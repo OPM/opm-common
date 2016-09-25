@@ -153,7 +153,7 @@ inline quantity rate( const fn_args& args ) {
 
     for( const auto* sched_well : args.schedule_wells ) {
         const auto& name = sched_well->name();
-        if( args.wells.wells.count( name ) == 0 ) continue;
+        if( args.wells.count( name ) == 0 ) continue;
         const auto v = args.wells.at( name ).rates.get( phase, 0.0 );
         if( ( v > 0 ) == injection )
             sum += v;
@@ -171,7 +171,7 @@ inline quantity crate( const fn_args& args ) {
     if( args.schedule_wells.empty() ) return zero;
 
     const auto& name = args.schedule_wells.front()->name();
-    if( args.wells.wells.count( name ) == 0 ) return zero;
+    if( args.wells.count( name ) == 0 ) return zero;
 
     const auto& well = args.wells.at( name );
     if( well.completions.count( index ) == 0 ) return zero;
@@ -198,8 +198,8 @@ inline quantity bhp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
     if( args.schedule_wells.empty() ) return zero;
 
-    const auto p = args.wells.wells.find( args.schedule_wells.front()->name() );
-    if( p == args.wells.wells.end() ) return zero;
+    const auto p = args.wells.find( args.schedule_wells.front()->name() );
+    if( p == args.wells.end() ) return zero;
 
     return { p->second.bhp, measure::pressure };
 }
@@ -208,8 +208,8 @@ inline quantity thp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
     if( args.schedule_wells.empty() ) return zero;
 
-    const auto p = args.wells.wells.find( args.schedule_wells.front()->name() );
-    if( p == args.wells.wells.end() ) return zero;
+    const auto p = args.wells.find( args.schedule_wells.front()->name() );
+    if( p == args.wells.end() ) return zero;
 
     return { p->second.thp, measure::pressure };
 }

@@ -125,14 +125,18 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         /* step time read from deck and hard-coded here */
         time_t step_time = ecl_util_make_date(10, 10, 2008 );
 
+        data::Rates r1, r2;
+        r1.set( data::Rates::opt::wat, 4.11 );
+        r1.set( data::Rates::opt::oil, 4.12 );
+        r1.set( data::Rates::opt::gas, 4.13 );
+
+        r2.set( data::Rates::opt::wat, 4.21 );
+        r2.set( data::Rates::opt::oil, 4.22 );
+        r2.set( data::Rates::opt::gas, 4.23 );
+
         Opm::data::Wells wells {
-            { { "OP_1", { {}, 1.0, 1.1, {} } },
-              { "OP_2", { {}, 1.0, 1.1, {} } } },
-            { 2.1, 2.2 },
-            { 3.1, 3.2 },
-            { 4.11, 4.12, 4.13, 4.21, 4.22, 4.23 },
-            { },
-            { }
+            { { "OP_1", { r1, 1.0, 1.1, 3.1, {} } },
+              { "OP_2", { r2, 1.0, 1.1, 3.2, {} } } },
         };
 
         eclipseWriter.writeTimeStep( 2,

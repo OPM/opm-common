@@ -575,6 +575,66 @@ void EclipseWriter::writeInitAndEgrid(data::Solution simProps, const NNC& nnc) {
     }
 }
 
+std::vector< double > serialize_wells( const data::Wells& wells,
+                                       int report_step,
+                                       const std::vector< const Well* > sched_wells,
+                                       const TableManager& tm,
+                                       const EclipseGrid& grid ) {
+
+    using rt = data::Rates::opt;
+
+    std::vector< rt > phases;
+    if( tm.hasPhase( Phase::PhaseEnum::WATER ) ) phases.push_back( rt::wat );
+    if( tm.hasPhase( Phase::PhaseEnum::OIL ) )   phases.push_back( rt::oil );
+    if( tm.hasPhase( Phase::PhaseEnum::GAS ) )   phases.push_back( rt::gas );
+
+    std::vector< double > xwel;
+    for( const auto* sched_well : sched_wells ) {
+
+        if( wells.count( sched_well->name() ) == 0 ) {
+            const auto elems =
+                sched_well->getCompletions( report_step ).size() * (phases.size() + 2)
+                + 2 /* bhp, temperature */
+                + phases.size();
+
+            // write zeros if no well data is provided
+            xwel.insert( xwel.end(), elems, 0.0 );
+            continue;
+        }
+
+        const auto& well = wells.at( sched_well->name() );
+
+        xwel.push_back( well.bhp );
+        xwel.push_back( well.temperature );
+        for( auto phase : phases )
+            xwel.push_back( well.rates.get( phase ) );
+
+        for( const auto& sc : sched_well->getCompletions( report_step ) ) {
+            const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
+
+            if( !grid.cellActive( i, j, k ) ) {
+                xwel.insert( xwel.end(), phases.size() + 2, 0.0 );
+                continue;
+            }
+
+            const auto active_index = grid.activeIndex( i, j, k );
+
+            if( well.completions.count( active_index ) == 0 ) {
+                xwel.insert( xwel.end(), phases.size() + 2, 0.0 );
+                continue;
+            }
+
+            const auto& completion = well.completions.at( active_index );
+
+            xwel.push_back( completion.pressure );
+            xwel.push_back( completion.reservoir_rate );
+            for( auto phase : phases )
+                xwel.push_back( completion.rates.get( phase ) );
+        }
+    }
+
+    return xwel;
+};
 
 // implementation of the writeTimeStep method
 void EclipseWriter::writeTimeStep(int report_step,
@@ -659,15 +719,9 @@ void EclipseWriter::writeTimeStep(int report_step,
             restartHandle.writeHeader( report_step, &rsthead_data);
         }
 
-        const auto sz = wells.bhp.size() + wells.perf_pressure.size()
-                      + wells.perf_rate.size() + wells.temperature.size()
-                      + wells.well_rate.size();
-        std::vector< double > xwel;
-        xwel.reserve( sz );
-
-        for( const auto& vec : { wells.bhp, wells.temperature, wells.well_rate,
-                                 wells.perf_pressure, wells.perf_rate } )
-            xwel.insert( xwel.end(), vec.begin(), vec.end() );
+        const auto& tm = es.getTableManager();
+        const auto& sched_wells = schedule.getWells( report_step );
+        const auto xwel = serialize_wells( wells, report_step, sched_wells, tm, grid );
 
         restartHandle.add_kw( ERT::EclKW< int >(IWEL_KW, iwell_data) );
         restartHandle.add_kw( ERT::EclKW< const char* >(ZWEL_KW, zwell_data ) );

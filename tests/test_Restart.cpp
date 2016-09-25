@@ -49,7 +49,8 @@
 
 using namespace Opm;
 
-std::string input =
+inline std::string input( const std::string& rst_name = "FIRST_SIM" ) {
+           return std::string(
            "RUNSPEC\n"
            "OIL\n"
            "GAS\n"
@@ -74,7 +75,8 @@ std::string input =
 
            "SOLUTION\n"
            "RESTART\n"
-           "FIRST_SIM 1/\n"
+           ) + rst_name + std::string(
+           " 1/\n"
            "\n"
 
            "START             -- 0 \n"
@@ -173,27 +175,151 @@ std::string input =
            "/\n"
            "TSTEP            -- 8\n"
            "10 /"
-           "/\n";
+           "/\n"
+           );
+}
+
+namespace Opm {
+namespace data {
+
+/*
+ * Some test specific equivalence definitions and pretty-printing. Not fit as a
+ * general purpose implementation, but does its job for testing and
+ * pretty-pringing for debugging purposes.
+ */
+
+std::ostream& operator<<( std::ostream& stream, const Rates& r ) {
+    return stream << "{ "
+                  << "wat: " << r.get( Rates::opt::wat, 0.0 ) << ", "
+                  << "oil: " << r.get( Rates::opt::oil, 0.0 ) << ", "
+                  << "gas: " << r.get( Rates::opt::gas, 0.0 ) << " "
+                  << "}";
+}
+
+std::ostream& operator<<( std::ostream& stream, const Completion& c ) {
+    return stream << "{ index: "
+                  << c.index << ", "
+                  << c.rates << ", "
+                  << c.pressure << " }";
+}
+
+std::ostream& operator<<( std::ostream& stream,
+                          const std::map< std::string, Well >& m ) {
+    stream << "\n";
+
+    for( const auto& p : m ) {
+        stream << p.first << ": \n"
+               << "\t" << "bhp: " << p.second.bhp << "\n"
+               << "\t" << "temp: " << p.second.temperature << "\n"
+               << "\t" << "rates: " << p.second.rates << "\n"
+               << "\t" << "completions: [\n";
+
+        for( const auto& c : p.second.completions )
+            stream << c.second << " ";
+
+        stream << "]\n";
+    }
+
+    return stream;
+}
+
+bool operator==( const Rates& lhs, const Rates& rhs ) {
+    using rt = Rates::opt;
+
+    BOOST_CHECK_EQUAL( lhs.has( rt::wat ), rhs.has( rt::wat ) );
+    BOOST_CHECK_EQUAL( lhs.has( rt::oil ), rhs.has( rt::oil ) );
+    BOOST_CHECK_EQUAL( lhs.has( rt::gas ), rhs.has( rt::gas ) );
+    BOOST_CHECK_EQUAL( lhs.has( rt::polymer ), rhs.has( rt::polymer ) );
+    BOOST_CHECK_EQUAL( lhs.get( rt::wat, 0.0 ), rhs.get( rt::wat, 0.0 ) );
+    BOOST_CHECK_EQUAL( lhs.get( rt::oil, 0.0 ), rhs.get( rt::oil, 0.0 ) );
+    BOOST_CHECK_EQUAL( lhs.get( rt::gas, 0.0 ), rhs.get( rt::gas, 0.0 ) );
+    BOOST_CHECK_EQUAL( lhs.get( rt::polymer, 0.0 ), rhs.get( rt::polymer, 0.0 ) );
+
+    return true;
+}
+
+bool operator==( const Completion& lhs, const Completion& rhs ) {
+    BOOST_CHECK_EQUAL( lhs.index, rhs.index );
+    BOOST_CHECK_EQUAL( lhs.rates, rhs.rates );
+    BOOST_CHECK_EQUAL( lhs.pressure, rhs.pressure );
+    BOOST_CHECK_EQUAL( lhs.reservoir_rate, rhs.reservoir_rate );
+
+    return true;
+}
+
+
+bool operator==( const Well& lhs, const Well& rhs ) {
+    BOOST_CHECK_EQUAL( lhs.rates, rhs.rates );
+    BOOST_CHECK_EQUAL( lhs.bhp, rhs.bhp );
+    BOOST_CHECK_EQUAL( lhs.temperature, rhs.temperature );
+
+    for( const auto& p : lhs.completions )
+        BOOST_CHECK_EQUAL( p.second, rhs.completions.at( p.first ) );
+
+    return true;
+}
+
+}
+
+/*
+ * forward declarations of internal functions that we want to expose to tests
+ * but not to users.
+ */
+std::vector< double > serialize_wells( const data::Wells& wells,
+                                       int report_step,
+                                       const std::vector< const Well* > sched_wells,
+                                       const TableManager& tm,
+                                       const EclipseGrid& );
+
+data::Wells restoreOPM_XWEL( const double* xwel_data,
+                             size_t xwel_data_size,
+                             int restart_step,
+                             const std::vector< const Well* > sched_wells,
+                             const std::vector< data::Rates::opt >& phases,
+                             const EclipseGrid& grid );
+}
 
 data::Wells mkWells() {
-    std::vector< double > bhp = { 1.23, 2.34 };
-    std::vector< double > temp = { 3.45, 4.56 };
-    std::vector< double > well_rates =
-        { 5.67, 6.78, 7.89, 8.90, 9.01, 10.12 };
+    data::Rates r1, r2, rc1, rc2, rc3;
+    r1.set( data::Rates::opt::wat, 5.67 );
+    r1.set( data::Rates::opt::oil, 6.78 );
+    r1.set( data::Rates::opt::gas, 7.89 );
 
-    std::vector< double > perf_press = {
-        20.41, 21.19, 22.41,
-        23.19, 24.41, 25.19,
-        26.41, 27.19, 28.41
-    };
+    r2.set( data::Rates::opt::wat, 8.90 );
+    r2.set( data::Rates::opt::oil, 9.01 );
+    r2.set( data::Rates::opt::gas, 10.12 );
 
-    std::vector< double > perf_rate = {
-        30.45, 31.19, 32.45,
-        33.19, 34.45, 35.19,
-        36.45, 37.19, 38.45,
-    };
+    rc1.set( data::Rates::opt::wat, 20.41 );
+    rc1.set( data::Rates::opt::oil, 21.19 );
+    rc1.set( data::Rates::opt::gas, 22.41 );
 
-    return { {}, bhp, temp, well_rates, perf_press, perf_rate };
+    rc2.set( data::Rates::opt::wat, 23.19 );
+    rc2.set( data::Rates::opt::oil, 24.41 );
+    rc2.set( data::Rates::opt::gas, 25.19 );
+
+    rc3.set( data::Rates::opt::wat, 26.41 );
+    rc3.set( data::Rates::opt::oil, 27.19 );
+    rc3.set( data::Rates::opt::gas, 28.41 );
+
+    data::Well w1, w2;
+    w1.rates = r1;
+    w1.bhp = 1.23;
+    w1.temperature = 3.45;
+
+    /*
+     *  the completion keys (active indices) and well names correspond to the
+     *  input deck. All other entries in the well structures are arbitrary.
+     */
+    w1.completions[ 88 ] = { 88, rc1, 30.45 };
+    w1.completions[ 288 ] = { 288, rc2, 33.19 };
+
+    w2.rates = r2;
+    w2.bhp = 2.34;
+    w2.temperature = 4.56;
+    w2.completions[ 188 ] = { 188, rc3, 36.22 };
+
+    return { { "OP_1", w1 },
+             { "OP_2", w2 } };
 }
 
 data::Solution mkSolution( int numCells ) {
@@ -250,7 +376,7 @@ first_sim(test_work_area_type * test_area) {
 }
 
 std::pair< data::Solution, data::Wells > second_sim() {
-    auto eclipseState = Parser::parseData( input );
+    auto eclipseState = Parser::parseData( input() );
 
     const auto& grid = eclipseState.getInputGrid();
     auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
@@ -271,26 +397,7 @@ void compare( std::pair< data::Solution, data::Wells > fst,
             BOOST_CHECK_CLOSE( *first, *second, 0.00001 );
     }
 
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-            fst.second.bhp.begin(), fst.second.bhp.end(),
-            snd.second.bhp.begin(), snd.second.bhp.end()
-        );
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-            fst.second.temperature.begin(), fst.second.temperature.end(),
-            snd.second.temperature.begin(), snd.second.temperature.end()
-        );
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-            fst.second.well_rate.begin(), fst.second.well_rate.end(),
-            snd.second.well_rate.begin(), snd.second.well_rate.end()
-        );
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-            fst.second.perf_pressure.begin(), fst.second.perf_pressure.end(),
-            snd.second.perf_pressure.begin(), snd.second.perf_pressure.end()
-        );
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-            fst.second.perf_rate.begin(), fst.second.perf_rate.end(),
-            snd.second.perf_rate.begin(), snd.second.perf_rate.end()
-        );
+    BOOST_CHECK_EQUAL( fst.second, snd.second );
 }
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
@@ -301,4 +408,30 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     compare(state1, state2);
 
     test_work_area_free(test_area);
+}
+
+BOOST_AUTO_TEST_CASE(OPM_XWEL) {
+    auto es = Parser::parseData( input( "XWEL" ) );
+    const auto& sched = es.getSchedule();
+    const auto& grid = es.getInputGrid();
+    const auto& tm = es.getTableManager();
+
+    std::vector< data::Rates::opt > phases {
+        data::Rates::opt::wat,
+        data::Rates::opt::oil,
+        data::Rates::opt::gas,
+    };
+
+    const auto wells = mkWells();
+    const auto& sched_wells = sched.getWells( 1 );
+    const auto xwel = serialize_wells( wells, 1, sched_wells, tm, grid );
+
+    const auto restored_wells = restoreOPM_XWEL( xwel.data(),
+                                                 xwel.size(),
+                                                 1,
+                                                 sched.getWells( 1 ),
+                                                 phases,
+                                                 grid );
+
+    BOOST_CHECK_EQUAL( wells, restored_wells );
 }

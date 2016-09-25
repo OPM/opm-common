@@ -148,13 +148,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     solution.insert( "PRESSURE",UnitSystem::measure::pressure , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
     solution.insert( "SWAT"    ,UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
     solution.insert( "SGAS"    ,UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
-    data::Wells wells { {},
-        { 1.1, 1.2, 1.3 },
-        { 2.1, 2.2, 2.3 },
-        { 3.11, 3.12, 3.13, 3.21, 3.22, 3.23, 3.31, 3.32, 3.33 },
-        { 4.1, 4.2, 4.3, 4.4 },
-        { 4.1, 4.2, 4.3, 4.4 }
-    };
+    data::Wells wells;
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep){
         eclipseWriter.writeTimeStep( timestep,

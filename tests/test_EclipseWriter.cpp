@@ -355,3 +355,6 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
      */
     BOOST_CHECK_EQUAL( file_size, write_and_check( 3, 5 ) );
 }
+
+BOOST_AUTO_TEST_CASE(OPM_XWEL) {
+}

@@ -26,6 +26,8 @@
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -33,6 +35,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
+#include <numeric>
 
 namespace Opm {
 namespace {
@@ -115,41 +118,64 @@ namespace {
 
         return sol;
     }
+}
 
-    
+using rt = data::Rates::opt;
+data::Wells restoreOPM_XWEL( const double* xwel_data,
+                             size_t xwel_data_size,
+                             int restart_step,
+                             const std::vector< const Well* > sched_wells,
+                             const std::vector< rt >& phases,
+                             const EclipseGrid& grid ) {
 
-    inline data::Wells restoreOPM_XWEL( ecl_file_type* file,
-                                        int num_wells,
-                                        int num_phases ) {
-        const char* keyword = "OPM_XWEL";
+    const auto well_size = [&]( size_t acc, const Well* w ) {
+        return acc
+            + 2 + phases.size()
+            + (w->getCompletions( restart_step )->size() * (phases.size() + 2));
+    };
 
-        ecl_kw_type* xwel = ecl_file_iget_named_kw( file, keyword, 0 );
-        const double* xwel_data = ecl_kw_get_double_ptr(xwel);
-        const double* xwel_end  = xwel_data + ecl_kw_get_size( xwel );
+    const auto expected_xwel_size = std::accumulate( sched_wells.begin(),
+                                                     sched_wells.end(),
+                                                     size_t( 0 ),
+                                                     well_size );
 
-        const double* bhp_begin = xwel_data;
-        const double* bhp_end = bhp_begin + num_wells;
-        const double* temp_begin = bhp_end;
-        const double* temp_end = temp_begin + num_wells;
-        const double* wellrate_begin = temp_end;
-        const double* wellrate_end = wellrate_begin + (num_wells * num_phases);
-
-        const auto remaining = std::distance( wellrate_end, xwel_end );
-        const auto perf_elems = remaining / 2;
-
-        const double* perfpres_begin = wellrate_end;
-        const double* perfpres_end = perfpres_begin + perf_elems;
-        const double* perfrate_begin = perfpres_end;
-        const double* perfrate_end = perfrate_begin + perf_elems;
-
-        return { {},
-            { bhp_begin, bhp_end },
-            { temp_begin, temp_end },
-            { wellrate_begin, wellrate_end },
-            { perfpres_begin, perfpres_end },
-            { perfrate_begin, perfrate_end }
-        };
+    if( xwel_data_size != expected_xwel_size ) {
+        throw std::runtime_error( "Mismatch between OPM_XWEL and deck; "
+                                  "too many elements in OPM_XWEL. "
+                                  "Was " + std::to_string( xwel_data_size ) +
+                                  ", expected " + std::to_string( expected_xwel_size ) );
     }
+
+    data::Wells wells;
+    for( const auto* sched_well : sched_wells ) {
+        data::Well& well = wells[ sched_well->name() ];
+
+        well.bhp = *xwel_data++;
+        well.temperature = *xwel_data++;
+
+        for( auto phase : phases )
+            well.rates.set( phase, *xwel_data++ );
+
+        auto completions = sched_well->getCompletions( restart_step );
+        for( const auto& sc : *completions ) {
+            const auto i = sc->getI(), j = sc->getJ(), k = sc->getK();
+            if( !grid.cellActive( i, j, k ) ) {
+                xwel_data += 2 + phases.size();
+                continue;
+            }
+
+            const auto active_index = grid.activeIndex( i, j, k );
+
+            auto& completion = well.completions[ active_index ];
+            completion.index = active_index;
+            completion.pressure = *xwel_data++;
+            completion.reservoir_rate = *xwel_data++;
+            for( auto phase : phases )
+                completion.rates.set( phase, *xwel_data++ );
+        }
+    }
+
+    return wells;
 }
 
 std::pair< data::Solution, data::Wells >
@@ -166,7 +192,12 @@ init_from_restart_file( const EclipseState& es, int numcells ) {
                                                         output);
     const bool unified                   = ioConfig.getUNIFIN();
     const int num_wells = es.getSchedule().numWells( restart_step );
-    const int num_phases = es.getTableManager().getNumPhases();
+
+    std::vector< rt > phases;
+    const auto& tm = es.getTableManager();
+    if( tm.hasPhase( Phase::PhaseEnum::WATER ) ) phases.push_back( rt::wat );
+    if( tm.hasPhase( Phase::PhaseEnum::OIL ) )   phases.push_back( rt::oil );
+    if( tm.hasPhase( Phase::PhaseEnum::GAS ) )   phases.push_back( rt::gas );
 
     using ft = ERT::ert_unique_ptr< ecl_file_type, ecl_file_close >;
     ft file( ecl_file_open( filename.c_str(), 0 ) );
@@ -181,9 +212,14 @@ init_from_restart_file( const EclipseState& es, int numcells ) {
                 + std::to_string( restart_step ) + "!" );
     }
 
+    const char* keyword = "OPM_XWEL";
+    ecl_kw_type* xwel = ecl_file_iget_named_kw( file.get(), keyword, 0 );
+    const double* xwel_data = ecl_kw_get_double_ptr( xwel );
+    const auto size = ecl_kw_get_size( xwel );
+
     return {
         restoreSOLUTION( file.get(), numcells, es.getUnits() ),
-        restoreOPM_XWEL( file.get(), num_wells, num_phases )
+        restoreOPM_XWEL( xwel_data, size, restart_step, sched_wells, phases, *es.getInputGrid() )
     };
 }
 
