@@ -31,10 +31,14 @@ class SimulationDataContainer;
 
 namespace data {
 
+    /**
+     * Small struct that keeps track of data for output to restart/summary files.
+     */
     struct CellData {
-        std::string name;
-        UnitSystem::measure dim;
-        std::vector<double> data;
+        std::string name;          //< Name of the output field (will end up "verbatim" in output)
+        UnitSystem::measure dim;   //< Dimension of the data to write
+        std::vector<double> data;  //< The actual data itself
+        bool enable_in_restart;    //< Enables writing this field to a restart file.
     };
 
 
