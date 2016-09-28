@@ -742,15 +742,17 @@ void EclipseWriter::writeTimeStep(int report_step,
                 sol.addFromCells<double>( cells );
             {
                 for (const auto& prop : simProps) {
-                    auto ecl_data = grid.compressedVector( prop.data );
-                    convertFromSiTo( ecl_data,
-                                     units,
-                                     prop.dim );
+                    if (prop.enable_in_restart) {
+                        auto ecl_data = grid.compressedVector( prop.data );
+                        convertFromSiTo( ecl_data,
+                                         units,
+                                         prop.dim );
 
-                    if (write_float)
-                        sol.add( ERT::EclKW<float>(prop.name , ecl_data));
-                    else
-                        sol.add( ERT::EclKW<double>(prop.name , ecl_data));
+                        if (write_float)
+                            sol.add( ERT::EclKW<float>(prop.name , ecl_data));
+                        else
+                            sol.add( ERT::EclKW<double>(prop.name , ecl_data));
+                    }
                 }
             }
         }
