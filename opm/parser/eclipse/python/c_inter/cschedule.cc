@@ -6,10 +6,11 @@
 extern "C" {
 
     Opm::Schedule * schedule_alloc(Opm::ParseContext * context, Opm::EclipseGrid * grid, Opm::Deck * deck);
-    void schedule_free( Opm::Schedule * schedule );
-    time_t schedule_end( const Opm::Schedule * schedule );
-    time_t schedule_start( const Opm::Schedule * schedule );
+    void            schedule_free( Opm::Schedule * schedule );
+    time_t          schedule_end( const Opm::Schedule * schedule );
+    time_t          schedule_start( const Opm::Schedule * schedule );
 
+    /*-----------------------------------------------------------------*/
 
     time_t schedule_end( const Opm::Schedule * schedule ) {
         return schedule->posixEndTime();
