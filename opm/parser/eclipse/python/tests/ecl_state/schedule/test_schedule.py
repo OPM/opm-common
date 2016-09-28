@@ -1,15 +1,15 @@
 import datetime
 import os.path
-from unittest import TestCase
 from ert.test import TestAreaContext
 
+from opm_test import OpmTest
 from opm.parser import Parser
 from opm.ecl_state.schedule import Schedule
 from opm.ecl_state.grid import EclipseGrid
 
 
 
-class ScheduleTest(TestCase):
+class ScheduleTest(OpmTest):
     def setUp(self):
         pass
 
@@ -20,11 +20,11 @@ class ScheduleTest(TestCase):
         # constructor is wrapped in the grid case we need to different
         # input files to instantiate the Schedule and EclipseGrid
         # instances respectively.
-        grid_file = os.path.join( os.path.abspath( os.path.dirname(__file__ )) , "../../../../../../../testdata/integration_tests/GRID/CORNERPOINT_ACTNUM.DATA")
+        grid_file = self.createPath( "integration_tests/GRID/CORNERPOINT_ACTNUM.DATA" )
         grid_deck = p.parseFile( grid_file )
         grid = EclipseGrid(grid_deck)
 
-        sched_file = os.path.join( os.path.abspath( os.path.dirname(__file__ )) , "../../../../../../../testdata/integration_tests/SCHEDULE/SCHEDULE1")
+        sched_file = self.createPath("integration_tests/SCHEDULE/SCHEDULE1")
         sched_deck = p.parseFile( sched_file )
         s = Schedule( grid , sched_deck )
 
