@@ -56,6 +56,7 @@
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/util/util.h>
 #define OPM_XWEL      "OPM_XWEL"
+#define OPM_IWEL      "OPM_IWEL"
 
 // namespace start here since we don't want the ERT headers in it
 namespace Opm {
@@ -575,11 +576,11 @@ void EclipseWriter::writeInitAndEgrid(data::Solution simProps, const NNC& nnc) {
     }
 }
 
-std::vector< double > serialize_wells( const data::Wells& wells,
-                                       int report_step,
-                                       const std::vector< const Well* > sched_wells,
-                                       const TableManager& tm,
-                                       const EclipseGrid& grid ) {
+std::vector< double > serialize_XWEL( const data::Wells& wells,
+                                      int report_step,
+                                      const std::vector< const Well* > sched_wells,
+                                      const TableManager& tm,
+                                      const EclipseGrid& grid ) {
 
     using rt = data::Rates::opt;
 
@@ -635,6 +636,21 @@ std::vector< double > serialize_wells( const data::Wells& wells,
 
     return xwel;
 };
+
+std::vector< int > serialize_IWEL( const data::Wells& wells,
+                                   const std::vector< const Well* > sched_wells ) {
+
+    const auto getctrl = [&]( const Well* w ) {
+        const auto itr = wells.find( w->name() );
+        return itr == wells.end() ? 0 : itr->second.control;
+    };
+
+    std::vector< int > iwel( sched_wells.size(), 0.0 );
+    std::transform( sched_wells.begin(), sched_wells.end(), iwel.begin(), getctrl );
+
+    return iwel;
+}
+
 
 // implementation of the writeTimeStep method
 void EclipseWriter::writeTimeStep(int report_step,
@@ -721,11 +737,13 @@ void EclipseWriter::writeTimeStep(int report_step,
 
         const auto& tm = es.getTableManager();
         const auto& sched_wells = schedule.getWells( report_step );
-        const auto xwel = serialize_wells( wells, report_step, sched_wells, tm, grid );
+        const auto xwel = serialize_XWEL( wells, report_step, sched_wells, tm, grid );
+        const auto iwel = serialize_IWEL( wells, sched_wells );
 
         restartHandle.add_kw( ERT::EclKW< int >(IWEL_KW, iwell_data) );
         restartHandle.add_kw( ERT::EclKW< const char* >(ZWEL_KW, zwell_data ) );
-        restartHandle.add_kw( ERT::EclKW< double >(OPM_XWEL, xwel ) );
+        restartHandle.add_kw( ERT::EclKW< double >( OPM_XWEL, xwel ) );
+        restartHandle.add_kw( ERT::EclKW< int >( OPM_IWEL, iwel ) );
         restartHandle.add_kw( ERT::EclKW< int >( ICON_KW, icon_data ) );
 
 

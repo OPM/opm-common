@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         r2.set( data::Rates::opt::gas, 4.23 );
 
         Opm::data::Wells wells {
-            { { "OP_1", { r1, 1.0, 1.1, 3.1, {} } },
-              { "OP_2", { r2, 1.0, 1.1, 3.2, {} } } },
+            { { "OP_1", { r1, 1.0, 1.1, 3.1, 1, {} } },
+              { "OP_2", { r2, 1.0, 1.1, 3.2, 1, {} } } },
         };
 
         eclipseWriter.writeTimeStep( 2,

@@ -121,17 +121,19 @@ namespace {
 }
 
 using rt = data::Rates::opt;
-data::Wells restoreOPM_XWEL( const double* xwel_data,
-                             size_t xwel_data_size,
-                             int restart_step,
-                             const std::vector< const Well* > sched_wells,
-                             const std::vector< rt >& phases,
-                             const EclipseGrid& grid ) {
+data::Wells restore_wells( const double* xwel_data,
+                           size_t xwel_data_size,
+                           const int* iwel_data,
+                           size_t iwel_data_size,
+                           int restart_step,
+                           const std::vector< const Well* > sched_wells,
+                           const std::vector< rt >& phases,
+                           const EclipseGrid& grid ) {
 
     const auto well_size = [&]( size_t acc, const Well* w ) {
         return acc
             + 2 + phases.size()
-            + (w->getCompletions( restart_step )->size() * (phases.size() + 2));
+            + (w->getCompletions( restart_step ).size() * (phases.size() + 2));
     };
 
     const auto expected_xwel_size = std::accumulate( sched_wells.begin(),
@@ -140,11 +142,17 @@ data::Wells restoreOPM_XWEL( const double* xwel_data,
                                                      well_size );
 
     if( xwel_data_size != expected_xwel_size ) {
-        throw std::runtime_error( "Mismatch between OPM_XWEL and deck; "
-                                  "too many elements in OPM_XWEL. "
-                                  "Was " + std::to_string( xwel_data_size ) +
-                                  ", expected " + std::to_string( expected_xwel_size ) );
+        throw std::runtime_error(
+                "Mismatch between OPM_XWEL and deck; "
+                "OPM_XWEL size was " + std::to_string( xwel_data_size ) +
+                ", expected " + std::to_string( expected_xwel_size ) );
     }
+
+    if( iwel_data_size != sched_wells.size() )
+        throw std::runtime_error(
+                "Mismatch between OPM_IWEL and deck; "
+                "OPM_IWEL size was " + std::to_string( iwel_data_size ) +
+                ", expected " + std::to_string( sched_wells.size() ) );
 
     data::Wells wells;
     for( const auto* sched_well : sched_wells ) {
@@ -152,13 +160,14 @@ data::Wells restoreOPM_XWEL( const double* xwel_data,
 
         well.bhp = *xwel_data++;
         well.temperature = *xwel_data++;
+        well.control = *iwel_data++;
 
         for( auto phase : phases )
             well.rates.set( phase, *xwel_data++ );
 
-        auto completions = sched_well->getCompletions( restart_step );
-        for( const auto& sc : *completions ) {
-            const auto i = sc->getI(), j = sc->getJ(), k = sc->getK();
+        const auto& completions = sched_well->getCompletions( restart_step );
+        for( const auto& sc : completions ) {
+            const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
             if( !grid.cellActive( i, j, k ) ) {
                 xwel_data += 2 + phases.size();
                 continue;
@@ -178,6 +187,7 @@ data::Wells restoreOPM_XWEL( const double* xwel_data,
     return wells;
 }
 
+/* should take grid as argument because it may be modified from the simulator */
 std::pair< data::Solution, data::Wells >
 init_from_restart_file( const EclipseState& es, int numcells ) {
 
@@ -191,7 +201,7 @@ init_from_restart_file( const EclipseState& es, int numcells ) {
                                                         restart_step,
                                                         output);
     const bool unified                   = ioConfig.getUNIFIN();
-    const int num_wells = es.getSchedule().numWells( restart_step );
+    const auto& sched_wells = es.getSchedule().getWells( restart_step );
 
     std::vector< rt > phases;
     const auto& tm = es.getTableManager();
@@ -212,14 +222,22 @@ init_from_restart_file( const EclipseState& es, int numcells ) {
                 + std::to_string( restart_step ) + "!" );
     }
 
-    const char* keyword = "OPM_XWEL";
-    ecl_kw_type* xwel = ecl_file_iget_named_kw( file.get(), keyword, 0 );
+    ecl_kw_type* xwel = ecl_file_iget_named_kw( file.get(), "OPM_XWEL", 0 );
     const double* xwel_data = ecl_kw_get_double_ptr( xwel );
-    const auto size = ecl_kw_get_size( xwel );
+    const auto xwel_size = ecl_kw_get_size( xwel );
+
+    ecl_kw_type* iwel = ecl_file_iget_named_kw( file.get(), "OPM_IWEL", 0 );
+    const int* iwel_data = ecl_kw_get_int_ptr( iwel );
+    const auto iwel_size = ecl_kw_get_size( iwel );
 
     return {
         restoreSOLUTION( file.get(), numcells, es.getUnits() ),
-        restoreOPM_XWEL( xwel_data, size, restart_step, sched_wells, phases, *es.getInputGrid() )
+        restore_wells( xwel_data, xwel_size,
+                       iwel_data, iwel_size,
+                       restart_step,
+                       sched_wells,
+                       phases,
+                       es.getInputGrid() )
     };
 }
 

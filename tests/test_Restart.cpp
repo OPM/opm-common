@@ -252,6 +252,7 @@ bool operator==( const Well& lhs, const Well& rhs ) {
     BOOST_CHECK_EQUAL( lhs.rates, rhs.rates );
     BOOST_CHECK_EQUAL( lhs.bhp, rhs.bhp );
     BOOST_CHECK_EQUAL( lhs.temperature, rhs.temperature );
+    BOOST_CHECK_EQUAL( lhs.control, rhs.control );
 
     for( const auto& p : lhs.completions )
         BOOST_CHECK_EQUAL( p.second, rhs.completions.at( p.first ) );
@@ -265,18 +266,23 @@ bool operator==( const Well& lhs, const Well& rhs ) {
  * forward declarations of internal functions that we want to expose to tests
  * but not to users.
  */
-std::vector< double > serialize_wells( const data::Wells& wells,
-                                       int report_step,
-                                       const std::vector< const Well* > sched_wells,
-                                       const TableManager& tm,
-                                       const EclipseGrid& );
+std::vector< double > serialize_XWEL( const data::Wells& wells,
+                                      int report_step,
+                                      const std::vector< const Well* > sched_wells,
+                                      const TableManager& tm,
+                                      const EclipseGrid& );
 
-data::Wells restoreOPM_XWEL( const double* xwel_data,
-                             size_t xwel_data_size,
-                             int restart_step,
-                             const std::vector< const Well* > sched_wells,
-                             const std::vector< data::Rates::opt >& phases,
-                             const EclipseGrid& grid );
+std::vector< int > serialize_IWEL( const data::Wells& wells,
+                                   const std::vector< const Well* > sched_wells );
+
+data::Wells restore_wells( const double* xwel_data,
+                           size_t xwel_data_size,
+                           const int* iwel_data,
+                           size_t iwel_data_size,
+                           int restart_step,
+                           const std::vector< const Well* > sched_wells,
+                           const std::vector< data::Rates::opt >& phases,
+                           const EclipseGrid& grid );
 }
 
 data::Wells mkWells() {
@@ -305,6 +311,7 @@ data::Wells mkWells() {
     w1.rates = r1;
     w1.bhp = 1.23;
     w1.temperature = 3.45;
+    w1.control = 1;
 
     /*
      *  the completion keys (active indices) and well names correspond to the
@@ -316,6 +323,7 @@ data::Wells mkWells() {
     w2.rates = r2;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
+    w2.control = 2;
     w2.completions[ 188 ] = { 188, rc3, 36.22 };
 
     return { { "OP_1", w1 },
@@ -424,14 +432,15 @@ BOOST_AUTO_TEST_CASE(OPM_XWEL) {
 
     const auto wells = mkWells();
     const auto& sched_wells = sched.getWells( 1 );
-    const auto xwel = serialize_wells( wells, 1, sched_wells, tm, grid );
+    const auto xwel = serialize_XWEL( wells, 1, sched_wells, tm, grid );
+    const auto iwel = serialize_IWEL( wells, sched_wells );
 
-    const auto restored_wells = restoreOPM_XWEL( xwel.data(),
-                                                 xwel.size(),
-                                                 1,
-                                                 sched.getWells( 1 ),
-                                                 phases,
-                                                 grid );
+    const auto restored_wells = restore_wells( xwel.data(), xwel.size(),
+                                               iwel.data(), iwel.size(),
+                                               1,
+                                               sched.getWells( 1 ),
+                                               phases,
+                                               grid );
 
     BOOST_CHECK_EQUAL( wells, restored_wells );
 }

@@ -92,6 +92,7 @@ namespace Opm {
         double bhp;
         double thp;
         double temperature;
+        int control;
         std::map< Completion::active_index, Completion > completions;
     };
 

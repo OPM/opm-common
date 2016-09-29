@@ -143,9 +143,9 @@ static data::Wells result_wells() {
     data::Completion comp2 { 1, crates2, 1.10 };
     data::Completion comp3 { 3, crates3, 1.11 };
 
-    data::Well well1 { rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, { {1, comp1} } };
-    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, { {1, comp2} } };
-    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, { {3, comp3} } };
+    data::Well well1 { rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1, { {1, comp1} } };
+    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {1, comp2} } };
+    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {3, comp3} } };
 
     return { { "W_1", well1 }, { "W_2", well2 }, { "W_3", well3 } };
 }
