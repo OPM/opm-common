@@ -293,6 +293,9 @@ public:
         if( cells.has( dc::SGAS ) )
             this->add( ERT::EclKW<T>( "SGAS", cells[ dc::SGAS ] ) );
 
+        if (cells.has (dc::SSOL))
+            this->add (ERT::EclKW<T>("SSOL", cells[ dc::SSOL] ) );
+
         // Write RS - Dissolved GOR
         if( cells.has( dc::RS ) )
             this->add( ERT::EclKW<T>("RS", cells[ dc::RS ] ) );
