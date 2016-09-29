@@ -31,6 +31,11 @@ function(add_python_package target package_path source_files install_package)
 endfunction()
 
 
+function(add_python_module target package_path module_file install_package)
+   set (source_list ${module_file})
+   add_python_package( ${target} ${package_path} ${source_list} ${install_package})
+endfunction()
+
 #-----------------------------------------------------------------
 
 
