@@ -42,6 +42,7 @@ namespace data {
     };
 
 
+
     struct Solution {
         /* data::Solution supports writing only some information,
          * distinguished by keys. When adding support for more values in
