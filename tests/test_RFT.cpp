@@ -27,7 +27,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/output/eclipse/EclipseWriter.hpp>
-#include <opm/output/Wells.hpp>
+#include <opm/output/data/Wells.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>

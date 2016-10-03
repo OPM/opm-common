@@ -29,8 +29,8 @@
 #include <array>
 #include <memory>
 
-#include <opm/output/Cells.hpp>
-#include <opm/output/Wells.hpp>
+#include <opm/output/data/Cells.hpp>
+#include <opm/output/data/Wells.hpp>
 
 namespace Opm {
 

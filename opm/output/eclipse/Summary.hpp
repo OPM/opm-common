@@ -29,8 +29,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <opm/output/Wells.hpp>
-#include <opm/output/Cells.hpp>
+#include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Cells.hpp>
 
 namespace Opm {
 

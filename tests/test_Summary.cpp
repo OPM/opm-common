@@ -33,8 +33,8 @@
 #include <ert/util/util.h>
 #include <ert/util/TestArea.hpp>
 
-#include <opm/output/Wells.hpp>
-#include <opm/output/Cells.hpp>
+#include <opm/output/data/Wells.hpp>
+#include <opm/output/data/Cells.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>

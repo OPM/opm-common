@@ -26,7 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/output/eclipse/EclipseWriter.hpp>
-#include <opm/output/Cells.hpp>
+#include <opm/output/data/Cells.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>

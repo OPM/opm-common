@@ -28,7 +28,7 @@
 
 #include <stdexcept>
 
-#include <opm/output/Wells.hpp>
+#include <opm/output/data/Wells.hpp>
 
 using namespace Opm;
 using rt = data::Rates::opt;

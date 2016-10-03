@@ -23,7 +23,7 @@
 
 #include <string>
 
-#include <opm/output/Cells.hpp>
+#include <opm/output/data/Cells.hpp>
 
 namespace Opm
 {
