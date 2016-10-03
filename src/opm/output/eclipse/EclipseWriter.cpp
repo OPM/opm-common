@@ -458,7 +458,7 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
 
 
 
-void EclipseWriter::writeINITFile(const std::vector<data::CellData>& simProps, const NNC& nnc) const {
+void EclipseWriter::writeINITFile(const CellDataContainer& simProps, const NNC& nnc) const {
     const auto& es = *this->impl->es;
     const auto& units = es.getUnits();
     const EclipseGrid& grid = this->impl->grid;
@@ -597,7 +597,7 @@ void EclipseWriter::writeEGRIDFile( const NNC& nnc ) const {
 }
 
 
-void EclipseWriter::writeInitAndEgrid(const std::vector<data::CellData>& simProps, const NNC& nnc) {
+void EclipseWriter::writeInitAndEgrid(const CellDataContainer& simProps, const NNC& nnc) {
     if( !this->impl->output_enabled )
         return;
 
@@ -620,7 +620,7 @@ void EclipseWriter::writeTimeStep(int report_step,
                                   double secs_elapsed,
                                   data::Solution cells,
                                   data::Wells wells,
-                                  const std::vector<data::CellData>& simProps,
+                                  const CellDataContainer& simProps,
                                   bool  write_float)
 {
 
@@ -744,12 +744,9 @@ void EclipseWriter::writeTimeStep(int report_step,
             else
                 sol.addFromCells<double>( cells );
             {
-                for (const auto& prop : simProps) {
-                    if (prop.enable_in_restart) {
-                        auto ecl_data = grid.compressedVector( prop.data );
-                        convertFromSiTo( ecl_data,
-                                         units,
-                                         prop.dim );
+                for (const auto& prop : cells) {
+                    if (prop.second.target == data::TargetType::RESTART_AUXILLARY) {
+                        auto ecl_data = grid.compressedVector( prop.second.data );
 
                         if (write_float)
                             sol.add( ERT::EclKW<float>(prop.name , ecl_data));

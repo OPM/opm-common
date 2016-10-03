@@ -145,7 +145,7 @@ void checkEgridFile( const EclipseGrid& eclGrid ) {
     fortio_fclose(egridFile);
 }
 
-void checkInitFile( const Deck& deck, const std::vector<data::CellData>& simProps) {
+void checkInitFile( const Deck& deck, const CellDataContainer& simProps) {
     // use ERT directly to inspect the INIT file produced by EclipseWriter
     ERT::ert_unique_ptr<ecl_file_type , ecl_file_close> initFile(ecl_file_open( "FOO.INIT" , 0 ));
 
@@ -285,11 +285,12 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
         std::vector<double> tranx(3*3*3);
         std::vector<double> trany(3*3*3);
         std::vector<double> tranz(3*3*3);
-        std::vector<data::CellData> eGridProps{
-            {"TRANX" , UnitSystem::measure::transmissibility, tranx},
-            {"TRANY" , UnitSystem::measure::transmissibility, trany},
-            {"TRANZ" , UnitSystem::measure::transmissibility, tranz}
+        CellDataContainer eGridProps{
+                    {"TRANX" , UnitSystem::measure::transmissibility, tranx},
+                    {"TRANY" , UnitSystem::measure::transmissibility, trany},
+                    {"TRANZ" , UnitSystem::measure::transmissibility, tranz}
         };
+
 
         eclWriter.writeInitAndEgrid( );
         eclWriter.writeInitAndEgrid( eGridProps );
@@ -297,9 +298,10 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
         data::Wells wells;
 
         for( int i = first; i < last; ++i ) {
-            std::vector<data::CellData> timesStepProps {
-                {"KRO" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i)},
-                {"KRG" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i*10)}};
+            CellDataContainer timesStepProps{
+                    {"KRO" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i)},
+                    {"KRG" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i*10)}
+            };
 
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
             eclWriter.writeTimeStep( i,
