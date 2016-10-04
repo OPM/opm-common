@@ -1,5 +1,6 @@
 find_package (PythonInterp REQUIRED)
 find_package (ERTPython)
+find_package (Cwrap)
 
 if (ERT_PYTHON_PATH) 
    add_subdirectory( c_inter )
