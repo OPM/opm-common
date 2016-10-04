@@ -57,6 +57,5 @@ function (addPythonTest TEST_NAME TEST_CLASS)
     if(TEST_OPTIONS_ENVIRONMENT)
         set_property(TEST python.tests.${TEST_NAME} PROPERTY ENVIRONMENT ${TEST_OPTIONS_ENVIRONMENT})
     endif()
-    set_property(TEST python.tests.${TEST_NAME} PROPERTY ENVIRONMENT "PYTHONPATH=${ERT_PYTHON_PATH}:${CWRAP_PYTHON_PATH}:${PYTHONPATH}")
+    set_property(TEST python.tests.${TEST_NAME} PROPERTY ENVIRONMENT "PYTHONPATH=${CWRAP_PYTHON_PATH}:${PYTHONPATH}")
 endfunction(addPythonTest)
-
