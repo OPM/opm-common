@@ -3,7 +3,7 @@ import json
 import inspect
 from functools import partial
 
-from ert.cwrap import BaseCClass
+from cwrap import BaseCClass
 from opm import OPMPrototype
 from opm.deck import Deck
 from opm.parser import ParseContext

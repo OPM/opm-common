@@ -1,4 +1,4 @@
-from ert.cwrap import BaseCClass, CWrapper
+from cwrap import BaseCClass, CWrapper
 from opm import OPMPrototype
 
 class ParseContext(BaseCClass):
