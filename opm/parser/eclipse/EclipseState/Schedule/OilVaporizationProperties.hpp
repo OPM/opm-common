@@ -53,7 +53,7 @@ namespace Opm
         bool operator!=( const OilVaporizationProperties& ) const;
 
     private:
-        Opm::OilVaporizationEnum m_type = OilVaporizationEnum::UNDEF;;
+        Opm::OilVaporizationEnum m_type = OilVaporizationEnum::UNDEF;
         double m_vap1;
         double m_vap2;
         double m_maxDRSDT;
