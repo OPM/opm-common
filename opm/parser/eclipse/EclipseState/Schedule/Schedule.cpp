@@ -352,7 +352,7 @@ namespace Opm {
             const auto* currentWell = getWell(wellName);
             checkWELSPECSConsistency( *currentWell, keyword, recordNr);
 
-            addWellToGroup( *this->m_groups.at( groupName ), *this->m_wells.get( wellName ), currentStep);
+            addWellToGroup( this->m_groups.at( groupName ), *this->m_wells.get( wellName ), currentStep);
             if (handleGroupFromWELSPECS(groupName, newTree))
                 needNewTree = true;
 
@@ -970,7 +970,7 @@ namespace Opm {
     void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            auto& group = *this->m_groups.at( groupName );
+            auto& group = this->m_groups.at( groupName );
 
             {
                 Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record.getItem("PHASE").getTrimmedString(0) );
@@ -1000,7 +1000,7 @@ namespace Opm {
     void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            auto& group = *this->m_groups.at( groupName );
+            auto& group = this->m_groups.at( groupName );
             {
                 GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 group.setProductionControlMode( currentStep , controlMode );
@@ -1023,7 +1023,7 @@ namespace Opm {
     void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            auto& group = *this->m_groups.at( groupName );
+            auto& group = this->m_groups.at( groupName );
 
             group.setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
 
@@ -1442,8 +1442,7 @@ namespace Opm {
         if (!m_timeMap) {
             throw std::invalid_argument("TimeMap is null, can't add group named: " + groupName);
         }
-        GroupPtr group(new Group(groupName, m_timeMap , timeStep));
-        m_groups[ groupName ] = group;
+        m_groups.emplace( groupName, Group { groupName, m_timeMap, timeStep } );
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
@@ -1456,9 +1455,9 @@ namespace Opm {
     }
 
 
-    const Group* Schedule::getGroup(const std::string& groupName) const {
+    const Group& Schedule::getGroup(const std::string& groupName) const {
         if (hasGroup(groupName)) {
-            return m_groups.at(groupName).get();
+            return m_groups.at(groupName);
         } else
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
@@ -1467,7 +1466,7 @@ namespace Opm {
         std::vector< const Group* > groups;
 
         for( const auto& itr : m_groups )
-            groups.push_back( itr.second.get() );
+            groups.push_back( &itr.second );
 
         return groups;
     }
@@ -1475,7 +1474,7 @@ namespace Opm {
     void Schedule::addWellToGroup( Group& newGroup, Well& well , size_t timeStep) {
         const std::string currentGroupName = well.getGroupName(timeStep);
         if (currentGroupName != "") {
-            m_groups.at( currentGroupName )->delWell( timeStep, well.name() );
+            m_groups.at( currentGroupName ).delWell( timeStep, well.name() );
         }
         well.setGroupName(timeStep , newGroup.name());
         newGroup.addWell(timeStep , &well);

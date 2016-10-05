@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -41,7 +42,6 @@ namespace Opm
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
-    class Group;
     class ParseContext;
     class SCHEDULESection;
     class TimeMap;
@@ -82,7 +82,7 @@ namespace Opm
         const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;
         bool hasGroup(const std::string& groupName) const;
-        const Group* getGroup(const std::string& groupName) const;
+        const Group& getGroup(const std::string& groupName) const;
         std::vector< const Group* > getGroups() const;
         const Tuning& getTuning() const;
 
@@ -96,7 +96,7 @@ namespace Opm
     private:
         std::shared_ptr< TimeMap > m_timeMap;
         OrderedMap<std::shared_ptr< Well >> m_wells;
-        std::map<std::string , std::shared_ptr< Group >> m_groups;
+        std::map<std::string, Group > m_groups;
         DynamicState< GroupTree > m_rootGroupTree;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;

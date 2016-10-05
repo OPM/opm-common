@@ -486,30 +486,30 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     BOOST_CHECK( sched->hasGroup( "OP" ));
 
     {
-        auto* group = sched->getGroup("INJ");
-        BOOST_CHECK_EQUAL( Phase::WATER , group->getInjectionPhase( 3 ));
-        BOOST_CHECK_EQUAL( GroupInjection::VREP , group->getInjectionControlMode( 3 ));
-        BOOST_CHECK_CLOSE( 10/Metric::Time , group->getSurfaceMaxRate( 3 ) , 0.001);
-        BOOST_CHECK_CLOSE( 20/Metric::Time , group->getReservoirMaxRate( 3 ) , 0.001);
-        BOOST_CHECK_EQUAL( 0.75 , group->getTargetReinjectFraction( 3 ));
-        BOOST_CHECK_EQUAL( 0.95 , group->getTargetVoidReplacementFraction( 3 ));
+        auto& group = sched->getGroup("INJ");
+        BOOST_CHECK_EQUAL( Phase::WATER , group.getInjectionPhase( 3 ));
+        BOOST_CHECK_EQUAL( GroupInjection::VREP , group.getInjectionControlMode( 3 ));
+        BOOST_CHECK_CLOSE( 10/Metric::Time , group.getSurfaceMaxRate( 3 ) , 0.001);
+        BOOST_CHECK_CLOSE( 20/Metric::Time , group.getReservoirMaxRate( 3 ) , 0.001);
+        BOOST_CHECK_EQUAL( 0.75 , group.getTargetReinjectFraction( 3 ));
+        BOOST_CHECK_EQUAL( 0.95 , group.getTargetVoidReplacementFraction( 3 ));
 
-        BOOST_CHECK_EQUAL( Phase::OIL , group->getInjectionPhase( 6 ));
-        BOOST_CHECK_EQUAL( GroupInjection::RATE , group->getInjectionControlMode( 6 ));
-        BOOST_CHECK_CLOSE( 1000/Metric::Time , group->getSurfaceMaxRate( 6 ) , 0.0001);
+        BOOST_CHECK_EQUAL( Phase::OIL , group.getInjectionPhase( 6 ));
+        BOOST_CHECK_EQUAL( GroupInjection::RATE , group.getInjectionControlMode( 6 ));
+        BOOST_CHECK_CLOSE( 1000/Metric::Time , group.getSurfaceMaxRate( 6 ) , 0.0001);
 
-        BOOST_CHECK(group->isInjectionGroup(3));
+        BOOST_CHECK(group.isInjectionGroup(3));
     }
 
     {
-        auto* group = sched->getGroup("OP");
-        BOOST_CHECK_EQUAL( GroupProduction::ORAT , group->getProductionControlMode(3));
-        BOOST_CHECK_CLOSE( 10/Metric::Time , group->getOilTargetRate(3) , 0.001);
-        BOOST_CHECK_CLOSE( 20/Metric::Time , group->getWaterTargetRate(3) , 0.001);
-        BOOST_CHECK_CLOSE( 30/Metric::Time , group->getGasTargetRate(3) , 0.001);
-        BOOST_CHECK_CLOSE( 40/Metric::Time , group->getLiquidTargetRate(3) , 0.001);
+        auto& group = sched->getGroup("OP");
+        BOOST_CHECK_EQUAL( GroupProduction::ORAT , group.getProductionControlMode(3));
+        BOOST_CHECK_CLOSE( 10/Metric::Time , group.getOilTargetRate(3) , 0.001);
+        BOOST_CHECK_CLOSE( 20/Metric::Time , group.getWaterTargetRate(3) , 0.001);
+        BOOST_CHECK_CLOSE( 30/Metric::Time , group.getGasTargetRate(3) , 0.001);
+        BOOST_CHECK_CLOSE( 40/Metric::Time , group.getLiquidTargetRate(3) , 0.001);
 
-        BOOST_CHECK(group->isProductionGroup(3));
+        BOOST_CHECK(group.isProductionGroup(3));
     }
 
 }
@@ -523,24 +523,24 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     EclipseGrid grid(10,10,3);
     SchedulePtr sched( new Schedule(parseContext , grid , deck));
 
-    auto* group1 = sched->getGroup("GROUP1");
-    auto* group2 = sched->getGroup("GROUP2");
+    auto& group1 = sched->getGroup("GROUP1");
+    auto& group2 = sched->getGroup("GROUP2");
 
-    BOOST_CHECK( group1->hasBeenDefined(0) );
-    BOOST_CHECK_EQUAL(false , group2->hasBeenDefined(0));
-    BOOST_CHECK( group2->hasBeenDefined(1));
+    BOOST_CHECK( group1.hasBeenDefined(0) );
+    BOOST_CHECK_EQUAL(false , group2.hasBeenDefined(0));
+    BOOST_CHECK( group2.hasBeenDefined(1));
 
-    BOOST_CHECK_EQUAL( true , group1->hasWell("W_1" , 0));
-    BOOST_CHECK_EQUAL( true , group1->hasWell("W_2" , 0));
-    BOOST_CHECK_EQUAL( false, group2->hasWell("W_1" , 0));
-    BOOST_CHECK_EQUAL( false, group2->hasWell("W_2" , 0));
+    BOOST_CHECK_EQUAL( true , group1.hasWell("W_1" , 0));
+    BOOST_CHECK_EQUAL( true , group1.hasWell("W_2" , 0));
+    BOOST_CHECK_EQUAL( false, group2.hasWell("W_1" , 0));
+    BOOST_CHECK_EQUAL( false, group2.hasWell("W_2" , 0));
 
 
 
-    BOOST_CHECK_EQUAL( true  , group1->hasWell("W_1" , 1));
-    BOOST_CHECK_EQUAL( false , group1->hasWell("W_2" , 1));
-    BOOST_CHECK_EQUAL( false , group2->hasWell("W_1" , 1));
-    BOOST_CHECK_EQUAL( true  , group2->hasWell("W_2" , 1));
+    BOOST_CHECK_EQUAL( true  , group1.hasWell("W_1" , 1));
+    BOOST_CHECK_EQUAL( false , group1.hasWell("W_2" , 1));
+    BOOST_CHECK_EQUAL( false , group2.hasWell("W_1" , 1));
+    BOOST_CHECK_EQUAL( true  , group2.hasWell("W_2" , 1));
 }
 
 

@@ -289,9 +289,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     EclipseGrid grid(10,10,10);
     Opm::Schedule schedule(parseContext , grid, deck );
 
-    const auto* group1 = schedule.getGroup("PRODUC");
-    BOOST_CHECK_EQUAL(group1->getGroupEfficiencyFactor(0), 0.85);
-    BOOST_CHECK_EQUAL(group1->getTransferGroupEfficiencyFactor(0), true);
+    const auto& group1 = schedule.getGroup("PRODUC");
+    BOOST_CHECK_EQUAL(group1.getGroupEfficiencyFactor(0), 0.85);
+    BOOST_CHECK(group1.getTransferGroupEfficiencyFactor(0));
 }
 
 
