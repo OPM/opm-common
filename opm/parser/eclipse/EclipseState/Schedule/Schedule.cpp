@@ -77,6 +77,7 @@ namespace Opm {
                         const EclipseGrid& grid,
                         const Deck& deck ) :
         m_timeMap( std::make_shared< TimeMap>( deck )),
+        m_oilvaporizationproperties( m_timeMap, nullptr ),
         m_events( m_timeMap ),
         m_modifierDeck( m_timeMap, nullptr ),
         m_tuning( m_timeMap )
@@ -85,7 +86,6 @@ namespace Opm {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
-        initOilVaporization(getTimeMap());
 
         if (Section::hasSCHEDULE(deck)) {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
@@ -105,10 +105,6 @@ namespace Opm {
         return posixTime( this->m_timeMap->getEndTime() );
     }
 
-
-    void Schedule::initOilVaporization(TimeMapConstPtr timeMap) {
-        m_oilvaporizationproperties.reset(new DynamicState<OilVaporizationPropertiesPtr>(timeMap, OilVaporizationPropertiesPtr()));
-    }
 
     void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
         m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
@@ -1576,15 +1572,15 @@ namespace Opm {
     }
 
     OilVaporizationPropertiesConstPtr Schedule::getOilVaporizationProperties(size_t timestep){
-        return m_oilvaporizationproperties->get(timestep);
+        return m_oilvaporizationproperties.get(timestep);
     }
 
     void Schedule::setOilVaporizationProperties(const OilVaporizationPropertiesPtr vapor, size_t timestep){
-        m_oilvaporizationproperties->update(timestep, vapor);
+        m_oilvaporizationproperties.update(timestep, vapor);
     }
 
     bool Schedule::hasOilVaporizationProperties(){
-        return m_oilvaporizationproperties->size() > 0;
+        return m_oilvaporizationproperties.size() > 0;
     }
 
 }

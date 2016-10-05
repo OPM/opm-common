@@ -98,7 +98,7 @@ namespace Opm
         OrderedMap<std::shared_ptr< Well >> m_wells;
         std::map<std::string , std::shared_ptr< Group >> m_groups;
         std::shared_ptr<DynamicState<std::shared_ptr< GroupTree >> > m_rootGroupTree;
-        std::shared_ptr<DynamicState<std::shared_ptr< OilVaporizationProperties > > > m_oilvaporizationproperties;
+        DynamicState<std::shared_ptr< OilVaporizationProperties > > m_oilvaporizationproperties;
         Events m_events;
         DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
         Tuning m_tuning;
@@ -109,7 +109,6 @@ namespace Opm
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
         void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
-        void initOilVaporization(std::shared_ptr< const TimeMap > timeMap);
         void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& , const EclipseGrid& grid);
         bool handleGroupFromWELSPECS(const std::string& groupName, std::shared_ptr< GroupTree > newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
