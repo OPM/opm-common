@@ -514,11 +514,12 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     }
 
     if( type == ECL_SMSPEC_GROUP_VAR ) {
-        const auto* group = schedule.getGroup( name );
-        if( !group ) return {};
+        if( !schedule.hasGroup( name ) ) return {};
+
+        const auto& group = schedule.getGroup( name );
 
         std::vector< const Well* > wells;
-        for( const auto& pair : group->getWells( timestep ) )
+        for( const auto& pair : group.getWells( timestep ) )
             wells.push_back( pair.second );
 
         return wells;
