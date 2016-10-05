@@ -78,10 +78,10 @@ namespace Opm {
                         const Deck& deck ) :
         m_timeMap( std::make_shared< TimeMap>( deck )),
         m_events( m_timeMap ),
+        m_modifierDeck( m_timeMap, nullptr ),
         m_tuning( m_timeMap )
 
     {
-        m_modifierDeck.reset( new DynamicVector<std::shared_ptr<Deck> >( m_timeMap , std::shared_ptr<Deck>( 0 ) ));
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
         initRootGroupTreeNode(getTimeMap());
@@ -242,10 +242,10 @@ namespace Opm {
                       index currentstep; then we fetch the deck (newly created - or old)
                       from the container and add the keyword.
                     */
-                    if (!m_modifierDeck->iget(currentStep))
-                        m_modifierDeck->iset( currentStep , std::make_shared<Deck>( ));
+                    if (!m_modifierDeck.iget(currentStep))
+                        m_modifierDeck.iset( currentStep , std::make_shared<Deck>( ));
 
-                    m_modifierDeck->iget( currentStep )->addKeyword( keyword );
+                    m_modifierDeck.iget( currentStep )->addKeyword( keyword );
                     m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
 
                 } else {
@@ -1557,7 +1557,7 @@ namespace Opm {
     }
 
     std::shared_ptr<const Deck> Schedule::getModifierDeck(size_t timeStep) const {
-        return m_modifierDeck->iget( timeStep );
+        return m_modifierDeck.iget( timeStep );
     }
 
 

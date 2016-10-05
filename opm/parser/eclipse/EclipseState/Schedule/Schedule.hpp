@@ -25,6 +25,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -33,8 +34,6 @@
 
 namespace Opm
 {
-
-    template< typename > class DynamicVector;
 
     class Deck;
     class DeckKeyword;
@@ -101,7 +100,7 @@ namespace Opm
         std::shared_ptr<DynamicState<std::shared_ptr< GroupTree >> > m_rootGroupTree;
         std::shared_ptr<DynamicState<std::shared_ptr< OilVaporizationProperties > > > m_oilvaporizationproperties;
         Events m_events;
-        std::shared_ptr<DynamicVector<std::shared_ptr<Deck> > > m_modifierDeck;
+        DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
         Tuning m_tuning;
         MessageContainer m_messages;
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
