@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForT
     EclipseGrid grid(10,10,10);
     DeckPtr deck = createDeck();
     Schedule schedule(ParseContext() , grid , deck );
-    BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0)->getNode("FIELD")->name());
+    BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0).getNode("FIELD")->name());
 }
 
 static std::shared_ptr< Deck > deckWithGRUPTREE() {
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
     EclipseGrid grid(10,10,10);
     auto deck = deckWithGRUPTREE();
     Schedule schedule(ParseContext() , grid , deck );
-    GroupTreeNodePtr fieldNode = schedule.getGroupTree(0)->getNode("FIELD");
+    GroupTreeNodePtr fieldNode = schedule.getGroupTree(0).getNode("FIELD");
     BOOST_CHECK_EQUAL("FIELD", fieldNode->name());
     GroupTreeNodePtr FAREN = fieldNode->getChildGroup("FAREN");
     BOOST_CHECK(FAREN->hasChildGroup("BARNET"));

@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     EclipseGrid grid(10,10,3);
     SchedulePtr sched(new Schedule(parseContext , grid , deck));
 
-    GroupTreeNodePtr rootNode = sched->getGroupTree(0)->getNode("FIELD");
+    GroupTreeNodePtr rootNode = sched->getGroupTree(0).getNode("FIELD");
 
 
     BOOST_REQUIRE_EQUAL("FIELD", rootNode->name());
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) 
     SchedulePtr schedule(new Schedule(parseContext , grid , deck));
 
     // Time 0, only from WELSPECS
-    GroupTreeNodeConstPtr root = schedule->getGroupTree(0)->getNode("FIELD");
+    GroupTreeNodeConstPtr root = schedule->getGroupTree(0).getNode("FIELD");
 
     int iter_counted = 0;
 
@@ -374,7 +374,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) 
     // Time 1, a new group added in tree
     iter_counted = 0;
 
-    root = schedule->getGroupTree(1)->getNode("FIELD");
+    root = schedule->getGroupTree(1).getNode("FIELD");
     for (auto iter=root->begin(); iter != root->end(); ++iter) {
        iter_counted++;
     }
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     SchedulePtr schedule(new Schedule(parseContext , grid , deck));
 
     // Time 0, only from WELSPECS
-    GroupTreeNodePtr root0 = schedule->getGroupTree(0)->getNode("FIELD");
+    GroupTreeNodePtr root0 = schedule->getGroupTree(0).getNode("FIELD");
     BOOST_REQUIRE_EQUAL("FIELD", root0->name());
     BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
     GroupTreeNodePtr GROUP_BJARNE = root0->getChildGroup("GROUP_BJARNE");
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     BOOST_CHECK_EQUAL("GROUP_ODD", GROUP_ODD->name());
 
     // Time 1, now also from GRUPTREE
-    GroupTreeNodePtr root1 = schedule->getGroupTree(1)->getNode("FIELD");
+    GroupTreeNodePtr root1 = schedule->getGroupTree(1).getNode("FIELD");
     BOOST_REQUIRE_EQUAL("FIELD", root1->name());
     BOOST_CHECK(root1->hasChildGroup("GROUP_BJARNE"));
     GroupTreeNodePtr GROUP_BJARNE1 = root1->getChildGroup("GROUP_BJARNE");
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
 
 
     // Time , from  first GRUPTREE
-    GroupTreeNodePtr root0 = schedule->getGroupTree(0)->getNode("FIELD");
+    GroupTreeNodePtr root0 = schedule->getGroupTree(0).getNode("FIELD");
     BOOST_REQUIRE_EQUAL("FIELD", root0->name());
     BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
     GroupTreeNodePtr GROUP_BJARNE0 = root0->getChildGroup("GROUP_BJARNE");
@@ -467,8 +467,8 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
     EclipseGrid grid(10,10,3);
     SchedulePtr sched(new Schedule(parseContext , grid , deck));
 
-    GroupTreePtr rootNode = sched->getGroupTree(0);
-    rootNode->printTree(std::cout);
+    const auto& rootNode = sched->getGroupTree(0);
+    rootNode.printTree(std::cout);
 
 }
 

@@ -77,6 +77,7 @@ namespace Opm {
                         const EclipseGrid& grid,
                         const Deck& deck ) :
         m_timeMap( std::make_shared< TimeMap>( deck )),
+        m_rootGroupTree( m_timeMap, GroupTree{} ),
         m_oilvaporizationproperties( m_timeMap, nullptr ),
         m_events( m_timeMap ),
         m_modifierDeck( m_timeMap, nullptr ),
@@ -85,7 +86,6 @@ namespace Opm {
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
-        initRootGroupTreeNode(getTimeMap());
 
         if (Section::hasSCHEDULE(deck)) {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
@@ -104,12 +104,6 @@ namespace Opm {
     time_t Schedule::posixEndTime() const {
         return posixTime( this->m_timeMap->getEndTime() );
     }
-
-
-    void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
-        m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
-    }
-
 
     void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid) {
         /*
@@ -271,11 +265,11 @@ namespace Opm {
     }
 
 
-    bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const {
+    bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const {
         bool treeUpdated = false;
-        if (!newTree->getNode(groupName)) {
+        if (!newTree.getNode(groupName)) {
             treeUpdated = true;
-            newTree->updateTree(groupName);
+            newTree.updateTree(groupName);
         }
         return treeUpdated;
     }
@@ -313,7 +307,7 @@ namespace Opm {
                                    size_t index,
                                    size_t currentStep ) {
         bool needNewTree = false;
-        GroupTreePtr newTree = m_rootGroupTree->get(currentStep)->deepCopy();
+        auto newTree = m_rootGroupTree.get(currentStep);
 
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
             auto itr = section.begin() + index;
@@ -367,7 +361,7 @@ namespace Opm {
         }
 
         if (needNewTree) {
-            m_rootGroupTree->update(currentStep, newTree);
+            m_rootGroupTree.update(currentStep, newTree);
             m_events.addEvent( ScheduleEvents::GROUP_CHANGE , currentStep);
         }
     }
@@ -1236,12 +1230,12 @@ namespace Opm {
     }
 
     void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep) {
-        GroupTreePtr currentTree = m_rootGroupTree->get(currentStep);
-        GroupTreePtr newTree = currentTree->deepCopy();
+        const auto& currentTree = m_rootGroupTree.get(currentStep);
+        auto newTree = currentTree;
         for( const auto& record : keyword ) {
             const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
             const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
-            newTree->updateTree(childName, parentName);
+            newTree.updateTree(childName, parentName);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep );
@@ -1249,7 +1243,7 @@ namespace Opm {
             if (!hasGroup(childName))
                 addGroup( childName , currentStep );
         }
-        m_rootGroupTree->update(currentStep, newTree);
+        m_rootGroupTree.update(currentStep, newTree);
     }
 
     void Schedule::handleWRFT( const DeckKeyword& keyword, size_t currentStep) {
@@ -1328,8 +1322,8 @@ namespace Opm {
         return m_timeMap;
     }
 
-    GroupTreePtr Schedule::getGroupTree(size_t timeStep) const {
-        return m_rootGroupTree->get(timeStep);
+    const GroupTree& Schedule::getGroupTree(size_t timeStep) const {
+        return m_rootGroupTree.get(timeStep);
     }
 
     void Schedule::addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder) {

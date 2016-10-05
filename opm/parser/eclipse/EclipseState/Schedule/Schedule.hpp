@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
@@ -40,7 +41,6 @@ namespace Opm
     class DeckRecord;
     class EclipseGrid;
     class Group;
-    class GroupTree;
     class OilVaporizationProperties;
     class ParseContext;
     class SCHEDULESection;
@@ -79,7 +79,7 @@ namespace Opm
         std::vector< const Well* > getWellsMatching( const std::string& ) const;
         std::shared_ptr< const OilVaporizationProperties > getOilVaporizationProperties(size_t timestep);
 
-        std::shared_ptr< GroupTree > getGroupTree(size_t t) const;
+        const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;
         bool hasGroup(const std::string& groupName) const;
         const Group* getGroup(const std::string& groupName) const;
@@ -97,7 +97,7 @@ namespace Opm
         std::shared_ptr< TimeMap > m_timeMap;
         OrderedMap<std::shared_ptr< Well >> m_wells;
         std::map<std::string , std::shared_ptr< Group >> m_groups;
-        std::shared_ptr<DynamicState<std::shared_ptr< GroupTree >> > m_rootGroupTree;
+        DynamicState< GroupTree > m_rootGroupTree;
         DynamicState<std::shared_ptr< OilVaporizationProperties > > m_oilvaporizationproperties;
         Events m_events;
         DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
@@ -108,9 +108,8 @@ namespace Opm
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
-        void initRootGroupTreeNode(std::shared_ptr< const TimeMap > timeMap);
         void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& , const EclipseGrid& grid);
-        bool handleGroupFromWELSPECS(const std::string& groupName, std::shared_ptr< GroupTree > newTree) const;
+        bool handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
         void handleCOMPORD(const ParseContext& parseContext, const DeckKeyword& compordKeyword, size_t currentStep);
