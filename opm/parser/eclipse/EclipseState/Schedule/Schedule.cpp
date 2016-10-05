@@ -78,7 +78,7 @@ namespace Opm {
                         const Deck& deck ) :
         m_timeMap( std::make_shared< TimeMap>( deck )),
         m_rootGroupTree( m_timeMap, GroupTree{} ),
-        m_oilvaporizationproperties( m_timeMap, nullptr ),
+        m_oilvaporizationproperties( m_timeMap, OilVaporizationProperties{} ),
         m_events( m_timeMap ),
         m_modifierDeck( m_timeMap, nullptr ),
         m_tuning( m_timeMap )
@@ -370,8 +370,8 @@ namespace Opm {
         for( const auto& record : keyword ) {
             double vap = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double density = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
-            OilVaporizationPropertiesPtr vappars = OilVaporizationProperties::createOilVaporizationPropertiesVAPPARS(vap, density);
-            setOilVaporizationProperties(vappars, currentStep);
+            auto vappars = OilVaporizationProperties::createVAPPARS(vap, density);
+            this->m_oilvaporizationproperties.update( currentStep, vappars );
 
         }
     }
@@ -379,8 +379,8 @@ namespace Opm {
     void Schedule::handleDRVDT( const DeckKeyword& keyword, size_t currentStep){
         for( const auto& record : keyword ) {
             double max = record.getItem("DRVDT_MAX").getSIDouble(0);
-            OilVaporizationPropertiesPtr drvdt = OilVaporizationProperties::createOilVaporizationPropertiesDRVDT(max);
-            setOilVaporizationProperties(drvdt, currentStep);
+            auto drvdt = OilVaporizationProperties::createDRVDT(max);
+            this->m_oilvaporizationproperties.update( currentStep, drvdt );
 
         }
     }
@@ -390,8 +390,8 @@ namespace Opm {
         for( const auto& record : keyword ) {
             double max = record.getItem("DRSDT_MAX").getSIDouble(0);
             std::string option = record.getItem("Option").get< std::string >(0);
-            OilVaporizationPropertiesPtr drsdt = OilVaporizationProperties::createOilVaporizationPropertiesDRSDT(max, option);
-            setOilVaporizationProperties(drsdt, currentStep);
+            auto drsdt = OilVaporizationProperties::createDRSDT(max, option);
+            this->m_oilvaporizationproperties.update( currentStep, drsdt );
         }
     }
 
@@ -1565,12 +1565,8 @@ namespace Opm {
         return this->m_events;
     }
 
-    OilVaporizationPropertiesConstPtr Schedule::getOilVaporizationProperties(size_t timestep){
+    const OilVaporizationProperties& Schedule::getOilVaporizationProperties(size_t timestep){
         return m_oilvaporizationproperties.get(timestep);
-    }
-
-    void Schedule::setOilVaporizationProperties(const OilVaporizationPropertiesPtr vapor, size_t timestep){
-        m_oilvaporizationproperties.update(timestep, vapor);
     }
 
     bool Schedule::hasOilVaporizationProperties(){

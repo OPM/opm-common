@@ -1021,10 +1021,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
+    const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
 
-    BOOST_CHECK_EQUAL(true,   ovap->getOption());
-    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::DRSDT);
+    BOOST_CHECK_EQUAL(true,   ovap.getOption());
+    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::DRSDT);
 }
 
 
@@ -1053,10 +1053,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 2;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
-    double value =  ovap->getMaxDRVDT();
+    const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
+    double value =  ovap.getMaxDRVDT();
     BOOST_CHECK_EQUAL(1.1574074074074074e-06, value);
-    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::DRVDT);
+    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::DRVDT);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
@@ -1078,11 +1078,11 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
-    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::VAPPARS);
-    double vap1 =  ovap->getVap1();
+    const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
+    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::VAPPARS);
+    double vap1 =  ovap.getVap1();
     BOOST_CHECK_EQUAL(2, vap1);
-    double vap2 =  ovap->getVap2();
+    double vap2 =  ovap.getVap2();
     BOOST_CHECK_EQUAL(0.100, vap2);
 
 }

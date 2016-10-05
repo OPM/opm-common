@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
@@ -41,7 +42,6 @@ namespace Opm
     class DeckRecord;
     class EclipseGrid;
     class Group;
-    class OilVaporizationProperties;
     class ParseContext;
     class SCHEDULESection;
     class TimeMap;
@@ -77,7 +77,7 @@ namespace Opm
         std::vector< const Well* > getWells() const;
         std::vector< const Well* > getWells(size_t timeStep) const;
         std::vector< const Well* > getWellsMatching( const std::string& ) const;
-        std::shared_ptr< const OilVaporizationProperties > getOilVaporizationProperties(size_t timestep);
+        const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep);
 
         const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;
@@ -98,7 +98,7 @@ namespace Opm
         OrderedMap<std::shared_ptr< Well >> m_wells;
         std::map<std::string , std::shared_ptr< Group >> m_groups;
         DynamicState< GroupTree > m_rootGroupTree;
-        DynamicState<std::shared_ptr< OilVaporizationProperties > > m_oilvaporizationproperties;
+        DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
         DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
         Tuning m_tuning;
@@ -147,9 +147,6 @@ namespace Opm
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
         static double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem);
         static bool convertEclipseStringToBool(const std::string& eclipseString);
-
-
-        void setOilVaporizationProperties(const std::shared_ptr< OilVaporizationProperties > vapor, size_t timestep);
 
     };
     typedef std::shared_ptr<Schedule> SchedulePtr;
