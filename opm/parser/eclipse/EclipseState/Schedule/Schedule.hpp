@@ -25,6 +25,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
@@ -39,7 +40,6 @@ namespace Opm
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
-    class Events;
     class Group;
     class GroupTree;
     class OilVaporizationProperties;
@@ -100,7 +100,7 @@ namespace Opm
         std::map<std::string , std::shared_ptr< Group >> m_groups;
         std::shared_ptr<DynamicState<std::shared_ptr< GroupTree >> > m_rootGroupTree;
         std::shared_ptr<DynamicState<std::shared_ptr< OilVaporizationProperties > > > m_oilvaporizationproperties;
-        std::shared_ptr<Events> m_events;
+        Events m_events;
         std::shared_ptr<DynamicVector<std::shared_ptr<Deck> > > m_modifierDeck;
         Tuning m_tuning;
         MessageContainer m_messages;

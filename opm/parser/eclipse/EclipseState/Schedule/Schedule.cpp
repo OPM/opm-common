@@ -77,9 +77,10 @@ namespace Opm {
                         const EclipseGrid& grid,
                         const Deck& deck ) :
         m_timeMap( std::make_shared< TimeMap>( deck )),
+        m_events( m_timeMap ),
         m_tuning( m_timeMap )
+
     {
-        m_events.reset(new Events(m_timeMap));
         m_modifierDeck.reset( new DynamicVector<std::shared_ptr<Deck> >( m_timeMap , std::shared_ptr<Deck>( 0 ) ));
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
@@ -245,7 +246,7 @@ namespace Opm {
                         m_modifierDeck->iset( currentStep , std::make_shared<Deck>( ));
 
                     m_modifierDeck->iget( currentStep )->addKeyword( keyword );
-                    m_events->addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
+                    m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
 
                 } else {
                     std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
@@ -371,7 +372,7 @@ namespace Opm {
 
         if (needNewTree) {
             m_rootGroupTree->update(currentStep, newTree);
-            m_events->addEvent( ScheduleEvents::GROUP_CHANGE , currentStep);
+            m_events.addEvent( ScheduleEvents::GROUP_CHANGE , currentStep);
         }
     }
 
@@ -470,7 +471,7 @@ namespace Opm {
                 }
                 updateWellStatus( *well , currentStep , status );
                 if (well->setProductionProperties(currentStep, properties))
-                    m_events->addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
+                    m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                 
                 if ( !well->getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
 
@@ -486,7 +487,7 @@ namespace Opm {
 
     void Schedule::updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status) {
         if( well.setStatus( reportStep, status ) )
-            m_events->addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
+            m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
     }
 
 
@@ -639,7 +640,7 @@ namespace Opm {
                 }
 
                 if (well->setInjectionProperties(currentStep, properties))
-                    m_events->addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 
                 if ( ! well->getAllowCrossFlow() && (properties.surfaceInjectionRate == 0) ) {
                     std::string msg =
@@ -736,7 +737,7 @@ namespace Opm {
             properties.predictionMode = false;
 
             if (well.setInjectionProperties(currentStep, properties))
-                m_events->addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 
             if ( ! well.getAllowCrossFlow() && (injectionRate == 0) ) {
                 std::string msg =
@@ -825,7 +826,7 @@ namespace Opm {
                     }
 
                     well->addCompletionSet(currentStep, newCompletionSet);
-                    m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
+                    m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
                     if (newCompletionSet->allCompletionsShut())
                         updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT);
 
@@ -1186,7 +1187,7 @@ namespace Opm {
                 updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT);
             }
         }
-        m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
+        m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
     }
 
     void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
@@ -1360,7 +1361,7 @@ namespace Opm {
         auto well = std::make_shared<Well>(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep,
                                            wellCompletionOrder, allowCrossFlow, automaticShutIn);
         m_wells.insert( wellName  , well);
-        m_events->addEvent( ScheduleEvents::NEW_WELL , timeStep );
+        m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
     }
 
     size_t Schedule::numWells() const {
@@ -1453,7 +1454,7 @@ namespace Opm {
         }
         GroupPtr group(new Group(groupName, m_timeMap , timeStep));
         m_groups[ groupName ] = group;
-        m_events->addEvent( ScheduleEvents::NEW_GROUP , timeStep );
+        m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
     size_t Schedule::numGroups() const {
@@ -1571,7 +1572,7 @@ namespace Opm {
 
 
     const Events& Schedule::getEvents() const {
-        return *m_events;
+        return this->m_events;
     }
 
     OilVaporizationPropertiesConstPtr Schedule::getOilVaporizationProperties(size_t timestep){
