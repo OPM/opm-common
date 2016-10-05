@@ -142,12 +142,12 @@ namespace Opm {
 
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
 
-        std::shared_ptr<DynamicState<bool> > m_isAvailableForGroupControl;
+        std::shared_ptr<DynamicState<int> > m_isAvailableForGroupControl;
         std::shared_ptr<DynamicState<double> > m_guideRate;
         std::shared_ptr<DynamicState<GuideRate::GuideRatePhaseEnum> > m_guideRatePhase;
         std::shared_ptr<DynamicState<double> > m_guideRateScalingFactor;
 
-        std::shared_ptr<DynamicState<bool> > m_isProducer;
+        std::shared_ptr<DynamicState<int> > m_isProducer;
         std::shared_ptr<DynamicState<std::shared_ptr< const CompletionSet >> > m_completions;
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
@@ -155,8 +155,8 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellEconProductionLimits> > m_econproductionlimits;
         std::shared_ptr<DynamicState<double> > m_solventFraction;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
-        std::shared_ptr<DynamicState<bool> > m_rft;
-        std::shared_ptr<DynamicState<bool> > m_plt;
+        std::shared_ptr<DynamicState<int> > m_rft;
+        std::shared_ptr<DynamicState<int> > m_plt;
 
         // WELSPECS data - assumes this is not dynamic
 

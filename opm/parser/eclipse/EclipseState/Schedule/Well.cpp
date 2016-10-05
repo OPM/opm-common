@@ -38,11 +38,11 @@ namespace Opm {
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
         : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::SHUT)),
-          m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
+          m_isAvailableForGroupControl(new DynamicState<int>(timeMap, true)),
           m_guideRate(new DynamicState<double>(timeMap, -1.0)),
           m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(timeMap, GuideRate::UNDEFINED)),
           m_guideRateScalingFactor(new DynamicState<double>(timeMap, 1.0)),
-          m_isProducer(new DynamicState<bool>(timeMap, true)) ,
+          m_isProducer(new DynamicState<int>(timeMap, true)) ,
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
           m_productionProperties( new DynamicState<WellProductionProperties>(timeMap, WellProductionProperties() )),
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
@@ -50,8 +50,8 @@ namespace Opm {
           m_econproductionlimits( new DynamicState<WellEconProductionLimits>(timeMap, WellEconProductionLimits()) ),
           m_solventFraction( new DynamicState<double>(timeMap, 0.0 )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
-          m_rft( new DynamicState<bool>(timeMap,false)),
-          m_plt( new DynamicState<bool>(timeMap,false)),
+          m_rft( new DynamicState<int>(timeMap,false)),
+          m_plt( new DynamicState<int>(timeMap,false)),
           m_timeMap( timeMap ),
           m_headI(headI),
           m_headJ(headJ),
@@ -206,11 +206,11 @@ namespace Opm {
         return m_messages;
     }
     bool Well::isProducer(size_t timeStep) const {
-        return m_isProducer->get(timeStep);
+        return bool( m_isProducer->get(timeStep) );
     }
 
     bool Well::isInjector(size_t timeStep) const {
-        return !isProducer(timeStep);
+        return !bool( isProducer(timeStep) );
     }
 
     bool Well::isAvailableForGroupControl(size_t timeStep) const {
@@ -327,11 +327,11 @@ namespace Opm {
     }
 
     bool Well::getRFTActive(size_t time_step) const{
-        return m_rft->get(time_step);
+        return bool( m_rft->get(time_step) );
     }
 
     bool Well::getPLTActive(size_t time_step) const{
-     return m_plt->get(time_step);
+     return bool( m_plt->get(time_step) );
     }
     void Well::setPLTActive(size_t time_step, bool value){
         m_plt->update(time_step, value);

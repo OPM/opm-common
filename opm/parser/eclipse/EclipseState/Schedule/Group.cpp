@@ -40,7 +40,7 @@ namespace Opm {
             std::shared_ptr<DynamicState<double> > liquidTarget;
             std::shared_ptr<DynamicState<double> > reservoirVolumeTarget;
             std::shared_ptr<DynamicState<double> > efficiencyFactor;
-            std::shared_ptr<DynamicState<bool> >   transferEfficiencyFactor;
+            std::shared_ptr<DynamicState<int> >    transferEfficiencyFactor;
 
         };
 
@@ -53,7 +53,7 @@ namespace Opm {
             liquidTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
             reservoirVolumeTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
             efficiencyFactor( new DynamicState<double>(timeMap, INVALID_EFFICIENCY_FACTOR)),
-            transferEfficiencyFactor( new DynamicState<bool>(timeMap, false))
+            transferEfficiencyFactor( new DynamicState<int>(timeMap, false))
         {
 
         }
@@ -118,11 +118,11 @@ namespace Opm {
     }
 
     bool Group::isProductionGroup(size_t timeStep) const {
-        return m_isProductionGroup.get(timeStep);
+        return bool( m_isProductionGroup.get(timeStep) );
     }
 
     bool Group::isInjectionGroup(size_t timeStep) const {
-        return m_isInjectionGroup.get(timeStep);
+        return bool( m_isInjectionGroup.get(timeStep) );
     }
 
     void Group::setProductionGroup(size_t timeStep, bool isProductionGroup_) {
