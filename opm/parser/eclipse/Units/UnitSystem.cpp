@@ -488,6 +488,7 @@ namespace {
         system->addDimension("Salinity", Metric::Salinity);
         system->addDimension("Viscosity" , Metric::Viscosity);
         system->addDimension("Timestep"  , Metric::Timestep);
+        system->addDimension("SurfaceTension"  , Metric::SurfaceTension);
         system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
@@ -516,6 +517,7 @@ namespace {
         system->addDimension("Salinity", Field::Salinity);
         system->addDimension("Viscosity", Field::Viscosity);
         system->addDimension("Timestep", Field::Timestep);
+        system->addDimension("SurfaceTension"  , Field::SurfaceTension);
         system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
@@ -544,6 +546,7 @@ namespace {
         system->addDimension("Salinity", Lab::Salinity);
         system->addDimension("Viscosity", Lab::Viscosity);
         system->addDimension("Timestep", Lab::Timestep);
+        system->addDimension("SurfaceTension"  , Lab::SurfaceTension);
         system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
