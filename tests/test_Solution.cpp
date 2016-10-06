@@ -45,10 +45,9 @@ BOOST_AUTO_TEST_CASE(Create)
         BOOST_CHECK_EQUAL( c.size() , 1U );
         BOOST_CHECK_EQUAL( c.has("NAME") , true);
 
-        const auto& prop = c.get( "NAME" );
-        BOOST_CHECK_EQUAL( prop.name , "NAME");
+        BOOST_CHECK_EQUAL( c.find("NAME")->first, "NAME");
 
-        BOOST_CHECK_THROW( c.get("NO_NOT_THIS") , std::invalid_argument );
+        BOOST_CHECK_THROW( c.at("NotLikeThis") , std::out_of_range );
 
 
         c.insert( "NAME2" , UnitSystem::measure::identity, data , data::TargetType::RESTART_SOLUTION );
@@ -60,7 +59,7 @@ BOOST_AUTO_TEST_CASE(Create)
 
 
         for (const auto& prop : c)
-            actual.push_back( prop.name );
+            actual.push_back( prop.first );
 
         BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() , expected.end() , actual.begin() , actual.end() );
     }
@@ -71,18 +70,15 @@ BOOST_AUTO_TEST_CASE(Create2)
 {
 
     std::vector<double> data(100);
-    data::Solution c = {{"TRANX" , UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION},
-                  {"TRANY" , UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION},
-                  {"TRANZ" , UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION}};
+    data::Solution c = {
+        { "TRANX", { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } },
+        { "TRANY", { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } },
+        { "TRANZ", { UnitSystem::measure::transmissibility, data, data::TargetType::RESTART_SOLUTION } }
+    };
 
-
-    std::vector<data::CellData> vec;
-    for (const auto& elm : c)
-        vec.push_back( elm );
-
-    data::Solution c2(vec);
+    auto c2 = c;
     BOOST_CHECK_EQUAL( c2.size() , 3U );
-    BOOST_CHECK( c2.has("TRANX"));
+    BOOST_CHECK( c2.has("TRANX") );
 }
 
 

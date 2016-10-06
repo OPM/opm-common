@@ -58,9 +58,10 @@ static const int day = 24 * 60 * 60;
 
 static data::Solution make_solution( const EclipseGrid& grid ) {
     int numCells = grid.getCartesianSize();
-    data::Solution sol = {{"TEMP" , UnitSystem::measure::temperature , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION},
-                          {"SWAT" , UnitSystem::measure::identity , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION},
-                          {"SGAS" , UnitSystem::measure::identity , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION}};
+    data::Solution sol = {
+        {"TEMP" , { UnitSystem::measure::temperature, std::vector<double>( numCells ), data::TargetType::RESTART_SOLUTION} },
+        {"SWAT" , { UnitSystem::measure::identity,    std::vector<double>( numCells ), data::TargetType::RESTART_SOLUTION} },
+        {"SGAS" , { UnitSystem::measure::identity,    std::vector<double>( numCells ), data::TargetType::RESTART_SOLUTION} }};
 
 
     sol.data("TEMP").assign( numCells, 7.0 );

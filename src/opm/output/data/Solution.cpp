@@ -26,102 +26,51 @@
 namespace Opm {
 namespace data {
 
-    Solution::Solution( std::initializer_list<data::CellData> init_list )
-        : storage( init_list )
-    { }
+Solution::Solution( bool init_si ) : si( init_si ) {}
 
+bool Solution::has(const std::string& keyword) const {
+    return this->count( keyword ) > 0;
+}
 
-    Solution::Solution( std::vector<data::CellData> init_list )
-        : storage(std::move(init_list))
-    { }
+std::vector<double>& Solution::data(const std::string& keyword) {
+    return this->at( keyword ).data;
+}
 
+const std::vector<double>& Solution::data(const std::string& keyword) const {
+    return this->at( keyword ).data;
+}
 
-    Solution::Solution( bool init_si )
-        : si( init_si )
-    { }
+std::pair< Solution::iterator, bool > Solution::insert( std::string name,
+                                                        UnitSystem::measure m,
+                                                        std::vector< double > xs,
+                                                        TargetType type ) {
 
-    size_t Solution::size() const {
-        return this->storage.size();
+    return this->emplace( name, CellData{ m, std::move( xs ), type } );
+}
+
+void data::Solution::convertToSI( const UnitSystem& units ) {
+    if (this->si) return;
+
+    for( auto& elm : *this ) {
+        UnitSystem::measure dim = elm.second.dim;
+        if (dim != UnitSystem::measure::identity)
+            units.to_si( dim , elm.second.data );
     }
 
+    this->si = true;
+}
 
-    bool Solution::has(const std::string& keyword) const {
-        const auto iter = std::find_if( this->storage.begin() , this->storage.end() , [&keyword](const data::CellData& cd) { return cd.name == keyword; });
-        return (iter != this->storage.end());
+void data::Solution::convertFromSI( const UnitSystem& units ) {
+    if (!this->si) return;
+
+    for (auto& elm : *this ) {
+        UnitSystem::measure dim = elm.second.dim;
+        if (dim != UnitSystem::measure::identity)
+            units.from_si( dim , elm.second.data );
     }
 
-    void Solution::insert(const std::string& keyword, UnitSystem::measure dim, const std::vector<double>& data , TargetType target) {
-        data::CellData cd { keyword, dim , data , target };
-        this->insert( cd );
-    }
-
-
-    void Solution::insert(data::CellData cell_data) {
-        this->storage.push_back( std::move(cell_data) );
-    }
-
-
-    const data::CellData& Solution::get(const std::string& keyword) const {
-        const auto iter = std::find_if( this->storage.begin() , this->storage.end() , [&keyword](const data::CellData& cd) { return cd.name == keyword; });
-        if (iter == this->storage.end())
-            throw std::invalid_argument("No such keyword in container: " + keyword);
-        else
-            return *iter;
-    }
-
-    data::CellData& Solution::get(const std::string& keyword)  {
-        auto iter = std::find_if( this->storage.begin() , this->storage.end() , [&keyword](const data::CellData& cd) { return cd.name == keyword; });
-        if (iter == this->storage.end())
-            throw std::invalid_argument("No such keyword in container: " + keyword);
-        else
-            return *iter;
-    }
-
-    std::vector<double>& Solution::data(const std::string& keyword) {
-        auto& elm = this->get( keyword );
-        return elm.data;
-    }
-
-    const std::vector<double>& Solution::data(const std::string& keyword) const {
-        const auto& elm = this->get( keyword );
-        return elm.data;
-    }
-
-    void data::Solution::convertToSI( const UnitSystem& units ) {
-        if (this->si)
-            return;
-
-        for (auto& elm : this->storage) {
-            UnitSystem::measure dim = elm.dim;
-            if (dim != UnitSystem::measure::identity)
-                units.to_si( dim , elm.data );
-        }
-
-        this->si = true;
-    }
-
-    void data::Solution::convertFromSI( const UnitSystem& units ) {
-        if (!this->si)
-            return;
-
-        for (auto& elm : this->storage) {
-            UnitSystem::measure dim = elm.dim;
-            if (dim != UnitSystem::measure::identity)
-                units.from_si( dim , elm.data );
-        }
-
-        this->si = false;
-    }
-
-
-    std::vector<data::CellData>::const_iterator Solution::begin() const {
-        return this->storage.begin();
-    }
-
-
-    std::vector<data::CellData>::const_iterator Solution::end() const {
-        return this->storage.end();
-    }
+    this->si = false;
+}
 
 }
 }

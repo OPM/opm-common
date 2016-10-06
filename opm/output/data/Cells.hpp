@@ -42,7 +42,6 @@ namespace data {
      * Small struct that keeps track of data for output to restart/summary files.
      */
     struct CellData {
-        std::string name;          //< Name of the output field (will end up "verbatim" in output)
         UnitSystem::measure dim;   //< Dimension of the data to write
         std::vector<double> data;  //< The actual data itself
         TargetType target;

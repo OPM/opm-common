@@ -283,7 +283,7 @@ quantity rpr(const fn_args& args) {
 
     double RPR = 0;
 
-    const std::vector<double>& pressure = args.state.get( "PRESSURE" ).data;
+    const std::vector<double>& pressure = args.state.data( "PRESSURE" );
     const auto& cells = pair->second;
 
     for (auto cell_index : cells)

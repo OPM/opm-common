@@ -112,11 +112,11 @@ namespace Opm {
 
     using eclkw = ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free >;
     for (const auto&  elm : data) {
-        if (elm.target == data::TargetType::RESTART_SOLUTION) {
-            eclkw kw( ecl_kw_alloc( elm.name.c_str() , nactive, ECL_FLOAT_TYPE ) );
+        if (elm.second.target == data::TargetType::RESTART_SOLUTION) {
+            eclkw kw( ecl_kw_alloc( elm.first.c_str() , nactive, ECL_FLOAT_TYPE ) );
 
             for( int i = 0; i < nactive; i++ )
-                ecl_kw_iset_float( kw.get(), i, elm.data[ i ] );
+                ecl_kw_iset_float( kw.get(), i, elm.second.data[ i ] );
 
             ecl_rst_file_add_kw( rst_file, kw.get() );
         }

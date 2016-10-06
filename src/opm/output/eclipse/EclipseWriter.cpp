@@ -282,8 +282,8 @@ public:
     template<typename T>
     void addFromCells(const data::Solution& solution) {
         for (const auto& elm: solution) {
-            if (elm.target == data::TargetType::RESTART_SOLUTION)
-                this->add( ERT::EclKW<T>(elm.name , elm.data ));
+            if (elm.second.target == data::TargetType::RESTART_SOLUTION)
+                this->add( ERT::EclKW<T>(elm.first, elm.second.data ));
         }
     }
 
@@ -345,9 +345,9 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
                          const data::Solution& cells) {
 
     using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
-    const std::vector<double>& pressure = cells.get("PRESSURE").data;
-    const std::vector<double>& swat = cells.get("SWAT").data;
-    const std::vector<double>& sgas = cells.get("SGAS").data;
+    const std::vector<double>& pressure = cells.data("PRESSURE");
+    const std::vector<double>& swat = cells.data("SWAT");
+    const std::vector<double>& sgas = cells.data("SGAS");
 
     for( const auto& well : wells ) {
         if( !( well->getRFTActive( report_step )
@@ -515,8 +515,8 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
     // Write properties which have been initialized by the simulator.
     {
         for (const auto& prop : simProps) {
-            auto ecl_data = grid.compressedVector( prop.data );
-            writeKeyword( fortio, prop.name, ecl_data );
+            auto ecl_data = grid.compressedVector( prop.second.data );
+            writeKeyword( fortio, prop.first, ecl_data );
         }
     }
 
@@ -721,9 +721,9 @@ void EclipseWriter::writeTimeStep(int report_step,
                         auto ecl_data = grid.compressedVector( prop.second.data );
 
                         if (write_float)
-                            sol.add( ERT::EclKW<float>(prop.name , ecl_data));
+                            sol.add( ERT::EclKW<float>(prop.first, ecl_data));
                         else
-                            sol.add( ERT::EclKW<double>(prop.name , ecl_data));
+                            sol.add( ERT::EclKW<double>(prop.first, ecl_data));
                     }
                 }
             }

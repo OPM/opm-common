@@ -176,7 +176,7 @@ void checkInitFile( const Deck& deck, const data::Solution& simProps) {
     BOOST_CHECK( ecl_file_has_kw( initFile.get() , "SATNUM" ));
 
     for (const auto& prop : simProps) {
-        BOOST_CHECK( ecl_file_has_kw( initFile.get() , prop.name.c_str()) );
+        BOOST_CHECK( ecl_file_has_kw( initFile.get() , prop.first.c_str()) );
     }
 }
 
@@ -279,14 +279,16 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
 
         EclipseWriter eclWriter( es, eclGrid );
 
+        using measure = UnitSystem::measure;
+        using TargetType = data::TargetType;
         auto start_time = ecl_util_make_date( 10, 10, 2008 );
         std::vector<double> tranx(3*3*3);
         std::vector<double> trany(3*3*3);
         std::vector<double> tranz(3*3*3);
-        data::Solution eGridProps{
-                    {"TRANX" , UnitSystem::measure::transmissibility, tranx, data::TargetType::INIT},
-                    {"TRANY" , UnitSystem::measure::transmissibility, trany, data::TargetType::INIT},
-                    {"TRANZ" , UnitSystem::measure::transmissibility, tranz, data::TargetType::INIT}
+        data::Solution eGridProps {
+            { "TRANX", { measure::transmissibility, tranx, TargetType::INIT } },
+            { "TRANY", { measure::transmissibility, trany, TargetType::INIT } },
+            { "TRANZ", { measure::transmissibility, tranz, TargetType::INIT } },
         };
 
 
@@ -297,8 +299,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
 
         for( int i = first; i < last; ++i ) {
             data::Solution sol = createBlackoilState( i, 3 * 3 * 3 );
-            sol.insert({"KRO" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i), data::TargetType::RESTART_AUXILLARY});
-            sol.insert({"KRG" , UnitSystem::measure::identity , std::vector<double>(3*3*3 , i*10), data::TargetType::RESTART_AUXILLARY});
+            sol.insert("KRO", measure::identity , std::vector<double>(3*3*3 , i), TargetType::RESTART_AUXILLARY);
+            sol.insert("KRG", measure::identity , std::vector<double>(3*3*3 , i*10), TargetType::RESTART_AUXILLARY);
 
 
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );

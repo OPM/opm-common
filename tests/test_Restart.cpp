@@ -197,10 +197,16 @@ data::Wells mkWells() {
 }
 
 data::Solution mkSolution( int numCells ) {
-    data::Solution sol = {{"PRESSURE" , UnitSystem::measure::pressure , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION},
-                          {"TEMP" , UnitSystem::measure::temperature , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION},
-                          {"SWAT" , UnitSystem::measure::identity , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION},
-                          {"SGAS" , UnitSystem::measure::identity , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION}};
+
+    using measure = UnitSystem::measure;
+    using namespace data;
+
+    data::Solution sol = {
+        { "PRESSURE", { measure::pressure, std::vector<double>( numCells ), TargetType::RESTART_SOLUTION } },
+        { "TEMP", { measure::temperature,  std::vector<double>( numCells ), TargetType::RESTART_SOLUTION } },
+        { "SWAT", { measure::identity,     std::vector<double>( numCells ), TargetType::RESTART_SOLUTION } },
+        { "SGAS", { measure::identity,     std::vector<double>( numCells ), TargetType::RESTART_SOLUTION } }
+    };
 
 
     sol.data("PRESSURE").assign( numCells, 6.0 );
@@ -211,8 +217,8 @@ data::Solution mkSolution( int numCells ) {
     fun::iota rsi( 300, 300 + numCells );
     fun::iota rvi( 400, 400 + numCells );
 
-    sol.insert( "RS", UnitSystem::measure::identity, { rsi.begin(), rsi.end() } , data::TargetType::RESTART_SOLUTION );
-    sol.insert( "RV", UnitSystem::measure::identity, { rvi.begin(), rvi.end() } , data::TargetType::RESTART_SOLUTION );
+    sol.insert( "RS", measure::identity, { rsi.begin(), rsi.end() } , TargetType::RESTART_SOLUTION );
+    sol.insert( "RV", measure::identity, { rvi.begin(), rvi.end() } , TargetType::RESTART_SOLUTION );
 
     return sol;
 }
