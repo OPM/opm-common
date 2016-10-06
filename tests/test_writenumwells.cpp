@@ -145,10 +145,10 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
     int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
 
-    using ds = data::Solution::key;
     data::Solution solution;
-    solution.insert( ds::PRESSURE, std::vector< double >( num_cells, 1 ) );
-    solution.insert( ds::TEMP, std::vector< double >( num_cells, 1 ) );
+    solution.insert( "PRESSURE",UnitSystem::measure::pressure , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
+    solution.insert( "SWAT"    ,UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
+    solution.insert( "SGAS"    ,UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
     data::Wells wells { {},
         { 1.1, 1.2, 1.3 },
         { 2.1, 2.2, 2.3 },
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep){
         eclipseWriter.writeTimeStep( timestep,
-                                     false, 
+                                     false,
                                      timestep,
                                      solution,
                                      wells );

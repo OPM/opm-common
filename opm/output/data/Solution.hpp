@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_OUTPUT_CELL_DATA_CONTAINER_HPP
-#define OPM_OUTPUT_CELL_DATA_CONTAINER_HPP
+#ifndef OPM_OUTPUT_DATA_SOLUTION_HPP
+#define OPM_OUTPUT_DATA_SOLUTION_HPP
 
 #include <string>
 #include <vector>
@@ -29,52 +29,73 @@
 
 
 namespace Opm {
-
+namespace data {
     /*
-      The CelDataContainer class is a small class whose only purpose
+      The Solution class is a small class whose only purpose
       is to transport cell data, i.e. pressure, saturations and
       auxillary properties like fluid in place from the simulator to
       output layer.
 
-      The container consist of instances of struct data::CellData.
+      The container consist of instances of struct data::Cells.
     */
 
-    class CellDataContainer {
+    class Solution {
     public:
         /*
           The initializer_list based constructor can be used as:
 
-          CellDataContainer cd = {{ "PRESSURE" , UnitSystem::measure::pressure , pressure_data , true},
+          Solution cd = {{ "PRESSURE" , UnitSystem::measure::pressure , pressure_data , true},
                                   { "SWAT" ,  UnitSystem::measure::unity , swat_data , true}};
         */
-        CellDataContainer( std::initializer_list<data::CellData> init_list );
-        CellDataContainer( std::vector<data::CellData> init_list );
+        Solution( std::initializer_list<data::CellData> init_list );
+        Solution( std::vector<data::CellData> init_list );
+        Solution( bool si );
 
         /*
           Default constructor - create a valid empty container.
         */
-        CellDataContainer( ) = default;
+        Solution( ) = default;
 
         size_t size() const;
-        bool hasKeyword(const std::string& keyword) const;
-        const data::CellData& getKeyword(const std::string& keyword) const;
+        bool has(const std::string& keyword) const;
+
+        const data::CellData& get(const std::string& keyword) const;
+        data::CellData& get(const std::string& keyword);
+
+        std::vector<double>& data(const std::string& keyword);
+        const std::vector<double>& data(const std::string& keyword) const;
 
         /*
           Construct a struct data::CellData instance based on the
           input arguments and insert it in the container.
         */
-        void insert(const std::string& keyword, UnitSystem::measure dim, const std::vector<double>& data , bool enable_in_restart = true);
+        void insert(const std::string& keyword, UnitSystem::measure dim, const std::vector<double>& data , TargetType target);
         void insert(data::CellData cell_data);
 
+
+        /*
+          Will inplace convert all the data vectors back and forth
+          between SI and the unit system given units. The internal
+          member variable si will keep track of whether we are in SI
+          units or not.
+        */
+
+        void convertToSI( const UnitSystem& units );
+        void convertFromSI( const UnitSystem& units );
         /*
           Iterate over the struct data::CellData instances in the container.
         */
         std::vector<data::CellData>::const_iterator begin() const ;
         std::vector<data::CellData>::const_iterator end() const;
+
+        /* hack to keep matlab/vtk output support */
+        const SimulationDataContainer* sdc = nullptr;
     private:
-        std::vector<data::CellData> data;
+        bool si = true;
+        std::vector<data::CellData> storage;
     };
 
+}
 }
 
 

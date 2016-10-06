@@ -197,23 +197,22 @@ data::Wells mkWells() {
 }
 
 data::Solution mkSolution( int numCells ) {
-    using ds = data::Solution::key;
-    data::Solution sol;
+    data::Solution sol = {{"PRESSURE" , UnitSystem::measure::pressure , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION},
+                          {"TEMP" , UnitSystem::measure::temperature , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION},
+                          {"SWAT" , UnitSystem::measure::identity , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION},
+                          {"SGAS" , UnitSystem::measure::identity , std::vector<double>( numCells ) , data::TargetType::RESTART_SOLUTION}};
 
-    for( auto k : { ds::PRESSURE, ds::TEMP, ds::SWAT, ds::SGAS } ) {
-        sol.insert( k, std::vector< double >( numCells ) );
-    }
 
-    sol[ ds::PRESSURE ].assign( numCells, 6.0 );
-    sol[ ds::TEMP ].assign( numCells, 7.0 );
-    sol[ ds::SWAT ].assign( numCells, 8.0 );
-    sol[ ds::SGAS ].assign( numCells, 9.0 );
+    sol.data("PRESSURE").assign( numCells, 6.0 );
+    sol.data("TEMP").assign( numCells, 7.0 );
+    sol.data("SWAT").assign( numCells, 8.0 );
+    sol.data("SGAS").assign( numCells, 9.0 );
 
     fun::iota rsi( 300, 300 + numCells );
     fun::iota rvi( 400, 400 + numCells );
 
-    sol.insert( ds::RS, { rsi.begin(), rsi.end() } );
-    sol.insert( ds::RV, { rvi.begin(), rvi.end() } );
+    sol.insert( "RS", UnitSystem::measure::identity, { rsi.begin(), rsi.end() } , data::TargetType::RESTART_SOLUTION );
+    sol.insert( "RV", UnitSystem::measure::identity, { rvi.begin(), rvi.end() } , data::TargetType::RESTART_SOLUTION );
 
     return sol;
 }
@@ -257,14 +256,13 @@ std::pair< data::Solution, data::Wells > second_sim() {
 void compare( std::pair< data::Solution, data::Wells > fst,
               std::pair< data::Solution, data::Wells > snd ) {
 
-    using ds = data::Solution::key;
-    for( auto key : { ds::PRESSURE, ds::TEMP, ds::SWAT, ds::SGAS,
-                      ds::RS, ds::RV } ) {
+    for( auto key : { "PRESSURE", "TEMP", "SWAT", "SGAS",
+                      "RS", "RV" } ) {
 
-        auto first = fst.first[ key ].begin();
-        auto second = snd.first[ key ].begin();
+        auto first = fst.first.data( key ).begin();
+        auto second = snd.first.data( key ).begin();
 
-        for( ; first != fst.first[ key ].end(); ++first, ++second )
+        for( ; first != fst.first.data( key ).end(); ++first, ++second )
             BOOST_CHECK_CLOSE( *first, *second, 0.00001 );
     }
 

@@ -84,13 +84,13 @@ namespace Opm {
 
     {
       ecl_rsthead_type rsthead_data = {};
-      
+
       const int num_wells    = 0;
       const int niwelz       = 0;
       const int nzwelz       = 0;
       const int niconz       = 0;
       const int ncwmax       = 0;
-      
+
       rsthead_data.nx        = nx;
       rsthead_data.ny        = ny;
       rsthead_data.nz        = nz;
@@ -111,26 +111,15 @@ namespace Opm {
     ecl_rst_file_start_solution( rst_file );
 
     using eclkw = ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free >;
-    using ds = data::Solution::key;
+    for (const auto&  elm : data) {
+        if (elm.target == data::TargetType::RESTART_SOLUTION) {
+            eclkw kw( ecl_kw_alloc( elm.name.c_str() , nactive, ECL_FLOAT_TYPE ) );
 
-    if( data.has( ds::PRESSURE ) ) {
-        const auto& pressure = data[ ds::PRESSURE ];
+            for( int i = 0; i < nactive; i++ )
+                ecl_kw_iset_float( kw.get(), i, elm.data[ i ] );
 
-        eclkw kw( ecl_kw_alloc( "PRESSURE", nactive, ECL_FLOAT_TYPE ) );
-        for( int i = 0; i < nactive; i++ )
-            ecl_kw_iset_float( kw.get(), i, pressure[ i ] );
-
-        ecl_rst_file_add_kw( rst_file, kw.get() );
-    }
-
-    if( data.has( ds::SWAT ) ) {
-        const auto& swat = data[ ds::SWAT ];
-
-        eclkw kw( ecl_kw_alloc( "SWAT", nactive, ECL_FLOAT_TYPE ) );
-        for( int i = 0; i < nactive; i++ )
-            ecl_kw_iset_float( kw.get(), i, swat[ i ] );
-
-        ecl_rst_file_add_kw( rst_file, kw.get() );
+            ecl_rst_file_add_kw( rst_file, kw.get() );
+        }
     }
 
     ecl_rst_file_end_solution( rst_file );

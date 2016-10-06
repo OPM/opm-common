@@ -31,6 +31,7 @@
 
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/data/Cells.hpp>
+#include <opm/output/data/Solution.hpp>
 
 namespace Opm {
 
@@ -52,7 +53,7 @@ class Summary {
                            const EclipseState& es,
                            const std::unordered_map<int, std::vector<size_t>>& regionCells,
                            const data::Wells&,
-                           const data::Solution&);
+                           const data::Solution& );
         void write();
 
         ~Summary();

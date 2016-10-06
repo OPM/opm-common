@@ -1,4 +1,5 @@
 /*
+  Copyright (c) 2016 Statoil ASA
   Copyright (c) 2013-2015 Andreas Lauser
   Copyright (c) 2013 SINTEF ICT, Applied Mathematics.
   Copyright (c) 2013 Uni Research AS
@@ -279,30 +280,11 @@ public:
     }
 
     template<typename T>
-    void addFromCells(const data::Solution& cells) {
-        using dc = data::Solution::key;
-
-        this->add( ERT::EclKW<T>("PRESSURE", cells[ dc::PRESSURE ]));
-
-        if ( cells.has( dc::TEMP ))
-            this->add( ERT::EclKW<T>("TEMP", cells[ dc::TEMP ]) );
-
-        if( cells.has( dc::SWAT ) )
-            this->add( ERT::EclKW<T>( "SWAT", cells[ dc::SWAT ] ) );
-
-        if( cells.has( dc::SGAS ) )
-            this->add( ERT::EclKW<T>( "SGAS", cells[ dc::SGAS ] ) );
-
-        if (cells.has (dc::SSOL))
-            this->add (ERT::EclKW<T>("SSOL", cells[ dc::SSOL] ) );
-
-        // Write RS - Dissolved GOR
-        if( cells.has( dc::RS ) )
-            this->add( ERT::EclKW<T>("RS", cells[ dc::RS ] ) );
-
-        // Write RV - Volatilized oil/gas ratio
-        if( cells.has( dc::RV ) )
-            this->add( ERT::EclKW<T>("RV", cells[ dc::RV ] ) );
+    void addFromCells(const data::Solution& solution) {
+        for (const auto& elm: solution) {
+            if (elm.target == data::TargetType::RESTART_SOLUTION)
+                this->add( ERT::EclKW<T>(elm.name , elm.data ));
+        }
     }
 
     ecl_rst_file_type* ertHandle() { return this->restart.ertHandle(); }
@@ -332,9 +314,7 @@ class RFT {
                             time_t current_time,
                             double days,
                             ert_ecl_unit_enum,
-                            const std::vector< double >& pressure,
-                            const std::vector< double >& swat,
-                            const std::vector< double >& sgas );
+                            const data::Solution& cells);
     private:
         ERT::FortIO fortio;
 };
@@ -362,11 +342,12 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
                          time_t current_time,
                          double days,
                          ert_ecl_unit_enum unitsystem,
-                         const std::vector< double >& pressure,
-                         const std::vector< double >& swat,
-                         const std::vector< double >& sgas ) {
+                         const data::Solution& cells) {
 
     using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
+    const std::vector<double>& pressure = cells.get("PRESSURE").data;
+    const std::vector<double>& swat = cells.get("SWAT").data;
+    const std::vector<double>& sgas = cells.get("SGAS").data;
 
     for( const auto& well : wells ) {
         if( !( well->getRFTActive( report_step )
@@ -413,6 +394,8 @@ class EclipseWriter::Impl {
     public:
         Impl( std::shared_ptr< const EclipseState > es, EclipseGrid&& grid);
         Impl( std::shared_ptr< const EclipseState > es, const EclipseGrid& grid);
+        void writeINITFile( const data::Solution& simProps, const NNC& nnc) const;
+        void writeEGRIDFile( const NNC& nnc ) const;
 
         std::shared_ptr< const EclipseState > es;
         EclipseGrid grid;
@@ -457,15 +440,14 @@ EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
 }
 
 
-
-void EclipseWriter::writeINITFile(const CellDataContainer& simProps, const NNC& nnc) const {
-    const auto& es = *this->impl->es;
+void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const NNC& nnc) const {
+    const auto& es = *this->es;
     const auto& units = es.getUnits();
-    const EclipseGrid& grid = this->impl->grid;
+    const EclipseGrid& grid = this->grid;
     const IOConfig& ioConfig = es.cfg().io();
 
-    FileName  initFile( this->impl->outputDir,
-                        this->impl->baseName,
+    FileName  initFile( this->outputDir,
+                        this->baseName,
                         ECL_INIT_FILE,
                         ioConfig.getFMTOUT() );
 
@@ -494,8 +476,8 @@ void EclipseWriter::writeINITFile(const CellDataContainer& simProps, const NNC& 
         ecl_init_file_fwrite_header( fortio.get(),
                                      grid.c_ptr(),
                                      NULL,
-                                     this->impl->ert_phase_mask,
-                                     this->impl->sim_start_time);
+                                     this->ert_phase_mask,
+                                     this->sim_start_time);
 
         convertFromSiTo( ecl_data,
                          units,
@@ -534,11 +516,6 @@ void EclipseWriter::writeINITFile(const CellDataContainer& simProps, const NNC& 
     {
         for (const auto& prop : simProps) {
             auto ecl_data = grid.compressedVector( prop.data );
-
-            convertFromSiTo( ecl_data,
-                             units,
-                             prop.dim );
-
             writeKeyword( fortio, prop.name, ecl_data );
         }
     }
@@ -576,17 +553,17 @@ void EclipseWriter::writeINITFile(const CellDataContainer& simProps, const NNC& 
 }
 
 
-void EclipseWriter::writeEGRIDFile( const NNC& nnc ) const {
-    const auto& es = *this->impl->es;
+void EclipseWriter::Impl::writeEGRIDFile( const NNC& nnc ) const {
+    const auto& es = *this->es;
     const auto& ioConfig = es.getIOConfig();
 
-    FileName  egridFile( this->impl->outputDir,
-                         this->impl->baseName,
+    FileName  egridFile( this->outputDir,
+                         this->baseName,
                          ECL_EGRID_FILE,
                          ioConfig->getFMTOUT() );
 
     {
-        const EclipseGrid& grid = this->impl->grid;
+        const EclipseGrid& grid = this->grid;
         int idx = 0;
         auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
         for (const NNCdata& n : nnc.nncdata())
@@ -597,7 +574,7 @@ void EclipseWriter::writeEGRIDFile( const NNC& nnc ) const {
 }
 
 
-void EclipseWriter::writeInitAndEgrid(const CellDataContainer& simProps, const NNC& nnc) {
+void EclipseWriter::writeInitAndEgrid(data::Solution simProps, const NNC& nnc) {
     if( !this->impl->output_enabled )
         return;
 
@@ -605,11 +582,12 @@ void EclipseWriter::writeInitAndEgrid(const CellDataContainer& simProps, const N
         const auto& es = *this->impl->es;
         const IOConfig& ioConfig = es.cfg().io();
 
+        simProps.convertFromSI( es.getUnits() );
         if( ioConfig.getWriteINITFile() )
-            writeINITFile( simProps , nnc );
+            this->impl->writeINITFile( simProps , nnc );
 
         if( ioConfig.getWriteEGRIDFile( ) )
-            writeEGRIDFile( nnc );
+            this->impl->writeEGRIDFile( nnc );
     }
 }
 
@@ -620,14 +598,12 @@ void EclipseWriter::writeTimeStep(int report_step,
                                   double secs_elapsed,
                                   data::Solution cells,
                                   data::Wells wells,
-                                  const CellDataContainer& simProps,
                                   bool  write_float)
 {
 
     if( !this->impl->output_enabled )
         return;
 
-    using dc = data::Solution::key;
 
     time_t current_posix_time = this->impl->sim_start_time + secs_elapsed;
     const auto& es = *this->impl->es;
@@ -646,12 +622,7 @@ void EclipseWriter::writeTimeStep(int report_step,
        the conversion is done once here - and not closer to the actual
        use-site.
     */
-    convertFromSiTo( cells[ dc::PRESSURE ], units, UnitSystem::measure::pressure );
-    if ( cells.has( dc::TEMP ))
-        convertFromSiTo( cells[ dc::TEMP ],
-                         units,
-                         UnitSystem::measure::temperature );
-
+    cells.convertFromSI( units );
 
     // Write restart file
     if(!isSubstep && restart.getWriteRestartFile(report_step))
@@ -737,12 +708,13 @@ void EclipseWriter::writeTimeStep(int report_step,
 
         */
         {
-            Solution sol(restartHandle);
+            Solution sol(restartHandle);  //Type solution: confusing
 
             if (write_float)
                 sol.addFromCells<float>( cells );
             else
                 sol.addFromCells<double>( cells );
+            // MIssing a ENDSOL output.
             {
                 for (const auto& prop : cells) {
                     if (prop.second.target == data::TargetType::RESTART_AUXILLARY) {
@@ -765,9 +737,7 @@ void EclipseWriter::writeTimeStep(int report_step,
                                    current_posix_time,
                                    days,
                                    to_ert_unit( unit_type ),
-                                   cells[ dc::PRESSURE ],
-                                   cells[ dc::SWAT ],
-                                   cells[ dc::SGAS ] );
+                                   cells );
 
     if( isSubstep ) return;
 

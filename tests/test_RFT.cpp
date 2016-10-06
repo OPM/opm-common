@@ -95,9 +95,9 @@ data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
         pressure[ i ] = timeStepIdx * 1e5 + 1e4 + i;
 
     data::Solution sol;
-    sol.insert( data::Solution::key::PRESSURE, pressure );
-    sol.insert( data::Solution::key::SWAT, swat );
-    sol.insert( data::Solution::key::SGAS, sgas );
+    sol.insert( "PRESSURE", UnitSystem::measure::pressure, pressure , data::TargetType::RESTART_SOLUTION );
+    sol.insert( "SWAT", UnitSystem::measure::identity, swat , data::TargetType::RESTART_SOLUTION );
+    sol.insert( "SGAS", UnitSystem::measure::identity, sgas, data::TargetType::RESTART_SOLUTION );
     return sol;
 }
 

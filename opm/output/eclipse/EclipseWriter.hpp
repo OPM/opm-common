@@ -30,7 +30,7 @@
 #include <memory>
 
 #include <opm/output/data/Cells.hpp>
-#include <opm/output/data/CellDataContainer.hpp>
+#include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 
 namespace Opm {
@@ -60,7 +60,7 @@ public:
     ///
     /// - The NNC argument is distributed between the EGRID and INIT
     ///   files.
-    void writeInitAndEgrid(const CellDataContainer& simProps = {}, const NNC& nnc = NNC());
+    void writeInitAndEgrid(data::Solution simProps = {}, const NNC& nnc = NNC());
 
     /*!
      * \brief Write a reservoir state and summary information to disk.
@@ -92,17 +92,12 @@ public:
                         double seconds_elapsed,
                         data::Solution,
                         data::Wells,
-                        const CellDataContainer& simProps = {},
                         bool write_float = true);
 
     EclipseWriter( const EclipseWriter& ) = delete;
     ~EclipseWriter();
 
 private:
-    void writeINITFile( const CellDataContainer& simProps, const NNC& nnc) const;
-    void writeEGRIDFile( const NNC& nnc) const;
-    void init();
-
     class Impl;
     std::unique_ptr< Impl > impl;
 

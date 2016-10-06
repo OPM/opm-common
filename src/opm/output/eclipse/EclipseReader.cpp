@@ -74,39 +74,49 @@ namespace {
                                          + ", mismatched number of cells" );
         }
 
-        using ds = data::Solution::key;
         data::Solution sol;
-        sol.insert( ds::PRESSURE, double_vector( pres ));
-        sol.insert( ds::TEMP,     double_vector( temp ));
-        sol.insert( ds::SWAT,     double_vector( swat ));
-        sol.insert( ds::SGAS,     double_vector( sgas ));
 
-        const auto apply_pressure = [&]( double x ) {
-            return units.to_si( UnitSystem::measure::pressure, x );
-        };
+        {
+            const auto apply_pressure = [&]( double x ) {
+                return units.to_si( UnitSystem::measure::pressure, x );
+            };
 
-        const auto apply_temperature = [=]( double x ) {
-            return units.to_si( UnitSystem::measure::temperature, x );
-        };
+            const auto apply_temperature = [=]( double x ) {
+                return units.to_si( UnitSystem::measure::temperature, x );
+            };
 
-        std::transform( sol[ ds::PRESSURE ].begin(), sol[ ds::PRESSURE ].end(),
-                        sol[ ds::PRESSURE ].begin(), apply_pressure );
-        std::transform( sol[ ds::TEMP ].begin(), sol[ ds::TEMP ].end(),
-                        sol[ ds::TEMP ].begin(), apply_temperature );
+            std::vector<double> pressure = double_vector( pres );
+            std::vector<double> temperature = double_vector( temp );
 
-        /* optional keywords */
-        if( ecl_file_has_kw( file, "RS" ) ) {
-            const ecl_kw_type * rs = ecl_file_iget_named_kw( file , "RS" , 0);
-            sol.insert( ds::RS, double_vector( rs ) );
-        }
 
-        if( ecl_file_has_kw( file, "RV" ) ) {
-            const ecl_kw_type * rv = ecl_file_iget_named_kw( file , "RV" , 0);
-            sol.insert( ds::RV, double_vector( rv ) );
+            std::transform( pressure.begin(), pressure.end(),
+                            pressure.begin(), apply_pressure );
+            std::transform( temperature.begin(), temperature.end(),
+                            temperature.begin(), apply_temperature );
+
+
+
+            sol.insert( "PRESSURE" , UnitSystem::measure::pressure , pressure , data::TargetType::RESTART_SOLUTION );
+            sol.insert( "TEMP" , UnitSystem::measure::temperature , temperature , data::TargetType::RESTART_SOLUTION );
+            sol.insert( "SWAT" , UnitSystem::measure::identity   , double_vector( swat ) , data::TargetType::RESTART_SOLUTION );
+            sol.insert( "SGAS" , UnitSystem::measure::identity , double_vector( sgas ) , data::TargetType::RESTART_SOLUTION );
+
+            /* optional keywords */
+            if( ecl_file_has_kw( file, "RS" ) ) {
+                const ecl_kw_type * rs = ecl_file_iget_named_kw( file , "RS" , 0);
+                sol.insert( "RS" , UnitSystem::measure::identity , double_vector( rs ) , data::TargetType::RESTART_SOLUTION );
+            }
+
+            if( ecl_file_has_kw( file, "RV" ) ) {
+                const ecl_kw_type * rv = ecl_file_iget_named_kw( file , "RV" , 0);
+                sol.insert( "RV" , UnitSystem::measure::identity , double_vector( rv ) , data::TargetType::RESTART_SOLUTION );
+            }
         }
 
         return sol;
     }
+
+    
 
     inline data::Wells restoreOPM_XWEL( ecl_file_type* file,
                                         int num_wells,
