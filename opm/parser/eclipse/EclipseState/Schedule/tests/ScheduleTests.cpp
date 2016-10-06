@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForT
     EclipseGrid grid(10,10,10);
     DeckPtr deck = createDeck();
     Schedule schedule(ParseContext() , grid , deck );
-    BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0)->getNode("FIELD")->name());
+    BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0).getNode("FIELD")->name());
 }
 
 static std::shared_ptr< Deck > deckWithGRUPTREE() {
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
     EclipseGrid grid(10,10,10);
     auto deck = deckWithGRUPTREE();
     Schedule schedule(ParseContext() , grid , deck );
-    GroupTreeNodePtr fieldNode = schedule.getGroupTree(0)->getNode("FIELD");
+    GroupTreeNodePtr fieldNode = schedule.getGroupTree(0).getNode("FIELD");
     BOOST_CHECK_EQUAL("FIELD", fieldNode->name());
     GroupTreeNodePtr FAREN = fieldNode->getChildGroup("FAREN");
     BOOST_CHECK(FAREN->hasChildGroup("BARNET"));
@@ -1021,10 +1021,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
+    const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
 
-    BOOST_CHECK_EQUAL(true,   ovap->getOption());
-    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::DRSDT);
+    BOOST_CHECK_EQUAL(true,   ovap.getOption());
+    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::DRSDT);
 }
 
 
@@ -1053,10 +1053,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 2;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
-    double value =  ovap->getMaxDRVDT();
+    const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
+    double value =  ovap.getMaxDRVDT();
     BOOST_CHECK_EQUAL(1.1574074074074074e-06, value);
-    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::DRVDT);
+    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::DRVDT);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
@@ -1078,11 +1078,11 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
-    OilVaporizationPropertiesConstPtr ovap = schedule.getOilVaporizationProperties(currentStep);
-    BOOST_CHECK_EQUAL(ovap->getType(), Opm::OilVaporizationEnum::VAPPARS);
-    double vap1 =  ovap->getVap1();
+    const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
+    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::VAPPARS);
+    double vap1 =  ovap.getVap1();
     BOOST_CHECK_EQUAL(2, vap1);
-    double vap2 =  ovap->getVap2();
+    double vap2 =  ovap.getVap2();
     BOOST_CHECK_EQUAL(0.100, vap2);
 
 }

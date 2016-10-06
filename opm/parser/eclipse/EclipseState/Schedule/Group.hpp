@@ -114,8 +114,8 @@ namespace Opm {
         std::shared_ptr<GroupInjection::InjectionData> m_injection;
         std::shared_ptr<GroupProduction::ProductionData> m_production;
         std::shared_ptr<DynamicState<std::shared_ptr< const WellSet >> > m_wells;
-        DynamicState<bool> m_isProductionGroup;
-        DynamicState<bool> m_isInjectionGroup;
+        DynamicState<int> m_isProductionGroup;
+        DynamicState<int> m_isInjectionGroup;
     };
     typedef std::shared_ptr<Group> GroupPtr;
     typedef std::shared_ptr<const Group> GroupConstPtr;

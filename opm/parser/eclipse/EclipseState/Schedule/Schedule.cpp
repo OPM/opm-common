@@ -76,15 +76,16 @@ namespace Opm {
     Schedule::Schedule( const ParseContext& parseContext,
                         const EclipseGrid& grid,
                         const Deck& deck ) :
-        m_timeMap( std::make_shared< TimeMap>( deck ))
+        m_timeMap( std::make_shared< TimeMap>( deck )),
+        m_rootGroupTree( m_timeMap, GroupTree{} ),
+        m_oilvaporizationproperties( m_timeMap, OilVaporizationProperties{} ),
+        m_events( m_timeMap ),
+        m_modifierDeck( m_timeMap, nullptr ),
+        m_tuning( m_timeMap )
+
     {
-        m_tuning.reset(new Tuning(m_timeMap));
-        m_events.reset(new Events(m_timeMap));
-        m_modifierDeck.reset( new DynamicVector<std::shared_ptr<Deck> >( m_timeMap , std::shared_ptr<Deck>( 0 ) ));
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
-        initRootGroupTreeNode(getTimeMap());
-        initOilVaporization(getTimeMap());
 
         if (Section::hasSCHEDULE(deck)) {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
@@ -103,16 +104,6 @@ namespace Opm {
     time_t Schedule::posixEndTime() const {
         return posixTime( this->m_timeMap->getEndTime() );
     }
-
-
-    void Schedule::initOilVaporization(TimeMapConstPtr timeMap) {
-        m_oilvaporizationproperties.reset(new DynamicState<OilVaporizationPropertiesPtr>(timeMap, OilVaporizationPropertiesPtr()));
-    }
-
-    void Schedule::initRootGroupTreeNode(TimeMapConstPtr timeMap) {
-        m_rootGroupTree.reset(new DynamicState<GroupTreePtr>(timeMap, GroupTreePtr(new GroupTree())));
-    }
-
 
     void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid) {
         /*
@@ -241,11 +232,11 @@ namespace Opm {
                       index currentstep; then we fetch the deck (newly created - or old)
                       from the container and add the keyword.
                     */
-                    if (!m_modifierDeck->iget(currentStep))
-                        m_modifierDeck->iset( currentStep , std::make_shared<Deck>( ));
+                    if (!m_modifierDeck.iget(currentStep))
+                        m_modifierDeck.iset( currentStep , std::make_shared<Deck>( ));
 
-                    m_modifierDeck->iget( currentStep )->addKeyword( keyword );
-                    m_events->addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
+                    m_modifierDeck.iget( currentStep )->addKeyword( keyword );
+                    m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
 
                 } else {
                     std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
@@ -274,11 +265,11 @@ namespace Opm {
     }
 
 
-    bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTreePtr newTree) const {
+    bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const {
         bool treeUpdated = false;
-        if (!newTree->getNode(groupName)) {
+        if (!newTree.getNode(groupName)) {
             treeUpdated = true;
-            newTree->updateTree(groupName);
+            newTree.updateTree(groupName);
         }
         return treeUpdated;
     }
@@ -316,7 +307,7 @@ namespace Opm {
                                    size_t index,
                                    size_t currentStep ) {
         bool needNewTree = false;
-        GroupTreePtr newTree = m_rootGroupTree->get(currentStep)->deepCopy();
+        auto newTree = m_rootGroupTree.get(currentStep);
 
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
             auto itr = section.begin() + index;
@@ -361,7 +352,7 @@ namespace Opm {
             const auto* currentWell = getWell(wellName);
             checkWELSPECSConsistency( *currentWell, keyword, recordNr);
 
-            addWellToGroup( *this->m_groups.at( groupName ), *this->m_wells.get( wellName ), currentStep);
+            addWellToGroup( this->m_groups.at( groupName ), *this->m_wells.get( wellName ), currentStep);
             if (handleGroupFromWELSPECS(groupName, newTree))
                 needNewTree = true;
 
@@ -370,8 +361,8 @@ namespace Opm {
         }
 
         if (needNewTree) {
-            m_rootGroupTree->update(currentStep, newTree);
-            m_events->addEvent( ScheduleEvents::GROUP_CHANGE , currentStep);
+            m_rootGroupTree.update(currentStep, newTree);
+            m_events.addEvent( ScheduleEvents::GROUP_CHANGE , currentStep);
         }
     }
 
@@ -379,8 +370,8 @@ namespace Opm {
         for( const auto& record : keyword ) {
             double vap = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
             double density = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
-            OilVaporizationPropertiesPtr vappars = OilVaporizationProperties::createOilVaporizationPropertiesVAPPARS(vap, density);
-            setOilVaporizationProperties(vappars, currentStep);
+            auto vappars = OilVaporizationProperties::createVAPPARS(vap, density);
+            this->m_oilvaporizationproperties.update( currentStep, vappars );
 
         }
     }
@@ -388,8 +379,8 @@ namespace Opm {
     void Schedule::handleDRVDT( const DeckKeyword& keyword, size_t currentStep){
         for( const auto& record : keyword ) {
             double max = record.getItem("DRVDT_MAX").getSIDouble(0);
-            OilVaporizationPropertiesPtr drvdt = OilVaporizationProperties::createOilVaporizationPropertiesDRVDT(max);
-            setOilVaporizationProperties(drvdt, currentStep);
+            auto drvdt = OilVaporizationProperties::createDRVDT(max);
+            this->m_oilvaporizationproperties.update( currentStep, drvdt );
 
         }
     }
@@ -399,8 +390,8 @@ namespace Opm {
         for( const auto& record : keyword ) {
             double max = record.getItem("DRSDT_MAX").getSIDouble(0);
             std::string option = record.getItem("Option").get< std::string >(0);
-            OilVaporizationPropertiesPtr drsdt = OilVaporizationProperties::createOilVaporizationPropertiesDRSDT(max, option);
-            setOilVaporizationProperties(drsdt, currentStep);
+            auto drsdt = OilVaporizationProperties::createDRSDT(max, option);
+            this->m_oilvaporizationproperties.update( currentStep, drsdt );
         }
     }
 
@@ -470,7 +461,7 @@ namespace Opm {
                 }
                 updateWellStatus( *well , currentStep , status );
                 if (well->setProductionProperties(currentStep, properties))
-                    m_events->addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
+                    m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                 
                 if ( !well->getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
 
@@ -486,7 +477,7 @@ namespace Opm {
 
     void Schedule::updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status) {
         if( well.setStatus( reportStep, status ) )
-            m_events->addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
+            m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
     }
 
 
@@ -639,7 +630,7 @@ namespace Opm {
                 }
 
                 if (well->setInjectionProperties(currentStep, properties))
-                    m_events->addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 
                 if ( ! well->getAllowCrossFlow() && (properties.surfaceInjectionRate == 0) ) {
                     std::string msg =
@@ -736,7 +727,7 @@ namespace Opm {
             properties.predictionMode = false;
 
             if (well.setInjectionProperties(currentStep, properties))
-                m_events->addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 
             if ( ! well.getAllowCrossFlow() && (injectionRate == 0) ) {
                 std::string msg =
@@ -825,7 +816,7 @@ namespace Opm {
                     }
 
                     well->addCompletionSet(currentStep, newCompletionSet);
-                    m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
+                    m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
                     if (newCompletionSet->allCompletionsShut())
                         updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT);
 
@@ -979,7 +970,7 @@ namespace Opm {
     void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            auto& group = *this->m_groups.at( groupName );
+            auto& group = this->m_groups.at( groupName );
 
             {
                 Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record.getItem("PHASE").getTrimmedString(0) );
@@ -1009,7 +1000,7 @@ namespace Opm {
     void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            auto& group = *this->m_groups.at( groupName );
+            auto& group = this->m_groups.at( groupName );
             {
                 GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 group.setProductionControlMode( currentStep , controlMode );
@@ -1032,7 +1023,7 @@ namespace Opm {
     void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            auto& group = *this->m_groups.at( groupName );
+            auto& group = this->m_groups.at( groupName );
 
             group.setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
 
@@ -1051,36 +1042,36 @@ namespace Opm {
             const auto& record1 = keyword.getRecord(0);
 
             double TSINIT = record1.getItem("TSINIT").getSIDouble(0);
-            m_tuning->setTSINIT(currentStep, TSINIT);
+            this->m_tuning.setTSINIT(currentStep, TSINIT);
 
             double TSMAXZ = record1.getItem("TSMAXZ").getSIDouble(0);
-            m_tuning->setTSMAXZ(currentStep, TSMAXZ);
+            this->m_tuning.setTSMAXZ(currentStep, TSMAXZ);
 
             double TSMINZ = record1.getItem("TSMINZ").getSIDouble(0);
-            m_tuning->setTSMINZ(currentStep, TSMINZ);
+            this->m_tuning.setTSMINZ(currentStep, TSMINZ);
 
             double TSMCHP = record1.getItem("TSMCHP").getSIDouble(0);
-            m_tuning->setTSMCHP(currentStep, TSMCHP);
+            this->m_tuning.setTSMCHP(currentStep, TSMCHP);
 
             double TSFMAX = record1.getItem("TSFMAX").get< double >(0);
-            m_tuning->setTSFMAX(currentStep, TSFMAX);
+            this->m_tuning.setTSFMAX(currentStep, TSFMAX);
 
             double TSFMIN = record1.getItem("TSFMIN").get< double >(0);
-            m_tuning->setTSFMIN(currentStep, TSFMIN);
+            this->m_tuning.setTSFMIN(currentStep, TSFMIN);
 
             double TSFCNV = record1.getItem("TSFCNV").get< double >(0);
-            m_tuning->setTSFCNV(currentStep, TSFCNV);
+            this->m_tuning.setTSFCNV(currentStep, TSFCNV);
 
             double TFDIFF = record1.getItem("TFDIFF").get< double >(0);
-            m_tuning->setTFDIFF(currentStep, TFDIFF);
+            this->m_tuning.setTFDIFF(currentStep, TFDIFF);
 
             double THRUPT = record1.getItem("THRUPT").get< double >(0);
-            m_tuning->setTHRUPT(currentStep, THRUPT);
+            this->m_tuning.setTHRUPT(currentStep, THRUPT);
 
             const auto& TMAXWCdeckItem = record1.getItem("TMAXWC");
             if (TMAXWCdeckItem.hasValue(0)) {
                 double TMAXWC = TMAXWCdeckItem.getSIDouble(0);
-                m_tuning->setTMAXWC(currentStep, TMAXWC);
+                this->m_tuning.setTMAXWC(currentStep, TMAXWC);
             }
         }
 
@@ -1089,46 +1080,46 @@ namespace Opm {
             const auto& record2 = keyword.getRecord(1);
 
             double TRGTTE = record2.getItem("TRGTTE").get< double >(0);
-            m_tuning->setTRGTTE(currentStep, TRGTTE);
+            this->m_tuning.setTRGTTE(currentStep, TRGTTE);
 
             double TRGCNV = record2.getItem("TRGCNV").get< double >(0);
-            m_tuning->setTRGCNV(currentStep, TRGCNV);
+            this->m_tuning.setTRGCNV(currentStep, TRGCNV);
 
             double TRGMBE = record2.getItem("TRGMBE").get< double >(0);
-            m_tuning->setTRGMBE(currentStep, TRGMBE);
+            this->m_tuning.setTRGMBE(currentStep, TRGMBE);
 
             double TRGLCV = record2.getItem("TRGLCV").get< double >(0);
-            m_tuning->setTRGLCV(currentStep, TRGLCV);
+            this->m_tuning.setTRGLCV(currentStep, TRGLCV);
 
             double XXXTTE = record2.getItem("XXXTTE").get< double >(0);
-            m_tuning->setXXXTTE(currentStep, XXXTTE);
+            this->m_tuning.setXXXTTE(currentStep, XXXTTE);
 
             double XXXCNV = record2.getItem("XXXCNV").get< double >(0);
-            m_tuning->setXXXCNV(currentStep, XXXCNV);
+            this->m_tuning.setXXXCNV(currentStep, XXXCNV);
 
             double XXXMBE = record2.getItem("XXXMBE").get< double >(0);
-            m_tuning->setXXXMBE(currentStep, XXXMBE);
+            this->m_tuning.setXXXMBE(currentStep, XXXMBE);
 
             double XXXLCV = record2.getItem("XXXLCV").get< double >(0);
-            m_tuning->setXXXLCV(currentStep, XXXLCV);
+            this->m_tuning.setXXXLCV(currentStep, XXXLCV);
 
             double XXXWFL = record2.getItem("XXXWFL").get< double >(0);
-            m_tuning->setXXXWFL(currentStep, XXXWFL);
+            this->m_tuning.setXXXWFL(currentStep, XXXWFL);
 
             double TRGFIP = record2.getItem("TRGFIP").get< double >(0);
-            m_tuning->setTRGFIP(currentStep, TRGFIP);
+            this->m_tuning.setTRGFIP(currentStep, TRGFIP);
 
             const auto& TRGSFTdeckItem = record2.getItem("TRGSFT");
             if (TRGSFTdeckItem.hasValue(0)) {
                 double TRGSFT = TRGSFTdeckItem.get< double >(0);
-                m_tuning->setTRGSFT(currentStep, TRGSFT);
+                this->m_tuning.setTRGSFT(currentStep, TRGSFT);
             }
 
             double THIONX = record2.getItem("THIONX").get< double >(0);
-            m_tuning->setTHIONX(currentStep, THIONX);
+            this->m_tuning.setTHIONX(currentStep, THIONX);
 
             int TRWGHT = record2.getItem("TRWGHT").get< int >(0);
-            m_tuning->setTRWGHT(currentStep, TRWGHT);
+            this->m_tuning.setTRWGHT(currentStep, TRWGHT);
         }
 
 
@@ -1136,36 +1127,36 @@ namespace Opm {
             const auto& record3 = keyword.getRecord(2);
 
             int NEWTMX = record3.getItem("NEWTMX").get< int >(0);
-            m_tuning->setNEWTMX(currentStep, NEWTMX);
+            this->m_tuning.setNEWTMX(currentStep, NEWTMX);
 
             int NEWTMN = record3.getItem("NEWTMN").get< int >(0);
-            m_tuning->setNEWTMN(currentStep, NEWTMN);
+            this->m_tuning.setNEWTMN(currentStep, NEWTMN);
 
             int LITMAX = record3.getItem("LITMAX").get< int >(0);
-            m_tuning->setLITMAX(currentStep, LITMAX);
+            this->m_tuning.setLITMAX(currentStep, LITMAX);
 
             int LITMIN = record3.getItem("LITMIN").get< int >(0);
-            m_tuning->setLITMIN(currentStep, LITMIN);
+            this->m_tuning.setLITMIN(currentStep, LITMIN);
 
             int MXWSIT = record3.getItem("MXWSIT").get< int >(0);
-            m_tuning->setMXWSIT(currentStep, MXWSIT);
+            this->m_tuning.setMXWSIT(currentStep, MXWSIT);
 
             int MXWPIT = record3.getItem("MXWPIT").get< int >(0);
-            m_tuning->setMXWPIT(currentStep, MXWPIT);
+            this->m_tuning.setMXWPIT(currentStep, MXWPIT);
 
             double DDPLIM = record3.getItem("DDPLIM").getSIDouble(0);
-            m_tuning->setDDPLIM(currentStep, DDPLIM);
+            this->m_tuning.setDDPLIM(currentStep, DDPLIM);
 
             double DDSLIM = record3.getItem("DDSLIM").get< double >(0);
-            m_tuning->setDDSLIM(currentStep, DDSLIM);
+            this->m_tuning.setDDSLIM(currentStep, DDSLIM);
 
             double TRGDPR = record3.getItem("TRGDPR").getSIDouble(0);
-            m_tuning->setTRGDPR(currentStep, TRGDPR);
+            this->m_tuning.setTRGDPR(currentStep, TRGDPR);
 
             const auto& XXXDPRdeckItem = record3.getItem("XXXDPR");
             if (XXXDPRdeckItem.hasValue(0)) {
                 double XXXDPR = XXXDPRdeckItem.getSIDouble(0);
-                m_tuning->setXXXDPR(currentStep, XXXDPR);
+                this->m_tuning.setXXXDPR(currentStep, XXXDPR);
             }
         }
     }
@@ -1186,7 +1177,7 @@ namespace Opm {
                 updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT);
             }
         }
-        m_events->addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
+        m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
     }
 
     void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
@@ -1239,12 +1230,12 @@ namespace Opm {
     }
 
     void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep) {
-        GroupTreePtr currentTree = m_rootGroupTree->get(currentStep);
-        GroupTreePtr newTree = currentTree->deepCopy();
+        const auto& currentTree = m_rootGroupTree.get(currentStep);
+        auto newTree = currentTree;
         for( const auto& record : keyword ) {
             const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
             const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
-            newTree->updateTree(childName, parentName);
+            newTree.updateTree(childName, parentName);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep );
@@ -1252,7 +1243,7 @@ namespace Opm {
             if (!hasGroup(childName))
                 addGroup( childName , currentStep );
         }
-        m_rootGroupTree->update(currentStep, newTree);
+        m_rootGroupTree.update(currentStep, newTree);
     }
 
     void Schedule::handleWRFT( const DeckKeyword& keyword, size_t currentStep) {
@@ -1331,8 +1322,8 @@ namespace Opm {
         return m_timeMap;
     }
 
-    GroupTreePtr Schedule::getGroupTree(size_t timeStep) const {
-        return m_rootGroupTree->get(timeStep);
+    const GroupTree& Schedule::getGroupTree(size_t timeStep) const {
+        return m_rootGroupTree.get(timeStep);
     }
 
     void Schedule::addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder) {
@@ -1360,7 +1351,7 @@ namespace Opm {
         auto well = std::make_shared<Well>(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep,
                                            wellCompletionOrder, allowCrossFlow, automaticShutIn);
         m_wells.insert( wellName  , well);
-        m_events->addEvent( ScheduleEvents::NEW_WELL , timeStep );
+        m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
     }
 
     size_t Schedule::numWells() const {
@@ -1451,9 +1442,8 @@ namespace Opm {
         if (!m_timeMap) {
             throw std::invalid_argument("TimeMap is null, can't add group named: " + groupName);
         }
-        GroupPtr group(new Group(groupName, m_timeMap , timeStep));
-        m_groups[ groupName ] = group;
-        m_events->addEvent( ScheduleEvents::NEW_GROUP , timeStep );
+        m_groups.emplace( groupName, Group { groupName, m_timeMap, timeStep } );
+        m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
     size_t Schedule::numGroups() const {
@@ -1465,9 +1455,9 @@ namespace Opm {
     }
 
 
-    const Group* Schedule::getGroup(const std::string& groupName) const {
+    const Group& Schedule::getGroup(const std::string& groupName) const {
         if (hasGroup(groupName)) {
-            return m_groups.at(groupName).get();
+            return m_groups.at(groupName);
         } else
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
@@ -1476,7 +1466,7 @@ namespace Opm {
         std::vector< const Group* > groups;
 
         for( const auto& itr : m_groups )
-            groups.push_back( itr.second.get() );
+            groups.push_back( &itr.second );
 
         return groups;
     }
@@ -1484,7 +1474,7 @@ namespace Opm {
     void Schedule::addWellToGroup( Group& newGroup, Well& well , size_t timeStep) {
         const std::string currentGroupName = well.getGroupName(timeStep);
         if (currentGroupName != "") {
-            m_groups.at( currentGroupName )->delWell( timeStep, well.name() );
+            m_groups.at( currentGroupName ).delWell( timeStep, well.name() );
         }
         well.setGroupName(timeStep , newGroup.name());
         newGroup.addWell(timeStep , &well);
@@ -1551,12 +1541,12 @@ namespace Opm {
       return ncwmax;
     }
 
-    TuningPtr Schedule::getTuning() const {
-      return m_tuning;
+    const Tuning& Schedule::getTuning() const {
+      return this->m_tuning;
     }
 
     std::shared_ptr<const Deck> Schedule::getModifierDeck(size_t timeStep) const {
-        return m_modifierDeck->iget( timeStep );
+        return m_modifierDeck.iget( timeStep );
     }
 
 
@@ -1571,19 +1561,15 @@ namespace Opm {
 
 
     const Events& Schedule::getEvents() const {
-        return *m_events;
+        return this->m_events;
     }
 
-    OilVaporizationPropertiesConstPtr Schedule::getOilVaporizationProperties(size_t timestep){
-        return m_oilvaporizationproperties->get(timestep);
-    }
-
-    void Schedule::setOilVaporizationProperties(const OilVaporizationPropertiesPtr vapor, size_t timestep){
-        m_oilvaporizationproperties->update(timestep, vapor);
+    const OilVaporizationProperties& Schedule::getOilVaporizationProperties(size_t timestep){
+        return m_oilvaporizationproperties.get(timestep);
     }
 
     bool Schedule::hasOilVaporizationProperties(){
-        return m_oilvaporizationproperties->size() > 0;
+        return m_oilvaporizationproperties.size() > 0;
     }
 
 }

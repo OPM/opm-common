@@ -242,6 +242,7 @@ namespace Opm {
     }
 
     enum OilVaporizationEnum{
+        UNDEF = 0,
         VAPPARS = 1,
         DRSDT = 2,
         DRVDT = 3
