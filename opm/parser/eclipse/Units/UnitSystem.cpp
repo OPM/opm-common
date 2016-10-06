@@ -447,6 +447,21 @@ namespace {
         return this->measure_table_to_si[ static_cast< int >( m ) ] * val;
     }
 
+    void UnitSystem::from_si( measure m, std::vector<double>& data ) const {
+        double factor = this->measure_table_from_si[ static_cast< int >( m ) ];
+        auto scale = [=](double x) { return x * factor; };
+        std::transform( data.begin() , data.end() , data.begin() , scale);
+    }
+
+
+    void UnitSystem::to_si( measure m, std::vector<double>& data) const {
+        double factor = this->measure_table_to_si[ static_cast< int >( m ) ];
+        auto scale = [=](double x) { return x * factor; };
+        std::transform( data.begin() , data.end() , data.begin() , scale);
+    }
+
+
+
     const char* UnitSystem::name( measure m ) const {
         return this->unit_name_table[ static_cast< int >( m ) ];
     }
