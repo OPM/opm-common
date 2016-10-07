@@ -30,9 +30,8 @@ find_opm_package (
   ""
 
   # test program
-"#include <opm/output/Wells.hpp>
+"#include <opm/output/eclipse/Summary.hpp>
 int main (void) {
-    Opm::data::Rates r;
     return 0;
 }
 "
