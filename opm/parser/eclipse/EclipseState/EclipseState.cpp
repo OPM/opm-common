@@ -140,8 +140,8 @@ namespace Opm {
         return m_parseContext;
     }
 
-    ScheduleConstPtr EclipseState::getSchedule() const {
-        return m_schedule;
+    const Schedule& EclipseState::getSchedule() const {
+        return *m_schedule;
     }
 
     /// [[deprecated]] --- use cfg().io()

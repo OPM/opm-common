@@ -45,14 +45,14 @@ BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     DeckPtr deck = parser->parseFile(scheduleFile, parseContext);
     EclipseState state(*deck, parseContext);
     const auto& trans = state.getTransMult();
-    std::shared_ptr<const Schedule> schedule = state.getSchedule();
-    const Events& events = schedule->getEvents();
+    const auto& schedule = state.getSchedule();
+    const Events& events = schedule.getEvents();
 
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 3,2,0,FaceDir::XPlus ));
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 2,2,0,FaceDir::XPlus ));
     BOOST_CHECK( events.hasEvent( ScheduleEvents::GEO_MODIFIER , 3 ) );
     {
-        std::shared_ptr<const Deck> mini_deck = schedule->getModifierDeck(3);
+        std::shared_ptr<const Deck> mini_deck = schedule.getModifierDeck(3);
         state.applyModifierDeck( *mini_deck );
     }
     BOOST_CHECK_EQUAL( 2.00 , trans.getMultiplier( 2,2,0,FaceDir::XPlus ));

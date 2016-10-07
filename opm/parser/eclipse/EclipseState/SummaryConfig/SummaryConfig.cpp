@@ -293,7 +293,7 @@ inline void uniq( std::vector< ERT::smspec_node >& vec ) {
 
 SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es , const ParseContext& parseContext)
     : SummaryConfig( deck,
-                        *es.getSchedule(),
+                        es.getSchedule(),
                         es.get3DProperties(),
                         parseContext,
                         dimensions( *es.getInputGrid() ) )

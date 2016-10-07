@@ -70,7 +70,7 @@ namespace Opm {
 
         const ParseContext& getParseContext() const;
 
-        std::shared_ptr< const Schedule > getSchedule() const;
+        const Schedule& getSchedule() const;
         std::shared_ptr< const IOConfig > getIOConfigConst() const;
         std::shared_ptr< IOConfig > getIOConfig() const;
 
