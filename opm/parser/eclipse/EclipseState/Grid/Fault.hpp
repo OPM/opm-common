@@ -23,6 +23,8 @@
 #include <memory>
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
+
 namespace Opm {
 
     class FaultFace;
@@ -35,14 +37,17 @@ public:
     const  std::string& getName() const;
     void   setTransMult(double transMult);
     double getTransMult() const;
-    void   addFace(std::shared_ptr<const FaultFace> face);
-    std::vector<std::shared_ptr<const FaultFace> >::const_iterator begin() const;
-    std::vector<std::shared_ptr<const FaultFace> >::const_iterator end() const;
+    void   addFace( FaultFace );
+    std::vector< FaultFace >::const_iterator begin() const;
+    std::vector< FaultFace >::const_iterator end() const;
+
+    bool operator==( const Fault& rhs ) const;
+    bool operator!=( const Fault& rhs ) const;
 
 private:
     std::string m_name;
     double m_transMult;
-    std::vector<std::shared_ptr<const FaultFace> > m_faceList;
+    std::vector< FaultFace > m_faceList;
 };
 }
 

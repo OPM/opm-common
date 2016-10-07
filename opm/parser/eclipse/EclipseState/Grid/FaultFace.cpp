@@ -78,4 +78,15 @@ namespace Opm {
         return m_faceDir;
     }
 
+    bool FaultFace::operator==( const FaultFace& rhs ) const {
+        return this->m_faceDir == rhs.m_faceDir
+            && this->m_indexList.size() == rhs.m_indexList.size()
+            && std::equal( this->m_indexList.begin(),
+                           this->m_indexList.end(),
+                           rhs.m_indexList.begin() );
+    }
+
+    bool FaultFace::operator!=( const FaultFace& rhs ) const {
+        return !( *this == rhs );
+    }
 }

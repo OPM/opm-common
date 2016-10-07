@@ -68,18 +68,16 @@ namespace Opm {
         int K1 = faultRecord.getItem(5).get<int>(0) - 1;
         int K2 = faultRecord.getItem(6).get<int>(0) - 1;
         FaceDir::DirEnum faceDir = FaceDir::FromString(faultRecord.getItem(7).get<std::string>(0));
-        std::shared_ptr<const FaultFace> face = std::make_shared<const FaultFace>(
-                        grid.getNX(), grid.getNY(), grid.getNZ(),
-                        static_cast<size_t>(I1), static_cast<size_t>(I2),
-                        static_cast<size_t>(J1), static_cast<size_t>(J2),
-                        static_cast<size_t>(K1), static_cast<size_t>(K2),
-                        faceDir);
+        FaultFace face { grid.getNX(), grid.getNY(), grid.getNZ(),
+                         size_t(I1), size_t(I2),
+                         size_t(J1), size_t(J2),
+                         size_t(K1), size_t(K2),
+                         faceDir };
 
         if (!hasFault(faultName))
             addFault(faultName);
 
-        Fault& fault = getFault(faultName);
-        fault.addFace(face);
+        getFault( faultName ).addFace( face );
     }
 
     size_t FaultCollection::size() const {

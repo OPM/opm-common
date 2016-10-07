@@ -39,6 +39,9 @@ public:
     std::vector<size_t>::const_iterator end() const;
     FaceDir::DirEnum getDir() const;
 
+    bool operator==( const FaultFace& rhs ) const;
+    bool operator!=( const FaultFace& rhs ) const;
+
 private:
     static void checkCoord(size_t dim , size_t l1 , size_t l2);
     FaceDir::DirEnum m_faceDir;

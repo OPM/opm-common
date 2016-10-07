@@ -41,17 +41,30 @@ namespace Opm {
     }
 
 
-    void Fault::addFace(std::shared_ptr<const FaultFace> face) {
-        m_faceList.push_back( face );
+    void Fault::addFace( FaultFace face ) {
+        m_faceList.push_back( std::move( face ) );
     }
 
-    std::vector<std::shared_ptr<const FaultFace> >::const_iterator Fault::begin() const {
+    std::vector< FaultFace >::const_iterator Fault::begin() const {
         return m_faceList.begin();
     }
 
 
-    std::vector<std::shared_ptr<const FaultFace> >::const_iterator Fault::end() const {
+    std::vector< FaultFace >::const_iterator Fault::end() const {
         return m_faceList.end();
+    }
+
+    bool Fault::operator==( const Fault& rhs ) const {
+        return this->m_name == rhs.m_name
+            && this->m_transMult == rhs.m_transMult
+            && this->m_faceList.size() == rhs.m_faceList.size()
+            && std::equal( this->m_faceList.begin(),
+                           this->m_faceList.end(),
+                           rhs.m_faceList.begin() );
+    }
+
+    bool Fault::operator!=( const Fault& rhs ) const {
+        return !( *this == rhs );
     }
 
 
