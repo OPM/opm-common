@@ -36,7 +36,7 @@
 
 BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate) };
     Opm::DynamicVector<double> vector(timeMap , 9.99);
 
     BOOST_CHECK_EQUAL( vector[0] , 9.99 );
@@ -47,11 +47,11 @@ BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
 
 BOOST_AUTO_TEST_CASE(DynamicVectorSet) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
-    Opm::DynamicVector<int> state(timeMap , 137);
+    Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate) };
     for (size_t i = 0; i < 4; i++)
-        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+        timeMap.addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
+    Opm::DynamicVector<int> state(timeMap , 137);
     BOOST_CHECK_EQUAL( 137 , state[0] );
     BOOST_CHECK_EQUAL( 137 , state[1] );
     BOOST_CHECK_EQUAL( 137 , state[2] );
@@ -72,26 +72,24 @@ BOOST_AUTO_TEST_CASE(DynamicVectorSet) {
 
 BOOST_AUTO_TEST_CASE(DynamicVectorPtr) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
-    Opm::DynamicVector<int> * state = new Opm::DynamicVector<int>( timeMap , 137 );
+    Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate) };
     for (size_t i = 0; i < 4; i++)
-        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+        timeMap.addTStep( boost::posix_time::hours( (i+1) * 24 ));
 
-    BOOST_CHECK_EQUAL( 137 , state->iget(0) );
-    BOOST_CHECK_EQUAL( 137 , state->iget(1) );
-    BOOST_CHECK_EQUAL( 137 , state->iget(2) );
-    BOOST_CHECK_EQUAL( 137 , state->iget(3) );
-    BOOST_CHECK_EQUAL( 137 , state->iget(4) );
+    Opm::DynamicVector<int> state( timeMap , 137 );
+    BOOST_CHECK_EQUAL( 137 , state.iget(0) );
+    BOOST_CHECK_EQUAL( 137 , state.iget(1) );
+    BOOST_CHECK_EQUAL( 137 , state.iget(2) );
+    BOOST_CHECK_EQUAL( 137 , state.iget(3) );
+    BOOST_CHECK_EQUAL( 137 , state.iget(4) );
 
-    state->iset(2 , 99);
-    BOOST_CHECK_EQUAL( 137 , state->iget(1) );
-    BOOST_CHECK_EQUAL(  99 , state->iget(2) );
-    BOOST_CHECK_EQUAL( 137 , state->iget(3) );
+    state.iset(2 , 99);
+    BOOST_CHECK_EQUAL( 137 , state.iget(1) );
+    BOOST_CHECK_EQUAL(  99 , state.iget(2) );
+    BOOST_CHECK_EQUAL( 137 , state.iget(3) );
 
-    state->iset(0,88);
-    BOOST_CHECK_EQUAL( 88 , state->iget(0));
-    BOOST_CHECK_THROW( state->iset(5 , 99) , std::range_error);
-
-    delete state;
+    state.iset(0,88);
+    BOOST_CHECK_EQUAL( 88 , state.iget(0));
+    BOOST_CHECK_THROW( state.iset(5 , 99) , std::range_error);
 }
 

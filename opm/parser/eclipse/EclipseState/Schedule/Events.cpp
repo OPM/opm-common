@@ -22,10 +22,9 @@
 
 namespace Opm {
 
-    Events::Events(std::shared_ptr<const TimeMap> timeMap)
-        : m_events( DynamicVector<uint64_t>( timeMap , 0 ) )
-    {
-    }
+    Events::Events(const TimeMap& timeMap) :
+        m_events( DynamicVector<uint64_t>( timeMap , 0 ) )
+    { }
 
 
     bool Events::hasEvent(uint64_t eventMask , size_t reportStep) const {

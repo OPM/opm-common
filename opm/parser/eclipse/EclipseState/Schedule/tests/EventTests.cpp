@@ -30,12 +30,13 @@
 
 BOOST_AUTO_TEST_CASE(CreateEmpty) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::TimeMap timeMap{boost::posix_time::ptime(startDate)};
     Opm::DynamicVector<double> vector(timeMap , 9.99);
-    Opm::Events events( timeMap );
 
     for (size_t i = 0; i < 11; i++)
-        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+        timeMap.addTStep( boost::posix_time::hours( (i+1) * 24 ));
+
+    Opm::Events events( timeMap );
 
     BOOST_CHECK_EQUAL( false , events.hasEvent(Opm::ScheduleEvents::NEW_WELL , 10));
 
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE(CreateEmpty) {
 
 BOOST_AUTO_TEST_CASE(TestMultiple) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    Opm::TimeMap timeMap{boost::posix_time::ptime(startDate)};
     Opm::DynamicVector<double> vector(timeMap , 9.99);
     Opm::Events events( timeMap );
 

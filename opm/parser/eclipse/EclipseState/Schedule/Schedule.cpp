@@ -79,10 +79,10 @@ namespace Opm {
         m_timeMap( std::make_shared< TimeMap>( deck )),
         m_rootGroupTree( m_timeMap, GroupTree{} ),
         m_oilvaporizationproperties( m_timeMap, OilVaporizationProperties{} ),
-        m_events( m_timeMap ),
-        m_modifierDeck( m_timeMap, nullptr ),
+        m_events( *m_timeMap ),
+        m_modifierDeck( *m_timeMap, nullptr ),
         m_tuning( m_timeMap ),
-        m_messageLimits(m_timeMap)
+        m_messageLimits( m_timeMap )
 
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;

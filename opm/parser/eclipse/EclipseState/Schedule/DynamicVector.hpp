@@ -48,16 +48,14 @@ namespace Opm {
     template <class T>
     class DynamicVector {
     public:
-
-
-        DynamicVector(const std::shared_ptr< const TimeMap > timeMap, T defaultValue) {
-            m_timeMap = timeMap;
-            m_defaultValue = defaultValue;
-        }
-
+        DynamicVector(const TimeMap& timeMap, T defaultValue) :
+            max_size( timeMap.size() ),
+            m_defaultValue( std::move( defaultValue ) )
+        {}
 
         const T& operator[](size_t index) const {
-            assertSize( index );
+            if (index >= this->max_size )
+                throw std::range_error("Index value is out range.");
 
             if (index < m_data.size())
                 return m_data[index];
@@ -73,7 +71,8 @@ namespace Opm {
 
 
         T& operator[](size_t index) {
-            assertSize( index );
+            if (index >= this->max_size )
+                throw std::range_error("Index value is out range.");
 
             if (index >= m_data.size())
                 m_data.resize( index + 1 , m_defaultValue);
@@ -87,14 +86,8 @@ namespace Opm {
 
 
     private:
-        void assertSize(size_t index) const {
-            if (index >= m_timeMap->size())
-                throw std::range_error("Index value is out range.");
-        }
-
-
         std::vector<T> m_data;
-        std::shared_ptr< const TimeMap > m_timeMap;
+        size_t max_size;
         T m_defaultValue;
     };
 }
