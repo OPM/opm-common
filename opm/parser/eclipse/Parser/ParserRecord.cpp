@@ -85,8 +85,8 @@ namespace Opm {
                 std::shared_ptr<const ParserItem> parserItem = get( (*iter)->name() );
 
                 for (size_t idim=0; idim < (*iter)->numDimensions(); idim++) {
-                    std::shared_ptr<const Dimension> activeDimension  = deck.getActiveUnitSystem().getNewDimension( parserItem->getDimension(idim) );
-                    std::shared_ptr<const Dimension> defaultDimension = deck.getDefaultUnitSystem().getNewDimension( parserItem->getDimension(idim) );
+                    auto activeDimension  = deck.getActiveUnitSystem().getNewDimension( parserItem->getDimension(idim) );
+                    auto defaultDimension = deck.getDefaultUnitSystem().getNewDimension( parserItem->getDimension(idim) );
                     deckItem.push_backDimension( activeDimension , defaultDimension );
                 }
             }

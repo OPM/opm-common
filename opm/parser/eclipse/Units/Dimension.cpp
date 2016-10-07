@@ -25,10 +25,6 @@
 
 namespace Opm {
 
-    Dimension::Dimension() {
-
-    }
-
     Dimension::Dimension(const std::string& name, double SIfactor, double SIoffset)
     {
         for (auto iter = name.begin(); iter != name.end(); ++iter) {
@@ -75,26 +71,30 @@ namespace Opm {
     bool Dimension::isCompositable() const
     { return m_SIoffset == 0.0; }
 
-    Dimension * Dimension::newComposite(const std::string& dim , double SIfactor, double SIoffset) {
-        Dimension * dimension = new Dimension();
-        dimension->m_name = dim;
-        dimension->m_SIfactor = SIfactor;
-        dimension->m_SIoffset = SIoffset;
-
+    Dimension Dimension::newComposite(const std::string& dim , double SIfactor, double SIoffset) {
+        Dimension dimension;
+        dimension.m_name = dim;
+        dimension.m_SIfactor = SIfactor;
+        dimension.m_SIoffset = SIoffset;
         return dimension;
     }
 
 
     bool Dimension::equal(const Dimension& other) const {
-        if (m_name != other.m_name)
-            return false;
-        if (m_SIfactor == other.m_SIfactor && m_SIoffset == other.m_SIoffset)
-            return true;
-        if (std::isnan(m_SIfactor) && std::isnan(other.m_SIfactor))
-            return true;
-        return false;
+        return *this == other;
     }
 
+    bool Dimension::operator==( const Dimension& rhs ) const {
+        if( this->m_name != rhs.m_name ) return false;
+        if( this->m_SIfactor == rhs.m_SIfactor
+         && this->m_SIoffset == rhs.m_SIoffset ) return true;
+
+        return std::isnan( this->m_SIfactor ) && std::isnan( rhs.m_SIfactor );
+    }
+
+    bool Dimension::operator!=( const Dimension& rhs ) const {
+        return !(*this == rhs );
+    }
 }
 
 

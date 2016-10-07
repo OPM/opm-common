@@ -854,9 +854,9 @@ namespace Opm {
 
     void Schedule::handleWELTARG( const SCHEDULESection& section ,  const DeckKeyword& keyword, size_t currentStep) {
         Opm::UnitSystem unitSystem = section.unitSystem();
-        double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
-        double siFactorG = unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
-        double siFactorP = unitSystem.parse("Pressure")->getSIScaling();
+        double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
+        double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
+        double siFactorP = unitSystem.parse("Pressure").getSIScaling();
 
         for( const auto& record : keyword ) {
 

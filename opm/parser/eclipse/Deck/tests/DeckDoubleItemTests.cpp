@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(PushBackMultiple) {
 
 BOOST_AUTO_TEST_CASE(PushBackDimension) {
     auto item = DeckItem::make< double >("HEI");
-    std::shared_ptr<Dimension> activeDimension(new Dimension("Length" , 100));
-    std::shared_ptr<Dimension> defaultDimension(new Dimension("Length" , 10));
+    Dimension activeDimension{ "Length" , 100 };
+    Dimension defaultDimension{ "Length" , 10 };
 
     item.push_back(1.234);
     item.push_backDimension( activeDimension , defaultDimension);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(PushBackDimension) {
 
 BOOST_AUTO_TEST_CASE(PushBackDimensionInvalidType) {
     auto item = DeckItem::make< int >("HEI");
-    std::shared_ptr<Dimension> dim(new Dimension("Length" , 100));
+    Dimension dim{ "Length" , 100 };
     BOOST_CHECK_THROW( item.push_backDimension( dim , dim ) , std::logic_error );
 }
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
 
 BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
     auto item = DeckItem::make< double >("HEI");
-    std::shared_ptr<Dimension> dim(new Dimension("Length" , 100));
+    Dimension dim{ "Length" , 100 };
 
     item.push_back(1.0 , 100 );
     item.push_backDimension( dim , dim );
@@ -130,8 +130,8 @@ BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
 
 BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
     auto item = DeckItem::make< double >("HEI");
-    std::shared_ptr<Dimension> dim(new Dimension("Length" , 1));
-    std::shared_ptr<Dimension> defaultDim(new Dimension("Length" , 100));
+    Dimension dim{ "Length" , 1 };
+    Dimension defaultDim{ "Length" , 100 };
 
     item.push_backDefault( 1.0 );
     item.push_backDimension( dim , defaultDim );
@@ -142,11 +142,11 @@ BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
 
 BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
     auto item = DeckItem::make< double >("HEI");
-    std::shared_ptr<Dimension> dim1(new Dimension("Length" , 2));
-    std::shared_ptr<Dimension> dim2(new Dimension("Length" , 4));
-    std::shared_ptr<Dimension> dim3(new Dimension("Length" , 8));
-    std::shared_ptr<Dimension> dim4(new Dimension("Length" ,16));
-    std::shared_ptr<Dimension> defaultDim(new Dimension("Length" , 100));
+    Dimension dim1{ "Length" , 2 };
+    Dimension dim2{ "Length" , 4 };
+    Dimension dim3{ "Length" , 8 };
+    Dimension dim4{ "Length" ,16 };
+    Dimension defaultDim{ "Length" , 100 };
 
     item.push_back( 1.0, 16 );
     item.push_backDimension( dim1 , defaultDim );

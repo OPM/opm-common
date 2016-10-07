@@ -24,10 +24,11 @@
 #include <vector>
 #include <memory>
 
+#include <opm/parser/eclipse/Units/Dimension.hpp>
+
 namespace Opm {
 
     class DeckItem;
-    class Dimension;
     class DeckItemBase;
 
     class DeckItem {
@@ -78,8 +79,8 @@ namespace Opm {
         // trying to access the data of a "dummy default item" will raise an exception
         void push_backDummyDefault();
 
-        void push_backDimension(std::shared_ptr<const Dimension> /* activeDimension */,
-                                std::shared_ptr<const Dimension> /* defaultDimension */);
+        void push_backDimension( Dimension /* activeDimension */,
+                                 Dimension /* defaultDimension */);
 
         type getType() const;
 

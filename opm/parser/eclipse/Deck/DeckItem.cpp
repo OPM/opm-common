@@ -68,16 +68,15 @@ namespace Opm {
             const double& getSI( size_t ) const;
             const std::vector< double >& getSIData() const;
 
-            void push_backDimension(
-                std::shared_ptr< const Dimension > activeDimension,
-                std::shared_ptr< const Dimension > defaultDimension );
+            void push_backDimension( const Dimension& activeDimension,
+                                     const Dimension& defaultDimension );
 
         private:
             const std::vector< double >& assertSIData() const;
             std::unique_ptr< DeckItemBase > clone() const override;
 
             mutable std::vector< double > SIdata;
-            std::vector< std::shared_ptr< const Dimension > > dimensions;
+            std::vector< Dimension > dimensions;
 
             friend class DeckItem;
     };
@@ -192,9 +191,8 @@ namespace Opm {
         return this->assertSIData();
     }
 
-    void DeckItemT< double >::push_backDimension(
-                std::shared_ptr< const Dimension > activeDimension,
-                std::shared_ptr< const Dimension > defaultDimension ) {
+    void DeckItemT< double >::push_backDimension( const Dimension& activeDimension,
+                                                  const Dimension& defaultDimension ) {
 
         if( this->size() == 0 || this->defaultApplied( this->size() - 1 ) )
             this->dimensions.push_back( defaultDimension );
@@ -229,7 +227,7 @@ namespace Opm {
         for( size_t index = 0; index < sz; index++ ) {
             const auto dimIndex = index % dim_size;
             this->SIdata[ index ] = this->dimensions[ dimIndex ]
-                                          ->convertRawToSi( this->get( index ) );
+                                         .convertRawToSi( this->get( index ) );
         }
 
         return this->SIdata;
@@ -347,9 +345,9 @@ namespace Opm {
         return conv< double >( this->ptr )->getSIData();
     }
 
-    void DeckItem::push_backDimension( std::shared_ptr< const Dimension > active,
-                                       std::shared_ptr< const Dimension > def ) {
-        return conv< double >( this->ptr )->push_backDimension( active, def );
+    void DeckItem::push_backDimension( Dimension active,
+                                       Dimension def ) {
+        return conv< double >( this->ptr ) ->push_backDimension( active, def );
     }
 
     DeckItem::type DeckItem::getType() const {

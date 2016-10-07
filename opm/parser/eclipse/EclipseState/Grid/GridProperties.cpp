@@ -71,7 +71,7 @@ namespace Opm {
     template<>
     double GridProperties<double>::convertInputValue(const GridProperty<double>& property, double doubleValue) const {
         const std::string& dimensionString = property.getDimensionString( );
-        return m_deckUnitSystem->getDimension(dimensionString)->getSIScaling() * doubleValue;
+        return m_deckUnitSystem->getDimension(dimensionString).getSIScaling() * doubleValue;
     }
 
 

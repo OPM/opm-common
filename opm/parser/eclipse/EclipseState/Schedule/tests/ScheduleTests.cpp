@@ -868,9 +868,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     BOOST_CHECK_EQUAL(wpp.WaterRate,0);
 
     Opm::UnitSystem unitSystem = deck->getActiveUnitSystem();
-    double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time")->getSIScaling();
-    double siFactorG = unitSystem.parse("GasSurfaceVolume/Time")->getSIScaling();
-    double siFactorP = unitSystem.parse("Pressure")->getSIScaling();
+    double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
+    double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
+    double siFactorP = unitSystem.parse("Pressure").getSIScaling();
 
     currentStep = 2;
     wpp = well->getProductionProperties(currentStep);

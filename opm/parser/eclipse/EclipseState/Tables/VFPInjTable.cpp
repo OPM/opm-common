@@ -169,7 +169,7 @@ void VFPInjTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_sy
         throw std::invalid_argument("VFPINJ table does not contain enough records.");
     }
 
-    const double table_scaling_factor = deck_unit_system.parse("Pressure")->getSIScaling();
+    const double table_scaling_factor = deck_unit_system.parse("Pressure").getSIScaling();
     for (size_t i=3; i<table.size(); ++i) {
         const auto& record = table.getRecord(i);
         //Get indices (subtract 1 to get 0-based index)
@@ -291,10 +291,10 @@ void VFPInjTable::convertFloToSI(const FLO_TYPE& type,
     switch (type) {
         case FLO_OIL:
         case FLO_WAT:
-            scaling_factor = unit_system.parse("LiquidSurfaceVolume/Time")->getSIScaling();
+            scaling_factor = unit_system.parse("LiquidSurfaceVolume/Time").getSIScaling();
             break;
         case FLO_GAS:
-            scaling_factor = unit_system.parse("GasSurfaceVolume/Time")->getSIScaling();
+            scaling_factor = unit_system.parse("GasSurfaceVolume/Time").getSIScaling();
             break;
         default:
             throw std::logic_error("Invalid FLO type");
@@ -310,7 +310,7 @@ void VFPInjTable::convertFloToSI(const FLO_TYPE& type,
 
 void VFPInjTable::convertTHPToSI(std::vector<double>& values,
                                  const UnitSystem& unit_system) {
-    double scaling_factor = unit_system.parse("Pressure")->getSIScaling();
+    double scaling_factor = unit_system.parse("Pressure").getSIScaling();
     scaleValues(values, scaling_factor);
 }
 

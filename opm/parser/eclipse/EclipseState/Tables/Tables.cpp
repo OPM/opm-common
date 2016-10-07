@@ -652,9 +652,9 @@ GasvisctTable::GasvisctTable( const Deck& deck, const DeckItem& deckItem ) {
                     double SIValue;
 
                     if (columnIndex == 0)
-                        SIValue = temperatureDimension->convertRawToSi(rawValue);
+                        SIValue = temperatureDimension.convertRawToSi(rawValue);
                     else
-                        SIValue = viscosityDimension->convertRawToSi(rawValue);
+                        SIValue = viscosityDimension.convertRawToSi(rawValue);
 
                     column.addValue( SIValue );
                 }
