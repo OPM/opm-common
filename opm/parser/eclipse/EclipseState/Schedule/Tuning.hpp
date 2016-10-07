@@ -129,55 +129,46 @@ namespace Opm {
 
     private:
         /* Record1 */
-        std::shared_ptr<DynamicState<double>> m_TSINIT;
-        std::shared_ptr<DynamicState<double>> m_TSMAXZ;
-        std::shared_ptr<DynamicState<double>> m_TSMINZ;
-        std::shared_ptr<DynamicState<double>> m_TSMCHP;
-        std::shared_ptr<DynamicState<double>> m_TSFMAX;
-        std::shared_ptr<DynamicState<double>> m_TSFMIN;
-        std::shared_ptr<DynamicState<double>> m_TSFCNV;
-        std::shared_ptr<DynamicState<double>> m_TFDIFF;
-        std::shared_ptr<DynamicState<double>> m_THRUPT;
-        std::shared_ptr<DynamicState<double>> m_TMAXWC;
-        std::shared_ptr<DynamicState<int>>    m_TMAXWC_has_value;
+        DynamicState<double> m_TSINIT;
+        DynamicState<double> m_TSMAXZ;
+        DynamicState<double> m_TSMINZ;
+        DynamicState<double> m_TSMCHP;
+        DynamicState<double> m_TSFMAX;
+        DynamicState<double> m_TSFMIN;
+        DynamicState<double> m_TSFCNV;
+        DynamicState<double> m_TFDIFF;
+        DynamicState<double> m_THRUPT;
+        DynamicState<double> m_TMAXWC;
+        DynamicState<int>    m_TMAXWC_has_value;
         /* Record 2 */
-        std::shared_ptr<DynamicState<double>> m_TRGTTE;
-        std::shared_ptr<DynamicState<double>> m_TRGCNV;
-        std::shared_ptr<DynamicState<double>> m_TRGMBE;
-        std::shared_ptr<DynamicState<double>> m_TRGLCV;
-        std::shared_ptr<DynamicState<double>> m_XXXTTE;
-        std::shared_ptr<DynamicState<double>> m_XXXCNV;
-        std::shared_ptr<DynamicState<double>> m_XXXMBE;
-        std::shared_ptr<DynamicState<double>> m_XXXLCV;
-        std::shared_ptr<DynamicState<double>> m_XXXWFL;
-        std::shared_ptr<DynamicState<double>> m_TRGFIP;
-        std::shared_ptr<DynamicState<double>> m_TRGSFT;
-        std::shared_ptr<DynamicState<int>>    m_TRGSFT_has_value;
-        std::shared_ptr<DynamicState<double>> m_THIONX;
-        std::shared_ptr<DynamicState<int>>    m_TRWGHT;
+        DynamicState<double> m_TRGTTE;
+        DynamicState<double> m_TRGCNV;
+        DynamicState<double> m_TRGMBE;
+        DynamicState<double> m_TRGLCV;
+        DynamicState<double> m_XXXTTE;
+        DynamicState<double> m_XXXCNV;
+        DynamicState<double> m_XXXMBE;
+        DynamicState<double> m_XXXLCV;
+        DynamicState<double> m_XXXWFL;
+        DynamicState<double> m_TRGFIP;
+        DynamicState<double> m_TRGSFT;
+        DynamicState<int>    m_TRGSFT_has_value;
+        DynamicState<double> m_THIONX;
+        DynamicState<int>    m_TRWGHT;
         /* Record 3 */
-        std::shared_ptr<DynamicState<int>>    m_NEWTMX;
-        std::shared_ptr<DynamicState<int>>    m_NEWTMN;
-        std::shared_ptr<DynamicState<int>>    m_LITMAX;
-        std::shared_ptr<DynamicState<int>>    m_LITMIN;
-        std::shared_ptr<DynamicState<int>>    m_MXWSIT;
-        std::shared_ptr<DynamicState<int>>    m_MXWPIT;
-        std::shared_ptr<DynamicState<double>> m_DDPLIM;
-        std::shared_ptr<DynamicState<double>> m_DDSLIM;
-        std::shared_ptr<DynamicState<double>> m_TRGDPR;
-        std::shared_ptr<DynamicState<double>> m_XXXDPR;
-        std::shared_ptr<DynamicState<int>>    m_XXXDPR_has_value;
+        DynamicState<int>    m_NEWTMX;
+        DynamicState<int>    m_NEWTMN;
+        DynamicState<int>    m_LITMAX;
+        DynamicState<int>    m_LITMIN;
+        DynamicState<int>    m_MXWSIT;
+        DynamicState<int>    m_MXWPIT;
+        DynamicState<double> m_DDPLIM;
+        DynamicState<double> m_DDSLIM;
+        DynamicState<double> m_TRGDPR;
+        DynamicState<double> m_XXXDPR;
+        DynamicState<int>    m_XXXDPR_has_value;
         std::map<std::string, bool> m_ResetValue;
-
-        double getDoubleValue(const std::string tuningItem, std::shared_ptr<DynamicState<double>> values, size_t timestep) const;
-        int getIntValue(const std::string tuningItem, std::shared_ptr<DynamicState<int>> values, size_t timestep) const;
-        bool getBoolValue(const std::string tuningItem, std::shared_ptr<DynamicState<int>> values, size_t timestep) const;
-
     };
-
-
-    typedef std::shared_ptr<Tuning> TuningPtr;
-    typedef std::shared_ptr<const Tuning> TuningConstPtr;
 
 } //namespace Opm
 
