@@ -77,12 +77,12 @@ namespace Opm {
                         const EclipseGrid& grid,
                         const Deck& deck ) :
         m_timeMap( std::make_shared< TimeMap>( deck )),
-        m_rootGroupTree( m_timeMap, GroupTree{} ),
-        m_oilvaporizationproperties( m_timeMap, OilVaporizationProperties{} ),
+        m_rootGroupTree( *m_timeMap, GroupTree{} ),
+        m_oilvaporizationproperties( *m_timeMap, OilVaporizationProperties{} ),
         m_events( *m_timeMap ),
         m_modifierDeck( *m_timeMap, nullptr ),
-        m_tuning( m_timeMap ),
-        m_messageLimits( m_timeMap )
+        m_tuning( *m_timeMap ),
+        m_messageLimits( *m_timeMap )
 
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
@@ -1479,7 +1479,7 @@ namespace Opm {
         if (!m_timeMap) {
             throw std::invalid_argument("TimeMap is null, can't add group named: " + groupName);
         }
-        m_groups.emplace( groupName, Group { groupName, m_timeMap, timeStep } );
+        m_groups.emplace( groupName, Group { groupName, *m_timeMap, timeStep } );
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 

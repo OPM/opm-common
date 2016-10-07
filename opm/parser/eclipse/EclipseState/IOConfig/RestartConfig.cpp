@@ -475,8 +475,8 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
                                   std::shared_ptr< const TimeMap > timemap) :
         m_timemap( timemap ),
         m_first_restart_step( -1 ),
-        restart_schedule( timemap, { 0, 0, 1 } ),
-        restart_keywords( timemap, {} )
+        restart_schedule( *timemap, { 0, 0, 1 } ),
+        restart_keywords( *timemap, {} )
     {
         handleSolutionSection( solution );
         handleScheduleSection( schedule );

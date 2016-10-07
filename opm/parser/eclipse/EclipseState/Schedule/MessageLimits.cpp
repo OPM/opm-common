@@ -24,7 +24,7 @@
 namespace Opm {
 
 
-    MessageLimits::MessageLimits(const std::shared_ptr< const TimeMap > timemap):
+    MessageLimits::MessageLimits( const TimeMap& timemap ) :
         m_message_print_limit(timemap, ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT::defaultValue),
         m_comment_print_limit(timemap, ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT::defaultValue),
         m_warning_print_limit(timemap, ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT::defaultValue),

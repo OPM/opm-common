@@ -44,7 +44,7 @@ namespace Opm {
     */
 
     public:
-        Tuning(std::shared_ptr< const TimeMap > timemap);
+        Tuning(const TimeMap& timemap);
 
         void setTuningInitialValue(const std::string tuningItem, double value,bool resetVector);
         void setTuningInitialValue(const std::string tuningItem, int value, bool resetVector);

@@ -45,7 +45,7 @@ namespace Opm {
 
     class Group {
     public:
-        Group(const std::string& name, std::shared_ptr< const TimeMap > timeMap , size_t creationTimeStep);
+        Group(const std::string& name, const TimeMap& timeMap , size_t creationTimeStep);
         bool hasBeenDefined(size_t timeStep) const;
         const std::string& name() const;
         bool isProductionGroup(size_t timeStep) const;

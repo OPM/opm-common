@@ -30,7 +30,7 @@
 namespace Opm {
     namespace GroupProduction {
         struct ProductionData {
-            ProductionData(TimeMapConstPtr timeMap);
+            ProductionData( const TimeMap& timeMap);
 
             std::shared_ptr<DynamicState<GroupProduction::ControlEnum> > controlMode;
             std::shared_ptr<DynamicState<GroupProductionExceedLimit::ActionEnum> > exceedAction;
@@ -44,7 +44,7 @@ namespace Opm {
 
         };
 
-        ProductionData::ProductionData(TimeMapConstPtr timeMap) :
+        ProductionData::ProductionData(const TimeMap& timeMap) :
             controlMode( new DynamicState<GroupProduction::ControlEnum>(timeMap , GroupProduction::NONE)),
             exceedAction( new DynamicState<GroupProductionExceedLimit::ActionEnum>(timeMap , GroupProductionExceedLimit::NONE)),
             oilTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
@@ -64,7 +64,7 @@ namespace Opm {
 
     namespace GroupInjection {
         struct InjectionData {
-            InjectionData(TimeMapConstPtr timeMap);
+            InjectionData( const TimeMap& timeMap);
 
             std::shared_ptr<DynamicState<Phase::PhaseEnum> > phase;
             std::shared_ptr<DynamicState<GroupInjection::ControlEnum> > controlMode;
@@ -75,7 +75,7 @@ namespace Opm {
             std::shared_ptr<DynamicState<double> > targetVoidReplacementFraction;
         };
 
-        InjectionData::InjectionData(TimeMapConstPtr timeMap) :
+        InjectionData::InjectionData(const TimeMap& timeMap) :
             phase( new DynamicState<Phase::PhaseEnum>( timeMap , Phase::WATER )),
             controlMode( new DynamicState<GroupInjection::ControlEnum>( timeMap , NONE )),
             rate( new DynamicState<double>( timeMap , 0 )),
@@ -93,7 +93,7 @@ namespace Opm {
 
     /*****************************************************************/
 
-    Group::Group(const std::string& name_, TimeMapConstPtr timeMap , size_t creationTimeStep) :
+    Group::Group(const std::string& name_, const TimeMap& timeMap , size_t creationTimeStep) :
         m_injection( new GroupInjection::InjectionData(timeMap) ),
         m_production( new GroupProduction::ProductionData( timeMap )),
         m_wells( new DynamicState< std::shared_ptr< const WellSet > >( timeMap , std::make_shared< const WellSet >() ) ),

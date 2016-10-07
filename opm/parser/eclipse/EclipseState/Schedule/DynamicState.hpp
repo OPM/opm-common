@@ -58,13 +58,18 @@ namespace Opm {
     public:
 
 
-        DynamicState(const std::shared_ptr< const TimeMap > timeMap, T initialValue) {
-            m_timeMap = timeMap;
-            init( initialValue );
-        }
+        DynamicState(const TimeMap& timeMap, T initialValue) :
+            m_currentValue( initialValue ),
+            m_initialValue( std::move( initialValue ) ),
+            max_size( timeMap.size() ),
+            m_initialRange( 0 )
+        {}
 
         void globalReset( T newValue ) {
-            init( newValue );
+            this->m_data.clear();
+            this->m_currentValue = newValue;
+            this->m_initialValue = std::move( newValue );
+            this->m_initialRange = 0;
         }
 
 
@@ -76,7 +81,7 @@ namespace Opm {
         }
 
         const T& at(size_t index) const {
-            if (index >= m_timeMap->size())
+            if (index >= this->max_size)
                 throw std::range_error("Index value is out range.");
 
             if (index >= m_data.size())
@@ -121,7 +126,7 @@ namespace Opm {
         */
         bool update(size_t index , T value) {
             bool change = (value != m_currentValue);
-            if (index >= (m_timeMap->size()))
+            if (index >= (this->max_size))
                 throw std::range_error("Index value is out range.");
 
             if (m_data.size() > 0) {
@@ -165,19 +170,10 @@ namespace Opm {
 
 
     private:
-
-        void init(T initialValue) {
-            m_data.clear();
-            m_currentValue = initialValue;
-            m_initialValue = initialValue;
-            m_initialRange = 0;
-        }
-
-
         std::vector<T> m_data;
-        std::shared_ptr< const TimeMap > m_timeMap;
         T m_currentValue;
         T m_initialValue;
+        size_t max_size;
         size_t m_initialRange;
     };
 }
