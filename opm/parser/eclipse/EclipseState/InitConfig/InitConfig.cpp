@@ -35,8 +35,6 @@ namespace Opm {
         return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
     }
 
-    InitConfig::InitConfig(DeckConstPtr deck) : InitConfig(*deck) {}
-
     InitConfig::InitConfig(const Deck& deck) : equil(equils(deck)) {
         initRestartKW(deck);
     }

@@ -29,7 +29,6 @@ namespace Opm {
     class InitConfig {
 
     public:
-        InitConfig(std::shared_ptr< const Deck > deck);
         InitConfig(const Deck& deck);
 
         void setRestart( const std::string& root, int step);
@@ -49,9 +48,6 @@ namespace Opm {
 
         Equil equil;
     };
-
-    typedef std::shared_ptr<InitConfig> InitConfigPtr;
-    typedef std::shared_ptr<const InitConfig> InitConfigConstPtr;
 
 } //namespace Opm
 
