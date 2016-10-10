@@ -398,7 +398,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
         }
 
         if( !( name == "RPTRST" || name == "RPTSCHED" ) ) continue;
-        if( this->m_timemap->size() <= current_step ) continue;
+        if( this->m_timemap.size() <= current_step ) continue;
 
         const bool is_RPTRST = name == "RPTRST";
         const auto& prev_sched = this->restart_schedule.back();
@@ -466,17 +466,17 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
     RestartConfig::RestartConfig( const Deck& deck ) :
         RestartConfig( SCHEDULESection( deck ),
                        SOLUTIONSection( deck ),
-                       std::make_shared< const TimeMap >( deck ))
+                       TimeMap{ deck } )
     {}
 
 
     RestartConfig::RestartConfig( const SCHEDULESection& schedule,
                                   const SOLUTIONSection& solution,
-                                  std::shared_ptr< const TimeMap > timemap) :
-        m_timemap( timemap ),
+                                  TimeMap timemap) :
+        m_timemap( std::move( timemap ) ),
         m_first_restart_step( -1 ),
-        restart_schedule( *timemap, { 0, 0, 1 } ),
-        restart_keywords( *timemap, {} )
+        restart_schedule( m_timemap, { 0, 0, 1 } ),
+        restart_keywords( m_timemap, {} )
     {
         handleSolutionSection( solution );
         handleScheduleSection( schedule );
@@ -496,7 +496,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
 
         {
             RestartSchedule ts_restart_config = getNode( timestep );
-            return ts_restart_config.writeRestartFile( timestep , *m_timemap );
+            return ts_restart_config.writeRestartFile( timestep , m_timemap );
         }
     }
 
@@ -536,7 +536,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
                 break;
             }
             report_step++;
-            if (report_step == m_timemap->size())
+            if (report_step == m_timemap.size())
                 break;
         }
     }
@@ -559,7 +559,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
         } //RPTRST
 
 
-        if (solutionSection.hasKeyword("RPTSOL") && (m_timemap->size() > 0)) {
+        if (solutionSection.hasKeyword("RPTSOL") && (m_timemap.size() > 0)) {
             handleRPTSOL(solutionSection.getKeyword("RPTSOL"));
         } //RPTSOL
     }

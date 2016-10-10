@@ -320,7 +320,7 @@ namespace Opm {
         explicit RestartConfig( const Deck& );
         RestartConfig( const SCHEDULESection& schedule,
                        const SOLUTIONSection& solution,
-                       std::shared_ptr< const TimeMap > timemap);
+                       TimeMap timemap );
 
 
         int  getFirstRestartStep() const;
@@ -333,7 +333,7 @@ namespace Opm {
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
         boost::gregorian::date getTimestepDate(size_t reportStep) const {
-            auto time = (*m_timemap)[reportStep];
+            const auto& time = this->m_timemap[reportStep];
             return time.date();
         }
 
@@ -357,9 +357,9 @@ namespace Opm {
                                           bool months = false) const;
         void handleRPTSOL( const DeckKeyword& keyword);
 
-        std::shared_ptr< const TimeMap > m_timemap;
-        int             m_first_restart_step;
-        bool            m_write_initial_RST_file = false;
+        TimeMap m_timemap;
+        int     m_first_restart_step;
+        bool    m_write_initial_RST_file = false;
 
         void handleScheduleSection( const SCHEDULESection& schedule);
         void update( size_t step, const RestartSchedule& rs);
