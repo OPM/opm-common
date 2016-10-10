@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
 
     auto deck = parser->parseString(deckString, parseContext);
     Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(deck);
+    Opm::EclipseGrid eg(*deck);
     Opm::Eclipse3DProperties props(*deck, tm, eg);
 
     // make sure that Eclipse3DProperties throws if it is bugged about an _unsupported_ keyword

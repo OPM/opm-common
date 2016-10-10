@@ -41,20 +41,20 @@ BOOST_AUTO_TEST_CASE( PARSE_TOPS_OK) {
     ParseContext parseContext;
     DeckPtr deck =  parser->parseFile(deckFile, parseContext);
     EclipseState state(*deck , parseContext);
-    EclipseGridConstPtr grid = state.getInputGrid();
+    const auto& grid = state.getInputGrid();
 
-    BOOST_CHECK_EQUAL( grid->getNX() , 9 );
-    BOOST_CHECK_EQUAL( grid->getNY() , 9 );
-    BOOST_CHECK_EQUAL( grid->getNZ() , 2 );
+    BOOST_CHECK_EQUAL( grid.getNX() , 9 );
+    BOOST_CHECK_EQUAL( grid.getNY() , 9 );
+    BOOST_CHECK_EQUAL( grid.getNZ() , 2 );
 
     for (size_t g=0; g < 9*9*2; g++)
-        BOOST_CHECK_CLOSE( grid->getCellVolume( g ) , 400*300*10 , 0.1);
+        BOOST_CHECK_CLOSE( grid.getCellVolume( g ) , 400*300*10 , 0.1);
 
-    for (size_t k=0; k < grid->getNZ(); k++) {
-        for (size_t j=0; j < grid->getNY(); j++) {
-            for (size_t i=0; i < grid->getNX(); i++) {
+    for (size_t k=0; k < grid.getNZ(); k++) {
+        for (size_t j=0; j < grid.getNY(); j++) {
+            for (size_t i=0; i < grid.getNX(); i++) {
 
-                auto pos = grid->getCellCenter( i,j,k );
+                auto pos = grid.getCellCenter( i,j,k );
                 BOOST_CHECK_CLOSE( std::get<0>(pos) , i*400 + 200 , 0.10 );
                 BOOST_CHECK_CLOSE( std::get<1>(pos) , j*300 + 150 , 0.10 );
                 BOOST_CHECK_CLOSE( std::get<2>(pos) , k*10  + 5 + 2202 , 0.10 );

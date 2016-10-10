@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE( PERMX ) {
     const auto& permy = state.get3DProperties().getDoubleGridProperty( "PERMY" );
     const auto& permz = state.get3DProperties().getDoubleGridProperty( "PERMZ" );
     size_t i, j, k;
-    std::shared_ptr<const EclipseGrid> grid = state.getInputGrid();
+    const EclipseGrid& grid = state.getInputGrid();
 
-    for (k = 0; k < grid->getNZ(); k++) {
-        for (j = 0; j < grid->getNY(); j++) {
-            for (i = 0; i < grid->getNX(); i++) {
+    for (k = 0; k < grid.getNZ(); k++) {
+        for (j = 0; j < grid.getNY(); j++) {
+            for (i = 0; i < grid.getNX(); i++) {
 
                 BOOST_CHECK_CLOSE( permx.iget( i, j, k ) * 0.25, permz.iget( i, j, k ), 0.001 );
                 BOOST_CHECK_EQUAL( permx.iget( i, j, k ) * 2, permy.iget( i, j, k ) );
@@ -75,12 +75,12 @@ BOOST_AUTO_TEST_CASE( PARSE_BOX_OK ) {
     const auto& satnum = state.get3DProperties().getIntGridProperty( "SATNUM" );
     {
         size_t i, j, k;
-        std::shared_ptr<const EclipseGrid> grid = state.getInputGrid();
-        for (k = 0; k < grid->getNZ(); k++) {
-            for (j = 0; j < grid->getNY(); j++) {
-                for (i = 0; i < grid->getNX(); i++) {
+        const EclipseGrid& grid = state.getInputGrid();
+        for (k = 0; k < grid.getNZ(); k++) {
+            for (j = 0; j < grid.getNY(); j++) {
+                for (i = 0; i < grid.getNX(); i++) {
 
-                    size_t g = i + j * grid->getNX() + k * grid->getNX() * grid->getNY();
+                    size_t g = i + j * grid.getNX() + k * grid.getNX() * grid.getNY();
                     if (i <= 1 && j <= 1 && k <= 1)
                         BOOST_CHECK_EQUAL( satnum.iget( g ), 10 );
                     else
@@ -97,13 +97,13 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTIPLY_COPY ) {
     const auto& satnum = state.get3DProperties().getIntGridProperty( "SATNUM" );
     const auto& fipnum = state.get3DProperties().getIntGridProperty( "FIPNUM" );
     size_t i, j, k;
-    std::shared_ptr<const EclipseGrid> grid = state.getInputGrid();
+    const EclipseGrid& grid = state.getInputGrid();
 
-    for (k = 0; k < grid->getNZ(); k++) {
-        for (j = 0; j < grid->getNY(); j++) {
-            for (i = 0; i < grid->getNX(); i++) {
+    for (k = 0; k < grid.getNZ(); k++) {
+        for (j = 0; j < grid.getNY(); j++) {
+            for (i = 0; i < grid.getNX(); i++) {
 
-                size_t g = i + j * grid->getNX() + k * grid->getNX() * grid->getNY();
+                size_t g = i + j * grid.getNX() + k * grid.getNX() * grid.getNY();
                 if (i <= 1 && j <= 1 && k <= 1)
                     BOOST_CHECK_EQUAL( 4 * satnum.iget( g ), fipnum.iget( g ) );
                 else
@@ -127,11 +127,11 @@ BOOST_AUTO_TEST_CASE( EQUALS ) {
     const auto& eqlnum = state.get3DProperties().getIntGridProperty( "EQLNUM" );
     const auto& poro = state.get3DProperties().getDoubleGridProperty( "PORO" );
     size_t i, j, k;
-    std::shared_ptr<const EclipseGrid> grid = state.getInputGrid();
+    const EclipseGrid& grid = state.getInputGrid();
 
-    for (k = 0; k < grid->getNZ(); k++) {
-        for (j = 0; j < grid->getNY(); j++) {
-            for (i = 0; i < grid->getNX(); i++) {
+    for (k = 0; k < grid.getNZ(); k++) {
+        for (j = 0; j < grid.getNY(); j++) {
+            for (i = 0; i < grid.getNX(); i++) {
 
                 BOOST_CHECK_EQUAL( pvtnum.iget( i, j, k ), k );
                 BOOST_CHECK_EQUAL( eqlnum.iget( i, j, k ), 77 + 2 * k );

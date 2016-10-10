@@ -178,7 +178,7 @@ struct Setup
     explicit Setup(Opm::DeckPtr deckArg) :
             deck(deckArg),
             tablemanager(*deck),
-            grid(deck),
+            grid(*deck),
             props(*deck, tablemanager, grid)
     {
     }

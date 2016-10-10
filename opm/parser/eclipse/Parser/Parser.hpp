@@ -101,19 +101,19 @@ namespace Opm {
         /// Parses the deck specified in filename.  If context contains ParseContext::PARSE_PARTIAL_DECK,
         /// we construct only a lean grid, otherwise, we construct a full EclipseState and return the
         /// fully constructed InputGrid
-        static std::shared_ptr<const EclipseGrid> parseGrid(const std::string &filename,
+        static EclipseGrid parseGrid(const std::string &filename,
                 const ParseContext& context = ParseContext());
 
         /// Parses the provided deck.  If context contains ParseContext::PARSE_PARTIAL_DECK,
         /// we construct only a lean grid, otherwise, we construct a full EclipseState and return the
         /// fully constructed InputGrid
-        static std::shared_ptr<const EclipseGrid> parseGrid(const Deck& deck,
+        static EclipseGrid parseGrid(const Deck& deck,
                 const ParseContext& context = ParseContext());
 
         /// Parses the provided deck string.  If context contains ParseContext::PARSE_PARTIAL_DECK,
         /// we construct only a lean grid, otherwise, we construct a full EclipseState and return the
         /// fully constructed InputGrid
-        static std::shared_ptr<const EclipseGrid> parseGridData(const std::string &data,
+        static EclipseGrid parseGridData(const std::string &data,
                 const ParseContext& context = ParseContext());
 
     private:

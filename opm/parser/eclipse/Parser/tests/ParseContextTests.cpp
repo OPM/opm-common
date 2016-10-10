@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
 
     auto deckSupported = parser.parseString( deckStringSupported , parseContext );
     auto deckUnSupported = parser.parseString( deckStringUnSupported , parseContext );
-    EclipseGrid grid( deckSupported );
+    EclipseGrid grid( *deckSupported );
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deckSupported ));
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
     Parser parser(true);
     auto deck = parser.parseString( deckString , parseContext );
 
-    EclipseGrid grid( deck );
+    EclipseGrid grid( *deck );
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
     BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deck ));

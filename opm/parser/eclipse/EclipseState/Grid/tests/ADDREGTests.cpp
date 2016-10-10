@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::DeckPtr deck = createValidIntDeck();
     Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(deck);
+    Opm::EclipseGrid eg(*deck);
     Opm::Eclipse3DProperties props(*deck, tm, eg);
     const auto& property = props.getIntGridProperty("SATNUM");
 
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
 BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::DeckPtr deck = createValidPERMXDeck();
     Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(deck);
+    Opm::EclipseGrid eg(*deck);
     Opm::Eclipse3DProperties props(*deck, tm, eg);
     const auto& permx = props.getDoubleGridProperty("PERMX");
 

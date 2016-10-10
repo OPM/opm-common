@@ -100,11 +100,6 @@ namespace Opm {
     {
     }
 
-    EclipseGrid::EclipseGrid(const std::shared_ptr<const Deck>& deckptr, const int * actnum)
-       : EclipseGrid(*deckptr, actnum)
-    {}
-
-
     EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn , const std::vector<int>& actnum)
         : GridDims(src.getNX(), src.getNY(), src.getNZ()),
           m_messages( src.m_messages ),

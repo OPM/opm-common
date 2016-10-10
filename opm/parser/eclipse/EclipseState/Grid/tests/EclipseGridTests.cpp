@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
     deck->addKeyword( Opm::DeckKeyword( "GRID" ) );
     deck->addKeyword( Opm::DeckKeyword( "EDIT" ) );
 
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
+    BOOST_CHECK_THROW(new Opm::EclipseGrid( *deck ) , std::invalid_argument);
 }
 
 static Opm::DeckPtr createDeckHeaders() {
@@ -107,7 +107,7 @@ static Opm::DeckPtr createDeckMissingDIMS() {
 
 BOOST_AUTO_TEST_CASE(MissingDimsThrows) {
     Opm::DeckPtr deck = createDeckMissingDIMS();
-    BOOST_CHECK_THROW( new Opm::EclipseGrid( deck ) , std::invalid_argument);
+    BOOST_CHECK_THROW( new Opm::EclipseGrid( *deck ) , std::invalid_argument);
 }
 
 
@@ -356,36 +356,36 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
     Opm::DeckPtr deck1 = createCARTDeck();
     Opm::DeckPtr deck2 = createCARTDeckDEPTHZ();
 
-    std::shared_ptr<Opm::EclipseGrid> grid1(new Opm::EclipseGrid( deck1 ));
-    std::shared_ptr<Opm::EclipseGrid> grid2(new Opm::EclipseGrid( deck2 ));
+    Opm::EclipseGrid grid1(*deck1 );
+    Opm::EclipseGrid grid2(*deck2 );
 
-    BOOST_CHECK( grid1->equal( *(grid2.get()) ));
+    BOOST_CHECK( grid1.equal( grid2 ) );
 
     {
-        BOOST_CHECK_THROW( grid1->getCellVolume(1000) , std::invalid_argument);
-        BOOST_CHECK_THROW( grid1->getCellVolume(10,0,0) , std::invalid_argument);
-        BOOST_CHECK_THROW( grid1->getCellVolume(0,10,0) , std::invalid_argument);
-        BOOST_CHECK_THROW( grid1->getCellVolume(0,0,10) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1.getCellVolume(1000) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1.getCellVolume(10,0,0) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1.getCellVolume(0,10,0) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1.getCellVolume(0,0,10) , std::invalid_argument);
 
         for (size_t g=0; g < 1000; g++)
-            BOOST_CHECK_CLOSE( grid1->getCellVolume(g) , 0.25*0.25*0.25 , 0.001);
+            BOOST_CHECK_CLOSE( grid1.getCellVolume(g) , 0.25*0.25*0.25 , 0.001);
 
 
         for (size_t k= 0; k < 10; k++)
             for (size_t j= 0; j < 10; j++)
                 for (size_t i= 0; i < 10; i++)
-                    BOOST_CHECK_CLOSE( grid1->getCellVolume(i,j,k) , 0.25*0.25*0.25 , 0.001 );
+                    BOOST_CHECK_CLOSE( grid1.getCellVolume(i,j,k) , 0.25*0.25*0.25 , 0.001 );
     }
     {
-        BOOST_CHECK_THROW( grid1->getCellCenter(1000) , std::invalid_argument);
-        BOOST_CHECK_THROW( grid1->getCellCenter(10,0,0) , std::invalid_argument);
-        BOOST_CHECK_THROW( grid1->getCellCenter(0,10,0) , std::invalid_argument);
-        BOOST_CHECK_THROW( grid1->getCellCenter(0,0,10) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1.getCellCenter(1000) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1.getCellCenter(10,0,0) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1.getCellCenter(0,10,0) , std::invalid_argument);
+        BOOST_CHECK_THROW( grid1.getCellCenter(0,0,10) , std::invalid_argument);
 
         for (size_t k= 0; k < 10; k++)
             for (size_t j= 0; j < 10; j++)
                 for (size_t i= 0; i < 10; i++) {
-                    auto pos = grid1->getCellCenter(i,j,k);
+                    auto pos = grid1.getCellCenter(i,j,k);
 
                     BOOST_CHECK_CLOSE( std::get<0>(pos) , i*0.25 + 0.125, 0.001);
                     BOOST_CHECK_CLOSE( std::get<1>(pos) , j*0.25 + 0.125, 0.001);
@@ -612,13 +612,11 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
 
 BOOST_AUTO_TEST_CASE(AllActiveExportActnum) {
     Opm::DeckPtr deck = createOnlyTopDZCartGrid();
-    std::shared_ptr<Opm::EclipseGrid> grid(new Opm::EclipseGrid( deck ));
+    Opm::EclipseGrid grid( *deck );
 
-    std::vector<int> actnum;
+    std::vector<int> actnum( 1, 100 );
 
-    actnum.push_back(100);
-
-    grid->exportACTNUM( actnum );
+    grid.exportACTNUM( actnum );
     BOOST_CHECK_EQUAL( 0U , actnum.size());
 }
 
@@ -644,7 +642,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
     const auto& zcorn = deck->getKeyword("ZCORN");
     BOOST_CHECK_EQUAL( 8000U , zcorn.getDataSize( ));
 
-    BOOST_CHECK_THROW(Opm::EclipseGrid( std::move(deck) ) , std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ *deck }, std::invalid_argument);
 }
 
 
@@ -666,7 +664,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
 
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseContext()) ;
-    BOOST_CHECK_THROW((void)Opm::EclipseGrid(deck), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ *deck }, std::invalid_argument);
 }
 
 
@@ -687,7 +685,7 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
     Opm::ParserPtr parser(new Opm::Parser());
     Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseContext()) ;
 
-    Opm::EclipseGrid grid(deck);
+    Opm::EclipseGrid grid(*deck);
     BOOST_CHECK_EQUAL( 1000U , grid.getNumActive());
     std::vector<int> actnum(1000);
     actnum[0] = 1;
@@ -765,11 +763,11 @@ BOOST_AUTO_TEST_CASE(ACTNUM_BEST_EFFORT) {
     Opm::DeckConstPtr deck1 = parser->parseString(deckData1, Opm::ParseContext()) ;
     Opm::DeckConstPtr deck2 = parser->parseString(deckData2, Opm::ParseContext()) ;
 
-    Opm::EclipseGrid grid1(deck1);
+    Opm::EclipseGrid grid1(*deck1);
     // Actnum vector is too short - ignored
     BOOST_CHECK_EQUAL( 1000U , grid1.getNumActive());
 
-    Opm::EclipseGrid grid2(deck2);
+    Opm::EclipseGrid grid2(*deck2);
     BOOST_CHECK_EQUAL( 200U , grid2.getNumActive());
 }
 
@@ -802,8 +800,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
     Opm::DeckConstPtr deck1 = parser->parseString(deckData, Opm::ParseContext()) ;
     Opm::DeckConstPtr deck2 = createCPDeck();
 
-    Opm::EclipseGrid grid1(deck1);
-    Opm::EclipseGrid grid2(deck2);
+    Opm::EclipseGrid grid1(*deck1);
+    Opm::EclipseGrid grid2(*deck2);
 
     BOOST_CHECK(grid1.equal( grid2 ));
 }
@@ -826,8 +824,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
     Opm::DeckConstPtr deck1 = parser->parseString(deckData, Opm::ParseContext()) ;
     Opm::DeckConstPtr deck2 = createCPDeck();
 
-    Opm::EclipseGrid grid1(deck1);
-    Opm::EclipseGrid grid2(deck2);
+    Opm::EclipseGrid grid1(*deck1);
+    Opm::EclipseGrid grid2(*deck2);
 
     BOOST_CHECK(grid1.equal( grid2 ));
 }
@@ -838,8 +836,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     Opm::DeckConstPtr deck1 = createCPDeck();
     Opm::DeckConstPtr deck2 = createPinchedCPDeck();
 
-    Opm::EclipseGrid grid1(deck1);
-    Opm::EclipseGrid grid2(deck2);
+    Opm::EclipseGrid grid1(*deck1);
+    Opm::EclipseGrid grid2(*deck2);
 
     BOOST_CHECK(!grid1.equal( grid2 ));
     BOOST_CHECK(!grid1.isPinchActive());
@@ -857,10 +855,10 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     Opm::DeckConstPtr deck3 = createMinpvCPDeck();
     Opm::DeckConstPtr deck4 = createMinpvFilCPDeck();
 
-    Opm::EclipseGrid grid1(deck1);
-    BOOST_CHECK_THROW(Opm::EclipseGrid grid2(deck2), std::invalid_argument);
-    Opm::EclipseGrid grid3(deck3);
-    Opm::EclipseGrid grid4(deck4);
+    Opm::EclipseGrid grid1(*deck1);
+    BOOST_CHECK_THROW(Opm::EclipseGrid grid2(*deck2), std::invalid_argument);
+    Opm::EclipseGrid grid3(*deck3);
+    Opm::EclipseGrid grid4(*deck4);
 
     BOOST_CHECK(!grid1.equal( grid3 ));
     BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Opm::MinpvMode::ModeEnum::Inactive);
@@ -942,7 +940,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
     Opm::DeckConstPtr deck = createActnumBoxDeck();
     Opm::EclipseState es(*deck, Opm::ParseContext());
     auto ep = es.get3DProperties();
-    auto grid = es.getInputGrid();
+    const auto& grid = es.getInputGrid();
 
     BOOST_CHECK_NO_THROW(ep.getIntGridProperty("ACTNUM"));
 
@@ -952,31 +950,31 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
                     - ( 3 *  3 * 3)  // - [6,8]^3 box
                     + ( 2 *  2 * 2); // + inclusion/exclusion
 
-    BOOST_CHECK_NO_THROW(grid->getNumActive());
-    BOOST_CHECK_EQUAL(grid->getNumActive(), active);
+    BOOST_CHECK_NO_THROW(grid.getNumActive());
+    BOOST_CHECK_EQUAL(grid.getNumActive(), active);
 
-    BOOST_CHECK_EQUAL(es.getInputGrid()->getNumActive(), active);
+    BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), active);
 
     {
         size_t active_index = 0;
         // NB: The implementation of this test actually assumes that
         //     the loops are running with z as the outer and x as the
         //     inner direction.
-        for (size_t z = 0; z < grid->getNZ(); z++) {
-            for (size_t y = 0; y < grid->getNY(); y++) {
-                for (size_t x = 0; x < grid->getNX(); x++) {
+        for (size_t z = 0; z < grid.getNZ(); z++) {
+            for (size_t y = 0; y < grid.getNY(); y++) {
+                for (size_t x = 0; x < grid.getNX(); x++) {
                     if (z == 0)
-                        BOOST_CHECK(!grid->cellActive(x, y, z));
+                        BOOST_CHECK(!grid.cellActive(x, y, z));
                     else if (x >= 4 && x <= 6 && y >= 4 && y <= 6 && z >= 4 && z <= 6)
-                        BOOST_CHECK(!grid->cellActive(x, y, z));
+                        BOOST_CHECK(!grid.cellActive(x, y, z));
                     else if (x >= 5 && x <= 7 && y >= 5 && y <= 7 && z >= 5 && z <= 7)
-                        BOOST_CHECK(!grid->cellActive(x, y, z));
+                        BOOST_CHECK(!grid.cellActive(x, y, z));
                     else {
-                        size_t g = grid->getGlobalIndex( x,y,z );
+                        size_t g = grid.getGlobalIndex( x,y,z );
 
-                        BOOST_CHECK(grid->cellActive(x, y, z));
-                        BOOST_CHECK_EQUAL( grid->activeIndex(x,y,z) , active_index );
-                        BOOST_CHECK_EQUAL( grid->activeIndex(g) , active_index );
+                        BOOST_CHECK(grid.cellActive(x, y, z));
+                        BOOST_CHECK_EQUAL( grid.activeIndex(x,y,z) , active_index );
+                        BOOST_CHECK_EQUAL( grid.activeIndex(g) , active_index );
 
                         active_index++;
                     }
@@ -984,7 +982,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
             }
         }
 
-        BOOST_CHECK_THROW( grid->activeIndex(0,0,0) , std::invalid_argument );
+        BOOST_CHECK_THROW( grid.activeIndex(0,0,0) , std::invalid_argument );
     }
 }
 
@@ -993,12 +991,12 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
 
     Opm::EclipseState es(*deck, Opm::ParseContext());
     auto ep = es.get3DProperties();
-    auto grid = es.getInputGrid();
-    Opm::EclipseGrid grid2( *grid );
+    const auto& grid = es.getInputGrid();
+    Opm::EclipseGrid grid2( grid );
 
     BOOST_CHECK_NO_THROW(ep.getIntGridProperty("ACTNUM"));
-    BOOST_CHECK_NO_THROW(grid->getNumActive());
-    BOOST_CHECK_EQUAL(grid->getNumActive(), 2 * 2 * 2 - 1);
+    BOOST_CHECK_NO_THROW(grid.getNumActive());
+    BOOST_CHECK_EQUAL(grid.getNumActive(), 2 * 2 * 2 - 1);
 
     BOOST_CHECK_NO_THROW(grid2.getNumActive());
     BOOST_CHECK_EQUAL(grid2.getNumActive(), 2 * 2 * 2 - 1);
@@ -1009,7 +1007,7 @@ BOOST_AUTO_TEST_CASE(GridActnumViaState) {
 
     BOOST_CHECK_NO_THROW(Opm::EclipseState(*deck, Opm::ParseContext()));
     Opm::EclipseState es(*deck, Opm::ParseContext());
-    BOOST_CHECK_EQUAL(es.getInputGrid()->getNumActive(), 2 * 2 * 2 - 1);
+    BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), 2 * 2 * 2 - 1);
 }
 
 

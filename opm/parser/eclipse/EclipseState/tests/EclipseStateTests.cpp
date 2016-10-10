@@ -34,7 +34,6 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
@@ -198,7 +197,6 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     DeckPtr deck = createDeck();
     EclipseState state(*deck, ParseContext());
     const auto& schedule = state.getSchedule();
-    EclipseGridConstPtr eclipseGrid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL(schedule.getStartTime(), boost::posix_time::ptime(boost::gregorian::date(1998, 3, 8)));
 }

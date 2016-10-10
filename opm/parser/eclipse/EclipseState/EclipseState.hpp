@@ -25,6 +25,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
@@ -80,8 +81,7 @@ namespace Opm {
         const RestartConfig& getRestartConfig() const;
         RestartConfig& getRestartConfig();
 
-        std::shared_ptr< const EclipseGrid > getInputGrid() const;
-        std::shared_ptr< EclipseGrid > getInputGridCopy() const;
+        const EclipseGrid& getInputGrid() const;
 
         const FaultCollection& getFaults() const;
         const TransMult& getTransMult() const;
@@ -123,7 +123,7 @@ namespace Opm {
         ParseContext m_parseContext;
         const TableManager m_tables;
         const GridDims m_gridDims;
-        std::shared_ptr<EclipseGrid> m_inputGrid;
+        EclipseGrid m_inputGrid;
         TransMult m_transMult;
         std::shared_ptr< const Schedule > m_schedule;
         Eclipse3DProperties m_eclipseProperties;

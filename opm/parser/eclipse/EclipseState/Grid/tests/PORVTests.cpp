@@ -37,7 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 static Opm::Eclipse3DProperties getProps(Opm::DeckPtr deck) {
-    return Opm::Eclipse3DProperties(*deck, *new Opm::TableManager(*deck), *new Opm::EclipseGrid(deck));
+    return Opm::Eclipse3DProperties(*deck, *new Opm::TableManager(*deck), *new Opm::EclipseGrid(*deck));
 }
 
 static Opm::DeckPtr createCARTDeck() {
@@ -442,19 +442,19 @@ BOOST_AUTO_TEST_CASE(PORO_ZERO_ACTNUM_CORRECT) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work and NTG */
     Opm::DeckPtr deck = createDeckWithPOROZero();
     Opm::EclipseState state( *deck , Opm::ParseContext());
-    auto grid = state.getInputGrid( );
+    const auto& grid = state.getInputGrid( );
 
     /* Top layer is active */
-    BOOST_CHECK( grid->cellActive( 0,0,0 ));
+    BOOST_CHECK( grid.cellActive( 0,0,0 ));
 
     /* Layer k=1 is inactive due to EQUAL ACTNUM */
-    BOOST_CHECK( !grid->cellActive(0,0,1));
+    BOOST_CHECK( !grid.cellActive(0,0,1));
 
     /* Layer k = 2 is inactive due t PORO = 0 */
-    BOOST_CHECK( !grid->cellActive(0,0,2));
+    BOOST_CHECK( !grid.cellActive(0,0,2));
 
     /* Layer k = 3 is inactive due t NTG = 0 */
-    BOOST_CHECK( !grid->cellActive(0,0,2));
+    BOOST_CHECK( !grid.cellActive(0,0,2));
 
-    BOOST_CHECK_EQUAL( grid->getNumActive() , 700U );
+    BOOST_CHECK_EQUAL( grid.getNumActive() , 700U );
 }

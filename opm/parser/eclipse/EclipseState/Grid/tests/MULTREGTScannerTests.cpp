@@ -108,9 +108,9 @@ static Opm::DeckPtr createInvalidMULTREGTDeck() {
 
 BOOST_AUTO_TEST_CASE(InvalidInput) {
     Opm::DeckPtr deck = createInvalidMULTREGTDeck();
-    Opm::EclipseGrid grid( deck );
+    Opm::EclipseGrid grid( *deck );
     Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(deck);
+    Opm::EclipseGrid eg( *deck );
     Opm::Eclipse3DProperties props(*deck, tm, eg);
 
 
@@ -181,9 +181,9 @@ static Opm::DeckPtr createNotSupportedMULTREGTDeck() {
 
 BOOST_AUTO_TEST_CASE(NotSupported) {
     Opm::DeckPtr deck = createNotSupportedMULTREGTDeck();
-    Opm::EclipseGrid grid( deck );
+    Opm::EclipseGrid grid( *deck );
     Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(deck);
+    Opm::EclipseGrid eg( *deck );
     Opm::Eclipse3DProperties props(*deck, tm, eg);
 
 
@@ -250,7 +250,7 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::DeckPtr deck = createCopyMULTNUMDeck();
     Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(deck);
+    Opm::EclipseGrid eg(*deck);
     Opm::Eclipse3DProperties props(*deck, tm, eg);
 
     BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("FLUXNUM"));

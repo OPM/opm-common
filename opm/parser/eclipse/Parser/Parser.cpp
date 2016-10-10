@@ -626,24 +626,24 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return parse(*deck, context);
     }
 
-    std::shared_ptr<const EclipseGrid> Parser::parseGrid(const std::string &filename, const ParseContext& context) {
+    EclipseGrid Parser::parseGrid(const std::string &filename, const ParseContext& context) {
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
-            return std::make_shared<const EclipseGrid>(filename);
+            return EclipseGrid{ filename };
         return parse(filename, context).getInputGrid();
     }
 
-    std::shared_ptr<const EclipseGrid> Parser::parseGrid(const Deck& deck, const ParseContext& context)
+    EclipseGrid Parser::parseGrid(const Deck& deck, const ParseContext& context)
     {
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
-            return std::make_shared<const EclipseGrid>(deck);
+            return EclipseGrid{ deck };
         return parse(deck, context).getInputGrid();
     }
 
-    std::shared_ptr<const EclipseGrid> Parser::parseGridData(const std::string &data, const ParseContext& context) {
+    EclipseGrid Parser::parseGridData(const std::string &data, const ParseContext& context) {
         Parser parser;
         auto deck = parser.parseString(data, context);
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS)) {
-            return std::make_shared<const EclipseGrid>(deck);
+            return EclipseGrid{ *deck };
         }
         return parse(*deck, context).getInputGrid();
     }

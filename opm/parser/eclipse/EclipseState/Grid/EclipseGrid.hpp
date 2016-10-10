@@ -76,9 +76,7 @@ namespace Opm {
 
         /// EclipseGrid ignores ACTNUM in Deck, and therefore needs ACTNUM
         /// explicitly.  If a null pointer is passed, every cell is active.
-        explicit EclipseGrid(const Deck& deck, const int * actnum = nullptr);
-        /// [deprecated]
-        explicit EclipseGrid(const std::shared_ptr<const Deck>& deck, const int * actnum = nullptr);
+        EclipseGrid(const Deck& deck, const int * actnum = nullptr);
 
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
@@ -215,9 +213,6 @@ namespace Opm {
                 const std::string& DVKey, const Deck&);
         static void scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
    };
-
-    typedef std::shared_ptr<EclipseGrid> EclipseGridPtr;
-    typedef std::shared_ptr<const EclipseGrid> EclipseGridConstPtr;
 
     class ZcornMapper {
     public:

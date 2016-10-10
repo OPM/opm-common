@@ -44,7 +44,7 @@ inline void check_property(const Eclipse3DProperties& props1,
 }
 
 inline Opm::Eclipse3DProperties getProps(Opm::DeckPtr deck) {
-    return Opm::Eclipse3DProperties(*deck, *new Opm::TableManager(*deck), *new Opm::EclipseGrid(deck));
+    return Opm::Eclipse3DProperties(*deck, *new Opm::TableManager(*deck), *new Opm::EclipseGrid(*deck));
 }
 
 BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
