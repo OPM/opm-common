@@ -145,13 +145,13 @@ namespace Opm {
     }
 
     /// [[deprecated]] --- use cfg().io()
-    IOConfigConstPtr EclipseState::getIOConfigConst() const {
-        return m_eclipseConfig.getIOConfigConst();
+    const IOConfig& EclipseState::getIOConfig() const {
+        return m_eclipseConfig.io();
     }
 
     /// [[deprecated]] --- use cfg().io()
-    IOConfigPtr EclipseState::getIOConfig() const {
-        return m_eclipseConfig.getIOConfig();
+    IOConfig& EclipseState::getIOConfig() {
+        return m_eclipseConfig.io();
     }
 
     /// [[deprecated]] --- use cfg().init()

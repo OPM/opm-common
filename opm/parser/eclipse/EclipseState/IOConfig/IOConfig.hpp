@@ -22,15 +22,13 @@
 
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+
 namespace Opm {
 
-    template< typename > class DynamicState;
-
     class Deck;
-    class DeckKeyword;
     class GRIDSection;
     class RUNSPECSection;
-    class TimeMap;
     class Schedule;
 
     /*The IOConfig class holds data about input / ouput configurations
@@ -163,7 +161,7 @@ namespace Opm {
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
     private:
-        std::shared_ptr< const TimeMap > m_timemap;
+        TimeMap m_timemap;
         bool            m_write_INIT_file = false;
         bool            m_write_EGRID_file = true;
         bool            m_UNIFIN = false;
@@ -180,15 +178,11 @@ namespace Opm {
 
         IOConfig( const GRIDSection&,
                   const RUNSPECSection&,
-                  std::shared_ptr< const TimeMap >,
+                  TimeMap,
                   bool nosim,
                   const std::string& input_path );
 
     };
-
-
-    typedef std::shared_ptr<IOConfig> IOConfigPtr;
-    typedef std::shared_ptr<const IOConfig> IOConfigConstPtr;
 
 } //namespace Opm
 
