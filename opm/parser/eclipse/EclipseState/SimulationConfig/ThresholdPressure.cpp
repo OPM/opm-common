@@ -32,110 +32,79 @@ namespace Opm {
                                          const Eclipse3DProperties& eclipseProperties)
     {
 
-        if (Section::hasRUNSPEC( deck ) && Section::hasSOLUTION( deck )) {
-            std::shared_ptr<const RUNSPECSection> runspecSection = std::make_shared<const RUNSPECSection>( deck );
-            std::shared_ptr<const SOLUTIONSection> solutionSection = std::make_shared<const SOLUTIONSection>( deck );
-            initThresholdPressure( runspecSection, solutionSection, eclipseProperties );
-        }
-    }
+        if( !Section::hasRUNSPEC( deck ) || !Section::hasSOLUTION( deck ) )
+            return;
 
-
-    std::pair<int,int> ThresholdPressure::makeIndex(int r1 , int r2) {
-        if (r1 < r2)
-            return std::make_pair(r1,r2);
-        else
-            return std::make_pair(r2,r1);
-    }
-
-    void ThresholdPressure::addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair) {
-        std::pair<int,int> indexPair = makeIndex(r1,r2);
-        m_pressureTable[indexPair] = valuePair;
-    }
-
-    void ThresholdPressure::addBarrier(int r1 , int r2 , double p) {
-        std::pair<bool,double> valuePair = std::make_pair(true , p);
-        addPair( r1,r2, valuePair );
-    }
-
-    void ThresholdPressure::addBarrier(int r1 , int r2) {
-        std::pair<bool,double> valuePair = std::make_pair(false , 0);
-        addPair( r1,r2, valuePair );
-    }
-
-
-    void ThresholdPressure::initThresholdPressure(std::shared_ptr<const RUNSPECSection> runspecSection,
-                                                  std::shared_ptr<const SOLUTIONSection> solutionSection,
-                                                  const Eclipse3DProperties& eclipseProperties) {
+        RUNSPECSection runspecSection( deck );
+        SOLUTIONSection solutionSection( deck );
 
         bool       thpresOption     = false;
-        const bool thpresKeyword    = solutionSection->hasKeyword<ParserKeywords::THPRES>( );
+        const bool thpresKeyword    = solutionSection.hasKeyword<ParserKeywords::THPRES>();
         const bool hasEqlnumKeyword = eclipseProperties.hasDeckIntGridProperty( "EQLNUM" );
         int        maxEqlnum        = 0;
 
         //Is THPRES option set?
-        if (runspecSection->hasKeyword<ParserKeywords::EQLOPTS>( )) {
-            const auto& eqlopts = runspecSection->getKeyword<ParserKeywords::EQLOPTS>( );
+        if( runspecSection.hasKeyword<ParserKeywords::EQLOPTS>() ) {
+            const auto& eqlopts = runspecSection.getKeyword<ParserKeywords::EQLOPTS>( );
             const auto& rec = eqlopts.getRecord(0);
-            for (size_t i = 0; i < rec.size(); ++i) {
-                const auto& item = rec.getItem(i);
-                if (item.hasValue(0)) {
-                    if (item.get< std::string >(0) == "THPRES") {
-                        thpresOption = true;
-                    } else if (item.get< std::string >(0) == "IRREVERS") {
-                        throw std::runtime_error("Cannot use IRREVERS version of THPRES option, not implemented");
-                    }
-                }
+            for( const auto& item : rec ) {
+                if( !item.hasValue( 0 ) ) continue;
+
+                const auto& opt = item.get< std::string >( 0 );
+                if( opt == "IRREVERS" )
+                    throw std::runtime_error("Cannot use IRREVERS version of THPRES option, not implemented");
+
+                if( opt == "THPRES" )
+                    thpresOption = true;
             }
         }
 
-        //Option is set and keyword is found
-        if (thpresOption && thpresKeyword)
-        {
-            //Find max of eqlnum
-            if (hasEqlnumKeyword) {
-                const auto& eqlnumKeyword = eclipseProperties.getIntGridProperty( "EQLNUM" );
-                const auto& eqlnum = eqlnumKeyword.getData();
-                maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
+        if( thpresOption && !thpresKeyword ) {
+            throw std::runtime_error("Invalid solution section; "
+                                     "the EQLOPTS THPRES option is set in RUNSPEC, "
+                                     "but no THPRES keyword is found in SOLUTION." );
+        }
 
-                if (0 == maxEqlnum) {
-                    throw std::runtime_error("Error in EQLNUM data: all values are 0");
-                }
-            } else {
+
+        //Option is set and keyword is found
+        if( thpresOption && thpresKeyword ) {
+            if( !hasEqlnumKeyword )
                 throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
+
+            //Find max of eqlnum
+            const auto& eqlnumKeyword = eclipseProperties.getIntGridProperty( "EQLNUM" );
+            const auto& eqlnum = eqlnumKeyword.getData();
+            maxEqlnum = *std::max_element(eqlnum.begin(), eqlnum.end());
+
+            if (0 == maxEqlnum) {
+                throw std::runtime_error("Error in EQLNUM data: all values are 0");
             }
 
 
             // Fill threshold pressure table.
-            const auto& thpres = solutionSection->getKeyword<ParserKeywords::THPRES>( );
+            const auto& thpres = solutionSection.getKeyword<ParserKeywords::THPRES>( );
 
-            const int numRecords = thpres.size();
-            for (int rec_ix = 0; rec_ix < numRecords; ++rec_ix) {
-                const auto& rec = thpres.getRecord(rec_ix);
+            for( const auto& rec : thpres ) {
                 const auto& region1Item = rec.getItem<ParserKeywords::THPRES::REGION1>();
                 const auto& region2Item = rec.getItem<ParserKeywords::THPRES::REGION2>();
                 const auto& thpressItem = rec.getItem<ParserKeywords::THPRES::VALUE>();
 
-                if (region1Item.hasValue(0) && region2Item.hasValue(0)) {
-                    const int r1 = region1Item.get< int >(0);
-                    const int r2 = region2Item.get< int >(0);
-                    if (r1 > maxEqlnum || r2 > maxEqlnum) {
-                        throw std::runtime_error("Too high region numbers in THPRES keyword");
-                    }
-
-                    if (thpressItem.hasValue(0)) {
-                        addBarrier( r1 , r2 , thpressItem.getSIDouble( 0 ) );
-                    } else
-                        addBarrier( r1 , r2 );
-                } else
+                if( !region1Item.hasValue( 0 ) || !region2Item.hasValue( 0 ) )
                     throw std::runtime_error("Missing region data for use of the THPRES keyword");
 
-            }
-        } else if (thpresOption && !thpresKeyword) {
-            throw std::runtime_error("Invalid solution section; the EQLOPTS THPRES option is set in RUNSPEC, but no THPRES keyword is found in SOLUTION");
+                const int r1 = region1Item.get< int >(0);
+                const int r2 = region2Item.get< int >(0);
+                if (r1 > maxEqlnum || r2 > maxEqlnum) {
+                    throw std::runtime_error("Too high region numbers in THPRES keyword");
+                }
 
+                if (thpressItem.hasValue(0)) {
+                    addBarrier( r1 , r2 , thpressItem.getSIDouble( 0 ) );
+                } else
+                    addBarrier( r1 , r2 );
+            }
         }
     }
-
 
     bool ThresholdPressure::hasRegionBarrier(int r1 , int r2) const {
         std::pair<int,int> indexPair = makeIndex(r1,r2);
@@ -165,8 +134,31 @@ namespace Opm {
             }
         }
 
+
     }
 
+
+    std::pair<int,int> ThresholdPressure::makeIndex(int r1 , int r2) {
+        if (r1 < r2)
+            return std::make_pair(r1,r2);
+        else
+            return std::make_pair(r2,r1);
+    }
+
+    void ThresholdPressure::addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair) {
+        std::pair<int,int> indexPair = makeIndex(r1,r2);
+        m_pressureTable[indexPair] = valuePair;
+    }
+
+    void ThresholdPressure::addBarrier(int r1 , int r2 , double p) {
+        std::pair<bool,double> valuePair = std::make_pair(true , p);
+        addPair( r1,r2, valuePair );
+    }
+
+    void ThresholdPressure::addBarrier(int r1 , int r2) {
+        std::pair<bool,double> valuePair = std::make_pair(false , 0);
+        addPair( r1,r2, valuePair );
+    }
 
     size_t ThresholdPressure::size() const {
         return m_pressureTable.size();

@@ -23,14 +23,11 @@
 #include <map>
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
-
 namespace Opm {
 
 
     class Deck;
-    class RUNSPECSection;
-    class SOLUTIONSection;
+    class Eclipse3DProperties;
 
     class ThresholdPressure {
 
@@ -66,11 +63,8 @@ namespace Opm {
         */
         double getThresholdPressure(int r1 , int r2) const;
         size_t size() const;
-    private:
-        void initThresholdPressure(std::shared_ptr<const RUNSPECSection> runspecSection,
-                                   std::shared_ptr<const SOLUTIONSection> solutionSection,
-                                   const Eclipse3DProperties& eclipseProperties);
 
+    private:
         static std::pair<int,int> makeIndex(int r1 , int r2);
         void addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair);
         void addBarrier(int r1 , int r2);
@@ -79,11 +73,6 @@ namespace Opm {
         std::vector<std::pair<bool,double>> m_thresholdPressureTable;
         std::map<std::pair<int,int> , std::pair<bool , double> > m_pressureTable;
     };
-
-
-    typedef std::shared_ptr<ThresholdPressure> ThresholdPressurePtr;
-    typedef std::shared_ptr<const ThresholdPressure> ThresholdPressureConstPtr;
-
 } //namespace Opm
 
 #endif
