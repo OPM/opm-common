@@ -697,7 +697,7 @@ namespace Opm {
         for( const auto& deckKeyword : section ) {
 
             if (supportsGridProperty(deckKeyword.name()) )
-                loadGridPropertyFromDeckKeyword( *boxManager.getActiveBox(),
+                loadGridPropertyFromDeckKeyword( boxManager.getActiveBox(),
                                                  deckKeyword);
             else {
                 if (deckKeyword.name() == "BOX")

@@ -62,15 +62,15 @@ namespace Opm {
         void endInputBox();
         void endKeyword();
 
-        std::shared_ptr<const Box> getActiveBox() const;
-        std::shared_ptr<const Box> getGlobalBox() const;
-        std::shared_ptr<const Box> getInputBox() const;
-        std::shared_ptr<const Box> getKeywordBox() const;
+        const Box& getActiveBox() const;
+        const Box& getGlobalBox() const;
+        const Box& getInputBox() const;
+        const Box& getKeywordBox() const;
 
     private:
-        std::shared_ptr<const Box> m_globalBox;
-        std::shared_ptr<const Box> m_inputBox;
-        std::shared_ptr<const Box> m_keywordBox;
+        Box m_globalBox;
+        Box m_inputBox;
+        Box m_keywordBox;
     };
 }
 

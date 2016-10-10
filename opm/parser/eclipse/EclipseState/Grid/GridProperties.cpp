@@ -276,7 +276,7 @@ namespace Opm {
             GridProperty<T>& property = getKeyword( field );
             T shiftValue  = convertInputValue( property , record.getItem("shift").get< double >(0) );
             setKeywordBox(record, boxManager);
-            property.add( shiftValue , *boxManager.getActiveBox() );
+            property.add( shiftValue , boxManager.getActiveBox() );
         } else
             throw std::invalid_argument("Fatal error processing ADD keyword. Tried to shift not defined keyword " + field);
     }
@@ -289,7 +289,7 @@ namespace Opm {
             GridProperty<T>& property = getKeyword( field );
             T factor  = convertInputValue( record.getItem("factor").get< double >(0) );
             setKeywordBox(record, boxManager);
-            property.scale( factor , *boxManager.getActiveBox() );
+            property.scale( factor , boxManager.getActiveBox() );
         } else
             throw std::invalid_argument("Fatal error processing ADD keyword. Tried to shift not defined keyword " + field);
     }
@@ -302,7 +302,7 @@ namespace Opm {
 
         if (hasKeyword( srcField )) {
             setKeywordBox(record, boxManager);
-            copyKeyword( srcField , targetField , *boxManager.getActiveBox() );
+            copyKeyword( srcField , targetField , boxManager.getActiveBox() );
         } else {
             if (!supportsKeyword( srcField))
                 throw std::invalid_argument("Fatal error processing COPY keyword."
@@ -320,7 +320,7 @@ namespace Opm {
             T targetValue = convertInputValue( property , value );
 
             setKeywordBox(record, boxManager);
-            property.setScalar( targetValue , *boxManager.getActiveBox() );
+            property.setScalar( targetValue , boxManager.getActiveBox() );
         } else
             throw std::invalid_argument("Fatal error processing EQUALS keyword. Tried to set not defined keyword " + field);
     }

@@ -24,26 +24,25 @@
 
 namespace Opm {
 
-    BoxManager::BoxManager(int nx , int ny , int nz) {
-        m_globalBox = std::make_shared<const Box>(nx,ny,nz);
-    }
+    BoxManager::BoxManager(int nx , int ny , int nz) :
+        m_globalBox( nx, ny, nz )
+    {}
 
-
-    std::shared_ptr<const Box> BoxManager::getGlobalBox() const {
+    const Box& BoxManager::getGlobalBox() const {
         return m_globalBox;
     }
 
 
-    std::shared_ptr<const Box> BoxManager::getInputBox() const {
+    const Box& BoxManager::getInputBox() const {
         return m_inputBox;
     }
 
 
-    std::shared_ptr<const Box> BoxManager::getKeywordBox() const {
+    const Box& BoxManager::getKeywordBox() const {
         return m_keywordBox;
     }
 
-    std::shared_ptr<const Box> BoxManager::getActiveBox() const {
+    const Box& BoxManager::getActiveBox() const {
         if (m_keywordBox)
             return m_keywordBox;
 
@@ -55,14 +54,14 @@ namespace Opm {
 
 
     void BoxManager::setInputBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2) {
-        m_inputBox.reset( new Box( *m_globalBox , i1,i2,j1,j2,k1,k2) );
+        this->m_inputBox = Box( this->m_globalBox, i1, i2, j1, j2, k1, k2 );
     }
 
     void BoxManager::endInputBox() {
-        if (m_keywordBox)
+        if(m_keywordBox)
             throw std::invalid_argument("Hmmm - this seems like an internal error - the SECTION is terminated with an active keyword box");
 
-        m_inputBox.reset( );
+        m_inputBox = Box{};
     }
 
     void BoxManager::endSection() {
@@ -70,11 +69,11 @@ namespace Opm {
     }
 
     void BoxManager::setKeywordBox( int i1,int i2 , int j1 , int j2 , int k1 , int k2) {
-        m_keywordBox.reset( new Box( *m_globalBox , i1,i2,j1,j2,k1,k2) );
+        this->m_keywordBox = Box( this->m_globalBox, i1, i2, j1, j2, k1, k2 );
     }
 
     void BoxManager::endKeyword() {
-        m_keywordBox.reset( );
+        this->m_keywordBox = Box{};
     }
 
 }

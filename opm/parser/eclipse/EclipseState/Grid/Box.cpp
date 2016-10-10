@@ -150,5 +150,9 @@ namespace Opm {
         return true;
     }
 
+    Box::operator bool() const {
+        return this->size() != 0;
+    }
+
 }
 

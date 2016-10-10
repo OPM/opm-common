@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(CreateBoxManager) {
     Opm::BoxManager boxManager(10,10,10);
     Opm::Box box(10,10,10);
 
-    BOOST_CHECK( box.equal( *boxManager.getGlobalBox()) );
-    BOOST_CHECK( box.equal( *boxManager.getActiveBox()) );
+    BOOST_CHECK( box.equal( boxManager.getGlobalBox()) );
+    BOOST_CHECK( box.equal( boxManager.getActiveBox()) );
     BOOST_CHECK( !boxManager.getInputBox() );
     BOOST_CHECK( !boxManager.getKeywordBox() );
 }
@@ -45,16 +45,16 @@ BOOST_AUTO_TEST_CASE(CreateBoxManager) {
 
 BOOST_AUTO_TEST_CASE(TestInputBox) {
     Opm::BoxManager boxManager(10,10,10);
-    Opm::Box inputBox( *boxManager.getGlobalBox() , 0,4,0,4,0,4);
+    Opm::Box inputBox( boxManager.getGlobalBox(), 0,4,0,4,0,4);
 
     boxManager.setInputBox( 0,4,0,4,0,4 );
-    BOOST_CHECK( inputBox.equal( *boxManager.getInputBox()) );
-    BOOST_CHECK( inputBox.equal( *boxManager.getActiveBox()) );
+    BOOST_CHECK( inputBox.equal( boxManager.getInputBox()) );
+    BOOST_CHECK( inputBox.equal( boxManager.getActiveBox()) );
 
 
     boxManager.endSection();
     BOOST_CHECK( !boxManager.getInputBox() );
-    BOOST_CHECK( boxManager.getActiveBox()->equal( *boxManager.getGlobalBox()));
+    BOOST_CHECK( boxManager.getActiveBox().equal( boxManager.getGlobalBox()));
 }
 
 
@@ -62,24 +62,24 @@ BOOST_AUTO_TEST_CASE(TestInputBox) {
 
 BOOST_AUTO_TEST_CASE(TestKeywordBox) {
     Opm::BoxManager boxManager(10,10,10);
-    Opm::Box inputBox( *boxManager.getGlobalBox() , 0,4,0,4,0,4);
-    Opm::Box keywordBox( *boxManager.getGlobalBox() , 0,2,0,2,0,2);
+    Opm::Box inputBox( boxManager.getGlobalBox() , 0,4,0,4,0,4);
+    Opm::Box keywordBox( boxManager.getGlobalBox() , 0,2,0,2,0,2);
 
 
     boxManager.setInputBox( 0,4,0,4,0,4 );
     boxManager.setKeywordBox( 0,2,0,2,0,2 );
-    BOOST_CHECK( inputBox.equal( *boxManager.getInputBox()) );
-    BOOST_CHECK( keywordBox.equal( *boxManager.getKeywordBox()) );
-    BOOST_CHECK( keywordBox.equal( *boxManager.getActiveBox()) );
+    BOOST_CHECK( inputBox.equal( boxManager.getInputBox()) );
+    BOOST_CHECK( keywordBox.equal( boxManager.getKeywordBox()) );
+    BOOST_CHECK( keywordBox.equal( boxManager.getActiveBox()) );
 
     // Must end keyword first
     BOOST_CHECK_THROW( boxManager.endSection() , std::invalid_argument );
 
     boxManager.endKeyword();
-    BOOST_CHECK( inputBox.equal( *boxManager.getActiveBox()) );
+    BOOST_CHECK( inputBox.equal( boxManager.getActiveBox()) );
     BOOST_CHECK( !boxManager.getKeywordBox() );
 
     boxManager.endSection();
     BOOST_CHECK( !boxManager.getInputBox() );
-    BOOST_CHECK( boxManager.getActiveBox()->equal( *boxManager.getGlobalBox()));
+    BOOST_CHECK( boxManager.getActiveBox().equal( boxManager.getGlobalBox()));
 }
