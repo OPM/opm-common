@@ -45,11 +45,11 @@ namespace Opm {
     {
     }
 
-    std::vector<CompsegsPtr> Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword ) {
+    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword ) {
 
         // only handle the second record here
         // The first record here only contains the well name
-        std::vector<CompsegsPtr> compsegs;
+        std::vector< Compsegs > compsegs;
 
         for (size_t recordIndex = 1; recordIndex < compsegsKeyword.size(); ++recordIndex) {
             const auto& record = compsegsKeyword.getRecord(recordIndex);
@@ -120,9 +120,12 @@ namespace Opm {
             }
 
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
-                CompsegsPtr new_compsegs = std::make_shared<Compsegs>(I, J, K, branch, distance_start, distance_end,
-                                                                      direction, center_depth, segment_number);
-                compsegs.push_back(new_compsegs);
+                compsegs.emplace_back( I, J, K,
+                                       branch,
+                                       distance_start, distance_end,
+                                       direction,
+                                       center_depth,
+                                       segment_number );
             } else { // a range is defined. genrate a range of Compsegs
                 throw std::runtime_error("entering COMPSEGS entries with a range is not supported yet!");
             }
@@ -131,67 +134,71 @@ namespace Opm {
         return compsegs;
     }
 
-    void Compsegs::processCOMPSEGS(std::vector<CompsegsPtr>& compsegs, SegmentSetConstPtr segment_set) {
+    void Compsegs::processCOMPSEGS(std::vector< Compsegs >& compsegs, const SegmentSet& segment_set) {
         // for the current cases we have at the moment, the distance information is specified explicitly,
         // while the depth information is defaulted though, which need to be obtained from the related segment
-        for (size_t i_comp = 0; i_comp < compsegs.size(); ++i_comp) {
-            if (compsegs[i_comp]->m_segment_number == 0) { // need to determine the related segment number first
-                const double center_distance = (compsegs[i_comp]->m_distance_start + compsegs[i_comp]->m_distance_end) / 2.0;
-                const int branch_number = compsegs[i_comp]->m_branch_number;
+        for( auto& compseg : compsegs ) {
 
-                int segment_number = 0;
-                double min_distance_difference = 1.e100; // begin with a big value
-                for (int i_segment = 0; i_segment < segment_set->numberSegment(); ++i_segment) {
-                    SegmentConstPtr current_segment = (*segment_set)[i_segment];
-                    if (branch_number == current_segment->branchNumber()) {
-                        const double distance = current_segment->totalLength();
-                        const double distance_difference = std::abs(center_distance - distance);
-                        if (distance_difference < min_distance_difference) {
-                            min_distance_difference = distance_difference;
-                            segment_number = current_segment->segmentNumber();
-                        }
-                    }
-                }
+            // need to determine the related segment number first
+            if (compseg.m_segment_number != 0) continue;
 
-                if (segment_number != 0) {
-                    compsegs[i_comp]->m_segment_number = segment_number;
-                    if (compsegs[i_comp]->m_center_depth == 0.) {
-                        // using the depth of the segment node as the depth of the completion
-                        // TODO: now only one completion for one segment is hanlded,
-                        // TODO: later we will try to handle more than one completion for each segment,
-                        // TODO: which will be a linear interpolation based on the segment node depth
-                        // TODO: in the same branch, while the actually way is not clear yet
-                        const int segment_location = segment_set->numberToLocation(segment_number);
-                        compsegs[i_comp]->m_center_depth = (*segment_set)[segment_location]->depth();
-                    } else if (compsegs[i_comp]->m_center_depth < 0.) {
-                        throw std::runtime_error(" obtaining perforation depth from COMPDAT data is not supported yet \n");
-                    }
-                } else {
-                   throw std::runtime_error(" the perforation failed in finding a related segment \n");
+            const double center_distance = (compseg.m_distance_start + compseg.m_distance_end) / 2.0;
+            const int branch_number = compseg.m_branch_number;
+
+            int segment_number = 0;
+            double min_distance_difference = 1.e100; // begin with a big value
+            for (int i_segment = 0; i_segment < segment_set.numberSegment(); ++i_segment) {
+                const Segment& current_segment = segment_set[i_segment];
+                if( branch_number != current_segment.branchNumber() ) continue;
+
+                const double distance = current_segment.totalLength();
+                const double distance_difference = std::abs(center_distance - distance);
+                if (distance_difference < min_distance_difference) {
+                    min_distance_difference = distance_difference;
+                    segment_number = current_segment.segmentNumber();
                 }
+            }
+
+            if (segment_number == 0) {
+                throw std::runtime_error("The perforation failed in finding a related segment \n");
+            }
+
+            if (compseg.m_center_depth < 0.) {
+                throw std::runtime_error("Obtaining perforation depth from COMPDAT data is not supported yet");
+            }
+
+            compseg.m_segment_number = segment_number;
+            if (compseg.m_center_depth == 0.) {
+                // using the depth of the segment node as the depth of the completion
+                // TODO: now only one completion for one segment is hanlded,
+                // TODO: later we will try to handle more than one completion for each segment,
+                // TODO: which will be a linear interpolation based on the segment node depth
+                // TODO: in the same branch, while the actually way is not clear yet
+                const int segment_location = segment_set.numberToLocation(segment_number);
+                compseg.m_center_depth = segment_set[segment_location].depth();
             }
         }
     }
 
 
-    void Compsegs::updateCompletionsWithSegment(const std::vector<CompsegsPtr>& compsegs,
-                                                CompletionSetPtr completion_set) {
+    void Compsegs::updateCompletionsWithSegment(const std::vector< Compsegs >& compsegs,
+                                                CompletionSet& completion_set) {
 
-        for (size_t i_comp = 0; i_comp < compsegs.size(); ++i_comp) {
-            const int i = compsegs[i_comp]->m_i;
-            const int j = compsegs[i_comp]->m_j;
-            const int k = compsegs[i_comp]->m_k;
+        for( const auto& compseg : compsegs ) {
+            const int i = compseg.m_i;
+            const int j = compseg.m_j;
+            const int k = compseg.m_k;
 
-            CompletionPtr new_completion = std::make_shared<Completion>(completion_set->getFromIJK(i, j, k));
-            new_completion->attachSegment(compsegs[i_comp]->m_segment_number, compsegs[i_comp]->m_center_depth);
-            completion_set->add(new_completion);
+            CompletionPtr new_completion = std::make_shared<Completion>(completion_set.getFromIJK(i, j, k));
+            new_completion->attachSegment(compseg.m_segment_number, compseg.m_center_depth);
+            completion_set.add(new_completion);
         }
 
-        for (size_t ic = 0; ic < completion_set->size(); ++ic) {
-            if ( !(completion_set->get(ic)->attachedToSegment()) ) {
-                throw std::runtime_error(" not all the completions are attached with a segment,\n the information from COMPSEGS are not complete");
+        for (size_t ic = 0; ic < completion_set.size(); ++ic) {
+            if ( !(completion_set.get(ic)->attachedToSegment()) ) {
+                throw std::runtime_error("Not all the completions are attached with a segment. "
+                                         "The information from COMPSEGS is not complete");
             }
         }
     }
-
 }

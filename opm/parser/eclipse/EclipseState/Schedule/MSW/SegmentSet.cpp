@@ -35,9 +35,6 @@
 
 namespace Opm {
 
-    SegmentSet::SegmentSet() {
-    }
-
     std::string SegmentSet::wellName() const {
         return m_well_name;
     }
@@ -74,7 +71,7 @@ namespace Opm {
         return m_multiphase_model;
     }
 
-    SegmentConstPtr SegmentSet::operator[](size_t idx) const {
+    const Segment& SegmentSet::operator[](size_t idx) const {
         return m_segments[idx];
     }
 
@@ -87,9 +84,9 @@ namespace Opm {
         }
     }
 
-    void SegmentSet::addSegment(SegmentConstPtr new_segment) {
+    void SegmentSet::addSegment( Segment new_segment ) {
        // decide whether to push_back or insert
-       int segment_number = new_segment->segmentNumber();
+       int segment_number = new_segment.segmentNumber();
 
        const int segment_location = numberToLocation(segment_number);
 
@@ -100,24 +97,6 @@ namespace Opm {
            m_segments[segment_location] = new_segment;
        }
    }
-
-    SegmentSet* SegmentSet::shallowCopy() const {
-        SegmentSet* copy = new SegmentSet();
-        copy->m_well_name = m_well_name;
-        copy->m_number_branch = m_number_branch;
-        copy->m_depth_top = m_depth_top;
-        copy->m_length_top = m_length_top;
-        copy->m_volume_top = m_volume_top;
-        copy->m_length_depth_type = m_length_depth_type;
-        copy->m_comp_pressure_drop = m_comp_pressure_drop;
-        copy->m_multiphase_model = m_multiphase_model;
-        copy->m_number_to_location = m_number_to_location;
-        copy->m_segments.resize(m_segments.size());
-        for (int i = 0; i < int(m_segments.size()); ++i) {
-            copy->m_segments[i] = m_segments[i];
-        }
-        return copy;
-    }
 
     void SegmentSet::segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword ) {
 
@@ -140,13 +119,14 @@ namespace Opm {
         // the main branch is 1 instead of 0
         // the segment number for top segment is also 1
         if (m_length_depth_type == WellSegment::INC) {
-            SegmentConstPtr top_segment(new Segment(1, 1, 0, 0., 0., invalid_value, invalid_value, invalid_value,
-                                                    m_volume_top, false));
-            m_segments.push_back(top_segment);
+            m_segments.emplace_back( 1, 1, 0, 0., 0.,
+                                     invalid_value, invalid_value, invalid_value,
+                                     m_volume_top, false );
+
         } else if (m_length_depth_type == WellSegment::ABS) {
-            SegmentConstPtr top_segment(new Segment(1, 1, 0, m_length_top, m_depth_top, invalid_value, invalid_value,
-                                                    invalid_value, m_volume_top, true));
-            m_segments.push_back(top_segment);
+            m_segments.emplace_back( 1, 1, 0, m_length_top, m_depth_top,
+                                     invalid_value, invalid_value, invalid_value,
+                                     m_volume_top, true );
         }
 
         // read all the information out from the DECK first then process to get all the required information
@@ -205,20 +185,20 @@ namespace Opm {
                 }
 
                 if (m_length_depth_type == WellSegment::INC) {
-                    m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, segment_length, depth_change,
-                                                                   diameter, roughness, area, volume, false));
+                    m_segments.emplace_back( i, branch, outlet_segment, segment_length, depth_change,
+                                             diameter, roughness, area, volume, false );
                 } else if (i == segment2) {
-                    m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, segment_length, depth_change,
-                                                                   diameter, roughness, area, volume, true));
+                    m_segments.emplace_back( i, branch, outlet_segment, segment_length, depth_change,
+                                             diameter, roughness, area, volume, true );
                 } else {
-                    m_segments.push_back(std::make_shared<const Segment>(i, branch, outlet_segment, invalid_value, invalid_value,
-                                                                   diameter, roughness, area, volume, false));
+                    m_segments.emplace_back( i, branch, outlet_segment, invalid_value, invalid_value,
+                                             diameter, roughness, area, volume, false );
                 }
             }
         }
 
         for (size_t i_segment = 0; i_segment < m_segments.size(); ++i_segment){
-            const int segment_number = m_segments[i_segment]->segmentNumber();
+            const int segment_number = m_segments[i_segment].segmentNumber();
             const int location = numberToLocation(segment_number);
             if (location >= 0) { // found in the existing m_segments already
                 throw std::logic_error("Segments with same segment number are found!\n");
@@ -235,20 +215,20 @@ namespace Opm {
 
         int current_loc = 1;
         while (current_loc < numberSegment()) {
-            if (m_segments[current_loc]->dataReady()) {
+            if (m_segments[current_loc].dataReady()) {
                 current_loc ++;
                 continue;
             }
 
             const int range_begin = current_loc;
-            const int outlet_segment = m_segments[range_begin]->outletSegment();
+            const int outlet_segment = m_segments[range_begin].outletSegment();
             const int outlet_loc = numberToLocation(outlet_segment);
 
-            assert(m_segments[outlet_loc]->dataReady() == true);
+            assert(m_segments[outlet_loc].dataReady() == true);
 
             int range_end = range_begin + 1;
             for (; range_end < numberSegment(); ++range_end) {
-                if (m_segments[range_end]->dataReady() == true) {
+                if (m_segments[range_end].dataReady() == true) {
                     break;
                 }
             }
@@ -261,27 +241,27 @@ namespace Opm {
             int number_segments = range_end - range_begin + 1;
             assert(number_segments > 1); //if only 1, the information should be complete
 
-            const double length_outlet = m_segments[outlet_loc]->totalLength();
-            const double depth_outlet = m_segments[outlet_loc]->depth();
+            const double length_outlet = m_segments[outlet_loc].totalLength();
+            const double depth_outlet = m_segments[outlet_loc].depth();
 
-            const double length_last = m_segments[range_end]->totalLength();
-            const double depth_last = m_segments[range_end]->depth();
+            const double length_last = m_segments[range_end].totalLength();
+            const double depth_last = m_segments[range_end].depth();
 
             // incremental length and depth for the segments within the range
             const double length_inc = (length_last - length_outlet) / number_segments;
             const double depth_inc = (depth_last - depth_outlet) / number_segments;
-            const double volume_segment = m_segments[range_end]->crossArea() * length_inc;
+            const double volume_segment = m_segments[range_end].crossArea() * length_inc;
 
             for (int k = range_begin; k <= range_end; ++k) {
-                SegmentPtr new_segment = std::make_shared<Segment>(m_segments[k]);
+                Segment new_segment = m_segments[k];
                 const double temp_length = length_outlet + (k - range_begin + 1) * length_inc;
                 const double temp_depth = depth_outlet + (k - range_end + 1) * depth_inc;
                 if (k != range_end) {
-                    new_segment->setDepthAndLength(temp_depth, temp_length);
+                    new_segment.setDepthAndLength(temp_depth, temp_length);
                 }
 
-                if (new_segment->volume() < 0.5 * invalid_value) {
-                    new_segment->setVolume(volume_segment);
+                if (new_segment.volume() < 0.5 * invalid_value) {
+                    new_segment.setVolume(volume_segment);
                 }
                 addSegment(new_segment);
             }
@@ -291,14 +271,14 @@ namespace Opm {
         // then update the volume for all the segments except the top segment
         // this is for the segments specified individually while the volume is not specified.
         for (int i = 1; i < numberSegment(); ++i) {
-            assert(m_segments[i]->dataReady());
-            if (m_segments[i]->volume() == invalid_value) {
-                SegmentPtr new_segment = std::make_shared<Segment>(m_segments[i]);
-                const int outlet_segment = m_segments[i]->outletSegment();
+            assert(m_segments[i].dataReady());
+            if (m_segments[i].volume() == invalid_value) {
+                Segment new_segment = m_segments[i];
+                const int outlet_segment = m_segments[i].outletSegment();
                 const int outlet_location = numberToLocation(outlet_segment);
-                const double segment_length = m_segments[i]->totalLength() - m_segments[outlet_location]->totalLength();
-                const double segment_volume = m_segments[i]->crossArea() * segment_length;
-                new_segment->setVolume(segment_volume);
+                const double segment_length = m_segments[i].totalLength() - m_segments[outlet_location].totalLength();
+                const double segment_volume = m_segments[i].crossArea() * segment_length;
+                new_segment.setVolume(segment_volume);
                 addSegment(new_segment);
             }
         }
@@ -308,8 +288,8 @@ namespace Opm {
 
         // update the information inside the SegmentSet to be in ABS way
         if (first_time) {
-            SegmentPtr new_top_segment = std::make_shared<Segment>((*this)[0]);
-            new_top_segment->setDepthAndLength(depthTopSegment(), lengthTopSegment());
+            Segment new_top_segment = (*this)[0];
+            new_top_segment.setDepthAndLength(depthTopSegment(), lengthTopSegment());
             this->addSegment(new_top_segment);
         }
 
@@ -317,25 +297,25 @@ namespace Opm {
 
         // begin with the second segment
         for (int i_loc = 1; i_loc < numberSegment(); ++i_loc) {
-            if (m_segments[i_loc]->dataReady() == false) {
-                // find its outlet segment
-                const int outlet_segment = m_segments[i_loc]->outletSegment();
-                const int outlet_loc = numberToLocation(outlet_segment);
+            if( m_segments[i_loc].dataReady() ) continue;
 
-                // assert some information of the outlet_segment
-                assert(outlet_loc >= 0);
-                assert(m_segments[outlet_loc]->dataReady());
+            // find its outlet segment
+            const int outlet_segment = m_segments[i_loc].outletSegment();
+            const int outlet_loc = numberToLocation(outlet_segment);
 
-                const double outlet_depth = m_segments[outlet_loc]->depth();
-                const double outlet_length = m_segments[outlet_loc]->totalLength();
-                const double temp_depth = outlet_depth + m_segments[i_loc]->depth();
-                const double temp_length = outlet_length + m_segments[i_loc]->totalLength();
+            // assert some information of the outlet_segment
+            assert(outlet_loc >= 0);
+            assert(m_segments[outlet_loc].dataReady());
 
-                // applying the calculated length and depth to the current segment
-                SegmentPtr new_segment = std::make_shared<Segment>(m_segments[i_loc]);
-                new_segment->setDepthAndLength(temp_depth, temp_length);
-                addSegment(new_segment);
-            }
+            const double outlet_depth = m_segments[outlet_loc].depth();
+            const double outlet_length = m_segments[outlet_loc].totalLength();
+            const double temp_depth = outlet_depth + m_segments[i_loc].depth();
+            const double temp_length = outlet_length + m_segments[i_loc].totalLength();
+
+            // applying the calculated length and depth to the current segment
+            Segment new_segment = this->m_segments[i_loc];
+            new_segment.setDepthAndLength(temp_depth, temp_length);
+            addSegment(new_segment);
         }
     }
 
@@ -356,13 +336,13 @@ namespace Opm {
 
         while (current_loc < numberSegment()) {
             // the branch number of the last segment that is done re-ordering
-            const int last_branch_number = m_segments[current_loc-1]->branchNumber();
+            const int last_branch_number = m_segments[current_loc-1].branchNumber();
             // the one need to be swapped to the current_loc.
             int target_segment_loc = -1;
 
             // looking for target_segment_loc
             for (int i_loc = current_loc; i_loc < numberSegment(); ++i_loc) {
-                const int outlet_segment_number = m_segments[i_loc]->outletSegment();
+                const int outlet_segment_number = m_segments[i_loc].outletSegment();
                 const int outlet_segment_location = numberToLocation(outlet_segment_number);
                 if (outlet_segment_location < 0) { // not found the outlet_segment in the done re-ordering segments
                     continue;
@@ -370,8 +350,8 @@ namespace Opm {
                 if (target_segment_loc < 0) { // first time found a candidate
                     target_segment_loc = i_loc;
                 } else { // there is already a candidate, chosing the one with the same branch number with last_branch_number
-                    const int old_target_segment_loc_branch = m_segments[target_segment_loc]->branchNumber();
-                    const int new_target_segment_loc_branch = m_segments[i_loc]->branchNumber();
+                    const int old_target_segment_loc_branch = m_segments[target_segment_loc].branchNumber();
+                    const int new_target_segment_loc_branch = m_segments[i_loc].branchNumber();
                     if (new_target_segment_loc_branch == last_branch_number) {
                         if (old_target_segment_loc_branch != last_branch_number) {
                             target_segment_loc = i_loc;
@@ -389,10 +369,32 @@ namespace Opm {
             if (target_segment_loc > current_loc) {
                 std::swap(m_segments[current_loc], m_segments[target_segment_loc]);
             }
-            const int segment_number = m_segments[current_loc]->segmentNumber();
+            const int segment_number = m_segments[current_loc].segmentNumber();
             m_number_to_location[segment_number] = current_loc;
             current_loc++;
         }
     }
 
+    bool SegmentSet::operator==( const SegmentSet& rhs ) const {
+        return this->m_well_name == rhs.m_well_name
+            && this->m_number_branch == rhs.m_number_branch
+            && this->m_depth_top == rhs.m_depth_top
+            && this->m_length_top == rhs.m_length_top
+            && this->m_volume_top == rhs.m_length_top
+            && this->m_length_depth_type == rhs.m_length_depth_type
+            && this->m_comp_pressure_drop == rhs.m_comp_pressure_drop
+            && this->m_multiphase_model == rhs.m_multiphase_model
+            && this->m_segments.size() == rhs.m_segments.size()
+            && this->m_number_to_location.size() == rhs.m_number_to_location.size()
+            && std::equal( this->m_segments.begin(),
+                           this->m_segments.end(),
+                           rhs.m_segments.begin() )
+            && std::equal( this->m_number_to_location.begin(),
+                           this->m_number_to_location.end(),
+                           rhs.m_number_to_location.begin() );
+    }
+
+    bool SegmentSet::operator!=( const SegmentSet& rhs ) const {
+        return !( *this == rhs );
+    }
 }

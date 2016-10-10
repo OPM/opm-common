@@ -131,9 +131,9 @@ namespace Opm {
 
         // for multi-segment wells
         bool isMultiSegment(size_t time_step) const;
-        std::shared_ptr< const SegmentSet > getSegmentSet(size_t time_step) const;
+        const SegmentSet& getSegmentSet(size_t time_step) const;
 
-        void addSegmentSet(size_t time_step, std::shared_ptr< const SegmentSet > new_segmentset);
+        void addSegmentSet(size_t time_step, SegmentSet new_segmentset);
 
         const MessageContainer& getMessageContainer() const;
     private:
@@ -173,7 +173,7 @@ namespace Opm {
         MessageContainer m_messages;
         // WELSEGS DATA - for mutli-segment wells
         // flag indicating if the well is a multi-segment well
-        std::shared_ptr<DynamicState<std::shared_ptr< const SegmentSet >>> m_segmentset;
+        std::shared_ptr<DynamicState< SegmentSet >> m_segmentset;
     };
 }
 

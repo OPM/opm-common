@@ -30,7 +30,6 @@ namespace Opm {
 
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                 double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in);
-        Segment(std::shared_ptr<const Segment> segment_in);
 
         int segmentNumber() const;
         int branchNumber() const;
@@ -47,6 +46,9 @@ namespace Opm {
         void setDepthAndLength(const double depth_in, const double length_in);
 
         static double invalidValue();
+
+        bool operator==( const Segment& ) const;
+        bool operator!=( const Segment& ) const;
 
 
     private:
@@ -100,10 +102,6 @@ namespace Opm {
         // while they are not supported by the keyword at the moment.
 
     };
-
-    typedef std::shared_ptr<Segment> SegmentPtr;
-    typedef std::shared_ptr<const Segment> SegmentConstPtr;
-
 }
 
 #endif

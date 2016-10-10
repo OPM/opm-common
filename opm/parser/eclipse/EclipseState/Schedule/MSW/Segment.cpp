@@ -52,21 +52,6 @@ namespace Opm {
     {
     }
 
-    Segment::Segment(std::shared_ptr<const Segment> segment_in)
-    : m_segment_number(segment_in->segmentNumber()),
-      m_branch(segment_in->branchNumber()),
-      m_outlet_segment(segment_in->outletSegment()),
-      m_total_length(segment_in->totalLength()),
-      m_depth(segment_in->depth()),
-      m_internal_diameter(segment_in->internalDiameter()),
-      m_roughness(segment_in->roughness()),
-      m_cross_area(segment_in->crossArea()),
-      m_volume(segment_in->volume()),
-      m_data_ready(segment_in->dataReady())
-    {
-    }
-
-
     int Segment::segmentNumber() const {
         return m_segment_number;
     }
@@ -128,4 +113,29 @@ namespace Opm {
         return invalid_value;
     }
 
+    bool Segment::operator==( const Segment& rhs ) const {
+        return this->m_segment_number    == rhs.m_segment_number
+            && this->m_branch            == rhs.m_branch
+            && this->m_outlet_segment    == rhs.m_outlet_segment
+            && this->m_total_length      == rhs.m_total_length
+            && this->m_depth             == rhs.m_depth
+            && this->m_internal_diameter == rhs.m_internal_diameter
+            && this->m_roughness         == rhs.m_roughness
+            && this->m_cross_area        == rhs.m_cross_area
+            && this->m_volume            == rhs.m_volume
+            && this->m_data_ready        == rhs.m_data_ready;
+    }
+
+    bool Segment::operator!=( const Segment& rhs ) const {
+        return this->m_segment_number    == rhs.m_segment_number
+            && this->m_branch            == rhs.m_branch
+            && this->m_outlet_segment    == rhs.m_outlet_segment
+            && this->m_total_length      == rhs.m_total_length
+            && this->m_depth             == rhs.m_depth
+            && this->m_internal_diameter == rhs.m_internal_diameter
+            && this->m_roughness         == rhs.m_roughness
+            && this->m_cross_area        == rhs.m_cross_area
+            && this->m_volume            == rhs.m_volume
+            && this->m_data_ready        == rhs.m_data_ready;
+    }
 }

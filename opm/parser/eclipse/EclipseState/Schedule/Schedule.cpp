@@ -1218,11 +1218,11 @@ namespace Opm {
     }
 
     void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
-        SegmentSetPtr newSegmentset= std::make_shared<SegmentSet>();
-        newSegmentset->segmentsFromWELSEGSKeyword(keyword);
+        SegmentSet newSegmentset;
+        newSegmentset.segmentsFromWELSEGSKeyword(keyword);
 
-        const std::string& well_name = newSegmentset->wellName();
-        auto well = this->m_wells.get( well_name );
+        const std::string& well_name = newSegmentset.wellName();
+        auto& well = this->m_wells.get( well_name );
 
         // update multi-segment related information for the well
         well->addSegmentSet(currentStep, newSegmentset);
@@ -1233,15 +1233,15 @@ namespace Opm {
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         auto& well = *this->m_wells.get( well_name );
 
-        std::vector<CompsegsPtr> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( keyword );
+        auto compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( keyword );
 
-        SegmentSetConstPtr current_segmentSet = well.getSegmentSet(currentStep);
+        const auto& current_segmentSet = well.getSegmentSet(currentStep);
         Compsegs::processCOMPSEGS(compsegs_vector, current_segmentSet);
 
         CompletionSetConstPtr current_completionSet = well.getCompletions(currentStep);
         // it is necessary to update the segment related information for some completions.
         CompletionSetPtr new_completionSet = CompletionSetPtr(current_completionSet->shallowCopy());
-        Compsegs::updateCompletionsWithSegment(compsegs_vector, new_completionSet);
+        Compsegs::updateCompletionsWithSegment(compsegs_vector, *new_completionSet);
 
         well.addCompletionSet(currentStep, new_completionSet);
     }
