@@ -22,20 +22,17 @@
 #define OPM_TABLE_SCHEMA_HPP
 
 #include <string>
-#include <vector>
-
-#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
 namespace Opm {
 
     class TableSchema {
     public:
-        TableSchema();
-        void addColumn(const ColumnSchema& column);
-        const ColumnSchema&& getColumn( const std::string& name ) const;
-        const ColumnSchema&& getColumn( size_t columnIndex ) const;
+        void addColumn( ColumnSchema );
+        const ColumnSchema& getColumn( const std::string& name ) const;
+        const ColumnSchema& getColumn( size_t columnIndex ) const;
         bool hasColumn(const std::string&) const;
 
         /* Number of columns */

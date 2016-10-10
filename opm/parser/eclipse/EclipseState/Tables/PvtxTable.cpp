@@ -52,12 +52,12 @@ namespace Opm {
                 m_outerColumn.addValue( deckRecord.getItem( 0 ).getSIDouble( 0 ));
 
                 const auto& dataItem = deckRecord.getItem(1);
-                std::shared_ptr<SimpleTable> underSaturatedTable = std::make_shared<SimpleTable>(m_underSaturatedSchema , dataItem);
+                std::shared_ptr<SimpleTable> underSaturatedTable = std::make_shared<SimpleTable>(*m_underSaturatedSchema , dataItem);
                 m_underSaturatedTables.push_back( underSaturatedTable );
             }
 
 
-            m_saturatedTable = std::make_shared<SimpleTable>(m_saturatedSchema);
+            m_saturatedTable = std::make_shared<SimpleTable>(*m_saturatedSchema);
             for (size_t sat_index = 0; sat_index < size(); sat_index++) {
                 const auto& underSaturatedTable = getUnderSaturatedTable( sat_index );
                 std::vector<double> row(4);

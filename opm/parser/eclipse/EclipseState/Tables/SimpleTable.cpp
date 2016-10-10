@@ -25,22 +25,16 @@
 
 namespace Opm {
 
-    SimpleTable::SimpleTable()
-    {
+    SimpleTable::SimpleTable( TableSchema schema, const DeckItem& deckItem) :
+        m_schema( std::move( schema ) ) {
 
+        init( deckItem );
     }
 
 
-    SimpleTable::SimpleTable(std::shared_ptr<TableSchema> schema , const DeckItem& deckItem)
-     : m_schema( schema )
-    {
-        init(deckItem);
-    }
+    SimpleTable::SimpleTable( TableSchema schema ) :
+        m_schema( std::move( schema ) ) {
 
-
-    SimpleTable::SimpleTable(std::shared_ptr<TableSchema> schema )
-        : m_schema( schema )
-    {
         addColumns();
     }
 
@@ -57,8 +51,8 @@ namespace Opm {
 
 
     void SimpleTable::addColumns() {
-        for (size_t colIdx = 0; colIdx < m_schema->size(); ++colIdx) {
-            const auto& schemaColumn = m_schema->getColumn( colIdx );
+        for (size_t colIdx = 0; colIdx < m_schema.size(); ++colIdx) {
+            const auto& schemaColumn = m_schema.getColumn( colIdx );
             TableColumn column(schemaColumn); // Some move trickery here ...
             m_columns.insert( schemaColumn.name() , column );
         }
@@ -76,16 +70,13 @@ namespace Opm {
         return col[row];
     }
 
+    void SimpleTable::init( const DeckItem& deckItem ) {
+        this->addColumns();
 
+        if ( (deckItem.size() % numColumns()) != 0)
+            throw std::runtime_error("Number of columns in the data file is"
+                    "inconsistent with the ones specified");
 
-// create table from single record
-void SimpleTable::init( const DeckItem& deckItem)
-{
-    addColumns();
-    if ( (deckItem.size() % numColumns()) != 0)
-        throw std::runtime_error("Number of columns in the data file is"
-                                 "inconsistent with the ones specified");
-    {
         size_t rows = deckItem.size() / numColumns();
         for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
             auto& column = getColumn( colIdx );
@@ -100,39 +91,35 @@ void SimpleTable::init( const DeckItem& deckItem)
                 column.applyDefaults(getColumn( 0 ));
         }
     }
-}
 
 size_t SimpleTable::numColumns() const {
-    return m_schema->size();
+    return m_schema.size();
 }
 
 size_t SimpleTable::numRows() const {
-    const auto column0 = getColumn(0);
-    return column0.size();
+    return getColumn( 0 ).size();
 }
 
-
-
     const TableColumn& SimpleTable::getColumn( const std::string& name) const {
-        return std::forward<const TableColumn &>(m_columns.get( name ));
+        return m_columns.get( name );
     }
 
     const TableColumn& SimpleTable::getColumn( size_t columnIndex )  const {
-        return std::forward<const TableColumn &>(m_columns.get( columnIndex ));
+        return m_columns.get( columnIndex );
     }
 
 
     TableColumn& SimpleTable::getColumn( const std::string& name) {
-        return std::forward<TableColumn &>(m_columns.get( name ));
+        return m_columns.get( name );
     }
 
     TableColumn& SimpleTable::getColumn( size_t columnIndex ) {
-        return std::forward<TableColumn &>(m_columns.get( columnIndex ));
+        return m_columns.get( columnIndex );
     }
 
 
     bool SimpleTable::hasColumn(const std::string& name) const {
-        return m_schema->hasColumn( name );
+        return m_schema.hasColumn( name );
     }
 
     double SimpleTable::evaluate(const std::string& columnName, double xPos) const

@@ -20,6 +20,7 @@
 #define	OPM_PARSER_SIMPLE_TABLE_HPP
 
 #include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 
 #include <map>
@@ -30,15 +31,13 @@
 namespace Opm {
 
     class DeckItem;
-    class TableSchema;
 
     class SimpleTable {
 
     public:
-        SimpleTable(const SimpleTable&) = default;
-        SimpleTable();
-        SimpleTable(std::shared_ptr<TableSchema> schema, const DeckItem& deckItem);
-        explicit SimpleTable(std::shared_ptr<TableSchema> schema);
+        SimpleTable() = default;
+        SimpleTable(TableSchema, const DeckItem& deckItem);
+        explicit SimpleTable( TableSchema );
         void addColumns();
         void init(const DeckItem& deckItem);
         size_t numColumns() const;
@@ -64,12 +63,9 @@ namespace Opm {
     protected:
         std::map<std::string, size_t> m_columnNames;
         std::vector<std::vector<bool> > m_valueDefaulted;
-        std::shared_ptr<TableSchema> m_schema;
+        TableSchema m_schema;
         OrderedMap<TableColumn> m_columns;
     };
-
-    typedef std::shared_ptr<SimpleTable> SimpleTablePtr;
-    typedef std::shared_ptr<const SimpleTable> SimpleTableConstPtr;
 }
 
 #endif

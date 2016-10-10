@@ -32,13 +32,13 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE( CreateTest ) {
-    std::shared_ptr<TableSchema> schema = std::make_shared<TableSchema>( );
+    TableSchema schema;
 
     {
         ColumnSchema col1("Name1" , Table::INCREASING , Table::DEFAULT_NONE);
         ColumnSchema col2("Name2" , Table::INCREASING , Table::DEFAULT_NONE);
-        schema->addColumn( col1 );
-        schema->addColumn( col2 );
+        schema.addColumn( col1 );
+        schema.addColumn( col2 );
     }
 
     SimpleTable table(schema);

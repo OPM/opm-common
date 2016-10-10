@@ -109,12 +109,10 @@ PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
 
 SwofTable::SwofTable( const DeckItem& item ) {
 
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "SW"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema( "KRW"  , Table::RANDOM              , Table::DEFAULT_LINEAR) );
-    m_schema->addColumn( ColumnSchema( "KROW" , Table::RANDOM              , Table::DEFAULT_LINEAR) );
-    m_schema->addColumn( ColumnSchema( "PCOW" , Table::RANDOM              , Table::DEFAULT_LINEAR) );
+    m_schema.addColumn( ColumnSchema( "SW"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "KRW"  , Table::RANDOM              , Table::DEFAULT_LINEAR) );
+    m_schema.addColumn( ColumnSchema( "KROW" , Table::RANDOM              , Table::DEFAULT_LINEAR) );
+    m_schema.addColumn( ColumnSchema( "PCOW" , Table::RANDOM              , Table::DEFAULT_LINEAR) );
 
     SimpleTable::init( item );
 }
@@ -137,12 +135,10 @@ const TableColumn& SwofTable::getPcowColumn() const {
 
 SgwfnTable::SgwfnTable( const DeckItem& item ) {
 
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema( "KRG"  , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KRGW" , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "PCGW" , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "KRG"  , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KRGW" , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "PCGW" , Table::RANDOM ,              Table::DEFAULT_LINEAR ) );
 
     SimpleTable::init( item );
 }
@@ -164,11 +160,10 @@ const TableColumn& SgwfnTable::getPcgwColumn() const {
 }
 
 SgofTable::SgofTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-    m_schema->addColumn( ColumnSchema("SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-    m_schema->addColumn( ColumnSchema("KRG"  , Table::RANDOM              , Table::DEFAULT_LINEAR ));
-    m_schema->addColumn( ColumnSchema("KROG" , Table::RANDOM              , Table::DEFAULT_LINEAR ));
-    m_schema->addColumn( ColumnSchema("PCOG" , Table::RANDOM              , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("SG"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema("KRG"  , Table::RANDOM              , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("KROG" , Table::RANDOM              , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("PCOG" , Table::RANDOM              , Table::DEFAULT_LINEAR ));
 
     SimpleTable::init( item );
 }
@@ -191,12 +186,10 @@ const TableColumn& SgofTable::getPcogColumn() const {
 }
 
 SlgofTable::SlgofTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema("SL"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema("KRG"  , Table::DECREASING , Table::DEFAULT_LINEAR ));
-    m_schema->addColumn( ColumnSchema("KROG" , Table::INCREASING , Table::DEFAULT_LINEAR ));
-    m_schema->addColumn( ColumnSchema("PCOG" , Table::DECREASING , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("SL"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema("KRG"  , Table::DECREASING , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("KROG" , Table::INCREASING , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("PCOG" , Table::DECREASING , Table::DEFAULT_LINEAR ));
 
     SimpleTable::init( item );
 
@@ -222,10 +215,8 @@ const TableColumn& SlgofTable::getPcogColumn() const {
 }
 
 Sof2Table::Sof2Table( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "SO"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema( "KRO" , Table::INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "SO"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "KRO" , Table::INCREASING , Table::DEFAULT_NONE ));
 
     SimpleTable::init(item);
 }
@@ -239,11 +230,10 @@ const TableColumn& Sof2Table::getKroColumn() const {
 }
 
 Sof3Table::Sof3Table( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
 
-    m_schema->addColumn( ColumnSchema("SO" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema("KROW" , Table::INCREASING , Table::DEFAULT_LINEAR ));
-    m_schema->addColumn( ColumnSchema("KROG" , Table::INCREASING , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("SO" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema("KROW" , Table::INCREASING , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("KROG" , Table::INCREASING , Table::DEFAULT_LINEAR ));
 
     SimpleTable::init( item );
 }
@@ -262,10 +252,9 @@ const TableColumn& Sof3Table::getKrogColumn() const {
 }
 
 PvdgTable::PvdgTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-    m_schema->addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema( "BG"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR));
-    m_schema->addColumn( ColumnSchema( "MUG" , Table::INCREASING          , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "BG"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR));
+    m_schema.addColumn( ColumnSchema( "MUG" , Table::INCREASING          , Table::DEFAULT_LINEAR ));
 
     SimpleTable::init( item );
 }
@@ -284,10 +273,9 @@ const TableColumn& PvdgTable::getViscosityColumn() const {
 }
 
 PvdoTable::PvdoTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-    m_schema->addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema( "BO"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR));
-    m_schema->addColumn( ColumnSchema( "MUO" , Table::INCREASING          , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "BO"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR));
+    m_schema.addColumn( ColumnSchema( "MUO" , Table::INCREASING          , Table::DEFAULT_LINEAR ));
 
     SimpleTable::init( item );
 }
@@ -306,11 +294,9 @@ const TableColumn& PvdoTable::getViscosityColumn() const {
 }
 
 SwfnTable::SwfnTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema("SW"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema("KRW"  , Table::INCREASING , Table::DEFAULT_LINEAR ));
-    m_schema->addColumn( ColumnSchema("PCOW" , Table::DECREASING , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("SW"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema("KRW"  , Table::INCREASING , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema("PCOW" , Table::DECREASING , Table::DEFAULT_LINEAR ));
 
     SimpleTable::init(item);
 }
@@ -328,11 +314,9 @@ const TableColumn& SwfnTable::getPcowColumn() const {
 }
 
 SgfnTable::SgfnTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema("SG"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema("KRG" , Table::INCREASING , Table::DEFAULT_LINEAR));
-    m_schema->addColumn( ColumnSchema("PCOG" , Table::INCREASING , Table::DEFAULT_LINEAR));
+    m_schema.addColumn( ColumnSchema("SG"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema("KRG" , Table::INCREASING , Table::DEFAULT_LINEAR));
+    m_schema.addColumn( ColumnSchema("PCOG" , Table::INCREASING , Table::DEFAULT_LINEAR));
 
     SimpleTable::init(item);
 }
@@ -351,11 +335,9 @@ const TableColumn& SgfnTable::getPcogColumn() const {
 }
 
 SsfnTable::SsfnTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema("SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-    m_schema->addColumn( ColumnSchema("GasRelPermMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-    m_schema->addColumn( ColumnSchema("SolventRelPermMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema("SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema("GasRelPermMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema("SolventRelPermMultiplier" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
 
     SimpleTable::init(item);
 }
@@ -374,11 +356,9 @@ const TableColumn& SsfnTable::getSolventRelPermMultiplierColumn() const {
 }
 
 PvdsTable::PvdsTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema( "BG"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR ));
-    m_schema->addColumn( ColumnSchema( "MUG" , Table::INCREASING  , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema( "P"   , Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "BG"  , Table::STRICTLY_DECREASING , Table::DEFAULT_LINEAR ));
+    m_schema.addColumn( ColumnSchema( "MUG" , Table::INCREASING  , Table::DEFAULT_LINEAR ));
 
     SimpleTable::init(item);
 }
@@ -396,10 +376,8 @@ const TableColumn& PvdsTable::getViscosityColumn() const {
 }
 
 PlyadsTable::PlyadsTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema("PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema("AdsorbedPolymer" , Table::INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema("PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema("AdsorbedPolymer" , Table::INCREASING , Table::DEFAULT_NONE ));
 
     SimpleTable::init(item);
 }
@@ -414,10 +392,8 @@ const TableColumn& PlyadsTable::getAdsorbedPolymerColumn() const {
 }
 
 PlymaxTable::PlymaxTable( const DeckRecord& record ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema("C_POLYMER",     Table::RANDOM , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema("C_POLYMER_MAX", Table::RANDOM , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("C_POLYMER",     Table::RANDOM , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("C_POLYMER_MAX", Table::RANDOM , Table::DEFAULT_NONE) );
 
     addColumns();
     for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
@@ -436,12 +412,11 @@ const TableColumn& PlymaxTable::getMaxPolymerConcentrationColumn() const {
 }
 
 PlyrockTable::PlyrockTable( const DeckRecord& record ) {
-    m_schema = std::make_shared< TableSchema >();
-    m_schema->addColumn( ColumnSchema("DeadPoreVolume",            Table::RANDOM , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema("ResidualResistanceFactor",  Table::RANDOM , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema("RockDensityFactor",         Table::RANDOM , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema("AdsorbtionIndex",           Table::RANDOM , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema("MaxAdsorbtion",             Table::RANDOM , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("DeadPoreVolume",            Table::RANDOM , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("ResidualResistanceFactor",  Table::RANDOM , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("RockDensityFactor",         Table::RANDOM , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("AdsorbtionIndex",           Table::RANDOM , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("MaxAdsorbtion",             Table::RANDOM , Table::DEFAULT_NONE) );
 
     addColumns();
     for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
@@ -472,10 +447,8 @@ const TableColumn& PlyrockTable::getMaxAdsorbtionColumn() const {
 }
 
 PlyviscTable::PlyviscTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-    m_schema->addColumn( ColumnSchema( "ViscosityMultiplier" , Table::INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema( "PolymerConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema( "ViscosityMultiplier" , Table::INCREASING , Table::DEFAULT_NONE));
     SimpleTable::init(item);
 }
 
@@ -488,10 +461,8 @@ const TableColumn& PlyviscTable::getViscosityMultiplierColumn() const {
 }
 
 PlydhflfTable::PlydhflfTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema("PolymerHalflife" , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema("PolymerHalflife" , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE ) );
 
     SimpleTable::init(item);
 }
@@ -507,7 +478,6 @@ const TableColumn& PlydhflfTable::getPolymerHalflifeColumn() const {
 PlyshlogTable::PlyshlogTable(
         const DeckRecord& indexRecord,
         const DeckRecord& dataRecord ) {
-    m_schema = std::make_shared< TableSchema >();
 
     {
         const auto& item = indexRecord.getItem<ParserKeywords::PLYSHLOG::REF_POLYMER_CONCENTRATION>();
@@ -532,8 +502,8 @@ PlyshlogTable::PlyshlogTable(
             setHasRefTemperature(false);
     }
 
-    m_schema->addColumn( ColumnSchema("WaterVelocity"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-    m_schema->addColumn( ColumnSchema("ShearMultiplier" , Table::RANDOM , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema("WaterVelocity"   , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema("ShearMultiplier" , Table::RANDOM , Table::DEFAULT_NONE));
 
     SimpleTable::init( dataRecord.getItem<ParserKeywords::PLYSHLOG::DATA>() );
 }
@@ -587,10 +557,8 @@ const TableColumn& PlyshlogTable::getShearMultiplierColumn() const {
 
 OilvisctTable::OilvisctTable( const DeckItem& item ) {
 
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema("Viscosity" , Table::DECREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema("Viscosity" , Table::DECREASING , Table::DEFAULT_NONE) );
     SimpleTable::init(item);
 }
 
@@ -603,10 +571,8 @@ const TableColumn& OilvisctTable::getOilViscosityColumn() const {
 }
 
 WatvisctTable::WatvisctTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn(ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
-    m_schema->addColumn(ColumnSchema("Viscosity"   , Table::DECREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("Viscosity"   , Table::DECREASING , Table::DEFAULT_NONE));
 
     SimpleTable::init(item);
 }
@@ -620,17 +586,15 @@ const TableColumn& WatvisctTable::getWaterViscosityColumn() const {
 } 
 
 GasvisctTable::GasvisctTable( const Deck& deck, const DeckItem& deckItem ) {
-    m_schema = std::make_shared< TableSchema >();
-
     int numComponents = deck.getKeyword<ParserKeywords::COMPS>().getRecord(0).getItem(0).get< int >(0);
 
     auto temperatureDimension = deck.getActiveUnitSystem().getDimension("Temperature");
     auto viscosityDimension = deck.getActiveUnitSystem().getDimension("Viscosity");
 
-    m_schema->addColumn( ColumnSchema( "Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema( "Temperature" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE));
     for (int compIdx = 0; compIdx < numComponents; ++ compIdx) {
         std::string columnName = "Viscosity" + std::to_string(compIdx);
-        m_schema->addColumn( ColumnSchema( columnName, Table::INCREASING , Table::DEFAULT_NONE ) );
+        m_schema.addColumn( ColumnSchema( columnName, Table::INCREASING , Table::DEFAULT_NONE ) );
     }
 
     SimpleTable::addColumns();
@@ -639,11 +603,11 @@ GasvisctTable::GasvisctTable( const Deck& deck, const DeckItem& deckItem ) {
         throw std::runtime_error("Number of columns in the data file is inconsistent "
                 "with the expected number for keyword GASVISCT");
 
-        size_t rows = deckItem.size() / m_schema->size();
-        for (size_t columnIndex=0; columnIndex < m_schema->size(); columnIndex++) {
+        size_t rows = deckItem.size() / m_schema.size();
+        for (size_t columnIndex=0; columnIndex < m_schema.size(); columnIndex++) {
             auto& column = getColumn( columnIndex );
             for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
-                size_t deckIndex = rowIdx * m_schema->size() + columnIndex;
+                size_t deckIndex = rowIdx * m_schema.size() + columnIndex;
 
                 if (deckItem.defaultApplied( deckIndex ))
                     column.addDefault();
@@ -671,10 +635,8 @@ const TableColumn& GasvisctTable::getGasViscosityColumn(size_t compIdx) const {
 }
 
 RtempvdTable::RtempvdTable(const DeckItem& item) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "Depth"       , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema( "Temperature" , Table::RANDOM , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "Depth"       , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "Temperature" , Table::RANDOM , Table::DEFAULT_NONE) );
 
     SimpleTable::init( item );
 }
@@ -695,8 +657,6 @@ RocktabTable::RocktabTable(
     m_isDirectional( isDirectional )
 {
 
-    m_schema = std::make_shared< TableSchema >();
-
     Table::ColumnOrderEnum POOrder;
 
     if (hasStressOption)
@@ -704,15 +664,15 @@ RocktabTable::RocktabTable(
     else
         POOrder = Table::STRICTLY_DECREASING;
 
-    m_schema->addColumn( ColumnSchema("PO"      , POOrder      , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema("PV_MULT" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema("PO"      , POOrder      , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema("PV_MULT" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
 
     if (isDirectional) {
-        m_schema->addColumn( ColumnSchema("PV_MULT_TRANX" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
-        m_schema->addColumn( ColumnSchema("PV_MULT_TRANY" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
-        m_schema->addColumn( ColumnSchema("PV_MULT_TRANZ" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+        m_schema.addColumn( ColumnSchema("PV_MULT_TRANX" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+        m_schema.addColumn( ColumnSchema("PV_MULT_TRANY" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+        m_schema.addColumn( ColumnSchema("PV_MULT_TRANZ" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
     } else
-        m_schema->addColumn( ColumnSchema("PV_MULT_TRAN" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
+        m_schema.addColumn( ColumnSchema("PV_MULT_TRAN" , Table::RANDOM , Table::DEFAULT_LINEAR ) );
 
     SimpleTable::init(item);
 }
@@ -747,10 +707,8 @@ const TableColumn& RocktabTable::getTransmissibilityMultiplierZColumn() const {
 }
 
 RsvdTable::RsvdTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema->addColumn( ColumnSchema( "RS" , Table::RANDOM , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "RS" , Table::RANDOM , Table::DEFAULT_NONE ));
 
     SimpleTable::init(item);
 }
@@ -764,10 +722,8 @@ const TableColumn& RsvdTable::getRsColumn() const {
 }
 
 RvvdTable::RvvdTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema( "RV"    ,  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "RV"    ,  Table::RANDOM , Table::DEFAULT_LINEAR ) );
     SimpleTable::init(item);
 }
 
@@ -780,16 +736,14 @@ const TableColumn& RvvdTable::getRvColumn() const {
 }
 
 EnkrvdTable::EnkrvdTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema( "KRWMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KRGMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KROMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KRWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KRGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KROCRITG",Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KROCRITW",Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "KRWMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KRGMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KROMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KRWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KRGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KROCRITG",Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KROCRITW",Table::RANDOM , Table::DEFAULT_LINEAR ) );
 
     SimpleTable::init(item);
 }
@@ -827,17 +781,15 @@ const TableColumn& EnkrvdTable::getKrocritwColumn() const {
 }
 
 EnptvdTable::EnptvdTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema( "SWCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SWCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SWMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SGCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SGCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SGMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SOWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SOGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "SWCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SWCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SWMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SGCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SGCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SGMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SOWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SOGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
 
     SimpleTable::init(item);
 }
@@ -879,16 +831,14 @@ const TableColumn& EnptvdTable::getSogcritColumn() const {
 }
 
 ImkrvdTable::ImkrvdTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema( "KRWMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KRGMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KROMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KRWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KRGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KROCRITG",Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "KROCRITW", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "KRWMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KRGMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KROMAX",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KRWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KRGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KROCRITG",Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "KROCRITW", Table::RANDOM , Table::DEFAULT_LINEAR ) );
 
     SimpleTable::init(item);
 }
@@ -927,17 +877,15 @@ const TableColumn& ImkrvdTable::getKrocritwColumn() const {
 
 
 ImptvdTable::ImptvdTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
-    m_schema->addColumn( ColumnSchema( "SWCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SWCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SWMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SGCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SGCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SGMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SOWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
-    m_schema->addColumn( ColumnSchema( "SOGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "DEPTH" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "SWCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SWCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SWMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SGCO",    Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SGCRIT",  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SGMAX",   Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SOWCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    m_schema.addColumn( ColumnSchema( "SOGCRIT", Table::RANDOM , Table::DEFAULT_LINEAR ) );
 
     SimpleTable::init(item);
 }
@@ -979,10 +927,8 @@ const TableColumn& ImptvdTable::getSogcritColumn() const {
 }
 
 SorwmisTable::SorwmisTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema( "MiscibleResidualOilSaturation" , Table::INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "MiscibleResidualOilSaturation" , Table::INCREASING , Table::DEFAULT_NONE) );
 
     SimpleTable::init(item);
 }
@@ -996,10 +942,8 @@ const TableColumn& SorwmisTable::getMiscibleResidualOilColumn() const {
 }
 
 SgcwmisTable::SgcwmisTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema( "MiscibleResidualGasSaturation" , Table::INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "WaterSaturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "MiscibleResidualGasSaturation" , Table::INCREASING , Table::DEFAULT_NONE) );
     SimpleTable::init(item);
 }
 
@@ -1012,10 +956,8 @@ const TableColumn& SgcwmisTable::getMiscibleResidualGasColumn() const {
 }
 
 MiscTable::MiscTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "SolventFraction" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
     SimpleTable::init( item );
 }
 
@@ -1029,10 +971,8 @@ const TableColumn& MiscTable::getMiscibilityColumn() const {
 
 
 PmiscTable::PmiscTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "OilPhasePressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "OilPhasePressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
     SimpleTable::init( item );
 }
 
@@ -1045,10 +985,8 @@ const TableColumn& PmiscTable::getMiscibilityColumn() const {
 }
 
 TlpmixpaTable::TlpmixpaTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "OilPhasePressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
-    m_schema->addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "OilPhasePressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "Miscibility" , Table::INCREASING , Table::DEFAULT_NONE) );
     SimpleTable::init( item );
 }
 
@@ -1061,11 +999,9 @@ const TableColumn& TlpmixpaTable::getMiscibilityColumn() const {
 }
 
 MsfnTable::MsfnTable( const DeckItem& item ) {
-    m_schema = std::make_shared< TableSchema >();
-
-    m_schema->addColumn( ColumnSchema( "GasPhaseFraction", Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE));
-    m_schema->addColumn( ColumnSchema( "GasSolventRelpermMultiplier", Table::INCREASING  , Table::DEFAULT_NONE));
-    m_schema->addColumn( ColumnSchema( "OilRelpermMultiplier", Table::DECREASING  , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema( "GasPhaseFraction", Table::STRICTLY_INCREASING  , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema( "GasSolventRelpermMultiplier", Table::INCREASING  , Table::DEFAULT_NONE));
+    m_schema.addColumn( ColumnSchema( "OilRelpermMultiplier", Table::DECREASING  , Table::DEFAULT_NONE));
 
     SimpleTable::init( item );
 

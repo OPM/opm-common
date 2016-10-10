@@ -51,7 +51,7 @@ public:
             m_vector[index] = value;
         } else {
             size_t index = m_vector.size();
-            m_vector.push_back( value );
+            m_vector.push_back( std::move( value ) );
             m_map.insert( std::pair<std::string, size_t>(key , index));
         }
     }

@@ -22,22 +22,16 @@
 
 namespace Opm {
 
-    TableSchema::TableSchema()
-    {
-
+    void TableSchema::addColumn( ColumnSchema column ) {
+        m_columns.insert( column.name(), column );
     }
 
-    void TableSchema::addColumn(const ColumnSchema& column) {
-        m_columns.insert( column.name() , column );
+    const ColumnSchema& TableSchema::getColumn( const std::string& name ) const {
+        return m_columns.get( name );
     }
 
-
-    const ColumnSchema&& TableSchema::getColumn( const std::string& name ) const {
-        return std::forward<const ColumnSchema>( m_columns.get( name ) );
-    }
-
-    const ColumnSchema&& TableSchema::getColumn( size_t columnIndex ) const {
-        return std::forward<const ColumnSchema>( m_columns.get( columnIndex) );
+    const ColumnSchema& TableSchema::getColumn( size_t columnIndex ) const {
+        return m_columns.get( columnIndex );
     }
 
     size_t TableSchema::size() const {
@@ -49,6 +43,3 @@ namespace Opm {
     }
 
 }
-
-
-
