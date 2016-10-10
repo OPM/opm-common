@@ -20,12 +20,12 @@
 #ifndef OPM_SIMULATION_CONFIG_HPP
 #define OPM_SIMULATION_CONFIG_HPP
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 
 namespace Opm {
 
-    class ThresholdPressure;
+    class Deck;
+    class Eclipse3DProperties;
 
     class SimulationConfig {
 
@@ -34,27 +34,18 @@ namespace Opm {
         SimulationConfig(const Deck& deck,
                          const Eclipse3DProperties& gridProperties);
 
-        std::shared_ptr<const ThresholdPressure> getThresholdPressure() const;
+        const ThresholdPressure& getThresholdPressure() const;
         bool hasThresholdPressure() const;
         bool useCPR() const;
         bool hasDISGAS() const;
         bool hasVAPOIL() const;
 
     private:
-
-        void initThresholdPressure(const Deck& deck,
-                                   const Eclipse3DProperties& gridProperties);
-
-        std::shared_ptr< const ThresholdPressure > m_ThresholdPressure;
+        ThresholdPressure m_ThresholdPressure;
         bool m_useCPR;
         bool m_DISGAS;
         bool m_VAPOIL;
     };
-
-
-
-    typedef std::shared_ptr<SimulationConfig> SimulationConfigPtr;
-    typedef std::shared_ptr<const SimulationConfig> SimulationConfigConstPtr;
 
 } //namespace Opm
 

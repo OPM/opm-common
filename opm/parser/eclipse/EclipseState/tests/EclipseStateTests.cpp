@@ -243,9 +243,7 @@ BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
     const auto& simConf = state.getSimulationConfig();
 
     BOOST_CHECK(simConf.hasThresholdPressure());
-
-    std::shared_ptr<const ThresholdPressure> thresholdPressure = simConf.getThresholdPressure();
-    BOOST_CHECK_EQUAL(thresholdPressure->size(), 3);
+    BOOST_CHECK_EQUAL(simConf.getThresholdPressure().size(), 3);
 }
 
 

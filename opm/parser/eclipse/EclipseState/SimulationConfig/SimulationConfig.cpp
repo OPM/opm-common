@@ -48,6 +48,7 @@ namespace Opm {
 
     SimulationConfig::SimulationConfig(const Deck& deck,
                                        const Eclipse3DProperties& eclipseProperties) :
+        m_ThresholdPressure( deck, eclipseProperties ),
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false)
@@ -68,24 +69,14 @@ namespace Opm {
                 m_VAPOIL = true;
             }
         }
-
-        initThresholdPressure(deck, eclipseProperties);
     }
 
-
-    void SimulationConfig::initThresholdPressure(const Deck& deck,
-                                                 const Eclipse3DProperties& eclipseProperties) {
-        m_ThresholdPressure = std::make_shared<const ThresholdPressure>(deck, eclipseProperties);
-    }
-
-
-    std::shared_ptr<const ThresholdPressure> SimulationConfig::getThresholdPressure() const {
+    const ThresholdPressure& SimulationConfig::getThresholdPressure() const {
         return m_ThresholdPressure;
     }
 
-
     bool SimulationConfig::hasThresholdPressure() const {
-        return m_ThresholdPressure->size() > 0;
+        return m_ThresholdPressure.size() > 0;
     }
 
     bool SimulationConfig::useCPR() const {

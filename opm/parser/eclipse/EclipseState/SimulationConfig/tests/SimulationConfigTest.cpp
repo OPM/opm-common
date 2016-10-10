@@ -115,9 +115,7 @@ BOOST_AUTO_TEST_CASE(SimulationConfigGetThresholdPressureTableTest) {
     TableManager tm(*deck);
     EclipseGrid eg(10, 3, 4);
     Eclipse3DProperties ep(*deck, tm, eg);
-    SimulationConfigConstPtr simulationConfigPtr;
-    BOOST_CHECK_NO_THROW(simulationConfigPtr = std::make_shared
-            <const SimulationConfig>(*deck, ep));
+    BOOST_CHECK_NO_THROW( SimulationConfig( *deck, ep ) );
 }
 
 
