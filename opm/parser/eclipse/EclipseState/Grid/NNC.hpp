@@ -20,10 +20,6 @@
 #ifndef OPM_PARSER_NNC_HPP
 #define OPM_PARSER_NNC_HPP
 
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
-
 #include <cstddef>
 #include <memory>
 #include <vector>
@@ -37,18 +33,15 @@ struct NNCdata {
     double trans;
 };
 
+class Deck;
+class GridDims;
+
 /// Represents non-neighboring connections (non-standard adjacencies).
 /// This class is essentially a directed weighted graph.
 class NNC
 {
 public:
-    NNC();
-
-    /// [[deprecated]]
-    NNC(std::shared_ptr<const Deck> deck_ptr, std::shared_ptr< const EclipseGrid > eclipseGrid);
-
-    /// [[deprecated]]
-    NNC(const Deck& deck, std::shared_ptr< const EclipseGrid > eclipseGrid);
+    NNC() = default;
 
     /// Construct from input deck.
     NNC(const Deck& deck, const GridDims& gridDims);

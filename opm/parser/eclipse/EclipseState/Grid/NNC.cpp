@@ -30,16 +30,6 @@
 
 namespace Opm
 {
-    /// [[deprecated]]
-    NNC::NNC(std::shared_ptr<const Deck> deck, EclipseGridConstPtr eclipseGrid) :
-            NNC(*deck, eclipseGrid)
-    {}
-
-    /// [[deprecated]]
-    NNC::NNC(const Deck& deck, EclipseGridConstPtr eclipseGrid) :
-            NNC(deck, *eclipseGrid)
-    {}
-
     NNC::NNC(const Deck& deck, const GridDims& gridDims) {
         const auto& nncs = deck.getKeywordList<ParserKeywords::NNC>();
         for (size_t idx_nnc = 0; idx_nnc<nncs.size(); ++idx_nnc) {
@@ -63,12 +53,6 @@ namespace Opm
             }
         }
     }
-
-    // default constructor
-    NNC::NNC() {
-    }
-
-
     void NNC::addNNC(const size_t cell1, const size_t cell2, const double trans) {
         NNCdata tmp;
         tmp.cell1 = cell1;
