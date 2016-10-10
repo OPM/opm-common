@@ -35,7 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTreeNode.hpp>
 
 using namespace Opm;

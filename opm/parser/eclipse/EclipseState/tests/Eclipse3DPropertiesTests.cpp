@@ -36,7 +36,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 static Opm::DeckPtr createDeck() {
     const char *deckData = "RUNSPEC\n"
