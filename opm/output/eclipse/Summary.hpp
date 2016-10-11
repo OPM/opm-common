@@ -32,6 +32,7 @@
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
+#include <opm/output/eclipse/RegionCache.hpp>
 
 namespace Opm {
 
@@ -41,6 +42,8 @@ namespace Opm {
 
 namespace out {
 
+    class RegionCache;
+
 class Summary {
     public:
         Summary( const EclipseState&, const SummaryConfig& );
@@ -49,9 +52,9 @@ class Summary {
 
         void add_timestep( int report_step,
                            double secs_elapsed,
-                           const EclipseGrid& grid, 
+                           const EclipseGrid& grid,
                            const EclipseState& es,
-                           const std::unordered_map<int, std::vector<size_t>>& regionCells,
+                           const RegionCache& regionCache,
                            const data::Wells&,
                            const data::Solution& );
         void write();

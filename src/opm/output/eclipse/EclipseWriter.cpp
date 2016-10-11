@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/RegionCache.hpp>
 
 #include <cstdlib>
 #include <memory>     // unique_ptr
@@ -400,7 +401,7 @@ class EclipseWriter::Impl {
 
         const EclipseState& es;
         EclipseGrid grid;
-        std::unordered_map<int , std::vector<size_t>> regionCells;
+        out::RegionCache regionCache;
         std::string outputDir;
         std::string baseName;
         out::Summary summary;
@@ -416,6 +417,7 @@ EclipseWriter::Impl::Impl( const EclipseState& eclipseState,
                            EclipseGrid grid_)
     : es( eclipseState )
     , grid( std::move( grid_ ) )
+    , regionCache( *es , grid )
     , outputDir( eclipseState.getIOConfig().getOutputDir() )
     , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
     , summary( eclipseState, eclipseState.getSummaryConfig() )
@@ -424,6 +426,8 @@ EclipseWriter::Impl::Impl( const EclipseState& eclipseState,
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
     , ert_phase_mask( ertPhaseMask( eclipseState.getTableManager() ) )
 {}
+
+
 
 void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const NNC& nnc) const {
     const auto& units = this->es.getUnits();
@@ -802,7 +806,7 @@ void EclipseWriter::writeTimeStep(int report_step,
                                       secs_elapsed,
                                       this->impl->grid,
                                       this->impl->es,
-                                      this->impl->regionCells,
+                                      this->impl->regionCache,
                                       wells ,
                                       cells );
     this->impl->summary.write();
@@ -828,20 +832,6 @@ EclipseWriter::EclipseWriter( const EclipseState& es, EclipseGrid grid)
                                       + outputDir + "' is not a directory");
         }
     }
-
-    /*
-       Precalculate the cell - region distribution for faster
-       evaluation of region properties.
-    */
-    {
-        const auto& properties = this->impl->es.get3DProperties();
-        const auto& fipnum = properties.getIntGridProperty("FIPNUM");
-        const auto& region_values = properties.getRegions( "FIPNUM" );
-
-        for (auto region_id : region_values)
-            this->impl->regionCells.emplace( region_id , fipnum.cellsEqual( region_id , this->impl->grid ));
-    }
-
 }
 
 EclipseWriter::~EclipseWriter() {}

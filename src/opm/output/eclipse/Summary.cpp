@@ -17,7 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <opm/output/eclipse/Summary.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -29,6 +28,9 @@
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/RegionCache.hpp>
 
 /*
  * This class takes simulator state and parser-provided information and
@@ -125,7 +127,7 @@ struct fn_args {
     int  num;
     const data::Wells& wells;
     const data::Solution& state;
-    const std::unordered_map<int , std::vector<size_t>>& regionCells;
+    const out::RegionCache& regionCache;
     const GridDims& grid;
 };
 
@@ -283,14 +285,13 @@ inline quantity duration( const fn_args& args ) {
 }
 
 quantity rpr(const fn_args& args) {
-    const auto& pair = args.regionCells.find( args.num );
-    if (pair == args.regionCells.end())
+    const auto& cells = args.regionCache.cells( args.num );
+    if (cells.size() == 0)
         return { 0.0 , measure::pressure };
 
     double RPR = 0;
 
     const std::vector<double>& pressure = args.state.data( "PRESSURE" );
-    const auto& cells = pair->second;
 
     for (auto cell_index : cells)
         RPR += pressure[cell_index];
@@ -586,9 +587,8 @@ Summary::Summary( const EclipseState& st,
         /* get unit strings by calling each function with dummy input */
         const auto handle = funs.find( keyword )->second;
         const std::vector< const Well* > dummy_wells;
-        const std::unordered_map<int,std::vector<size_t>> dummy_cells;
         GridDims dummy_grid(1,1,1);
-        const fn_args no_args{ dummy_wells, 0, 0, 0, {} , {}, dummy_cells , dummy_grid };
+        const fn_args no_args{ dummy_wells, 0, 0, 0, {} , {}, {} , dummy_grid };
         const auto val = handle( no_args );
         const auto* unit = st.getUnits().name( val.unit );
 
@@ -603,7 +603,7 @@ void Summary::add_timestep( int report_step,
                             double secs_elapsed,
                             const EclipseGrid& grid,
                             const EclipseState& es,
-                            const std::unordered_map<int, std::vector<size_t>>& regionCells,
+                            const RegionCache& regionCache,
                             const data::Wells& wells ,
                             const data::Solution& state) {
 
@@ -618,7 +618,7 @@ void Summary::add_timestep( int report_step,
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
         const auto schedule_wells = find_wells( schedule, f.first, timestep );
-        const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCells , grid} );
+        const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCache , grid} );
 
         const auto unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         const auto res = smspec_node_is_total( f.first ) && prev_tstep

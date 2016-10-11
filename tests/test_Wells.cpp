@@ -72,3 +72,5 @@ BOOST_AUTO_TEST_CASE(get_wrong) {
     BOOST_CHECK_EQUAL( def, rates.get( rt::oil, def ) );
     BOOST_CHECK_THROW( rates.get( rt::oil ), std::invalid_argument );
 }
+
+
