@@ -34,7 +34,7 @@ namespace Opm {
         const std::string paths = "PATHS";
         const unsigned int maxKeywordLength = 8;
 
-        constexpr char sep_table[ 256 ] = {
+        constexpr bool sep_table[ 256 ] = {
             0, 0, 0, 0, 0, 0, 0, 0, 0,
             1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
@@ -59,7 +59,7 @@ namespace Opm {
             }
         };
 
-        constexpr char q_table[ 256 ] = {
+        constexpr bool q_table[ 256 ] = {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

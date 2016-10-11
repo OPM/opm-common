@@ -679,7 +679,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if( m_deckParserKeywords.count( name ) )
             return true;
 
-        return matchingKeyword( name );
+        return bool( matchingKeyword( name ) );
     }
 
 void Parser::addParserKeyword( std::unique_ptr< const ParserKeyword >&& parserKeyword) {
