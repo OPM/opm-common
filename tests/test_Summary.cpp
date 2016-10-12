@@ -182,7 +182,7 @@ struct setup {
         ta( ERT::TestArea("test_summary") ),
         solution( make_solution( es.getInputGrid() ) )
     {
-        solution = make_solution( *es.getInputGrid());
+        solution = make_solution( es.getInputGrid());
     }
 
 };

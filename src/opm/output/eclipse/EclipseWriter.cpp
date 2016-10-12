@@ -417,7 +417,7 @@ EclipseWriter::Impl::Impl( const EclipseState& eclipseState,
                            EclipseGrid grid_)
     : es( eclipseState )
     , grid( std::move( grid_ ) )
-    , regionCache( *es , grid )
+    , regionCache( es , grid )
     , outputDir( eclipseState.getIOConfig().getOutputDir() )
     , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
     , summary( eclipseState, eclipseState.getSummaryConfig() )

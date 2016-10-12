@@ -44,9 +44,9 @@ const char* path = "summary_deck.DATA";
 BOOST_AUTO_TEST_CASE(create) {
     ParseContext parseContext;
     Parser parser;
-    std::shared_ptr<Deck> deck( parser.parseFile( path, parseContext ));
-    EclipseState es(*deck , parseContext );
-    const EclipseGrid& grid = *es.getInputGrid();
+    Deck deck( parser.parseFile( path, parseContext ));
+    EclipseState es(deck , parseContext );
+    const EclipseGrid& grid = es.getInputGrid();
     out::RegionCache rc(es , grid);
 
 
