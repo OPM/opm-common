@@ -54,13 +54,13 @@ BOOST_AUTO_TEST_CASE(CreateDimensionInvalidNameThrows) {
 
 
 BOOST_AUTO_TEST_CASE(CreateUnitSystem) {
-    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
+    UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     BOOST_CHECK_EQUAL("Metric" , system.getName());
 }
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemEmptyHasNone) {
-    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
+    UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     BOOST_CHECK_EQUAL( false , system.hasDimension("Length"));
     BOOST_CHECK_EQUAL( false , system.hasDimension("LXY"));
 }
@@ -68,12 +68,12 @@ BOOST_AUTO_TEST_CASE(UnitSystemEmptyHasNone) {
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemGetMissingDimensionThrows) {
-    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
+    UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     BOOST_CHECK_THROW( system.getDimension("Length") , std::out_of_range );
 }
 
 BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
-    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
+    UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     system.addDimension("Length" , 10 );
     system.addDimension("Time" , 100);
 
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
-    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
+    UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     system.addDimension("Length" , 1 );
     system.addDimension("Time" , 86400 );
     system.addDimension("Temperature", 1.0, 273.15);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemParseInvalidThrows) {
-    UnitSystem system(UnitSystem::UNIT_TYPE_METRIC);
+    UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
     BOOST_CHECK_THROW( system.parse("//") , std::invalid_argument);
     BOOST_CHECK_THROW( system.parse("Length * Length / Time") , std::out_of_range );
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(DimensionEqual) {
 }
 
 namespace Opm {
-std::ostream& operator<<( std::ostream& stream, const UnitSystem& us ) {
+inline std::ostream& operator<<( std::ostream& stream, const UnitSystem& us ) {
     return stream << us.getName() << " :: " << us.getType();
 }
 }

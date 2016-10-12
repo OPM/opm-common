@@ -41,7 +41,9 @@ namespace Opm {
     GridProperties<double>::GridProperties(const EclipseGrid& eclipseGrid,
                                            const UnitSystem*  deckUnitSystem,
                                            std::vector< GridProperty<double>::SupportedKeywordInfo >&& supportedKeywords) :
-        m_eclipseGrid( eclipseGrid ),
+        nx( eclipseGrid.getNX() ),
+        ny( eclipseGrid.getNY() ),
+        nz( eclipseGrid.getNZ() ),
         m_deckUnitSystem( deckUnitSystem )
     {
         for (auto iter = supportedKeywords.begin(); iter != supportedKeywords.end(); ++iter)
@@ -52,7 +54,9 @@ namespace Opm {
     template <>
     GridProperties<int>::GridProperties(const EclipseGrid& eclipseGrid,
                                         std::vector< GridProperty<int>::SupportedKeywordInfo >&& supportedKeywords) :
-        m_eclipseGrid( eclipseGrid )
+        nx( eclipseGrid.getNX() ),
+        ny( eclipseGrid.getNY() ),
+        nz( eclipseGrid.getNZ() )
     {
         for (auto iter = supportedKeywords.begin(); iter != supportedKeywords.end(); ++iter)
             m_supportedKeywords.emplace( iter->getKeywordName(), std::move( *iter ) );
@@ -205,11 +209,8 @@ namespace Opm {
 
     template< typename T >
     void GridProperties<T>::insertKeyword(const SupportedKeywordInfo& supportedKeyword) const {
-        int nx = m_eclipseGrid.getNX();
-        int ny = m_eclipseGrid.getNY();
-        int nz = m_eclipseGrid.getNZ();
-
-        m_properties.emplace( supportedKeyword.getKeywordName() , GridProperty<T>( nx, ny , nz , supportedKeyword ));
+        m_properties.emplace( supportedKeyword.getKeywordName(), 
+                GridProperty<T>( this->nx, this->ny , this->nz , supportedKeyword ));
     }
 
 

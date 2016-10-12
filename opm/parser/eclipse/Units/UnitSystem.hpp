@@ -31,7 +31,7 @@ namespace Opm {
 
     class UnitSystem {
     public:
-        enum UnitType {
+        enum class UnitType {
           UNIT_TYPE_METRIC = 0,
           UNIT_TYPE_FIELD  = 1,
           UNIT_TYPE_LAB    = 2
@@ -66,7 +66,7 @@ namespace Opm {
             water_inverse_formation_volume_factor,
         };
 
-        UnitSystem(UnitType unit);
+        UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
 
         const std::string& getName() const;
         UnitType getType() const;

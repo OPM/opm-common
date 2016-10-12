@@ -48,6 +48,7 @@ namespace Opm {
     {
     public:
 
+        Eclipse3DProperties() = default;
         Eclipse3DProperties(const Deck& deck,
                             const TableManager& tableManager,
                             const EclipseGrid& eclipseGrid);
@@ -93,7 +94,7 @@ namespace Opm {
         void setKeywordBox(const DeckKeyword& deckKeyword, const DeckRecord&, BoxManager& boxManager);
 
         std::string            m_defaultRegion;
-        const UnitSystem&      m_deckUnitSystem;
+        UnitSystem             m_deckUnitSystem;
         GridProperties<int>    m_intGridProperties;
         GridProperties<double> m_doubleGridProperties;
     };

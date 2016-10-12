@@ -305,19 +305,19 @@ namespace {
         m_unittype( unit )
     {
         switch(unit) {
-            case(UNIT_TYPE_METRIC):
+            case(UnitType::UNIT_TYPE_METRIC):
                 m_name = "Metric";
                 this->measure_table_from_si = to_metric;
                 this->measure_table_to_si = from_metric;
                 this->unit_name_table = metric_names;
                 break;
-            case(UNIT_TYPE_FIELD):
+            case(UnitType::UNIT_TYPE_FIELD):
                 m_name = "Field";
                 this->measure_table_from_si = to_field;
                 this->measure_table_to_si = from_field;
                 this->unit_name_table = field_names;
                 break;
-            case(UNIT_TYPE_LAB):
+            case(UnitType::UNIT_TYPE_LAB):
                 m_name = "Lab";
                 this->measure_table_from_si = to_lab;
                 this->measure_table_to_si = from_lab;
@@ -452,7 +452,7 @@ namespace {
     }
 
     UnitSystem * UnitSystem::newMETRIC() {
-        UnitSystem * system = new UnitSystem(UNIT_TYPE_METRIC);
+        UnitSystem * system = new UnitSystem(UnitType::UNIT_TYPE_METRIC);
 
         system->addDimension("1"         , 1.0);
         system->addDimension("Pressure"  , Metric::Pressure );
@@ -481,7 +481,7 @@ namespace {
 
 
     UnitSystem * UnitSystem::newFIELD() {
-        UnitSystem * system = new UnitSystem(UNIT_TYPE_FIELD);
+        UnitSystem * system = new UnitSystem(UnitType::UNIT_TYPE_FIELD);
 
         system->addDimension("1"    , 1.0);
         system->addDimension("Pressure", Field::Pressure );
@@ -510,7 +510,7 @@ namespace {
 
 
     UnitSystem * UnitSystem::newLAB() {
-        UnitSystem * system = new UnitSystem(UNIT_TYPE_LAB);
+        UnitSystem * system = new UnitSystem(UnitType::UNIT_TYPE_LAB);
 
         system->addDimension("1"    , 1.0);
         system->addDimension("Pressure", Lab::Pressure );

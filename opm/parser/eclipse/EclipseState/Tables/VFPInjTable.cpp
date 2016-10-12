@@ -119,13 +119,13 @@ void VFPInjTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_sy
         //Need to change all of the convertToSI functions to support LAB/PVT-M
 
         if (units_string == "METRIC") {
-            table_unit_type = UnitSystem::UNIT_TYPE_METRIC;
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_METRIC;
         }
         else if (units_string == "FIELD") {
-            table_unit_type = UnitSystem::UNIT_TYPE_FIELD;
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_FIELD;
         }
         else if (units_string == "LAB") {
-            throw std::invalid_argument("Unsupported UNITS string: 'LAB'");
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_FIELD;
         }
         else if (units_string == "PVT-M") {
             throw std::invalid_argument("Unsupported UNITS string: 'PVT-M'");
