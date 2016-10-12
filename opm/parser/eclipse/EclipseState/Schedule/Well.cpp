@@ -291,6 +291,10 @@ namespace Opm {
         return m_completions->get( timeStep );
     }
 
+    CompletionSetConstPtr Well::getCompletions() const {
+        return m_completions->back();
+    }
+
     void Well::addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions) {
         CompletionSetConstPtr currentCompletionSet = m_completions->get(time_step);
         CompletionSetPtr newCompletionSet = CompletionSetPtr( currentCompletionSet->shallowCopy() );

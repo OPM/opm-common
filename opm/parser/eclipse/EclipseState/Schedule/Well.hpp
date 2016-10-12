@@ -81,6 +81,7 @@ namespace Opm {
         void addCompletions(size_t time_step , const std::vector<std::shared_ptr< Completion >>& newCompletions);
         void addCompletionSet(size_t time_step, const std::shared_ptr< const CompletionSet > newCompletionSet);
         std::shared_ptr< const CompletionSet > getCompletions(size_t timeStep) const;
+        std::shared_ptr< const CompletionSet > getCompletions( ) const;
 
         /* The rate of a given phase under the following assumptions:
          * * Returns zero if production is requested for an injector (and vice
