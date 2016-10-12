@@ -21,8 +21,10 @@
 
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 
 /*
   This class is a common base class for the PVTG and PVTO tables. The
@@ -104,12 +106,8 @@ The first row actually corresponds to saturated values.
  namespace Opm {
 
      class DeckKeyword;
-     class SimpleTable;
-     class TableSchema;
 
-    class PvtxTable
-    {
-
+    class PvtxTable {
     public:
         static size_t numTables( const DeckKeyword& keyword);
         static std::vector<std::pair<size_t , size_t> > recordRanges( const DeckKeyword& keyword);
@@ -126,10 +124,10 @@ The first row actually corresponds to saturated values.
         ColumnSchema m_outerColumnSchema;
         TableColumn m_outerColumn;
 
-        std::shared_ptr<TableSchema> m_underSaturatedSchema;
-        std::shared_ptr<TableSchema> m_saturatedSchema;
-        std::vector<std::shared_ptr<const SimpleTable> > m_underSaturatedTables;
-        std::shared_ptr<SimpleTable> m_saturatedTable;
+        TableSchema m_underSaturatedSchema;
+        TableSchema m_saturatedSchema;
+        std::vector< SimpleTable > m_underSaturatedTables;
+        SimpleTable m_saturatedTable;
     };
 
 }

@@ -73,36 +73,28 @@ namespace Opm {
 PvtgTable::PvtgTable( const DeckKeyword& keyword, size_t tableIdx ) :
     PvtxTable("P") {
 
-        m_saturatedSchema = std::make_shared< TableSchema >();
-        m_underSaturatedSchema = std::make_shared< TableSchema >();
+        m_underSaturatedSchema.addColumn( ColumnSchema( "RV"  , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "BG"  , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "MUG" , Table::RANDOM , Table::DEFAULT_LINEAR ));
 
-        m_underSaturatedSchema->addColumn( ColumnSchema( "RV"  , Table::STRICTLY_DECREASING , Table::DEFAULT_NONE ));
-        m_underSaturatedSchema->addColumn( ColumnSchema( "BG"  , Table::RANDOM , Table::DEFAULT_LINEAR ));
-        m_underSaturatedSchema->addColumn( ColumnSchema( "MUG" , Table::RANDOM , Table::DEFAULT_LINEAR ));
-
-        m_saturatedSchema = std::make_shared< TableSchema >( );
-        m_saturatedSchema->addColumn( ColumnSchema( "PG"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-        m_saturatedSchema->addColumn( ColumnSchema( "RV"  , Table::RANDOM , Table::DEFAULT_NONE ));
-        m_saturatedSchema->addColumn( ColumnSchema( "BG"  , Table::RANDOM , Table::DEFAULT_LINEAR ));
-        m_saturatedSchema->addColumn( ColumnSchema( "MUG" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "PG"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+        m_saturatedSchema.addColumn( ColumnSchema( "RV"  , Table::RANDOM , Table::DEFAULT_NONE ));
+        m_saturatedSchema.addColumn( ColumnSchema( "BG"  , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "MUG" , Table::RANDOM , Table::DEFAULT_LINEAR ));
 
         PvtxTable::init(keyword, tableIdx);
     }
 
 PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
     PvtxTable("P") {
+        m_underSaturatedSchema.addColumn( ColumnSchema( "P"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "BO" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "MU" , Table::RANDOM , Table::DEFAULT_LINEAR ));
 
-        m_saturatedSchema = std::make_shared< TableSchema >();
-        m_underSaturatedSchema = std::make_shared< TableSchema >();
-
-        m_underSaturatedSchema->addColumn( ColumnSchema( "P"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-        m_underSaturatedSchema->addColumn( ColumnSchema( "BO" , Table::RANDOM , Table::DEFAULT_LINEAR ));
-        m_underSaturatedSchema->addColumn( ColumnSchema( "MU" , Table::RANDOM , Table::DEFAULT_LINEAR ));
-
-        m_saturatedSchema->addColumn( ColumnSchema( "RS" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-        m_saturatedSchema->addColumn( ColumnSchema( "P"  , Table::RANDOM , Table::DEFAULT_NONE ));
-        m_saturatedSchema->addColumn( ColumnSchema( "BO" , Table::RANDOM , Table::DEFAULT_LINEAR ));
-        m_saturatedSchema->addColumn( ColumnSchema( "MU" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "RS" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+        m_saturatedSchema.addColumn( ColumnSchema( "P"  , Table::RANDOM , Table::DEFAULT_NONE ));
+        m_saturatedSchema.addColumn( ColumnSchema( "BO" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "MU" , Table::RANDOM , Table::DEFAULT_LINEAR ));
 
         PvtxTable::init(keyword , tableIdx);
     }

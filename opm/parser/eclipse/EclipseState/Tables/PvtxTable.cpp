@@ -52,20 +52,19 @@ namespace Opm {
                 m_outerColumn.addValue( deckRecord.getItem( 0 ).getSIDouble( 0 ));
 
                 const auto& dataItem = deckRecord.getItem(1);
-                std::shared_ptr<SimpleTable> underSaturatedTable = std::make_shared<SimpleTable>(*m_underSaturatedSchema , dataItem);
-                m_underSaturatedTables.push_back( underSaturatedTable );
+                m_underSaturatedTables.emplace_back( this->m_underSaturatedSchema, dataItem );
             }
 
 
-            m_saturatedTable = std::make_shared<SimpleTable>(*m_saturatedSchema);
+            m_saturatedTable = SimpleTable(m_saturatedSchema);
             for (size_t sat_index = 0; sat_index < size(); sat_index++) {
                 const auto& underSaturatedTable = getUnderSaturatedTable( sat_index );
                 std::vector<double> row(4);
                 row[0] = m_outerColumn[sat_index];
-                for (size_t col_index = 0; col_index < m_underSaturatedSchema->size(); col_index++)
+                for (size_t col_index = 0; col_index < m_underSaturatedSchema.size(); col_index++)
                     row[col_index + 1] = underSaturatedTable.get( col_index , 0 );
 
-                m_saturatedTable->addRow( row );
+                m_saturatedTable.addRow( row );
             }
         }
     }
@@ -90,7 +89,7 @@ namespace Opm {
 
 
     const SimpleTable& PvtxTable::getSaturatedTable() const {
-        return *m_saturatedTable;
+        return this->m_saturatedTable;
     }
 
 
@@ -98,7 +97,7 @@ namespace Opm {
     const SimpleTable& PvtxTable::getUnderSaturatedTable(size_t tableNumber) const {
         if (tableNumber >= size())
             throw std::invalid_argument("Invalid table number: " + std::to_string( tableNumber) + " max: " + std::to_string( size() - 1 ));
-        return *m_underSaturatedTables[ tableNumber ];
+        return m_underSaturatedTables[ tableNumber ];
     }
 
 
