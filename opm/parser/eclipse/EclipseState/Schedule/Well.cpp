@@ -34,7 +34,7 @@ namespace Opm {
 
     Well::Well(const std::string& name_, int headI,
                int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
-               TimeMapConstPtr timeMap, size_t creationTimeStep,
+               std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
         : m_status(new DynamicState<WellCommon::StatusEnum>(*timeMap, WellCommon::SHUT)),

@@ -1355,8 +1355,8 @@ namespace Opm {
         }
     }
 
-    TimeMapConstPtr Schedule::getTimeMap() const {
-        return m_timeMap;
+    const TimeMap& Schedule::getTimeMap() const {
+        return *m_timeMap;
     }
 
     const GroupTree& Schedule::getGroupTree(size_t timeStep) const {

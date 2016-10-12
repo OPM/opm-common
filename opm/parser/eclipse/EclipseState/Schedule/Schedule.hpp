@@ -67,7 +67,7 @@ namespace Opm
         time_t posixEndTime() const;
 
 
-        std::shared_ptr< const TimeMap > getTimeMap() const;
+        const TimeMap& getTimeMap() const;
 
         size_t numWells() const;
         size_t numWells(size_t timestep) const;

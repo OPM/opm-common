@@ -89,15 +89,15 @@ BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
 
 BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    std::shared_ptr<Opm::TimeMap> timeMap = std::make_shared<Opm::TimeMap>(boost::posix_time::ptime(boost::posix_time::ptime(startDate)));
+    Opm::TimeMap timeMap{ boost::posix_time::ptime(boost::posix_time::ptime(startDate)) };
 
-    timeMap->addTStep( boost::posix_time::hours(1));
-    timeMap->addTStep( boost::posix_time::hours(23));
-    BOOST_CHECK_EQUAL( 3U , timeMap->size());
+    timeMap.addTStep( boost::posix_time::hours(1));
+    timeMap.addTStep( boost::posix_time::hours(23));
+    BOOST_CHECK_EQUAL( 3U , timeMap.size());
 
-    BOOST_CHECK_THROW( (*timeMap)[3] , std::invalid_argument );
-    BOOST_CHECK_EQUAL( (*timeMap)[0] , boost::posix_time::ptime(boost::posix_time::ptime(startDate)));
-    BOOST_CHECK_EQUAL( (*timeMap)[2] , boost::posix_time::ptime(boost::posix_time::ptime( boost::gregorian::date( 2010 , boost::gregorian::Jan , 2 ))));
+    BOOST_CHECK_THROW( timeMap[3] , std::invalid_argument );
+    BOOST_CHECK_EQUAL( timeMap[0] , boost::posix_time::ptime(boost::posix_time::ptime(startDate)));
+    BOOST_CHECK_EQUAL( timeMap[2] , boost::posix_time::ptime(boost::posix_time::ptime( boost::gregorian::date( 2010 , boost::gregorian::Jan , 2 ))));
 }
 
 
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
 
     Opm::ParserPtr parser(new Opm::Parser(/*addDefault=*/true));
     Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseContext());
-    Opm::TimeMap tmap(deck);
+    Opm::TimeMap tmap(*deck);
 
     BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/0),
                       boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21)));
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
 
     Opm::ParserPtr parser(new Opm::Parser(true));
     Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseContext());
-    const Opm::TimeMap tmap(deck);
+    const Opm::TimeMap tmap(*deck);
 
     /*deckData timesteps:
     0   21 may  1981 START

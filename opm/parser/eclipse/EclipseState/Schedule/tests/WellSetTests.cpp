@@ -31,9 +31,9 @@
 
 using namespace Opm;
 
-static Opm::TimeMapPtr createXDaysTimeMap(size_t numDays) {
+static std::shared_ptr< Opm::TimeMap > createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMapPtr timeMap(new Opm::TimeMap(boost::posix_time::ptime(startDate)));
+    auto timeMap = std::make_shared< Opm::TimeMap >(boost::posix_time::ptime(startDate));
     for (size_t i = 0; i < numDays; i++)
         timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
     return timeMap;
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(CreatEmptyWellSet) {
 
 BOOST_AUTO_TEST_CASE(AddAndDeleteWell) {
     Opm::WellSet wellSet;
-    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    auto timeMap = createXDaysTimeMap(10);
 
     auto well  = std::make_shared< Well >("WELL1", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
     auto well2 = std::make_shared< Well >("WELL2", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(AddAndDeleteWell) {
 
 BOOST_AUTO_TEST_CASE(AddWellSameName) {
     Opm::WellSet wellSet;
-    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    auto timeMap = createXDaysTimeMap(10);
 
     auto well1 = std::make_shared< Well >("WELL", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
     auto well2 = std::make_shared< Well >("WELL", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(AddWellSameName) {
 
 BOOST_AUTO_TEST_CASE(Iterator) {
     Opm::WellSet wellSet;
-    Opm::TimeMapPtr timeMap = createXDaysTimeMap(10);
+    auto timeMap = createXDaysTimeMap(10);
 
     auto well1 = std::make_shared< Well >("WELL", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
     auto well2 = std::make_shared< Well >("WELL", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);

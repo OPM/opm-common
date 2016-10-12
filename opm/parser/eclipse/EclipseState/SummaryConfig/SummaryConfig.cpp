@@ -215,7 +215,7 @@ inline void keywordC( std::vector< ERT::smspec_node >& list,
                       std::array< int, 3 > dims ) {
 
     const auto& keywordstring = keyword.name();
-    const auto last_timestep = schedule.getTimeMap()->last();
+    const auto last_timestep = schedule.getTimeMap().last();
 
     for( const auto& record : keyword ) {
 

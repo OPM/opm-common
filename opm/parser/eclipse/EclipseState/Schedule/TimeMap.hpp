@@ -34,7 +34,6 @@ namespace Opm {
     class TimeMap {
     public:
         explicit TimeMap(boost::posix_time::ptime startDate);
-        explicit TimeMap(std::shared_ptr< const Deck > deck);
         explicit TimeMap( const Deck& deck);
 
         void addTime(boost::posix_time::ptime newTime);
@@ -75,8 +74,6 @@ namespace Opm {
         std::vector<size_t> m_first_timestep_years;   // A list of the first timestep of every year
         std::vector<size_t> m_first_timestep_months;  // A list of the first timestep of every month
     };
-    typedef std::shared_ptr<TimeMap> TimeMapPtr;
-    typedef std::shared_ptr<const TimeMap> TimeMapConstPtr;
 }
 
 

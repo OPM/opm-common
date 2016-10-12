@@ -34,8 +34,6 @@ namespace Opm {
         m_timeList.push_back( boost::posix_time::ptime(startDate) );
     }
 
-    TimeMap::TimeMap(Opm::DeckConstPtr deck) : TimeMap( *deck ) {}
-
     TimeMap::TimeMap( const Deck& deck) {
         // The default start date is not specified in the Eclipse
         // reference manual. We hence just assume it is same as for
