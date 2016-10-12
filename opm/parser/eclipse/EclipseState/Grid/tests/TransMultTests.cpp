@@ -25,11 +25,14 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
 BOOST_AUTO_TEST_CASE(Empty) {
-    Opm::TransMult transMult(10,10,10);
+    Opm::Eclipse3DProperties props;
+    Opm::TransMult transMult(10,10,10, props, {} );
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Opm::FaceDir::XPlus) , std::invalid_argument );
     BOOST_CHECK_THROW( transMult.getMultiplier(1000 , Opm::FaceDir::XPlus) , std::invalid_argument );

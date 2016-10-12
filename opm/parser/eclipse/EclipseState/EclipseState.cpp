@@ -59,10 +59,11 @@ namespace Opm {
         m_tables(            deck ),
         m_gridDims(          deck ),
         m_inputGrid(         deck, nullptr ),
-        m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ()),
         m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck ) ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
         m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, *m_schedule , parseContext),
+        m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ(),
+                             m_eclipseProperties, deck.getKeywordList( "MULTREGT" ) ),
         m_inputNnc(          deck, m_gridDims ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() )
     {
@@ -77,12 +78,6 @@ namespace Opm {
 
         initTransMult();
         initFaults(deck);
-
-        std::vector< const DeckKeyword* > multregtKeywords;
-        if (deck.hasKeyword("MULTREGT"))
-            multregtKeywords = deck.getKeywordList("MULTREGT");
-        m_transMult.createMultregtScanner(m_eclipseProperties, multregtKeywords);
-
 
         m_messageContainer.appendMessages(m_tables.getMessageContainer());
         m_messageContainer.appendMessages(m_schedule->getMessageContainer());

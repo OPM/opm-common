@@ -124,10 +124,10 @@ namespace Opm {
         const TableManager m_tables;
         const GridDims m_gridDims;
         EclipseGrid m_inputGrid;
-        TransMult m_transMult;
         std::shared_ptr< const Schedule > m_schedule;
         Eclipse3DProperties m_eclipseProperties;
         EclipseConfig m_eclipseConfig;
+        TransMult m_transMult;
         NNC m_inputNnc;
         UnitSystem m_deckUnitSystem;
 

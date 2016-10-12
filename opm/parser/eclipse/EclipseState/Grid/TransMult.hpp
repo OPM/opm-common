@@ -41,19 +41,21 @@ namespace Opm {
     template< typename > class GridProperty;
     class Fault;
     class FaultCollection;
+    class Eclipse3DProperties;
+    class DeckKeyword;
 
     class TransMult {
 
     public:
-        TransMult(size_t nx , size_t ny , size_t nz);
+        TransMult(size_t nx , size_t ny , size_t nz,
+                  const Eclipse3DProperties&,
+                  const std::vector< const DeckKeyword* >& );
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
         double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;
         void applyMULT(const GridProperty<double>& srcMultProp, FaceDir::DirEnum faceDir);
         void applyMULTFLT(const FaultCollection& faults);
         void applyMULTFLT(const Fault& fault);
-        void createMultregtScanner(const Eclipse3DProperties& e3DProps,
-                                   std::vector<const DeckKeyword*> multregtKeywords);
 
     private:
         size_t getGlobalIndex(size_t i , size_t j , size_t k) const;
@@ -66,7 +68,7 @@ namespace Opm {
         size_t m_nx , m_ny , m_nz;
         std::map<FaceDir::DirEnum , GridProperty<double> > m_trans;
         std::map<FaceDir::DirEnum , std::string> m_names;
-        MULTREGTScanner* m_multregtScanner = nullptr;
+        MULTREGTScanner m_multregtScanner;
     };
 
 }
