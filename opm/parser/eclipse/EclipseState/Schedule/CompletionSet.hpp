@@ -29,14 +29,12 @@ namespace Opm {
 
     class CompletionSet {
     public:
-        using const_iterator = std::vector< std::shared_ptr< const Completion > >::const_iterator;
+        using const_iterator = std::vector< Completion >::const_iterator;
 
-        CompletionSet();
-        void add(std::shared_ptr< const Completion > completion);
+        void add( Completion );
         size_t size() const;
-        CompletionSet * shallowCopy() const;
-        std::shared_ptr< const Completion > get(size_t index) const;
-        std::shared_ptr< const Completion > getFromIJK(const int i, const int j, const int k) const;
+        const Completion& get(size_t index) const;
+        const Completion& getFromIJK(const int i, const int j, const int k) const;
 
         const_iterator begin() const { return this->m_completions.begin(); }
         const_iterator end() const { return this->m_completions.end(); }
@@ -55,13 +53,14 @@ namespace Opm {
         /// \param[in] well_j  logical cartesian j-coordinate of well head
         /// \param[in] grid    EclipseGrid object, used for cell depths
         void orderCompletions(size_t well_i, size_t well_j);
+
+        bool operator==( const CompletionSet& ) const;
+        bool operator!=( const CompletionSet& ) const;
+
     private:
-        std::vector<std::shared_ptr< const Completion >> m_completions;
+        std::vector< Completion > m_completions;
         size_t findClosestCompletion(int oi, int oj, double oz, size_t start_pos);
     };
-
-    typedef std::shared_ptr<CompletionSet> CompletionSetPtr;
-    typedef std::shared_ptr<const CompletionSet> CompletionSetConstPtr;
 }
 
 

@@ -189,13 +189,13 @@ namespace Opm {
             const int j = compseg.m_j;
             const int k = compseg.m_k;
 
-            CompletionPtr new_completion = std::make_shared<Completion>(completion_set.getFromIJK(i, j, k));
-            new_completion->attachSegment(compseg.m_segment_number, compseg.m_center_depth);
+            auto new_completion = completion_set.getFromIJK( i, j, k );
+            new_completion.attachSegment(compseg.m_segment_number, compseg.m_center_depth);
             completion_set.add(new_completion);
         }
 
         for (size_t ic = 0; ic < completion_set.size(); ++ic) {
-            if ( !(completion_set.get(ic)->attachedToSegment()) ) {
+            if ( !(completion_set.get(ic).attachedToSegment()) ) {
                 throw std::runtime_error("Not all the completions are attached with a segment. "
                                          "The information from COMPSEGS is not complete");
             }

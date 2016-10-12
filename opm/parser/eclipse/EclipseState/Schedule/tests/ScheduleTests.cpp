@@ -451,67 +451,36 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     DeckPtr deck = createDeckWithWellsAndCompletionDataWithWELOPEN();
     Schedule schedule(ParseContext() , grid , deck );
     auto* well = schedule.getWell("OP_1");
-    size_t currentStep = 0;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
-    currentStep = 3;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 0 ));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 3 ));
 
     well = schedule.getWell("OP_2");
-    CompletionSetConstPtr completionSet = well->getCompletions(currentStep);
+    const auto& cs = well->getCompletions( 3 );
 
-    size_t index = 3;
-    CompletionConstPtr completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, completion->getState());
-    index = 4;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, completion->getState());
-    index = 5;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, completion->getState());
-    index = 6;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, cs.get( 3 ).getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, cs.get( 4 ).getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, cs.get( 5 ).getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs.get( 6 ).getState());
 
-    currentStep = 4;
-    completionSet = well->getCompletions(currentStep);
-    index = 3;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
-    index = 4;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
-    index = 5;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
-    index = 6;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
+    const auto& cs2 = well->getCompletions( 4 );
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs2.get( 3 ).getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs2.get( 4 ).getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs2.get( 5 ).getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs2.get( 6 ).getState());
 
     well = schedule.getWell("OP_3");
-    currentStep = 3;
-    completionSet = well->getCompletions(currentStep);
+    const auto& cs3 = well->getCompletions( 3 );
 
-    index = 0;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, cs3.get( 0 ).getState());
 
-    currentStep = 4;
-    completionSet = well->getCompletions(currentStep);
+    const auto& cs4 = well->getCompletions( 4 );
 
-    index = 0;
-    completion = completionSet->get(index);
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, completion->getState());
+    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs4.get( 0 ).getState());
 
     well = schedule.getWell("OP_1");
-
-    currentStep = 3;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
-
-    currentStep = 4;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
-
-    currentStep = 5;
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 3 ));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus( 4 ));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 5 ));
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompletionsDoNotOpenWell) {
@@ -973,33 +942,20 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     Schedule schedule(parseContext , grid, deck );
     auto* well = schedule.getWell("OP_1");
 
-    size_t currentStep = 2;
-    CompletionSetConstPtr currentCompletionSet = well->getCompletions(currentStep);
-    size_t completionSize = currentCompletionSet->size();
-
-    for(size_t i = 0; i < completionSize;i++) {
-        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
-        BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), 1.3);
+    const auto& cs2 = well->getCompletions( 2 );
+    for(size_t i = 0; i < cs2.size(); i++) {
+        BOOST_CHECK_EQUAL(cs2.get( i ).getWellPi(), 1.3);
     }
 
-    currentStep = 3;
-    currentCompletionSet = well->getCompletions(currentStep);
-    completionSize = currentCompletionSet->size();
-
-    for(size_t i = 0; i < completionSize;i++) {
-        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
-        BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), (1.3*1.3));
+    const auto& cs3 = well->getCompletions( 3 );
+    for(size_t i = 0; i < cs3.size(); i++ ) {
+        BOOST_CHECK_EQUAL(cs3.get( i ).getWellPi(), (1.3*1.3));
     }
 
-    currentStep = 4;
-    currentCompletionSet = well->getCompletions(currentStep);
-    completionSize = currentCompletionSet->size();
-
-    for(size_t i = 0; i < completionSize;i++) {
-        CompletionConstPtr currentCompletion = currentCompletionSet->get(i);
-        BOOST_CHECK_EQUAL(currentCompletion->getWellPi(), 1.0);
+    const auto& cs4 = well->getCompletions( 4 );
+    for(size_t i = 0; i < cs4.size(); i++ ) {
+        BOOST_CHECK_EQUAL(cs4.get( i ).getWellPi(), 1.0);
     }
-
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {

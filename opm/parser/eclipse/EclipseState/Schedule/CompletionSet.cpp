@@ -28,25 +28,17 @@
 
 namespace Opm {
 
-    CompletionSet::CompletionSet() {}
-
-
     size_t CompletionSet::size() const {
         return m_completions.size();
     }
 
-
-    CompletionConstPtr CompletionSet::get(size_t index) const {
-        if (index >= m_completions.size())
-            throw std::range_error("Out of bounds");
-
-        return m_completions[index];
+    const Completion& CompletionSet::get(size_t index) const {
+        return this->m_completions.at( index );
     }
 
-
-    CompletionConstPtr CompletionSet::getFromIJK(const int i, const int j, const int k) const {
+    const Completion& CompletionSet::getFromIJK(const int i, const int j, const int k) const {
         for (size_t ic = 0; ic < size(); ++ic) {
-            if (get(ic)->sameCoordinate(i, j, k)) {
+            if (get(ic).sameCoordinate(i, j, k)) {
                 return get(ic);
             }
         }
@@ -54,42 +46,25 @@ namespace Opm {
     }
 
 
-    void CompletionSet::add(CompletionConstPtr completion) {
-        bool inserted = false;
-
-        for (size_t ic = 0; ic < m_completions.size(); ic++) {
-            CompletionConstPtr current = m_completions[ic];
-            if (current->sameCoordinate( *completion )) {
-                m_completions[ic] = completion;
-                inserted = true;
+    void CompletionSet::add( Completion completion ) {
+        for( auto& c : this->m_completions ) {
+            if( c.sameCoordinate( completion ) ) {
+                c = std::move( completion );
+                return;
             }
         }
 
-        if (!inserted)
-            m_completions.push_back( completion );
+        m_completions.push_back( std::move( completion ) );
     }
-
-
-    CompletionSet * CompletionSet::shallowCopy() const {
-        CompletionSet * copy = new CompletionSet();
-        for (size_t ic = 0; ic < m_completions.size(); ic++) {
-            CompletionConstPtr completion = m_completions[ic];
-            copy->m_completions.push_back( completion );
-        }
-        return copy;
-    }
-
 
     bool CompletionSet::allCompletionsShut( ) const {
-      bool allShut = true;
-      for (auto ci = m_completions.begin(); ci != m_completions.end(); ++ci) {
-          CompletionConstPtr completion_ptr = *ci;
-          if (completion_ptr->getState() != WellCompletion::StateEnum::SHUT) {
-              allShut = false;
-              break;
-          }
-      }
-      return allShut;
+        auto shut = []( const Completion& c ) {
+            return c.getState() == WellCompletion::StateEnum::SHUT;
+        };
+
+        return std::all_of( this->m_completions.begin(),
+                            this->m_completions.end(),
+                            shut );
     }
 
 
@@ -111,10 +86,12 @@ namespace Opm {
         // O(n^2) algorithm. However, it should be acceptable since
         // the expected number of completions is fairly low (< 100).
 
+        if( this->m_completions.empty() ) return;
+
         for (size_t pos = 1; pos < m_completions.size() - 1; ++pos) {
-            CompletionConstPtr prev = m_completions[pos - 1];
-            const double prevz = prev->getCenterDepth();
-            size_t next_index = findClosestCompletion(prev->getI(), prev->getJ(), prevz, pos);
+            const auto& prev = m_completions[pos - 1];
+            const double prevz = prev.getCenterDepth();
+            size_t next_index = findClosestCompletion(prev.getI(), prev.getJ(), prevz, pos);
             std::swap(m_completions[next_index], m_completions[pos]);
         }
     }
@@ -127,9 +104,11 @@ namespace Opm {
         int min_ijdist2 = std::numeric_limits<int>::max();
         double min_zdiff = std::numeric_limits<double>::max();
         for (size_t pos = start_pos; pos < m_completions.size(); ++pos) {
-            const double depth = m_completions[pos]->getCenterDepth();
-            const int ci = m_completions[pos]->getI();
-            const int cj = m_completions[pos]->getJ();
+            const auto& completion = m_completions[ pos ];
+
+            const double depth = completion.getCenterDepth();
+            const int ci = completion.getI();
+            const int cj = completion.getJ();
             // Using square of distance to avoid non-integer arithmetics.
             const int ijdist2 = (ci - oi) * (ci - oi) + (cj - oj) * (cj - oj);
             if (ijdist2 < min_ijdist2) {
@@ -146,6 +125,15 @@ namespace Opm {
         }
         assert(closest != std::numeric_limits<size_t>::max());
         return closest;
+    }
+
+    bool CompletionSet::operator==( const CompletionSet& rhs ) const {
+        return this->size() == rhs.size()
+            && std::equal( this->begin(), this->end(), rhs.begin() );
+    }
+
+    bool CompletionSet::operator!=( const CompletionSet& rhs ) const {
+        return !( *this == rhs );
     }
 
 }

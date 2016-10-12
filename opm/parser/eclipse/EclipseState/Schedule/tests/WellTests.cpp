@@ -49,6 +49,12 @@ static std::shared_ptr< Opm::TimeMap > createXDaysTimeMap(size_t numDays) {
     return timeMap;
 }
 
+namespace Opm {
+inline std::ostream& operator<<( std::ostream& stream, const Completion& c ) {
+    return stream << "(" << c.getI() << "," << c.getJ() << "," << c.getK() << ")";
+}
+}
+
 BOOST_AUTO_TEST_CASE(CreateWell_CorrectNameAndDefaultValues) {
     auto timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" ,  0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
@@ -193,14 +199,12 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
-    Opm::CompletionSetConstPtr completions = op_1->getCompletions( timestep );
-    BOOST_CHECK_EQUAL((size_t)9 , completions->size());
+    const auto& completions = op_1->getCompletions( timestep );
+    BOOST_CHECK_EQUAL(9U, completions.size());
 
     //Verify TRACK completion ordering
-    Opm::CompletionConstPtr completion;
-    for (size_t k = 0; k<completions->size(); ++k) {
-        completion = completions->get(k);
-        BOOST_CHECK_EQUAL((size_t)completion->getK(), k);
+    for (size_t k = 0; k < completions.size(); ++k) {
+        BOOST_CHECK_EQUAL(completions.get( k ).getK(), k);
     }
 }
 
@@ -234,14 +238,12 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
-    Opm::CompletionSetConstPtr completions = op_1->getCompletions( timestep );
-    BOOST_CHECK_EQUAL((size_t)9 , completions->size());
+    const auto& completions = op_1->getCompletions( timestep );
+    BOOST_CHECK_EQUAL(9U, completions.size());
 
     //Verify TRACK completion ordering
-    Opm::CompletionConstPtr completion;
-    for (size_t k = 0; k<completions->size(); ++k) {
-        completion = completions->get(k);
-        BOOST_CHECK_EQUAL((size_t)completion->getK(), k);
+    for (size_t k = 0; k < completions.size(); ++k) {
+        BOOST_CHECK_EQUAL(completions.get( k ).getK(), k);
     }
 }
 
@@ -277,46 +279,25 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
-    Opm::CompletionSetConstPtr completions = op_1->getCompletions( timestep );
-    BOOST_CHECK_EQUAL((size_t)9 , completions->size());
+    const auto& completions = op_1->getCompletions( timestep );
+    BOOST_CHECK_EQUAL(9U, completions.size());
 
     //Verify INPUT completion ordering
-    Opm::CompletionConstPtr completion;
-    {
-        completion = completions->get(0);
-        BOOST_CHECK_EQUAL(completion->getK(), 0);
-
-        completion = completions->get(1);
-        BOOST_CHECK_EQUAL(completion->getK(), 2);
-
-        completion = completions->get(2);
-        BOOST_CHECK_EQUAL(completion->getK(), 3);
-
-        completion = completions->get(3);
-        BOOST_CHECK_EQUAL(completion->getK(), 4);
-
-        completion = completions->get(4);
-        BOOST_CHECK_EQUAL(completion->getK(), 5);
-
-        completion = completions->get(5);
-        BOOST_CHECK_EQUAL(completion->getK(), 6);
-
-        completion = completions->get(6);
-        BOOST_CHECK_EQUAL(completion->getK(), 7);
-
-        completion = completions->get(7);
-        BOOST_CHECK_EQUAL(completion->getK(), 8);
-
-        completion = completions->get(8);
-        BOOST_CHECK_EQUAL(completion->getK(), 1);
-    }
+    BOOST_CHECK_EQUAL(completions.get( 0 ).getK(), 0);
+    BOOST_CHECK_EQUAL(completions.get( 1 ).getK(), 2);
+    BOOST_CHECK_EQUAL(completions.get( 2 ).getK(), 3);
+    BOOST_CHECK_EQUAL(completions.get( 3 ).getK(), 4);
+    BOOST_CHECK_EQUAL(completions.get( 4 ).getK(), 5);
+    BOOST_CHECK_EQUAL(completions.get( 5 ).getK(), 6);
+    BOOST_CHECK_EQUAL(completions.get( 6 ).getK(), 7);
+    BOOST_CHECK_EQUAL(completions.get( 7 ).getK(), 8);
+    BOOST_CHECK_EQUAL(completions.get( 8 ).getK(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
     auto timeMap = createXDaysTimeMap(10);
     Opm::Well well("WELL1" , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
-    Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
-    BOOST_CHECK_EQUAL( 0U , completions->size());
+    BOOST_CHECK_EQUAL( 0U , well.getCompletions( 0 ).size() );
 }
 
 
@@ -324,19 +305,18 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     auto timeMap = createXDaysTimeMap(10);
 
     Opm::Well well("WELL1" , 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
-    Opm::CompletionSetConstPtr completions = well.getCompletions( 0 );
-    BOOST_CHECK_EQUAL( 0U , completions->size());
+    const auto& completions = well.getCompletions( 0 );
+    BOOST_CHECK_EQUAL( 0U , completions.size());
 
-    std::vector<Opm::CompletionPtr> newCompletions;
-    std::vector<Opm::CompletionPtr> newCompletions2;
-    Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , 10,Opm::WellCompletion::AUTO , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp2(new Opm::Completion( 10 , 10 , 11 , 11,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp3(new Opm::Completion( 10 , 10 , 12 , 12,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp4(new Opm::Completion( 10 , 10 , 12 , 12,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionPtr comp5(new Opm::Completion( 10 , 10 , 13 , 13,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::Completion comp1( 10 , 10 , 10 , 10,Opm::WellCompletion::AUTO , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion comp2( 10 , 10 , 11 , 11,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion comp3( 10 , 10 , 12 , 12,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion comp4( 10 , 10 , 12 , 12,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion comp5( 10 , 10 , 13 , 13,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
 
     //std::vector<Opm::CompletionConstPtr> newCompletions2{ comp4 , comp5}; Newer c++
 
+    std::vector< Opm::Completion > newCompletions, newCompletions2;
     newCompletions.push_back( comp1 );
     newCompletions.push_back( comp2 );
     newCompletions.push_back( comp3 );
@@ -346,32 +326,25 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
 
     BOOST_CHECK_EQUAL( 3U , newCompletions.size());
     well.addCompletions( 5 , newCompletions );
-    completions = well.getCompletions( 5 );
-    BOOST_CHECK_EQUAL( 3U , completions->size());
-    BOOST_CHECK_EQUAL( comp3 , completions->get(2));
+    BOOST_CHECK_EQUAL( 3U , well.getCompletions( 5 ).size());
+    BOOST_CHECK_EQUAL( comp3 , well.getCompletions( 5 ).get(2));
 
     well.addCompletions( 6 , newCompletions2 );
 
-    completions = well.getCompletions( 6 );
-    BOOST_CHECK_EQUAL( 4U , completions->size());
-    BOOST_CHECK_EQUAL( comp4 , completions->get(2));
-
+    BOOST_CHECK_EQUAL( 4U , well.getCompletions( 6 ).size());
+    BOOST_CHECK_EQUAL( comp4 , well.getCompletions( 6 ).get(2));
 }
-
-Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k);
 
 // Helper function for CompletionOrder test.
-Opm::CompletionPtr completion(const size_t i, const size_t j, const size_t k)
-{
-    return std::make_shared<Opm::Completion>(i, j, k,
-                                             k*1.0,
-                                             Opm::WellCompletion::AUTO,
-                                             Opm::Value<double>("ConnectionTransmissibilityFactor",99.88),
-                                             Opm::Value<double>("D",22.33),
-                                             Opm::Value<double>("SKIN",33.22),
-                                             Opm::WellCompletion::DirectionEnum::Z);
+inline Opm::Completion completion( int i, int j, int k ) {
+    return Opm::Completion{ i, j, k,
+                            k*1.0,
+                            Opm::WellCompletion::AUTO,
+                            Opm::Value<double>("ConnectionTransmissibilityFactor",99.88),
+                            Opm::Value<double>("D",22.33),
+                            Opm::Value<double>("SKIN",33.22),
+                            Opm::WellCompletion::DirectionEnum::Z };
 }
-
 
 
 BOOST_AUTO_TEST_CASE(CompletionOrder) {
@@ -383,13 +356,13 @@ BOOST_AUTO_TEST_CASE(CompletionOrder) {
         auto c2 = completion(5, 5, 9);
         auto c3 = completion(5, 5, 1);
         auto c4 = completion(5, 5, 0);
-        std::vector<Opm::CompletionPtr> cv1 = { c1, c2 };
+        std::vector< Opm::Completion > cv1 = { c1, c2 };
         well.addCompletions(1, cv1);
-        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c1);
-        std::vector<Opm::CompletionPtr> cv2 = { c3, c4 };
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c1);
+        std::vector< Opm::Completion > cv2 = { c3, c4 };
         well.addCompletions(2, cv2);
-        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c1);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(0), c4);
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c1);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), c4);
     }
 
     {
@@ -401,31 +374,31 @@ BOOST_AUTO_TEST_CASE(CompletionOrder) {
         auto c4 = completion(9, 5, 8);
         auto c5 = completion(8, 5, 9);
         auto c6 = completion(5, 5, 4);
-        std::vector<Opm::CompletionPtr> cv1 = { c1, c2 };
+        std::vector<Opm::Completion> cv1 = { c1, c2 };
         well.addCompletions(1, cv1);
-        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c2);
-        std::vector<Opm::CompletionPtr> cv2 = { c3, c4, c5 };
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c2);
+        std::vector<Opm::Completion> cv2 = { c3, c4, c5 };
         well.addCompletions(2, cv2);
-        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(0), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(1), c1);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(2), c3);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(3), c5);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(4), c4);
-        std::vector<Opm::CompletionPtr> cv3 = { c6 };
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), c1);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), c3);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), c5);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), c4);
+        std::vector<Opm::Completion> cv3 = { c6 };
         well.addCompletions(3, cv3);
-        BOOST_CHECK_EQUAL(well.getCompletions(1)->get(0), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(0), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(1), c1);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(2), c3);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(3), c5);
-        BOOST_CHECK_EQUAL(well.getCompletions(2)->get(4), c4);
-        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(0), c6);
-        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(1), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(2), c1);
-        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(3), c3);
-        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(4), c5);
-        BOOST_CHECK_EQUAL(well.getCompletions(3)->get(5), c4);
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), c1);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), c3);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), c5);
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), c4);
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(0), c6);
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(1), c2);
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(2), c1);
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(3), c3);
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(4), c5);
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(5), c4);
     }
 }
 
@@ -610,8 +583,8 @@ BOOST_AUTO_TEST_CASE(WellStatus) {
 
     Opm::Well well("WELL1" ,  0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap , 0);
 
-    std::vector<Opm::CompletionPtr> newCompletions;
-    Opm::CompletionPtr comp1(new Opm::Completion( 10 , 10 , 10 , 0.25 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    std::vector<Opm::Completion> newCompletions;
+    Opm::Completion comp1(10 , 10 , 10 , 0.25 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
 
     newCompletions.push_back( comp1 );
 

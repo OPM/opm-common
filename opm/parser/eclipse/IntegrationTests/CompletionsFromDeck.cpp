@@ -53,33 +53,33 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK_EQUAL(  5U , completions.find("W_2")->second.size() );
     BOOST_CHECK_EQUAL(  5U , completions.find("W_3")->second.size() );
 
-    std::vector<CompletionPtr> W_3Completions = completions.find("W_3")->second;
+    std::vector<Completion> W_3Completions = completions.find("W_3")->second;
 
-    CompletionConstPtr completion0 = W_3Completions[0];
-    CompletionConstPtr completion4 = W_3Completions[4];
+    const auto& completion0 = W_3Completions[0];
+    const auto& completion4 = W_3Completions[4];
 
-    BOOST_CHECK_EQUAL( 2     , completion0->getI() );
-    BOOST_CHECK_EQUAL( 7     , completion0->getJ() );
-    BOOST_CHECK_EQUAL( 0     , completion0->getK() );
-    BOOST_CHECK_EQUAL( WellCompletion::OPEN   , completion0->getState() );
-    BOOST_CHECK_EQUAL( 3.1726851851851847e-12 , completion0->getConnectionTransmissibilityFactor() );
-    BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::Y, completion0->getDirection() );
+    BOOST_CHECK_EQUAL( 2     , completion0.getI() );
+    BOOST_CHECK_EQUAL( 7     , completion0.getJ() );
+    BOOST_CHECK_EQUAL( 0     , completion0.getK() );
+    BOOST_CHECK_EQUAL( WellCompletion::OPEN   , completion0.getState() );
+    BOOST_CHECK_EQUAL( 3.1726851851851847e-12 , completion0.getConnectionTransmissibilityFactor() );
+    BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::Y, completion0.getDirection() );
 
-    BOOST_CHECK_EQUAL( 2     , completion4->getI() );
-    BOOST_CHECK_EQUAL( 6     , completion4->getJ() );
-    BOOST_CHECK_EQUAL( 3     , completion4->getK() );
-    BOOST_CHECK_EQUAL( WellCompletion::OPEN   , completion4->getState() );
-    BOOST_CHECK_EQUAL( 5.4722222222222212e-13 , completion4->getConnectionTransmissibilityFactor() );
-    BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::Y, completion4->getDirection() );
+    BOOST_CHECK_EQUAL( 2     , completion4.getI() );
+    BOOST_CHECK_EQUAL( 6     , completion4.getJ() );
+    BOOST_CHECK_EQUAL( 3     , completion4.getK() );
+    BOOST_CHECK_EQUAL( WellCompletion::OPEN   , completion4.getState() );
+    BOOST_CHECK_EQUAL( 5.4722222222222212e-13 , completion4.getConnectionTransmissibilityFactor() );
+    BOOST_CHECK_EQUAL( WellCompletion::DirectionEnum::Y, completion4.getDirection() );
 
 
     // Check that wells with all completions shut is also itself shut
     const Well* well1 = schedule.getWell("W_1");
-    BOOST_CHECK (!well1->getCompletions(0)->allCompletionsShut());
+    BOOST_CHECK (!well1->getCompletions(0).allCompletionsShut());
     BOOST_CHECK_EQUAL (well1->getStatus(0) , WellCommon::StatusEnum::OPEN);
 
     const Well* well2 = schedule.getWell("W_2");
-    BOOST_CHECK (well2->getCompletions(0)->allCompletionsShut());
+    BOOST_CHECK (well2->getCompletions(0).allCompletionsShut());
     BOOST_CHECK_EQUAL (well2->getStatus(0) , WellCommon::StatusEnum::SHUT);
 
 

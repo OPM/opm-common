@@ -37,6 +37,17 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 
+namespace Opm {
+inline std::ostream& operator<<( std::ostream& stream, const Completion& c ) {
+    return stream << "(" << c.getI() << "," << c.getJ() << "," << c.getK() << ")";
+}
+
+inline std::ostream& operator<<( std::ostream& stream, const CompletionSet& cs ) {
+    stream << "{ ";
+    for( const auto& c : cs ) stream << c << " ";
+    return stream << "}";
+}
+}
 
 BOOST_AUTO_TEST_CASE(CreateCompletionSetOK) {
     Opm::CompletionSet completionSet;
@@ -47,29 +58,29 @@ BOOST_AUTO_TEST_CASE(CreateCompletionSetOK) {
 
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     Opm::CompletionSet completionSet;
-    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionConstPtr completion2(new Opm::Completion(11,10,10,0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::Completion completion1( 10,10,10,0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion2( 11,10,10,0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
     completionSet.add( completion2 );
     BOOST_CHECK_EQUAL( 2U , completionSet.size() );
 
-    BOOST_CHECK_EQUAL( completion1 , completionSet.get(0));
+    BOOST_CHECK_EQUAL( completion1 , completionSet.get(0) );
 }
 
 
 BOOST_AUTO_TEST_CASE(CompletionSetGetOutOfRangeThrows) {
     Opm::CompletionSet completionSet;
-    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionConstPtr completion2(new Opm::Completion(11,10,10,0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::Completion completion1( 10,10,10,0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion2( 11,10,10,0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
     completionSet.add( completion2 );
     BOOST_CHECK_EQUAL( 2U , completionSet.size() );
 
-    BOOST_CHECK_THROW( completionSet.get(10) , std::range_error );
+    BOOST_CHECK_THROW( completionSet.get(10) , std::out_of_range );
 }
 
 
@@ -77,8 +88,8 @@ BOOST_AUTO_TEST_CASE(CompletionSetGetOutOfRangeThrows) {
 
 BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
     Opm::CompletionSet completionSet;
-    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionConstPtr completion2(new Opm::Completion(10,10,10,0.0,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::Completion completion1( 10,10,10,0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion2( 10,10,10,0.0,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
 
 
     completionSet.add( completion1 );
@@ -93,19 +104,19 @@ BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
 BOOST_AUTO_TEST_CASE(AddCompletionShallowCopy) {
     Opm::CompletionSet completionSet;
 
-    Opm::CompletionConstPtr completion1(new Opm::Completion(10,10,10,0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionConstPtr completion2(new Opm::Completion(10,10,11,0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
-    Opm::CompletionConstPtr completion3(new Opm::Completion(10,10,12,0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22)));
+    Opm::Completion completion1( 10,10,10,0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion2( 10,10,11,0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
+    Opm::Completion completion3( 10,10,12,0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22));
 
     completionSet.add( completion1 );
     completionSet.add( completion2 );
     completionSet.add( completion3 );
     BOOST_CHECK_EQUAL( 3U , completionSet.size() );
 
-    Opm::CompletionSetConstPtr copy = Opm::CompletionSetConstPtr( completionSet.shallowCopy() );
-    BOOST_CHECK_EQUAL( 3U , copy->size() );
+    auto copy = completionSet;
+    BOOST_CHECK_EQUAL( 3U , copy.size() );
 
-    BOOST_CHECK_EQUAL( completion1 , copy->get(0));
-    BOOST_CHECK_EQUAL( completion2 , copy->get(1));
-    BOOST_CHECK_EQUAL( completion3 , copy->get(2));
+    BOOST_CHECK_EQUAL( completion1 , copy.get(0));
+    BOOST_CHECK_EQUAL( completion2 , copy.get(1));
+    BOOST_CHECK_EQUAL( completion3 , copy.get(2));
 }

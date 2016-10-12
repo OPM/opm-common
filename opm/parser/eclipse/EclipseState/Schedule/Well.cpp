@@ -43,7 +43,7 @@ namespace Opm {
           m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(*timeMap, GuideRate::UNDEFINED)),
           m_guideRateScalingFactor(new DynamicState<double>(*timeMap, 1.0)),
           m_isProducer(new DynamicState<int>(*timeMap, true)) ,
-          m_completions( new DynamicState<CompletionSetConstPtr>( *timeMap , CompletionSetConstPtr( new CompletionSet()) )),
+          m_completions( new DynamicState< std::shared_ptr< const CompletionSet > >( *timeMap, std::make_shared< const CompletionSet >() ) ),
           m_productionProperties( new DynamicState<WellProductionProperties>(*timeMap, WellProductionProperties() )),
           m_injectionProperties( new DynamicState<WellInjectionProperties>(*timeMap, WellInjectionProperties() )),
           m_polymerProperties( new DynamicState<WellPolymerProperties>(*timeMap, WellPolymerProperties() )),
@@ -195,7 +195,7 @@ namespace Opm {
     }
 
     bool Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
-        if ((WellCommon::StatusEnum::OPEN == status) && getCompletions(timeStep)->allCompletionsShut()) {
+        if ((WellCommon::StatusEnum::OPEN == status) && getCompletions(timeStep).allCompletionsShut()) {
             m_messages.note("When handling keyword for well " + name() + ": Cannot open a well where all completions are shut");
             return false;
         } else
@@ -269,10 +269,10 @@ namespace Opm {
     void Well::setRefDepthFromCompletions() const {
         size_t timeStep = m_creationTimeStep;
         while (true) {
-            auto completions = getCompletions( timeStep );
-            if (completions->size() > 0) {
-                auto firstCompletion = completions->get(0);
-                m_refDepth.setValue( firstCompletion->getCenterDepth() );
+            const auto& completions = getCompletions( timeStep );
+            if (completions.size() > 0) {
+                auto firstCompletion = completions.get(0);
+                m_refDepth.setValue( firstCompletion.getCenterDepth() );
                 break;
             } else {
                 timeStep++;
@@ -287,32 +287,31 @@ namespace Opm {
         return m_preferredPhase;
     }
 
-    CompletionSetConstPtr Well::getCompletions(size_t timeStep) const {
-        return m_completions->get( timeStep );
+    const CompletionSet& Well::getCompletions(size_t timeStep) const {
+        return *m_completions->get( timeStep );
     }
 
-    CompletionSetConstPtr Well::getCompletions() const {
-        return m_completions->back();
+    const CompletionSet& Well::getCompletions() const {
+        return *m_completions->back();
     }
 
-    void Well::addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions) {
-        CompletionSetConstPtr currentCompletionSet = m_completions->get(time_step);
-        CompletionSetPtr newCompletionSet = CompletionSetPtr( currentCompletionSet->shallowCopy() );
+    void Well::addCompletions(size_t time_step, std::vector< Completion > newCompletions ) {
+        auto new_set = this->getCompletions( time_step );
 
-        for (size_t ic = 0; ic < newCompletions.size(); ic++) {
-            newCompletions[ic]->fixDefaultIJ( m_headI , m_headJ );
-            newCompletionSet->add( newCompletions[ic] );
+        for( auto& completion : newCompletions ) {
+            completion.fixDefaultIJ( m_headI , m_headJ );
+            new_set.add( std::move( completion ) );
         }
 
-        addCompletionSet( time_step , newCompletionSet);
+        this->addCompletionSet( time_step, new_set );
     }
 
-    void Well::addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet){
-        CompletionSetPtr mutable_copy(newCompletionSet->shallowCopy());
-        if (getWellCompletionOrdering() == WellCompletion::TRACK) {
-            mutable_copy->orderCompletions(m_headI, m_headJ);
+    void Well::addCompletionSet(size_t time_step, CompletionSet new_set ){
+        if( getWellCompletionOrdering() == WellCompletion::TRACK) {
+            new_set.orderCompletions(m_headI, m_headJ);
         }
-        m_completions->update(time_step, mutable_copy);
+
+        m_completions->update( time_step, std::make_shared< CompletionSet >( std::move( new_set ) ) );
     }
 
     const std::string Well::getGroupName(size_t time_step) const {

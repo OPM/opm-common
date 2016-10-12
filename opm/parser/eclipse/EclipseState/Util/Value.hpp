@@ -95,6 +95,14 @@ public:
             return false;
     }
 
+    bool operator==( const Value& rhs ) const {
+        return this->equal( rhs );
+    }
+
+    bool operator!=( const Value& rhs ) const {
+        return !(*this == rhs );
+    }
+
 
 };
 }

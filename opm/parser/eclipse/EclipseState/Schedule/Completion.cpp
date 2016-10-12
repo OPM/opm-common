@@ -46,73 +46,22 @@ namespace Opm {
           m_skinFactor(skinFactor),
           m_state(state),
           m_direction(direction),
-          m_segment_number(-1),
           m_center_depth( depth )
     {}
 
-    Completion::Completion(std::shared_ptr<const Completion> oldCompletion, WellCompletion::StateEnum newStatus)
-    :
-        m_i(oldCompletion->getI()),
-        m_j(oldCompletion->getJ()),
-        m_k(oldCompletion->getK()),
-        m_diameter(oldCompletion->getDiameterAsValueObject()),
-        m_connectionTransmissibilityFactor(oldCompletion->getConnectionTransmissibilityFactorAsValueObject()),
-        m_wellPi(oldCompletion->getWellPi()),
-        m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
-        m_state(newStatus),
-        m_direction(oldCompletion->getDirection()),
-        m_center_depth(oldCompletion->getCenterDepth())
+    Completion::Completion(const Completion& oldCompletion, WellCompletion::StateEnum newStatus ) :
+        Completion( oldCompletion )
     {
-        if (oldCompletion->attachedToSegment()) {
-            m_segment_number = oldCompletion->getSegmentNumber();
-        } else {
-            m_segment_number = -1;
-        }
+        this->m_state = newStatus;
     }
 
-    Completion::Completion(std::shared_ptr<const Completion> oldCompletion, double wellPi)
-            :
-            m_i(oldCompletion->getI()),
-            m_j(oldCompletion->getJ()),
-            m_k(oldCompletion->getK()),
-            m_diameter(oldCompletion->getDiameterAsValueObject()),
-            m_connectionTransmissibilityFactor(oldCompletion->getConnectionTransmissibilityFactorAsValueObject()),
-            m_wellPi(oldCompletion->getWellPi()),
-            m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
-            m_state(oldCompletion->getState()),
-            m_direction(oldCompletion->getDirection()),
-            m_center_depth(oldCompletion->getCenterDepth())
+    Completion::Completion(const Completion& oldCompletion, double wellPi) :
+        Completion( oldCompletion )
     {
-        if (oldCompletion->attachedToSegment()) {
-            m_segment_number = oldCompletion->getSegmentNumber();
+        if( this->m_wellPi != 0 ) {
+            this->m_wellPi *= wellPi;
         } else {
-            m_segment_number = -1;
-        }
-
-        if(m_wellPi!=0){
-            m_wellPi*=wellPi;
-        }else{
-            m_wellPi=wellPi;
-        }
-    }
-
-    Completion::Completion(std::shared_ptr<const Completion> oldCompletion)
-            :
-            m_i(oldCompletion->getI()),
-            m_j(oldCompletion->getJ()),
-            m_k(oldCompletion->getK()),
-            m_diameter(oldCompletion->getDiameterAsValueObject()),
-            m_connectionTransmissibilityFactor(oldCompletion->getConnectionTransmissibilityFactorAsValueObject()),
-            m_wellPi(oldCompletion->getWellPi()),
-            m_skinFactor(oldCompletion->getSkinFactorAsValueObject()),
-            m_state(oldCompletion->getState()),
-            m_direction(oldCompletion->getDirection()),
-            m_center_depth(oldCompletion->getCenterDepth())
-    {
-        if (oldCompletion->attachedToSegment()) {
-            m_segment_number = oldCompletion->getSegmentNumber();
-        } else {
-            m_segment_number = -1;
+            this->m_wellPi = wellPi;
         }
     }
 
@@ -141,10 +90,10 @@ namespace Opm {
        disentangled, and each completion is returned separately.
     */
 
-    inline std::vector< CompletionPtr >
+    inline std::vector< Completion >
     fromCOMPDAT( const EclipseGrid& grid, const DeckRecord& compdatRecord, const Well& well ) {
 
-        std::vector<CompletionPtr> completions;
+        std::vector< Completion > completions;
 
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         // I and J can be defaulted with 0 or *, in which case they are fetched
@@ -182,9 +131,13 @@ namespace Opm {
         const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord.getItem("DIR").getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
-            double depth = grid.getCellDepth( I,J,k );
-            CompletionPtr completion(new Completion(I , J , k , depth , state , connectionTransmissibilityFactor, diameter, skinFactor, direction ));
-            completions.push_back( completion );
+            completions.emplace_back( I, J, k,
+                                      grid.getCellDepth( I,J,k ),
+                                      state,
+                                      connectionTransmissibilityFactor,
+                                      diameter,
+                                      skinFactor,
+                                      direction );
         }
 
         return completions;
@@ -200,12 +153,12 @@ namespace Opm {
       }
     */
 
-    std::map< std::string, std::vector< CompletionPtr > >
+    std::map< std::string, std::vector< Completion > >
     Completion::fromCOMPDAT( const EclipseGrid& grid ,
                              const DeckKeyword& compdatKeyword,
                              const std::vector< const Well* >& wells ) {
 
-        std::map< std::string, std::vector< CompletionPtr > > res;
+        std::map< std::string, std::vector< Completion > > res;
 
         for( const auto& record : compdatKeyword ) {
 
@@ -221,8 +174,8 @@ namespace Opm {
             auto completions = Opm::fromCOMPDAT( grid, record, **well );
 
             res[ wellname ].insert( res[ wellname ].end(),
-                                    completions.begin(),
-                                    completions.end() );
+                                    std::make_move_iterator( completions.begin() ),
+                                    std::make_move_iterator( completions.end() ) );
         }
 
         return res;
@@ -307,7 +260,24 @@ namespace Opm {
         return (m_segment_number > 0);
     }
 
+    bool Completion::operator==( const Completion& rhs ) const {
+        return this->m_i == rhs.m_i
+            && this->m_j == rhs.m_j
+            && this->m_k == rhs.m_k
+            && this->m_diameter == rhs.m_diameter
+            && this->m_connectionTransmissibilityFactor
+               == rhs.m_connectionTransmissibilityFactor
+            && this->m_wellPi == rhs.m_wellPi
+            && this->m_skinFactor == rhs.m_skinFactor
+            && this->m_state == rhs.m_state
+            && this->m_direction == rhs.m_direction
+            && this->m_segment_number == rhs.m_segment_number
+            && this->m_center_depth == rhs.m_center_depth;
+    }
 
+    bool Completion::operator!=( const Completion& rhs ) const {
+        return !( *this == rhs );
+    }
 }
 
 

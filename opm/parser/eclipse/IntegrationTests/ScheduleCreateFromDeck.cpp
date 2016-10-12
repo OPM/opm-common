@@ -289,20 +289,18 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     {
         auto* well1 = sched->getWell("W_1");
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionPropertiesCopy(8).OilRate , 0.0001);
-        CompletionSetConstPtr completions = well1->getCompletions(0);
-        BOOST_CHECK_EQUAL(0U, completions->size());
+        BOOST_CHECK_EQUAL(0U, well1->getCompletions( 0 ).size() );
 
-        completions = well1->getCompletions(3);
-        BOOST_CHECK_EQUAL(4U, completions->size());
+        const auto& completions = well1->getCompletions(3);
+        BOOST_CHECK_EQUAL(4U, completions.size());
 
-        BOOST_CHECK_EQUAL(WellCompletion::OPEN, completions->get(3)->getState());
-        BOOST_CHECK_EQUAL(2.2836805555555556e-12 , completions->get(3)->getConnectionTransmissibilityFactor());
-        BOOST_CHECK_EQUAL(0.311/Metric::Length, completions->get(3)->getDiameter());
-        BOOST_CHECK_EQUAL(3.3, completions->get(3)->getSkinFactor());
+        BOOST_CHECK_EQUAL(WellCompletion::OPEN, completions.get(3).getState());
+        BOOST_CHECK_EQUAL(2.2836805555555556e-12 , completions.get(3).getConnectionTransmissibilityFactor());
+        BOOST_CHECK_EQUAL(0.311/Metric::Length, completions.get(3).getDiameter());
+        BOOST_CHECK_EQUAL(3.3, completions.get(3).getSkinFactor());
 
-        completions = well1->getCompletions(7);
-        BOOST_CHECK_EQUAL(4U, completions->size());
-        BOOST_CHECK_EQUAL(WellCompletion::SHUT, completions->get(3)->getState());
+        BOOST_CHECK_EQUAL(4U, well1->getCompletions( 7 ).size() );
+        BOOST_CHECK_EQUAL(WellCompletion::SHUT, well1->getCompletions( 7 ).get( 3 ).getState() );
     }
 }
 
@@ -663,9 +661,9 @@ COMPDAT \n\
     EclipseGrid grid(30,30,10);
     SchedulePtr sched(new Schedule(parseContext , grid , deck));
     const auto* well = sched->getWell("W1");
-    CompletionSetConstPtr completions = well->getCompletions(0);
-    BOOST_CHECK_EQUAL( 10 , completions->get(0)->getI() );
-    BOOST_CHECK_EQUAL( 20 , completions->get(0)->getJ() );
+    const auto& completions = well->getCompletions(0);
+    BOOST_CHECK_EQUAL( 10 , completions.get(0).getI() );
+    BOOST_CHECK_EQUAL( 20 , completions.get(0).getJ() );
 }
 
 

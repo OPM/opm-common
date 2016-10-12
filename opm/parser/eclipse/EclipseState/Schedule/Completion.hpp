@@ -47,9 +47,8 @@ namespace Opm {
                    const Value<double>& skinFactor,
                    const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
-        Completion(std::shared_ptr<const Completion> oldCompletion, WellCompletion::StateEnum newStatus);
-        Completion(std::shared_ptr<const Completion> oldCompletion, double wellPi);
-        Completion(std::shared_ptr<const Completion> oldCompletion);
+        Completion(const Completion&, WellCompletion::StateEnum newStatus);
+        Completion(const Completion&, double wellPi);
 
         bool sameCoordinate(const Completion& other) const;
         bool sameCoordinate(const int i, const int j, const int k) const;
@@ -71,10 +70,13 @@ namespace Opm {
 
         WellCompletion::DirectionEnum getDirection() const;
 
-        static std::map< std::string, std::vector< std::shared_ptr< Completion > > >
+        static std::map< std::string, std::vector< Completion > >
         fromCOMPDAT( const EclipseGrid& grid,
                      const DeckKeyword& compdatKeyword,
                      const std::vector< const Well* >& );
+
+        bool operator==( const Completion& ) const;
+        bool operator!=( const Completion& ) const;
 
     private:
         int m_i, m_j, m_k;
@@ -86,15 +88,11 @@ namespace Opm {
         WellCompletion::DirectionEnum m_direction;
         Value<double> getDiameterAsValueObject() const;
         Value<double> getSkinFactorAsValueObject() const;
-	// related segment number
-	// -1 means the completion is not related to segment
-        int m_segment_number;
+        // related segment number
+        // -1 means the completion is not related to segment
+        int m_segment_number = -1;
         double m_center_depth;
-
     };
-
-    typedef std::shared_ptr<Completion> CompletionPtr;
-    typedef std::shared_ptr<const Completion> CompletionConstPtr;
 }
 
 

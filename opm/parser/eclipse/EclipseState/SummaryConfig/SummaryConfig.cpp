@@ -236,9 +236,9 @@ inline void keywordC( std::vector< ERT::smspec_node >& list,
              * over a well's completions regardless of the desired block is
              * defaulted or not
              */
-            for( const auto& completion : *well->getCompletions( last_timestep ) ) {
+            for( const auto& completion : well->getCompletions( last_timestep ) ) {
                 /* block coordinates defaulted */
-                auto cijk = getijk( *completion );
+                auto cijk = getijk( completion );
 
                 if( record.getItem( 1 ).defaultApplied( 0 ) ) {
                     list.emplace_back( keywordstring, name, dims.data(), cijk.data() );
