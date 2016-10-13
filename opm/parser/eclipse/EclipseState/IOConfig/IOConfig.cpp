@@ -194,7 +194,7 @@ namespace Opm {
         return m_first_rft_step;
     }
 
-    bool IOConfig::getOutputEnabled(){
+    bool IOConfig::getOutputEnabled() const {
         return m_output_enabled;
     }
 
