@@ -125,8 +125,22 @@ namespace Opm {
     Deck::Deck( std::vector< DeckKeyword >&& x ) :
         DeckView( x.begin(), x.end() ),
         keywordList( std::move( x ) ),
+        defaultUnits( UnitSystem::newMETRIC() ),
+        activeUnits( UnitSystem::newMETRIC() ),
         m_dataFile("")
-    {}
+    {
+        /*
+         * If multiple unit systems are requested, metric is preferred over
+         * lab, and field over metric, for as long as we have no easy way of
+         * figuring out which was requested last.
+         */
+        if( this->hasKeyword( "LAB" ) )
+            this->activeUnits = UnitSystem::newLAB();
+        if( this->hasKeyword( "FIELD" ) )
+            this->activeUnits = UnitSystem::newFIELD();
+        if( this->hasKeyword( "METRIC" ) )
+            this->activeUnits = UnitSystem::newMETRIC();
+    }
 
     Deck::Deck( std::initializer_list< DeckKeyword > ilist ) :
         Deck( std::vector< DeckKeyword >( ilist ) )
@@ -159,44 +173,20 @@ namespace Opm {
         return this->m_messageContainer;
     }
 
-    
     UnitSystem& Deck::getDefaultUnitSystem() {
-        if( !this->defaultUnits ) this->initUnitSystem();
-        return *this->defaultUnits;
-    }
-
-    UnitSystem& Deck::getActiveUnitSystem() {
-        if( !this->activeUnits ) this->initUnitSystem();
-        return *this->activeUnits;
+        return this->defaultUnits;
     }
 
     const UnitSystem& Deck::getDefaultUnitSystem() const {
-        if( !this->defaultUnits ) this->initUnitSystem();
-        return *this->defaultUnits;
+        return this->defaultUnits;
+    }
+
+    UnitSystem& Deck::getActiveUnitSystem() {
+        return this->activeUnits;
     }
 
     const UnitSystem& Deck::getActiveUnitSystem() const {
-        if( !this->activeUnits ) this->initUnitSystem();
-        return *this->activeUnits;
-    }
-
-    void Deck::initUnitSystem() const {
-        /*
-         * The unit systems are lazily created as their exact value depend on
-         * input values of the deck, but in a constructed deck this can be
-         * considered constant (and in fact, if the deck is obtained through
-         * ParseFromString/File, this these values set before the Deck is
-         * available). The unit systems are needed from const contexts though,
-         * but might not have been generated at that time. Generation is done
-         * in this method, but it has to be callable from const'd this, and are
-         * marked mutable.
-         */
-
-        this->defaultUnits = std::unique_ptr< UnitSystem >( new UnitSystem( UnitSystem::newMETRIC() ) );
-        if (hasKeyword("FIELD"))
-            this->activeUnits = std::unique_ptr< UnitSystem >( new UnitSystem( UnitSystem::newFIELD() ) );
-        else
-            this->activeUnits = std::unique_ptr< UnitSystem >( new UnitSystem( UnitSystem::newMETRIC() ) );
+        return this->activeUnits;
     }
 
     const std::string Deck::getDataFile() const {

@@ -128,11 +128,10 @@ namespace Opm {
             DeckKeyword& getKeyword( size_t );
             MessageContainer& getMessageContainer() const;
 
-            UnitSystem& getDefaultUnitSystem();
-            UnitSystem& getActiveUnitSystem();
-
             const UnitSystem& getDefaultUnitSystem() const;
             const UnitSystem& getActiveUnitSystem() const;
+            UnitSystem& getActiveUnitSystem();
+            UnitSystem& getDefaultUnitSystem();
 
             const std::string getDataFile() const;
             void setDataFile(const std::string& dataFile);
@@ -143,14 +142,10 @@ namespace Opm {
         private:
             Deck( std::vector< DeckKeyword >&& );
 
-            void initUnitSystem() const;
-
-
             std::vector< DeckKeyword > keywordList;
             mutable MessageContainer m_messageContainer;
-
-            mutable std::unique_ptr< UnitSystem > activeUnits;
-            mutable std::unique_ptr< UnitSystem > defaultUnits;
+            UnitSystem defaultUnits;
+            UnitSystem activeUnits;
 
             std::string m_dataFile;
     };

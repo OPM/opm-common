@@ -788,6 +788,18 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
 
     void Parser::applyUnitsToDeck(Deck& deck) const {
+        /*
+         * If multiple unit systems are requested, metric is preferred over
+         * lab, and field over metric, for as long as we have no easy way of
+         * figuring out which was requested last.
+         */
+        if( deck.hasKeyword( "LAB" ) )
+            deck.getActiveUnitSystem() = UnitSystem::newLAB();
+        if( deck.hasKeyword( "FIELD" ) )
+            deck.getActiveUnitSystem() = UnitSystem::newFIELD();
+        if( deck.hasKeyword( "METRIC" ) )
+            deck.getActiveUnitSystem() = UnitSystem::newMETRIC();
+
         for( auto& deckKeyword : deck ) {
 
             if( !isRecognizedKeyword( deckKeyword.name() ) ) continue;
