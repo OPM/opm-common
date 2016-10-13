@@ -50,10 +50,6 @@
 
 namespace Opm {
 
-    EclipseState::EclipseState(std::shared_ptr<const Deck> deckptr, ParseContext parseContext) :
-        EclipseState(*deckptr, parseContext)
-    {}
-
     EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
         m_parseContext(      parseContext ),
         m_tables(            deck ),

@@ -171,7 +171,7 @@ const std::string& inputStrMissingPressure = "RUNSPEC\n"
                                          "/\n"
                                          "\n";
 
-static DeckPtr createDeck(const ParseContext& parseContext, const std::string& input) {
+static Deck createDeck(const ParseContext& parseContext, const std::string& input) {
     Opm::Parser parser;
     return parser.parseString(input, parseContext);
 }
@@ -180,7 +180,7 @@ static DeckPtr createDeck(const ParseContext& parseContext, const std::string& i
 struct Setup
 {
     ParseContext parseContext;
-    DeckPtr deck;
+    Deck deck;
     TableManager tablemanager;
     EclipseGrid grid;
     Eclipse3DProperties props;
@@ -189,19 +189,19 @@ struct Setup
     explicit Setup(const std::string& input) :
             parseContext(),
             deck(createDeck(parseContext, input)),
-            tablemanager(*deck),
+            tablemanager(deck),
             grid(10, 3, 4),
-            props(*deck, tablemanager, grid),
-            threshPres(*deck, props)
+            props(deck, tablemanager, grid),
+            threshPres(deck, props)
     {
     }
     explicit Setup(const std::string& input, ParseContext& parseContextArg) :
             parseContext(), // not used
             deck(createDeck(parseContextArg, input)),
-            tablemanager(*deck),
+            tablemanager(deck),
             grid(10, 3, 4),
-            props(*deck, tablemanager, grid),
-            threshPres(*deck, props)
+            props(deck, tablemanager, grid),
+            threshPres(deck, props)
     {
     }
 

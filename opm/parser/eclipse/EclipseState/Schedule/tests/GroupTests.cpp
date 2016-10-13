@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
             "/\n";
 
     Opm::ParseContext parseContext;
-    Opm::DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Opm::Schedule schedule(parseContext , grid, deck );
 
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
            
 
     Opm::ParseContext parseContext;
-    Opm::DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Opm::Schedule schedule(parseContext , grid, deck );
     const auto* currentWell = schedule.getWell("B-37T2");

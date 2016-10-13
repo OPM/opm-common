@@ -34,7 +34,7 @@
 
 using namespace Opm;
 
-static DeckPtr createDeckWithOutSolvent() {
+static Deck createDeckWithOutSolvent() {
     Opm::Parser parser;
     std::string input =
             "SCHEDULE\n"
@@ -50,7 +50,7 @@ static DeckPtr createDeckWithOutSolvent() {
     return parser.parseString(input, ParseContext());
 }
 
-static DeckPtr createDeckWithGasInjector() {
+static Deck createDeckWithGasInjector() {
     Opm::Parser parser;
     std::string input =
             "SCHEDULE\n"
@@ -69,7 +69,7 @@ static DeckPtr createDeckWithGasInjector() {
     return parser.parseString(input, ParseContext());
 }
 
-static DeckPtr createDeckWithDynamicWSOLVENT() {
+static Deck createDeckWithDynamicWSOLVENT() {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
@@ -100,7 +100,7 @@ static DeckPtr createDeckWithDynamicWSOLVENT() {
     return parser.parseString(input, ParseContext());
 }
 
-static DeckPtr createDeckWithOilInjector() {
+static Deck createDeckWithOilInjector() {
     Opm::Parser parser;
     std::string input =
             "SCHEDULE\n"
@@ -119,7 +119,7 @@ static DeckPtr createDeckWithOilInjector() {
     return parser.parseString(input, ParseContext());
 }
 
-static DeckPtr createDeckWithWaterInjector() {
+static Deck createDeckWithWaterInjector() {
     Opm::Parser parser;
     std::string input =
             "SCHEDULE\n"
@@ -138,26 +138,26 @@ static DeckPtr createDeckWithWaterInjector() {
     return parser.parseString(input, ParseContext());
 }
 BOOST_AUTO_TEST_CASE(TestNoSolvent) {
-    DeckPtr deck = createDeckWithOutSolvent();
+    auto deck = createDeckWithOutSolvent();
     EclipseGrid grid(10,10,10);
     Schedule schedule(ParseContext() , grid , deck );
-    BOOST_CHECK(!deck->hasKeyword("WSOLVENT"));
+    BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
 }
 
 BOOST_AUTO_TEST_CASE(TestGasInjector) {
-    DeckPtr deck = createDeckWithGasInjector();
+    auto deck = createDeckWithGasInjector();
     EclipseGrid grid(10,10,10);
     Schedule schedule(ParseContext(), grid , deck );
-    BOOST_CHECK(deck->hasKeyword("WSOLVENT"));
+    BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 
 }
 
 BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
-    DeckPtr deck = createDeckWithDynamicWSOLVENT();
+    auto deck = createDeckWithDynamicWSOLVENT();
     EclipseGrid grid(10,10,10);
     Schedule schedule(ParseContext() , grid , deck );
-    BOOST_CHECK(deck->hasKeyword("WSOLVENT"));
-    const auto& keyword = deck->getKeyword("WSOLVENT");
+    BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
+    const auto& keyword = deck.getKeyword("WSOLVENT");
     BOOST_CHECK_EQUAL(keyword.size(),1);
     const auto& record = keyword.getRecord(0);
     const std::string& wellNamesPattern = record.getItem("WELL").getTrimmedString(0);
@@ -170,13 +170,13 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
 }
 
 BOOST_AUTO_TEST_CASE(TestOilInjector) {
-    DeckPtr deck = createDeckWithOilInjector();
+    auto deck = createDeckWithOilInjector();
     EclipseGrid grid(10,10,10);
     BOOST_CHECK_THROW (Schedule(ParseContext() , grid , deck ), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(TestWaterInjector) {
-    DeckPtr deck = createDeckWithWaterInjector();
+    auto deck = createDeckWithWaterInjector();
     EclipseGrid grid(10,10,10);
     BOOST_CHECK_THROW (Schedule(ParseContext(), grid , deck ), std::invalid_argument);
 }

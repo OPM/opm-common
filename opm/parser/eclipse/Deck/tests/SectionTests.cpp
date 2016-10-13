@@ -34,17 +34,17 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(SectionTest) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword("TEST0") );
-    deck->addKeyword( DeckKeyword("RUNSPEC") );
-    deck->addKeyword( DeckKeyword("TEST1") );
-    deck->addKeyword( DeckKeyword("GRID") );
-    deck->addKeyword( DeckKeyword("TEST2") );
-    deck->addKeyword( DeckKeyword("SCHEDULE") );
-    deck->addKeyword( DeckKeyword("TEST3") );
+    Deck deck;
+    deck.addKeyword( DeckKeyword("TEST0") );
+    deck.addKeyword( DeckKeyword("RUNSPEC") );
+    deck.addKeyword( DeckKeyword("TEST1") );
+    deck.addKeyword( DeckKeyword("GRID") );
+    deck.addKeyword( DeckKeyword("TEST2") );
+    deck.addKeyword( DeckKeyword("SCHEDULE") );
+    deck.addKeyword( DeckKeyword("TEST3") );
 
-    Section runspecSection(*deck, "RUNSPEC");
-    Section gridSection(*deck, "GRID");
+    Section runspecSection(deck, "RUNSPEC");
+    Section gridSection(deck, "GRID");
     BOOST_CHECK(runspecSection.hasKeyword("TEST1"));
     BOOST_CHECK(gridSection.hasKeyword("TEST2"));
 
@@ -57,12 +57,12 @@ BOOST_AUTO_TEST_CASE(SectionTest) {
 }
 
 BOOST_AUTO_TEST_CASE(IteratorTest) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword("TEST2") );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    Section section(*deck, "RUNSPEC");
+    Deck deck;
+    deck.addKeyword( DeckKeyword( "RUNSPEC" ) );
+    deck.addKeyword( DeckKeyword("TEST2") );
+    deck.addKeyword( DeckKeyword( "TEST3" ) );
+    deck.addKeyword( DeckKeyword( "GRID" ) );
+    Section section(deck, "RUNSPEC");
 
     int numberOfItems = 0;
     for (auto iter=section.begin(); iter != section.end(); ++iter) {
@@ -75,20 +75,20 @@ BOOST_AUTO_TEST_CASE(IteratorTest) {
 }
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_EmptyDeck) {
-    DeckPtr deck(new Deck());
-    BOOST_REQUIRE_NO_THROW(RUNSPECSection section(*deck));
+    Deck deck;
+    BOOST_REQUIRE_NO_THROW(RUNSPECSection section(deck));
 }
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSimpleDeck) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "TEST1") );
-    deck->addKeyword( DeckKeyword( "RUNSPEC") );
-    deck->addKeyword( DeckKeyword( "TEST2") );
-    deck->addKeyword( DeckKeyword( "TEST3") );
-    deck->addKeyword( DeckKeyword( "GRID") );
-    deck->addKeyword( DeckKeyword( "TEST4") );
+    Deck deck;
+    deck.addKeyword( DeckKeyword( "TEST1") );
+    deck.addKeyword( DeckKeyword( "RUNSPEC") );
+    deck.addKeyword( DeckKeyword( "TEST2") );
+    deck.addKeyword( DeckKeyword( "TEST3") );
+    deck.addKeyword( DeckKeyword( "GRID") );
+    deck.addKeyword( DeckKeyword( "TEST4") );
 
-    RUNSPECSection section(*deck);
+    RUNSPECSection section(deck);
     BOOST_CHECK(!section.hasKeyword("TEST1"));
     BOOST_CHECK(section.hasKeyword("RUNSPEC"));
     BOOST_CHECK(section.hasKeyword("TEST2"));
@@ -98,111 +98,111 @@ BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSimpleDeck) {
 }
 
 BOOST_AUTO_TEST_CASE(RUNSPECSection_ReadSmallestPossibleDeck) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( DeckKeyword( "GRID") );
-    RUNSPECSection section(*deck);
+    Deck deck;
+    deck.addKeyword( DeckKeyword( "RUNSPEC" ) );
+    deck.addKeyword( DeckKeyword( "GRID") );
+    RUNSPECSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("RUNSPEC"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("GRID"));
 }
 
 BOOST_AUTO_TEST_CASE(GRIDSection_TerminatedByEDITKeyword) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "EDIT" ) );
-    GRIDSection section(*deck);
+    Deck deck;
+    deck.addKeyword( DeckKeyword( "GRID" ) );
+    deck.addKeyword( DeckKeyword( "EDIT" ) );
+    GRIDSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("EDIT"));
 }
 
 BOOST_AUTO_TEST_CASE(GRIDSection_TerminatedByPROPSKeyword) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "GRID" ) );
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    GRIDSection section(*deck);
+    Deck deck;
+    deck.addKeyword( DeckKeyword( "GRID" ) );
+    deck.addKeyword( DeckKeyword( "PROPS" ) );
+    GRIDSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("GRID"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("PROPS"));
 }
 
 BOOST_AUTO_TEST_CASE(EDITSection_TerminatedByPROPSKeyword) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "EDIT" ) );
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    EDITSection section(*deck);
+    Deck deck;
+    deck.addKeyword( DeckKeyword( "EDIT" ) );
+    deck.addKeyword( DeckKeyword( "PROPS" ) );
+    EDITSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("EDIT"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("PROPS"));
 }
 
 BOOST_AUTO_TEST_CASE(PROPSSection_TerminatedByREGIONSKeyword) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "REGIONS" ) );
-    PROPSSection section(*deck);
+    Deck deck;
+    deck.addKeyword( DeckKeyword( "PROPS" ) );
+    deck.addKeyword( DeckKeyword( "REGIONS" ) );
+    PROPSSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("PROPS"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("REGIONS"));
 }
 
 BOOST_AUTO_TEST_CASE(PROPSSection_TerminatedBySOLUTIONKeyword) {
-    DeckPtr deck(new Deck());
+    Deck deck;
 
-    deck->addKeyword( DeckKeyword( "PROPS" ) );
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
+    deck.addKeyword( DeckKeyword( "PROPS" ) );
+    deck.addKeyword( DeckKeyword( "SOLUTION" ) );
 
-    PROPSSection section(*deck);
+    PROPSSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("PROPS"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("SOLUTION"));
 }
 
 BOOST_AUTO_TEST_CASE(REGIONSSection_TerminatedBySOLUTIONKeyword) {
-    DeckPtr deck(new Deck());
+    Deck deck;
 
-    deck->addKeyword( DeckKeyword( "REGIONS" ) );
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
+    deck.addKeyword( DeckKeyword( "REGIONS" ) );
+    deck.addKeyword( DeckKeyword( "SOLUTION" ) );
 
-    REGIONSSection section(*deck);
+    REGIONSSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("REGIONS"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("SOLUTION"));
 }
 
 BOOST_AUTO_TEST_CASE(SOLUTIONSection_TerminatedBySUMMARYKeyword) {
-    DeckPtr deck(new Deck());
+    Deck deck;
 
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "SUMMARY" ) );
+    deck.addKeyword( DeckKeyword( "SOLUTION" ) );
+    deck.addKeyword( DeckKeyword( "SUMMARY" ) );
 
-    SOLUTIONSection section(*deck);
+    SOLUTIONSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("SOLUTION"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("SUMMARY"));
 }
 
 BOOST_AUTO_TEST_CASE(SOLUTIONSection_TerminatedBySCHEDULEKeyword) {
-    DeckPtr deck(new Deck());
+    Deck deck;
 
-    deck->addKeyword( DeckKeyword( "SOLUTION" ) );
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
+    deck.addKeyword( DeckKeyword( "SOLUTION" ) );
+    deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
 
-    SOLUTIONSection section(*deck);
+    SOLUTIONSection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("SOLUTION"));
     BOOST_CHECK_EQUAL(false, section.hasKeyword("SCHEDULE"));
 }
 
 BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
-    DeckPtr deck(new Deck());
+    Deck deck;
 
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
-    deck->addKeyword( DeckKeyword( "TEST1" ) );
-    deck->addKeyword( DeckKeyword( "TEST2" ) );
-    deck->addKeyword( DeckKeyword( "TEST3" ) );
-    deck->addKeyword( DeckKeyword( "TEST4" ) );
+    deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
+    deck.addKeyword( DeckKeyword( "TEST1" ) );
+    deck.addKeyword( DeckKeyword( "TEST2" ) );
+    deck.addKeyword( DeckKeyword( "TEST3" ) );
+    deck.addKeyword( DeckKeyword( "TEST4" ) );
 
-    SCHEDULESection section(*deck);
+    SCHEDULESection section(deck);
     BOOST_CHECK_EQUAL(true, section.hasKeyword("SCHEDULE"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST1"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST2"));
     BOOST_CHECK_EQUAL(true, section.hasKeyword("TEST3"));
 
-    BOOST_CHECK( Section::hasSCHEDULE(*deck ));
-    BOOST_CHECK( !Section::hasREGIONS(*deck ));
+    BOOST_CHECK( Section::hasSCHEDULE(deck ));
+    BOOST_CHECK( !Section::hasREGIONS(deck ));
 }
 
 BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
@@ -221,8 +221,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
                                 "SCHEDULE\n"
                                 "TEST5\n";
 
-    std::unique_ptr< Deck > deck( parser.newDeckFromString( minimal, mode ) );
-    BOOST_CHECK( Opm::Section::checkSectionTopology(*deck, parser) );
+    BOOST_CHECK( Opm::Section::checkSectionTopology( parser.parseString( minimal, mode ), parser) );
 
     const std::string with_opt = "RUNSPEC\n"
                                 "TEST1\n"
@@ -241,8 +240,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
                                 "SCHEDULE\n"
                                 "TEST8\n";
 
-    deck.reset( parser.newDeckFromString( with_opt, mode ) );
-    BOOST_CHECK(Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(Opm::Section::checkSectionTopology( parser.parseString( with_opt, mode ), parser));
 }
 
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
@@ -263,8 +261,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                 "SCHEDULE\n"
                                 "TEST5\n";
 
-    std::unique_ptr< Deck > deck( parser.newDeckFromString( keyword_before_RUNSPEC, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( keyword_before_RUNSPEC, mode ), parser));
 
     const std::string wrong_order = "RUNSPEC\n"
                                     "TEST1\n"
@@ -283,8 +280,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                     "SCHEDULE\n"
                                     "TEST8\n";
 
-    deck.reset( parser.newDeckFromString( wrong_order, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( wrong_order, mode ), parser));
 
     const std::string duplicate = "RUNSPEC\n"
                                   "TEST1\n"
@@ -305,8 +301,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                   "SCHEDULE\n"
                                   "TEST8\n";
 
-    deck.reset( parser.newDeckFromString( duplicate, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( duplicate, mode ), parser));
 
     const std::string section_after_SCHEDULE = "RUNSPEC\n"
                                                "TEST1\n"
@@ -325,8 +320,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                                "EDIT\n"
                                                "TEST3\n";
 
-    deck.reset( parser.newDeckFromString( section_after_SCHEDULE, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( section_after_SCHEDULE, mode ), parser));
 
     const std::string missing_runspec = "GRID\n"
                                         "TEST2\n"
@@ -337,8 +331,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                         "SCHEDULE\n"
                                         "TEST5\n";
 
-    deck.reset( parser.newDeckFromString( missing_runspec, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( missing_runspec, mode ), parser));
 
 
     const std::string missing_GRID = "RUNSPEC\n"
@@ -350,8 +343,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                      "SCHEDULE\n"
                                      "TEST5\n";
 
-    deck.reset( parser.newDeckFromString( missing_GRID, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( missing_GRID, mode ), parser));
 
    const std::string missing_PROPS = "RUNSPEC\n"
                                      "TEST1\n"
@@ -362,8 +354,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                      "SCHEDULE\n"
                                      "TEST5\n";
 
-    deck.reset( parser.newDeckFromString( missing_PROPS, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( missing_PROPS, mode ), parser));
 
     const std::string missing_SOLUTION = "RUNSPEC\n"
                                          "TEST1\n"
@@ -374,8 +365,7 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                          "SCHEDULE\n"
                                          "TEST5\n";
 
-    deck.reset( parser.newDeckFromString( missing_SOLUTION, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( missing_SOLUTION, mode ), parser));
 
     const std::string missing_SCHEDULE = "RUNSPEC\n"
                                          "TEST1\n"
@@ -386,6 +376,5 @@ BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
                                          "SOLUTION\n"
                                          "TEST4\n";
 
-    deck.reset( parser.newDeckFromString( missing_SCHEDULE, mode ) );
-    BOOST_CHECK(!Opm::Section::checkSectionTopology(*deck, parser));
+    BOOST_CHECK(!Opm::Section::checkSectionTopology( parser.parseString( missing_SCHEDULE, mode ), parser));
 }

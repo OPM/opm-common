@@ -18,10 +18,7 @@
 */
 
 #define BOOST_TEST_MODULE ParserIntegrationTests
-#include <math.h>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
@@ -64,10 +61,10 @@ PVTO\n\
               506          1.31         0.96 /\n\
 /\n";
 
-
-static void check_parser(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(pvtoData, ParseContext());
-    const auto& kw1 = deck->getKeyword("PVTO" , 0);
+BOOST_AUTO_TEST_CASE( parse_PVTO_OK ) {
+    Parser parser;
+    auto deck =  parser.parseString(pvtoData, ParseContext());
+    const auto& kw1 = deck.getKeyword("PVTO" , 0);
     BOOST_CHECK_EQUAL(5U , kw1.size());
 
     const auto& record0 = kw1.getRecord(0);
@@ -122,10 +119,4 @@ static void check_parser(ParserPtr parser) {
 
     BOOST_CHECK_CLOSE( 1.15 , pvtoTable.evaluate( "BO" , 1e-3 , 250*1e5 ) , 1e-6 );
     BOOST_CHECK_CLOSE( 1.15 , pvtoTable.evaluate( "BO" , 0.0 , 250*1e5 ) , 1e-6 );
-}
-
-
-BOOST_AUTO_TEST_CASE( parse_PVTO_OK ) {
-    ParserPtr parser(new Parser());
-    check_parser( parser );
 }

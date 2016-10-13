@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
     Parser parser(true);
 
     auto deck = parser.parseString( deckString , parseContext );
-    EclipseGrid grid( *deck );
+    EclipseGrid grid( deck );
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     {

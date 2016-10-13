@@ -38,26 +38,24 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE( parse_END_OK ) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string fileWithTitleKeyword("testdata/integration_tests/END/END1.txt");
+    auto deck = parser.parseFile(fileWithTitleKeyword, ParseContext());
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword, ParseContext());
-
-    BOOST_CHECK_EQUAL(size_t(1), deck->size());
-    BOOST_CHECK_EQUAL (true, deck->hasKeyword("OIL"));
-    BOOST_CHECK_EQUAL (false, deck->hasKeyword("GAS"));
-    BOOST_CHECK_EQUAL (false, deck->hasKeyword("END"));
+    BOOST_CHECK_EQUAL(size_t(1), deck.size());
+    BOOST_CHECK_EQUAL (true, deck.hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL (false, deck.hasKeyword("GAS"));
+    BOOST_CHECK_EQUAL (false, deck.hasKeyword("END"));
 }
 
 BOOST_AUTO_TEST_CASE( parse_ENDINC_OK ) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string fileWithTitleKeyword("testdata/integration_tests/END/ENDINC1.txt");
+    auto deck = parser.parseFile(fileWithTitleKeyword, ParseContext());
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword, ParseContext());
-
-    BOOST_CHECK_EQUAL(size_t(1), deck->size());
-    BOOST_CHECK_EQUAL (true, deck->hasKeyword("OIL"));
-    BOOST_CHECK_EQUAL (false, deck->hasKeyword("GAS"));
-    BOOST_CHECK_EQUAL (false, deck->hasKeyword("ENDINC"));
+    BOOST_CHECK_EQUAL(size_t(1), deck.size());
+    BOOST_CHECK_EQUAL (true, deck.hasKeyword("OIL"));
+    BOOST_CHECK_EQUAL (false, deck.hasKeyword("GAS"));
+    BOOST_CHECK_EQUAL (false, deck.hasKeyword("ENDINC"));
 }
 

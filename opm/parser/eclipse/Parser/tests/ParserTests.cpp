@@ -50,9 +50,6 @@ inline std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw
 
 BOOST_AUTO_TEST_CASE(Initializing) {
     BOOST_CHECK_NO_THROW(Parser parser);
-    BOOST_CHECK_NO_THROW(Parser parser);
-    BOOST_CHECK_NO_THROW(ParserPtr parserPtr(new Parser()));
-    BOOST_CHECK_NO_THROW(ParserConstPtr parserConstPtr(new Parser()));
 }
 
 BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
@@ -62,35 +59,35 @@ BOOST_AUTO_TEST_CASE(addKeyword_keyword_doesntfail) {
 
 
 BOOST_AUTO_TEST_CASE(canParseDeckKeyword_returnstrue) {
-    ParserPtr parser(new Parser());
-    parser->addParserKeyword(createDynamicSized("FJAS"));
-    BOOST_CHECK(parser->isRecognizedKeyword("FJAS"));
+    Parser parser;
+    parser.addParserKeyword(createDynamicSized("FJAS"));
+    BOOST_CHECK(parser.isRecognizedKeyword("FJAS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(getKeyword_haskeyword_returnskeyword) {
-    ParserPtr parser(new Parser());
-    parser->addParserKeyword( createDynamicSized( "FJAS" ) );
-    BOOST_CHECK_EQUAL("FJAS", parser->getParserKeywordFromDeckName("FJAS")->getName());
+    Parser parser;
+    parser.addParserKeyword( createDynamicSized( "FJAS" ) );
+    BOOST_CHECK_EQUAL("FJAS", parser.getParserKeywordFromDeckName("FJAS")->getName());
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
-    ParserPtr parser(new Parser());
-    parser->addParserKeyword( createDynamicSized( "FJAS" ) );
-    BOOST_CHECK_THROW(parser->getParserKeywordFromDeckName("FJASS"), std::invalid_argument);
+    Parser parser;
+    parser.addParserKeyword( createDynamicSized( "FJAS" ) );
+    BOOST_CHECK_THROW(parser.getParserKeywordFromDeckName("FJASS"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(getAllDeckNames_hasTwoKeywords_returnsCompleteList) {
-    ParserPtr parser(new Parser(false));
-    std::cout << parser->getAllDeckNames().size() << std::endl;
-    parser->addParserKeyword( createDynamicSized( "FJAS" ) );
-    parser->addParserKeyword( createDynamicSized( "SAJF" ) );
-    BOOST_CHECK_EQUAL(2U, parser->getAllDeckNames().size());
+    Parser parser( false );
+    std::cout << parser.getAllDeckNames().size() << std::endl;
+    parser.addParserKeyword( createDynamicSized( "FJAS" ) );
+    parser.addParserKeyword( createDynamicSized( "SAJF" ) );
+    BOOST_CHECK_EQUAL(2U, parser.getAllDeckNames().size());
 }
 
 BOOST_AUTO_TEST_CASE(getAllDeckNames_hasNoKeywords_returnsEmptyList) {
-    ParserPtr parser(new Parser(false));
-    BOOST_CHECK_EQUAL(0U, parser->getAllDeckNames().size());
+    Parser parser( false );
+    BOOST_CHECK_EQUAL(0U, parser.getAllDeckNames().size());
 }
 
 
@@ -99,62 +96,62 @@ BOOST_AUTO_TEST_CASE(getAllDeckNames_hasNoKeywords_returnsEmptyList) {
 
 
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_isRecognizedKeyword_returnstrue) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     Json::JsonObject jsonConfig("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addParserKeyword( jsonConfig );
-    BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
+    parser.addParserKeyword( jsonConfig );
+    BOOST_CHECK(parser.isRecognizedKeyword("BPR"));
 }
 
 
 BOOST_AUTO_TEST_CASE(addParserKeywordJSON_size_isObject_allGood) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     Json::JsonObject jsonConfig("{\"name\": \"EQUIXL\", \"sections\":[], \"size\" : {\"keyword\":\"EQLDIMS\" , \"item\" : \"NTEQUL\"},  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}");
-    parser->addParserKeyword( jsonConfig );
-    BOOST_CHECK(parser->isRecognizedKeyword("EQUIXL"));
+    parser.addParserKeyword( jsonConfig );
+    BOOST_CHECK(parser.isRecognizedKeyword("EQUIXL"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_notArray_throw) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     Json::JsonObject jsonConfig( "{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"]}");
 
-    BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
+    BOOST_CHECK_THROW(parser.loadKeywords( jsonConfig ) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_noSectionsItem_throw) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
 
-    BOOST_CHECK_THROW(parser->loadKeywords( jsonConfig ) , std::invalid_argument);
+    BOOST_CHECK_THROW(parser.loadKeywords( jsonConfig ) , std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_isRecognizedKeyword_returnstrue) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"], \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}]");
 
-    parser->loadKeywords( jsonConfig );
-    BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
+    parser.loadKeywords( jsonConfig );
+    BOOST_CHECK(parser.isRecognizedKeyword("BPR"));
 }
 
 
 BOOST_AUTO_TEST_CASE(empty_sizeReturns0) {
-    ParserPtr parser(new Parser( false ));
-    BOOST_CHECK_EQUAL( 0U , parser->size());
+    Parser parser( false );
+    BOOST_CHECK_EQUAL( 0U , parser.size());
 }
 
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
-    ParserPtr parser(new Parser( false ));
+    Parser parser( false );
     Json::JsonObject jsonConfig( "[{\"name\" : \"BPR\" , \"size\" : 100, \"sections\":[\"SUMMARY\"] ,  \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\"}]}, {\"name\" : \"WWCT\", \"sections\":[\"SUMMARY\"], \"size\" : 0} , {\"name\" : \"EQUIL\", \"sections\":[\"PROPS\"], \"size\" : 0}]");
 
-    parser->loadKeywords( jsonConfig );
-    BOOST_CHECK(parser->isRecognizedKeyword("BPR"));
-    BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
-    BOOST_CHECK(parser->isRecognizedKeyword("EQUIL"));
-    BOOST_CHECK_EQUAL( 3U , parser->size() );
+    parser.loadKeywords( jsonConfig );
+    BOOST_CHECK(parser.isRecognizedKeyword("BPR"));
+    BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
+    BOOST_CHECK(parser.isRecognizedKeyword("EQUIL"));
+    BOOST_CHECK_EQUAL( 3U , parser.size() );
 }
 
 
@@ -164,113 +161,113 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_fileDoesNotExist_returnsFalse) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     boost::filesystem::path configFile("File/does/not/exist");
-    BOOST_CHECK_EQUAL( false , parser->loadKeywordFromFile( configFile ));
+    BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidJson_returnsFalse) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     boost::filesystem::path configFile("testdata/json/example_invalid_json");
-    BOOST_CHECK_EQUAL( false , parser->loadKeywordFromFile( configFile ));
+    BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidConfig_returnsFalse) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     boost::filesystem::path configFile("testdata/json/example_missing_name.json");
-    BOOST_CHECK_EQUAL( false , parser->loadKeywordFromFile( configFile ));
+    BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
-    ParserPtr parser(new Parser( false ));
+    Parser parser( false );
     boost::filesystem::path configFile("testdata/json/BPR");
-    BOOST_CHECK_EQUAL( true , parser->loadKeywordFromFile( configFile ));
-    BOOST_CHECK_EQUAL( 1U , parser->size() );
-    BOOST_CHECK_EQUAL( true , parser->isRecognizedKeyword("BPR") );
+    BOOST_CHECK_EQUAL( true , parser.loadKeywordFromFile( configFile ));
+    BOOST_CHECK_EQUAL( 1U , parser.size() );
+    BOOST_CHECK_EQUAL( true , parser.isRecognizedKeyword("BPR") );
 }
 
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
-        ParserPtr parser(new Parser(false));
+        Parser parser;
         boost::filesystem::path configPath("path/does/not/exist");
-        BOOST_CHECK_THROW(parser->loadKeywordsFromDirectory( configPath), std::invalid_argument);
+        BOOST_CHECK_THROW(parser.loadKeywordsFromDirectory( configPath), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
-        ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("BPR"));
+        Parser parser( false );
+        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
-        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false));
-        BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
-        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("DIMENS"));
+        BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, false));
+        BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
-        ParserPtr parser(new Parser(false));
+        Parser parser( false );
         boost::filesystem::path configPath("testdata/config/directory1");
-        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, false));
-        BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
+        BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, false));
+        BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         // the file name for the following keyword is "Bpr", but that
         // does not matter
-        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
-        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("DIMENS"));
+        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
+        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
-        ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("BPR"));
+        Parser parser( false );
+        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
-        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath, true));
-        BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
-        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
-        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("DIMENS"));
+        BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, true));
+        BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
+        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
+        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("DIMENS"));
 }
 
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
-        ParserPtr parser(new Parser(false));
-        BOOST_CHECK_EQUAL(false , parser->isRecognizedKeyword("BPR"));
+        Parser parser( false );
+        BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
         boost::filesystem::path configPath("testdata/config/directory1");
-        BOOST_CHECK_NO_THROW(parser->loadKeywordsFromDirectory( configPath ));
-        BOOST_CHECK(parser->isRecognizedKeyword("WWCT"));
+        BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath ));
+        BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         // the file name for the following keyword is "Bpr", but that
         // does not matter
-        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("BPR"));
-        BOOST_CHECK_EQUAL(true , parser->isRecognizedKeyword("DIMENS"));
+        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
+        BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("DIMENS"));
 }
 
 BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
-    ParserPtr parser(new Parser());
-    const auto* eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
+    Parser parser;
+    const auto* eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
 
-    BOOST_CHECK( parser->loadKeywordFromFile( "testdata/parser/EQLDIMS2" ) );
+    BOOST_CHECK( parser.loadKeywordFromFile( "testdata/parser/EQLDIMS2" ) );
 
-    eqldims = parser->getParserKeywordFromDeckName("EQLDIMS");
-    auto record = eqldims->getRecord(0);
+    eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
+    const auto& record = eqldims->getRecord(0);
     BOOST_CHECK(record->hasItem("NEW"));
 }
 
 
 BOOST_AUTO_TEST_CASE(WildCardTest) {
-    ParserPtr parser(new Parser());
-    BOOST_CHECK(!parser->isRecognizedKeyword("TVDP*"));
-    BOOST_CHECK(!parser->isRecognizedKeyword("TVDP"));
-    BOOST_CHECK(parser->isRecognizedKeyword("TVDPXXX"));
-    BOOST_CHECK(!parser->isRecognizedKeyword("TVDPIAMTOOLONG"));
-    BOOST_CHECK(!parser->isRecognizedKeyword("TVD"));
+    Parser parser;
+    BOOST_CHECK(!parser.isRecognizedKeyword("TVDP*"));
+    BOOST_CHECK(!parser.isRecognizedKeyword("TVDP"));
+    BOOST_CHECK(parser.isRecognizedKeyword("TVDPXXX"));
+    BOOST_CHECK(!parser.isRecognizedKeyword("TVDPIAMTOOLONG"));
+    BOOST_CHECK(!parser.isRecognizedKeyword("TVD"));
 
-    BOOST_CHECK(!parser->isRecognizedKeyword("TVDP"));
+    BOOST_CHECK(!parser.isRecognizedKeyword("TVDP"));
 
-    const auto* keyword1 = parser->getParserKeywordFromDeckName("TVDPA");
-    const auto* keyword2 = parser->getParserKeywordFromDeckName("TVDPBC");
-    const auto* keyword3 = parser->getParserKeywordFromDeckName("TVDPXXX");
+    const auto* keyword1 = parser.getParserKeywordFromDeckName("TVDPA");
+    const auto* keyword2 = parser.getParserKeywordFromDeckName("TVDPBC");
+    const auto* keyword3 = parser.getParserKeywordFromDeckName("TVDPXXX");
 
     BOOST_CHECK_EQUAL( keyword1 , keyword2 );
     BOOST_CHECK_EQUAL( keyword1 , keyword3 );
@@ -295,8 +292,8 @@ BOOST_AUTO_TEST_CASE( PATHS_has_global_scope ) {
     ParseContext parseContext;
 
     parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION);
-    parser.newDeckFromFile( "testdata/parser/PATHSInInclude.data", parseContext );
-    BOOST_CHECK_THROW( parser.newDeckFromFile( "testdata/parser/PATHSInIncludeInvalid.data", ParseContext() ), std::invalid_argument );
+    parser.parseFile( "testdata/parser/PATHSInInclude.data", parseContext );
+    BOOST_CHECK_THROW( parser.parseFile( "testdata/parser/PATHSInIncludeInvalid.data", ParseContext() ), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE( handle_empty_title ) {
@@ -306,8 +303,8 @@ BOOST_AUTO_TEST_CASE( handle_empty_title ) {
                              "EQLDIMS\n/\n";
 
     Parser parser;
-    const auto deck = parser.newDeckFromString( input_deck, ParseContext() );
-    BOOST_CHECK_EQUAL( "untitled", deck->getKeyword( "TITLE" ).getStringData().front() );
+    const auto deck = parser.parseString( input_deck, ParseContext() );
+    BOOST_CHECK_EQUAL( "untitled", deck.getKeyword( "TITLE" ).getStringData().front() );
  }
 
 BOOST_AUTO_TEST_CASE( deck_comma_separated_fields ) {
@@ -335,7 +332,7 @@ SWOF
 /
 )";
 
-    BOOST_CHECK_NO_THROW( Parser().newDeckFromString( deck, ParseContext() ) );
+    BOOST_CHECK_NO_THROW( Parser().parseString( deck, ParseContext() ) );
  }
 
 
@@ -352,7 +349,7 @@ BOOST_AUTO_TEST_CASE(ParseTNUM) {
     Opm::ParseContext parseContext;
     Opm::Parser parser;
     auto deck = parser.parseString( deck1 , parseContext );
-    BOOST_CHECK( deck->hasKeyword("TNUMFSGS"));
-    BOOST_CHECK( deck->hasKeyword("TNUMFXXX"));
+    BOOST_CHECK( deck.hasKeyword("TNUMFSGS"));
+    BOOST_CHECK( deck.hasKeyword("TNUMFXXX"));
 }
 

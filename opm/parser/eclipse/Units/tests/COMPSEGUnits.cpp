@@ -31,7 +31,7 @@
 
 using namespace Opm;
 
-inline std::shared_ptr<const Deck> createCOMPSEGSDeck() {
+inline Deck createCOMPSEGSDeck() {
     const char *deckData =
         "COMPSEGS\n"
         " WELL /\n"
@@ -39,15 +39,14 @@ inline std::shared_ptr<const Deck> createCOMPSEGSDeck() {
         "/\n";
 
     Parser parser;
-    DeckConstPtr deck(parser.parseString(deckData, ParseContext()));
-    return deck;
+    return parser.parseString(deckData, ParseContext());
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateDimension) {
-    DeckConstPtr deck = createCOMPSEGSDeck();
-    const auto& keyword = deck->getKeyword<ParserKeywords::COMPSEGS>();
+    auto deck = createCOMPSEGSDeck();
+    const auto& keyword = deck.getKeyword<ParserKeywords::COMPSEGS>();
     const auto& record = keyword.getRecord(1);
     BOOST_CHECK_NO_THROW( record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().getSIDouble(0) );
 }

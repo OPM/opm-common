@@ -34,12 +34,12 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
 
-    ParserPtr parser(new Parser());
+    Parser parser;
     const auto scheduleFile = "testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1";
-    DeckPtr deck =  parser->parseFile(scheduleFile, ParseContext());
+    auto deck =  parser.parseFile(scheduleFile, ParseContext());
     EclipseGrid grid(10,10,10);
-    const Schedule schedule( ParseContext(), grid, *deck );
-    const auto& COMPDAT1 = deck->getKeyword("COMPDAT" , 1);
+    const Schedule schedule( ParseContext(), grid, deck );
+    const auto& COMPDAT1 = deck.getKeyword("COMPDAT" , 1);
 
     const auto wells = schedule.getWells( 0 );
     auto completions = Completion::fromCOMPDAT( grid, COMPDAT1, wells );

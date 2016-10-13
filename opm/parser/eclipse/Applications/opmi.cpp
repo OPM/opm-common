@@ -18,7 +18,6 @@
 */
 
 #include <iostream>
-#include <memory>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
@@ -44,24 +43,20 @@ inline void dumpMessages( const Opm::MessageContainer& messageContainer) {
 
 inline void loadDeck( const char * deck_file) {
     Opm::ParseContext parseContext;
-    Opm::ParserPtr parser(new Opm::Parser());
-    std::shared_ptr<const Opm::Deck> deck;
-    std::shared_ptr<Opm::EclipseState> state;
+    Opm::Parser parser;
 
     std::cout << "Loading deck: " << deck_file << " ..... "; std::cout.flush();
-    deck = parser->parseFile(deck_file, parseContext);
+    auto deck = parser.parseFile(deck_file, parseContext);
     std::cout << "parse complete - creating EclipseState .... ";  std::cout.flush();
-    state = std::make_shared<Opm::EclipseState>( *deck , parseContext );
+    Opm::EclipseState state( deck, parseContext );
     std::cout << "complete." << std::endl;
 
-    dumpMessages( deck->getMessageContainer() );
+    dumpMessages( deck.getMessageContainer() );
 }
 
 
 int main(int argc, char** argv) {
     for (int iarg = 1; iarg < argc; iarg++)
         loadDeck( argv[iarg] );
-
-    return 0;
 }
 

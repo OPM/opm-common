@@ -18,10 +18,7 @@
  */
 
 #define BOOST_TEST_MODULE ParserIntegrationTests
-#include <math.h>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -29,18 +26,16 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <array>
-
 using namespace Opm;
 
 
 
 BOOST_AUTO_TEST_CASE( PARSE_TOPS_OK) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string deckFile("testdata/integration_tests/GRID/TOPS.DATA");
     ParseContext parseContext;
-    DeckPtr deck =  parser->parseFile(deckFile, parseContext);
-    EclipseState state(*deck , parseContext);
+    auto deck =  parser.parseFile(deckFile, parseContext);
+    EclipseState state(deck, parseContext);
     const auto& grid = state.getInputGrid();
 
     BOOST_CHECK_EQUAL( grid.getNX() , 9 );

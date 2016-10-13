@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(TestNNCBehaviourEnum) {
 
 
 
-static Opm::DeckPtr createInvalidMULTREGTDeck() {
-    const char *deckData =
+static Opm::Deck createInvalidMULTREGTDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -101,41 +101,41 @@ static Opm::DeckPtr createInvalidMULTREGTDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 
 BOOST_AUTO_TEST_CASE(InvalidInput) {
-    Opm::DeckPtr deck = createInvalidMULTREGTDeck();
-    Opm::EclipseGrid grid( *deck );
-    Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg( *deck );
-    Opm::Eclipse3DProperties props(*deck, tm, eg);
+    Opm::Deck deck = createInvalidMULTREGTDeck();
+    Opm::EclipseGrid grid( deck );
+    Opm::TableManager tm(deck);
+    Opm::EclipseGrid eg( deck );
+    Opm::Eclipse3DProperties props(deck, tm, eg);
 
 
     // Invalid direction
     std::vector<const Opm::DeckKeyword*> keywords0;
-    const auto& multregtKeyword0 = deck->getKeyword( "MULTREGT", 0 );
+    const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
     keywords0.push_back( &multregtKeyword0 );
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords0 ); , std::invalid_argument );
 
     // Not supported region
     std::vector<const Opm::DeckKeyword*> keywords1;
-    const auto& multregtKeyword1 = deck->getKeyword( "MULTREGT", 1 );
+    const auto& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
     keywords1.push_back( &multregtKeyword1 );
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords1 ); , std::invalid_argument );
 
     // The keyword is ok; but it refers to a region which is not in the deck.
     std::vector<const Opm::DeckKeyword*> keywords2;
-    const auto& multregtKeyword2 = deck->getKeyword( "MULTREGT", 2 );
+    const auto& multregtKeyword2 = deck.getKeyword( "MULTREGT", 2 );
     keywords2.push_back( &multregtKeyword2 );
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords2 ); , std::logic_error );
 }
 
 
-static Opm::DeckPtr createNotSupportedMULTREGTDeck() {
-    const char *deckData =
+static Opm::Deck createNotSupportedMULTREGTDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -172,49 +172,49 @@ static Opm::DeckPtr createNotSupportedMULTREGTDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 
 
 
 BOOST_AUTO_TEST_CASE(NotSupported) {
-    Opm::DeckPtr deck = createNotSupportedMULTREGTDeck();
-    Opm::EclipseGrid grid( *deck );
-    Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg( *deck );
-    Opm::Eclipse3DProperties props(*deck, tm, eg);
+    Opm::Deck deck = createNotSupportedMULTREGTDeck();
+    Opm::EclipseGrid grid( deck );
+    Opm::TableManager tm(deck);
+    Opm::EclipseGrid eg( deck );
+    Opm::Eclipse3DProperties props(deck, tm, eg);
 
 
     // Not support NOAQUNNC behaviour
     std::vector<const Opm::DeckKeyword*> keywords0;
-    const auto& multregtKeyword0 = deck->getKeyword( "MULTREGT", 0 );
+    const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
     keywords0.push_back( &multregtKeyword0 );
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords0 ); , std::invalid_argument );
 
     // Defaulted from value - not supported
     std::vector<const Opm::DeckKeyword*> keywords1;
-    const auto& multregtKeyword1 = deck->getKeyword( "MULTREGT", 1 );
+    const auto& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
     keywords1.push_back( &multregtKeyword1 );
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords1 ); , std::invalid_argument );
 
 
     // Defaulted to value - not supported
     std::vector<const Opm::DeckKeyword*> keywords2;
-    const auto& multregtKeyword2 = deck->getKeyword( "MULTREGT", 2 );
+    const auto& multregtKeyword2 = deck.getKeyword( "MULTREGT", 2 );
     keywords2.push_back( &multregtKeyword2 );
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords2 ); , std::invalid_argument );
 
     // srcValue == targetValue - not supported
     std::vector<const Opm::DeckKeyword*> keywords3;
-    const Opm::DeckKeyword& multregtKeyword3 = deck->getKeyword( "MULTREGT", 3 );
+    const Opm::DeckKeyword& multregtKeyword3 = deck.getKeyword( "MULTREGT", 3 );
     keywords3.push_back( &multregtKeyword3 );
     BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords3 ); , std::invalid_argument );
 }
 
-static Opm::DeckPtr createCopyMULTNUMDeck() {
-    const char *deckData =
+static Opm::Deck createCopyMULTNUMDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -243,15 +243,15 @@ static Opm::DeckPtr createCopyMULTNUMDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
-    Opm::DeckPtr deck = createCopyMULTNUMDeck();
-    Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(*deck);
-    Opm::Eclipse3DProperties props(*deck, tm, eg);
+    Opm::Deck deck = createCopyMULTNUMDeck();
+    Opm::TableManager tm(deck);
+    Opm::EclipseGrid eg(deck);
+    Opm::Eclipse3DProperties props(deck, tm, eg);
 
     BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("FLUXNUM"));
     BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("MULTNUM"));

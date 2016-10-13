@@ -40,10 +40,10 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE(ParseDENSITY) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string file("testdata/integration_tests/DENSITY/DENSITY1");
-    DeckPtr deck =  parser->parseFile(file, ParseContext());
-    const auto& densityKw = deck->getKeyword("DENSITY" , 0);
+    auto deck =  parser.parseFile(file, ParseContext());
+    const auto& densityKw = deck.getKeyword("DENSITY" , 0);
 
 
     BOOST_CHECK_EQUAL( 2U , densityKw.size());

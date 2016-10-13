@@ -18,22 +18,13 @@
  */
 
 #define BOOST_TEST_MODULE ParserWellProbe
-#include <vector>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
-
-#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
-
 
 BOOST_AUTO_TEST_CASE(ParseWellProbe) {
     const char *validDeckString =
@@ -43,7 +34,7 @@ BOOST_AUTO_TEST_CASE(ParseWellProbe) {
         "WOPR\n"
         "/\n";
 
-    ParserPtr parser(new Parser());
+    Parser parser;
 
     // TODO: for some reason, the parser does not seem to throw here. Investigate
 /*
@@ -53,9 +44,9 @@ BOOST_AUTO_TEST_CASE(ParseWellProbe) {
     BOOST_CHECK_THROW(parser->parseString(invalidDeckString), std::invalid_argument);
 */
 
-    DeckPtr deck = parser->parseString(validDeckString, ParseContext());
-    BOOST_CHECK( !deck->hasKeyword("WELL_PROBE"));
-    BOOST_CHECK( deck->hasKeyword("WBHP"));
-    BOOST_CHECK( deck->hasKeyword("WOPR"));
-    BOOST_CHECK( !deck->hasKeyword("WWPR"));
+    auto deck = parser.parseString(validDeckString, ParseContext());
+    BOOST_CHECK( !deck.hasKeyword("WELL_PROBE"));
+    BOOST_CHECK(  deck.hasKeyword("WBHP"));
+    BOOST_CHECK(  deck.hasKeyword("WOPR"));
+    BOOST_CHECK( !deck.hasKeyword("WWPR"));
 }

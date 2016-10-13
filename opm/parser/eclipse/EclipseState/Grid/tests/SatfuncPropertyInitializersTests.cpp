@@ -43,10 +43,6 @@ inline void check_property(const Eclipse3DProperties& props1,
     BOOST_CHECK_CLOSE(data1[0], data2[0], 1e-12);
 }
 
-inline Opm::Eclipse3DProperties getProps(Opm::DeckPtr deck) {
-    return Opm::Eclipse3DProperties(*deck, *new Opm::TableManager(*deck), *new Opm::EclipseGrid(*deck));
-}
-
 BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     const char * deckdefault =
             "RUNSPEC\n"
@@ -108,20 +104,24 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
         " .8 1.0  1.0/\n";
 
     ParseContext parseContext;
-    ParserPtr parser(new Parser());
+    Parser parser;
 
     char family1Deck[500] = " ";
     strcat(family1Deck , deckdefault);
     strcat(family1Deck , family1);
-    DeckPtr deck1 = parser->parseString(family1Deck, parseContext) ;
-    const auto prop1 = getProps(deck1);
+    Deck deck1 = parser.parseString(family1Deck, parseContext) ;
+    Opm::TableManager tm1( deck1 );
+    Opm::EclipseGrid grid1( deck1 );
+    Opm::Eclipse3DProperties prop1( deck1, tm1, grid1 );
 
 
     char family2Deck[700] = " ";
     strcat(family2Deck , deckdefault);
     strcat(family2Deck , family2);
-    DeckPtr deck2 = parser->parseString(family2Deck, parseContext) ;
-    const auto prop2 = getProps(deck2);
+    Deck deck2 = parser.parseString(family2Deck, parseContext) ;
+    Opm::TableManager tm2( deck2 );
+    Opm::EclipseGrid grid2( deck2 );
+    Opm::Eclipse3DProperties prop2( deck2, tm2, grid2 );
 
     check_property(prop1, prop2, "SWL");
     check_property(prop1, prop2, "SWU");
@@ -146,7 +146,9 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     strcat(familyMixDeck , family1);
     strcat(familyMixDeck , family2);
 
-    DeckPtr deckMix = parser->parseString(familyMixDeck, parseContext) ;
-    const auto propMix = getProps(deckMix);
+    Deck deckMix = parser.parseString(familyMixDeck, parseContext) ;
+    Opm::TableManager tmMix( deckMix );
+    Opm::EclipseGrid gridMix( deckMix );
+    Opm::Eclipse3DProperties propMix( deckMix, tmMix, gridMix );
     BOOST_CHECK_THROW(propMix.getDoubleGridProperty("SGCR") , std::invalid_argument);
 }

@@ -60,7 +60,7 @@ const std::string& deckStr =  "START\n"
 
 
 
-static DeckPtr createDeck(const std::string& input) {
+static Deck createDeck(const std::string& input) {
     Opm::Parser parser;
     return parser.parseString(input, ParseContext());
 }
@@ -69,7 +69,7 @@ static DeckPtr createDeck(const std::string& input) {
 
 BOOST_AUTO_TEST_CASE(TuningTest) {
 
-  DeckPtr deck = createDeck(deckStr);
+  auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   Schedule schedule( ParseContext() , grid , deck );
   auto tuning = schedule.getTuning();
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
 
 BOOST_AUTO_TEST_CASE(TuningInitTest) {
 
-  DeckPtr deck = createDeck(deckStr);
+  auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   Schedule schedule(ParseContext() , grid , deck);
   auto tuning = schedule.getTuning();
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
 
 BOOST_AUTO_TEST_CASE(TuningResetTest) {
 
-  DeckPtr deck = createDeck(deckStr);
+  auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   Schedule schedule(ParseContext() , grid , deck);
   auto tuning = schedule.getTuning();

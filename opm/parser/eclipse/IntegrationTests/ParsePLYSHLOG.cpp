@@ -18,10 +18,7 @@
  */
 
 #define BOOST_TEST_MODULE ParsePLYSHLOG
-#include <math.h>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -29,17 +26,16 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 using namespace Opm;
 
 
 
 BOOST_AUTO_TEST_CASE( PARSE_PLYSHLOG_OK) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string deckFile("testdata/integration_tests/POLYMER/plyshlog.data");
-    DeckPtr deck =  parser->parseFile(deckFile, ParseContext());
-    const auto& kw = deck->getKeyword("PLYSHLOG");
+    auto deck =  parser.parseFile(deckFile, ParseContext());
+    const auto& kw = deck.getKeyword("PLYSHLOG");
     const auto& rec1 = kw.getRecord(0); // reference conditions
 
     const auto& itemRefPolyConc = rec1.getItem("REF_POLYMER_CONCENTRATION");

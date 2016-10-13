@@ -231,9 +231,9 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
         "TSTEP\n"
         " 6 7 /\n";
 
-    Opm::ParserPtr parser(new Opm::Parser(/*addDefault=*/true));
-    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseContext());
-    Opm::TimeMap tmap(*deck);
+    Opm::Parser parser( true );
+    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    Opm::TimeMap tmap(deck);
 
     BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/0),
                       boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21)));
@@ -302,9 +302,9 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
         "TSTEP\n"
         " 6 7 /\n";
 
-    Opm::ParserPtr parser(new Opm::Parser(true));
-    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseContext());
-    const Opm::TimeMap tmap(*deck);
+    Opm::Parser parser;
+    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    const Opm::TimeMap tmap(deck);
 
     /*deckData timesteps:
     0   21 may  1981 START

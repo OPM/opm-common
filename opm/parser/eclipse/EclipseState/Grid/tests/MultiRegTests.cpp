@@ -37,8 +37,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 
 
-static Opm::DeckPtr createDeckInvalidArray() {
-    const char *deckData =
+static Opm::Deck createDeckInvalidArray() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -50,13 +50,13 @@ static Opm::DeckPtr createDeckInvalidArray() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createDeckInvalidRegion() {
-    const char *deckData =
+static Opm::Deck createDeckInvalidRegion() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -71,13 +71,13 @@ static Opm::DeckPtr createDeckInvalidRegion() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createDeckInvalidValue() {
-    const char *deckData =
+static Opm::Deck createDeckInvalidValue() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -92,13 +92,13 @@ static Opm::DeckPtr createDeckInvalidValue() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createDeckMissingVector() {
-    const char *deckData =
+static Opm::Deck createDeckMissingVector() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -113,13 +113,13 @@ static Opm::DeckPtr createDeckMissingVector() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createDeckUnInitialized() {
-    const char *deckData =
+static Opm::Deck createDeckUnInitialized() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -132,13 +132,13 @@ static Opm::DeckPtr createDeckUnInitialized() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createValidIntDeck() {
-    const char *deckData =
+static Opm::Deck createValidIntDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "GRIDOPTS\n"
         "  'YES'  2 /\n"
@@ -176,8 +176,8 @@ static Opm::DeckPtr createValidIntDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext()) ;
 }
 
 
@@ -186,37 +186,37 @@ static Opm::DeckPtr createValidIntDeck() {
 
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows) {
-    Opm::DeckPtr deck = createDeckInvalidArray();
-    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
+    Opm::Deck deck = createDeckInvalidArray();
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(InvalidRegionThrows) {
-    Opm::DeckPtr deck = createDeckInvalidRegion();
-    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
+    Opm::Deck deck = createDeckInvalidRegion();
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(ExpectedIntThrows) {
-    Opm::DeckPtr deck = createDeckInvalidValue();
-    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
+    Opm::Deck deck = createDeckInvalidValue();
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(MissingRegionVectorThrows) {
-    Opm::DeckPtr deck = createDeckMissingVector();
-    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
+    Opm::Deck deck = createDeckMissingVector();
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
-    Opm::DeckPtr deck = createDeckUnInitialized();
-    BOOST_CHECK_THROW( new Opm::EclipseState( *deck, Opm::ParseContext()) , std::invalid_argument );
+    Opm::Deck deck = createDeckUnInitialized();
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
-    Opm::DeckPtr deck = createValidIntDeck();
-    Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(*deck);
-    Opm::Eclipse3DProperties props(*deck, tm, eg);
+    Opm::Deck deck = createValidIntDeck();
+    Opm::TableManager tm(deck);
+    Opm::EclipseGrid eg(deck);
+    Opm::Eclipse3DProperties props(deck, tm, eg);
 
     const auto& property = props.getIntGridProperty("SATNUM");
     for (size_t j = 0; j < 5; j++)

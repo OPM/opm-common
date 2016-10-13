@@ -40,19 +40,19 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE( parse_MULTREGT_OK ) {
-    ParserPtr parser(new Parser());
-    DeckPtr deck =  parser->parseFile("testdata/integration_tests/MULTREGT/MULTREGT", ParseContext());
-    BOOST_CHECK_NO_THROW( deck->getKeyword("MULTREGT" , 0); );
+    Parser parser;
+    auto deck =  parser.parseFile("testdata/integration_tests/MULTREGT/MULTREGT", ParseContext());
+    BOOST_CHECK_NO_THROW( deck.getKeyword("MULTREGT" , 0); );
 }
 
 
 
 BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
     ParseContext parseContext;
-    ParserPtr parser(new Parser());
-    DeckPtr deck =  parser->parseFile("testdata/integration_tests/MULTREGT/MULTREGT.DATA", parseContext);
-    EclipseState state(*deck , parseContext);
-    auto transMult = state.getTransMult();
+    Parser parser;
+    auto deck =  parser.parseFile("testdata/integration_tests/MULTREGT/MULTREGT.DATA", parseContext);
+    EclipseState state(deck , parseContext);
+    const auto& transMult = state.getTransMult();
 
     // Test NONNC
     // cell 0 and 1 are neigbours

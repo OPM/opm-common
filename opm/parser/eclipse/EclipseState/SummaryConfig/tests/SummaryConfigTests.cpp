@@ -29,7 +29,7 @@
 
 using namespace Opm;
 
-static DeckPtr createDeck( const std::string& summary ) {
+static Deck createDeck( const std::string& summary ) {
     Opm::Parser parser;
     std::string input = 
             "START             -- 0 \n"
@@ -98,7 +98,7 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     auto deck = createDeck( input );
-    EclipseState state( *deck, parseContext );
+    EclipseState state( deck, parseContext );
     return state.getEclipseConfig().getSummaryConfig();
 }
 

@@ -18,9 +18,7 @@
  */
 
 #define BOOST_TEST_MODULE ResinsightIntegrationTests
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -29,7 +27,6 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
@@ -47,18 +44,13 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
 
-    auto deckptr = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseContext);
-    const Deck& deck = *deckptr;
+    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseContext);
 
     BOOST_CHECK( deck.hasKeyword<ParserKeywords::SPECGRID>() );
     BOOST_CHECK( deck.hasKeyword<ParserKeywords::FAULTS>() );
 
-    {
-        GridDims* grid = nullptr;
-        BOOST_CHECK_NO_THROW( grid = new GridDims(deck) );
-        BOOST_CHECK_NO_THROW( grid->getCartesianSize() );
-        delete grid;
-    }
+    BOOST_CHECK_NO_THROW( GridDims{deck} );
+    BOOST_CHECK_NO_THROW( GridDims{deck}.getCartesianSize() );
 }
 
 
@@ -73,8 +65,7 @@ BOOST_AUTO_TEST_CASE( test_state ) {
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
     parser.addKeyword<ParserKeywords::GRID>();
-    auto deckptr = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseContext);
-    const Deck& deck = *deckptr;
+    auto deck = parser.parseFile("testdata/integration_tests/Resinsight/DECK1.DATA" , parseContext);
 
     GridDims grid(deck);
     GRIDSection gsec(deck);

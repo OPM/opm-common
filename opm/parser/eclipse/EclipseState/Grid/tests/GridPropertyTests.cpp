@@ -40,25 +40,25 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
 static const Opm::DeckKeyword createSATNUMKeyword( ) {
-    const char *deckData =
+    const char* deckData =
     "SATNUM \n"
     "  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 / \n"
     "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseContext());
-    return deck->getKeyword("SATNUM");
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deckData, Opm::ParseContext());
+    return deck.getKeyword("SATNUM");
 }
 
 static const Opm::DeckKeyword createTABDIMSKeyword( ) {
-    const char *deckData =
+    const char* deckData =
     "TABDIMS\n"
     "  0 1 2 3 4 5 / \n"
     "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckPtr deck = parser->parseString(deckData, Opm::ParseContext());
-    return deck->getKeyword("TABDIMS");
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(deckData, Opm::ParseContext());
+    return deck.getKeyword("TABDIMS");
 }
 
 BOOST_AUTO_TEST_CASE(Empty) {
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(ADD) {
 }
 
 BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
-    const char *deckString =
+    const char* deckString =
         "RUNSPEC\n"
         "\n"
         "OIL\n"
@@ -346,12 +346,12 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         "SCHEDULE\n";
 
     Opm::ParseContext parseContext;
-    Opm::ParserPtr parser(new Opm::Parser);
+    Opm::Parser parser;
 
-    auto deck = parser->parseString(deckString, parseContext);
-    Opm::TableManager tm(*deck);
-    Opm::EclipseGrid eg(*deck);
-    Opm::Eclipse3DProperties props(*deck, tm, eg);
+    auto deck = parser.parseString(deckString, parseContext);
+    Opm::TableManager tm(deck);
+    Opm::EclipseGrid eg(deck);
+    Opm::Eclipse3DProperties props(deck, tm, eg);
 
     // make sure that Eclipse3DProperties throws if it is bugged about an _unsupported_ keyword
     BOOST_CHECK_THROW(props.hasDeckIntGridProperty("ISWU"), std::logic_error);

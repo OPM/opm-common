@@ -31,8 +31,6 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
     BOOST_REQUIRE_NO_THROW(Deck deck);
-    BOOST_REQUIRE_NO_THROW(DeckPtr deckPtr(new Deck()));
-    BOOST_REQUIRE_NO_THROW(DeckConstPtr deckConstPtr(new Deck()));
 }
 
 BOOST_AUTO_TEST_CASE(Initializer_lists) {

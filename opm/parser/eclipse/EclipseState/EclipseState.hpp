@@ -66,9 +66,6 @@ namespace Opm {
 
         EclipseState(const Deck& deck , ParseContext parseContext = ParseContext());
 
-        /// [deprecated]
-        EclipseState(std::shared_ptr< const Deck > deck , ParseContext parseContext = ParseContext());
-
         const ParseContext& getParseContext() const;
 
         const Schedule& getSchedule() const;

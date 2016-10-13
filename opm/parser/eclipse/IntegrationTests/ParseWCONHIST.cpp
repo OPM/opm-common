@@ -19,7 +19,6 @@
 
 #define BOOST_TEST_MODULE ParserIntegrationTests
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -28,22 +27,14 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
-
-#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
 
-
-
-
 BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string wconhistFile("testdata/integration_tests/WCONHIST/WCONHIST1");
-    DeckPtr deck =  parser->parseFile(wconhistFile, ParseContext());
-    const auto& kw1 = deck->getKeyword("WCONHIST" , 0);
+    auto deck =  parser.parseFile(wconhistFile, ParseContext());
+    const auto& kw1 = deck.getKeyword("WCONHIST" , 0);
     BOOST_CHECK_EQUAL( 3U , kw1.size() );
 
 
@@ -60,9 +51,9 @@ BOOST_AUTO_TEST_CASE( parse_WCHONHIST_OK ) {
     BOOST_CHECK_EQUAL( "OP_1" , item1.get< std::string >(0));
 
 
-    const auto& kw2 = deck->getKeyword( "WCONHIST", 1 );
+    const auto& kw2 = deck.getKeyword( "WCONHIST", 1 );
     BOOST_CHECK_EQUAL( "OP_3" , rec3.getItem("WELL").get< std::string >(0));
-    BOOST_CHECK_EQUAL( 2U , deck->count("WCONHIST"));
+    BOOST_CHECK_EQUAL( 2U , deck.count("WCONHIST"));
     BOOST_CHECK_EQUAL( "OP_3_B" , kw2.getRecord( 2 ).getItem("WELL").get< std::string >(0));
-    BOOST_CHECK_EQUAL( false , deck->hasKeyword( "DIMENS" ));
+    BOOST_CHECK( !deck.hasKeyword( "DIMENS" ));
 }

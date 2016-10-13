@@ -18,29 +18,20 @@
  */
 
 #define BOOST_TEST_MODULE ParserTVPD
-#include <vector>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
-
-#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
 
-
 BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string poroFile("testdata/integration_tests/TVPD/TVPD1");
-    DeckPtr deck =  parser->parseFile(poroFile);
+    auto deck =  parser.parseFile(poroFile);
 
-    BOOST_CHECK( deck->hasKeyword("TVDPA"));
-    BOOST_CHECK( deck->hasKeyword("TVDP1"));
-    BOOST_CHECK( deck->hasKeyword("TVDPXX"));
-    BOOST_CHECK( deck->hasKeyword("TVDPYY"));
+    BOOST_CHECK( deck.hasKeyword("TVDPA"));
+    BOOST_CHECK( deck.hasKeyword("TVDP1"));
+    BOOST_CHECK( deck.hasKeyword("TVDPXX"));
+    BOOST_CHECK( deck.hasKeyword("TVDPYY"));
 }

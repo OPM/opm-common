@@ -18,11 +18,7 @@
 */
 
 #define BOOST_TEST_MODULE ParserIntegrationTests
-#include <math.h>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
-
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -62,10 +58,10 @@ PVTG\n\
               0.00000000   0.005082     0.02306 /\n\
  /\n";
 
-
-static void check_parser(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(pvtgData, ParseContext());
-    const auto& kw1 = deck->getKeyword("PVTG" , 0);
+BOOST_AUTO_TEST_CASE( parse_PVTG_OK ) {
+    Parser parser;
+    auto deck =  parser.parseString(pvtgData, ParseContext());
+    const auto& kw1 = deck.getKeyword("PVTG" , 0);
     BOOST_CHECK_EQUAL(5U , kw1.size());
 
     const auto& record0 = kw1.getRecord(0);
@@ -134,10 +130,4 @@ static void check_parser(ParserPtr parser) {
         BOOST_CHECK_EQUAL(outerTable.getGasViscosityColumn()[0], innerTable0.getGasViscosityColumn()[0]);
     }
     */
-}
-
-
-BOOST_AUTO_TEST_CASE( parse_PVTG_OK ) {
-    ParserPtr parser(new Parser());
-    check_parser( parser );
 }

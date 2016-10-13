@@ -336,8 +336,8 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     }
 
     ParseContext parseContext;
-    ParserPtr parser(new Parser());
-    DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/RPT_TEST2.DATA", parseContext);
+    Parser parser;
+    auto deck = parser.parseFile("testdata/integration_tests/IOConfig/RPT_TEST2.DATA", parseContext);
     EclipseState state( deck , parseContext );
     const auto& rstConfig = state.cfg().restart();
     verifyRestartConfig( rstConfig, rptConfig );
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
 
 BOOST_AUTO_TEST_CASE( SPE9END ) {
     ParseContext parseContext;
-    ParserPtr parser(new Parser());
-    DeckConstPtr deck = parser->parseFile("testdata/integration_tests/IOConfig/SPE9_END.DATA", parseContext);
-    BOOST_CHECK_NO_THROW( EclipseState state( *deck , parseContext ) );
+    Parser parser;
+    auto deck = parser.parseFile("testdata/integration_tests/IOConfig/SPE9_END.DATA", parseContext);
+    BOOST_CHECK_NO_THROW( EclipseState state( deck , parseContext ) );
 }

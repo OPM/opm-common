@@ -150,44 +150,44 @@ createDeckWithInclude(path& datafile, std::string addEndKeyword)
 
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     path datafile;
-    ParserPtr parser(new Parser());
+    Parser parser;
     createDeckWithInclude (datafile, "");
-    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseContext());
+    auto deck =  parser.parseFile(datafile.string(), ParseContext());
 
-    BOOST_CHECK( deck->hasKeyword("START"));
-    BOOST_CHECK( deck->hasKeyword("DIMENS"));
-    BOOST_CHECK( deck->hasKeyword("GRIDUNIT"));
+    BOOST_CHECK( deck.hasKeyword("START"));
+    BOOST_CHECK( deck.hasKeyword("DIMENS"));
+    BOOST_CHECK( deck.hasKeyword("GRIDUNIT"));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithENDINCKeyword_deckReturned) {
     path datafile;
-    ParserPtr parser(new Parser());
+    Parser parser;
     createDeckWithInclude (datafile, "ENDINC");
-    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseContext());
+    auto deck =  parser.parseFile(datafile.string(), ParseContext());
 
-    BOOST_CHECK( deck->hasKeyword("START"));
-    BOOST_CHECK( !deck->hasKeyword("DIMENS"));
-    BOOST_CHECK( deck->hasKeyword("GRIDUNIT"));
+    BOOST_CHECK( deck.hasKeyword("START"));
+    BOOST_CHECK( !deck.hasKeyword("DIMENS"));
+    BOOST_CHECK( deck.hasKeyword("GRIDUNIT"));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithENDKeyword_deckReturned) {
     path datafile;
-    ParserPtr parser(new Parser());
+    Parser parser;
     createDeckWithInclude (datafile, "END");
-    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseContext());
+    auto deck =  parser.parseFile(datafile.string(), ParseContext());
 
-    BOOST_CHECK( deck->hasKeyword("START"));
-    BOOST_CHECK( !deck->hasKeyword("DIMENS"));
-    BOOST_CHECK( !deck->hasKeyword("GRIDUNIT"));
+    BOOST_CHECK( deck.hasKeyword("START"));
+    BOOST_CHECK( !deck.hasKeyword("DIMENS"));
+    BOOST_CHECK( !deck.hasKeyword("GRIDUNIT"));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithPathsKeyword_IncludeExtendsPath) {
     path datafile;
-    ParserPtr parser(new Parser());
+    Parser parser;
     createDeckWithInclude (datafile, "");
-    DeckConstPtr deck =  parser->parseFile(datafile.string(), ParseContext());
+    auto deck =  parser.parseFile(datafile.string(), ParseContext());
 
-    BOOST_CHECK( deck->hasKeyword("TITLE"));
-    BOOST_CHECK( deck->hasKeyword("BOX"));
+    BOOST_CHECK( deck.hasKeyword("TITLE"));
+    BOOST_CHECK( deck.hasKeyword("BOX"));
 }
 

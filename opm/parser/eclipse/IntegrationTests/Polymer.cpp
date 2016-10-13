@@ -19,7 +19,6 @@
 
 #define BOOST_TEST_MODULE ParserIntegrationTests
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -32,13 +31,10 @@
 
 using namespace Opm;
 
-
-
-
 BOOST_AUTO_TEST_CASE( parse_polymer_tables ) {
-    ParserPtr parser(new Parser());
-    DeckPtr deck = parser->parseFile("testdata/integration_tests/POLYMER/POLY.inc", ParseContext());
-    Opm::TableManager tables( *deck );
+    Parser parser;
+    auto deck = parser.parseFile("testdata/integration_tests/POLYMER/POLY.inc", ParseContext());
+    Opm::TableManager tables( deck );
     const TableContainer& plymax = tables.getPlymaxTables();
     const TableContainer& plyrock = tables.getPlyrockTables();
     const TableContainer& plyads = tables.getPlyadsTables();

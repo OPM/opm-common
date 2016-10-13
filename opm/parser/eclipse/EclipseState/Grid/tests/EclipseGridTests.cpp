@@ -41,16 +41,16 @@
 
 
 BOOST_AUTO_TEST_CASE(CreateMissingDIMENS_throws) {
-    Opm::DeckPtr deck(new Opm::Deck());
-    deck->addKeyword( Opm::DeckKeyword( "RUNSPEC" ) );
-    deck->addKeyword( Opm::DeckKeyword( "GRID" ) );
-    deck->addKeyword( Opm::DeckKeyword( "EDIT" ) );
+    Opm::Deck deck;
+    deck.addKeyword( Opm::DeckKeyword( "RUNSPEC" ) );
+    deck.addKeyword( Opm::DeckKeyword( "GRID" ) );
+    deck.addKeyword( Opm::DeckKeyword( "EDIT" ) );
 
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( *deck ) , std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ deck } , std::invalid_argument);
 }
 
-static Opm::DeckPtr createDeckHeaders() {
-    const char *deckData =
+static Opm::Deck createDeckHeaders() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -59,12 +59,12 @@ static Opm::DeckPtr createDeckHeaders() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext());
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
 }
 
-static Opm::DeckPtr createDeckDIMENS() {
-    const char *deckData =
+static Opm::Deck createDeckDIMENS() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -72,12 +72,12 @@ static Opm::DeckPtr createDeckDIMENS() {
         "GRID\n"
         "EDIT\n"
         "\n";
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext());
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
 }
 
-static Opm::DeckPtr createDeckSPECGRID() {
-    const char *deckData =
+static Opm::Deck createDeckSPECGRID() {
+    const char* deckData =
         "GRID\n"
         "SPECGRID \n"
         "  13 17 19 / \n"
@@ -89,44 +89,40 @@ static Opm::DeckPtr createDeckSPECGRID() {
         "  1000*1 / \n"
         "EDIT\n"
         "\n";
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext());
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
 }
 
-static Opm::DeckPtr createDeckMissingDIMS() {
-    const char *deckData =
+static Opm::Deck createDeckMissingDIMS() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "GRID\n"
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 BOOST_AUTO_TEST_CASE(MissingDimsThrows) {
-    Opm::DeckPtr deck = createDeckMissingDIMS();
-    BOOST_CHECK_THROW( new Opm::EclipseGrid( *deck ) , std::invalid_argument);
+    Opm::Deck deck = createDeckMissingDIMS();
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(HasGridKeywords) {
-    Opm::DeckPtr deck = createDeckHeaders();
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( *deck ));
+    Opm::Deck deck = createDeckHeaders();
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateGridNoCells) {
-    Opm::DeckPtr deckptr = createDeckHeaders();
-    const Opm::Deck& deck = *deckptr;
-    {
-        Opm::EclipseGrid* gridptr = nullptr;
-        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
-        delete gridptr;
-    }
-    const Opm::GridDims grid(deck);
+    Opm::Deck deck = createDeckHeaders();
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
+
+    const Opm::GridDims grid( deck);
     BOOST_CHECK_EQUAL( 10 , grid.getNX());
     BOOST_CHECK_EQUAL( 10 , grid.getNY());
     BOOST_CHECK_EQUAL( 10 , grid.getNZ());
@@ -161,8 +157,8 @@ BOOST_AUTO_TEST_CASE(CheckGridIndex) {
     BOOST_CHECK_EQUAL(17 * 19 * 41, grid.getCartesianSize());
 }
 
-static Opm::DeckPtr createCPDeck() {
-    const char *deckData =
+static Opm::Deck createCPDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -177,13 +173,13 @@ static Opm::DeckPtr createCPDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createPinchedCPDeck() {
-    const char *deckData =
+static Opm::Deck createPinchedCPDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -200,13 +196,13 @@ static Opm::DeckPtr createPinchedCPDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createMinpvDefaultCPDeck() {
-    const char *deckData =
+static Opm::Deck createMinpvDefaultCPDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -225,13 +221,13 @@ static Opm::DeckPtr createMinpvDefaultCPDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createMinpvCPDeck() {
-    const char *deckData =
+static Opm::Deck createMinpvCPDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -248,14 +244,14 @@ static Opm::DeckPtr createMinpvCPDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
 
-static Opm::DeckPtr createMinpvFilCPDeck() {
-    const char *deckData =
+static Opm::Deck createMinpvFilCPDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -272,13 +268,13 @@ static Opm::DeckPtr createMinpvFilCPDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createCARTDeck() {
-    const char *deckData =
+static Opm::Deck createCARTDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -295,13 +291,13 @@ static Opm::DeckPtr createCARTDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createCARTDeckDEPTHZ() {
-    const char *deckData =
+static Opm::Deck createCARTDeckDEPTHZ() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -318,13 +314,13 @@ static Opm::DeckPtr createCARTDeckDEPTHZ() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createCARTInvalidDeck() {
-    const char *deckData =
+static Opm::Deck createCARTInvalidDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -339,8 +335,8 @@ static Opm::DeckPtr createCARTInvalidDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 BOOST_AUTO_TEST_CASE(CREATE_SIMPLE) {
@@ -353,11 +349,11 @@ BOOST_AUTO_TEST_CASE(CREATE_SIMPLE) {
 }
 
 BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
-    Opm::DeckPtr deck1 = createCARTDeck();
-    Opm::DeckPtr deck2 = createCARTDeckDEPTHZ();
+    Opm::Deck deck1 = createCARTDeck();
+    Opm::Deck deck2 = createCARTDeckDEPTHZ();
 
-    Opm::EclipseGrid grid1(*deck1 );
-    Opm::EclipseGrid grid2(*deck2 );
+    Opm::EclipseGrid grid1( deck1 );
+    Opm::EclipseGrid grid2( deck2 );
 
     BOOST_CHECK( grid1.equal( grid2 ) );
 
@@ -398,30 +394,30 @@ BOOST_AUTO_TEST_CASE(DEPTHZ_EQUAL_TOPS) {
 
 
 BOOST_AUTO_TEST_CASE(HasCPKeywords) {
-    Opm::DeckPtr deck = createCPDeck();
-    BOOST_CHECK(  Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( *deck ));
+    Opm::Deck deck = createCPDeck();
+    BOOST_CHECK(  Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasCartKeywords) {
-    Opm::DeckPtr deck = createCARTDeck();
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
-    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( *deck ));
+    Opm::Deck deck = createCARTDeck();
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasCartKeywordsDEPTHZ) {
-    Opm::DeckPtr deck = createCARTDeckDEPTHZ();
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
-    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( *deck ));
+    Opm::Deck deck = createCARTDeckDEPTHZ();
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK(  Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
 BOOST_AUTO_TEST_CASE(HasINVALIDCartKeywords) {
-    Opm::DeckPtr deck = createCARTInvalidDeck();
-    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( *deck ));
-    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( *deck ));
+    Opm::Deck deck = createCARTInvalidDeck();
+    BOOST_CHECK( !Opm::EclipseGrid::hasCornerPointKeywords( deck ));
+    BOOST_CHECK( !Opm::EclipseGrid::hasCartesianKeywords( deck ));
 }
 
 
@@ -429,18 +425,13 @@ BOOST_AUTO_TEST_CASE(HasINVALIDCartKeywords) {
 
 
 BOOST_AUTO_TEST_CASE(CreateMissingGRID_throws) {
-    auto deckptr = createDeckHeaders();
-    const Opm::Deck& deck = *deckptr;
-    {
-        Opm::EclipseGrid* gridptr = nullptr;
-        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
-        delete gridptr;
-    }
+    auto deck= createDeckHeaders();
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
 
-static Opm::DeckPtr createInvalidDXYZCARTDeck() {
-    const char *deckData =
+static Opm::Deck createInvalidDXYZCARTDeck() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -457,21 +448,20 @@ static Opm::DeckPtr createInvalidDXYZCARTDeck() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRID) {
-    auto deckptr = createInvalidDXYZCARTDeck();
-    const Opm::Deck& deck = *deckptr;
-    BOOST_CHECK_THROW(new Opm::EclipseGrid( deck ) , std::invalid_argument);
+    auto deck = createInvalidDXYZCARTDeck();
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
 
-static Opm::DeckPtr createInvalidDXYZCARTDeckDEPTHZ() {
-    const char *deckData =
+static Opm::Deck createInvalidDXYZCARTDeckDEPTHZ() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -488,25 +478,20 @@ static Opm::DeckPtr createInvalidDXYZCARTDeckDEPTHZ() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDDEPTHZ) {
-    auto deckptr = createInvalidDXYZCARTDeckDEPTHZ();
-    const Opm::Deck& deck = *deckptr;
-    {
-        Opm::EclipseGrid* gridptr = nullptr;
-        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
-        delete gridptr;
-    }
+    auto deck = createInvalidDXYZCARTDeckDEPTHZ();
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
 
-static Opm::DeckPtr createOnlyTopDZCartGrid() {
-    const char *deckData =
+static Opm::Deck createOnlyTopDZCartGrid() {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -523,13 +508,13 @@ static Opm::DeckPtr createOnlyTopDZCartGrid() {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
-static Opm::DeckPtr createInvalidDEPTHZDeck1 () {
-    const char *deckData =
+static Opm::Deck createInvalidDEPTHZDeck1 () {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -546,25 +531,19 @@ static Opm::DeckPtr createInvalidDEPTHZDeck1 () {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ1) {
-    auto deckptr = createInvalidDEPTHZDeck1();
-    const Opm::Deck& deck = *deckptr;
-    {
-        Opm::EclipseGrid* gridptr = nullptr;
-        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
-        delete gridptr;
-    }
-
+    auto deck = createInvalidDEPTHZDeck1();
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
 
-static Opm::DeckPtr createInvalidDEPTHZDeck2 () {
-    const char *deckData =
+static Opm::Deck createInvalidDEPTHZDeck2 () {
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -581,26 +560,20 @@ static Opm::DeckPtr createInvalidDEPTHZDeck2 () {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext()) ;
 }
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ2) {
-    auto deckptr = createInvalidDEPTHZDeck2();
-    const Opm::Deck& deck = *deckptr;
-    {
-        Opm::EclipseGrid* gridptr = nullptr;
-        BOOST_CHECK_THROW( gridptr = new Opm::EclipseGrid( deck ) , std::invalid_argument);
-        delete gridptr;
-    }
-
+    auto deck = createInvalidDEPTHZDeck2();
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
-    Opm::DeckPtr deck = createOnlyTopDZCartGrid();
-    Opm::EclipseGrid grid( *deck );
+    Opm::Deck deck = createOnlyTopDZCartGrid();
+    Opm::EclipseGrid grid( deck );
 
     BOOST_CHECK_EQUAL( 10 , grid.getNX( ));
     BOOST_CHECK_EQUAL(  5 , grid.getNY( ));
@@ -611,8 +584,8 @@ BOOST_AUTO_TEST_CASE(CreateCartesianGRIDOnlyTopLayerDZ) {
 
 
 BOOST_AUTO_TEST_CASE(AllActiveExportActnum) {
-    Opm::DeckPtr deck = createOnlyTopDZCartGrid();
-    Opm::EclipseGrid grid( *deck );
+    Opm::Deck deck = createOnlyTopDZCartGrid();
+    Opm::EclipseGrid grid( deck );
 
     std::vector<int> actnum( 1, 100 );
 
@@ -622,7 +595,7 @@ BOOST_AUTO_TEST_CASE(AllActiveExportActnum) {
 
 
 BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
-    const char *deckData =
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -637,17 +610,17 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseContext()) ;
-    const auto& zcorn = deck->getKeyword("ZCORN");
+    Opm::Parser parser;
+    auto deck = parser.parseString( deckData, Opm::ParseContext()) ;
+    const auto& zcorn = deck.getKeyword("ZCORN");
     BOOST_CHECK_EQUAL( 8000U , zcorn.getDataSize( ));
 
-    BOOST_CHECK_THROW(Opm::EclipseGrid{ *deck }, std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
-    const char *deckData =
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -662,14 +635,14 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseContext()) ;
-    BOOST_CHECK_THROW(Opm::EclipseGrid{ *deck }, std::invalid_argument);
+    Opm::Parser parser;
+    auto deck = parser.parseString( deckData, Opm::ParseContext()) ;
+    BOOST_CHECK_THROW(Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(ResetACTNUM) {
-    const char *deckData =
+    const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -682,10 +655,10 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck = parser->parseString(deckData, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    auto deck = parser.parseString( deckData, Opm::ParseContext()) ;
 
-    Opm::EclipseGrid grid(*deck);
+    Opm::EclipseGrid grid( deck);
     BOOST_CHECK_EQUAL( 1000U , grid.getNumActive());
     std::vector<int> actnum(1000);
     actnum[0] = 1;
@@ -729,7 +702,7 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
 
 
 BOOST_AUTO_TEST_CASE(ACTNUM_BEST_EFFORT) {
-    const char *deckData1 =
+    const char* deckData1 =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -744,7 +717,7 @@ BOOST_AUTO_TEST_CASE(ACTNUM_BEST_EFFORT) {
         "EDIT\n"
         "\n";
 
-    const char *deckData2 =
+    const char* deckData2 =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
@@ -759,15 +732,15 @@ BOOST_AUTO_TEST_CASE(ACTNUM_BEST_EFFORT) {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck1 = parser->parseString(deckData1, Opm::ParseContext()) ;
-    Opm::DeckConstPtr deck2 = parser->parseString(deckData2, Opm::ParseContext()) ;
+    Opm::Parser parser;
+    auto deck1 = parser.parseString( deckData1, Opm::ParseContext()) ;
+    auto deck2 = parser.parseString( deckData2, Opm::ParseContext()) ;
 
-    Opm::EclipseGrid grid1(*deck1);
+    Opm::EclipseGrid grid1(deck1);
     // Actnum vector is too short - ignored
     BOOST_CHECK_EQUAL( 1000U , grid1.getNumActive());
 
-    Opm::EclipseGrid grid2(*deck2);
+    Opm::EclipseGrid grid2(deck2);
     BOOST_CHECK_EQUAL( 200U , grid2.getNumActive());
 }
 
@@ -783,7 +756,7 @@ BOOST_AUTO_TEST_CASE(LoadFromBinary) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
-    const char *deckData =
+    const char* deckData =
         "GRID\n"
         "SPECGRID \n"
         "  10 10 10 / \n"
@@ -796,12 +769,12 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
         "EDIT\n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck1 = parser->parseString(deckData, Opm::ParseContext()) ;
-    Opm::DeckConstPtr deck2 = createCPDeck();
+    Opm::Parser parser;
+    auto deck1 = parser.parseString( deckData, Opm::ParseContext()) ;
+    auto deck2 = createCPDeck();
 
-    Opm::EclipseGrid grid1(*deck1);
-    Opm::EclipseGrid grid2(*deck2);
+    Opm::EclipseGrid grid1(deck1);
+    Opm::EclipseGrid grid2(deck2);
 
     BOOST_CHECK(grid1.equal( grid2 ));
 }
@@ -809,7 +782,7 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
-    const char *deckData =
+    const char* deckData =
         "DIMENS \n"
         "  10 10 10 / \n"
         "COORD \n"
@@ -820,12 +793,12 @@ BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
         "  1000*1 / \n"
         "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    Opm::DeckConstPtr deck1 = parser->parseString(deckData, Opm::ParseContext()) ;
-    Opm::DeckConstPtr deck2 = createCPDeck();
+    Opm::Parser parser;
+    auto deck1 = parser.parseString( deckData, Opm::ParseContext()) ;
+    auto deck2 = createCPDeck();
 
-    Opm::EclipseGrid grid1(*deck1);
-    Opm::EclipseGrid grid2(*deck2);
+    Opm::EclipseGrid grid1(deck1);
+    Opm::EclipseGrid grid2(deck2);
 
     BOOST_CHECK(grid1.equal( grid2 ));
 }
@@ -833,11 +806,11 @@ BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
-    Opm::DeckConstPtr deck1 = createCPDeck();
-    Opm::DeckConstPtr deck2 = createPinchedCPDeck();
+    auto deck1 = createCPDeck();
+    auto deck2 = createPinchedCPDeck();
 
-    Opm::EclipseGrid grid1(*deck1);
-    Opm::EclipseGrid grid2(*deck2);
+    Opm::EclipseGrid grid1(deck1);
+    Opm::EclipseGrid grid2(deck2);
 
     BOOST_CHECK(!grid1.equal( grid2 ));
     BOOST_CHECK(!grid1.isPinchActive());
@@ -850,15 +823,15 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
 
 
 BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
-    Opm::DeckConstPtr deck1 = createCPDeck();
-    Opm::DeckConstPtr deck2 = createMinpvDefaultCPDeck();
-    Opm::DeckConstPtr deck3 = createMinpvCPDeck();
-    Opm::DeckConstPtr deck4 = createMinpvFilCPDeck();
+    auto deck1 = createCPDeck();
+    auto deck2 = createMinpvDefaultCPDeck();
+    auto deck3 = createMinpvCPDeck();
+    auto deck4 = createMinpvFilCPDeck();
 
-    Opm::EclipseGrid grid1(*deck1);
-    BOOST_CHECK_THROW(Opm::EclipseGrid grid2(*deck2), std::invalid_argument);
-    Opm::EclipseGrid grid3(*deck3);
-    Opm::EclipseGrid grid4(*deck4);
+    Opm::EclipseGrid grid1(deck1);
+    BOOST_CHECK_THROW(Opm::EclipseGrid grid2(deck2), std::invalid_argument);
+    Opm::EclipseGrid grid3(deck3);
+    Opm::EclipseGrid grid4(deck4);
 
     BOOST_CHECK(!grid1.equal( grid3 ));
     BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Opm::MinpvMode::ModeEnum::Inactive);
@@ -869,8 +842,8 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
 }
 
 
-static Opm::DeckPtr createActnumDeck() {
-    const char *deckData = "RUNSPEC\n"
+static Opm::Deck createActnumDeck() {
+    const char* deckData = "RUNSPEC\n"
             "\n"
             "DIMENS \n"
             "  2 2 2 / \n"
@@ -889,16 +862,16 @@ static Opm::DeckPtr createActnumDeck() {
             "FLUXNUM\n"
             "8*0 /\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext());
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
 }
 
 
 /// creates a deck where the top-layer has ACTNUM = 0 and two partially
 /// overlapping 2*2*2 boxes in the center, one [5,7]^3 and one [6,8]^3
 /// have ACTNUM = 0
-static Opm::DeckPtr createActnumBoxDeck() {
-    const char *deckData = "RUNSPEC\n"
+static Opm::Deck createActnumBoxDeck() {
+    const char* deckData = "RUNSPEC\n"
             "\n"
             "DIMENS \n"
             "  10 10 10 / \n"
@@ -932,13 +905,13 @@ static Opm::DeckPtr createActnumBoxDeck() {
             "FLUXNUM\n"
             "1000*0 /\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext());
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
 }
 
 BOOST_AUTO_TEST_CASE(GridBoxActnum) {
-    Opm::DeckConstPtr deck = createActnumBoxDeck();
-    Opm::EclipseState es(*deck, Opm::ParseContext());
+    auto deck = createActnumBoxDeck();
+    Opm::EclipseState es( deck, Opm::ParseContext());
     auto ep = es.get3DProperties();
     const auto& grid = es.getInputGrid();
 
@@ -987,9 +960,9 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
 }
 
 BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
-    Opm::DeckConstPtr deck = createActnumDeck();
+    auto deck = createActnumDeck();
 
-    Opm::EclipseState es(*deck, Opm::ParseContext());
+    Opm::EclipseState es( deck, Opm::ParseContext());
     auto ep = es.get3DProperties();
     const auto& grid = es.getInputGrid();
     Opm::EclipseGrid grid2( grid );
@@ -1003,25 +976,25 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
 }
 
 BOOST_AUTO_TEST_CASE(GridActnumViaState) {
-    Opm::DeckConstPtr deck = createActnumDeck();
+    auto deck = createActnumDeck();
 
-    BOOST_CHECK_NO_THROW(Opm::EclipseState(*deck, Opm::ParseContext()));
-    Opm::EclipseState es(*deck, Opm::ParseContext());
+    BOOST_CHECK_NO_THROW(Opm::EclipseState( deck, Opm::ParseContext()));
+    Opm::EclipseState es( deck, Opm::ParseContext());
     BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), 2 * 2 * 2 - 1);
 }
 
 
 BOOST_AUTO_TEST_CASE(GridDimsSPECGRID) {
-    auto deckptr =  createDeckSPECGRID();
-    auto gd = Opm::GridDims(*deckptr);
+    auto deck =  createDeckSPECGRID();
+    auto gd = Opm::GridDims( deck );
     BOOST_CHECK_EQUAL(gd.getNX(), 13);
     BOOST_CHECK_EQUAL(gd.getNY(), 17);
     BOOST_CHECK_EQUAL(gd.getNZ(), 19);
 }
 
 BOOST_AUTO_TEST_CASE(GridDimsDIMENS) {
-    auto deckptr =  createDeckDIMENS();
-    auto gd = Opm::GridDims(*deckptr);
+    auto deck =  createDeckDIMENS();
+    auto gd = Opm::GridDims( deck );
     BOOST_CHECK_EQUAL(gd.getNX(), 13);
     BOOST_CHECK_EQUAL(gd.getNY(), 17);
     BOOST_CHECK_EQUAL(gd.getNZ(), 19);

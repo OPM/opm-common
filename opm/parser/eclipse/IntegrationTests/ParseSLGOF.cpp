@@ -17,10 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 #define BOOST_TEST_MODULE ParserIntegrationTests
-#include <math.h>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -29,8 +26,6 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
 
@@ -55,33 +50,22 @@ const char *parserData =
     "    0.9 0.1 1.0 1.0\n"
     "    1.0 0.0 1.0 0.0 /\n";
 
-static void check_parser(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(parserData, ParseContext());
-    const auto& kw1 = deck->getKeyword("SLGOF");
-    BOOST_CHECK_EQUAL(1U , kw1.size());
+BOOST_AUTO_TEST_CASE( parse_SLGOF_OK ) {
+    Parser parser;
+    auto deck =  parser.parseString(parserData, ParseContext());
 
+    const auto& kw1 = deck.getKeyword("SLGOF");
     const auto& record0 = kw1.getRecord(0);
-    BOOST_CHECK_EQUAL(1U , record0.size());
-
     const auto& item0 = record0.getItem(0);
+    BOOST_CHECK_EQUAL(1U , kw1.size());
+    BOOST_CHECK_EQUAL(1U , record0.size());
     BOOST_CHECK_EQUAL(10U * 4, item0.size());
-}
 
-static void check_SlgofTable(ParserPtr parser) {
-    DeckPtr deck =  parser->parseString(parserData, ParseContext());
-    Opm::SlgofTable slgofTable(deck->getKeyword("SLGOF").getRecord(0).getItem(0));
-
+    Opm::SlgofTable slgofTable( deck.getKeyword("SLGOF").getRecord(0).getItem(0) );
     BOOST_CHECK_EQUAL(10U, slgofTable.getSlColumn().size());
     BOOST_CHECK_EQUAL(0.1, slgofTable.getSlColumn()[0]);
     BOOST_CHECK_EQUAL(1.0, slgofTable.getSlColumn()[9]);
     BOOST_CHECK_EQUAL(0.0, slgofTable.getKrgColumn()[9]);
     BOOST_CHECK_EQUAL(1.0, slgofTable.getKrogColumn()[9]);
     BOOST_CHECK_EQUAL(0.0, slgofTable.getPcogColumn()[9]);
-}
-
-BOOST_AUTO_TEST_CASE( parse_SLGOF_OK ) {
-    ParserPtr parser(new Parser(/*addDefault=*/true));
-
-    check_parser( parser );
-    check_SlgofTable(parser);
 }

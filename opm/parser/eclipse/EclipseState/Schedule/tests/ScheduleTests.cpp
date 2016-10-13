@@ -44,7 +44,7 @@
 
 using namespace Opm;
 
-static DeckPtr createDeck() {
+static Deck createDeck() {
     Opm::Parser parser;
     std::string input =
         "START\n"
@@ -56,7 +56,7 @@ static DeckPtr createDeck() {
     return parser.parseString(input, ParseContext());
 }
 
-static DeckPtr createDeckWithWells() {
+static Deck createDeckWithWells() {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
@@ -80,7 +80,7 @@ static DeckPtr createDeckWithWells() {
     return parser.parseString(input, ParseContext());
 }
 
-static DeckPtr createDeckForTestingCrossFlow() {
+static Deck createDeckForTestingCrossFlow() {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
@@ -145,7 +145,7 @@ static DeckPtr createDeckForTestingCrossFlow() {
     return parser.parseString(input, ParseContext());
 }
 
-static DeckPtr createDeckWithWellsOrdered() {
+static Deck createDeckWithWellsOrdered() {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
@@ -160,7 +160,7 @@ static DeckPtr createDeckWithWellsOrdered() {
     return parser.parseString(input, ParseContext());
 }
 
-static DeckPtr createDeckWithWellsAndCompletionData() {
+static Deck createDeckWithWellsAndCompletionData() {
     Opm::Parser parser;
     std::string input =
       "START             -- 0 \n"
@@ -195,15 +195,15 @@ static DeckPtr createDeckWithWellsAndCompletionData() {
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
-    DeckPtr deck(new Deck());
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
+    Deck deck;
+    deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
     EclipseGrid grid(10,10,10);
     Schedule schedule(ParseContext() , grid , deck );
     BOOST_CHECK_EQUAL( schedule.getStartTime() , boost::posix_time::ptime(boost::gregorian::date( 1983  , boost::gregorian::Jan , 1)));
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
-    DeckPtr deck = createDeckWithWellsOrdered();
+    auto deck = createDeckWithWellsOrdered();
     EclipseGrid grid(100,100,100);
     Schedule schedule(ParseContext() , grid , deck );
     auto wells = schedule.getWells();
@@ -214,23 +214,23 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
-    DeckPtr deck = createDeck();
+    auto deck = createDeck();
     EclipseGrid grid(10,10,10);
     Schedule schedule(ParseContext() , grid , deck );
     BOOST_CHECK_EQUAL( schedule.getStartTime() , boost::posix_time::ptime(boost::gregorian::date( 1998  , boost::gregorian::Mar , 8)));
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
-    DeckPtr deck(new Deck());
+    Deck deck;
     EclipseGrid grid(10,10,10);
-    deck->addKeyword( DeckKeyword( "SCHEDULE" ) );
+    deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
 
-    BOOST_CHECK_NO_THROW(Schedule schedule(ParseContext() , grid , deck ));
+    BOOST_CHECK_NO_THROW( Schedule schedule( ParseContext() , grid , deck ));
 }
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeck();
+    auto deck = createDeck();
     Schedule schedule(ParseContext() , grid , deck );
     BOOST_CHECK_EQUAL( 0U , schedule.numWells() );
     BOOST_CHECK_EQUAL( false , schedule.hasWell("WELL1") );
@@ -239,13 +239,13 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
 
 BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeck();
+    auto deck = createDeck();
     Schedule schedule(ParseContext() , grid , deck );
     BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0).getNode("FIELD")->name());
 }
 
-static std::shared_ptr< Deck > deckWithGRUPTREE() {
-    DeckPtr deck = createDeck();
+static Deck deckWithGRUPTREE() {
+    auto deck = createDeck();
     DeckKeyword gruptreeKeyword("GRUPTREE");
 
     DeckRecord recordChildOfField;
@@ -257,7 +257,7 @@ static std::shared_ptr< Deck > deckWithGRUPTREE() {
     recordChildOfField.addItem( std::move( itemChild1 ) );
     recordChildOfField.addItem( std::move( itemParent1 ) );
     gruptreeKeyword.addRecord( std::move( recordChildOfField ) );
-    deck->addKeyword( std::move( gruptreeKeyword ) );
+    deck.addKeyword( std::move( gruptreeKeyword ) );
 
     return deck;
 }
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(GetGroups) {
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeck();
+    auto deck = createDeck();
     Schedule schedule(ParseContext() , grid , deck );
     BOOST_CHECK_EQUAL( 1U , schedule.numGroups() );
     BOOST_CHECK_EQUAL( true , schedule.hasGroup("FIELD") );
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
 
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeck();
+    auto deck = createDeck();
     Schedule schedule(ParseContext() , grid , deck );
     size_t timeStep = 0;
     const auto wells_alltimesteps = schedule.getWells();
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
 
 BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeckWithWells();
+    auto deck = createDeckWithWells();
     Schedule schedule(ParseContext() , grid , deck );
     size_t timeStep = 0;
 
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
 
 BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeckWithWells();
+    auto deck = createDeckWithWells();
     Schedule schedule(ParseContext() , grid , deck );
     std::string wellNamePattern;
 
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
 
 BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeckWithWells();
+    auto deck = createDeckWithWells();
     Schedule schedule(ParseContext() , grid , deck );
 
     BOOST_CHECK_EQUAL(schedule.numWells(0), 1);
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
 
 BOOST_AUTO_TEST_CASE(ReturnMaxNumCompletionsForWellsInTimestep) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeckWithWellsAndCompletionData();
+    auto deck = createDeckWithWellsAndCompletionData();
     Schedule schedule(ParseContext() , grid , deck );
 
     BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(1), 7);
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(ReturnMaxNumCompletionsForWellsInTimestep) {
 
 BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeckForTestingCrossFlow();
+    auto deck = createDeckForTestingCrossFlow();
     Schedule schedule(ParseContext() , grid , deck );
 
     auto well_ban = schedule.getWell("BAN");
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     }
 }
 
-static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {
+static Deck createDeckWithWellsAndCompletionDataWithWELOPEN() {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
@@ -448,7 +448,7 @@ static DeckPtr createDeckWithWellsAndCompletionDataWithWELOPEN() {
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = createDeckWithWellsAndCompletionDataWithWELOPEN();
+    auto deck = createDeckWithWellsAndCompletionDataWithWELOPEN();
     Schedule schedule(ParseContext() , grid , deck );
     auto* well = schedule.getWell("OP_1");
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 0 ));
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
 
   EclipseGrid grid(10,10,10);
   ParseContext parseContext;
-  DeckPtr deck = parser.parseString(input, parseContext);
+  auto deck = parser.parseString(input, parseContext);
   Schedule schedule(parseContext , grid , deck );
   auto* well = schedule.getWell("OP_1");
   size_t currentStep = 3;
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC1_ThrowsExcpetion) {
                     "/\n";
 
 
-    DeckPtr deck = parser.parseString(input, ParseContext());
+    auto deck = parser.parseString(input, ParseContext());
     EclipseGrid grid(10,10,10);
     BOOST_CHECK_THROW(Schedule schedule(ParseContext() , grid , deck ), std::exception);
 }
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC1andC2_ThrowsExcpetion) 
                     "/\n";
 
 
-    DeckPtr deck = parser.parseString(input, ParseContext());
+    auto deck = parser.parseString(input, ParseContext());
     EclipseGrid grid(10,10,10);
     BOOST_CHECK_THROW(Schedule schedule(ParseContext() , grid , deck ), std::exception);
 }
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC2_ThrowsExcpetion) {
                     "/\n";
 
 
-    DeckPtr deck = parser.parseString(input, ParseContext());
+    auto deck = parser.parseString(input, ParseContext());
     EclipseGrid grid(10,10,10);
     BOOST_CHECK_THROW(Schedule schedule(ParseContext() , grid , deck ), std::exception);
 }
@@ -669,7 +669,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValuesInWELOPEN) {
                     "/\n";
 
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = parser.parseString(input, ParseContext());
+    auto deck = parser.parseString(input, ParseContext());
     Schedule schedule(ParseContext() , grid , deck );
     auto* well = schedule.getWell("OP_1");
     size_t currentStep = 3;
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
 
     EclipseGrid grid(10,10,10);
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     Schedule schedule(parseContext , grid , deck );
 
     {
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
                     "/\n";
     ParseContext parseContext;
     EclipseGrid grid(10,10,10);
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     Schedule schedule(parseContext , grid , deck );
     auto* well = schedule.getWell("OP_1");
 
@@ -827,7 +827,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
             "/\n";
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Schedule schedule(parseContext , grid , deck );
     auto* well = schedule.getWell("OP_1");
@@ -836,7 +836,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     WellProductionProperties wpp = well->getProductionProperties(currentStep);
     BOOST_CHECK_EQUAL(wpp.WaterRate,0);
 
-    Opm::UnitSystem unitSystem = deck->getActiveUnitSystem();
+    Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
     double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
     double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
     double siFactorP = unitSystem.parse("Pressure").getSIScaling();
@@ -865,7 +865,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
             "/\n";
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
 
     BOOST_CHECK_THROW(Schedule (parseContext , grid , deck ), std::invalid_argument);
@@ -881,7 +881,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
             "/\n";
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
 
     BOOST_CHECK_THROW(Schedule (parseContext , grid , deck ), std::out_of_range);
@@ -937,7 +937,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
                     "/\n";
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Schedule schedule(parseContext , grid, deck );
     auto* well = schedule.getWell("OP_1");
@@ -972,7 +972,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
             "/\n";
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 1;
@@ -1004,7 +1004,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
             "/\n";
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 2;
@@ -1029,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
             "/\n";
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Schedule schedule(parseContext , grid, deck );
     size_t currentStep = 1;
@@ -1056,7 +1056,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithOutOilVaporizationProperties) {
 
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Schedule schedule(parseContext , grid, deck );
 
@@ -1115,7 +1115,7 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
             ;
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Schedule schedule(parseContext , grid, deck );
     auto* well_p = schedule.getWell("P");
@@ -1202,7 +1202,7 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
             ;
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     Schedule schedule(parseContext , grid, deck );
     auto* well_p1 = schedule.getWell("P1");
@@ -1266,7 +1266,7 @@ BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
             ;
 
     ParseContext parseContext;
-    DeckPtr deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
     BOOST_CHECK_THROW(Schedule schedule(parseContext , grid, deck ), std::invalid_argument);
 }

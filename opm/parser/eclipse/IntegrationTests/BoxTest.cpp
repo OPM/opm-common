@@ -35,15 +35,11 @@
 
 using namespace Opm;
 
-// forward declaration to avoid a pedantic compiler warning
-EclipseState makeState(const std::string& fileName);
-
-EclipseState makeState(const std::string& fileName) {
-    ParserPtr parser(new Parser( ));
+inline EclipseState makeState(const std::string& fileName) {
+    Parser parser;
     boost::filesystem::path boxFile(fileName);
-    DeckPtr deck =  parser->parseFile(boxFile.string(), ParseContext());
-    EclipseState state(*deck , ParseContext());
-    return state;
+    auto deck =  parser.parseFile(boxFile.string(), ParseContext());
+    return EclipseState( deck, ParseContext() );
 }
 
 

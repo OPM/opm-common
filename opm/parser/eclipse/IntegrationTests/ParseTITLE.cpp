@@ -18,9 +18,8 @@
  */
 
 #define BOOST_TEST_MODULE ParserIntegrationTests
-#include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -28,11 +27,6 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
-
-#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
 
@@ -40,22 +34,21 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE( parse_TITLE_OK ) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string fileWithTitleKeyword("testdata/integration_tests/TITLE/TITLE1.txt");
 
-    DeckPtr deck = parser->parseFile(fileWithTitleKeyword, ParseContext());
+    auto deck = parser.parseFile(fileWithTitleKeyword, ParseContext());
 
-    BOOST_CHECK_EQUAL(size_t(2), deck->size());
-    BOOST_CHECK_EQUAL (true, deck->hasKeyword("TITLE"));
-    const auto& titleKeyword = deck->getKeyword("TITLE");
+    BOOST_CHECK_EQUAL(size_t(2), deck.size());
+    BOOST_CHECK_EQUAL (true, deck.hasKeyword("TITLE"));
+
+    const auto& titleKeyword = deck.getKeyword("TITLE");
     const auto& record = titleKeyword.getRecord(0);
     const auto& item = record.getItem(0);
+
     std::vector<std::string> itemValue = item.getData< std::string >();
     std::string itemValueString = boost::algorithm::join(itemValue, " ");
 
     BOOST_CHECK_EQUAL (0, itemValueString.compare("This is the title of the model."));
-    BOOST_CHECK_EQUAL (true, deck->hasKeyword("START"));
-
+    BOOST_CHECK_EQUAL (true, deck.hasKeyword("START"));
 }
-
-

@@ -21,7 +21,6 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -38,11 +37,11 @@ using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE(ParsePOROandPERMX) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string poroFile("testdata/integration_tests/PORO/PORO1");
-    DeckPtr deck =  parser->parseFile(poroFile, ParseContext());
-    const auto& kw1 = deck->getKeyword("PORO" , 0);
-    const auto& kw2 = deck->getKeyword("PERMX" , 0);
+    auto deck =  parser.parseFile(poroFile, ParseContext());
+    const auto& kw1 = deck.getKeyword("PORO" , 0);
+    const auto& kw2 = deck.getKeyword("PERMX" , 0);
 
     BOOST_CHECK_THROW( kw1.getIntData() , std::logic_error );
     BOOST_CHECK_THROW( kw1.getStringData() , std::logic_error );

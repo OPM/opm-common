@@ -35,11 +35,11 @@ using namespace Opm;
 
 BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
 
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string deckFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
-    DeckPtr deck =  parser->parseFile(deckFile, ParseContext());
+    auto deck =  parser.parseFile(deckFile, ParseContext());
     // for WELSEGS keyword
-    const auto& kw = deck->getKeyword("WELSEGS");
+    const auto& kw = deck.getKeyword("WELSEGS");
 
     // check the size of the keywords
     BOOST_CHECK_EQUAL( 6, kw.size() );
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE( PARSE_MULTISEGMENT_ABS ) {
     }
 
     // for COMPSEG keyword
-    const auto& kw1 = deck->getKeyword("COMPSEGS");
+    const auto& kw1 = deck.getKeyword("COMPSEGS");
     // check the size of the keywords
     BOOST_CHECK_EQUAL( 7, kw1.size() );
     // first record only contains the well name

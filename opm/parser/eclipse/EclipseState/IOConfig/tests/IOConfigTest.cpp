@@ -154,15 +154,15 @@ const std::string deckStr_RFT = "RUNSPEC\n"
 
 
 
-static DeckPtr createDeck(const std::string& input) {
+static Deck createDeck(const std::string& input) {
     Opm::Parser parser;
     return parser.parseString(input, Opm::ParseContext());
 }
 
 
 BOOST_AUTO_TEST_CASE( RFT_TIME) {
-    DeckPtr deck = createDeck(deckStr_RFT);
-    EclipseState state( *deck , Opm::ParseContext() );
+    Deck deck = createDeck(deckStr_RFT);
+    EclipseState state( deck , Opm::ParseContext() );
     const IOConfig& ioConfig = state.cfg().io();
 
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
                        "/\n";
 
     auto deck = Parser().parseString( data, ParseContext() );
-    IOConfig ioConfig( *deck );
+    IOConfig ioConfig( deck );
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK( ioConfig.getWriteEGRIDFile() );
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(OutputProperties) {
 
 
     auto deck = Parser().parseString( data, ParseContext() );
-    IOConfig ioConfig( *deck );
+    IOConfig ioConfig( deck );
 
     BOOST_CHECK( !ioConfig.getWriteEGRIDFile() );
     /*If INIT keyword is specified, verify write of INIT file*/
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(NoGRIDFILE) {
                         "\n";
 
     auto deck = Parser().parseString( data, ParseContext() );
-    IOConfig ioConfig( *deck );
+    IOConfig ioConfig( deck );
 
     /*If GRIDFILE 0 0 is specified, no EGRID file is written */
     BOOST_CHECK( !ioConfig.getWriteEGRIDFile() );

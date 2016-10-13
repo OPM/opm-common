@@ -18,36 +18,26 @@
  */
 
 #define BOOST_TEST_MODULE ParserIntegrationTests
-#include <math.h>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
-
-#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 using namespace Opm;
 
-
-
 BOOST_AUTO_TEST_CASE( parse_VFPPROD_OK ) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string file("testdata/integration_tests/VFPPROD/VFPPROD1");
-    BOOST_CHECK( parser->isRecognizedKeyword("VFPPROD"));
+    BOOST_CHECK( parser.isRecognizedKeyword("VFPPROD"));
 
-    DeckPtr deck =  parser->parseFile(file, ParseContext());
+    auto deck =  parser.parseFile(file, ParseContext());
 
-    const auto& VFPPROD1 = deck->getKeyword("VFPPROD" , 0);
-    const auto& BPR = deck->getKeyword("BPR" , 0);
-    const auto& VFPPROD2 = deck->getKeyword("VFPPROD" , 1);
+    const auto& VFPPROD1 = deck.getKeyword("VFPPROD" , 0);
+    const auto& BPR = deck.getKeyword("BPR" , 0);
+    const auto& VFPPROD2 = deck.getKeyword("VFPPROD" , 1);
 
     BOOST_CHECK_EQUAL( 573U  , VFPPROD1.size() );
     BOOST_CHECK_EQUAL( 1U    , BPR.size());

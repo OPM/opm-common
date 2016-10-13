@@ -154,9 +154,6 @@ namespace Opm {
 
             std::string m_dataFile;
     };
-
-    typedef std::shared_ptr<Deck> DeckPtr;
-    typedef std::shared_ptr<const Deck> DeckConstPtr;
 }
 #endif  /* DECK_HPP */
 

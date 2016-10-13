@@ -18,26 +18,20 @@
  */
 
 #define BOOST_TEST_MODULE ParsePLYVISC
-#include <math.h>
-
-#include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 using namespace Opm;
 
-
-
 BOOST_AUTO_TEST_CASE( PARSE_PLYADSS_OK) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string deckFile("testdata/integration_tests/POLYMER/plyadss.data");
-    DeckPtr deck =  parser->parseFile(deckFile, ParseContext());
-    const auto& kw = deck->getKeyword("PLYADSS");
+    auto deck =  parser.parseFile(deckFile, ParseContext());
+    const auto& kw = deck.getKeyword("PLYADSS");
 
     BOOST_CHECK_EQUAL( kw.size() , 11U );
 }

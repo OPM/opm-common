@@ -32,7 +32,7 @@
 #include <string>
 #include <memory>
 
-inline std::shared_ptr<const Opm::Deck> createSWOFDeck() {
+inline Opm::Deck createSWOFDeck() {
     const char *deckData =
         "TABDIMS\n"
         " 2 /\n"
@@ -43,19 +43,18 @@ inline std::shared_ptr<const Opm::Deck> createSWOFDeck() {
         " 9 10 11 12 /\n";
 
     Opm::Parser parser;
-    Opm::DeckConstPtr deck(parser.parseString(deckData, Opm::ParseContext()));
-    return deck;
+    return parser.parseString(deckData, Opm::ParseContext());
 }
 
 BOOST_AUTO_TEST_CASE( CreateContainer ) {
     std::vector<std::string> columnNames{"A", "B", "C", "D"};
-    Opm::DeckConstPtr deck = createSWOFDeck();
+    auto deck = createSWOFDeck();
     Opm::TableContainer container(10);
     BOOST_CHECK( container.empty() );
     BOOST_CHECK_EQUAL( 0 , container.size() );
     BOOST_CHECK_EQUAL( false , container.hasTable( 1 ));
 
-    std::shared_ptr<Opm::SimpleTable> table = std::make_shared<Opm::SwofTable>( deck->getKeyword("SWOF").getRecord(0).getItem(0) );
+    std::shared_ptr<Opm::SimpleTable> table = std::make_shared<Opm::SwofTable>( deck.getKeyword("SWOF").getRecord(0).getItem(0) );
     BOOST_CHECK_THROW( container.addTable( 10 , table ), std::invalid_argument );
     container.addTable( 6 , table );
     BOOST_CHECK_EQUAL( 1 , container.size() );

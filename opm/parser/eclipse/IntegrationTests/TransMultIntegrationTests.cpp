@@ -17,33 +17,24 @@
 */
 
 #define BOOST_TEST_MODULE TransMultTests
-#include <math.h>
-
 #include <boost/test/unit_test.hpp>
-#include <boost/test/test_tools.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/GroupTreeNode.hpp>
 
 using namespace Opm;
 
 
 BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
-    ParserPtr parser(new Parser());
+    Parser parser;
     std::string scheduleFile("testdata/integration_tests/TRANS/Deck1");
     ParseContext parseContext;
-    DeckPtr deck = parser->parseFile(scheduleFile, parseContext);
-    EclipseState state(*deck, parseContext);
+    auto deck = parser.parseFile(scheduleFile, parseContext);
+    EclipseState state(deck, parseContext);
     const auto& trans = state.getTransMult();
     const auto& schedule = state.getSchedule();
     const Events& events = schedule.getEvents();
@@ -52,7 +43,7 @@ BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 2,2,0,FaceDir::XPlus ));
     BOOST_CHECK( events.hasEvent( ScheduleEvents::GEO_MODIFIER , 3 ) );
     {
-        std::shared_ptr<const Deck> mini_deck = schedule.getModifierDeck(3);
+        const auto& mini_deck = schedule.getModifierDeck(3);
         state.applyModifierDeck( *mini_deck );
     }
     BOOST_CHECK_EQUAL( 2.00 , trans.getMultiplier( 2,2,0,FaceDir::XPlus ));

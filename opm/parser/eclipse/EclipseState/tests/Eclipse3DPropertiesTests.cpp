@@ -38,7 +38,7 @@
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-static Opm::DeckPtr createDeck() {
+static Opm::Deck createDeck() {
     const char *deckData = "RUNSPEC\n"
             "\n"
             "DIMENS\n"
@@ -76,13 +76,13 @@ static Opm::DeckPtr createDeck() {
             "1000*2 /\n"
             "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext());
+    Opm::Parser parser;
+    return std::move( parser.parseString(deckData, Opm::ParseContext() ) );
 }
 
 
 
-static Opm::DeckPtr createValidIntDeck() {
+static Opm::Deck createValidIntDeck() {
     const char *deckData = "RUNSPEC\n"
             "GRIDOPTS\n"
             "  'YES'  2 /\n"
@@ -115,11 +115,11 @@ static Opm::DeckPtr createValidIntDeck() {
             "EDIT\n"
             "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext());
+    Opm::Parser parser;
+    return std::move( parser.parseString(deckData, Opm::ParseContext() ) );
 }
 
-static Opm::DeckPtr createValidPERMXDeck() {
+static Opm::Deck createValidPERMXDeck() {
     const char *deckData = "RUNSPEC\n"
             "GRIDOPTS\n"
             "  'YES'  2 /\n"
@@ -161,8 +161,8 @@ static Opm::DeckPtr createValidPERMXDeck() {
             "EDIT\n"
             "\n";
 
-    Opm::ParserPtr parser(new Opm::Parser());
-    return parser->parseString(deckData, Opm::ParseContext());
+    Opm::Parser parser;
+    return std::move( parser.parseString(deckData, Opm::ParseContext() ) );
 }
 
 
@@ -170,16 +170,16 @@ static Opm::DeckPtr createValidPERMXDeck() {
 struct Setup
 {
     Opm::ParseContext parseContext;
-    Opm::DeckPtr deck;
+    Opm::Deck deck;
     Opm::TableManager tablemanager;
     Opm::EclipseGrid grid;
     Opm::Eclipse3DProperties props;
 
-    explicit Setup(Opm::DeckPtr deckArg) :
-            deck(deckArg),
-            tablemanager(*deck),
-            grid(*deck),
-            props(*deck, tablemanager, grid)
+    explicit Setup(Opm::Deck&& deckArg) :
+            deck(std::move( deckArg ) ),
+            tablemanager(deck),
+            grid(deck),
+            props(deck, tablemanager, grid)
     {
     }
 };
@@ -232,8 +232,7 @@ BOOST_AUTO_TEST_CASE(IntGridProperty) {
 }
 
 BOOST_AUTO_TEST_CASE(AddregIntSetCorrectly) {
-    Opm::DeckPtr deck = createValidIntDeck();
-    Setup s(deck);
+    Setup s(createValidIntDeck());
     const auto& property = s.props.getIntGridProperty("SATNUM");
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
@@ -246,8 +245,7 @@ BOOST_AUTO_TEST_CASE(AddregIntSetCorrectly) {
 }
 
 BOOST_AUTO_TEST_CASE(PermxUnitAppliedCorrectly) {
-    Opm::DeckPtr deck = createValidPERMXDeck();
-    Setup s(deck);
+    Setup s( createValidPERMXDeck() );
     const auto& permx = s.props.getDoubleGridProperty("PermX");
 
     for (size_t j = 0; j < 5; j++)
@@ -260,8 +258,7 @@ BOOST_AUTO_TEST_CASE(PermxUnitAppliedCorrectly) {
 }
 
 BOOST_AUTO_TEST_CASE(DoubleIterator) {
-    Opm::DeckPtr deck = createValidPERMXDeck();
-    Setup s(deck);
+    Setup s( createValidPERMXDeck() );
     const auto& doubleProperties = s.props.getDoubleProperties();
     std::vector<std::string> kw_list;
     for (const auto& prop : doubleProperties )
@@ -274,8 +271,7 @@ BOOST_AUTO_TEST_CASE(DoubleIterator) {
 
 
 BOOST_AUTO_TEST_CASE(IntIterator) {
-    Opm::DeckPtr deck = createValidPERMXDeck();
-    Setup s(deck);
+    Setup s( createValidPERMXDeck() );
     const auto& intProperties = s.props.getIntProperties();
     std::vector<std::string> kw_list;
     for (const auto& prop : intProperties )
@@ -307,8 +303,7 @@ BOOST_AUTO_TEST_CASE(getRegions) {
             "FIPNUM\n"
             "1 1 2 3 /\n";
 
-    auto deck = Opm::Parser().parseString(input, Opm::ParseContext());
-    Setup s( deck );
+    Setup s( Opm::Parser().parseString(input, Opm::ParseContext() ) );
 
     std::vector< int > ref = { 1, 2, 3 };
     const auto regions = s.props.getRegions( "FIPNUM" );
