@@ -20,7 +20,6 @@
 #ifndef OPM_OUTPUT_WRITER_HPP
 #define OPM_OUTPUT_WRITER_HPP
 
-#include <memory>  // unique_ptr, shared_ptr
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/output/Cells.hpp>

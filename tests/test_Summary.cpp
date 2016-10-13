@@ -157,7 +157,7 @@ ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > readsum( const std::string& ba
 }
 
 struct setup {
-    std::shared_ptr< Deck > deck;
+    Deck deck;
     EclipseState es;
     SummaryConfig config;
     const EclipseGrid& grid;
@@ -172,12 +172,13 @@ struct setup {
 
     setup( const std::string& fname , const ParseContext& parseContext = ParseContext( )) :
         deck( Parser().parseFile( path, parseContext ) ),
-        es( *deck, ParseContext() ),
-        config( *deck, es , parseContext ),
-        grid( *es.getInputGrid() ),
+        es( deck, ParseContext() ),
+        config( deck, es, parseContext ),
+        grid( es.getInputGrid() ),
         wells( result_wells() ),
         name( fname ),
-        ta( ERT::TestArea("test_summary") )
+        ta( ERT::TestArea("test_summary") ),
+        solution( make_solution( es.getInputGrid() ) )
     {
         const auto& properties = es.get3DProperties();
         const auto& fipnum = properties.getIntGridProperty("FIPNUM");
@@ -185,8 +186,6 @@ struct setup {
 
         for (auto region_id : region_values)
             cells.emplace( region_id , fipnum.cellsEqual( region_id , grid ));
-
-        solution = make_solution( *es.getInputGrid());
     }
 
 };
@@ -598,7 +597,7 @@ BOOST_AUTO_TEST_CASE(region_vars) {
     BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:1"));
     BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:10"));
     BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:11"));
-    UnitSystem units( UnitSystem::UNIT_TYPE_METRIC );
+    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
 
     for (size_t r=1; r <= 10; r++) {
         std::string key = "RPR:" + std::to_string( r );

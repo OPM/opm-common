@@ -213,11 +213,11 @@ public:
                                  const Well& well,
                                  size_t offset ) const {
 
-        CompletionSetConstPtr completions = well.getCompletions( step );
+        const auto& completions = well.getCompletions( step );
 
         data[ offset + IWEL_HEADI_INDEX ] = well.getHeadI() + 1;
         data[ offset + IWEL_HEADJ_INDEX ] = well.getHeadJ() + 1;
-        data[ offset + IWEL_CONNECTIONS_INDEX ] = completions->size();
+        data[ offset + IWEL_CONNECTIONS_INDEX ] = completions.size();
         data[ offset + IWEL_GROUP_INDEX ] = 1;
 
         data[ offset + IWEL_TYPE_INDEX ] = to_ert_welltype( well, step );
@@ -226,11 +226,11 @@ public:
     }
 
     void addRestartFileIconData( std::vector< int >& data,
-                                 CompletionSetConstPtr completions,
+                                 const CompletionSet& completions,
                                  size_t wellICONOffset ) const {
 
-        for( size_t i = 0; i < completions->size(); ++i ) {
-            const auto& completion = *completions->get( i );
+        for( size_t i = 0; i < completions.size(); ++i ) {
+            const auto& completion = completions.get( i );
             size_t offset = wellICONOffset + i * Restart::NICONZ;
             data[ offset + ICON_IC_INDEX ] = 1;
 
@@ -327,10 +327,11 @@ RFT::RFT( const char* output_dir,
 {}
 
 inline ert_ecl_unit_enum to_ert_unit( UnitSystem::UnitType t ) {
+    using ut = UnitSystem::UnitType;
     switch ( t ) {
-        case UnitSystem::UNIT_TYPE_METRIC: return ERT_ECL_METRIC_UNITS;
-        case UnitSystem::UNIT_TYPE_FIELD: return ERT_ECL_FIELD_UNITS;
-        case UnitSystem::UNIT_TYPE_LAB: return ERT_ECL_LAB_UNITS;
+        case ut::UNIT_TYPE_METRIC: return ERT_ECL_METRIC_UNITS;
+        case ut::UNIT_TYPE_FIELD:  return ERT_ECL_FIELD_UNITS;
+        case ut::UNIT_TYPE_LAB:    return ERT_ECL_LAB_UNITS;
     }
 
     throw std::invalid_argument("unhandled enum value");
@@ -357,10 +358,10 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
         auto* rft_node = ecl_rft_node_alloc_new( well->name().c_str(), "RFT",
                 current_time, days );
 
-        for( const auto& completion : *well->getCompletions( report_step ) ) {
-            const size_t i = size_t( completion->getI() );
-            const size_t j = size_t( completion->getJ() );
-            const size_t k = size_t( completion->getK() );
+        for( const auto& completion : well->getCompletions( report_step ) ) {
+            const size_t i = size_t( completion.getI() );
+            const size_t j = size_t( completion.getJ() );
+            const size_t k = size_t( completion.getK() );
 
             if( !grid.cellActive( i, j, k ) ) continue;
 
@@ -392,12 +393,11 @@ inline std::string uppercase( std::string x ) {
 
 class EclipseWriter::Impl {
     public:
-        Impl( std::shared_ptr< const EclipseState > es, EclipseGrid&& grid);
-        Impl( std::shared_ptr< const EclipseState > es, const EclipseGrid& grid);
+        Impl( const EclipseState& es, EclipseGrid grid );
         void writeINITFile( const data::Solution& simProps, const NNC& nnc) const;
         void writeEGRIDFile( const NNC& nnc ) const;
 
-        std::shared_ptr< const EclipseState > es;
+        const EclipseState& es;
         EclipseGrid grid;
         std::unordered_map<int , std::vector<size_t>> regionCells;
         std::string outputDir;
@@ -411,37 +411,21 @@ class EclipseWriter::Impl {
         bool first_restart = true;
 };
 
-EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
-                           EclipseGrid&& grid_)
+EclipseWriter::Impl::Impl( const EclipseState& eclipseState,
+                           EclipseGrid grid_)
     : es( eclipseState )
-    , grid( std::move(grid_) )
-    , outputDir( eclipseState->getIOConfig()->getOutputDir() )
-    , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
-    , summary( *eclipseState, eclipseState->getSummaryConfig() )
-    , rft( outputDir.c_str(), baseName.c_str(), es->getIOConfig()->getFMTOUT() )
-    , sim_start_time( es->getSchedule()->posixStartTime() )
-    , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
-    , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
-{
-}
-
-EclipseWriter::Impl::Impl( std::shared_ptr< const EclipseState > eclipseState,
-                           const EclipseGrid& grid_)
-    : es( eclipseState )
-    , grid( grid_ )
-    , outputDir( eclipseState->getIOConfig()->getOutputDir() )
-    , baseName( uppercase( eclipseState->getIOConfig()->getBaseName() ) )
-    , summary( *eclipseState, eclipseState->getSummaryConfig() )
-    , rft( outputDir.c_str(), baseName.c_str(), es->getIOConfig()->getFMTOUT() )
-    , sim_start_time( es->getSchedule()->posixStartTime() )
-    , output_enabled( eclipseState->getIOConfig()->getOutputEnabled() )
-    , ert_phase_mask( ertPhaseMask( eclipseState->getTableManager() ) )
-{
-}
-
+    , grid( std::move( grid_ ) )
+    , outputDir( eclipseState.getIOConfig().getOutputDir() )
+    , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
+    , summary( eclipseState, eclipseState.getSummaryConfig() )
+    , rft( outputDir.c_str(), baseName.c_str(), es.getIOConfig().getFMTOUT() )
+    , sim_start_time( es.getSchedule().posixStartTime() )
+    , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
+    , ert_phase_mask( ertPhaseMask( eclipseState.getTableManager() ) )
+{}
 
 void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const NNC& nnc) const {
-    const auto& es = *this->es;
+    const auto& es = this->es;
     const auto& units = es.getUnits();
     const EclipseGrid& grid = this->grid;
     const IOConfig& ioConfig = es.cfg().io();
@@ -554,13 +538,13 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
 
 
 void EclipseWriter::Impl::writeEGRIDFile( const NNC& nnc ) const {
-    const auto& es = *this->es;
+    const auto& es = this->es;
     const auto& ioConfig = es.getIOConfig();
 
     FileName  egridFile( this->outputDir,
                          this->baseName,
                          ECL_EGRID_FILE,
-                         ioConfig->getFMTOUT() );
+                         ioConfig.getFMTOUT() );
 
     {
         const EclipseGrid& grid = this->grid;
@@ -579,7 +563,7 @@ void EclipseWriter::writeInitAndEgrid(data::Solution simProps, const NNC& nnc) {
         return;
 
     {
-        const auto& es = *this->impl->es;
+        const auto& es = this->impl->es;
         const IOConfig& ioConfig = es.cfg().io();
 
         simProps.convertFromSI( es.getUnits() );
@@ -606,7 +590,7 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 
     time_t current_posix_time = this->impl->sim_start_time + secs_elapsed;
-    const auto& es = *this->impl->es;
+    const auto& es = this->impl->es;
     const auto& grid = this->impl->grid;
     const auto& units = es.getUnits();
 
@@ -614,7 +598,7 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 
     const auto days = units.from_si( UnitSystem::measure::time, secs_elapsed );
-    const auto& schedule = *es.getSchedule();
+    const auto& schedule = es.getSchedule();
 
     /*
        This routine can optionally write RFT and/or restart file; to
@@ -744,7 +728,7 @@ void EclipseWriter::writeTimeStep(int report_step,
     this->impl->summary.add_timestep( report_step,
                                       secs_elapsed,
                                       this->impl->grid,
-                                      *this->impl->es,
+                                      this->impl->es,
                                       this->impl->regionCells,
                                       wells ,
                                       cells );
@@ -753,8 +737,8 @@ void EclipseWriter::writeTimeStep(int report_step,
 
 
 
-EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es, EclipseGrid grid)
-    : impl( new Impl( es, std::move(grid) ) )
+EclipseWriter::EclipseWriter( const EclipseState& es, EclipseGrid grid)
+    : impl( new Impl( es, std::move( grid ) ) )
 {
     if( !this->impl->output_enabled )
         return;
@@ -777,7 +761,7 @@ EclipseWriter::EclipseWriter( std::shared_ptr< const EclipseState > es, EclipseG
        evaluation of region properties.
     */
     {
-        const auto& properties = this->impl->es->get3DProperties();
+        const auto& properties = this->impl->es.get3DProperties();
         const auto& fipnum = properties.getIntGridProperty("FIPNUM");
         const auto& region_values = properties.getRegions( "FIPNUM" );
 

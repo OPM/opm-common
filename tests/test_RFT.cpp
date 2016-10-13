@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
     ERT::TestArea test_area("test_RFT");
     test_area.copyFile( eclipse_data_filename );
 
-    auto eclipseState = std::make_shared< EclipseState >( Parser::parse( eclipse_data_filename ) );
+    auto eclipseState = Parser::parse( eclipse_data_filename );
     {
         /* eclipseWriter is scoped here to ensure it is destroyed after the
          * file itself has been written, because we're going to reload it
@@ -117,11 +117,11 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
          * written to disk and flushed.
          */
 
-        const auto numCells = eclipseState->getInputGrid()->getCartesianSize( );
-        const auto& grid = *eclipseState->getInputGrid();
+        const auto& grid = eclipseState.getInputGrid();
+        const auto numCells = grid.getCartesianSize( );
 
         EclipseWriter eclipseWriter( eclipseState, grid);
-        time_t start_time = eclipseState->getSchedule()->posixStartTime();
+        time_t start_time = eclipseState.getSchedule().posixStartTime();
         /* step time read from deck and hard-coded here */
         time_t step_time = ecl_util_make_date(10, 10, 2008 );
 

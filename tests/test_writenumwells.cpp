@@ -47,17 +47,17 @@
 using namespace Opm;
 
 void verifyWellState(const std::string& rst_filename,
-                     EclipseGridConstPtr ecl_grid,
-                     ScheduleConstPtr schedule) {
+                     const EclipseGrid& ecl_grid,
+                     const Schedule& schedule) {
 
-  well_info_type* well_info = well_info_alloc(ecl_grid->c_ptr());
+  well_info_type* well_info = well_info_alloc(ecl_grid.c_ptr());
   well_info_load_rstfile(well_info, rst_filename.c_str(), false);
 
   //Verify numwells
   int numwells = well_info_get_num_wells(well_info);
-  BOOST_CHECK_EQUAL( numwells, schedule->numWells() );
+  BOOST_CHECK_EQUAL( numwells, schedule.numWells() );
 
-  auto wells = schedule->getWells();
+  auto wells = schedule.getWells();
 
   for (int i = 0; i < numwells; ++i) {
 
@@ -111,19 +111,19 @@ void verifyWellState(const std::string& rst_filename,
       size_t num_wellconnections = well_conn_collection_get_size(well_connections);
 
       int report_nr = well_state_get_report_nr(well_state);
-      auto completions_set = well->getCompletions((size_t)report_nr);
+      const auto& completions_set = well->getCompletions((size_t)report_nr);
 
-      BOOST_CHECK_EQUAL(num_wellconnections, completions_set->size());
+      BOOST_CHECK_EQUAL(num_wellconnections, completions_set.size());
 
       //Verify coordinates for each completion connection
       for (size_t k = 0; k < num_wellconnections; ++k) {
           const well_conn_type * well_connection = well_conn_collection_iget_const(well_connections , k);
 
-          Opm::CompletionConstPtr completion = completions_set->get(k);
+          const auto& completion = completions_set.get(k);
 
-          BOOST_CHECK_EQUAL(well_conn_get_i(well_connection), completion->getI());
-          BOOST_CHECK_EQUAL(well_conn_get_j(well_connection), completion->getJ());
-          BOOST_CHECK_EQUAL(well_conn_get_k(well_connection), completion->getK());
+          BOOST_CHECK_EQUAL(well_conn_get_i(well_connection), completion.getI());
+          BOOST_CHECK_EQUAL(well_conn_get_j(well_connection), completion.getJ());
+          BOOST_CHECK_EQUAL(well_conn_get_k(well_connection), completion.getK());
       }
     }
   }
@@ -139,11 +139,10 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     test_work_area_copy_file(test_area, eclipse_data_filename.c_str());
 
     auto es = Parser::parse( eclipse_data_filename, ParseContext() );
-    auto eclipseState = std::make_shared< EclipseState >( es );
-    const auto num_cells = eclipseState->getInputGrid()->getCartesianSize();
-    EclipseWriter eclipseWriter( eclipseState,  *eclipseState->getInputGrid());
+    const auto num_cells = es.getInputGrid().getCartesianSize();
+    EclipseWriter eclipseWriter( es,  es.getInputGrid() );
 
-    int countTimeStep = eclipseState->getSchedule()->getTimeMap()->numTimesteps();
+    int countTimeStep = es.getSchedule().getTimeMap().numTimesteps();
 
     data::Solution solution;
     solution.insert( "PRESSURE",UnitSystem::measure::pressure , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
@@ -165,7 +164,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
                                      wells );
     }
 
-    verifyWellState(eclipse_restart_filename, eclipseState->getInputGrid(), eclipseState->getSchedule());
+    verifyWellState(eclipse_restart_filename, es.getInputGrid(), es.getSchedule());
 
     test_work_area_free(test_area);
 }

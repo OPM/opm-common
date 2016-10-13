@@ -22,6 +22,7 @@
 #ifndef OPM_ECLIPSE_WRITER_HPP
 #define OPM_ECLIPSE_WRITER_HPP
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <string>
@@ -47,7 +48,7 @@ public:
      * \brief Sets the common attributes required to write eclipse
      *        binary files using ERT.
      */
-    EclipseWriter(std::shared_ptr< const EclipseState >, EclipseGrid grid);
+    EclipseWriter( const EclipseState&, EclipseGrid );
 
 
 

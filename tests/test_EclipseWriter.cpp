@@ -272,10 +272,9 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
 
     auto write_and_check = [&]( int first = 1, int last = 5 ) {
         auto deck = Parser().parseString( deckString, ParseContext() );
-        auto es = std::make_shared< EclipseState >( Parser::parse( *deck ) );
-        es->getIOConfig()->setBaseName( "FOO" );
-
-        auto& eclGrid = *es->getInputGrid();
+        auto es = Parser::parse( deck );
+        auto& eclGrid = es.getInputGrid();
+        es.getIOConfig().setBaseName( "FOO" );
 
         EclipseWriter eclWriter( es, eclGrid );
 
@@ -314,7 +313,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
             checkRestartFile( i );
         }
 
-        checkInitFile( *deck , eGridProps);
+        checkInitFile( deck , eGridProps);
         checkEgridFile( eclGrid );
 
         std::ifstream file( "FOO.UNRST", std::ios::binary );

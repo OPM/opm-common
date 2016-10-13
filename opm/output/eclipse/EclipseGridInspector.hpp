@@ -57,7 +57,7 @@ class EclipseGridInspector
 public:
     /// Constructor taking a parser as argument.
     /// The parser must already have read an Eclipse file.
-    EclipseGridInspector(Opm::DeckConstPtr deck);
+    EclipseGridInspector(Opm::Deck);
 
     /// Assuming that the pillars are vertical, compute the
     /// volume of the cell given by logical coordinates (i, j, k).
@@ -91,7 +91,7 @@ public:
     std::array<double, 8> cellZvals(int i, int j, int k) const;
 
 private:
-    Opm::DeckConstPtr deck_;
+    Opm::Deck deck_;
     int logical_gridsize_[3];
     void init_();
     void checkLogicalCoords(int i, int j, int k) const;

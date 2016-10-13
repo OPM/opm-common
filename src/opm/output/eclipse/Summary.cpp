@@ -543,7 +543,7 @@ class Summary::keyword_handlers {
 };
 
 Summary::Summary( const EclipseState& st, const SummaryConfig& sum ) :
-    Summary( st, sum, st.getIOConfig()->fullBasePath().c_str() )
+    Summary( st, sum, st.getIOConfig().fullBasePath().c_str() )
 {}
 
 Summary::Summary( const EclipseState& st,
@@ -558,14 +558,14 @@ Summary::Summary( const EclipseState& st,
     ecl_sum(
             ecl_sum_alloc_writer(
                 basename,
-                st.getIOConfig()->getFMTOUT(),
-                st.getIOConfig()->getUNIFOUT(),
+                st.getIOConfig().getFMTOUT(),
+                st.getIOConfig().getUNIFOUT(),
                 ":",
-                st.getSchedule()->posixStartTime(),
+                st.getSchedule().posixStartTime(),
                 true,
-                st.getInputGrid()->getNX(),
-                st.getInputGrid()->getNY(),
-                st.getInputGrid()->getNZ()
+                st.getInputGrid().getNX(),
+                st.getInputGrid().getNY(),
+                st.getInputGrid().getNZ()
                 )
             ),
     handlers( new keyword_handlers() )
@@ -605,7 +605,7 @@ void Summary::add_timestep( int report_step,
     const double duration = secs_elapsed - this->prev_time_elapsed;
 
     const size_t timestep = report_step;
-    const auto& schedule = *es.getSchedule();
+    const auto& schedule = es.getSchedule();
 
     for( auto& f : this->handlers->handlers ) {
         const int num = smspec_node_get_num( f.first );

@@ -229,10 +229,9 @@ first_sim(test_work_area_type * test_area) {
     std::string eclipse_data_filename    = "FIRST_SIM.DATA";
     test_work_area_copy_file(test_area, eclipse_data_filename.c_str());
 
-    auto eclipseState = std::make_shared< EclipseState >(
-            Parser::parse( eclipse_data_filename ) );
+    auto eclipseState = Parser::parse( eclipse_data_filename );
 
-    const auto& grid = *eclipseState->getInputGrid();
+    const auto& grid = eclipseState.getInputGrid();
     auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
 
     EclipseWriter eclWriter( eclipseState, grid);
@@ -253,7 +252,7 @@ first_sim(test_work_area_type * test_area) {
 std::pair< data::Solution, data::Wells > second_sim() {
     auto eclipseState = Parser::parseData( input );
 
-    const auto& grid = *eclipseState.getInputGrid();
+    const auto& grid = eclipseState.getInputGrid();
     auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
 
     return init_from_restart_file( eclipseState, num_cells );

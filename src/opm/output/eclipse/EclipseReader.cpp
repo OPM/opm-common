@@ -156,16 +156,16 @@ std::pair< data::Solution, data::Wells >
 init_from_restart_file( const EclipseState& es, int numcells ) {
 
     const InitConfig& initConfig         = es.getInitConfig();
-    IOConfigConstPtr ioConfig            = es.getIOConfig();
+    const auto& ioConfig                 = es.getIOConfig();
     int restart_step                     = initConfig.getRestartStep();
     const std::string& restart_file_root = initConfig.getRestartRootName();
     bool output                          = false;
-    const std::string filename           = ioConfig->getRestartFileName(
+    const std::string filename           = ioConfig.getRestartFileName(
                                                         restart_file_root,
                                                         restart_step,
                                                         output);
-    const bool unified                   = ioConfig->getUNIFIN();
-    const int num_wells = es.getSchedule()->numWells( restart_step );
+    const bool unified                   = ioConfig.getUNIFIN();
+    const int num_wells = es.getSchedule().numWells( restart_step );
     const int num_phases = es.getTableManager().getNumPhases();
 
     using ft = ERT::ert_unique_ptr< ecl_file_type, ecl_file_close >;

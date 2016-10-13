@@ -86,16 +86,16 @@ BOOST_AUTO_TEST_CASE(Create2)
 BOOST_AUTO_TEST_CASE(UNITS) {
     std::vector<double> data(100,1);
     data::Solution c;
-    auto metric = std::unique_ptr<UnitSystem>( UnitSystem::newMETRIC() );
+    auto metric = UnitSystem::newMETRIC();
 
     c.insert("NAME", UnitSystem::measure::pressure, data , data::TargetType::RESTART_SOLUTION);
 
     double si0 = c.data("NAME")[0];
-    c.convertFromSI( *metric );
+    c.convertFromSI( metric );
     double metric0 = c.data("NAME")[0];
-    c.convertFromSI( *metric );
+    c.convertFromSI( metric );
     BOOST_CHECK_EQUAL( metric0 , c.data("NAME")[0] );
-    c.convertToSI( *metric );
+    c.convertToSI( metric );
     BOOST_CHECK_EQUAL( si0 , c.data("NAME")[0] );
 }
 
