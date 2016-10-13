@@ -141,6 +141,9 @@ namespace Opm {
             return const_iterator( m_properties.end() );
         }
 
+        /*
+         * storage MUST ensure that std::addressof(storage.at( key )) is valid.
+         */
         typedef typename std::map<std::string , GridProperty<T> > storage;
         typedef typename storage::const_iterator storage_iterator;
 
