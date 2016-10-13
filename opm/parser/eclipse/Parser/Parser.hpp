@@ -52,12 +52,11 @@ namespace Opm {
         static std::string stripComments(const std::string& inputString);
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
-        Deck parseFile(const std::string &dataFile, const ParseContext& parseContext) const;
-        Deck parseString(const std::string &data, const ParseContext& parseContext) const;
+        Deck parseFile(const std::string &dataFile,
+                       const ParseContext& = ParseContext()) const;
+        Deck parseString(const std::string &data,
+                         const ParseContext& = ParseContext()) const;
         Deck parseStream(std::unique_ptr<std::istream>&& inputStream , const ParseContext& parseContext) const;
-
-        Deck parseFile(const std::string &dataFile, bool strict = true) const;
-        Deck parseString(const std::string &data, bool strict = true) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(const Json::JsonObject& jsonKeyword);
