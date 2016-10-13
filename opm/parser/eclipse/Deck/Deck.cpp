@@ -192,11 +192,11 @@ namespace Opm {
          * marked mutable.
          */
 
-        this->defaultUnits = std::unique_ptr< UnitSystem >( UnitSystem::newMETRIC() );
+        this->defaultUnits = std::unique_ptr< UnitSystem >( new UnitSystem( UnitSystem::newMETRIC() ) );
         if (hasKeyword("FIELD"))
-            this->activeUnits = std::unique_ptr< UnitSystem >( UnitSystem::newFIELD() );
+            this->activeUnits = std::unique_ptr< UnitSystem >( new UnitSystem( UnitSystem::newFIELD() ) );
         else
-            this->activeUnits = std::unique_ptr< UnitSystem >( UnitSystem::newMETRIC() );
+            this->activeUnits = std::unique_ptr< UnitSystem >( new UnitSystem( UnitSystem::newMETRIC() ) );
     }
 
     const std::string Deck::getDataFile() const {

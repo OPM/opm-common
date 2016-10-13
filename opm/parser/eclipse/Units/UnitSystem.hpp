@@ -89,9 +89,9 @@ namespace Opm {
         void to_si( measure, std::vector<double>& ) const;
         const char* name( measure ) const;
 
-        static UnitSystem * newMETRIC();
-        static UnitSystem * newFIELD();
-        static UnitSystem * newLAB();
+        static UnitSystem newMETRIC();
+        static UnitSystem newFIELD();
+        static UnitSystem newLAB();
     private:
         Dimension parseFactor( const std::string& ) const;
 

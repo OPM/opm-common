@@ -451,88 +451,88 @@ namespace {
         return this->unit_name_table[ static_cast< int >( m ) ];
     }
 
-    UnitSystem * UnitSystem::newMETRIC() {
-        UnitSystem * system = new UnitSystem(UnitType::UNIT_TYPE_METRIC);
+    UnitSystem UnitSystem::newMETRIC() {
+        UnitSystem system( UnitType::UNIT_TYPE_METRIC );
 
-        system->addDimension("1"         , 1.0);
-        system->addDimension("Pressure"  , Metric::Pressure );
-        system->addDimension("Temperature", Metric::Temperature, Metric::TemperatureOffset);
-        system->addDimension("AbsoluteTemperature", Metric::AbsoluteTemperature);
-        system->addDimension("Length"    , Metric::Length);
-        system->addDimension("Time"      , Metric::Time );
-        system->addDimension("Mass"         , Metric::Mass );
-        system->addDimension("Permeability", Metric::Permeability );
-        system->addDimension("Transmissibility", Metric::Transmissibility );
-        system->addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
-        system->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
-        system->addDimension("LiquidSurfaceVolume", Metric::LiquidSurfaceVolume );
-        system->addDimension("GasSurfaceVolume" , Metric::GasSurfaceVolume );
-        system->addDimension("ReservoirVolume", Metric::ReservoirVolume );
-        system->addDimension("Density"   , Metric::Density );
-        system->addDimension("PolymerDensity", Metric::PolymerDensity);
-        system->addDimension("Salinity", Metric::Salinity);
-        system->addDimension("Viscosity" , Metric::Viscosity);
-        system->addDimension("Timestep"  , Metric::Timestep);
-        system->addDimension("SurfaceTension"  , Metric::SurfaceTension);
-        system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        system.addDimension("1"         , 1.0);
+        system.addDimension("Pressure"  , Metric::Pressure );
+        system.addDimension("Temperature", Metric::Temperature, Metric::TemperatureOffset);
+        system.addDimension("AbsoluteTemperature", Metric::AbsoluteTemperature);
+        system.addDimension("Length"    , Metric::Length);
+        system.addDimension("Time"      , Metric::Time );
+        system.addDimension("Mass"         , Metric::Mass );
+        system.addDimension("Permeability", Metric::Permeability );
+        system.addDimension("Transmissibility", Metric::Transmissibility );
+        system.addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
+        system.addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
+        system.addDimension("LiquidSurfaceVolume", Metric::LiquidSurfaceVolume );
+        system.addDimension("GasSurfaceVolume" , Metric::GasSurfaceVolume );
+        system.addDimension("ReservoirVolume", Metric::ReservoirVolume );
+        system.addDimension("Density"   , Metric::Density );
+        system.addDimension("PolymerDensity", Metric::PolymerDensity);
+        system.addDimension("Salinity", Metric::Salinity);
+        system.addDimension("Viscosity" , Metric::Viscosity);
+        system.addDimension("Timestep"  , Metric::Timestep);
+        system.addDimension("SurfaceTension"  , Metric::SurfaceTension);
+        system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 
 
 
-    UnitSystem * UnitSystem::newFIELD() {
-        UnitSystem * system = new UnitSystem(UnitType::UNIT_TYPE_FIELD);
+    UnitSystem UnitSystem::newFIELD() {
+        UnitSystem system( UnitType::UNIT_TYPE_FIELD );
 
-        system->addDimension("1"    , 1.0);
-        system->addDimension("Pressure", Field::Pressure );
-        system->addDimension("Temperature", Field::Temperature, Field::TemperatureOffset);
-        system->addDimension("AbsoluteTemperature", Field::AbsoluteTemperature);
-        system->addDimension("Length", Field::Length);
-        system->addDimension("Time" , Field::Time);
-        system->addDimension("Mass", Field::Mass);
-        system->addDimension("Permeability", Field::Permeability );
-        system->addDimension("Transmissibility", Field::Transmissibility );
-        system->addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
-        system->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
-        system->addDimension("LiquidSurfaceVolume", Field::LiquidSurfaceVolume );
-        system->addDimension("GasSurfaceVolume", Field::GasSurfaceVolume );
-        system->addDimension("ReservoirVolume", Field::ReservoirVolume );
-        system->addDimension("Density", Field::Density );
-        system->addDimension("PolymerDensity", Field::PolymerDensity);
-        system->addDimension("Salinity", Field::Salinity);
-        system->addDimension("Viscosity", Field::Viscosity);
-        system->addDimension("Timestep", Field::Timestep);
-        system->addDimension("SurfaceTension"  , Field::SurfaceTension);
-        system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        system.addDimension("1"    , 1.0);
+        system.addDimension("Pressure", Field::Pressure );
+        system.addDimension("Temperature", Field::Temperature, Field::TemperatureOffset);
+        system.addDimension("AbsoluteTemperature", Field::AbsoluteTemperature);
+        system.addDimension("Length", Field::Length);
+        system.addDimension("Time" , Field::Time);
+        system.addDimension("Mass", Field::Mass);
+        system.addDimension("Permeability", Field::Permeability );
+        system.addDimension("Transmissibility", Field::Transmissibility );
+        system.addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
+        system.addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
+        system.addDimension("LiquidSurfaceVolume", Field::LiquidSurfaceVolume );
+        system.addDimension("GasSurfaceVolume", Field::GasSurfaceVolume );
+        system.addDimension("ReservoirVolume", Field::ReservoirVolume );
+        system.addDimension("Density", Field::Density );
+        system.addDimension("PolymerDensity", Field::PolymerDensity);
+        system.addDimension("Salinity", Field::Salinity);
+        system.addDimension("Viscosity", Field::Viscosity);
+        system.addDimension("Timestep", Field::Timestep);
+        system.addDimension("SurfaceTension"  , Field::SurfaceTension);
+        system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 
 
 
-    UnitSystem * UnitSystem::newLAB() {
-        UnitSystem * system = new UnitSystem(UnitType::UNIT_TYPE_LAB);
+    UnitSystem UnitSystem::newLAB() {
+        UnitSystem system( UnitType::UNIT_TYPE_LAB );
 
-        system->addDimension("1"    , 1.0);
-        system->addDimension("Pressure", Lab::Pressure );
-        system->addDimension("Temperature", Lab::Temperature, Lab::TemperatureOffset);
-        system->addDimension("AbsoluteTemperature", Lab::AbsoluteTemperature);
-        system->addDimension("Length", Lab::Length);
-        system->addDimension("Time" , Lab::Time);
-        system->addDimension("Mass", Lab::Mass);
-        system->addDimension("Permeability", Lab::Permeability );
-        system->addDimension("Transmissibility", Lab::Transmissibility );
-        system->addDimension("GasDissolutionFactor" , Lab::GasDissolutionFactor);
-        system->addDimension("OilDissolutionFactor", Lab::OilDissolutionFactor);
-        system->addDimension("LiquidSurfaceVolume", Lab::LiquidSurfaceVolume );
-        system->addDimension("GasSurfaceVolume", Lab::GasSurfaceVolume );
-        system->addDimension("ReservoirVolume", Lab::ReservoirVolume );
-        system->addDimension("Density", Lab::Density );
-        system->addDimension("PolymerDensity", Lab::PolymerDensity);
-        system->addDimension("Salinity", Lab::Salinity);
-        system->addDimension("Viscosity", Lab::Viscosity);
-        system->addDimension("Timestep", Lab::Timestep);
-        system->addDimension("SurfaceTension"  , Lab::SurfaceTension);
-        system->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        system.addDimension("1"    , 1.0);
+        system.addDimension("Pressure", Lab::Pressure );
+        system.addDimension("Temperature", Lab::Temperature, Lab::TemperatureOffset);
+        system.addDimension("AbsoluteTemperature", Lab::AbsoluteTemperature);
+        system.addDimension("Length", Lab::Length);
+        system.addDimension("Time" , Lab::Time);
+        system.addDimension("Mass", Lab::Mass);
+        system.addDimension("Permeability", Lab::Permeability );
+        system.addDimension("Transmissibility", Lab::Transmissibility );
+        system.addDimension("GasDissolutionFactor" , Lab::GasDissolutionFactor);
+        system.addDimension("OilDissolutionFactor", Lab::OilDissolutionFactor);
+        system.addDimension("LiquidSurfaceVolume", Lab::LiquidSurfaceVolume );
+        system.addDimension("GasSurfaceVolume", Lab::GasSurfaceVolume );
+        system.addDimension("ReservoirVolume", Lab::ReservoirVolume );
+        system.addDimension("Density", Lab::Density );
+        system.addDimension("PolymerDensity", Lab::PolymerDensity);
+        system.addDimension("Salinity", Lab::Salinity);
+        system.addDimension("Viscosity", Lab::Viscosity);
+        system.addDimension("Timestep", Lab::Timestep);
+        system.addDimension("SurfaceTension"  , Lab::SurfaceTension);
+        system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 

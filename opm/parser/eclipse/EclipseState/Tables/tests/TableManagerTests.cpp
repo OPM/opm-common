@@ -361,14 +361,14 @@ VFPPROD \n\
 
     Opm::Parser parser;
     auto deck = parser.parseString(deckData, Opm::ParseContext());
-    std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+    auto units = Opm::UnitSystem::newMETRIC();
     const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
 
     BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
 
     Opm::VFPProdTable vfpprodTable;
 
-    vfpprodTable.init(vfpprodKeyword, *units);
+    vfpprodTable.init(vfpprodKeyword, units);
 
     BOOST_CHECK_EQUAL(vfpprodTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpprodTable.getDatumDepth(), 32.9);
@@ -489,13 +489,13 @@ VFPPROD \n\
     Opm::Parser parser;
     auto deck = parser.parseString(deckData, Opm::ParseContext());
     const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
-    std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+    auto units = Opm::UnitSystem::newMETRIC();
 
     BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
 
     Opm::VFPProdTable vfpprodTable;
 
-    vfpprodTable.init(vfpprodKeyword, *units);
+    vfpprodTable.init(vfpprodKeyword, units);
 
     BOOST_CHECK_EQUAL(vfpprodTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpprodTable.getDatumDepth(), 32.9);
@@ -601,13 +601,11 @@ VFPPROD \n\
         Opm::Parser parser;
         auto deck = parser.parseString(missing_values, Opm::ParseContext());
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
 
         Opm::VFPProdTable vfpprodTable;
-
-
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
     }
 
 
@@ -638,13 +636,13 @@ VFPPROD \n\
         Opm::Parser parser;
         auto deck = parser.parseString(missing_values, Opm::ParseContext());
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
 
         Opm::VFPProdTable vfpprodTable;
 
 
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
     }
 
 
@@ -673,13 +671,13 @@ VFPPROD \n\
         Opm::Parser parser;
         auto deck = parser.parseString(missing_metadata, Opm::ParseContext());
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
 
         Opm::VFPProdTable vfpprodTable;
 
 
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, *units), std::out_of_range);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::out_of_range);
     }
 
 
@@ -709,12 +707,12 @@ VFPPROD \n\
         Opm::Parser parser;
         auto deck = parser.parseString(wrong_metadata, Opm::ParseContext());
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
 
         Opm::VFPProdTable vfpprodTable;
 
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
     }
 
 
@@ -744,12 +742,12 @@ VFPPROD \n\
         Opm::Parser parser;
         auto deck = parser.parseString(missing_axes, Opm::ParseContext());
         const auto& vfpprodKeyword = deck.getKeyword("VFPPROD");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPPROD"), 1);
 
         Opm::VFPProdTable vfpprodTable;
 
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpprodKeyword, units), std::invalid_argument);
     }
 }
 
@@ -777,13 +775,13 @@ VFPINJ \n\
     Opm::Parser parser;
     auto deck = parser.parseString(deckData, Opm::ParseContext());
     const auto& vfpprodKeyword = deck.getKeyword("VFPINJ");
-    std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+    auto units = Opm::UnitSystem::newMETRIC();
 
     BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
 
     Opm::VFPInjTable vfpinjTable;
 
-    vfpinjTable.init(vfpprodKeyword, *units);
+    vfpinjTable.init(vfpprodKeyword, units);
 
     BOOST_CHECK_EQUAL(vfpinjTable.getTableNum(), 5);
     BOOST_CHECK_EQUAL(vfpinjTable.getDatumDepth(), 32.9);
@@ -879,13 +877,13 @@ VFPINJ \n\
         Opm::Parser parser;
         auto deck = parser.parseString(missing_values, Opm::ParseContext());
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
 
         Opm::VFPProdTable vfpprodTable;
 
 
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, units), std::invalid_argument);
     }
 
 
@@ -910,13 +908,11 @@ VFPINJ \n\
         Opm::Parser parser;
         auto deck = parser.parseString(missing_values, Opm::ParseContext());
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
 
         Opm::VFPProdTable vfpprodTable;
-
-
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, units), std::invalid_argument);
     }
 
 
@@ -940,13 +936,11 @@ VFPINJ \n\
         Opm::Parser parser;
         auto deck = parser.parseString(missing_metadata, Opm::ParseContext());
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
 
         Opm::VFPProdTable vfpprodTable;
-
-
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, units), std::invalid_argument);
     }
 
 
@@ -971,12 +965,12 @@ VFPINJ \n\
         Opm::Parser parser;
         auto deck = parser.parseString(wrong_metadata, Opm::ParseContext());
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units(Opm::UnitSystem::newMETRIC());
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
 
         Opm::VFPProdTable vfpprodTable;
 
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, units), std::invalid_argument);
     }
 
 
@@ -1001,12 +995,12 @@ VFPINJ \n\
         Opm::Parser parser;
         auto deck = parser.parseString(missing_axes, Opm::ParseContext());
         const auto& vfpinjKeyword = deck.getKeyword("VFPINJ");
-        std::shared_ptr<Opm::UnitSystem> units(Opm::UnitSystem::newMETRIC());
+        auto units = Opm::UnitSystem::newMETRIC();
         BOOST_CHECK_EQUAL(deck.count("VFPINJ"), 1);
 
         Opm::VFPProdTable vfpprodTable;
 
-        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, *units), std::invalid_argument);
+        BOOST_CHECK_THROW(vfpprodTable.init(vfpinjKeyword, units), std::invalid_argument);
     }
 }
 

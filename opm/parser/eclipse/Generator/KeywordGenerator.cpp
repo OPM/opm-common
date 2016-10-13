@@ -49,7 +49,7 @@ const std::string testHeader =
     "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>\n"
     "#include <opm/parser/eclipse/Units/UnitSystem.hpp>\n"
     "using namespace Opm;\n"
-    "std::shared_ptr<UnitSystem> unitSystem( UnitSystem::newMETRIC() );\n";
+    "auto unitSystem =  UnitSystem::newMETRIC();\n";
 
 const std::string sourceHeader =
     "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>\n"
@@ -239,7 +239,7 @@ namespace Opm {
             stream << "            ParserItemConstPtr item = parserRecord->get( i );" << std::endl;
             stream << "            for (size_t j=0; j < item->numDimensions(); j++) {" << std::endl;
             stream << "                std::string dimString = item->getDimension(j);" << std::endl;
-            stream << "                BOOST_CHECK_NO_THROW( unitSystem->getNewDimension( dimString ));" << std::endl;
+            stream << "                BOOST_CHECK_NO_THROW( unitSystem.getNewDimension( dimString ));" << std::endl;
             stream << "             }" << std::endl;
             stream << "        }" << std::endl;
             stream << "    }" << std::endl;

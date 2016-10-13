@@ -134,7 +134,7 @@ static void checkSystemHasRequiredDimensions( const UnitSystem& system) {
 
 
 BOOST_AUTO_TEST_CASE(CreateMetricSystem) {
-    auto system = *UnitSystem::newMETRIC();
+    auto system = UnitSystem::newMETRIC();
     checkSystemHasRequiredDimensions( system );
 
     BOOST_CHECK_EQUAL( Metric::Length       , system.getDimension("Length").getSIScaling() );
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(CreateMetricSystem) {
 
 
 BOOST_AUTO_TEST_CASE(CreateFieldSystem) {
-    auto system = *UnitSystem::newFIELD();
+    auto system = UnitSystem::newFIELD();
     checkSystemHasRequiredDimensions( system );
 
     BOOST_CHECK_EQUAL( Field::Length       , system.getDimension("Length").getSIScaling() );
@@ -180,9 +180,9 @@ inline std::ostream& operator<<( std::ostream& stream, const UnitSystem& us ) {
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemEqual) {
-    auto metric1 = *UnitSystem::newMETRIC();
-    auto metric2 = *UnitSystem::newMETRIC();
-    auto field = *UnitSystem::newFIELD();
+    auto metric1 = UnitSystem::newMETRIC();
+    auto metric2 = UnitSystem::newMETRIC();
+    auto field = UnitSystem::newFIELD();
 
     BOOST_CHECK_EQUAL( metric1, metric1 );
     BOOST_CHECK_EQUAL( metric1, metric2 );
@@ -197,12 +197,12 @@ BOOST_AUTO_TEST_CASE(UnitSystemEqual) {
 BOOST_AUTO_TEST_CASE(LabUnitConversions) {
     using Meas = UnitSystem::measure;
 
-    auto lab = std::unique_ptr<UnitSystem>( UnitSystem::newLAB() );
+    auto lab = UnitSystem::newLAB();
 
     {
         const auto furlong = 660*unit::feet;
-        BOOST_CHECK_CLOSE( 2.01168e4 , lab->from_si( Meas::length , furlong ) , 1.0e-10 );
-        BOOST_CHECK_CLOSE( furlong   , lab->to_si( Meas::length , 2.01168e4 ) , 1.0e-10 );
+        BOOST_CHECK_CLOSE( 2.01168e4 , lab.from_si( Meas::length , furlong ) , 1.0e-10 );
+        BOOST_CHECK_CLOSE( furlong   , lab.to_si( Meas::length , 2.01168e4 ) , 1.0e-10 );
     }
 
     struct Factor { Meas m; double f; };
@@ -215,8 +215,8 @@ BOOST_AUTO_TEST_CASE(LabUnitConversions) {
                            Factor{ Meas::time                  , 3600.0 }   ,
                            Factor{ Meas::mass                  , 1.0e-3 }   })
     {
-        BOOST_CHECK_CLOSE( q.f , lab->to_si( q.m , 1.0 )   , 1.0e-10 );
-        BOOST_CHECK_CLOSE( 1.0 , lab->from_si( q.m , q.f ) , 1.0e-10 );
+        BOOST_CHECK_CLOSE( q.f , lab.to_si( q.m , 1.0 )   , 1.0e-10 );
+        BOOST_CHECK_CLOSE( 1.0 , lab.from_si( q.m , q.f ) , 1.0e-10 );
     }
 }
 
@@ -224,11 +224,9 @@ BOOST_AUTO_TEST_CASE(LabUnitConversions) {
 BOOST_AUTO_TEST_CASE( VectorConvert ) {
     std::vector<double> d0 = {1,2,3};
     std::vector<double> d1 = {1,2,3};
-    UnitSystem * units = UnitSystem::newLAB();
+    UnitSystem units = UnitSystem::newLAB();
 
-    units->from_si( UnitSystem::measure::pressure , d0 );
+    units.from_si( UnitSystem::measure::pressure , d0 );
     for (size_t i = 0; i < d1.size(); i++)
-        BOOST_CHECK_EQUAL( units->from_si( UnitSystem::measure::pressure , d1[i] ) , d0[i]);
-
-    delete units;
+        BOOST_CHECK_EQUAL( units.from_si( UnitSystem::measure::pressure , d1[i] ) , d0[i]);
 }
