@@ -35,12 +35,34 @@ namespace Opm {
     class WellSet;
 
     namespace GroupInjection {
-        struct InjectionData;
+        struct InjectionData {
+            InjectionData( const TimeMap& );
+
+            DynamicState< Phase::PhaseEnum > phase;
+            DynamicState< GroupInjection::ControlEnum > controlMode;
+            DynamicState< double > rate;
+            DynamicState< double > surfaceFlowMaxRate;
+            DynamicState< double > reservoirFlowMaxRate;
+            DynamicState< double > targetReinjectFraction;
+            DynamicState< double > targetVoidReplacementFraction;
+        };
     }
 
 
     namespace GroupProduction {
-        struct ProductionData;
+        struct ProductionData {
+            ProductionData( const TimeMap& );
+
+            DynamicState< GroupProduction::ControlEnum > controlMode;
+            DynamicState< GroupProductionExceedLimit::ActionEnum > exceedAction;
+            DynamicState< double > oilTarget;
+            DynamicState< double > waterTarget;
+            DynamicState< double > gasTarget;
+            DynamicState< double > liquidTarget;
+            DynamicState< double > reservoirVolumeTarget;
+            DynamicState< double > efficiencyFactor;
+            DynamicState< int >    transferEfficiencyFactor;
+        };
     }
 
     class Group {
@@ -111,14 +133,12 @@ namespace Opm {
 
         size_t m_creationTimeStep;
         std::string m_name;
-        std::shared_ptr<GroupInjection::InjectionData> m_injection;
-        std::shared_ptr<GroupProduction::ProductionData> m_production;
-        std::shared_ptr<DynamicState<std::shared_ptr< const WellSet >> > m_wells;
+        GroupInjection::InjectionData m_injection;
+        GroupProduction::ProductionData m_production;
+        DynamicState<std::shared_ptr< const WellSet > > m_wells;
         DynamicState<int> m_isProductionGroup;
         DynamicState<int> m_isInjectionGroup;
     };
-    typedef std::shared_ptr<Group> GroupPtr;
-    typedef std::shared_ptr<const Group> GroupConstPtr;
 }
 
 

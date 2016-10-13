@@ -28,75 +28,34 @@
 
 
 namespace Opm {
-    namespace GroupProduction {
-        struct ProductionData {
-            ProductionData( const TimeMap& timeMap);
+    GroupProduction::ProductionData::ProductionData(const TimeMap& timeMap) :
+        controlMode( timeMap , GroupProduction::NONE ),
+        exceedAction( timeMap , GroupProductionExceedLimit::NONE ),
+        oilTarget( timeMap , INVALID_GROUP_RATE),
+        waterTarget( timeMap , INVALID_GROUP_RATE ),
+        gasTarget( timeMap , INVALID_GROUP_RATE ),
+        liquidTarget( timeMap , INVALID_GROUP_RATE ),
+        reservoirVolumeTarget( timeMap , INVALID_GROUP_RATE ),
+        efficiencyFactor( timeMap, INVALID_EFFICIENCY_FACTOR ),
+        transferEfficiencyFactor( timeMap, false )
+    {}
 
-            std::shared_ptr<DynamicState<GroupProduction::ControlEnum> > controlMode;
-            std::shared_ptr<DynamicState<GroupProductionExceedLimit::ActionEnum> > exceedAction;
-            std::shared_ptr<DynamicState<double> > oilTarget;
-            std::shared_ptr<DynamicState<double> > waterTarget;
-            std::shared_ptr<DynamicState<double> > gasTarget;
-            std::shared_ptr<DynamicState<double> > liquidTarget;
-            std::shared_ptr<DynamicState<double> > reservoirVolumeTarget;
-            std::shared_ptr<DynamicState<double> > efficiencyFactor;
-            std::shared_ptr<DynamicState<int> >    transferEfficiencyFactor;
-
-        };
-
-        ProductionData::ProductionData(const TimeMap& timeMap) :
-            controlMode( new DynamicState<GroupProduction::ControlEnum>(timeMap , GroupProduction::NONE)),
-            exceedAction( new DynamicState<GroupProductionExceedLimit::ActionEnum>(timeMap , GroupProductionExceedLimit::NONE)),
-            oilTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
-            waterTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
-            gasTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
-            liquidTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
-            reservoirVolumeTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
-            efficiencyFactor( new DynamicState<double>(timeMap, INVALID_EFFICIENCY_FACTOR)),
-            transferEfficiencyFactor( new DynamicState<int>(timeMap, false))
-        {
-
-        }
-    }
-
-
-
-
-    namespace GroupInjection {
-        struct InjectionData {
-            InjectionData( const TimeMap& timeMap);
-
-            std::shared_ptr<DynamicState<Phase::PhaseEnum> > phase;
-            std::shared_ptr<DynamicState<GroupInjection::ControlEnum> > controlMode;
-            std::shared_ptr<DynamicState<double> > rate;
-            std::shared_ptr<DynamicState<double> > surfaceFlowMaxRate;
-            std::shared_ptr<DynamicState<double> > reservoirFlowMaxRate;
-            std::shared_ptr<DynamicState<double> > targetReinjectFraction;
-            std::shared_ptr<DynamicState<double> > targetVoidReplacementFraction;
-        };
-
-        InjectionData::InjectionData(const TimeMap& timeMap) :
-            phase( new DynamicState<Phase::PhaseEnum>( timeMap , Phase::WATER )),
-            controlMode( new DynamicState<GroupInjection::ControlEnum>( timeMap , NONE )),
-            rate( new DynamicState<double>( timeMap , 0 )),
-            surfaceFlowMaxRate( new DynamicState<double>( timeMap , 0)),
-            reservoirFlowMaxRate( new DynamicState<double>( timeMap , 0)),
-            targetReinjectFraction( new DynamicState<double>( timeMap , 0)),
-            targetVoidReplacementFraction( new DynamicState<double>( timeMap , 0))
-        {
-
-        }
-    }
-
-
-
+    GroupInjection::InjectionData::InjectionData(const TimeMap& timeMap) :
+        phase( timeMap, Phase::WATER  ),
+        controlMode( timeMap, NONE  ),
+        rate( timeMap, 0  ),
+        surfaceFlowMaxRate( timeMap, 0 ),
+        reservoirFlowMaxRate( timeMap, 0 ),
+        targetReinjectFraction( timeMap, 0 ),
+        targetVoidReplacementFraction( timeMap, 0 )
+    {}
 
     /*****************************************************************/
 
     Group::Group(const std::string& name_, const TimeMap& timeMap , size_t creationTimeStep) :
-        m_injection( new GroupInjection::InjectionData(timeMap) ),
-        m_production( new GroupProduction::ProductionData( timeMap )),
-        m_wells( new DynamicState< std::shared_ptr< const WellSet > >( timeMap , std::make_shared< const WellSet >() ) ),
+        m_injection( timeMap ),
+        m_production( timeMap ),
+        m_wells( timeMap, std::make_shared< const WellSet >() ),
         m_isProductionGroup( timeMap, false),
         m_isInjectionGroup( timeMap, false)
     {
@@ -138,8 +97,8 @@ namespace Opm {
 
 
     void Group::setInjectionPhase(size_t time_step , Phase::PhaseEnum phase){
-        if (m_injection->phase->size() == time_step + 1) {
-            Phase::PhaseEnum currentPhase = m_injection->phase->get(time_step);
+        if (m_injection.phase.size() == time_step + 1) {
+            Phase::PhaseEnum currentPhase = m_injection.phase.get(time_step);
             /*
               The ECLIPSE documentation of the GCONINJE keyword seems
               to indicate that a group can inject more than one phase
@@ -161,154 +120,154 @@ namespace Opm {
             if (phase != currentPhase)
                 throw std::invalid_argument("Sorry - we currently do not support injecting multiple phases at the same time.");
         }
-        m_injection->phase->update( time_step , phase );
+        m_injection.phase.update( time_step , phase );
     }
 
     Phase::PhaseEnum Group::getInjectionPhase( size_t time_step ) const {
-        return m_injection->phase->get( time_step );
+        return m_injection.phase.get( time_step );
     }
 
     void Group::setInjectionRate( size_t time_step , double rate) {
-        m_injection->rate->update( time_step , rate);
+        m_injection.rate.update( time_step , rate);
     }
 
     double Group::getInjectionRate( size_t time_step ) const {
-        return m_injection->rate->get( time_step );
+        return m_injection.rate.get( time_step );
     }
 
     void Group::setInjectionControlMode(size_t time_step , GroupInjection::ControlEnum controlMode) {
-        m_injection->controlMode->update( time_step , controlMode );
+        m_injection.controlMode.update( time_step , controlMode );
     }
 
     GroupInjection::ControlEnum Group::getInjectionControlMode( size_t time_step) const {
-        return m_injection->controlMode->get( time_step );
+        return m_injection.controlMode.get( time_step );
     }
 
     void Group::setSurfaceMaxRate( size_t time_step , double rate) {
-        m_injection->surfaceFlowMaxRate->update( time_step , rate);
+        m_injection.surfaceFlowMaxRate.update( time_step , rate);
     }
 
     double Group::getSurfaceMaxRate( size_t time_step ) const {
-        return m_injection->surfaceFlowMaxRate->get( time_step );
+        return m_injection.surfaceFlowMaxRate.get( time_step );
     }
 
     void Group::setReservoirMaxRate( size_t time_step , double rate) {
-        m_injection->reservoirFlowMaxRate->update( time_step , rate);
+        m_injection.reservoirFlowMaxRate.update( time_step , rate);
     }
 
     double Group::getReservoirMaxRate( size_t time_step ) const {
-        return m_injection->reservoirFlowMaxRate->get( time_step );
+        return m_injection.reservoirFlowMaxRate.get( time_step );
     }
 
     void Group::setTargetReinjectFraction( size_t time_step , double rate) {
-        m_injection->targetReinjectFraction->update( time_step , rate);
+        m_injection.targetReinjectFraction.update( time_step , rate);
     }
 
     double Group::getTargetReinjectFraction( size_t time_step ) const {
-        return m_injection->targetReinjectFraction->get( time_step );
+        return m_injection.targetReinjectFraction.get( time_step );
     }
 
     void Group::setTargetVoidReplacementFraction( size_t time_step , double rate) {
-        m_injection->targetVoidReplacementFraction->update( time_step , rate);
+        m_injection.targetVoidReplacementFraction.update( time_step , rate);
     }
 
     double Group::getTargetVoidReplacementFraction( size_t time_step ) const {
-        return m_injection->targetVoidReplacementFraction->get( time_step );
+        return m_injection.targetVoidReplacementFraction.get( time_step );
     }
 
 
     /*****************************************************************/
 
     void Group::setProductionControlMode( size_t time_step , GroupProduction::ControlEnum controlMode) {
-        m_production->controlMode->update(time_step , controlMode );
+        m_production.controlMode.update(time_step , controlMode );
     }
 
     GroupProduction::ControlEnum Group::getProductionControlMode( size_t time_step ) const {
-        return m_production->controlMode->get(time_step);
+        return m_production.controlMode.get(time_step);
     }
 
 
     GroupProductionExceedLimit::ActionEnum Group::getProductionExceedLimitAction( size_t time_step ) const  {
-        return m_production->exceedAction->get(time_step);
+        return m_production.exceedAction.get(time_step);
     }
 
 
     void Group::setProductionExceedLimitAction( size_t time_step , GroupProductionExceedLimit::ActionEnum action) {
-        m_production->exceedAction->update(time_step , action);
+        m_production.exceedAction.update(time_step , action);
     }
 
 
     void Group::setOilTargetRate(size_t time_step , double oilTargetRate) {
-        m_production->oilTarget->update(time_step , oilTargetRate);
+        m_production.oilTarget.update(time_step , oilTargetRate);
     }
 
 
     double Group::getOilTargetRate(size_t time_step) const {
-        return m_production->oilTarget->get(time_step);
+        return m_production.oilTarget.get(time_step);
     }
 
 
     void Group::setGasTargetRate(size_t time_step , double gasTargetRate) {
-        m_production->gasTarget->update(time_step , gasTargetRate);
+        m_production.gasTarget.update(time_step , gasTargetRate);
     }
 
 
     double Group::getGasTargetRate(size_t time_step) const {
-        return m_production->gasTarget->get(time_step);
+        return m_production.gasTarget.get(time_step);
     }
 
 
     void Group::setWaterTargetRate(size_t time_step , double waterTargetRate) {
-        m_production->waterTarget->update(time_step , waterTargetRate);
+        m_production.waterTarget.update(time_step , waterTargetRate);
     }
 
 
     double Group::getWaterTargetRate(size_t time_step) const {
-        return m_production->waterTarget->get(time_step);
+        return m_production.waterTarget.get(time_step);
     }
 
 
     void Group::setLiquidTargetRate(size_t time_step , double liquidTargetRate) {
-        m_production->liquidTarget->update(time_step , liquidTargetRate);
+        m_production.liquidTarget.update(time_step , liquidTargetRate);
     }
 
 
     double Group::getLiquidTargetRate(size_t time_step) const {
-        return m_production->liquidTarget->get(time_step);
+        return m_production.liquidTarget.get(time_step);
     }
 
 
     void Group::setReservoirVolumeTargetRate(size_t time_step , double reservoirVolumeTargetRate) {
-        m_production->reservoirVolumeTarget->update(time_step , reservoirVolumeTargetRate);
+        m_production.reservoirVolumeTarget.update(time_step , reservoirVolumeTargetRate);
     }
 
 
     double Group::getReservoirVolumeTargetRate(size_t time_step) const {
-        return m_production->reservoirVolumeTarget->get(time_step);
+        return m_production.reservoirVolumeTarget.get(time_step);
     }
 
 
     void Group::setGroupEfficiencyFactor(size_t time_step, double factor) {
-        m_production->efficiencyFactor->update(time_step , factor);
+        m_production.efficiencyFactor.update(time_step , factor);
     }
 
     double Group::getGroupEfficiencyFactor(size_t time_step) const {
-        return m_production->efficiencyFactor->get(time_step);
+        return m_production.efficiencyFactor.get(time_step);
     }
 
     void  Group::setTransferGroupEfficiencyFactor(size_t time_step, bool transfer) {
-        m_production->transferEfficiencyFactor->update(time_step , transfer);
+        m_production.transferEfficiencyFactor.update(time_step , transfer);
     }
 
 
     bool  Group::getTransferGroupEfficiencyFactor(size_t time_step) const {
-        return m_production->transferEfficiencyFactor->get(time_step);
+        return m_production.transferEfficiencyFactor.get(time_step);
     }
 
     /*****************************************************************/
 
     std::shared_ptr< const WellSet > Group::wellMap(size_t time_step) const {
-        return m_wells->get(time_step);
+        return m_wells.get(time_step);
     }
 
 
@@ -334,7 +293,7 @@ namespace Opm {
         std::shared_ptr< WellSet > newWellSet( wellSet->shallowCopy() );
 
         newWellSet->addWell(well);
-        m_wells->update(time_step , newWellSet);
+        m_wells.update(time_step , newWellSet);
     }
 
 
@@ -343,10 +302,7 @@ namespace Opm {
         std::shared_ptr< WellSet > newWellSet( wellSet->shallowCopy() );
 
         newWellSet->delWell(wellName);
-        m_wells->update(time_step , newWellSet);
+        m_wells.update(time_step , newWellSet);
     }
 
 }
-
-
-
