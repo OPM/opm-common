@@ -47,9 +47,9 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE1");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,10);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck ));
-    const auto& timeMap = sched->getTimeMap();
-    BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched->getStartTime());
+    Schedule sched(parseContext , grid , deck );
+    const auto& timeMap = sched.getTimeMap();
+    BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched.getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap.size());
     BOOST_CHECK( deck.hasKeyword("NETBALAN") );
 }
@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMMENTS_AFTER_KEYWORDS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,10);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck ));
-    const auto& timeMap = sched->getTimeMap();
-    BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched->getStartTime());
+    Schedule sched(parseContext , grid , deck );
+    const auto& timeMap = sched.getTimeMap();
+    BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched.getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap.size());
 }
 
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MISSING_CMODE");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    BOOST_CHECK_NO_THROW( new Schedule(parseContext , grid , deck ) );
+    BOOST_CHECK_NO_THROW( Schedule(parseContext , grid , deck ) );
 }
 
 
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
 
-    BOOST_CHECK_THROW( new Schedule(parseContext , grid , deck ) , std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule(parseContext , grid , deck ) , std::invalid_argument );
 }
 
 
@@ -96,12 +96,12 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
     BOOST_CHECK_EQUAL(3, 3);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck ));
+    Schedule sched(parseContext , grid , deck );
     BOOST_CHECK_EQUAL(4, 4);
 
-    auto* well1 = sched->getWell("W_1");
-    auto* well2 = sched->getWell("W_2");
-    auto* well4 = sched->getWell("W_4");
+    auto* well1 = sched.getWell("W_1");
+    auto* well2 = sched.getWell("W_2");
+    auto* well4 = sched.getWell("W_4");
     BOOST_CHECK_EQUAL( well1->getRefDepth() , grid.getCellDepth( 29 , 36 , 0 ));
     BOOST_CHECK_EQUAL( well2->getRefDepth() , 100 );
     BOOST_CHECK_THROW( well4->getRefDepth() , std::invalid_argument );
@@ -114,20 +114,20 @@ BOOST_AUTO_TEST_CASE(WellTestOpen) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck ));
+    Schedule sched(parseContext , grid , deck );
 
-    auto well1 = sched->getWell( "W_1" );
-    auto well2 = sched->getWell( "W_2" );
-    auto well3 = sched->getWell( "W_3" );
+    auto well1 = sched.getWell( "W_1" );
+    auto well2 = sched.getWell( "W_2" );
+    auto well3 = sched.getWell( "W_3" );
 
     {
-        auto wells = sched->getOpenWells( 3 );
+        auto wells = sched.getOpenWells( 3 );
         BOOST_CHECK_EQUAL( 1U , wells.size() );
         BOOST_CHECK_EQUAL( well1 , wells[0] );
     }
 
     {
-        auto wells = sched->getOpenWells(6);
+        auto wells = sched.getOpenWells(6);
         BOOST_CHECK_EQUAL( 3U , wells.size() );
 
         BOOST_CHECK_EQUAL( well1 , wells[0] );
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(WellTestOpen) {
     }
 
     {
-        auto wells = sched->getOpenWells(12);
+        auto wells = sched.getOpenWells(12);
         BOOST_CHECK_EQUAL( 2U , wells.size() );
 
         BOOST_CHECK_EQUAL( well2 , wells[0] );
@@ -154,15 +154,15 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck ));
+    Schedule sched(parseContext , grid , deck );
 
-    BOOST_CHECK_EQUAL(4U, sched->numWells());
-    BOOST_CHECK(sched->hasWell("W_1"));
-    BOOST_CHECK(sched->hasWell("W_2"));
-    BOOST_CHECK(sched->hasWell("W_3"));
+    BOOST_CHECK_EQUAL(4U, sched.numWells());
+    BOOST_CHECK(sched.hasWell("W_1"));
+    BOOST_CHECK(sched.hasWell("W_2"));
+    BOOST_CHECK(sched.hasWell("W_3"));
 
     {
-        auto* well2 = sched->getWell("W_2");
+        auto* well2 = sched.getWell("W_2");
         BOOST_CHECK_EQUAL( 0 , well2->getProductionPropertiesCopy(2).ResVRate);
         BOOST_CHECK_CLOSE( 777/Metric::Time , well2->getProductionPropertiesCopy(7).ResVRate , 0.0001);
         BOOST_CHECK_EQUAL( 0 , well2->getProductionPropertiesCopy(8).ResVRate);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
 
 
     {
-        auto* well3 = sched->getWell("W_3");
+        auto* well3 = sched.getWell("W_3");
 
         BOOST_CHECK_EQUAL( WellCommon::AUTO , well3->getStatus(3));
         BOOST_CHECK_EQUAL( 0 , well3->getProductionPropertiesCopy(2).LiquidRate);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     }
 
     {
-        auto* well1 = sched->getWell("W_1");
+        auto* well1 = sched.getWell("W_1");
 
         BOOST_CHECK(well1->getProductionPropertiesCopy(0).predictionMode);
         BOOST_CHECK_EQUAL(0, well1->getProductionPropertiesCopy(0).OilRate);
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT_DEFAULTED_ITEMS) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    SchedulePtr sched(new Schedule(parseContext , grid, deck));
+    Schedule sched(parseContext , grid, deck);
 }
 
 
@@ -280,14 +280,14 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
-    BOOST_CHECK_EQUAL(4U, sched->numWells());
-    BOOST_CHECK(sched->hasWell("W_1"));
-    BOOST_CHECK(sched->hasWell("W_2"));
-    BOOST_CHECK(sched->hasWell("W_3"));
+    BOOST_CHECK_EQUAL(4U, sched.numWells());
+    BOOST_CHECK(sched.hasWell("W_1"));
+    BOOST_CHECK(sched.hasWell("W_2"));
+    BOOST_CHECK(sched.hasWell("W_3"));
     {
-        auto* well1 = sched->getWell("W_1");
+        auto* well1 = sched.getWell("W_1");
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionPropertiesCopy(8).OilRate , 0.0001);
         BOOST_CHECK_EQUAL(0U, well1->getCompletions( 0 ).size() );
 
@@ -310,26 +310,26 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GRUPTREE_EXPLICIT_PARENTING");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
-    GroupTreeNodePtr rootNode = sched->getGroupTree(0).getNode("FIELD");
+    const auto& rootNode = sched.getGroupTree(0).getNode("FIELD");
 
 
     BOOST_REQUIRE_EQUAL("FIELD", rootNode->name());
 
     BOOST_CHECK(rootNode->hasChildGroup("FIRST_LEVEL1"));
-    GroupTreeNodePtr FIRST_LEVEL1 = rootNode->getChildGroup("FIRST_LEVEL1");
+    const auto& FIRST_LEVEL1 = rootNode->getChildGroup("FIRST_LEVEL1");
     BOOST_CHECK(rootNode->hasChildGroup("FIRST_LEVEL2"));
-    GroupTreeNodePtr FIRST_LEVEL2 = rootNode->getChildGroup("FIRST_LEVEL2");
+    const auto& FIRST_LEVEL2 = rootNode->getChildGroup("FIRST_LEVEL2");
 
     BOOST_CHECK(FIRST_LEVEL1->hasChildGroup("SECOND_LEVEL1"));
-    GroupTreeNodePtr SECOND_LEVEL1 = FIRST_LEVEL1->getChildGroup("SECOND_LEVEL1");
+    const auto& SECOND_LEVEL1 = FIRST_LEVEL1->getChildGroup("SECOND_LEVEL1");
 
     BOOST_CHECK(FIRST_LEVEL2->hasChildGroup("SECOND_LEVEL2"));
-    GroupTreeNodePtr SECOND_LEVEL2 = FIRST_LEVEL2->getChildGroup("SECOND_LEVEL2");
+    FIRST_LEVEL2->getChildGroup("SECOND_LEVEL2");
 
     BOOST_CHECK(SECOND_LEVEL1->hasChildGroup("THIRD_LEVEL1"));
-    GroupTreeNodePtr THIRD_LEVEL1 = SECOND_LEVEL1->getChildGroup("THIRD_LEVEL1");
+    SECOND_LEVEL1->getChildGroup("THIRD_LEVEL1");
 }
 
 
@@ -339,15 +339,15 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GRUPTREE");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    SchedulePtr schedule(new Schedule(parseContext , grid , deck));
+    Schedule schedule(parseContext , grid , deck);
 
-    BOOST_CHECK( schedule->hasGroup( "FIELD" ));
-    BOOST_CHECK( schedule->hasGroup( "PROD" ));
-    BOOST_CHECK( schedule->hasGroup( "INJE" ));
-    BOOST_CHECK( schedule->hasGroup( "MANI-PROD" ));
-    BOOST_CHECK( schedule->hasGroup( "MANI-INJ" ));
-    BOOST_CHECK( schedule->hasGroup( "DUMMY-PROD" ));
-    BOOST_CHECK( schedule->hasGroup( "DUMMY-INJ" ));
+    BOOST_CHECK( schedule.hasGroup( "FIELD" ));
+    BOOST_CHECK( schedule.hasGroup( "PROD" ));
+    BOOST_CHECK( schedule.hasGroup( "INJE" ));
+    BOOST_CHECK( schedule.hasGroup( "MANI-PROD" ));
+    BOOST_CHECK( schedule.hasGroup( "MANI-INJ" ));
+    BOOST_CHECK( schedule.hasGroup( "DUMMY-PROD" ));
+    BOOST_CHECK( schedule.hasGroup( "DUMMY-INJ" ));
 }
 
 
@@ -358,25 +358,15 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) 
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    SchedulePtr schedule(new Schedule(parseContext , grid , deck));
+    Schedule schedule(parseContext , grid , deck);
 
     // Time 0, only from WELSPECS
-    GroupTreeNodeConstPtr root = schedule->getGroupTree(0).getNode("FIELD");
+    const auto& root0 = schedule.getGroupTree(0).getNode("FIELD");
+    BOOST_CHECK_EQUAL( 2U, std::distance( root0->begin(), root0->end() ) );
 
-    int iter_counted = 0;
-
-    for (auto iter=root->begin(); iter != root->end(); ++iter)
-        iter_counted++;
-
-    BOOST_CHECK_EQUAL(2, iter_counted);
     // Time 1, a new group added in tree
-    iter_counted = 0;
-
-    root = schedule->getGroupTree(1).getNode("FIELD");
-    for (auto iter=root->begin(); iter != root->end(); ++iter) {
-       iter_counted++;
-    }
-    BOOST_CHECK_EQUAL(3, iter_counted);
+    const auto& root1 = schedule.getGroupTree(1).getNode("FIELD");
+    BOOST_CHECK_EQUAL( 3U, std::distance( root1->begin(), root1->end() ) );
 }
 
 BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
@@ -385,42 +375,42 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    SchedulePtr schedule(new Schedule(parseContext , grid , deck));
+    Schedule schedule(parseContext , grid , deck);
 
     // Time 0, only from WELSPECS
-    GroupTreeNodePtr root0 = schedule->getGroupTree(0).getNode("FIELD");
+    const auto& root0 = schedule.getGroupTree(0).getNode("FIELD");
     BOOST_REQUIRE_EQUAL("FIELD", root0->name());
     BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
-    GroupTreeNodePtr GROUP_BJARNE = root0->getChildGroup("GROUP_BJARNE");
+    const auto& GROUP_BJARNE = root0->getChildGroup("GROUP_BJARNE");
     BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE->name());
 
     BOOST_CHECK(root0->hasChildGroup("GROUP_ODD"));
-    GroupTreeNodePtr GROUP_ODD = root0->getChildGroup("GROUP_ODD");
+    const auto& GROUP_ODD = root0->getChildGroup("GROUP_ODD");
     BOOST_CHECK_EQUAL("GROUP_ODD", GROUP_ODD->name());
 
     // Time 1, now also from GRUPTREE
-    GroupTreeNodePtr root1 = schedule->getGroupTree(1).getNode("FIELD");
+    const auto& root1 = schedule.getGroupTree(1).getNode("FIELD");
     BOOST_REQUIRE_EQUAL("FIELD", root1->name());
     BOOST_CHECK(root1->hasChildGroup("GROUP_BJARNE"));
-    GroupTreeNodePtr GROUP_BJARNE1 = root1->getChildGroup("GROUP_BJARNE");
+    const auto& GROUP_BJARNE1 = root1->getChildGroup("GROUP_BJARNE");
     BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE1->name());
 
     BOOST_CHECK(root1->hasChildGroup("GROUP_ODD"));
-    GroupTreeNodePtr GROUP_ODD1 = root1->getChildGroup("GROUP_ODD");
+    const auto& GROUP_ODD1 = root1->getChildGroup("GROUP_ODD");
     BOOST_CHECK_EQUAL("GROUP_ODD", GROUP_ODD1->name());
 
     // - from GRUPTREE
 
     BOOST_CHECK(GROUP_BJARNE1->hasChildGroup("GROUP_BIRGER"));
-    GroupTreeNodePtr GROUP_BIRGER = GROUP_BJARNE1->getChildGroup("GROUP_BIRGER");
+    const auto& GROUP_BIRGER = GROUP_BJARNE1->getChildGroup("GROUP_BIRGER");
     BOOST_CHECK_EQUAL("GROUP_BIRGER", GROUP_BIRGER->name());
 
     BOOST_CHECK(root1->hasChildGroup("GROUP_NEW"));
-    GroupTreeNodePtr GROUP_NEW = root1->getChildGroup("GROUP_NEW");
+    const auto& GROUP_NEW = root1->getChildGroup("GROUP_NEW");
     BOOST_CHECK_EQUAL("GROUP_NEW", GROUP_NEW->name());
 
     BOOST_CHECK(GROUP_NEW->hasChildGroup("GROUP_NILS"));
-    GroupTreeNodePtr GROUP_NILS = GROUP_NEW->getChildGroup("GROUP_NILS");
+    const auto& GROUP_NILS = GROUP_NEW->getChildGroup("GROUP_NILS");
     BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS->name());
 }
 
@@ -430,27 +420,27 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS_REPARENT");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    SchedulePtr schedule(new Schedule(parseContext , grid , deck));
+    Schedule schedule(parseContext , grid , deck);
 
 
     // Time , from  first GRUPTREE
-    GroupTreeNodePtr root0 = schedule->getGroupTree(0).getNode("FIELD");
+    const auto& root0 = schedule.getGroupTree(0).getNode("FIELD");
     BOOST_REQUIRE_EQUAL("FIELD", root0->name());
     BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
-    GroupTreeNodePtr GROUP_BJARNE0 = root0->getChildGroup("GROUP_BJARNE");
+    const auto& GROUP_BJARNE0 = root0->getChildGroup("GROUP_BJARNE");
     BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE0->name());
 
     BOOST_CHECK(root0->hasChildGroup("GROUP_NEW"));
-    GroupTreeNodePtr GROUP_NEW0 = root0->getChildGroup("GROUP_NEW");
+    const auto& GROUP_NEW0 = root0->getChildGroup("GROUP_NEW");
     BOOST_CHECK_EQUAL("GROUP_NEW", GROUP_NEW0->name());
 
 
     BOOST_CHECK(GROUP_BJARNE0->hasChildGroup("GROUP_BIRGER"));
-    GroupTreeNodePtr GROUP_BIRGER0 = GROUP_BJARNE0->getChildGroup("GROUP_BIRGER");
+    const auto& GROUP_BIRGER0 = GROUP_BJARNE0->getChildGroup("GROUP_BIRGER");
     BOOST_CHECK_EQUAL("GROUP_BIRGER", GROUP_BIRGER0->name());
 
     BOOST_CHECK(GROUP_NEW0->hasChildGroup("GROUP_NILS"));
-    GroupTreeNodePtr GROUP_NILS0 = GROUP_NEW0->getChildGroup("GROUP_NILS");
+    const auto& GROUP_NILS0 = GROUP_NEW0->getChildGroup("GROUP_NILS");
     BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS0->name());
 
     // SÅ den nye strukturen med et barneflytt
@@ -463,9 +453,9 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
-    const auto& rootNode = sched->getGroupTree(0);
+    const auto& rootNode = sched.getGroupTree(0);
     rootNode.printTree(std::cout);
 
 }
@@ -477,14 +467,14 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    SchedulePtr sched( new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
-    BOOST_CHECK_EQUAL( 3U , sched->numGroups() );
-    BOOST_CHECK( sched->hasGroup( "INJ" ));
-    BOOST_CHECK( sched->hasGroup( "OP" ));
+    BOOST_CHECK_EQUAL( 3U , sched.numGroups() );
+    BOOST_CHECK( sched.hasGroup( "INJ" ));
+    BOOST_CHECK( sched.hasGroup( "OP" ));
 
     {
-        auto& group = sched->getGroup("INJ");
+        auto& group = sched.getGroup("INJ");
         BOOST_CHECK_EQUAL( Phase::WATER , group.getInjectionPhase( 3 ));
         BOOST_CHECK_EQUAL( GroupInjection::VREP , group.getInjectionControlMode( 3 ));
         BOOST_CHECK_CLOSE( 10/Metric::Time , group.getSurfaceMaxRate( 3 ) , 0.001);
@@ -500,7 +490,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     }
 
     {
-        auto& group = sched->getGroup("OP");
+        auto& group = sched.getGroup("OP");
         BOOST_CHECK_EQUAL( GroupProduction::ORAT , group.getProductionControlMode(3));
         BOOST_CHECK_CLOSE( 10/Metric::Time , group.getOilTargetRate(3) , 0.001);
         BOOST_CHECK_CLOSE( 20/Metric::Time , group.getWaterTargetRate(3) , 0.001);
@@ -519,10 +509,10 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS_AND_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    SchedulePtr sched( new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
-    auto& group1 = sched->getGroup("GROUP1");
-    auto& group2 = sched->getGroup("GROUP2");
+    auto& group1 = sched.getGroup("GROUP1");
+    auto& group2 = sched.getGroup("GROUP2");
 
     BOOST_CHECK(  group1.hasBeenDefined(0) );
     BOOST_CHECK( !group2.hasBeenDefined(0));
@@ -546,26 +536,26 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
-    BOOST_CHECK_EQUAL(4U, sched->numWells());
-    BOOST_CHECK(sched->hasWell("W_1"));
-    BOOST_CHECK(sched->hasWell("W_2"));
-    BOOST_CHECK(sched->hasWell("W_3"));
+    BOOST_CHECK_EQUAL(4U, sched.numWells());
+    BOOST_CHECK(sched.hasWell("W_1"));
+    BOOST_CHECK(sched.hasWell("W_2"));
+    BOOST_CHECK(sched.hasWell("W_3"));
     {
-        const auto* well1 = sched->getWell("W_1");
+        const auto* well1 = sched.getWell("W_1");
         BOOST_CHECK(!well1->hasBeenDefined(2));
         BOOST_CHECK(well1->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(29, well1->getHeadI());
         BOOST_CHECK_EQUAL(36, well1->getHeadJ());
 
-        const auto* well2 = sched->getWell("W_2");
+        const auto* well2 = sched.getWell("W_2");
         BOOST_CHECK(!well2->hasBeenDefined(2));
         BOOST_CHECK(well2->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(19, well2->getHeadI());
         BOOST_CHECK_EQUAL(50, well2->getHeadJ());
 
-        const auto* well3 = sched->getWell("W_3");
+        const auto* well3 = sched.getWell("W_3");
         BOOST_CHECK(!well3->hasBeenDefined(2));
         BOOST_CHECK(well3->hasBeenDefined(3));
         BOOST_CHECK_EQUAL(30, well3->getHeadI());
@@ -579,7 +569,7 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECS_InvalidConfig_Throws) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELL_INVALID_WELSPECS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    BOOST_CHECK_THROW(new Schedule(parseContext , grid , deck), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(parseContext , grid , deck), std::invalid_argument);
 
 }
 
@@ -589,7 +579,7 @@ BOOST_AUTO_TEST_CASE(WellTestWELOPEN_ConfigWithIndexes_Throws) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELOPEN_INVALID");
     auto deck =  parser.parseFile(scheduleFile);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>(10,10,3);
-    BOOST_CHECK_THROW(new Schedule(grid , deck), std::logic_error);
+    BOOST_CHECK_THROW(Schedule(grid , deck), std::logic_error);
 }
 
 
@@ -598,15 +588,15 @@ BOOST_AUTO_TEST_CASE(WellTestWELOPENControlsSet) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELOPEN");
     auto deck =  parser.parseFile(scheduleFile);
     std::shared_ptr<const EclipseGrid> grid = std::make_shared<const EclipseGrid>( 10,10,10 );
-    SchedulePtr sched(new Schedule(grid , deck));
+    Schedule sched(grid , deck);
 
-    const auto* well1 = sched->getWell("W_1");
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched->getWell("W_1")->getStatus(0));
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, sched->getWell("W_1")->getStatus(1));
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched->getWell("W_1")->getStatus(2));
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::STOP, sched->getWell("W_1")->getStatus(3));
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::AUTO, sched->getWell("W_1")->getStatus(4));
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::STOP, sched->getWell("W_1")->getStatus(5));
+    const auto* well1 = sched.getWell("W_1");
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched.getWell("W_1")->getStatus(0));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, sched.getWell("W_1")->getStatus(1));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, sched.getWell("W_1")->getStatus(2));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::STOP, sched.getWell("W_1")->getStatus(3));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::AUTO, sched.getWell("W_1")->getStatus(4));
+    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::STOP, sched.getWell("W_1")->getStatus(5));
 }
 */
 
@@ -618,21 +608,21 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WGRUPCON");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,10);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
-    const auto* well1 = sched->getWell("W_1");
+    const auto* well1 = sched.getWell("W_1");
     BOOST_CHECK(well1->isAvailableForGroupControl(0));
     BOOST_CHECK_EQUAL(-1, well1->getGuideRate(0));
     BOOST_CHECK_EQUAL(GuideRate::OIL, well1->getGuideRatePhase(0));
     BOOST_CHECK_EQUAL(1.0, well1->getGuideRateScalingFactor(0));
 
-    const auto* well2 = sched->getWell("W_2");
+    const auto* well2 = sched.getWell("W_2");
     BOOST_CHECK(!well2->isAvailableForGroupControl(0));
     BOOST_CHECK_EQUAL(-1, well2->getGuideRate(0));
     BOOST_CHECK_EQUAL(GuideRate::UNDEFINED, well2->getGuideRatePhase(0));
     BOOST_CHECK_EQUAL(1.0, well2->getGuideRateScalingFactor(0));
 
-    const auto* well3 = sched->getWell("W_3");
+    const auto* well3 = sched.getWell("W_3");
     BOOST_CHECK(well3->isAvailableForGroupControl(0));
     BOOST_CHECK_EQUAL(100, well3->getGuideRate(0));
     BOOST_CHECK_EQUAL(GuideRate::RAT, well3->getGuideRatePhase(0));
@@ -657,8 +647,8 @@ COMPDAT \n\
 /\n";
     auto deck =  parser.parseString(deckString, parseContext);
     EclipseGrid grid(30,30,10);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
-    const auto* well = sched->getWell("W1");
+    Schedule sched(parseContext , grid , deck);
+    const auto* well = sched.getWell("W1");
     const auto& completions = well->getCompletions(0);
     BOOST_CHECK_EQUAL( 10 , completions.get(0).getI() );
     BOOST_CHECK_EQUAL( 20 , completions.get(0).getJ() );
@@ -675,7 +665,7 @@ BOOST_AUTO_TEST_CASE(OpmCode) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/wells_group.data");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    BOOST_CHECK_NO_THROW( new Schedule(parseContext , grid , deck) );
+    BOOST_CHECK_NO_THROW( Schedule(parseContext , grid , deck) );
 }
 
 
@@ -686,12 +676,12 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_SHUT_WELL");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(20,40,1);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
 
-    const auto* well1 = sched->getWell("W1");
-    const auto* well2 = sched->getWell("W2");
-    const auto* well3 = sched->getWell("W3");
+    const auto* well1 = sched.getWell("W1");
+    const auto* well2 = sched.getWell("W2");
+    const auto* well3 = sched.getWell("W3");
 
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well1->getStatus(1));
     BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well2->getStatus(1));
@@ -710,14 +700,14 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_POLYMER");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(30,30,30);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
 
-    BOOST_CHECK_EQUAL(4U, sched->numWells());
-    BOOST_CHECK(sched->hasWell("INJE01"));
-    BOOST_CHECK(sched->hasWell("PROD01"));
+    BOOST_CHECK_EQUAL(4U, sched.numWells());
+    BOOST_CHECK(sched.hasWell("INJE01"));
+    BOOST_CHECK(sched.hasWell("PROD01"));
 
-    const auto* well1 = sched->getWell("INJE01");
+    const auto* well1 = sched.getWell("INJE01");
     BOOST_CHECK( well1->isInjector(0));
     {
         const WellPolymerProperties& props_well10 = well1->getPolymerProperties(0);
@@ -728,7 +718,7 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
         BOOST_CHECK_CLOSE(0.1*Metric::PolymerDensity, props_well12.m_polymerConcentration, 0.0001);
     }
 
-    const auto* well2 = sched->getWell("INJE02");
+    const auto* well2 = sched.getWell("INJE02");
     BOOST_CHECK( well2->isInjector(0));
     {
         const WellPolymerProperties& props_well20 = well2->getPolymerProperties(0);
@@ -739,7 +729,7 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
         BOOST_CHECK_CLOSE(0.2*Metric::PolymerDensity, props_well22.m_polymerConcentration, 0.0001);
     }
 
-    const auto* well3 = sched->getWell("INJE03");
+    const auto* well3 = sched.getWell("INJE03");
     BOOST_CHECK( well3->isInjector(0));
     {
         const WellPolymerProperties& props_well30 = well3->getPolymerProperties(0);
@@ -758,14 +748,14 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WECON");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(30,30,30);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
+    Schedule sched(parseContext , grid , deck);
 
-    BOOST_CHECK_EQUAL(3U, sched->numWells());
-    BOOST_CHECK(sched->hasWell("INJE01"));
-    BOOST_CHECK(sched->hasWell("PROD01"));
-    BOOST_CHECK(sched->hasWell("PROD02"));
+    BOOST_CHECK_EQUAL(3U, sched.numWells());
+    BOOST_CHECK(sched.hasWell("INJE01"));
+    BOOST_CHECK(sched.hasWell("PROD01"));
+    BOOST_CHECK(sched.hasWell("PROD02"));
 
-    const auto* prod1 = sched->getWell("PROD01");
+    const auto* prod1 = sched.getWell("PROD01");
     {
         const WellEconProductionLimits& econ_limit1 = prod1->getEconProductionLimits(0);
         BOOST_CHECK(econ_limit1.onMinOilRate());
@@ -812,7 +802,7 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
         BOOST_CHECK(econ_limit2.onAnyEffectiveLimit());
     }
 
-    const auto* prod2 = sched->getWell("PROD02");
+    const auto* prod2 = sched.getWell("PROD02");
     {
         const WellEconProductionLimits& econ_limit1 = prod2->getEconProductionLimits(0);
         BOOST_CHECK(!(econ_limit1.onMinOilRate()));
@@ -868,8 +858,8 @@ BOOST_AUTO_TEST_CASE(TestEvents) {
 
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,40,30);
-    SchedulePtr sched(new Schedule(parseContext , grid , deck));
-    const Events& events = sched->getEvents();
+    Schedule sched(parseContext , grid , deck);
+    const Events& events = sched.getEvents();
 
     BOOST_CHECK(  events.hasEvent(ScheduleEvents::NEW_WELL , 0 ) );
     BOOST_CHECK( !events.hasEvent(ScheduleEvents::NEW_WELL , 1 ) );

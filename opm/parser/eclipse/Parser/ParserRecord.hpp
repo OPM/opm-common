@@ -54,9 +54,6 @@ namespace Opm {
         std::vector<std::shared_ptr< const ParserItem >> m_items;
         std::map<std::string , std::shared_ptr< const ParserItem >> m_itemMap;
     };
-
-    typedef std::shared_ptr<const ParserRecord> ParserRecordConstPtr;
-    typedef std::shared_ptr<ParserRecord> ParserRecordPtr;
 }
 
 

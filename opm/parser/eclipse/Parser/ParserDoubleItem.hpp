@@ -63,9 +63,6 @@ namespace Opm {
         double m_default;
         std::vector<std::string> m_dimensions;
     };
-
-    typedef std::shared_ptr<const ParserDoubleItem> ParserDoubleItemConstPtr;
-    typedef std::shared_ptr<ParserDoubleItem> ParserDoubleItemPtr;
 }
 
 #endif  /* PARSERINTITEM_HPP */

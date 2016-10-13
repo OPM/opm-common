@@ -100,15 +100,14 @@ BOOST_AUTO_TEST_CASE(get_byNameNonExisting_throws) {
 }
 
 BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
-    ParserStringItemPtr itemString(new ParserStringItem(std::string("STRINGITEM1")));
-    ParserRecordPtr record1(new ParserRecord());
+    auto itemString = std::make_shared< ParserStringItem >(std::string("STRINGITEM1"));
+    ParserRecord record1;
     RawRecord rawRecord( " ' VALUE ' " );
     ParseContext parseContext;
     MessageContainer msgContainer;
-    record1->addItem( itemString );
+    record1.addItem( itemString );
 
 
-    const auto deckRecord = record1->parse( parseContext , msgContainer, rawRecord );
+    const auto deckRecord = record1.parse( parseContext , msgContainer, rawRecord );
     BOOST_CHECK_EQUAL(" VALUE " , deckRecord.getItem(0).get< std::string >(0));
 }
-

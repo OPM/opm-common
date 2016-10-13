@@ -49,9 +49,6 @@ namespace Opm {
         std::string m_name;
         std::map<std::string, std::shared_ptr<GroupTreeNode> > m_childGroups;
     };
-
-    typedef std::shared_ptr<GroupTreeNode> GroupTreeNodePtr;
-    typedef std::shared_ptr<const GroupTreeNode> GroupTreeNodeConstPtr;
 }
 
 #endif	/* GROUPTREENODE_HPP */

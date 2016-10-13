@@ -596,8 +596,8 @@ BOOST_AUTO_TEST_CASE(scan_intsAndStrings_dataCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(ParserItemCheckEqualsOverride) {
-    ParserItemConstPtr itemDefault10( new ParserIntItem("ITEM" ,  10) );
-    ParserItemConstPtr itemDefault20( new ParserIntItem("ITEM" ,  20) );
+    auto itemDefault10 = std::make_shared< ParserIntItem >( "ITEM" ,  10 );
+    auto itemDefault20 = std::make_shared< ParserIntItem >( "ITEM" ,  20 );
 
     BOOST_CHECK( itemDefault10->equal( *itemDefault10 ));
     BOOST_CHECK_EQUAL( false , itemDefault10->equal( *itemDefault20 ));

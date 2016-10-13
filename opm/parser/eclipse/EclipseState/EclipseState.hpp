@@ -134,9 +134,6 @@ namespace Opm {
         MessageContainer m_messageContainer;
 
     };
-
-    typedef std::shared_ptr<EclipseState> EclipseStatePtr;
-    typedef std::shared_ptr<const EclipseState> EclipseStateConstPtr;
 }
 
 #endif // OPM_ECLIPSE_STATE_HPP

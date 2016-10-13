@@ -266,9 +266,9 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
     EclipseGrid grid(10,10,10);
     auto deck = deckWithGRUPTREE();
     Schedule schedule(ParseContext() , grid , deck );
-    GroupTreeNodePtr fieldNode = schedule.getGroupTree(0).getNode("FIELD");
+    const auto& fieldNode = schedule.getGroupTree(0).getNode("FIELD");
     BOOST_CHECK_EQUAL("FIELD", fieldNode->name());
-    GroupTreeNodePtr FAREN = fieldNode->getChildGroup("FAREN");
+    const auto& FAREN = fieldNode->getChildGroup("FAREN");
     BOOST_CHECK(FAREN->hasChildGroup("BARNET"));
 }
 

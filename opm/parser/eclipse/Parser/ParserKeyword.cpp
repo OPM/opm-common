@@ -313,20 +313,18 @@ namespace Opm {
                     switch (valueType) {
                     case INT:
                         {
-                            ParserIntItemConstPtr item = ParserIntItemConstPtr(new ParserIntItem(itemConfig));
-                            record->addItem( item );
+                            record->addItem( std::make_shared< ParserIntItem >( itemConfig ) );
                         }
                         break;
                     case STRING:
                         {
-                            ParserStringItemConstPtr item = ParserStringItemConstPtr(new ParserStringItem(itemConfig));
-                            record->addItem(item);
+                            record->addItem( std::make_shared< ParserStringItem >( itemConfig ) );
                         }
                         break;
                     case DOUBLE:
                         {
-                            ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem(itemConfig));
-                            initDoubleItemDimension( item , itemConfig );
+                            auto item = std::make_shared< ParserDoubleItem >( itemConfig );
+                            initDoubleItemDimension( item, itemConfig );
                             record->addItem(item);
                         }
                         break;
@@ -341,7 +339,7 @@ namespace Opm {
             throw std::invalid_argument("The 'items' JSON item missing must be an array in keyword "+getName()+".");
     }
 
-    void ParserKeyword::initDoubleItemDimension( ParserDoubleItemPtr item, const Json::JsonObject itemConfig) {
+    void ParserKeyword::initDoubleItemDimension( std::shared_ptr< ParserDoubleItem > item, const Json::JsonObject itemConfig) {
         if (itemConfig.has_item("dimension")) {
             const Json::JsonObject dimensionConfig = itemConfig.get_item("dimension");
             if (dimensionConfig.is_string())
@@ -372,7 +370,7 @@ namespace Opm {
             switch (valueType) {
                 case INT:
                 {
-                    ParserIntItemPtr item = ParserIntItemPtr(new ParserIntItem(itemName, ALL));
+                    auto item = std::make_shared< ParserIntItem >( itemName, ALL );
                     if (hasDefault) {
                         int defaultValue = dataConfig.get_int("default");
                         item->setDefault(defaultValue);
@@ -382,7 +380,7 @@ namespace Opm {
                 break;
                 case STRING:
                 {
-                    ParserStringItemPtr item = ParserStringItemPtr(new ParserStringItem(itemName, ALL));
+                    auto item = std::make_shared< ParserStringItem >(itemName, ALL);
                     if (hasDefault) {
                         std::string defaultValue = dataConfig.get_string("default");
                         item->setDefault(defaultValue);
@@ -392,7 +390,7 @@ namespace Opm {
                 break;
                 case DOUBLE:
                 {
-                    ParserDoubleItemPtr item = ParserDoubleItemPtr(new ParserDoubleItem(itemName, ALL));
+                    auto item = std::make_shared< ParserDoubleItem >(itemName, ALL);
                     if (hasDefault) {
                         double defaultValue = dataConfig.get_double("default");
                         item->setDefault(defaultValue);
@@ -409,16 +407,16 @@ namespace Opm {
             throw std::invalid_argument("The 'value_type' JSON item of keyword "+getName()+" is missing");
     }
 
-    ParserRecordPtr ParserKeyword::getRecord(size_t recordIndex) const {
+    std::shared_ptr< ParserRecord > ParserKeyword::getRecord(size_t recordIndex) const {
         return m_records.get( recordIndex );
     }
 
 
-    std::vector<ParserRecordPtr>::const_iterator ParserKeyword::recordBegin() const {
+    std::vector<std::shared_ptr< ParserRecord > >::const_iterator ParserKeyword::recordBegin() const {
         return m_records.begin();
     }
 
-    std::vector<ParserRecordPtr>::const_iterator ParserKeyword::recordEnd() const {
+    std::vector<std::shared_ptr< ParserRecord > >::const_iterator ParserKeyword::recordEnd() const {
         return m_records.end();
     }
 
@@ -473,7 +471,9 @@ namespace Opm {
         return m_deckNames.end();
     }
 
-    DeckKeyword ParserKeyword::parse(const ParseContext& parseContext , MessageContainer& msgContainer, RawKeywordPtr rawKeyword) const {
+    DeckKeyword ParserKeyword::parse(const ParseContext& parseContext,
+                                     MessageContainer& msgContainer,
+                                     std::shared_ptr< RawKeyword > rawKeyword) const {
         if( !rawKeyword->isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword->getKeywordName());
 
@@ -602,7 +602,7 @@ namespace Opm {
                 for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
                     std::shared_ptr<ParserRecord> record = *iter;
                     for (size_t i = 0; i < record->size(); i++) {
-                        ParserItemConstPtr item = record->get(i);
+                        const auto& item = record->get(i);
                         ss << std::endl;
                         item->inlineClass(ss , local_indent );
                     }
@@ -678,11 +678,11 @@ namespace Opm {
                     ss << indent << "{" << std::endl;
                     ss << local_indent << "std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();" << std::endl;
                     for (size_t i = 0; i < record->size(); i++) {
-                        ParserItemConstPtr item = record->get(i);
+                        const auto& item = record->get(i);
                         ss << local_indent << "{" << std::endl;
                         {
                             std::string indent3 = local_indent + "   ";
-                            ss << indent3 << "ParserItemPtr item(" << item->createCode() << ");" << std::endl;
+                            ss << indent3 << "std::shared_ptr< ParserItem > item(" << item->createCode() << ");" << std::endl;
                             ss << indent3 << "item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
                             for (size_t idim=0; idim < item->numDimensions(); idim++)
                                 ss << indent3 <<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
@@ -712,7 +712,7 @@ namespace Opm {
         for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
             std::shared_ptr<ParserRecord> record = *iter;
             for (size_t i = 0; i < record->size(); i++) {
-                ParserItemConstPtr item = record->get(i);
+                const auto& item = record->get(i);
                 ss << item->inlineClassInit(className());
             }
         }

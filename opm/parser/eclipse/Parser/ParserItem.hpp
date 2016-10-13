@@ -100,10 +100,6 @@ namespace Opm {
         std::string m_description;
     };
 
-    typedef std::shared_ptr<ParserItem> ParserItemPtr;
-    typedef std::shared_ptr<const ParserItem> ParserItemConstPtr;
-
-
 
     template<typename ParserItemType, typename ValueType>
     void ParserItemInlineClassDeclaration(const ParserItemType * self , std::ostream& os, const std::string& indent , const std::string& typeString) {

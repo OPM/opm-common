@@ -30,11 +30,11 @@ namespace Opm {
         return m_name;
     }
 
-    GroupTreeNodePtr GroupTreeNode::addChildGroup(const std::string& childName) {
+    std::shared_ptr< GroupTreeNode > GroupTreeNode::addChildGroup(const std::string& childName) {
         if (hasChildGroup(childName)) {
             throw std::invalid_argument("Child group with name \"" + childName + "\"already exists.");
         }
-        GroupTreeNodePtr child(new GroupTreeNode(childName));
+        std::shared_ptr< GroupTreeNode > child(new GroupTreeNode(childName));
         m_childGroups[childName] = child;
         return child;
     }
@@ -47,7 +47,7 @@ namespace Opm {
     }
 
 
-    void GroupTreeNode::removeChild(GroupTreeNodePtr child) {
+    void GroupTreeNode::removeChild(std::shared_ptr< GroupTreeNode > child) {
         if (!hasChildGroup(child->name())) {
             throw std::invalid_argument("The node " + m_name + " does not have a child named " + child->name());
         }
@@ -58,15 +58,15 @@ namespace Opm {
         return m_childGroups.find(childName) != m_childGroups.end();
     }
 
-    GroupTreeNodePtr GroupTreeNode::getChildGroup(const std::string& childName) {
+    std::shared_ptr< GroupTreeNode > GroupTreeNode::getChildGroup(const std::string& childName) {
         if (hasChildGroup(childName)) {
             return m_childGroups[childName];
         }
         throw std::invalid_argument("Child group with name \"" + childName + "\" does not exist.");
     }
 
-    GroupTreeNodePtr GroupTreeNode::createFieldNode() {
-        return GroupTreeNodePtr(new GroupTreeNode("FIELD"));
+    std::shared_ptr< GroupTreeNode > GroupTreeNode::createFieldNode() {
+        return std::shared_ptr< GroupTreeNode >(new GroupTreeNode("FIELD"));
     }
 
     std::map<std::string, std::shared_ptr<GroupTreeNode> >::const_iterator GroupTreeNode::begin() const {

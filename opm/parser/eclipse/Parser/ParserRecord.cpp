@@ -36,7 +36,7 @@ namespace Opm {
         return m_items.size();
     }
 
-    void ParserRecord::addItem(ParserItemConstPtr item) {
+    void ParserRecord::addItem(std::shared_ptr< const ParserItem > item) {
         if (m_dataRecord)
             throw std::invalid_argument("Record is already marked as DataRecord - can not add items");
 
@@ -47,7 +47,7 @@ namespace Opm {
             throw std::invalid_argument("Itemname: " + item->name() + " already exists.");
     }
 
-    void ParserRecord::addDataItem(ParserItemConstPtr item) {
+    void ParserRecord::addDataItem(std::shared_ptr< const ParserItem > item) {
         if (m_items.size() > 0)
             throw std::invalid_argument("Record already contains items - can not add Data Item");
 
@@ -57,12 +57,12 @@ namespace Opm {
 
 
 
-    std::vector<ParserItemConstPtr>::const_iterator ParserRecord::begin() const {
+    std::vector< std::shared_ptr< const ParserItem > >::const_iterator ParserRecord::begin() const {
         return m_items.begin();
     }
 
 
-    std::vector<ParserItemConstPtr>::const_iterator ParserRecord::end() const {
+    std::vector< std::shared_ptr< const ParserItem > >::const_iterator ParserRecord::end() const {
         return m_items.end();
     }
 
@@ -94,7 +94,7 @@ namespace Opm {
     }
 
 
-    ParserItemConstPtr ParserRecord::get(size_t index) const {
+    std::shared_ptr< const ParserItem > ParserRecord::get(size_t index) const {
         if (index < m_items.size())
             return m_items[ index ];
         else
@@ -108,13 +108,8 @@ namespace Opm {
             return true;
     }
 
-    ParserItemConstPtr ParserRecord::get(const std::string& itemName) const {
-        if (m_itemMap.find(itemName) == m_itemMap.end())
-            throw std::invalid_argument("Itemname: " + itemName + " does not exist.");
-        else {
-            std::map<std::string, ParserItemConstPtr>::const_iterator theItem = m_itemMap.find(itemName);
-            return (*theItem).second;
-        }
+    std::shared_ptr< const ParserItem > ParserRecord::get(const std::string& itemName) const {
+        return this->m_itemMap.at( itemName );
     }
 
     DeckRecord ParserRecord::parse(const ParseContext& parseContext , MessageContainer& msgContainer, RawRecord& rawRecord ) const {
@@ -141,8 +136,8 @@ namespace Opm {
                if (itemIndex == size())
                    break;
                {
-                   ParserItemConstPtr item = get(itemIndex);
-                   ParserItemConstPtr otherItem = other.get(itemIndex);
+                   const auto& item = get(itemIndex);
+                   const auto& otherItem = other.get(itemIndex);
 
                    if (!item->equal(*otherItem)) {
                        equal_ = false;

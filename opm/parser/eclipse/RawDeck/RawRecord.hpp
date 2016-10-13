@@ -59,8 +59,6 @@ namespace Opm {
 
         void setRecordString(const std::string& singleRecordString);
     };
-    typedef std::shared_ptr<RawRecord> RawRecordPtr;
-    typedef std::shared_ptr<const RawRecord> RawRecordConstPtr;
 
     /*
      * These are frequently called, but fairly trivial in implementation, and

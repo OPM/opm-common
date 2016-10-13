@@ -127,10 +127,6 @@ namespace Opm {
         void addItems( const Json::JsonObject& jsonConfig);
         void initDoubleItemDimension( std::shared_ptr< ParserDoubleItem > item, const Json::JsonObject itemConfig);
     };
-
-    typedef std::shared_ptr<ParserKeyword> ParserKeywordPtr;
-    typedef std::shared_ptr<const ParserKeyword> ParserKeywordConstPtr;
-
 }
 
 #endif

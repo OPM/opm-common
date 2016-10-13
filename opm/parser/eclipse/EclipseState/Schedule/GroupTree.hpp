@@ -36,9 +36,9 @@ namespace Opm {
         void updateTree(const std::string& childName);
         void updateTree(const std::string& childName, const std::string& parentName);
 
-        GroupTreeNodePtr getNode(const std::string& nodeName) const;
-        std::vector<GroupTreeNodeConstPtr> getNodes() const;
-        GroupTreeNodePtr getParent(const std::string& childName) const;
+        std::shared_ptr< GroupTreeNode > getNode(const std::string& nodeName) const;
+        std::vector<std::shared_ptr< const GroupTreeNode >> getNodes() const;
+        std::shared_ptr< GroupTreeNode > getParent(const std::string& childName) const;
 
         std::shared_ptr<GroupTree> deepCopy() const;
         void printTree(std::ostream &os) const;
@@ -53,17 +53,15 @@ namespace Opm {
 
 
     private:
-        GroupTreeNodePtr m_root;
-        GroupTreeNodePtr getNode(const std::string& nodeName, GroupTreeNodePtr current) const;
-        GroupTreeNodePtr getParent(const std::string& childName, GroupTreeNodePtr currentChild, GroupTreeNodePtr parent) const;
+        std::shared_ptr< GroupTreeNode > m_root;
+        std::shared_ptr< GroupTreeNode > getNode(const std::string& nodeName, std::shared_ptr< GroupTreeNode > current) const;
+        std::shared_ptr< GroupTreeNode > getParent(const std::string& childName, std::shared_ptr< GroupTreeNode > currentChild, std::shared_ptr< GroupTreeNode > parent) const;
 
-        void getNodes(GroupTreeNodePtr fromNode, std::vector<GroupTreeNodeConstPtr>& nodes) const;
-        void deepCopy(GroupTreeNodePtr origin, GroupTreeNodePtr copy) const;
-        void printTree(std::ostream &os , GroupTreeNodePtr fromNode) const;
+        void getNodes(std::shared_ptr< GroupTreeNode > fromNode,
+                      std::vector< std::shared_ptr< const GroupTreeNode > >& nodes) const;
+        void deepCopy(std::shared_ptr< GroupTreeNode > origin, std::shared_ptr< GroupTreeNode > copy) const;
+        void printTree(std::ostream &os , std::shared_ptr< GroupTreeNode > fromNode) const;
     };
-
-    typedef std::shared_ptr<GroupTree> GroupTreePtr;
-    typedef std::shared_ptr<const GroupTree> GroupTreeConstPtr;
 }
 
 #endif	/* GROUPTREE_HPP */

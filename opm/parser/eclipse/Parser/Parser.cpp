@@ -226,7 +226,7 @@ class ParserState {
         boost::filesystem::path rootPath;
 
     public:
-        RawKeywordPtr rawKeyword;
+        std::shared_ptr< RawKeyword > rawKeyword;
         string_view nextKeyword = emptystr;
         Deck deck;
         const ParseContext& parseContext;
@@ -758,7 +758,6 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
         try {
             Json::JsonObject jsonKeyword(configFile);
-            ParserKeywordConstPtr parserKeyword = std::make_shared<const ParserKeyword>(jsonKeyword);
             addParserKeyword( std::unique_ptr< ParserKeyword >( new ParserKeyword( jsonKeyword ) ) );
             return true;
         }

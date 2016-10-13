@@ -29,50 +29,50 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(CreateFieldNode) {
-    GroupTreeNodePtr node = GroupTreeNode::createFieldNode();
+    auto node = GroupTreeNode::createFieldNode();
     BOOST_CHECK_EQUAL("FIELD", node->name());
 }
 
 BOOST_AUTO_TEST_CASE(CreateChild_WithFieldParent_ParentHasChild) {
-    GroupTreeNodePtr fieldNode = GroupTreeNode::createFieldNode();
+    auto fieldNode = GroupTreeNode::createFieldNode();
     BOOST_CHECK(!fieldNode->hasChildGroup("Child"));
-    GroupTreeNodePtr child = fieldNode->addChildGroup("Child");
+    auto child = fieldNode->addChildGroup("Child");
     BOOST_REQUIRE(fieldNode->hasChildGroup("Child"));
     BOOST_CHECK_EQUAL(child, fieldNode->getChildGroup("Child"));
 }
 
 BOOST_AUTO_TEST_CASE(CreateChildGroup_ChildExists_Throws) {
-    GroupTreeNodePtr fieldNode = GroupTreeNode::createFieldNode();
-    GroupTreeNodePtr child = fieldNode->addChildGroup("Child");
+    auto fieldNode = GroupTreeNode::createFieldNode();
+    auto child = fieldNode->addChildGroup("Child");
     BOOST_CHECK_THROW(fieldNode->addChildGroup("Child"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(GetChildGroup_ChildNotExisting_Throws) {
-    GroupTreeNodePtr fieldNode = GroupTreeNode::createFieldNode();
-    GroupTreeNodePtr child = fieldNode->addChildGroup("Child2");
+    auto fieldNode = GroupTreeNode::createFieldNode();
+    auto child = fieldNode->addChildGroup("Child2");
     BOOST_CHECK_THROW(fieldNode->getChildGroup("Child"), std::invalid_argument);
 }
 
 
 BOOST_AUTO_TEST_CASE(RemoveChild_ChildNonExisting_Throws) {
-    GroupTreeNodePtr fieldNodeDummy = GroupTreeNode::createFieldNode();
-    GroupTreeNodePtr fieldNode = GroupTreeNode::createFieldNode();
-    GroupTreeNodePtr child = fieldNode->addChildGroup("Child1");
+    auto fieldNodeDummy = GroupTreeNode::createFieldNode();
+    auto fieldNode = GroupTreeNode::createFieldNode();
+    auto child = fieldNode->addChildGroup("Child1");
     BOOST_CHECK_THROW(fieldNode->removeChild(fieldNodeDummy), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(RemoveChild_RemoveTwice_Throws) {
-    GroupTreeNodePtr fieldNodeDummy = GroupTreeNode::createFieldNode();
-    GroupTreeNodePtr fieldNode = GroupTreeNode::createFieldNode();
-    GroupTreeNodePtr child = fieldNode->addChildGroup("Child1");
+    auto fieldNodeDummy = GroupTreeNode::createFieldNode();
+    auto fieldNode = GroupTreeNode::createFieldNode();
+    auto child = fieldNode->addChildGroup("Child1");
     BOOST_CHECK_NO_THROW(fieldNode->removeChild(child));;
     BOOST_CHECK_THROW(fieldNode->removeChild(child), std::invalid_argument);
 
 }
 
 BOOST_AUTO_TEST_CASE(RemoveChild_ChildExists_ChildRemoved) {
-    GroupTreeNodePtr fieldNode = GroupTreeNode::createFieldNode();
-    GroupTreeNodePtr child = fieldNode->addChildGroup("Child1");
+    auto fieldNode = GroupTreeNode::createFieldNode();
+    auto child = fieldNode->addChildGroup("Child1");
     BOOST_CHECK_NO_THROW(fieldNode->removeChild(child));
     BOOST_CHECK(!fieldNode->hasChildGroup("Child1"));
 }

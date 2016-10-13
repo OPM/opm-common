@@ -56,9 +56,6 @@ namespace Opm {
     private:
         int  m_default;
     };
-
-    typedef std::shared_ptr< ParserIntItem > ParserIntItemPtr;
-    typedef std::shared_ptr< const ParserIntItem > ParserIntItemConstPtr;
 }
 
 #endif  /* PARSERINTITEM_HPP */

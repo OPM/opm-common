@@ -91,9 +91,6 @@ namespace Opm {
         void setKeywordName(const std::string& keyword);
         static bool isValidKeyword(const std::string& keywordCandidate);
     };
-    typedef std::shared_ptr<RawKeyword> RawKeywordPtr;
-    typedef std::shared_ptr<const RawKeyword> RawKeywordConstPtr;
-
 }
 #endif  /* RAWKEYWORD_HPP */
 

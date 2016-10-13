@@ -53,11 +53,11 @@ std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw) {
 
 Parser createWWCTParser() {
     auto parserKeyword = createDynamicSized("WWCT");
-    {
-        std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
-        record->addItem( ParserStringItemConstPtr(new ParserStringItem("WELL", ALL)) );
-        parserKeyword->addRecord( record );
-    }
+
+    auto record = std::make_shared< ParserRecord >();
+    record->addItem( std::make_shared< ParserStringItem >("WELL", ALL) );
+    parserKeyword->addRecord( record );
+
     auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
 
     Parser parser;
@@ -141,9 +141,9 @@ static Parser createBPRParser() {
     auto parserKeyword = createDynamicSized("BPR");
     {
         std::shared_ptr<ParserRecord> bprRecord = std::make_shared<ParserRecord>();
-        bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("I", SINGLE)));
-        bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("J", SINGLE)));
-        bprRecord->addItem(ParserIntItemConstPtr(new ParserIntItem("K", SINGLE)));
+        bprRecord->addItem( std::make_shared< ParserIntItem >("I", SINGLE));
+        bprRecord->addItem( std::make_shared< ParserIntItem >("J", SINGLE));
+        bprRecord->addItem( std::make_shared< ParserIntItem >("K", SINGLE));
         parserKeyword->addRecord( bprRecord );
     }
     auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
@@ -229,9 +229,9 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     BOOST_CHECK_EQUAL(lastItem_1.get< int >(0), 1);
 
     auto* parserKeyword = parser.getParserKeywordFromDeckName("RADFIN4");
-    ParserRecordConstPtr parserRecord = parserKeyword->getRecord(0);
-    ParserItemConstPtr nwmaxItem = parserRecord->get("NWMAX");
-    ParserIntItemConstPtr intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);
+    const auto& parserRecord = parserKeyword->getRecord(0);
+    const auto& nwmaxItem = parserRecord->get("NWMAX");
+    auto intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);
 
     BOOST_CHECK_EQUAL(18, radfin4_0_full.getRecord(0).getItem(10).get< int >(0));
     BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_1_partial.getRecord(0).getItem(10).get< int >(0));

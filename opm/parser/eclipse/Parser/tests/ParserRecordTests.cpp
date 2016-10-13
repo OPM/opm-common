@@ -41,176 +41,156 @@ BOOST_AUTO_TEST_CASE(DefaultConstructor_NoParams_NoThrow) {
     BOOST_CHECK_NO_THROW(ParserRecord record);
 }
 
-BOOST_AUTO_TEST_CASE(InitSharedPointer_NoThrow) {
-    BOOST_CHECK_NO_THROW(ParserRecordConstPtr ptr(new ParserRecord()));
-    BOOST_CHECK_NO_THROW(ParserRecordPtr ptr(new ParserRecord()));
-}
-
 BOOST_AUTO_TEST_CASE(Size_NoElements_ReturnsZero) {
     ParserRecord record;
     BOOST_CHECK_EQUAL(0U, record.size());
 }
 
 BOOST_AUTO_TEST_CASE(Size_OneItem_Return1) {
-    ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt(new ParserIntItem("ITEM1", sizeType));
-    ParserRecordPtr record(new ParserRecord());
-    record->addItem(itemInt);
-    BOOST_CHECK_EQUAL(1U, record->size());
+    auto itemInt = std::make_shared< ParserIntItem >("ITEM1", SINGLE );
+    ParserRecord record;
+    record.addItem(itemInt);
+    BOOST_CHECK_EQUAL(1U, record.size());
 }
 
 BOOST_AUTO_TEST_CASE(Get_OneItem_Return1) {
-    ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt(new ParserIntItem("ITEM1", sizeType));
-    ParserRecordPtr record(new ParserRecord());
-    record->addItem(itemInt);
-    {
-        ParserItemConstPtr item = record->get(0);
-        BOOST_CHECK_EQUAL(item, itemInt);
-    }
+    auto itemInt = std::make_shared< ParserIntItem >("ITEM1", SINGLE);
+    ParserRecord record;
+    record.addItem(itemInt);
+
+    BOOST_CHECK_EQUAL(record.get(0), itemInt);
 }
 
 BOOST_AUTO_TEST_CASE(Get_outOfRange_Throw) {
-    ParserRecordConstPtr record(new ParserRecord());
-    BOOST_CHECK_THROW(record->get(0), std::out_of_range);
+    BOOST_CHECK_THROW(ParserRecord{}.get(0), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(Get_KeyNotFound_Throw) {
-    ParserRecordPtr record(new ParserRecord());
-    BOOST_CHECK_THROW(record->get("Hei"), std::invalid_argument);
+    ParserRecord record;
+    BOOST_CHECK_THROW(record.get("Hei"), std::out_of_range );
 }
 
 BOOST_AUTO_TEST_CASE(Get_KeyFound_OK) {
-    ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt(new ParserIntItem("ITEM1", sizeType));
-    ParserRecordPtr record(new ParserRecord());
-    record->addItem(itemInt);
-    {
-        ParserItemConstPtr item = record->get("ITEM1");
-        BOOST_CHECK_EQUAL(item, itemInt);
-    }
+    auto itemInt = std::make_shared< ParserIntItem >("ITEM1", SINGLE );
+    ParserRecord record;
+    record.addItem(itemInt);
+    BOOST_CHECK_EQUAL(record.get("ITEM1"), itemInt);
 }
 
 BOOST_AUTO_TEST_CASE(Get_GetByNameAndIndex_OK) {
-    ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt(new ParserIntItem("ITEM1", sizeType));
-    ParserRecordPtr record(new ParserRecord());
-    record->addItem(itemInt);
-    {
-        ParserItemConstPtr itemByName = record->get("ITEM1");
-        ParserItemConstPtr itemByIndex = record->get(0);
-        BOOST_CHECK_EQUAL(itemInt, itemByName);
-        BOOST_CHECK_EQUAL(itemInt, itemByIndex);
-    }
+    auto itemInt = std::make_shared< ParserIntItem >("ITEM1", SINGLE);
+    ParserRecord record;
+    record.addItem(itemInt);
+
+    const auto& itemByName = record.get("ITEM1");
+    const auto& itemByIndex = record.get(0);
+    BOOST_CHECK_EQUAL(itemInt, itemByName);
+    BOOST_CHECK_EQUAL(itemInt, itemByIndex);
 }
 
 BOOST_AUTO_TEST_CASE(addItem_SameName_Throw) {
-    ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt1(new ParserIntItem("ITEM1", sizeType));
-    ParserIntItemPtr itemInt2(new ParserIntItem("ITEM1", sizeType));
-    ParserRecordPtr record(new ParserRecord());
-    record->addItem(itemInt1);
-    BOOST_CHECK_THROW(record->addItem(itemInt2), std::invalid_argument);
+    auto itemInt1 = std::make_shared< ParserIntItem >("ITEM1", SINGLE);
+    auto itemInt2 = std::make_shared< ParserIntItem >("ITEM1", SINGLE);
+    ParserRecord record;
+    record.addItem(itemInt1);
+    BOOST_CHECK_THROW(record.addItem(itemInt2), std::invalid_argument);
 }
 
-static ParserRecordPtr createSimpleParserRecord() {
-    ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt1(new ParserIntItem("ITEM1", sizeType));
-    ParserIntItemPtr itemInt2(new ParserIntItem("ITEM2", sizeType));
-    ParserRecordPtr record(new ParserRecord());
+static ParserRecord createSimpleParserRecord() {
+    auto itemInt1 = std::make_shared< ParserIntItem >("ITEM1", SINGLE);
+    auto itemInt2 = std::make_shared< ParserIntItem >("ITEM2", SINGLE);
+    ParserRecord record;
 
-    record->addItem(itemInt1);
-    record->addItem(itemInt2);
-
+    record.addItem(itemInt1);
+    record.addItem(itemInt2);
     return record;
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
-    ParserRecordPtr record = createSimpleParserRecord();
+    auto record = createSimpleParserRecord();
     ParseContext parseContext;
     RawRecord raw( string_view( "100 443" ) );
     MessageContainer msgContainer;
-    BOOST_CHECK_NO_THROW(record->parse(parseContext, msgContainer, raw ) );
+    BOOST_CHECK_NO_THROW(record.parse(parseContext, msgContainer, raw ) );
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
-    ParserRecordPtr record = createSimpleParserRecord();
+    auto record = createSimpleParserRecord();
     RawRecord rawRecord( string_view( "100 443" ) );
     ParseContext parseContext;
     MessageContainer msgContainer;
-    const auto deckRecord = record->parse(parseContext , msgContainer, rawRecord);
+    const auto deckRecord = record.parse(parseContext , msgContainer, rawRecord);
     BOOST_CHECK_EQUAL(2U, deckRecord.size());
 }
 
 
 // INT INT DOUBLE DOUBLE INT DOUBLE
 
-static ParserRecordPtr createMixedParserRecord() {
+static ParserRecord createMixedParserRecord() {
 
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt1(new ParserIntItem("INTITEM1", sizeType));
-    ParserIntItemPtr itemInt2(new ParserIntItem("INTITEM2", sizeType));
-    ParserDoubleItemPtr itemDouble1(new ParserDoubleItem("DOUBLEITEM1", sizeType));
-    ParserDoubleItemPtr itemDouble2(new ParserDoubleItem("DOUBLEITEM2", sizeType));
+    auto itemInt1 = std::make_shared< ParserIntItem >("INTITEM1", sizeType);
+    auto itemInt2 = std::make_shared< ParserIntItem >("INTITEM2", sizeType);
+    auto itemInt3 = std::make_shared< ParserIntItem >("INTITEM3", sizeType);
+    auto itemDouble1 = std::make_shared< ParserDoubleItem >("DOUBLEITEM1", sizeType);
+    auto itemDouble2 = std::make_shared< ParserDoubleItem >("DOUBLEITEM2", sizeType);
+    auto itemDouble3 = std::make_shared< ParserDoubleItem >("DOUBLEITEM3", sizeType);
 
-    ParserIntItemPtr itemInt3(new ParserIntItem("INTITEM3", sizeType));
-    ParserDoubleItemPtr itemDouble3(new ParserDoubleItem("DOUBLEITEM3", sizeType));
-
-    ParserRecordPtr record(new ParserRecord());
-    record->addItem(itemInt1);
-    record->addItem(itemInt2);
-    record->addItem(itemDouble1);
-    record->addItem(itemDouble2);
-    record->addItem(itemInt3);
-    record->addItem(itemDouble3);
+    ParserRecord record;
+    record.addItem(itemInt1);
+    record.addItem(itemInt2);
+    record.addItem(itemDouble1);
+    record.addItem(itemDouble2);
+    record.addItem(itemInt3);
+    record.addItem(itemDouble3);
 
     return record;
 }
 
 BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
-    ParserRecordPtr record = createMixedParserRecord();
+    auto record = createMixedParserRecord();
     RawRecord rawRecord( string_view( "1 2 10.0 20.0 4 90.0") );
     ParseContext parseContext;
     MessageContainer msgContainer;
-    BOOST_CHECK_NO_THROW(record->parse(parseContext , msgContainer, rawRecord));
+    BOOST_CHECK_NO_THROW(record.parse(parseContext , msgContainer, rawRecord));
 }
 
 BOOST_AUTO_TEST_CASE(Equal_Equal_ReturnsTrue) {
-    ParserRecordPtr record1 = createMixedParserRecord();
-    ParserRecordPtr record2 = createMixedParserRecord();
+    auto record1 = createMixedParserRecord();
+    auto record2 = createMixedParserRecord();
 
-    BOOST_CHECK(record1->equal(*record1));
-    BOOST_CHECK(record1->equal(*record2));
+    BOOST_CHECK(record1.equal(record1));
+    BOOST_CHECK(record1.equal(record2));
 }
 
 BOOST_AUTO_TEST_CASE(Equal_Different_ReturnsFalse) {
     ParserItemSizeEnum sizeType = SINGLE;
-    ParserIntItemPtr itemInt(new ParserIntItem("INTITEM1", sizeType, 0));
-    ParserDoubleItemPtr itemDouble(new ParserDoubleItem("DOUBLEITEM1", sizeType, 0));
-    ParserStringItemPtr itemString(new ParserStringItem("STRINGITEM1", sizeType));
-    ParserRecordPtr record1(new ParserRecord());
-    ParserRecordPtr record2(new ParserRecord());
-    ParserRecordPtr record3(new ParserRecord());
+    auto itemInt    = std::make_shared< ParserIntItem    >("INTITEM1", sizeType, 0);
+    auto itemDouble = std::make_shared< ParserDoubleItem >("DOUBLEITEM1", sizeType, 0);
+    auto itemString = std::make_shared< ParserStringItem >("STRINGITEM1", sizeType);
+    ParserRecord record1;
+    ParserRecord record2;
+    ParserRecord record3;
 
-    record1->addItem(itemInt);
-    record1->addItem(itemDouble);
+    record1.addItem(itemInt);
+    record1.addItem(itemDouble);
 
-    record2->addItem(itemInt);
-    record2->addItem(itemDouble);
-    record2->addItem(itemString);
+    record2.addItem(itemInt);
+    record2.addItem(itemDouble);
+    record2.addItem(itemString);
 
-    record3->addItem(itemDouble);
-    record3->addItem(itemInt);
-    BOOST_CHECK(!record1->equal(*record2));
-    BOOST_CHECK(!record1->equal(*record3));
+    record3.addItem(itemDouble);
+    record3.addItem(itemInt);
+    BOOST_CHECK(!record1.equal(record2));
+    BOOST_CHECK(!record1.equal(record3));
 
 }
 
 BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     ParserRecord parserRecord;
-    ParserIntItemConstPtr itemInt(new ParserIntItem("ITEM1", SINGLE , 100));
-    ParserStringItemConstPtr itemString(new ParserStringItem("ITEM2", SINGLE , "DEFAULT"));
-    ParserDoubleItemConstPtr itemDouble(new ParserDoubleItem("ITEM3", SINGLE , 3.14 ));
+    auto itemInt = std::make_shared< ParserIntItem >("ITEM1", SINGLE , 100);
+    auto itemString = std::make_shared< ParserStringItem >("ITEM2", SINGLE , "DEFAULT");
+    auto itemDouble = std::make_shared< ParserDoubleItem >("ITEM3", SINGLE , 3.14 );
 
     parserRecord.addItem(itemInt);
     parserRecord.addItem(itemString);
@@ -300,48 +280,48 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 }
 
 BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
-    ParserRecordPtr parserRecord(new ParserRecord());
-    ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
-    ParserIntItemConstPtr itemJ(new ParserIntItem("J", SINGLE));
-    ParserIntItemConstPtr itemK(new ParserIntItem("K", SINGLE));
+    ParserRecord parserRecord;
+    auto itemI = std::make_shared< ParserIntItem >("I", SINGLE);
+    auto itemJ = std::make_shared< ParserIntItem >("J", SINGLE);
+    auto itemK = std::make_shared< ParserIntItem >("K", SINGLE);
     ParseContext parseContext;
 
-    parserRecord->addItem(itemI);
-    parserRecord->addItem(itemJ);
-    parserRecord->addItem(itemK);
+    parserRecord.addItem(itemI);
+    parserRecord.addItem(itemJ);
+    parserRecord.addItem(itemK);
 
 
     RawRecord rawRecord(  "3 3 3 " );
     MessageContainer msgContainer;
 
-    BOOST_CHECK_NO_THROW(parserRecord->parse(parseContext , msgContainer, rawRecord));
+    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext , msgContainer, rawRecord));
 
     RawRecord rawRecordOneExtra(  "3 3 3 4 " );
-    BOOST_CHECK_THROW(parserRecord->parse(parseContext , msgContainer, rawRecordOneExtra), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord.parse(parseContext , msgContainer, rawRecordOneExtra), std::invalid_argument);
 
     RawRecord rawRecordForgotRecordTerminator(  "3 3 3 \n 4 4 4 " );
-    BOOST_CHECK_THROW(parserRecord->parse(parseContext , msgContainer, rawRecordForgotRecordTerminator), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord.parse(parseContext , msgContainer, rawRecordForgotRecordTerminator), std::invalid_argument);
 
 }
 
 
 BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
-    ParserRecordPtr parserRecord(new ParserRecord());
-    ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
-    ParserIntItemConstPtr itemJ(new ParserIntItem("J", SINGLE));
-    ParserIntItemConstPtr itemK(new ParserIntItem("K", SINGLE));
+    ParserRecord parserRecord;
+    auto itemI = std::make_shared< ParserIntItem >("I", SINGLE);
+    auto itemJ = std::make_shared< ParserIntItem >("J", SINGLE);
+    auto itemK = std::make_shared< ParserIntItem >("K", SINGLE);
 
-    parserRecord->addItem(itemI);
-    parserRecord->addItem(itemJ);
-    parserRecord->addItem(itemK);
+    parserRecord.addItem(itemI);
+    parserRecord.addItem(itemJ);
+    parserRecord.addItem(itemK);
 
     ParseContext parseContext;
     RawRecord rawRecord(  "3 3  " );
     // no default specified for the third item, record can be parsed just fine but trying
     // to access the data will raise an exception...
     MessageContainer msgContainer;
-    BOOST_CHECK_NO_THROW(parserRecord->parse(parseContext , msgContainer, rawRecord));
-    auto record = parserRecord->parse(parseContext , msgContainer, rawRecord);
+    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext , msgContainer, rawRecord));
+    auto record = parserRecord.parse(parseContext , msgContainer, rawRecord);
     BOOST_CHECK_NO_THROW(record.getItem(2));
     BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::out_of_range);
 }
@@ -349,18 +329,18 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
 
 
 BOOST_AUTO_TEST_CASE(ParseRecordHasDimensionCorrect) {
-    ParserRecordPtr parserRecord(new ParserRecord());
-    ParserIntItemConstPtr itemI(new ParserIntItem("I", SINGLE));
-    ParserDoubleItemPtr item2(new ParserDoubleItem("ID", SINGLE));
+    ParserRecord parserRecord;
+    auto itemI = std::make_shared< ParserIntItem >( "I", SINGLE );
+    auto item2 = std::make_shared< ParserDoubleItem >( "ID", SINGLE );
 
-    BOOST_CHECK_EQUAL( false , parserRecord->hasDimension());
+    BOOST_CHECK( !parserRecord.hasDimension() );
 
-    parserRecord->addItem( itemI );
-    parserRecord->addItem( item2 );
-    BOOST_CHECK_EQUAL( false , parserRecord->hasDimension());
+    parserRecord.addItem( itemI );
+    parserRecord.addItem( item2 );
+    BOOST_CHECK( !parserRecord.hasDimension() );
 
     item2->push_backDimension("Length*Length/Time");
-    BOOST_CHECK_EQUAL( true , parserRecord->hasDimension());
+    BOOST_CHECK( parserRecord.hasDimension() );
 }
 
 
@@ -369,12 +349,10 @@ BOOST_AUTO_TEST_CASE(DefaultNotDataRecord) {
     BOOST_CHECK_EQUAL( false , record.isDataRecord() );
 }
 
-
-
 BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
     ParserRecord record;
-    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
-    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL));
+    auto dataItem = std::make_shared< ParserIntItem >( "ACTNUM" , ALL);
+    auto item     = std::make_shared< ParserIntItem >( "XXX" , ALL);
     record.addDataItem( dataItem );
     BOOST_CHECK_THROW( record.addItem( item ) , std::invalid_argument);
     BOOST_CHECK_THROW( record.addItem( dataItem ) , std::invalid_argument);
@@ -382,8 +360,8 @@ BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
 
 BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
     ParserRecord record;
-    ParserIntItemConstPtr dataItem = ParserIntItemConstPtr(new ParserIntItem( "ACTNUM" , ALL));
-    ParserIntItemConstPtr item     = ParserIntItemConstPtr(new ParserIntItem( "XXX" , ALL));
+    auto dataItem = std::make_shared< ParserIntItem >( "ACTNUM" , ALL);
+    auto item     = std::make_shared< ParserIntItem >( "XXX" , ALL);
 
     record.addItem( item );
     BOOST_CHECK_THROW( record.addDataItem( dataItem ) , std::invalid_argument);

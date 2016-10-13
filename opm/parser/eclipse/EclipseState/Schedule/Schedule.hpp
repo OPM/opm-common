@@ -153,8 +153,6 @@ namespace Opm
         static bool convertEclipseStringToBool(const std::string& eclipseString);
 
     };
-    typedef std::shared_ptr<Schedule> SchedulePtr;
-    typedef std::shared_ptr<const Schedule> ScheduleConstPtr;
 }
 
 #endif

@@ -53,9 +53,6 @@ namespace Opm {
     private:
         std::string m_default;
     };
-
-    typedef std::shared_ptr<const ParserStringItem> ParserStringItemConstPtr;
-    typedef std::shared_ptr<ParserStringItem> ParserStringItemPtr;
 }
 
 #endif  /* PARSERSTRINGITEM_HPP */

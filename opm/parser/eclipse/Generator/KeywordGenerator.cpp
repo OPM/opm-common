@@ -234,9 +234,9 @@ namespace Opm {
             stream << "    ParserKeywords::" << keywordName << " inlineKeyword;" << std::endl;
             stream << "    BOOST_CHECK( jsonKeyword.equal( inlineKeyword ));" << std::endl;
             stream << "    if (jsonKeyword.hasDimension()) {" <<std::endl;
-            stream << "        ParserRecordConstPtr parserRecord = jsonKeyword.getRecord(0);" << std::endl;
+            stream << "        const auto& parserRecord = jsonKeyword.getRecord(0);" << std::endl;
             stream << "        for (size_t i=0; i < parserRecord->size(); i++){ " << std::endl;
-            stream << "            ParserItemConstPtr item = parserRecord->get( i );" << std::endl;
+            stream << "            const auto& item = parserRecord->get( i );" << std::endl;
             stream << "            for (size_t j=0; j < item->numDimensions(); j++) {" << std::endl;
             stream << "                std::string dimString = item->getDimension(j);" << std::endl;
             stream << "                BOOST_CHECK_NO_THROW( unitSystem.getNewDimension( dimString ));" << std::endl;
