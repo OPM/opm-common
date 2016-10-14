@@ -20,10 +20,10 @@
 #ifndef OPM_MESSAGES_HPP
 #define OPM_MESSAGES_HPP
 
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 
 namespace Opm {
 
-    template<typename> class DynamicState;
     class TimeMap;    
 
     class MessagesLimits {
@@ -64,19 +64,19 @@ namespace Opm {
         void setErrorStopLimit(size_t timestep, int value);
         void setBugStopLimit(size_t timestep, int value);
     private:
-        std::shared_ptr<DynamicState<int>> m_message_print_limit;
-        std::shared_ptr<DynamicState<int>> m_comment_print_limit;
-        std::shared_ptr<DynamicState<int>> m_warning_print_limit;
-        std::shared_ptr<DynamicState<int>> m_problem_print_limit;
-        std::shared_ptr<DynamicState<int>> m_error_print_limit;
-        std::shared_ptr<DynamicState<int>> m_bug_print_limit;
+        DynamicState<int> m_message_print_limit;
+        DynamicState<int> m_comment_print_limit;
+        DynamicState<int> m_warning_print_limit;
+        DynamicState<int> m_problem_print_limit;
+        DynamicState<int> m_error_print_limit;
+        DynamicState<int> m_bug_print_limit;
 
-        std::shared_ptr<DynamicState<int>> m_message_stop_limit;
-        std::shared_ptr<DynamicState<int>> m_comment_stop_limit;
-        std::shared_ptr<DynamicState<int>> m_warning_stop_limit;
-        std::shared_ptr<DynamicState<int>> m_problem_stop_limit;
-        std::shared_ptr<DynamicState<int>> m_error_stop_limit;
-        std::shared_ptr<DynamicState<int>> m_bug_stop_limit;
+        DynamicState<int> m_message_stop_limit;
+        DynamicState<int> m_comment_stop_limit;
+        DynamicState<int> m_warning_stop_limit;
+        DynamicState<int> m_problem_stop_limit;
+        DynamicState<int> m_error_stop_limit;
+        DynamicState<int> m_bug_stop_limit;
     };
 }
 
