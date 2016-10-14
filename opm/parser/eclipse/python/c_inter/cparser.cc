@@ -16,7 +16,7 @@ extern "C" {
     /*-----------------------------------------------------------------*/
 
     Opm::Deck * parser_parse_file(const Opm::Parser * parser , const char * file , const Opm::ParseContext * parse_mode) {
-        return parser->newDeckFromFile( file , *parse_mode );
+        return new Opm::Deck( parser->parseFile( file , *parse_mode ) );
     }
 
 
