@@ -227,7 +227,7 @@ namespace Opm {
 
             int numTables = TableType::numTables( tableKeyword );
             for (int tableIdx = 0; tableIdx < numTables; ++tableIdx)
-                tableVector.push_back(TableType(tableKeyword , tableIdx));
+                tableVector.emplace_back( tableKeyword , tableIdx );
         }
 
         std::map<std::string , TableContainer> m_simpleTables;

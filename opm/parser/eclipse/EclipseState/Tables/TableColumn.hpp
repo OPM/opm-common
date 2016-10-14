@@ -23,13 +23,11 @@
 
 #include <string>
 #include <vector>
-#include <memory>
 
+#include <opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableIndex.hpp>
 
 namespace Opm {
-
-    class ColumnSchema;
 
     class TableColumn {
     public:
@@ -67,7 +65,7 @@ namespace Opm {
         void assertPrevious(size_t index , double value) const;
         void assertNext(size_t index , double value) const;
 
-        const ColumnSchema * m_schema;
+        ColumnSchema m_schema;
         std::string m_name;
         std::vector<double> m_values;
         std::vector<bool> m_default;
