@@ -70,10 +70,10 @@ set (state_source
 EclipseState/EclipseState.cpp
 EclipseState/EclipseConfig.cpp
 EclipseState/Eclipse3DProperties.cpp
-EclipseState/Messages.cpp
 #
 EclipseState/checkDeck.cpp
 #
+EclipseState/Schedule/MessagesLimits.cpp
 EclipseState/Schedule/OilVaporizationProperties.cpp
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp 
@@ -172,10 +172,10 @@ Units/ConversionFactors.hpp
 EclipseState/EclipseState.hpp
 EclipseState/EclipseConfig.hpp
 EclipseState/Eclipse3DProperties.hpp
-EclipseState/Messages.hpp
 #
 EclipseState/checkDeck.hpp
 #
+EclipseState/Schedule/MessagesLimits.hpp
 EclipseState/Schedule/OilVaporizationProperties.hpp
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp

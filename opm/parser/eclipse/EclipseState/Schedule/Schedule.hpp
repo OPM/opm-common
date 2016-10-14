@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MessagesLimits.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm
@@ -48,6 +49,7 @@ namespace Opm
     class Tuning;
     class UnitSystem;
     class Well;
+    class MessagesLimits;
 
     class Schedule {
     public:
@@ -83,6 +85,7 @@ namespace Opm
         const Group* getGroup(const std::string& groupName) const;
         std::vector< const Group* > getGroups() const;
         std::shared_ptr< Tuning > getTuning() const;
+        const MessagesLimits& getMessagesLimits() const;
 
         const Events& getEvents() const;
         bool hasOilVaporizationProperties();
@@ -101,6 +104,7 @@ namespace Opm
         std::shared_ptr<Events> m_events;
         std::shared_ptr<DynamicVector<std::shared_ptr<Deck> > > m_modifierDeck;
         std::shared_ptr< Tuning > m_tuning;
+        MessagesLimits m_messagesLimits;
         MessageContainer m_messages;
 
 
@@ -141,6 +145,7 @@ namespace Opm
         void handleDRVDT( const DeckKeyword& keyword, size_t currentStep);
         void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
         void handleWECON( const DeckKeyword& keyword, size_t currentStep);
+        void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
 
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
 

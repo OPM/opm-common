@@ -67,7 +67,8 @@ namespace Opm {
                         std::shared_ptr<const EclipseGrid> grid,
                         const Deck& deck ) :
         m_timeMap( std::make_shared< TimeMap>( deck )),
-        m_grid( grid )
+        m_grid( grid ),
+        m_messagesLimits(m_timeMap)
     {
         m_tuning.reset(new Tuning(m_timeMap));
         m_events.reset(new Events(m_timeMap));
@@ -214,6 +215,9 @@ namespace Opm {
 
             else if (keyword.name() == "WECON")
                 handleWECON(keyword, currentStep);
+
+            else if (keyword.name() == "MESSAGES")
+                handleMESSAGES(keyword, currentStep);
 
             else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
                 bool supported = geoModifiers.at( keyword.name() );
@@ -1134,6 +1138,39 @@ namespace Opm {
     }
 
 
+    void Schedule::handleMESSAGES( const DeckKeyword& keyword, size_t currentStep) {
+        const auto& record = keyword.getRecord(0);
+        int msgPrint = record.getItem("MESSAGE_PRINT_LIMIT").get< int >(0);
+        int msgStop = record.getItem("MESSAGE_STOP_LIMIT").get< int >(0);
+        m_messagesLimits.setMessagePrintLimit(currentStep, msgPrint);
+        m_messagesLimits.setMessageStopLimit(currentStep, msgStop);
+
+        int commentPrint = record.getItem("COMMENT_PRINT_LIMIT").get< int >(0);
+        int commentStop = record.getItem("COMMENT_STOP_LIMIT").get< int >(0);
+        m_messagesLimits.setCommentPrintLimit(currentStep, commentPrint);
+        m_messagesLimits.setCommentStopLimit(currentStep, commentStop);
+
+        int warnPrint = record.getItem("WARNING_PRINT_LIMIT").get< int >(0);
+        int warnStop = record.getItem("WARNING_STOP_LIMIT").get< int >(0);
+        m_messagesLimits.setWarningPrintLimit(currentStep, warnPrint);
+        m_messagesLimits.setWarningStopLimit(currentStep, warnStop);
+
+        int probPrint = record.getItem("PROBLEM_PRINT_LIMIT").get< int >(0);
+        int probStop = record.getItem("PROBLEM_STOP_LIMIT").get< int >(0);
+        m_messagesLimits.setWarningPrintLimit(currentStep, probPrint);
+        m_messagesLimits.setWarningStopLimit(currentStep, probStop);
+
+        int errPrint = record.getItem("ERROR_PRINT_LIMIT").get< int >(0);
+        int errStop = record.getItem("ERROR_STOP_LIMIT").get< int >(0);
+        m_messagesLimits.setErrorPrintLimit(currentStep, errPrint);
+        m_messagesLimits.setErrorStopLimit(currentStep, errStop);
+
+        int bugPrint = record.getItem("BUG_PRINT_LIMIT").get< int >(0);
+        int bugStop = record.getItem("BUG_STOP_LIMIT").get< int >(0);
+        m_messagesLimits.setBugPrintLimit(currentStep, bugPrint);
+        m_messagesLimits.setBugStopLimit(currentStep, bugStop);
+    }
+
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep) {
         const auto wells = this->getWells( currentStep );
         auto completions = Completion::fromCOMPDAT( keyword, wells );
@@ -1522,6 +1559,9 @@ namespace Opm {
         return m_modifierDeck->iget( timeStep );
     }
 
+    const MessagesLimits& Schedule::getMessagesLimits() const {
+        return m_messagesLimits;
+    }
 
     const MessageContainer& Schedule::getMessageContainer() const {
         return m_messages;
