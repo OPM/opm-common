@@ -38,14 +38,13 @@ namespace Opm {
 
     class Completion;
     class CompletionSet;
-    class EclipseGrid;
     class Segment;
     class SegmentSet;
     class TimeMap;
 
     class Well {
     public:
-        Well(const std::string& name, std::shared_ptr<const EclipseGrid> grid, int headI,
+        Well(const std::string& name, int headI,
              int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
              std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep,
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
@@ -82,6 +81,7 @@ namespace Opm {
         void addCompletions(size_t time_step , const std::vector<std::shared_ptr< Completion >>& newCompletions);
         void addCompletionSet(size_t time_step, const std::shared_ptr< const CompletionSet > newCompletionSet);
         std::shared_ptr< const CompletionSet > getCompletions(size_t timeStep) const;
+        std::shared_ptr< const CompletionSet > getCompletions( ) const;
 
         /* The rate of a given phase under the following assumptions:
          * * Returns zero if production is requested for an injector (and vice
@@ -143,12 +143,12 @@ namespace Opm {
 
         std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
 
-        std::shared_ptr<DynamicState<bool> > m_isAvailableForGroupControl;
+        std::shared_ptr<DynamicState<int> > m_isAvailableForGroupControl;
         std::shared_ptr<DynamicState<double> > m_guideRate;
         std::shared_ptr<DynamicState<GuideRate::GuideRatePhaseEnum> > m_guideRatePhase;
         std::shared_ptr<DynamicState<double> > m_guideRateScalingFactor;
 
-        std::shared_ptr<DynamicState<bool> > m_isProducer;
+        std::shared_ptr<DynamicState<int> > m_isProducer;
         std::shared_ptr<DynamicState<std::shared_ptr< const CompletionSet >> > m_completions;
         std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
         std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
@@ -156,8 +156,8 @@ namespace Opm {
         std::shared_ptr<DynamicState<WellEconProductionLimits> > m_econproductionlimits;
         std::shared_ptr<DynamicState<double> > m_solventFraction;
         std::shared_ptr<DynamicState<std::string> > m_groupName;
-        std::shared_ptr<DynamicState<bool> > m_rft;
-        std::shared_ptr<DynamicState<bool> > m_plt;
+        std::shared_ptr<DynamicState<int> > m_rft;
+        std::shared_ptr<DynamicState<int> > m_plt;
 
         // WELSPECS data - assumes this is not dynamic
 
@@ -166,7 +166,6 @@ namespace Opm {
         int m_headJ;
         mutable Value<double> m_refDepth;
         Phase::PhaseEnum m_preferredPhase;
-        std::shared_ptr<const EclipseGrid> m_grid;
 
         WellCompletion::CompletionOrderEnum m_comporder;
         bool m_allowCrossFlow;

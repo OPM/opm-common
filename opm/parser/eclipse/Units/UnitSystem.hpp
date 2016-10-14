@@ -22,6 +22,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include <memory>
 
 namespace Opm {
@@ -81,6 +82,8 @@ namespace Opm {
 
         double from_si( measure, double ) const;
         double to_si( measure, double ) const;
+        void from_si( measure, std::vector<double>& ) const;
+        void to_si( measure, std::vector<double>& ) const;
         const char* name( measure ) const;
 
         static UnitSystem * newMETRIC();

@@ -119,6 +119,7 @@ namespace Opm {
     namespace WellProducer {
 
         enum ControlModeEnum {
+            NONE =     0,
             ORAT =     1,
             WRAT =     2,
             GRAT =     4,
@@ -135,7 +136,8 @@ namespace Opm {
           The items BHP, THP and GRUP only apply in prediction mode:
           WCONPROD. The elements in this enum are used as bitmasks to
           keep track of which controls are present, i.e. the 2^n
-          structure must be intact.
+          structure must be intact.The NONE item is only used in WHISTCTL
+          to cancel its effect.
 
           The properties are initialized with the CMODE_UNDEFINED
           value, but the undefined value is never assigned apart from
@@ -190,7 +192,8 @@ namespace Opm {
             LRAT = 4,
             CRAT = 5,
             RESV = 6,
-            PRBL = 7
+            PRBL = 7,
+            FLD  = 8
         };
 
         const std::string ControlEnum2String( GroupProduction::ControlEnum enumValue );
@@ -239,6 +242,7 @@ namespace Opm {
     }
 
     enum OilVaporizationEnum{
+        UNDEF = 0,
         VAPPARS = 1,
         DRSDT = 2,
         DRVDT = 3

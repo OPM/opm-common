@@ -185,6 +185,8 @@ namespace Opm {
                 return "RESV";
             case PRBL:
                 return "PRBL";
+            case FLD:
+                return "FLD";
             default:
                 throw std::invalid_argument("Unhandled enum value");
             }
@@ -208,6 +210,8 @@ namespace Opm {
                 return RESV;
             else if (stringValue == "PRBL")
                 return PRBL;
+            else if (stringValue == "FLD")
+                return FLD;
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
@@ -335,6 +339,8 @@ namespace Opm {
                 return THP;
             else if (stringValue == "GRUP")
                 return GRUP;
+            else if (stringValue == "NONE")
+                return NONE;
             else
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }

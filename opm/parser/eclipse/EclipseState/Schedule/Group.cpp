@@ -40,7 +40,7 @@ namespace Opm {
             std::shared_ptr<DynamicState<double> > liquidTarget;
             std::shared_ptr<DynamicState<double> > reservoirVolumeTarget;
             std::shared_ptr<DynamicState<double> > efficiencyFactor;
-            std::shared_ptr<DynamicState<bool> >   transferEfficiencyFactor;
+            std::shared_ptr<DynamicState<int> >    transferEfficiencyFactor;
 
         };
 
@@ -53,7 +53,7 @@ namespace Opm {
             liquidTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
             reservoirVolumeTarget( new DynamicState<double>(timeMap , INVALID_GROUP_RATE)),
             efficiencyFactor( new DynamicState<double>(timeMap, INVALID_EFFICIENCY_FACTOR)),
-            transferEfficiencyFactor( new DynamicState<bool>(timeMap, false))
+            transferEfficiencyFactor( new DynamicState<int>(timeMap, false))
         {
 
         }
@@ -97,7 +97,8 @@ namespace Opm {
         m_injection( new GroupInjection::InjectionData(timeMap) ),
         m_production( new GroupProduction::ProductionData( timeMap )),
         m_wells( new DynamicState< std::shared_ptr< const WellSet > >( timeMap , std::make_shared< const WellSet >() ) ),
-        m_isProductionGroup( new DynamicState<bool>(timeMap, true))
+        m_isProductionGroup( timeMap, false),
+        m_isInjectionGroup( timeMap, false)
     {
         m_name = name_;
         m_creationTimeStep = creationTimeStep;
@@ -117,15 +118,19 @@ namespace Opm {
     }
 
     bool Group::isProductionGroup(size_t timeStep) const {
-        return m_isProductionGroup->get(timeStep);
+        return bool( m_isProductionGroup.get(timeStep) );
     }
 
     bool Group::isInjectionGroup(size_t timeStep) const {
-        return !m_isProductionGroup->get(timeStep);
+        return bool( m_isInjectionGroup.get(timeStep) );
     }
 
     void Group::setProductionGroup(size_t timeStep, bool isProductionGroup_) {
-        m_isProductionGroup->update(timeStep, isProductionGroup_);
+        m_isProductionGroup.update(timeStep, isProductionGroup_);
+    }
+
+    void Group::setInjectionGroup(size_t timeStep, bool isInjectionGroup_) {
+        m_isInjectionGroup.update(timeStep, isInjectionGroup_);
     }
 
 

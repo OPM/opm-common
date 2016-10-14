@@ -1,7 +1,7 @@
 find_package (PythonInterp REQUIRED)
-find_package (ERTPython)
+find_package (Cwrap)
 
-if (ERT_PYTHON_PATH) 
+if (CWRAP_PYTHON_PATH)
    add_subdirectory( c_inter )
 
    if (EXISTS "/etc/debian_version")
@@ -16,5 +16,5 @@ if (ERT_PYTHON_PATH)
    add_subdirectory( python )
    add_subdirectory( tests )
 else()
-   message("Could not find ERTPython - Python bindings skipped")     
+   message("Could not find cwrap - Python bindings to Ert skipped")
 endif()

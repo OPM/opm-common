@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
     Parser parser(true);
 
     auto deck = parser.parseString( deckString , parseContext );
-    std::shared_ptr<EclipseGrid> grid = std::make_shared<EclipseGrid>( deck );
+    EclipseGrid grid( deck );
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     {

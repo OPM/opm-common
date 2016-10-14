@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
@@ -31,7 +32,9 @@
 
 namespace Opm {
 
-    Completion::Completion(int i, int j , int k , WellCompletion::StateEnum state ,
+    Completion::Completion(int i, int j , int k ,
+                           double depth,
+                           WellCompletion::StateEnum state ,
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
@@ -44,7 +47,7 @@ namespace Opm {
           m_state(state),
           m_direction(direction),
           m_segment_number(-1),
-          m_center_depth(-1.e100)
+          m_center_depth( depth )
     {}
 
     Completion::Completion(std::shared_ptr<const Completion> oldCompletion, WellCompletion::StateEnum newStatus)
@@ -139,7 +142,7 @@ namespace Opm {
     */
 
     inline std::vector< CompletionPtr >
-    fromCOMPDAT( const DeckRecord& compdatRecord, const Well& well ) {
+    fromCOMPDAT( const EclipseGrid& grid, const DeckRecord& compdatRecord, const Well& well ) {
 
         std::vector<CompletionPtr> completions;
 
@@ -179,7 +182,8 @@ namespace Opm {
         const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord.getItem("DIR").getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
-            CompletionPtr completion(new Completion(I , J , k , state , connectionTransmissibilityFactor, diameter, skinFactor, direction ));
+            double depth = grid.getCellDepth( I,J,k );
+            CompletionPtr completion(new Completion(I , J , k , depth , state , connectionTransmissibilityFactor, diameter, skinFactor, direction ));
             completions.push_back( completion );
         }
 
@@ -197,7 +201,8 @@ namespace Opm {
     */
 
     std::map< std::string, std::vector< CompletionPtr > >
-    Completion::fromCOMPDAT( const DeckKeyword& compdatKeyword,
+    Completion::fromCOMPDAT( const EclipseGrid& grid ,
+                             const DeckKeyword& compdatKeyword,
                              const std::vector< const Well* >& wells ) {
 
         std::map< std::string, std::vector< CompletionPtr > > res;
@@ -213,7 +218,7 @@ namespace Opm {
 
             if( well == wells.end() ) continue;
 
-            auto completions = Opm::fromCOMPDAT( record, **well );
+            auto completions = Opm::fromCOMPDAT( grid, record, **well );
 
             res[ wellname ].insert( res[ wellname ].end(),
                                     completions.begin(),

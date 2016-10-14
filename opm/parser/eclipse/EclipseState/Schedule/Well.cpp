@@ -20,7 +20,6 @@
 #include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
@@ -33,17 +32,17 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name_, std::shared_ptr<const EclipseGrid> grid, int headI,
+    Well::Well(const std::string& name_, int headI,
                int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
                TimeMapConstPtr timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
         : m_status(new DynamicState<WellCommon::StatusEnum>(timeMap, WellCommon::SHUT)),
-          m_isAvailableForGroupControl(new DynamicState<bool>(timeMap, true)),
+          m_isAvailableForGroupControl(new DynamicState<int>(timeMap, true)),
           m_guideRate(new DynamicState<double>(timeMap, -1.0)),
           m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(timeMap, GuideRate::UNDEFINED)),
           m_guideRateScalingFactor(new DynamicState<double>(timeMap, 1.0)),
-          m_isProducer(new DynamicState<bool>(timeMap, true)) ,
+          m_isProducer(new DynamicState<int>(timeMap, true)) ,
           m_completions( new DynamicState<CompletionSetConstPtr>( timeMap , CompletionSetConstPtr( new CompletionSet()) )),
           m_productionProperties( new DynamicState<WellProductionProperties>(timeMap, WellProductionProperties() )),
           m_injectionProperties( new DynamicState<WellInjectionProperties>(timeMap, WellInjectionProperties() )),
@@ -51,14 +50,13 @@ namespace Opm {
           m_econproductionlimits( new DynamicState<WellEconProductionLimits>(timeMap, WellEconProductionLimits()) ),
           m_solventFraction( new DynamicState<double>(timeMap, 0.0 )),
           m_groupName( new DynamicState<std::string>( timeMap , "" )),
-          m_rft( new DynamicState<bool>(timeMap,false)),
-          m_plt( new DynamicState<bool>(timeMap,false)),
+          m_rft( new DynamicState<int>(timeMap,false)),
+          m_plt( new DynamicState<int>(timeMap,false)),
           m_timeMap( timeMap ),
           m_headI(headI),
           m_headJ(headJ),
           m_refDepth(refDepth),
           m_preferredPhase(preferredPhase),
-          m_grid( grid ),
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
           m_automaticShutIn(automaticShutIn),
@@ -208,11 +206,11 @@ namespace Opm {
         return m_messages;
     }
     bool Well::isProducer(size_t timeStep) const {
-        return m_isProducer->get(timeStep);
+        return bool( m_isProducer->get(timeStep) );
     }
 
     bool Well::isInjector(size_t timeStep) const {
-        return !isProducer(timeStep);
+        return !bool( isProducer(timeStep) );
     }
 
     bool Well::isAvailableForGroupControl(size_t timeStep) const {
@@ -274,8 +272,7 @@ namespace Opm {
             auto completions = getCompletions( timeStep );
             if (completions->size() > 0) {
                 auto firstCompletion = completions->get(0);
-                double depth = m_grid->getCellDepth( firstCompletion->getI() , firstCompletion->getJ() , firstCompletion->getK());
-                m_refDepth.setValue( depth );
+                m_refDepth.setValue( firstCompletion->getCenterDepth() );
                 break;
             } else {
                 timeStep++;
@@ -294,6 +291,10 @@ namespace Opm {
         return m_completions->get( timeStep );
     }
 
+    CompletionSetConstPtr Well::getCompletions() const {
+        return m_completions->back();
+    }
+
     void Well::addCompletions(size_t time_step , const std::vector<CompletionPtr>& newCompletions) {
         CompletionSetConstPtr currentCompletionSet = m_completions->get(time_step);
         CompletionSetPtr newCompletionSet = CompletionSetPtr( currentCompletionSet->shallowCopy() );
@@ -309,7 +310,7 @@ namespace Opm {
     void Well::addCompletionSet(size_t time_step, const CompletionSetConstPtr newCompletionSet){
         CompletionSetPtr mutable_copy(newCompletionSet->shallowCopy());
         if (getWellCompletionOrdering() == WellCompletion::TRACK) {
-            mutable_copy->orderCompletions(m_headI, m_headJ, m_grid);
+            mutable_copy->orderCompletions(m_headI, m_headJ);
         }
         m_completions->update(time_step, mutable_copy);
     }
@@ -330,11 +331,11 @@ namespace Opm {
     }
 
     bool Well::getRFTActive(size_t time_step) const{
-        return m_rft->get(time_step);
+        return bool( m_rft->get(time_step) );
     }
 
     bool Well::getPLTActive(size_t time_step) const{
-     return m_plt->get(time_step);
+     return bool( m_plt->get(time_step) );
     }
     void Well::setPLTActive(size_t time_step, bool value){
         m_plt->update(time_step, value);

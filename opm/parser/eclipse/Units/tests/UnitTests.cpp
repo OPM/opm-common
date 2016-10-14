@@ -213,3 +213,16 @@ BOOST_AUTO_TEST_CASE(LabUnitConversions) {
         BOOST_CHECK_CLOSE( 1.0 , lab->from_si( q.m , q.f ) , 1.0e-10 );
     }
 }
+
+
+BOOST_AUTO_TEST_CASE( VectorConvert ) {
+    std::vector<double> d0 = {1,2,3};
+    std::vector<double> d1 = {1,2,3};
+    UnitSystem * units = UnitSystem::newLAB();
+
+    units->from_si( UnitSystem::measure::pressure , d0 );
+    for (size_t i = 0; i < d1.size(); i++)
+        BOOST_CHECK_EQUAL( units->from_si( UnitSystem::measure::pressure , d1[i] ) , d0[i]);
+
+    delete units;
+}

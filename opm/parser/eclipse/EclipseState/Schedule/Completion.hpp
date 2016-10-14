@@ -35,10 +35,13 @@ namespace Opm {
     class DeckKeyword;
     class DeckRecord;
     class Well;
+    class EclipseGrid;
 
     class Completion {
     public:
-        Completion(int i, int j , int k , WellCompletion::StateEnum state ,
+        Completion(int i, int j , int k ,
+                   double depth,
+                   WellCompletion::StateEnum state ,
                    const Value<double>& connectionTransmissibilityFactor,
                    const Value<double>& diameter,
                    const Value<double>& skinFactor,
@@ -69,8 +72,9 @@ namespace Opm {
         WellCompletion::DirectionEnum getDirection() const;
 
         static std::map< std::string, std::vector< std::shared_ptr< Completion > > >
-        fromCOMPDAT( const DeckKeyword& compdatKeyword,
-                                       const std::vector< const Well* >& );
+        fromCOMPDAT( const EclipseGrid& grid,
+                     const DeckKeyword& compdatKeyword,
+                     const std::vector< const Well* >& );
 
     private:
         int m_i, m_j, m_k;

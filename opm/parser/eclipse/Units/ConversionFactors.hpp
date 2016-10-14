@@ -133,6 +133,7 @@ namespace Opm {
             /// \name Force
             /// @{
             constexpr const double Newton = kilogram*meter / square(second); // == 1
+            constexpr const double dyne   = 1e-5*Newton;
             constexpr const double lbf    = pound * gravity; // Pound-force
             /// @}
 
@@ -211,6 +212,7 @@ namespace Opm {
         constexpr const double Salinity             = kilogram/cubic(meter);
         constexpr const double Viscosity            = centi*Poise;
         constexpr const double Timestep             = day;
+        constexpr const double SurfaceTension       = dyne/(centi*meter);
     }
 
 
@@ -236,6 +238,7 @@ namespace Opm {
         constexpr const double Salinity             = pound/stb;
         constexpr const double Viscosity            = centi*Poise;
         constexpr const double Timestep             = day;
+        constexpr const double SurfaceTension       = dyne/(centi*meter);
     }
 
 
@@ -261,6 +264,7 @@ namespace Opm {
         constexpr const double Salinity             = gram/cubic(centi*meter);
         constexpr const double Viscosity            = centi*Poise;
         constexpr const double Timestep             = hour;
+        constexpr const double SurfaceTension       = dyne/(centi*meter);
     }
 
 }
