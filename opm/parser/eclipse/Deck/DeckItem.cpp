@@ -352,7 +352,7 @@ namespace Opm {
         return conv< double >( this->ptr )->push_backDimension( active, def );
     }
 
-    DeckItem::type DeckItem::typeof() const {
+    DeckItem::type DeckItem::getType() const {
         return this->ptr->type_tag;
     }
 

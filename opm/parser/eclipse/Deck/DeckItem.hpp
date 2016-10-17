@@ -81,7 +81,7 @@ namespace Opm {
         void push_backDimension(std::shared_ptr<const Dimension> /* activeDimension */,
                                 std::shared_ptr<const Dimension> /* defaultDimension */);
 
-        type typeof() const;
+        type getType() const;
 
     private:
         DeckItem( std::unique_ptr< DeckItemBase >&& );
