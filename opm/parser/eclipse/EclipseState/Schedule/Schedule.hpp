@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MessagesLimits.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm
@@ -48,7 +48,6 @@ namespace Opm
     class TimeMap;
     class UnitSystem;
     class Well;
-    class MessagesLimits;
 
     class Schedule {
     public:
@@ -87,7 +86,7 @@ namespace Opm
         const Group& getGroup(const std::string& groupName) const;
         std::vector< const Group* > getGroups() const;
         const Tuning& getTuning() const;
-        const MessagesLimits& getMessagesLimits() const;
+        const MessageLimits& getMessageLimits() const;
 
         const Events& getEvents() const;
         bool hasOilVaporizationProperties();
@@ -105,7 +104,7 @@ namespace Opm
         Events m_events;
         DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
         Tuning m_tuning;
-        MessagesLimits m_messagesLimits;
+        MessageLimits m_messageLimits;
         MessageContainer m_messages;
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
 

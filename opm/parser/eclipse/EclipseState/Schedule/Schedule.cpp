@@ -82,7 +82,7 @@ namespace Opm {
         m_events( m_timeMap ),
         m_modifierDeck( m_timeMap, nullptr ),
         m_tuning( m_timeMap ),
-        m_messagesLimits(m_timeMap)
+        m_messageLimits(m_timeMap)
 
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
@@ -1170,33 +1170,33 @@ namespace Opm {
         const auto& record = keyword.getRecord(0);
         int msgPrint = record.getItem("MESSAGE_PRINT_LIMIT").get< int >(0);
         int msgStop = record.getItem("MESSAGE_STOP_LIMIT").get< int >(0);
-        m_messagesLimits.setMessagePrintLimit(currentStep, msgPrint);
-        m_messagesLimits.setMessageStopLimit(currentStep, msgStop);
+        m_messageLimits.setMessagePrintLimit(currentStep, msgPrint);
+        m_messageLimits.setMessageStopLimit(currentStep, msgStop);
 
         int commentPrint = record.getItem("COMMENT_PRINT_LIMIT").get< int >(0);
         int commentStop = record.getItem("COMMENT_STOP_LIMIT").get< int >(0);
-        m_messagesLimits.setCommentPrintLimit(currentStep, commentPrint);
-        m_messagesLimits.setCommentStopLimit(currentStep, commentStop);
+        m_messageLimits.setCommentPrintLimit(currentStep, commentPrint);
+        m_messageLimits.setCommentStopLimit(currentStep, commentStop);
 
         int warnPrint = record.getItem("WARNING_PRINT_LIMIT").get< int >(0);
         int warnStop = record.getItem("WARNING_STOP_LIMIT").get< int >(0);
-        m_messagesLimits.setWarningPrintLimit(currentStep, warnPrint);
-        m_messagesLimits.setWarningStopLimit(currentStep, warnStop);
+        m_messageLimits.setWarningPrintLimit(currentStep, warnPrint);
+        m_messageLimits.setWarningStopLimit(currentStep, warnStop);
 
         int probPrint = record.getItem("PROBLEM_PRINT_LIMIT").get< int >(0);
         int probStop = record.getItem("PROBLEM_STOP_LIMIT").get< int >(0);
-        m_messagesLimits.setWarningPrintLimit(currentStep, probPrint);
-        m_messagesLimits.setWarningStopLimit(currentStep, probStop);
+        m_messageLimits.setWarningPrintLimit(currentStep, probPrint);
+        m_messageLimits.setWarningStopLimit(currentStep, probStop);
 
         int errPrint = record.getItem("ERROR_PRINT_LIMIT").get< int >(0);
         int errStop = record.getItem("ERROR_STOP_LIMIT").get< int >(0);
-        m_messagesLimits.setErrorPrintLimit(currentStep, errPrint);
-        m_messagesLimits.setErrorStopLimit(currentStep, errStop);
+        m_messageLimits.setErrorPrintLimit(currentStep, errPrint);
+        m_messageLimits.setErrorStopLimit(currentStep, errStop);
 
         int bugPrint = record.getItem("BUG_PRINT_LIMIT").get< int >(0);
         int bugStop = record.getItem("BUG_STOP_LIMIT").get< int >(0);
-        m_messagesLimits.setBugPrintLimit(currentStep, bugPrint);
-        m_messagesLimits.setBugStopLimit(currentStep, bugStop);
+        m_messageLimits.setBugPrintLimit(currentStep, bugPrint);
+        m_messageLimits.setBugStopLimit(currentStep, bugStop);
     }
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid) {
@@ -1586,8 +1586,8 @@ namespace Opm {
         return m_modifierDeck.iget( timeStep );
     }
 
-    const MessagesLimits& Schedule::getMessagesLimits() const {
-        return m_messagesLimits;
+    const MessageLimits& Schedule::getMessageLimits() const {
+        return m_messageLimits;
     }
 
     const MessageContainer& Schedule::getMessageContainer() const {

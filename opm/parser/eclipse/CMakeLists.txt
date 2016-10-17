@@ -73,7 +73,7 @@ EclipseState/Eclipse3DProperties.cpp
 #
 EclipseState/checkDeck.cpp
 #
-EclipseState/Schedule/MessagesLimits.cpp
+EclipseState/Schedule/MessageLimits.cpp
 EclipseState/Schedule/OilVaporizationProperties.cpp
 EclipseState/Schedule/TimeMap.cpp 
 EclipseState/Schedule/Schedule.cpp 
@@ -175,7 +175,7 @@ EclipseState/Eclipse3DProperties.hpp
 #
 EclipseState/checkDeck.hpp
 #
-EclipseState/Schedule/MessagesLimits.hpp
+EclipseState/Schedule/MessageLimits.hpp
 EclipseState/Schedule/OilVaporizationProperties.hpp
 EclipseState/Schedule/TimeMap.hpp
 EclipseState/Schedule/Schedule.hpp
