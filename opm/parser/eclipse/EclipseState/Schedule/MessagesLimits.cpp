@@ -24,19 +24,19 @@
 namespace Opm {
 
 
-    MessagesLimits::MessagesLimits(TimeMapConstPtr timemap):
-        m_message_print_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT::defaultValue)),
-        m_comment_print_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT::defaultValue)),
-        m_warning_print_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT::defaultValue)),
-        m_problem_print_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT::defaultValue)),
-        m_error_print_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT::defaultValue)),
-        m_bug_print_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::BUG_PRINT_LIMIT::defaultValue)),
-        m_message_stop_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT::defaultValue)),
-        m_comment_stop_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT::defaultValue)),
-        m_warning_stop_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::WARNING_STOP_LIMIT::defaultValue)),
-        m_problem_stop_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT::defaultValue)),
-        m_error_stop_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::ERROR_STOP_LIMIT::defaultValue)),
-        m_bug_stop_limit(DynamicState<int>(timemap, ParserKeywords::MESSAGES::BUG_STOP_LIMIT::defaultValue))
+    MessagesLimits::MessagesLimits(const std::shared_ptr< const TimeMap > timemap):
+        m_message_print_limit(timemap, ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT::defaultValue),
+        m_comment_print_limit(timemap, ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT::defaultValue),
+        m_warning_print_limit(timemap, ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT::defaultValue),
+        m_problem_print_limit(timemap, ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT::defaultValue),
+        m_error_print_limit(timemap, ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT::defaultValue),
+        m_bug_print_limit(timemap, ParserKeywords::MESSAGES::BUG_PRINT_LIMIT::defaultValue),
+        m_message_stop_limit(timemap, ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT::defaultValue),
+        m_comment_stop_limit(timemap, ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT::defaultValue),
+        m_warning_stop_limit(timemap, ParserKeywords::MESSAGES::WARNING_STOP_LIMIT::defaultValue),
+        m_problem_stop_limit(timemap, ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT::defaultValue),
+        m_error_stop_limit(timemap, ParserKeywords::MESSAGES::ERROR_STOP_LIMIT::defaultValue),
+        m_bug_stop_limit(timemap, ParserKeywords::MESSAGES::BUG_STOP_LIMIT::defaultValue)
         {
         }
 

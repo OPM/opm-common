@@ -35,7 +35,7 @@ namespace Opm {
            set in the record are modified.
         */
 
-        MessagesLimits(std::shared_ptr<const TimeMap> timemap);
+        MessagesLimits(const std::shared_ptr< const TimeMap >  timemap);
 
         ///Get all the value from MESSAGES keyword.
         int getMessagePrintLimit(size_t timestep) const;
