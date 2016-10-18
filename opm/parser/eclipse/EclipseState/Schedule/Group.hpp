@@ -60,8 +60,6 @@ namespace Opm {
             DynamicState< double > gasTarget;
             DynamicState< double > liquidTarget;
             DynamicState< double > reservoirVolumeTarget;
-            DynamicState< double > efficiencyFactor;
-            DynamicState< int >    transferEfficiencyFactor;
         };
     }
 
@@ -138,6 +136,8 @@ namespace Opm {
         DynamicState<std::shared_ptr< const WellSet > > m_wells;
         DynamicState<int> m_isProductionGroup;
         DynamicState<int> m_isInjectionGroup;
+        DynamicState<double> m_efficiencyFactor;
+        DynamicState<int> m_transferEfficiencyFactor;
     };
 }
 
