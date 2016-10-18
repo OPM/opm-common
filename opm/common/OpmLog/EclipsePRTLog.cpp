@@ -19,14 +19,46 @@
 
 #include <opm/common/OpmLog/EclipsePRTLog.hpp>
 #include <opm/common/OpmLog/LogUtil.hpp>
+#include <cmath>
 
 namespace Opm {
 
 
     void EclipsePRTLog::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message)
     {
-        StreamLog::addTaggedMessage(messageType, messageTag, message);
         m_count[messageType]++;
+        const auto& limiter = getMessageLimiter();
+        const auto& fomatter = getMessageFormatter();
+        const auto& os = getOstream();
+        MessageLimiter::Response res;
+        if (limiter) {
+            if (!messageTag.empty()) {
+                // Use the message limiter (if any).
+                res = limiter->handleMessageTag(messageTag);
+                if (res == MessageLimiter::Response::JustOverLimit) {
+                    // Special case: add a message to this backend about limit being reached.
+                    std::string msg = "Message limit reached for message tag: " + messageTag;
+                    addTaggedMessage(messageType, "", msg);
+                    m_count[messageType]++;
+                }
+                if (res == MessageLimiter::Response::PrintMessage) {
+                    *os << formatMessage(messageType, message) << std::endl;
+                }
+            } else {
+                const auto limits = limiter->categoryLimit();
+                auto idx = int(std::log2(messageType));
+                res = limiter->handleCategoryLimits(m_count[messageType], limits[idx]);
+                if (res == MessageLimiter::Response::JustOverLimit) {
+                    // Special case: add a message to this backend about limit being reached.
+                    std::string msg = "Message limit reached for:  " + messageType;
+                    addTaggedMessage(messageType, "", msg);
+                    m_count[messageType]++;
+                }
+                if (res == MessageLimiter::Response::PrintMessage) {
+                    *os << formatMessage(messageType, message) << std::endl;
+                }
+            }
+        }
     }
 
 

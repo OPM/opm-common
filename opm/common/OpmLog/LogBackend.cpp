@@ -36,6 +36,16 @@ namespace Opm {
         m_formatter = formatter;
     }
 
+    std::shared_ptr<MessageFormatterInterface> LogBackend::getMessageFormatter() const
+    {
+        return m_formatter;
+    }
+
+    std::shared_ptr<MessageLimiter> LogBackend::getMessageLimiter() const
+    {
+        return m_limiter;
+    }
+
     void LogBackend::setMessageLimiter(std::shared_ptr<MessageLimiter> limiter)
     {
         m_limiter = limiter;

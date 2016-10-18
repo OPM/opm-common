@@ -43,9 +43,14 @@ namespace Opm
         /// Configure how formatMessage() will modify message strings.
         void setMessageFormatter(std::shared_ptr<MessageFormatterInterface> formatter);
 
+        /// Get MessageFormatter.
+        std::shared_ptr<MessageFormatterInterface> getMessageFormatter() const;
+
         /// Configure how message tags will be used to limit messages.
         void setMessageLimiter(std::shared_ptr<MessageLimiter> limiter);
 
+        /// Get MessageLimiter.
+        std::shared_ptr<MessageLimiter> getMessageLimiter() const;
         /// Add a message to the backend.
         ///
         /// Typically a subclass may filter, change, and output
