@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>

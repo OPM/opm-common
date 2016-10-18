@@ -21,7 +21,7 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(LabUnitConversions) {
     auto lab = std::unique_ptr<UnitSystem>( UnitSystem::newLAB() );
 
     {
-        const auto furlong = 660*details::unit::feet;
+        const auto furlong = 660*unit::feet;
         BOOST_CHECK_CLOSE( 2.01168e4 , lab->from_si( Meas::length , furlong ) , 1.0e-10 );
         BOOST_CHECK_CLOSE( furlong   , lab->to_si( Meas::length , 2.01168e4 ) , 1.0e-10 );
     }

@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 
 using namespace Opm;
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE( EquilOperations ) {
 
     const auto& record = equil.getRecord( 0 );
     BOOST_CHECK_CLOSE( 2469, record.datumDepth(), 1e-12 );
-    BOOST_CHECK_CLOSE( 382.4 * details::unit::barsa, record.datumDepthPressure(), 1e-12 );
+    BOOST_CHECK_CLOSE( 382.4 * unit::barsa, record.datumDepthPressure(), 1e-12 );
     BOOST_CHECK_CLOSE( 1705.0, record.waterOilContactDepth(), 1e-12 );
     BOOST_CHECK_CLOSE( 0.0, record.waterOilContactCapillaryPressure(), 1e-12 );
     BOOST_CHECK_CLOSE( 500, record.gasOilContactDepth(), 1e-12 );
