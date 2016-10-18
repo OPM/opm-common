@@ -22,7 +22,9 @@
 
 #include <string>
 #include <unordered_map>
-
+#include <map>
+#include <vector>
+#include <opm/common/OpmLog/LogUtil.hpp>
 namespace Opm
 {
 
@@ -36,7 +38,13 @@ namespace Opm
 
         /// Default constructor, no limit to the number of messages.
         MessageLimiter()
-            : message_limit_(NoLimit)
+            : tag_limit_(NoLimit),
+              category_limits_({{Log::MessageType::Note, NoLimit},
+                                {Log::MessageType::Info, NoLimit},
+                                {Log::MessageType::Warning, NoLimit},
+                                {Log::MessageType::Error, NoLimit},
+                                {Log::MessageType::Problem, NoLimit},
+                                {Log::MessageType::Bug, NoLimit}})
         {
         }
 
@@ -46,62 +54,108 @@ namespace Opm
         /// Negative limits (including NoLimit) are interpreted as
         /// NoLimit, but the default constructor is the preferred way
         /// to obtain that behaviour.
-        explicit MessageLimiter(const int message_limit)
-            : message_limit_(message_limit < 0 ? NoLimit : message_limit)
+        explicit MessageLimiter(const int tag_limit)
+            : tag_limit_(tag_limit < 0 ? NoLimit : tag_limit),
+              category_limits_({{Log::MessageType::Note, NoLimit},
+                                {Log::MessageType::Info, NoLimit},
+                                {Log::MessageType::Warning, NoLimit},
+                                {Log::MessageType::Error, NoLimit},
+                                {Log::MessageType::Problem, NoLimit},
+                                {Log::MessageType::Bug, NoLimit}})
+        {
+        }
+
+        MessageLimiter(const int tag_limit, const std::map<int64_t, int> category_limits)
+            : tag_limit_(tag_limit < 0 ? NoLimit : tag_limit),
+              category_limits_(category_limits)
         {
         }
 
         /// The message limit (same for all tags).
         int messageLimit() const
         {
-            return message_limit_;
+            return tag_limit_;
         }
 
-        /// Used for handleMessageTag() return type (see that
+        /// Used for handleMessageLimits() return type (see that
         /// function).
         enum class Response
         {
-            PrintMessage, JustOverLimit, OverLimit
+            PrintMessage, JustOverTagLimit, JustOverCategoryLimit, OverTagLimit, OverCategoryLimit
         };
 
         /// If a tag is empty, there is no message limit or for that
-        /// tag (count <= limit), respond PrintMessage.
+        /// (count <= limit), respond PrintMessage.
         /// If (count == limit + 1), respond JustOverLimit.
         /// If (count > limit + 1), respond OverLimit.
-        Response handleMessageTag(const std::string& tag)
+        Response handleMessageLimits(const std::string& tag, const int64_t messageMask)
         {
-            if (tag.empty() || message_limit_ == NoLimit) {
-                return Response::PrintMessage;
+            Response res = Response::PrintMessage;
+            // Deal with tag limits.
+            if (tag.empty() || tag_limit_ == NoLimit) {
+                category_counts_[messageMask]++;
+                res = Response::PrintMessage;
             } else {
                 // See if tag already encountered.
                 auto it = tag_counts_.find(tag);
                 if (it != tag_counts_.end()) {
                     // Already encountered this tag. Increment its count.
                     const int count = ++it->second;
-                    return countBasedResponse(count);
+                    res = countBasedResponse(count, messageMask);
                 } else {
                     // First encounter of this tag. Insert 1.
                     tag_counts_.insert({tag, 1});
-                    return countBasedResponse(1);
+                    res = countBasedResponse(1, messageMask);
                 }
             }
+            // If tag count reached the limit, ignore all the same tagged messages.
+            if (res == Response::JustOverTagLimit || res == Response::OverTagLimit) {
+                return res;
+            } else {
+                if (category_limits_[messageMask] == NoLimit) {
+                    category_counts_[messageMask]++;
+                    res = Response::PrintMessage;
+                } else {
+                    res = countBasedResponse(messageMask);
+                }
+            }
+            return res;
         }
 
     private:
-        Response countBasedResponse(const int count)
+        Response countBasedResponse(const int count, const int64_t messageMask)
         {
-            if (count <= message_limit_) {
+            if (count <= tag_limit_) {
+                category_counts_[messageMask]++;
                 return Response::PrintMessage;
-            } else if (count == message_limit_ + 1) {
-                return Response::JustOverLimit;
+            } else if (count == tag_limit_ + 1) {
+                category_counts_[messageMask]++;
+                return Response::JustOverTagLimit;
             } else {
-                return Response::OverLimit;
+                return Response::OverTagLimit;
             }
         }
 
 
-        int message_limit_;
+        Response countBasedResponse(const int64_t messageMask)
+        {
+            if (category_counts_[messageMask] < category_limits_[messageMask]) {
+                category_counts_[messageMask]++;
+                return Response::PrintMessage;
+            } else if (category_counts_[messageMask] == category_limits_[messageMask] + 1) {
+                category_counts_[messageMask]++;
+                return Response::JustOverCategoryLimit;
+            } else {
+                return Response::OverCategoryLimit;
+            }
+        }
+
+        int tag_limit_;
         std::unordered_map<std::string, int> tag_counts_;
+        std::map<int64_t, int> category_counts_;
+        // info, note, warning, problem, error, bug.
+        std::map<int64_t, int> category_limits_;
+        bool reachTagLimit_;
     };
 
 

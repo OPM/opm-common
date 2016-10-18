@@ -62,13 +62,19 @@ namespace Opm {
 
         // Use the message limiter (if any).
         MessageLimiter::Response res = m_limiter
-            ? m_limiter->handleMessageTag(messageTag)
+            ? m_limiter->handleMessageLimits(messageTag, messageFlag)
             : MessageLimiter::Response::PrintMessage;
-        if (res == MessageLimiter::Response::JustOverLimit) {
+        if (res == MessageLimiter::Response::JustOverTagLimit) {
             // Special case: add a message to this backend about limit being reached.
             std::string msg = "Message limit reached for message tag: " + messageTag;
             addTaggedMessage(messageFlag, "", msg);
         }
+        if (res == MessageLimiter::Response::JustOverCategoryLimit) {
+            // Special case: add a message to this backend about limit being reached.
+            std::string msg = "Message limit reached for message : " + Log::prefixMessage(messageFlag, "");
+            addTaggedMessage(messageFlag, "", msg);
+        }
+
         return res == MessageLimiter::Response::PrintMessage;
     }
 
