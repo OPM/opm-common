@@ -23,7 +23,7 @@
 #endif
 
 #include <opm/output/eclipse/writeECLData.hpp>
-#include <opm/parser/eclipse/Units/ConversionFactors.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <vector>
 
