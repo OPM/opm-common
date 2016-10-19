@@ -71,22 +71,19 @@ namespace Opm {
                        const GridProperties<int>* intGridProperties,
                        const GridProperties<double>* doubleGridProperties)
         {
-            const auto iter = std::find_if( values.begin(), values.end(), []( double value ) { return std::isnan(value); });
-            if (iter != values.end()) {
-                const auto& poro = doubleGridProperties->getKeyword("PORO");
-                const auto& ntg =  doubleGridProperties->getKeyword("NTG");
+            const auto& poro = doubleGridProperties->getKeyword("PORO");
+            const auto& ntg =  doubleGridProperties->getKeyword("NTG");
 
-                if (poro.containsNaN())
-                    throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
-                else {
-                    const auto& poroData = poro.getData();
-                    for (size_t globalIndex = 0; globalIndex < poro.getCartesianSize(); globalIndex++) {
-                        if (std::isnan(values[globalIndex])) {
-                            double cell_poro = poroData[globalIndex];
-                            double cell_ntg = ntg.iget(globalIndex);
-                            double cell_volume = eclipseGrid->getCellVolume(globalIndex);
-                            values[globalIndex] = cell_poro * cell_volume * cell_ntg;
-                        }
+            if (poro.containsNaN())
+                throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
+            else {
+                const auto& poroData = poro.getData();
+                for (size_t globalIndex = 0; globalIndex < poro.getCartesianSize(); globalIndex++) {
+                    if (!std::isfinite(values[globalIndex])) {
+                        double cell_poro = poroData[globalIndex];
+                        double cell_ntg = ntg.iget(globalIndex);
+                        double cell_volume = eclipseGrid->getCellVolume(globalIndex);
+                        values[globalIndex] = cell_poro * cell_volume * cell_ntg;
                     }
                 }
             }
