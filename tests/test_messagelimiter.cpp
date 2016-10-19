@@ -25,7 +25,7 @@
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
 #include <opm/common/OpmLog/MessageLimiter.hpp>
-
+#include <opm/common/OpmLog/LogUtil.hpp>
 
 using namespace Opm;
 
@@ -44,36 +44,37 @@ BOOST_AUTO_TEST_CASE(ConstructionAndLimits)
 
 BOOST_AUTO_TEST_CASE(Response)
 {
+    using namespace Opm;
     {
         // No limits.
         MessageLimiter m;
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
     }
 
     {
         // Limit == 0.
         MessageLimiter m(0);
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::JustOverLimit);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::JustOverLimit);
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::OverLimit);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::OverLimit);
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::OverLimit);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::OverLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
     }
 
     {
         // Limit == 1.
         MessageLimiter m(1);
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::PrintMessage);
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::JustOverLimit);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::JustOverLimit);
-        BOOST_CHECK(m.handleMessageTag("tag1") == MessageLimiter::Response::OverLimit);
-        BOOST_CHECK(m.handleMessageTag("tag2") == MessageLimiter::Response::OverLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
     }
 }
