@@ -23,9 +23,9 @@
 namespace Opm {
 
 
-    void EclipsePRTLog::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message)
+    void EclipsePRTLog::addMessageUnconditionally(int64_t messageType, const std::string& message)
     {
-        StreamLog::addTaggedMessage(messageType, messageTag, message);
+        StreamLog::addMessageUnconditionally(messageType, message);
         m_count[messageType]++;
     }
 

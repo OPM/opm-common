@@ -47,6 +47,12 @@ namespace Opm {
         addTaggedMessage(messageFlag, "", message);
     }
 
+    void LogBackend::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message) {
+        if (includeMessage( messageType, messageTag )) {
+            addMessageUnconditionally(messageType, message);
+        }
+    }
+
     int64_t LogBackend::getMask() const
     {
         return m_mask;
@@ -67,12 +73,13 @@ namespace Opm {
         if (res == MessageLimiter::Response::JustOverTagLimit) {
             // Special case: add a message to this backend about limit being reached.
             std::string msg = "Message limit reached for message tag: " + messageTag;
-            addTaggedMessage(messageFlag, "", msg);
+            addMessageUnconditionally(messageFlag, msg);
         }
         if (res == MessageLimiter::Response::JustOverCategoryLimit) {
             // Special case: add a message to this backend about limit being reached.
-            std::string msg = "Message limit reached for message : " + Log::prefixMessage(messageFlag, "");
-            addTaggedMessage(messageFlag, "", msg);
+            std::string prefix = Log::prefixMessage(messageFlag, "");
+            std::string msg = "Message limit reached for message category: " + prefix.substr(0, prefix.size()-2);
+            addMessageUnconditionally(messageFlag, msg);
         }
 
         return res == MessageLimiter::Response::PrintMessage;

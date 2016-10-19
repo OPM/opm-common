@@ -41,14 +41,14 @@ TimerLog::TimerLog(std::ostream& os) : StreamLog( os , StopTimer | StartTimer )
 
 
 
-void TimerLog::addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& msg ) {
+void TimerLog::addMessageUnconditionally(int64_t messageType, const std::string& msg ) {
     if (messageType == StopTimer) {
         clock_t stop = clock();
         double secondsElapsed = 1.0 * (m_start - stop) / CLOCKS_PER_SEC ;
 
         m_work.str("");
         m_work << std::fixed << msg << ": " << secondsElapsed << " seconds ";
-        StreamLog::addTaggedMessage( messageType, messageTag, m_work.str());
+        StreamLog::addMessageUnconditionally( messageType, m_work.str());
     } else {
         if (messageType == StartTimer)
             m_start = clock();

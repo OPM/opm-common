@@ -66,6 +66,18 @@ namespace Opm
             : tag_limit_(tag_limit < 0 ? NoLimit : tag_limit),
               category_limits_(category_limits)
         {
+            // Must ensure NoLimit for categories that are not
+            // explicitly specified in the input.
+            for (auto category : { Log::MessageType::Note,
+                                   Log::MessageType::Info,
+                                   Log::MessageType::Warning,
+                                   Log::MessageType::Error,
+                                   Log::MessageType::Problem,
+                                   Log::MessageType::Bug }) {
+                if (category_limits_.find(category) == category_limits_.end()) {
+                    category_limits_[category] = NoLimit;
+                }
+            }
         }
 
         /// The tag message limit (same for all tags).
