@@ -20,11 +20,14 @@
 #ifndef OPM_MESSAGELIMITER_HEADER_INCLUDED
 #define OPM_MESSAGELIMITER_HEADER_INCLUDED
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+#include <cassert>
+#include <map>
 #include <string>
 #include <unordered_map>
-#include <map>
 #include <vector>
-#include <opm/common/OpmLog/LogUtil.hpp>
+
+
 namespace Opm
 {
 
@@ -38,13 +41,7 @@ namespace Opm
 
         /// Default constructor, no limit to the number of messages.
         MessageLimiter()
-            : tag_limit_(NoLimit),
-              category_limits_({{Log::MessageType::Note, NoLimit},
-                                {Log::MessageType::Info, NoLimit},
-                                {Log::MessageType::Warning, NoLimit},
-                                {Log::MessageType::Error, NoLimit},
-                                {Log::MessageType::Problem, NoLimit},
-                                {Log::MessageType::Bug, NoLimit}})
+            : MessageLimiter(NoLimit)
         {
         }
 
@@ -71,10 +68,22 @@ namespace Opm
         {
         }
 
-        /// The message limit (same for all tags).
-        int messageLimit() const
+        /// The tag message limit (same for all tags).
+        int tagMessageLimit() const
         {
             return tag_limit_;
+        }
+
+        /// The category message limits.
+        const std::map<int64_t, int>& categoryMessageLimits() const
+        {
+            return category_limits_;
+        }
+
+        /// The category message counts.
+        const std::map<int64_t, int>& categoryMessageCounts() const
+        {
+            return category_counts_;
         }
 
         /// Used for handleMessageLimits() return type (see that
@@ -84,52 +93,51 @@ namespace Opm
             PrintMessage, JustOverTagLimit, JustOverCategoryLimit, OverTagLimit, OverCategoryLimit
         };
 
-        /// If a tag is empty, there is no message limit or for that
-        /// (count <= limit), respond PrintMessage.
-        /// If (count == limit + 1), respond JustOverLimit.
-        /// If (count > limit + 1), respond OverLimit.
+        /// If (tag count == tag limit + 1) for the passed tag, respond JustOverTagLimit.
+        /// If (tag count > tag limit + 1), respond OverTagLimit.
+        /// If a tag is empty, there is no tag message limit or for that tag
+        /// (tag count <= tag limit), consider the category limits:
+        /// If (category count == category limit + 1) for the passed messageMask, respond JustOverCategoryLimit.
+        /// If (category count > category limit + 1), respond OverCategoryLimit.
+        /// If (category count <= category limit), or there is no limit for that category, respond PrintMessage.
         Response handleMessageLimits(const std::string& tag, const int64_t messageMask)
         {
             Response res = Response::PrintMessage;
+
             // Deal with tag limits.
-            if (tag.empty() || tag_limit_ == NoLimit) {
-                category_counts_[messageMask]++;
-                res = Response::PrintMessage;
-            } else {
+            if (!tag.empty() && tag_limit_ != NoLimit) {
                 // See if tag already encountered.
                 auto it = tag_counts_.find(tag);
                 if (it != tag_counts_.end()) {
                     // Already encountered this tag. Increment its count.
                     const int count = ++it->second;
-                    res = countBasedResponse(count, messageMask);
+                    res = countBasedResponseTag(count);
                 } else {
                     // First encounter of this tag. Insert 1.
                     tag_counts_.insert({tag, 1});
-                    res = countBasedResponse(1, messageMask);
+                    res = countBasedResponseTag(1);
                 }
             }
-            // If tag count reached the limit, ignore all the same tagged messages.
-            if (res == Response::JustOverTagLimit || res == Response::OverTagLimit) {
-                return res;
-            } else {
-                if (category_limits_[messageMask] == NoLimit) {
-                    category_counts_[messageMask]++;
-                    res = Response::PrintMessage;
-                } else {
-                    res = countBasedResponse(messageMask);
+
+            // If tag count reached the limit, the message is not counted
+            // towards the category limits.
+            if (res == Response::PrintMessage) {
+                // We are *not* above the tag limit, consider category limit.
+                const int count = ++category_counts_[messageMask];
+                if (category_limits_[messageMask] != NoLimit) {
+                    res = countBasedResponseCategory(count, messageMask);
                 }
             }
+
             return res;
         }
 
     private:
-        Response countBasedResponse(const int count, const int64_t messageMask)
+        Response countBasedResponseTag(const int count) const
         {
             if (count <= tag_limit_) {
-                category_counts_[messageMask]++;
                 return Response::PrintMessage;
             } else if (count == tag_limit_ + 1) {
-                category_counts_[messageMask]++;
                 return Response::JustOverTagLimit;
             } else {
                 return Response::OverTagLimit;
@@ -137,13 +145,12 @@ namespace Opm
         }
 
 
-        Response countBasedResponse(const int64_t messageMask)
+        Response countBasedResponseCategory(const int count, const int64_t messageMask) const
         {
-            if (category_counts_[messageMask] < category_limits_[messageMask]) {
-                category_counts_[messageMask]++;
+            const int limit = category_limits_.at(messageMask);
+            if (count <= limit) {
                 return Response::PrintMessage;
-            } else if (category_counts_[messageMask] == category_limits_[messageMask] + 1) {
-                category_counts_[messageMask]++;
+            } else if (count == limit + 1) {
                 return Response::JustOverCategoryLimit;
             } else {
                 return Response::OverCategoryLimit;
@@ -152,10 +159,13 @@ namespace Opm
 
         int tag_limit_;
         std::unordered_map<std::string, int> tag_counts_;
-        std::map<int64_t, int> category_counts_;
-        // info, note, warning, problem, error, bug.
         std::map<int64_t, int> category_limits_;
-        bool reachTagLimit_;
+        std::map<int64_t, int> category_counts_ = {{Log::MessageType::Note, 0},
+                                                   {Log::MessageType::Info, 0},
+                                                   {Log::MessageType::Warning, 0},
+                                                   {Log::MessageType::Error, 0},
+                                                   {Log::MessageType::Problem, 0},
+                                                   {Log::MessageType::Bug, 0}};
     };
 
 
