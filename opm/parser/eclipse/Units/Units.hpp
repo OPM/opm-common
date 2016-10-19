@@ -242,15 +242,6 @@ namespace Opm {
                 return q / unit;
             }
         } // namespace convert
-
-
-#ifndef HAS_ATTRIBUTE_UNUSED
-        namespace detail {
-            // Some units are sometimes unused, and generate a (potentially) large number of warnings
-            // Adding them here silences these warnings, and should have no side-effects
-            constexpr double __attribute__((unused)) unused_units = stb + liter + barsa + psia + darcy;
-        } // namespace detail
-#endif
     }
 
     namespace Metric {
