@@ -2,10 +2,10 @@
 #
 # Synopsis:
 #
-#	remove_duplicate_libraries (module)
+# remove_duplicate_libraries (module)
 #
 # where
-#	module         Name of the module whose libraries should be pruned
+# module         Name of the module whose libraries should be pruned
 
 # Copyright (C) 2013 Uni Research AS
 # This file is licensed under the GNU General Public License v3.0
@@ -14,9 +14,9 @@
 # missing functions in those later in the list will be resolved
 macro (remove_duplicate_libraries module)
   if (DEFINED ${module}_LIBRARIES)
-	list (REVERSE ${module}_LIBRARIES)
-	list (REMOVE_DUPLICATES ${module}_LIBRARIES)
-	list (REVERSE ${module}_LIBRARIES)
+  list (REVERSE ${module}_LIBRARIES)
+  list (REMOVE_DUPLICATES ${module}_LIBRARIES)
+  list (REVERSE ${module}_LIBRARIES)
   endif (DEFINED ${module}_LIBRARIES)
 endmacro (remove_duplicate_libraries module)
 
@@ -24,7 +24,7 @@ endmacro (remove_duplicate_libraries module)
 # the list is an idempotent action
 macro (remove_duplicate_var module suffix)
   if (DEFINED ${module}_${suffix})
-	list (REMOVE_DUPLICATES ${module}_${suffix})
+  list (REMOVE_DUPLICATES ${module}_${suffix})
   endif (DEFINED ${module}_${suffix})
 endmacro (remove_duplicate_var module suffix)
 

@@ -3,13 +3,13 @@
 function (system_info)
   message (STATUS "CMake version: ${CMAKE_VERSION}")
   if (CMAKE_SYSTEM MATCHES "Linux")
-	distro_name (DISTRO_NAME)
-	message (STATUS "Linux distribution: ${DISTRO_NAME}")
+  distro_name (DISTRO_NAME)
+  message (STATUS "Linux distribution: ${DISTRO_NAME}")
   elseif (CMAKE_SYSTEM MATCHES "Darwin")
-	sw_vers (OS_VERSION)
-	message (STATUS "${OS_VERSION}")
+  sw_vers (OS_VERSION)
+  message (STATUS "${OS_VERSION}")
   else (CMAKE_SYSTEM MATCHES "Linux")
-	message (STATUS "Operating system: ${CMAKE_SYSTEM}")
+  message (STATUS "Operating system: ${CMAKE_SYSTEM}")
   endif (CMAKE_SYSTEM MATCHES "Linux")
 
   target_architecture (TARGET_CPU)
@@ -44,21 +44,21 @@ function (distro_name varname)
   # start with /etc/os-release,
   # see <http://0pointer.de/blog/projects/os-release.html>
   if (NOT has_os_release STREQUAL "")
-	read_release (PRETTY_NAME FROM /etc/os-release INTO _descr)
+  read_release (PRETTY_NAME FROM /etc/os-release INTO _descr)
   # previous "standard", used on older Ubuntu and Debian
   elseif (NOT has_lsb_release STREQUAL "")
-	read_release (DISTRIB_DESCRIPTION FROM /etc/lsb-release INTO _descr)
+  read_release (DISTRIB_DESCRIPTION FROM /etc/lsb-release INTO _descr)
   endif (NOT has_os_release STREQUAL "")
   # RHEL/CentOS etc. has just a text-file
   if (NOT _descr)
-	if (NOT has_sys_release STREQUAL "")
-	  file (READ /etc/system-release _descr)
-	elseif (NOT has_redhat_release STREQUAL "")
-	  file (READ /etc/redhat-release _descr)
-	else (NOT has_sys_release STREQUAL "")
-	  # no yet known release file found
-	  set (_descr "unknown")
-	endif (NOT has_sys_release STREQUAL "")
+  if (NOT has_sys_release STREQUAL "")
+    file (READ /etc/system-release _descr)
+  elseif (NOT has_redhat_release STREQUAL "")
+    file (READ /etc/redhat-release _descr)
+  else (NOT has_sys_release STREQUAL "")
+    # no yet known release file found
+    set (_descr "unknown")
+  endif (NOT has_sys_release STREQUAL "")
   endif (NOT _descr)
   # return from function (into appropriate variable)
   string (STRIP "${_descr}" _descr)
@@ -68,15 +68,15 @@ endfunction (distro_name varname)
 # read property from the newer /etc/os-release
 function (read_release valuename FROM filename INTO varname)
   file (STRINGS ${filename} _distrib
-	REGEX "^${valuename}="
-	)
+  REGEX "^${valuename}="
+  )
   string (REGEX REPLACE
-	"^${valuename}=\"?\(.*\)" "\\1" ${varname} "${_distrib}"
-	)
+  "^${valuename}=\"?\(.*\)" "\\1" ${varname} "${_distrib}"
+  )
   # remove trailing quote that got globbed by the wildcard (greedy match)
   string (REGEX REPLACE
-	"\"$" "" ${varname} "${${varname}}"
-	)
+  "\"$" "" ${varname} "${${varname}}"
+  )
   set (${varname} "${${varname}}" PARENT_SCOPE)
 endfunction (read_release valuename FROM filename INTO varname)
 
@@ -92,93 +92,93 @@ function (target_architecture output_var)
   # the Mach-O binary, and there is a variable that tells us which those
   # are, but they may be in any order, so they must be normalized
   if (APPLE AND CMAKE_OSX_ARCHITECTURES)
-	# detect each of the possible candidates as a separate flag
-	set (osx_arch_list i386 x86_64)
-	foreach (osx_arch IN ITEMS ${CMAKE_OSX_ARCHITECTURES})
-	  foreach (candidate IN LISTS osx_arch_list)
-		if ("${osx_arch}" STREQUAL "${candidate}")
-		  set (osx_arch_${candidate} TRUE)
-		endif ("${osx_arch}" STREQUAL "${candidate}")
-	  endforeach (candidate)
-	endforeach (osx_arch)
+  # detect each of the possible candidates as a separate flag
+  set (osx_arch_list i386 x86_64)
+  foreach (osx_arch IN ITEMS ${CMAKE_OSX_ARCHITECTURES})
+    foreach (candidate IN LISTS osx_arch_list)
+    if ("${osx_arch}" STREQUAL "${candidate}")
+      set (osx_arch_${candidate} TRUE)
+    endif ("${osx_arch}" STREQUAL "${candidate}")
+    endforeach (candidate)
+  endforeach (osx_arch)
 
-	# add all architectures back in normalized order
-	foreach (candidate IN LISTS osx_arch_list)
-	  if (osx_arch_${candidate})
-		list (APPEND ARCH ${candidate})
-	  endif (osx_arch_${candidate})
-	endforeach (candidate)
+  # add all architectures back in normalized order
+  foreach (candidate IN LISTS osx_arch_list)
+    if (osx_arch_${candidate})
+    list (APPEND ARCH ${candidate})
+    endif (osx_arch_${candidate})
+  endforeach (candidate)
 
   else (APPLE AND CMAKE_OSX_ARCHITECTURES)
-	# use the preprocessor defines to determine which target architectures
-	# that are available
-	set (arch_c_src "
-	  #if defined(__arm__) || defined(__TARGET_ARCH_ARM)
-	  #  if defined(__ARM_ARCH_7__) \\
-	     || defined(__ARM_ARCH_7A__) \\
-	     || defined(__ARM_ARCH_7R__) \\
-	     || defined(__ARM_ARCH_7M__) \\
-	     || (defined(__TARGET_ARCH_ARM) && __TARGET_ARCH_ARM-0 >= 7)
-	  #    error cmake_ARCH armv7
-	  #  elif defined(__ARM_ARCH_6__) \\
-	       || defined(__ARM_ARCH_6J__) \\
-	       || defined(__ARM_ARCH_6T2__) \\
-	       || defined(__ARM_ARCH_6Z__) \\
-	       || defined(__ARM_ARCH_6K__) \\
-	       || defined(__ARM_ARCH_6ZK__) \\
-	       || defined(__ARM_ARCH_6M__) \\
-	       || (defined(__TARGET_ARCH_ARM) && __TARGET_ARCH_ARM-0 >= 6)
-	  #    error cmake_ARCH armv6
-	  #  elif defined(__ARM_ARCH_5TEJ__) \\
-	      || (defined(__TARGET_ARCH_ARM) && __TARGET_ARCH_ARM-0 >= 5)
-	  #    error cmake_ARCH armv5
-	  #  else
-	  #    error cmake_ARCH arm
-	  #  endif
-	  #elif defined(__i386) \\
+  # use the preprocessor defines to determine which target architectures
+  # that are available
+  set (arch_c_src "
+    #if defined(__arm__) || defined(__TARGET_ARCH_ARM)
+    #  if defined(__ARM_ARCH_7__) \\
+       || defined(__ARM_ARCH_7A__) \\
+       || defined(__ARM_ARCH_7R__) \\
+       || defined(__ARM_ARCH_7M__) \\
+       || (defined(__TARGET_ARCH_ARM) && __TARGET_ARCH_ARM-0 >= 7)
+    #    error cmake_ARCH armv7
+    #  elif defined(__ARM_ARCH_6__) \\
+         || defined(__ARM_ARCH_6J__) \\
+         || defined(__ARM_ARCH_6T2__) \\
+         || defined(__ARM_ARCH_6Z__) \\
+         || defined(__ARM_ARCH_6K__) \\
+         || defined(__ARM_ARCH_6ZK__) \\
+         || defined(__ARM_ARCH_6M__) \\
+         || (defined(__TARGET_ARCH_ARM) && __TARGET_ARCH_ARM-0 >= 6)
+    #    error cmake_ARCH armv6
+    #  elif defined(__ARM_ARCH_5TEJ__) \\
+        || (defined(__TARGET_ARCH_ARM) && __TARGET_ARCH_ARM-0 >= 5)
+    #    error cmake_ARCH armv5
+    #  else
+    #    error cmake_ARCH arm
+    #  endif
+    #elif defined(__i386) \\
          || defined(__i386__) \\
          || defined(_M_IX86)
-	  #  error cmake_ARCH i386
-	  #elif defined(__x86_64) \\
+    #  error cmake_ARCH i386
+    #elif defined(__x86_64) \\
          || defined(__x86_64__) \\
          || defined(__amd64) \\
          || defined(_M_X64)
-	  #  error cmake_ARCH x86_64
-	  #elif defined(__ia64) \\
+    #  error cmake_ARCH x86_64
+    #elif defined(__ia64) \\
          || defined(__ia64__) \\
          || defined(_M_IA64)
-	  #  error cmake_ARCH ia64
-	  #elif defined(__ppc__) \\
+    #  error cmake_ARCH ia64
+    #elif defined(__ppc__) \\
          || defined(__ppc) \\
          || defined(__powerpc__) \\
-	     || defined(_ARCH_COM) \\
+       || defined(_ARCH_COM) \\
          || defined(_ARCH_PWR) \\
          || defined(_ARCH_PPC) \\
-	     || defined(_M_MPPC) \\
+       || defined(_M_MPPC) \\
          || defined(_M_PPC)
-	  #  if defined(__ppc64__) \\
+    #  if defined(__ppc64__) \\
          || defined(__powerpc64__) \\
          || defined(__64BIT__)
-	  #    error cmake_ARCH ppc64
-	  #  else
-	  #    error cmake_ARCH ppc
-	  #  endif
-	  #else
-	  #  error cmake_ARCH unknown
-	  #endif
-	  ")
-	
-	# write a temporary program that can be compiled to get the result
-	set (tmp_dir "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp")
-	set (arch_c "${tmp_dir}/arch.c")
-	file (WRITE "${arch_c}" "${arch_c_src}")
-	try_compile (
-	  compile_result_unused
-	  "${tmp_dir}"
-	  "${arch_c}"
-	  CMAKE_FLAGS CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
-	  OUTPUT_VARIABLE ARCH
-	  )
+    #    error cmake_ARCH ppc64
+    #  else
+    #    error cmake_ARCH ppc
+    #  endif
+    #else
+    #  error cmake_ARCH unknown
+    #endif
+    ")
+
+  # write a temporary program that can be compiled to get the result
+  set (tmp_dir "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp")
+  set (arch_c "${tmp_dir}/arch.c")
+  file (WRITE "${arch_c}" "${arch_c_src}")
+  try_compile (
+    compile_result_unused
+    "${tmp_dir}"
+    "${arch_c}"
+    CMAKE_FLAGS CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
+    OUTPUT_VARIABLE ARCH
+    )
 
     # parse the architecture name from the compiler output
     string (REGEX MATCH "cmake_ARCH ([a-zA-Z0-9_]+)" ARCH "${ARCH}")

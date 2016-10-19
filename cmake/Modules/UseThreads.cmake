@@ -2,23 +2,23 @@
 #
 # Synopsis:
 #
-#	find_threads (module)
+# find_threads (module)
 #
 # where:
 #
-#	module            Name of the module to which Threads support
-#	                  etc. should be added, e.g. "opm-core".
+# module            Name of the module to which Threads support
+#                   etc. should be added, e.g. "opm-core".
 #
 # Note: Compiler flags are always added globally, to avoid ABI
 # incompatibility problems.
 #
 # It is assumed that the following variables are available
 #
-#	${module}_QUIET      Verbosity level of the parent's find module
-#	${module}_LIBRARIES  List of libraries to which Thread support will be added
+# ${module}_QUIET      Verbosity level of the parent's find module
+# ${module}_LIBRARIES  List of libraries to which Thread support will be added
 #
 # Example:
-#	find_threads (opm-core)
+# find_threads (opm-core)
 
 include (AddOptions)
 include (UseCompVer)

@@ -1,7 +1,7 @@
 # - Find the Python wrappers for Ensemble-based Reservoir Tool (ERT)
 #
 # Set the cache variable ERT_PYTHON_PATH to the install location of
-# the root ert package.  
+# the root ert package.
 
 find_package(PythonInterp)
 if(PYTHONINTERP_FOUND)
@@ -31,7 +31,7 @@ if(PYTHONINTERP_FOUND)
 
   # Add various popular sibling alternatives.
   list(APPEND PATH_LIST "${PROJECT_SOURCE_DIR}/../ert/build"
-    			"${PROJECT_BINARY_DIR}/../ert-build")
+          "${PROJECT_BINARY_DIR}/../ert-build")
 
   foreach( PATH ${PATH_LIST})
       set( python_code "import sys; sys.path.insert(0 , '${PATH}/${PYTHON_INSTALL_PREFIX}'); import os.path; import inspect; import ert; print os.path.dirname(os.path.dirname(inspect.getfile(ert))); from ert.ecl import EclSum")

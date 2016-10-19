@@ -33,7 +33,7 @@ find_opm_package (
 "#include <opm/material/Constants.hpp>
 int main (void) {
   double c = Opm::Constants<double>::c;
-  return 0;  
+  return 0;
 }
 "
   # config variables

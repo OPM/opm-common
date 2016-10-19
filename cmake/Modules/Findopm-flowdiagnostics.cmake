@@ -21,7 +21,7 @@ find_opm_package (
 
   # dependencies
   "${opm-flowdiagnostics_DEPS}"
-  
+
   # header to search for
   "opm/flowdiagnostics/Toolbox.hpp"
 

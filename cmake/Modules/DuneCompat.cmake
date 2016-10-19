@@ -17,9 +17,9 @@ if (CMAKE_GENERATOR MATCHES "Unix Makefiles")
   # amazingly, nothing depends on the generated Makefile, so this can be
   # run whenever in the build without trigging a compile of e.g. config.h
   add_custom_target (dune-compat ALL
-	COMMAND ${CMAKE_COMMAND} -DCMAKE_HOME_DIRECTORY=${CMAKE_HOME_DIRECTORY} -P ${OPM_MACROS_ROOT}/cmake/Scripts/DuneCompat2.cmake
-	COMMENT "Patching Makefile to be DUNE compatible"
-	)
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_HOME_DIRECTORY=${CMAKE_HOME_DIRECTORY} -P ${OPM_MACROS_ROOT}/cmake/Scripts/DuneCompat2.cmake
+  COMMENT "Patching Makefile to be DUNE compatible"
+  )
 endif (CMAKE_GENERATOR MATCHES "Unix Makefiles")
 
 # dunecontrol refuses to use a build tree as module directory unless
@@ -35,13 +35,13 @@ if (_src_dir_len GREATER _bin_dir_len)
 else (_src_dir_len GREATER _bin_dir_len)
   string (SUBSTRING "${PROJECT_BINARY_DIR}/" 0 ${_src_dir_len} _proj_prefix)
   if ("${PROJECT_SOURCE_DIR}/" STREQUAL "${_proj_prefix}")
-	set (_not_substring FALSE)
+  set (_not_substring FALSE)
   else ("${PROJECT_SOURCE_DIR}/" STREQUAL "${_proj_prefix}")
-	set (_not_substring TRUE)
+  set (_not_substring TRUE)
   endif ("${PROJECT_SOURCE_DIR}/" STREQUAL "${_proj_prefix}")
 endif (_src_dir_len GREATER _bin_dir_len)
 if (_not_substring)
   execute_process (COMMAND
-	${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/dune.module ${PROJECT_BINARY_DIR}/dune.module
-	)
+  ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/dune.module ${PROJECT_BINARY_DIR}/dune.module
+  )
 endif (_not_substring)

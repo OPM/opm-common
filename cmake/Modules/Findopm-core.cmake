@@ -19,7 +19,7 @@ find_opm_package (
 
   # dependencies
   "${opm-core_DEPS}"
-  
+
   # header to search for
   "opm/core/grid.h"
 
@@ -35,7 +35,7 @@ int main (void) {
   struct UnstructuredGrid *g;
   g = create_grid_empty ();
   destroy_grid (g);
-  return 0;  
+  return 0;
 }
 "
   # config variables

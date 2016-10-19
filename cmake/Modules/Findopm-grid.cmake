@@ -18,7 +18,7 @@ find_opm_package (
 
   # dependencies
   "${opm-grid_DEPS}"
-  
+
   # header to search for
   "dune/grid/CpGrid.hpp"
 

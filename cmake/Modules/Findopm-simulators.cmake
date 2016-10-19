@@ -19,7 +19,7 @@ find_opm_package (
 
   # dependencies
   "${opm-simulators_DEPS}"
-  
+
   # header to search for
   "opm/autodiff/AutoDiff.hpp"
 
@@ -34,7 +34,7 @@ find_opm_package (
 int main (void) {
   Opm::AutoDiff<double> x = Opm::AutoDiff<double>::constant(42.);
   (void) x;
-  return 0;  
+  return 0;
 }
 "
   # config variables

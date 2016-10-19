@@ -19,7 +19,7 @@ find_opm_package (
 
   # dependencies
   "${ewoms_DEPS}"
-  
+
   # header to search for
   "ewoms/common/start.hh"
 

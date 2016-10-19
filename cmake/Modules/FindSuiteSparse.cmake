@@ -133,8 +133,8 @@ set (SuiteSparse_EVERYTHING_FOUND TRUE)
 foreach (module IN LISTS SuiteSparse_MODULES)
   string (TOUPPER ${module} MODULE)
   if (NOT SuiteSparse_${MODULE}_FOUND)
-	set (SuiteSparse_EVERYTHING_FOUND FALSE)
-	break ()
+  set (SuiteSparse_EVERYTHING_FOUND FALSE)
+  break ()
   endif (NOT SuiteSparse_${MODULE}_FOUND)
 endforeach (module)
 if (SuiteSparse_EVERYTHING_FOUND)
@@ -172,7 +172,7 @@ if (config_LIBRARY)
   # POSIX.1-2001 REALTIME portion require us to link this library too for
   # clock_gettime() which is used by suitesparseconfig
   if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-	list (APPEND SuiteSparse_EXTRA_LIBS "-lrt")
+  list (APPEND SuiteSparse_EXTRA_LIBS "-lrt")
   endif ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
 endif (config_LIBRARY)
 
@@ -181,18 +181,18 @@ foreach (module IN LISTS SuiteSparse_MODULES)
   string (TOUPPER ${module} MODULE)
   # search for files which implements this module
   find_path (${MODULE}_INCLUDE_DIR
-	NAMES ${module}.h
-	PATHS ${SuiteSparse_SEARCH_PATH}
-	PATH_SUFFIXES "include" "include/suitesparse" "include/ufsparse" "${MODULE}/Include"
-	${_no_default_path}
-	)
+  NAMES ${module}.h
+  PATHS ${SuiteSparse_SEARCH_PATH}
+  PATH_SUFFIXES "include" "include/suitesparse" "include/ufsparse" "${MODULE}/Include"
+  ${_no_default_path}
+  )
 
   find_library (${MODULE}_LIBRARY
-	NAMES "${_pref_}${module}${_suff_}"
-	PATHS ${SuiteSparse_SEARCH_PATH}
-	PATH_SUFFIXES "lib/.libs" "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}" "lib/ufsparse" "${MODULE}/Lib"
-	${_no_default_path}
-	)
+  NAMES "${_pref_}${module}${_suff_}"
+  PATHS ${SuiteSparse_SEARCH_PATH}
+  PATH_SUFFIXES "lib/.libs" "lib" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}" "lib/ufsparse" "${MODULE}/Lib"
+  ${_no_default_path}
+  )
   # start out by including the module itself; other dependencies will be added later
   set (${MODULE}_INCLUDE_DIRS ${${MODULE}_INCLUDE_DIR})
   set (${MODULE}_LIBRARIES ${${MODULE}_LIBRARY})
@@ -203,10 +203,10 @@ if (CHOLMOD_LIBRARY)
   list (APPEND CHOLMOD_LIBRARIES ${AMD_LIBRARIES} ${COLAMD_LIBRARIES})
   # optional libraries; don't insert any -NOT_FOUND paths
   if (CAMD_LIBRARY)
-	list (APPEND CHOLMOD_LIBRARIES ${CAMD_LIBRARIES})
+  list (APPEND CHOLMOD_LIBRARIES ${CAMD_LIBRARIES})
   endif (CAMD_LIBRARY)
   if (CCOLAMD_LIBRARY)
-	list (APPEND CHOLMOD_LIBRARIES ${CCOLAMD_LIBRARIES})
+  list (APPEND CHOLMOD_LIBRARIES ${CCOLAMD_LIBRARIES})
   endif (CCOLAMD_LIBRARY)
   list (REVERSE CHOLMOD_LIBRARIES)
   # always remove the *first* library from the list
@@ -218,19 +218,19 @@ if (UMFPACK_LIBRARY)
   # test if umfpack is usable with only amd and not cholmod
   try_compile_umfpack (HAVE_UMFPACK_WITHOUT_CHOLMOD ${AMD_LIBRARIES})
   if (HAVE_UMFPACK_WITHOUT_CHOLMOD)
-	list (APPEND UMFPACK_EXTRA_LIBS ${AMD_LIBRARIES})
+  list (APPEND UMFPACK_EXTRA_LIBS ${AMD_LIBRARIES})
   else (HAVE_UMFPACK_WITHOUT_CHOLMOD)
-	if (CHOLMOD_LIBRARIES)
-	  try_compile_umfpack (HAVE_UMFPACK_WITH_CHOLMOD ${CHOLMOD_LIBRARIES})
-	  if (HAVE_UMFPACK_WITH_CHOLMOD)
-		list (APPEND UMFPACK_EXTRA_LIBS ${CHOLMOD_LIBRARIES})
-	  else (HAVE_UMFPACK_WITH_CHOLMOD)
-		set (UMFPACK_EXTRA_LIBS "-NOTFOUND")
-	  endif (HAVE_UMFPACK_WITH_CHOLMOD)
-	else (CHOLMOD_LIBRARIES)
-	  # if we don't have cholmod, then we certainly cannot have umfpack with cholmod
-	  set (UMFPACK_EXTRA_LIBS "-NOTFOUND")
-	endif (CHOLMOD_LIBRARIES)
+  if (CHOLMOD_LIBRARIES)
+    try_compile_umfpack (HAVE_UMFPACK_WITH_CHOLMOD ${CHOLMOD_LIBRARIES})
+    if (HAVE_UMFPACK_WITH_CHOLMOD)
+    list (APPEND UMFPACK_EXTRA_LIBS ${CHOLMOD_LIBRARIES})
+    else (HAVE_UMFPACK_WITH_CHOLMOD)
+    set (UMFPACK_EXTRA_LIBS "-NOTFOUND")
+    endif (HAVE_UMFPACK_WITH_CHOLMOD)
+  else (CHOLMOD_LIBRARIES)
+    # if we don't have cholmod, then we certainly cannot have umfpack with cholmod
+    set (UMFPACK_EXTRA_LIBS "-NOTFOUND")
+  endif (CHOLMOD_LIBRARIES)
   endif (HAVE_UMFPACK_WITHOUT_CHOLMOD)
   list (APPEND UMFPACK_LIBRARIES ${UMFPACK_EXTRA_LIBS})
   list (REVERSE UMFPACK_LIBRARIES)
@@ -251,20 +251,20 @@ foreach (module IN LISTS SuiteSparse_FIND_COMPONENTS)
   string (TOUPPER ${module} MODULE)
   set (SuiteSparse_${MODULE}_FOUND TRUE)
   foreach (file IN LISTS ${MODULE}_INCLUDE_DIRS ${MODULE}_LIBRARIES)
-	if (NOT EXISTS ${file})
-	  set (SuiteSparse_${MODULE}_FOUND FALSE)
-	endif (NOT EXISTS ${file})
+  if (NOT EXISTS ${file})
+    set (SuiteSparse_${MODULE}_FOUND FALSE)
+  endif (NOT EXISTS ${file})
   endforeach (file)
   if (NOT SuiteSparse_${MODULE}_FOUND)
-	set (SuiteSparse_FOUND FALSE)
-	# use empty string instead of zero, so it can be tested with #ifdef
-	# as well as #if in the source code
-	set (HAVE_SUITESPARSE_${MODULE}_H "" CACHE INT "Is ${module} header present?")
+  set (SuiteSparse_FOUND FALSE)
+  # use empty string instead of zero, so it can be tested with #ifdef
+  # as well as #if in the source code
+  set (HAVE_SUITESPARSE_${MODULE}_H "" CACHE INT "Is ${module} header present?")
   else (NOT SuiteSparse_${MODULE}_FOUND)
-	set (HAVE_SUITESPARSE_${MODULE}_H 1 CACHE INT "Is ${module} header present?")
-	list (APPEND SuiteSparse_LIBRARIES "${${MODULE}_LIBRARIES}")
-	list (APPEND SuiteSparse_LINKER_FLAGS "${${MODULE}_LINKER_FLAGS}")
-	list (APPEND SuiteSparse_INCLUDE_DIRS "${${MODULE}_INCLUDE_DIRS}")
+  set (HAVE_SUITESPARSE_${MODULE}_H 1 CACHE INT "Is ${module} header present?")
+  list (APPEND SuiteSparse_LIBRARIES "${${MODULE}_LIBRARIES}")
+  list (APPEND SuiteSparse_LINKER_FLAGS "${${MODULE}_LINKER_FLAGS}")
+  list (APPEND SuiteSparse_INCLUDE_DIRS "${${MODULE}_INCLUDE_DIRS}")
   endif (NOT SuiteSparse_${MODULE}_FOUND)
   mark_as_advanced (HAVE_SUITESPARSE_${MODULE}_H)
   mark_as_advanced (${MODULE}_INCLUDE_DIR)

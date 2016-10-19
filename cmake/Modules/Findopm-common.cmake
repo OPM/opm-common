@@ -32,7 +32,7 @@ find_opm_package (
   # test program
   "#include <opm/common/utility/platform_dependent/disable_warnings.h>
 int main (void) {
-  return 0;  
+  return 0;
 }
 "
 

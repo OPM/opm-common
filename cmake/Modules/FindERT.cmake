@@ -5,10 +5,10 @@
 #
 # If found, it sets these variables:
 #
-#	ERT_INCLUDE_DIRS      Header file directories
-#	ERT_LIBRARIES         Archives and shared objects
-#	ERT_CONFIG_VARS       Definitions that goes in config.h
-#	ERT_LINKER_FLAGS      Options that must be passed to linker
+# ERT_INCLUDE_DIRS      Header file directories
+# ERT_LIBRARIES         Archives and shared objects
+# ERT_CONFIG_VARS       Definitions that goes in config.h
+# ERT_LINKER_FLAGS      Options that must be passed to linker
 #
 # It will also add to CMAKE_C_FLAGS and CMAKE_CXX_FLAGS if necessary to
 # link with the ERT libraries.
@@ -69,7 +69,7 @@ find_path (ERT_UTILXX_INCLUDE_DIR
   PATH_SUFFIXES "libert_utilxx/include/" "include"
   DOC "Path to ERT Eclipse C++ library header files"
   ${_no_default_path}
-  )  
+  )
 find_path (ERT_GEN_INCLUDE_DIR
   NAMES "ert/util/int_vector.h"
   HINTS "${ERT_ROOT}"
@@ -160,7 +160,7 @@ list (APPEND ERT_LIBRARY
   ${ERT_LIBRARY_ECL_WELL}
   ${ERT_LIBRARY_GEOMETRY}
   ${ERT_LIBRARY_UTIL}
-  ${ERT_LIBRARY_UTILXX} 
+  ${ERT_LIBRARY_UTILXX}
   )
 list (APPEND ERT_LIBRARIES ${ERT_LIBRARY})
 list (APPEND ERT_INCLUDE_DIRS ${ERT_INCLUDE_DIR})
@@ -169,9 +169,9 @@ list (APPEND ERT_INCLUDE_DIRS ${ERT_INCLUDE_DIR})
 include (FindPackageHandleStandardArgs)
 if (ERT_INCLUDE_DIR MATCHES "-NOTFOUND" OR ERT_LIBRARIES MATCHES "-NOTFOUND")
   find_package_handle_standard_args (ERT
-	DEFAULT_MSG
-	ERT_INCLUDE_DIR ERT_LIBRARY
-	)
+  DEFAULT_MSG
+  ERT_INCLUDE_DIR ERT_LIBRARY
+  )
   # clear the cache so the find probe is attempted again if files becomes
   # available (only upon a unsuccessful *compile* should we disable further
   # probing)
@@ -212,8 +212,8 @@ endif (LAPACK_FOUND)
 # math library (should exist on all unices; automatically linked on Windows)
 if (UNIX)
   find_library (MATH_LIBRARY
-	NAMES "m"
-	)
+  NAMES "m"
+  )
   list (APPEND ERT_LIBRARIES ${MATH_LIBRARY})
 endif (UNIX)
 
