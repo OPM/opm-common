@@ -22,5 +22,10 @@ for project in "${project_list[@]}"; do
     fi
 done
 
+rm -rf opm-output
+git clone https://github.com/joakim-hove/opm-output.git
+pushd opm-output > /dev/null
+git checkout debug-output
+popd > /dev/null
 
 
