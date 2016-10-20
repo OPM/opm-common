@@ -6,7 +6,7 @@
 # scripts that does this).
 #
 # Example:
-#	opm_cornerpoint_grid (${CONFIG_H})
+# opm_cornerpoint_grid (${CONFIG_H})
 
 include (CMakeParseArguments)
 function (opm_grid_type)
@@ -45,9 +45,9 @@ function (opm_grid_type)
   # is done: clients expect to just pull in config.h and have the
   # proper type available.
   foreach (header IN LISTS a_HEADERS)
-	file (APPEND ${a_FILENAME}
-	  "#include <${header}>\n"
-	  )
+  file (APPEND ${a_FILENAME}
+    "#include <${header}>\n"
+    )
   endforeach (header)
 
   # main part which does the typedef and then a postlude which marks
@@ -66,16 +66,16 @@ function (opm_grid_type)
   #define USED_${a_SYMBOL}_GRIDTYPE 1
 #endif
 ")
-  
+
 endfunction (opm_grid_type)
 
 # write the grid type for opm-grid
 function (opm_cornerpoint_grid config_h)
   opm_grid_type (
-	FILENAME ${CONFIG_H}
-	SYMBOL CPGRID
-	HEADERS "dune/grid/CpGrid.hpp" "dune/grid/cpgrid/dgfparser.hh"
-	TYPE Dune::CpGrid
-	CONDITION "(GRIDDIM == 3) && (WORLDDIM == 3)"
-	)
+  FILENAME ${CONFIG_H}
+  SYMBOL CPGRID
+  HEADERS "dune/grid/CpGrid.hpp" "dune/grid/cpgrid/dgfparser.hh"
+  TYPE Dune::CpGrid
+  CONDITION "(GRIDDIM == 3) && (WORLDDIM == 3)"
+  )
 endfunction (opm_cornerpoint_grid config_h)

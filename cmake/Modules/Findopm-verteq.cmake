@@ -32,7 +32,7 @@ find_opm_package (
   # test program
 "#include <opm/verteq/verteq.hpp>
 int main (void) {
-  return 0;  
+  return 0;
 }
 "
   # config variables

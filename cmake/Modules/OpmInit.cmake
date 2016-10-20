@@ -3,11 +3,11 @@
 # This will read the dune.module file for project information and
 # set the following variables:
 #
-#	project                     From the Module: field
-#	${project}_NAME             Same as above
-#	${project}_DESCRIPTION      From the Description: field
-#	${project}_VERSION_MAJOR    From the Version: field
-#	${project}_VERSION_MINOR    From the Version: field also
+# project                     From the Module: field
+# ${project}_NAME             Same as above
+# ${project}_DESCRIPTION      From the Description: field
+# ${project}_VERSION_MAJOR    From the Version: field
+# ${project}_VERSION_MINOR    From the Version: field also
 #
 # This module should be the first to be included in the project,
 # because most of the others (OpmXxx.cmake) use these variables.
@@ -42,7 +42,7 @@ function (OpmInitProjVars)
   set (${project}_NAME "${project}" PARENT_SCOPE)
   set (${project}_DESCRIPTION "${description}" PARENT_SCOPE)
   set (${project}_VERSION_MAJOR "${major}" PARENT_SCOPE)
-  set (${project}_VERSION_MINOR "${minor}" PARENT_SCOPE)  
+  set (${project}_VERSION_MINOR "${minor}" PARENT_SCOPE)
   set (${project}_LABEL "${label}" PARENT_SCOPE)
 endfunction ()
 
@@ -53,7 +53,7 @@ macro (OpmInitDirVars)
 
   # but for backward compatibility we can override it
   if (COMMAND dir_hook)
-	dir_hook ()	
+  dir_hook ()
   endif (COMMAND dir_hook)
 endmacro ()
 

@@ -9,11 +9,11 @@
 #
 # Customize the module configuration by defining these "callback" macros:
 #
-#	prereqs_hook    Do special processing before prerequisites are found
+# prereqs_hook    Do special processing before prerequisites are found
 # fortran_hook    Determine whether Fortran support is necessary or not
-#	sources_hook    Do special processing before sources are compiled
-#	tests_hook      Do special processing before tests are compiled
-#	files_hook      Do special processing before final targets are added
+# sources_hook    Do special processing before sources are compiled
+# tests_hook      Do special processing before tests are compiled
+# files_hook      Do special processing before final targets are added
 
 # for CMake >= 3.0, we need to change a few policies:
 #
@@ -21,11 +21,11 @@
 #   - CMP0048 to indicate that we want to deal with the *VERSION*
 #     variables ourselves
 if (POLICY CMP0026)
-	cmake_policy(SET CMP0026 OLD)
+  cmake_policy(SET CMP0026 OLD)
 endif()
 
 if (POLICY CMP0048)
-	cmake_policy(SET CMP0048 OLD)
+  cmake_policy(SET CMP0048 OLD)
 endif()
 
 # set the behavior of the policy 0054 to NEW. (i.e. do not implicitly
@@ -36,18 +36,18 @@ endif()
 
 # include special
 if (CMAKE_VERSION VERSION_LESS "2.8.3")
-	message (STATUS "Enabling compatibility modules for CMake 2.8.3")
-	list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.3")
+  message (STATUS "Enabling compatibility modules for CMake 2.8.3")
+  list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.3")
 endif (CMAKE_VERSION VERSION_LESS "2.8.3")
 
 if (CMAKE_VERSION VERSION_LESS "2.8.5")
-	message (STATUS "Enabling compatibility modules for CMake 2.8.5")
-	list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.5")
+  message (STATUS "Enabling compatibility modules for CMake 2.8.5")
+  list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.5")
 endif (CMAKE_VERSION VERSION_LESS "2.8.5")
 
 if (CMAKE_VERSION VERSION_LESS "2.8.7")
-	message (STATUS "Enabling compatibility modules for CMake 2.8.7")
-	list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.7")
+  message (STATUS "Enabling compatibility modules for CMake 2.8.7")
+  list (APPEND CMAKE_MODULE_PATH "${OPM_MACROS_ROOT}/cmake/Modules/compat-2.8.7")
 endif (CMAKE_VERSION VERSION_LESS "2.8.7")
 
 # don't write default flags into the cache, preserve that for user set values
@@ -93,7 +93,7 @@ include (UseWarnings)
 # parallel computing must be explicitly enabled
 option (USE_MPI "Use Message Passing Interface for parallel computing" OFF)
 if (NOT USE_MPI)
-	set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
+  set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
 endif (NOT USE_MPI)
 
 # parallel programming
@@ -104,7 +104,7 @@ find_threads (${project})
 
 # callback hook to setup additional dependencies
 if (COMMAND prereqs_hook)
-	prereqs_hook ()
+  prereqs_hook ()
 endif (COMMAND prereqs_hook)
 
 # macro to set standard variables (INCLUDE_DIRS, LIBRARIES etc.)
@@ -146,21 +146,21 @@ opm_sources (${project})
 
 # processing after base sources have been identified
 if (COMMAND sources_hook)
-	sources_hook ()
+  sources_hook ()
 endif (COMMAND sources_hook)
 
 # convenience macro to add version of another suite, e.g. dune-common
 macro (opm_need_version_of what)
-	string (TOUPPER "${what}" _WHAT)
-	string (REPLACE "-" "_" _WHAT "${_WHAT}")
-	list (APPEND ${project}_CONFIG_IMPL_VARS
-		${_WHAT}_VERSION_MAJOR ${_WHAT}_VERSION_MINOR ${_WHAT}_VERSION_REVISION
-		)
+  string (TOUPPER "${what}" _WHAT)
+  string (REPLACE "-" "_" _WHAT "${_WHAT}")
+  list (APPEND ${project}_CONFIG_IMPL_VARS
+    ${_WHAT}_VERSION_MAJOR ${_WHAT}_VERSION_MINOR ${_WHAT}_VERSION_REVISION
+    )
 endmacro (opm_need_version_of suite module)
 
 # use this hook to add version macros before we write to config.h
 if (COMMAND config_hook)
-	config_hook ()
+  config_hook ()
 endif (COMMAND config_hook)
 
 # create configuration header which describes available features
@@ -179,31 +179,31 @@ list (APPEND ${project}_CONFIG_VARS ${${project}_CONFIG_VAR})
 message (STATUS "Writing config file \"${PROJECT_BINARY_DIR}/config.h\"...")
 set (CONFIG_H "${PROJECT_BINARY_DIR}/config.h.tmp")
 configure_vars (
-	FILE  CXX  ${CONFIG_H}
-	WRITE ${${project}_CONFIG_VARS}
-	      ${${project}_CONFIG_IMPL_VARS}
-	      ${TESTING_CONFIG_VARS}
-	)
+  FILE  CXX  ${CONFIG_H}
+  WRITE ${${project}_CONFIG_VARS}
+        ${${project}_CONFIG_IMPL_VARS}
+        ${TESTING_CONFIG_VARS}
+  )
 
 # call this hook to let it setup necessary conditions for Fortran support
 if (COMMAND fortran_hook)
-	fortran_hook ()
+  fortran_hook ()
 endif (COMMAND fortran_hook)
 
 if (${project}_FORTRAN_IF)
-	include (UseFortranWrappers)
-	define_fc_func (
-		APPEND ${CONFIG_H}
-		IF ${${project}_FORTRAN_IF}
-		)
+  include (UseFortranWrappers)
+  define_fc_func (
+    APPEND ${CONFIG_H}
+    IF ${${project}_FORTRAN_IF}
+    )
 endif (${project}_FORTRAN_IF)
 
 # overwrite the config.h that is used by the code only if we have some
 # real changes. thus, we don't have to recompile if a reconfigure is run
 # due to some files being added, for instance
 execute_process (COMMAND
-	${CMAKE_COMMAND} -E copy_if_different ${CONFIG_H} ${PROJECT_BINARY_DIR}/config.h
-	)
+  ${CMAKE_COMMAND} -E copy_if_different ${CONFIG_H} ${PROJECT_BINARY_DIR}/config.h
+  )
 
 # compile main library; pull in all required includes and libraries
 include (OpmCompile)
@@ -213,7 +213,7 @@ opm_compile (${project})
 # configuration files to system directories
 include (OpmInstall)
 if (COMMAND install_hook)
-	install_hook ()
+  install_hook ()
 endif (COMMAND install_hook)
 opm_install (${project})
 message (STATUS "This build defaults to installing in ${CMAKE_INSTALL_PREFIX}")
@@ -228,7 +228,7 @@ include (OpmSatellites)
 # example programs are found in the tutorials/ and examples/ directory
 option (BUILD_EXAMPLES "Build the examples/ tree" ON)
 if (BUILD_EXAMPLES)
-	opm_compile_satellites (${project} examples "" "")
+  opm_compile_satellites (${project} examples "" "")
 endif (BUILD_EXAMPLES)
 
 opm_compile_satellites (${project} additionals EXCLUDE_FROM_ALL "")
@@ -244,31 +244,31 @@ include (CTest)
 
 # conditionally disable tests when features aren't available
 macro (cond_disable_test name)
-	if ((NOT DEFINED HAVE_${name}) OR (NOT HAVE_${name}))
-		message (STATUS "${name} test disabled, since ${name} is not found.")
-		string (TOLOWER "${name}" name_lower)
-		get_filename_component (test_${name}_FILE "tests/test_${name_lower}.cpp" ABSOLUTE)
-		list (REMOVE_ITEM tests_SOURCES "${test_${name}_FILE}")
-	endif ((NOT DEFINED HAVE_${name}) OR (NOT HAVE_${name}))
+  if ((NOT DEFINED HAVE_${name}) OR (NOT HAVE_${name}))
+    message (STATUS "${name} test disabled, since ${name} is not found.")
+    string (TOLOWER "${name}" name_lower)
+    get_filename_component (test_${name}_FILE "tests/test_${name_lower}.cpp" ABSOLUTE)
+    list (REMOVE_ITEM tests_SOURCES "${test_${name}_FILE}")
+  endif ((NOT DEFINED HAVE_${name}) OR (NOT HAVE_${name}))
 endmacro (cond_disable_test name)
 
 # use this target to run all tests
 add_custom_target (check
-	COMMAND ${CMAKE_CTEST_COMMAND}
-	DEPENDS test-suite
-	COMMENT "Checking if library is functional"
-	VERBATIM
-	)
+  COMMAND ${CMAKE_CTEST_COMMAND}
+  DEPENDS test-suite
+  COMMENT "Checking if library is functional"
+  VERBATIM
+  )
 
 # special processing for tests
 if (COMMAND tests_hook)
-	tests_hook ()
+  tests_hook ()
 endif (COMMAND tests_hook)
 
 # make datafiles necessary for tests available in output directory
 if (BUILD_TESTING)
-	opm_data (tests datafiles "${tests_DIR}")
-	opm_compile_satellites (${project} tests "" "${tests_REGEXP}")
+  opm_data (tests datafiles "${tests_DIR}")
+  opm_compile_satellites (${project} tests "" "${tests_REGEXP}")
 endif (BUILD_TESTING)
 
 # use this target to check local git commits
@@ -287,7 +287,7 @@ opm_doc (${project} ${doxy_dir})
 include (DuneCompat)
 include (LibtoolArchives)
 if (${project}_TARGET)
-	configure_la (${project} ${${project}_TARGET} ${project}_LIBTOOL_ARCHIVE)
+  configure_la (${project} ${${project}_TARGET} ${project}_LIBTOOL_ARCHIVE)
 endif ()
 
 ### clean in-source builds ###
@@ -299,10 +299,10 @@ include (OpmKnown)
 
 # make sure we rebuild if dune.module changes
 configure_file (
-	"${CMAKE_CURRENT_SOURCE_DIR}/dune.module"
-	"${CMAKE_CURRENT_BINARY_DIR}/dunemod.tmp"
-	COPYONLY
-	)
+  "${CMAKE_CURRENT_SOURCE_DIR}/dune.module"
+  "${CMAKE_CURRENT_BINARY_DIR}/dunemod.tmp"
+  COPYONLY
+  )
 
 # make sure updated version information is available in the source code
 include (UseVersion)

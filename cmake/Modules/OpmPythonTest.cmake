@@ -1,5 +1,5 @@
 function (opm_add_python_test TEST_NAME TEST_SCRIPT)
-    add_test(NAME ${TEST_NAME} 
+    add_test(NAME ${TEST_NAME}
              WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
              COMMAND ${TEST_SCRIPT} ${ARGN})
 

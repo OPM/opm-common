@@ -16,7 +16,7 @@ find_opm_package (
 
   # dependencies
   ""
-  
+
   # header to search for
   "tinyxml.h"
 
@@ -30,7 +30,7 @@ find_opm_package (
 "#include <tinyxml.h>
 int main (void) {
   TiXmlDocument doc;
-  return 0;  
+  return 0;
 }
 "
   # config variables

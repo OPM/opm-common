@@ -8,17 +8,17 @@ function (set_aliases)
   # hardcoded list of "dune-var opm-var" pairs, where the components
   # are separated by space
   set (aliases
-	"HAVE_UMFPACK             HAVE_SUITESPARSE_UMFPACK_H"
-	"HAVE_DUNE_BOOST          HAVE_BOOST"
-	)
+  "HAVE_UMFPACK             HAVE_SUITESPARSE_UMFPACK_H"
+  "HAVE_DUNE_BOOST          HAVE_BOOST"
+  )
   foreach (alias IN LISTS aliases)
-	# convert entry "X Y" into a list "X;Y", then pick apart
-	string (REGEX REPLACE "\ +" ";" tuple "${alias}")
-	list (GET tuple 0 var)	
-	list (GET tuple 1 name)
+  # convert entry "X Y" into a list "X;Y", then pick apart
+  string (REGEX REPLACE "\ +" ";" tuple "${alias}")
+  list (GET tuple 0 var)
+  list (GET tuple 1 name)
 
-	# write this alias to cache
-	set (${var} ${${name}} PARENT_SCOPE)
+  # write this alias to cache
+  set (${var} ${${name}} PARENT_SCOPE)
   endforeach (alias)
 endfunction (set_aliases)
 

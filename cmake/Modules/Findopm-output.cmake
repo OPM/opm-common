@@ -19,7 +19,7 @@ find_opm_package (
 
   # dependencies
   "${opm-output_DEPS}"
-  
+
   # header to search for
   "opm/output/OutputWriter.hpp"
 

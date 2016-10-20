@@ -14,76 +14,76 @@ macro (opm_dist_clean opm)
   # which generator have we been using
   string (TOUPPER "${CMAKE_GENERATOR}" _gen)
   if (_gen MATCHES "UNIX MAKEFILES")
-	set (_gen_is_makefiles TRUE)
-	set (_gen_is_ninja FALSE)
+  set (_gen_is_makefiles TRUE)
+  set (_gen_is_ninja FALSE)
   elseif (_gen MATCHES "NINJA")
-	set (_gen_is_makefiles FALSE)
-	set (_gen_is_ninja TRUE)
+  set (_gen_is_makefiles FALSE)
+  set (_gen_is_ninja TRUE)
   else ()
-	set (_gen_is_makefiles FALSE)
-	set (_gen_is_ninja FALSE)
+  set (_gen_is_makefiles FALSE)
+  set (_gen_is_ninja FALSE)
   endif ()
 
   set (DISTCLEAN_FILES
-	CMakeCache.txt
-	cmake_install.cmake
-	config.h
-	config.h.tmp
-	${${opm}_NAME}-config.cmake
-	${${opm}_NAME}-config-version.cmake
-	${${opm}_NAME}-install.cmake
-	${${opm}_NAME}.pc
-	${${opm}_NAME}-install.pc
-	${doxy_dir}/Doxyfile
-	${doxy_dir}/Doxyfile.in
-	CTestTestfile.cmake
-	DartConfiguration.tcl
-	lib/${${opm}_LIBTOOL_ARCHIVE}
-	${${opm}_DEBUG}
-	${tests_DEBUG}
-	${examples_DEBUG}
-	${tutorial_DEBUG}
-	install_manifest.txt
-	${${opm}_STYLESHEET_COPIED}
-	${tests_INPUT_FILES}
-	project-version.h
-	project-version.tmp
-	)
+  CMakeCache.txt
+  cmake_install.cmake
+  config.h
+  config.h.tmp
+  ${${opm}_NAME}-config.cmake
+  ${${opm}_NAME}-config-version.cmake
+  ${${opm}_NAME}-install.cmake
+  ${${opm}_NAME}.pc
+  ${${opm}_NAME}-install.pc
+  ${doxy_dir}/Doxyfile
+  ${doxy_dir}/Doxyfile.in
+  CTestTestfile.cmake
+  DartConfiguration.tcl
+  lib/${${opm}_LIBTOOL_ARCHIVE}
+  ${${opm}_DEBUG}
+  ${tests_DEBUG}
+  ${examples_DEBUG}
+  ${tutorial_DEBUG}
+  install_manifest.txt
+  ${${opm}_STYLESHEET_COPIED}
+  ${tests_INPUT_FILES}
+  project-version.h
+  project-version.tmp
+  )
   if (_gen_is_makefiles)
-	list (APPEND DISTCLEAN_FILES
-	  Makefile)
+  list (APPEND DISTCLEAN_FILES
+    Makefile)
   endif ()
   if (_gen_is_ninja)
-	list (APPEND DISTCLEAN_FILES
-	  build.ninja
-	  rules.ninja
-	  )
+  list (APPEND DISTCLEAN_FILES
+    build.ninja
+    rules.ninja
+    )
   endif ()
 
   # only remove these files if they were actually copied
   if (NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
-	list (APPEND DISTCLEAN_FILES
-	  dune.module
-	  dunemod.tmp
-	  )
+  list (APPEND DISTCLEAN_FILES
+    dune.module
+    dunemod.tmp
+    )
   endif (NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   # script to remove empty directories (can't believe this isn't included!)
   set (rmdir "${OPM_MACROS_ROOT}/cmake/Scripts/RemoveEmptyDir.cmake")
   add_custom_target (distclean
-	COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR} -- clean
-	COMMAND ${CMAKE_COMMAND} -E remove -f ${DISTCLEAN_FILES}
-	COMMAND ${CMAKE_COMMAND} -E remove_directory CMakeFiles/
-	COMMAND ${CMAKE_COMMAND} -E remove_directory Testing/
-	COMMAND ${CMAKE_COMMAND} -DDIR=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -P ${rmdir}
-	COMMAND ${CMAKE_COMMAND} -DDIR=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} -P ${rmdir}
-	COMMAND ${CMAKE_COMMAND} -DDIR:LOCATION=${doxy_dir} -P ${rmdir}
-	COMMAND ${CMAKE_COMMAND} -DDIR:LOCATION=${tests_DIR} -P ${rmdir}
+  COMMAND ${CMAKE_COMMAND} --build ${PROJECT_BINARY_DIR} -- clean
+  COMMAND ${CMAKE_COMMAND} -E remove -f ${DISTCLEAN_FILES}
+  COMMAND ${CMAKE_COMMAND} -E remove_directory CMakeFiles/
+  COMMAND ${CMAKE_COMMAND} -E remove_directory Testing/
+  COMMAND ${CMAKE_COMMAND} -DDIR=${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -P ${rmdir}
+  COMMAND ${CMAKE_COMMAND} -DDIR=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} -P ${rmdir}
+  COMMAND ${CMAKE_COMMAND} -DDIR:LOCATION=${doxy_dir} -P ${rmdir}
+  COMMAND ${CMAKE_COMMAND} -DDIR:LOCATION=${tests_DIR} -P ${rmdir}
 # cannot depend on clean because it is only defined in the master Makefile
 # not in CMakeFiles/Makefile where this target will end up
-#	DEPENDS clean
-	WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-	COMMENT Removing CMake-generated files
-	VERBATIM
-	)
-  
+# DEPENDS clean
+  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+  COMMENT Removing CMake-generated files
+  VERBATIM
+  )
+
 endmacro (opm_dist_clean opm)

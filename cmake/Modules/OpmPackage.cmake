@@ -10,8 +10,8 @@
 #             stem of all variables defined (see below).
 #   deps      Semi-colon-separated list of dependent modules which must
 #             be present; those that are required must be marked as such
-#	          explicitly. Quote if more than one word is necessary to
-#	          describe the dependency.
+#           explicitly. Quote if more than one word is necessary to
+#           describe the dependency.
 #   header    Name of the header file to probe for, e.g.
 #             "dune/common/fvector.hh". Note that you should have to same
 #             relative path here as is used in the header files.
@@ -44,9 +44,9 @@ mark_as_advanced (SIBLING_SEARCH)
 # append all items from src into dst; both must be *names* of lists
 macro (append_found src dst)
   foreach (_item IN LISTS ${src})
-	if (NOT "${_item}" MATCHES "-NOTFOUND$")
-	  list (APPEND ${dst} ${_item})
-	endif (NOT "${_item}" MATCHES "-NOTFOUND$")
+  if (NOT "${_item}" MATCHES "-NOTFOUND$")
+    list (APPEND ${dst} ${_item})
+  endif (NOT "${_item}" MATCHES "-NOTFOUND$")
   endforeach (_item)
 endmacro (append_found src dst)
 
@@ -58,19 +58,19 @@ macro (find_opm_package module deps header lib defs prog conf)
 
   # if someone else has included this test, don't do it again
   if (${MODULE}_FOUND OR ${module}_FOUND)
-	return ()
+  return ()
   endif ()
 
   # variables to pass on to other packages
   if (${module}_FIND_QUIETLY)
-	set (_${module}_quiet "QUIET")
+  set (_${module}_quiet "QUIET")
   else (${module}_FIND_QUIETLY)
-	set (_${module}_quiet "")
+  set (_${module}_quiet "")
   endif (${module}_FIND_QUIETLY)
   if (${module}_FIND_REQUIRED)
-	set (_${module}_required "REQUIRED")
+  set (_${module}_required "REQUIRED")
   else (${module}_FIND_REQUIRED)
-	set (_${module}_required "")
+  set (_${module}_required "")
   endif (${module}_FIND_REQUIRED)
 
   # see if there is a pkg-config entry for this package, and use those
@@ -89,7 +89,7 @@ macro (find_opm_package module deps header lib defs prog conf)
   # don't bother if we are in a project specific directory already
   # (assuming no-one wants to name the build dir after another module!)
   if ("${_build_dir}" STREQUAL "${PROJECT_NAME}")
-	set (_build_dir "")
+  set (_build_dir "")
   endif ("${_build_dir}" STREQUAL "${PROJECT_NAME}")
 
   # if the user hasn't specified any location, and it isn't found
@@ -109,72 +109,72 @@ macro (find_opm_package module deps header lib defs prog conf)
     set(workaround_cmake_bug 1)
   endif()
   if (NOT workaround_cmake_bug)
-	string (TOLOWER "${module}" _module_lower)
-	set (_guess
-	  "../${module}"
-	  "../${_module_lower}"
-	  )
-	set (_guess_bin_only
-	  "../${module}-build"
-	  "../${_module_lower}-build"
-	  )
+  string (TOLOWER "${module}" _module_lower)
+  set (_guess
+    "../${module}"
+    "../${_module_lower}"
+    )
+  set (_guess_bin_only
+    "../${module}-build"
+    "../${_module_lower}-build"
+    )
 
-	# look in similar dirs for the other module
-	if (_build_dir)
-	  list (APPEND _guess_bin_only
-		"../../${module}/${_build_dir}"
-		"../../${_module_lower}/${_build_dir}"
-		)
-	endif (_build_dir)
+  # look in similar dirs for the other module
+  if (_build_dir)
+    list (APPEND _guess_bin_only
+    "../../${module}/${_build_dir}"
+    "../../${_module_lower}/${_build_dir}"
+    )
+  endif (_build_dir)
 
-	# generate items that are in the build, not source dir
-	set (_guess_bin)
-	foreach (_item IN ITEMS ${_guess} ${_guess_bin_only})
-	  list (APPEND _guess_bin "${PROJECT_BINARY_DIR}/${_item}")
-	endforeach (_item)
-	set (_no_system "")
+  # generate items that are in the build, not source dir
+  set (_guess_bin)
+  foreach (_item IN ITEMS ${_guess} ${_guess_bin_only})
+    list (APPEND _guess_bin "${PROJECT_BINARY_DIR}/${_item}")
+  endforeach (_item)
+  set (_no_system "")
   else ()
-	# start looking at the paths in this order
-	set (_guess_bin
-	  ${${module}_DIR}
-	  ${${module}_ROOT}
-	  ${${MODULE}_ROOT}
-	  )
-	# if every package is installed directly in the "suite" directory
-	# (e.g. /usr) then allow us to back-track one directory from the
-	# module sub-dir that was added by OpmFind (this happens incidently
-	# already for the source do to the out-of-source support)
-	if ("${${MODULE}_ROOT}" MATCHES "/${module}$")
-	  get_filename_component (_suite_parent ${${MODULE}_ROOT} PATH)
-	  list (APPEND _guess_bin
-		${_suite_parent}
-		${_suite_parent}/${module}
-		${_suite_parent}/${module}/${_build_dir}
-		)
-	endif ("${${MODULE}_ROOT}" MATCHES "/${module}$")
-	# when we look for the source, it may be that we have been specified
-	# a build directory which is a sub-dir of the source, so we look in
-	# the parent also
-	set (_guess
-	  ${${module}_DIR}
-	  ${${module}_ROOT}
-	  ${${MODULE}_ROOT}
-	  )
-	# only add parent directories for those variants that are actually set
-	# (otherwise, we'll inadvertedly add the root directory (=all))
-	if (${module}_DIR)
-	  list (APPEND _guess ${${module}_DIR}/..)
-	endif (${module}_DIR)
-	if (${module}_ROOT)
-	  list (APPEND _guess ${${module}_ROOT}/..)
-	endif (${module}_ROOT)
-	if (${MODULE}_ROOT)
-	  list (APPEND _guess ${${MODULE}_ROOT}/..)
-	endif (${MODULE}_ROOT)
-	# don't search the system paths! that would be dangerous; if there
-	# is a problem in our own specified directory, we don't necessarily
-	# want an old version that is left in one of the system paths!
-	set (_no_system "NO_DEFAULT_PATH")
+  # start looking at the paths in this order
+  set (_guess_bin
+    ${${module}_DIR}
+    ${${module}_ROOT}
+    ${${MODULE}_ROOT}
+    )
+  # if every package is installed directly in the "suite" directory
+  # (e.g. /usr) then allow us to back-track one directory from the
+  # module sub-dir that was added by OpmFind (this happens incidently
+  # already for the source do to the out-of-source support)
+  if ("${${MODULE}_ROOT}" MATCHES "/${module}$")
+    get_filename_component (_suite_parent ${${MODULE}_ROOT} PATH)
+    list (APPEND _guess_bin
+    ${_suite_parent}
+    ${_suite_parent}/${module}
+    ${_suite_parent}/${module}/${_build_dir}
+    )
+  endif ("${${MODULE}_ROOT}" MATCHES "/${module}$")
+  # when we look for the source, it may be that we have been specified
+  # a build directory which is a sub-dir of the source, so we look in
+  # the parent also
+  set (_guess
+    ${${module}_DIR}
+    ${${module}_ROOT}
+    ${${MODULE}_ROOT}
+    )
+  # only add parent directories for those variants that are actually set
+  # (otherwise, we'll inadvertedly add the root directory (=all))
+  if (${module}_DIR)
+    list (APPEND _guess ${${module}_DIR}/..)
+  endif (${module}_DIR)
+  if (${module}_ROOT)
+    list (APPEND _guess ${${module}_ROOT}/..)
+  endif (${module}_ROOT)
+  if (${MODULE}_ROOT)
+    list (APPEND _guess ${${MODULE}_ROOT}/..)
+  endif (${MODULE}_ROOT)
+  # don't search the system paths! that would be dangerous; if there
+  # is a problem in our own specified directory, we don't necessarily
+  # want an old version that is left in one of the system paths!
+  set (_no_system "NO_DEFAULT_PATH")
   endif ()
 
   # by specifying _guess in the HINTS section, it gets searched before
@@ -183,111 +183,111 @@ macro (find_opm_package module deps header lib defs prog conf)
   # specified, then PATHS is used. Otherwise, it looks in HINTS, then in
   # system paths, and the finally in PATHS (!)
   if (SIBLING_SEARCH)
-	set (_guess_hints ${_guess})
-	set (_guess_hints_bin ${_guess_bin})
+  set (_guess_hints ${_guess})
+  set (_guess_hints_bin ${_guess_bin})
   else (SIBLING_SEARCH)
-	set (_guess_hints)
-	set (_guess_hints_bin)
+  set (_guess_hints)
+  set (_guess_hints_bin)
   endif (SIBLING_SEARCH)
 
   # if an include directory is specified directly (e.g. OPM_CORE_INCLUDE_DIR=
   # /usr/include/opm-2013.03) then this overrides everything else. Notice that
   # this variable uses the fully capitalized version of the name.
   if (${MODULE}_INCLUDE_DIR)
-	set (_guess "${${MODULE}_INCLUDE_DIR}")
-	set (_no_system_incl "NO_DEFAULT_PATH")
+  set (_guess "${${MODULE}_INCLUDE_DIR}")
+  set (_no_system_incl "NO_DEFAULT_PATH")
   else ()
-	set (_no_system_incl "${_no_system}")
+  set (_no_system_incl "${_no_system}")
   endif ()
 
   # search for this include and library file to get the installation
   # directory of the package; hints are searched before the system locations,
   # paths are searched afterwards
   find_path (${module}_INCLUDE_DIR
-	NAMES "${header}"
-	PATHS ${_guess}
-	HINTS ${PkgConf_${module}_INCLUDE_DIRS} ${_guess_hints}
-	PATH_SUFFIXES "include"
-	${_no_system_incl}
-	)
+  NAMES "${header}"
+  PATHS ${_guess}
+  HINTS ${PkgConf_${module}_INCLUDE_DIRS} ${_guess_hints}
+  PATH_SUFFIXES "include"
+  ${_no_system_incl}
+  )
 
   # some modules are all in headers
   if (NOT "${lib}" STREQUAL "")
-	if (CMAKE_SIZEOF_VOID_P)
-	  math (EXPR _BITS "8 * ${CMAKE_SIZEOF_VOID_P}")
-	endif (CMAKE_SIZEOF_VOID_P)
+  if (CMAKE_SIZEOF_VOID_P)
+    math (EXPR _BITS "8 * ${CMAKE_SIZEOF_VOID_P}")
+  endif (CMAKE_SIZEOF_VOID_P)
 
-	# again, we may directly override the location of the library alone by
-	# specifying e.g. OPM_CORE_LIB_DIR. notice that this is a *directory*
-	# and not the name of the library
-	if (${MODULE}_LIB_DIR)
-	  set (_guess_bin "${${MODULE}_LIB_DIR}")
-	  set (_no_system_lib "NO_DEFAULT_PATH")
-	else ()
-	  set (_no_system_lib "${_no_system}")
-	endif ()
+  # again, we may directly override the location of the library alone by
+  # specifying e.g. OPM_CORE_LIB_DIR. notice that this is a *directory*
+  # and not the name of the library
+  if (${MODULE}_LIB_DIR)
+    set (_guess_bin "${${MODULE}_LIB_DIR}")
+    set (_no_system_lib "NO_DEFAULT_PATH")
+  else ()
+    set (_no_system_lib "${_no_system}")
+  endif ()
 
-	# if there is more than one library, then look for all of them, putting
-	# them in variables with the name of the library appended. however, the
-	# first entry is assumed to be the "primary" library and will be named
-	# like the module. thus, with a lib entry of "foo;bar", the first library
-	# is called ${module}_LIBRARY and the second ${module}_LIBRARY_bar
-	foreach (_lib IN ITEMS ${lib})
-	  # don't include any suffix if it is the first one
-	  if ("${lib}" MATCHES "^${_lib}")
-		set (_which)
-	  else ()
-		set (_which "_${_lib}")
-	  endif ()
-	  find_library (${module}_LIBRARY${_which}
-		NAMES "${_lib}"
-		PATHS ${_guess_bin}
-		HINTS ${PkgConf_${module}_LIBRARY_DIRS} ${_guess_hints_bin}
-		PATH_SUFFIXES "lib" "lib/Debug" "lib/Release" "lib/.libs" ".libs" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}" "build-cmake/lib"
-		${_no_system_lib}		
-		)
-	  # debug info if we didn't find the desired library
-	  if (NOT ${module}_LIBRARY${_which})
-		message (STATUS "Failed to find library \"${_lib}\" for module ${module}")
-	  endif ()
-	endforeach (_lib)
+  # if there is more than one library, then look for all of them, putting
+  # them in variables with the name of the library appended. however, the
+  # first entry is assumed to be the "primary" library and will be named
+  # like the module. thus, with a lib entry of "foo;bar", the first library
+  # is called ${module}_LIBRARY and the second ${module}_LIBRARY_bar
+  foreach (_lib IN ITEMS ${lib})
+    # don't include any suffix if it is the first one
+    if ("${lib}" MATCHES "^${_lib}")
+    set (_which)
+    else ()
+    set (_which "_${_lib}")
+    endif ()
+    find_library (${module}_LIBRARY${_which}
+    NAMES "${_lib}"
+    PATHS ${_guess_bin}
+    HINTS ${PkgConf_${module}_LIBRARY_DIRS} ${_guess_hints_bin}
+    PATH_SUFFIXES "lib" "lib/Debug" "lib/Release" "lib/.libs" ".libs" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}" "build-cmake/lib"
+    ${_no_system_lib}
+    )
+    # debug info if we didn't find the desired library
+    if (NOT ${module}_LIBRARY${_which})
+    message (STATUS "Failed to find library \"${_lib}\" for module ${module}")
+    endif ()
+  endforeach (_lib)
   else (NOT "${lib}" STREQUAL "")
-	set (${module}_LIBRARY "")
+  set (${module}_LIBRARY "")
   endif (NOT "${lib}" STREQUAL "")
 
   # add dependencies so that our result variables are complete
   # list of necessities to build with the software
   set (${module}_INCLUDE_DIRS "${${module}_INCLUDE_DIR}")
   foreach (_lib IN ITEMS ${lib})
-	if ("${lib}" MATCHES "^${_lib}")
-	  set (${module}_LIBRARIES "${${module}_LIBRARY}")
-	else ()
-	  list (APPEND ${module}_LIBRARIES "${${module}_LIBRARY_${_lib}}")
-	endif ()
+  if ("${lib}" MATCHES "^${_lib}")
+    set (${module}_LIBRARIES "${${module}_LIBRARY}")
+  else ()
+    list (APPEND ${module}_LIBRARIES "${${module}_LIBRARY_${_lib}}")
+  endif ()
   endforeach (_lib)
   # period because it should be something that evaluates to true
   # in find_package_handle_standard_args
   set (${module}_ALL_PREREQS ".")
   foreach (_dep IN ITEMS ${deps})
-	separate_arguments (_${module}_args UNIX_COMMAND ${_dep})
-	if (_${module}_args)
-	  # keep REQUIRED in the arguments only if we were required ourself
-	  # "required-ness" is not transitive as far as CMake is concerned
-	  # (i.e. if an optional package requests a package to be required,
-	  # the build will fail if it's not found)
-	  string (REPLACE "REQUIRED" "${_${module}_required}" _args_req "${_${module}_args}")
-	  find_and_append_package_to (${module} ${_args_req} ${_${module}_quiet})
-	  list (GET _${module}_args 0 _name_only)
-	  string (TOUPPER "${_name_only}" _NAME_ONLY)
-	  string (REPLACE "-" "_" _NAME_ONLY "${_NAME_ONLY}")
-	  # check manually if it was found if REQUIRED; otherwise poison the
-	  # dependency list which is checked later (so that it will fail)
-	  if (("${_${module}_args}" MATCHES "REQUIRED") AND NOT (${_name_only}_FOUND OR ${_NAME_ONLY}_FOUND))
-		list (APPEND ${module}_ALL_PREREQS "${_name_only}-NOTFOUND")
-	  endif ()
-	else ()
-	  message (WARNING "Empty dependency in find module for ${module} (check for trailing semi-colon)")
-	endif ()
+  separate_arguments (_${module}_args UNIX_COMMAND ${_dep})
+  if (_${module}_args)
+    # keep REQUIRED in the arguments only if we were required ourself
+    # "required-ness" is not transitive as far as CMake is concerned
+    # (i.e. if an optional package requests a package to be required,
+    # the build will fail if it's not found)
+    string (REPLACE "REQUIRED" "${_${module}_required}" _args_req "${_${module}_args}")
+    find_and_append_package_to (${module} ${_args_req} ${_${module}_quiet})
+    list (GET _${module}_args 0 _name_only)
+    string (TOUPPER "${_name_only}" _NAME_ONLY)
+    string (REPLACE "-" "_" _NAME_ONLY "${_NAME_ONLY}")
+    # check manually if it was found if REQUIRED; otherwise poison the
+    # dependency list which is checked later (so that it will fail)
+    if (("${_${module}_args}" MATCHES "REQUIRED") AND NOT (${_name_only}_FOUND OR ${_NAME_ONLY}_FOUND))
+    list (APPEND ${module}_ALL_PREREQS "${_name_only}-NOTFOUND")
+    endif ()
+  else ()
+    message (WARNING "Empty dependency in find module for ${module} (check for trailing semi-colon)")
+  endif ()
   endforeach (_dep)
 
   # since find_and_append_package_to is a macro, this variable have
@@ -300,7 +300,7 @@ macro (find_opm_package module deps header lib defs prog conf)
   # compile with this option to avoid avalanche of warnings
   set (${module}_DEFINITIONS "${${module}_DEFINITIONS}")
   foreach (_def IN ITEMS ${defs})
-	list (APPEND ${module}_DEFINITIONS "-D${_def}")
+  list (APPEND ${module}_DEFINITIONS "-D${_def}")
   endforeach (_def)
 
   # tidy the lists before returning them
@@ -309,10 +309,10 @@ macro (find_opm_package module deps header lib defs prog conf)
   # these defines are used in dune/${module} headers, and should be put
   # in config.h when we include those
   foreach (_var IN ITEMS ${conf})
-	# massage the name to remove source code formatting
-	string (REGEX REPLACE "^[\n\t\ ]+" "" _var "${_var}")
-	string (REGEX REPLACE "[\n\t\ ]+$" "" _var "${_var}")
-	list (APPEND ${module}_CONFIG_VARS ${_var})
+  # massage the name to remove source code formatting
+  string (REGEX REPLACE "^[\n\t\ ]+" "" _var "${_var}")
+  string (REGEX REPLACE "[\n\t\ ]+$" "" _var "${_var}")
+  list (APPEND ${module}_CONFIG_VARS ${_var})
   endforeach (_var)
 
   # these are the defines that should be set when compiling
@@ -336,40 +336,40 @@ macro (find_opm_package module deps header lib defs prog conf)
   # write status message in the same manner as everyone else
   include (FindPackageHandleStandardArgs)
   if ("${lib}" STREQUAL "")
-	set (_lib_var "")
-	set (_and_lib_var)
+  set (_lib_var "")
+  set (_and_lib_var)
   else ("${lib}" STREQUAL "")
-	foreach (_lib IN ITEMS ${lib})
-	  if ("${lib}" MATCHES "^${_lib}")
-		set (_lib_var "${module}_LIBRARY")
-		set (_and_lib_var AND ${_lib_var})
-	  else ()
-		list (APPEND _lib_var "${module}_LIBRARY_${_lib}")
-		set (_and_lib_var ${_and_lib_var} AND "${module}_LIBRARY_${_lib}")
-	  endif ()
-	endforeach (_lib)
+  foreach (_lib IN ITEMS ${lib})
+    if ("${lib}" MATCHES "^${_lib}")
+    set (_lib_var "${module}_LIBRARY")
+    set (_and_lib_var AND ${_lib_var})
+    else ()
+    list (APPEND _lib_var "${module}_LIBRARY_${_lib}")
+    set (_and_lib_var ${_and_lib_var} AND "${module}_LIBRARY_${_lib}")
+    endif ()
+  endforeach (_lib)
   endif ("${lib}" STREQUAL "")
   # if the search is going to fail, then write these variables to
   # the console as well as a diagnostics
   if ((NOT (${module}_INCLUDE_DIR ${_and_lib_var} AND HAVE_${MODULE}))
-	  AND (_${module}_required OR NOT _${module}_quiet))
-	if (DEFINED ${module}_DIR)
-	  message (STATUS "${module}_DIR = ${${module}_DIR}")
-	elseif (DEFINED ${module}_ROOT)
-	  message (STATUS "${module}_ROOT = ${${module}_ROOT}")
-	elseif (DEFINED ${MODULE}_ROOT)
-	  message (STATUS "${MODULE}_ROOT = ${${MODULE}_ROOT}")
-	endif (DEFINED ${module}_DIR)
+    AND (_${module}_required OR NOT _${module}_quiet))
+  if (DEFINED ${module}_DIR)
+    message (STATUS "${module}_DIR = ${${module}_DIR}")
+  elseif (DEFINED ${module}_ROOT)
+    message (STATUS "${module}_ROOT = ${${module}_ROOT}")
+  elseif (DEFINED ${MODULE}_ROOT)
+    message (STATUS "${MODULE}_ROOT = ${${MODULE}_ROOT}")
+  endif (DEFINED ${module}_DIR)
   endif ((NOT (${module}_INCLUDE_DIR ${_and_lib_var} AND HAVE_${MODULE}))
-	AND (_${module}_required OR NOT _${module}_quiet))
+  AND (_${module}_required OR NOT _${module}_quiet))
   if ("${${module}_ALL_PREREQS}" MATCHES "-NOTFOUND")
-	message (STATUS "${module} prereqs: ${${module}_ALL_PREREQS}")
+  message (STATUS "${module} prereqs: ${${module}_ALL_PREREQS}")
   endif ()
   find_package_handle_standard_args (
-	${module}
-	DEFAULT_MSG
-	${module}_INCLUDE_DIR ${_lib_var} HAVE_${MODULE} ${module}_ALL_PREREQS
-	)
+  ${module}
+  DEFAULT_MSG
+  ${module}_INCLUDE_DIR ${_lib_var} HAVE_${MODULE} ${module}_ALL_PREREQS
+  )
 
   # allow the user to override these from user interface
   mark_as_advanced (${module}_INCLUDE_DIR)
@@ -382,7 +382,7 @@ macro (find_opm_package module deps header lib defs prog conf)
 
   # print everything out if we're asked to
   if (${module}_DEBUG)
-	debug_find_vars (${module})
+  debug_find_vars (${module})
   endif (${module}_DEBUG)
 endmacro (find_opm_package module deps header lib defs prog conf)
 
@@ -395,7 +395,7 @@ function (debug_find_vars module)
   message (STATUS "${module}_CONFIG_VARS  = ${${module}_CONFIG_VARS}")
   message (STATUS "${module}_LINKER_FLAGS = ${${module}_LINKER_FLAGS}")
   string (TOUPPER ${module} MODULE)
-  string (REPLACE "-" "_" MODULE ${MODULE})  
+  string (REPLACE "-" "_" MODULE ${MODULE})
   message (STATUS "HAVE_${MODULE}         = ${HAVE_${MODULE}}")
 endfunction (debug_find_vars module)
 
@@ -406,11 +406,11 @@ endfunction (debug_find_vars module)
 function (config_cmd_line varname defs)
   # process each variable
   foreach (_var IN LISTS ${defs})
-	# only generate an entry if the define was actually set
-	if ((DEFINED ${_var}) AND (NOT "${${_var}}" STREQUAL ""))
-	  # add command-line option to define this variable
-	  list (APPEND _cmdline "-D${_var}=${${_var}}")
-	endif ((DEFINED ${_var}) AND (NOT "${${_var}}" STREQUAL ""))
+  # only generate an entry if the define was actually set
+  if ((DEFINED ${_var}) AND (NOT "${${_var}}" STREQUAL ""))
+    # add command-line option to define this variable
+    list (APPEND _cmdline "-D${_var}=${${_var}}")
+  endif ((DEFINED ${_var}) AND (NOT "${${_var}}" STREQUAL ""))
   endforeach (_var)
   # return the resulting command-line options for defining vars
   set (${varname} "${_cmdline}" PARENT_SCOPE)
