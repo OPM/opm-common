@@ -74,17 +74,16 @@ namespace Opm {
             const auto& poro = doubleGridProperties->getKeyword("PORO");
             const auto& ntg =  doubleGridProperties->getKeyword("NTG");
 
-            if (poro.containsNaN())
-                throw std::logic_error("Do not have information for the PORV keyword - some defaulted values in PORO");
-            else {
-                const auto& poroData = poro.getData();
-                for (size_t globalIndex = 0; globalIndex < poro.getCartesianSize(); globalIndex++) {
-                    if (!std::isfinite(values[globalIndex])) {
-                        double cell_poro = poroData[globalIndex];
-                        double cell_ntg = ntg.iget(globalIndex);
-                        double cell_volume = eclipseGrid->getCellVolume(globalIndex);
-                        values[globalIndex] = cell_poro * cell_volume * cell_ntg;
-                    }
+            const auto& poroData = poro.getData();
+            for (size_t globalIndex = 0; globalIndex < poro.getCartesianSize(); globalIndex++) {
+                if (!std::isfinite(values[globalIndex])) {
+                    double cell_poro = poroData[globalIndex];
+                    if (std::isnan(cell_poro))
+                        throw std::logic_error("Some cells neither specify the PORV keyword nor PORO");
+
+                    double cell_ntg = ntg.iget(globalIndex);
+                    double cell_volume = eclipseGrid->getCellVolume(globalIndex);
+                    values[globalIndex] = cell_poro * cell_volume * cell_ntg;
                 }
             }
 
