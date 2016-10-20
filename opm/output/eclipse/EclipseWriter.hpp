@@ -60,7 +60,7 @@ public:
     ///
     /// - The NNC argument is distributed between the EGRID and INIT
     ///   files.
-    void writeInitAndEgrid(data::Solution simProps = {}, const NNC& nnc = NNC());
+    void writeInitAndEgrid(data::Solution simProps = data::Solution( ), const NNC& nnc = NNC());
 
     /*!
      * \brief Write a reservoir state and summary information to disk.
