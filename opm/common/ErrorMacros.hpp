@@ -57,6 +57,16 @@
         throw Exception(oss__.str());                                   \
     } while (false)
 
+// Same as OPM_THROW, except for not making an OpmLog::error() call.
+//
+// Usage: OPM_THROW_NOLOG(ExceptionClass, "Error message " << value);
+#define OPM_THROW_NOLOG(Exception, message)                             \
+    do {                                                                \
+        std::ostringstream oss__;                                       \
+        oss__ << "[" << __FILE__ << ":" << __LINE__ << "] " << message; \
+        throw Exception(oss__.str());                                   \
+    } while (false)
+
 // throw an exception if a condition is true
 #define OPM_ERROR_IF(condition, message) do {if(condition){ OPM_THROW(std::logic_error, message);}} while(false)
 

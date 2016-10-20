@@ -31,8 +31,6 @@ class EclipsePRTLog : public StreamLog {
 public:
     using StreamLog::StreamLog;
 
-    void addTaggedMessage(int64_t messageType, const std::string& messageTag, const std::string& message);
-
     size_t numMessages(int64_t messageType) const;
 
     ~EclipsePRTLog();
@@ -54,6 +52,10 @@ public:
     /// \param print_summary If true print a summary to the PRT file.
     EclipsePRTLog(std::ostream& os , int64_t messageMask,
                   bool print_summary);
+
+protected:
+    void addMessageUnconditionally(int64_t messageType, const std::string& message) override;
+
 private:
     std::map<int64_t, size_t> m_count;
     /// \brief Whether to print a summary to the log file.

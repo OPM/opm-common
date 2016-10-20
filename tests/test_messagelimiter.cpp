@@ -33,16 +33,16 @@ using namespace Opm;
 BOOST_AUTO_TEST_CASE(ConstructionAndLimits)
 {
     MessageLimiter m1;
-    BOOST_CHECK_EQUAL(m1.messageLimit(), MessageLimiter::NoLimit);
+    BOOST_CHECK_EQUAL(m1.tagMessageLimit(), MessageLimiter::NoLimit);
     MessageLimiter m2(0);
-    BOOST_CHECK_EQUAL(m2.messageLimit(), 0);
+    BOOST_CHECK_EQUAL(m2.tagMessageLimit(), 0);
     MessageLimiter m3(1);
-    BOOST_CHECK_EQUAL(m3.messageLimit(), 1);
+    BOOST_CHECK_EQUAL(m3.tagMessageLimit(), 1);
     MessageLimiter m4(-4);
-    BOOST_CHECK_EQUAL(m4.messageLimit(), MessageLimiter::NoLimit);
+    BOOST_CHECK_EQUAL(m4.tagMessageLimit(), MessageLimiter::NoLimit);
 }
 
-BOOST_AUTO_TEST_CASE(Response)
+BOOST_AUTO_TEST_CASE(TagResponse)
 {
     using namespace Opm;
     {
@@ -54,6 +54,7 @@ BOOST_AUTO_TEST_CASE(Response)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 6);
     }
 
     {
@@ -65,6 +66,7 @@ BOOST_AUTO_TEST_CASE(Response)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 0);
     }
 
     {
@@ -76,5 +78,82 @@ BOOST_AUTO_TEST_CASE(Response)
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
         BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 2);
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(CategoryResponse)
+{
+    using namespace Opm;
+    {
+        // No limits.
+        MessageLimiter m;
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 3);
+    }
+
+    {
+        // Limit == 0.
+        MessageLimiter m(MessageLimiter::NoLimit,
+                         {{ Log::MessageType::Info, 0 }});
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::JustOverCategoryLimit);
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::OverCategoryLimit);
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::OverCategoryLimit);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 3);
+    }
+
+    {
+        // Limit == 1.
+        MessageLimiter m(MessageLimiter::NoLimit,
+                         {{ Log::MessageType::Info, 1 }});
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::JustOverCategoryLimit);
+        BOOST_CHECK(m.handleMessageLimits("", Log::MessageType::Info) == MessageLimiter::Response::OverCategoryLimit);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 3);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(MixedResponse)
+{
+    using namespace Opm;
+    {
+        // Tag Limit == 1. Category limit = 0.
+        MessageLimiter m(1, {{ Log::MessageType::Info, 0 }});
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::JustOverCategoryLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverCategoryLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 2);
+    }
+
+    {
+        // Tag Limit == 0. Category limit = 1.
+        MessageLimiter m(0, {{ Log::MessageType::Info, 1 }});
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 0);
+    }
+
+    {
+        // Tag Limit == 1. Category limit = 1.
+        MessageLimiter m(1, {{ Log::MessageType::Info, 1 }});
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::PrintMessage);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverCategoryLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::JustOverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag1", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.handleMessageLimits("tag2", Log::MessageType::Info) == MessageLimiter::Response::OverTagLimit);
+        BOOST_CHECK(m.categoryMessageCounts().at(Log::MessageType::Info) == 2);
+    }
+
 }

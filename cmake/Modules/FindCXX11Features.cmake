@@ -33,41 +33,57 @@ include(CheckIncludeFileCXX)
 # macro to only add option once
 include(AddOptions)
 
-if(NOT MSVC)
-  # try to use compiler flag -std=c++11
-  CHECK_CXX_ACCEPTS_FLAG("-std=c++11" CXX_FLAG_CXX11)
-  if(CXX_FLAG_CXX11)
-    add_options (CXX ALL_BUILDS "-std=c++11")
-    set(CXX_STD0X_FLAGS "-std=c++11")
+if(CMAKE_VERSION VERSION_LESS 3.1)
+  if(NOT MSVC)
+    # try to use compiler flag -std=c++11
+    CHECK_CXX_ACCEPTS_FLAG("-std=c++11" CXX_FLAG_CXX11)
+    if(CXX_FLAG_CXX11)
+      add_options (CXX ALL_BUILDS "-std=c++11")
+      set(CXX_STD0X_FLAGS "-std=c++11")
+    else()
+      # try to use compiler flag -std=c++0x for older compilers
+      CHECK_CXX_ACCEPTS_FLAG("-std=c++0x" CXX_FLAG_CXX0X)
+      if(CXX_FLAG_CXX0X)
+        add_options (CXX ALL_BUILDS "-std=c++0x")
+        set(CXX_STD0X_FLAGS "-std=c++0x")
+      endif(CXX_FLAG_CXX0X)
+    endif(CXX_FLAG_CXX11)
+  endif(NOT MSVC)
+
+  # if we are building with an Apple toolchain in MacOS X,
+  # we cannot use the old GCC 4.2 fork, but must use the
+  # new runtime library
+  set (CXX_STDLIB_FLAGS)
+  string (TOUPPER "${CMAKE_CXX_COMPILER_ID}" _comp_id)
+  if (APPLE AND (_comp_id MATCHES "CLANG"))
+    CHECK_CXX_ACCEPTS_FLAG ("-stdlib=libc++" CXX_FLAG_STDLIB_LIBCXX)
+    if (CXX_FLAG_STDLIB_LIBCXX)
+          add_options (CXX ALL_BUILDS "-stdlib=libc++")
+          set (CXX_STDLIB_FLAGS "-stdlib=libc++")
+    endif (CXX_FLAG_STDLIB_LIBCXX)
+  endif (APPLE AND (_comp_id MATCHES "CLANG"))
+
+  # to format the command-line options pretty, we have an optional space
+  if (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
+    set (CXX_SPACE " ")
+  else (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
+    set (CXX_SPACE)
+  endif (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
+else()
+  if(NOT CMAKE_CXX_STANDARD)
+    set(CMAKE_CXX_STANDARD 11)
+  endif()
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+
+  # Workaround bug in cmake:
+  # cxx standard flags are not applied in CheckCXXSourceCompiles
+  if (CMAKE_CXX_STANDARD EQUAL 14)
+    add_options(CXX ALL_BUILDS ${CMAKE_CXX14_STANDARD_COMPILE_OPTION})
   else()
-    # try to use compiler flag -std=c++0x for older compilers
-    CHECK_CXX_ACCEPTS_FLAG("-std=c++0x" CXX_FLAG_CXX0X)
-    if(CXX_FLAG_CXX0X)
-      add_options (CXX ALL_BUILDS "-std=c++0x")
-      set(CXX_STD0X_FLAGS "-std=c++0x")
-    endif(CXX_FLAG_CXX0X)
-  endif(CXX_FLAG_CXX11)
-endif(NOT MSVC)
-
-# if we are building with an Apple toolchain in MacOS X,
-# we cannot use the old GCC 4.2 fork, but must use the
-# new runtime library
-set (CXX_STDLIB_FLAGS)
-string (TOUPPER "${CMAKE_CXX_COMPILER_ID}" _comp_id)
-if (APPLE AND (_comp_id MATCHES "CLANG"))
-  CHECK_CXX_ACCEPTS_FLAG ("-stdlib=libc++" CXX_FLAG_STDLIB_LIBCXX)
-  if (CXX_FLAG_STDLIB_LIBCXX)
-	add_options (CXX ALL_BUILDS "-stdlib=libc++")
-	set (CXX_STDLIB_FLAGS "-stdlib=libc++")
-  endif (CXX_FLAG_STDLIB_LIBCXX)
-endif (APPLE AND (_comp_id MATCHES "CLANG"))
-
-# to format the command-line options pretty, we have an optional space
-if (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
-  set (CXX_SPACE " ")
-else (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
-  set (CXX_SPACE)
-endif (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
+    add_options(CXX ALL_BUILDS ${CMAKE_CXX11_STANDARD_COMPILE_OPTION})
+  endif()
+endif()
 
 # perform tests
 include(CheckCXXSourceCompiles)
@@ -161,7 +177,7 @@ CHECK_CXX_SOURCE_COMPILES("
 # array and fill
 CHECK_CXX_SOURCE_COMPILES("
     #include <array>
-    
+
     int main(void)
     {
       std::array<int,2> a;
@@ -216,24 +232,24 @@ CHECK_CXX_SOURCE_COMPILES("
    {
      bar() DEP;
    };
-   
+
    class peng { } DEP;
-   
+
    template <class T>
    class t_bar
    {
      t_bar() DEP;
    };
-   
+
    template <class T>
    class t_peng {
      t_peng() {};
    } DEP;
-   
+
    void foo() DEP;
-   
+
    void foo() {};
-   
+
    int main(void)
    {
      return 0;
@@ -247,25 +263,25 @@ CHECK_CXX_SOURCE_COMPILES("
    class bar {
      bar() DEP;
    };
-   
+
    class peng { } DEP;
-   
+
    template <class T>
    class t_bar
    {
      t_bar() DEP;
    };
-   
+
    template <class T>
    class t_peng
    {
-     t_peng() {}; 
+     t_peng() {};
    } DEP;
-   
+
    void foo() DEP;
-   
+
    void foo() {};
-   
+
    int main(void)
    {
      return 0;
@@ -433,7 +449,7 @@ endif()
 if(CXX_FEATURES_MISSING)
   set (CXX11FEATURES_FOUND FALSE)
   if (CXX11Features_FIND_REQUIRED)
-	message(FATAL_ERROR
+        message(FATAL_ERROR
       "Your C++ compiler does not support the minimum set of C++-2011 features required. "
       "Make sure to use a compiler which implements all C++-2011 features provided by GCC 4.4. "
       "Your compiler does not seem to implement the following features:\n"

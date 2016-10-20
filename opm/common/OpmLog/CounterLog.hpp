@@ -30,28 +30,23 @@ namespace Opm {
  * \brief Provides a simple sytem for log message which are found by the
  *        Parser/Deck/EclipseState classes during processing the deck.
  */
-    class CounterLog : public LogBackend {
-public:
+    class CounterLog : public LogBackend
+    {
+    public:
+        CounterLog(int64_t messageMask);
+        CounterLog();
 
-    CounterLog(int64_t messageMask);
-    CounterLog();
+        size_t numMessages(int64_t messageType) const;
 
-    size_t numMessages(int64_t messageType) const;
+        void clear();
 
+    protected:
+        void addMessageUnconditionally(int64_t messageFlag,
+                                       const std::string& message) override;
+    private:
+        std::map<int64_t , size_t> m_count;
+    };
 
-    void addTaggedMessage(int64_t messageFlag,
-                          const std::string& messageTag,
-                          const std::string& message);
-
-
-    void clear();
-    ~CounterLog() {};
-private:
-    std::map<int64_t , size_t> m_count;
-};
-
-typedef std::shared_ptr<CounterLog> CounterLogPtr;
-typedef std::shared_ptr<const CounterLog> CounterLogConstPtr;
 } // namespace Opm
 
 #endif

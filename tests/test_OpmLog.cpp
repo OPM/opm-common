@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(DoLogging) {
 
 
 BOOST_AUTO_TEST_CASE(Test_Format) {
-    BOOST_CHECK_EQUAL( "There is a mild fuckup here?\nIn file /path/to/file, line 100\n" , Log::fileMessage("/path/to/file" , 100 , "There is a mild fuckup here?"));
+    BOOST_CHECK_EQUAL( "There is an error here?\nIn file /path/to/file, line 100\n" , Log::fileMessage("/path/to/file" , 100 , "There is an error here?"));
 
     BOOST_CHECK_EQUAL( "Error: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
     BOOST_CHECK_EQUAL( "Warning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
@@ -118,7 +118,8 @@ public:
         m_specialMessages = 0;
     }
 
-    void addTaggedMessage(int64_t messageType , const std::string& /* messageTag */, const std::string& /* message */) {
+    void addMessageUnconditionally(int64_t messageType , const std::string& /* message */) override
+    {
         if (messageType & Log::DefaultMessageTypes)
             m_defaultMessages +=1;
         else
@@ -328,7 +329,8 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
         streamLog1->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
         streamLog1->setMessageLimiter(std::make_shared<MessageLimiter>(2));
         streamLog2->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(false, true));
-        streamLog2->setMessageLimiter(std::make_shared<MessageLimiter>()); // no limit
+        std::shared_ptr<MessageLimiter> lim(new MessageLimiter(MessageLimiter::NoLimit, {{ Log::MessageType::Warning, 2 }}));
+        streamLog2->setMessageLimiter(lim); // no tag limit, but a warning category limit
     }
 
     const std::string tag = "ExampleTag";
@@ -354,8 +356,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
         + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n";
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Message limit reached for message category: Warning") + "\n";
 
     BOOST_CHECK_EQUAL(log_stream2.str(), expected2);
 
