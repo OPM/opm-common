@@ -46,7 +46,7 @@ function downstream_build_and_test {
     # is used the 'set -e' does not exit on first error.
     cmake ../ -DENABLE_PYTHON=ON -DBUILD_TESTING=ON -DSILENCE_EXTERNAL_WARNINGS=True -DUSE_QUADMATH=OFF -DADD_DISABLED_CTESTS=OFF
     make
-    ctest --output-on-failure
+    ctest -VV
     popd > /dev/null
 }
 
@@ -70,7 +70,7 @@ fi
 
 
 build_index=0
-
+project_index=3
 
 while [ $build_index -lt ${project_index} ];
 do
