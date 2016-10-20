@@ -68,7 +68,7 @@ inline Itr find_terminator( Itr begin, Itr end, Term terminator ) {
 
     auto pos = terminator( begin, end );
 
-    if( pos == end ) return end;
+    if( pos == begin || pos == end) return pos;
 
     auto qbegin = std::find_if( begin, end, RawConsts::is_quote() );
 
