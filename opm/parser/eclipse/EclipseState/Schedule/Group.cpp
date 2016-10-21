@@ -35,9 +35,7 @@ namespace Opm {
         waterTarget( timeMap , INVALID_GROUP_RATE ),
         gasTarget( timeMap , INVALID_GROUP_RATE ),
         liquidTarget( timeMap , INVALID_GROUP_RATE ),
-        reservoirVolumeTarget( timeMap , INVALID_GROUP_RATE ),
-        efficiencyFactor( timeMap, INVALID_EFFICIENCY_FACTOR ),
-        transferEfficiencyFactor( timeMap, false )
+        reservoirVolumeTarget( timeMap , INVALID_GROUP_RATE )
     {}
 
     GroupInjection::InjectionData::InjectionData(const TimeMap& timeMap) :
@@ -57,7 +55,9 @@ namespace Opm {
         m_production( timeMap ),
         m_wells( timeMap, std::make_shared< const WellSet >() ),
         m_isProductionGroup( timeMap, false),
-        m_isInjectionGroup( timeMap, false)
+        m_isInjectionGroup( timeMap, false),
+        m_efficiencyFactor( timeMap, 1.0),
+        m_transferEfficiencyFactor( timeMap, 1)
     {
         m_name = name_;
         m_creationTimeStep = creationTimeStep;
@@ -248,20 +248,20 @@ namespace Opm {
 
 
     void Group::setGroupEfficiencyFactor(size_t time_step, double factor) {
-        m_production.efficiencyFactor.update(time_step , factor);
+        m_efficiencyFactor.update(time_step , factor);
     }
 
     double Group::getGroupEfficiencyFactor(size_t time_step) const {
-        return m_production.efficiencyFactor.get(time_step);
+        return m_efficiencyFactor.get(time_step);
     }
 
     void  Group::setTransferGroupEfficiencyFactor(size_t time_step, bool transfer) {
-        m_production.transferEfficiencyFactor.update(time_step , transfer);
+        m_transferEfficiencyFactor.update(time_step , transfer);
     }
 
 
     bool  Group::getTransferGroupEfficiencyFactor(size_t time_step) const {
-        return m_production.transferEfficiencyFactor.get(time_step);
+        return m_transferEfficiencyFactor.get(time_step);
     }
 
     /*****************************************************************/
