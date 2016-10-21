@@ -88,6 +88,20 @@ namespace Opm {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
 
+        /*
+          We can have the MESSAGES keyword anywhere in the deck, we
+          must therefor also scan the part of the deck prior to the
+          SCHEDULE section to initialize valid MessageLimits object.
+        */
+        for (size_t keywordIdx = 0; keywordIdx < deck.size(); ++keywordIdx) {
+            const auto& keyword = deck.getKeyword(keywordIdx);
+            if (keyword.name() == "SCHEDULE")
+                break;
+
+            if (keyword.name() == "MESSAGES")
+                handleMESSAGES(keyword, 0);
+        }
+
         if (Section::hasSCHEDULE(deck)) {
             std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
             iterateScheduleSection(parseContext , *scheduleSection , grid );
@@ -1163,36 +1177,31 @@ namespace Opm {
 
     void Schedule::handleMESSAGES( const DeckKeyword& keyword, size_t currentStep) {
         const auto& record = keyword.getRecord(0);
-        int msgPrint = record.getItem("MESSAGE_PRINT_LIMIT").get< int >(0);
-        int msgStop = record.getItem("MESSAGE_STOP_LIMIT").get< int >(0);
-        m_messageLimits.setMessagePrintLimit(currentStep, msgPrint);
-        m_messageLimits.setMessageStopLimit(currentStep, msgStop);
+        using  set_limit_fptr = decltype( std::mem_fn( &MessageLimits::setMessagePrintLimit ) );
+        static const std::pair<std::string , set_limit_fptr> setters[] = {{"MESSAGE_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setMessagePrintLimit)},
+                                                                          {"COMMENT_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setCommentPrintLimit)},
+                                                                          {"WARNING_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setWarningPrintLimit)},
+                                                                          {"PROBLEM_PRINT_LIMIT" , std::mem_fn( &MessageLimits::setProblemPrintLimit)},
+                                                                          {"ERROR_PRINT_LIMIT"   , std::mem_fn( &MessageLimits::setErrorPrintLimit)},
+                                                                          {"BUG_PRINT_LIMIT"     , std::mem_fn( &MessageLimits::setBugPrintLimit)},
+                                                                          {"MESSAGE_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setMessageStopLimit)},
+                                                                          {"COMMENT_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setCommentStopLimit)},
+                                                                          {"WARNING_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setWarningStopLimit)},
+                                                                          {"PROBLEM_STOP_LIMIT"  , std::mem_fn( &MessageLimits::setProblemStopLimit)},
+                                                                          {"ERROR_STOP_LIMIT"    , std::mem_fn( &MessageLimits::setErrorStopLimit)},
+                                                                          {"BUG_STOP_LIMIT"      , std::mem_fn( &MessageLimits::setBugStopLimit)}};
 
-        int commentPrint = record.getItem("COMMENT_PRINT_LIMIT").get< int >(0);
-        int commentStop = record.getItem("COMMENT_STOP_LIMIT").get< int >(0);
-        m_messageLimits.setCommentPrintLimit(currentStep, commentPrint);
-        m_messageLimits.setCommentStopLimit(currentStep, commentStop);
-
-        int warnPrint = record.getItem("WARNING_PRINT_LIMIT").get< int >(0);
-        int warnStop = record.getItem("WARNING_STOP_LIMIT").get< int >(0);
-        m_messageLimits.setWarningPrintLimit(currentStep, warnPrint);
-        m_messageLimits.setWarningStopLimit(currentStep, warnStop);
-
-        int probPrint = record.getItem("PROBLEM_PRINT_LIMIT").get< int >(0);
-        int probStop = record.getItem("PROBLEM_STOP_LIMIT").get< int >(0);
-        m_messageLimits.setWarningPrintLimit(currentStep, probPrint);
-        m_messageLimits.setWarningStopLimit(currentStep, probStop);
-
-        int errPrint = record.getItem("ERROR_PRINT_LIMIT").get< int >(0);
-        int errStop = record.getItem("ERROR_STOP_LIMIT").get< int >(0);
-        m_messageLimits.setErrorPrintLimit(currentStep, errPrint);
-        m_messageLimits.setErrorStopLimit(currentStep, errStop);
-
-        int bugPrint = record.getItem("BUG_PRINT_LIMIT").get< int >(0);
-        int bugStop = record.getItem("BUG_STOP_LIMIT").get< int >(0);
-        m_messageLimits.setBugPrintLimit(currentStep, bugPrint);
-        m_messageLimits.setBugStopLimit(currentStep, bugStop);
+        for (const auto& pair : setters) {
+            const auto& item = record.getItem( pair.first );
+            if (!item.defaultApplied(0)) {
+                set_limit_fptr fptr = pair.second;
+                int value = item.get<int>(0);
+                fptr( this->m_messageLimits , currentStep , value );
+            }
+        }
     }
+
+
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid) {
         const auto wells = this->getWells( currentStep );

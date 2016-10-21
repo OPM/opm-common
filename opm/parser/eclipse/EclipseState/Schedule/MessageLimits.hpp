@@ -21,10 +21,48 @@
 #define OPM_MESSAGES_HPP
 
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 
 namespace Opm {
 
-    class TimeMap;    
+    class TimeMap;
+
+    struct MLimits {
+        int message_print_limit = ParserKeywords::MESSAGES::MESSAGE_PRINT_LIMIT::defaultValue;
+        int comment_print_limit = ParserKeywords::MESSAGES::COMMENT_PRINT_LIMIT::defaultValue;
+        int warning_print_limit = ParserKeywords::MESSAGES::WARNING_PRINT_LIMIT::defaultValue;
+        int problem_print_limit = ParserKeywords::MESSAGES::PROBLEM_PRINT_LIMIT::defaultValue;
+        int error_print_limit   = ParserKeywords::MESSAGES::ERROR_PRINT_LIMIT::defaultValue;
+        int bug_print_limit     = ParserKeywords::MESSAGES::BUG_PRINT_LIMIT::defaultValue;
+        int message_stop_limit  = ParserKeywords::MESSAGES::MESSAGE_STOP_LIMIT::defaultValue;
+        int comment_stop_limit  = ParserKeywords::MESSAGES::COMMENT_STOP_LIMIT::defaultValue;
+        int warning_stop_limit  = ParserKeywords::MESSAGES::WARNING_STOP_LIMIT::defaultValue;
+        int problem_stop_limit  = ParserKeywords::MESSAGES::PROBLEM_STOP_LIMIT::defaultValue;
+        int error_stop_limit    = ParserKeywords::MESSAGES::ERROR_STOP_LIMIT::defaultValue;
+        int bug_stop_limit      = ParserKeywords::MESSAGES::BUG_STOP_LIMIT::defaultValue;
+
+
+        bool operator==(const MLimits& other) const {
+            return  ((this->message_print_limit == other.message_print_limit) &&
+                     (this->comment_print_limit == other.comment_print_limit) &&
+                     (this->warning_print_limit == other.warning_print_limit) &&
+                     (this->problem_print_limit == other.problem_print_limit) &&
+                     (this->error_print_limit   == other.error_print_limit  ) &&
+                     (this->bug_print_limit     == other.bug_print_limit    ) &&
+                     (this->message_stop_limit  == other.message_stop_limit ) &&
+                     (this->comment_stop_limit  == other.comment_stop_limit ) &&
+                     (this->warning_stop_limit  == other.warning_stop_limit ) &&
+                     (this->problem_stop_limit  == other.problem_stop_limit ) &&
+                     (this->error_stop_limit    == other.error_stop_limit   ) &&
+                     (this->bug_stop_limit      == other.bug_stop_limit     ));
+        }
+
+        bool operator!=(const MLimits& other) const {
+            return !(*this == other);
+        }
+
+    };
+
 
     class MessageLimits {
     public:
@@ -63,20 +101,11 @@ namespace Opm {
         void setProblemStopLimit(size_t timestep, int value);
         void setErrorStopLimit(size_t timestep, int value);
         void setBugStopLimit(size_t timestep, int value);
-    private:
-        DynamicState<int> m_message_print_limit;
-        DynamicState<int> m_comment_print_limit;
-        DynamicState<int> m_warning_print_limit;
-        DynamicState<int> m_problem_print_limit;
-        DynamicState<int> m_error_print_limit;
-        DynamicState<int> m_bug_print_limit;
 
-        DynamicState<int> m_message_stop_limit;
-        DynamicState<int> m_comment_stop_limit;
-        DynamicState<int> m_warning_stop_limit;
-        DynamicState<int> m_problem_stop_limit;
-        DynamicState<int> m_error_stop_limit;
-        DynamicState<int> m_bug_stop_limit;
+    private:
+        void update(size_t timestep, const MLimits& value);
+
+        DynamicState<MLimits> limits;
     };
 }
 
