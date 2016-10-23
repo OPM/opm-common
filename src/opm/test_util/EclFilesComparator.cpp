@@ -19,6 +19,9 @@
 #include <opm/test_util/EclFilesComparator.hpp>
 #include <opm/common/ErrorMacros.hpp>
 
+#include <stdio.h>
+
+#include <set>
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -382,6 +385,15 @@ void RegressionTest::gridCompare() const {
 
 void RegressionTest::results() {
     if (keywords1.size() != keywords2.size()) {
+        std::set<std::string> keys(keywords1.begin() , keywords1.end());
+        for (const auto& key2: keywords2)
+            keys.insert( key2 );
+
+        for (const auto& key : keys)
+            fprintf(stderr," %8s:%3d     %8s:%3d \n",key.c_str() , ecl_file_get_num_named_kw( ecl_file1 , key.c_str()),
+                                                     key.c_str() , ecl_file_get_num_named_kw( ecl_file2 , key.c_str()));
+
+
         OPM_THROW(std::runtime_error, "\nKeywords in first file: " << keywords1.size()
                 << "\nKeywords in second file: " << keywords2.size()
                 << "\nThe number of keywords differ.");
