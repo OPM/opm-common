@@ -143,7 +143,7 @@ namespace Opm {
     /// NOTE: data are popped from the rawRecords deque!
     template<typename ParserItemType, typename ValueType>
     DeckItem ParserItemScan(const ParserItemType * self, RawRecord& rawRecord ) {
-        auto deckItem = DeckItem::make< ValueType >( self->name(), rawRecord.size() );
+        DeckItem deckItem( self->name(), ValueType(), rawRecord.size() );
 
         if (self->sizeType() == ALL) {
             while (rawRecord.size() > 0) {

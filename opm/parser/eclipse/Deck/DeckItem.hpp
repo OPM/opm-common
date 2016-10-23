@@ -25,29 +25,18 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
+#include <opm/parser/eclipse/Utility/Typetools.hpp>
 
 namespace Opm {
 
-    class DeckItem;
-    class DeckItemBase;
-
     class DeckItem {
     public:
-        DeckItem() = delete;
-        DeckItem( const DeckItem& );
+        DeckItem() = default;
+        DeckItem( const std::string& );
 
-        /* for python interop as well as queries, must be manually synchronised
-         * with cdeck_item.cc and opm/deck/item_type_enum.py
-         */
-        enum type {
-            unknown = 0, /* this signals an error */
-            integer = 1,
-            string = 2,
-            fdouble = 3
-        };
-
-        template< typename T >
-        static DeckItem make( const std::string&, size_t = 1 );
+        DeckItem( const std::string&, int, size_t size_hint = 8 );
+        DeckItem( const std::string&, double, size_t size_hint = 8 );
+        DeckItem( const std::string&, std::string, size_t size_hint = 8 );
 
         const std::string& name() const;
 
@@ -73,40 +62,37 @@ namespace Opm {
         template< typename T > const std::vector< T >& getData() const;
         const std::vector< double >& getSIDoubleData() const;
 
-        template< typename T > void push_back( T );
-        template< typename T > void push_back( T, size_t );
-        template< typename T > void push_backDefault( T );
+        void push_back( int, size_t = 1 );
+        void push_back( double, size_t = 1 );
+        void push_back( std::string, size_t = 1 );
+        void push_backDefault( int );
+        void push_backDefault( double );
+        void push_backDefault( std::string );
         // trying to access the data of a "dummy default item" will raise an exception
         void push_backDummyDefault();
 
-        void push_backDimension( Dimension /* activeDimension */,
-                                 Dimension /* defaultDimension */);
+        void push_backDimension( const Dimension& /* activeDimension */,
+                                 const Dimension& /* defaultDimension */);
 
-        type getType() const;
+        type_tag getType() const;
 
     private:
-        DeckItem( std::unique_ptr< DeckItemBase >&& );
-        std::unique_ptr< DeckItemBase > ptr;
+        std::vector< double > dval;
+        std::vector< int > ival;
+        std::vector< std::string > sval;
+
+        type_tag type = type_tag::unknown;
+
+        std::string item_name;
+        std::vector< bool > defaulted;
+        std::vector< Dimension > dimensions;
+        mutable std::vector< double > SIdata;
+
+        template< typename T > std::vector< T >& value_ref();
+        template< typename T > const std::vector< T >& value_ref() const;
+        template< typename T > void push( T, size_t );
+        template< typename T > void push_default( T );
     };
-
-    class DeckItemBase {
-        public:
-            virtual const std::string& name() const = 0;
-            virtual bool defaultApplied( size_t ) const = 0;
-            virtual bool hasValue( size_t ) const = 0;
-            virtual size_t size() const = 0;
-            virtual void push_backDummyDefault() = 0;
-            virtual ~DeckItemBase() = default;
-            const DeckItem::type type_tag;
-
-        protected:
-            DeckItemBase( DeckItem::type tag ) : type_tag( tag ) {}
-
-        private:
-            virtual std::unique_ptr< DeckItemBase > clone() const = 0;
-            friend class DeckItem;
-    };
-
 }
 #endif  /* DECKITEM_HPP */
 

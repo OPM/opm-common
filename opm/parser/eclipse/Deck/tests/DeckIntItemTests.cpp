@@ -27,12 +27,12 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(Initialize) {
-    BOOST_REQUIRE_NO_THROW( DeckItem::make< int >("TEST") );
+    BOOST_REQUIRE_NO_THROW( DeckItem m( "TEST", int() ) );
 }
 
 
 BOOST_AUTO_TEST_CASE(HasValue) {
-    auto deckIntItem = DeckItem::make< int >("TEST");
+    DeckItem deckIntItem( "TEST", int() );
     BOOST_CHECK_EQUAL( false , deckIntItem.hasValue(0) );
     deckIntItem.push_back(1);
     BOOST_CHECK_EQUAL( true  , deckIntItem.hasValue(0) );
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(HasValue) {
 }
 
 BOOST_AUTO_TEST_CASE(DummyDefaults) {
-    auto deckIntItem = DeckItem::make< int >("TEST");
+    DeckItem deckIntItem( "TEST", int() );
     BOOST_CHECK_EQUAL(deckIntItem.size(), 0);
 
     deckIntItem.push_backDummyDefault();
@@ -52,19 +52,19 @@ BOOST_AUTO_TEST_CASE(DummyDefaults) {
 }
 
 BOOST_AUTO_TEST_CASE(GetIntAtIndex_NoData_ExceptionThrown) {
-    auto deckIntItem = DeckItem::make< int >("TEST");
+    DeckItem deckIntItem( "TEST", int() );
     deckIntItem.push_back(100);
     BOOST_CHECK(deckIntItem.get< int >(0) == 100);
     BOOST_CHECK_THROW(deckIntItem.get< int >(1), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(InitializeDefaultApplied) {
-    auto deckIntItem = DeckItem::make< int >("TEST");
+    DeckItem deckIntItem( "TEST", int() );
     BOOST_CHECK( deckIntItem.size() == 0 );
 }
 
 BOOST_AUTO_TEST_CASE(size_correct) {
-    auto deckIntItem = DeckItem::make< int >("TEST");
+    DeckItem deckIntItem( "TEST", int() );
 
     BOOST_CHECK_EQUAL( 0U , deckIntItem.size());
     deckIntItem.push_back( 100 );
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(size_correct) {
 }
 
 BOOST_AUTO_TEST_CASE(DefaultNotApplied) {
-    auto deckIntItem = DeckItem::make< int >("TEST");
+    DeckItem deckIntItem( "TEST", int() );
     BOOST_CHECK( deckIntItem.size() == 0 );
 
     deckIntItem.push_back( 100 );
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(DefaultNotApplied) {
 }
 
 BOOST_AUTO_TEST_CASE(UseDefault) {
-    auto deckIntItem = DeckItem::make< int >("TEST");
+    DeckItem deckIntItem( "TEST", int() );
 
     deckIntItem.push_backDefault( 100 );
 
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(UseDefault) {
 }
 
 BOOST_AUTO_TEST_CASE(DefaultApplied) {
-    auto deckIntItem = DeckItem::make< int >("TEST");
+    DeckItem deckIntItem( "TEST", int() );
     BOOST_CHECK( deckIntItem.size() == 0 );
 
     deckIntItem.push_backDefault( 100 );
@@ -117,12 +117,9 @@ BOOST_AUTO_TEST_CASE(DefaultApplied) {
 
 
 BOOST_AUTO_TEST_CASE(PushBackMultiple) {
-    auto item = DeckItem::make< int >("HEI");
+    DeckItem item( "HEI", int() );
     item.push_back(10 , 100U );
     BOOST_CHECK_EQUAL( 100U , item.size() );
     for (size_t i=0; i < 100; i++)
         BOOST_CHECK_EQUAL(10 , item.get< int >(i));
 }
-
-
-

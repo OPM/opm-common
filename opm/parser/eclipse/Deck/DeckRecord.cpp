@@ -56,7 +56,7 @@ namespace Opm {
         return m_items.size();
     }
 
-    void DeckRecord::addItem( DeckItem&& deckItem ) {
+    void DeckRecord::addItem( DeckItem deckItem ) {
         if( this->hasItem( deckItem.name() ) )
             throw std::invalid_argument(
                     "Item with name: "

@@ -30,11 +30,11 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(InitializeDouble) {
-    BOOST_REQUIRE_NO_THROW( DeckItem::make< double >("HEI") );
+    BOOST_REQUIRE_NO_THROW( DeckItem( "HEI", double() ) );
 }
 
 BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
-    auto deckDoubleItem = DeckItem::make< double >("TEST");
+    DeckItem deckDoubleItem( "TEST", double() );
 
     BOOST_CHECK_THROW(deckDoubleItem.get< double >(0), std::out_of_range);
     deckDoubleItem.push_back(1.89);
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(GetDoubleAtIndex_NoData_ExceptionThrown) {
 
 
 BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
-    auto deckDoubleItem = DeckItem::make< double >("TEST");
+    DeckItem deckDoubleItem( "TEST", double() );
 
     BOOST_CHECK_EQUAL( 0U , deckDoubleItem.size());
     deckDoubleItem.push_back( 100.0 );
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(sizeDouble_correct) {
 
 
 BOOST_AUTO_TEST_CASE(SetInDeck) {
-    auto deckDoubleItem = DeckItem::make< double >("TEST");
+    DeckItem deckDoubleItem( "TEST", double() );
     BOOST_CHECK( deckDoubleItem.size() == 0 );
 
     deckDoubleItem.push_backDefault( 1.0 );
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(SetInDeck) {
 }
 
 BOOST_AUTO_TEST_CASE(DummyDefaults) {
-    auto deckDoubleItem = DeckItem::make< double >("TEST");
+    DeckItem deckDoubleItem( "TEST", double() );
     BOOST_CHECK_EQUAL(deckDoubleItem.size(), 0);
 
     deckDoubleItem.push_backDummyDefault();
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(DummyDefaults) {
 }
 
 BOOST_AUTO_TEST_CASE(PushBackMultiple) {
-    auto item = DeckItem::make< double >("HEI");
+    DeckItem item( "HEI", double() );
     item.push_back(10.22 , 100 );
     BOOST_CHECK_EQUAL( 100U , item.size() );
     for (size_t i=0; i < 100; i++)
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(PushBackMultiple) {
 }
 
 BOOST_AUTO_TEST_CASE(PushBackDimension) {
-    auto item = DeckItem::make< double >("HEI");
+    DeckItem item( "HEI", double() );
     Dimension activeDimension{ "Length" , 100 };
     Dimension defaultDimension{ "Length" , 10 };
 
@@ -104,13 +104,13 @@ BOOST_AUTO_TEST_CASE(PushBackDimension) {
 }
 
 BOOST_AUTO_TEST_CASE(PushBackDimensionInvalidType) {
-    auto item = DeckItem::make< int >("HEI");
+    DeckItem item( "HEI", int() );
     Dimension dim{ "Length" , 100 };
     BOOST_CHECK_THROW( item.push_backDimension( dim , dim ) , std::logic_error );
 }
 
 BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
-    auto item = DeckItem::make< double >("HEI");
+    DeckItem item( "HEI", double() );
     item.push_back(10.22 , 100 );
 
     BOOST_CHECK_THROW( item.getSIDouble(0) , std::invalid_argument );
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(GetSIWithoutDimensionThrows) {
 }
 
 BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
-    auto item = DeckItem::make< double >("HEI");
+    DeckItem item( "HEI", double() );
     Dimension dim{ "Length" , 100 };
 
     item.push_back(1.0 , 100 );
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(GetSISingleDimensionCorrect) {
 }
 
 BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
-    auto item = DeckItem::make< double >("HEI");
+    DeckItem item( "HEI", double() );
     Dimension dim{ "Length" , 1 };
     Dimension defaultDim{ "Length" , 100 };
 
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(GetSISingleDefault) {
 }
 
 BOOST_AUTO_TEST_CASE(GetSIMultipleDim) {
-    auto item = DeckItem::make< double >("HEI");
+    DeckItem item( "HEI", double() );
     Dimension dim1{ "Length" , 2 };
     Dimension dim2{ "Length" , 4 };
     Dimension dim3{ "Length" , 8 };
