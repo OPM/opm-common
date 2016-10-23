@@ -23,32 +23,6 @@
 
 namespace Opm {
 
-
-
-    const std::string ParserItemSizeEnum2String(ParserItemSizeEnum enumValue) {
-        switch (enumValue) {
-        case ALL:
-            return "ALL";
-            break;
-        case SINGLE:
-            return "SINGLE";
-            break;
-        default:
-            throw std::invalid_argument("Implementation error - should NOT be here");
-        }
-    }
-
-
-    ParserItemSizeEnum ParserItemSizeEnumFromString(const std::string& stringValue) {
-        if (stringValue == "ALL")
-            return ALL;
-        else if (stringValue == "SINGLE")
-            return SINGLE;
-        else
-            throw std::invalid_argument("String: " + stringValue + " can not be converted to enum value");
-    }
-
-
     /*****************************************************************/
 
     const std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue) {

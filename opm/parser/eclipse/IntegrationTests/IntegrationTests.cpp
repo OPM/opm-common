@@ -28,10 +28,8 @@
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
@@ -54,8 +52,8 @@ std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw) {
 Parser createWWCTParser() {
     auto parserKeyword = createDynamicSized("WWCT");
 
-    auto record = std::make_shared< ParserRecord >();
-    record->addItem( std::make_shared< ParserStringItem >("WELL", ALL) );
+    ParserRecord record;
+    record.addItem( ParserItem("WELL", ParserItem::item_size::ALL, "") );
     parserKeyword->addRecord( record );
 
     auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
@@ -140,10 +138,10 @@ BOOST_AUTO_TEST_CASE(parser_internal_name_vs_deck_name) {
 static Parser createBPRParser() {
     auto parserKeyword = createDynamicSized("BPR");
     {
-        std::shared_ptr<ParserRecord> bprRecord = std::make_shared<ParserRecord>();
-        bprRecord->addItem( std::make_shared< ParserIntItem >("I", SINGLE));
-        bprRecord->addItem( std::make_shared< ParserIntItem >("J", SINGLE));
-        bprRecord->addItem( std::make_shared< ParserIntItem >("K", SINGLE));
+        ParserRecord bprRecord;
+        bprRecord.addItem( ParserItem("I", ParserItem::item_size::SINGLE, 0) );
+        bprRecord.addItem( ParserItem("J", ParserItem::item_size::SINGLE, 0) );
+        bprRecord.addItem( ParserItem("K", ParserItem::item_size::SINGLE, 0) );
         parserKeyword->addRecord( bprRecord );
     }
     auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
@@ -230,9 +228,8 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
 
     auto* parserKeyword = parser.getParserKeywordFromDeckName("RADFIN4");
     const auto& parserRecord = parserKeyword->getRecord(0);
-    const auto& nwmaxItem = parserRecord->get("NWMAX");
-    auto intItem = std::static_pointer_cast<const ParserIntItem>(nwmaxItem);
+    const auto& intItem = parserRecord.get("NWMAX");
 
     BOOST_CHECK_EQUAL(18, radfin4_0_full.getRecord(0).getItem(10).get< int >(0));
-    BOOST_CHECK_EQUAL(intItem->getDefault(), radfin4_1_partial.getRecord(0).getItem(10).get< int >(0));
+    BOOST_CHECK_EQUAL(intItem.getDefault< int >(), radfin4_1_partial.getRecord(0).getItem(10).get< int >(0));
 }

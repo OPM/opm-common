@@ -33,10 +33,6 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
-
-
 using namespace Opm;
 
 inline std::unique_ptr< ParserKeyword > createDynamicSized(const std::string& kw) {
@@ -251,7 +247,7 @@ BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
 
     eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
     const auto& record = eqldims->getRecord(0);
-    BOOST_CHECK(record->hasItem("NEW"));
+    BOOST_CHECK(record.hasItem("NEW"));
 }
 
 

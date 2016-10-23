@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(LoadKeywordDirectory) {
     {
         auto kw = loader.getKeyword("ADDREG");
         auto record = kw->getRecord(0);
-        BOOST_CHECK_EQUAL( false, record->hasItem("REGION_NUMBER"));
+        BOOST_CHECK( !record.hasItem("REGION_NUMBER") );
     }
 }
 
@@ -100,6 +100,6 @@ BOOST_AUTO_TEST_CASE(BigLoad) {
     {
         auto kw = loader.getKeyword("ADDREG");
         auto record = kw->getRecord(0);
-        BOOST_CHECK( record->hasItem("REGION_NUMBER"));
+        BOOST_CHECK( record.hasItem("REGION_NUMBER"));
     }
 }

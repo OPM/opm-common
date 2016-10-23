@@ -25,28 +25,6 @@
 
 using namespace Opm;
 
-BOOST_AUTO_TEST_CASE(TestItemSizeEnum2String) {
-    BOOST_CHECK_EQUAL( "ALL"    , ParserItemSizeEnum2String(ALL));
-    BOOST_CHECK_EQUAL( "SINGLE" , ParserItemSizeEnum2String(SINGLE));
-}
-
-
-BOOST_AUTO_TEST_CASE(TestItemSizeEnumFromString) {
-    BOOST_CHECK_THROW( ParserItemSizeEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( ALL , ParserItemSizeEnumFromString("ALL"));
-    BOOST_CHECK_EQUAL( SINGLE , ParserItemSizeEnumFromString("SINGLE"));
-}
-
-
-
-BOOST_AUTO_TEST_CASE(TestItemSizeEnumLoop) {
-    BOOST_CHECK_EQUAL( ALL    , ParserItemSizeEnumFromString( ParserItemSizeEnum2String( ALL ) ));
-    BOOST_CHECK_EQUAL( SINGLE , ParserItemSizeEnumFromString( ParserItemSizeEnum2String( SINGLE ) ));
-
-    BOOST_CHECK_EQUAL( "ALL"    , ParserItemSizeEnum2String(ParserItemSizeEnumFromString(  "ALL" ) ));
-    BOOST_CHECK_EQUAL( "SINGLE" , ParserItemSizeEnum2String(ParserItemSizeEnumFromString(  "SINGLE" ) ));
-}
-
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestKeywordSizeEnum2String) {

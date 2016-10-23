@@ -18,6 +18,8 @@
 
 #include <algorithm>
 #include <cctype>
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -26,14 +28,12 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
-#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
 namespace Opm {
 
@@ -82,10 +82,11 @@ namespace Opm {
     }
 
     bool ParserKeyword::hasDimension() const {
-        for( const auto& record : m_records )
-            if( record->hasDimension() ) return true;
+        auto have_dim = []( const ParserRecord& r ) {
+            return r.hasDimension();
+        };
 
-        return false;
+        return std::any_of( this->begin(), this->end(), have_dim );
     }
 
 
@@ -301,135 +302,134 @@ namespace Opm {
     }
 
     void ParserKeyword::addItems(const Json::JsonObject& itemsConfig) {
-        if (itemsConfig.is_array()) {
-            size_t num_items = itemsConfig.size();
-            std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
-
-            for (size_t i = 0; i < num_items; i++) {
-                const Json::JsonObject itemConfig = itemsConfig.get_array_item(i);
-
-                if (itemConfig.has_item("value_type")) {
-                    ParserValueTypeEnum valueType = ParserValueTypeEnumFromString(itemConfig.get_string("value_type"));
-                    switch (valueType) {
-                    case INT:
-                        {
-                            record->addItem( std::make_shared< ParserIntItem >( itemConfig ) );
-                        }
-                        break;
-                    case STRING:
-                        {
-                            record->addItem( std::make_shared< ParserStringItem >( itemConfig ) );
-                        }
-                        break;
-                    case DOUBLE:
-                        {
-                            auto item = std::make_shared< ParserDoubleItem >( itemConfig );
-                            initDoubleItemDimension( item, itemConfig );
-                            record->addItem(item);
-                        }
-                        break;
-                    default:
-                        throw std::invalid_argument("While parsing "+getName()+": Values of type "+itemConfig.get_string("value_type")+" are not implemented.");
-                    }
-                } else
-                    throw std::invalid_argument("'value_type' JSON item missing for keyword "+getName()+".");
-            }
-            addRecord(record);
-        } else
+        if( !itemsConfig.is_array() )
             throw std::invalid_argument("The 'items' JSON item missing must be an array in keyword "+getName()+".");
-    }
 
-    void ParserKeyword::initDoubleItemDimension( std::shared_ptr< ParserDoubleItem > item, const Json::JsonObject itemConfig) {
-        if (itemConfig.has_item("dimension")) {
-            const Json::JsonObject dimensionConfig = itemConfig.get_item("dimension");
-            if (dimensionConfig.is_string())
-                item->push_backDimension( dimensionConfig.as_string() );
-            else if (dimensionConfig.is_array()) {
-                for (size_t idim = 0; idim < dimensionConfig.size(); idim++) {
-                    Json::JsonObject dimObject = dimensionConfig.get_array_item( idim );
-                    item->push_backDimension( dimObject.as_string());
-                }
-            } else
-                throw std::invalid_argument("The 'dimension' attribute of keyword "+getName()+" must be a string or a list of strings");
+        size_t num_items = itemsConfig.size();
+        ParserRecord record;
+
+        for (size_t i = 0; i < num_items; i++) {
+            const Json::JsonObject& itemConfig = itemsConfig.get_array_item(i);
+            record.addItem( ParserItem( itemConfig ) );
         }
+
+        this->addRecord( record );
     }
 
+namespace {
+
+void set_dimensions( ParserItem& item,
+                    const Json::JsonObject& json,
+                    const std::string& keyword ) {
+    if( !json.has_item("dimension") ) return;
+
+    const auto& dim = json.get_item("dimension");
+    if( dim.is_string() ) {
+        item.push_backDimension( dim.as_string() );
+    }
+    else if( dim.is_array() ) {
+        for (size_t idim = 0; idim < dim.size(); idim++)
+            item.push_backDimension( dim.get_array_item( idim ).as_string() );
+    }
+    else {
+        throw std::invalid_argument(
+                "The 'dimension' attribute of keyword " + keyword
+                + " must be a string or a list of strings" );
+    }
+}
+
+}
 
 
     void ParserKeyword::initData(const Json::JsonObject& jsonConfig) {
-        m_fixedSize = 1U;
-        m_keywordSizeType = FIXED;
+        this->m_fixedSize = 1U;
+        this->m_keywordSizeType = FIXED;
 
         const Json::JsonObject dataConfig = jsonConfig.get_item("data");
-        if (dataConfig.has_item("value_type")) {
-            ParserValueTypeEnum valueType = ParserValueTypeEnumFromString(dataConfig.get_string("value_type"));
-            const std::string itemName("data");
-            bool hasDefault = dataConfig.has_item("default");
-            std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
+        if (!dataConfig.has_item("value_type") )
+            throw std::invalid_argument("The 'value_type' JSON item of keyword "+getName()+" is missing");
 
-            switch (valueType) {
-                case INT:
+        ParserValueTypeEnum valueType = ParserValueTypeEnumFromString(dataConfig.get_string("value_type"));
+        const std::string itemName("data");
+        bool hasDefault = dataConfig.has_item("default");
+
+        ParserRecord record;
+        ParserItem item( itemName, ParserItem::item_size::ALL );
+
+        switch (valueType) {
+            case INT:
                 {
-                    auto item = std::make_shared< ParserIntItem >( itemName, ALL );
-                    if (hasDefault) {
+                    item.setType( int() );
+                    if(hasDefault) {
                         int defaultValue = dataConfig.get_int("default");
-                        item->setDefault(defaultValue);
+                        item.setDefault(defaultValue);
                     }
-                    record->addDataItem( item );
+                    record.addDataItem( item );
                 }
                 break;
-                case STRING:
+            case STRING:
                 {
-                    auto item = std::make_shared< ParserStringItem >(itemName, ALL);
+                    item.setType( std::string() );
                     if (hasDefault) {
                         std::string defaultValue = dataConfig.get_string("default");
-                        item->setDefault(defaultValue);
+                        item.setDefault(defaultValue);
                     }
-                    record->addItem( item );
+                    record.addItem( item );
                 }
                 break;
-                case DOUBLE:
+            case DOUBLE:
                 {
-                    auto item = std::make_shared< ParserDoubleItem >(itemName, ALL);
+                    item.setType( double() );
                     if (hasDefault) {
                         double defaultValue = dataConfig.get_double("default");
-                        item->setDefault(defaultValue);
+                        item.setDefault(defaultValue);
                     }
-                    initDoubleItemDimension( item , dataConfig );
-                    record->addDataItem( item );
+                    set_dimensions( item, dataConfig, this->getName() );
+                    record.addDataItem( item );
                 }
                 break;
-                default:
-                    throw std::invalid_argument("While initializing keyword "+getName()+": Values of type "+dataConfig.get_string("value_type")+" are not implemented.");
-            }
-            addDataRecord( record );
-        } else
-            throw std::invalid_argument("The 'value_type' JSON item of keyword "+getName()+" is missing");
+            default:
+                throw std::invalid_argument("While initializing keyword "+getName()+": Values of type "+dataConfig.get_string("value_type")+" are not implemented.");
+        }
+
+        this->addDataRecord( record );
     }
 
-    std::shared_ptr< ParserRecord > ParserKeyword::getRecord(size_t recordIndex) const {
-        return m_records.get( recordIndex );
+    const ParserRecord& ParserKeyword::getRecord(size_t recordIndex) const {
+        if( this->m_records.empty() )
+            throw std::invalid_argument( "Trying to get record from empty keyword" );
+
+        if( recordIndex >= this->m_records.size() )
+            return this->m_records.back();
+
+        return this->m_records[ recordIndex ];
+    }
+
+    ParserRecord& ParserKeyword::getRecord( size_t index ) {
+        return const_cast< ParserRecord& >(
+                 const_cast< const ParserKeyword& >( *this ).getRecord( index )
+                );
     }
 
 
-    std::vector<std::shared_ptr< ParserRecord > >::const_iterator ParserKeyword::recordBegin() const {
+    std::vector< ParserRecord >::const_iterator ParserKeyword::begin() const {
         return m_records.begin();
     }
 
-    std::vector<std::shared_ptr< ParserRecord > >::const_iterator ParserKeyword::recordEnd() const {
+    std::vector< ParserRecord >::const_iterator ParserKeyword::end() const {
         return m_records.end();
     }
 
 
 
-    void ParserKeyword::addRecord(std::shared_ptr<ParserRecord> record) {
-        m_records.push_back( record );
+    void ParserKeyword::addRecord( ParserRecord record ) {
+        m_records.push_back( std::move( record ) );
     }
 
 
-    void ParserKeyword::addDataRecord(std::shared_ptr<ParserRecord> record) {
+    void ParserKeyword::addDataRecord( ParserRecord record ) {
         if ((m_keywordSizeType == FIXED) && (m_fixedSize == 1U))
-            addRecord(record);
+            addRecord( std::move( record ) );
         else
             throw std::invalid_argument("When calling addDataRecord() for keyword " + getName() + ", it must be configured with fixed size == 1.");
     }
@@ -486,7 +486,7 @@ namespace Opm {
             if( m_records.size() == 0 && rawRecord.size() > 0 )
                 throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
 
-            keyword.addRecord( getRecord( record_nr )->parse( parseContext, msgContainer, rawRecord ) );
+            keyword.addRecord( getRecord( record_nr ).parse( parseContext, msgContainer, rawRecord ) );
             record_nr++;
         }
 
@@ -513,11 +513,9 @@ namespace Opm {
 
 
     bool ParserKeyword::isDataKeyword() const {
-        if (m_records.size() > 0) {
-            auto record = m_records.get(0);
-            return record->isDataRecord();
-        } else
-            return false;
+        if( this->m_records.empty() ) return false;
+
+        return this->m_records.front().isDataRecord();
     }
 
 
@@ -553,43 +551,6 @@ namespace Opm {
         return false;
     }
 
-    bool ParserKeyword::equal(const ParserKeyword& other) const {
-        // compare the deck names. we don't care about the ordering of the strings.
-        if (m_deckNames != other.m_deckNames)
-            return false;
-
-        if(    m_name != other.m_name
-            || m_matchRegexString != other.m_matchRegexString
-            || m_keywordSizeType != other.m_keywordSizeType
-            || isDataKeyword() != other.isDataKeyword()
-            || m_isTableCollection != other.m_isTableCollection )
-                return false;
-
-        switch( m_keywordSizeType ) {
-            case FIXED:
-                if( m_fixedSize != other.m_fixedSize )
-                    return false;
-                break;
-
-            case OTHER_KEYWORD_IN_DECK:
-                if(  m_sizeDefinitionPair.first != other.m_sizeDefinitionPair.first
-                  || m_sizeDefinitionPair.second != other.m_sizeDefinitionPair.second )
-                    return false;
-                break;
-
-            default:
-                break;
-        }
-
-        for( size_t i = 0; i < m_records.size(); i++ ) {
-            if( !getRecord( i )->equal( *other.getRecord( i ) ) )
-                    return false;
-        }
-
-        return true;
-    }
-
-
     std::string ParserKeyword::createDeclaration(const std::string& indent) const {
         std::stringstream ss;
         ss << indent << "class " << className() << " : public ParserKeyword {" << std::endl;
@@ -599,12 +560,10 @@ namespace Opm {
             ss << local_indent << className() << "();" << std::endl;
             ss << local_indent << "static const std::string keywordName;" << std::endl;
             if (m_records.size() > 0 ) {
-                for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
-                    std::shared_ptr<ParserRecord> record = *iter;
-                    for (size_t i = 0; i < record->size(); i++) {
-                        const auto& item = record->get(i);
+                for( const auto& record : *this ) {
+                    for( const auto& item : record ) {
                         ss << std::endl;
-                        item->inlineClass(ss , local_indent );
+                        item.inlineClass(ss , local_indent );
                     }
                 }
             }
@@ -672,32 +631,30 @@ namespace Opm {
 
         {
             if (m_records.size() > 0 ) {
-                for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
-                    std::shared_ptr<ParserRecord> record = *iter;
+                for( const auto& record : *this ) {
                     const std::string local_indent = indent + "   ";
                     ss << indent << "{" << std::endl;
-                    ss << local_indent << "std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();" << std::endl;
-                    for (size_t i = 0; i < record->size(); i++) {
-                        const auto& item = record->get(i);
+                    ss << local_indent << "ParserRecord record;" << std::endl;
+                    for( const auto& item : record ) {
                         ss << local_indent << "{" << std::endl;
                         {
                             std::string indent3 = local_indent + "   ";
-                            ss << indent3 << "std::shared_ptr< ParserItem > item(" << item->createCode() << ");" << std::endl;
-                            ss << indent3 << "item->setDescription(\"" << item->getDescription() << "\");" << std::endl;
-                            for (size_t idim=0; idim < item->numDimensions(); idim++)
-                                ss << indent3 <<"item->push_backDimension(\"" << item->getDimension( idim ) << "\");" << std::endl;
+                            ss << indent3 << item.createCode() << std::endl
+                               << indent3 << "item.setDescription(\"" << item.getDescription() << "\");" << std::endl;
+                            for (size_t idim=0; idim < item.numDimensions(); idim++)
+                                ss << indent3 <<"item.push_backDimension(\"" << item.getDimension( idim ) << "\");" << std::endl;
                             {
                                 std::string addItemMethod = "addItem";
                                 if (isDataKeyword())
                                     addItemMethod = "addDataItem";
 
-                                ss << indent3 << "record->" << addItemMethod << "(item);" << std::endl;
+                                ss << indent3 << "record." << addItemMethod << "(item);" << std::endl;
                             }
                         }
                         ss << local_indent << "}" << std::endl;
                     }
 
-                    if (record->isDataRecord())
+                    if (record.isDataRecord())
                         ss << local_indent << "addDataRecord( record );" << std::endl;
                     else
                         ss << local_indent << "addRecord( record );" << std::endl;
@@ -709,11 +666,9 @@ namespace Opm {
         ss << "}" << std::endl;
 
         ss << "const std::string " << className() << "::keywordName = \"" << getName() << "\";" << std::endl;
-        for (auto iter = recordBegin(); iter != recordEnd(); ++iter) {
-            std::shared_ptr<ParserRecord> record = *iter;
-            for (size_t i = 0; i < record->size(); i++) {
-                const auto& item = record->get(i);
-                ss << item->inlineClassInit(className());
+        for( const auto& record : *this ) {
+            for( const auto& item : record ) {
+                ss << item.inlineClassInit(className());
             }
         }
         ss << std::endl;
@@ -723,9 +678,59 @@ namespace Opm {
 
     void ParserKeyword::applyUnitsToDeck( Deck& deck, DeckKeyword& deckKeyword) const {
         for (size_t index = 0; index < deckKeyword.size(); index++) {
-            std::shared_ptr<const ParserRecord> parserRecord = getRecord(index);
-            auto& deckRecord = deckKeyword.getRecord(index);
-            parserRecord->applyUnitsToDeck( deck , deckRecord );
+            const auto& parserRecord = this->getRecord( index );
+            auto& deckRecord = deckKeyword.getRecord( index );
+            parserRecord.applyUnitsToDeck( deck, deckRecord );
         }
     }
+
+    bool ParserKeyword::operator==( const ParserKeyword& rhs ) const {
+        // compare the deck names. we don't care about the ordering of the strings.
+        if (m_deckNames != rhs.m_deckNames)
+            return false;
+
+        if(    m_name              != rhs.m_name
+            || m_matchRegexString  != rhs.m_matchRegexString
+            || m_keywordSizeType   != rhs.m_keywordSizeType
+            || isDataKeyword()     != rhs.isDataKeyword()
+            || m_isTableCollection != rhs.m_isTableCollection )
+                return false;
+
+        switch( m_keywordSizeType ) {
+            case FIXED:
+                if( m_fixedSize != rhs.m_fixedSize )
+                    return false;
+                break;
+
+            case OTHER_KEYWORD_IN_DECK:
+                if(  m_sizeDefinitionPair.first  != rhs.m_sizeDefinitionPair.first
+                  || m_sizeDefinitionPair.second != rhs.m_sizeDefinitionPair.second )
+                    return false;
+                break;
+
+            default:
+                break;
+        }
+
+        return this->m_records.size() == rhs.m_records.size()
+            && std::equal( this->begin(), this->end(), rhs.begin() );
+    }
+
+    bool ParserKeyword::operator!=( const ParserKeyword& rhs ) const {
+        return !( *this == rhs );
+    }
+
+    std::ostream& operator<<( std::ostream& stream, const ParserKeyword& kw ) {
+        stream << "ParserKeyword " << kw.getName() << " { " << std::endl
+               << "records: [";
+
+        if( kw.begin() != kw.end() ) stream << std::endl;
+
+        for( const auto& record : kw )
+            stream << record << std::endl;
+        stream << "]";
+
+        return stream << std::endl << "}";
+    }
+
 }

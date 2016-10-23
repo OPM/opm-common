@@ -19,14 +19,15 @@
 #ifndef PARSER_KEYWORD_H
 #define PARSER_KEYWORD_H
 
+#include <iosfwd>
 #include <string>
 #include <memory>
 #include <set>
 
 #include <boost/regex.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Util/RecordVector.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
+#include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
 namespace Json {
     class JsonObject;
@@ -37,7 +38,6 @@ namespace Opm {
     class DeckKeyword;
     class ParseContext;
     class ParserDoubleItem;
-    class ParserRecord;
     class RawKeyword;
     class string_view;
     class MessageContainer;
@@ -68,11 +68,12 @@ namespace Opm {
         void setMatchRegex(const std::string& deckNameRegexp);
         bool matches(const string_view& ) const;
         bool hasDimension() const;
-        void addRecord(std::shared_ptr<ParserRecord> record);
-        void addDataRecord(std::shared_ptr<ParserRecord> record);
-        std::shared_ptr< ParserRecord > getRecord(size_t recordIndex) const;
-        std::vector<std::shared_ptr< ParserRecord >>::const_iterator recordBegin() const;
-        std::vector<std::shared_ptr< ParserRecord >>::const_iterator recordEnd() const;
+        void addRecord( ParserRecord );
+        void addDataRecord( ParserRecord );
+        const ParserRecord& getRecord(size_t recordIndex) const;
+        ParserRecord& getRecord(size_t recordIndex);
+        std::vector< ParserRecord >::const_iterator begin() const;
+        std::vector< ParserRecord >::const_iterator end() const;
         const std::string className() const;
         const std::string& getName() const;
         size_t getFixedSize() const;
@@ -97,12 +98,15 @@ namespace Opm {
         enum ParserKeywordSizeEnum getSizeType() const;
         const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
         bool isDataKeyword() const;
-        bool equal(const ParserKeyword& other) const;
 
         std::string createDeclaration(const std::string& indent) const;
         std::string createDecl() const;
         std::string createCode() const;
         void applyUnitsToDeck( Deck& deck, DeckKeyword& deckKeyword) const;
+
+        bool operator==( const ParserKeyword& ) const;
+        bool operator!=( const ParserKeyword& ) const;
+
     private:
         std::pair<std::string,std::string> m_sizeDefinitionPair;
         std::string m_name;
@@ -110,7 +114,7 @@ namespace Opm {
         DeckNameSet m_validSectionNames;
         std::string m_matchRegexString;
         boost::regex m_matchRegex;
-        RecordVector<std::shared_ptr< ParserRecord >> m_records;
+        std::vector< ParserRecord > m_records;
         enum ParserKeywordSizeEnum m_keywordSizeType;
         size_t m_fixedSize;
         bool m_isTableCollection;
@@ -125,8 +129,9 @@ namespace Opm {
         void initSizeKeyword(const Json::JsonObject& sizeObject);
         void commonInit(const std::string& name, ParserKeywordSizeEnum sizeType);
         void addItems( const Json::JsonObject& jsonConfig);
-        void initDoubleItemDimension( std::shared_ptr< ParserDoubleItem > item, const Json::JsonObject itemConfig);
     };
+
+std::ostream& operator<<( std::ostream&, const ParserKeyword& );
 }
 
 #endif
