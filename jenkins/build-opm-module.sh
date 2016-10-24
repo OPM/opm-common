@@ -167,7 +167,7 @@ function build_downstreams {
   do
     echo "Building downstream $downstream=${downstreamRev[$downstream]} configuration=$configuration"
     # Build downstream and execute installation
-    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT" ${downstreamRev[$downstream]} $WORKSPACE/$configuration 1
+    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT -DCMAKE_INSTALL_RPATH=$WORKSPACE/$configuration/install/lib/x86_64-linux-gnu" ${downstreamRev[$downstream]} $WORKSPACE/$configuration 1
     test $? -eq 0 || exit 1
 
     # Installation for downstream
@@ -198,7 +198,7 @@ function build_module_full {
     mkdir -p $configuration/build-$1
     cd $configuration/build-$1
     echo "Building main module $1=$sha1 configuration=$configuration"
-    build_module "-DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT" 1 $WORKSPACE
+    build_module "-DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT -DCMAKE_INSTALL_RPATH=$WORKSPACE/$configuration/install/lib/x86_64-linux-gnu" 1 $WORKSPACE
     test $? -eq 0 || exit 1
     popd
 
