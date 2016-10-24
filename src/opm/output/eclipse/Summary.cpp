@@ -16,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -108,6 +107,22 @@ struct quantity {
         if( rhs.value == 0 ) return { 0.0, res_unit };
         return { this->value / rhs.value, res_unit };
     }
+
+    quantity operator/( double divisor ) const {
+        if( divisor == 0 ) return { 0.0, this->unit };
+        return { this->value / divisor , this->unit };
+    }
+
+    quantity& operator/=( double divisor ) {
+        if( divisor == 0 )
+            this->value = 0;
+        else
+            this->value /= divisor;
+
+        return *this;
+    }
+
+
     quantity operator-( const quantity& rhs) const {
         return { this->value - rhs.value, this->unit };
     }
@@ -284,22 +299,47 @@ inline quantity duration( const fn_args& args ) {
     return { args.duration, measure::time };
 }
 
-quantity rpr(const fn_args& args) {
+
+quantity region_sum( const fn_args& args , const std::string& keyword , UnitSystem::measure unit) {
     const auto& cells = args.regionCache.cells( args.num );
     if (cells.size() == 0)
-        return { 0.0 , measure::pressure };
+        return { 0.0 , unit };
 
-    double RPR = 0;
+    double sum = 0;
 
-    const std::vector<double>& pressure = args.state.data( "PRESSURE" );
+    const std::vector<double>& sim_value = args.state.data( keyword);
 
     for (auto cell_index : cells)
-        RPR += pressure[cell_index];
+        sum += sim_value[cell_index];
 
-    RPR /= cells.size();
-
-    return { RPR , measure::pressure };
+    return { sum , unit };
 }
+
+
+quantity rpr(const fn_args& args) {
+    quantity p = region_sum( args , "PRESSURE" ,measure::pressure );
+    const auto& cells = args.regionCache.cells( args.num );
+    if (cells.size() > 0)
+        p /= cells.size();
+    return p;
+}
+
+
+quantity roip(const fn_args& args) {
+    return region_sum( args , "ROIP", measure::volume );
+}
+
+
+quantity roipl(const fn_args& args) {
+    return region_sum( args , "ROIPL", measure::volume );
+}
+
+
+quantity roipg(const fn_args& args) {
+    return region_sum( args , "ROIPG", measure::volume );
+}
+
+
 
 template< typename F, typename G >
 auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
@@ -506,7 +546,11 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     /* Region properties */
     { "RPR" , rpr},
+    { "ROIP" , roip},
+    { "ROIPL" , roipl},
+    { "ROIPG" , roipg}
 };
+
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
                                               const smspec_node_type* node,
@@ -554,8 +598,8 @@ Summary::Summary( const EclipseState& st, const SummaryConfig& sum ) :
 {}
 
 Summary::Summary( const EclipseState& st,
-                const SummaryConfig& sum,
-                const std::string& basename ) :
+                  const SummaryConfig& sum,
+                  const std::string& basename ) :
     Summary( st, sum, basename.c_str() )
 {}
 
