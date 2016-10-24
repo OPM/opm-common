@@ -174,9 +174,15 @@ inline quantity crate( const fn_args& args ) {
     if( args.wells.count( name ) == 0 ) return zero;
 
     const auto& well = args.wells.at( name );
-    if( well.completions.count( index ) == 0 ) return zero;
 
-    const auto v = well.completions.at( index ).rates.get( phase, 0.0 );
+    const auto& completion = std::find_if( well.completions.begin(),
+                                           well.completions.end(),
+                                           [=]( const data::Completion& c ) {
+                                                return c.index == index;
+                                           } );
+
+    if( completion == well.completions.end() ) return zero;
+    const auto v = completion->rates.get( phase, 0.0 );
     if( ( v > 0 ) != injection ) return zero;
 
     if( !injection ) return { -v, rate_unit< phase >() };

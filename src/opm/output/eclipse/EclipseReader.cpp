@@ -130,10 +130,12 @@ data::Wells restore_wells( const double* xwel_data,
                            const std::vector< rt >& phases,
                            const EclipseGrid& grid ) {
 
+
     const auto well_size = [&]( size_t acc, const Well* w ) {
         return acc
             + 2 + phases.size()
-            + (w->getCompletions( restart_step ).size() * (phases.size() + 2));
+            + (  w->getCompletions( restart_step ).size()
+              * (phases.size() + data::Completion::restart_size) );
     };
 
     const auto expected_xwel_size = std::accumulate( sched_wells.begin(),
@@ -165,17 +167,17 @@ data::Wells restore_wells( const double* xwel_data,
         for( auto phase : phases )
             well.rates.set( phase, *xwel_data++ );
 
-        const auto& completions = sched_well->getCompletions( restart_step );
-        for( const auto& sc : completions ) {
+        for( const auto& sc : sched_well->getCompletions( restart_step ) ) {
             const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
-            if( !grid.cellActive( i, j, k ) ) {
-                xwel_data += 2 + phases.size();
+            if( !grid.cellActive( i, j, k ) || sc.getState() == WellCompletion::SHUT ) {
+                xwel_data += data::Completion::restart_size + phases.size();
                 continue;
             }
 
             const auto active_index = grid.activeIndex( i, j, k );
 
-            auto& completion = well.completions[ active_index ];
+            well.completions.emplace_back();
+            auto& completion = well.completions.back();
             completion.index = active_index;
             completion.pressure = *xwel_data++;
             completion.reservoir_rate = *xwel_data++;

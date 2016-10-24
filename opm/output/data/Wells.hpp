@@ -81,6 +81,8 @@ namespace Opm {
 
     struct Completion {
         using active_index = size_t;
+        static const constexpr int restart_size = 2;
+
         active_index index;
         Rates rates;
         double pressure;
@@ -93,7 +95,7 @@ namespace Opm {
         double thp;
         double temperature;
         int control;
-        std::map< Completion::active_index, Completion > completions;
+        std::vector< Completion > completions;
     };
 
     using Wells = std::map< std::string, Well >;
