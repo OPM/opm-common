@@ -35,19 +35,16 @@ include(AddOptions)
 
 if(CMAKE_VERSION VERSION_LESS 3.1)
   if(NOT MSVC)
-    # try to use compiler flag -std=c++11
-    CHECK_CXX_ACCEPTS_FLAG("-std=c++11" CXX_FLAG_CXX11)
-    if(CXX_FLAG_CXX11)
-      add_options (CXX ALL_BUILDS "-std=c++11")
-      set(CXX_STD0X_FLAGS "-std=c++11")
-    else()
-      # try to use compiler flag -std=c++0x for older compilers
-      CHECK_CXX_ACCEPTS_FLAG("-std=c++0x" CXX_FLAG_CXX0X)
-      if(CXX_FLAG_CXX0X)
-        add_options (CXX ALL_BUILDS "-std=c++0x")
-        set(CXX_STD0X_FLAGS "-std=c++0x")
-      endif(CXX_FLAG_CXX0X)
-    endif(CXX_FLAG_CXX11)
+    foreach(_flag "c++14" "c++11" "c++0x")
+      string(REPLACE "c++" "CXX_FLAG_CXX" _FLAG ${_flag})
+      # try to use compiler flag -std=${_flag}
+      CHECK_CXX_ACCEPTS_FLAG("-std=${_flag}" ${_FLAG})
+      if(${_FLAG})
+	add_options (CXX ALL_BUILDS "-std=${_flag}")
+	set(CXX_STD0X_FLAGS "-std=${_flag}")
+	break()
+      endif()
+    endforeach()
   endif(NOT MSVC)
 
   # if we are building with an Apple toolchain in MacOS X,
