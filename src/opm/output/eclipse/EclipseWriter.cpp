@@ -426,10 +426,8 @@ EclipseWriter::Impl::Impl( const EclipseState& eclipseState,
 {}
 
 void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const NNC& nnc) const {
-    const auto& es = this->es;
-    const auto& units = es.getUnits();
-    const EclipseGrid& grid = this->grid;
-    const IOConfig& ioConfig = es.cfg().io();
+    const auto& units = this->es.getUnits();
+    const IOConfig& ioConfig = this->es.cfg().io();
 
     FileName  initFile( this->outputDir,
                         this->baseName,
@@ -450,16 +448,16 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
     // reading the PORV vector.
     {
 
-        const auto& opm_data = es.get3DProperties().getDoubleGridProperty("PORV").getData();
+        const auto& opm_data = this->es.get3DProperties().getDoubleGridProperty("PORV").getData();
         auto ecl_data = opm_data;
 
         for (size_t global_index = 0; global_index < opm_data.size(); global_index++)
-            if (!grid.cellActive( global_index ))
+            if (!this->grid.cellActive( global_index ))
                 ecl_data[global_index] = 0;
 
 
         ecl_init_file_fwrite_header( fortio.get(),
-                                     grid.c_ptr(),
+                                     this->grid.c_ptr(),
                                      NULL,
                                      this->ert_phase_mask,
                                      this->sim_start_time);
@@ -472,12 +470,12 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
     }
 
     // Writing quantities which are calculated by the grid to the INIT file.
-    ecl_grid_fwrite_depth( grid.c_ptr() , fortio.get() , to_ert_unit( units.getType( )) );
-    ecl_grid_fwrite_dims( grid.c_ptr() , fortio.get() , to_ert_unit( units.getType( )) );
+    ecl_grid_fwrite_depth( this->grid.c_ptr() , fortio.get() , to_ert_unit( units.getType( )) );
+    ecl_grid_fwrite_dims( this->grid.c_ptr() , fortio.get() , to_ert_unit( units.getType( )) );
 
     // Write properties from the input deck.
     {
-        const auto& properties = es.get3DProperties();
+        const auto& properties = this->es.get3DProperties();
         using double_kw = std::pair<std::string, UnitSystem::measure>;
         std::vector<double_kw> doubleKeywords = {{"PORO"  , UnitSystem::measure::identity },
                                                  {"PERMX" , UnitSystem::measure::permeability },
@@ -486,7 +484,7 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
 
         for (const auto& kw_pair : doubleKeywords) {
             const auto& opm_property = properties.getDoubleGridProperty(kw_pair.first);
-            auto ecl_data = opm_property.compressedCopy( grid );
+            auto ecl_data = opm_property.compressedCopy( this->grid );
 
             convertFromSiTo( ecl_data,
                              units,
@@ -500,7 +498,7 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
     // Write properties which have been initialized by the simulator.
     {
         for (const auto& prop : simProps) {
-            auto ecl_data = grid.compressedVector( prop.second.data );
+            auto ecl_data = this->grid.compressedVector( prop.second.data );
             writeKeyword( fortio, prop.first, ecl_data );
         }
     }
@@ -508,7 +506,7 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
 
     // Write all integer field properties from the input deck.
     {
-        const auto& properties = es.get3DProperties().getIntProperties();
+        const auto& properties = this->es.get3DProperties().getIntProperties();
 
         // It seems that the INIT file should always contain these
         // keywords, we therefor call getKeyword() here to invoke the
@@ -520,7 +518,7 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
         properties.getKeyword("FIPNUM");
 
         for (const auto& property : properties) {
-            auto ecl_data = property.compressedCopy( grid );
+            auto ecl_data = property.compressedCopy( this->grid );
             writeKeyword( fortio , property.getKeywordName() , ecl_data );
         }
     }
@@ -539,8 +537,7 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
 
 
 void EclipseWriter::Impl::writeEGRIDFile( const NNC& nnc ) const {
-    const auto& es = this->es;
-    const auto& ioConfig = es.getIOConfig();
+    const auto& ioConfig = this->es.getIOConfig();
 
     FileName  egridFile( this->outputDir,
                          this->baseName,
@@ -548,13 +545,12 @@ void EclipseWriter::Impl::writeEGRIDFile( const NNC& nnc ) const {
                          ioConfig.getFMTOUT() );
 
     {
-        const EclipseGrid& grid = this->grid;
         int idx = 0;
-        auto* ecl_grid = const_cast< ecl_grid_type* >( grid.c_ptr() );
+        auto* ecl_grid = const_cast< ecl_grid_type* >( this->grid.c_ptr() );
         for (const NNCdata& n : nnc.nncdata())
             ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
 
-        ecl_grid_fwrite_EGRID2(ecl_grid, egridFile.get(), to_ert_unit( es.getDeckUnitSystem().getType()));
+        ecl_grid_fwrite_EGRID2(ecl_grid, egridFile.get(), to_ert_unit( this->es.getDeckUnitSystem().getType()));
     }
 }
 
