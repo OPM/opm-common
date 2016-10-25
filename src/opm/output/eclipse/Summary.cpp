@@ -166,7 +166,7 @@ inline quantity rate( const fn_args& args ) {
 template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
-    const auto index = args.num;
+    const size_t index = args.num;
 
     if( args.schedule_wells.empty() ) return zero;
 
