@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(DimensionEqual) {
 
 namespace Opm {
 inline std::ostream& operator<<( std::ostream& stream, const UnitSystem& us ) {
-    return stream << us.getName() << " :: " << us.getType();
+    return stream << us.getName() << " :: " << static_cast<int>(us.getType());
 }
 }
 
