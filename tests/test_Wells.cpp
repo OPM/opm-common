@@ -74,3 +74,56 @@ BOOST_AUTO_TEST_CASE(get_wrong) {
 }
 
 
+
+BOOST_AUTO_TEST_CASE(get_completions) {
+    data::Rates r1, r2, rc1, rc2, rc3;
+    r1.set( data::Rates::opt::wat, 5.67 );
+    r1.set( data::Rates::opt::oil, 6.78 );
+    r1.set( data::Rates::opt::gas, 7.89 );
+
+    r2.set( data::Rates::opt::wat, 8.90 );
+    r2.set( data::Rates::opt::oil, 9.01 );
+    r2.set( data::Rates::opt::gas, 10.12 );
+
+    rc1.set( data::Rates::opt::wat, 20.41 );
+    rc1.set( data::Rates::opt::oil, 21.19 );
+    rc1.set( data::Rates::opt::gas, 22.41 );
+
+    rc2.set( data::Rates::opt::wat, 23.19 );
+    rc2.set( data::Rates::opt::oil, 24.41 );
+    rc2.set( data::Rates::opt::gas, 25.19 );
+
+    rc3.set( data::Rates::opt::wat, 26.41 );
+    rc3.set( data::Rates::opt::oil, 27.19 );
+    rc3.set( data::Rates::opt::gas, 28.41 );
+
+    data::Well w1, w2;
+    w1.rates = r1;
+    w1.bhp = 1.23;
+    w1.temperature = 3.45;
+    w1.control = 1;
+
+    /*
+     *  the completion keys (active indices) and well names correspond to the
+     *  input deck. All other entries in the well structures are arbitrary.
+     */
+    w1.completions.push_back( { 88, rc1, 30.45 } );
+    w1.completions.push_back( { 288, rc2, 33.19 } );
+
+    w2.rates = r2;
+    w2.bhp = 2.34;
+    w2.temperature = 4.56;
+    w2.control = 2;
+    w2.completions.push_back( { 188, rc3, 36.22 } );
+
+    data::Wells wellRates;
+
+    wellRates["OP_1"] = w1;
+    wellRates["OP_2"] = w2;
+
+    BOOST_CHECK_THROW( wellRates.get("NO_SUCH_WELL" , data::Rates::opt::wat), std::out_of_range);
+    BOOST_CHECK_EQUAL( 5.67 , wellRates.get( "OP_1" , data::Rates::opt::wat));
+
+    BOOST_CHECK_THROW( wellRates.get("OP_2" , 10000 , data::Rates::opt::wat), std::out_of_range);
+    BOOST_CHECK_EQUAL( 26.41 , wellRates.get( "OP_2" , 188 , data::Rates::opt::wat));
+}

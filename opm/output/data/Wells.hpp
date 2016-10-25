@@ -22,6 +22,7 @@
 
 #include <initializer_list>
 #include <map>
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -98,8 +99,33 @@ namespace Opm {
         std::vector< Completion > completions;
     };
 
-    using Wells = std::map< std::string, Well >;
 
+    class WellRates : public std::map<std::string , Well> {
+    public:
+
+        double get(const std::string& well_name , Rates::opt m) const {
+            const auto& well = this->at(well_name);
+            return well.rates.get( m );
+        }
+
+
+        double get(const std::string& well_name , Completion::active_index completion_grid_index, Rates::opt m) const {
+            const auto& well = this->at(well_name);
+            const auto& completion = std::find_if( well.completions.begin() ,
+                                                   well.completions.end() ,
+                                                   [=]( const Completion& c ) {
+                                                        return c.index == completion_grid_index; });
+            if (completion == well.completions.end())
+                throw std::out_of_range("No such completion");
+
+            return completion->rates.get( m );
+        }
+
+
+    };
+    using Wells = WellRates;
+
+    //using Wells = std::map<std::string , Well>;
     /* IMPLEMENTATIONS */
 
     inline bool Rates::has( opt m ) const {
@@ -132,6 +158,7 @@ namespace Opm {
 
         return *this;
     }
+
 
     /*
      * To avoid error-prone and repetitve work when extending rates with new

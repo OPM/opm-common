@@ -330,8 +330,14 @@ data::Wells mkWells() {
     w2.control = 2;
     w2.completions.push_back( { 188, rc3, 36.22, 123.4 } );
 
-    return { { "OP_1", w1 },
-             { "OP_2", w2 } };
+    {
+        data::Wells wellRates;
+
+        wellRates["OP_1"] = w1;
+        wellRates["OP_2"] = w2;
+
+        return wellRates;
+    }
 }
 
 data::Solution mkSolution( int numCells ) {
