@@ -302,10 +302,41 @@ inline quantity duration( const fn_args& args ) {
     return { args.duration, measure::time };
 }
 
+template<rt phase , bool injection>
+quantity region_rate( const fn_args& args ) {
+    double sum = 0;
+    const auto& well_completions = args.regionCache.completions( args.num );
+    for (const auto& pair : well_completions) {
+        double rate = args.wells.get( pair.first , pair.second , phase );
+
+        // We are asking for the production rate in an injector - or
+        // opposite. We just clamp to zero.
+        if ((rate > 0) != injection)
+            rate = 0;
+
+        sum += rate;
+    }
+
+    if( injection )
+        return { sum, rate_unit< phase >() };
+    else
+        return { -sum, rate_unit< phase >() };
+}
+
+template<rt phase>
+quantity region_production(const fn_args& args) {
+    return region_rate<phase , false>(args);
+}
+
+template<rt phase>
+quantity region_injection(const fn_args& args) {
+    return region_rate<phase , true>(args);
+}
+
 
 quantity region_sum( const fn_args& args , const std::string& keyword , UnitSystem::measure unit) {
     const auto& cells = args.regionCache.cells( args.num );
-    if (cells.size() == 0)
+    if (cells.empty())
         return { 0.0 , unit };
 
     double sum = 0;
@@ -551,7 +582,13 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "RPR" , rpr},
     { "ROIP" , roip},
     { "ROIPL" , roipl},
-    { "ROIPG" , roipg}
+    { "ROIPG" , roipg},
+    { "ROPR"  , region_production<rt::oil>},
+    { "RGPR"  , region_production<rt::gas>},
+    { "RWPR"  , region_production<rt::wat>},
+    { "ROPT"  , mul( region_production<rt::oil>, duration )},
+    { "RGPT"  , mul( region_production<rt::gas>, duration )},
+    { "RWPT"  , mul( region_production<rt::wat>, duration )},
 };
 
 
@@ -634,14 +671,13 @@ Summary::Summary( const EclipseState& st,
         /* get unit strings by calling each function with dummy input */
         const auto handle = funs.find( keyword )->second;
         const std::vector< const Well* > dummy_wells;
-        GridDims dummy_grid(1,1,1);
+        EclipseGrid dummy_grid(1,1,1);
         const fn_args no_args{ dummy_wells, 0, 0, 0, {} , {}, {} , dummy_grid };
         const auto val = handle( no_args );
         const auto* unit = st.getUnits().name( val.unit );
 
         auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(), keyword,
                                          node.wgname(), node.num(), unit, 0 );
-
         this->handlers->handlers.emplace_back( nodeptr, handle );
     }
 }

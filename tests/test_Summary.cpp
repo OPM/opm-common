@@ -213,6 +213,7 @@ struct setup {
 
 };
 
+
 /*
  * Tests works by reading the Deck, write the summary output, then immediately
  * read it again (with ERT), and compare the read values with the input.
@@ -460,7 +461,15 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     BOOST_CHECK_CLOSE( 100.3,     ecl_sum_get_well_completion_var( resp, 1, "W_1", "CNPT", 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 100.0, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CWPT", 1 ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 100.1, ecl_sum_get_well_completion_var( resp, 2, "W_1", "COPT", 1 ), 1e-5 );
+
     BOOST_CHECK_CLOSE( 2 * 100.2, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CGPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * 200.2, ecl_sum_get_well_completion_var( resp, 2, "W_2", "CGPT", 2 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0        , ecl_sum_get_well_completion_var( resp, 2, "W_3", "CGPT", 3 ), 1e-5 );
+
+    BOOST_CHECK_CLOSE( 1 * 100.2, ecl_sum_get_well_completion_var( resp, 1, "W_1", "CGPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 1 * 200.2, ecl_sum_get_well_completion_var( resp, 1, "W_2", "CGPT", 2 ), 1e-5 );
+    BOOST_CHECK_CLOSE( 0        , ecl_sum_get_well_completion_var( resp, 1, "W_3", "CGPT", 3 ), 1e-5 );
+
     BOOST_CHECK_CLOSE( 2 * 100.3, ecl_sum_get_well_completion_var( resp, 2, "W_1", "CNPT", 1 ), 1e-5 );
 
     /* Injection rates */
@@ -632,3 +641,34 @@ BOOST_AUTO_TEST_CASE(region_vars) {
         BOOST_CHECK_CLOSE( area * (2*r + 1 ) * 1.0 , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roipg_key.c_str())) , 1e-5);
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(region_production) {
+    setup cfg( "region_production" );
+
+    {
+        out::Summary writer( cfg.es, cfg.config, cfg.name );
+        writer.add_timestep( 0, 0 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+        writer.add_timestep( 1, 1 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+        writer.add_timestep( 2, 2 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+        writer.write();
+    }
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "ROPR:1"));
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var( resp , 1 , "ROPR:1" ) ,
+                      ecl_sum_get_general_var( resp , 1 , "COPR:W_1:1") +
+                      ecl_sum_get_general_var( resp , 1 , "COPR:W_2:2") +
+                      ecl_sum_get_general_var( resp , 1 , "COPR:W_3:3"), 1e-5);
+
+
+
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RGPT:1"));
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var( resp , 2 , "RGPT:1" ) ,
+                      ecl_sum_get_general_var( resp , 2 , "CGPT:W_1:1") +
+                      ecl_sum_get_general_var( resp , 2 , "CGPT:W_2:2") +
+                      ecl_sum_get_general_var( resp , 2 , "CGPT:W_3:3"), 1e-5);
+}
+
