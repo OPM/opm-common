@@ -66,7 +66,7 @@ namespace Opm {
             water_inverse_formation_volume_factor,
         };
 
-        UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
+        explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
 
         const std::string& getName() const;
         UnitType getType() const;
