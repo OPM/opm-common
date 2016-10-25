@@ -478,11 +478,7 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
     /* Solvent flow rate + or - Note OPM uses negative values for producers, while CNFR outputs positive
     values for producers*/
     BOOST_CHECK_CLOSE( -300.3,     ecl_sum_get_well_completion_var( resp, 1, "W_3", "CNFR", 3 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 200.3,    ecl_sum_get_well_completion_var( resp, 1, "W_2", "CNFR", 1 ), 1e-5 );
-
-    /* CGPT's wildcarding means W_2's completions should also be available */
-    BOOST_CHECK_CLOSE( 200.2,     ecl_sum_get_well_completion_var( resp, 1, "W_2", "CGPT", 1 ), 1e-5 );
-    BOOST_CHECK_CLOSE( 2 * 200.2, ecl_sum_get_well_completion_var( resp, 2, "W_2", "CGPT", 1 ), 1e-5 );
+    BOOST_CHECK_CLOSE(  200.3,    ecl_sum_get_well_completion_var( resp, 1, "W_2", "CNFR", 2 ), 1e-5 );
 }
 
 BOOST_AUTO_TEST_CASE(field_keywords) {

@@ -143,7 +143,7 @@ struct fn_args {
     const data::Wells& wells;
     const data::Solution& state;
     const out::RegionCache& regionCache;
-    const GridDims& grid;
+    const EclipseGrid& grid;
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -183,19 +183,22 @@ inline quantity rate( const fn_args& args ) {
 template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
-    const size_t index = args.num;
-
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclispe SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a completion with offset 0.
+    const auto global_index = args.num - 1;
+    const auto active_index = args.grid.activeIndex( global_index );
     if( args.schedule_wells.empty() ) return zero;
 
     const auto& name = args.schedule_wells.front()->name();
     if( args.wells.count( name ) == 0 ) return zero;
 
     const auto& well = args.wells.at( name );
-
     const auto& completion = std::find_if( well.completions.begin(),
                                            well.completions.end(),
                                            [=]( const data::Completion& c ) {
-                                                return c.index == index;
+                                                return c.index == active_index;
                                            } );
 
     if( completion == well.completions.end() ) return zero;
