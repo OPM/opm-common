@@ -593,8 +593,8 @@ std::vector< double > serialize_XWEL( const data::Wells& wells,
     for( const auto* sched_well : sched_wells ) {
 
         if( wells.count( sched_well->name() ) == 0 ) {
-            const auto elems =
-                sched_well->getCompletions( report_step ).size() * (phases.size() + 2)
+            const auto elems = (sched_well->getCompletions( report_step ).size()
+                               * (phases.size() + data::Completion::restart_size))
                 + 2 /* bhp, temperature */
                 + phases.size();
 
@@ -613,24 +613,29 @@ std::vector< double > serialize_XWEL( const data::Wells& wells,
         for( const auto& sc : sched_well->getCompletions( report_step ) ) {
             const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
 
-            if( !grid.cellActive( i, j, k ) ) {
-                xwel.insert( xwel.end(), phases.size() + 2, 0.0 );
+            const auto rs_size = phases.size() + data::Completion::restart_size;
+            if( !grid.cellActive( i, j, k ) || sc.getState() == WellCompletion::SHUT ) {
+                xwel.insert( xwel.end(), rs_size, 0.0 );
                 continue;
             }
 
             const auto active_index = grid.activeIndex( i, j, k );
+            const auto at_index = [=]( const data::Completion& c ) {
+                return c.index == active_index;
+            };
+            const auto& completion = std::find_if( well.completions.begin(),
+                                                   well.completions.end(),
+                                                   at_index );
 
-            if( well.completions.count( active_index ) == 0 ) {
-                xwel.insert( xwel.end(), phases.size() + 2, 0.0 );
+            if( completion == well.completions.end() ) {
+                xwel.insert( xwel.end(), rs_size, 0.0 );
                 continue;
             }
 
-            const auto& completion = well.completions.at( active_index );
-
-            xwel.push_back( completion.pressure );
-            xwel.push_back( completion.reservoir_rate );
+            xwel.push_back( completion->pressure );
+            xwel.push_back( completion->reservoir_rate );
             for( auto phase : phases )
-                xwel.push_back( completion.rates.get( phase ) );
+                xwel.push_back( completion->rates.get( phase ) );
         }
     }
 

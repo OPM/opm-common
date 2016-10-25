@@ -97,7 +97,7 @@ inline std::string input( const std::string& rst_name = "FIRST_SIM" ) {
            "COMPDAT\n"
            " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
            " 'OP_2'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-           " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_1'  9  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
            "/\n"
            "WCONPROD\n"
                "'OP_1' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
@@ -113,7 +113,7 @@ inline std::string input( const std::string& rst_name = "FIRST_SIM" ) {
            "    'OP_3'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
            "/\n"
            "COMPDAT\n"
-           " 'OP_3'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_3'  9  9   1   1 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
            "/\n"
            "WCONPROD\n"
                "'OP_3' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
@@ -123,8 +123,8 @@ inline std::string input( const std::string& rst_name = "FIRST_SIM" ) {
            " 15  JUN 2013 / \n"
            "/\n"
            "COMPDAT\n"
-           " 'OP_2'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           " 'OP_1'  9  9   7  7 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_2'  9  9   3  9 SHUT 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_1'  9  9   7  7 OPEN 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
            "/\n"
 
            "DATES             -- 4\n"
@@ -134,8 +134,8 @@ inline std::string input( const std::string& rst_name = "FIRST_SIM" ) {
            "    'OP_4'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
            "/\n"
            "COMPDAT\n"
-           " 'OP_4'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-           " 'OP_3'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_4'  9  9   3  9 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+           " 'OP_3'  9  9   3  9 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
            "/\n"
            "WCONPROD\n"
                "'OP_4' 'OPEN' 'ORAT' 20000  4* 1000 /\n"
@@ -215,7 +215,7 @@ std::ostream& operator<<( std::ostream& stream,
                << "\t" << "completions: [\n";
 
         for( const auto& c : p.second.completions )
-            stream << c.second << " ";
+            stream << c << " ";
 
         stream << "]\n";
     }
@@ -247,6 +247,9 @@ bool operator==( const Completion& lhs, const Completion& rhs ) {
     return true;
 }
 
+bool operator!=( const Completion& lhs, const Completion& rhs ) {
+    return !( lhs == rhs );
+}
 
 bool operator==( const Well& lhs, const Well& rhs ) {
     BOOST_CHECK_EQUAL( lhs.rates, rhs.rates );
@@ -254,8 +257,9 @@ bool operator==( const Well& lhs, const Well& rhs ) {
     BOOST_CHECK_EQUAL( lhs.temperature, rhs.temperature );
     BOOST_CHECK_EQUAL( lhs.control, rhs.control );
 
-    for( const auto& p : lhs.completions )
-        BOOST_CHECK_EQUAL( p.second, rhs.completions.at( p.first ) );
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            lhs.completions.begin(), lhs.completions.end(),
+            rhs.completions.begin(), rhs.completions.end() );
 
     return true;
 }
@@ -317,14 +321,14 @@ data::Wells mkWells() {
      *  the completion keys (active indices) and well names correspond to the
      *  input deck. All other entries in the well structures are arbitrary.
      */
-    w1.completions[ 88 ] = { 88, rc1, 30.45 };
-    w1.completions[ 288 ] = { 288, rc2, 33.19 };
+    w1.completions.push_back( { 88, rc1, 30.45 } );
+    w1.completions.push_back( { 288, rc2, 33.19 } );
 
     w2.rates = r2;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
     w2.control = 2;
-    w2.completions[ 188 ] = { 188, rc3, 36.22 };
+    w2.completions.push_back( { 188, rc3, 36.22 } );
 
     return { { "OP_1", w1 },
              { "OP_2", w2 } };
