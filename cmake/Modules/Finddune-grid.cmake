@@ -41,7 +41,7 @@ find_opm_package (
 "#include <dune/grid/onedgrid.hh>
 int main (void) {
   Dune::OneDGrid grid(1, 0., 1.);
-  return grid.lbegin<0>(0) == grid.lend<0>(0);
+  return grid.leafGridView().begin<0>() == grid.leafGridView().end<0>();
 }
 "
   # config variables
