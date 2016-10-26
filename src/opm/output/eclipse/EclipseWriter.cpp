@@ -349,7 +349,7 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
     using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
     const std::vector<double>& pressure = cells.data("PRESSURE");
     const std::vector<double>& swat = cells.data("SWAT");
-    const std::vector<double>& sgas = cells.data("SGAS");
+    const std::vector<double>& sgas = cells.has("SGAS") ? cells.data("SGAS") : std::vector<double>( pressure.size() , 0 );
 
     for( const auto& well : wells ) {
         if( !( well->getRFTActive( report_step )
@@ -368,9 +368,9 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
 
             const auto index = grid.activeIndex( i, j, k );
             const double depth = grid.getCellDepth( i, j, k );
-            const double press = !pressure.empty() ? pressure[ index ] : 0.0;
-            const double satwat = !swat.empty() ? swat[ index ] : 0.0;
-            const double satgas = !sgas.empty() ? sgas[ index ] : 0.0;
+            const double press = pressure[ index ];
+            const double satwat = swat[ index ];
+            const double satgas = sgas[ index ];
 
             auto* cell = ecl_rft_cell_alloc_RFT(
                             i, j, k, depth, press, satwat, satgas );
