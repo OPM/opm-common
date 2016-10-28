@@ -574,6 +574,11 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGORH" ), 1e-5 );
 
+    const double foip = 110.0 * 100;
+    const double fgip = 115.5 * 100;
+    BOOST_CHECK_CLOSE( foip, ecl_sum_get_field_var( resp, 1, "FOIP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( fgip, ecl_sum_get_field_var( resp, 1, "FGIP" ), 1e-5 );
+
 }
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {

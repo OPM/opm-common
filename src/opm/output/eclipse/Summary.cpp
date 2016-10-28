@@ -16,6 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <numeric>
+
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -370,9 +373,27 @@ quantity roipl(const fn_args& args) {
     return region_sum( args , "OIPL", measure::volume );
 }
 
-
 quantity roipg(const fn_args& args) {
     return region_sum( args , "OIPG", measure::volume );
+}
+
+quantity fgip( const fn_args& args ) {
+    quantity zero { 0.0, measure::volume };
+    if( !args.state.has( "GIP" ) )
+        return zero;
+
+    const auto& cells = args.state.at( "GIP" ).data;
+    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
+             measure::volume };
+}
+
+quantity foip( const fn_args& args ) {
+    if( !args.state.has( "OIP" ) )
+        return { 0.0, measure::volume };
+
+    const auto& cells = args.state.at( "OIP" ).data;
+    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
+             measure::volume };
 }
 
 
@@ -551,6 +572,9 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FNIT", mul( injerate< rt::solvent >, duration ) },
     { "FLIT", mul( sum( injerate< rt::wat >, injerate< rt::oil > ),
                    duration ) },
+
+    { "FOIP", foip },
+    { "FGIP", fgip },
 
     { "FWPRH", production_history< Phase::WATER > },
     { "FOPRH", production_history< Phase::OIL > },
