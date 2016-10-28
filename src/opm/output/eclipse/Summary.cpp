@@ -358,11 +358,13 @@ quantity rpr(const fn_args& args) {
     return p;
 }
 
-
 quantity roip(const fn_args& args) {
     return region_sum( args , "ROIP", measure::volume );
 }
 
+quantity rgip(const fn_args& args) {
+    return region_sum( args , "RGIP", measure::volume );
+}
 
 quantity roipl(const fn_args& args) {
     return region_sum( args , "ROIPL", measure::volume );
@@ -588,6 +590,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROIP" , roip},
     { "ROIPL" , roipl},
     { "ROIPG" , roipg},
+    { "RGIP"  , rgip},
     { "ROPR"  , region_production<rt::oil>},
     { "RGPR"  , region_production<rt::gas>},
     { "RWPR"  , region_production<rt::wat>},

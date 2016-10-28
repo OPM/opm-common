@@ -74,6 +74,7 @@ static data::Solution make_solution( const EclipseGrid& grid ) {
         std::vector<double> roip(numCells);
         std::vector<double> roipl(numCells);
         std::vector<double> roipg(numCells);
+        std::vector<double> rgip(numCells);
 
         for (size_t k=0; k < grid.getNZ(); k++) {
             for (size_t j=0; j < grid.getNY(); j++) {
@@ -83,6 +84,7 @@ static data::Solution make_solution( const EclipseGrid& grid ) {
                     roip[g] = 2.0*(k + 1);
                     roipl[g] = roip[g] - 1;
                     roipg[g] = roip[g] + 1;
+                    rgip[g] = 2.1*(k + 1);
                 }
             }
         }
@@ -91,6 +93,7 @@ static data::Solution make_solution( const EclipseGrid& grid ) {
         sol.insert( "ROIP"     , UnitSystem::measure::volume   , roip , data::TargetType::RESTART_AUXILLARY);
         sol.insert( "ROIPL"    , UnitSystem::measure::volume   , roipl, data::TargetType::RESTART_AUXILLARY);
         sol.insert( "ROIPG"    , UnitSystem::measure::volume   , roipg, data::TargetType::RESTART_AUXILLARY);
+        sol.insert( "RGIP"     , UnitSystem::measure::volume   , rgip , data::TargetType::RESTART_AUXILLARY);
     }
     return sol;
 }
@@ -636,6 +639,7 @@ BOOST_AUTO_TEST_CASE(region_vars) {
     for (size_t r=1; r <= 10; r++) {
         std::string rpr_key   = "RPR:"   + std::to_string( r );
         std::string roip_key  = "ROIP:"  + std::to_string( r );
+        std::string rgip_key  = "RGIP:"  + std::to_string( r );
         std::string roipl_key = "ROIPL:" + std::to_string( r );
         std::string roipg_key = "ROIPG:" + std::to_string( r );
         const double area = cfg.grid.getNX() * cfg.grid.getNY();
@@ -645,6 +649,7 @@ BOOST_AUTO_TEST_CASE(region_vars) {
         BOOST_CHECK_CLOSE( area *  2*r * 1.0       , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roip_key.c_str())) , 1e-5);
         BOOST_CHECK_CLOSE( area * (2*r - 1) * 1.0  , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roipl_key.c_str())) , 1e-5);
         BOOST_CHECK_CLOSE( area * (2*r + 1 ) * 1.0 , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roipg_key.c_str())) , 1e-5);
+        BOOST_CHECK_CLOSE( area *  2.1*r * 1.0     , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rgip_key.c_str())) , 1e-5);
     }
 }
 
