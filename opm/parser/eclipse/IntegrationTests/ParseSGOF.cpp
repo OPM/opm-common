@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( parse_SGOF_OK ) {
     const auto& item0 = record0.getItem(0);
     BOOST_CHECK_EQUAL(10U * 4, item0.size());
 
-    Opm::SgofTable sgofTable(deck.getKeyword("SGOF").getRecord(0).getItem(0));
+    Opm::SgofTable sgofTable(deck.getKeyword("SGOF").getRecord(0).getItem(0), false);
     BOOST_CHECK_EQUAL(10U, sgofTable.getSgColumn().size());
     BOOST_CHECK_EQUAL(0.1, sgofTable.getSgColumn()[0]);
     BOOST_CHECK_EQUAL(0.0, sgofTable.getKrgColumn()[0]);

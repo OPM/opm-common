@@ -39,7 +39,7 @@ namespace Opm {
         SimpleTable(TableSchema, const DeckItem& deckItem);
         explicit SimpleTable( TableSchema );
         void addColumns();
-        void init(const DeckItem& deckItem);
+        void init(const DeckItem& deckItem );
         size_t numColumns() const;
         size_t numRows() const;
         void addRow( const std::vector<double>& row);
@@ -60,11 +60,15 @@ namespace Opm {
          */
         double evaluate(const std::string& columnName, double xPos) const;
 
+        /// throws std::invalid_argument if jf != m_jfunc
+        void assertJFuncPressure(const bool jf) const;
+
     protected:
         std::map<std::string, size_t> m_columnNames;
         std::vector<std::vector<bool> > m_valueDefaulted;
         TableSchema m_schema;
         OrderedMap<TableColumn> m_columns;
+        bool m_jfunc = false;
     };
 }
 

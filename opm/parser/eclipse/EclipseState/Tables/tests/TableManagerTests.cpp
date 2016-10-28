@@ -33,12 +33,15 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+
+#include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -90,12 +93,83 @@ Opm::Deck createSingleRecordDeckWithVd() {
     return parser.parseString(deckData, Opm::ParseContext());
 }
 
+Opm::Deck createSingleRecordDeckWithJFunc() {
+    const char *deckData =
+        "RUNSPEC\n"
+        "ENDSCALE\n"
+        "2* 1 2 /\n"
+        "PROPS\n"
+        "JFUNC\n"
+        "  WATER 22.0 /\n"
+        "TABDIMS\n"
+        " 2 /\n"
+        "\n"
+        "SWFN\n"
+        "0.22 .0   7.0 \n"
+        "0.3  .0   4.0 \n"
+        "0.5  .24  2.5 \n"
+        "0.8  .65  1.0 \n"
+        "0.9  .83  .5  \n"
+        "1.0  1.00 .0 /\n"
+        "/\n"
+        "IMPTVD\n"
+        "3000.0 6*0.1 0.31 1*0.1\n"
+        "9000.0 6*0.1 0.32 1*0.1/\n"
+        "ENPTVD\n"
+        "3000.0 0.20 0.20 1.0 0.0 0.04 1.0 0.18 0.22\n"
+        "9000.0 0.22 0.22 1.0 0.0 0.04 1.0 0.18 0.22 /";
+
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext());
+}
+
+Opm::Deck createSingleRecordDeckWithJFuncBoth() {
+    const char *deckData =
+        "RUNSPEC\nENDSCALE\n2* 1 2 /\nPROPS\n"
+        "JFUNC\n * 55.0 88.0 /\n" // ASTERISK MEANS DEFAULT VALUE
+        "TABDIMS\n 2 /\n";
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext());
+}
+
+Opm::Deck createSingleRecordDeckWithFullJFunc() {
+    const char *deckData =
+        "RUNSPEC\nENDSCALE\n2* 1 2 /\nPROPS\n"
+        "JFUNC\n WATER 2.7182 3.1416 0.6 0.7 Z /\n"
+        "TABDIMS\n 2 /\n";
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext());
+}
+
+Opm::Deck createSingleRecordDeckWithJFuncBrokenFlag() {
+    const char *deckData =
+        "RUNSPEC\nENDSCALE\n2* 1 2 /\nPROPS\n"
+        "JFUNC\n GARBAGE 55.0 88.0 /\n"
+        "TABDIMS\n 2 /\n";
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext());
+}
+
+Opm::Deck createSingleRecordDeckWithJFuncBrokenDirection() {
+    const char *deckData =
+        "RUNSPEC\nENDSCALE\n2* 1 2 /\nPROPS\n"
+        "JFUNC\n * * * * * XZ /\n"
+        "TABDIMS\n 2 /\n";
+    Opm::Parser parser;
+    return parser.parseString(deckData, Opm::ParseContext());
+}
+
+
+/// used in BOOST_CHECK_CLOSE
+static float epsilon() {
+    return 0.00001;
+}
 }
 
 BOOST_AUTO_TEST_CASE( CreateTables ) {
     auto deck = createSingleRecordDeck();
     Opm::TableManager tables(deck);
-    auto tabdims = tables.getTabdims();
+    auto& tabdims = tables.getTabdims();
     BOOST_CHECK_EQUAL( tabdims.getNumSatTables() , 2 );
     BOOST_CHECK( !tables.useImptvd() );
     BOOST_CHECK( !tables.useEnptvd() );
@@ -104,13 +178,51 @@ BOOST_AUTO_TEST_CASE( CreateTables ) {
 BOOST_AUTO_TEST_CASE( CreateTablesWithVd ) {
     auto deck = createSingleRecordDeckWithVd();
     Opm::TableManager tables(deck);
-    auto tabdims = tables.getTabdims();
+    auto& tabdims = tables.getTabdims();
     BOOST_CHECK_EQUAL( tabdims.getNumSatTables() , 2 );
     BOOST_CHECK( tables.useImptvd() );
     BOOST_CHECK( tables.useEnptvd() );
 }
 
+BOOST_AUTO_TEST_CASE( CreateTablesWithJFunc ) {
+    auto deck = createSingleRecordDeckWithJFunc();
+    Opm::TableManager tables(deck);
+    const Opm::Tabdims& tabdims = tables.getTabdims();
+    BOOST_CHECK_EQUAL(tabdims.getNumSatTables(), 2);
+    BOOST_CHECK(tables.useImptvd());
+    BOOST_CHECK(tables.useEnptvd());
 
+    const auto& swfnTab = tables.getSwfnTables();
+
+    const float swfnDataVerbatim[] =
+        {0.22, 0.00, 7.00, 0.30, 0.00, 4.00, 0.50, 0.24, 2.50,
+         0.80, 0.65, 1.00, 0.90, 0.83, 0.50, 1.00, 1.00, 0.00};
+
+
+    for (size_t tab = 0; tab < swfnTab.size(); tab++) {
+        const auto& t = swfnTab.getTable(tab);
+
+        BOOST_CHECK_THROW( t.getColumn("PCOW"), std::invalid_argument );
+
+        for (size_t c_idx = 0; c_idx < t.numColumns(); c_idx++) {
+            const auto& col = t.getColumn(c_idx);
+            for (size_t i = 0; i < col.size(); i++) {
+                int idx = c_idx + i*3;
+                BOOST_CHECK_CLOSE( col[i], swfnDataVerbatim[idx], epsilon());
+            }
+        }
+    }
+
+    const auto& tt = swfnTab.getTable<Opm::SwfnTable>(0);
+    BOOST_CHECK_THROW(tt.getPcowColumn(), std::invalid_argument);
+
+    const auto& col = tt.getJFuncColumn();
+    for (size_t i = 0; i < col.size(); i++) {
+        BOOST_CHECK_CLOSE(col[i], swfnDataVerbatim[i*3 + 2], epsilon());
+    }
+
+    BOOST_CHECK(tables.useJFunc());
+}
 /*****************************************************************/
 
 
@@ -130,8 +242,8 @@ BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
     Opm::Parser parser;
     auto deck = parser.parseString(deckData, Opm::ParseContext());
 
-    Opm::SwofTable swof1Table(deck.getKeyword("SWOF").getRecord(0).getItem(0));
-    Opm::SwofTable swof2Table(deck.getKeyword("SWOF").getRecord(1).getItem(0));
+    Opm::SwofTable swof1Table(deck.getKeyword("SWOF").getRecord(0).getItem(0), false);
+    Opm::SwofTable swof2Table(deck.getKeyword("SWOF").getRecord(1).getItem(0), false);
 
     BOOST_CHECK_EQUAL(swof1Table.numRows(), 2);
     BOOST_CHECK_EQUAL(swof2Table.numRows(), 3);
@@ -216,8 +328,8 @@ BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
     Opm::Parser parser;
     auto deck = parser.parseString(deckData, Opm::ParseContext());
 
-    Opm::SgofTable sgof1Table(deck.getKeyword("SGOF").getRecord(0).getItem(0));
-    Opm::SgofTable sgof2Table(deck.getKeyword("SGOF").getRecord(1).getItem(0));
+    Opm::SgofTable sgof1Table(deck.getKeyword("SGOF").getRecord(0).getItem(0), false);
+    Opm::SgofTable sgof2Table(deck.getKeyword("SGOF").getRecord(1).getItem(0), false);
 
     BOOST_CHECK_EQUAL(sgof1Table.numRows(), 2);
     BOOST_CHECK_EQUAL(sgof2Table.numRows(), 3);
@@ -565,9 +677,48 @@ VFPPROD \n\
     }
 }
 
+BOOST_AUTO_TEST_CASE(JFuncTestThrowingOnBrokenData) {
+    auto deck = createSingleRecordDeckWithJFuncBrokenFlag();
+    BOOST_CHECK_THROW(Opm::TableManager tm (deck), std::invalid_argument);
 
+    auto deck2 = createSingleRecordDeckWithJFuncBrokenDirection();
+    BOOST_CHECK_THROW(Opm::TableManager tm2 (deck2), std::invalid_argument);
+}
 
+BOOST_AUTO_TEST_CASE(JFuncTestThrowingGalore) {
+    auto deck = createSingleRecordDeckWithVd();
+    Opm::TableManager tables(deck);
+    auto tabdims = tables.getTabdims();
+    BOOST_CHECK(!tables.useJFunc());
+    BOOST_CHECK_THROW(tables.getJFunc(), std::invalid_argument);
+}
 
+BOOST_AUTO_TEST_CASE(JFuncTest) {
+    const auto deck = createSingleRecordDeckWithJFuncBoth();
+    Opm::TableManager tables(deck);
+    BOOST_CHECK(tables.useJFunc());
+
+    const Opm::JFunc& jt = tables.getJFunc();
+    BOOST_CHECK(jt.getJFuncFlag() == Opm::JFunc::Flag::BOTH);
+    BOOST_CHECK_CLOSE(jt.getowSurfaceTension(), 55.0, epsilon());
+    BOOST_CHECK_CLOSE(jt.getgoSurfaceTension(), 88.0, epsilon());
+    BOOST_CHECK_CLOSE(jt.getAlphaFactor(), 0.5, epsilon()); // default
+    BOOST_CHECK_CLOSE(jt.getBetaFactor(),  0.5, epsilon());  // default
+    BOOST_CHECK(jt.getDirection() == Opm::JFunc::Direction::XY); // default
+
+    // full specification = WATER 2.7182 3.1416 0.6 0.7 Z
+    const auto deck2 = createSingleRecordDeckWithFullJFunc();
+    Opm::TableManager tables2(deck2);
+    BOOST_CHECK(tables2.useJFunc());
+
+    const auto& jt2 = tables2.getJFunc();
+    BOOST_CHECK(jt2.getJFuncFlag() == Opm::JFunc::Flag::WATER);
+    BOOST_CHECK_CLOSE(jt2.getowSurfaceTension(), 2.7182, epsilon());
+    BOOST_CHECK_THROW(jt2.getgoSurfaceTension(), std::invalid_argument);
+    BOOST_CHECK_CLOSE(jt2.getAlphaFactor(), 0.6, epsilon()); // default
+    BOOST_CHECK_CLOSE(jt2.getBetaFactor(),  0.7, epsilon());  // default
+    BOOST_CHECK(jt2.getDirection() == Opm::JFunc::Direction::Z); // default
+}
 
 
 

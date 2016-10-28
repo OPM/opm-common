@@ -27,7 +27,7 @@ namespace Opm {
     class SgofTable : public SimpleTable {
 
     public:
-        SgofTable( const DeckItem& item );
+        SgofTable( const DeckItem& item, const bool jfunc );
 
         const TableColumn& getSgColumn() const;
         const TableColumn& getKrgColumn() const;
@@ -38,6 +38,8 @@ namespace Opm {
         // is inconsistent, but it is the one used in the Eclipse
         // manual...)
         const TableColumn& getPcogColumn() const;
+
+        const TableColumn& getJFuncColumn() const;
     };
 }
 

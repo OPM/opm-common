@@ -28,11 +28,13 @@ namespace Opm {
     class SgfnTable : public SimpleTable {
 
     public:
-        SgfnTable( const DeckItem& item );
+        SgfnTable( const DeckItem& item, const bool jfunc );
 
         const TableColumn& getSgColumn() const;
         const TableColumn& getKrgColumn() const;
         const TableColumn& getPcogColumn() const;
+
+        const TableColumn& getJFuncColumn() const;
     };
 }
 

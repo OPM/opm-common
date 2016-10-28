@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( CreateContainer ) {
     BOOST_CHECK_EQUAL( 0 , container.size() );
     BOOST_CHECK_EQUAL( false , container.hasTable( 1 ));
 
-    std::shared_ptr<Opm::SimpleTable> table = std::make_shared<Opm::SwofTable>( deck.getKeyword("SWOF").getRecord(0).getItem(0) );
+    std::shared_ptr<Opm::SimpleTable> table = std::make_shared<Opm::SwofTable>( deck.getKeyword("SWOF").getRecord(0).getItem(0), false );
     BOOST_CHECK_THROW( container.addTable( 10 , table ), std::invalid_argument );
     container.addTable( 6 , table );
     BOOST_CHECK_EQUAL( 1 , container.size() );

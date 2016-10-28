@@ -103,6 +103,7 @@ EclipseState/Schedule/GroupTree.cpp
 EclipseState/Schedule/Tuning.cpp
 EclipseState/Schedule/Events.cpp
 #
+EclipseState/Tables/JFunc.cpp
 EclipseState/Tables/SimpleTable.cpp
 EclipseState/Tables/VFPProdTable.cpp
 EclipseState/Tables/VFPInjTable.cpp
@@ -227,6 +228,7 @@ EclipseState/IOConfig/RestartConfig.hpp
 EclipseState/IOConfig/IOConfig.hpp
 #
 EclipseState/Tables/FlatTable.hpp
+EclipseState/Tables/JFunc.hpp
 EclipseState/Tables/Tabdims.hpp
 EclipseState/Tables/Eqldims.hpp
 EclipseState/Tables/Regdims.hpp

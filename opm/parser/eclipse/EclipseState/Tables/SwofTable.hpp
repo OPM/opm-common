@@ -27,7 +27,7 @@ namespace Opm {
 
     class SwofTable : public SimpleTable {
     public:
-        SwofTable( const DeckItem& item );
+        SwofTable( const DeckItem& item, const bool jfunc );
         const TableColumn& getSwColumn() const;
         const TableColumn& getKrwColumn() const;
         const TableColumn& getKrowColumn() const;
@@ -35,6 +35,9 @@ namespace Opm {
         // this column is p_o - p_w (non-wetting phase pressure minus
         // wetting phase pressure for a given water saturation)
         const TableColumn& getPcowColumn() const;
+
+        /// use this function if JFUNC is set in the deck
+        const TableColumn& getJFuncColumn() const;
     };
 }
 

@@ -67,6 +67,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Tables/JFunc.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
@@ -78,7 +80,8 @@ namespace Opm {
         m_tabdims( Tabdims(deck)),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
-        hasEqlnum (deck.hasKeyword("EQLNUM"))
+        hasEqlnum (deck.hasKeyword("EQLNUM")),
+        m_jfunc( deck )
     {
         initDims( deck );
         initSimpleTables( deck );
@@ -233,17 +236,20 @@ namespace Opm {
             addTables( "ROCKTAB", numRocktabTables);
         }
 
-        initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims.getNumSatTables());
+
         initSimpleTableContainer<SgwfnTable>(deck, "SGWFN", m_tabdims.getNumSatTables());
-        initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims.getNumSatTables());
-        initSimpleTableContainer<SlgofTable>(deck, "SLGOF" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<Sof2Table>(deck, "SOF2" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<Sof3Table>(deck, "SOF3" , m_tabdims.getNumSatTables());
-        initSimpleTableContainer<SwfnTable>(deck, "SWFN" , m_tabdims.getNumSatTables());
-        initSimpleTableContainer<SgfnTable>(deck, "SGFN" , m_tabdims.getNumSatTables());
+        {
+            initSimpleTableContainerWithJFunc<SwofTable>(deck, "SWOF", m_tabdims.getNumSatTables());
+            initSimpleTableContainerWithJFunc<SgofTable>(deck, "SGOF", m_tabdims.getNumSatTables());
+            initSimpleTableContainerWithJFunc<SwfnTable>(deck, "SWFN", m_tabdims.getNumSatTables());
+            initSimpleTableContainerWithJFunc<SgfnTable>(deck, "SGFN", m_tabdims.getNumSatTables());
+            initSimpleTableContainerWithJFunc<SlgofTable>(deck, "SLGOF", m_tabdims.getNumSatTables());
+
+        }
         initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims.getNumSatTables());
         initSimpleTableContainer<MsfnTable>(deck, "MSFN" , m_tabdims.getNumSatTables());
-
 
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
@@ -670,6 +676,12 @@ namespace Opm {
         return getTables("TLPMIXPA");
     }
 
+    const JFunc& TableManager::getJFunc() const {
+        if (!useJFunc())
+            throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
+        return m_jfunc;
+    }
+
     const std::map<int, VFPProdTable>& TableManager::getVFPProdTables() const {
         return m_vfpprodTables;
     }
@@ -690,6 +702,9 @@ namespace Opm {
         return hasEqlnum;
     }
 
+    bool TableManager::useJFunc() const {
+        return m_jfunc;
+    }
 
     const MessageContainer& TableManager::getMessageContainer() const {
         return m_messages;

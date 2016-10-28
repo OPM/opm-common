@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( parse_SLGOF_OK ) {
     BOOST_CHECK_EQUAL(1U , record0.size());
     BOOST_CHECK_EQUAL(10U * 4, item0.size());
 
-    Opm::SlgofTable slgofTable( deck.getKeyword("SLGOF").getRecord(0).getItem(0) );
+    Opm::SlgofTable slgofTable( deck.getKeyword("SLGOF").getRecord(0).getItem(0), false );
     BOOST_CHECK_EQUAL(10U, slgofTable.getSlColumn().size());
     BOOST_CHECK_EQUAL(0.1, slgofTable.getSlColumn()[0]);
     BOOST_CHECK_EQUAL(1.0, slgofTable.getSlColumn()[9]);

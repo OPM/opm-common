@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE( parse_SWOF_OK ) {
     BOOST_CHECK_EQUAL(1U , record0.size());
     BOOST_CHECK_EQUAL(10U * 4, item0.size());
 
-    Opm::SwofTable swofTable(deck.getKeyword("SWOF").getRecord(0).getItem(0));
+    Opm::SwofTable swofTable(deck.getKeyword("SWOF").getRecord(0).getItem(0), false);
     BOOST_CHECK_EQUAL(10U, swofTable.getSwColumn().size());
     BOOST_CHECK_CLOSE(0.1, swofTable.getSwColumn()[0], 1e-8);
     BOOST_CHECK_CLOSE(1.0, swofTable.getSwColumn().back(), 1e-8);
