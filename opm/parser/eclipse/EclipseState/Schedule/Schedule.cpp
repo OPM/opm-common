@@ -617,17 +617,15 @@ namespace Opm {
                     properties.dropInjectionControl(WellInjector::THP);
 
                 /*
-                  What a mess; there is a sensible default BHP limit
-                  defined, so the BHPLimit can be safely set
-                  unconditionally - but should we make BHP control
-                  available based on that default value - currently we
-                  do not do that.
+                  There is a sensible default BHP limit defined, so the BHPLimit can be
+                  safely set unconditionally, and we make BHP limit as a constraint based
+                  on that default value. It is not easy to infer from the manual, while the
+                  current behavoir agrees with the behovir of Eclipse when BHPLimit is not
+                  specified while employed during group control.
                 */
                 properties.BHPLimit = record.getItem("BHP").getSIDouble(0);
-                if (!record.getItem("BHP").defaultApplied(0)) {
-                    properties.addInjectionControl(WellInjector::BHP);
-                } else
-                    properties.dropInjectionControl(WellInjector::BHP);
+                // BHP control should always be there.
+                properties.addInjectionControl(WellInjector::BHP);
 
                 if (well->isAvailableForGroupControl(currentStep))
                     properties.addInjectionControl(WellInjector::GRUP);
