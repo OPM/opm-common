@@ -9,9 +9,6 @@ set (opm-grid_CONFIG_VAR
 	DUNE_COMMON_VERSION_MAJOR
 	DUNE_COMMON_VERSION_MINOR
 	DUNE_COMMON_VERSION_REVISION
-	DUNE_ISTL_VERSION_MAJOR
-	DUNE_ISTL_VERSION_MINOR
-	DUNE_ISTL_VERSION_REVISION
 	HAVE_ZOLTAN
 	)
 
@@ -26,11 +23,10 @@ set (opm-grid_DEPS
 		COMPONENTS date_time filesystem system unit_test_framework REQUIRED"
 	# DUNE dependency
 	"dune-common REQUIRED;
-   dune-grid REQUIRED;
-   dune-geometry REQUIRED
-	 dune-istl"
+	dune-grid REQUIRED;
+	dune-geometry REQUIRED"
 	# OPM dependency
-  "opm-common REQUIRED;
-   opm-core REQUIRED"
+        "opm-common REQUIRED;
+        opm-core REQUIRED"
 	"ZOLTAN"
 	)
