@@ -359,20 +359,20 @@ quantity rpr(const fn_args& args) {
 }
 
 quantity roip(const fn_args& args) {
-    return region_sum( args , "ROIP", measure::volume );
+    return region_sum( args , "OIP", measure::volume );
 }
 
 quantity rgip(const fn_args& args) {
-    return region_sum( args , "RGIP", measure::volume );
+    return region_sum( args , "GIP", measure::volume );
 }
 
 quantity roipl(const fn_args& args) {
-    return region_sum( args , "ROIPL", measure::volume );
+    return region_sum( args , "OIPL", measure::volume );
 }
 
 
 quantity roipg(const fn_args& args) {
-    return region_sum( args , "ROIPG", measure::volume );
+    return region_sum( args , "OIPG", measure::volume );
 }
 
 

@@ -89,11 +89,11 @@ static data::Solution make_solution( const EclipseGrid& grid ) {
             }
         }
 
-        sol.insert( "PRESSURE" , UnitSystem::measure::pressure , pres , data::TargetType::RESTART_SOLUTION);
-        sol.insert( "ROIP"     , UnitSystem::measure::volume   , roip , data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "ROIPL"    , UnitSystem::measure::volume   , roipl, data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "ROIPG"    , UnitSystem::measure::volume   , roipg, data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "RGIP"     , UnitSystem::measure::volume   , rgip , data::TargetType::RESTART_AUXILLARY);
+        sol.insert( "PRESSURE", UnitSystem::measure::pressure , pres , data::TargetType::RESTART_SOLUTION);
+        sol.insert( "OIP"     , UnitSystem::measure::volume   , roip , data::TargetType::RESTART_AUXILLARY);
+        sol.insert( "OIPL"    , UnitSystem::measure::volume   , roipl, data::TargetType::RESTART_AUXILLARY);
+        sol.insert( "OIPG"    , UnitSystem::measure::volume   , roipg, data::TargetType::RESTART_AUXILLARY);
+        sol.insert( "GIP"     , UnitSystem::measure::volume   , rgip , data::TargetType::RESTART_AUXILLARY);
     }
     return sol;
 }
