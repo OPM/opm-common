@@ -58,12 +58,17 @@ namespace Opm {
         m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck ) ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
         m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, *m_schedule , parseContext),
+        m_runspec(           deck ),
         m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ(),
                              m_eclipseProperties, deck.getKeywordList( "MULTREGT" ) ),
         m_inputNnc(          deck, m_gridDims ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() )
     {
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
+
+        if( this->runspec().phases().size() < 3 )
+            m_messageContainer.info("Only " + std::to_string( this->runspec().phases().size() )
+                                    + " fluid phases are enabled" );
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
@@ -153,6 +158,10 @@ namespace Opm {
 
     const EclipseConfig& EclipseState::cfg() const {
         return m_eclipseConfig;
+    }
+
+    const Runspec& EclipseState::runspec() const {
+        return this->m_runspec;
     }
 
     /// [[deprecated]] --- use cfg().simulation()

@@ -70,6 +70,7 @@ set (state_source
 EclipseState/EclipseState.cpp
 EclipseState/EclipseConfig.cpp
 EclipseState/Eclipse3DProperties.cpp
+EclipseState/Runspec.cpp
 #
 EclipseState/checkDeck.cpp
 #
@@ -172,6 +173,7 @@ Units/Units.hpp
 EclipseState/EclipseState.hpp
 EclipseState/EclipseConfig.hpp
 EclipseState/Eclipse3DProperties.hpp
+EclipseState/Runspec.hpp
 #
 EclipseState/checkDeck.hpp
 #

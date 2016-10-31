@@ -101,6 +101,7 @@ namespace Opm
         DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
         Tuning m_tuning;
         MessageLimits m_messageLimits;
+
         MessageContainer m_messages;
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
 
@@ -145,7 +146,7 @@ namespace Opm
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
 
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
-        static double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem);
+        static double convertInjectionRateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem &unitSystem);
         static bool convertEclipseStringToBool(const std::string& eclipseString);
 
     };

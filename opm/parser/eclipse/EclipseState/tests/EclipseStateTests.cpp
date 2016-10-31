@@ -246,15 +246,13 @@ BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
     BOOST_CHECK_EQUAL(simConf.getThresholdPressure().size(), 3);
 }
 
-
-
 BOOST_AUTO_TEST_CASE(PhasesCorrect) {
     auto deck = createDeck();
     EclipseState state( deck, ParseContext() );
-    const auto& tm = state.getTableManager();
-    BOOST_CHECK(   tm.hasPhase( Phase::PhaseEnum::OIL ));
-    BOOST_CHECK(   tm.hasPhase( Phase::PhaseEnum::GAS ));
-    BOOST_CHECK( ! tm.hasPhase( Phase::PhaseEnum::WATER ));
+    const auto& phases = state.runspec().phases();
+    BOOST_CHECK(  phases.active( Phase::OIL ) );
+    BOOST_CHECK(  phases.active( Phase::GAS ) );
+    BOOST_CHECK( !phases.active( Phase::WATER ) );
 }
 
 BOOST_AUTO_TEST_CASE(TitleCorrect) {

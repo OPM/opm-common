@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -107,6 +108,8 @@ namespace Opm {
 
         void applyModifierDeck(const Deck& deck);
 
+        const Runspec& runspec() const;
+
     private:
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
@@ -124,6 +127,7 @@ namespace Opm {
         std::shared_ptr< const Schedule > m_schedule;
         Eclipse3DProperties m_eclipseProperties;
         EclipseConfig m_eclipseConfig;
+        Runspec m_runspec;
         TransMult m_transMult;
         NNC m_inputNnc;
         UnitSystem m_deckUnitSystem;

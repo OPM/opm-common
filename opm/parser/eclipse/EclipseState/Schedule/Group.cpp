@@ -96,9 +96,9 @@ namespace Opm {
     /**********************************************************************/
 
 
-    void Group::setInjectionPhase(size_t time_step , Phase::PhaseEnum phase){
+    void Group::setInjectionPhase(size_t time_step, Phase phase){
         if (m_injection.phase.size() == time_step + 1) {
-            Phase::PhaseEnum currentPhase = m_injection.phase.get(time_step);
+            Phase currentPhase = m_injection.phase.get(time_step);
             /*
               The ECLIPSE documentation of the GCONINJE keyword seems
               to indicate that a group can inject more than one phase
@@ -123,7 +123,7 @@ namespace Opm {
         m_injection.phase.update( time_step , phase );
     }
 
-    Phase::PhaseEnum Group::getInjectionPhase( size_t time_step ) const {
+    Phase Group::getInjectionPhase( size_t time_step ) const {
         return m_injection.phase.get( time_step );
     }
 

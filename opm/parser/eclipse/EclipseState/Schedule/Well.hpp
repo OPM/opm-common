@@ -25,10 +25,11 @@
 #include <string>
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
@@ -45,7 +46,7 @@ namespace Opm {
     class Well {
     public:
         Well(const std::string& name, int headI,
-             int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
+             int headJ, Value<double> refDepth , Phase preferredPhase,
              std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep,
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
              bool allowCrossFlow = true, bool automaticShutIn = true);
@@ -61,7 +62,7 @@ namespace Opm {
         int    getHeadI() const;
         int    getHeadJ() const;
         double getRefDepth() const;
-        Phase::PhaseEnum getPreferredPhase() const;
+        Phase getPreferredPhase() const;
 
         bool isAvailableForGroupControl(size_t timeStep) const;
         void setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl);
@@ -92,8 +93,8 @@ namespace Opm {
          *   water_injector.injection_rate( gas ) == 0
          * * Mixed injection is not supported and always returns 0.
          */
-        double production_rate( Phase::PhaseEnum phase, size_t timestep ) const;
-        double injection_rate( Phase::PhaseEnum phase, size_t timestep ) const;
+        double production_rate( Phase phase, size_t timestep ) const;
+        double injection_rate( Phase phase, size_t timestep ) const;
 
         bool                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
         WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;
@@ -166,7 +167,7 @@ namespace Opm {
         int m_headI;
         int m_headJ;
         mutable Value<double> m_refDepth;
-        Phase::PhaseEnum m_preferredPhase;
+        Phase m_preferredPhase;
 
         WellCompletion::CompletionOrderEnum m_comporder;
         bool m_allowCrossFlow;
