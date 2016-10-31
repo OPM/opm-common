@@ -331,7 +331,7 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
     return std::move( mnemonics );
 }
 
-void expand_RPTRST_mnemonics(std::map< std::string, int >& mnemonics) {
+inline void expand_RPTRST_mnemonics(std::map< std::string, int >& mnemonics) {
     const auto allprops = mnemonics.find( "ALLPROPS");
     if (allprops != mnemonics.end()) {
         const auto value = allprops->second;

@@ -44,7 +44,9 @@ namespace Opm {
             throw std::invalid_argument("Incorrect ordering of values in column: " + m_schema.name());
     }
 
-
+    const std::string& TableColumn::name() const {
+        return m_name;
+    }
 
     void TableColumn::assertNext(size_t index , double value) const {
         size_t nextIndex = index + 1;

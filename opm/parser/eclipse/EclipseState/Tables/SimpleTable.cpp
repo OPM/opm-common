@@ -92,13 +92,13 @@ namespace Opm {
         }
     }
 
-size_t SimpleTable::numColumns() const {
-    return m_schema.size();
-}
+    size_t SimpleTable::numColumns() const {
+        return m_schema.size();
+    }
 
-size_t SimpleTable::numRows() const {
-    return getColumn( 0 ).size();
-}
+    size_t SimpleTable::numRows() const {
+        return getColumn( 0 ).size();
+    }
 
     const TableColumn& SimpleTable::getColumn( const std::string& name) const {
         return m_columns.get( name );
