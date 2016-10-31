@@ -66,13 +66,6 @@ namespace Opm {
 
     }
 
-
-    Schedule::Schedule(const ParseContext& parseContext,
-                       const EclipseGrid& grid,
-                       std::shared_ptr< const Deck > deckptr ) :
-            Schedule(parseContext, grid, *deckptr )
-    {}
-
     Schedule::Schedule( const ParseContext& parseContext,
                         const EclipseGrid& grid,
                         const Deck& deck ) :

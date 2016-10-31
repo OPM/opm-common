@@ -54,10 +54,6 @@ namespace Opm
         Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
                  const Deck& deck );
 
-        /// [deprecated]
-        Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
-                 std::shared_ptr<const Deck> deck );
-
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
          * 1983 is defaulted
