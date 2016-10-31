@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(create) {
     BOOST_CHECK_EQUAL( c.size() , 0 );
 
     {
-        const auto& empty = rc.completions( 3 );
+        const auto& empty = rc.completions( 4 );
         BOOST_CHECK_EQUAL( empty.size() , 0 );
     }
 

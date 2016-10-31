@@ -530,3 +530,16 @@ TSTEP
 -- up historical rates and volumes. These volumes however don't change, i.e.
 -- every time step has the same set of values
 10 10 /
+
+-- Register a fourth well with completions later. This ensure we handle when
+-- wells are registered or activated later in a simulation
+WELSPECS
+     'W_4'        'G_3'   1    1  3.33       'OIL'  7* /
+/
+
+COMPDAT
+    W_4 1 1 3 3 /
+/
+
+TSTEP
+10 10 /

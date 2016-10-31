@@ -121,9 +121,9 @@ BOOST_AUTO_TEST_CASE(get_completions) {
     wellRates["OP_1"] = w1;
     wellRates["OP_2"] = w2;
 
-    BOOST_CHECK_THROW( wellRates.get("NO_SUCH_WELL" , data::Rates::opt::wat), std::out_of_range);
+    BOOST_CHECK_EQUAL( 0.0, wellRates.get("NO_SUCH_WELL" , data::Rates::opt::wat) );
     BOOST_CHECK_EQUAL( 5.67 , wellRates.get( "OP_1" , data::Rates::opt::wat));
 
-    BOOST_CHECK_THROW( wellRates.get("OP_2" , 10000 , data::Rates::opt::wat), std::out_of_range);
+    BOOST_CHECK_EQUAL( 0.0, wellRates.get("OP_2" , 10000 , data::Rates::opt::wat) );
     BOOST_CHECK_EQUAL( 26.41 , wellRates.get( "OP_2" , 188 , data::Rates::opt::wat));
 }

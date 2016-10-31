@@ -104,28 +104,33 @@ namespace Opm {
     public:
 
         double get(const std::string& well_name , Rates::opt m) const {
-            const auto& well = this->at(well_name);
-            return well.rates.get( m );
+            const auto& well = this->find( well_name );
+            if( well == this->end() ) return 0.0;
+
+            return well->second.rates.get( m, 0.0 );
         }
 
 
         double get(const std::string& well_name , Completion::active_index completion_grid_index, Rates::opt m) const {
-            const auto& well = this->at(well_name);
+            const auto& witr = this->find( well_name );
+            if( witr == this->end() ) return 0.0;
+
+            const auto& well = witr->second;
             const auto& completion = std::find_if( well.completions.begin() ,
                                                    well.completions.end() ,
                                                    [=]( const Completion& c ) {
                                                         return c.index == completion_grid_index; });
-            if (completion == well.completions.end())
-                throw std::out_of_range("No such completion");
 
-            return completion->rates.get( m );
+            if( completion == well.completions.end() )
+                return 0.0;
+
+            return completion->rates.get( m, 0.0 );
         }
 
-
     };
+
     using Wells = WellRates;
 
-    //using Wells = std::map<std::string , Well>;
     /* IMPLEMENTATIONS */
 
     inline bool Rates::has( opt m ) const {
