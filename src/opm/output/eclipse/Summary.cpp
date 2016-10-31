@@ -344,7 +344,10 @@ quantity region_sum( const fn_args& args , const std::string& keyword , UnitSyst
 
     double sum = 0;
 
-    const std::vector<double>& sim_value = args.state.data( keyword);
+    if( args.state.count( keyword ) == 0 )
+        return { 0.0, unit };
+
+    const std::vector<double>& sim_value = args.state.data( keyword );
 
     for (auto cell_index : cells)
         sum += sim_value[cell_index];
