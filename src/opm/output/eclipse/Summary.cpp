@@ -707,7 +707,14 @@ Summary::Summary( const EclipseState& st,
         const auto handle = funs.find( keyword )->second;
         const std::vector< const Well* > dummy_wells;
         EclipseGrid dummy_grid(1,1,1);
-        const fn_args no_args{ dummy_wells, 0, 0, 0, {} , {}, {} , dummy_grid };
+        const fn_args no_args { dummy_wells, // Wells from Schedule object
+                                0,           // Duration of time step
+                                0,           // Timestep number
+                                1,           // NUMS value for the summary output.
+                                {},          // Well results - data::Wells
+                                {},          // EclipseState
+                                {},          // Region <-> cell mappings.
+                                dummy_grid };
         const auto val = handle( no_args );
         const auto* unit = st.getUnits().name( val.unit );
 
