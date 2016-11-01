@@ -14,6 +14,10 @@
         {"name" : "LIQUID_EXCEED_PROCEDURE" , "value_type" : "STRING"},
         {"name" : "RESERVOIR_FLUID_TARGET" , "value_type" : "DOUBLE", "dimension" : "ReservoirVolume/Time", "default" : -999e100},
         {"name" : "RESERVOIR_VOLUME_BALANCE" , "value_type" : "DOUBLE", "dimension" : "1"},
+        {"name" : "WET_GAS_TARGET" , "value_type" : "DOUBLE", "dimension" : "1"},
+        {"name" : "CALORIFIC_TARGET" , "value_type" : "DOUBLE", "dimension" : "1"},
+        {"name" : "SURFACE_GAS_BALANCE" , "value_type" : "DOUBLE", "dimension" : "1"},
+        {"name" : "SURFACE_WATER_BALANCE" , "value_type" : "DOUBLE", "dimension" : "1"},
         {"name" : "LINEAR_COMBINED_TARGET" , "value_type" : "DOUBLE", "dimension" : "1"},
         {"name" : "LIN_TARGET_EXCEED_PROCEDURE" , "value_type" : "STRING"}
 ]}
