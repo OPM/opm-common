@@ -244,13 +244,13 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
             const WellInjectionProperties& prop9 = well1->getInjectionProperties(9);
             BOOST_CHECK_CLOSE(20000/Metric::Time ,  prop9.surfaceInjectionRate  , 0.001);
             BOOST_CHECK_CLOSE(200000/Metric::Time , prop9.reservoirInjectionRate, 0.001);
-            BOOST_CHECK_CLOSE(6891 * Metric::Pressure , prop9.BHPLimit, 0.001);
+            BOOST_CHECK_CLOSE(6895 * Metric::Pressure , prop9.BHPLimit, 0.001);
             BOOST_CHECK_CLOSE(0 , prop9.THPLimit , 0.001);
             BOOST_CHECK_EQUAL( WellInjector::RESV  , prop9.controlMode);
             BOOST_CHECK(  prop9.hasInjectionControl(WellInjector::RATE ));
             BOOST_CHECK(  prop9.hasInjectionControl(WellInjector::RESV ));
             BOOST_CHECK( !prop9.hasInjectionControl(WellInjector::THP));
-            BOOST_CHECK( !prop9.hasInjectionControl(WellInjector::BHP));
+            BOOST_CHECK(  prop9.hasInjectionControl(WellInjector::BHP));
         }
 
 
