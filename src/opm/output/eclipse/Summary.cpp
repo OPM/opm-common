@@ -20,15 +20,15 @@
 #include <numeric>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/output/eclipse/Summary.hpp>
@@ -156,7 +156,7 @@ struct fn_args {
  */
 template< rt > constexpr
 measure rate_unit() { return measure::liquid_surface_rate; }
-template< Phase::PhaseEnum > constexpr
+template< Phase > constexpr
 measure rate_unit() { return measure::liquid_surface_rate; }
 
 template<> constexpr
@@ -243,7 +243,7 @@ inline quantity thp( const fn_args& args ) {
     return { p->second.thp, measure::pressure };
 }
 
-template< Phase::PhaseEnum phase >
+template< Phase phase >
 inline quantity production_history( const fn_args& args ) {
     /*
      * For well data, looking up historical rates (both for production and
@@ -270,7 +270,7 @@ inline quantity production_history( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
-template< Phase::PhaseEnum phase >
+template< Phase phase >
 inline quantity injection_history( const fn_args& args ) {
     if( args.timestep == 0 ) return { 0.0, rate_unit< phase >() };
 

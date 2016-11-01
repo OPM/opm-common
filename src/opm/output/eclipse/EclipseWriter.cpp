@@ -298,10 +298,10 @@ private:
 };
 
 /// Convert OPM phase usage to ERT bitmask
-inline int ertPhaseMask( const TableManager& tm ) {
-    return ( tm.hasPhase( Phase::PhaseEnum::WATER ) ? ECL_WATER_PHASE : 0 )
-         | ( tm.hasPhase( Phase::PhaseEnum::OIL ) ? ECL_OIL_PHASE : 0 )
-         | ( tm.hasPhase( Phase::PhaseEnum::GAS ) ? ECL_GAS_PHASE : 0 );
+inline int ertPhaseMask( const Phases& phase ) {
+    return ( phase.active( Phase::WATER ) ? ECL_WATER_PHASE : 0 )
+         | ( phase.active( Phase::OIL ) ? ECL_OIL_PHASE : 0 )
+         | ( phase.active( Phase::GAS ) ? ECL_GAS_PHASE : 0 );
 }
 
 class RFT {
@@ -424,7 +424,7 @@ EclipseWriter::Impl::Impl( const EclipseState& eclipseState,
     , rft( outputDir.c_str(), baseName.c_str(), es.getIOConfig().getFMTOUT() )
     , sim_start_time( es.getSchedule().posixStartTime() )
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
-    , ert_phase_mask( ertPhaseMask( eclipseState.getTableManager() ) )
+    , ert_phase_mask( ertPhaseMask( eclipseState.runspec().phases() ) )
 {}
 
 
@@ -579,15 +579,15 @@ void EclipseWriter::writeInitAndEgrid(data::Solution simProps, const NNC& nnc) {
 std::vector< double > serialize_XWEL( const data::Wells& wells,
                                       int report_step,
                                       const std::vector< const Well* > sched_wells,
-                                      const TableManager& tm,
+                                      const Phases& phase,
                                       const EclipseGrid& grid ) {
 
     using rt = data::Rates::opt;
 
     std::vector< rt > phases;
-    if( tm.hasPhase( Phase::PhaseEnum::WATER ) ) phases.push_back( rt::wat );
-    if( tm.hasPhase( Phase::PhaseEnum::OIL ) )   phases.push_back( rt::oil );
-    if( tm.hasPhase( Phase::PhaseEnum::GAS ) )   phases.push_back( rt::gas );
+    if( phase.active( Phase::WATER ) ) phases.push_back( rt::wat );
+    if( phase.active( Phase::OIL ) )   phases.push_back( rt::oil );
+    if( phase.active( Phase::GAS ) )   phases.push_back( rt::gas );
 
     std::vector< double > xwel;
     for( const auto* sched_well : sched_wells ) {
@@ -740,9 +740,9 @@ void EclipseWriter::writeTimeStep(int report_step,
             restartHandle.writeHeader( report_step, &rsthead_data);
         }
 
-        const auto& tm = es.getTableManager();
+        const auto& phases = es.runspec().phases();
         const auto& sched_wells = schedule.getWells( report_step );
-        const auto xwel = serialize_XWEL( wells, report_step, sched_wells, tm, grid );
+        const auto xwel = serialize_XWEL( wells, report_step, sched_wells, phases, grid );
         const auto iwel = serialize_IWEL( wells, sched_wells );
 
         restartHandle.add_kw( ERT::EclKW< int >(IWEL_KW, iwell_data) );

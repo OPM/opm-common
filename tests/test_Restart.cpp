@@ -273,7 +273,7 @@ bool operator==( const Well& lhs, const Well& rhs ) {
 std::vector< double > serialize_XWEL( const data::Wells& wells,
                                       int report_step,
                                       const std::vector< const Well* > sched_wells,
-                                      const TableManager& tm,
+                                      const Phases&,
                                       const EclipseGrid& );
 
 std::vector< int > serialize_IWEL( const data::Wells& wells,
@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(OPM_XWEL) {
     auto es = Parser::parseData( input( "XWEL" ) );
     const auto& sched = es.getSchedule();
     const auto& grid = es.getInputGrid();
-    const auto& tm = es.getTableManager();
+    const auto& ph = es.runspec().phases();
 
     std::vector< data::Rates::opt > phases {
         data::Rates::opt::wat,
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(OPM_XWEL) {
 
     const auto wells = mkWells();
     const auto& sched_wells = sched.getWells( 1 );
-    const auto xwel = serialize_XWEL( wells, 1, sched_wells, tm, grid );
+    const auto xwel = serialize_XWEL( wells, 1, sched_wells, ph, grid );
     const auto iwel = serialize_IWEL( wells, sched_wells );
 
     const auto restored_wells = restore_wells( xwel.data(), xwel.size(),
