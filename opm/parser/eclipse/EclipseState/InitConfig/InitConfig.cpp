@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -36,35 +38,34 @@ namespace Opm {
     }
 
     InitConfig::InitConfig(const Deck& deck) : equil(equils(deck)) {
-        initRestartKW(deck);
+        if( !deck.hasKeyword( "RESTART" ) ) {
+            if( deck.hasKeyword( "SKIPREST" ) ) {
+                std::cout << "Deck has SKIPREST, but no RESTART. "
+                          << "Ignoring SKIPREST." << std::endl;
+            }
+
+            return;
+        }
+
+        const auto& record = deck.getKeyword( "RESTART" ).getRecord(0);
+        const auto& save_item = record.getItem(2);
+
+        if( save_item.hasValue( 0 ) ) {
+            throw std::runtime_error(
+                    "OPM does not support RESTART from a SAVE file, "
+                    "only from RESTART files");
+        }
+
+        const std::string& root = record.getItem( 0 ).get< std::string >( 0 );
+        int step = record.getItem( 1 ).get< int >(0);
+
+        this->setRestart( root, step );
     }
 
     void InitConfig::setRestart( const std::string& root, int step) {
         m_restartRequested = true;
         m_restartStep = step;
         m_restartRootName = root;
-    }
-
-
-    void InitConfig::initRestartKW(const Deck& deck) {
-        if (deck.hasKeyword<ParserKeywords::RESTART>( )) {
-            const auto& keyword = deck.getKeyword<ParserKeywords::RESTART>( );
-            const auto& record = keyword.getRecord(0);
-            const auto& save_item = record.getItem(2);
-            if (save_item.hasValue(0))
-                throw std::runtime_error("OPM does not support RESTART from a SAVE file, only from RESTART files");
-
-            {
-                const auto& root_item = record.getItem(0);
-                const std::string& root = root_item.get< std::string >(0);
-
-                const auto& step_item = record.getItem(1);
-                int step = step_item.get< int >(0);
-
-                setRestart( root , step );
-            }
-        } else if (deck.hasKeyword<ParserKeywords::SKIPREST>())
-            throw std::runtime_error("Error in deck: Can not supply SKIPREST keyword without a preceeding RESTART.");
     }
 
     bool InitConfig::restartRequested() const {
