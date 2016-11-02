@@ -104,11 +104,6 @@ namespace Opm {
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
 
-        bool hasPhase(enum Phase::PhaseEnum phase) const;
-
-        /// number of phases, [gas, oil, water] = 3
-        size_t getNumPhases() const;
-
         /// deck has keyword "IMPTVD" --- Imbition end-point versus depth tables
         bool useImptvd() const;
 
@@ -129,7 +124,6 @@ namespace Opm {
         void addTables( const std::string& tableName , size_t numTables);
         void initSimpleTables(const Deck& deck);
         void initRTempTables(const Deck& deck);
-        void initPhases(const Deck& deck);
         void initDims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
         void initGasvisctTables(const Deck& deck);
@@ -239,8 +233,6 @@ namespace Opm {
         std::shared_ptr<Regdims> m_regdims;
         std::shared_ptr<Tabdims> m_tabdims;
         std::shared_ptr<Eqldims> m_eqldims;
-
-        std::set<enum Phase::PhaseEnum> phases;
 
         const bool hasImptvd;// if deck has keyword IMPTVD
         const bool hasEnptvd;// if deck has keyword ENPTVD

@@ -262,37 +262,6 @@ namespace Opm {
 
     /*****************************************************************/
 
-    namespace Phase {
-        const std::string PhaseEnum2String( PhaseEnum enumValue ) {
-            switch( enumValue ) {
-            case OIL:
-                return "OIL";
-            case GAS:
-                return "GAS";
-            case WATER:
-                return "WATER";
-            default:
-                throw std::invalid_argument("unhandled enum value");
-            }
-        }
-
-        PhaseEnum PhaseEnumFromString( const std::string& stringValue ) {
-
-            if (stringValue == "OIL")
-                return OIL;
-            else if (stringValue == "WATER")
-                return WATER;
-            else if (stringValue == "WAT")
-                return WATER;
-            else if (stringValue == "GAS")
-                return GAS;
-            else
-                throw std::invalid_argument("Unknown enum state string: " + stringValue );
-        }
-    }
-
-    /*****************************************************************/
-
     namespace WellProducer {
 
         const std::string ControlMode2String( ControlModeEnum enumValue ) {

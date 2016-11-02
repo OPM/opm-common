@@ -217,46 +217,6 @@ BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumLoop) {
     BOOST_CHECK_EQUAL("RATE" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "RATE" ) ));
 }
 
-
-/*****************************************************************/
-
-BOOST_AUTO_TEST_CASE(TestPhaseEnum2String) {
-    BOOST_CHECK_EQUAL( "OIL"  ,  Phase::PhaseEnum2String(Phase::OIL));
-    BOOST_CHECK_EQUAL( "GAS"  ,  Phase::PhaseEnum2String(Phase::GAS));
-    BOOST_CHECK_EQUAL( "WATER" , Phase::PhaseEnum2String(Phase::WATER));
-}
-
-
-BOOST_AUTO_TEST_CASE(TestPhaseEnumFromString) {
-    BOOST_CHECK_THROW( Phase::PhaseEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( Phase::OIL   , Phase::PhaseEnumFromString("OIL"));
-    BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString("WATER"));
-    BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString("WAT"));
-    BOOST_CHECK_EQUAL( Phase::GAS   , Phase::PhaseEnumFromString("GAS"));
-}
-
-
-
-BOOST_AUTO_TEST_CASE(TestPhaseEnumLoop) {
-    BOOST_CHECK_EQUAL( Phase::OIL   , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::OIL ) ));
-    BOOST_CHECK_EQUAL( Phase::WATER , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::WATER ) ));
-    BOOST_CHECK_EQUAL( Phase::GAS   , Phase::PhaseEnumFromString( Phase::PhaseEnum2String( Phase::GAS ) ));
-
-    BOOST_CHECK_EQUAL( "OIL"    , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "OIL" ) ));
-    BOOST_CHECK_EQUAL( "GAS"    , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "GAS" ) ));
-    BOOST_CHECK_EQUAL( "WATER"  , Phase::PhaseEnum2String(Phase::PhaseEnumFromString(  "WATER" ) ));
-}
-
-
-
-BOOST_AUTO_TEST_CASE(TestPhaseEnumMask) {
-    BOOST_CHECK_EQUAL( 0 , Phase::OIL   & Phase::GAS );
-    BOOST_CHECK_EQUAL( 0 , Phase::OIL   & Phase::WATER );
-    BOOST_CHECK_EQUAL( 0 , Phase::WATER & Phase::GAS );
-}
-
-
-
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestInjectorEnum2String) {

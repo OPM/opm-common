@@ -69,20 +69,6 @@ namespace Opm {
 
     }
 
-
-    namespace Phase {
-        enum PhaseEnum {
-            OIL   = 1,
-            GAS   = 2,
-            WATER = 4
-        };
-
-        const std::string PhaseEnum2String( PhaseEnum enumValue );
-        PhaseEnum PhaseEnumFromString( const std::string& stringValue );
-    }
-
-
-
     namespace WellInjector {
         enum TypeEnum {
             WATER = 1,

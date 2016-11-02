@@ -79,7 +79,6 @@ namespace Opm {
         hasEnptvd (deck.hasKeyword("ENPTVD")),
         hasEqlnum (deck.hasKeyword("EQLNUM"))
     {
-        initPhases( deck );
         initDims( deck );
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
@@ -88,29 +87,6 @@ namespace Opm {
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
     }
-
-    void TableManager::initPhases(const Deck& deck) {
-        if (deck.hasKeyword("OIL"))
-            phases.insert(Phase::PhaseEnum::OIL);
-
-        if (deck.hasKeyword("GAS"))
-            phases.insert(Phase::PhaseEnum::GAS);
-
-        if (deck.hasKeyword("WATER"))
-            phases.insert(Phase::PhaseEnum::WATER);
-
-        if (phases.size() < 3)
-            m_messages.info("Only " + std::to_string(static_cast<long long>(phases.size())) + " fluid phases are enabled");
-    }
-
-    size_t TableManager::getNumPhases() const{
-        return phases.size();
-    }
-
-    bool TableManager::hasPhase(enum Phase::PhaseEnum phase) const {
-         return (phases.count(phase) == 1);
-    }
-
 
     void TableManager::initDims(const Deck& deck) {
         using namespace Opm::ParserKeywords;

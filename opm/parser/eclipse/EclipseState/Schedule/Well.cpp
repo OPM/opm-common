@@ -33,7 +33,7 @@
 namespace Opm {
 
     Well::Well(const std::string& name_, int headI,
-               int headJ, Value<double> refDepth , Phase::PhaseEnum preferredPhase,
+               int headJ, Value<double> refDepth , Phase preferredPhase,
                std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
@@ -91,7 +91,7 @@ namespace Opm {
     }
 
 
-    double Well::production_rate( Phase::PhaseEnum phase, size_t timestep ) const {
+    double Well::production_rate( Phase phase, size_t timestep ) const {
         if( !this->isProducer( timestep ) ) return 0.0;
 
         const auto& p = this->getProductionProperties( timestep );
@@ -102,11 +102,11 @@ namespace Opm {
             case Phase::GAS:   return p.GasRate;
         }
 
-        throw std::logic_error( "Unreachable state. Invalid PhaseEnum value. "
+        throw std::logic_error( "Unreachable state. Invalid Phase value. "
                                 "This is likely a programming error." );
     }
 
-    double Well::injection_rate( Phase::PhaseEnum phase, size_t timestep ) const {
+    double Well::injection_rate( Phase phase, size_t timestep ) const {
         if( !this->isInjector( timestep ) ) return 0.0;
 
         const auto& i = this->getInjectionProperties( timestep );
@@ -283,7 +283,7 @@ namespace Opm {
     }
 
 
-    Phase::PhaseEnum Well::getPreferredPhase() const {
+    Phase Well::getPreferredPhase() const {
         return m_preferredPhase;
     }
 

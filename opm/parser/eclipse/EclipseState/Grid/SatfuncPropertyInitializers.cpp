@@ -696,9 +696,6 @@ namespace Opm {
 
         satnum.checkLimits( 1 , numSatTables );
 
-        // All table lookup assumes three-phase model
-        assert( tableManager->getNumPhases() == 3 );
-
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
         // cell and we would need to know how the simulator wants to interpolate between

@@ -54,10 +54,6 @@ namespace Opm
         Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
                  const Deck& deck );
 
-        /// [deprecated]
-        Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
-                 std::shared_ptr<const Deck> deck );
-
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
          * 1983 is defaulted
@@ -105,6 +101,7 @@ namespace Opm
         DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
         Tuning m_tuning;
         MessageLimits m_messageLimits;
+
         MessageContainer m_messages;
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
 
@@ -149,7 +146,7 @@ namespace Opm
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
 
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
-        static double convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem &unitSystem);
+        static double convertInjectionRateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem &unitSystem);
         static bool convertEclipseStringToBool(const std::string& eclipseString);
 
     };

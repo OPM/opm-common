@@ -66,13 +66,6 @@ namespace Opm {
 
     }
 
-
-    Schedule::Schedule(const ParseContext& parseContext,
-                       const EclipseGrid& grid,
-                       std::shared_ptr< const Deck > deckptr ) :
-            Schedule(parseContext, grid, *deckptr )
-    {}
-
     Schedule::Schedule( const ParseContext& parseContext,
                         const EclipseGrid& grid,
                         const Deck& deck ) :
@@ -83,7 +76,6 @@ namespace Opm {
         m_modifierDeck( *m_timeMap, nullptr ),
         m_tuning( *m_timeMap ),
         m_messageLimits( *m_timeMap )
-
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
@@ -984,7 +976,7 @@ namespace Opm {
             auto& group = this->m_groups.at( groupName );
 
             {
-                Phase::PhaseEnum phase = Phase::PhaseEnumFromString( record.getItem("PHASE").getTrimmedString(0) );
+                Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0) );
                 group.setInjectionPhase( currentStep , phase );
             }
             {
@@ -992,7 +984,7 @@ namespace Opm {
                 group.setInjectionControlMode( currentStep , controlMode );
             }
 
-            Phase::PhaseEnum wellPhase = Phase::PhaseEnumFromString( record.getItem("PHASE").getTrimmedString(0));
+            Phase wellPhase = get_phase( record.getItem("PHASE").getTrimmedString(0));
 
             // calculate SI injection rates for the group
             double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< double >(0);
@@ -1368,7 +1360,7 @@ namespace Opm {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
-        Phase::PhaseEnum preferredPhase = Phase::PhaseEnumFromString(record.getItem("PHASE").getTrimmedString(0));
+        Phase preferredPhase = get_phase(record.getItem("PHASE").getTrimmedString(0));
         Value<double> refDepth("REF_DEPTH");
         const auto& refDepthItem = record.getItem("REF_DEPTH");
 
@@ -1540,7 +1532,7 @@ namespace Opm {
         }
     }
 
-    double Schedule::convertInjectionRateToSI(double rawRate, Phase::PhaseEnum wellPhase, const Opm::UnitSystem& unitSystem) {
+    double Schedule::convertInjectionRateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem& unitSystem) {
         switch (wellPhase) {
         case Phase::OIL:
         case Phase::WATER:
@@ -1612,5 +1604,4 @@ namespace Opm {
     bool Schedule::hasOilVaporizationProperties(){
         return m_oilvaporizationproperties.size() > 0;
     }
-
 }

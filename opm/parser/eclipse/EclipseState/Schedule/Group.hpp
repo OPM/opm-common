@@ -22,6 +22,7 @@
 #define GROUP_HPP_
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 
 #include <memory>
@@ -38,7 +39,7 @@ namespace Opm {
         struct InjectionData {
             InjectionData( const TimeMap& );
 
-            DynamicState< Phase::PhaseEnum > phase;
+            DynamicState< Phase > phase;
             DynamicState< GroupInjection::ControlEnum > controlMode;
             DynamicState< double > rate;
             DynamicState< double > surfaceFlowMaxRate;
@@ -74,8 +75,8 @@ namespace Opm {
         void setInjectionGroup(size_t timeStep, bool isInjectionGroup_);
 
         /******************************************************************/
-        void             setInjectionPhase(size_t time_step , Phase::PhaseEnum phase);
-        Phase::PhaseEnum getInjectionPhase(size_t time_step) const;
+        void             setInjectionPhase(size_t time_step, Phase);
+        Phase            getInjectionPhase(size_t time_step) const;
 
         void                      setInjectionControlMode(size_t time_step , GroupInjection::ControlEnum ControlMode);
         GroupInjection::ControlEnum getInjectionControlMode( size_t time_step) const;
