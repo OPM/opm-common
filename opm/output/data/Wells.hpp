@@ -67,6 +67,9 @@ namespace Opm {
             /// chaining.
             inline Rates& set( opt m, double value );
 
+            /// true if any option is set; false otherwise
+            inline bool any() const noexcept;
+
         private:
             double& get_ref( opt );
             const double& get_ref( opt ) const;
@@ -97,6 +100,8 @@ namespace Opm {
         double temperature;
         int control;
         std::vector< Completion > completions;
+
+        inline bool flowing() const noexcept;
     };
 
 
@@ -194,6 +199,14 @@ namespace Opm {
         return const_cast< double& >(
                 static_cast< const Rates* >( this )->get_ref( m )
                 );
+    }
+
+    inline bool Rates::any() const noexcept {
+        return static_cast< enum_size >( this->mask ) != 0;
+    }
+
+    inline bool Well::flowing() const noexcept {
+        return this->rates.any();
     }
 
     }

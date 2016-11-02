@@ -444,6 +444,11 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
 
     BOOST_CHECK_CLOSE( ggor1, ecl_sum_get_group_var( resp, 1, "G_1", "GGORH" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor2, ecl_sum_get_group_var( resp, 1, "G_2", "GGORH" ), 1e-5 );
+
+    BOOST_CHECK_EQUAL( 0, ecl_sum_get_group_var( resp, 1, "G_1", "GMWIN" ) );
+    BOOST_CHECK_EQUAL( 2, ecl_sum_get_group_var( resp, 1, "G_1", "GMWPR" ) );
+    BOOST_CHECK_EQUAL( 1, ecl_sum_get_group_var( resp, 1, "G_2", "GMWIN" ) );
+    BOOST_CHECK_EQUAL( 0, ecl_sum_get_group_var( resp, 1, "G_2", "GMWPR" ) );
 }
 
 BOOST_AUTO_TEST_CASE(completion_kewords) {
@@ -579,6 +584,8 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_CLOSE( foip, ecl_sum_get_field_var( resp, 1, "FOIP" ), 1e-5 );
     BOOST_CHECK_CLOSE( fgip, ecl_sum_get_field_var( resp, 1, "FGIP" ), 1e-5 );
 
+    BOOST_CHECK_EQUAL( 1, ecl_sum_get_field_var( resp, 1, "FMWIN" ) );
+    BOOST_CHECK_EQUAL( 2, ecl_sum_get_field_var( resp, 1, "FMWPR" ) );
 }
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {

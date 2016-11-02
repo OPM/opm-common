@@ -183,6 +183,23 @@ inline quantity rate( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
+template< bool injection = true >
+inline quantity flowing( const fn_args& args ) {
+    const auto& wells = args.wells;
+    const auto ts = args.timestep;
+    auto pred = [&wells,ts]( const Well* w ) {
+        const auto& name = w->name();
+        return w->isInjector( ts ) == injection
+            && wells.count( name ) > 0
+            && wells.at( name ).flowing();
+    };
+
+    return { double( std::count_if( args.schedule_wells.begin(),
+                                    args.schedule_wells.end(),
+                                    pred ) ),
+             measure::identity };
+}
+
 template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
@@ -533,6 +550,8 @@ static const std::unordered_map< std::string, ofun > funs = {
                     duration ) },
     { "GWITH", mul( injection_history< Phase::WATER >, duration ) },
     { "GGITH", mul( injection_history< Phase::GAS >, duration ) },
+    { "GMWIN", flowing< true > },
+    { "GMWPR", flowing< false > },
 
     { "CWIR", injecrate< rt::wat > },
     { "CGIR", injecrate< rt::gas > },
@@ -611,6 +630,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FGLRH", div( production_history< Phase::GAS >,
                     sum( production_history< Phase::WATER >,
                          production_history< Phase::OIL > ) ) },
+    { "FMWIN", flowing< true > },
+    { "FMWPR", flowing< false > },
 
     /* Region properties */
     { "RPR" , rpr},
