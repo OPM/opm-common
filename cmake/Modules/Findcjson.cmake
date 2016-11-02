@@ -20,7 +20,7 @@ endif (CJSON_ROOT)
 find_path (CJSON_INCLUDE_DIR
   NAMES "cjson/cJSON.h"
   HINTS "${CJSON_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/../opm-parser"
+  PATHS "${PROJECT_SOURCE_DIR}"
   PATH_SUFFIXES "include" "external"
   DOC "Path to cjson library header files"
   ${_no_default_path} )
