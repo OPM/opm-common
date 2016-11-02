@@ -16,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
@@ -47,10 +46,12 @@ namespace out {
                 const auto& completions = well->getCompletions( );
                 for (const auto& c : completions) {
                     size_t global_index = grid.getGlobalIndex( c.getI() , c.getJ() , c.getK());
-                    size_t active_index = grid.activeIndex( global_index );
-                    int region_id =fipnum.iget( global_index );
-                    auto& well_index_list = this->completion_map[ region_id ];
-                    well_index_list.push_back( { well->name() , active_index } );
+                    if (grid.cellActive( global_index )) {
+                        size_t active_index = grid.activeIndex( global_index );
+                        int region_id =fipnum.iget( global_index );
+                        auto& well_index_list = this->completion_map[ region_id ];
+                        well_index_list.push_back( { well->name() , active_index } );
+                    }
                 }
             }
         }
