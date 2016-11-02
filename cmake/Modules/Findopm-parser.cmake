@@ -137,6 +137,16 @@ if (ERT_FOUND AND Boost_FOUND AND
     ${Boost_LIBRARIES}
     ${ERT_LIBRARIES})
 
+  # We might be using an external cJSON library
+  find_package(cjson)
+
+  if (CJSON_FOUND)
+    # If we do we need to add it to the libs.
+    set (opm-parser_LIBRARIES
+      ${opm-parser_LIBRARIES}
+      ${CJSON_LIBRARY})
+  endif (CJSON_FOUND)
+
   # see if we can compile a minimum example
   # CMake logical test doesn't handle lists (sic)
   include (CMakePushCheckState)
