@@ -53,7 +53,7 @@ namespace Opm
     class Schedule {
     public:
         Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
-                 const Deck& deck, const Phases &phases = Phases(true, true, true) );
+                 const Deck& deck, const Phases &phases );
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan

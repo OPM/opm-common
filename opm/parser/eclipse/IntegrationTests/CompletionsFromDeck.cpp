@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     const auto scheduleFile = "testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1";
     auto deck =  parser.parseFile(scheduleFile, ParseContext());
     EclipseGrid grid(10,10,10);
-    const Schedule schedule( ParseContext(), grid, deck );
+    const Schedule schedule( ParseContext(), grid, deck, Phases(true, true, true) );
     const auto& COMPDAT1 = deck.getKeyword("COMPDAT" , 1);
 
     const auto wells = schedule.getWells( 0 );

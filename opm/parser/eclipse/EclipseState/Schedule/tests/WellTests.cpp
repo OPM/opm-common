@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     Opm::ParseContext parseContext;
     auto deck = parser.parseString(input, parseContext);
     Opm::EclipseGrid grid(10,10,10);
-    Opm::Schedule schedule(Opm::ParseContext() , grid , deck );
+    Opm::Schedule schedule(Opm::ParseContext() , grid , deck, Opm::Phases(true, true, true) );
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     Opm::ParseContext parseContext;
     auto deck = parser.parseString(input, parseContext);
     Opm::EclipseGrid grid(10,10,10);
-    Opm::Schedule schedule(Opm::ParseContext() , grid , deck );
+    Opm::Schedule schedule(Opm::ParseContext() , grid , deck, Opm::Phases(true, true, true) );
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     Opm::ParseContext parseContext;
     auto deck = parser.parseString(input, parseContext);
     Opm::EclipseGrid grid(10,10,10);
-    Opm::Schedule schedule(Opm::ParseContext() , grid , deck );
+    Opm::Schedule schedule(Opm::ParseContext() , grid , deck, Opm::Phases(true, true, true) );
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
