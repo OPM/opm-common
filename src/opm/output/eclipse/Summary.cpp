@@ -186,6 +186,10 @@ inline quantity rate( const fn_args& args ) {
 template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
+    // A negative value for num is used for the initial pass which
+    // only purpose is to determine the correct unit.
+    if (args.num < 0) return zero;
+
     // The args.num value is the literal value which will go to the
     // NUMS array in the eclispe SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
@@ -710,7 +714,7 @@ Summary::Summary( const EclipseState& st,
         const fn_args no_args { dummy_wells, // Wells from Schedule object
                                 0,           // Duration of time step
                                 0,           // Timestep number
-                                1,           // NUMS value for the summary output.
+                               -1,           // NUMS value for the summary output.
                                 {},          // Well results - data::Wells
                                 {},          // EclipseState
                                 {},          // Region <-> cell mappings.
