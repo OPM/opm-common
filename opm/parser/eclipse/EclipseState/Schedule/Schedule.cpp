@@ -447,15 +447,17 @@ namespace Opm {
                 }
 
                 if (status != WellCommon::SHUT) {
-                    const std::string& cmodeString =
+                        std::string cmodeString =
                         record.getItem("CMODE").getTrimmedString(0);
 
                     WellProducer::ControlModeEnum control =
                         WellProducer::ControlModeFromString(cmodeString);
 
+
                     if ( m_controlModeWHISTCTL != WellProducer::CMODE_UNDEFINED &&
-                         m_controlModeWHISTCTL != WellProducer::NONE) {
+                         m_controlModeWHISTCTL != WellProducer::NONE && !isPredictionMode){
                         control = m_controlModeWHISTCTL; // overwrite given control
+                        cmodeString = WellProducer::ControlMode2String(control); // update the string
                     }
 
                     if (properties.hasProductionControl(control)) {
