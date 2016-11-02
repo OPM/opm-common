@@ -125,6 +125,15 @@ BOOST_AUTO_TEST_CASE(wells_select) {
             names.begin(), names.end() );
 }
 
+BOOST_AUTO_TEST_CASE(groups_all) {
+    const auto summary = createSummary( "GWPR \n /\n" );
+    const auto groups = { "G", "OP" };
+    const auto names = sorted_names( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS( groups.begin(), groups.end(),
+                                   names.begin(), names.end() );
+}
+
 BOOST_AUTO_TEST_CASE(wells_pattern) {
     const auto input = "WWCT\n'W*' /\n";
     const auto summary = createSummary( input );
@@ -288,7 +297,6 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
             auto kn = keyword + ":";
             all.push_back(kn + "G");
             all.push_back(kn + "OP");
-            all.push_back(kn + "FIELD");
         }
         else if (keyword[0]=='W') {
             auto kn = keyword + ":";

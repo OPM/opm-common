@@ -140,8 +140,10 @@ inline void keywordG( std::vector< ERT::smspec_node >& list,
     if( keyword.size() == 0 ||
         !keyword.getDataRecord().getDataItem().hasValue( 0 ) ) {
 
-        for( const auto& group : schedule.getGroups() )
+        for( const auto& group : schedule.getGroups() ) {
+            if( group->name() == "FIELD" ) continue;
             list.emplace_back( type, group->name(), keyword.name() );
+        }
 
         return;
     }
