@@ -48,6 +48,8 @@ namespace {
 
 using rt = data::Rates::opt;
 using measure = UnitSystem::measure;
+constexpr const bool injector = true;
+constexpr const bool producer = false;
 
 /* Some numerical value with its unit tag embedded to enable caller to apply
  * unit conversion. This removes a lot of boilerplate. ad-hoc solution to poor
@@ -183,6 +185,23 @@ inline quantity rate( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
+template< bool injection >
+inline quantity flowing( const fn_args& args ) {
+    const auto& wells = args.wells;
+    const auto ts = args.timestep;
+    auto pred = [&wells,ts]( const Well* w ) {
+        const auto& name = w->name();
+        return w->isInjector( ts ) == injection
+            && wells.count( name ) > 0
+            && wells.at( name ).flowing();
+    };
+
+    return { double( std::count_if( args.schedule_wells.begin(),
+                                    args.schedule_wells.end(),
+                                    pred ) ),
+             measure::identity };
+}
+
 template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
@@ -215,17 +234,6 @@ inline quantity crate( const fn_args& args ) {
     if( !injection ) return { -v, rate_unit< phase >() };
     return { v, rate_unit< phase >() };
 }
-
-
-template< rt phase > inline quantity prodrate( const fn_args& args )
-{ return rate< phase, false >( args ); }
-template< rt phase > inline quantity injerate( const fn_args& args )
-{ return rate< phase, true >( args ); }
-template< rt phase > inline quantity prodcrate( const fn_args& args )
-{ return crate< phase, false >( args ); }
-template< rt phase > inline quantity injecrate( const fn_args& args )
-{ return crate< phase, true >( args ); }
-
 
 inline quantity bhp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
@@ -330,17 +338,6 @@ quantity region_rate( const fn_args& args ) {
         return { -sum, rate_unit< phase >() };
 }
 
-template<rt phase>
-quantity region_production(const fn_args& args) {
-    return region_rate<phase , false>(args);
-}
-
-template<rt phase>
-quantity region_injection(const fn_args& args) {
-    return region_rate<phase , true>(args);
-}
-
-
 quantity region_sum( const fn_args& args , const std::string& keyword , UnitSystem::measure unit) {
     const auto& cells = args.regionCache.cells( args.num );
     if (cells.empty())
@@ -424,61 +421,61 @@ auto sub( F f, G g ) -> bin_op< F, G, std::minus< quantity > >
 using ofun = std::function< quantity( const fn_args& ) >;
 
 static const std::unordered_map< std::string, ofun > funs = {
-    { "WWIR", injerate< rt::wat > },
-    { "WOIR", injerate< rt::oil > },
-    { "WGIR", injerate< rt::gas > },
-    { "WNIR", injerate< rt::solvent > },
+    { "WWIR", rate< rt::wat, injector > },
+    { "WOIR", rate< rt::oil, injector > },
+    { "WGIR", rate< rt::gas, injector > },
+    { "WNIR", rate< rt::solvent, injector > },
 
-    { "WWIT", mul( injerate< rt::wat >, duration ) },
-    { "WOIT", mul( injerate< rt::oil >, duration ) },
-    { "WGIT", mul( injerate< rt::gas >, duration ) },
-    { "WNIT", mul( injerate< rt::solvent >, duration ) },
+    { "WWIT", mul( rate< rt::wat, injector >, duration ) },
+    { "WOIT", mul( rate< rt::oil, injector >, duration ) },
+    { "WGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
 
-    { "WWPR", prodrate< rt::wat > },
-    { "WOPR", prodrate< rt::oil > },
-    { "WGPR", prodrate< rt::gas > },
-    { "WNPR", prodrate< rt::solvent > },
+    { "WWPR", rate< rt::wat, producer > },
+    { "WOPR", rate< rt::oil, producer > },
+    { "WGPR", rate< rt::gas, producer > },
+    { "WNPR", rate< rt::solvent, producer > },
 
-    { "WLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
-    { "WWPT", mul( prodrate< rt::wat >, duration ) },
-    { "WOPT", mul( prodrate< rt::oil >, duration ) },
-    { "WGPT", mul( prodrate< rt::gas >, duration ) },
-    { "WNPT", mul( prodrate< rt::solvent >, duration ) },
-    { "WLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
+    { "WLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
+    { "WWPT", mul( rate< rt::wat, producer >, duration ) },
+    { "WOPT", mul( rate< rt::oil, producer >, duration ) },
+    { "WGPT", mul( rate< rt::gas, producer >, duration ) },
+    { "WNPT", mul( rate< rt::solvent, producer >, duration ) },
+    { "WLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
 
-    { "WWCT", div( prodrate< rt::wat >,
-                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
-    { "GWCT", div( prodrate< rt::wat >,
-                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
-    { "WGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
-    { "GGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
-    { "WGLR", div( prodrate< rt::gas >,
-                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "WWCT", div( rate< rt::wat, producer >,
+                   sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
+    { "GWCT", div( rate< rt::wat, producer >,
+                   sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
+    { "WGOR", div( rate< rt::gas, producer >, rate< rt::oil, producer > ) },
+    { "GGOR", div( rate< rt::gas, producer >, rate< rt::oil, producer > ) },
+    { "WGLR", div( rate< rt::gas, producer >,
+                   sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
 
     { "WBHP", bhp },
     { "WTHP", thp },
 
-    { "GWIR", injerate< rt::wat > },
-    { "GOIR", injerate< rt::oil > },
-    { "GGIR", injerate< rt::gas > },
-    { "GNIR", injerate< rt::solvent > },
-    { "GWIT", mul( injerate< rt::wat >, duration ) },
-    { "GOIT", mul( injerate< rt::oil >, duration ) },
-    { "GGIT", mul( injerate< rt::gas >, duration ) },
-    { "GNIT", mul( injerate< rt::solvent >, duration ) },
+    { "GWIR", rate< rt::wat, injector > },
+    { "GOIR", rate< rt::oil, injector > },
+    { "GGIR", rate< rt::gas, injector > },
+    { "GNIR", rate< rt::solvent, injector > },
+    { "GWIT", mul( rate< rt::wat, injector >, duration ) },
+    { "GOIT", mul( rate< rt::oil, injector >, duration ) },
+    { "GGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
 
-    { "GWPR", prodrate< rt::wat > },
-    { "GOPR", prodrate< rt::oil > },
-    { "GGPR", prodrate< rt::gas > },
-    { "GNPR", prodrate< rt::solvent > },
-    { "GLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
+    { "GWPR", rate< rt::wat, producer > },
+    { "GOPR", rate< rt::oil, producer > },
+    { "GGPR", rate< rt::gas, producer > },
+    { "GNPR", rate< rt::solvent, producer > },
+    { "GLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
 
-    { "GWPT", mul( prodrate< rt::wat >, duration ) },
-    { "GOPT", mul( prodrate< rt::oil >, duration ) },
-    { "GGPT", mul( prodrate< rt::gas >, duration ) },
-    { "GNPT", mul( prodrate< rt::solvent >, duration ) },
-    { "GLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
+    { "GWPT", mul( rate< rt::wat, producer >, duration ) },
+    { "GOPT", mul( rate< rt::oil, producer >, duration ) },
+    { "GGPT", mul( rate< rt::gas, producer >, duration ) },
+    { "GNPT", mul( rate< rt::solvent, producer >, duration ) },
+    { "GLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
 
     { "WWPRH", production_history< Phase::WATER > },
@@ -537,47 +534,49 @@ static const std::unordered_map< std::string, ofun > funs = {
                     duration ) },
     { "GWITH", mul( injection_history< Phase::WATER >, duration ) },
     { "GGITH", mul( injection_history< Phase::GAS >, duration ) },
+    { "GMWIN", flowing< injector > },
+    { "GMWPR", flowing< producer > },
 
-    { "CWIR", injecrate< rt::wat > },
-    { "CGIR", injecrate< rt::gas > },
-    { "CWIT", mul( injecrate< rt::wat >, duration ) },
-    { "CGIT", mul( injecrate< rt::gas >, duration ) },
-    { "CNIT", mul( injecrate< rt::solvent >, duration ) },
+    { "CWIR", crate< rt::wat, injector > },
+    { "CGIR", crate< rt::gas, injector > },
+    { "CWIT", mul( crate< rt::wat, injector >, duration ) },
+    { "CGIT", mul( crate< rt::gas, injector >, duration ) },
+    { "CNIT", mul( crate< rt::solvent, injector >, duration ) },
 
-    { "CWPR", prodcrate< rt::wat > },
-    { "COPR", prodcrate< rt::oil > },
-    { "CGPR", prodcrate< rt::gas > },
+    { "CWPR", crate< rt::wat, producer > },
+    { "COPR", crate< rt::oil, producer > },
+    { "CGPR", crate< rt::gas, producer > },
     // Minus for injection rates and pluss for production rate
-    { "CNFR", sub( prodcrate< rt::solvent>, injecrate<rt::solvent>) },
-    { "CWPT", mul( prodcrate< rt::wat >, duration ) },
-    { "COPT", mul( prodcrate< rt::oil >, duration ) },
-    { "CGPT", mul( prodcrate< rt::gas >, duration ) },
-    { "CNPT", mul( prodcrate< rt::solvent >, duration ) },
+    { "CNFR", sub( crate< rt::solvent, producer >, crate<rt::solvent, injector >) },
+    { "CWPT", mul( crate< rt::wat, producer >, duration ) },
+    { "COPT", mul( crate< rt::oil, producer >, duration ) },
+    { "CGPT", mul( crate< rt::gas, producer >, duration ) },
+    { "CNPT", mul( crate< rt::solvent, producer >, duration ) },
 
-    { "FWPR", prodrate< rt::wat > },
-    { "FOPR", prodrate< rt::oil > },
-    { "FGPR", prodrate< rt::gas > },
-    { "FNPR", prodrate< rt::solvent > },
+    { "FWPR", rate< rt::wat, producer > },
+    { "FOPR", rate< rt::oil, producer > },
+    { "FGPR", rate< rt::gas, producer > },
+    { "FNPR", rate< rt::solvent, producer > },
 
-    { "FLPR", sum( prodrate< rt::wat >, prodrate< rt::oil > ) },
-    { "FWPT", mul( prodrate< rt::wat >, duration ) },
-    { "FOPT", mul( prodrate< rt::oil >, duration ) },
-    { "FGPT", mul( prodrate< rt::gas >, duration ) },
-    { "FNPT", mul( prodrate< rt::solvent >, duration ) },
-    { "FLPT", mul( sum( prodrate< rt::wat >, prodrate< rt::oil > ),
+    { "FLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
+    { "FWPT", mul( rate< rt::wat, producer >, duration ) },
+    { "FOPT", mul( rate< rt::oil, producer >, duration ) },
+    { "FGPT", mul( rate< rt::gas, producer >, duration ) },
+    { "FNPT", mul( rate< rt::solvent >, duration ) },
+    { "FLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
 
-    { "FWIR", injerate< rt::wat > },
-    { "FOIR", injerate< rt::oil > },
-    { "FGIR", injerate< rt::gas > },
-    { "FNIR", injerate< rt::solvent > },
+    { "FWIR", rate< rt::wat, injector > },
+    { "FOIR", rate< rt::oil, injector > },
+    { "FGIR", rate< rt::gas, injector > },
+    { "FNIR", rate< rt::solvent, injector > },
 
-    { "FLIR", sum( injerate< rt::wat >, injerate< rt::oil > ) },
-    { "FWIT", mul( injerate< rt::wat >, duration ) },
-    { "FOIT", mul( injerate< rt::oil >, duration ) },
-    { "FGIT", mul( injerate< rt::gas >, duration ) },
-    { "FNIT", mul( injerate< rt::solvent >, duration ) },
-    { "FLIT", mul( sum( injerate< rt::wat >, injerate< rt::oil > ),
+    { "FLIR", sum( rate< rt::wat, injector >, rate< rt::oil, injector > ) },
+    { "FWIT", mul( rate< rt::wat, injector >, duration ) },
+    { "FOIT", mul( rate< rt::oil, injector >, duration ) },
+    { "FGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
+    { "FLIT", mul( sum( rate< rt::wat, injector >, rate< rt::oil, injector > ),
                    duration ) },
 
     { "FOIP", foip },
@@ -602,11 +601,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FOITH", mul( injection_history< Phase::OIL >, duration ) },
     { "FGITH", mul( injection_history< Phase::GAS >, duration ) },
 
-    { "FWCT", div( prodrate< rt::wat >,
-                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
-    { "FGOR", div( prodrate< rt::gas >, prodrate< rt::oil > ) },
-    { "FGLR", div( prodrate< rt::gas >,
-                   sum( prodrate< rt::wat >, prodrate< rt::oil > ) ) },
+    { "FWCT", div( rate< rt::wat, producer >,
+                   sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
+    { "FGOR", div( rate< rt::gas, producer >, rate< rt::oil, producer > ) },
+    { "FGLR", div( rate< rt::gas, producer >,
+                   sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
     { "FWCTH", div( production_history< Phase::WATER >,
                     sum( production_history< Phase::WATER >,
                          production_history< Phase::OIL > ) ) },
@@ -615,6 +614,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FGLRH", div( production_history< Phase::GAS >,
                     sum( production_history< Phase::WATER >,
                          production_history< Phase::OIL > ) ) },
+    { "FMWIN", flowing< injector > },
+    { "FMWPR", flowing< producer > },
 
     /* Region properties */
     { "RPR" , rpr},
@@ -622,12 +623,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROIPL" , roipl},
     { "ROIPG" , roipg},
     { "RGIP"  , rgip},
-    { "ROPR"  , region_production<rt::oil>},
-    { "RGPR"  , region_production<rt::gas>},
-    { "RWPR"  , region_production<rt::wat>},
-    { "ROPT"  , mul( region_production<rt::oil>, duration )},
-    { "RGPT"  , mul( region_production<rt::gas>, duration )},
-    { "RWPT"  , mul( region_production<rt::wat>, duration )},
+    { "ROPR"  , region_rate< rt::oil, producer > },
+    { "RGPR"  , region_rate< rt::gas, producer > },
+    { "RWPR"  , region_rate< rt::wat, producer > },
+    { "ROPT"  , mul( region_rate< rt::oil, producer >, duration ) },
+    { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
+    { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
 };
 
 
