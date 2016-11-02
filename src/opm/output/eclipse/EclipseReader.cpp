@@ -31,7 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
@@ -206,10 +205,10 @@ init_from_restart_file( const EclipseState& es, int numcells ) {
     const auto& sched_wells = es.getSchedule().getWells( restart_step );
 
     std::vector< rt > phases;
-    const auto& tm = es.getTableManager();
-    if( tm.hasPhase( Phase::PhaseEnum::WATER ) ) phases.push_back( rt::wat );
-    if( tm.hasPhase( Phase::PhaseEnum::OIL ) )   phases.push_back( rt::oil );
-    if( tm.hasPhase( Phase::PhaseEnum::GAS ) )   phases.push_back( rt::gas );
+    const auto& phase = es.runspec().phases();
+    if( phase.active( Phase::WATER ) ) phases.push_back( rt::wat );
+    if( phase.active( Phase::OIL ) )   phases.push_back( rt::oil );
+    if( phase.active( Phase::GAS ) )   phases.push_back( rt::gas );
 
     using ft = ERT::ert_unique_ptr< ecl_file_type, ecl_file_close >;
     ft file( ecl_file_open( filename.c_str(), 0 ) );
