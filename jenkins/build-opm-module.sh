@@ -83,7 +83,12 @@ function build_module {
   test $? -eq 0 || exit 1
   if test $2 -eq 1
   then
-    cmake --build .
+    if [ ! -z $BUILDTHREADS ]
+    then
+      cmake --build . -- -j$BUILDTHREADS
+    else
+      cmake --build .
+    fi
     test $? -eq 0 || exit 2
     ctest -T Test --no-compress-output
 
@@ -96,7 +101,12 @@ function build_module {
       sed -e "s/classname=\"TestSuite\"/classname=\"${configuration}\"/g" testoutput.xml > $WORKSPACE/$configuration/testoutput.xml
     fi
   else
-    cmake --build . --target install
+    if [ ! -z $BUILDTHREADS ]
+    then
+      cmake --build . --target install -- -j$BUILDTHREADS
+    else
+      cmake --build . --target install
+    fi
   fi
 }
 
@@ -173,7 +183,13 @@ function build_downstreams {
     # Installation for downstream
     pushd .
     cd $WORKSPACE/$configuration/build-$downstream
-    cmake --build . --target install
+
+    if [ ! -z $BUILDTHREADS ]
+    then
+      cmake --build . --target install -- -j$BUILDTHREADS
+    else
+      cmake --build . --target install
+    fi
     popd
     egrep_cmd="$egrep_cmd $WORKSPACE/$configuration/build-$downstream/testoutput.xml"
   done
