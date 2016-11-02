@@ -138,7 +138,12 @@ if (ERT_FOUND AND Boost_FOUND AND
     ${ERT_LIBRARIES})
 
   # We might be using an external cJSON library
+  # but we have to unset the OPM_PARSER_ROOT stuff to find it
+  # (other NO_DEFAULT_PATH will be set).
+  set(_OPM_PARSER_ROOT_bak ${OPM_PARSER_ROOT})
+  set(OPM_PARSER_ROOT "")
   find_package(cjson)
+  set(OPM_PARSER_ROOT ${OPM_PARSER_ROOT_bak})
 
   if (CJSON_FOUND)
     # If we do we need to add it to the libs.
