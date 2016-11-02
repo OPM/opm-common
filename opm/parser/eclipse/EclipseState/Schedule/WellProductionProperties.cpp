@@ -39,7 +39,7 @@ namespace Opm {
     {}
 
 
-    WellProductionProperties WellProductionProperties::history(double BHPLimit, const DeckRecord& record)
+    WellProductionProperties WellProductionProperties::history(double BHPLimit, const DeckRecord& record, const Phases &phases)
     {
         // Modes supported in WCONHIST just from {O,W,G}RAT values
         //
@@ -50,8 +50,16 @@ namespace Opm {
         p.predictionMode = false;
 
         namespace wp = WellProducer;
-        for( auto cmode : { wp::ORAT, wp::WRAT, wp::GRAT,
-                            wp::LRAT, wp::RESV, wp::GRUP } ) {
+        if(phases.active(Phase::OIL))
+            p.addProductionControl( wp::ORAT );
+
+        if(phases.active(Phase::WATER))
+            p.addProductionControl( wp::WRAT );
+
+        if(phases.active(Phase::GAS))
+            p.addProductionControl( wp::GRAT );
+
+        for( auto cmode : { wp::LRAT, wp::RESV, wp::GRUP } ) {
             p.addProductionControl( cmode );
         }
 
