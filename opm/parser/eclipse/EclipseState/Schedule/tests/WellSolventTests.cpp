@@ -140,14 +140,14 @@ static Deck createDeckWithWaterInjector() {
 BOOST_AUTO_TEST_CASE(TestNoSolvent) {
     auto deck = createDeckWithOutSolvent();
     EclipseGrid grid(10,10,10);
-    Schedule schedule(ParseContext() , grid , deck );
+    Schedule schedule(ParseContext() , grid , deck, Phases(true, true, true) );
     BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
 }
 
 BOOST_AUTO_TEST_CASE(TestGasInjector) {
     auto deck = createDeckWithGasInjector();
     EclipseGrid grid(10,10,10);
-    Schedule schedule(ParseContext(), grid , deck );
+    Schedule schedule(ParseContext(), grid , deck, Phases(true, true, true) );
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 
 }
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(TestGasInjector) {
 BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     auto deck = createDeckWithDynamicWSOLVENT();
     EclipseGrid grid(10,10,10);
-    Schedule schedule(ParseContext() , grid , deck );
+    Schedule schedule(ParseContext() , grid , deck, Phases(true, true, true) );
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
     const auto& keyword = deck.getKeyword("WSOLVENT");
     BOOST_CHECK_EQUAL(keyword.size(),1);
@@ -172,11 +172,11 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
 BOOST_AUTO_TEST_CASE(TestOilInjector) {
     auto deck = createDeckWithOilInjector();
     EclipseGrid grid(10,10,10);
-    BOOST_CHECK_THROW (Schedule(ParseContext() , grid , deck ), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(ParseContext() , grid , deck, Phases(true, true, true) ), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(TestWaterInjector) {
     auto deck = createDeckWithWaterInjector();
     EclipseGrid grid(10,10,10);
-    BOOST_CHECK_THROW (Schedule(ParseContext(), grid , deck ), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(ParseContext(), grid , deck, Phases(true, true, true) ), std::invalid_argument);
 }

@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm
@@ -52,7 +53,7 @@ namespace Opm
     class Schedule {
     public:
         Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
-                 const Deck& deck );
+                 const Deck& deck, const Phases &phases );
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
@@ -101,6 +102,7 @@ namespace Opm
         DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
         Tuning m_tuning;
         MessageLimits m_messageLimits;
+        Phases m_phases;
 
         MessageContainer m_messages;
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;

@@ -22,7 +22,7 @@ extern "C" {
 
 
     Opm::Schedule * schedule_alloc(Opm::ParseContext * context, Opm::EclipseGrid * grid, Opm::Deck * deck) {
-        return new Opm::Schedule( *context , *grid, *deck );
+        return new Opm::Schedule( *context , *grid, *deck, Opm::Runspec(*deck).phases() );
     }
 
     void schedule_free( Opm::Schedule * schedule  ) {

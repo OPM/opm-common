@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     Opm::ParseContext parseContext;
     auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
-    Opm::Schedule schedule(parseContext , grid, deck );
+    Opm::Schedule schedule(parseContext , grid, deck, Opm::Phases(true, true, true) );
 
     const auto& group1 = schedule.getGroup("PRODUC");
     BOOST_CHECK_EQUAL(group1.getGroupEfficiencyFactor(0), 0.85);
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     Opm::ParseContext parseContext;
     auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
-    Opm::Schedule schedule(parseContext , grid, deck );
+    Opm::Schedule schedule(parseContext , grid, deck, Opm::Phases(true, true, true) );
     const auto* currentWell = schedule.getWell("B-37T2");
     const Opm::WellProductionProperties& wellProductionProperties = currentWell->getProductionProperties(0);
     BOOST_CHECK_EQUAL(wellProductionProperties.controlMode, Opm::WellProducer::ControlModeEnum::GRUP);

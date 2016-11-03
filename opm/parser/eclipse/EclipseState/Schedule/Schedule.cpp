@@ -68,14 +68,16 @@ namespace Opm {
 
     Schedule::Schedule( const ParseContext& parseContext,
                         const EclipseGrid& grid,
-                        const Deck& deck ) :
+                        const Deck& deck,
+                        const Phases &phases ) :
         m_timeMap( std::make_shared< TimeMap>( deck )),
         m_rootGroupTree( *m_timeMap, GroupTree{} ),
         m_oilvaporizationproperties( *m_timeMap, OilVaporizationProperties{} ),
         m_events( *m_timeMap ),
         m_modifierDeck( *m_timeMap, nullptr ),
         m_tuning( *m_timeMap ),
-        m_messageLimits( *m_timeMap )
+        m_messageLimits( *m_timeMap ),
+        m_phases(phases)
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
@@ -440,10 +442,10 @@ namespace Opm {
                 if (isPredictionMode) {
                     auto addGrupProductionControl = well->isAvailableForGroupControl(currentStep);
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
- 		} else {
+                } else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
                     double BHPLimit = prev_properties.BHPLimit;
-                    properties = WellProductionProperties::history( BHPLimit , record);
+                    properties = WellProductionProperties::history( BHPLimit , record, m_phases);
                 }
 
                 if (status != WellCommon::SHUT) {
