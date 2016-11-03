@@ -340,6 +340,7 @@ CHECK_CXX_SOURCE_COMPILES("
      return 0;
    }
 " HAVE_VARIADIC_TEMPLATES
+)
 
 # SFINAE on variadic template constructors within template classes
 CHECK_CXX_SOURCE_COMPILES("
