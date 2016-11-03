@@ -80,17 +80,18 @@ if(CMAKE_VERSION VERSION_LESS 3.1)
   else (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
     set (CXX_SPACE)
   endif (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
+endif()
 
-  if(NOT CMAKE_VERSION VERSION_LESS 3.1)
-    # Workaround bug in cmake:
-    # cxx standard flags are not applied in CheckCXXSourceCompiles
-    if (CMAKE_CXX_STANDARD EQUAL 14)
-      add_options(CXX ALL_BUILDS ${CMAKE_CXX14_STANDARD_COMPILE_OPTION})
-    else()
-      add_options(CXX ALL_BUILDS ${CMAKE_CXX11_STANDARD_COMPILE_OPTION})
-    endif()
+if(NOT CMAKE_VERSION VERSION_LESS 3.1)
+  # Workaround bug in cmake:
+  # cxx standard flags are not applied in CheckCXXSourceCompiles
+  if (CMAKE_CXX_STANDARD EQUAL 14)
+    add_options(CXX ALL_BUILDS ${CMAKE_CXX14_STANDARD_COMPILE_OPTION})
+  else()
+    add_options(CXX ALL_BUILDS ${CMAKE_CXX11_STANDARD_COMPILE_OPTION})
   endif()
 endif()
+
 
 # perform tests
 include(CheckCXXSourceCompiles)
