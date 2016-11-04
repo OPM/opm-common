@@ -28,7 +28,6 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
@@ -167,7 +166,6 @@ namespace Opm {
 
         // WELSPECS data - assumes this is not dynamic
 
-        TimeMap m_timeMap;
         int m_headI;
         int m_headJ;
         mutable Value<double> m_refDepth;
@@ -180,6 +178,7 @@ namespace Opm {
         // WELSEGS DATA - for mutli-segment wells
         // flag indicating if the well is a multi-segment well
         DynamicState< SegmentSet > m_segmentset;
+        size_t timesteps;
     };
 }
 

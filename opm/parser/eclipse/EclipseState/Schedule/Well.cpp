@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
@@ -54,7 +55,6 @@ namespace Opm {
           m_groupName( timeMap, "" ),
           m_rft( timeMap, false ),
           m_plt( timeMap, false ),
-          m_timeMap( timeMap ),
           m_headI(headI),
           m_headJ(headJ),
           m_refDepth(refDepth),
@@ -62,7 +62,8 @@ namespace Opm {
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
           m_automaticShutIn(automaticShutIn),
-          m_segmentset( timeMap, SegmentSet{} )
+          m_segmentset( timeMap, SegmentSet{} ),
+          timesteps( timeMap.numTimesteps() )
     {}
 
     const std::string& Well::name() const {
@@ -273,7 +274,7 @@ namespace Opm {
                 break;
             } else {
                 timeStep++;
-                if (timeStep >= m_timeMap.size())
+                if( timeStep > this->timesteps )
                     throw std::invalid_argument("No completions defined for well: " + name() + " can not infer reference depth");
             }
         }
@@ -359,8 +360,7 @@ namespace Opm {
 
 
     int Well::findWellFirstOpen(int startTimeStep) const{
-        int numberOfTimeSteps = m_timeMap.numTimesteps();
-        for(int i = startTimeStep; i < numberOfTimeSteps;i++){
+        for( size_t i = startTimeStep; i < this->timesteps ;i++){
             if(getStatus(i)==WellCommon::StatusEnum::OPEN){
                 return i;
             }
