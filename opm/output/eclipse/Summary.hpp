@@ -39,6 +39,7 @@ namespace Opm {
     class EclipseState;
     class Schedule;
     class SummaryConfig;
+    class EclipseGrid;
 
 namespace out {
 
@@ -46,13 +47,12 @@ namespace out {
 
 class Summary {
     public:
-        Summary( const EclipseState&, const SummaryConfig& );
-        Summary( const EclipseState&, const SummaryConfig&, const std::string& );
-        Summary( const EclipseState&, const SummaryConfig&, const char* basename );
+        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid& );
+        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&,  const std::string& );
+        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&,  const char* basename );
 
         void add_timestep( int report_step,
                            double secs_elapsed,
-                           const EclipseGrid& grid,
                            const EclipseState& es,
                            const RegionCache& regionCache,
                            const data::Wells&,
@@ -64,6 +64,7 @@ class Summary {
     private:
         class keyword_handlers;
 
+        const EclipseGrid& grid;
         ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > ecl_sum;
         std::unique_ptr< keyword_handlers > handlers;
         const ecl_sum_tstep_type* prev_tstep = nullptr;

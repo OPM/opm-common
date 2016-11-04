@@ -420,7 +420,7 @@ EclipseWriter::Impl::Impl( const EclipseState& eclipseState,
     , regionCache( es , grid )
     , outputDir( eclipseState.getIOConfig().getOutputDir() )
     , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
-    , summary( eclipseState, eclipseState.getSummaryConfig() )
+    , summary( eclipseState, eclipseState.getSummaryConfig() , grid )
     , rft( outputDir.c_str(), baseName.c_str(), es.getIOConfig().getFMTOUT() )
     , sim_start_time( es.getSchedule().posixStartTime() )
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
@@ -804,7 +804,6 @@ void EclipseWriter::writeTimeStep(int report_step,
 
     this->impl->summary.add_timestep( report_step,
                                       secs_elapsed,
-                                      this->impl->grid,
                                       this->impl->es,
                                       this->impl->regionCache,
                                       wells ,

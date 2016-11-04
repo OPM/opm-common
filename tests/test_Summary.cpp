@@ -229,10 +229,10 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     util_make_path( "PATH" );
     cfg.name = "PATH/CASE";
 
-    out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 1, 1 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 2, 2 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    out::Summary writer( cfg.es, cfg.config, cfg.grid , cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -365,10 +365,10 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
 BOOST_AUTO_TEST_CASE(group_keywords) {
     setup cfg( "test_Summary_group" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 1, 1 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 2, 2 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -454,10 +454,10 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
 BOOST_AUTO_TEST_CASE(completion_kewords) {
     setup cfg( "test_Summary_completion" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 1, 1 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 2, 2 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -507,10 +507,10 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
 BOOST_AUTO_TEST_CASE(field_keywords) {
     setup cfg( "test_Summary_field" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 1, 1 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 2, 2 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -591,10 +591,10 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
 BOOST_AUTO_TEST_CASE(report_steps_time) {
     setup cfg( "test_Summary_report_steps_time" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 1, 2 *  day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 1, 5 *  day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 2, 10 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 10 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -613,10 +613,10 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
 BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     setup cfg( "test_Summary_skip_unknown_var" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 1, 2 *  day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 1, 5 *  day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 2, 10 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 10 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -633,10 +633,10 @@ BOOST_AUTO_TEST_CASE(region_vars) {
     setup cfg( "region_vars" );
 
     {
-        out::Summary writer( cfg.es, cfg.config, cfg.name );
-        writer.add_timestep( 1, 2 *  day, cfg.grid , cfg.es, cfg.regionCache, cfg.wells, cfg.solution);
-        writer.add_timestep( 1, 5 *  day, cfg.grid , cfg.es, cfg.regionCache, cfg.wells, cfg.solution);
-        writer.add_timestep( 2, 10 * day, cfg.grid , cfg.es, cfg.regionCache, cfg.wells, cfg.solution);
+        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.regionCache, cfg.wells, cfg.solution);
+        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.regionCache, cfg.wells, cfg.solution);
+        writer.add_timestep( 2, 10 * day, cfg.es, cfg.regionCache, cfg.wells, cfg.solution);
         writer.write();
     }
 
@@ -670,10 +670,10 @@ BOOST_AUTO_TEST_CASE(region_production) {
     setup cfg( "region_production" );
 
     {
-        out::Summary writer( cfg.es, cfg.config, cfg.name );
-        writer.add_timestep( 0, 0 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-        writer.add_timestep( 1, 1 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-        writer.add_timestep( 2, 2 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+        writer.add_timestep( 0, 0 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+        writer.add_timestep( 1, 1 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+        writer.add_timestep( 2, 2 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
         writer.write();
     }
 

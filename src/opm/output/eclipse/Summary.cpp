@@ -34,6 +34,8 @@
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
+#include <ert/ecl/ecl_smspec.h>
+
 /*
  * This class takes simulator state and parser-provided information and
  * orchestrates ert to write simulation results as requested by the SUMMARY
@@ -205,10 +207,6 @@ inline quantity flowing( const fn_args& args ) {
 template< rt phase, bool injection = true >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
-    // A negative value for num is used for the initial pass which
-    // only purpose is to determine the correct unit.
-    if (args.num < 0) return zero;
-
     // The args.num value is the literal value which will go to the
     // NUMS array in the eclispe SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
@@ -673,19 +671,24 @@ class Summary::keyword_handlers {
         std::vector< std::pair< smspec_node_type*, fn > > handlers;
 };
 
-Summary::Summary( const EclipseState& st, const SummaryConfig& sum ) :
-    Summary( st, sum, st.getIOConfig().fullBasePath().c_str() )
+Summary::Summary( const EclipseState& st,
+                  const SummaryConfig& sum ,
+                  const EclipseGrid& grid) :
+    Summary( st, sum, grid, st.getIOConfig().fullBasePath().c_str() )
 {}
 
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum,
+                  const EclipseGrid& grid,
                   const std::string& basename ) :
-    Summary( st, sum, basename.c_str() )
+    Summary( st, sum, grid, basename.c_str() )
 {}
 
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum,
+                  const EclipseGrid& grid_,
                   const char* basename ) :
+    grid( grid_ ),
     ecl_sum(
             ecl_sum_alloc_writer(
                 basename,
@@ -708,18 +711,25 @@ Summary::Summary( const EclipseState& st,
         const auto* keyword = node.keyword();
         if( funs.find( keyword ) == funs.end() ) continue;
 
+        if (node.type() == ECL_SMSPEC_COMPLETION_VAR) {
+            int global_index = node.num() - 1;
+            if (!this->grid.cellActive(global_index))
+                continue;
+        }
+
         /* get unit strings by calling each function with dummy input */
         const auto handle = funs.find( keyword )->second;
         const std::vector< const Well* > dummy_wells;
-        EclipseGrid dummy_grid(1,1,1);
+
         const fn_args no_args { dummy_wells, // Wells from Schedule object
                                 0,           // Duration of time step
                                 0,           // Timestep number
-                               -1,           // NUMS value for the summary output.
+                                node.num(),  // NUMS value for the summary output.
                                 {},          // Well results - data::Wells
                                 {},          // EclipseState
                                 {},          // Region <-> cell mappings.
-                                dummy_grid };
+                                this->grid };
+
         const auto val = handle( no_args );
         const auto* unit = st.getUnits().name( val.unit );
 
@@ -731,7 +741,6 @@ Summary::Summary( const EclipseState& st,
 
 void Summary::add_timestep( int report_step,
                             double secs_elapsed,
-                            const EclipseGrid& grid,
                             const EclipseState& es,
                             const RegionCache& regionCache,
                             const data::Wells& wells ,
@@ -748,7 +757,7 @@ void Summary::add_timestep( int report_step,
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
         const auto schedule_wells = find_wells( schedule, f.first, timestep );
-        const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCache , grid} );
+        const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCache , this->grid} );
 
         const auto unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         const auto res = smspec_node_is_total( f.first ) && prev_tstep
