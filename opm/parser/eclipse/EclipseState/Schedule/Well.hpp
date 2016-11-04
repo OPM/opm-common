@@ -26,10 +26,14 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
@@ -47,7 +51,7 @@ namespace Opm {
     public:
         Well(const std::string& name, int headI,
              int headJ, Value<double> refDepth , Phase preferredPhase,
-             std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep,
+             const TimeMap& timeMap, size_t creationTimeStep,
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
              bool allowCrossFlow = true, bool automaticShutIn = true);
         const std::string& name() const;
@@ -143,27 +147,27 @@ namespace Opm {
         size_t m_creationTimeStep;
         std::string m_name;
 
-        std::shared_ptr<DynamicState<WellCommon::StatusEnum> > m_status;
+        DynamicState< WellCommon::StatusEnum > m_status;
 
-        std::shared_ptr<DynamicState<int> > m_isAvailableForGroupControl;
-        std::shared_ptr<DynamicState<double> > m_guideRate;
-        std::shared_ptr<DynamicState<GuideRate::GuideRatePhaseEnum> > m_guideRatePhase;
-        std::shared_ptr<DynamicState<double> > m_guideRateScalingFactor;
+        DynamicState< int > m_isAvailableForGroupControl;
+        DynamicState< double > m_guideRate;
+        DynamicState< GuideRate::GuideRatePhaseEnum > m_guideRatePhase;
+        DynamicState< double > m_guideRateScalingFactor;
 
-        std::shared_ptr<DynamicState<int> > m_isProducer;
-        std::shared_ptr<DynamicState<std::shared_ptr< const CompletionSet >> > m_completions;
-        std::shared_ptr<DynamicState<WellProductionProperties> > m_productionProperties;
-        std::shared_ptr<DynamicState<WellInjectionProperties> > m_injectionProperties;
-        std::shared_ptr<DynamicState<WellPolymerProperties> > m_polymerProperties;
-        std::shared_ptr<DynamicState<WellEconProductionLimits> > m_econproductionlimits;
-        std::shared_ptr<DynamicState<double> > m_solventFraction;
-        std::shared_ptr<DynamicState<std::string> > m_groupName;
-        std::shared_ptr<DynamicState<int> > m_rft;
-        std::shared_ptr<DynamicState<int> > m_plt;
+        DynamicState< int > m_isProducer;
+        DynamicState< CompletionSet > m_completions;
+        DynamicState< WellProductionProperties > m_productionProperties;
+        DynamicState< WellInjectionProperties > m_injectionProperties;
+        DynamicState< WellPolymerProperties > m_polymerProperties;
+        DynamicState< WellEconProductionLimits > m_econproductionlimits;
+        DynamicState< double > m_solventFraction;
+        DynamicState< std::string > m_groupName;
+        DynamicState< int > m_rft;
+        DynamicState< int > m_plt;
 
         // WELSPECS data - assumes this is not dynamic
 
-        std::shared_ptr< const TimeMap > m_timeMap;
+        TimeMap m_timeMap;
         int m_headI;
         int m_headJ;
         mutable Value<double> m_refDepth;
@@ -175,7 +179,7 @@ namespace Opm {
         MessageContainer m_messages;
         // WELSEGS DATA - for mutli-segment wells
         // flag indicating if the well is a multi-segment well
-        std::shared_ptr<DynamicState< SegmentSet >> m_segmentset;
+        DynamicState< SegmentSet > m_segmentset;
     };
 }
 

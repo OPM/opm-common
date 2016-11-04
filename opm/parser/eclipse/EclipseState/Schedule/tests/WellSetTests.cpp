@@ -31,11 +31,11 @@
 
 using namespace Opm;
 
-static std::shared_ptr< Opm::TimeMap > createXDaysTimeMap(size_t numDays) {
+static TimeMap createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    auto timeMap = std::make_shared< Opm::TimeMap >(boost::posix_time::ptime(startDate));
+    TimeMap timeMap{ boost::posix_time::ptime(startDate) };
     for (size_t i = 0; i < numDays; i++)
-        timeMap->addTStep( boost::posix_time::hours( (i+1) * 24 ));
+        timeMap.addTStep( boost::posix_time::hours( (i+1) * 24 ));
     return timeMap;
 }
 

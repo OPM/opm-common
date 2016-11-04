@@ -34,24 +34,26 @@ namespace Opm {
 
     Well::Well(const std::string& name_, int headI,
                int headJ, Value<double> refDepth , Phase preferredPhase,
-               std::shared_ptr< const TimeMap > timeMap, size_t creationTimeStep,
+               const TimeMap& timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
-        : m_status(new DynamicState<WellCommon::StatusEnum>(*timeMap, WellCommon::SHUT)),
-          m_isAvailableForGroupControl(new DynamicState<int>(*timeMap, true)),
-          m_guideRate(new DynamicState<double>(*timeMap, -1.0)),
-          m_guideRatePhase(new DynamicState<GuideRate::GuideRatePhaseEnum>(*timeMap, GuideRate::UNDEFINED)),
-          m_guideRateScalingFactor(new DynamicState<double>(*timeMap, 1.0)),
-          m_isProducer(new DynamicState<int>(*timeMap, true)) ,
-          m_completions( new DynamicState< std::shared_ptr< const CompletionSet > >( *timeMap, std::make_shared< const CompletionSet >() ) ),
-          m_productionProperties( new DynamicState<WellProductionProperties>(*timeMap, WellProductionProperties() )),
-          m_injectionProperties( new DynamicState<WellInjectionProperties>(*timeMap, WellInjectionProperties() )),
-          m_polymerProperties( new DynamicState<WellPolymerProperties>(*timeMap, WellPolymerProperties() )),
-          m_econproductionlimits( new DynamicState<WellEconProductionLimits>(*timeMap, WellEconProductionLimits()) ),
-          m_solventFraction( new DynamicState<double>(*timeMap, 0.0 )),
-          m_groupName( new DynamicState<std::string>( *timeMap , "" )),
-          m_rft( new DynamicState<int>(*timeMap,false)),
-          m_plt( new DynamicState<int>(*timeMap,false)),
+        : m_creationTimeStep( creationTimeStep ),
+          m_name( name_ ),
+          m_status( timeMap, WellCommon::SHUT ),
+          m_isAvailableForGroupControl( timeMap, true ),
+          m_guideRate( timeMap, -1.0 ),
+          m_guideRatePhase( timeMap, GuideRate::UNDEFINED ),
+          m_guideRateScalingFactor( timeMap, 1.0 ),
+          m_isProducer( timeMap, true ) ,
+          m_completions( timeMap, CompletionSet{} ),
+          m_productionProperties( timeMap, WellProductionProperties() ),
+          m_injectionProperties( timeMap, WellInjectionProperties() ),
+          m_polymerProperties( timeMap, WellPolymerProperties() ),
+          m_econproductionlimits( timeMap, WellEconProductionLimits() ),
+          m_solventFraction( timeMap, 0.0 ),
+          m_groupName( timeMap, "" ),
+          m_rft( timeMap, false ),
+          m_plt( timeMap, false ),
           m_timeMap( timeMap ),
           m_headI(headI),
           m_headJ(headJ),
@@ -60,13 +62,8 @@ namespace Opm {
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
           m_automaticShutIn(automaticShutIn),
-          m_segmentset(new DynamicState< SegmentSet >(*timeMap, SegmentSet{} ) )
-    {
-        m_name = name_;
-        m_creationTimeStep = creationTimeStep;
-
-
-    }
+          m_segmentset( timeMap, SegmentSet{} )
+    {}
 
     const std::string& Well::name() const {
         return m_name;
@@ -123,64 +120,64 @@ namespace Opm {
         if (isInjector(timeStep))
             switchToProducer( timeStep );
 
-        m_isProducer->update(timeStep , true);
-        return m_productionProperties->update(timeStep, newProperties);
+        m_isProducer.update(timeStep , true);
+        return m_productionProperties.update(timeStep, newProperties);
     }
 
     WellProductionProperties Well::getProductionPropertiesCopy(size_t timeStep) const {
-        return m_productionProperties->get(timeStep);
+        return m_productionProperties.get(timeStep);
     }
 
     const WellProductionProperties& Well::getProductionProperties(size_t timeStep) const {
-        return m_productionProperties->at(timeStep);
+        return m_productionProperties.at(timeStep);
     }
 
     bool Well::setInjectionProperties(size_t timeStep , const WellInjectionProperties newProperties) {
         if (isProducer(timeStep))
             switchToInjector( timeStep );
 
-        m_isProducer->update(timeStep , false);
-        return m_injectionProperties->update(timeStep, newProperties);
+        m_isProducer.update(timeStep , false);
+        return m_injectionProperties.update(timeStep, newProperties);
     }
 
     WellInjectionProperties Well::getInjectionPropertiesCopy(size_t timeStep) const {
-        return m_injectionProperties->get(timeStep);
+        return m_injectionProperties.get(timeStep);
     }
 
     const WellInjectionProperties& Well::getInjectionProperties(size_t timeStep) const {
-        return m_injectionProperties->at(timeStep);
+        return m_injectionProperties.at(timeStep);
     }
 
     bool Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties newProperties) {
-        m_isProducer->update(timeStep , false);
-        return m_polymerProperties->update(timeStep, newProperties);
+        m_isProducer.update(timeStep , false);
+        return m_polymerProperties.update(timeStep, newProperties);
     }
 
     WellPolymerProperties Well::getPolymerPropertiesCopy(size_t timeStep) const {
-        return m_polymerProperties->get(timeStep);
+        return m_polymerProperties.get(timeStep);
     }
 
     const WellPolymerProperties& Well::getPolymerProperties(size_t timeStep) const {
-        return m_polymerProperties->at(timeStep);
+        return m_polymerProperties.at(timeStep);
     }
 
     bool Well::setSolventFraction(size_t timeStep , const double fraction) {
-        m_isProducer->update(timeStep , false);
-        return m_solventFraction->update(timeStep, fraction);
+        m_isProducer.update(timeStep , false);
+        return m_solventFraction.update(timeStep, fraction);
     }
 
     bool Well::setEconProductionLimits(const size_t timeStep, const WellEconProductionLimits& productionlimits) {
         // not sure if this keyword turning a well to be producer.
         // not sure what will happen if we use this keyword to a injector.
-        return m_econproductionlimits->update(timeStep, productionlimits);
+        return m_econproductionlimits.update(timeStep, productionlimits);
     }
 
     const WellEconProductionLimits& Well::getEconProductionLimits(const size_t timeStep) const {
-        return m_econproductionlimits->at(timeStep);
+        return m_econproductionlimits.at(timeStep);
     }
 
     const double& Well::getSolventFraction(size_t timeStep) const {
-        return m_solventFraction->at(timeStep);
+        return m_solventFraction.at(timeStep);
     }
 
     bool Well::hasBeenDefined(size_t timeStep) const {
@@ -191,7 +188,7 @@ namespace Opm {
     }
 
     WellCommon::StatusEnum Well::getStatus(size_t timeStep) const {
-        return m_status->get( timeStep );
+        return m_status.get( timeStep );
     }
 
     bool Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
@@ -199,14 +196,14 @@ namespace Opm {
             m_messages.note("When handling keyword for well " + name() + ": Cannot open a well where all completions are shut");
             return false;
         } else
-            return m_status->update( timeStep , status );
+            return m_status.update( timeStep , status );
     }
 
     const MessageContainer& Well::getMessageContainer() const {
         return m_messages;
     }
     bool Well::isProducer(size_t timeStep) const {
-        return bool( m_isProducer->get(timeStep) );
+        return bool( m_isProducer.get(timeStep) );
     }
 
     bool Well::isInjector(size_t timeStep) const {
@@ -214,35 +211,35 @@ namespace Opm {
     }
 
     bool Well::isAvailableForGroupControl(size_t timeStep) const {
-        return m_isAvailableForGroupControl->get(timeStep);
+        return m_isAvailableForGroupControl.get(timeStep);
     }
 
     void Well::setAvailableForGroupControl(size_t timeStep, bool isAvailableForGroupControl_) {
-        m_isAvailableForGroupControl->update(timeStep, isAvailableForGroupControl_);
+        m_isAvailableForGroupControl.update(timeStep, isAvailableForGroupControl_);
     }
 
     double Well::getGuideRate(size_t timeStep) const {
-        return m_guideRate->get(timeStep);
+        return m_guideRate.get(timeStep);
     }
 
     void Well::setGuideRate(size_t timeStep, double guideRate) {
-        m_guideRate->update(timeStep, guideRate);
+        m_guideRate.update(timeStep, guideRate);
     }
 
     GuideRate::GuideRatePhaseEnum Well::getGuideRatePhase(size_t timeStep) const {
-        return m_guideRatePhase->get(timeStep);
+        return m_guideRatePhase.get(timeStep);
     }
 
     void Well::setGuideRatePhase(size_t timeStep, GuideRate::GuideRatePhaseEnum phase) {
-        m_guideRatePhase->update(timeStep, phase);
+        m_guideRatePhase.update(timeStep, phase);
     }
 
     double Well::getGuideRateScalingFactor(size_t timeStep) const {
-        return m_guideRateScalingFactor->get(timeStep);
+        return m_guideRateScalingFactor.get(timeStep);
     }
 
     void Well::setGuideRateScalingFactor(size_t timeStep, double scalingFactor) {
-        m_guideRateScalingFactor->update(timeStep, scalingFactor);
+        m_guideRateScalingFactor.update(timeStep, scalingFactor);
     }
 
     /*****************************************************************/
@@ -276,7 +273,7 @@ namespace Opm {
                 break;
             } else {
                 timeStep++;
-                if (timeStep >= m_timeMap->size())
+                if (timeStep >= m_timeMap.size())
                     throw std::invalid_argument("No completions defined for well: " + name() + " can not infer reference depth");
             }
         }
@@ -288,11 +285,11 @@ namespace Opm {
     }
 
     const CompletionSet& Well::getCompletions(size_t timeStep) const {
-        return *m_completions->get( timeStep );
+        return m_completions.get( timeStep );
     }
 
     const CompletionSet& Well::getCompletions() const {
-        return *m_completions->back();
+        return m_completions.back();
     }
 
     void Well::addCompletions(size_t time_step, std::vector< Completion > newCompletions ) {
@@ -311,41 +308,41 @@ namespace Opm {
             new_set.orderCompletions(m_headI, m_headJ);
         }
 
-        m_completions->update( time_step, std::make_shared< CompletionSet >( std::move( new_set ) ) );
+        m_completions.update( time_step, std::move( new_set ) );
     }
 
     const std::string Well::getGroupName(size_t time_step) const {
-        return m_groupName->get(time_step);
+        return m_groupName.get(time_step);
     }
 
 
     void Well::setGroupName(size_t time_step, const std::string& groupName ) {
-        m_groupName->update(time_step , groupName);
+        m_groupName.update(time_step , groupName);
     }
 
 
 
     void Well::setRFTActive(size_t time_step, bool value){
-        m_rft->update(time_step, value);
+        m_rft.update(time_step, value);
     }
 
     bool Well::getRFTActive(size_t time_step) const{
-        return bool( m_rft->get(time_step) );
+        return bool( m_rft.get(time_step) );
     }
 
     bool Well::getPLTActive(size_t time_step) const{
-     return bool( m_plt->get(time_step) );
+     return bool( m_plt.get(time_step) );
     }
     void Well::setPLTActive(size_t time_step, bool value){
-        m_plt->update(time_step, value);
+        m_plt.update(time_step, value);
     }
 
     /*
       The first report step where *either* RFT or PLT output is active.
     */
     int Well::firstRFTOutput( ) const {
-        int rft_output = m_rft->find( true );
-        int plt_output = m_plt->find( true );
+        int rft_output = m_rft.find( true );
+        int plt_output = m_plt.find( true );
 
         if (rft_output < plt_output) {
             if (rft_output >= 0)
@@ -362,7 +359,7 @@ namespace Opm {
 
 
     int Well::findWellFirstOpen(int startTimeStep) const{
-        int numberOfTimeSteps = m_timeMap->numTimesteps();
+        int numberOfTimeSteps = m_timeMap.numTimesteps();
         for(int i = startTimeStep; i < numberOfTimeSteps;i++){
             if(getStatus(i)==WellCommon::StatusEnum::OPEN){
                 return i;
@@ -419,7 +416,7 @@ namespace Opm {
 
 
     const SegmentSet& Well::getSegmentSet(size_t time_step) const {
-        return m_segmentset->get(time_step);
+        return m_segmentset.get(time_step);
     }
 
     bool Well::isMultiSegment(size_t time_step) const {
@@ -450,6 +447,6 @@ namespace Opm {
         } else {
             throw std::logic_error(" unknown length_depth_type in the new_segmentset");
         }
-        m_segmentset->update(time_step, new_segmentset);
+        m_segmentset.update(time_step, new_segmentset);
     }
 }

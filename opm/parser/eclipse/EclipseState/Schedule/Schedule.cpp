@@ -1382,7 +1382,7 @@ namespace Opm {
             automaticShutIn = false;
         }
 
-        auto well = std::make_shared<Well>(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep,
+        auto well = std::make_shared<Well>(wellName, headI, headJ, refDepth, preferredPhase, *m_timeMap , timeStep,
                                            wellCompletionOrder, allowCrossFlow, automaticShutIn);
         m_wells.insert( wellName  , well);
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );

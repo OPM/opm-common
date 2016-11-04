@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
 
 BOOST_AUTO_TEST_CASE(GroupAddWell) {
 
-    auto timeMap = std::make_shared< Opm::TimeMap >( createXDaysTimeMap( 10 ) );
-    Opm::Group group("G1" , *timeMap , 0);
+    auto timeMap = createXDaysTimeMap( 10 );
+    Opm::Group group("G1" , timeMap , 0);
     auto well1 = std::make_shared< Well >("WELL1", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
     auto well2 = std::make_shared< Well >("WELL2", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
 
@@ -194,8 +194,8 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
 
 BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 
-    auto timeMap = std::make_shared< Opm::TimeMap >( createXDaysTimeMap( 10 ) );
-    Opm::Group group("G1" , *timeMap , 0);
+    auto timeMap = createXDaysTimeMap( 10 );
+    Opm::Group group("G1" , timeMap , 0);
     auto well1 = std::make_shared< Well >("WELL1", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
     auto well2 = std::make_shared< Well >("WELL2", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
 
@@ -230,8 +230,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 }
 
 BOOST_AUTO_TEST_CASE(getWells) {
-    auto timeMap = std::make_shared< Opm::TimeMap >( createXDaysTimeMap( 10 ) );
-    Opm::Group group("G1" , *timeMap , 0);
+    auto timeMap = createXDaysTimeMap( 10 );
+    Opm::Group group("G1" , timeMap , 0);
     auto well1 = std::make_shared< Well >("WELL1", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
     auto well2 = std::make_shared< Well >("WELL2", 0, 0, Opm::Value<double>("REF_DEPTH"), Opm::Phase::OIL, timeMap, 0);
 
