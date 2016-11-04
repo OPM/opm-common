@@ -49,9 +49,9 @@ if(NOT CMAKE_CXX_STANDARD)
 
       if(${_FLAG})
         if(CMAKE_VERSION VERSION_LESS 3.1)
-          add_options (CXX ALL_BUILDS "-std=${_flag}")
+          add_options (CXX ALL_BUILDS "-std=c++${_flag}")
         endif()
-        set(CXX_STD0X_FLAGS "-std=${_flag}")
+        set(CXX_STD0X_FLAGS "-std=c++${_flag}")
         #Use vriables for CMake > 3.1 set the standard with no extensions
         set(CMAKE_CXX_STANDARD ${_flag})
         break()
