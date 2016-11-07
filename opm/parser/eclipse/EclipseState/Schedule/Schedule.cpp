@@ -278,12 +278,10 @@ namespace Opm {
 
 
     bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const {
-        bool treeUpdated = false;
-        if (!newTree.getNode(groupName)) {
-            treeUpdated = true;
-            newTree.updateTree(groupName);
-        }
-        return treeUpdated;
+        if( newTree.exists( groupName ) ) return false;
+
+        newTree.update( groupName );
+        return true;
     }
 
     void Schedule::handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword) {
@@ -1269,7 +1267,7 @@ namespace Opm {
         for( const auto& record : keyword ) {
             const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
             const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
-            newTree.updateTree(childName, parentName);
+            newTree.update(childName, parentName);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep );

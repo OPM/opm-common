@@ -85,7 +85,6 @@ EclipseState/Schedule/Group.cpp
 EclipseState/Schedule/Completion.cpp
 EclipseState/Schedule/CompletionSet.cpp
 EclipseState/Schedule/ScheduleEnums.cpp 
-EclipseState/Schedule/GroupTreeNode.cpp
 EclipseState/Schedule/GroupTree.cpp
 EclipseState/Schedule/Tuning.cpp
 EclipseState/Schedule/Events.cpp
@@ -187,7 +186,6 @@ EclipseState/Schedule/DynamicVector.hpp
 EclipseState/Schedule/Completion.hpp
 EclipseState/Schedule/CompletionSet.hpp
 EclipseState/Schedule/ScheduleEnums.hpp
-EclipseState/Schedule/GroupTreeNode.hpp 
 EclipseState/Schedule/GroupTree.hpp
 EclipseState/Schedule/Tuning.hpp
 EclipseState/Schedule/Events.hpp
