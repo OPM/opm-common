@@ -27,7 +27,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -674,11 +673,14 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     if( type == ECL_SMSPEC_GROUP_VAR ) {
         if( !schedule.hasGroup( name ) ) return {};
 
-        const auto& group = schedule.getGroup( name );
+        const auto& names = schedule.getGroup( name ).getWells( timestep );
+        auto get = [&schedule]( const std::string& w ) {
+            return schedule.getWell( w );
+        };
 
         std::vector< const Well* > wells;
-        for( const auto& pair : group.getWells( timestep ) )
-            wells.push_back( pair.second );
+        auto insert = std::back_inserter( wells );
+        std::transform( names.begin(), names.end(), insert, get );
 
         return wells;
     }
