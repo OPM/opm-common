@@ -429,7 +429,7 @@ WMCTL
 
 -- Water injection per connection
 CWIR
-'W_3' /
+  * /
 /
 
 -- Gas injection on 3 1 1 (45)

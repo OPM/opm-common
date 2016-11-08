@@ -704,3 +704,29 @@ BOOST_AUTO_TEST_CASE(region_production) {
                       ecl_sum_get_general_var( resp , 2 , "CGPT:W_3:3"), 1e-5);
 }
 
+BOOST_AUTO_TEST_CASE(region_injection) {
+    setup cfg( "region_injection" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RWIR:1"));
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var( resp , 1 , "RWIR:1" ) ,
+                      ecl_sum_get_general_var( resp , 1 , "CWIR:W_1:1") +
+                      ecl_sum_get_general_var( resp , 1 , "CWIR:W_2:2") +
+                      ecl_sum_get_general_var( resp , 1 , "CWIR:W_3:3"), 1e-5);
+
+
+
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RGIT:1"));
+    BOOST_CHECK_CLOSE(ecl_sum_get_general_var( resp , 2 , "RGIT:1" ) ,
+                      ecl_sum_get_general_var( resp , 2 , "CGIT:W_1:1") +
+                      ecl_sum_get_general_var( resp , 2 , "CGIT:W_2:2") +
+                      ecl_sum_get_general_var( resp , 2 , "CGIT:W_3:3"), 1e-5);
+}
