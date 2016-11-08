@@ -20,4 +20,6 @@ set (opm-material_DEPS
 	"opm-common REQUIRED"
 	# DUNE dependency
 	"dune-common REQUIRED"
+	# valgrind client requests
+	"Valgrind"
 	)
