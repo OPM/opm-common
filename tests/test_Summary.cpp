@@ -598,6 +598,10 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
 
     BOOST_CHECK_EQUAL( 1, ecl_sum_get_field_var( resp, 1, "FMWIN" ) );
     BOOST_CHECK_EQUAL( 2, ecl_sum_get_field_var( resp, 1, "FMWPR" ) );
+
+    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    const double fpr = units.from_si( UnitSystem::measure::pressure, 5.5 );
+    BOOST_CHECK_CLOSE( fpr, ecl_sum_get_field_var( resp, 1, "FPR" ), 1e-5 );
 }
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {

@@ -354,6 +354,16 @@ quantity region_sum( const fn_args& args , const std::string& keyword , UnitSyst
     return { sum , unit };
 }
 
+quantity fpr( const fn_args& args ) {
+    if( !args.state.has( "PRESSURE" ) )
+        return { 0.0, measure::pressure };
+
+    const auto& p = args.state.data( "PRESSURE" );
+    const auto& total = std::accumulate( p.begin(), p.end(), 0.0 );
+    const auto size = std::max( p.size(), size_t( 1 ) );
+
+    return { total / size, measure::pressure };
+}
 
 quantity rpr(const fn_args& args) {
     quantity p = region_sum( args , "PRESSURE" ,measure::pressure );
@@ -624,6 +634,7 @@ static const std::unordered_map< std::string, ofun > funs = {
                          production_history< Phase::OIL > ) ) },
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
+    { "FPR",   fpr },
 
     /* Region properties */
     { "RPR" , rpr},
