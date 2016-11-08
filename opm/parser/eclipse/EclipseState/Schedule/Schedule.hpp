@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -48,7 +49,6 @@ namespace Opm
     class SCHEDULESection;
     class TimeMap;
     class UnitSystem;
-    class Well;
 
     class Schedule {
     public:
@@ -94,7 +94,7 @@ namespace Opm
 
     private:
         TimeMap m_timeMap;
-        OrderedMap<std::shared_ptr< Well >> m_wells;
+        OrderedMap< Well > m_wells;
         std::map<std::string, Group > m_groups;
         DynamicState< GroupTree > m_rootGroupTree;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;

@@ -122,6 +122,14 @@ public:
     typename std::vector<T>::const_iterator end() const {
         return m_vector.end();
     }
+
+    typename std::vector<T>::iterator begin() {
+        return m_vector.begin();
+    }
+
+    typename std::vector<T>::iterator end() {
+        return m_vector.end();
+    }
 };
 }
 
