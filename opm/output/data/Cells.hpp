@@ -27,8 +27,6 @@
 
 namespace Opm {
 
-class SimulationDataContainer;
-
 namespace data {
 
     enum class TargetType {

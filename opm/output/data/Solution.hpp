@@ -55,8 +55,6 @@ class Solution : public std::map< std::string, data::CellData > {
         void convertToSI( const UnitSystem& );
         void convertFromSI( const UnitSystem& );
 
-        // Retained for compile-time compatibility with the vtk and matlab output targets.
-        const SimulationDataContainer * sdc = nullptr;
     private:
         bool si = true;
 };
