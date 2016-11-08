@@ -93,7 +93,7 @@ namespace Opm
 
 
     private:
-        std::shared_ptr< TimeMap > m_timeMap;
+        TimeMap m_timeMap;
         OrderedMap<std::shared_ptr< Well >> m_wells;
         std::map<std::string, Group > m_groups;
         DynamicState< GroupTree > m_rootGroupTree;

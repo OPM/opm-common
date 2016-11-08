@@ -69,13 +69,13 @@ namespace Opm {
                         const EclipseGrid& grid,
                         const Deck& deck,
                         const Phases &phases ) :
-        m_timeMap( std::make_shared< TimeMap>( deck )),
-        m_rootGroupTree( *m_timeMap, GroupTree{} ),
-        m_oilvaporizationproperties( *m_timeMap, OilVaporizationProperties{} ),
-        m_events( *m_timeMap ),
-        m_modifierDeck( *m_timeMap, nullptr ),
-        m_tuning( *m_timeMap ),
-        m_messageLimits( *m_timeMap ),
+        m_timeMap( deck ),
+        m_rootGroupTree( this->m_timeMap, GroupTree{} ),
+        m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties{} ),
+        m_events( this->m_timeMap ),
+        m_modifierDeck( this->m_timeMap, nullptr ),
+        m_tuning( this->m_timeMap ),
+        m_messageLimits( this->m_timeMap ),
         m_phases(phases)
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
@@ -102,7 +102,7 @@ namespace Opm {
     }
 
     boost::posix_time::ptime Schedule::getStartTime() const {
-        return m_timeMap->getStartTime(/*timeStepIdx=*/0);
+        return m_timeMap.getStartTime(/*timeStepIdx=*/0);
     }
 
     time_t Schedule::posixStartTime() const {
@@ -110,7 +110,7 @@ namespace Opm {
     }
 
     time_t Schedule::posixEndTime() const {
-        return posixTime( this->m_timeMap->getEndTime() );
+        return posixTime( this->m_timeMap.getEndTime() );
     }
 
     void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid) {
@@ -480,7 +480,7 @@ namespace Opm {
 
                     std::string msg =
                             "Well " + well->name() + " is a history matched well with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                     m_messages.note(msg);
                     updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
@@ -642,7 +642,7 @@ namespace Opm {
                 if ( ! well->getAllowCrossFlow() && (properties.surfaceInjectionRate == 0) ) {
                     std::string msg =
                             "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                     m_messages.note(msg);
                     updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
@@ -739,7 +739,7 @@ namespace Opm {
             if ( ! well.getAllowCrossFlow() && (injectionRate == 0) ) {
                 std::string msg =
                         "Well " + well.name() + " is an injector with zero rate where crossflow is banned. " +
-                        "This well will be closed at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                        "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                 m_messages.note(msg);
                 updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT );
             }
@@ -832,7 +832,7 @@ namespace Opm {
                     if (status == WellCommon::StatusEnum::OPEN && !well->canOpen(currentStep)) {
                         std::string msg =
                                 "Well " + well->name() + " where crossflow is banned has zero total rate. " +
-                                "This well is prevented from opening at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                                "This well is prevented from opening at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                         m_messages.note(msg);
                         continue;
                     }
@@ -1206,7 +1206,7 @@ namespace Opm {
             well.addCompletions( currentStep, pair.second );
             if (well.getCompletions( currentStep ).allCompletionsShut()) {
                 std::string msg =
-                        "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap->getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
+                        "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
                         "The well is therefore also shut.";
                 m_messages.note(msg);
                 updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT);
@@ -1292,7 +1292,7 @@ namespace Opm {
             for( auto* well : getWells( wellNamePattern ) ) {
 
                 well->setRFTActive(currentStep, true);
-                size_t numStep = m_timeMap->numTimesteps();
+                size_t numStep = m_timeMap.numTimesteps();
                 if(currentStep<numStep){
                     well->setRFTActive(currentStep+1, false);
                 }
@@ -1301,7 +1301,7 @@ namespace Opm {
 
         for (auto iter = m_wells.begin(); iter != m_wells.end(); ++iter) {
             auto well = *iter;
-            well->setRFTForWellWhenFirstOpen(m_timeMap->numTimesteps(), currentStep);
+            well->setRFTForWellWhenFirstOpen(m_timeMap.numTimesteps(), currentStep);
         }
     }
 
@@ -1326,7 +1326,7 @@ namespace Opm {
                         well->setRFTActive(currentStep, true);
                         break;
                     case RFTConnections::RFTEnum::FOPN:
-                        well->setRFTForWellWhenFirstOpen(m_timeMap->numTimesteps(),currentStep);
+                        well->setRFTForWellWhenFirstOpen(m_timeMap.numTimesteps(),currentStep);
                         break;
                     case RFTConnections::RFTEnum::NO:
                         well->setRFTActive(currentStep, false);
@@ -1352,7 +1352,7 @@ namespace Opm {
     }
 
     const TimeMap& Schedule::getTimeMap() const {
-        return *m_timeMap;
+        return this->m_timeMap;
     }
 
     const GroupTree& Schedule::getGroupTree(size_t timeStep) const {
@@ -1381,7 +1381,7 @@ namespace Opm {
             automaticShutIn = false;
         }
 
-        auto well = std::make_shared<Well>(wellName, headI, headJ, refDepth, preferredPhase, *m_timeMap , timeStep,
+        auto well = std::make_shared<Well>(wellName, headI, headJ, refDepth, preferredPhase, m_timeMap , timeStep,
                                            wellCompletionOrder, allowCrossFlow, automaticShutIn);
         m_wells.insert( wellName  , well);
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
@@ -1400,11 +1400,11 @@ namespace Opm {
     }
 
     std::vector< const Well* > Schedule::getWells() const {
-        return getWells(m_timeMap->size()-1);
+        return getWells(m_timeMap.size()-1);
     }
 
     std::vector< const Well* > Schedule::getWells(size_t timeStep) const {
-        if (timeStep >= m_timeMap->size()) {
+        if (timeStep >= m_timeMap.size()) {
             throw std::invalid_argument("Timestep to large");
         }
 
@@ -1472,10 +1472,7 @@ namespace Opm {
     }
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
-        if (!m_timeMap) {
-            throw std::invalid_argument("TimeMap is null, can't add group named: " + groupName);
-        }
-        m_groups.emplace( groupName, Group { groupName, *m_timeMap, timeStep } );
+        m_groups.emplace( groupName, Group { groupName, m_timeMap, timeStep } );
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
