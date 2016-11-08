@@ -371,6 +371,10 @@ quantity rgip(const fn_args& args) {
     return region_sum( args , "GIP", measure::volume );
 }
 
+quantity rwip(const fn_args& args) {
+    return region_sum( args , "WIP", measure::volume );
+}
+
 quantity roipl(const fn_args& args) {
     return region_sum( args , "OIPL", measure::volume );
 }
@@ -627,6 +631,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROIPL" , roipl},
     { "ROIPG" , roipg},
     { "RGIP"  , rgip},
+    { "RWIP"  , rwip},
     { "ROIR"  , region_rate< rt::oil, injector > },
     { "RGIR"  , region_rate< rt::gas, injector > },
     { "RWIR"  , region_rate< rt::wat, injector > },
