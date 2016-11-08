@@ -21,19 +21,19 @@
 #ifndef GROUP_HPP_
 #define GROUP_HPP_
 
+#include <memory>
+#include <set>
+#include <string>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-
-#include <memory>
-#include <string>
 
 namespace Opm {
 
 
     class TimeMap;
     class Well;
-    class WellSet;
 
     namespace GroupInjection {
         struct InjectionData {
@@ -122,19 +122,17 @@ namespace Opm {
         /*****************************************************************/
 
         bool hasWell(const std::string& wellName , size_t time_step) const;
-        const Well* getWell(const std::string& wellName , size_t time_step) const;
-        const WellSet& getWells( size_t time_step ) const;
+        const std::set< std::string >& getWells( size_t time_step ) const;
         size_t numWells(size_t time_step) const;
-        void addWell(size_t time_step , Well* well);
+        void addWell(size_t time_step, const Well* well);
         void delWell(size_t time_step, const std::string& wellName );
-    private:
-        std::shared_ptr< const WellSet > wellMap(size_t time_step) const;
 
+    private:
         size_t m_creationTimeStep;
         std::string m_name;
         GroupInjection::InjectionData m_injection;
         GroupProduction::ProductionData m_production;
-        DynamicState<std::shared_ptr< const WellSet > > m_wells;
+        DynamicState< std::set< std::string > > m_wells;
         DynamicState<int> m_isProductionGroup;
         DynamicState<int> m_isInjectionGroup;
         DynamicState<double> m_efficiencyFactor;
@@ -144,4 +142,4 @@ namespace Opm {
 
 
 
-#endif /* WELL_HPP_ */
+#endif /* GROUP_HPP_ */

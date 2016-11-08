@@ -142,8 +142,8 @@ namespace Opm {
                 }
             }
 
-            m_data[index] = value;
-            m_currentValue = value;
+            m_currentValue = std::move( value );
+            m_data[index] = this->m_currentValue;
             if (m_initialRange == 0)
                 m_initialRange = index;
 

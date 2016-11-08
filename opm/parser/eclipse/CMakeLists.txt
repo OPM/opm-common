@@ -95,7 +95,6 @@ EclipseState/Schedule/WellEconProductionLimits.cpp
 EclipseState/Schedule/MSW/Segment.cpp
 EclipseState/Schedule/MSW/SegmentSet.cpp
 EclipseState/Schedule/MSW/Compsegs.cpp
-EclipseState/Schedule/WellSet.cpp
 EclipseState/Schedule/Group.cpp
 EclipseState/Schedule/Completion.cpp
 EclipseState/Schedule/CompletionSet.cpp
@@ -189,7 +188,6 @@ EclipseState/Schedule/WellEconProductionLimits.hpp
 EclipseState/Schedule/MSW/Segment.hpp
 EclipseState/Schedule/MSW/SegmentSet.hpp
 EclipseState/Schedule/MSW/Compsegs.hpp
-EclipseState/Schedule/WellSet.hpp
 EclipseState/Schedule/Group.hpp
 EclipseState/Schedule/DynamicState.hpp
 EclipseState/Schedule/DynamicVector.hpp

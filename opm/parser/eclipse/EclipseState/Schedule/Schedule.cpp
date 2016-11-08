@@ -51,7 +51,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 

@@ -21,7 +21,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
 #define INVALID_GROUP_RATE -999e100
 #define INVALID_EFFICIENCY_FACTOR 0.0
@@ -51,17 +51,16 @@ namespace Opm {
     /*****************************************************************/
 
     Group::Group(const std::string& name_, const TimeMap& timeMap , size_t creationTimeStep) :
+        m_creationTimeStep( creationTimeStep ),
+        m_name( name_ ),
         m_injection( timeMap ),
         m_production( timeMap ),
-        m_wells( timeMap, std::make_shared< const WellSet >() ),
+        m_wells( timeMap, {} ),
         m_isProductionGroup( timeMap, false),
         m_isInjectionGroup( timeMap, false),
         m_efficiencyFactor( timeMap, 1.0),
         m_transferEfficiencyFactor( timeMap, 1)
-    {
-        m_name = name_;
-        m_creationTimeStep = creationTimeStep;
-    }
+    {}
 
 
     const std::string& Group::name() const {
@@ -266,43 +265,33 @@ namespace Opm {
 
     /*****************************************************************/
 
-    std::shared_ptr< const WellSet > Group::wellMap(size_t time_step) const {
-        return m_wells.get(time_step);
-    }
-
-
     bool Group::hasWell(const std::string& wellName , size_t time_step) const {
-        return this->wellMap(time_step)->hasWell( wellName );
+        return this->m_wells.at( time_step ).find( wellName ) !=
+               this->m_wells.at( time_step ).end();
     }
 
-
-    const Well* Group::getWell(const std::string& wellName , size_t time_step) const {
-        return this->wellMap( time_step )->getWell( wellName );
-    }
-
-    const WellSet& Group::getWells( size_t time_step ) const {
-        return *this->wellMap( time_step );
+    const std::set< std::string >& Group::getWells( size_t time_step ) const {
+        return this->m_wells.at( time_step );
     }
 
     size_t Group::numWells(size_t time_step) const {
-        return wellMap(time_step)->size();
+        return this->m_wells.at( time_step ).size();
     }
 
-    void Group::addWell(size_t time_step, Well* well ) {
-        auto wellSet = wellMap(time_step);
-        std::shared_ptr< WellSet > newWellSet( wellSet->shallowCopy() );
-
-        newWellSet->addWell(well);
-        m_wells.update(time_step , newWellSet);
+    void Group::addWell(size_t time_step, const Well* well ) {
+        auto new_set = this->m_wells.at( time_step );
+        new_set.insert( well->name() );
+        this->m_wells.update( time_step, new_set );
     }
-
 
     void Group::delWell(size_t time_step, const std::string& wellName) {
-        auto wellSet = wellMap(time_step);
-        std::shared_ptr< WellSet > newWellSet( wellSet->shallowCopy() );
+        auto itr = this->m_wells.at( time_step ).find( wellName );
 
-        newWellSet->delWell(wellName);
-        m_wells.update(time_step , newWellSet);
+        if( itr == this->m_wells.at( time_step ).end() ) return;
+
+        auto new_set = this->m_wells.at( time_step );
+        new_set.erase( wellName );
+        this->m_wells.update( time_step, new_set );
     }
 
 }

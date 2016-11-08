@@ -32,7 +32,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
@@ -151,7 +150,6 @@ BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
 
     BOOST_CHECK_EQUAL(false , group.hasWell("NO", 2));
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
-    BOOST_CHECK_THROW(group.getWell("NO" , 2) , std::invalid_argument);
 }
 
 
@@ -224,9 +222,6 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
     BOOST_CHECK_EQUAL( 0U , group.numWells(8));
     BOOST_CHECK_EQUAL( 1U , group.numWells(7));
     BOOST_CHECK_EQUAL( 2U , group.numWells(6));
-
-    BOOST_CHECK_THROW( group.delWell( 8 , "WeLLDOESNOT" ) , std::invalid_argument);
-    BOOST_CHECK_THROW( group.delWell( 8 , "WELL1" ) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(getWells) {
@@ -242,24 +237,24 @@ BOOST_AUTO_TEST_CASE(getWells) {
 
     std::vector< std::string > names = { "WELL1", "WELL2" };
     std::vector< std::string > wnames;
-    for( const auto& pair : group.getWells( 3 ) )
-        wnames.push_back( pair.first );
+    for( const auto& wname : group.getWells( 3 ) )
+        wnames.push_back( wname );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( names.begin(), names.end(),
                                    wnames.begin(), wnames.end() );
 
     const auto& wells = group.getWells( 3 );
     BOOST_CHECK_EQUAL( wells.size(), 2U );
-    BOOST_CHECK( wells.hasWell( "WELL1" ) );
-    BOOST_CHECK( wells.hasWell( "WELL2" ) );
+    BOOST_CHECK( wells.count( "WELL1" ) > 0 );
+    BOOST_CHECK( wells.count( "WELL2" ) > 0 );
 
     BOOST_CHECK_EQUAL( group.getWells( 0 ).size(), 0U );
     BOOST_CHECK_EQUAL( group.getWells( 2 ).size(), 1U );
-    BOOST_CHECK( group.getWells( 2 ).hasWell( "WELL1" ) );
-    BOOST_CHECK( !group.getWells( 2 ).hasWell( "WELL2" ) );
+    BOOST_CHECK( group.getWells( 2 ).count( "WELL1" ) > 0 );
+    BOOST_CHECK( group.getWells( 2 ).count( "WELL2" ) == 0 );
     BOOST_CHECK_EQUAL( group.getWells( 4 ).size(), 2U );
-    BOOST_CHECK( group.getWells( 4 ).hasWell( "WELL1" ) );
-    BOOST_CHECK( group.getWells( 4 ).hasWell( "WELL2" ) );
+    BOOST_CHECK( group.getWells( 4 ).count( "WELL1" ) > 0 );
+    BOOST_CHECK( group.getWells( 4 ).count( "WELL2" ) > 0 );
 
 }
 
