@@ -84,21 +84,21 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
         BOOST_CHECK_EQUAL( false , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 3 ));
 
 
-        BOOST_CHECK( !schedule.getModifierDeck(1) );
-        BOOST_CHECK( !schedule.getModifierDeck(3) );
+        BOOST_CHECK_EQUAL( 0U, schedule.getModifierDeck(1).size() );
+        BOOST_CHECK_EQUAL( 0U, schedule.getModifierDeck(3).size() );
 
-        std::shared_ptr<const Deck> multflt_deck = schedule.getModifierDeck(2);
-        BOOST_CHECK_EQUAL( 2U , multflt_deck->size());
-        BOOST_CHECK( multflt_deck->hasKeyword<ParserKeywords::MULTFLT>() );
+        const Deck& multflt_deck = schedule.getModifierDeck(2);
+        BOOST_CHECK_EQUAL( 2U , multflt_deck.size());
+        BOOST_CHECK( multflt_deck.hasKeyword<ParserKeywords::MULTFLT>() );
 
-        const auto& multflt1 = multflt_deck->getKeyword(0);
+        const auto& multflt1 = multflt_deck.getKeyword(0);
         BOOST_CHECK_EQUAL( 1U , multflt1.size( ) );
 
         const auto& record0 = multflt1.getRecord( 0 );
         BOOST_CHECK_EQUAL( 100.0  , record0.getItem<ParserKeywords::MULTFLT::factor>().get< double >(0));
         BOOST_CHECK_EQUAL( "F1" , record0.getItem<ParserKeywords::MULTFLT::fault>().get< std::string >(0));
 
-        const auto& multflt2 = multflt_deck->getKeyword(1);
+        const auto& multflt2 = multflt_deck.getKeyword(1);
         BOOST_CHECK_EQUAL( 1U , multflt2.size( ) );
 
         const auto& record1 = multflt2.getRecord( 0 );

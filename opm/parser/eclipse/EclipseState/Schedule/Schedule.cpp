@@ -73,7 +73,7 @@ namespace Opm {
         m_rootGroupTree( this->m_timeMap, GroupTree{} ),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties{} ),
         m_events( this->m_timeMap ),
-        m_modifierDeck( this->m_timeMap, nullptr ),
+        m_modifierDeck( this->m_timeMap, Deck{} ),
         m_tuning( this->m_timeMap ),
         m_messageLimits( this->m_timeMap ),
         m_phases(phases)
@@ -237,18 +237,8 @@ namespace Opm {
             else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
                 bool supported = geoModifiers.at( keyword.name() );
                 if (supported) {
-                    /*
-                      If the deck stored at currentStep is a null pointer (i.e. evaluates
-                      to false) we must first create a new deck and install that under
-                      index currentstep; then we fetch the deck (newly created - or old)
-                      from the container and add the keyword.
-                    */
-                    if (!m_modifierDeck.iget(currentStep))
-                        m_modifierDeck.iset( currentStep , std::make_shared<Deck>( ));
-
-                    m_modifierDeck.iget( currentStep )->addKeyword( keyword );
+                    this->m_modifierDeck[ currentStep ].addKeyword( keyword );
                     m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
-
                 } else {
                     std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
                     parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , m_messages, msg );
@@ -1577,7 +1567,7 @@ namespace Opm {
       return this->m_tuning;
     }
 
-    std::shared_ptr<const Deck> Schedule::getModifierDeck(size_t timeStep) const {
+    const Deck& Schedule::getModifierDeck(size_t timeStep) const {
         return m_modifierDeck.iget( timeStep );
     }
 

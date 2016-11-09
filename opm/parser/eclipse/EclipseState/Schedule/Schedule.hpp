@@ -87,7 +87,7 @@ namespace Opm
 
         const Events& getEvents() const;
         bool hasOilVaporizationProperties();
-        std::shared_ptr<const Deck> getModifierDeck(size_t timeStep) const;
+        const Deck& getModifierDeck(size_t timeStep) const;
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
 
@@ -99,7 +99,7 @@ namespace Opm
         DynamicState< GroupTree > m_rootGroupTree;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
-        DynamicVector<std::shared_ptr<Deck> > m_modifierDeck;
+        DynamicVector< Deck > m_modifierDeck;
         Tuning m_tuning;
         MessageLimits m_messageLimits;
         Phases m_phases;
