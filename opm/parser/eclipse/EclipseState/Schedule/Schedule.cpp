@@ -96,8 +96,7 @@ namespace Opm {
         }
 
         if (Section::hasSCHEDULE(deck)) {
-            std::shared_ptr<SCHEDULESection> scheduleSection = std::make_shared<SCHEDULESection>(deck);
-            iterateScheduleSection(parseContext , *scheduleSection , grid );
+            iterateScheduleSection( parseContext, SCHEDULESection( deck ), grid );
         }
     }
 
