@@ -50,14 +50,29 @@ set( generator_source
 Generator/KeywordGenerator.cpp
 Generator/KeywordLoader.cpp )
 
-set( build_parser_source 
-Parser/ParseContext.cpp
+set( utility_source
+Utility/Functional.cpp
+Utility/Stringview.cpp
+)
+
+set( build_parser_source
+Deck/Deck.cpp
+Deck/DeckItem.cpp
+Deck/DeckKeyword.cpp
+Deck/DeckRecord.cpp
 Parser/MessageContainer.cpp
-Parser/ParserEnums.cpp
-Parser/ParserKeyword.cpp 
-Parser/ParserRecord.cpp
+Parser/ParseContext.cpp
 Parser/ParserItem.cpp
+Parser/ParserKeyword.cpp
+Parser/ParserRecord.cpp
+Parser/ParserEnums.cpp
+RawDeck/RawKeyword.cpp
+RawDeck/RawRecord.cpp
+RawDeck/StarToken.cpp
+Units/Dimension.cpp
+Units/UnitSystem.cpp
 ${generator_source}
+${utility_source}
 )
 
 set (state_source
@@ -126,11 +141,6 @@ EclipseState/SummaryConfig/SummaryConfig.cpp
 EclipseState/IOConfig/RestartConfig.cpp
 EclipseState/IOConfig/IOConfig.cpp)
 #
-
-set( utility_source
-Utility/Functional.cpp
-Utility/Stringview.cpp
-)
 
 set( HEADER_FILES
 RawDeck/RawConsts.hpp 
@@ -276,18 +286,13 @@ Utility/Functional.hpp
 Utility/Stringview.hpp
 Utility/Typetools.hpp)
 
-add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source} ${utility_source})
-target_link_libraries(buildParser opmjson ${opm-common_LIBRARIES} ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
-
 #-----------------------------------------------------------------
 # This section manages the generation of C++ code for the default keywords.
 
 # 1. Create an executable 'createDefaultKeywordList'.
 
-add_executable( createDefaultKeywordList Parser/createDefaultKeywordList.cpp )
-target_link_libraries( createDefaultKeywordList buildParser opmjson ${Boost_LIBRARIES})
-
-
+add_executable(createDefaultKeywordList Parser/createDefaultKeywordList.cpp ${build_parser_source})
+target_link_libraries( createDefaultKeywordList opmjson ${Boost_LIBRARIES} ${ERT_LIBRARIES})
 
 # 2. Run the generated application createDefaultKeywordlist - this
 #    application will recursively scan through all the json keyword
