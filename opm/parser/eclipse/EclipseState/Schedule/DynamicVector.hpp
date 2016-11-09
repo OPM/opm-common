@@ -17,14 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #ifndef DYNAMICVECTOR_HPP_
 #define DYNAMICVECTOR_HPP_
 
 
 #include <stdexcept>
-
-
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 namespace Opm {
@@ -33,34 +30,19 @@ namespace Opm {
       The DynamicVector<T> class is a thin wrapper around
       std::vector<T> with the following twists:
 
-        - The vector is bound to a TimeMap instance.
-
-        - The operator[] supports arbitrary assignment - the vector
-          will grow as needed, however it will *not* grow beyond the
-          length of the TimeMap.
-
-        - The vector is created with a default value which will be
-          used to 'fill in the holes' when growing; and that value
-          will also be returned if you ask for values beyond the end
-          of the vector.
+        - Default-sized to the size of a time map, pre-populated by the default
+          value.
     */
 
     template <class T>
     class DynamicVector {
     public:
         DynamicVector(const TimeMap& timeMap, T defaultValue) :
-            max_size( timeMap.size() ),
-            m_defaultValue( std::move( defaultValue ) )
+            m_data( timeMap.size(), defaultValue )
         {}
 
         const T& operator[](size_t index) const {
-            if (index >= this->max_size )
-                throw std::range_error("Index value is out range.");
-
-            if (index < m_data.size())
-                return m_data[index];
-            else
-                return m_defaultValue;
+            return this->m_data.at( index );
         }
 
 
@@ -68,30 +50,17 @@ namespace Opm {
             return (*this)[index];
         }
 
-
-
         T& operator[](size_t index) {
-            if (index >= this->max_size )
-                throw std::range_error("Index value is out range.");
-
-            if (index >= m_data.size())
-                m_data.resize( index + 1 , m_defaultValue);
-
-            return m_data[index];
+            return this->m_data.at( index );
         }
 
         void iset(size_t index, T value) {
-            (*this)[index] = value;
+            (*this)[index] = std::move( value );
         }
-
 
     private:
         std::vector<T> m_data;
-        size_t max_size;
-        T m_defaultValue;
     };
 }
-
-
 
 #endif

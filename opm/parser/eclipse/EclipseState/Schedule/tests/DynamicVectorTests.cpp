@@ -18,9 +18,6 @@
  */
 
 #include <stdexcept>
-#include <iostream>
-#include <boost/filesystem.hpp>
-
 
 #define BOOST_TEST_MODULE DynamicVectorTests
 #include <boost/test/unit_test.hpp>
@@ -40,7 +37,7 @@ BOOST_AUTO_TEST_CASE(CreateDynamicTest) {
     Opm::DynamicVector<double> vector(timeMap , 9.99);
 
     BOOST_CHECK_EQUAL( vector[0] , 9.99 );
-    BOOST_CHECK_THROW( vector[1] , std::range_error);
+    BOOST_CHECK_THROW( vector[1] , std::out_of_range );
 }
 
 
@@ -65,7 +62,7 @@ BOOST_AUTO_TEST_CASE(DynamicVectorSet) {
 
     state[0] = 88;
     BOOST_CHECK_EQUAL( 88 , state[0]);
-    BOOST_CHECK_THROW( state[5] = 99 , std::range_error);
+    BOOST_CHECK_THROW( state[5] = 99 , std::out_of_range );
 }
 
 
@@ -90,6 +87,6 @@ BOOST_AUTO_TEST_CASE(DynamicVectorPtr) {
 
     state.iset(0,88);
     BOOST_CHECK_EQUAL( 88 , state.iget(0));
-    BOOST_CHECK_THROW( state.iset(5 , 99) , std::range_error);
+    BOOST_CHECK_THROW( state.iset(5 , 99) , std::out_of_range );
 }
 
