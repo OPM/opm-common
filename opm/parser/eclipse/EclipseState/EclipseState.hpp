@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -50,7 +51,6 @@ namespace Opm {
     class IOConfig;
     class ParseContext;
     class RestartConfig;
-    class Schedule;
     class Section;
     class SimulationConfig;
     class TableManager;
@@ -125,7 +125,7 @@ namespace Opm {
         Runspec m_runspec;
         const GridDims m_gridDims;
         EclipseGrid m_inputGrid;
-        std::shared_ptr< const Schedule > m_schedule;
+        Schedule m_schedule;
         Eclipse3DProperties m_eclipseProperties;
         EclipseConfig m_eclipseConfig;
         TransMult m_transMult;

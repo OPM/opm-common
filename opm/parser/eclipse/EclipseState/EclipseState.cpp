@@ -56,9 +56,9 @@ namespace Opm {
         m_runspec(           deck ),
         m_gridDims(          deck ),
         m_inputGrid(         deck, nullptr ),
-        m_schedule(          std::make_shared<Schedule>( m_parseContext, m_inputGrid, deck, m_runspec.phases() ) ),
+        m_schedule(          m_parseContext, m_inputGrid, deck, m_runspec.phases() ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
-        m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, *m_schedule , parseContext),
+        m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, m_schedule, parseContext ),
         m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ(),
                              m_eclipseProperties, deck.getKeywordList( "MULTREGT" ) ),
         m_inputNnc(          deck, m_gridDims ),
@@ -81,7 +81,7 @@ namespace Opm {
         initFaults(deck);
 
         m_messageContainer.appendMessages(m_tables.getMessageContainer());
-        m_messageContainer.appendMessages(m_schedule->getMessageContainer());
+        m_messageContainer.appendMessages(m_schedule.getMessageContainer());
         m_messageContainer.appendMessages(m_inputGrid.getMessageContainer());
         m_messageContainer.appendMessages(m_eclipseProperties.getMessageContainer());
     }
@@ -133,7 +133,7 @@ namespace Opm {
     }
 
     const Schedule& EclipseState::getSchedule() const {
-        return *m_schedule;
+        return this->m_schedule;
     }
 
     /// [[deprecated]] --- use cfg().io()
