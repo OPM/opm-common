@@ -429,6 +429,43 @@ quantity foe( const fn_args& args ) {
     return (args.initial_oip - val) / args.initial_oip;
 }
 
+quantity bpr( const fn_args& args) {
+    if (!args.state.has("PRESSURE"))
+        return { 0.0 , measure::pressure };
+
+    const auto global_index = args.num - 1;
+    const auto active_index = args.grid.activeIndex( global_index );
+
+    const auto& pressure  = args.state.at( "PRESSURE" ).data;
+    return { pressure[active_index] , measure::pressure };
+}
+
+
+quantity bswat( const fn_args& args) {
+    if (!args.state.has("SWAT"))
+        return { 0.0 , measure::identity };
+
+    const auto global_index = args.num - 1;
+    const auto active_index = args.grid.activeIndex( global_index );
+
+    const auto& swat  = args.state.at( "SWAT" ).data;
+    return { swat[active_index] , measure::identity };
+}
+
+
+quantity bsgas( const fn_args& args) {
+    if (!args.state.has("SGAS"))
+        return { 0.0 , measure::identity };
+
+    const auto global_index = args.num - 1;
+    const auto active_index = args.grid.activeIndex( global_index );
+
+    const auto& sgas  = args.state.at( "SGAS" ).data;
+    return { sgas[active_index] , measure::identity };
+}
+
+
+
 template< typename F, typename G >
 auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
 { return { f, g }; }
@@ -673,6 +710,14 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROPT"  , mul( region_rate< rt::oil, producer >, duration ) },
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
+
+    /*Block properties */
+    {"BPR" , bpr},
+    {"BPRESSUR" , bpr},
+    {"BSWAT" , bswat},
+    {"BWSAT" , bswat},
+    {"BSGAS" , bsgas},
+    {"BGSAS" , bsgas},
 };
 
 
@@ -760,7 +805,7 @@ Summary::Summary( const EclipseState& st,
         const auto* keyword = node.keyword();
         if( funs.find( keyword ) == funs.end() ) continue;
 
-        if (node.type() == ECL_SMSPEC_COMPLETION_VAR) {
+        if ((node.type() == ECL_SMSPEC_COMPLETION_VAR) || (node.type() == ECL_SMSPEC_BLOCK_VAR)) {
             int global_index = node.num() - 1;
             if (!this->grid.cellActive(global_index))
                 continue;
@@ -775,7 +820,7 @@ Summary::Summary( const EclipseState& st,
                                 0,           // Timestep number
                                 node.num(),  // NUMS value for the summary output.
                                 {},          // Well results - data::Wells
-                                {},          // EclipseState
+                                {},          // Solution::State
                                 {},          // Region <-> cell mappings.
                                 this->grid,
                                 this->initial_oip };

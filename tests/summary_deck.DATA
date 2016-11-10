@@ -29,6 +29,11 @@ DZ
 TOPS
 100*1 /
 
+-- Cell 2,1,10 is inactive
+ACTNUM
+  901*1 0 98*1 /
+  
+
 REGIONS
 
 FIPNUM
@@ -107,10 +112,31 @@ FOE
 
 -- Pressures
 FPR
---BPR
---18 63 25 /
---18 63 26 /
---/
+
+BPR
+  1  1  1 /
+  1  1  2 /
+  1  1  3 /
+  1  1  4 /
+  1  1  5 /
+  1  1  6 /
+  1  1  7 /
+  1  1  8 /
+  1  1  9 /
+  1  1  10 /    
+  2  1  10 /  -- This cell is not ACTIVE
+/
+
+BSGAS
+  1  1  1 /
+/
+
+
+BSWAT
+  1  1  1 /
+/
+
+
 --  Region data
 RPR
 /

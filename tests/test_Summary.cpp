@@ -705,9 +705,13 @@ BOOST_AUTO_TEST_CASE(region_vars) {
         std::string roipg_key = "ROIPG:" + std::to_string( r );
         std::string rgipl_key = "RGIPL:" + std::to_string( r );
         std::string rgipg_key = "RGIPG:" + std::to_string( r );
-        const double area = cfg.grid.getNX() * cfg.grid.getNY();
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
 
         BOOST_CHECK_CLOSE(   r * 1.0        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
+
+        // There is one inactive cell in the bottom layer.
+        if (r == 10)
+            area -= 1;
 
         BOOST_CHECK_CLOSE( area *  2*r * 1.0       , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roip_key.c_str())) , 1e-5);
         BOOST_CHECK_CLOSE( area * (2*r - 1) * 1.0  , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roipl_key.c_str())) , 1e-5);
@@ -774,4 +778,34 @@ BOOST_AUTO_TEST_CASE(region_injection) {
                       ecl_sum_get_general_var( resp , 2 , "CGIT:W_1:1") +
                       ecl_sum_get_general_var( resp , 2 , "CGIT:W_2:2") +
                       ecl_sum_get_general_var( resp , 2 , "CGIT:W_3:3"), 1e-5);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
+    setup cfg( "region_injection" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    for (size_t r=1; r <= 10; r++) {
+        std::string bpr_key   = "BPR:1,1,"   + std::to_string( r );
+        BOOST_CHECK( ecl_sum_has_general_var( resp , bpr_key.c_str()));
+
+        BOOST_CHECK_CLOSE( r * 1.0 , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, bpr_key.c_str())) , 1e-5);
+
+    }
+
+    BOOST_CHECK_CLOSE( 8.0 , units.to_si( UnitSystem::measure::identity , ecl_sum_get_general_var( resp, 1, "BSWAT:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 9.0 , units.to_si( UnitSystem::measure::identity , ecl_sum_get_general_var( resp, 1, "BSGAS:1,1,1")) , 1e-5);
+
+    // Cell is not active
+    BOOST_CHECK( !ecl_sum_has_general_var( resp , "BPR:2,1,10"));
 }
