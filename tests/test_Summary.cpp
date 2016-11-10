@@ -716,10 +716,10 @@ BOOST_AUTO_TEST_CASE(region_production) {
 BOOST_AUTO_TEST_CASE(region_injection) {
     setup cfg( "region_injection" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 1, 1 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
-    writer.add_timestep( 2, 2 * day, cfg.grid, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
     writer.write();
 
     auto res = readsum( cfg.name );
