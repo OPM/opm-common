@@ -120,6 +120,26 @@ const std::vector< T >& DeckItem::getData() const {
 }
 
 template< typename T >
+void DeckItem::push( T x ) {
+    auto& val = this->value_ref< T >();
+
+    val.push_back( std::move( x ) );
+    this->defaulted.push_back( false );
+}
+
+void DeckItem::push_back( int x ) {
+    this->push( x );
+}
+
+void DeckItem::push_back( double x ) {
+    this->push( x );
+}
+
+void DeckItem::push_back( std::string x ) {
+    this->push( std::move( x ) );
+}
+
+template< typename T >
 void DeckItem::push( T x, size_t n ) {
     auto& val = this->value_ref< T >();
 

@@ -62,9 +62,12 @@ namespace Opm {
         template< typename T > const std::vector< T >& getData() const;
         const std::vector< double >& getSIDoubleData() const;
 
-        void push_back( int, size_t = 1 );
-        void push_back( double, size_t = 1 );
-        void push_back( std::string, size_t = 1 );
+        void push_back( int );
+        void push_back( double );
+        void push_back( std::string );
+        void push_back( int, size_t );
+        void push_back( double, size_t );
+        void push_back( std::string, size_t );
         void push_backDefault( int );
         void push_backDefault( double );
         void push_backDefault( std::string );
@@ -90,6 +93,7 @@ namespace Opm {
 
         template< typename T > std::vector< T >& value_ref();
         template< typename T > const std::vector< T >& value_ref() const;
+        template< typename T > void push( T );
         template< typename T > void push( T, size_t );
         template< typename T > void push_default( T );
     };
