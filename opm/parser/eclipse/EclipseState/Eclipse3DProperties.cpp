@@ -729,6 +729,9 @@ namespace Opm {
                 else if (deckKeyword.name() == "COPYREG")
                     handleCOPYREGKeyword(deckKeyword);
 
+                else if (deckKeyword.name() == "OPERATE")
+                    handleOPERATEKeyword( deckKeyword , boxManager);
+
                 boxManager.endKeyword();
             }
         }
@@ -753,6 +756,19 @@ namespace Opm {
         boxManager.endInputBox();
     }
 
+    void Eclipse3DProperties::handleOPERATEKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
+        for( const auto& record : deckKeyword ) {
+            const std::string& targetArray = record.getItem("TARGET_ARRAY").get< std::string >(0);
+            const std::string& srcArray = record.getItem("ARRAY").get< std::string >(0);
+
+            if (m_intGridProperties.supportsKeyword( targetArray ))
+                m_intGridProperties.handleOPERATERecord( record  , boxManager);
+            else if (m_doubleGridProperties.supportsKeyword( targetArray ))
+                m_doubleGridProperties.handleOPERATERecord( record , boxManager);
+            else
+                throw std::invalid_argument("Fatal error processing OPERATE keyword - invalid/undefined keyword: " + targetArray);
+        }
+    }
 
     void Eclipse3DProperties::handleEQUALREGKeyword( const DeckKeyword& deckKeyword) {
        for( const auto& record : deckKeyword ) {

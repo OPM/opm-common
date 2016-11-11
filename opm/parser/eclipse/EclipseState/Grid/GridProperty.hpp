@@ -103,7 +103,9 @@ public:
     void iset(size_t index, T value);
     void iset(size_t i , size_t j , size_t k , T value);
 
+
     const std::vector<T>& getData() const;
+    std::vector<T>& getData();
 
     bool containsNaN() const;
     const std::string& getDimensionString() const;

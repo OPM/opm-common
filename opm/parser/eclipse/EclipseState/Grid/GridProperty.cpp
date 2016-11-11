@@ -166,6 +166,12 @@ namespace Opm {
         return m_data;
     }
 
+
+    template< typename T >
+    std::vector< T >& GridProperty< T >::getData() {
+        return m_data;
+    }
+
     template< typename T >
     void GridProperty< T >::multiplyWith( const GridProperty< T >& other ) {
         if ((m_nx == other.m_nx) && (m_ny == other.m_ny) && (m_nz == other.m_nz)) {
@@ -179,6 +185,8 @@ namespace Opm {
     void GridProperty< T >::multiplyValueAtIndex(size_t index, T factor) {
         m_data[index] *= factor;
     }
+
+
 
     template< typename T >
     void GridProperty< T >::maskedSet( T value, const std::vector< bool >& mask ) {

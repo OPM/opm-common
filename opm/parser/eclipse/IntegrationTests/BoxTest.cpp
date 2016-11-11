@@ -139,4 +139,16 @@ BOOST_AUTO_TEST_CASE( EQUALS ) {
 }
 
 
+BOOST_AUTO_TEST_CASE( OPERATE ) {
+    EclipseState state = makeState( "testdata/integration_tests/BOX/BOXTEST1" );
+    const auto& ntg = state.get3DProperties().getDoubleGridProperty( "NTG" );
+
+    BOOST_CHECK_EQUAL( ntg.iget( 0,0,0) , 8.50 );  // MULTA
+    BOOST_CHECK_EQUAL( ntg.iget( 0,5,0) , 5.00 );  // POLY
+
+    BOOST_CHECK_EQUAL( ntg.iget( 0,0,1) , 4.0 );  // COPY
+    BOOST_CHECK_EQUAL( ntg.iget( 0,5,1) , 4.0 );  // MINLIM
+
+    BOOST_CHECK_EQUAL( ntg.iget( 0,0,2) , 2.0 );  // MAXLIM
+}
 

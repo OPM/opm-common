@@ -87,6 +87,7 @@ namespace Opm {
         void handleCOPYREGKeyword( const DeckKeyword& deckKeyword );
         void handleEQUALREGKeyword(const DeckKeyword& deckKeyword );
         void handleMULTIREGKeyword(const DeckKeyword& deckKeyword );
+        void handleOPERATEKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager);
 
         void loadGridPropertyFromDeckKeyword(const Box& inputBox,
                                              const DeckKeyword& deckKeyword);

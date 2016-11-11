@@ -397,6 +397,118 @@ namespace Opm {
         }
     }
 
+    namespace {
+        /*
+          The functions in this namespace are those listed as
+          available operations in the OPERATE keyword.
+        */
+
+        double MULTA(double, double X, double alpha, double beta) {
+            return alpha*X + beta;
+        }
+
+        // NB: The POLY function and the MULTIPLY function both use
+        // the R value in the calculation. That implies that we should
+        // ideally check that the R property has already been
+        // initialized with a valid value, For all the other
+        // operations R only appears on the left side of the equation,
+        // and can be fully assigned to.
+        double POLY(double R, double X, double alpha, double beta) {
+            return R + alpha * std::pow(X , beta );
+        }
+
+        double MULTIPLY(double R, double X, double , double ) {
+            return R * X;
+        }
+
+        double SLOG(double, double X, double alpha, double beta) {
+            return pow(10 , alpha + beta * X);
+        }
+
+        double LOG10(double, double X, double , double ) {
+            return log10(X);
+        }
+
+        double LOGE(double, double X, double , double ) {
+            return log(X);
+        }
+
+        double INV(double, double X, double , double ) {
+            return 1.0/X;
+        }
+
+        double MULTX(double, double X, double alpha, double ) {
+            return alpha * X;
+        }
+
+        double ADDX(double, double X, double alpha, double ) {
+            return alpha + X;
+        }
+
+        double COPY(double, double X, double, double ) {
+            return X;
+        }
+
+        double MAXLIM(double, double X, double alpha, double ) {
+            return std::min( alpha , X );
+        }
+
+        double MINLIM(double, double X, double alpha, double ) {
+            return std::max( alpha , X );
+        }
+
+        double MULTP(double, double X, double alpha, double beta) {
+            return alpha * pow(X, beta );
+        }
+
+        double ABS(double, double X, double, double) {
+            return std::abs(X);
+        }
+    }
+
+
+    template <typename T>
+    void GridProperties<T>::handleOPERATERecord( const DeckRecord& record, BoxManager& boxManager) {
+        using  operate_fptr = decltype( &MULTA );
+        static const std::map<std::string , operate_fptr> operations = {{"MULTA"  , &MULTA},
+                                                                        {"POLY"   , &POLY},
+                                                                        {"SLOG"   , &SLOG},
+                                                                        {"LOG10"  , &LOG10},
+                                                                        {"LOGE"   , &LOGE},
+                                                                        {"INV"    , &INV},
+                                                                        {"MULTX"  , &MULTX},
+                                                                        {"ADDX"   , &ADDX},
+                                                                        {"COPY"   , &COPY},
+                                                                        {"MAXLIM" , &MAXLIM},
+                                                                        {"MINLIM" , &MINLIM},
+                                                                        {"MULTP"  , &MULTP},
+                                                                        {"ABS"    , &ABS},
+                                                                        {"MULTIPLY" , &MULTIPLY}};
+
+        const std::string& srcArray    = record.getItem("ARRAY").get< std::string >(0);
+        const std::string& targetArray = record.getItem("TARGET_ARRAY").get< std::string >(0);
+        const std::string& operation   = record.getItem("OPERATION").get< std::string >(0);
+        double alpha = record.getItem("PARAM1").get< double >(0);
+        double beta = record.getItem("PARAM2").get< double >(0);
+
+        if (!supportsKeyword( targetArray))
+            throw std::invalid_argument("Fatal error processing COPYREG record - invalid/undefined keyword: " + targetArray);
+
+        if (!hasKeyword( srcArray ))
+            throw std::invalid_argument("Fatal error processing COPYREG record - invalid/undefined keyword: " + srcArray);
+
+        {
+            const std::vector<T>& srcData = getKeyword( srcArray ).getData();
+            std::vector<T>& targetData = getOrCreateProperty( targetArray ).getData();
+            operate_fptr func = operations.at( operation );
+
+            setKeywordBox(record, boxManager);
+            for (auto index : boxManager.getActiveBox())
+                targetData[index] = func( targetData[index] , srcData[index] , alpha, beta );
+        }
+    }
+
+
     template< typename T >
     void GridProperties<T>::postAddKeyword(const std::string& name,
                                            const T defaultValue,

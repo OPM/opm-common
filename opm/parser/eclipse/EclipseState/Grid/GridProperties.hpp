@@ -127,7 +127,7 @@ namespace Opm {
         void handleADDREGRecord( const DeckRecord& record, const GridProperty<int>& regionProperty );
         void handleMULTIREGRecord( const DeckRecord& record, const GridProperty<int>& regionProperty );
         void handleCOPYREGRecord( const DeckRecord& record, const GridProperty<int>& regionProperty );
-
+        void handleOPERATERecord( const DeckRecord& record , BoxManager& boxManager);
         /*
           Iterators over initialized properties. The overloaded
           operator*() opens the pair which comes natively from the

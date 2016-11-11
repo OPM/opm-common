@@ -13,6 +13,23 @@ DZ
 TOPS
 100*1 /
 
+NTG
+  1000*1 /
+
+SWAT
+  1000*4 /
+
+OPERATE
+  NTG  1 10 1  5 1  1  'MULTA' SWAT  2 0.50  /   -- NTG = SWAT * 2 + 0.50
+  NTG  1 10 6 10 1  1  'POLY'  SWAT  2 0.50  /      -- NTG = NTG + 2 * SWAT^0.5
+--
+  NTG  1 10 1  5 2  2  'COPY' SWAT /                -- NTG = SWAT
+  NTG  1 10 6 10 2  2  'MINLIM'  SWAT  2  /         -- NTG = max(swat, 2 )
+--
+  NTG  1 10 1  5 3  3  'MAXLIM'  SWAT  2  /         -- NTG = min(swat, 2 )
+/  
+
+
 PERMX
   1000*1 /
 
