@@ -29,11 +29,28 @@ void RegressionTest::getRegressionTest(){
     std::vector<double> dataVec1, dataVec2, absDevVec, relDevVec;
     int ivar = 0;
     if(stringlist_get_size(keysShort) != stringlist_get_size(keysLong)){
+        int missing_count = 0;
+        std::cout << "Keywords missing from one case: " << std::endl;
+
+        for (int i=0; i < stringlist_get_size( keysLong); i++) {
+            const char * key = stringlist_iget( keysLong , i );
+            if (!stringlist_contains( keysShort , key)) {
+                std::cout << key << " ";
+
+                missing_count++;
+                if ((missing_count % 8) == 0)
+                    std::cout << std::endl;
+            }
+        }
+        std::cout << std::endl;
+
         OPM_THROW(std::runtime_error, "Different ammont of keywords in the two summary files.");
     }
     if(printKeyword){
         printKeywords();
     }
+
+
     //Iterates over all keywords from the restricted file, use iterator "ivar". Searches for a  match in the file with more keywords, use the iterator "jvar".
     while(ivar < stringlist_get_size(keysShort)){
         const char* keyword = stringlist_iget(keysShort, ivar);
