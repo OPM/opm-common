@@ -273,7 +273,8 @@ EclipseState/Tables/TableSchema.hpp
 EclipseState/Tables/TableIndex.hpp
 #
 Utility/Functional.hpp
-Utility/Stringview.hpp)
+Utility/Stringview.hpp
+Utility/Typetools.hpp)
 
 add_library(buildParser ${rawdeck_source} ${build_parser_source} ${deck_source} ${unit_source} ${generator_source} ${utility_source})
 target_link_libraries(buildParser opmjson ${opm-common_LIBRARIES} ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
