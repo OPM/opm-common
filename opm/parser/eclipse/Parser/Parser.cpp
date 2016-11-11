@@ -35,12 +35,14 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
 
 namespace Opm {
@@ -439,10 +441,10 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
     parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msgContainer, msg );
 
     const auto* keyword = parser.getKeyword( sizeKeyword.first );
-    const auto record = keyword->getRecord(0);
-    const auto int_item = std::dynamic_pointer_cast<const ParserIntItem>( record->get( sizeKeyword.second ) );
+    const auto& record = keyword->getRecord(0);
+    const auto& int_item = record.get( sizeKeyword.second );
 
-    const auto targetSize = int_item->getDefault( );
+    const auto targetSize = int_item.getDefault< int >( );
     return std::make_shared< RawKeyword >( keywordString,
                                             parserState.current_path().string(),
                                             parserState.line(),

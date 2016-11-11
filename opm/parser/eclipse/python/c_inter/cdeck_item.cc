@@ -20,7 +20,7 @@ extern "C" {
     */
 
     int deck_item_get_type( const Opm::DeckItem * item ) {
-        return item->getType();
+        return static_cast< int >( item->getType() );
     }
 
     int deck_item_iget_int( const Opm::DeckItem * item , int index) {

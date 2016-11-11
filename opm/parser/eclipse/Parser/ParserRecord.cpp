@@ -23,9 +23,20 @@
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
+
+namespace {
+    struct name_eq {
+        name_eq( const std::string& x ) : name( x ) {}
+        const std::string& name;
+        bool operator()( const ParserItem& x ) const {
+            return x.name() == this->name;
+        }
+    };
+}
 
     ParserRecord::ParserRecord()
         : m_dataRecord( false )
@@ -36,87 +47,88 @@ namespace Opm {
         return m_items.size();
     }
 
-    void ParserRecord::addItem(std::shared_ptr< const ParserItem > item) {
+    void ParserRecord::addItem( ParserItem item ) {
         if (m_dataRecord)
             throw std::invalid_argument("Record is already marked as DataRecord - can not add items");
 
-        if (m_itemMap.find(item->name()) == m_itemMap.end()) {
-            m_items.push_back(item);
-            m_itemMap[item->name()] = item;
-        } else
-            throw std::invalid_argument("Itemname: " + item->name() + " already exists.");
+        auto itr = std::find_if( this->m_items.begin(),
+                                 this->m_items.end(),
+                                 name_eq( item.name() ) );
+
+        if( itr != this->m_items.end() )
+            throw std::invalid_argument("Itemname: " + item.name() + " already exists.");
+
+        this->m_items.push_back( std::move( item ) );
     }
 
-    void ParserRecord::addDataItem(std::shared_ptr< const ParserItem > item) {
+    void ParserRecord::addDataItem( ParserItem item ) {
         if (m_items.size() > 0)
             throw std::invalid_argument("Record already contains items - can not add Data Item");
 
-        addItem(item);
+        this->addItem( std::move( item) );
         m_dataRecord = true;
     }
 
 
 
-    std::vector< std::shared_ptr< const ParserItem > >::const_iterator ParserRecord::begin() const {
+    std::vector< ParserItem >::const_iterator ParserRecord::begin() const {
         return m_items.begin();
     }
 
 
-    std::vector< std::shared_ptr< const ParserItem > >::const_iterator ParserRecord::end() const {
+    std::vector< ParserItem >::const_iterator ParserRecord::end() const {
         return m_items.end();
     }
 
 
     bool ParserRecord::hasDimension() const {
-        bool hasDim = false;
-        for (auto iter=begin(); iter != end(); ++iter) {
-            if ((*iter)->hasDimension())
-                hasDim = true;
-        }
-        return hasDim;
+        return std::any_of( this->begin(), this->end(),
+                    []( const ParserItem& x ) { return x.hasDimension(); } );
     }
 
 
 
     void ParserRecord::applyUnitsToDeck( Deck& deck, DeckRecord& deckRecord ) const {
-        for (auto iter=begin(); iter != end(); ++iter) {
-            if ((*iter)->hasDimension()) {
-                auto& deckItem = deckRecord.getItem( (*iter)->name() );
-                std::shared_ptr<const ParserItem> parserItem = get( (*iter)->name() );
+        for( const auto& item : *this ) {
+            if( !item.hasDimension() ) continue;
 
-                for (size_t idim=0; idim < (*iter)->numDimensions(); idim++) {
-                    auto activeDimension  = deck.getActiveUnitSystem().getNewDimension( parserItem->getDimension(idim) );
-                    auto defaultDimension = deck.getDefaultUnitSystem().getNewDimension( parserItem->getDimension(idim) );
-                    deckItem.push_backDimension( activeDimension , defaultDimension );
-                }
+            auto& deckItem = deckRecord.getItem( item.name() );
+
+            for (size_t idim = 0; idim < item.numDimensions(); idim++) {
+                auto activeDimension  = deck.getActiveUnitSystem().getNewDimension( item.getDimension(idim) );
+                auto defaultDimension = deck.getDefaultUnitSystem().getNewDimension( item.getDimension(idim) );
+                deckItem.push_backDimension( activeDimension , defaultDimension );
             }
         }
     }
 
 
-    std::shared_ptr< const ParserItem > ParserRecord::get(size_t index) const {
-        if (index < m_items.size())
-            return m_items[ index ];
-        else
-            throw std::out_of_range("Out of range");
+    const ParserItem& ParserRecord::get(size_t index) const {
+        return this->m_items.at( index );
     }
 
-    bool ParserRecord::hasItem(const std::string& itemName) const {
-        if (m_itemMap.find(itemName) == m_itemMap.end())
-            return false;
-        else
-            return true;
+    bool ParserRecord::hasItem( const std::string& name ) const {
+        return std::any_of( this->m_items.begin(),
+                            this->m_items.end(),
+                            name_eq( name ) );
     }
 
-    std::shared_ptr< const ParserItem > ParserRecord::get(const std::string& itemName) const {
-        return this->m_itemMap.at( itemName );
+    const ParserItem& ParserRecord::get( const std::string& name ) const {
+        auto itr = std::find_if( this->m_items.begin(),
+                                 this->m_items.end(),
+                                 name_eq( name ) );
+
+        if( itr == this->m_items.end() )
+            throw std::out_of_range( "No item '" + name + "'" );
+
+        return *itr;
     }
 
     DeckRecord ParserRecord::parse(const ParseContext& parseContext , MessageContainer& msgContainer, RawRecord& rawRecord ) const {
         std::vector< DeckItem > items;
         items.reserve( this->size() + 20 );
         for( const auto& parserItem : *this )
-            items.emplace_back( parserItem->scan( rawRecord ) );
+            items.emplace_back( parserItem.scan( rawRecord ) );
 
         if (rawRecord.size() > 0) {
             std::string msg = "The RawRecord for keyword \""  + rawRecord.getKeywordName() + "\" in file\"" + rawRecord.getFileName() + "\" contained " +
@@ -139,7 +151,7 @@ namespace Opm {
                    const auto& item = get(itemIndex);
                    const auto& otherItem = other.get(itemIndex);
 
-                   if (!item->equal(*otherItem)) {
+                   if (item != otherItem ) {
                        equal_ = false;
                        break;
                    }
@@ -155,5 +167,21 @@ namespace Opm {
         return m_dataRecord;
     }
 
+    bool ParserRecord::operator==( const ParserRecord& rhs ) const {
+        return this->equal( rhs );
+    }
+
+    bool ParserRecord::operator!=( const ParserRecord& rhs ) const {
+        return !( *this == rhs );
+    }
+
+    std::ostream& operator<<( std::ostream& stream, const ParserRecord& rec ) {
+        stream << "  ParserRecord { " << std::endl;
+
+        for( const auto& item : rec )
+            stream << "      " << item << std::endl;
+
+        return stream << "    }";
+    }
 
 }

@@ -26,14 +26,10 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParserStringItem.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <boost/test/test_tools.hpp>
 
 using namespace Opm;
-
-static DeckItem mkIntItem( std::string name ) {
-    return DeckItem::make< int >( name );
-}
 
 BOOST_AUTO_TEST_CASE(Initialize) {
     BOOST_CHECK_NO_THROW(DeckRecord deckRecord);
@@ -46,61 +42,54 @@ BOOST_AUTO_TEST_CASE(size_defaultConstructor_sizezero) {
 
 BOOST_AUTO_TEST_CASE(addItem_singleItem_sizeone) {
     DeckRecord deckRecord;
-    deckRecord.addItem( mkIntItem( "TEST" ) );
+    deckRecord.addItem( DeckItem { "TEST", int() } );
     BOOST_CHECK_EQUAL(1U, deckRecord.size());
 }
 
 BOOST_AUTO_TEST_CASE(addItem_multipleItems_sizecorrect) {
 
     DeckRecord deckRecord;
-    deckRecord.addItem( mkIntItem( "TEST" ) );
-    deckRecord.addItem( mkIntItem( "TEST2" ) );
-    deckRecord.addItem( mkIntItem( "TEST3" ) );
+    deckRecord.addItem( DeckItem { "TEST", int() } );
+    deckRecord.addItem( DeckItem { "TEST2", int() } );
+    deckRecord.addItem( DeckItem { "TEST3", int() } );
 
     BOOST_CHECK_EQUAL(3U, deckRecord.size());
 }
 
-BOOST_AUTO_TEST_CASE(addItem_sameItemTwoTimes_throws) {
-    DeckRecord deckRecord;
-    auto intItem1 = mkIntItem( "TEST" );
-    deckRecord.addItem( std::move( intItem1 ) );
-    BOOST_CHECK_THROW(deckRecord.addItem( std::move( intItem1 ) ), std::invalid_argument);
-}
-
 BOOST_AUTO_TEST_CASE(addItem_differentItemsSameName_throws) {
     DeckRecord deckRecord;
-    deckRecord.addItem( mkIntItem( "TEST" ) );
-    BOOST_CHECK_THROW( deckRecord.addItem( mkIntItem( "TEST" ) ), std::invalid_argument );
-    std::vector< DeckItem > items = { mkIntItem( "TEST" ), mkIntItem( "TEST" ) };
+    deckRecord.addItem( DeckItem { "TEST", int() } );
+    BOOST_CHECK_THROW( deckRecord.addItem( DeckItem { "TEST", int() } ), std::invalid_argument );
+    std::vector< DeckItem > items = { DeckItem { "TEST", int() }, DeckItem { "TEST" , int() } };
     BOOST_CHECK_THROW( DeckRecord( std::move( items ) ), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(get_byIndex_returnsItem) {
     DeckRecord deckRecord;
-    deckRecord.addItem( mkIntItem( "TEST" ) );
+    deckRecord.addItem( DeckItem { "TEST", int() } );
     BOOST_CHECK_NO_THROW(deckRecord.getItem(0U));
 }
 
 BOOST_AUTO_TEST_CASE(get_indexoutofbounds_throws) {
     DeckRecord deckRecord;
-    deckRecord.addItem( mkIntItem( "TEST" ) );
+    deckRecord.addItem( DeckItem { "TEST", int() } );
     BOOST_CHECK_THROW(deckRecord.getItem(1), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(get_byName_returnsItem) {
     DeckRecord deckRecord;
-    deckRecord.addItem( mkIntItem( "TEST" ) );
+    deckRecord.addItem( DeckItem { "TEST", int() } );
     deckRecord.getItem("TEST");
 }
 
 BOOST_AUTO_TEST_CASE(get_byNameNonExisting_throws) {
     DeckRecord deckRecord;
-    deckRecord.addItem( mkIntItem( "TEST" ) );
+    deckRecord.addItem( DeckItem { "TEST", int() } );
     BOOST_CHECK_THROW(deckRecord.getItem("INVALID"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
-    auto itemString = std::make_shared< ParserStringItem >(std::string("STRINGITEM1"));
+    ParserItem itemString("STRINGITEM1", "" );
     ParserRecord record1;
     RawRecord rawRecord( " ' VALUE ' " );
     ParseContext parseContext;

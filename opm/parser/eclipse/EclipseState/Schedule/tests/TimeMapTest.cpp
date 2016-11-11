@@ -103,11 +103,11 @@ BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
 
 BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
     Opm::DeckRecord startRecord;
-    auto dayItem = Opm::DeckItem::make< int >("DAY");
-    auto monthItem = Opm::DeckItem::make< std::string >("MONTH");
-    auto yearItem = Opm::DeckItem::make< int >("YEAR");
-    auto timeItem = Opm::DeckItem::make< std::string >("TIME");
-    auto extraItem = Opm::DeckItem::make< int >("EXTRA");
+    Opm::DeckItem dayItem("DAY", int() );
+    Opm::DeckItem monthItem("MONTH", std::string() );
+    Opm::DeckItem yearItem("YEAR", int() );
+    Opm::DeckItem timeItem("TIME", std::string() );
+    Opm::DeckItem extraItem("EXTRA", int() );
 
     dayItem.push_back( 10 );
     yearItem.push_back(1987 );
@@ -116,19 +116,19 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
 
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
-    startRecord.addItem( std::move( dayItem ) );
+    startRecord.addItem( dayItem );
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
-    startRecord.addItem( std::move( monthItem ) );
+    startRecord.addItem( monthItem );
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
-    startRecord.addItem( std::move( yearItem ) );
+    startRecord.addItem( yearItem );
     BOOST_CHECK_THROW(Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 
-    startRecord.addItem( std::move( timeItem ) );
+    startRecord.addItem( timeItem );
     BOOST_CHECK_NO_THROW(Opm::TimeMap::timeFromEclipse( startRecord ));
 
-    startRecord.addItem( std::move( extraItem ) );
+    startRecord.addItem( extraItem );
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 }
 
@@ -136,17 +136,17 @@ BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
 
 BOOST_AUTO_TEST_CASE( dateFromEclipseInvalidMonthThrows ) {
     Opm::DeckRecord startRecord;
-    auto dayItem = Opm::DeckItem::make< int >("DAY");
-    auto monthItem = Opm::DeckItem::make< std::string >("MONTH");
-    auto yearItem = Opm::DeckItem::make< int >("YEAR");
+    Opm::DeckItem dayItem( "DAY", int() );
+    Opm::DeckItem monthItem( "MONTH", std::string() );
+    Opm::DeckItem yearItem( "YEAR", int() );
 
     dayItem.push_back( 10 );
     yearItem.push_back(1987 );
     monthItem.push_back("XXX");
 
-    startRecord.addItem( std::move( dayItem ) );
-    startRecord.addItem( std::move( monthItem ) );
-    startRecord.addItem( std::move( yearItem ) );
+    startRecord.addItem( dayItem );
+    startRecord.addItem( monthItem );
+    startRecord.addItem( yearItem );
 
     BOOST_CHECK_THROW( Opm::TimeMap::timeFromEclipse( startRecord ) , std::invalid_argument );
 }
@@ -177,10 +177,10 @@ BOOST_AUTO_TEST_CASE( timeFromEclipseCheckMonthNames ) {
 
 BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
     Opm::DeckRecord  startRecord;
-    auto dayItem = Opm::DeckItem::make< int >("DAY");
-    auto monthItem = Opm::DeckItem::make< std::string >("MONTH");
-    auto yearItem = Opm::DeckItem::make< int >("YEAR");
-    auto timeItem = Opm::DeckItem::make< std::string >("TIME");
+    Opm::DeckItem dayItem( "DAY", int() );
+    Opm::DeckItem monthItem( "MONTH", std::string() );
+    Opm::DeckItem yearItem("YEAR", int() );
+    Opm::DeckItem timeItem("TIME", std::string() );
 
     dayItem.push_back( 10 );
     yearItem.push_back( 1987 );

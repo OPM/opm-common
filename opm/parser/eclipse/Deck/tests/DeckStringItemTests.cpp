@@ -28,12 +28,12 @@
 using namespace Opm;
 
 BOOST_AUTO_TEST_CASE(InitializeString) {
-    auto stringItem = DeckItem::make< std::string >("TEST");
+    DeckItem stringItem("TEST", std::string() );
     BOOST_CHECK_EQUAL("TEST", stringItem.name());
 }
 
 BOOST_AUTO_TEST_CASE(DummyDefaults) {
-    auto deckStringItem = DeckItem::make< std::string >("TEST");
+    DeckItem deckStringItem("TEST", std::string() );
     BOOST_CHECK_EQUAL(deckStringItem.size(), 0);
 
     deckStringItem.push_backDummyDefault();
@@ -43,14 +43,14 @@ BOOST_AUTO_TEST_CASE(DummyDefaults) {
 }
 
 BOOST_AUTO_TEST_CASE(GetStringAtIndex_NoData_ExceptionThrown) {
-    auto deckStringItem = DeckItem::make< std::string >("TEST");
+    DeckItem deckStringItem( "TEST", std::string() );
     BOOST_CHECK_THROW(deckStringItem.get< std::string >(0), std::out_of_range);
     deckStringItem.push_back("SA");
     BOOST_CHECK_THROW(deckStringItem.get< std::string >(1), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(size_variouspushes_sizecorrect) {
-    auto deckStringItem = DeckItem::make< std::string >("TEST");
+    DeckItem deckStringItem( "TEST", std::string() );
 
     BOOST_CHECK_EQUAL(0U, deckStringItem.size());
     deckStringItem.push_back("WELL-3");
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(size_variouspushes_sizecorrect) {
 }
 
 BOOST_AUTO_TEST_CASE(DefaultNotApplied) {
-    auto deckStringItem = DeckItem::make< std::string >("TEST");
+    DeckItem deckStringItem( "TEST", std::string() );
     BOOST_CHECK( deckStringItem.size() == 0 );
 
     deckStringItem.push_back( "FOO") ;
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(DefaultNotApplied) {
 }
 
 BOOST_AUTO_TEST_CASE(DefaultApplied) {
-    auto deckStringItem = DeckItem::make< std::string >("TEST");
+    DeckItem deckStringItem( "TEST", std::string() );
     BOOST_CHECK( deckStringItem.size() == 0 );
 
     deckStringItem.push_backDefault( "FOO" );
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(DefaultApplied) {
 
 
 BOOST_AUTO_TEST_CASE(PushBackMultiple) {
-    auto stringItem = DeckItem::make< std::string >("HEI");
+    DeckItem stringItem( "TEST", std::string() );
     stringItem.push_back("Heisann ", 100U );
     BOOST_CHECK_EQUAL( 100U , stringItem.size() );
     for (size_t i=0; i < 100; i++)

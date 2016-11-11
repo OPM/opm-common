@@ -36,7 +36,7 @@ namespace Opm {
         DeckRecord( std::vector< DeckItem >&& );
 
         size_t size() const;
-        void addItem( DeckItem&& deckItem );
+        void addItem( DeckItem deckItem );
 
         DeckItem& getItem( size_t index );
         DeckItem& getItem( const std::string& name );
@@ -47,7 +47,7 @@ namespace Opm {
         const DeckItem& getDataItem() const;
 
         bool hasItem(const std::string& name) const;
-        
+
         template <class Item>
         DeckItem& getItem() {
             return getItem( Item::itemName );

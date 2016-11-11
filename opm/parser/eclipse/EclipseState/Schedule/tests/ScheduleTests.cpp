@@ -249,9 +249,9 @@ static Deck deckWithGRUPTREE() {
     DeckKeyword gruptreeKeyword("GRUPTREE");
 
     DeckRecord recordChildOfField;
-    auto itemChild1 = DeckItem::make< std::string >( "CHILD_GROUP" );
+    DeckItem itemChild1( "CHILD_GROUP", std::string() );
     itemChild1.push_back(std::string("BARNET"));
-    auto itemParent1 = DeckItem::make< std::string >( "PARENT_GROUP" );
+    DeckItem itemParent1( "PARENT_GROUP", std::string() );
     itemParent1.push_back(std::string("FAREN"));
 
     recordChildOfField.addItem( std::move( itemChild1 ) );

@@ -27,14 +27,13 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/ParserDoubleItem.hpp>
-#include <opm/parser/eclipse/Parser/ParserIntItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/RawEnums.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
+#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 
 using namespace Opm;
 
@@ -147,23 +146,23 @@ BOOST_AUTO_TEST_CASE(ParserKeywordMatches) {
 
 BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
     const auto& parserKeyword = createFixedSized("PORO", (size_t) 1);
-    const auto& item = std::make_shared< ParserIntItem >( "ACTNUM" , ALL);
-    std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
+    ParserItem item( "ACTNUM" , ParserItem::item_size::ALL, 0 );
+    ParserRecord record;
 
-    BOOST_CHECK_EQUAL( false , parserKeyword->isDataKeyword() );
-    record->addDataItem( item );
+    BOOST_CHECK( !parserKeyword->isDataKeyword() );
+    record.addDataItem( item );
     parserKeyword->addRecord( record );
-    BOOST_CHECK_EQUAL( true , parserKeyword->isDataKeyword() );
+    BOOST_CHECK( parserKeyword->isDataKeyword() );
 
-    BOOST_CHECK_EQUAL(true , parserKeyword->hasFixedSize( ));
+    BOOST_CHECK( parserKeyword->hasFixedSize() );
     BOOST_CHECK_EQUAL(1U , parserKeyword->getFixedSize() );
 }
 
 BOOST_AUTO_TEST_CASE(WrongConstructor_addDataItem_throws) {
     const auto& parserKeyword = createDynamicSized("PORO");
-    const auto& dataItem = std::make_shared< ParserIntItem >( "ACTNUM" , ALL );
-    std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
-    record->addDataItem( dataItem );
+    ParserItem dataItem( "ACTNUM" , ParserItem::item_size::ALL );
+    ParserRecord record;
+    record.addDataItem( dataItem );
     BOOST_CHECK_THROW( parserKeyword->addDataRecord( record ) , std::invalid_argument);
 }
 
@@ -270,10 +269,10 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObjectItemsOK) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" : [{\"name\" : \"I\", \"value_type\" : \"INT\"}]}");
     const auto& parserKeyword = std::make_shared<const ParserKeyword>(jsonObject);
     const auto& record = parserKeyword->getRecord(0);
-    const auto& item = record->get( 0 );
-    BOOST_CHECK_EQUAL( 1U , record->size( ) );
-    BOOST_CHECK_EQUAL( "I" , item->name( ) );
-    BOOST_CHECK_EQUAL( SINGLE , item->sizeType());
+    const auto& item = record.get( 0 );
+    BOOST_CHECK_EQUAL( 1U , record.size( ) );
+    BOOST_CHECK_EQUAL( "I" , item.name( ) );
+    BOOST_CHECK_EQUAL( ParserItem::item_size::SINGLE , item.sizeType());
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_sizeFromOther) {
@@ -296,15 +295,15 @@ BOOST_AUTO_TEST_CASE(AddDataKeywordFromJson_correctlyConfigured) {
     Json::JsonObject jsonConfig("{\"name\": \"ACTNUM\", \"sections\":[\"GRID\"], \"data\" : {\"value_type\": \"INT\"}}");
     const auto& parserKeyword = std::make_shared<const ParserKeyword>(jsonConfig);
     const auto& parserRecord = parserKeyword->getRecord(0);
-    const auto& item = parserRecord->get(0);
+    const auto& item = parserRecord.get(0);
 
 
-    BOOST_CHECK_EQUAL( true , parserKeyword->isDataKeyword());
-    BOOST_CHECK_EQUAL(true , parserKeyword->hasFixedSize( ));
+    BOOST_CHECK( parserKeyword->isDataKeyword() );
+    BOOST_CHECK( parserKeyword->hasFixedSize( ) );
     BOOST_CHECK_EQUAL(1U , parserKeyword->getFixedSize() );
 
-    BOOST_CHECK_EQUAL( item->name() , ParserKeywords::ACTNUM::data::itemName );
-    BOOST_CHECK_EQUAL( ALL , item->sizeType() );
+    BOOST_CHECK_EQUAL( item.name() , ParserKeywords::ACTNUM::data::itemName );
+    BOOST_CHECK_EQUAL( ParserItem::item_size::ALL, item.sizeType() );
 }
 
 BOOST_AUTO_TEST_CASE(AddkeywordFromJson_numTables_incoorect_throw) {
@@ -393,15 +392,16 @@ BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
 
 BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     const auto& tabdimsKeyword = createFixedSized("TEST" , 1);
-    std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
-    auto item = std::make_shared< ParserIntItem >(std::string("ITEM") , ALL);
+    ParserRecord record;
+    ParserItem item("ITEM", ParserItem::item_size::ALL );
+    item.setType( int() );
     auto rawkeyword = std::make_shared< RawKeyword >( tabdimsKeyword->getName() , "FILE" , 10U , 1 );
     ParseContext parseContext;
     MessageContainer msgContainer;
 
     BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword->getSizeType());
     rawkeyword->addRawRecordString("/");
-    record->addItem(item);
+    record.addItem(item);
     tabdimsKeyword->addRecord( record );
 
     const auto deckKeyword = tabdimsKeyword->parse( parseContext , msgContainer, rawkeyword );
@@ -419,51 +419,53 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
 /* Dimension */
 BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
     const auto& parserKeyword = createDynamicSized("JA");
-    const auto& itemI = std::make_shared< ParserIntItem >("I", SINGLE);
-    const auto& item2 = std::make_shared< ParserDoubleItem >("ID", SINGLE);
-    std::shared_ptr<ParserRecord> record = std::make_shared<ParserRecord>();
+    ParserItem item1("I", ParserItem::item_size::SINGLE, 0 );
+    ParserItem item2("ID", ParserItem::item_size::SINGLE, 0.0 );
+    ParserRecord record;
 
-    BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
+    BOOST_CHECK( !parserKeyword->hasDimension());
 
-    record->addItem( itemI );
-    record->addItem( item2 );
+    record.addItem( item1 );
     parserKeyword->addRecord( record );
-    BOOST_CHECK_EQUAL( false , parserKeyword->hasDimension());
-    BOOST_CHECK_EQUAL( 0U , itemI->numDimensions() );
+    BOOST_CHECK( !parserKeyword->hasDimension() );
+    BOOST_CHECK_EQUAL( 0U , item1.numDimensions() );
 
-    item2->push_backDimension("Length*Length/Time");
-    BOOST_CHECK_EQUAL( true , parserKeyword->hasDimension());
-    BOOST_CHECK_EQUAL( 1U , item2->numDimensions() );
+    item2.push_backDimension("Length*Length/Time");
+    record.addItem( item2 );
+    const auto& parserKeyword2 = createDynamicSized("JA");
+    parserKeyword2->addRecord( record );
+    BOOST_CHECK( parserKeyword2->hasDimension() );
+    BOOST_CHECK_EQUAL( 1U , item2.numDimensions() );
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimension) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"SINGLE\" , \"value_type\" : \"DOUBLE\" , \"dimension\" : \"Length*Length/Time\"}]}");
     const auto& parserKeyword = std::make_shared<ParserKeyword>(jsonObject);
     const auto& record = parserKeyword->getRecord(0);
-    const auto& item = record->get("ItemX");
+    const auto& item = record.get("ItemX");
 
     BOOST_CHECK_EQUAL("BPR" , parserKeyword->getName());
-    BOOST_CHECK_EQUAL( true , parserKeyword->hasFixedSize() );
+    BOOST_CHECK( parserKeyword->hasFixedSize() );
     BOOST_CHECK_EQUAL( 100U , parserKeyword->getFixedSize() );
 
     BOOST_CHECK( parserKeyword->hasDimension() );
-    BOOST_CHECK( item->hasDimension() );
-    BOOST_CHECK_EQUAL( 1U , item->numDimensions() );
+    BOOST_CHECK( item.hasDimension() );
+    BOOST_CHECK_EQUAL( 1U , item.numDimensions() );
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withDimensionList) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : 100 , \"items\" :[{\"name\":\"ItemX\" , \"size_type\":\"ALL\" , \"value_type\" : \"DOUBLE\" , \"dimension\" : [\"Length*Length/Time\" , \"Time\", \"1\"]}]}");
     const auto& parserKeyword = std::make_shared<ParserKeyword>(jsonObject);
     const auto& record = parserKeyword->getRecord(0);
-    const auto& item = record->get("ItemX");
+    const auto& item = record.get("ItemX");
 
     BOOST_CHECK_EQUAL("BPR" , parserKeyword->getName());
     BOOST_CHECK_EQUAL( true , parserKeyword->hasFixedSize() );
     BOOST_CHECK_EQUAL( 100U , parserKeyword->getFixedSize() );
 
     BOOST_CHECK( parserKeyword->hasDimension() );
-    BOOST_CHECK( item->hasDimension() );
-    BOOST_CHECK_EQUAL( 3U , item->numDimensions() );
+    BOOST_CHECK( item.hasDimension() );
+    BOOST_CHECK_EQUAL( 3U , item.numDimensions() );
 }
 
 
@@ -485,7 +487,7 @@ BOOST_AUTO_TEST_CASE(ConstructFromJson_withRecords) {
     auto kw1 = std::make_shared<ParserKeyword>( jsonObject1 );
     auto kw2 = std::make_shared<ParserKeyword>( jsonObject2 );
 
-    BOOST_CHECK( kw1->equal( *kw2 ));
+    BOOST_CHECK_EQUAL( *kw1, *kw2 );
 
 }
 

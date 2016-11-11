@@ -20,9 +20,11 @@
 #ifndef PARSERRECORD_HPP
 #define PARSERRECORD_HPP
 
+#include <iosfwd>
 #include <vector>
-#include <map>
 #include <memory>
+
+#include <opm/parser/eclipse/Parser/ParserItem.hpp>
 
 namespace Opm {
 
@@ -37,23 +39,28 @@ namespace Opm {
     public:
         ParserRecord();
         size_t size() const;
-        void addItem( std::shared_ptr< const ParserItem > item );
-        void addDataItem(std::shared_ptr< const ParserItem > item);
-        std::shared_ptr< const ParserItem > get(size_t index) const;
-        std::shared_ptr< const ParserItem > get(const std::string& itemName) const;
+        void addItem( ParserItem );
+        void addDataItem( ParserItem item );
+        const ParserItem& get(size_t index) const;
+        const ParserItem& get(const std::string& itemName) const;
         DeckRecord parse( const ParseContext&, MessageContainer&, RawRecord& ) const;
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
         bool hasDimension() const;
         bool hasItem(const std::string& itemName) const;
         void applyUnitsToDeck( Deck& deck, DeckRecord& deckRecord) const;
-        std::vector<std::shared_ptr< const ParserItem >>::const_iterator begin() const;
-        std::vector<std::shared_ptr< const ParserItem >>::const_iterator end() const;
+        std::vector< ParserItem >::const_iterator begin() const;
+        std::vector< ParserItem >::const_iterator end() const;
+
+        bool operator==( const ParserRecord& ) const;
+        bool operator!=( const ParserRecord& ) const;
+
     private:
         bool m_dataRecord;
-        std::vector<std::shared_ptr< const ParserItem >> m_items;
-        std::map<std::string , std::shared_ptr< const ParserItem >> m_itemMap;
+        std::vector< ParserItem > m_items;
     };
+
+std::ostream& operator<<( std::ostream&, const ParserRecord& );
 }
 
 
