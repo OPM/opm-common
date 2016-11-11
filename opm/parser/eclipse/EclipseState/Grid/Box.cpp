@@ -103,6 +103,16 @@ namespace Opm {
     }
 
 
+
+    std::vector<size_t>::const_iterator Box::begin() const {
+        return m_indexList.begin();
+    }
+
+    std::vector<size_t>::const_iterator Box::end() const {
+        return m_indexList.end();
+    }
+
+
     const std::vector<size_t>& Box::getIndexList() const {
         return m_indexList;
     }

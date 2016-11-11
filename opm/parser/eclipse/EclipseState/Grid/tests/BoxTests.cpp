@@ -53,9 +53,15 @@ BOOST_AUTO_TEST_CASE(CreateBox) {
                 for (i=0; i < box.getDim(0); i++) {
                     size_t g = i + j*box.getDim(0) + k*box.getDim(0)*box.getDim(1);
                     BOOST_CHECK_EQUAL( indexList[g] , g);
-
+                    
                 }
             }
+        }
+
+        i = 0;
+        for (auto index : box) {
+            BOOST_CHECK_EQUAL( index , indexList[i]);
+            i++;
         }
     }
 }

@@ -38,7 +38,8 @@ namespace Opm {
         bool equal(const Box& other) const;
 
         explicit operator bool() const;
-
+        std::vector<size_t>::const_iterator begin() const;
+        std::vector<size_t>::const_iterator end() const;
 
     private:
         void initIndexList();
