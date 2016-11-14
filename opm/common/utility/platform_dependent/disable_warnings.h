@@ -73,6 +73,7 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #pragma GCC diagnostic ignored "-Wcast-align"
+#pragma GCC diagnostic ignored "-Wcast-qual"
 #endif // COMPATIBLE_COMPILER
 
 #endif // SILENCE_EXTERNAL_WARNINGS
