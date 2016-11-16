@@ -101,6 +101,16 @@ namespace Opm {
     }
 
 
+    std::vector< SimpleTable >::const_iterator PvtxTable::begin() const {
+        return m_underSaturatedTables.begin();
+    }
+
+    std::vector< SimpleTable >::const_iterator PvtxTable::end() const {
+        return m_underSaturatedTables.end();
+    }
+
+
+
     size_t PvtxTable::size() const
     {
         return m_outerColumn.size();

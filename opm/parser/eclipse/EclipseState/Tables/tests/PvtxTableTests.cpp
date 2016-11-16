@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 // generic table classes
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
@@ -130,6 +131,35 @@ BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
 
     BOOST_CHECK_EQUAL( saturatedTable.get(0 , 0) , 20.59 );
     BOOST_CHECK_EQUAL( saturatedTable.get(0 , 1) , 28.19 );
+
+    {
+        int num = 0;
+        UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+        for (const auto& table :  pvtoTable) {
+            if (num == 0) {
+                {
+                    const auto& col = table.getColumn(0);
+                    BOOST_CHECK_EQUAL( col.size() , 5 );
+                    BOOST_CHECK_CLOSE( col[0] , units.to_si( UnitSystem::measure::pressure , 50 ) , 1e-3);
+                    BOOST_CHECK_CLOSE( col[4] , units.to_si( UnitSystem::measure::pressure , 150) , 1e-3);
+                }
+                {
+                    const auto& col = table.getColumn(2);
+                    BOOST_CHECK_CLOSE( col[0] , units.to_si( UnitSystem::measure::viscosity , 1.180) , 1e-3);
+                    BOOST_CHECK_CLOSE( col[4] , units.to_si( UnitSystem::measure::viscosity , 1.453) , 1e-3);
+                }
+            }
+
+            if (num == 1) {
+                const auto& col = table.getColumn(0);
+                BOOST_CHECK_EQUAL( col.size() , 5 );
+                BOOST_CHECK_CLOSE( col[0] , units.to_si( UnitSystem::measure::pressure , 70  ), 1e-3);
+                BOOST_CHECK_CLOSE( col[4] , units.to_si( UnitSystem::measure::pressure , 170 ), 1e-3);
+            }
+            num++;
+        }
+        BOOST_CHECK_EQUAL( num , pvtoTable.size() );
+    }
 }
 
 
