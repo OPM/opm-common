@@ -29,6 +29,32 @@ namespace Opm {
 
 namespace data {
 
+
+    /*
+      The 3D data which are saved to file are assembled in one large
+      container. In the container the data is tagged with an element
+      from the TargetType enum which indicates why they they have been
+      added to the container - and where they are headed.
+
+      RESTART_SOLUTION : Fields which represent primary variables, and
+       are reqired for restart. Typically pressure and
+       suturation. WIll end up in the SOLUTION section of the restart
+       file.
+
+     RESTART_AUXILLARY : Fields with extra information, not required
+       for restart. Examples of this include fluid in place values or
+       evaluations of relative permeability. Will end up in the
+       restart file.
+
+     SUMMARY : Fields which are added only to serve as input data for
+       calculations of summary results. The Summary implementation can
+       use data with any tag value, but if it is tagged as SUMMARY it
+       will not be output anywhere else.
+
+     INIT : Fields which should go to the INIT file.
+    */
+
+
     enum class TargetType {
         RESTART_SOLUTION,
         RESTART_AUXILLARY,
