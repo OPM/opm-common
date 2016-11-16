@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/Tables.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
 #include <cstdlib>
@@ -507,6 +508,12 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
         }
     }
 
+    // Write tables
+    {
+        Tables tables( this->es.getUnits() );
+        tables.addPVTO( this->es.getTableManager().getPvtoTables() );
+        tables.fwrite( fortio );
+    }
 
     // Write all integer field properties from the input deck.
     {
