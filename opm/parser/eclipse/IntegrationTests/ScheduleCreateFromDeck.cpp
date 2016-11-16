@@ -36,7 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/GroupTreeNode.hpp>
 
 using namespace Opm;
 
@@ -312,24 +311,19 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     EclipseGrid grid(10,10,3);
     Schedule sched(parseContext , grid , deck, Phases(true, true, true));
 
-    const auto& rootNode = sched.getGroupTree(0).getNode("FIELD");
+    const auto& grouptree = sched.getGroupTree( 0 );
 
+    BOOST_CHECK( grouptree.exists( "FIRST_LEVEL1" ) );
+    BOOST_CHECK( grouptree.exists( "FIRST_LEVEL2" ) );
+    BOOST_CHECK( grouptree.exists( "SECOND_LEVEL1" ) );
+    BOOST_CHECK( grouptree.exists( "SECOND_LEVEL2" ) );
+    BOOST_CHECK( grouptree.exists( "THIRD_LEVEL1" ) );
 
-    BOOST_REQUIRE_EQUAL("FIELD", rootNode->name());
-
-    BOOST_CHECK(rootNode->hasChildGroup("FIRST_LEVEL1"));
-    const auto& FIRST_LEVEL1 = rootNode->getChildGroup("FIRST_LEVEL1");
-    BOOST_CHECK(rootNode->hasChildGroup("FIRST_LEVEL2"));
-    const auto& FIRST_LEVEL2 = rootNode->getChildGroup("FIRST_LEVEL2");
-
-    BOOST_CHECK(FIRST_LEVEL1->hasChildGroup("SECOND_LEVEL1"));
-    const auto& SECOND_LEVEL1 = FIRST_LEVEL1->getChildGroup("SECOND_LEVEL1");
-
-    BOOST_CHECK(FIRST_LEVEL2->hasChildGroup("SECOND_LEVEL2"));
-    FIRST_LEVEL2->getChildGroup("SECOND_LEVEL2");
-
-    BOOST_CHECK(SECOND_LEVEL1->hasChildGroup("THIRD_LEVEL1"));
-    SECOND_LEVEL1->getChildGroup("THIRD_LEVEL1");
+    BOOST_CHECK_EQUAL( "FIELD", grouptree.parent( "FIRST_LEVEL1" ) );
+    BOOST_CHECK_EQUAL( "FIELD", grouptree.parent( "FIRST_LEVEL2" ) );
+    BOOST_CHECK_EQUAL( "FIRST_LEVEL1", grouptree.parent( "SECOND_LEVEL1" ) );
+    BOOST_CHECK_EQUAL( "FIRST_LEVEL2", grouptree.parent( "SECOND_LEVEL2" ) );
+    BOOST_CHECK_EQUAL( "SECOND_LEVEL1", grouptree.parent( "THIRD_LEVEL1" ) );
 }
 
 
@@ -352,7 +346,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
 
 
 
-BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) {
+BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_size ) {
     ParseContext parseContext;
     Parser parser;
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
@@ -361,12 +355,10 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_iter_function) 
     Schedule schedule(parseContext , grid , deck, Phases(true, true, true));
 
     // Time 0, only from WELSPECS
-    const auto& root0 = schedule.getGroupTree(0).getNode("FIELD");
-    BOOST_CHECK_EQUAL( 2U, std::distance( root0->begin(), root0->end() ) );
+    BOOST_CHECK_EQUAL( 2U, schedule.getGroupTree(0).children("FIELD").size() );
 
     // Time 1, a new group added in tree
-    const auto& root1 = schedule.getGroupTree(1).getNode("FIELD");
-    BOOST_CHECK_EQUAL( 3U, std::distance( root1->begin(), root1->end() ) );
+    BOOST_CHECK_EQUAL( 3U, schedule.getGroupTree(1).children("FIELD").size() );
 }
 
 BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
@@ -378,40 +370,26 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     Schedule schedule(parseContext , grid , deck, Phases(true, true, true));
 
     // Time 0, only from WELSPECS
-    const auto& root0 = schedule.getGroupTree(0).getNode("FIELD");
-    BOOST_REQUIRE_EQUAL("FIELD", root0->name());
-    BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
-    const auto& GROUP_BJARNE = root0->getChildGroup("GROUP_BJARNE");
-    BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE->name());
-
-    BOOST_CHECK(root0->hasChildGroup("GROUP_ODD"));
-    const auto& GROUP_ODD = root0->getChildGroup("GROUP_ODD");
-    BOOST_CHECK_EQUAL("GROUP_ODD", GROUP_ODD->name());
+    const auto& tree0 = schedule.getGroupTree( 0 );
+    BOOST_CHECK( tree0.exists( "FIELD" ) );
+    BOOST_CHECK_EQUAL( "FIELD", tree0.parent( "GROUP_BJARNE" ) );
+    BOOST_CHECK( tree0.exists("GROUP_ODD") );
 
     // Time 1, now also from GRUPTREE
-    const auto& root1 = schedule.getGroupTree(1).getNode("FIELD");
-    BOOST_REQUIRE_EQUAL("FIELD", root1->name());
-    BOOST_CHECK(root1->hasChildGroup("GROUP_BJARNE"));
-    const auto& GROUP_BJARNE1 = root1->getChildGroup("GROUP_BJARNE");
-    BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE1->name());
-
-    BOOST_CHECK(root1->hasChildGroup("GROUP_ODD"));
-    const auto& GROUP_ODD1 = root1->getChildGroup("GROUP_ODD");
-    BOOST_CHECK_EQUAL("GROUP_ODD", GROUP_ODD1->name());
+    const auto& tree1 = schedule.getGroupTree( 1 );
+    BOOST_CHECK( tree1.exists( "FIELD" ) );
+    BOOST_CHECK_EQUAL( "FIELD", tree1.parent( "GROUP_BJARNE" ) );
+    BOOST_CHECK( tree1.exists("GROUP_ODD"));
 
     // - from GRUPTREE
+    BOOST_CHECK( tree1.exists( "GROUP_BIRGER" ) );
+    BOOST_CHECK_EQUAL( "GROUP_BJARNE", tree1.parent( "GROUP_BIRGER" ) );
 
-    BOOST_CHECK(GROUP_BJARNE1->hasChildGroup("GROUP_BIRGER"));
-    const auto& GROUP_BIRGER = GROUP_BJARNE1->getChildGroup("GROUP_BIRGER");
-    BOOST_CHECK_EQUAL("GROUP_BIRGER", GROUP_BIRGER->name());
+    BOOST_CHECK( tree1.exists( "GROUP_NEW" ) );
+    BOOST_CHECK_EQUAL( "FIELD", tree1.parent( "GROUP_NEW" ) );
 
-    BOOST_CHECK(root1->hasChildGroup("GROUP_NEW"));
-    const auto& GROUP_NEW = root1->getChildGroup("GROUP_NEW");
-    BOOST_CHECK_EQUAL("GROUP_NEW", GROUP_NEW->name());
-
-    BOOST_CHECK(GROUP_NEW->hasChildGroup("GROUP_NILS"));
-    const auto& GROUP_NILS = GROUP_NEW->getChildGroup("GROUP_NILS");
-    BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS->name());
+    BOOST_CHECK( tree1.exists( "GROUP_NILS" ) );
+    BOOST_CHECK_EQUAL( "GROUP_NEW", tree1.parent( "GROUP_NILS" ) );
 }
 
 BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
@@ -423,43 +401,15 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     Schedule schedule(parseContext , grid , deck, Phases(true, true, true));
 
 
-    // Time , from  first GRUPTREE
-    const auto& root0 = schedule.getGroupTree(0).getNode("FIELD");
-    BOOST_REQUIRE_EQUAL("FIELD", root0->name());
-    BOOST_CHECK(root0->hasChildGroup("GROUP_BJARNE"));
-    const auto& GROUP_BJARNE0 = root0->getChildGroup("GROUP_BJARNE");
-    BOOST_CHECK_EQUAL("GROUP_BJARNE", GROUP_BJARNE0->name());
+    const auto& tree0 = schedule.getGroupTree( 0 );
 
-    BOOST_CHECK(root0->hasChildGroup("GROUP_NEW"));
-    const auto& GROUP_NEW0 = root0->getChildGroup("GROUP_NEW");
-    BOOST_CHECK_EQUAL("GROUP_NEW", GROUP_NEW0->name());
-
-
-    BOOST_CHECK(GROUP_BJARNE0->hasChildGroup("GROUP_BIRGER"));
-    const auto& GROUP_BIRGER0 = GROUP_BJARNE0->getChildGroup("GROUP_BIRGER");
-    BOOST_CHECK_EQUAL("GROUP_BIRGER", GROUP_BIRGER0->name());
-
-    BOOST_CHECK(GROUP_NEW0->hasChildGroup("GROUP_NILS"));
-    const auto& GROUP_NILS0 = GROUP_NEW0->getChildGroup("GROUP_NILS");
-    BOOST_CHECK_EQUAL("GROUP_NILS", GROUP_NILS0->name());
-
-    // SÅ den nye strukturen med et barneflytt
+    BOOST_CHECK( tree0.exists( "GROUP_BJARNE" ) );
+    BOOST_CHECK( tree0.exists( "GROUP_NILS" ) );
+    BOOST_CHECK( tree0.exists( "GROUP_NEW" ) );
+    BOOST_CHECK_EQUAL( "FIELD", tree0.parent( "GROUP_BJARNE" ) );
+    BOOST_CHECK_EQUAL( "GROUP_BJARNE", tree0.parent( "GROUP_BIRGER" ) );
+    BOOST_CHECK_EQUAL( "GROUP_NEW", tree0.parent( "GROUP_NILS" ) );
 }
-
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_PrintGrouptree) {
-    ParseContext parseContext;
-    Parser parser;
-    std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
-    auto deck =  parser.parseFile(scheduleFile, parseContext);
-    EclipseGrid grid(10,10,3);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
-
-    const auto& rootNode = sched.getGroupTree(0);
-    rootNode.printTree(std::cout);
-
-}
-
 
 BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     ParseContext parseContext;

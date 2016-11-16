@@ -17,142 +17,118 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <stdexcept>
-#include <iostream>
-
 
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 
-
 namespace Opm {
 
-    GroupTree::GroupTree() {
-        m_root = GroupTreeNode::createFieldNode();
+void GroupTree::update( const std::string& name ) {
+    this->update( name, "FIELD" );
+}
+
+/*
+ * Insertions are only done via the update method which maintains the
+ * underlying group vector sorted on group names. This requires group names to
+ * be unique, but simplifies the implementation greatly and emphasises that
+ * this grouptree class is just meta data for the actual group objects (stored
+ * and represented elsewhere)
+ */
+
+void GroupTree::update( const std::string& name, const std::string& parent ) {
+    if( name == "FIELD" )
+        throw std::invalid_argument( "The FIELD group name is reserved." );
+
+    if( parent.empty() )
+        throw std::invalid_argument( "Parent group must have a name." );
+
+    auto root = this->find( parent );
+
+    if( root == this->groups.end() || root->name != parent )
+        this->groups.insert( root, 1, group { parent, "FIELD" } );
+
+    auto node = this->find( name );
+
+    if( node == this->groups.end() || node->name != name ) {
+        this->groups.insert( node, 1, group { name, parent } );
+        return;
     }
 
-    GroupTree::GroupTree( const GroupTree& x ) :
-        m_root( GroupTreeNode::createFieldNode() ) {
-        deepCopy( x.m_root, this->m_root );
+    node->parent = parent;
+}
+
+bool GroupTree::exists( const std::string& name ) const {
+    return std::binary_search( this->groups.begin(),
+                               this->groups.end(),
+                               name );
+}
+
+const std::string& GroupTree::parent( const std::string& name ) const {
+    auto node = std::find( this->groups.begin(), this->groups.end(), name );
+
+    if( node == this->groups.end() )
+        throw std::out_of_range( "No such parent '" + name + "'." );
+
+    return node->parent;
+}
+
+std::vector< std::string > GroupTree::children( const std::string& parent ) const {
+    if( !this->exists( parent ) )
+        throw std::out_of_range( "Node '" + parent + "' does not exist." );
+
+    std::vector< std::string > kids;
+    for( const auto& node : this->groups ) {
+        if( node.parent != parent ) continue;
+        kids.push_back( node.name );
     }
 
-    void GroupTree::updateTree(const std::string& childName) {
-        updateTree(childName, m_root->name());
-    }
+    return kids;
+}
 
-    void GroupTree::updateTree(const std::string& childName, const std::string& parentName) {
-        if (childName == m_root->name()) {
-            throw std::domain_error("Error, trying to add node with the same name as the root, offending name: " + childName);
-        }
+bool GroupTree::operator==( const GroupTree& rhs ) const {
+    return this->groups.size() == rhs.groups.size()
+        && std::equal( this->groups.begin(),
+                       this->groups.end(),
+                       rhs.groups.begin() );
+}
 
-        std::shared_ptr< GroupTreeNode > newParentNode = getNode(parentName);
-        if (!newParentNode) {
-            newParentNode = m_root->addChildGroup(parentName);
-        }
+bool GroupTree::operator!=( const GroupTree& rhs ) const {
+    return !( *this == rhs );
+}
 
-        std::shared_ptr< GroupTreeNode > childNodeInTree = getNode(childName);
-        if (childNodeInTree) {
-            std::shared_ptr< GroupTreeNode > currentParent = getParent(childName);
-            currentParent->removeChild(childNodeInTree);
-            newParentNode->addChildGroup(childNodeInTree);
-        } else {
-            newParentNode->addChildGroup(childName);
-        }
-    }
+bool GroupTree::group::operator==( const std::string& rhs ) const {
+    return this->name == rhs;
+}
 
-    std::shared_ptr< GroupTreeNode > GroupTree::getNode(const std::string& nodeName) const {
-        std::shared_ptr< GroupTreeNode > current = m_root;
-        return getNode(nodeName, current);
-    }
+bool GroupTree::group::operator!=( const std::string& rhs ) const {
+    return !( *this == rhs );
+}
 
-    std::shared_ptr< GroupTreeNode > GroupTree::getNode(const std::string& nodeName, std::shared_ptr< GroupTreeNode > current) const {
-        if (current->name() == nodeName) {
-            return current;
-        } else {
-            std::map<std::string, std::shared_ptr< GroupTreeNode >>::const_iterator iter = current->begin();
-            while (iter != current->end()) {
-                std::shared_ptr< GroupTreeNode > result = getNode(nodeName, (*iter).second);
-                if (result) {
-                    return result;
-                }
-                ++iter;
-            }
-            return std::shared_ptr< GroupTreeNode >();
-        }
-    }
+bool GroupTree::group::operator==( const GroupTree::group& rhs ) const {
+    return this->name == rhs.name && this->parent == rhs.parent;
+}
 
-    std::vector<std::shared_ptr< const GroupTreeNode >> GroupTree::getNodes() const {
-        std::vector<std::shared_ptr< const GroupTreeNode >> nodes;
-        nodes.push_back(m_root);
-        getNodes(m_root, nodes);
-        return nodes;
-    }
+bool GroupTree::group::operator!=( const GroupTree::group& rhs ) const {
+    return !( *this == rhs );
+}
 
-    void GroupTree::getNodes(std::shared_ptr< GroupTreeNode > fromNode, std::vector<std::shared_ptr< const GroupTreeNode >>& nodes) const {
-        std::map<std::string, std::shared_ptr< GroupTreeNode > >::const_iterator iter = fromNode->begin();
-        while (iter != fromNode->end()) {
-            std::shared_ptr< GroupTreeNode > child = (*iter).second;
-            nodes.push_back(child);
-            getNodes(child, nodes);
-            ++iter;
-        }
-    }
+bool GroupTree::group::operator<( const GroupTree::group& rhs ) const {
+    return this->name < rhs.name;
+}
 
-    std::shared_ptr< GroupTreeNode > GroupTree::getParent(const std::string& childName) const {
-        std::shared_ptr< GroupTreeNode > currentChild = m_root;
-        return getParent(childName, currentChild, std::shared_ptr< GroupTreeNode >());
-    }
+bool GroupTree::group::operator<( const std::string& rhs ) const {
+    return this->name < rhs;
+}
 
-    std::shared_ptr< GroupTreeNode > GroupTree::getParent(const std::string& childName, std::shared_ptr< GroupTreeNode > currentChild, std::shared_ptr< GroupTreeNode > parent) const {
-        if (currentChild->name() == childName) {
-            return parent;
-        } else {
-            std::map<std::string, std::shared_ptr< GroupTreeNode >>::const_iterator iter = currentChild->begin();
-            while (iter != currentChild->end()) {
-                std::shared_ptr< GroupTreeNode > result = getParent(childName, (*iter).second, currentChild);
-                if (result) {
-                    return result;
-                }
-                ++iter;
-            }
-            return std::shared_ptr< GroupTreeNode >();
-        }
-    }
+bool operator<( const std::string& lhs, const GroupTree::group& rhs ) {
+    return lhs < rhs.name;
+}
 
-    std::shared_ptr< GroupTree > GroupTree::deepCopy() const {
-        std::shared_ptr< GroupTree > newTree(new GroupTree());
-        std::shared_ptr< GroupTreeNode > currentOriginNode = m_root;
-        std::shared_ptr< GroupTreeNode > currentNewNode = newTree->getNode("FIELD");
-
-        deepCopy(currentOriginNode, currentNewNode);
-        return newTree;
-
-    }
-
-    void GroupTree::deepCopy(std::shared_ptr< GroupTreeNode > origin, std::shared_ptr< GroupTreeNode > copy) const {
-        std::map<std::string, std::shared_ptr< GroupTreeNode > >::const_iterator iter = origin->begin();
-        while (iter != origin->end()) {
-            std::shared_ptr< GroupTreeNode > originChild = (*iter).second;
-            std::shared_ptr< GroupTreeNode > copyChild = copy->addChildGroup(originChild->name());
-            deepCopy(originChild, copyChild);
-            ++iter;
-        }
-    }
-
-    void GroupTree::printTree(std::ostream &os) const {
-        printTree(os , m_root);
-        os << std::endl;
-        os << "End of tree" << std::endl;
-    }
-
-    void GroupTree::printTree(std::ostream &os , std::shared_ptr< GroupTreeNode > fromNode) const {
-        os << fromNode->name() << "(" << fromNode.get() << ")";
-        std::map<std::string, std::shared_ptr< GroupTreeNode > >::const_iterator iter = fromNode->begin();
-        while (iter != fromNode->end()) {
-            const auto& child = (*iter).second;
-            os << "<-" << child->name() << "(" << child.get() << ")" << std::endl;
-            printTree(os , child);
-            ++iter;
-        }
-    }
+std::vector< GroupTree::group >::iterator GroupTree::find( const std::string& name ) {
+    return std::lower_bound( this->groups.begin(),
+                             this->groups.end(),
+                             name );
+}
 
 }

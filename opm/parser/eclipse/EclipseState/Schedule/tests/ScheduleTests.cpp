@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForT
     EclipseGrid grid(10,10,10);
     auto deck = createDeck();
     Schedule schedule(ParseContext() , grid , deck, Phases(true, true, true) );
-    BOOST_CHECK_EQUAL("FIELD", schedule.getGroupTree(0).getNode("FIELD")->name());
+    BOOST_CHECK(schedule.getGroupTree(0).exists("FIELD"));
 }
 
 static Deck deckWithGRUPTREE() {
@@ -266,10 +266,9 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
     EclipseGrid grid(10,10,10);
     auto deck = deckWithGRUPTREE();
     Schedule schedule(ParseContext() , grid , deck, Phases(true, true, true) );
-    const auto& fieldNode = schedule.getGroupTree(0).getNode("FIELD");
-    BOOST_CHECK_EQUAL("FIELD", fieldNode->name());
-    const auto& FAREN = fieldNode->getChildGroup("FAREN");
-    BOOST_CHECK(FAREN->hasChildGroup("BARNET"));
+    BOOST_CHECK( schedule.getGroupTree( 0 ).exists( "FIELD" ) );
+    BOOST_CHECK( schedule.getGroupTree( 0 ).exists( "FAREN" ) );
+    BOOST_CHECK_EQUAL( "FAREN", schedule.getGroupTree( 0 ).parent( "BARNET" ) );
 }
 
 BOOST_AUTO_TEST_CASE(GetGroups) {

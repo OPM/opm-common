@@ -18,51 +18,44 @@
  */
 
 #ifndef GROUPTREE_HPP
-#define	GROUPTREE_HPP
-
-#include <opm/parser/eclipse/EclipseState/Schedule/GroupTreeNode.hpp>
+#define GROUPTREE_HPP
 
 #include <string>
-#include <map>
-#include <memory>
 #include <vector>
 
 namespace Opm {
 
-    class GroupTree {
+class GroupTree {
     public:
-        GroupTree();
-        GroupTree( const GroupTree& );
-        void updateTree(const std::string& childName);
-        void updateTree(const std::string& childName, const std::string& parentName);
+        void update( const std::string& name );
+        void update( const std::string& name, const std::string& parent );
+        bool exists( const std::string& group ) const;
+        const std::string& parent( const std::string& name ) const;
+        std::vector< std::string > children( const std::string& parent ) const;
 
-        std::shared_ptr< GroupTreeNode > getNode(const std::string& nodeName) const;
-        std::vector<std::shared_ptr< const GroupTreeNode >> getNodes() const;
-        std::shared_ptr< GroupTreeNode > getParent(const std::string& childName) const;
-
-        std::shared_ptr<GroupTree> deepCopy() const;
-        void printTree(std::ostream &os) const;
-
-        bool operator==( const GroupTree& rhs ) {
-            return this->m_root == rhs.m_root;
-        }
-
-        bool operator!=( const GroupTree& rhs ) {
-            return !(*this == rhs );
-        }
-
+        bool operator==( const GroupTree& ) const;
+        bool operator!=( const GroupTree& ) const;
 
     private:
-        std::shared_ptr< GroupTreeNode > m_root;
-        std::shared_ptr< GroupTreeNode > getNode(const std::string& nodeName, std::shared_ptr< GroupTreeNode > current) const;
-        std::shared_ptr< GroupTreeNode > getParent(const std::string& childName, std::shared_ptr< GroupTreeNode > currentChild, std::shared_ptr< GroupTreeNode > parent) const;
+        struct group {
+            std::string name;
+            std::string parent;
 
-        void getNodes(std::shared_ptr< GroupTreeNode > fromNode,
-                      std::vector< std::shared_ptr< const GroupTreeNode > >& nodes) const;
-        void deepCopy(std::shared_ptr< GroupTreeNode > origin, std::shared_ptr< GroupTreeNode > copy) const;
-        void printTree(std::ostream &os , std::shared_ptr< GroupTreeNode > fromNode) const;
-    };
+            bool operator<( const group& rhs ) const;
+            bool operator==( const std::string& name ) const;
+            bool operator!=( const std::string& name ) const;
+
+            bool operator<( const std::string& name ) const;
+            bool operator==( const group& rhs ) const;
+            bool operator!=( const group& rhs ) const;
+        };
+
+        std::vector< group > groups = { group { "FIELD", "" } };
+        friend bool operator<( const std::string&, const group& );
+        std::vector< group >::iterator find( const std::string& );
+};
+
 }
 
-#endif	/* GROUPTREE_HPP */
+#endif /* GROUPTREE_HPP */
 

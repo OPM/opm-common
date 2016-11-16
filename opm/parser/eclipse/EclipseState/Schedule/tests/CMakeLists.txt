@@ -2,7 +2,7 @@ foreach(tapp TimeMapTest ScheduleTests WellTests
              WellPropertiesTests WellSetTests
              GroupTests ScheduleEnumTests
              CompletionTests CompletionSetTests
-             DynamicStateTests GroupTreeNodeTests
+             DynamicStateTests
              GroupTreeTests TuningTests EventTests
              WellSolventTests DynamicVectorTests
              GeomodifierTests MessageLimitTests)
