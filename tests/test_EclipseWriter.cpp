@@ -291,8 +291,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
         };
 
 
-        eclWriter.writeInitAndEgrid( );
-        eclWriter.writeInitAndEgrid( eGridProps );
+        eclWriter.writeInitial( );
+        eclWriter.writeInitial( eGridProps );
 
         data::Wells wells;
 

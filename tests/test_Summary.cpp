@@ -602,6 +602,32 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
     const double fpr = units.from_si( UnitSystem::measure::pressure, 5.5 );
     BOOST_CHECK_CLOSE( fpr, ecl_sum_get_field_var( resp, 1, "FPR" ), 1e-5 );
+
+    /* in this test, the initial OIP wasn't set */
+    BOOST_CHECK_EQUAL( 0.0, ecl_sum_get_field_var( resp, 1, "FOE" ) );
+    BOOST_CHECK_EQUAL( 0.0, ecl_sum_get_field_var( resp, 2, "FOE" ) );
+}
+
+BOOST_AUTO_TEST_CASE(foe_test) {
+    setup cfg( "foe" );
+
+    std::vector< double > oip( cfg.grid.getCartesianSize(), 12.0 );
+    data::Solution sol;
+    sol.insert( "OIP", UnitSystem::measure::volume, oip, data::TargetType::RESTART_AUXILLARY );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.set_initial( sol );
+    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 10 * day, cfg.es, cfg.regionCache, cfg.wells , cfg.solution);
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    const double foe = (12000.0 - 11000.0) / 12000.0;
+    BOOST_CHECK_CLOSE( foe, ecl_sum_get_field_var( resp, 1, "FOE" ), 1e-5 );
+    BOOST_CHECK_CLOSE( foe, ecl_sum_get_field_var( resp, 2, "FOE" ), 1e-5 );
 }
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {

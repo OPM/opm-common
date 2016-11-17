@@ -559,7 +559,7 @@ void EclipseWriter::Impl::writeEGRIDFile( const NNC& nnc ) const {
 }
 
 
-void EclipseWriter::writeInitAndEgrid(data::Solution simProps, const NNC& nnc) {
+void EclipseWriter::writeInitial( data::Solution simProps, const NNC& nnc) {
     if( !this->impl->output_enabled )
         return;
 
@@ -574,6 +574,8 @@ void EclipseWriter::writeInitAndEgrid(data::Solution simProps, const NNC& nnc) {
         if( ioConfig.getWriteEGRIDFile( ) )
             this->impl->writeEGRIDFile( nnc );
     }
+
+    this->impl->summary.set_initial( simProps );
 }
 
 std::vector< double > serialize_XWEL( const data::Wells& wells,
@@ -655,7 +657,6 @@ std::vector< int > serialize_IWEL( const data::Wells& wells,
 
     return iwel;
 }
-
 
 // implementation of the writeTimeStep method
 void EclipseWriter::writeTimeStep(int report_step,
