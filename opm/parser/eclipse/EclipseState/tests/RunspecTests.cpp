@@ -81,3 +81,29 @@ BOOST_AUTO_TEST_CASE(ThreePhase) {
 
 }
 
+
+BOOST_AUTO_TEST_CASE(TABDIMS) {
+    const std::string input = R"(
+    RUNSPEC
+    TABDIMS
+      1 * 3 * 5 * /
+    OIL
+    GAS
+    WATER
+    )";
+
+    Parser parser;
+    ParseContext parseContext;
+
+    auto deck = parser.parseString(input, parseContext);
+
+    Runspec runspec( deck );
+    const auto& tabdims = runspec.tabdims();
+    BOOST_CHECK_EQUAL( tabdims.getNumSatTables( ) , 1 );
+    BOOST_CHECK_EQUAL( tabdims.getNumPVTTables( ) , 1 );
+    BOOST_CHECK_EQUAL( tabdims.getNumSatNodes( ) , 3 );
+    BOOST_CHECK_EQUAL( tabdims.getNumPressureNodes( ) , 20 );
+    BOOST_CHECK_EQUAL( tabdims.getNumFIPRegions( ) , 5 );
+    BOOST_CHECK_EQUAL( tabdims.getNumRSNodes( ) , 20 );
+}
+

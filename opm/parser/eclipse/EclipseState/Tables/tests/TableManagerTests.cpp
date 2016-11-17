@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE( CreateTables ) {
     auto deck = createSingleRecordDeck();
     Opm::TableManager tables(deck);
     auto tabdims = tables.getTabdims();
-    BOOST_CHECK_EQUAL( tabdims->getNumSatTables() , 2 );
+    BOOST_CHECK_EQUAL( tabdims.getNumSatTables() , 2 );
     BOOST_CHECK( !tables.useImptvd() );
     BOOST_CHECK( !tables.useEnptvd() );
 }
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE( CreateTablesWithVd ) {
     auto deck = createSingleRecordDeckWithVd();
     Opm::TableManager tables(deck);
     auto tabdims = tables.getTabdims();
-    BOOST_CHECK_EQUAL( tabdims->getNumSatTables() , 2 );
+    BOOST_CHECK_EQUAL( tabdims.getNumSatTables() , 2 );
     BOOST_CHECK( tables.useImptvd() );
     BOOST_CHECK( tables.useEnptvd() );
 }

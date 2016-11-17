@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MsfnTable.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
@@ -46,7 +47,6 @@
 
 namespace Opm {
 
-    class Tabdims;
     class Eqldims;
     class Regdims;
 
@@ -59,7 +59,7 @@ namespace Opm {
         bool hasTables( const std::string& tableName ) const;
 
 
-        std::shared_ptr<const Tabdims> getTabdims() const;
+        const Tabdims& getTabdims() const;
 
         const TableContainer& getSwofTables() const;
         const TableContainer& getSgwfnTables() const;
@@ -230,8 +230,8 @@ namespace Opm {
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
 
+        Tabdims m_tabdims;
         std::shared_ptr<Regdims> m_regdims;
-        std::shared_ptr<Tabdims> m_tabdims;
         std::shared_ptr<Eqldims> m_eqldims;
 
         const bool hasImptvd;// if deck has keyword IMPTVD

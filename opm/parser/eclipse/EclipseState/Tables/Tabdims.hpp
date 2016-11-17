@@ -26,6 +26,9 @@
 */
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 namespace Opm {
     class Tabdims {
@@ -46,13 +49,19 @@ namespace Opm {
         { }
 
 
-        Tabdims(size_t ntsfun, size_t ntpvt, size_t nssfun , size_t nppvt, size_t ntfip , size_t nrpvt) :
-            m_ntsfun( ntsfun ),
-            m_ntpvt( ntpvt ),
-            m_nssfun( nssfun ),
-            m_nppvt( nppvt ),
-            m_ntfip( ntfip ),
-            m_nrpvt( nrpvt ) {}
+        Tabdims(const Deck& deck) :
+            Tabdims()
+        {
+            if (deck.hasKeyword("TABDIMS")) {
+                const auto& record = deck.getKeyword( "TABDIMS" , 0 ).getRecord( 0 );
+                m_ntsfun = record.getItem("NTSFUN").get<int>(0);
+                m_ntpvt  = record.getItem("NTPVT").get<int>(0);
+                m_nssfun = record.getItem("NSSFUN").get<int>(0);
+                m_nppvt  = record.getItem("NPPVT").get<int>(0);
+                m_ntfip  = record.getItem("NTFIP").get<int>(0);
+                m_nrpvt  = record.getItem("NRPVT").get<int>(0);
+            }
+        }
 
 
         size_t getNumSatTables() const {
