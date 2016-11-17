@@ -5,6 +5,9 @@
 set (opm-simulators_CONFIG_VAR
 	HAVE_OPM_GRID
 	HAVE_PTHREAD
+        DUNE_ISTL_VERSION_MAJOR
+        DUNE_ISTL_VERSION_MINOR
+        DUNE_ISTL_VERSION_REVISION
 	)
 
 # dependencies
