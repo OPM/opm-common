@@ -59,16 +59,21 @@ size_t Phases::size() const noexcept {
     return this->bits.count();
 }
 
-Runspec::Runspec( const Deck& deck ) :
-    Runspec( Phases{ deck.hasKeyword( "OIL" ),
-                     deck.hasKeyword( "GAS" ),
-                     deck.hasKeyword( "WATER" ) } )
-{}
 
-Runspec::Runspec( const Phases& p ) noexcept : active_phases( p ) {}
+Runspec::Runspec( const Deck& deck ) :
+    active_phases( Phases{ deck.hasKeyword( "OIL" ),
+                           deck.hasKeyword( "GAS" ),
+                           deck.hasKeyword( "WATER" ) } ),
+    m_tabdims( deck )
+{}
 
 const Phases& Runspec::phases() const noexcept {
     return this->active_phases;
+}
+
+
+const Tabdims& Runspec::tabdims() const noexcept {
+    return this->m_tabdims;
 }
 
 }

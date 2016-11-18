@@ -77,7 +77,7 @@ namespace Opm {
     enum class limit { min, max };
 
     static std::vector< double > findMinWaterSaturation( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& swfnTables = tm->getSwfnTables();
 
@@ -98,7 +98,7 @@ namespace Opm {
     }
 
     static std::vector< double > findMaxWaterSaturation( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& swfnTables = tm->getSwfnTables();
 
@@ -119,7 +119,7 @@ namespace Opm {
     }
 
     static std::vector< double > findMinGasSaturation( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables  = tm->getSgofTables();
         const auto& slgofTables = tm->getSlgofTables();
         const auto& sgfnTables = tm->getSgfnTables();
@@ -159,7 +159,7 @@ namespace Opm {
     }
 
     static std::vector< double > findMaxGasSaturation( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables  = tm->getSgofTables();
         const auto& slgofTables = tm->getSlgofTables();
         const auto& sgfnTables = tm->getSgfnTables();
@@ -227,7 +227,7 @@ namespace Opm {
 
     static std::vector< double > findCriticalWater( const TableManager* tm ) {
 
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& swfnTables = tm->getSwfnTables();
 
@@ -270,7 +270,7 @@ namespace Opm {
 
     static std::vector< double > findCriticalGas( const TableManager* tm ) {
 
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgfnTables = tm->getSgfnTables();
         const auto& sgofTables = tm->getSgofTables();
         const auto& slgofTables = tm->getSlgofTables();
@@ -329,7 +329,7 @@ namespace Opm {
     }
 
     static std::vector< double > findCriticalOilWater( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& sof3Tables= tm->getSof3Tables();
 
@@ -380,7 +380,7 @@ namespace Opm {
 
     static std::vector< double > findCriticalOilGas( const TableManager* tm ) {
 
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
         const auto& slgofTables = tm->getSlgofTables();
         const auto& sof3Tables = tm->getSof3Tables();
@@ -417,7 +417,7 @@ namespace Opm {
     }
 
     static std::vector< double > findMaxKrg( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
         const auto& sgfnTables = tm->getSgfnTables();
 
@@ -440,7 +440,7 @@ namespace Opm {
     }
 
     static std::vector< double > findKrgr( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
         const auto& sgfnTables = tm->getSgfnTables();
 
@@ -463,7 +463,7 @@ namespace Opm {
     }
 
     static std::vector< double > findKrwr( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& swfnTables = tm->getSwfnTables();
 
@@ -486,7 +486,7 @@ namespace Opm {
     }
 
     static std::vector< double > findKrorw( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& sof3Tables = tm->getSof3Tables();
 
@@ -520,7 +520,7 @@ namespace Opm {
     }
 
     static std::vector< double > findKrorg( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
         const auto& sof3Tables = tm->getSof3Tables();
 
@@ -563,7 +563,7 @@ namespace Opm {
      * scaled.
      */
     static std::vector< double > findMaxPcog( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
         const auto& sgfnTables = tm->getSgfnTables();
 
@@ -586,7 +586,7 @@ namespace Opm {
     }
 
     static std::vector< double > findMaxPcow( const TableManager* tm ) {
-        const auto num_tables  = tm->getTabdims()->getNumSatTables();
+        const auto num_tables  = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& swfnTables = tm->getSwfnTables();
 
@@ -609,7 +609,7 @@ namespace Opm {
     }
 
     static std::vector< double > findMaxKro( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& sof3Tables = tm->getSof3Tables();
 
@@ -632,7 +632,7 @@ namespace Opm {
     }
 
     static std::vector< double > findMaxKrw( const TableManager* tm ) {
-        const auto num_tables = tm->getTabdims()->getNumSatTables();
+        const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& swofTables = tm->getSwofTables();
         const auto& swfnTables = tm->getSwfnTables();
 
@@ -692,7 +692,7 @@ namespace Opm {
 
         const auto& satnum = intGridProperties->getKeyword("SATNUM");
         const auto& endnum = intGridProperties->getKeyword("ENDNUM");
-        int numSatTables = tabdims->getNumSatTables();
+        int numSatTables = tabdims.getNumSatTables();
 
         satnum.checkLimits( 1 , numSatTables );
 
@@ -736,7 +736,7 @@ namespace Opm {
         const auto& endnum = intGridProperties->getKeyword("ENDNUM");
 
         auto tabdims = tableManager->getTabdims();
-        const int numSatTables = tabdims->getNumSatTables();
+        const int numSatTables = tabdims.getNumSatTables();
 
         imbnum.checkLimits( 1 , numSatTables );
         // acctually assign the defaults. if the ENPVD keyword was specified in the deck,

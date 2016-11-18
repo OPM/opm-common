@@ -75,6 +75,7 @@ namespace Opm {
 
     TableManager::TableManager( const Deck& deck )
         :
+        m_tabdims( Tabdims(deck)),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
         hasEqlnum (deck.hasKeyword("EQLNUM"))
@@ -90,19 +91,6 @@ namespace Opm {
 
     void TableManager::initDims(const Deck& deck) {
         using namespace Opm::ParserKeywords;
-        if (deck.hasKeyword<TABDIMS>()) {
-            const auto& keyword = deck.getKeyword<TABDIMS>();
-            const auto& record = keyword.getRecord(0);
-            int ntsfun = record.getItem<TABDIMS::NTSFUN>().get< int >(0);
-            int ntpvt  = record.getItem<TABDIMS::NTPVT>().get< int >(0);
-            int nssfun = record.getItem<TABDIMS::NSSFUN>().get< int >(0);
-            int nppvt  = record.getItem<TABDIMS::NPPVT>().get< int >(0);
-            int ntfip  = record.getItem<TABDIMS::NTFIP>().get< int >(0);
-            int nrpvt  = record.getItem<TABDIMS::NRPVT>().get< int >(0);
-
-            m_tabdims = std::make_shared<Tabdims>(ntsfun , ntpvt , nssfun , nppvt , ntfip , nrpvt);
-        } else
-            m_tabdims = std::make_shared<Tabdims>();
 
         if (deck.hasKeyword<EQLDIMS>()) {
             const auto& keyword = deck.getKeyword<EQLDIMS>();
@@ -170,29 +158,29 @@ namespace Opm {
     }
 
     void TableManager::initSimpleTables(const Deck& deck) {
-        addTables( "SWOF" , m_tabdims->getNumSatTables() );
-        addTables( "SGWFN", m_tabdims->getNumSatTables() );
-        addTables( "SGOF",  m_tabdims->getNumSatTables() );
-        addTables( "SLGOF", m_tabdims->getNumSatTables() );
-        addTables( "SOF2",  m_tabdims->getNumSatTables() );
-        addTables( "SOF3",  m_tabdims->getNumSatTables() );
-        addTables( "SWFN",  m_tabdims->getNumSatTables() );
-        addTables( "SGFN",  m_tabdims->getNumSatTables() );
-        addTables( "SSFN",  m_tabdims->getNumSatTables() );
-        addTables( "MSFN",  m_tabdims->getNumSatTables() );
+        addTables( "SWOF" , m_tabdims.getNumSatTables() );
+        addTables( "SGWFN", m_tabdims.getNumSatTables() );
+        addTables( "SGOF",  m_tabdims.getNumSatTables() );
+        addTables( "SLGOF", m_tabdims.getNumSatTables() );
+        addTables( "SOF2",  m_tabdims.getNumSatTables() );
+        addTables( "SOF3",  m_tabdims.getNumSatTables() );
+        addTables( "SWFN",  m_tabdims.getNumSatTables() );
+        addTables( "SGFN",  m_tabdims.getNumSatTables() );
+        addTables( "SSFN",  m_tabdims.getNumSatTables() );
+        addTables( "MSFN",  m_tabdims.getNumSatTables() );
 
-        addTables( "PLYADS", m_tabdims->getNumSatTables() );
-        addTables( "PLYROCK", m_tabdims->getNumSatTables());
-        addTables( "PLYVISC", m_tabdims->getNumPVTTables());
-        addTables( "PLYDHFLF", m_tabdims->getNumPVTTables());
+        addTables( "PLYADS", m_tabdims.getNumSatTables() );
+        addTables( "PLYROCK", m_tabdims.getNumSatTables());
+        addTables( "PLYVISC", m_tabdims.getNumPVTTables());
+        addTables( "PLYDHFLF", m_tabdims.getNumPVTTables());
 
-        addTables( "PVDG", m_tabdims->getNumPVTTables());
-        addTables( "PVDO", m_tabdims->getNumPVTTables());
-        addTables( "PVDS", m_tabdims->getNumPVTTables());
+        addTables( "PVDG", m_tabdims.getNumPVTTables());
+        addTables( "PVDO", m_tabdims.getNumPVTTables());
+        addTables( "PVDS", m_tabdims.getNumPVTTables());
 
-        addTables( "OILVISCT", m_tabdims->getNumPVTTables());
-        addTables( "WATVISCT", m_tabdims->getNumPVTTables());
-        addTables( "GASVISCT", m_tabdims->getNumPVTTables());
+        addTables( "OILVISCT", m_tabdims.getNumPVTTables());
+        addTables( "WATVISCT", m_tabdims.getNumPVTTables());
+        addTables( "GASVISCT", m_tabdims.getNumPVTTables());
 
         addTables( "PLYMAX", m_regdims->getNPLMIX());
         addTables( "RSVD", m_eqldims->getNumEquilRegions());
@@ -237,16 +225,16 @@ namespace Opm {
             addTables( "ROCKTAB", numRocktabTables);
         }
 
-        initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims->getNumSatTables());
-        initSimpleTableContainer<SgwfnTable>(deck, "SGWFN", m_tabdims->getNumSatTables());
-        initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims->getNumSatTables());
-        initSimpleTableContainer<SlgofTable>(deck, "SLGOF" , m_tabdims->getNumSatTables());
-        initSimpleTableContainer<Sof2Table>(deck, "SOF2" , m_tabdims->getNumSatTables());
-        initSimpleTableContainer<Sof3Table>(deck, "SOF3" , m_tabdims->getNumSatTables());
-        initSimpleTableContainer<SwfnTable>(deck, "SWFN" , m_tabdims->getNumSatTables());
-        initSimpleTableContainer<SgfnTable>(deck, "SGFN" , m_tabdims->getNumSatTables());
-        initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims->getNumSatTables());
-        initSimpleTableContainer<MsfnTable>(deck, "MSFN" , m_tabdims->getNumSatTables());
+        initSimpleTableContainer<SwofTable>(deck, "SWOF" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<SgwfnTable>(deck, "SGWFN", m_tabdims.getNumSatTables());
+        initSimpleTableContainer<SgofTable>(deck, "SGOF" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<SlgofTable>(deck, "SLGOF" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<Sof2Table>(deck, "SOF2" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<Sof3Table>(deck, "SOF3" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<SwfnTable>(deck, "SWFN" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<SgfnTable>(deck, "SGFN" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<SsfnTable>(deck, "SSFN" , m_tabdims.getNumSatTables());
+        initSimpleTableContainer<MsfnTable>(deck, "MSFN" , m_tabdims.getNumSatTables());
 
 
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
@@ -281,15 +269,15 @@ namespace Opm {
 
         }
 
-        initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims->getNumPVTTables());
-        initSimpleTableContainer<PvdoTable>(deck, "PVDO", m_tabdims->getNumPVTTables());
-        initSimpleTableContainer<PvdsTable>(deck, "PVDS", m_tabdims->getNumPVTTables());
-        initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims->getNumPVTTables());
-        initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<PvdoTable>(deck, "PVDO", m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<PvdsTable>(deck, "PVDS", m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims.getNumPVTTables());
 
-        initSimpleTableContainer<PlyadsTable>(deck, "PLYADS", m_tabdims->getNumSatTables());
-        initSimpleTableContainer<PlyviscTable>(deck, "PLYVISC", m_tabdims->getNumPVTTables());
-        initSimpleTableContainer<PlydhflfTable>(deck, "PLYDHFLF", m_tabdims->getNumPVTTables());
+        initSimpleTableContainer<PlyadsTable>(deck, "PLYADS", m_tabdims.getNumSatTables());
+        initSimpleTableContainer<PlyviscTable>(deck, "PLYVISC", m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<PlydhflfTable>(deck, "PLYDHFLF", m_tabdims.getNumPVTTables());
         initPlyrockTables(deck);
         initPlymaxTables(deck);
         initGasvisctTables(deck);
@@ -316,7 +304,7 @@ namespace Opm {
     void TableManager::initGasvisctTables(const Deck& deck) {
 
         const std::string keywordName = "GASVISCT";
-        size_t numTables = m_tabdims->getNumPVTTables();
+        size_t numTables = m_tabdims.getNumPVTTables();
 
         if (!deck.hasKeyword(keywordName))
             return; // the table is not featured by the deck...
@@ -351,7 +339,7 @@ namespace Opm {
             complainAboutAmbiguousKeyword(deck, keywordName);
             return;
         }
-        size_t numTables = m_tabdims->getNumPVTTables();
+        size_t numTables = m_tabdims.getNumPVTTables();
         auto& container = forceGetTables(keywordName , numTables);
         const auto& tableKeyword = deck.getKeyword(keywordName);
 
@@ -373,7 +361,7 @@ namespace Opm {
 
 
     void TableManager::initPlyrockTables(const Deck& deck) {
-        size_t numTables = m_tabdims->getNumSatTables();
+        size_t numTables = m_tabdims.getNumSatTables();
         const std::string keywordName = "PLYROCK";
         if (!deck.hasKeyword(keywordName)) {
             return;
@@ -505,7 +493,7 @@ namespace Opm {
         }
     }
 
-    std::shared_ptr<const Tabdims> TableManager::getTabdims() const {
+    const Tabdims& TableManager::getTabdims() const {
         return m_tabdims;
     }
 

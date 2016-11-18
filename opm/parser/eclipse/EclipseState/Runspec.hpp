@@ -23,6 +23,8 @@
 #include <iosfwd>
 #include <string>
 
+#include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
+
 namespace Opm {
 
 class Deck;
@@ -51,12 +53,12 @@ class Phases {
 class Runspec {
     public:
         explicit Runspec( const Deck& );
-        explicit Runspec( const Phases& ) noexcept;
 
         const Phases& phases() const noexcept;
-
+        const Tabdims&  tabdims() const noexcept;
     private:
         Phases active_phases;
+        Tabdims m_tabdims;
 };
 
 }
