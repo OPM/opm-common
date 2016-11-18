@@ -5,6 +5,7 @@
 set (opm-simulators_CONFIG_VAR
 	HAVE_OPM_GRID
 	HAVE_PTHREAD
+	HAVE_EWOMS
         DUNE_ISTL_VERSION_MAJOR
         DUNE_ISTL_VERSION_MINOR
         DUNE_ISTL_VERSION_REVISION
@@ -28,7 +29,8 @@ set (opm-simulators_DEPS
         opm-parser REQUIRED;
 	opm-core REQUIRED;
 	opm-output REQUIRED;
-	opm-grid"
+	opm-grid REQUIRED;
+	ewoms REQUIRED"
 	# Eigen
 	"Eigen3 3.2.0"
 	)
