@@ -204,8 +204,10 @@ function build_downstreams {
 
 # $1 = Name of main module
 function build_module_full {
+  LD_OLD=$LD_LIBRARY_PATH
   for configuration in ${!configurations[@]}
   do
+    export LD_LIBRARY_PATH="$WORKSPACE/$configuration/install/lib:$WORKSPACE/$configuration/install/lib/x86_64-linux-gnu:$WORKSPACE/$configuration/install/lib64:$LDOLD"
     # Build upstream modules
     build_upstreams
 
@@ -225,4 +227,5 @@ function build_module_full {
       test $? -eq 0 || exit 1
     fi
   done
+  export LD_LIBRARY_PATH=$LD_OLD
 }
