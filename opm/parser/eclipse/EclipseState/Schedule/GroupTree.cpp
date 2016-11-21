@@ -36,26 +36,26 @@ void GroupTree::update( const std::string& name ) {
  * and represented elsewhere)
  */
 
-void GroupTree::update( const std::string& name, const std::string& parent ) {
+void GroupTree::update( const std::string& name, const std::string& other_parent ) {
     if( name == "FIELD" )
         throw std::invalid_argument( "The FIELD group name is reserved." );
 
-    if( parent.empty() )
+    if( other_parent.empty() )
         throw std::invalid_argument( "Parent group must have a name." );
 
-    auto root = this->find( parent );
+    auto root = this->find( other_parent );
 
-    if( root == this->groups.end() || root->name != parent )
-        this->groups.insert( root, 1, group { parent, "FIELD" } );
+    if( root == this->groups.end() || root->name != other_parent )
+        this->groups.insert( root, 1, group { other_parent, "FIELD" } );
 
     auto node = this->find( name );
 
     if( node == this->groups.end() || node->name != name ) {
-        this->groups.insert( node, 1, group { name, parent } );
+        this->groups.insert( node, 1, group { name, other_parent } );
         return;
     }
 
-    node->parent = parent;
+    node->parent = other_parent;
 }
 
 bool GroupTree::exists( const std::string& name ) const {
@@ -73,13 +73,13 @@ const std::string& GroupTree::parent( const std::string& name ) const {
     return node->parent;
 }
 
-std::vector< std::string > GroupTree::children( const std::string& parent ) const {
-    if( !this->exists( parent ) )
-        throw std::out_of_range( "Node '" + parent + "' does not exist." );
+std::vector< std::string > GroupTree::children( const std::string& other_parent ) const {
+    if( !this->exists( other_parent ) )
+        throw std::out_of_range( "Node '" + other_parent + "' does not exist." );
 
     std::vector< std::string > kids;
     for( const auto& node : this->groups ) {
-        if( node.parent != parent ) continue;
+        if( node.parent != other_parent ) continue;
         kids.push_back( node.name );
     }
 
