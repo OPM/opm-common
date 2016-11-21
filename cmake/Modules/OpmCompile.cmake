@@ -13,13 +13,11 @@ macro (opm_compile opm)
   # all public header files are together with the source. prepend our own
   # source path to the one of the dependencies so that our version of any
   # ambigious paths are used.
-  # set (${opm}_INCLUDE_DIR "${PROJECT_SOURCE_DIR}")
-  # set (${opm}_INCLUDE_DIRS ${${opm}_INCLUDE_DIR} ${${opm}_INCLUDE_DIRS})
+  set (${opm}_INCLUDE_DIR "${PROJECT_SOURCE_DIR}")
+  set (${opm}_INCLUDE_DIRS ${${opm}_INCLUDE_DIR} ${${opm}_INCLUDE_DIRS})
 
   # create this library, if there are any compilation units
-  # include_directories (${${opm}_INCLUDE_DIRS})
-  include_directories("${PROJECT_SOURCE_DIR}")
-  include_directories (SYSTEM ${${opm}_INCLUDE_DIRS})
+  include_directories (${${opm}_INCLUDE_DIRS})
   link_directories (${${opm}_LIBRARY_DIRS})
   add_definitions (${${opm}_DEFINITIONS})
   set (${opm}_VERSION "${${opm}_VERSION_MAJOR}.${${opm}_VERSION_MINOR}")
