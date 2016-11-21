@@ -392,6 +392,14 @@ quantity roipg(const fn_args& args) {
     return region_sum( args , "OIPG", measure::volume );
 }
 
+quantity rgipl(const fn_args& args) {
+    return region_sum( args , "GIPL", measure::volume );
+}
+
+quantity rgipg(const fn_args& args) {
+    return region_sum( args , "GIPG", measure::volume );
+}
+
 quantity fgip( const fn_args& args ) {
     quantity zero { 0.0, measure::volume };
     if( !args.state.has( "GIP" ) )
@@ -641,6 +649,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROIPL" , roipl},
     { "ROIPG" , roipg},
     { "RGIP"  , rgip},
+    { "RGIPL" , rgipl},
+    { "RGIPG" , rgipg},
     { "RWIP"  , rwip},
     { "ROIR"  , region_rate< rt::oil, injector > },
     { "RGIR"  , region_rate< rt::gas, injector > },
