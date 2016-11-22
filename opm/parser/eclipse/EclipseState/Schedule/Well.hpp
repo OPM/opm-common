@@ -33,7 +33,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
@@ -49,7 +48,7 @@ namespace Opm {
     class Well {
     public:
         Well(const std::string& name, int headI,
-             int headJ, Value<double> refDepth , Phase preferredPhase,
+             int headJ, double refDepth, Phase preferredPhase,
              const TimeMap& timeMap, size_t creationTimeStep,
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
              bool allowCrossFlow = true, bool automaticShutIn = true);
@@ -70,6 +69,8 @@ namespace Opm {
         void setHeadJ( size_t timestep, int J );
 
         double getRefDepth() const;
+        double getRefDepth( size_t timestep ) const;
+        void setRefDepth( size_t timestep, double );
         Phase getPreferredPhase() const;
 
         bool isAvailableForGroupControl(size_t timeStep) const;
@@ -147,7 +148,6 @@ namespace Opm {
 
         const MessageContainer& getMessageContainer() const;
     private:
-        void setRefDepthFromCompletions() const;
         size_t m_creationTimeStep;
         std::string m_name;
 
@@ -171,7 +171,7 @@ namespace Opm {
 
         DynamicState< int > m_headI;
         DynamicState< int > m_headJ;
-        mutable Value<double> m_refDepth;
+        DynamicState< double > m_refDepth;
         Phase m_preferredPhase;
 
         WellCompletion::CompletionOrderEnum m_comporder;

@@ -1301,3 +1301,34 @@ BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
     BOOST_CHECK_EQUAL( 2, well.getHeadI( 1 ) );
 }
 
+BOOST_AUTO_TEST_CASE(change_ref_depth ) {
+    std::string input = R"(
+            START             -- 0
+            19 JUN 2007 /
+            SCHEDULE
+            DATES             -- 1
+             10  OKT 2008 /
+            /
+            WELSPECS
+                'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            /
+            DATES             -- 2
+                15  OKT 2008 /
+            /
+
+            WELSPECS
+                'W1' 'G1'  3 3 12.0 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            /
+    )";
+
+    ParseContext ctx;
+    auto deck = Parser().parseString(input, ctx);
+    EclipseGrid grid(10,10,10);
+    Schedule schedule( ctx, grid, deck, Phases( true, true, true ) );
+
+    const auto& well = *schedule.getWell( "W1" );
+    BOOST_CHECK_EQUAL( 12.0, well.getRefDepth() );
+    BOOST_CHECK_CLOSE( 2873.94, well.getRefDepth( 1 ), 1e-5 );
+}
+
