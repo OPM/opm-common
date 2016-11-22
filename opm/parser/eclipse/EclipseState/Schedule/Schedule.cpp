@@ -358,8 +358,28 @@ namespace Opm {
                 addWell(wellName, record, currentStep, wellCompletionOrder);
             }
 
-            const auto* currentWell = getWell(wellName);
-            checkWELSPECSConsistency( *currentWell, keyword, recordNr);
+            auto& currentWell = this->m_wells.get( wellName );
+
+            const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
+            const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
+
+            if( currentWell->getHeadI() != headI ) {
+                std::string msg = "HEAD_I changed for well " + currentWell->name();
+                this->m_messages.info(keyword.getFileName(), msg, keyword.getLineNumber());
+                currentWell->setHeadI( currentStep, headI );
+            }
+
+            if( currentWell->getHeadJ() != headJ ) {
+                std::string msg = "HEAD_J changed for well " + currentWell->name();
+                this->m_messages.info( keyword.getFileName(), msg, keyword.getLineNumber() );
+                currentWell->setHeadJ( currentStep, headJ );
+            }
+
+            const auto& refDepthItem = record.getItem( "REF_DEPTH" );
+            double refDepth = refDepthItem.hasValue( 0 )
+                            ? refDepthItem.getSIDouble( 0 )
+                            : -1.0;
+            currentWell->setRefDepth( currentStep, refDepth );
 
             addWellToGroup( this->m_groups.at( groupName ), *this->m_wells.get( wellName ), currentStep);
             if (handleGroupFromWELSPECS(groupName, newTree))
@@ -401,24 +421,6 @@ namespace Opm {
             std::string option = record.getItem("Option").get< std::string >(0);
             auto drsdt = OilVaporizationProperties::createDRSDT(max, option);
             this->m_oilvaporizationproperties.update( currentStep, drsdt );
-        }
-    }
-
-
-
-    void Schedule::checkWELSPECSConsistency( const Well& well, const DeckKeyword& keyword, size_t recordIdx) {
-        const auto& record = keyword.getRecord(recordIdx);
-        if (well.getHeadI() != record.getItem("HEAD_I").get< int >(0) - 1) {
-            std::string msg =
-                "Unable process WELSPECS for well " + well.name() + ", HEAD_I deviates from existing value";
-            m_messages.error(keyword.getFileName(), msg, keyword.getLineNumber());
-            throw std::invalid_argument(msg);
-        }
-        if (well.getHeadJ() != record.getItem("HEAD_J").get< int >(0) - 1) {
-            std::string msg =
-                "Unable process WELSPECS for well " + well.name() + ", HEAD_J deviates from existing value";
-            m_messages.error(keyword.getFileName(), msg, keyword.getLineNumber());
-            throw std::invalid_argument(msg);
         }
     }
 
@@ -1362,11 +1364,11 @@ namespace Opm {
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
         Phase preferredPhase = get_phase(record.getItem("PHASE").getTrimmedString(0));
-        Value<double> refDepth("REF_DEPTH");
         const auto& refDepthItem = record.getItem("REF_DEPTH");
 
-        if (refDepthItem.hasValue(0))
-            refDepth.setValue( refDepthItem.getSIDouble(0));
+        double refDepth = refDepthItem.hasValue( 0 )
+                        ? refDepthItem.getSIDouble( 0 )
+                        : -1.0;
 
         bool allowCrossFlow = true;
         const std::string& allowCrossFlowStr = record.getItem<ParserKeywords::WELSPECS::CROSSFLOW>().getTrimmedString(0);

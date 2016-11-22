@@ -26,7 +26,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 #include <ert/ecl/ecl_grid.h>
 
@@ -34,7 +33,7 @@
 namespace Opm {
 
     Well::Well(const std::string& name_, int headI,
-               int headJ, Value<double> refDepth , Phase preferredPhase,
+               int headJ, double refDepth , Phase preferredPhase,
                const TimeMap& timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
@@ -55,9 +54,9 @@ namespace Opm {
           m_groupName( timeMap, "" ),
           m_rft( timeMap, false ),
           m_plt( timeMap, false ),
-          m_headI(headI),
-          m_headJ(headJ),
-          m_refDepth(refDepth),
+          m_headI( timeMap, headI ),
+          m_headJ( timeMap, headJ ),
+          m_refDepth( timeMap, refDepth ),
           m_preferredPhase(preferredPhase),
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
@@ -248,38 +247,52 @@ namespace Opm {
     // WELSPECS
 
     int Well::getHeadI() const {
-        return m_headI;
+        return m_headI.back();
     }
 
     int Well::getHeadJ() const {
-        return m_headJ;
+        return m_headJ.back();
     }
 
-
-    double Well::getRefDepth() const{
-        if (!m_refDepth.hasValue())
-            setRefDepthFromCompletions();
-
-        return m_refDepth.getValue();
+    int Well::getHeadI( size_t timestep ) const {
+        return this->m_headI.get( timestep );
     }
 
+    int Well::getHeadJ( size_t timestep ) const {
+        return this->m_headJ.get( timestep );
+    }
 
-    void Well::setRefDepthFromCompletions() const {
-        size_t timeStep = m_creationTimeStep;
-        while (true) {
-            const auto& completions = getCompletions( timeStep );
-            if (completions.size() > 0) {
-                auto firstCompletion = completions.get(0);
-                m_refDepth.setValue( firstCompletion.getCenterDepth() );
-                break;
-            } else {
-                timeStep++;
-                if( timeStep > this->timesteps )
-                    throw std::invalid_argument("No completions defined for well: " + name() + " can not infer reference depth");
-            }
+    void Well::setHeadI( size_t timestep, int I ) {
+        this->m_headI.update( timestep, I );
+    }
+
+    void Well::setHeadJ( size_t timestep, int J ) {
+        this->m_headJ.update( timestep, J );
+    }
+
+    double Well::getRefDepth() const {
+        return this->getRefDepth( this->timesteps );
+    }
+
+    double Well::getRefDepth( size_t timestep ) const {
+        auto depth = this->m_refDepth.get( timestep );
+
+        if( depth >= 0.0 ) return depth;
+
+        // ref depth was defaulted and we get the depth of the first completion
+        const auto& completions = this->getCompletions( timestep );
+        if( completions.size() == 0 ) {
+            throw std::invalid_argument( "No completions defined for well: "
+                                         + name()
+                                         + ". Can not infer reference depth" );
         }
+
+        return completions.get( 0 ).getCenterDepth();
     }
 
+    void Well::setRefDepth( size_t timestep, double depth ) {
+        this->m_refDepth.update( timestep, depth );
+    }
 
     Phase Well::getPreferredPhase() const {
         return m_preferredPhase;
@@ -296,8 +309,11 @@ namespace Opm {
     void Well::addCompletions(size_t time_step, std::vector< Completion > newCompletions ) {
         auto new_set = this->getCompletions( time_step );
 
+        const auto headI = this->m_headI[ time_step ];
+        const auto headJ = this->m_headJ[ time_step ];
+
         for( auto& completion : newCompletions ) {
-            completion.fixDefaultIJ( m_headI , m_headJ );
+            completion.fixDefaultIJ( headI , headJ );
             new_set.add( std::move( completion ) );
         }
 
@@ -306,7 +322,9 @@ namespace Opm {
 
     void Well::addCompletionSet(size_t time_step, CompletionSet new_set ){
         if( getWellCompletionOrdering() == WellCompletion::TRACK) {
-            new_set.orderCompletions(m_headI, m_headJ);
+            const auto headI = this->m_headI[ time_step ];
+            const auto headJ = this->m_headJ[ time_step ];
+            new_set.orderCompletions( headI, headJ );
         }
 
         m_completions.update( time_step, std::move( new_set ) );
@@ -438,7 +456,7 @@ namespace Opm {
 
         // overwrite the BHP reference depth with the one from WELSEGS keyword
         const double ref_depth = new_segmentset.depthTopSegment();
-        m_refDepth.setValue(ref_depth);
+        m_refDepth.update( time_step, ref_depth );
 
         if (new_segmentset.lengthDepthType() == WellSegment::ABS) {
             new_segmentset.processABS();
