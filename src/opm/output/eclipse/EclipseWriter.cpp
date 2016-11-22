@@ -217,8 +217,8 @@ public:
 
         const auto& completions = well.getCompletions( step );
 
-        data[ offset + IWEL_HEADI_INDEX ] = well.getHeadI() + 1;
-        data[ offset + IWEL_HEADJ_INDEX ] = well.getHeadJ() + 1;
+        data[ offset + IWEL_HEADI_INDEX ] = well.getHeadI( step ) + 1;
+        data[ offset + IWEL_HEADJ_INDEX ] = well.getHeadJ( step ) + 1;
         data[ offset + IWEL_CONNECTIONS_INDEX ] = completions.size();
         data[ offset + IWEL_GROUP_INDEX ] = 1;
 
