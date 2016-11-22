@@ -1270,3 +1270,34 @@ BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
     BOOST_CHECK_THROW(Schedule schedule(parseContext , grid, deck, Phases(true, true, true) ), std::invalid_argument);
 }
 
+BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
+    std::string input = R"(
+            START             -- 0
+            19 JUN 2007 /
+            SCHEDULE
+            DATES             -- 1
+             10  OKT 2008 /
+            /
+            WELSPECS
+                'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            /
+            DATES             -- 2
+                15  OKT 2008 /
+            /
+
+            WELSPECS
+                'W1' 'G1'  4 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            /
+    )";
+
+    ParseContext ctx;
+    auto deck = Parser().parseString(input, ctx);
+    EclipseGrid grid(10,10,10);
+    Schedule schedule( ctx, grid, deck, Phases( true, true, true ) );
+
+    const auto& well = *schedule.getWell( "W1" );
+    BOOST_CHECK_EQUAL( 3, well.getHeadI() );
+    BOOST_CHECK_EQUAL( 2, well.getHeadI( 1 ) );
+}
+

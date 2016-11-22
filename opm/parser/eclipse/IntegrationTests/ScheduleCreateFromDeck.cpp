@@ -513,16 +513,6 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(WellTestWELSPECS_InvalidConfig_Throws) {
-    ParseContext parseContext;
-    Parser parser;
-    std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELL_INVALID_WELSPECS");
-    auto deck =  parser.parseFile(scheduleFile, parseContext);
-    EclipseGrid grid(10,10,3);
-    BOOST_CHECK_THROW(Schedule(parseContext , grid , deck, Phases(true, true, true)), std::invalid_argument);
-
-}
-
 /*
 BOOST_AUTO_TEST_CASE(WellTestWELOPEN_ConfigWithIndexes_Throws) {
     Parser parser;

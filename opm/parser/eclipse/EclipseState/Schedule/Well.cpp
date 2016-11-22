@@ -55,8 +55,8 @@ namespace Opm {
           m_groupName( timeMap, "" ),
           m_rft( timeMap, false ),
           m_plt( timeMap, false ),
-          m_headI(headI),
-          m_headJ(headJ),
+          m_headI( timeMap, headI ),
+          m_headJ( timeMap, headJ ),
           m_refDepth(refDepth),
           m_preferredPhase(preferredPhase),
           m_comporder(completionOrdering),
@@ -248,13 +248,28 @@ namespace Opm {
     // WELSPECS
 
     int Well::getHeadI() const {
-        return m_headI;
+        return m_headI.back();
     }
 
     int Well::getHeadJ() const {
-        return m_headJ;
+        return m_headJ.back();
     }
 
+    int Well::getHeadI( size_t timestep ) const {
+        return this->m_headI.get( timestep );
+    }
+
+    int Well::getHeadJ( size_t timestep ) const {
+        return this->m_headJ.get( timestep );
+    }
+
+    void Well::setHeadI( size_t timestep, int I ) {
+        this->m_headI.update( timestep, I );
+    }
+
+    void Well::setHeadJ( size_t timestep, int J ) {
+        this->m_headJ.update( timestep, J );
+    }
 
     double Well::getRefDepth() const{
         if (!m_refDepth.hasValue())
@@ -296,8 +311,11 @@ namespace Opm {
     void Well::addCompletions(size_t time_step, std::vector< Completion > newCompletions ) {
         auto new_set = this->getCompletions( time_step );
 
+        const auto headI = this->m_headI[ time_step ];
+        const auto headJ = this->m_headJ[ time_step ];
+
         for( auto& completion : newCompletions ) {
-            completion.fixDefaultIJ( m_headI , m_headJ );
+            completion.fixDefaultIJ( headI , headJ );
             new_set.add( std::move( completion ) );
         }
 
@@ -306,7 +324,9 @@ namespace Opm {
 
     void Well::addCompletionSet(size_t time_step, CompletionSet new_set ){
         if( getWellCompletionOrdering() == WellCompletion::TRACK) {
-            new_set.orderCompletions(m_headI, m_headJ);
+            const auto headI = this->m_headI[ time_step ];
+            const auto headJ = this->m_headJ[ time_step ];
+            new_set.orderCompletions( headI, headJ );
         }
 
         m_completions.update( time_step, std::move( new_set ) );

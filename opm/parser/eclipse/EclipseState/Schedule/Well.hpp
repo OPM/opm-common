@@ -62,8 +62,13 @@ namespace Opm {
         WellCommon::StatusEnum getStatus(size_t timeStep) const;
         bool                   setStatus(size_t timeStep, WellCommon::StatusEnum Status);
 
-        int    getHeadI() const;
-        int    getHeadJ() const;
+        int getHeadI() const;
+        int getHeadJ() const;
+        int getHeadI( size_t timestep ) const;
+        int getHeadJ( size_t timestep ) const;
+        void setHeadI( size_t timestep, int I );
+        void setHeadJ( size_t timestep, int J );
+
         double getRefDepth() const;
         Phase getPreferredPhase() const;
 
@@ -164,10 +169,8 @@ namespace Opm {
         DynamicState< int > m_rft;
         DynamicState< int > m_plt;
 
-        // WELSPECS data - assumes this is not dynamic
-
-        int m_headI;
-        int m_headJ;
+        DynamicState< int > m_headI;
+        DynamicState< int > m_headJ;
         mutable Value<double> m_refDepth;
         Phase m_preferredPhase;
 
