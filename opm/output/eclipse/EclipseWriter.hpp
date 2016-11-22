@@ -53,7 +53,8 @@ public:
 
 
 
-    /// Write the static eclipse data (grid, PVT curves, etc) to disk.
+    /// Write the static eclipse data (grid, PVT curves, etc) to disk, and set
+    /// up additional initial properties
     ///
     /// - simProps contains a list of properties which must be
     ///   calculated by the simulator, e.g. the transmissibility
@@ -61,7 +62,10 @@ public:
     ///
     /// - The NNC argument is distributed between the EGRID and INIT
     ///   files.
-    void writeInitAndEgrid(data::Solution simProps = data::Solution( ), const NNC& nnc = NNC());
+    ///
+    /// If you want FOE in the SUMMARY section, you must pass the initial
+    /// oil-in-place "OIP" key in Solution
+    void writeInitial( data::Solution = data::Solution(), const NNC& = NNC());
 
     /*!
      * \brief Write a reservoir state and summary information to disk.

@@ -134,6 +134,10 @@ struct quantity {
     }
 };
 
+quantity operator-( double lhs, const quantity& rhs ) {
+    return { lhs - rhs.value, rhs.unit };
+}
+
 /*
  * All functions must have the same parameters, so they're gathered in a struct
  * and functions use whatever information they care about.
@@ -150,6 +154,7 @@ struct fn_args {
     const data::Solution& state;
     const out::RegionCache& regionCache;
     const EclipseGrid& grid;
+    double initial_oip;
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -419,7 +424,10 @@ quantity foip( const fn_args& args ) {
              measure::volume };
 }
 
-
+quantity foe( const fn_args& args ) {
+    const quantity val = { foip( args ).value, measure::identity };
+    return (args.initial_oip - val) / args.initial_oip;
+}
 
 template< typename F, typename G >
 auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
@@ -606,6 +614,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "FOIP", foip },
     { "FGIP", fgip },
+    { "FOE",  foe },
 
     { "FWPRH", production_history< Phase::WATER > },
     { "FOPRH", production_history< Phase::OIL > },
@@ -768,7 +777,8 @@ Summary::Summary( const EclipseState& st,
                                 {},          // Well results - data::Wells
                                 {},          // EclipseState
                                 {},          // Region <-> cell mappings.
-                                this->grid };
+                                this->grid,
+                                this->initial_oip };
 
         const auto val = handle( no_args );
         const auto* unit = st.getUnits().name( val.unit );
@@ -797,7 +807,15 @@ void Summary::add_timestep( int report_step,
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
         const auto schedule_wells = find_wells( schedule, f.first, timestep );
-        const auto val = f.second( { schedule_wells, duration, timestep, num, wells , state , regionCache , this->grid} );
+        const auto val = f.second( { schedule_wells,
+                                     duration,
+                                     timestep,
+                                     num,
+                                     wells,
+                                     state,
+                                     regionCache,
+                                     this->grid,
+                                     this->initial_oip } );
 
         const auto unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         const auto res = smspec_node_is_total( f.first ) && prev_tstep
@@ -809,6 +827,13 @@ void Summary::add_timestep( int report_step,
 
     this->prev_tstep = tstep;
     this->prev_time_elapsed = secs_elapsed;
+}
+
+void Summary::set_initial( const data::Solution& sol ) {
+    if( !sol.has( "OIP" ) ) return;
+
+    const auto& cells = sol.at( "OIP" ).data;
+    this->initial_oip = std::accumulate( cells.begin(), cells.end(), 0.0 );
 }
 
 void Summary::write() {
