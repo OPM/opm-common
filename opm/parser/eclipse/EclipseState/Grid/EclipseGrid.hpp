@@ -154,10 +154,15 @@ namespace Opm {
         double getCellDepth(size_t globalIndex) const;
         ZcornMapper zcornMapper() const;
 
+        /*
+          The exportZCORN method will adjust the z coordinates to ensure that cells do not
+          overlap. The return value is the number of points which have been adjusted.
+        */
+        size_t exportZCORN( std::vector<double>& zcorn) const;
+
 
         void exportMAPAXES( std::vector<double>& mapaxes) const;
         void exportCOORD( std::vector<double>& coord) const;
-        void exportZCORN( std::vector<double>& zcorn) const;
         void exportACTNUM( std::vector<int>& actnum) const;
         void resetACTNUM( const int * actnum);
         bool equal(const EclipseGrid& other) const;
@@ -220,6 +225,23 @@ namespace Opm {
         size_t index(size_t i, size_t j, size_t k, int c) const;
         size_t index(size_t g, int c) const;
 
+        /*
+          The fixupZCORN method will take a zcorn vector as input and
+          run through it. If the following situation is detected:
+
+                      /|                     /|
+                     / |                    / |
+                    /  |                  /   |
+                   /   |                 /    |
+                  /    |     ==>       /      |
+                 /     |             /        |
+             ---/------x            /---------x
+             | /
+             |/
+
+        */
+        size_t fixupZCORN( std::vector<double>& zcorn);
+        size_t fixupZCORN( std::vector<double>& zcorn, int sign, size_t, size_t , size_t k , size_t c);
     private:
         std::array<size_t,3> dims;
         std::array<size_t,3> stride;

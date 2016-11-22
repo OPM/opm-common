@@ -1057,6 +1057,17 @@ BOOST_AUTO_TEST_CASE(ZcornMapper) {
                     BOOST_CHECK_EQUAL( zmp.index(g , c) , zmp.index( i,j,k,c));
                     BOOST_CHECK_EQUAL( zmp.index(i,j,k,c) , ecl_grid_zcorn_index( ert_grid, i , j , k, c));
                 }
+
+    std::vector<double> zcorn;
+    auto points_adjusted = grid.exportZCORN( zcorn );
+    BOOST_CHECK_EQUAL( points_adjusted , 0 );
+
+    /* Manually destroy it */
+    zcorn[ zmp.index(0,0,0,4) ] = zcorn[ zmp.index(0,0,0,0) ] - 1;
+
+    points_adjusted = zmp.fixupZCORN( zcorn );
+    BOOST_CHECK_EQUAL( points_adjusted , 1 );
+    BOOST_CHECK_EQUAL( zcorn[ zmp.index(0,0,0,4) ] , zcorn[ zmp.index(0,0,0,0) ] );
 }
 
 

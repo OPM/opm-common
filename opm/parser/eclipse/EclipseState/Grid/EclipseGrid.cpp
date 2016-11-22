@@ -698,10 +698,16 @@ namespace Opm {
         ecl_grid_init_coord_data_double( c_ptr() , coord.data() );
     }
 
-    void EclipseGrid::exportZCORN( std::vector<double>& zcorn) const {
+    size_t EclipseGrid::exportZCORN( std::vector<double>& zcorn) const {
+        ZcornMapper mapper( getNX(), getNY(), getNZ());
+
         zcorn.resize( ecl_grid_get_zcorn_size( c_ptr() ));
         ecl_grid_init_zcorn_data_double( c_ptr() , zcorn.data() );
+
+        return mapper.fixupZCORN( zcorn );
     }
+
+
 
     const std::vector<int>& EclipseGrid::getActiveMap() const {
         if( !this->activeMap.empty() ) return this->activeMap;
@@ -765,6 +771,32 @@ namespace Opm {
         int i = g;
 
         return index(i,j,k,c);
+    }
+
+    size_t ZcornMapper::fixupZCORN( std::vector<double>& zcorn, int sign, size_t i, size_t j, size_t k , size_t c) {
+        size_t index1 = this->index(i,j,k,c);
+        size_t index2 = this->index(i,j,k,c+4);
+
+        if ((zcorn[index2] - zcorn[index1]) * sign < 0 ) {
+            zcorn[index2] = zcorn[index1];
+            return 1;
+        } else
+            return 0;
+
+    }
+
+
+    size_t ZcornMapper::fixupZCORN( std::vector<double>& zcorn) {
+        int sign = zcorn[ this->index(0,0,0,0) ] <= zcorn[this->index(0,0, this->dims[2] - 1,4)] ? 1 : -1;
+        size_t cells_adjusted = 0;
+
+        for (size_t k=0; k < this->dims[2]; k++)
+            for (size_t j=0; j < this->dims[1]; j++)
+                for (size_t i=0; i < this->dims[0]; i++)
+                    for (size_t c=0; c < 4; c++)
+                        cells_adjusted += this->fixupZCORN( zcorn , sign, i , j , k , c );
+
+        return cells_adjusted;
     }
 }
 
