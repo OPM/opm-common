@@ -14,9 +14,10 @@ downstreams=(ert
              opm-material
              opm-core
              opm-grid
+             ewoms
              opm-simulators
              opm-upscaling
-             ewoms)
+             )
 
 declare -A downstreamRev
 downstreamRev[ert]=master
@@ -25,9 +26,9 @@ downstreamRev[opm-material]=master
 downstreamRev[opm-core]=master
 downstreamRev[opm-grid]=master
 downstreamRev[opm-output]=master
+downstreamRev[ewoms]=master
 downstreamRev[opm-simulators]=master
 downstreamRev[opm-upscaling]=master
-downstreamRev[ewoms]=master
 
 parseRevisions
 printHeader opm-common
