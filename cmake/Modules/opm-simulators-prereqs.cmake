@@ -20,12 +20,13 @@ set (opm-simulators_DEPS
 	"dune-common REQUIRED;
 	dune-istl REQUIRED"
 	"ERTPython"
-        # OPM dependency
+  # OPM dependency
 	"opm-common REQUIRED;
-        opm-parser REQUIRED;
-	opm-core REQUIRED;
-	opm-output REQUIRED;
-	opm-grid"
+   opm-parser REQUIRED;
+	 opm-grid REQUIRED;
+	 opm-core REQUIRED;
+	 opm-output REQUIRED;
+	 ewoms REQUIRED"
 	# Eigen
 	"Eigen3 3.2.0"
 	)
