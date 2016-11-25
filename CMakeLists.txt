@@ -17,6 +17,8 @@ find_package( PythonLibs 2.7 REQUIRED )
 find_package( PythonInterp 2.7 REQUIRED )
 find_package( Boost COMPONENTS python REQUIRED )
 
-add_subdirectory( cmake  )
-add_subdirectory( python )
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/pycmake/cmake/Modules)
+
 add_subdirectory( src )
+add_subdirectory( python )
+add_subdirectory( tests )
