@@ -8,3 +8,7 @@ class TestParse(unittest.TestCase):
 
     def parse(self):
         sunbeam.parse(self.spe3)
+
+    def testParse(self):
+        spe3 = sunbeam.parse(self.spe3)
+        self.assertEqual('SPE 3 - CASE 1', spe3.title)
