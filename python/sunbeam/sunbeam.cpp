@@ -15,6 +15,14 @@ py::class_< EclipseState >( "EclipseState", py::no_init )
     .add_property( "title", &EclipseState::getTitle )
     ;
 
+void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
 py::class_< ParseContext >( "ParseContext" )
+    .def( "update", ctx_update )
+    ;
+
+py::enum_< InputError::Action >( "action" )
+    .value( "throw",  InputError::Action::THROW_EXCEPTION )
+    .value( "warn",   InputError::Action::WARN )
+    .value( "ignore", InputError::Action::IGNORE )
     ;
 }
