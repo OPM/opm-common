@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 by Andreas Lauser
+  Copyright (C) 2013 by Andreas Lauser, 2016 Statoil ASA
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -149,9 +149,12 @@ namespace Opm {
     void SimpleTable::assertJFuncPressure(const bool jf) const {
         if (jf == m_jfunc)
             return;
+        // if we reach here, wrong values are read from the deck! (JFUNC is used
+        // incorrectly.)  This function writes to std err for now, but will
+        // after a grace period be rewritten to throw (std::invalid_argument).
         if (m_jfunc)
-            throw std::invalid_argument("Cannot get pressure column with JFUNC in deck");
+            std::cerr << "Developer warning: Pressure column is read with JFUNC in deck." << std::endl;
         else
-            throw std::invalid_argument("Cannot get JFUNC column when JFUNC not in deck");
+            std::cerr << "Developer warning: Raw values from JFUNC column is read, but JFUNC not provided in deck." << std::endl;
     }
 }

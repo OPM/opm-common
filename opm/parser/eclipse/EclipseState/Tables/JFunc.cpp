@@ -32,61 +32,61 @@ namespace Opm {
         const auto& rec = kw.getRecord(0);
         const auto& kw_flag = rec.getItem("FLAG").get<std::string>(0);
         if (kw_flag == "BOTH")
-            flag = Flag::BOTH;
+            m_flag = Flag::BOTH;
         else if (kw_flag == "WATER")
-            flag = Flag::WATER;
+            m_flag = Flag::WATER;
         else if (kw_flag == "GAS")
-            flag = Flag::GAS;
+            m_flag = Flag::GAS;
         else
             throw std::invalid_argument("Illegal JFUNC FLAG, must be BOTH, WATER, or GAS.  Was \"" + kw_flag + "\".");
 
-        if (flag != Flag::WATER)
-            goSurfaceTension = rec.getItem("GO_SURFACE_TENSION").get<double>(0);
+        if (m_flag != Flag::WATER)
+            m_goSurfaceTension = rec.getItem("GO_SURFACE_TENSION").get<double>(0);
 
-        if (flag != Flag::GAS)
-            owSurfaceTension = rec.getItem("OW_SURFACE_TENSION").get<double>(0);
+        if (m_flag != Flag::GAS)
+            m_owSurfaceTension = rec.getItem("OW_SURFACE_TENSION").get<double>(0);
 
-        alphaFactor = rec.getItem("ALPHA_FACTOR").get<double>(0);
-        betaFactor = rec.getItem("BETA_FACTOR").get<double>(0);
+        m_alphaFactor = rec.getItem("ALPHA_FACTOR").get<double>(0);
+        m_betaFactor = rec.getItem("BETA_FACTOR").get<double>(0);
 
         const auto kw_dir = rec.getItem("DIRECTION").get<std::string>(0);
         if (kw_dir == "XY")
-            direction = Direction::XY;
+            m_direction = Direction::XY;
         else if (kw_dir == "X")
-            direction = Direction::X;
+            m_direction = Direction::X;
         else if (kw_dir == "Y")
-            direction = Direction::Y;
+            m_direction = Direction::Y;
         else if (kw_dir == "Z")
-            direction = Direction::Z;
+            m_direction = Direction::Z;
         else
             throw std::invalid_argument("Illegal JFUNC DIRECTION, must be XY, X, Y, or Z.  Was \"" + kw_dir + "\".");
     }
 
-    double JFunc::getAlphaFactor() const {
-        return alphaFactor;
+    double JFunc::alphaFactor() const {
+        return m_alphaFactor;
     }
 
-    double JFunc::getBetaFactor() const {
-        return betaFactor;
+    double JFunc::betaFactor() const {
+        return m_betaFactor;
     }
 
-    double JFunc::getgoSurfaceTension() const {
-        if (flag == JFunc::Flag::WATER)
+    double JFunc::goSurfaceTension() const {
+        if (m_flag == JFunc::Flag::WATER)
             throw std::invalid_argument("Cannot get gas-oil with WATER JFUNC");
-        return goSurfaceTension;
+        return m_goSurfaceTension;
     }
 
-    double JFunc::getowSurfaceTension() const {
-        if (flag == JFunc::Flag::GAS)
+    double JFunc::owSurfaceTension() const {
+        if (m_flag == JFunc::Flag::GAS)
             throw std::invalid_argument("Cannot get oil-water with GAS JFUNC");
-        return owSurfaceTension;
+        return m_owSurfaceTension;
     }
 
-    const JFunc::Flag& JFunc::getJFuncFlag() const {
-        return flag;
+    const JFunc::Flag& JFunc::flag() const {
+        return m_flag;
     }
 
-    const JFunc::Direction& JFunc::getDirection() const {
-        return direction;
+    const JFunc::Direction& JFunc::direction() const {
+        return m_direction;
     }
 } // Opm::

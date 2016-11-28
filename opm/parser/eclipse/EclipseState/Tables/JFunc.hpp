@@ -33,21 +33,21 @@ public:
     enum class Direction { XY, X, Y, Z };
 
     JFunc(const Deck& deck);
-    double getAlphaFactor() const;
-    double getBetaFactor() const;
-    double getgoSurfaceTension() const;
-    double getowSurfaceTension() const;
-    const Flag& getJFuncFlag() const;
-    const Direction& getDirection() const;
+    double alphaFactor() const;
+    double betaFactor() const;
+    double goSurfaceTension() const;
+    double owSurfaceTension() const;
+    const Flag& flag() const;
+    const Direction& direction() const;
     operator bool() const { return m_exists; }
 
 private:
-    Flag       flag;             // JFUNC flag: WATER, GAS, or BOTH.  Default BOTH
-    double     owSurfaceTension; // oil-wat surface tension.  Required if flag is BOTH or WATER
-    double     goSurfaceTension; // gas-oil surface tension.  Required if flag is BOTH or GAS
-    double     alphaFactor;      // alternative porosity term. Default 0.5
-    double     betaFactor;       // alternative permeability term. Default 0.5
-    Direction  direction;        // XY, X, Y, Z.  Default XY
+    Flag       m_flag;             // JFUNC flag: WATER, GAS, or BOTH.  Default BOTH
+    double     m_owSurfaceTension; // oil-wat surface tension.  Required if flag is BOTH or WATER
+    double     m_goSurfaceTension; // gas-oil surface tension.  Required if flag is BOTH or GAS
+    double     m_alphaFactor;      // alternative porosity term. Default 0.5
+    double     m_betaFactor;       // alternative permeability term. Default 0.5
+    Direction  m_direction;        // XY, X, Y, Z.  Default XY
     const bool m_exists;         // will be true if JFunc is specified in the deck
 };
 } // Opm::
