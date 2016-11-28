@@ -68,11 +68,12 @@ struct setup {
 
 
 
-BOOST_AUTO_TEST_CASE(Test_PVTO) {
+BOOST_AUTO_TEST_CASE(Test_PVTX) {
     setup cfg( "PVTO" , "table_deck.DATA");
     Tables tables( cfg.es.getUnits() );
 
     tables.addPVTO( cfg.es.getTableManager().getPvtoTables() );
+    tables.addPVTG( cfg.es.getTableManager().getPvtgTables() );
     {
         ERT::FortIO f("TEST.INIT" , std::fstream::out);
         tables.fwrite( f );
@@ -81,12 +82,11 @@ BOOST_AUTO_TEST_CASE(Test_PVTO) {
 
     {
         ecl_file_type * f = ecl_file_open("TEST.INIT" , 0 );
+        const ecl_kw_type * tabdims = ecl_file_iget_named_kw( f , "TABDIMS" , 0 );
+        const ecl_kw_type * tab = ecl_file_iget_named_kw( f , "TAB" , 0 );
 
-        BOOST_CHECK( ecl_file_has_kw( f , "TABDIMS" ));
-        BOOST_CHECK( ecl_file_has_kw( f , "TAB" ));
+        /* PVTO */
         {
-            const ecl_kw_type * tabdims = ecl_file_iget_named_kw( f , "TABDIMS" , 0 );
-            const ecl_kw_type * tab = ecl_file_iget_named_kw( f , "TAB" , 0 );
             int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTO_OFFSET_ITEM );
             int rs_offset = ecl_kw_iget_int( tabdims , TABDIMS_JBPVTO_OFFSET_ITEM );
             int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NRPVTO_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NPPVTO_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NTPVTO_ITEM );
@@ -105,6 +105,24 @@ BOOST_AUTO_TEST_CASE(Test_PVTO) {
 
             BOOST_CHECK_CLOSE(20.59            , ecl_kw_iget_double( tab , rs_offset ), 1e-6 );
             BOOST_CHECK_CLOSE(28.19            , ecl_kw_iget_double( tab , rs_offset + 1), 1e-6 );
+        }
+
+        /* PVTG */
+        {
+            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTG_OFFSET_ITEM );
+            int pg_offset = ecl_kw_iget_int( tabdims , TABDIMS_JBPVTG_OFFSET_ITEM );
+            int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NRPVTG_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NPPVTG_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NTPVTG_ITEM );
+
+            BOOST_CHECK_EQUAL( 2, ecl_kw_iget_int( tabdims , TABDIMS_NRPVTG_ITEM ) );
+            BOOST_CHECK_EQUAL( 3, ecl_kw_iget_int( tabdims , TABDIMS_NPPVTG_ITEM ) );
+            BOOST_CHECK_EQUAL( 1, ecl_kw_iget_int( tabdims , TABDIMS_NTPVTG_ITEM ) );
+
+            BOOST_CHECK_CLOSE(0.00002448  , ecl_kw_iget_double( tab , offset ), 1e-6 );
+            BOOST_CHECK_CLOSE(0.061895    , ecl_kw_iget_double( tab , offset + column_stride), 1e-6 );
+            BOOST_CHECK_CLOSE(0.01299     , ecl_kw_iget_double( tab , offset + 2*column_stride ), 1e-6 );
+
+            BOOST_CHECK_CLOSE(20.0        , ecl_kw_iget_double( tab , pg_offset ), 1e-6 );
+            BOOST_CHECK_CLOSE(40.0        , ecl_kw_iget_double( tab , pg_offset + 1), 1e-6 );
         }
         ecl_file_close( f );
     }

@@ -512,6 +512,7 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
     {
         Tables tables( this->es.getUnits() );
         tables.addPVTO( this->es.getTableManager().getPvtoTables() );
+        tables.addPVTG( this->es.getTableManager().getPvtgTables() );
         tables.fwrite( fortio );
     }
 

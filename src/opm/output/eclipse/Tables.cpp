@@ -121,6 +121,53 @@ namespace Opm {
 
 
 
+    void Tables::addPVTG( const std::vector<PvtgTable>& pvtgTables) {
+        const double default_value = -2e20;
+        PvtxDims dims = tableDims( pvtgTables );
+        this->tabdims[ TABDIMS_NTPVTG_ITEM ] = dims.num_tables;
+        this->tabdims[ TABDIMS_NRPVTG_ITEM ] = dims.outer_size;
+        this->tabdims[ TABDIMS_NPPVTG_ITEM ] = dims.inner_size;
+
+        {
+            std::vector<double> pvtgData( dims.data_size , default_value );
+            std::vector<double> p_values( dims.num_tables * dims.outer_size  , default_value );
+            size_t composition_stride = dims.inner_size;
+            size_t table_stride = dims.outer_size * composition_stride;
+            size_t column_stride = table_stride * dims.num_tables;
+
+            size_t table_index = 0;
+            for (const auto& table : pvtgTables) {
+                size_t composition_index = 0;
+                for (const auto& underSatTable : table) {
+                    const auto& col0 = underSatTable.getColumn(0);
+                    const auto& col1 = underSatTable.getColumn(1);
+                    const auto& col2 = underSatTable.getColumn(2);
+
+                    for (size_t row = 0; row < col0.size(); row++) {
+                        size_t data_index = row + composition_stride * composition_index + table_stride * table_index;
+
+                        pvtgData[ data_index ]                  = units.from_si( UnitSystem::measure::gas_oil_ratio, col0[row]);
+                        pvtgData[ data_index + column_stride ]  = units.from_si( UnitSystem::measure::gas_oil_ratio, col1[row]);
+                        pvtgData[ data_index + 2*column_stride] = units.from_si( UnitSystem::measure::viscosity , col2[row]);
+                    }
+                    composition_index++;
+                }
+
+                {
+                    const auto& sat_table = table.getSaturatedTable();
+                    const auto& p = sat_table.getColumn("PG");
+                    for (size_t index = 0; index < p.size(); index++)
+                        p_values[index + table_index * dims.outer_size ] = units.from_si( UnitSystem::measure::pressure , p[index]);
+                }
+                table_index++;
+            }
+
+            addData( TABDIMS_IBPVTG_OFFSET_ITEM , pvtgData );
+            addData( TABDIMS_JBPVTG_OFFSET_ITEM , p_values );
+        }
+    }
+
+
     void Tables::fwrite( ERT::FortIO& fortio ) const
     {
         tabdims.fwrite( fortio );

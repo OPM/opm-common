@@ -26,6 +26,7 @@
 #include <ert/ecl/EclKW.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 
 
 namespace Opm {
@@ -36,6 +37,7 @@ namespace Opm {
         Tables( const UnitSystem& units_);
         void fwrite( ERT::FortIO& fortio ) const;
         void addPVTO( const std::vector<PvtoTable>& pvtoTables);
+        void addPVTG( const std::vector<PvtgTable>& pvtgTables);
 
 
     private:
