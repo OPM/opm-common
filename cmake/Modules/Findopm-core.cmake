@@ -21,7 +21,7 @@ find_opm_package (
   "${opm-core_DEPS}"
   
   # header to search for
-  "opm/core/grid.h"
+  "opm/core/wells.h"
 
   # library to search for
   "opmcore"
@@ -35,7 +35,7 @@ find_opm_package (
 int main()
 {
     Opm::parameter::ParameterGroup parameters;
-    parameters.insertParameter("number", "7");
+    parameters.insertParameter(\"number\", \"7\");
     return 0;
 }
 "
