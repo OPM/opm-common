@@ -24,10 +24,8 @@ set (opm-grid_DEPS
 	# DUNE dependency
 	"dune-common REQUIRED;
    dune-grid REQUIRED;
-   dune-geometry REQUIRED
-	 dune-istl"
-	# OPM dependency
-  "opm-common REQUIRED;
-   opm-core REQUIRED"
+	 dune-geometry REQUIRED;
+   opm-common REQUIRED;
+	 opm-parser REQUIRED"
 	"ZOLTAN"
 	)

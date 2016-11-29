@@ -30,12 +30,13 @@ find_opm_package (
   ""
 
   # test program
-"#include <opm/core/grid.h>
-int main (void) {
-  struct UnstructuredGrid *g;
-  g = create_grid_empty ();
-  destroy_grid (g);
-  return 0;  
+"
+#include <opm/core/utility/parameters/ParameterGroup.hpp>
+int main()
+{
+    Opm::parameter::ParameterGroup parameters;
+    parameters.insertParameter("number", "7");
+    return 0;
 }
 "
   # config variables

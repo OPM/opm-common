@@ -35,6 +35,7 @@ set (ewoms_DEPS
 	"dune-fem"
 	"opm-parser"
 	"opm-grid"
+	"opm-core"
 	# librt (on some systems necessary for clock_gettime())
 	"librt REQUIRED"
 	# valgrind client requests
