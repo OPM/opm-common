@@ -45,5 +45,8 @@ set (opm-core_DEPS
 	"opm-parser REQUIRED"
 	# the code which implements the material laws
 	"opm-material REQUIRED"
+	# the code which implements the output routines
 	"opm-output REQUIRED"
+	# the code which implements grids
+	"opm-grid REQUIRED"
 	)
