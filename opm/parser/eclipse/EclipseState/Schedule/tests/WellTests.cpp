@@ -41,6 +41,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
+using namespace Opm;
+
 static Opm::TimeMap createXDaysTimeMap(size_t numDays) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate ) };
@@ -335,9 +337,9 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
 }
 
 // Helper function for CompletionOrder test.
-inline Opm::Completion completion( int i, int j, int k ) {
+inline Opm::Completion completion( int i, int j, int k, int complnum = 1 ) {
     return Opm::Completion{ i, j, k,
-                            1,
+                            complnum,
                             k*1.0,
                             Opm::WellCompletion::AUTO,
                             Opm::Value<double>("ConnectionTransmissibilityFactor",99.88),
@@ -356,11 +358,11 @@ BOOST_AUTO_TEST_CASE(CompletionOrder) {
         auto c2 = completion(5, 5, 9);
         auto c3 = completion(5, 5, 1);
         auto c4 = completion(5, 5, 0);
-        std::vector< Opm::Completion > cv1 = { c1, c2 };
-        well.addCompletions(1, cv1);
+        Opm::CompletionSet cv1 = { c1, c2 };
+        well.addCompletionSet(1, cv1);
         BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c1);
-        std::vector< Opm::Completion > cv2 = { c3, c4 };
-        well.addCompletions(2, cv2);
+        Opm::CompletionSet cv2 = { c3, c4 };
+        well.addCompletionSet(2, cv2);
         BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c1);
         BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), c4);
     }
@@ -368,37 +370,46 @@ BOOST_AUTO_TEST_CASE(CompletionOrder) {
     {
         // Horizontal well.
         Opm::Well well("WELL1" ,  5, 5, 0.0, Opm::Phase::OIL, timeMap , 0);
-        auto c1 = completion(6, 5, 8);
-        auto c2 = completion(5, 6, 7);
-        auto c3 = completion(7, 5, 8);
-        auto c4 = completion(9, 5, 8);
-        auto c5 = completion(8, 5, 9);
-        auto c6 = completion(5, 5, 4);
-        std::vector<Opm::Completion> cv1 = { c1, c2 };
+        auto c1 = completion(6, 5, 8, 1);
+        auto c2 = completion(5, 6, 7, 2);
+        auto c3 = completion(7, 5, 8, 1);
+        auto c4 = completion(9, 5, 8, 2);
+        auto c5 = completion(8, 5, 9, 3);
+        auto c6 = completion(5, 5, 4, 1);
+
+        std::vector< Opm::Completion > cv1 = { c1, c2 };
         well.addCompletions(1, cv1);
         BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c2);
-        std::vector<Opm::Completion> cv2 = { c3, c4, c5 };
+
+        /*
+         * adding completions in batches like this will under the hood modify
+         * completion numbers to match expectations, so we ensure that we're
+         * comparing to the right value by forcing the right-hand-side of the
+         * comparison to use the expected completion number
+         */
+        std::vector< Opm::Completion > cv2 = { c3, c4, c5 };
         well.addCompletions(2, cv2);
-        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), c1);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), c3);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), c5);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), c4);
-        std::vector<Opm::Completion> cv3 = { c6 };
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), Completion( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), Completion( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), Completion( c1, 1 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), Completion( c3, 3 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), Completion( c5, 5 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), Completion( c4, 4 ) );
+        std::vector< Opm::Completion > cv3 = { c6 };
+
         well.addCompletions(3, cv3);
-        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), c1);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), c3);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), c5);
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), c4);
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(0), c6);
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(1), c2);
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(2), c1);
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(3), c3);
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(4), c5);
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(5), c4);
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), Completion( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), Completion( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), Completion( c1, 1 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), Completion( c3, 3 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), Completion( c5, 5 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), Completion( c4, 4 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(0), Completion( c6, 6 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(1), Completion( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(2), Completion( c1, 1 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(3), Completion( c3, 3 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(4), Completion( c5, 5 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(5), Completion( c4, 4 ) );
     }
 }
 

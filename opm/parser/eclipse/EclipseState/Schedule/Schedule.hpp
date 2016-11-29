@@ -121,6 +121,7 @@ namespace Opm
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid);
+        void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);

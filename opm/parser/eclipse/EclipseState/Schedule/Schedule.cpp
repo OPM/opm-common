@@ -218,6 +218,9 @@ namespace Opm {
             else if (keyword.name() == "COMPORD")
                 handleCOMPORD(parseContext , keyword, currentStep);
 
+            else if (keyword.name() == "COMPLUMP")
+                handleCOMPLUMP(keyword, currentStep);
+
             else if (keyword.name() == "DRSDT")
                 handleDRSDT(keyword, currentStep);
 
@@ -298,8 +301,6 @@ namespace Opm {
             }
         }
     }
-
-
 
     void Schedule::handleWELSPECS( const SCHEDULESection& section,
                                    size_t index,
@@ -735,6 +736,49 @@ namespace Opm {
         }
     }
 
+    namespace {
+
+        bool defaulted( int x ) { return x < 0; }
+        int maybe( const DeckRecord& rec, const std::string& s ) {
+            const auto& item = rec.getItem( s );
+            return item.defaultApplied( 0 ) ? -1 : item.get< int >( 0 ) - 1;
+        }
+    }
+
+    void Schedule::handleCOMPLUMP( const DeckKeyword& keyword,
+                                   size_t timestep ) {
+
+        for( const auto& record : keyword ) {
+            const int N  = maybe( record, "N" ) + 1;
+            if( N < 1 ) throw std::invalid_argument(
+                "Completion number in COMPLUMP can not be defaulted."
+            );
+
+            const auto& wellname = record.getItem( "WELL" ).getTrimmedString(0);
+            const int I  = maybe( record, "I" );
+            const int J  = maybe( record, "J" );
+            const int K1 = maybe( record, "K1" );
+            const int K2 = maybe( record, "K2" );
+
+            auto new_completion = [=]( const Completion& c ) -> Completion {
+                if( !defaulted( I ) && c.getI() != I )  return c;
+                if( !defaulted( J ) && c.getJ() != J )  return c;
+                if( !defaulted( K1 ) && c.getK() < K1 ) return c;
+                if( !defaulted( K2 ) && c.getK() > K2 ) return c;
+
+                return { c, N };
+            };
+
+            for( auto& well : this->getWells( wellname ) ) {
+                CompletionSet new_completions;
+                for( const auto& completion : well->getCompletions( timestep ) )
+                    new_completions.add( new_completion( completion ) );
+
+                well->addCompletionSet( timestep, new_completions );
+            }
+        }
+    }
+
     void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep ) {
 
         auto all_defaulted = []( const DeckRecord& rec ) {
@@ -773,12 +817,6 @@ namespace Opm {
 
                 continue;
             }
-
-            auto defaulted = []( int x ) { return x < 0; };
-            auto maybe = []( const DeckRecord& rec, const std::string& s ) {
-                const auto& item = rec.getItem( s );
-                return item.defaultApplied( 0 ) ? -1 : item.get< int >( 0 ) - 1;
-            };
 
             const int I  = maybe( record, "I" );
             const int J  = maybe( record, "J" );

@@ -306,7 +306,7 @@ namespace Opm {
         return m_completions.back();
     }
 
-    void Well::addCompletions(size_t time_step, std::vector< Completion > newCompletions ) {
+    void Well::addCompletions(size_t time_step, const std::vector< Completion >& newCompletions ) {
         auto new_set = this->getCompletions( time_step );
         int complnum_shift = new_set.size();
 
@@ -314,11 +314,11 @@ namespace Opm {
         const auto headJ = this->m_headJ[ time_step ];
 
         auto prev_size = new_set.size();
-        for( auto& completion : newCompletions ) {
+        for( auto completion : newCompletions ) {
             completion.fixDefaultIJ( headI , headJ );
             completion.shift_complnum( complnum_shift );
 
-            new_set.add( std::move( completion ) );
+            new_set.add( completion );
             const auto new_size = new_set.size();
 
             /* Completions can be "re-added", i.e. same coordinates but with a

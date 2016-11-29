@@ -28,6 +28,10 @@
 
 namespace Opm {
 
+    CompletionSet::CompletionSet( std::initializer_list< Completion > cs ) {
+        for( auto&& c : cs ) this->add( c );
+    }
+
     size_t CompletionSet::size() const {
         return m_completions.size();
     }

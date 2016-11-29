@@ -21,14 +21,15 @@
 #ifndef COMPLETIONSET_HPP_
 #define COMPLETIONSET_HPP_
 
-#include <memory>
-
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
 namespace Opm {
 
     class CompletionSet {
     public:
+        CompletionSet() = default;
+        CompletionSet( std::initializer_list< Completion > );
+
         using const_iterator = std::vector< Completion >::const_iterator;
 
         void add( Completion );

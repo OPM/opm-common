@@ -89,7 +89,7 @@ namespace Opm {
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(const DeckRecord& deckRecord);
 
-        void addCompletions(size_t time_step, std::vector< Completion > );
+        void addCompletions(size_t time_step, const std::vector< Completion >& );
         void addCompletionSet(size_t time_step, CompletionSet );
         const CompletionSet& getCompletions(size_t timeStep) const;
         const CompletionSet& getCompletions() const;
