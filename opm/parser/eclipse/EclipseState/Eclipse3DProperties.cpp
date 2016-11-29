@@ -759,7 +759,6 @@ namespace Opm {
     void Eclipse3DProperties::handleOPERATEKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
         for( const auto& record : deckKeyword ) {
             const std::string& targetArray = record.getItem("TARGET_ARRAY").get< std::string >(0);
-            const std::string& srcArray = record.getItem("ARRAY").get< std::string >(0);
 
             if (m_intGridProperties.supportsKeyword( targetArray ))
                 m_intGridProperties.handleOPERATERecord( record  , boxManager);
