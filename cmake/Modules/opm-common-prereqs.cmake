@@ -3,7 +3,7 @@
 
 # defines that must be present in config.h for our headers
 set (opm-common_CONFIG_VAR
-	)
+	"HAS_ATTRIBUTE_UNUSED")
 
 # dependencies
 set (opm-common_DEPS
