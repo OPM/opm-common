@@ -12,8 +12,8 @@ downstreams=(ert
              opm-parser
              opm-output
              opm-material
-             opm-core
              opm-grid
+             opm-core
              ewoms
              opm-simulators
              opm-upscaling
