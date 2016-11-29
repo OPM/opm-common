@@ -35,7 +35,7 @@ find_opm_package (
 int main()
 {
     Opm::parameter::ParameterGroup parameters;
-    parameters.insertParameter("number", "7");
+    parameters.insertParameter(\"number\", \"7\");
     return 0;
 }
 "
