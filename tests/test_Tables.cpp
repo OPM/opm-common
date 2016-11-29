@@ -107,6 +107,7 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
             BOOST_CHECK_CLOSE(28.19            , ecl_kw_iget_double( tab , rs_offset + 1), 1e-6 );
         }
 
+
         /* PVTG */
         {
             int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTG_OFFSET_ITEM );
@@ -124,6 +125,27 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
             BOOST_CHECK_CLOSE(20.0        , ecl_kw_iget_double( tab , pg_offset ), 1e-6 );
             BOOST_CHECK_CLOSE(40.0        , ecl_kw_iget_double( tab , pg_offset + 1), 1e-6 );
         }
+
+
+        /* PVTW */
+        /*
+          This test code should be OK; however it turns out the PVTW
+          tabular data is not really internalized in the EclipseState
+          object so it is commented out for now.
+
+        {
+            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTW_OFFSET_ITEM );
+            int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NTPVTW_ITEM );
+            BOOST_CHECK_CLOSE( 247.7 , ecl_kw_iget_double( tab , offset ));
+            BOOST_CHECK_CLOSE( 1.0 / 1.03665 , ecl_kw_iget_double( tab , offset + column_stride));
+            BOOST_CHECK_CLOSE( 0.41726E-04 , ecl_kw_iget_double( tab , offset + 2 * column_stride));
+            BOOST_CHECK_CLOSE( 1.03665 / 0.29120 , ecl_kw_iget_double( tab , offset + 3 * column_stride));
+
+            // For the last column - WATER_VISCOSIBILITY there is
+            // clearly a transform involved; not really clear which
+            // transform this is. This column is therefor not tested.
+        }
+        */
         ecl_file_close( f );
     }
 }
