@@ -144,8 +144,8 @@ namespace {
         1 / ( Field::ReservoirVolume / Field::Time ),
         1 / Field::Transmissibility,
         1 / Field::Mass,
-        1, /* gas-oil ratio */
-        1, /* oil-gas ratio */
+        1 / ( Field::GasSurfaceVolume / Field::LiquidSurfaceVolume ), /* gas-oil ratio */
+        1 / ( Field::LiquidSurfaceVolume / Field::GasSurfaceVolume ), /* oil-gas ratio */
         1, /* water cut */
         1 / (Field::ReservoirVolume / Field::GasSurfaceVolume), /* gas formation volume factor */
         1, /* oil formation volume factor */
@@ -173,8 +173,8 @@ namespace {
          Field::ReservoirVolume / Field::Time,
          Field::Transmissibility,
          Field::Mass,
-         1, /* gas-oil ratio */
-         1, /* oil-gas ratio */
+         Field::GasSurfaceVolume / Field::LiquidSurfaceVolume, /* gas-oil ratio */
+         Field::LiquidSurfaceVolume / Field::GasSurfaceVolume, /* oil-gas ratio */
          1, /* water cut */
          Field::ReservoirVolume / Field::GasSurfaceVolume, /* gas formation volume factor */
          1, /* oil formation volume factor */
