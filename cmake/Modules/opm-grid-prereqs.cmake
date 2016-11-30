@@ -9,6 +9,8 @@ set (opm-grid_CONFIG_VAR
 	DUNE_COMMON_VERSION_MAJOR
 	DUNE_COMMON_VERSION_MINOR
 	DUNE_COMMON_VERSION_REVISION
+	HAVE_DUNE_ISTL
+	HAVE_MPI
 	HAVE_ZOLTAN
 	)
 
@@ -21,11 +23,11 @@ set (opm-grid_DEPS
 	# various runtime library enhancements
 	"Boost 1.44.0
 		COMPONENTS date_time filesystem system unit_test_framework REQUIRED"
-	# DUNE dependency
-	"dune-common REQUIRED;
-   dune-grid REQUIRED;
-	 dune-geometry REQUIRED;
-   opm-common REQUIRED;
-	 opm-parser REQUIRED"
+	"MPI"
+	"dune-common"
+	"dune-grid REQUIRED"
+	"dune-istl"
+	"opm-common REQUIRED"
+	"opm-parser REQUIRED"
 	"ZOLTAN"
 	)
