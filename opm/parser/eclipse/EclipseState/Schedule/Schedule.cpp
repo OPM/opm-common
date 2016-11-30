@@ -1593,7 +1593,7 @@ namespace Opm {
     }
 
     bool Schedule::hasOilVaporizationProperties() const {
-        for( size_t i = 0; i < this->m_timeMap->size(); ++i )
+        for( size_t i = 0; i < this->m_timeMap.size(); ++i )
             if( m_oilvaporizationproperties.at( i ).defined() ) return true;
 
         return false;
