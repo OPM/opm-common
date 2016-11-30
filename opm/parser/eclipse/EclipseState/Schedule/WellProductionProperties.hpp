@@ -20,6 +20,7 @@
 #ifndef WELLPRODUCTIONPROPERTIES_HPP_HEADER_INCLUDED
 #define WELLPRODUCTIONPROPERTIES_HPP_HEADER_INCLUDED
 
+#include <iosfwd>
 #include <memory>
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -70,6 +71,9 @@ namespace Opm {
 
         WellProductionProperties(const DeckRecord& record);
     };
+
+    std::ostream& operator<<( std::ostream&, const WellProductionProperties& );
+
 } // namespace Opm
 
 #endif  // WELLPRODUCTIONPROPERTIES_HPP_HEADER_INCLUDED

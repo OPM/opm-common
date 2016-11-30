@@ -20,6 +20,8 @@
 #ifndef WELLINJECTIONPROPERTIES_HPP_HEADER_INCLUDED
 #define WELLINJECTIONPROPERTIES_HPP_HEADER_INCLUDED
 
+#include <iosfwd>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 namespace Opm {
@@ -56,6 +58,8 @@ namespace Opm {
                 injectionControls += controlModeArg;
         }
     };
+
+    std::ostream& operator<<( std::ostream&, const WellInjectionProperties& );
 }
 
 #endif
