@@ -40,6 +40,7 @@ namespace Opm {
     class Completion {
     public:
         Completion(int i, int j , int k ,
+                   int complnum,
                    double depth,
                    WellCompletion::StateEnum state ,
                    const Value<double>& connectionTransmissibilityFactor,
@@ -49,6 +50,7 @@ namespace Opm {
 
         Completion(const Completion&, WellCompletion::StateEnum newStatus);
         Completion(const Completion&, double wellPi);
+        Completion(const Completion&, int complnum );
 
         bool sameCoordinate(const Completion& other) const;
         bool sameCoordinate(const int i, const int j, const int k) const;
@@ -56,6 +58,7 @@ namespace Opm {
         int getI() const;
         int getJ() const;
         int getK() const;
+        int complnum() const;
         WellCompletion::StateEnum getState() const;
         double getConnectionTransmissibilityFactor() const;
         double getWellPi() const;
@@ -63,6 +66,7 @@ namespace Opm {
         double getDiameter() const;
         double getSkinFactor() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
+        void   shift_complnum( int );
         int getSegmentNumber() const;
         double getCenterDepth() const;
         void attachSegment(const int segmentNumber , const double centerDepth);
@@ -80,6 +84,7 @@ namespace Opm {
 
     private:
         int m_i, m_j, m_k;
+        int m_complnum;
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
         double m_wellPi;

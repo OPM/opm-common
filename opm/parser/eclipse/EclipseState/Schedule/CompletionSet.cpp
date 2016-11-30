@@ -47,14 +47,21 @@ namespace Opm {
 
 
     void CompletionSet::add( Completion completion ) {
-        for( auto& c : this->m_completions ) {
-            if( c.sameCoordinate( completion ) ) {
-                c = std::move( completion );
-                return;
-            }
+        auto same = [&]( const Completion& c ) {
+            return c.sameCoordinate( completion );
+        };
+
+        auto prev = std::find_if( this->m_completions.begin(),
+                                  this->m_completions.end(),
+                                  same );
+
+        if( prev != this->m_completions.end() ) {
+            // update the completion, but preserve it's number
+            *prev = Completion( completion, prev->complnum() );
+            return;
         }
 
-        m_completions.push_back( std::move( completion ) );
+        m_completions.emplace_back( completion );
     }
 
     bool CompletionSet::allCompletionsShut( ) const {

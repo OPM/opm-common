@@ -1332,3 +1332,88 @@ BOOST_AUTO_TEST_CASE(change_ref_depth ) {
     BOOST_CHECK_CLOSE( 2873.94, well.getRefDepth( 1 ), 1e-5 );
 }
 
+BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
+    std::string input = R"(
+        START             -- 0
+        19 JUN 2007 /
+        SCHEDULE
+        DATES             -- 1
+            10  OKT 2008 /
+        /
+        WELSPECS
+            'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+        /
+
+        COMPDAT
+            'W1' 0 0 1 1 'SHUT' 1*    / -- regular completion (1)
+            'W1' 0 0 2 2 'SHUT' 1*    / -- regular completion (2)
+            'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
+        /
+
+        DATES             -- 2
+            11  OKT 2008 /
+        /
+
+        COMPDAT
+            'W1' 0 0 1 1 'SHUT' 1*    / -- respecify, essentially ignore (1)
+        /
+    )";
+
+    ParseContext ctx;
+    auto deck = Parser().parseString(input, ctx);
+    EclipseGrid grid(10,10,10);
+    Schedule schedule( ctx, grid, deck, Phases( true, true, true ) );
+
+    const auto& cs1 = schedule.getWell( "W1" )->getCompletions( 1 );
+    BOOST_CHECK_EQUAL( 1, cs1.get( 0 ).complnum() );
+    BOOST_CHECK_EQUAL( 2, cs1.get( 1 ).complnum() );
+    BOOST_CHECK_EQUAL( 3, cs1.get( 2 ).complnum() );
+    BOOST_CHECK_EQUAL( 4, cs1.get( 3 ).complnum() );
+
+    const auto& cs2 = schedule.getWell( "W1" )->getCompletions( 2 );
+    BOOST_CHECK_EQUAL( 1, cs2.get( 0 ).complnum() );
+    BOOST_CHECK_EQUAL( 2, cs2.get( 1 ).complnum() );
+    BOOST_CHECK_EQUAL( 3, cs2.get( 2 ).complnum() );
+    BOOST_CHECK_EQUAL( 4, cs2.get( 3 ).complnum() );
+}
+
+BOOST_AUTO_TEST_CASE( COMPDAT_complnum_multiple_wells ) {
+    std::string input = R"(
+        START             -- 0
+        19 JUN 2007 /
+        SCHEDULE
+        DATES             -- 1
+            10  OKT 2008 /
+        /
+        WELSPECS
+            'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+        /
+
+        COMPDAT
+            'W1' 0 0 1 1 'SHUT' 1*    / -- regular completion (1)
+            'W1' 0 0 2 2 'SHUT' 1*    / -- regular completion (2)
+            'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
+            'W3' 0 0 1 3 'SHUT' 1*    / -- doesn't exist, ignored
+            'W2' 0 0 3 3 'SHUT' 1*    / -- regular completion (1)
+            'W2' 0 0 1 3 'SHUT' 1*    / -- two completions (one exist already) (2, 3)
+        /
+    )";
+
+    ParseContext ctx;
+    auto deck = Parser().parseString(input, ctx);
+    EclipseGrid grid(10,10,10);
+    Schedule schedule( ctx, grid, deck, Phases( true, true, true ) );
+
+    const auto& w1cs = schedule.getWell( "W1" )->getCompletions();
+    BOOST_CHECK_EQUAL( 1, w1cs.get( 0 ).complnum() );
+    BOOST_CHECK_EQUAL( 2, w1cs.get( 1 ).complnum() );
+    BOOST_CHECK_EQUAL( 3, w1cs.get( 2 ).complnum() );
+    BOOST_CHECK_EQUAL( 4, w1cs.get( 3 ).complnum() );
+
+    const auto& w2cs = schedule.getWell( "W2" )->getCompletions();
+    BOOST_CHECK_EQUAL( 1, w2cs.getFromIJK( 4, 4, 2 ).complnum() );
+    BOOST_CHECK_EQUAL( 2, w2cs.getFromIJK( 4, 4, 0 ).complnum() );
+    BOOST_CHECK_EQUAL( 3, w2cs.getFromIJK( 4, 4, 1 ).complnum() );
+    BOOST_CHECK_THROW( w2cs.get( 3 ).complnum(), std::out_of_range );
+}

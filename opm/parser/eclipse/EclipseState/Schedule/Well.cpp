@@ -308,12 +308,14 @@ namespace Opm {
 
     void Well::addCompletions(size_t time_step, std::vector< Completion > newCompletions ) {
         auto new_set = this->getCompletions( time_step );
+        const int complnum_shift = new_set.size();
 
         const auto headI = this->m_headI[ time_step ];
         const auto headJ = this->m_headJ[ time_step ];
 
         for( auto& completion : newCompletions ) {
             completion.fixDefaultIJ( headI , headJ );
+            completion.shift_complnum( complnum_shift );
             new_set.add( std::move( completion ) );
         }
 

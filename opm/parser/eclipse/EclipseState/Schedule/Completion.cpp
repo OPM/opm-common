@@ -33,6 +33,7 @@
 namespace Opm {
 
     Completion::Completion(int i, int j , int k ,
+                           int compnum,
                            double depth,
                            WellCompletion::StateEnum state ,
                            const Value<double>& connectionTransmissibilityFactor,
@@ -40,6 +41,7 @@ namespace Opm {
                            const Value<double>& skinFactor,
                            const WellCompletion::DirectionEnum direction)
         : m_i(i), m_j(j), m_k(k),
+          m_complnum( compnum ),
           m_diameter(diameter),
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
           m_wellPi(1.0),
@@ -63,6 +65,12 @@ namespace Opm {
         } else {
             this->m_wellPi = wellPi;
         }
+    }
+
+    Completion::Completion( const Completion& c, int num ) :
+        Completion( c )
+    {
+        this->m_complnum = num;
     }
 
     bool Completion::sameCoordinate(const Completion& other) const {
@@ -91,7 +99,10 @@ namespace Opm {
     */
 
     inline std::vector< Completion >
-    fromCOMPDAT( const EclipseGrid& grid, const DeckRecord& compdatRecord, const Well& well ) {
+    fromCOMPDAT( const EclipseGrid& grid,
+                 const DeckRecord& compdatRecord,
+                 const Well& well,
+                 int prev_complnum ) {
 
         std::vector< Completion > completions;
 
@@ -132,6 +143,7 @@ namespace Opm {
 
         for (int k = K1; k <= K2; k++) {
             completions.emplace_back( I, J, k,
+                                      int( completions.size() + prev_complnum ) + 1,
                                       grid.getCellDepth( I,J,k ),
                                       state,
                                       connectionTransmissibilityFactor,
@@ -159,6 +171,7 @@ namespace Opm {
                              const std::vector< const Well* >& wells ) {
 
         std::map< std::string, std::vector< Completion > > res;
+        std::vector< int > prev_compls( wells.size(), 0 );
 
         for( const auto& record : compdatKeyword ) {
 
@@ -171,7 +184,15 @@ namespace Opm {
 
             if( well == wells.end() ) continue;
 
-            auto completions = Opm::fromCOMPDAT( grid, record, **well );
+            const auto index = std::distance( wells.begin(), well );
+            if( prev_compls[ index ] == 0 ) (*well)->getCompletions().size();
+
+            auto completions = Opm::fromCOMPDAT( grid,
+                                                 record,
+                                                 **well,
+                                                 prev_compls[ index ] );
+
+            prev_compls[ index ] += completions.size();
 
             res[ wellname ].insert( res[ wellname ].end(),
                                     std::make_move_iterator( completions.begin() ),
@@ -189,6 +210,9 @@ namespace Opm {
             m_j = wellHeadJ;
     }
 
+    void Completion::shift_complnum( int shift ) {
+        this->m_complnum += shift;
+    }
 
     int Completion::getI() const {
         return m_i;
@@ -200,6 +224,10 @@ namespace Opm {
 
     int Completion::getK() const {
         return m_k;
+    }
+
+    int Completion::complnum() const {
+        return this->m_complnum;
     }
 
     WellCompletion::StateEnum Completion::getState() const {
