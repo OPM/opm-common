@@ -230,3 +230,18 @@ BOOST_AUTO_TEST_CASE( VectorConvert ) {
     for (size_t i = 0; i < d1.size(); i++)
         BOOST_CHECK_EQUAL( units.from_si( UnitSystem::measure::pressure , d1[i] ) , d0[i]);
 }
+
+BOOST_AUTO_TEST_CASE( GasOilRatioNotIdentityForField ) {
+    const double gas = 14233.4;
+    const double oil = 4223;
+
+    const double ratio = gas / oil;
+    const auto units = UnitSystem::newFIELD();
+
+    const auto field_gas = (gas * 35.314666721) / 1000;
+    const auto field_oil = oil * 6.28981100;
+
+    const auto gor = UnitSystem::measure::gas_oil_ratio;
+
+    BOOST_CHECK_CLOSE( units.from_si( gor, ratio ), field_gas / field_oil, 1e-5 );
+}
