@@ -413,6 +413,16 @@ static Deck createDeckWithWellsAndCompletionDataWithWELOPEN() {
                     " 'OP_2'  8  7   3   6 'OPEN' 1*    6.242   0.311   576.458 1*  1*  'Y'  21.915 / \n"
                     " 'OP_3'  7  7   1   1 'OPEN' 1*   27.412   0.311  2445.337 1*  1*  'Y'  18.521 / \n"
                     " 'OP_3'  7  7   2   2 'OPEN' 1*   55.195   0.311  4923.842 1*  1*  'Y'  18.524 / \n"
+                    /*
+                     * Completions for OP_2:
+                     * 1 - 8 8 1
+                     * 2 - 8 8 2
+                     * 3 - 8 8 3
+                     * 4 - 8 7 3
+                     * 5 - 8 7 4
+                     * 6 - 8 7 5
+                     * 7 - 8 7 6
+                     */
                     "/\n"
                     "DATES             -- 2,3\n"
                     " 10  JUL 2007 / \n"
@@ -456,25 +466,29 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     well = schedule.getWell("OP_2");
     const auto& cs = well->getCompletions( 3 );
 
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, cs.get( 3 ).getState());
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, cs.get( 4 ).getState());
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, cs.get( 5 ).getState());
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs.get( 6 ).getState());
+    constexpr auto shut = WellCompletion::StateEnum::SHUT;
+    constexpr auto open = WellCompletion::StateEnum::OPEN;
+
+    BOOST_CHECK_EQUAL( 7U, cs.size() );
+    BOOST_CHECK_EQUAL(shut, cs.getFromIJK( 7, 6, 2 ).getState());
+    BOOST_CHECK_EQUAL(shut, cs.getFromIJK( 7, 6, 3 ).getState());
+    BOOST_CHECK_EQUAL(shut, cs.getFromIJK( 7, 6, 4 ).getState());
+    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 7, 2 ).getState());
 
     const auto& cs2 = well->getCompletions( 4 );
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs2.get( 3 ).getState());
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs2.get( 4 ).getState());
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs2.get( 5 ).getState());
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs2.get( 6 ).getState());
+    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 2 ).getState());
+    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 3 ).getState());
+    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 4 ).getState());
+    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 7, 2 ).getState());
 
     well = schedule.getWell("OP_3");
     const auto& cs3 = well->getCompletions( 3 );
 
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::SHUT, cs3.get( 0 ).getState());
+    BOOST_CHECK_EQUAL(shut, cs3.get( 0 ).getState());
 
     const auto& cs4 = well->getCompletions( 4 );
 
-    BOOST_CHECK_EQUAL(WellCompletion::StateEnum::OPEN, cs4.get( 0 ).getState());
+    BOOST_CHECK_EQUAL(open, cs4.get( 0 ).getState());
 
     well = schedule.getWell("OP_1");
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 3 ));
@@ -527,114 +541,6 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
   currentStep = 4;
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
-}
-
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC1_ThrowsExcpetion) {
-    Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-                    "1 NOV 1979 / \n"
-                    "SCHEDULE\n"
-                    "DATES             -- 1\n"
-                    " 1 DES 1979/ \n"
-                    "/\n"
-                    "WELSPECS\n"
-                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    "/\n"
-                    "DATES             -- 3\n"
-                    " 10  OKT 2008 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' OPEN 0 0 0 1 0 / \n"
-                    "/\n"
-                    "COMPLUMP\n"
-                    " 'OP_1' 0 0 0 0 0 / \n "
-                    "/\n"
-                    "DATES             -- 4\n"
-                    " 10  NOV 2008 / \n"
-                    "/\n";
-
-
-    auto deck = parser.parseString(input, ParseContext());
-    EclipseGrid grid(10,10,10);
-    BOOST_CHECK_THROW(Schedule schedule(ParseContext() , grid , deck, Phases(true, true, true) ), std::exception);
-}
-
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC1andC2_ThrowsExcpetion) {
-    Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-                    "1 NOV 1979 / \n"
-                    "SCHEDULE\n"
-                    "DATES             -- 1\n"
-                    " 1 DES 1979/ \n"
-                    "/\n"
-                    "WELSPECS\n"
-                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    "/\n"
-                    "DATES             -- 3\n"
-                    " 10  OKT 2008 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' OPEN 0 0 0 1 4 / \n"
-                    "/\n"
-                    "COMPLUMP\n"
-                    " 'OP_1' 0 0 0 0 0 / \n "
-                    "/\n"
-                    "DATES             -- 4\n"
-                    " 10  NOV 2008 / \n"
-                    "/\n";
-
-
-    auto deck = parser.parseString(input, ParseContext());
-    EclipseGrid grid(10,10,10);
-    BOOST_CHECK_THROW(Schedule schedule(ParseContext() , grid , deck, Phases(true, true, true) ), std::exception);
-}
-
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithC2_ThrowsExcpetion) {
-    Opm::Parser parser;
-    std::string input =
-            "START             -- 0 \n"
-                    "1 NOV 1979 / \n"
-                    "SCHEDULE\n"
-                    "DATES             -- 1\n"
-                    " 1 DES 1979/ \n"
-                    "/\n"
-                    "WELSPECS\n"
-                    "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
-                    "/\n"
-                    "COMPDAT\n"
-                    " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
-                    " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
-                    "/\n"
-                    "DATES             -- 3\n"
-                    " 10  OKT 2008 / \n"
-                    "/\n"
-                    "WELOPEN\n"
-                    " 'OP_1' OPEN 0 0 0 0 4 / \n"
-                    "/\n"
-                    "COMPLUMP\n"
-                    " 'OP_1' 0 0 0 0 0 / \n "
-                    "/\n"
-                    "DATES             -- 4\n"
-                    " 10  NOV 2008 / \n"
-                    "/\n";
-
-
-    auto deck = parser.parseString(input, ParseContext());
-    EclipseGrid grid(10,10,10);
-    BOOST_CHECK_THROW(Schedule schedule(ParseContext() , grid , deck, Phases(true, true, true) ), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithCOMPLUMPwithDefaultValuesInWELOPEN) {

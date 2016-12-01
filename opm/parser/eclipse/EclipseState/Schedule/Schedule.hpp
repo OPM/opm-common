@@ -127,7 +127,7 @@ namespace Opm
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep);
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
-        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, bool hascomplump);
+        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep );
         void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleGCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep);
