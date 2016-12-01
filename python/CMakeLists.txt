@@ -1,4 +1,5 @@
-# Loading pycmake macros
+include( FindPythonModule )
+include( PythonPackage )
 
 #python_module( ctypes )
 python_module( six    )
@@ -10,3 +11,5 @@ if (DEFINED PY_inspect)
 else()
   message(STATUS "We do not have inspect, ignoring ...")
 endif()
+
+add_subdirectory( sunbeam )
