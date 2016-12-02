@@ -1,7 +1,50 @@
 import libsunbeam as lib
 
-class EclipseState(lib.EclipseState):
-    pass
+class _delegate(object):
+    def __init__(self, name, attr):
+        self._name = name
+        self._attr = attr
+
+    def __get__(self, instance, _):
+        if instance is None: return self
+        return getattr(self.delegate(instance), self._attr)
+
+    def __set__(self, instance, value):
+        setattr(self.delegate(instance), self._attr, value)
+
+    def delegate(self, instance):
+        return getattr(instance, self._name)
+
+    def __repr__(self):
+        return '_delegate(' + repr(self._name) + ", " + repr(self._attr) + ")"
+
+def delegate(delegate_cls, to = '_sun'):
+    attributes = set(delegate_cls.__dict__.keys())
+
+    def inner(cls):
+        class _property(object):
+            pass
+
+        setattr(cls, to, _property())
+        for attr in attributes - set(cls.__dict__.keys()):
+            setattr(cls, attr, _delegate(to, attr))
+
+        # inject __init__
+        def default_init(self, this):
+            setattr(self, to, this)
+
+        setattr(cls, '__init__', default_init)
+
+        return cls
+
+    return inner
+
+@delegate(lib.EclipseState)
+class EclipseState(object):
+
+    @property
+    def schedule(self):
+        return self._schedule()
 
 def _parse_context(actions):
     ctx = lib.ParseContext()
@@ -24,6 +67,5 @@ def _parse_context(actions):
 
     return ctx
 
-
 def parse(path, actions = None):
-    return lib.parse(path, _parse_context(actions))
+    return EclipseState(lib.parse(path, _parse_context(actions)))
