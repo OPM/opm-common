@@ -19,6 +19,5 @@ find_package( Boost COMPONENTS python REQUIRED )
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/pycmake/cmake/Modules)
 
-add_subdirectory( src )
 add_subdirectory( python )
 add_subdirectory( tests )
