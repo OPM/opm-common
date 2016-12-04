@@ -241,7 +241,7 @@ namespace Opm {
 
         */
         size_t fixupZCORN( std::vector<double>& zcorn);
-        size_t fixupZCORN( std::vector<double>& zcorn, int sign, size_t, size_t , size_t k , size_t c);
+        bool validZCORN( const std::vector<double>& zcorn) const;
     private:
         std::array<size_t,3> dims;
         std::array<size_t,3> stride;

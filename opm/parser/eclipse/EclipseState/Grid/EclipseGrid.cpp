@@ -773,17 +773,33 @@ namespace Opm {
         return index(i,j,k,c);
     }
 
-    size_t ZcornMapper::fixupZCORN( std::vector<double>& zcorn, int sign, size_t i, size_t j, size_t k , size_t c) {
-        size_t index1 = this->index(i,j,k,c);
-        size_t index2 = this->index(i,j,k,c+4);
+    bool ZcornMapper::validZCORN( const std::vector<double>& zcorn) const {
+        int sign = zcorn[ this->index(0,0,0,0) ] <= zcorn[this->index(0,0, this->dims[2] - 1,4)] ? 1 : -1;
+        for (size_t j=0; j < this->dims[1]; j++)
+            for (size_t i=0; i < this->dims[0]; i++)
+                for (size_t c=0; c < 4; c++)
+                    for (size_t k=0; k < this->dims[2]; k++) {
+                        /* Between cells */
+                        if (k > 0) {
+                            size_t index1 = this->index(i,j,k-1,c+4);
+                            size_t index2 = this->index(i,j,k,c);
+                            if ((zcorn[index2] - zcorn[index1]) * sign < 0)
+                                return false;
+                        }
 
-        if ((zcorn[index2] - zcorn[index1]) * sign < 0 ) {
-            zcorn[index2] = zcorn[index1];
-            return 1;
-        } else
-            return 0;
+                        /* In cell */
+                        {
+                            size_t index1 = this->index(i,j,k,c);
+                            size_t index2 = this->index(i,j,k,c+4);
+                            if ((zcorn[index2] - zcorn[index1]) * sign < 0)
+                                return false;
+                        }
+                    }
 
+        return true;
     }
+
+
 
 
     size_t ZcornMapper::fixupZCORN( std::vector<double>& zcorn) {
@@ -793,9 +809,30 @@ namespace Opm {
         for (size_t k=0; k < this->dims[2]; k++)
             for (size_t j=0; j < this->dims[1]; j++)
                 for (size_t i=0; i < this->dims[0]; i++)
-                    for (size_t c=0; c < 4; c++)
-                        cells_adjusted += this->fixupZCORN( zcorn , sign, i , j , k , c );
+                    for (size_t c=0; c < 4; c++) {
+                        /* Cell to cell */
+                        if (k > 0) {
+                            size_t index1 = this->index(i,j,k-1,c+4);
+                            size_t index2 = this->index(i,j,k,c);
 
+                            if ((zcorn[index2] - zcorn[index1]) * sign < 0 ) {
+                                zcorn[index2] = zcorn[index1];
+                                cells_adjusted++;
+                            }
+                        }
+
+
+                        /* Cell internal */
+                        {
+                            size_t index1 = this->index(i,j,k,c);
+                            size_t index2 = this->index(i,j,k,c+4);
+
+                            if ((zcorn[index2] - zcorn[index1]) * sign < 0 ) {
+                                zcorn[index2] = zcorn[index1];
+                                cells_adjusted++;
+                            }
+                        }
+                    }
         return cells_adjusted;
     }
 }

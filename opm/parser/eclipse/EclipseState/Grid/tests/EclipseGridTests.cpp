@@ -1061,13 +1061,29 @@ BOOST_AUTO_TEST_CASE(ZcornMapper) {
     std::vector<double> zcorn;
     auto points_adjusted = grid.exportZCORN( zcorn );
     BOOST_CHECK_EQUAL( points_adjusted , 0 );
+    BOOST_CHECK( zmp.validZCORN( zcorn ));
 
-    /* Manually destroy it */
-    zcorn[ zmp.index(0,0,0,4) ] = zcorn[ zmp.index(0,0,0,0) ] - 1;
-
+    /* Manually destroy it - cell internal */
+    zcorn[ zmp.index(0,0,0,4) ] = zcorn[ zmp.index(0,0,0,0) ] - 0.1;
+    BOOST_CHECK( !zmp.validZCORN( zcorn ));
     points_adjusted = zmp.fixupZCORN( zcorn );
     BOOST_CHECK_EQUAL( points_adjusted , 1 );
-    BOOST_CHECK_EQUAL( zcorn[ zmp.index(0,0,0,4) ] , zcorn[ zmp.index(0,0,0,0) ] );
+    BOOST_CHECK( zmp.validZCORN( zcorn ));
+
+    /* Manually destroy it - cell 2 cell */
+    zcorn[ zmp.index(0,0,0,4) ] = zcorn[ zmp.index(0,0,1,0) ] + 0.1;
+    BOOST_CHECK( !zmp.validZCORN( zcorn ));
+    points_adjusted = zmp.fixupZCORN( zcorn );
+    BOOST_CHECK_EQUAL( points_adjusted , 1 );
+    BOOST_CHECK( zmp.validZCORN( zcorn ));
+
+    /* Manually destroy it - cell 2 cell and cell internal*/
+    zcorn[ zmp.index(0,0,0,4) ] = zcorn[ zmp.index(0,0,1,0) ] + 0.1;
+    zcorn[ zmp.index(0,0,0,0) ] = zcorn[ zmp.index(0,0,0,4) ] + 0.1;
+    BOOST_CHECK( !zmp.validZCORN( zcorn ));
+    points_adjusted = zmp.fixupZCORN( zcorn );
+    BOOST_CHECK_EQUAL( points_adjusted , 2 );
+    BOOST_CHECK( zmp.validZCORN( zcorn ));
 }
 
 
