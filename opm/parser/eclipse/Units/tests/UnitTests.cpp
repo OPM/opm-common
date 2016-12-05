@@ -245,3 +245,24 @@ BOOST_AUTO_TEST_CASE( GasOilRatioNotIdentityForField ) {
 
     BOOST_CHECK_CLOSE( units.from_si( gor, ratio ), field_gas / field_oil, 1e-5 );
 }
+
+BOOST_AUTO_TEST_CASE ( UnitConstants ) {
+    using namespace Opm::prefix;
+    using namespace Opm::unit;
+
+    BOOST_REQUIRE_EQUAL (meter, 1);
+    BOOST_REQUIRE_EQUAL (kilogram, 1);
+    BOOST_REQUIRE_EQUAL (second, 1);
+
+    BOOST_REQUIRE_CLOSE (milli*darcy, 9.86923667e-16, 0.01);
+    BOOST_REQUIRE_CLOSE (mega*darcy, 9.86923e-7, 0.01);
+    BOOST_REQUIRE_CLOSE (convert::to(mega*darcy, milli*darcy), 1e9, 0.01);
+
+    BOOST_REQUIRE_CLOSE (convert::to(convert::from(1.0, barsa), psia), 14.5038, 0.01);
+    BOOST_REQUIRE_CLOSE (convert::to(1*atm, barsa), 1.01325, 0.01);
+
+    const double flux_SI = 10000*cubic(meter)/year;
+    BOOST_REQUIRE_CLOSE (flux_SI, 3.17098e-4, 0.01);
+    const double flux_m3py = convert::to(flux_SI, cubic(meter)/year);
+    BOOST_REQUIRE_CLOSE (flux_m3py, 1e4, 0.01);
+}
