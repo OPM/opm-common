@@ -1377,7 +1377,7 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     BOOST_CHECK_EQUAL( 4, cs2.get( 3 ).complnum() );
 }
 
-BOOST_AUTO_TEST_CASE( COMPDAT_complnum_multiple_wells ) {
+BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
@@ -1416,4 +1416,36 @@ BOOST_AUTO_TEST_CASE( COMPDAT_complnum_multiple_wells ) {
     BOOST_CHECK_EQUAL( 2, w2cs.getFromIJK( 4, 4, 0 ).complnum() );
     BOOST_CHECK_EQUAL( 3, w2cs.getFromIJK( 4, 4, 1 ).complnum() );
     BOOST_CHECK_THROW( w2cs.get( 3 ).complnum(), std::out_of_range );
+}
+
+BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
+    std::string input = R"(
+        START             -- 0
+        19 JUN 2007 /
+        SCHEDULE
+        DATES             -- 1
+            10  OKT 2008 /
+        /
+        WELSPECS
+            'W1' 'G1'  3 3 2873.94 'WATER' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            'W2' 'G2'  5 5 1       'OIL'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+        /
+
+        COMPDAT
+            'W1' 0 0 1 2 'SHUT' 1*    / -- multiple completion (1, 2)
+            'W1' 0 0 2 2 'SHUT' 1*    / -- updated completion (2)
+            'W1' 0 0 3 3 'SHUT' 1*    / -- regular completion (3)
+        /
+    )";
+
+    ParseContext ctx;
+    auto deck = Parser().parseString(input, ctx);
+    EclipseGrid grid(10,10,10);
+    Schedule schedule( ctx, grid, deck, Phases( true, true, true ) );
+
+    const auto& cs = schedule.getWell( "W1" )->getCompletions();
+    BOOST_CHECK_EQUAL( 3U, cs.size() );
+    BOOST_CHECK_EQUAL( 1, cs.get( 0 ).complnum() );
+    BOOST_CHECK_EQUAL( 2, cs.get( 1 ).complnum() );
+    BOOST_CHECK_EQUAL( 3, cs.get( 2 ).complnum() );
 }

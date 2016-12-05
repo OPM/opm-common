@@ -308,15 +308,26 @@ namespace Opm {
 
     void Well::addCompletions(size_t time_step, std::vector< Completion > newCompletions ) {
         auto new_set = this->getCompletions( time_step );
-        const int complnum_shift = new_set.size();
+        int complnum_shift = new_set.size();
 
         const auto headI = this->m_headI[ time_step ];
         const auto headJ = this->m_headJ[ time_step ];
 
+        auto prev_size = new_set.size();
         for( auto& completion : newCompletions ) {
             completion.fixDefaultIJ( headI , headJ );
             completion.shift_complnum( complnum_shift );
+
             new_set.add( std::move( completion ) );
+            const auto new_size = new_set.size();
+
+            /* Completions can be "re-added", i.e. same coordinates but with a
+             * different set of properties. In this case they also inherit the
+             * completion number (which must otherwise be shifted because
+             * every COMPDAT keyword thinks it's the only one.
+             */
+            if( new_size == prev_size ) --complnum_shift;
+            else ++prev_size;
         }
 
         this->addCompletionSet( time_step, new_set );
