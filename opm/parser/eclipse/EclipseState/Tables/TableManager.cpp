@@ -84,6 +84,8 @@ namespace Opm {
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
+        if( deck.hasKeyword( "PVTW" ) )
+            this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
 
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
@@ -629,6 +631,10 @@ namespace Opm {
 
     const std::vector<PvtoTable>& TableManager::getPvtoTables() const {
         return m_pvtoTables;
+    }
+
+    const PvtwTable& TableManager::getPvtwTable() const {
+        return this->m_pvtwTable;
     }
 
     const TableContainer& TableManager::getMsfnTables() const {
