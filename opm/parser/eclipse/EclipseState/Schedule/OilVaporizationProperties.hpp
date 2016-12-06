@@ -44,6 +44,7 @@ namespace Opm
         double getMaxDRSDT() const;
         double getMaxDRVDT() const;
         bool getOption() const;
+        bool defined() const;
 
         /*
          * if either argument was default constructed == will always be false

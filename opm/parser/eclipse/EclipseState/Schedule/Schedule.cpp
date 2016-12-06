@@ -1592,7 +1592,10 @@ namespace Opm {
         return m_oilvaporizationproperties.get(timestep);
     }
 
-    bool Schedule::hasOilVaporizationProperties(){
-        return m_oilvaporizationproperties.size() > 0;
+    bool Schedule::hasOilVaporizationProperties() const {
+        for( size_t i = 0; i < this->m_timeMap.size(); ++i )
+            if( m_oilvaporizationproperties.at( i ).defined() ) return true;
+
+        return false;
     }
 }

@@ -18,6 +18,7 @@
 */
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -54,4 +55,20 @@ namespace Opm {
     bool WellInjectionProperties::operator!=(const WellInjectionProperties& other) const {
         return !(*this == other);
     }
+
+    std::ostream& operator<<( std::ostream& stream,
+                              const WellInjectionProperties& wp ) {
+        return stream
+            << "WellInjectionProperties { "
+            << "surfacerate: "      << wp.surfaceInjectionRate << ", "
+            << "reservoir rate "    << wp.reservoirInjectionRate << ", "
+            << "BHP limit: "        << wp.BHPLimit << ", "
+            << "THP limit: "        << wp.THPLimit << ", "
+            << "VFP table: "        << wp.VFPTableNumber << ", "
+            << "prediction mode: "  << wp.predictionMode << ", "
+            << "injection ctrl: "   << wp.injectionControls << ", "
+            << "injector type: "    << wp.injectorType << ", "
+            << "control mode: "     << wp.controlMode << " }";
+    }
+
 }

@@ -93,6 +93,10 @@ namespace Opm {
         return ovp;
     }
 
+    bool OilVaporizationProperties::defined() const {
+        return this->m_type != OilVaporizationEnum::UNDEF;
+    }
+
     bool OilVaporizationProperties::operator==( const OilVaporizationProperties& rhs ) const {
         if( this->m_type == OilVaporizationEnum::UNDEF
          || rhs.m_type   == OilVaporizationEnum::UNDEF

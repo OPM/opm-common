@@ -96,29 +96,24 @@ namespace Opm {
 
 
     void Group::setInjectionPhase(size_t time_step, Phase phase){
-        if (m_injection.phase.size() == time_step + 1) {
-            Phase currentPhase = m_injection.phase.get(time_step);
-            /*
-              The ECLIPSE documentation of the GCONINJE keyword seems
-              to indicate that a group can inject more than one phase
-              simultaneously. This should be implemented in the input
-              file as:
+        /*
+           The ECLIPSE documentation of the GCONINJE keyword seems
+           to indicate that a group can inject more than one phase
+           simultaneously. This should be implemented in the input
+           file as:
 
-              GCONINJE
-                 'GROUP'   'PHASE1'    'RATE'   ... /
-                 'GROUP'   'PHASE2'    'RATE'   ... /
-                 ...
-              /
+           GCONINJE
+           'GROUP'   'PHASE1'    'RATE'   ... /
+           'GROUP'   'PHASE2'    'RATE'   ... /
+           ...
+           /
 
-              I.e. the same group occurs more than once at the same
-              time step, with different phases. This seems quite
-              weird, and we do currently not support it. Changing the
-              injected phase from one time step to the next is
-              supported.
-            */
-            if (phase != currentPhase)
-                throw std::invalid_argument("Sorry - we currently do not support injecting multiple phases at the same time.");
-        }
+           I.e. the same group occurs more than once at the same
+           time step, with different phases. This seems quite
+           weird, and we do currently not support it - we only set the latest
+           specified phase. Changing the injected phase from one time step to
+           the next is supported.
+           */
         m_injection.phase.update( time_step , phase );
     }
 

@@ -16,6 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -135,19 +137,17 @@ namespace Opm {
 
 
     bool WellProductionProperties::operator==(const WellProductionProperties& other) const {
-        if ((OilRate == other.OilRate) &&
-            (WaterRate == other.WaterRate) &&
-            (GasRate == other.GasRate) &&
-            (LiquidRate == other.LiquidRate) &&
-            (ResVRate == other.ResVRate) &&
-            (BHPLimit == other.BHPLimit) &&
-            (THPLimit == other.THPLimit) &&
-            (VFPTableNumber == other.VFPTableNumber) &&
-            (controlMode == other.controlMode) &&
-            (m_productionControls == other.m_productionControls))
-            return true;
-        else
-            return false;
+        return OilRate              == other.OilRate
+            && WaterRate            == other.WaterRate
+            && GasRate              == other.GasRate
+            && LiquidRate           == other.LiquidRate
+            && ResVRate             == other.ResVRate
+            && BHPLimit             == other.BHPLimit
+            && THPLimit             == other.THPLimit
+            && VFPTableNumber       == other.VFPTableNumber
+            && controlMode          == other.controlMode
+            && m_productionControls == other.m_productionControls
+            && this->predictionMode == other.predictionMode;
     }
 
 
@@ -155,5 +155,20 @@ namespace Opm {
         return !(*this == other);
     }
 
+
+    std::ostream& operator<<( std::ostream& stream, const WellProductionProperties& wp ) {
+        return stream
+            << "WellProductionProperties { "
+            << "oil rate: "     << wp.OilRate           << ", "
+            << "water rate: "   << wp.WaterRate         << ", "
+            << "gas rate: "     << wp.GasRate           << ", "
+            << "liquid rate: "  << wp.LiquidRate        << ", "
+            << "ResV rate: "    << wp.ResVRate          << ", "
+            << "BHP limit: "    << wp.BHPLimit          << ", "
+            << "THP limit: "    << wp.THPLimit          << ", "
+            << "VFP table: "    << wp.VFPTableNumber    << ", "
+            << "ALQ: "          << wp.ALQValue          << ", "
+            << "prediction: "   << wp.predictionMode    << " }";
+    }
 
 } // namespace Opm

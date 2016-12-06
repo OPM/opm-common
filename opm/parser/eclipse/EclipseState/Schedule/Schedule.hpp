@@ -86,8 +86,8 @@ namespace Opm
         const MessageLimits& getMessageLimits() const;
 
         const Events& getEvents() const;
-        bool hasOilVaporizationProperties();
         const Deck& getModifierDeck(size_t timeStep) const;
+        bool hasOilVaporizationProperties() const;
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
 

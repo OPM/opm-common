@@ -21,11 +21,10 @@
 #ifndef DYNAMICSTATE_HPP_
 #define DYNAMICSTATE_HPP_
 
-#include <stdexcept>
+#include <vector>
+#include <algorithm>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-
-#include <ert/util/ssize_t.h>
 
 
 namespace Opm {
@@ -53,131 +52,73 @@ namespace Opm {
 
 
 
-    template <class T>
-    class DynamicState {
+template< class T >
+class DynamicState {
+
     public:
-
-
-        DynamicState(const TimeMap& timeMap, T initialValue) :
-            m_currentValue( initialValue ),
-            m_initialValue( std::move( initialValue ) ),
-            max_size( timeMap.size() ),
-            m_initialRange( 0 )
+        DynamicState( const TimeMap& timeMap, T initial ) :
+            m_data( timeMap.size(), initial ),
+            initial_range( timeMap.size() )
         {}
 
-        void globalReset( T newValue ) {
-            this->m_data.clear();
-            this->m_currentValue = newValue;
-            this->m_initialValue = std::move( newValue );
-            this->m_initialRange = 0;
+        void globalReset( T value ) {
+            this->m_data.assign( this->m_data.size(), value );
         }
-
 
         const T& back() const {
-            if (m_data.size() > 0)
-                return m_data.back();
-            else
-                return m_initialValue;
+            return m_data.back();
         }
 
-        const T& at(size_t index) const {
-            if (index >= this->max_size)
-                throw std::range_error("Index value is out range.");
-
-            if (index >= m_data.size())
-                return m_currentValue;
-
-            return m_data.at(index);
+        const T& at( size_t index ) const {
+            return this->m_data.at( index );
         }
-
 
         const T& operator[](size_t index) const {
-            return at(index);
+            return this->at( index );
         }
-
 
         const T& get(size_t index) const {
             return this->at( index );
         }
 
-
-
-        void updateInitial(T initialValue) {
-            if (m_initialValue != initialValue) {
-                size_t index;
-                m_initialValue = initialValue;
-                if (m_initialRange > 0) {
-                    for (index = 0; index < m_initialRange; index++)
-                        m_data[index] = m_initialValue;
-                } else
-                    m_currentValue = initialValue;
-            }
+        void updateInitial( T initial ) {
+            std::fill_n( this->m_data.begin(), this->initial_range, initial );
         }
-
-
-        size_t size() const {
-            return m_data.size();
-        }
-
 
         /**
            If the current value has been changed the method will
            return true, otherwise it will return false.
         */
-        bool update(size_t index , T value) {
-            bool change = (value != m_currentValue);
-            if (index >= (this->max_size))
-                throw std::range_error("Index value is out range.");
+        bool update( size_t index, T value ) {
+            if( this->initial_range == this->m_data.size() )
+                this->initial_range = index;
 
-            if (m_data.size() > 0) {
-                if (index < (m_data.size() - 1))
-                    throw std::invalid_argument("Elements must be added in weakly increasing order");
-            }
+            const bool change = (value != this->m_data.at( index ));
 
-            {
-                size_t currentSize = m_data.size();
-                if (currentSize <= index) {
-                    for (size_t i = currentSize; i <= index; i++)
-                        m_data.push_back( m_currentValue );
-                }
-            }
+            if( !change ) return false;
 
-            m_currentValue = std::move( value );
-            m_data[index] = this->m_currentValue;
-            if (m_initialRange == 0)
-                m_initialRange = index;
+            std::fill( this->m_data.begin() + index,
+                       this->m_data.end(),
+                       value );
 
-            return change;
+            return true;
         }
-
 
         /// Will return the index of the first occurence of @value, or
         /// -1 if @value is not found.
-        ssize_t find(const T& value) const {
+        int find(const T& value) const {
             auto iter = std::find( m_data.begin() , m_data.end() , value);
-            if (iter != m_data.end()) {
-                // Found normally
-                return std::distance( m_data.begin() , iter );
-            } else {
-                if ((m_data.size() == 0) && (value == m_currentValue))
-                    // Not found explicitly - but the value corresponds to the initial 'current value'
-                    return 0;
+            if( iter == this->m_data.end() ) return -1;
 
-                // Not found
-                return -1;
-            }
+            return std::distance( m_data.begin() , iter );
         }
 
-
     private:
-        std::vector<T> m_data;
-        T m_currentValue;
-        T m_initialValue;
-        size_t max_size;
-        size_t m_initialRange;
-    };
+        std::vector< T > m_data;
+        size_t initial_range;
+};
+
 }
 
-
-
 #endif
+

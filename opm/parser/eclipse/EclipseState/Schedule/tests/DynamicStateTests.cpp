@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateGetOutOfRangeThrows) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate) };
     Opm::DynamicState<double> state(timeMap , 9.99);
-    BOOST_CHECK_THROW( state.get(1) , std::range_error);
+    BOOST_CHECK_THROW( state.get(1) , std::out_of_range );
 }
 
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOutOfRangeThrows) {
 
     Opm::DynamicState<int> state(timeMap , 137);
 
-    BOOST_CHECK_THROW( state.update(3 , 100) , std::range_error);
+    BOOST_CHECK_THROW( state.update(3 , 100) , std::out_of_range );
 }
 
 
@@ -98,21 +98,6 @@ BOOST_AUTO_TEST_CASE(DynamicStateSetOK) {
     BOOST_CHECK_EQUAL( 60 , state.back());
 }
 
-
-
-BOOST_AUTO_TEST_CASE(DynamicStateAddIndexAlreadySetThrows) {
-    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate) };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep( boost::posix_time::hours( (i+1) * 24 ));
-
-    Opm::DynamicState<int> state(timeMap , 137);
-
-    state.update( 5 , 60);
-    BOOST_CHECK_THROW( state.update(3 , 78) , std::invalid_argument);
-}
-
-
 BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate) };
@@ -130,29 +115,6 @@ BOOST_AUTO_TEST_CASE(DynamicStateAddAt) {
         BOOST_CHECK( &v1 != &v2 );
     }
 }
-
-
-BOOST_AUTO_TEST_CASE(DynamicStateCheckSize) {
-    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate) };
-    for (size_t i = 0; i < 10; i++)
-        timeMap.addTStep( boost::posix_time::hours( (i+1) * 24 ));
-    Opm::DynamicState<int> state(timeMap , 137);
-
-    BOOST_CHECK_EQUAL( 0U , state.size() );
-
-    state.update( 0 , 10 );
-    BOOST_CHECK_EQUAL( 1U , state.size() );
-
-    state.update( 2 , 10 );
-    BOOST_CHECK_EQUAL( 3U , state.size() );
-    state.update( 2 , 10 );
-    BOOST_CHECK_EQUAL( 3U , state.size() );
-
-    state.update( 6 , 10 );
-    BOOST_CHECK_EQUAL( 7U , state.size() );
-}
-
 
 BOOST_AUTO_TEST_CASE(DynamicStateOperatorSubscript) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);

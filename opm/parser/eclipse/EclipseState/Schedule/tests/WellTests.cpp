@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(CreateWell_GetProductionPropertiesShouldReturnSameObject) {
 
     BOOST_CHECK_EQUAL(&(well.getProductionProperties(5)), &(well.getProductionProperties(5)));
     BOOST_CHECK_EQUAL(&(well.getProductionProperties(8)), &(well.getProductionProperties(8)));
-    BOOST_CHECK_EQUAL(&(well.getProductionProperties(5)), &(well.getProductionProperties(8)));
+    BOOST_CHECK_EQUAL(well.getProductionProperties(5), well.getProductionProperties(8));
 }
 
 BOOST_AUTO_TEST_CASE(CreateWell_GetInjectionPropertiesShouldReturnSameObject) {
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(CreateWell_GetInjectionPropertiesShouldReturnSameObject) {
 
     BOOST_CHECK_EQUAL(&(well.getInjectionProperties(5)), &(well.getInjectionProperties(5)));
     BOOST_CHECK_EQUAL(&(well.getInjectionProperties(8)), &(well.getInjectionProperties(8)));
-    BOOST_CHECK_EQUAL(&(well.getInjectionProperties(5)), &(well.getInjectionProperties(8)));
+    BOOST_CHECK_EQUAL(well.getInjectionProperties(5), well.getInjectionProperties(8));
 }
 
 BOOST_AUTO_TEST_CASE(CreateWellCreateTimeStepOK) {
@@ -148,10 +148,9 @@ BOOST_AUTO_TEST_CASE(setPredictionModeProduction_ModeSetCorrect) {
     Opm::WellProductionProperties props;
     props.predictionMode = false;
     well.setProductionProperties( 5 , props);
-    BOOST_CHECK_EQUAL(false , well.getProductionPropertiesCopy(5).predictionMode);
-    BOOST_CHECK_EQUAL(false , well.getProductionPropertiesCopy(8).predictionMode);
+    BOOST_CHECK( !well.getProductionPropertiesCopy(5).predictionMode );
+    BOOST_CHECK( !well.getProductionPropertiesCopy(8).predictionMode );
 }
-
 
 
 BOOST_AUTO_TEST_CASE(setpredictionModeInjection_ModeSetCorrect) {
