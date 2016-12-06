@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp> // Phase::PhaseEnum
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtwTable.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
@@ -98,9 +99,9 @@ namespace Opm {
         const TableContainer& getMsfnTables() const;
         const TableContainer& getTlpmixpaTables() const;
 
-
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
+        const PvtwTable& getPvtwTable() const;
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
 
@@ -229,6 +230,7 @@ namespace Opm {
         std::map<int, VFPInjTable> m_vfpinjTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
+        PvtwTable m_pvtwTable;
 
         Tabdims m_tabdims;
         std::shared_ptr<Regdims> m_regdims;

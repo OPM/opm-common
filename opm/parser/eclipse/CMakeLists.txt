@@ -262,6 +262,7 @@ EclipseState/Tables/OilvisctTable.hpp
 EclipseState/Tables/GasvisctTable.hpp
 EclipseState/Tables/WatvisctTable.hpp
 EclipseState/Tables/PvtgTable.hpp
+EclipseState/Tables/PvtwTable.hpp
 EclipseState/Tables/VFPProdTable.hpp
 EclipseState/Tables/VFPInjTable.hpp
 EclipseState/Tables/TableManager.hpp

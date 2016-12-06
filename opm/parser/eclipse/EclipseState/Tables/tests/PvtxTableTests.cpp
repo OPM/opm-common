@@ -180,3 +180,42 @@ BOOST_AUTO_TEST_CASE( PVTGSaturatedTable ) {
     BOOST_CHECK_EQUAL( saturatedTable.get(1 , 1) , 0.00000628 );
 }
 
+BOOST_AUTO_TEST_CASE( PVTWTable ) {
+    const std::string input = R"(
+        RUNSPEC
+
+        DIMENS
+            10 10 10 /
+
+        TABDIMS
+            1 2 /
+
+        PROPS
+
+        PVTW
+            3600.0000 1.00341 3.00E-06 0.52341 0.00E-01 /
+            3900 1 2.67E-06 0.56341 1.20E-07 /
+        )";
+
+    auto deck = Parser().parseString( input );
+    TableManager tables( deck );
+
+    const auto& pvtw = tables.getPvtwTable();
+
+    const auto& rec1 = pvtw[0];
+    const auto& rec2 = pvtw.at(1);
+
+    BOOST_CHECK_THROW( pvtw[2], std::out_of_range );
+
+    BOOST_CHECK_CLOSE( 3600.00, rec1.reference_pressure / 1e5, 1e-5 );
+    BOOST_CHECK_CLOSE( 1.00341, rec1.volume_factor, 1e-5 );
+    BOOST_CHECK_CLOSE( 3.0e-06, rec1.compressibility * 1e5, 1e-5 );
+    BOOST_CHECK_CLOSE( 0.52341, rec1.viscosity * 1e3, 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0e-01, rec1.viscosibility * 1e5, 1e-5 );
+
+    BOOST_CHECK_CLOSE( 3900,     rec2.reference_pressure / 1e5, 1e-5 );
+    BOOST_CHECK_CLOSE( 1.0,      rec2.volume_factor, 1e-5 );
+    BOOST_CHECK_CLOSE( 2.67e-06, rec2.compressibility * 1e5, 1e-5 );
+    BOOST_CHECK_CLOSE( 0.56341,  rec2.viscosity * 1e3, 1e-5 );
+    BOOST_CHECK_CLOSE( 1.20e-07, rec2.viscosibility * 1e5, 1e-5 );
+}
