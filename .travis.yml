@@ -29,7 +29,7 @@ before_script:
     - cd ../../opm-parser
     - mkdir build
     - cd build
-    - cmake .. && make
+    - cmake -DBUILD_TESTING=OFF .. && make
     - cd ../..
     - pwd
     - cd sunbeam
