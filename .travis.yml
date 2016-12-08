@@ -3,5 +3,36 @@ python:
   - "2.7"
 install:
   - pip install -r requirements.txt
+addons:
+  apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
+    packages:
+      - libboost1.55-all-dev
+      - gcc-4.8
+      - g++-4.8
+      - gfortran-4.8
+      - liblapack-dev
+      - libgmp3-dev
+      - libsuitesparse-dev
+      - libeigen3-dev
+before_script:
+    - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
+    - cd ..
+    - git clone https://github.com/OPM/opm-common.git
+    - git clone https://github.com/OPM/opm-parser.git
+    - opm-common/travis/build-prereqs.sh
+    - mkdir -p opm-common/build
+    - cd opm-common/build
+    - cmake .. && make
+    - cd ../../opm-parser
+    - mkdir build
+    - cd build
+    - cmake .. && make
+    - cd ../..
+    - pwd
+    - cd sunbeam
+
 script:
   - tests/run_tests
