@@ -1,4 +1,4 @@
-from cwrap import BaseCClass, CWrapper
+from cwrap import BaseCClass
 from opm import OPMPrototype
 
 class ParseContext(BaseCClass):
