@@ -54,6 +54,7 @@ list (APPEND PROGRAM_SOURCE_FILES
 list( APPEND PUBLIC_HEADER_FILES
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
+      opm/common/ResetLocale.hpp
       opm/common/Unused.hpp
       opm/common/data/SimulationDataContainer.hpp
       opm/common/OpmLog/CounterLog.hpp
