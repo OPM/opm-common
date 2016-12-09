@@ -28,17 +28,17 @@ namespace Opm {
     namespace FaceDir {
 
         DirEnum FromString(const std::string& stringValue) {
-            if ((stringValue == "X") || (stringValue == "I"))
+            if ((stringValue == "X") || (stringValue == "I") || (stringValue == "X+")  || (stringValue == "I+"))
                 return XPlus;
             if ((stringValue == "X-") || (stringValue == "I-"))
                 return XMinus;
 
-            if ((stringValue == "Y") || (stringValue == "J"))
+            if ((stringValue == "Y") || (stringValue == "J") || (stringValue == "Y+")  || (stringValue == "J+"))
                 return YPlus;
             if ((stringValue == "Y-") || (stringValue == "J-"))
                 return YMinus;
 
-            if ((stringValue == "Z") || (stringValue == "K"))
+            if ((stringValue == "Z") || (stringValue == "K") || (stringValue == "Z+")  || (stringValue == "K+"))
                 return ZPlus;
             if ((stringValue == "Z-") || (stringValue == "K-"))
                 return ZMinus;
