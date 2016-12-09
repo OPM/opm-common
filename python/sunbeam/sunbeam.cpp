@@ -2,6 +2,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
@@ -61,6 +62,7 @@ py::class_< std::vector< Well > >( "WellList", py::no_init )
 
 py::class_< Schedule >( "Schedule", py::no_init )
     .add_property( "wells", get_wells )
+    .def( "__contains__", &Schedule::hasWell )
     ;
 
 void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
