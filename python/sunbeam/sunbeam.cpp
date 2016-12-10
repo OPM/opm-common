@@ -54,6 +54,9 @@ py::class_< Well >( "Well", py::no_init )
     .def( "J",   headJts )
     .def( "ref", refD )
     .def( "ref", refDts )
+    .def( "isdefined",  &Well::hasBeenDefined )
+    .def( "isinjector", &Well::isInjector )
+    .def( "isproducer", &Well::isProducer )
     ;
 
 py::class_< std::vector< Well > >( "WellList", py::no_init )

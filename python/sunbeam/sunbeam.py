@@ -46,6 +46,24 @@ class EclipseState(object):
     def schedule(self):
         return self._schedule()
 
+@delegate(lib.Well)
+class Well(object):
+
+    @staticmethod
+    def defined(timestep):
+        def fn(well): return well.isdefined(timestep)
+        return fn
+
+    @staticmethod
+    def injector(timestep):
+        def fn(well): return well.isinjector(timestep)
+        return fn
+
+    @staticmethod
+    def producer(timestep):
+        def fn(well): return well.isproducer(timestep)
+        return fn
+
 def _parse_context(actions):
     ctx = lib.ParseContext()
 

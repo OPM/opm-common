@@ -22,3 +22,16 @@ class TestWells(unittest.TestCase):
         self.assertEqual(6, i)
         self.assertEqual(6, j)
         self.assertEqual(2247.9, refdepth)
+
+    def testWellDefinedFilter(self):
+        defined0 = filter(sunbeam.Well.defined(0), self.wells)
+        defined1 = filter(sunbeam.Well.defined(1), self.wells)
+        self.assertEqual(len(list(defined0)), 2)
+        self.assertEqual(len(list(defined1)), 2)
+
+    def testWellProdInjeFilter(self):
+        inje = filter(sunbeam.Well.injector(0), self.wells)
+        prod = filter(sunbeam.Well.producer(0), self.wells)
+
+        self.assertEqual(len(list(inje)), 1)
+        self.assertEqual(len(list(prod)), 1)
