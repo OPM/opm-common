@@ -21,10 +21,16 @@ std::vector< Well > get_wells( const Schedule& sch ) {
 
 /* alias some of boost's long names and operations */
 using ref = py::return_internal_reference<>;
+using copy = py::return_value_policy< py::copy_const_reference >;
 
 template< typename F >
 auto mkref( F f ) -> decltype( py::make_function( f, ref() ) ) {
     return py::make_function( f, ref() );
+}
+
+template< typename F >
+auto mkcopy( F f ) -> decltype( py::make_function( f, copy() ) ) {
+    return py::make_function( f, copy() );
 }
 
 }
@@ -48,6 +54,7 @@ int    (Well::*headJts)(size_t) const = &Well::getHeadI;
 double (Well::*refDts)(size_t)  const = &Well::getRefDepth;
 
 py::class_< Well >( "Well", py::no_init )
+    .add_property( "name", mkcopy( &Well::name ) )
     .def( "I",   headI )
     .def( "I",   headIts )
     .def( "J",   headJ )
@@ -64,7 +71,7 @@ py::class_< std::vector< Well > >( "WellList", py::no_init )
     ;
 
 py::class_< Schedule >( "Schedule", py::no_init )
-    .add_property( "wells", get_wells )
+    .add_property( "_wells", get_wells )
     .def( "__contains__", &Schedule::hasWell )
     ;
 

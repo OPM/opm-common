@@ -17,7 +17,7 @@ class TestWells(unittest.TestCase):
 
     def testWellProperty(self):
         well = self.wells[0]
-        i, j, refdepth = well.pos
+        i, j, refdepth = well.pos()
 
         self.assertEqual(6, i)
         self.assertEqual(6, j)
@@ -30,8 +30,11 @@ class TestWells(unittest.TestCase):
         self.assertEqual(len(list(defined1)), 2)
 
     def testWellProdInjeFilter(self):
-        inje = filter(sunbeam.Well.injector(0), self.wells)
-        prod = filter(sunbeam.Well.producer(0), self.wells)
+        inje = list(filter(sunbeam.Well.injector(0), self.wells))
+        prod = list(filter(sunbeam.Well.producer(0), self.wells))
 
-        self.assertEqual(len(list(inje)), 1)
-        self.assertEqual(len(list(prod)), 1)
+        self.assertEqual(len(inje), 1)
+        self.assertEqual(len(prod), 1)
+
+        self.assertEqual(inje[0].name, "INJ")
+        self.assertEqual(prod[0].name, "PROD")
