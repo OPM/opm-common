@@ -12,6 +12,25 @@ using namespace Opm;
 
 namespace {
 
+/* converters */
+
+struct ptime_to_python_datetime {
+    static PyObject* convert( const boost::posix_time::ptime& pt ) {
+        const auto& date = pt.date();
+        return PyDate_FromDate( int( date.year() ),
+                                int( date.month() ),
+                                int( date.day() ) );
+
+    }
+};
+
+template< typename T >
+py::list vector_to_pylist( const std::vector< T >& v ) {
+    py::list l;
+    for( const auto& x : v ) l.append( x );
+    return l;
+}
+
 std::vector< Well > get_wells( const Schedule& sch ) {
     std::vector< Well > wells;
     for( const auto& w : sch.getWells() )
@@ -55,17 +74,15 @@ boost::posix_time::ptime get_end_time( const Schedule* s ) {
     return boost::posix_time::from_time_t( s->posixEndTime() );
 }
 
-/* converters */
+py::list get_timesteps( const Schedule* s ) {
+    const auto& tm = s->getTimeMap();
+    std::vector< boost::posix_time::ptime > v;
+    v.reserve( tm.size() );
 
-struct ptime_to_python_datetime {
-    static PyObject* convert( const boost::posix_time::ptime& pt ) {
-        const auto& date = pt.date();
-        return PyDate_FromDate( int( date.year() ),
-                                int( date.month() ),
-                                int( date.day() ) );
+    for( size_t i = 0; i < tm.size(); ++i ) v.push_back( tm[ i ] );
 
-    }
-};
+    return vector_to_pylist( v );
+}
 
 }
 
@@ -118,6 +135,7 @@ py::class_< Schedule >( "Schedule", py::no_init )
     .add_property( "_wells", get_wells )
     .add_property( "start",  get_start_time )
     .add_property( "end",    get_end_time )
+    .add_property( "timesteps", get_timesteps )
     .def( "__contains__", &Schedule::hasWell )
     ;
 
