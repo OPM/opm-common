@@ -23,6 +23,10 @@ class TestWells(unittest.TestCase):
         self.assertEqual(6, j)
         self.assertEqual(2247.9, refdepth)
 
+    def testWellStatus(self):
+        for well in self.wells:
+            self.assertEqual("OPEN", well.status(0))
+
     def testWellDefinedFilter(self):
         defined0 = filter(sunbeam.Well.defined(0), self.wells)
         defined1 = filter(sunbeam.Well.defined(1), self.wells)

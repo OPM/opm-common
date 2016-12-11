@@ -33,6 +33,10 @@ auto mkcopy( F f ) -> decltype( py::make_function( f, copy() ) ) {
     return py::make_function( f, copy() );
 }
 
+std::string well_status( const Well* w, size_t timestep ) {
+    return WellCommon::Status2String( w->getStatus( timestep ) );
+}
+
 }
 
 BOOST_PYTHON_MODULE(libsunbeam) {
@@ -61,6 +65,7 @@ py::class_< Well >( "Well", py::no_init )
     .def( "J",   headJts )
     .def( "ref", refD )
     .def( "ref", refDts )
+    .def( "status", &well_status )
     .def( "isdefined",  &Well::hasBeenDefined )
     .def( "isinjector", &Well::isInjector )
     .def( "isproducer", &Well::isProducer )
