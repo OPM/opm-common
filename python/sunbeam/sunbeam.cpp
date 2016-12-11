@@ -1,5 +1,6 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <datetime.h>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -46,9 +47,34 @@ std::string well_prefphase( const Well* w ) {
     }
 }
 
+boost::posix_time::ptime get_start_time( const Schedule* s ) {
+    return boost::posix_time::from_time_t( s->posixStartTime() );
+}
+
+boost::posix_time::ptime get_end_time( const Schedule* s ) {
+    return boost::posix_time::from_time_t( s->posixEndTime() );
+}
+
+/* converters */
+
+struct ptime_to_python_datetime {
+    static PyObject* convert( const boost::posix_time::ptime& pt ) {
+        const auto& date = pt.date();
+        return PyDate_FromDate( int( date.year() ),
+                                int( date.month() ),
+                                int( date.day() ) );
+
+    }
+};
+
 }
 
 BOOST_PYTHON_MODULE(libsunbeam) {
+
+PyDateTime_IMPORT;
+/* register all converters */
+py::to_python_converter< const boost::posix_time::ptime,
+                         ptime_to_python_datetime >();
 
 EclipseState (*parse_file)( const std::string&, const ParseContext& ) = &Parser::parse;
 py::def( "parse", parse_file );
@@ -90,6 +116,8 @@ py::class_< std::vector< Well > >( "WellList", py::no_init )
 
 py::class_< Schedule >( "Schedule", py::no_init )
     .add_property( "_wells", get_wells )
+    .add_property( "start",  get_start_time )
+    .add_property( "end",    get_end_time )
     .def( "__contains__", &Schedule::hasWell )
     ;
 
