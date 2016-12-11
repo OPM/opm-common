@@ -37,6 +37,15 @@ std::string well_status( const Well* w, size_t timestep ) {
     return WellCommon::Status2String( w->getStatus( timestep ) );
 }
 
+std::string well_prefphase( const Well* w ) {
+    switch( w->getPreferredPhase() ) {
+        case Phase::OIL:   return "OIL";
+        case Phase::GAS:   return "GAS";
+        case Phase::WATER: return "WATER";
+        default: throw std::logic_error( "Unhandled enum value" );
+    }
+}
+
 }
 
 BOOST_PYTHON_MODULE(libsunbeam) {
@@ -59,6 +68,7 @@ double (Well::*refDts)(size_t)  const = &Well::getRefDepth;
 
 py::class_< Well >( "Well", py::no_init )
     .add_property( "name", mkcopy( &Well::name ) )
+    .add_property( "preferred_phase", &well_prefphase )
     .def( "I",   headI )
     .def( "I",   headIts )
     .def( "J",   headJ )
@@ -69,6 +79,9 @@ py::class_< Well >( "Well", py::no_init )
     .def( "isdefined",  &Well::hasBeenDefined )
     .def( "isinjector", &Well::isInjector )
     .def( "isproducer", &Well::isProducer )
+    .def( "group", &Well::getGroupName )
+    .def( "guide_rate", &Well::getGuideRate )
+    .def( "available_gctrl", &Well::isAvailableForGroupControl )
     ;
 
 py::class_< std::vector< Well > >( "WellList", py::no_init )
