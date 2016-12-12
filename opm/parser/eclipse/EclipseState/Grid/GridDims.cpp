@@ -63,7 +63,7 @@ namespace Opm {
     }
 
     const std::array<int, 3> GridDims::getNXYZ() const {
-        return std::array<int, 3> {int( m_nx ), int( m_ny ), int( m_nz )};
+        return std::array<int, 3> {{int( m_nx ), int( m_ny ), int( m_nz )}};
     }
 
     size_t GridDims::getGlobalIndex(size_t i, size_t j, size_t k) const {
