@@ -278,7 +278,7 @@ RPTRST_integer( const std::vector< int >& ints ) {
         mnemonics[ "PCOG" ] = ints[ PCO_index ];
     }
 
-    return std::move( mnemonics );
+    return mnemonics;
 }
 
 inline std::map< std::string, int >
@@ -289,7 +289,7 @@ RPTSCHED_integer( const std::vector< int >& ints ) {
     for( size_t i = 0; i < size; ++i )
         mnemonics[ SCHEDIntegerKeywords[ i ] ] = ints[ i ];
 
-    return std::move( mnemonics );
+    return mnemonics;
 }
 
 template< typename F, typename G >
@@ -328,7 +328,7 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
         mnemonics.emplace( base, val );
     }
 
-    return std::move( mnemonics );
+    return mnemonics;
 }
 
 inline void expand_RPTRST_mnemonics(std::map< std::string, int >& mnemonics) {
