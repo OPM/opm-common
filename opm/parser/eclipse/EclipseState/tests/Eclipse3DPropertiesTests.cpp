@@ -77,7 +77,7 @@ static Opm::Deck createDeck() {
             "\n";
 
     Opm::Parser parser;
-    return std::move( parser.parseString(deckData, Opm::ParseContext() ) );
+    return parser.parseString(deckData, Opm::ParseContext() );
 }
 
 
@@ -116,7 +116,7 @@ static Opm::Deck createValidIntDeck() {
             "\n";
 
     Opm::Parser parser;
-    return std::move( parser.parseString(deckData, Opm::ParseContext() ) );
+    return parser.parseString(deckData, Opm::ParseContext() );
 }
 
 static Opm::Deck createValidPERMXDeck() {
@@ -162,7 +162,7 @@ static Opm::Deck createValidPERMXDeck() {
             "\n";
 
     Opm::Parser parser;
-    return std::move( parser.parseString(deckData, Opm::ParseContext() ) );
+    return parser.parseString(deckData, Opm::ParseContext() );
 }
 
 
