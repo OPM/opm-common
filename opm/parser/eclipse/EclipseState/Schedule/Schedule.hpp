@@ -121,13 +121,14 @@ namespace Opm
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid);
+        void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep);
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
-        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, bool hascomplump);
+        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep );
         void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleGCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep);

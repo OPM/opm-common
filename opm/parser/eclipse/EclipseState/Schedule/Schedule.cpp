@@ -186,7 +186,7 @@ namespace Opm {
                 handleCOMPSEGS(keyword, currentStep);
 
             else if (keyword.name() == "WELOPEN")
-                handleWELOPEN(keyword, currentStep , section.hasKeyword("COMPLUMP"));
+                handleWELOPEN(keyword, currentStep);
 
             else if (keyword.name() == "WELTARG")
                 handleWELTARG(section, keyword, currentStep);
@@ -217,6 +217,9 @@ namespace Opm {
 
             else if (keyword.name() == "COMPORD")
                 handleCOMPORD(parseContext , keyword, currentStep);
+
+            else if (keyword.name() == "COMPLUMP")
+                handleCOMPLUMP(keyword, currentStep);
 
             else if (keyword.name() == "DRSDT")
                 handleDRSDT(keyword, currentStep);
@@ -298,8 +301,6 @@ namespace Opm {
             }
         }
     }
-
-
 
     void Schedule::handleWELSPECS( const SCHEDULESection& section,
                                    size_t index,
@@ -735,98 +736,132 @@ namespace Opm {
         }
     }
 
+    namespace {
 
+        bool defaulted( int x ) { return x < 0; }
+        int maybe( const DeckRecord& rec, const std::string& s ) {
+            const auto& item = rec.getItem( s );
+            return item.defaultApplied( 0 ) ? -1 : item.get< int >( 0 ) - 1;
+        }
+    }
 
-    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep , bool hascomplump) {
+    void Schedule::handleCOMPLUMP( const DeckKeyword& keyword,
+                                   size_t timestep ) {
 
         for( const auto& record : keyword ) {
-            bool haveCompletionData = false;
-            for (size_t i=2; i<7; i++) {
-                const auto& item = record.getItem(i);
-                if (!item.defaultApplied(0)) {
-                    haveCompletionData = true;
-                    break;
+            const int N  = maybe( record, "N" ) + 1;
+            if( N < 1 ) throw std::invalid_argument(
+                "Completion number in COMPLUMP can not be defaulted."
+            );
+
+            const auto& wellname = record.getItem( "WELL" ).getTrimmedString(0);
+            const int I  = maybe( record, "I" );
+            const int J  = maybe( record, "J" );
+            const int K1 = maybe( record, "K1" );
+            const int K2 = maybe( record, "K2" );
+
+            auto new_completion = [=]( const Completion& c ) -> Completion {
+                if( !defaulted( I ) && c.getI() != I )  return c;
+                if( !defaulted( J ) && c.getJ() != J )  return c;
+                if( !defaulted( K1 ) && c.getK() < K1 ) return c;
+                if( !defaulted( K2 ) && c.getK() > K2 ) return c;
+
+                return { c, N };
+            };
+
+            for( auto& well : this->getWells( wellname ) ) {
+                CompletionSet new_completions;
+                for( const auto& completion : well->getCompletions( timestep ) )
+                    new_completions.add( new_completion( completion ) );
+
+                well->addCompletionSet( timestep, new_completions );
+            }
+        }
+    }
+
+    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep ) {
+
+        auto all_defaulted = []( const DeckRecord& rec ) {
+            auto defaulted = []( const DeckItem& item ) {
+                return item.defaultApplied( 0 );
+            };
+
+            return std::all_of( rec.begin() + 2, rec.end(), defaulted );
+        };
+
+        constexpr auto open = WellCommon::StatusEnum::OPEN;
+        constexpr auto shut = WellCommon::StatusEnum::SHUT;
+
+        for( const auto& record : keyword ) {
+            const auto& wellname = record.getItem( "WELL" ).getTrimmedString(0);
+            const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
+
+            /* if all records are defaulted or just the status is set, only
+             * well status is updated
+             */
+            if( all_defaulted( record ) ) {
+                const auto status = WellCommon::StatusFromString( status_str );
+
+                for( auto* well : getWells( wellname ) ) {
+                    if( status == open && !well->canOpen(currentStep) ) {
+                        auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
+                        std::string msg = "Well " + well->name()
+                            + " where crossflow is banned has zero total rate."
+                            + " This well is prevented from opening at "
+                            + std::to_string( days ) + " days";
+                        m_messages.note(msg);
+                    } else {
+                        this->updateWellStatus( *well, currentStep, status );
+                    }
                 }
+
+                continue;
             }
 
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const int I  = maybe( record, "I" );
+            const int J  = maybe( record, "J" );
+            const int K  = maybe( record, "K" );
+            const int C1 = maybe( record, "C1" );
+            const int C2 = maybe( record, "C2" );
 
-            for( auto* well : getWells( wellNamePattern ) ) {
+            const auto status = WellCompletion::StateEnumFromString( status_str );
 
-                if(haveCompletionData){
-                    const auto& currentCompletionSet = well->getCompletions(currentStep);
-                    CompletionSet newCompletionSet;
+            /*
+             * Construct the updated completion with the possible status change
+             * applied. Status is changed when a completion matches all the IJK
+             * criteria *and* the completion number. A defaulted field always
+             * matches the property in question.
+             */
+            auto new_completion = [=]( const Completion& completion ) -> Completion {
+                if( !defaulted( I ) && completion.getI() != I ) return completion;
+                if( !defaulted( J ) && completion.getJ() != J ) return completion;
+                if( !defaulted( K ) && completion.getK() != K ) return completion;
 
-                    Opm::Value<int> I  = getValueItem(record.getItem("I"));
-                    Opm::Value<int> J  = getValueItem(record.getItem("J"));
-                    Opm::Value<int> K  = getValueItem(record.getItem("K"));
-                    Opm::Value<int> C1 = getValueItem(record.getItem("C1"));
-                    Opm::Value<int> C2 = getValueItem(record.getItem("C2"));
+                // assuming CM can be defaulted, even in the presence of
+                // CN, e.g. it's a match for c >= C1 when C2 is defaulted
+                // and vice versa.
+                // complnum starts at 1, but we temp. adjust it for zero to
+                // generalise the negative default value
+                const auto complnum = completion.complnum() - 1;
+                if( !defaulted( C1 ) && complnum < C1 ) return completion;
+                if( !defaulted( C2 ) && complnum > C2 ) return completion;
+                if( !defaulted( C1 ) && !defaulted( C2 )
+                    && ( C1 > complnum || complnum > C2 ) ) return completion;
 
-                    if(hascomplump && (C2.hasValue() || C1.hasValue())){
-                        std::cerr << "ERROR the keyword COMPLUMP is not supported used when C1 or C2 in WELOPEN have values" << std::endl;
-                        throw std::exception();
-                    }
+                // completion matched - update it's status
+                return { completion, status };
+            };
 
-                    size_t completionSize = currentCompletionSet.size();
+            for( auto* well : getWells( wellname ) ) {
+                CompletionSet new_completions;
+                for( const auto& c : well->getCompletions( currentStep ) )
+                    new_completions.add( new_completion( c ) );
 
-                    for(size_t i = 0; i < completionSize;i++) {
+                well->addCompletionSet( currentStep, new_completions );
+                m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
 
-                        const auto& currentCompletion = currentCompletionSet.get(i);
-
-                        if (C1.hasValue()) {
-                            if (i < (size_t) C1.getValue()) {
-                                newCompletionSet.add(currentCompletion);
-                                continue;
-                            }
-                        }
-                        if (C2.hasValue()) {
-                            if (i > (size_t) C2.getValue()) {
-                                newCompletionSet.add(currentCompletion);
-                                continue;
-                            }
-                        }
-
-                        int ci = currentCompletion.getI();
-                        int cj = currentCompletion.getJ();
-                        int ck = currentCompletion.getK();
-
-                        if (I.hasValue() && (!(I.getValue() == ci) )) {
-                            newCompletionSet.add(currentCompletion);
-                            continue;
-                        }
-
-                        if (J.hasValue() && (!(J.getValue() == cj) )) {
-                            newCompletionSet.add(currentCompletion);
-                            continue;
-                        }
-
-                        if (K.hasValue() && (!(K.getValue() == ck) )) {
-                            newCompletionSet.add(currentCompletion);
-                            continue;
-                        }
-
-                        WellCompletion::StateEnum completionStatus = WellCompletion::StateEnumFromString(record.getItem("STATUS").getTrimmedString(0));
-                        newCompletionSet.add( { currentCompletion, completionStatus } );
-                    }
-
-                    well->addCompletionSet(currentStep, newCompletionSet);
-                    m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
-                    if (newCompletionSet.allCompletionsShut())
-                        updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT);
-
-                }
-                else if(!haveCompletionData) {
-                    WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
-                    if (status == WellCommon::StatusEnum::OPEN && !well->canOpen(currentStep)) {
-                        std::string msg =
-                                "Well " + well->name() + " where crossflow is banned has zero total rate. " +
-                                "This well is prevented from opening at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                        m_messages.note(msg);
-                        continue;
-                    }
-                    updateWellStatus( *well, currentStep, status );
-                }
+                if( new_completions.allCompletionsShut() )
+                    this->updateWellStatus( *well, currentStep, shut );
             }
         }
     }

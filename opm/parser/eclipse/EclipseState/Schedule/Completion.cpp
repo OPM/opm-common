@@ -292,6 +292,7 @@ namespace Opm {
         return this->m_i == rhs.m_i
             && this->m_j == rhs.m_j
             && this->m_k == rhs.m_k
+            && this->m_complnum == rhs.m_complnum
             && this->m_diameter == rhs.m_diameter
             && this->m_connectionTransmissibilityFactor
                == rhs.m_connectionTransmissibilityFactor
