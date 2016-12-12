@@ -738,9 +738,9 @@ namespace Opm {
     }
 
     ZcornMapper::ZcornMapper(size_t nx , size_t ny, size_t nz)
-        : dims( {nx,ny,nz} ),
-          stride( {2 , 4*nx, 8*nx*ny} ),
-          cell_shift( {0 , 1 , 2*nx , 2*nx + 1 , 4*nx*ny , 4*nx*ny + 1, 4*nx*ny + 2*nx , 4*nx*ny + 2*nx + 1 })
+        : dims( {{nx,ny,nz}} ),
+          stride( {{2 , 4*nx, 8*nx*ny}} ),
+          cell_shift( {{0 , 1 , 2*nx , 2*nx + 1 , 4*nx*ny , 4*nx*ny + 1, 4*nx*ny + 2*nx , 4*nx*ny + 2*nx + 1 }})
     {
     }
 
