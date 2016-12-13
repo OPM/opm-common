@@ -396,3 +396,15 @@ BOOST_AUTO_TEST_CASE( ANALYTICAL_AQUIFERS ) {
     )";
     const auto summary = createSummary( input );
 }
+
+BOOST_AUTO_TEST_CASE( NUMERICAL_AQUIFERS ) {
+    const std::string input = R"(
+            ANQR
+                1 2 /
+            ANQP
+                2 1 /
+            ANQT
+                /
+    )";
+    const auto summary = createSummary( input );
+}
