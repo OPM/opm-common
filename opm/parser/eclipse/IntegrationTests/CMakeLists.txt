@@ -1,7 +1,7 @@
 add_definitions( -DKEYWORD_DIRECTORY="${PROJECT_SOURCE_DIR}/opm/parser/share/keywords/000_Eclipse100")
 
 foreach(tapp TransMultIntegrationTests CheckDeckValidity IntegrationTests ParseWellProbe
-             ParseTITLE ParseTOPS ParseWCONHIST ParseWellWithWildcards
+             ParseDEBUG ParseTITLE ParseTOPS ParseWCONHIST ParseWellWithWildcards
              ParsePORO ParsePLYVISC ParsePLYDHFLF ParsePLYSHLOG ParseDATAWithDefault
              ParseTVDP ParseDENSITY ParseVFPPROD ScheduleCreateFromDeck
              CompletionsFromDeck ParseEND IncludeTest ParseEQUIL
