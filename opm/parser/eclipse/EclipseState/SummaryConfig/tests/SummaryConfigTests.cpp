@@ -376,3 +376,23 @@ BOOST_AUTO_TEST_CASE( REMOVE_DUPLICATED_ENTRIES ) {
             keys.begin(), keys.end(),
             uniq_keys.begin(), uniq_keys.end() );
 }
+
+BOOST_AUTO_TEST_CASE( ANALYTICAL_AQUIFERS ) {
+    const std::string input = R"(
+            AAQR
+                1 2 /
+            AAQP
+                2 1 /
+            AAQT
+                /
+            AAQRG
+                /
+            AAQTG
+                /
+            AAQTD
+                /
+            AAQPD
+                /
+    )";
+    const auto summary = createSummary( input );
+}
