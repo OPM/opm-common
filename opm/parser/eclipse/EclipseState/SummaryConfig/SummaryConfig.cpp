@@ -73,6 +73,13 @@ namespace {
         "GMWIS", "GMWIV", "GMWIP", "GMWDR", "GMWDT", "GMWWO", "GMWWT"
     };
 
+    const Deck FMWSET_keywords = {
+        "SUMMARY",
+        "FMCTF", "FMWPT", "FMWPR", "FMWPA", "FMWPU", "FMWPF", "FMWPO", "FMWPS",
+        "FMWPV", "FMWPP", "FMWPL", "FMWIT", "FMWIN", "FMWIA", "FMWIU", "FMWIF",
+        "FMWIS", "FMWIV", "FMWIP", "FMWDR", "FMWDT", "FMWWO", "FMWWT"
+    };
+
 /*
     When the error handling config says that the error should be
     logged, the handleMissingWell and handleMissingGroup routines
@@ -169,6 +176,7 @@ inline void keywordG( std::vector< ERT::smspec_node >& list,
 
 inline void keywordF( std::vector< ERT::smspec_node >& list,
                       const DeckKeyword& keyword ) {
+    if( keyword.name() == "FMWSET" ) return;
     list.emplace_back( keyword.name() );
 }
 
@@ -325,6 +333,9 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 
     if( section.hasKeyword( "GMWSET" ) )
         this->merge( { GMWSET_keywords, schedule, props, parseContext, n_xyz } );
+
+    if( section.hasKeyword( "FMWSET" ) )
+        this->merge( { FMWSET_keywords, schedule, props, parseContext, n_xyz } );
 
     uniq( this->keywords );
     for (const auto& kw: this->keywords)

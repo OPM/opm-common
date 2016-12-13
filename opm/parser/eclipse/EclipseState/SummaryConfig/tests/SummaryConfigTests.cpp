@@ -439,3 +439,29 @@ BOOST_AUTO_TEST_CASE( summary_GMWSET ) {
 
     BOOST_CHECK( !summary.hasKeyword("NO-NOT-THIS") );
 }
+
+static const auto FMWSET_keywords = {
+    "FMCTF", "FMWPT", "FMWPR", "FMWPA", "FMWPU", "FMWPF", "FMWPO", "FMWPS",
+    "FMWPV", "FMWPP", "FMWPL", "FMWIT", "FMWIN", "FMWIA", "FMWIU", "FMWIF",
+    "FMWIS", "FMWIV", "FMWIP", "FMWDR", "FMWDT", "FMWWO", "FMWWT"
+};
+
+BOOST_AUTO_TEST_CASE( summary_FMWSET ) {
+
+    const auto input = "FMWSET\n";
+    const auto summary = createSummary( input );
+    const auto key_names = sorted_key_names( summary );
+
+    std::vector< std::string > all( FMWSET_keywords.begin(),
+                                    FMWSET_keywords.end() );
+    std::sort( all.begin(), all.end() );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS( all.begin(), all.end(),
+                                   key_names.begin(), key_names.end() );
+
+    BOOST_CHECK( summary.hasKeyword( "FMWPS" ) );
+    BOOST_CHECK( summary.hasKeyword( "FMWPT" ) );
+    BOOST_CHECK( summary.hasKeyword( "FMWPR" ) );
+
+    BOOST_CHECK( !summary.hasKeyword("NO-NOT-THIS") );
+}
