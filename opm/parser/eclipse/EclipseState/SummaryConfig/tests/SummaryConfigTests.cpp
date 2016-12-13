@@ -408,3 +408,34 @@ BOOST_AUTO_TEST_CASE( NUMERICAL_AQUIFERS ) {
     )";
     const auto summary = createSummary( input );
 }
+
+static const auto GMWSET_keywords = {
+    "GMCTG", "GMWPT", "GMWPR", "GMWPA", "GMWPU", "GMWPG", "GMWPO", "GMWPS",
+    "GMWPV", "GMWPP", "GMWPL", "GMWIT", "GMWIN", "GMWIA", "GMWIU", "GMWIG",
+    "GMWIS", "GMWIV", "GMWIP", "GMWDR", "GMWDT", "GMWWO", "GMWWT"
+};
+
+BOOST_AUTO_TEST_CASE( summary_GMWSET ) {
+
+    const auto input = "GMWSET\n";
+    const auto summary = createSummary( input );
+    const auto key_names = sorted_key_names( summary );
+
+    std::vector< std::string > all;
+
+    for( std::string kw : GMWSET_keywords ) {
+        all.emplace_back(kw + ":G");
+        all.emplace_back(kw + ":OP");
+    }
+
+    std::sort( all.begin(), all.end() );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS( all.begin(), all.end(),
+                                   key_names.begin(), key_names.end() );
+
+    BOOST_CHECK( summary.hasKeyword( "GMWPS" ) );
+    BOOST_CHECK( summary.hasKeyword( "GMWPT" ) );
+    BOOST_CHECK( summary.hasKeyword( "GMWPR" ) );
+
+    BOOST_CHECK( !summary.hasKeyword("NO-NOT-THIS") );
+}
