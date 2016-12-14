@@ -5,7 +5,7 @@ foreach(tapp TransMultIntegrationTests CheckDeckValidity IntegrationTests ParseW
              ParsePORO ParsePLYVISC ParsePLYDHFLF ParsePLYSHLOG ParseDATAWithDefault
              ParseTVDP ParseDENSITY ParseVFPPROD ScheduleCreateFromDeck
              CompletionsFromDeck ParseEND ParseLGR ParseTRACERS IncludeTest ParseEQUIL
-             ParseRSVD ParsePVTG ParsePVTO ParseSWOF ParseCOORDSYS BoxTest
+             ParseRSVD ParsePVTG ParsePVTO ParseSWOF ParseCOORDSYS ParseGRUPRIG BoxTest
              ParseMULTREGT ParseSGOF ParseSLGOF EclipseGridCreateFromDeck NNCTests
              ResinsightTest IOConfigIntegrationTest
              Polymer ParsePLYADSS ParseMULTSEGWELL ParseMiscible)
