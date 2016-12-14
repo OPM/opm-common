@@ -3,7 +3,7 @@ add_definitions( -DKEYWORD_DIRECTORY="${PROJECT_SOURCE_DIR}/opm/parser/share/key
 foreach(tapp TransMultIntegrationTests CheckDeckValidity IntegrationTests ParseWellProbe
              ParseDEBUG ParseTITLE ParseTOPS ParseWCONHIST ParseWellWithWildcards
              ParsePORO ParsePLYVISC ParsePLYDHFLF ParsePLYSHLOG ParseDATAWithDefault
-             ParseTVDP ParseDENSITY ParseVFPPROD ScheduleCreateFromDeck
+             ParseTVDP ParseDENSITY ParseVFPPROD ParsePRORDER ScheduleCreateFromDeck
              CompletionsFromDeck ParseEND ParseLGR ParseTRACERS IncludeTest ParseEQUIL
              ParseRSVD ParsePVTG ParsePVTO ParseSWOF ParseCOORDSYS ParseGRUPRIG BoxTest
              ParseMULTREGT ParseSGOF ParseSLGOF EclipseGridCreateFromDeck NNCTests
