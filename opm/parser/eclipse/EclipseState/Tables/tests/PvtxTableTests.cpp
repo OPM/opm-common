@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE( PVTWTable ) {
     const auto& rec1 = pvtw[0];
     const auto& rec2 = pvtw.at(1);
 
-    BOOST_CHECK_THROW( pvtw[2], std::out_of_range );
+    BOOST_CHECK_THROW( pvtw.at(2), std::out_of_range );
 
     BOOST_CHECK_CLOSE( 3600.00, rec1.reference_pressure / 1e5, 1e-5 );
     BOOST_CHECK_CLOSE( 1.00341, rec1.volume_factor, 1e-5 );

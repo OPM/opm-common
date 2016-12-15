@@ -20,64 +20,12 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/PvtwTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtxTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp>
 
 namespace Opm {
-
-namespace {
-    std::vector< PvtwTable::record > pvtw_records( const DeckKeyword& kw ) {
-        std::vector< PvtwTable::record > rs;
-
-        for( const auto& record : kw ) {
-            if( record.getItem( 0 ).defaultApplied( 0 ) ) {
-                throw std::invalid_argument(
-                    "PvtwTable reference pressure cannot be defaulted" );
-            }
-
-            rs.emplace_back(
-                PvtwTable::record {
-                    record.getItem( 0 ).getSIDouble( 0 ),
-                    record.getItem( 1 ).getSIDouble( 0 ),
-                    record.getItem( 2 ).getSIDouble( 0 ),
-                    record.getItem( 3 ).getSIDouble( 0 ),
-                    record.getItem( 4 ).getSIDouble( 0 ),
-                }
-            );
-        }
-
-        return rs;
-    }
-
-}
-
-    PvtwTable::PvtwTable( const DeckKeyword& kw ) : records( pvtw_records( kw ) ) {}
-
-    const PvtwTable::record& PvtwTable::operator[]( size_t region ) const {
-        return this->records.at( region );
-    }
-
-    const PvtwTable::record& PvtwTable::at( size_t region ) const {
-        return this->records.at( region );
-    }
-
-    bool PvtwTable::empty() const {
-        return this->records.empty();
-    }
-
-    size_t PvtwTable::size() const {
-        return this->records.size();
-    }
-
-    PvtwTable::const_iterator PvtwTable::begin() const {
-        return this->records.begin();
-    }
-
-    PvtwTable::const_iterator PvtwTable::end() const {
-        return this->records.end();
-    }
 
     PvtxTable::PvtxTable(const std::string& columnName) :
         m_outerColumnSchema( columnName , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ),

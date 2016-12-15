@@ -87,6 +87,9 @@ namespace Opm {
         if( deck.hasKeyword( "PVTW" ) )
             this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
 
+        if( deck.hasKeyword( "DENSITY" ) )
+            this->m_densityTable = DensityTable( deck.getKeyword( "DENSITY" ) );
+
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
     }
@@ -635,6 +638,10 @@ namespace Opm {
 
     const PvtwTable& TableManager::getPvtwTable() const {
         return this->m_pvtwTable;
+    }
+
+    const DensityTable& TableManager::getDensityTable() const {
+        return this->m_densityTable;
     }
 
     const TableContainer& TableManager::getMsfnTables() const {

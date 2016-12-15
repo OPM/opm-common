@@ -1060,6 +1060,23 @@ BOOST_AUTO_TEST_CASE( TestPLYMAX ) {
     BOOST_CHECK_EQUAL( table1.getMaxPolymerConcentrationColumn()[0] , 20.0 );
 }
 
+BOOST_AUTO_TEST_CASE( TestParseDENSITY ) {
+    const std::string data = R"(
+      TABDIMS
+        1* 1 /
+
+      DENSITY
+        1.1 1.2 1.3 /
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(data, Opm::ParseContext());
+    Opm::TableManager tables( deck );
+    const auto& density = tables.getDensityTable();
+    BOOST_CHECK_EQUAL( 1.1, density[0].oil );
+    BOOST_CHECK_EQUAL( 1.2, density[0].water );
+    BOOST_CHECK_EQUAL( 1.3, density[0].gas );
+}
 
 
 BOOST_AUTO_TEST_CASE( TestParseTABDIMS ) {

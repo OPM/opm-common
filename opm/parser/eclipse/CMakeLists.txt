@@ -226,6 +226,7 @@ EclipseState/SummaryConfig/SummaryConfig.hpp
 EclipseState/IOConfig/RestartConfig.hpp
 EclipseState/IOConfig/IOConfig.hpp
 #
+EclipseState/Tables/FlatTable.hpp
 EclipseState/Tables/Tabdims.hpp
 EclipseState/Tables/Eqldims.hpp
 EclipseState/Tables/Regdims.hpp
@@ -262,7 +263,6 @@ EclipseState/Tables/OilvisctTable.hpp
 EclipseState/Tables/GasvisctTable.hpp
 EclipseState/Tables/WatvisctTable.hpp
 EclipseState/Tables/PvtgTable.hpp
-EclipseState/Tables/PvtwTable.hpp
 EclipseState/Tables/VFPProdTable.hpp
 EclipseState/Tables/VFPInjTable.hpp
 EclipseState/Tables/TableManager.hpp
