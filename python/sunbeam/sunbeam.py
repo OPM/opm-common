@@ -26,14 +26,15 @@ def delegate(delegate_cls, to = '_sun'):
             pass
 
         setattr(cls, to, _property())
-        for attr in attributes - set(cls.__dict__.keys()):
+        for attr in attributes - set(cls.__dict__.keys() + ['__init__']):
             setattr(cls, attr, _delegate(to, attr))
 
-        # inject __init__
-        def default_init(self, this):
-            setattr(self, to, this)
+        def new__new__(_cls, this, *args, **kwargs):
+            new = super(cls, _cls).__new__(_cls, *args, **kwargs)
+            setattr(new, to, this)  # self._sun = this
+            return new
 
-        setattr(cls, '__init__', default_init)
+        cls.__new__ = staticmethod(new__new__)
 
         return cls
 
