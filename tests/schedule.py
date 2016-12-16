@@ -25,3 +25,10 @@ class TestSchedule(unittest.TestCase):
         timesteps = self.sch.timesteps
         self.assertEqual(176, len(timesteps))
         self.assertEqual(dt.date(2015, 12, 31), timesteps[7])
+
+    def testGroups(self):
+        g1 = self.sch.group('G1').wells(0)
+        self.assertEqual(2, len(g1))
+
+        with self.assertRaises(ValueError):
+            self.sch.group('foo')

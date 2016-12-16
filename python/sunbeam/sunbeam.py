@@ -46,6 +46,9 @@ class Schedule(object):
     def wells(self):
         return map(Well, self._wells)
 
+    def group(self, name):
+        return Group(self._group(name), self)
+
 @delegate(lib.EclipseState)
 class EclipseState(object):
     @property
@@ -74,6 +77,17 @@ class Well(object):
     def producer(timestep):
         def fn(well): return well.isproducer(timestep)
         return fn
+
+@delegate(lib.Group)
+class Group(object):
+    def __init__(self, _, schedule):
+        self._schedule = schedule
+
+    def wells(self, timestep):
+        names = self._wellnames(timestep)
+        wells = { well.name: well for well in self._schedule.wells }
+        return map(wells.__getitem__, filter(wells.__contains__, names))
+
 
 def _parse_context(actions):
     ctx = lib.ParseContext()

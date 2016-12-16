@@ -25,7 +25,7 @@ struct ptime_to_python_datetime {
 };
 
 template< typename T >
-py::list vector_to_pylist( const std::vector< T >& v ) {
+py::list iterable_to_pylist( const T& v ) {
     py::list l;
     for( const auto& x : v ) l.append( x );
     return l;
@@ -37,6 +37,10 @@ std::vector< Well > get_wells( const Schedule& sch ) {
         wells.push_back( *w );
 
     return wells;
+}
+
+py::list group_wellnames( const Group& g, size_t timestep ) {
+    return iterable_to_pylist( g.getWells( timestep )  );
 }
 
 /* alias some of boost's long names and operations */
@@ -81,7 +85,7 @@ py::list get_timesteps( const Schedule* s ) {
 
     for( size_t i = 0; i < tm.size(); ++i ) v.push_back( tm[ i ] );
 
-    return vector_to_pylist( v );
+    return iterable_to_pylist( v );
 }
 
 }
@@ -131,12 +135,18 @@ py::class_< std::vector< Well > >( "WellList", py::no_init )
     .def( py::vector_indexing_suite< std::vector< Well > >() )
     ;
 
+py::class_< Group >( "Group", py::no_init )
+    .def( "name",       mkcopy( &Group::name ) )
+    .def( "_wellnames", group_wellnames )
+    ;
+
 py::class_< Schedule >( "Schedule", py::no_init )
     .add_property( "_wells", get_wells )
     .add_property( "start",  get_start_time )
     .add_property( "end",    get_end_time )
     .add_property( "timesteps", get_timesteps )
     .def( "__contains__", &Schedule::hasWell )
+    .def( "_group", &Schedule::getGroup, ref() )
     ;
 
 void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
