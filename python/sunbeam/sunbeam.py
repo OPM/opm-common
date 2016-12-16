@@ -39,12 +39,40 @@ def delegate(delegate_cls, to = '_sun'):
 
     return inner
 
+@delegate(lib.Schedule)
+class Schedule(object):
+    @property
+    def wells(self):
+        return map(Well, self._wells)
+
 @delegate(lib.EclipseState)
 class EclipseState(object):
-
     @property
     def schedule(self):
-        return self._schedule()
+        return Schedule(self._schedule())
+
+@delegate(lib.Well)
+class Well(object):
+
+    def pos(self, timestep = None):
+        if timestep is None:
+            return self.I(), self.J(), self.ref()
+        return self.I(timestep), self.J(timestep), self.ref(timestep)
+
+    @staticmethod
+    def defined(timestep):
+        def fn(well): return well.isdefined(timestep)
+        return fn
+
+    @staticmethod
+    def injector(timestep):
+        def fn(well): return well.isinjector(timestep)
+        return fn
+
+    @staticmethod
+    def producer(timestep):
+        def fn(well): return well.isproducer(timestep)
+        return fn
 
 def _parse_context(actions):
     ctx = lib.ParseContext()
