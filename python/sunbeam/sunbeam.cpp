@@ -13,22 +13,38 @@ using namespace Opm;
 
 namespace {
 
-py::list group_wellnames( const Group& g, size_t timestep ) {
+namespace group {
+py::list wellnames( const Group& g, size_t timestep ) {
     return iterable_to_pylist( g.getWells( timestep )  );
 }
 
-std::string well_status( const Well* w, size_t timestep ) {
-    return WellCommon::Status2String( w->getStatus( timestep ) );
 }
 
-std::string well_prefphase( const Well* w ) {
-    switch( w->getPreferredPhase() ) {
+namespace well {
+std::string status( const Well& w, size_t timestep )  {
+    return WellCommon::Status2String( w.getStatus( timestep ) );
+}
+
+std::string preferred_phase( const Well& w ) {
+    switch( w.getPreferredPhase() ) {
         case Phase::OIL:   return "OIL";
         case Phase::GAS:   return "GAS";
         case Phase::WATER: return "WATER";
         default: throw std::logic_error( "Unhandled enum value" );
     }
 }
+
+int    (Well::*headI)() const = &Well::getHeadI;
+int    (Well::*headJ)() const = &Well::getHeadI;
+double (Well::*refD)()  const = &Well::getRefDepth;
+
+int    (Well::*headI_at)(size_t) const = &Well::getHeadI;
+int    (Well::*headJ_at)(size_t) const = &Well::getHeadI;
+double (Well::*refD_at)(size_t)  const = &Well::getRefDepth;
+
+}
+
+namespace schedule {
 
 std::vector< Well > get_wells( const Schedule& sch ) {
     std::vector< Well > wells;
@@ -45,16 +61,16 @@ const Well& get_well( const Schedule& sch, const std::string& name ) try {
 }
 
 
-boost::posix_time::ptime get_start_time( const Schedule* s ) {
-    return boost::posix_time::from_time_t( s->posixStartTime() );
+boost::posix_time::ptime get_start_time( const Schedule& s ) {
+    return boost::posix_time::from_time_t( s.posixStartTime() );
 }
 
-boost::posix_time::ptime get_end_time( const Schedule* s ) {
-    return boost::posix_time::from_time_t( s->posixEndTime() );
+boost::posix_time::ptime get_end_time( const Schedule& s ) {
+    return boost::posix_time::from_time_t( s.posixEndTime() );
 }
 
-py::list get_timesteps( const Schedule* s ) {
-    const auto& tm = s->getTimeMap();
+py::list get_timesteps( const Schedule& s ) {
+    const auto& tm = s.getTimeMap();
     std::vector< boost::posix_time::ptime > v;
     v.reserve( tm.size() );
 
@@ -65,41 +81,41 @@ py::list get_timesteps( const Schedule* s ) {
 
 }
 
-BOOST_PYTHON_MODULE(libsunbeam) {
+EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;
+void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
 
+}
+
+BOOST_PYTHON_MODULE(libsunbeam) {
+/*
+ * Python C-API requires this macro to be invoked before anything from
+ * datetime.h is used.
+ */
 PyDateTime_IMPORT;
+
 /* register all converters */
 py::to_python_converter< const boost::posix_time::ptime,
                          ptime_to_python_datetime >();
 
 py::register_exception_translator< key_error >( &key_error::translate );
 
-EclipseState (*parse_file)( const std::string&, const ParseContext& ) = &Parser::parse;
-py::def( "parse", parse_file );
+py::def( "parse", parse );
 
 py::class_< EclipseState >( "EclipseState", py::no_init )
     .add_property( "title", &EclipseState::getTitle )
     .def( "_schedule", &EclipseState::getSchedule, ref() )
     ;
 
-int    (Well::*headI)() const = &Well::getHeadI;
-int    (Well::*headJ)() const = &Well::getHeadI;
-double (Well::*refD)()  const = &Well::getRefDepth;
-
-int    (Well::*headIts)(size_t) const = &Well::getHeadI;
-int    (Well::*headJts)(size_t) const = &Well::getHeadI;
-double (Well::*refDts)(size_t)  const = &Well::getRefDepth;
-
 py::class_< Well >( "Well", py::no_init )
     .add_property( "name", mkcopy( &Well::name ) )
-    .add_property( "preferred_phase", &well_prefphase )
-    .def( "I",   headI )
-    .def( "I",   headIts )
-    .def( "J",   headJ )
-    .def( "J",   headJts )
-    .def( "ref", refD )
-    .def( "ref", refDts )
-    .def( "status", &well_status )
+    .add_property( "preferred_phase", &well::preferred_phase )
+    .def( "I",   well::headI )
+    .def( "I",   well::headI_at )
+    .def( "J",   well::headJ )
+    .def( "J",   well::headJ_at )
+    .def( "ref", well::refD )
+    .def( "ref", well::refD_at )
+    .def( "status",     &well::status )
     .def( "isdefined",  &Well::hasBeenDefined )
     .def( "isinjector", &Well::isInjector )
     .def( "isproducer", &Well::isProducer )
@@ -115,20 +131,19 @@ py::class_< std::vector< Well > >( "WellList", py::no_init )
 
 py::class_< Group >( "Group", py::no_init )
     .def( "name",       mkcopy( &Group::name ) )
-    .def( "_wellnames", group_wellnames )
+    .def( "_wellnames", group::wellnames )
     ;
 
 py::class_< Schedule >( "Schedule", py::no_init )
-    .add_property( "_wells", get_wells )
-    .add_property( "start",  get_start_time )
-    .add_property( "end",    get_end_time )
-    .add_property( "timesteps", get_timesteps )
+    .add_property( "_wells", schedule::get_wells )
+    .add_property( "start",  schedule::get_start_time )
+    .add_property( "end",    schedule::get_end_time )
+    .add_property( "timesteps", schedule::get_timesteps )
     .def( "__contains__", &Schedule::hasWell )
-    .def( "__getitem__", get_well, ref() )
+    .def( "__getitem__", schedule::get_well, ref() )
     .def( "_group", &Schedule::getGroup, ref() )
     ;
 
-void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
 py::class_< ParseContext >( "ParseContext" )
     .def( "update", ctx_update )
     ;
