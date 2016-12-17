@@ -1,49 +1,33 @@
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <datetime.h>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
+#include "converters.hpp"
+
 namespace py = boost::python;
 using namespace Opm;
 
 namespace {
 
-/* converters */
+py::list group_wellnames( const Group& g, size_t timestep ) {
+    return iterable_to_pylist( g.getWells( timestep )  );
+}
 
-struct ptime_to_python_datetime {
-    static PyObject* convert( const boost::posix_time::ptime& pt ) {
-        const auto& date = pt.date();
-        return PyDate_FromDate( int( date.year() ),
-                                int( date.month() ),
-                                int( date.day() ) );
+std::string well_status( const Well* w, size_t timestep ) {
+    return WellCommon::Status2String( w->getStatus( timestep ) );
+}
 
+std::string well_prefphase( const Well* w ) {
+    switch( w->getPreferredPhase() ) {
+        case Phase::OIL:   return "OIL";
+        case Phase::GAS:   return "GAS";
+        case Phase::WATER: return "WATER";
+        default: throw std::logic_error( "Unhandled enum value" );
     }
-};
-
-class key_error : public std::exception {
-    public:
-        static void translate( const key_error& e ) {
-            PyErr_SetString( PyExc_KeyError, e.what() );
-        }
-
-        key_error( const std::string& m ) : msg( m ) {}
-
-        const char* what() const throw() { return this->msg.c_str(); }
-
-    private:
-        std::string msg;
-};
-
-
-template< typename T >
-py::list iterable_to_pylist( const T& v ) {
-    py::list l;
-    for( const auto& x : v ) l.append( x );
-    return l;
 }
 
 std::vector< Well > get_wells( const Schedule& sch ) {
@@ -60,36 +44,6 @@ const Well& get_well( const Schedule& sch, const std::string& name ) try {
     throw key_error( name );
 }
 
-py::list group_wellnames( const Group& g, size_t timestep ) {
-    return iterable_to_pylist( g.getWells( timestep )  );
-}
-
-/* alias some of boost's long names and operations */
-using ref = py::return_internal_reference<>;
-using copy = py::return_value_policy< py::copy_const_reference >;
-
-template< typename F >
-auto mkref( F f ) -> decltype( py::make_function( f, ref() ) ) {
-    return py::make_function( f, ref() );
-}
-
-template< typename F >
-auto mkcopy( F f ) -> decltype( py::make_function( f, copy() ) ) {
-    return py::make_function( f, copy() );
-}
-
-std::string well_status( const Well* w, size_t timestep ) {
-    return WellCommon::Status2String( w->getStatus( timestep ) );
-}
-
-std::string well_prefphase( const Well* w ) {
-    switch( w->getPreferredPhase() ) {
-        case Phase::OIL:   return "OIL";
-        case Phase::GAS:   return "GAS";
-        case Phase::WATER: return "WATER";
-        default: throw std::logic_error( "Unhandled enum value" );
-    }
-}
 
 boost::posix_time::ptime get_start_time( const Schedule* s ) {
     return boost::posix_time::from_time_t( s->posixStartTime() );
