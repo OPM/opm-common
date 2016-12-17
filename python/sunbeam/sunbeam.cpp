@@ -24,6 +24,21 @@ struct ptime_to_python_datetime {
     }
 };
 
+class key_error : public std::exception {
+    public:
+        static void translate( const key_error& e ) {
+            PyErr_SetString( PyExc_KeyError, e.what() );
+        }
+
+        key_error( const std::string& m ) : msg( m ) {}
+
+        const char* what() const throw() { return this->msg.c_str(); }
+
+    private:
+        std::string msg;
+};
+
+
 template< typename T >
 py::list iterable_to_pylist( const T& v ) {
     py::list l;
@@ -37,6 +52,12 @@ std::vector< Well > get_wells( const Schedule& sch ) {
         wells.push_back( *w );
 
     return wells;
+}
+
+const Well& get_well( const Schedule& sch, const std::string& name ) try {
+    return *sch.getWell( name );
+} catch( const std::invalid_argument& e ) {
+    throw key_error( name );
 }
 
 py::list group_wellnames( const Group& g, size_t timestep ) {
@@ -97,6 +118,8 @@ PyDateTime_IMPORT;
 py::to_python_converter< const boost::posix_time::ptime,
                          ptime_to_python_datetime >();
 
+py::register_exception_translator< key_error >( &key_error::translate );
+
 EclipseState (*parse_file)( const std::string&, const ParseContext& ) = &Parser::parse;
 py::def( "parse", parse_file );
 
@@ -129,6 +152,7 @@ py::class_< Well >( "Well", py::no_init )
     .def( "group", &Well::getGroupName )
     .def( "guide_rate", &Well::getGuideRate )
     .def( "available_gctrl", &Well::isAvailableForGroupControl )
+    .def( "__eq__", &Well::operator== )
     ;
 
 py::class_< std::vector< Well > >( "WellList", py::no_init )
@@ -146,6 +170,7 @@ py::class_< Schedule >( "Schedule", py::no_init )
     .add_property( "end",    get_end_time )
     .add_property( "timesteps", get_timesteps )
     .def( "__contains__", &Schedule::hasWell )
+    .def( "__getitem__", get_well, ref() )
     .def( "_group", &Schedule::getGroup, ref() )
     ;
 

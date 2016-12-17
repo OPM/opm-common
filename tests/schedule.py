@@ -11,6 +11,9 @@ class TestSchedule(unittest.TestCase):
     def testWells(self):
         self.assertEqual(2, len(self.sch.wells))
 
+        with self.assertRaises(KeyError):
+            self.sch['foo']
+
     def testContains(self):
         self.assertTrue('PROD' in self.sch)
         self.assertTrue('INJ'  in self.sch)
@@ -29,6 +32,14 @@ class TestSchedule(unittest.TestCase):
     def testGroups(self):
         g1 = self.sch.group('G1').wells(0)
         self.assertEqual(2, len(g1))
+
+        def head(xs): return next(iter(xs))
+
+        inje = head(filter(sunbeam.Well.injector(0), g1))
+        prod = head(filter(sunbeam.Well.producer(0), g1))
+
+        self.assertEqual(self.sch['INJ'],  inje)
+        self.assertEqual(self.sch['PROD'], prod)
 
         with self.assertRaises(ValueError):
             self.sch.group('foo')
