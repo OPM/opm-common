@@ -49,6 +49,12 @@ class Schedule(object):
     def group(self, name):
         return Group(self._group(name), self)
 
+    @property
+    def groups(self):
+        def mk(x): return Group(x, self)
+        def not_field(x): return x.name != 'FIELD'
+        return map(mk, filter(not_field, self._groups))
+
 @delegate(lib.EclipseState)
 class EclipseState(object):
     @property

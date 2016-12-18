@@ -79,6 +79,14 @@ py::list get_timesteps( const Schedule& s ) {
     return iterable_to_pylist( v );
 }
 
+py::list get_groups( const Schedule& sch ) {
+    std::vector< Group > groups;
+    for( const auto& g : sch.getGroups() )
+        groups.push_back( *g );
+
+    return iterable_to_pylist( groups );
+}
+
 }
 
 EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;
@@ -130,12 +138,13 @@ py::class_< std::vector< Well > >( "WellList", py::no_init )
     ;
 
 py::class_< Group >( "Group", py::no_init )
-    .def( "name",       mkcopy( &Group::name ) )
+    .add_property( "name", mkcopy( &Group::name ) )
     .def( "_wellnames", group::wellnames )
     ;
 
 py::class_< Schedule >( "Schedule", py::no_init )
     .add_property( "_wells", schedule::get_wells )
+    .add_property( "_groups", schedule::get_groups )
     .add_property( "start",  schedule::get_start_time )
     .add_property( "end",    schedule::get_end_time )
     .add_property( "timesteps", schedule::get_timesteps )
