@@ -73,3 +73,15 @@ class TestWells(unittest.TestCase):
 
         self.assertEqual(inje[0].name, "INJ")
         self.assertEqual(prod[0].name, "PROD")
+
+    def testOpenFilter(self):
+        open_at_1 = sunbeam.Well.flowing(1)
+        flowing = list(filter(open_at_1, self.wells))
+        closed  = list(filter(lambda well: not open_at_1(well), self.wells))
+
+        self.assertEqual(2, len(flowing))
+        self.assertEqual(0, len(closed))
+
+        flowing1 = filter(lambda x: not sunbeam.Well.closed(1)(x), self.wells)
+        closed1  = filter(sunbeam.Well.closed(1), self.wells)
+        self.assertListEqual(list(closed), list(closed1))

@@ -84,6 +84,25 @@ class Well(object):
         def fn(well): return well.isproducer(timestep)
         return fn
 
+    # using the names flowing and closed for functions that test if a well is
+    # opened or closed at some point, because we might want to use the more
+    # imperative words 'open' and 'close' (or 'shut') for *changing* the status
+    # later
+    @staticmethod
+    def flowing(timestep):
+        def fn(well): return well.status(timestep) == 'OPEN'
+        return fn
+
+    @staticmethod
+    def closed(timestep):
+        def fn(well): return well.status(timestep) == 'SHUT'
+        return fn
+
+    @staticmethod
+    def auto(timestep):
+        def fn(well): return well.status(timestep) == 'AUTO'
+        return fn
+
 @delegate(lib.Group)
 class Group(object):
     def __init__(self, _, schedule):
