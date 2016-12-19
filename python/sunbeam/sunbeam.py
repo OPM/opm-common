@@ -26,14 +26,15 @@ def delegate(delegate_cls, to = '_sun'):
             pass
 
         setattr(cls, to, _property())
-        for attr in attributes - set(cls.__dict__.keys()):
+        for attr in attributes - set(cls.__dict__.keys() + ['__init__']):
             setattr(cls, attr, _delegate(to, attr))
 
-        # inject __init__
-        def default_init(self, this):
-            setattr(self, to, this)
+        def new__new__(_cls, this, *args, **kwargs):
+            new = super(cls, _cls).__new__(_cls, *args, **kwargs)
+            setattr(new, to, this)  # self._sun = this
+            return new
 
-        setattr(cls, '__init__', default_init)
+        cls.__new__ = staticmethod(new__new__)
 
         return cls
 
@@ -44,6 +45,15 @@ class Schedule(object):
     @property
     def wells(self):
         return map(Well, self._wells)
+
+    def group(self, name):
+        return Group(self._group(name), self)
+
+    @property
+    def groups(self):
+        def mk(x): return Group(x, self)
+        def not_field(x): return x.name != 'FIELD'
+        return map(mk, filter(not_field, self._groups))
 
 @delegate(lib.EclipseState)
 class EclipseState(object):
@@ -73,6 +83,36 @@ class Well(object):
     def producer(timestep):
         def fn(well): return well.isproducer(timestep)
         return fn
+
+    # using the names flowing and closed for functions that test if a well is
+    # opened or closed at some point, because we might want to use the more
+    # imperative words 'open' and 'close' (or 'shut') for *changing* the status
+    # later
+    @staticmethod
+    def flowing(timestep):
+        def fn(well): return well.status(timestep) == 'OPEN'
+        return fn
+
+    @staticmethod
+    def closed(timestep):
+        def fn(well): return well.status(timestep) == 'SHUT'
+        return fn
+
+    @staticmethod
+    def auto(timestep):
+        def fn(well): return well.status(timestep) == 'AUTO'
+        return fn
+
+@delegate(lib.Group)
+class Group(object):
+    def __init__(self, _, schedule):
+        self._schedule = schedule
+
+    def wells(self, timestep):
+        names = self._wellnames(timestep)
+        wells = { well.name: well for well in self._schedule.wells }
+        return map(wells.__getitem__, filter(wells.__contains__, names))
+
 
 def _parse_context(actions):
     ctx = lib.ParseContext()
