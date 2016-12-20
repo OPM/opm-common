@@ -1078,6 +1078,29 @@ BOOST_AUTO_TEST_CASE( TestParseDENSITY ) {
     BOOST_CHECK_EQUAL( 1.3, density[0].gas );
 }
 
+BOOST_AUTO_TEST_CASE( TestParseROCK ) {
+    const std::string data = R"(
+      TABDIMS
+        1* 2 /
+
+      ROCK
+        1.1 1.2 /
+        2.1 2.2 /
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(data, Opm::ParseContext());
+    Opm::TableManager tables( deck );
+    const auto& rock = tables.getRockTable();
+    BOOST_CHECK_EQUAL( 1.1 * 1e5,  rock[0].reference_pressure );
+    BOOST_CHECK_EQUAL( 1.2 * 1e-5, rock[0].compressibility );
+
+    BOOST_CHECK_EQUAL( 2.1 * 1e5,  rock[1].reference_pressure );
+    BOOST_CHECK_EQUAL( 2.2 * 1e-5, rock[1].compressibility );
+
+    BOOST_CHECK_THROW( rock.at( 2 ), std::out_of_range );
+}
+
 
 BOOST_AUTO_TEST_CASE( TestParseTABDIMS ) {
     const char *data =

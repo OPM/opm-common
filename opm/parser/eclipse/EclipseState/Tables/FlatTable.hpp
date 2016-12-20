@@ -37,6 +37,17 @@ struct PvtwTable : public FlatTable< PVTWRecord > {
     using FlatTable< PVTWRecord >::FlatTable;
 };
 
+struct ROCKRecord {
+    static constexpr std::size_t size = 2;
+
+    double reference_pressure;
+    double compressibility;
+};
+
+struct RockTable : public FlatTable< ROCKRecord > {
+    using FlatTable< ROCKRecord >::FlatTable;
+};
+
 }
 
 #endif //OPM_FLAT_TABLE_HPP

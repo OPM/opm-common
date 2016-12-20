@@ -1094,5 +1094,6 @@ FlatTable< T >::FlatTable( const DeckKeyword& kw ) :
 
 template FlatTable< DENSITYRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PVTWRecord >::FlatTable( const DeckKeyword& );
+template FlatTable< ROCKRecord >::FlatTable( const DeckKeyword& );
 
 } // namespace Opm
