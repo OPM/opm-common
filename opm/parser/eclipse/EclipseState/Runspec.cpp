@@ -28,16 +28,18 @@ Phase get_phase( const std::string& str ) {
     if( str == "OIL" ) return Phase::OIL;
     if( str == "GAS" ) return Phase::GAS;
     if( str == "WAT" ) return Phase::WATER;
-    if( str == "WATER" ) return Phase::WATER;
+    if( str == "WATER" )   return Phase::WATER;
+    if( str == "SOLVENT" ) return Phase::SOLVENT;
 
     throw std::invalid_argument( "Unknown phase '" + str + "'" );
 }
 
 std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
     switch( p ) {
-        case Phase::OIL:   return stream << "OIL";
-        case Phase::GAS:   return stream << "GAS";
-        case Phase::WATER: return stream << "WATER";
+        case Phase::OIL:     return stream << "OIL";
+        case Phase::GAS:     return stream << "GAS";
+        case Phase::WATER:   return stream << "WATER";
+        case Phase::SOLVENT: return stream << "SOLVENT";
     }
 
     return stream;
@@ -45,10 +47,11 @@ std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
 
 using un = std::underlying_type< Phase >::type;
 
-Phases::Phases( bool oil, bool gas, bool wat ) noexcept :
-    bits( (oil ? (1 << static_cast< un >( Phase::OIL ) )   : 0) |
-          (gas ? (1 << static_cast< un >( Phase::GAS ) )   : 0) |
-          (wat ? (1 << static_cast< un >( Phase::WATER ) ) : 0) )
+Phases::Phases( bool oil, bool gas, bool wat, bool sol ) noexcept :
+    bits( (oil ? (1 << static_cast< un >( Phase::OIL ) )    : 0) |
+          (gas ? (1 << static_cast< un >( Phase::GAS ) )    : 0) |
+          (wat ? (1 << static_cast< un >( Phase::WATER ) )  : 0) |
+          (sol ? (1 << static_cast< un >( Phase::SOLVENT) ) : 0) )
 {}
 
 bool Phases::active( Phase p ) const noexcept {
@@ -63,7 +66,9 @@ size_t Phases::size() const noexcept {
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases{ deck.hasKeyword( "OIL" ),
                            deck.hasKeyword( "GAS" ),
-                           deck.hasKeyword( "WATER" ) } ),
+                           deck.hasKeyword( "WATER" ),
+                           deck.hasKeyword( "SOLVENT" ),
+                         } ),
     m_tabdims( deck )
 {}
 

@@ -30,9 +30,10 @@ namespace Opm {
 class Deck;
 
 enum class Phase {
-    OIL   = 0,
-    GAS   = 1,
-    WATER = 2,
+    OIL     = 0,
+    GAS     = 1,
+    WATER   = 2,
+    SOLVENT = 3,
 };
 
 Phase get_phase( const std::string& );
@@ -41,13 +42,13 @@ std::ostream& operator<<( std::ostream&, const Phase& );
 class Phases {
     public:
         Phases() noexcept = default;
-        Phases( bool oil, bool gas, bool wat ) noexcept;
+        Phases( bool oil, bool gas, bool wat, bool solvent = false ) noexcept;
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
 
     private:
-        std::bitset< 3 > bits;
+        std::bitset< 4 > bits;
 };
 
 class Runspec {
