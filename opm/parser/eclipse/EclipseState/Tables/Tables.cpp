@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
@@ -1012,5 +1013,87 @@ const TableColumn& MsfnTable::getGasSolventRelpermMultiplierColumn() const {
 const TableColumn& MsfnTable::getOilRelpermMultiplierColumn() const {
     return SimpleTable::getColumn(2); 
 }
+
+namespace {
+
+/*
+ * Create a compile-time sequence of integers [0,N). In C++14 this can be
+ * replaced by std::index_sequence.
+ */
+template< std::size_t... > struct seq { using type = seq; };
+template< std::size_t N, std::size_t... Is >
+struct mkseq : mkseq< N - 1, N - 1, Is... > {};
+template< std::size_t... Is >
+struct mkseq< 0u, Is... > : seq< Is... >{ using type = seq< Is... >; };
+
+/*
+ * Convenince function for creating a 'flat table', e.g. PVTW and DENSITY.
+ * Assumes the following:
+ *
+ * 1. The table has vector semantics with no other to enforce
+ * 2. That the following struct is implemented:
+ * struct record {
+ *  static constexpr std::size_t size = [number-of-members]
+ *  double members ...;
+ * };
+ * 3. The table is declared as
+ * struct table : public FlatTable< table > {
+ *  using FlatTable< table >::FlatTable;
+ * }
+ *
+ * If some field can *not* be defaulted, e.g. 0, specialise the flat_props
+ * struct (in this namespace) as such:
+ * template<> struct< record, 0 > {
+ *  static constexpr bool can_default() { return false; }
+ *  static constexpr const char* errmsg() { "error message"; }
+ * };
+ * and the parser will throw std::invalid_argument if the field is defaulted in
+ * the input.
+ *
+ */
+
+template< typename T, std::size_t N >
+struct flat_props {
+    static constexpr bool can_default() { return true; }
+    static constexpr const char* errmsg() { return ""; }
+};
+
+template< typename T, std::size_t N >
+double flat_get( const DeckRecord& rec ) {
+    if( !flat_props< T, N >::can_default()
+     && rec.getItem( N ).defaultApplied( 0 ) ) {
+        throw std::invalid_argument( flat_props< T, N >::errmsg() );
+    }
+
+    return rec.getItem( N ).getSIDouble( 0 );
+}
+
+template< typename T, std::size_t... Is >
+std::vector< T > flat_records( const DeckKeyword& kw, seq< Is... > ) {
+    std::vector< T > xs;
+    for( const auto& record : kw )
+        xs.emplace_back( T { flat_get< T, Is >( record )... } );
+
+    return xs;
+}
+
+template<>
+struct flat_props< PVTWRecord, 0 > {
+    static constexpr bool can_default() { return false; }
+    static constexpr const char* errmsg() {
+        return "PVTW reference pressure cannot be defaulted";
+    }
+};
+
+}
+
+template< typename T >
+FlatTable< T >::FlatTable( const DeckKeyword& kw ) :
+    std::vector< T >( flat_records< T >( kw, mkseq< T::size >{} ) )
+{}
+
+template FlatTable< DENSITYRecord >::FlatTable( const DeckKeyword& );
+template FlatTable< PVTWRecord >::FlatTable( const DeckKeyword& );
+template FlatTable< ROCKRecord >::FlatTable( const DeckKeyword& );
 
 } // namespace Opm

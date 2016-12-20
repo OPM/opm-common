@@ -358,6 +358,8 @@ namespace Opm {
         supportedDoubleKeywords.emplace_back( "PRESSURE", 0.0 , "Pressure" );
         supportedDoubleKeywords.emplace_back( "SWAT", 0.0 , "1" );
         supportedDoubleKeywords.emplace_back( "SGAS", 0.0 , "1" );
+        supportedDoubleKeywords.emplace_back( "RS",  0.0, "1" );
+        supportedDoubleKeywords.emplace_back( "RV",  0.0, "1" );
 
 
         // cell temperature (E300 only, but makes a lot of sense for E100, too)
