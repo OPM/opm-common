@@ -1623,7 +1623,7 @@ namespace Opm {
         return this->m_events;
     }
 
-    const OilVaporizationProperties& Schedule::getOilVaporizationProperties(size_t timestep){
+    const OilVaporizationProperties& Schedule::getOilVaporizationProperties(size_t timestep) const {
         return m_oilvaporizationproperties.get(timestep);
     }
 
