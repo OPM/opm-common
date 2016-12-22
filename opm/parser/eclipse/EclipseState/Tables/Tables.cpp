@@ -1085,6 +1085,22 @@ struct flat_props< PVTWRecord, 0 > {
     }
 };
 
+constexpr const char* pvcdo_err[] = {
+    "PVCDO reference pressure cannot be defaulted",
+    "PVCDO oil volume factor cannot be defaulted",
+    "PVCDO compressibility cannot be defaulted",
+    "PVCDO viscosity cannot be defaulted",
+    "PVCDO viscosibility cannot be defaulted",
+};
+
+template< std::size_t N >
+struct flat_props< PVCDORecord, N > {
+    static constexpr bool can_default() { return false; }
+    static constexpr const char* errmsg() {
+        return pvcdo_err[ N ];
+    }
+};
+
 }
 
 template< typename T >
@@ -1094,6 +1110,9 @@ FlatTable< T >::FlatTable( const DeckKeyword& kw ) :
 
 template FlatTable< DENSITYRecord >::FlatTable( const DeckKeyword& );
 template FlatTable< PVTWRecord >::FlatTable( const DeckKeyword& );
+template FlatTable< PVCDORecord >::FlatTable( const DeckKeyword& );
 template FlatTable< ROCKRecord >::FlatTable( const DeckKeyword& );
+template FlatTable< VISCREFRecord >::FlatTable( const DeckKeyword& );
+template FlatTable< WATDENTRecord >::FlatTable( const DeckKeyword& );
 
 } // namespace Opm

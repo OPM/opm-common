@@ -48,6 +48,43 @@ struct RockTable : public FlatTable< ROCKRecord > {
     using FlatTable< ROCKRecord >::FlatTable;
 };
 
+struct PVCDORecord {
+    static constexpr std::size_t size = 5;
+
+    double reference_pressure;
+    double volume_factor;
+    double compressibility;
+    double viscosity;
+    double viscosibility;
+};
+
+struct PvcdoTable : public FlatTable< PVCDORecord > {
+    using FlatTable< PVCDORecord >::FlatTable;
+};
+
+struct VISCREFRecord {
+    static constexpr std::size_t size = 2;
+
+    double reference_pressure;
+    double reference_rs;
+};
+
+struct ViscrefTable : public FlatTable< VISCREFRecord > {
+    using FlatTable< VISCREFRecord >::FlatTable;
+};
+
+struct WATDENTRecord {
+    static constexpr std::size_t size = 3;
+
+    double reference_temperature;
+    double first_coefficient;
+    double second_coefficient;
+};
+
+struct WatdentTable : public FlatTable< WATDENTRecord > {
+    using FlatTable< WATDENTRecord >::FlatTable;
+};
+
 }
 
 #endif //OPM_FLAT_TABLE_HPP
