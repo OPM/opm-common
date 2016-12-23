@@ -291,6 +291,8 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, const NNC& 
         Tables tables( this->es.getUnits() );
         tables.addPVTO( this->es.getTableManager().getPvtoTables() );
         tables.addPVTG( this->es.getTableManager().getPvtgTables() );
+        tables.addPVTW( this->es.getTableManager().getPvtwTable() );
+        tables.addDensity( this->es.getTableManager().getDensityTable( ) );
         tables.fwrite( fortio );
     }
 

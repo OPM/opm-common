@@ -37,6 +37,7 @@ namespace Opm {
     void Tables::addData( size_t offset_index, const std::vector<double>& new_data) {
         this->tabdims[ offset_index ] = this->data.size();
         this->data.insert( this->data.end() , new_data.begin() , new_data.end());
+        this->tabdims[ TABDIMS_TAB_SIZE_ITEM ] = this->data.size();
     }
 
 
@@ -164,6 +165,51 @@ namespace Opm {
 
             addData( TABDIMS_IBPVTG_OFFSET_ITEM , pvtgData );
             addData( TABDIMS_JBPVTG_OFFSET_ITEM , p_values );
+        }
+    }
+
+    void Tables::addPVTW( const PvtwTable& pvtwTable)
+    {
+        if (pvtwTable.size() > 0) {
+            const double default_value = -2e20;
+            const size_t num_columns = pvtwTable[0].size;
+            std::vector<double> pvtwData( pvtwTable.size() * num_columns , default_value);
+
+            this->tabdims[ TABDIMS_NTPVTW_ITEM ] = pvtwTable.size();
+            for (size_t table_num = 0; table_num < pvtwTable.size(); table_num++) {
+                const auto& record = pvtwTable[table_num];
+                pvtwData[ table_num * num_columns ]    = units.from_si( UnitSystem::measure::pressure , record.reference_pressure);
+                pvtwData[ table_num * num_columns + 1] = 1.0 / record.volume_factor;
+                pvtwData[ table_num * num_columns + 2] = units.to_si( UnitSystem::measure::pressure, record.compressibility);
+                pvtwData[ table_num * num_columns + 3] = record.volume_factor / units.from_si( UnitSystem::measure::viscosity , record.viscosity);
+
+
+                // The last column should contain information about
+                // the viscosibility, however there is clearly a
+                // not-yet-identified transformation involved, we
+                // therefor leave this item defaulted.
+
+                // pvtwData[ table_num * num_columns + 4] = record.viscosibility;
+            }
+            addData( TABDIMS_IBPVTW_OFFSET_ITEM , pvtwData );
+        }
+    }
+
+    void Tables::addDensity( const DensityTable& density)
+    {
+        if (density.size() > 0) {
+            const double default_value = -2e20;
+            const size_t num_columns = density[0].size;
+            std::vector<double> densityData( density.size() * num_columns , default_value);
+
+            this->tabdims[ TABDIMS_NTDENS_ITEM ] = density.size();
+            for (size_t table_num = 0; table_num < density.size(); table_num++) {
+                const auto& record = density[table_num];
+                densityData[ table_num * num_columns ]    = units.from_si( UnitSystem::measure::density , record.oil);
+                densityData[ table_num * num_columns + 1] = units.from_si( UnitSystem::measure::density , record.water);
+                densityData[ table_num * num_columns + 2] = units.from_si( UnitSystem::measure::density , record.gas);
+            }
+            addData( TABDIMS_IBDENS_OFFSET_ITEM , densityData );
         }
     }
 

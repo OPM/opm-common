@@ -27,6 +27,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 
 
 namespace Opm {
@@ -38,7 +39,8 @@ namespace Opm {
         void fwrite( ERT::FortIO& fortio ) const;
         void addPVTO( const std::vector<PvtoTable>& pvtoTables);
         void addPVTG( const std::vector<PvtgTable>& pvtgTables);
-
+        void addPVTW( const PvtwTable& pvtwTable);
+        void addDensity( const DensityTable& density);
 
     private:
         void addData( size_t offset_index , const std::vector<double>& new_data);

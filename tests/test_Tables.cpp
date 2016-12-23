@@ -74,6 +74,8 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
 
     tables.addPVTO( cfg.es.getTableManager().getPvtoTables() );
     tables.addPVTG( cfg.es.getTableManager().getPvtgTables() );
+    tables.addPVTW( cfg.es.getTableManager().getPvtwTable() );
+    tables.addDensity( cfg.es.getTableManager().getDensityTable( ) );
     {
         ERT::FortIO f("TEST.INIT" , std::fstream::out);
         tables.fwrite( f );
@@ -85,6 +87,7 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
         const ecl_kw_type * tabdims = ecl_file_iget_named_kw( f , "TABDIMS" , 0 );
         const ecl_kw_type * tab = ecl_file_iget_named_kw( f , "TAB" , 0 );
 
+        BOOST_CHECK_EQUAL( ecl_kw_get_size( tab ) , ecl_kw_iget_int( tabdims , TABDIMS_TAB_SIZE_ITEM ));
         /* PVTO */
         {
             int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTO_OFFSET_ITEM );
@@ -128,24 +131,33 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
 
 
         /* PVTW */
-        /*
-          This test code should be OK; however it turns out the PVTW
-          tabular data is not really internalized in the EclipseState
-          object so it is commented out for now.
-
         {
             int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTW_OFFSET_ITEM );
             int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NTPVTW_ITEM );
-            BOOST_CHECK_CLOSE( 247.7 , ecl_kw_iget_double( tab , offset ));
-            BOOST_CHECK_CLOSE( 1.0 / 1.03665 , ecl_kw_iget_double( tab , offset + column_stride));
-            BOOST_CHECK_CLOSE( 0.41726E-04 , ecl_kw_iget_double( tab , offset + 2 * column_stride));
-            BOOST_CHECK_CLOSE( 1.03665 / 0.29120 , ecl_kw_iget_double( tab , offset + 3 * column_stride));
+            BOOST_CHECK( ecl_kw_get_size( tab ) >= (offset + column_stride * 5 ));
 
-            // For the last column - WATER_VISCOSIBILITY there is
+            BOOST_CHECK_CLOSE( 247.7 , ecl_kw_iget_double( tab , offset ) , 1e-6 );
+            BOOST_CHECK_CLOSE( 1.0 / 1.03665 , ecl_kw_iget_double( tab , offset + column_stride), 1e-6);
+            BOOST_CHECK_CLOSE( 0.41726E-04 , ecl_kw_iget_double( tab , offset + 2 * column_stride), 1e-6);
+            BOOST_CHECK_CLOSE( 1.03665 / 0.29120 , ecl_kw_iget_double( tab , offset + 3 * column_stride), 1e-6);
+
+            // For the last column - WATER_VISCOSIBILITY - there is
             // clearly a transform involved; not really clear which
             // transform this is. This column is therefor not tested.
+
+            // BOOST_CHECK_CLOSE( f(0.99835E-04) , ecl_kw_iget_double( tab , offset + 4 * column_stride), 1e-6);
         }
-        */
+
+        // Density
+        {
+            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBDENS_OFFSET_ITEM );
+            int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NTDENS_ITEM );
+            BOOST_CHECK( ecl_kw_get_size( tab ) >= (offset + column_stride * 3 ));
+            BOOST_CHECK_CLOSE( 859.5 , ecl_kw_iget_double( tab , offset )     , 1e-6 );
+            BOOST_CHECK_CLOSE( 1033  , ecl_kw_iget_double( tab , offset + 1 ) , 1e-6 );
+            BOOST_CHECK_CLOSE( 0.854 , ecl_kw_iget_double( tab , offset + 2)  , 1e-6 );
+        }
+
         ecl_file_close( f );
     }
 }
