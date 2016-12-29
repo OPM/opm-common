@@ -767,22 +767,22 @@ class Summary::keyword_handlers {
 
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum ,
-                  const EclipseGrid& grid) :
-    Summary( st, sum, grid, st.getIOConfig().fullBasePath().c_str() )
+                  const EclipseGrid& grid_arg) :
+    Summary( st, sum, grid_arg, st.getIOConfig().fullBasePath().c_str() )
 {}
 
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum,
-                  const EclipseGrid& grid,
+                  const EclipseGrid& grid_arg,
                   const std::string& basename ) :
-    Summary( st, sum, grid, basename.c_str() )
+    Summary( st, sum, grid_arg, basename.c_str() )
 {}
 
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum,
-                  const EclipseGrid& grid_,
+                  const EclipseGrid& grid_arg,
                   const char* basename ) :
-    grid( grid_ ),
+    grid( grid_arg ),
     ecl_sum(
             ecl_sum_alloc_writer(
                 basename,

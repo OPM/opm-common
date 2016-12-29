@@ -589,15 +589,15 @@ void EclipseWriter::writeInitial( data::Solution simProps, const NNC& nnc) {
 std::vector< double > serialize_XWEL( const data::Wells& wells,
                                       int report_step,
                                       const std::vector< const Well* > sched_wells,
-                                      const Phases& phase,
+                                      const Phases& phase_spec,
                                       const EclipseGrid& grid ) {
 
     using rt = data::Rates::opt;
 
     std::vector< rt > phases;
-    if( phase.active( Phase::WATER ) ) phases.push_back( rt::wat );
-    if( phase.active( Phase::OIL ) )   phases.push_back( rt::oil );
-    if( phase.active( Phase::GAS ) )   phases.push_back( rt::gas );
+    if( phase_spec.active( Phase::WATER ) ) phases.push_back( rt::wat );
+    if( phase_spec.active( Phase::OIL ) )   phases.push_back( rt::oil );
+    if( phase_spec.active( Phase::GAS ) )   phases.push_back( rt::gas );
 
     std::vector< double > xwel;
     for( const auto* sched_well : sched_wells ) {

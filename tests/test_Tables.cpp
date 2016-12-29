@@ -56,7 +56,7 @@ struct setup {
     EclipseState es;
     ERT::TestArea ta;
 
-    setup( const std::string& name, const std::string& path , const ParseContext& parseContext = ParseContext( )) :
+    setup( const std::string& path , const ParseContext& parseContext = ParseContext( )) :
         deck( Parser().parseFile( path, parseContext ) ),
         es( deck, ParseContext() ),
         ta( ERT::TestArea("test_tables") )
@@ -69,7 +69,7 @@ struct setup {
 
 
 BOOST_AUTO_TEST_CASE(Test_PVTX) {
-    setup cfg( "PVTO" , "table_deck.DATA");
+    setup cfg( "table_deck.DATA");
     Tables tables( cfg.es.getUnits() );
 
     tables.addPVTO( cfg.es.getTableManager().getPvtoTables() );
