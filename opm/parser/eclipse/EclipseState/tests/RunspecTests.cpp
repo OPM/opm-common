@@ -107,3 +107,161 @@ BOOST_AUTO_TEST_CASE(TABDIMS) {
     BOOST_CHECK_EQUAL( tabdims.getNumRSNodes( ) , 20 );
 }
 
+BOOST_AUTO_TEST_CASE( EndpointScalingWithoutENDSCALE ) {
+    const std::string input = R"(
+    RUNSPEC
+    )";
+
+    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    const auto& endscale = runspec.endpoint_scaling();
+
+    BOOST_CHECK( !endscale );
+    BOOST_CHECK( !endscale.directional() );
+    BOOST_CHECK( !endscale.nondirectional() );
+    BOOST_CHECK( !endscale.reversible() );
+    BOOST_CHECK( !endscale.irreversible() );
+}
+
+BOOST_AUTO_TEST_CASE( EndpointScalingDefaulted ) {
+    const std::string input = R"(
+    RUNSPEC
+    ENDSCALE
+        /
+    )";
+
+    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    const auto& endscale = runspec.endpoint_scaling();
+
+    BOOST_CHECK( endscale );
+    BOOST_CHECK( !endscale.directional() );
+    BOOST_CHECK( endscale.nondirectional() );
+    BOOST_CHECK( endscale.reversible() );
+    BOOST_CHECK( !endscale.irreversible() );
+}
+
+BOOST_AUTO_TEST_CASE( EndpointScalingDIRECT ) {
+    const std::string input = R"(
+    RUNSPEC
+    ENDSCALE
+        DIRECT /
+    )";
+
+    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    const auto& endscale = runspec.endpoint_scaling();
+
+    BOOST_CHECK( endscale );
+    BOOST_CHECK( endscale.directional() );
+    BOOST_CHECK( !endscale.nondirectional() );
+    BOOST_CHECK( endscale.reversible() );
+    BOOST_CHECK( !endscale.irreversible() );
+}
+
+BOOST_AUTO_TEST_CASE( EndpointScalingDIRECT_IRREVERS ) {
+    const std::string input = R"(
+    RUNSPEC
+    ENDSCALE
+        direct IRREVERS /
+    )";
+
+    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    const auto& endscale = runspec.endpoint_scaling();
+
+    BOOST_CHECK( endscale );
+    BOOST_CHECK( endscale.directional() );
+    BOOST_CHECK( !endscale.nondirectional() );
+    BOOST_CHECK( !endscale.reversible() );
+    BOOST_CHECK( endscale.irreversible() );
+}
+
+BOOST_AUTO_TEST_CASE( SCALECRS_without_ENDSCALE ) {
+    const std::string input = R"(
+    RUNSPEC
+    SCALECRS
+        /
+    )";
+
+    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    const auto& endscale = runspec.endpoint_scaling();
+
+    BOOST_CHECK( !endscale );
+    BOOST_CHECK( !endscale.twopoint() );
+    BOOST_CHECK( !endscale.threepoint() );
+}
+
+BOOST_AUTO_TEST_CASE( SCALECRS_N ) {
+    const std::string N = R"(
+    RUNSPEC
+    ENDSCALE
+        /
+    SCALECRS
+        N /
+    )";
+
+    const std::string defaulted = R"(
+    RUNSPEC
+    ENDSCALE
+        /
+    SCALECRS
+        /
+    )";
+
+    for( const auto& input : { N, defaulted } ) {
+        Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+        const auto& endscale = runspec.endpoint_scaling();
+
+        BOOST_CHECK( endscale );
+        BOOST_CHECK( endscale.twopoint() );
+        BOOST_CHECK( !endscale.threepoint() );
+    }
+}
+
+BOOST_AUTO_TEST_CASE( SCALECRS_Y ) {
+    const std::string input = R"(
+    RUNSPEC
+    ENDSCALE
+        /
+    SCALECRS
+        Y /
+    )";
+
+    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    const auto& endscale = runspec.endpoint_scaling();
+
+    BOOST_CHECK( endscale );
+    BOOST_CHECK( !endscale.twopoint() );
+    BOOST_CHECK( endscale.threepoint() );
+}
+
+BOOST_AUTO_TEST_CASE( endpoint_scaling_throw_invalid_argument ) {
+
+    const std::string inputs[] = {
+        R"(
+            RUNSPEC
+            ENDSCALE
+            NODIR IRREVERSIBLE / -- irreversible requires direct
+        )",
+        R"(
+            RUNSPEC
+            ENDSCALE
+                * IRREVERSIBLE / -- irreversible requires direct *specified*
+        )",
+        R"(
+            RUNSPEC
+            ENDSCALE -- ENDSCALE can't take arbitrary input (takes enumeration)
+                broken /
+        )",
+        R"(
+            RUNSPEC
+            ENDSCALE
+                /
+            SCALECRS -- SCALECRS takes YES/NO
+                broken /
+        )",
+    };
+
+    for( auto&& input : inputs ) {
+        auto deck = Parser{}.parseString( input, ParseContext{} );
+        std::cout << input << std::endl;
+        BOOST_CHECK_THROW( Runspec{ deck }, std::invalid_argument );
+    }
+}

@@ -51,15 +51,45 @@ class Phases {
         std::bitset< 4 > bits;
 };
 
+class EndpointScaling {
+    public:
+        EndpointScaling() noexcept = default;
+        explicit EndpointScaling( const Deck& );
+
+        /* true if endpoint scaling is enabled, otherwise false */
+        operator bool() const noexcept;
+
+        bool directional() const noexcept;
+        bool nondirectional() const noexcept;
+        bool reversible() const noexcept;
+        bool irreversible() const noexcept;
+        bool twopoint() const noexcept;
+        bool threepoint() const noexcept;
+
+    private:
+        enum class option {
+            any         = 0,
+            directional = 1,
+            reversible  = 2,
+            threepoint  = 3,
+        };
+
+        using ue = std::underlying_type< option >::type;
+        std::bitset< 4 > options;
+};
+
 class Runspec {
     public:
         explicit Runspec( const Deck& );
 
         const Phases& phases() const noexcept;
         const Tabdims&  tabdims() const noexcept;
+        const EndpointScaling& endpoint_scaling() const noexcept;
+
     private:
         Phases active_phases;
         Tabdims m_tabdims;
+        EndpointScaling endscale;
 };
 
 }
