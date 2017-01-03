@@ -75,7 +75,7 @@ namespace Opm
         std::vector< const Well* > getWells() const;
         std::vector< const Well* > getWells(size_t timeStep) const;
         std::vector< const Well* > getWellsMatching( const std::string& ) const;
-        const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep);
+        const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;

@@ -48,6 +48,8 @@
 #include <stdexcept>
 #include <iostream>
 
+using namespace Opm;
+
 namespace {
 
 Opm::Deck createSingleRecordDeck() {
@@ -992,7 +994,7 @@ VFPINJ \n\
 
 
 
-BOOST_AUTO_TEST_CASE(TableContainer) {
+BOOST_AUTO_TEST_CASE(TestTableContainer) {
     auto deck = createSingleRecordDeck();
     Opm::TableManager tables( deck );
     BOOST_CHECK_EQUAL( false , tables.hasTables("SGOF") );
@@ -1251,6 +1253,41 @@ BOOST_AUTO_TEST_CASE( TestParseROCK ) {
     BOOST_CHECK_THROW( rock.at( 2 ), std::out_of_range );
 }
 
+BOOST_AUTO_TEST_CASE( TestParsePVCDO ) {
+    const std::string data = R"(
+      TABDIMS
+        1* 1 /
+
+      PVCDO
+        3600 1.12 1.6e-5 0.88 0.0 /
+    )";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(data, Opm::ParseContext());
+    Opm::TableManager tables( deck );
+    const auto& pvcdo = tables.getPvcdoTable();
+
+    BOOST_CHECK_CLOSE( 3600.00, pvcdo[ 0 ].reference_pressure / 1e5, 1e-5 );
+    BOOST_CHECK_CLOSE( 1.12,    pvcdo[ 0 ].volume_factor, 1e-5 );
+    BOOST_CHECK_CLOSE( 1.6e-5,  pvcdo[ 0 ].compressibility * 1e5, 1e-5 );
+    BOOST_CHECK_CLOSE( 0.88,    pvcdo[ 0 ].viscosity * 1e3, 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0,     pvcdo[ 0 ].viscosibility * 1e5, 1e-5 );
+
+    BOOST_CHECK_THROW( pvcdo.at( 1 ), std::out_of_range );
+
+
+    const std::string malformed = R"(
+      TABDIMS
+        1* 1 /
+
+      PVCDO
+        -- cannot be defaulted
+        3600 1* 1.6e-5 0.88 0.0 /
+    )";
+
+    auto illegal_default = parser.parseString( malformed, ParseContext() );
+    BOOST_CHECK_THROW( TableManager{ illegal_default }, std::invalid_argument );
+}
 
 BOOST_AUTO_TEST_CASE( TestParseTABDIMS ) {
     const char *data =

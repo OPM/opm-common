@@ -90,11 +90,20 @@ namespace Opm {
         if( deck.hasKeyword( "PVTW" ) )
             this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
 
+        if( deck.hasKeyword( "PVCDO" ) )
+            this->m_pvcdoTable = PvcdoTable( deck.getKeyword( "PVCDO" ) );
+
         if( deck.hasKeyword( "DENSITY" ) )
             this->m_densityTable = DensityTable( deck.getKeyword( "DENSITY" ) );
 
         if( deck.hasKeyword( "ROCK" ) )
             this->m_rockTable = RockTable( deck.getKeyword( "ROCK" ) );
+
+        if( deck.hasKeyword( "VISCREF" ) )
+            this->m_viscrefTable = ViscrefTable( deck.getKeyword( "VISCREF" ) );
+
+        if( deck.hasKeyword( "WATDENT" ) )
+            this->m_watdentTable = WatdentTable( deck.getKeyword( "WATDENT" ) );
 
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
@@ -649,12 +658,24 @@ namespace Opm {
         return this->m_pvtwTable;
     }
 
+    const PvcdoTable& TableManager::getPvcdoTable() const {
+        return this->m_pvcdoTable;
+    }
+
     const DensityTable& TableManager::getDensityTable() const {
         return this->m_densityTable;
     }
 
     const RockTable& TableManager::getRockTable() const {
         return this->m_rockTable;
+    }
+
+    const ViscrefTable& TableManager::getViscrefTable() const {
+        return this->m_viscrefTable;
+    }
+
+    const WatdentTable& TableManager::getWatdentTable() const {
+        return this->m_watdentTable;
     }
 
     const TableContainer& TableManager::getMsfnTables() const {

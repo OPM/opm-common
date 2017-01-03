@@ -105,8 +105,11 @@ namespace Opm {
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
         const PvtwTable& getPvtwTable() const;
+        const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
         const RockTable& getRockTable() const;
+        const ViscrefTable& getViscrefTable() const;
+        const WatdentTable& getWatdentTable() const;
         const std::map<int, VFPProdTable>& getVFPProdTables() const;
         const std::map<int, VFPInjTable>& getVFPInjTables() const;
 
@@ -281,8 +284,11 @@ namespace Opm {
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
         PvtwTable m_pvtwTable;
+        PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;
         RockTable m_rockTable;
+        ViscrefTable m_viscrefTable;
+        WatdentTable m_watdentTable;
 
         Tabdims m_tabdims;
         std::shared_ptr<Regdims> m_regdims;
