@@ -58,7 +58,7 @@ class Runspec {
 
         const Phases& phases() const noexcept;
         const Tabdims&  tabdims() const noexcept;
-        const EndpointScaling& endpoint_scaling() const noexcept;
+        const EndpointScaling& endpointScaling() const noexcept;
 
     private:
         Phases active_phases;
