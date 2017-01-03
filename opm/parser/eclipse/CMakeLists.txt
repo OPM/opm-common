@@ -175,6 +175,7 @@ EclipseState/EclipseState.hpp
 EclipseState/EclipseConfig.hpp
 EclipseState/Eclipse3DProperties.hpp
 EclipseState/Runspec.hpp
+EclipseState/EndpointScaling.hpp
 #
 EclipseState/checkDeck.hpp
 #
