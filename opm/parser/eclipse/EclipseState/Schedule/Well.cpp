@@ -98,7 +98,7 @@ namespace Opm {
             case Phase::OIL:   return p.OilRate;
             case Phase::GAS:   return p.GasRate;
             case Phase::SOLVENT:
-                throw std::logic_error( "Production of 'SOLVENT' requested." );
+                throw std::invalid_argument( "Production of 'SOLVENT' requested." );
         }
 
         throw std::logic_error( "Unreachable state. Invalid Phase value. "
