@@ -115,6 +115,15 @@ BOOST_AUTO_TEST_CASE(setWellProductionProperties_PropertiesSetCorrect) {
     BOOST_CHECK_EQUAL(97 , well.getProductionPropertiesCopy( 8 ).WaterRate);
     BOOST_CHECK_EQUAL(96 , well.getProductionPropertiesCopy( 8 ).LiquidRate);
     BOOST_CHECK_EQUAL(95 , well.getProductionPropertiesCopy( 8 ).ResVRate);
+
+    BOOST_CHECK_EQUAL(99, well.production_rate( Opm::Phase::OIL, 5 ) );
+    BOOST_CHECK_EQUAL(99, well.production_rate( Opm::Phase::OIL, 8 ) );
+    BOOST_CHECK_EQUAL(98, well.production_rate( Opm::Phase::GAS, 5 ) );
+    BOOST_CHECK_EQUAL(98, well.production_rate( Opm::Phase::GAS, 8 ) );
+
+    BOOST_CHECK_EQUAL(0.0, well.injection_rate( Opm::Phase::GAS, 8 ) );
+
+    BOOST_CHECK_THROW( well.production_rate( Opm::Phase::SOLVENT, 5 ), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(setOilRate_RateSetCorrect) {
@@ -452,6 +461,12 @@ BOOST_AUTO_TEST_CASE(setSurfaceInjectionRate_RateSetCorrect) {
     well.setInjectionProperties(5, props);
     BOOST_CHECK_EQUAL(108 , well.getInjectionPropertiesCopy(5).surfaceInjectionRate);
     BOOST_CHECK_EQUAL(108 , well.getInjectionPropertiesCopy(8).surfaceInjectionRate);
+
+    BOOST_CHECK_EQUAL( 108, well.injection_rate(Opm::Phase::WATER, 5) );
+    BOOST_CHECK_EQUAL( 108, well.injection_rate(Opm::Phase::WATER, 8) );
+
+    BOOST_CHECK_EQUAL( 0.0, well.injection_rate(Opm::Phase::GAS, 5) );
+    BOOST_CHECK_EQUAL( 0.0, well.injection_rate(Opm::Phase::GAS, 8) );
 }
 
 
