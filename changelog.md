@@ -3,6 +3,22 @@
 A short month-by-month synopsis of change highlights. Most bugfixes won't make
 it in here, only the bigger features and interface changes.
 
+# 2016.12
+* ZCORN adjustments improved, considers cell-cell relations
+* Slightly more robust compilation - won't crash if locales are broken
+* Accessing the PVTW table has a richer interface
+* FAULTS face direction accepts X+, I+, Y+, J+, Z+ and K+
+* WELOPEN can be controlled with completion numbers (last two parameters)
+* COMPLUMP is now supported
+* Don't crash on aquifer keywords
+* GMWSET and FMWSET are expanded properly
+* Don't crash on DEBUG
+* Read support for COORDSYS, GRUPRIG, LGR, PRORDER, TRACERS, TUNINGDP,
+  WDFACCOR, WEFAC, and WORKLIM, no longer crashes.
+* RS and RV support.
+* Support for DENSITY, PVTW, and ROCK tables
+* JFUNC is understood and exposed
+
 # 2016.11
 * A new class, Runspec, for the RUNSPEC section, has been introduced
 * Nodes in the FIELD group are no longer added to the Summary config
