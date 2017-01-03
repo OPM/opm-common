@@ -16,7 +16,7 @@ U& uppercase( const T& src, U& dst ) {
 template< typename T >
 typename std::decay< T >::type uppercase( T&& x ) {
     typename std::decay< T >::type t( std::forward< T >( x ) );
-    return std::move( uppercase( t, t ) );
+    return uppercase( t, t );
 }
 
 }
