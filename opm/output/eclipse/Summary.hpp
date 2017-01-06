@@ -43,8 +43,6 @@ namespace Opm {
 
 namespace out {
 
-    class RegionCache;
-
 class Summary {
     public:
         Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid& );
@@ -54,7 +52,6 @@ class Summary {
         void add_timestep( int report_step,
                            double secs_elapsed,
                            const EclipseState& es,
-                           const RegionCache& regionCache,
                            const data::Wells&,
                            const data::Solution& );
 
@@ -67,6 +64,7 @@ class Summary {
         class keyword_handlers;
 
         const EclipseGrid& grid;
+        out::RegionCache regionCache;
         ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > ecl_sum;
         std::unique_ptr< keyword_handlers > handlers;
         const ecl_sum_tstep_type* prev_tstep = nullptr;

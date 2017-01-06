@@ -783,6 +783,7 @@ Summary::Summary( const EclipseState& st,
                   const EclipseGrid& grid_arg,
                   const char* basename ) :
     grid( grid_arg ),
+    regionCache( st , grid_arg ),
     ecl_sum(
             ecl_sum_alloc_writer(
                 basename,
@@ -837,7 +838,6 @@ Summary::Summary( const EclipseState& st,
 void Summary::add_timestep( int report_step,
                             double secs_elapsed,
                             const EclipseState& es,
-                            const RegionCache& regionCache,
                             const data::Wells& wells ,
                             const data::Solution& state) {
 
@@ -858,7 +858,7 @@ void Summary::add_timestep( int report_step,
                                      num,
                                      wells,
                                      state,
-                                     regionCache,
+                                     this->regionCache,
                                      this->grid,
                                      this->initial_oip } );
 

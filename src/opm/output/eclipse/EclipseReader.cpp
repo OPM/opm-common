@@ -53,70 +53,29 @@ namespace {
     }
 
     inline data::Solution restoreSOLUTION( ecl_file_type* file,
+                                           const std::map<std::string, UnitSystem::measure>& keys,
                                            int numcells,
                                            const UnitSystem& units ) {
 
-        for( const auto* key : { "PRESSURE", "TEMP", "SWAT", "SGAS" } ) {
-            if( !ecl_file_has_kw( file, key ) )
+        data::Solution sol;
+        for (const auto& pair : keys) {
+            const std::string& key = pair.first;
+            UnitSystem::measure dim = pair.second;
+            if( !ecl_file_has_kw( file, key.c_str() ) )
                 throw std::runtime_error("Read of restart file: "
                                          "File does not contain "
-                                         + std::string( key )
+                                         + key
                                          + " data" );
-        }
 
-        const ecl_kw_type * pres = ecl_file_iget_named_kw( file, "PRESSURE", 0 );
-        const ecl_kw_type * temp = ecl_file_iget_named_kw( file, "TEMP", 0 );
-        const ecl_kw_type * swat = ecl_file_iget_named_kw( file, "SWAT", 0 );
-        const ecl_kw_type * sgas = ecl_file_iget_named_kw( file, "SGAS", 0 );
-
-        for( const auto& kw : { pres, temp, swat, sgas } ) {
-            if( ecl_kw_get_size(kw) != numcells)
+            const ecl_kw_type * ecl_kw = ecl_file_iget_named_kw( file , key.c_str() , 0 );
+            if( ecl_kw_get_size(ecl_kw) != numcells)
                 throw std::runtime_error("Restart file: Could not restore "
-                                         + std::string( ecl_kw_get_header( kw ) )
+                                         + std::string( ecl_kw_get_header( ecl_kw ) )
                                          + ", mismatched number of cells" );
-        }
 
-        data::Solution sol;
-
-        {
-            const auto apply_pressure = [&]( double x ) {
-                return units.to_si( UnitSystem::measure::pressure, x );
-            };
-
-            const auto apply_temperature = [=]( double x ) {
-                return units.to_si( UnitSystem::measure::temperature, x );
-            };
-
-            std::vector<double> pressure = double_vector( pres );
-            std::vector<double> temperature = double_vector( temp );
-
-
-            std::transform( pressure.begin(), pressure.end(),
-                            pressure.begin(), apply_pressure );
-            std::transform( temperature.begin(), temperature.end(),
-                            temperature.begin(), apply_temperature );
-
-
-
-            sol.insert( "PRESSURE" , UnitSystem::measure::pressure , pressure , data::TargetType::RESTART_SOLUTION );
-            sol.insert( "TEMP" , UnitSystem::measure::temperature , temperature , data::TargetType::RESTART_SOLUTION );
-            sol.insert( "SWAT" , UnitSystem::measure::identity   , double_vector( swat ) , data::TargetType::RESTART_SOLUTION );
-            sol.insert( "SGAS" , UnitSystem::measure::identity , double_vector( sgas ) , data::TargetType::RESTART_SOLUTION );
-
-            /* optional keywords */
-            if( ecl_file_has_kw( file, "RS" ) ) {
-                const ecl_kw_type * rs_kw = ecl_file_iget_named_kw( file , "RS" , 0);
-                std::vector<double> rs = double_vector( rs_kw );
-                units.to_si( UnitSystem::measure::gas_oil_ratio, rs );
-                sol.insert( "RS" , UnitSystem::measure::gas_oil_ratio , rs , data::TargetType::RESTART_SOLUTION );
-            }
-
-            if( ecl_file_has_kw( file, "RV" ) ) {
-                const ecl_kw_type * rv_kw = ecl_file_iget_named_kw( file , "RV" , 0);
-                std::vector<double> rv = double_vector( rv_kw );
-                units.to_si( UnitSystem::measure::oil_gas_ratio, rv );
-                sol.insert( "RV" , UnitSystem::measure::oil_gas_ratio , rv , data::TargetType::RESTART_SOLUTION );
-            }
+            std::vector<double> data = double_vector( ecl_kw );
+            units.to_si( dim , data );
+            sol.insert( key, dim, data , data::TargetType::RESTART_SOLUTION );
         }
 
         return sol;
@@ -129,9 +88,15 @@ data::Wells restore_wells( const double* xwel_data,
                            const int* iwel_data,
                            size_t iwel_data_size,
                            int restart_step,
-                           const std::vector< const Well* > sched_wells,
-                           const std::vector< rt >& phases,
-                           const EclipseGrid& grid ) {
+                           const EclipseState& es ) {
+
+    const auto& sched_wells = es.getSchedule().getWells( restart_step );
+    const EclipseGrid& grid = es.getInputGrid( );
+    std::vector< rt > phases;
+    const auto& phase = es.runspec().phases();
+    if( phase.active( Phase::WATER ) ) phases.push_back( rt::wat );
+    if( phase.active( Phase::OIL ) )   phases.push_back( rt::oil );
+    if( phase.active( Phase::GAS ) )   phases.push_back( rt::gas );
 
 
     const auto well_size = [&]( size_t acc, const Well* w ) {
@@ -194,7 +159,7 @@ data::Wells restore_wells( const double* xwel_data,
 
 /* should take grid as argument because it may be modified from the simulator */
 std::pair< data::Solution, data::Wells >
-init_from_restart_file( const EclipseState& es, int numcells ) {
+load_from_restart_file( const EclipseState& es, const std::map<std::string, UnitSystem::measure>& keys, int numcells ) {
 
     const InitConfig& initConfig         = es.getInitConfig();
     const auto& ioConfig                 = es.getIOConfig();
@@ -206,14 +171,6 @@ init_from_restart_file( const EclipseState& es, int numcells ) {
                                                         restart_step,
                                                         output);
     const bool unified                   = ioConfig.getUNIFIN();
-    const auto& sched_wells = es.getSchedule().getWells( restart_step );
-
-    std::vector< rt > phases;
-    const auto& phase = es.runspec().phases();
-    if( phase.active( Phase::WATER ) ) phases.push_back( rt::wat );
-    if( phase.active( Phase::OIL ) )   phases.push_back( rt::oil );
-    if( phase.active( Phase::GAS ) )   phases.push_back( rt::gas );
-
     using ft = ERT::ert_unique_ptr< ecl_file_type, ecl_file_close >;
     ft file( ecl_file_open( filename.c_str(), 0 ) );
 
@@ -236,13 +193,11 @@ init_from_restart_file( const EclipseState& es, int numcells ) {
     const auto iwel_size = ecl_kw_get_size( iwel );
 
     return {
-        restoreSOLUTION( file.get(), numcells, es.getUnits() ),
+        restoreSOLUTION( file.get(), keys, numcells, es.getUnits() ),
         restore_wells( xwel_data, xwel_size,
                        iwel_data, iwel_size,
                        restart_step,
-                       sched_wells,
-                       phases,
-                       es.getInputGrid() )
+                       es )
     };
 }
 

@@ -1,4 +1,3 @@
-
 /*
   Copyright 2014 Statoil IT
   This file is part of the Open Porous Media project (OPM).
@@ -22,11 +21,11 @@
 #define BOOST_TEST_DYN_LINK
 #endif
 
-#define BOOST_TEST_MODULE EclipseWriter
+#define BOOST_TEST_MODULE EclipseIO
 #include <boost/test/unit_test.hpp>
 
-#include <opm/output/eclipse/EclipseWriter.hpp>
-#include <opm/output/eclipse/EclipseReader.hpp>
+#include <opm/output/eclipse/EclipseIO.hpp>
+#include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -45,7 +44,7 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl_well/well_info.h>
 #include <ert/ecl_well/well_state.h>
-#include <ert/util/test_work_area.h>
+#include <ert/util/TestArea.hpp>
 
 using namespace Opm;
 
@@ -266,28 +265,6 @@ bool operator==( const Well& lhs, const Well& rhs ) {
 
 }
 
-/*
- * forward declarations of internal functions that we want to expose to tests
- * but not to users.
- */
-std::vector< double > serialize_XWEL( const data::Wells& wells,
-                                      int report_step,
-                                      const std::vector< const Well* > sched_wells,
-                                      const Phases&,
-                                      const EclipseGrid& );
-
-std::vector< int > serialize_IWEL( const data::Wells& wells,
-                                   const std::vector< const Well* > sched_wells );
-
-data::Wells restore_wells( const double* xwel_data,
-                           size_t xwel_data_size,
-                           const int* iwel_data,
-                           size_t iwel_data_size,
-                           int restart_step,
-                           const std::vector< const Well* > sched_wells,
-                           const std::vector< data::Rates::opt >& phases,
-                           const EclipseGrid& grid );
-}
 
 data::Wells mkWells() {
     data::Rates r1, r2, rc1, rc2, rc3;
@@ -368,17 +345,10 @@ data::Solution mkSolution( int numCells ) {
 }
 
 std::pair< data::Solution, data::Wells >
-first_sim(test_work_area_type * test_area) {
-
-    std::string eclipse_data_filename    = "FIRST_SIM.DATA";
-    test_work_area_copy_file(test_area, eclipse_data_filename.c_str());
-
-    auto eclipseState = Parser::parse( eclipse_data_filename );
-
-    const auto& grid = eclipseState.getInputGrid();
+first_sim(const EclipseState& es, EclipseIO& eclWriter) {
+    const auto& grid = es.getInputGrid();
     auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
 
-    EclipseWriter eclWriter( eclipseState, grid);
     auto start_time = ecl_util_make_date( 1, 11, 1979 );
     auto first_step = ecl_util_make_date( 10, 10, 2008 );
 
@@ -393,25 +363,21 @@ first_sim(test_work_area_type * test_area) {
     return { sol, wells };
 }
 
-std::pair< data::Solution, data::Wells > second_sim() {
-    auto eclipseState = Parser::parseData( input() );
-
-    const auto& grid = eclipseState.getInputGrid();
-    auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
-
-    return init_from_restart_file( eclipseState, num_cells );
+std::pair< data::Solution, data::Wells > second_sim(const EclipseIO& writer, const std::map<std::string, UnitSystem::measure>& keys) {
+    return writer.loadRestart( keys );
 }
 
+
 void compare( std::pair< data::Solution, data::Wells > fst,
-              std::pair< data::Solution, data::Wells > snd ) {
+              std::pair< data::Solution, data::Wells > snd ,
+              const std::map<std::string, UnitSystem::measure>& keys) {
 
-    for( auto key : { "PRESSURE", "TEMP", "SWAT", "SGAS",
-                      "RS", "RV" } ) {
+    for (const auto& pair : keys) {
 
-        auto first = fst.first.data( key ).begin();
-        auto second = snd.first.data( key ).begin();
+        auto first = fst.first.data( pair.first ).begin();
+        auto second = snd.first.data( pair.first ).begin();
 
-        for( ; first != fst.first.data( key ).end(); ++first, ++second )
+        for( ; first != fst.first.data( pair.first ).end(); ++first, ++second )
             BOOST_CHECK_CLOSE( *first, *second, 0.00001 );
     }
 
@@ -419,38 +385,23 @@ void compare( std::pair< data::Solution, data::Wells > fst,
 }
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
-    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
+    std::map<std::string, UnitSystem::measure> keys {{"PRESSURE" , UnitSystem::measure::pressure},
+                                                     {"SWAT" , UnitSystem::measure::identity},
+                                                     {"SGAS" , UnitSystem::measure::identity},
+                                                     {"TEMP" , UnitSystem::measure::temperature}};
+    ERT::TestArea testArea("test_Restart");
+    testArea.copyFile( "FIRST_SIM.DATA" );
 
-    auto state1 = first_sim(test_area);
-    auto state2 = second_sim();
-    compare(state1, state2);
+    auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
+    const auto& grid = eclipseState.getInputGrid();
+    EclipseIO eclWriter( eclipseState, grid);
+    auto state1 = first_sim( eclipseState , eclWriter );
+    auto state2 = second_sim( eclWriter , keys );
+    compare(state1, state2 , keys);
 
-    test_work_area_free(test_area);
+    {
+        std::map<std::string, UnitSystem::measure> extra_keys {{"SOIL" , UnitSystem::measure::pressure}};
+        BOOST_CHECK_THROW( second_sim( eclWriter, extra_keys ) , std::runtime_error );
+    }
 }
-
-BOOST_AUTO_TEST_CASE(OPM_XWEL) {
-    auto es = Parser::parseData( input( "XWEL" ) );
-    const auto& sched = es.getSchedule();
-    const auto& grid = es.getInputGrid();
-    const auto& ph = es.runspec().phases();
-
-    std::vector< data::Rates::opt > phases {
-        data::Rates::opt::wat,
-        data::Rates::opt::oil,
-        data::Rates::opt::gas,
-    };
-
-    const auto wells = mkWells();
-    const auto& sched_wells = sched.getWells( 1 );
-    const auto xwel = serialize_XWEL( wells, 1, sched_wells, ph, grid );
-    const auto iwel = serialize_IWEL( wells, sched_wells );
-
-    const auto restored_wells = restore_wells( xwel.data(), xwel.size(),
-                                               iwel.data(), iwel.size(),
-                                               1,
-                                               sched.getWells( 1 ),
-                                               phases,
-                                               grid );
-
-    BOOST_CHECK_EQUAL( wells, restored_wells );
 }

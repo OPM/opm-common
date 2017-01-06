@@ -27,7 +27,7 @@
 #include <boost/test/unit_test.hpp>
 #include <opm/common/utility/platform_dependent/reenable_warnings.h>
 
-#include <opm/output/eclipse/EclipseWriter.hpp>
+#include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
     auto es = Parser::parse( eclipse_data_filename, ParseContext() );
     const auto num_cells = es.getInputGrid().getCartesianSize();
-    EclipseWriter eclipseWriter( es,  es.getInputGrid() );
+    EclipseIO eclipseWriter( es,  es.getInputGrid() );
 
     int countTimeStep = es.getSchedule().getTimeMap().numTimesteps();
 

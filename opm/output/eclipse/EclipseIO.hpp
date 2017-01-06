@@ -42,13 +42,13 @@ class EclipseState;
  * \brief A class to write the reservoir state and the well state of a
  *        blackoil simulation to disk using the Eclipse binary format.
  */
-class EclipseWriter {
+class EclipseIO {
 public:
     /*!
      * \brief Sets the common attributes required to write eclipse
      *        binary files using ERT.
      */
-    EclipseWriter( const EclipseState&, EclipseGrid );
+    EclipseIO( const EclipseState&, EclipseGrid );
 
 
 
@@ -84,23 +84,49 @@ public:
      * permeabilities KRO, KRW and KRG and fluxes. The keywords which
      * can be added here are represented with mnenonics in the RPTRST
      * keyword.
-     *
-     * By default the various solution fields like PRESSURE and
-     * SWAT/SGAS should be written in single precision (i.e. as
-     * float). That is what eclipse does, and probably what most third
-     * party application expect - however passing false for the
-     * optional variable write_float the solution fields will be
-     * written in double precision.
      */
+
     void writeTimeStep( int report_step,
                         bool isSubstep,
                         double seconds_elapsed,
                         data::Solution,
-                        data::Wells,
-                        bool write_float = true);
+                        data::Wells);
 
-    EclipseWriter( const EclipseWriter& ) = delete;
-    ~EclipseWriter();
+
+    /*
+      Will load solution data and wellstate from the restart
+      file. This method will consult the IOConfig object to get
+      filename and report step to restart from.
+
+      The map keys should be a map of keyword names and their
+      corresponding dimension object, i.e. to load the state from a
+      simple two phase simulation you would pass:
+
+         keys = {{"PRESSURE" , UnitSystem::measure::pressure},
+                 {"SWAT" , UnitSystem::measure::identity }}
+
+      For a three phase black oil simulation you would add pairs for
+      SGAS, RS and RV. If you ask for keys which are not found in the
+      restart file an exception will be raised, the happens if the
+      size of a vector is wrong.
+
+      The function will consult the InitConfig object in the
+      EclipseState object to determine which file and report step to
+      load.
+
+      The return value is of type 'data::Solution', which is the same
+      container type which is used by the EclipseIO, but observe
+      that the dim and target elements carry no information:
+
+         - The returned double data has been converted to SI.
+         . The target is unconditionally set to 'RESTART_SOLUTION'
+    */
+    std::pair< data::Solution, data::Wells >
+    loadRestart(const std::map<std::string, UnitSystem::measure>& keys) const;
+
+
+    EclipseIO( const EclipseIO& ) = delete;
+    ~EclipseIO();
 
 private:
     class Impl;

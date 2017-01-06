@@ -22,10 +22,10 @@
 #define BOOST_TEST_DYN_LINK
 #endif
 
-#define BOOST_TEST_MODULE EclipseWriter
+#define BOOST_TEST_MODULE EclipseIO
 #include <boost/test/unit_test.hpp>
 
-#include <opm/output/eclipse/EclipseWriter.hpp>
+#include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/data/Cells.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -109,7 +109,7 @@ void compareErtData(const std::vector<int> &src, const std::vector<int> &dst)
 }
 
 void checkEgridFile( const EclipseGrid& eclGrid ) {
-    // use ERT directly to inspect the EGRID file produced by EclipseWriter
+    // use ERT directly to inspect the EGRID file produced by EclipseIO
     auto egridFile = fortio_open_reader("FOO.EGRID", /*isFormated=*/0, ECL_ENDIAN_FLIP);
 
     const auto numCells = eclGrid.getNX() * eclGrid.getNY() * eclGrid.getNZ();
@@ -146,7 +146,7 @@ void checkEgridFile( const EclipseGrid& eclGrid ) {
 }
 
 void checkInitFile( const Deck& deck, const data::Solution& simProps) {
-    // use ERT directly to inspect the INIT file produced by EclipseWriter
+    // use ERT directly to inspect the INIT file produced by EclipseIO
     ERT::ert_unique_ptr<ecl_file_type , ecl_file_close> initFile(ecl_file_open( "FOO.INIT" , 0 ));
 
     for (int k=0; k < ecl_file_get_size(  initFile.get() ); k++) {
@@ -184,7 +184,7 @@ void checkRestartFile( int timeStepIdx ) {
     for (int i = 1; i <= timeStepIdx; ++i) {
         auto sol = createBlackoilState( i, 3 * 3 * 3 );
 
-        // use ERT directly to inspect the restart file produced by EclipseWriter
+        // use ERT directly to inspect the restart file produced by EclipseIO
         auto rstFile = fortio_open_reader("FOO.UNRST", /*isFormated=*/0, ECL_ENDIAN_FLIP);
 
         int curSeqnum = -1;
@@ -226,7 +226,7 @@ void checkRestartFile( int timeStepIdx ) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
+BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
     const char *deckString =
         "RUNSPEC\n"
         "UNIFOUT\n"
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriterIntegration) {
         auto& eclGrid = es.getInputGrid();
         es.getIOConfig().setBaseName( "FOO" );
 
-        EclipseWriter eclWriter( es, eclGrid );
+        EclipseIO eclWriter( es, eclGrid );
 
         using measure = UnitSystem::measure;
         using TargetType = data::TargetType;

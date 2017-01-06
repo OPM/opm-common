@@ -26,7 +26,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <opm/output/eclipse/EclipseWriter.hpp>
+#include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
 
-        EclipseWriter eclipseWriter( eclipseState, grid);
+        EclipseIO eclipseWriter( eclipseState, grid);
         time_t start_time = eclipseState.getSchedule().posixStartTime();
         /* step time read from deck and hard-coded here */
         time_t step_time = ecl_util_make_date(10, 10, 2008 );
