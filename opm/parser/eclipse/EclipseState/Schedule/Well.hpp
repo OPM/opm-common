@@ -105,6 +105,9 @@ namespace Opm {
         double production_rate( Phase phase, size_t timestep ) const;
         double injection_rate( Phase phase, size_t timestep ) const;
 
+        bool operator==(const Well&) const;
+        bool operator!=(const Well&) const;
+
         bool                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
         WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;
         const WellProductionProperties& getProductionProperties(size_t timeStep)  const;

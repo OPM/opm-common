@@ -55,6 +55,9 @@ namespace Opm {
 inline std::ostream& operator<<( std::ostream& stream, const Completion& c ) {
     return stream << "(" << c.getI() << "," << c.getJ() << "," << c.getK() << ")";
 }
+inline std::ostream& operator<<( std::ostream& stream, const Well& well ) {
+    return stream << "(" << well.name() << ")";
+}
 }
 
 BOOST_AUTO_TEST_CASE(CreateWell_CorrectNameAndDefaultValues) {
@@ -63,6 +66,23 @@ BOOST_AUTO_TEST_CASE(CreateWell_CorrectNameAndDefaultValues) {
     BOOST_CHECK_EQUAL( "WELL1" , well.name() );
     BOOST_CHECK_EQUAL(0.0 , well.getProductionPropertiesCopy(5).OilRate);
 }
+
+BOOST_AUTO_TEST_CASE(CreateWell_Equals) {
+    auto timeMap = createXDaysTimeMap(10);
+    auto timeMap2 = createXDaysTimeMap(11);
+    Opm::Well well1("WELL1" ,  0, 0, 0.0, Opm::Phase::OIL, timeMap , 0);
+    Opm::Well well2("WELL1" ,  0, 0, 0.0, Opm::Phase::OIL, timeMap , 0);
+    Opm::Well well3("WELL3" ,  0, 0, 0.0, Opm::Phase::OIL, timeMap , 0);
+    Opm::Well well4("WELL3" ,  0, 0, 0.0, Opm::Phase::OIL, timeMap2 , 0);
+    BOOST_CHECK_EQUAL( well1, well1 );
+    BOOST_CHECK_EQUAL( well2, well1 );
+    BOOST_CHECK( well1 == well2 );
+    BOOST_CHECK( well1 != well3 );
+    BOOST_CHECK( well3 != well2 );
+    BOOST_CHECK( well3 == well3 );
+    BOOST_CHECK( well4 != well3 );
+}
+
 
 BOOST_AUTO_TEST_CASE(CreateWell_GetProductionPropertiesShouldReturnSameObject) {
     auto timeMap = createXDaysTimeMap(10);

@@ -88,6 +88,17 @@ namespace Opm {
     }
 
 
+    bool Well::operator==(const Well& other) const {
+        return this->m_creationTimeStep == other.m_creationTimeStep
+            && this->m_name == other.m_name
+            && this->m_preferredPhase == other.m_preferredPhase
+            && this->timesteps == other.timesteps;
+    }
+
+    bool Well::operator!=(const Well& other) const {
+        return !(*this == other);
+    }
+
     double Well::production_rate( Phase phase, size_t timestep ) const {
         if( !this->isProducer( timestep ) ) return 0.0;
 
