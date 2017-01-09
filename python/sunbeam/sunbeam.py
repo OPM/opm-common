@@ -42,6 +42,12 @@ def delegate(delegate_cls, to = '_sun'):
 
 @delegate(lib.Schedule)
 class Schedule(object):
+
+    def __repr__(self):
+        lt = len(self.timesteps)
+        lw = len(self.wells)
+        return 'Schedule(timesteps: %d, wells: %d)' % (lt, lw)
+
     @property
     def wells(self):
         return map(Well, self._wells)
@@ -57,6 +63,9 @@ class Schedule(object):
 
 @delegate(lib.EclipseState)
 class EclipseState(object):
+    def __repr__(self):
+        return 'EclipseState(title = "%s")' % self.title
+
     @property
     def schedule(self):
         return Schedule(self._schedule())
@@ -68,6 +77,9 @@ class Well(object):
         if timestep is None:
             return self.I(), self.J(), self.ref()
         return self.I(timestep), self.J(timestep), self.ref(timestep)
+
+    def __repr__(self):
+        return 'Well(name = "%s")' % self.name
 
     @staticmethod
     def defined(timestep):
