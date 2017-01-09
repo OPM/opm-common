@@ -105,13 +105,17 @@ namespace {
 
             /* optional keywords */
             if( ecl_file_has_kw( file, "RS" ) ) {
-                const ecl_kw_type * rs = ecl_file_iget_named_kw( file , "RS" , 0);
-                sol.insert( "RS" , UnitSystem::measure::identity , double_vector( rs ) , data::TargetType::RESTART_SOLUTION );
+                const ecl_kw_type * rs_kw = ecl_file_iget_named_kw( file , "RS" , 0);
+                std::vector<double> rs = double_vector( rs_kw );
+                units.to_si( UnitSystem::measure::gas_oil_ratio, rs );
+                sol.insert( "RS" , UnitSystem::measure::gas_oil_ratio , rs , data::TargetType::RESTART_SOLUTION );
             }
 
             if( ecl_file_has_kw( file, "RV" ) ) {
-                const ecl_kw_type * rv = ecl_file_iget_named_kw( file , "RV" , 0);
-                sol.insert( "RV" , UnitSystem::measure::identity , double_vector( rv ) , data::TargetType::RESTART_SOLUTION );
+                const ecl_kw_type * rv_kw = ecl_file_iget_named_kw( file , "RV" , 0);
+                std::vector<double> rv = double_vector( rv_kw );
+                units.to_si( UnitSystem::measure::oil_gas_ratio, rv );
+                sol.insert( "RV" , UnitSystem::measure::oil_gas_ratio , rv , data::TargetType::RESTART_SOLUTION );
             }
         }
 
