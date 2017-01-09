@@ -142,6 +142,7 @@
         "WSTAT",
         "WMCTL",
         "WMCON",
+        "WOVPR",
         "WEPR",
         "WEPT",
         "WEFF",
