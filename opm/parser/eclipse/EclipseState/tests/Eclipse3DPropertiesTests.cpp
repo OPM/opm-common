@@ -74,6 +74,8 @@ static Opm::Deck createDeck() {
             "1000*1 /\n"
             "SATNUM\n"
             "1000*2 /\n"
+            "ROCKNUM\n"
+            "200*1 200*2 200*3 400*4 /\n"
             "\n";
 
     Opm::Parser parser;
@@ -194,7 +196,7 @@ BOOST_AUTO_TEST_CASE(SupportsProperty) {
     Setup s(createDeck());
     std::vector<std::string> keywordList = {
         // int props
-        "ACTNUM", "SATNUM", "IMBNUM", "PVTNUM", "EQLNUM", "ENDNUM", "FLUXNUM", "MULTNUM", "FIPNUM", "MISCNUM", "OPERNUM",
+        "ACTNUM", "SATNUM", "IMBNUM", "PVTNUM", "EQLNUM", "ENDNUM", "FLUXNUM", "MULTNUM", "FIPNUM", "MISCNUM", "OPERNUM", "ROCKNUM",
         // double props
         "TEMPI", "MULTPV", "PERMX", "permy", "PERMZ", "SWATINIT", "THCONR", "NTG"
     };
@@ -242,6 +244,25 @@ BOOST_AUTO_TEST_CASE(AddregIntSetCorrectly) {
                 BOOST_CHECK_EQUAL(21, property.iget(i, j, 0));
         }
 
+}
+
+BOOST_AUTO_TEST_CASE(RocknumTest) {
+    Setup s(createDeck());
+    const auto& rocknum = s.props.getIntGridProperty("ROCKNUM");
+    for (size_t i = 0; i < 10; i++) {
+        for (size_t j = 0; j < 10; j++) {
+            for (size_t k = 0; k < 10; k++) {
+                if (k < 2)
+                    BOOST_CHECK_EQUAL(1, rocknum.iget(i, j, k));
+                else if (k < 4)
+                    BOOST_CHECK_EQUAL(2, rocknum.iget(i, j, k));
+                else if (k < 6)
+                    BOOST_CHECK_EQUAL(3, rocknum.iget(i, j, k));
+                else
+                    BOOST_CHECK_EQUAL(4, rocknum.iget(i, j, k));
+            }
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(PermxUnitAppliedCorrectly) {

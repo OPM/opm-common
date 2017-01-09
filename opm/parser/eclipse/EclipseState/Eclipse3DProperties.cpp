@@ -187,16 +187,19 @@ namespace Opm {
 
     static std::vector< GridProperties< int >::SupportedKeywordInfo >
     makeSupportedIntKeywords() {
-        return { GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "ENDNUM" , 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "FLUXNUM", 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "FIPNUM" , 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" ),
-                GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1" ) };
+        return {
+            GridProperties< int >::SupportedKeywordInfo( "ENDNUM" , 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "FIPNUM" , 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "FLUXNUM", 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "ROCKNUM", 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" )
+        };
     }
 
 
