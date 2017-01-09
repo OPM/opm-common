@@ -12,7 +12,7 @@ set (opm-flowdiagnostics-applications_DEPS
 	# compile with C++0x/11 support if available
 	"CXX11Features REQUIRED"
 	"Boost 1.44.0
-		COMPONENTS filesystem system unit_test_framework REQUIRED"
+		COMPONENTS filesystem regex system unit_test_framework REQUIRED"
 	"ERT REQUIRED"
 	# prerequisite OPM modules
 	"opm-common REQUIRED;
