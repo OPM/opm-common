@@ -13,6 +13,41 @@ using namespace Opm;
 
 namespace {
 
+namespace state {
+    py::list getNNC( const EclipseState& state ) {
+        py::list l;
+        for( const auto& x : state.getInputNNC().nncdata() )
+            l.append( py::make_tuple( x.cell1, x.cell2, x.trans )  );
+        return l;
+    }
+}
+
+namespace props {
+py::list getitem( const Eclipse3DProperties& p, const std::string& kw) {
+    const auto& ip = p.getIntProperties();
+    if (ip.supportsKeyword(kw) && ip.hasKeyword(kw))
+        return iterable_to_pylist(p.getIntGridProperty(kw).getData());
+
+    const auto& dp = p.getDoubleProperties();
+    if (dp.supportsKeyword(kw) && dp.hasKeyword(kw))
+        return iterable_to_pylist(p.getDoubleGridProperty(kw).getData());
+    throw key_error( "no such grid property " + kw );
+}
+
+bool contains( const Eclipse3DProperties& p, const std::string& kw) {
+    return
+        (p.getIntProperties().supportsKeyword(kw) &&
+         p.getIntProperties().hasKeyword(kw))
+        ||
+        (p.getDoubleProperties().supportsKeyword(kw) &&
+         p.getDoubleProperties().hasKeyword(kw))
+        ;
+}
+py::list regions( const Eclipse3DProperties& p, const std::string& kw) {
+    return iterable_to_pylist( p.getRegions(kw) );
+}
+}
+
 namespace group {
 py::list wellnames( const Group& g, size_t timestep ) {
     return iterable_to_pylist( g.getWells( timestep )  );
@@ -112,6 +147,15 @@ py::def( "parse", parse );
 py::class_< EclipseState >( "EclipseState", py::no_init )
     .add_property( "title", &EclipseState::getTitle )
     .def( "_schedule", &EclipseState::getSchedule, ref() )
+    .def( "_props",    &EclipseState::get3DProperties, ref() )
+    .def( "has_input_nnc",   &EclipseState::hasInputNNC )
+    .def( "input_nnc",      state::getNNC )
+    ;
+
+py::class_< Eclipse3DProperties >( "Eclipse3DProperties", py::no_init )
+    .def( "getRegions",   props::regions )
+    .def( "__contains__", props::contains )
+    .def( "__getitem__",  props::getitem )
     ;
 
 py::class_< Well >( "Well", py::no_init )

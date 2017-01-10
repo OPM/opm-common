@@ -61,6 +61,12 @@ class Schedule(object):
         def not_field(x): return x.name != 'FIELD'
         return map(mk, filter(not_field, self._groups))
 
+@delegate(lib.Eclipse3DProperties)
+class Eclipse3DProperties(object):
+
+    def __repr__(self):
+        return 'Eclipse3DProperties()'
+
 @delegate(lib.EclipseState)
 class EclipseState(object):
     def __repr__(self):
@@ -69,6 +75,9 @@ class EclipseState(object):
     @property
     def schedule(self):
         return Schedule(self._schedule())
+
+    def props(self):
+        return Eclipse3DProperties(self._props())
 
 @delegate(lib.Well)
 class Well(object):
