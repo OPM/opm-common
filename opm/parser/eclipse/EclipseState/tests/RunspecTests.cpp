@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE( EndpointScalingWithoutENDSCALE ) {
     )";
 
     Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
-    const auto& endscale = runspec.endpoint_scaling();
+    const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( !endscale );
     BOOST_CHECK( !endscale.directional() );
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE( EndpointScalingDefaulted ) {
     )";
 
     Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
-    const auto& endscale = runspec.endpoint_scaling();
+    const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( endscale );
     BOOST_CHECK( !endscale.directional() );
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE( EndpointScalingDIRECT ) {
     )";
 
     Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
-    const auto& endscale = runspec.endpoint_scaling();
+    const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( endscale );
     BOOST_CHECK( endscale.directional() );
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE( EndpointScalingDIRECT_IRREVERS ) {
     )";
 
     Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
-    const auto& endscale = runspec.endpoint_scaling();
+    const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( endscale );
     BOOST_CHECK( endscale.directional() );
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE( SCALECRS_without_ENDSCALE ) {
     )";
 
     Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
-    const auto& endscale = runspec.endpoint_scaling();
+    const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( !endscale );
     BOOST_CHECK( !endscale.twopoint() );
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE( SCALECRS_N ) {
 
     for( const auto& input : { N, defaulted } ) {
         Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
-        const auto& endscale = runspec.endpoint_scaling();
+        const auto& endscale = runspec.endpointScaling();
 
         BOOST_CHECK( endscale );
         BOOST_CHECK( endscale.twopoint() );
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE( SCALECRS_Y ) {
     )";
 
     Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
-    const auto& endscale = runspec.endpoint_scaling();
+    const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( endscale );
     BOOST_CHECK( !endscale.twopoint() );

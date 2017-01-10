@@ -80,7 +80,7 @@ const Tabdims& Runspec::tabdims() const noexcept {
     return this->m_tabdims;
 }
 
-const EndpointScaling& Runspec::endpoint_scaling() const noexcept {
+const EndpointScaling& Runspec::endpointScaling() const noexcept {
     return this->endscale;
 }
 
