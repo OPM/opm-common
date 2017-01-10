@@ -1,6 +1,0 @@
-#!/usr/bin/env python
-
-import unittest
-import six
-
-print('No tests, all ok')
