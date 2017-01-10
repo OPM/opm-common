@@ -321,16 +321,26 @@ BOOST_AUTO_TEST_CASE(getRegions) {
             "TOPS\n"
             "4*0.25 /\n"
             "REGIONS\n"
+            "FIPPGDX\n"
+            "2 1 1 2 /\n"
+            "FIPREG\n"
+            "3 2 3 2 /\n"
             "FIPNUM\n"
             "1 1 2 3 /\n";
 
     Setup s( Opm::Parser().parseString(input, Opm::ParseContext() ) );
 
     std::vector< int > ref = { 1, 2, 3 };
-    const auto regions = s.props.getRegions( "FIPNUM" );
+    const auto& regions = s.props.getRegions( "FIPNUM" );
 
     BOOST_CHECK_EQUAL_COLLECTIONS( ref.begin(), ref.end(),
                                    regions.begin(), regions.end() );
 
     BOOST_CHECK( s.props.getRegions( "EQLNUM" ).empty() );
+    BOOST_CHECK( ! s.props.getRegions( "FIPPGDX" ).empty() );
+
+    const auto& fipreg = s.props.getRegions( "FIPREG" );
+    BOOST_CHECK_EQUAL( 2, fipreg.at(0) );
+    BOOST_CHECK_EQUAL( 3, fipreg.at(1) );
+
 }

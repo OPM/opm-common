@@ -190,7 +190,6 @@ namespace Opm {
         return {
             GridProperties< int >::SupportedKeywordInfo( "ENDNUM" , 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "FIPNUM" , 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "FLUXNUM", 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" ),
