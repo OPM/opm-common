@@ -5,7 +5,11 @@ import sunbeam
 spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
 
 class TestSchedule(unittest.TestCase):
+    spe3 = None
+
     def setUp(self):
+        if self.spe3 is None:
+            self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
         self.sch = spe3.schedule
 
     def testWells(self):
