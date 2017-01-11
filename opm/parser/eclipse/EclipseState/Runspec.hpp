@@ -46,7 +46,6 @@ class Phases {
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
-
     private:
         std::bitset< 4 > bits;
 };
@@ -59,8 +58,9 @@ class Runspec {
         const Phases& phases() const noexcept;
         const Tabdims&  tabdims() const noexcept;
         const EndpointScaling& endpointScaling() const noexcept;
+        int eclPhaseMask( ) const noexcept;
 
-    private:
+   private:
         Phases active_phases;
         Tabdims m_tabdims;
         EndpointScaling endscale;
