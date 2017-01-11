@@ -69,6 +69,7 @@ namespace Opm {
         };
 
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
+        explicit UnitSystem(ert_ecl_unit_enum ecl_type);
 
         const std::string& getName() const;
         UnitType getType() const;
