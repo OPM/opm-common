@@ -54,7 +54,6 @@ namespace Opm {
                             const EclipseGrid& eclipseGrid);
 
 
-        const GridProperty<int>& getRegion(const DeckItem& regionItem) const;
         std::vector< int > getRegions( const std::string& keyword ) const;
         std::string getDefaultRegionKeyword() const;
 
@@ -70,6 +69,7 @@ namespace Opm {
         MessageContainer getMessageContainer();
 
     private:
+        const GridProperty<int>& getRegion(const DeckItem& regionItem) const;
         void processGridProperties(const Deck& deck,
                                    const EclipseGrid& eclipseGrid);
 
