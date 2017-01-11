@@ -332,9 +332,9 @@ RFT::RFT( const char* output_dir,
 inline ert_ecl_unit_enum to_ert_unit( UnitSystem::UnitType t ) {
     using ut = UnitSystem::UnitType;
     switch ( t ) {
-        case ut::UNIT_TYPE_METRIC: return ERT_ECL_METRIC_UNITS;
-        case ut::UNIT_TYPE_FIELD:  return ERT_ECL_FIELD_UNITS;
-        case ut::UNIT_TYPE_LAB:    return ERT_ECL_LAB_UNITS;
+        case ut::UNIT_TYPE_METRIC: return ECL_METRIC_UNITS;
+        case ut::UNIT_TYPE_FIELD:  return ECL_FIELD_UNITS;
+        case ut::UNIT_TYPE_LAB:    return ECL_LAB_UNITS;
     }
 
     throw std::invalid_argument("unhandled enum value");
@@ -464,6 +464,7 @@ void EclipseWriter::Impl::writeINITFile( const data::Solution& simProps, const N
         ecl_init_file_fwrite_header( fortio.get(),
                                      this->grid.c_ptr(),
                                      NULL,
+                                     to_ert_unit( units.getType( ) ),
                                      this->ert_phase_mask,
                                      this->sim_start_time);
 
@@ -745,6 +746,7 @@ void EclipseWriter::writeTimeStep(int report_step,
             rsthead_data.ncwmax     = ncwmax;
             rsthead_data.phase_sum  = this->impl->ert_phase_mask;
             rsthead_data.sim_days   = days;
+            rsthead_data.unit_system= to_ert_unit( units.getType() );
 
             restartHandle.writeHeader( report_step, &rsthead_data);
         }
