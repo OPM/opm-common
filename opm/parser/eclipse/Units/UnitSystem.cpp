@@ -364,6 +364,18 @@ namespace {
     }
 
 
+    ert_ecl_unit_enum UnitSystem::getEclType() const {
+        switch ( m_unittype ) {
+          case UnitType::UNIT_TYPE_METRIC: return ECL_METRIC_UNITS;
+          case UnitType::UNIT_TYPE_FIELD:  return ECL_FIELD_UNITS;
+          case UnitType::UNIT_TYPE_LAB:    return ECL_LAB_UNITS;
+        default:
+            throw std::runtime_error("What has happened here?");
+        }
+    }
+
+
+
     Dimension UnitSystem::parseFactor(const std::string& dimension) const {
         std::vector<std::string> dimensionList;
         boost::split(dimensionList , dimension , boost::is_any_of("*"));
