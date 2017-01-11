@@ -16,3 +16,13 @@ class TestState(unittest.TestCase):
 
     def test_state_nnc(self):
         self.assertFalse(self.state.has_input_nnc())
+
+    def test_grid(self):
+        self.assertEqual(9, self.state.getNX())
+        self.assertEqual(9, self.state.getNY())
+        self.assertEqual(4, self.state.getNZ())
+        self.assertEqual(9*9*4, self.state.nactive())
+        self.assertEqual(9*9*4, self.state.cartesianSize())
+        g,i,j,k = 295,7,5,3
+        self.assertEqual(g, self.state.globalIndex(i,j,k))
+        self.assertEqual((i,j,k), self.state.getIJK(g))

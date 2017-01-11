@@ -72,6 +72,13 @@ class EclipseState(object):
     def __repr__(self):
         return 'EclipseState(title = "%s")' % self.title
 
+    def getNX(self):
+        return self._getXYZ()[0]
+    def getNY(self):
+        return self._getXYZ()[1]
+    def getNZ(self):
+        return self._getXYZ()[2]
+
     @property
     def schedule(self):
         return Schedule(self._schedule())
