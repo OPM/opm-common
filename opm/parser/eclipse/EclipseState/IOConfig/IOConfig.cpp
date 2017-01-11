@@ -32,9 +32,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <ert/ecl/ecl_util.h>
 
-
+#include <ert/ecl/EclFilename.hpp>
 
 
 namespace Opm {
@@ -180,13 +179,9 @@ namespace Opm {
     std::string IOConfig::getRestartFileName(const std::string& restart_base, int report_step, bool output) const {
         bool unified  = output ? getUNIFOUT() : getUNIFIN();
         bool fmt_file = output ? getFMTOUT()  : getFMTIN();
-
         ecl_file_enum file_type = (unified) ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE;
-        char * c_str = ecl_util_alloc_filename( NULL , restart_base.c_str() , file_type, fmt_file , report_step);
-        std::string restart_filename = c_str;
-        free( c_str );
 
-        return restart_filename;
+        return ERT::EclFilename( restart_base , file_type , report_step , fmt_file );
     }
 
 
