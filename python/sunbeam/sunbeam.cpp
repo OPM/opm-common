@@ -20,6 +20,24 @@ namespace state {
             l.append( py::make_tuple( x.cell1, x.cell2, x.trans )  );
         return l;
     }
+    py::tuple getXYZ( const EclipseState& state ) {
+        return py::make_tuple( state.getInputGrid().getNX(),
+                               state.getInputGrid().getNY(),
+                               state.getInputGrid().getNZ());
+    }
+    int getNumActive( const EclipseState& state ) {
+        return state.getInputGrid().getNumActive();
+    }
+    int getCartesianSize( const EclipseState& state ) {
+        return state.getInputGrid().getCartesianSize();
+    }
+    int getGlobalIndex( const EclipseState& state, int i, int j, int k ) {
+        return state.getInputGrid().getGlobalIndex(i, j, k);
+    }
+    py::tuple getIJK( const EclipseState& state, int g ) {
+        const auto& ijk = state.getInputGrid().getIJK(g);
+        return py::make_tuple(ijk[0], ijk[1], ijk[2]);
+    }
 }
 
 namespace props {
@@ -146,10 +164,15 @@ py::def( "parse", parse );
 
 py::class_< EclipseState >( "EclipseState", py::no_init )
     .add_property( "title", &EclipseState::getTitle )
-    .def( "_schedule", &EclipseState::getSchedule, ref() )
-    .def( "_props",    &EclipseState::get3DProperties, ref() )
-    .def( "has_input_nnc",   &EclipseState::hasInputNNC )
+    .def( "_schedule",      &EclipseState::getSchedule, ref() )
+    .def( "_props",         &EclipseState::get3DProperties, ref() )
+    .def( "has_input_nnc",  &EclipseState::hasInputNNC )
     .def( "input_nnc",      state::getNNC )
+    .def( "_getXYZ",        state::getXYZ )
+    .def( "nactive",        state::getNumActive )
+    .def( "cartesianSize",  state::getCartesianSize )
+    .def( "globalIndex",    state::getGlobalIndex )
+    .def( "getIJK",         state::getIJK )
     ;
 
 py::class_< Eclipse3DProperties >( "Eclipse3DProperties", py::no_init )
