@@ -26,7 +26,7 @@ using namespace Opm;
  */
 
 
-/* boost.posix_time(y, m, d) -> datetime.date(y, m, y) */
+/* boost.posix_time(y, m, d) -> datetime.date(y, m, d) */
 struct ptime_to_python_datetime {
     static PyObject* convert( const boost::posix_time::ptime& pt ) {
         const auto& date = pt.date();
