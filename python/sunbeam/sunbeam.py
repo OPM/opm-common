@@ -68,10 +68,8 @@ class Eclipse3DProperties(object):
     def __repr__(self):
         return 'Eclipse3DProperties()'
 
-@delegate(lib.EclipseState)
-class EclipseState(object):
-    def __repr__(self):
-        return 'EclipseState(title = "%s")' % self.title
+@delegate(lib.EclipseGrid)
+class EclipseGrid(object):
 
     def getNX(self):
         return self._getXYZ()[0]
@@ -80,12 +78,30 @@ class EclipseState(object):
     def getNZ(self):
         return self._getXYZ()[2]
 
+    def __repr__(self):
+        x,y,z = self._getXYZ()
+        g = self.cartesianSize()
+        na = self.nactive()
+        cnt = '(%d, %d, %d)' % (x,y,z)
+        if na != g:
+            cnt += ', active = %s' % na
+        return 'EclipseGrid(%s)' % cnt
+
+
+@delegate(lib.EclipseState)
+class EclipseState(object):
+    def __repr__(self):
+        return 'EclipseState(title = "%s")' % self.title
+
     @property
     def schedule(self):
         return Schedule(self._schedule())
 
     def props(self):
         return Eclipse3DProperties(self._props())
+
+    def grid(self):
+        return EclipseGrid(self._grid())
 
 @delegate(lib.Well)
 class Well(object):
