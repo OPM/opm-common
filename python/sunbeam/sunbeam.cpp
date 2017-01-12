@@ -78,6 +78,10 @@ py::list wellnames( const Group& g, size_t timestep ) {
 }
 
 namespace well {
+py::list completions( const Well& w) {
+    return iterable_to_pylist( w.getCompletions() );
+}
+
 std::string status( const Well& w, size_t timestep )  {
     return WellCommon::Status2String( w.getStatus( timestep ) );
 }
@@ -208,7 +212,15 @@ py::class_< Well >( "Well", py::no_init )
     .def( "guide_rate", &Well::getGuideRate )
     .def( "available_gctrl", &Well::isAvailableForGroupControl )
     .def( "__eq__", &Well::operator== )
+    .def( "completions", well::completions )
     ;
+
+py::class_< Completion >( "Completion", py::no_init )
+    .def( "getI",      &Completion::getI )
+    .def( "getJ",      &Completion::getJ )
+    .def( "getK",      &Completion::getK )
+    ;
+
 
 py::class_< std::vector< Well > >( "WellList", py::no_init )
     .def( py::vector_indexing_suite< std::vector< Well > >() )

@@ -87,3 +87,9 @@ class TestWells(unittest.TestCase):
         flowing1 = filter(lambda x: not sunbeam.Well.closed(1)(x), self.wells)
         closed1  = filter(sunbeam.Well.closed(1), self.wells)
         self.assertListEqual(list(closed), list(closed1))
+
+    def testCompletions(self):
+        w0 = self.wells[0]
+        c0,c1 = w0.completions()
+        self.assertEqual((6,6,2), (c0.getI(), c0.getJ(), c0.getK()))
+        self.assertEqual((6,6,3), (c1.getI(), c1.getJ(), c1.getK()))
