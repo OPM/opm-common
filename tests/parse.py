@@ -3,6 +3,29 @@ import sunbeam
 
 class TestParse(unittest.TestCase):
 
+    REGIONDATA = """
+START             -- 0
+10 MAI 2007 /
+RUNSPEC
+
+DIMENS
+2 2 1 /
+GRID
+DX
+4*0.25 /
+DY
+4*0.25 /
+DZ
+4*0.25 /
+TOPS
+4*0.25 /
+REGIONS
+OPERNUM
+3 3 1 2 /
+FIPNUM
+1 1 2 3 /
+"""
+
     def setUp(self):
         self.spe3fn = 'spe3/SPE3CASE1.DATA'
 
@@ -31,3 +54,7 @@ class TestParse(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             sunbeam.parse(self.spe3fn, "PARSE_RANDOM_SLASH")
+
+    def testData(self):
+        regtest = sunbeam.parse(self.REGIONDATA)
+        self.assertEqual([3,3,1,2], regtest.props()['OPERNUM'])

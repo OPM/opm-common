@@ -2,6 +2,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -14,30 +15,33 @@ using namespace Opm;
 namespace {
 
 namespace state {
-    py::list getNNC( const EclipseState& state ) {
-        py::list l;
-        for( const auto& x : state.getInputNNC().nncdata() )
-            l.append( py::make_tuple( x.cell1, x.cell2, x.trans )  );
-        return l;
-    }
-    py::tuple getXYZ( const EclipseState& state ) {
-        return py::make_tuple( state.getInputGrid().getNX(),
-                               state.getInputGrid().getNY(),
-                               state.getInputGrid().getNZ());
-    }
-    int getNumActive( const EclipseState& state ) {
-        return state.getInputGrid().getNumActive();
-    }
-    int getCartesianSize( const EclipseState& state ) {
-        return state.getInputGrid().getCartesianSize();
-    }
-    int getGlobalIndex( const EclipseState& state, int i, int j, int k ) {
-        return state.getInputGrid().getGlobalIndex(i, j, k);
-    }
-    py::tuple getIJK( const EclipseState& state, int g ) {
-        const auto& ijk = state.getInputGrid().getIJK(g);
-        return py::make_tuple(ijk[0], ijk[1], ijk[2]);
-    }
+py::list getNNC( const EclipseState& state ) {
+    py::list l;
+    for( const auto& x : state.getInputNNC().nncdata() )
+        l.append( py::make_tuple( x.cell1, x.cell2, x.trans )  );
+    return l;
+}
+}
+
+namespace grid {
+py::tuple getXYZ( const EclipseGrid& grid ) {
+    return py::make_tuple( grid.getNX(),
+                           grid.getNY(),
+                           grid.getNZ());
+}
+int getNumActive( const EclipseGrid& grid ) {
+    return grid.getNumActive();
+}
+int getCartesianSize( const EclipseGrid& grid ) {
+    return grid.getCartesianSize();
+}
+int getGlobalIndex( const EclipseGrid& grid, int i, int j, int k ) {
+    return grid.getGlobalIndex(i, j, k);
+}
+py::tuple getIJK( const EclipseGrid& grid, int g ) {
+    const auto& ijk = grid.getIJK(g);
+    return py::make_tuple(ijk[0], ijk[1], ijk[2]);
+}
 }
 
 namespace props {
@@ -143,6 +147,7 @@ py::list get_groups( const Schedule& sch ) {
 }
 
 EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;
+EclipseState (*parseData) (const std::string &data, const ParseContext& context) = &Parser::parseData;
 void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
 
 }
@@ -161,18 +166,23 @@ py::to_python_converter< const boost::posix_time::ptime,
 py::register_exception_translator< key_error >( &key_error::translate );
 
 py::def( "parse", parse );
+py::def( "parseData", parseData );
 
 py::class_< EclipseState >( "EclipseState", py::no_init )
     .add_property( "title", &EclipseState::getTitle )
-    .def( "_schedule",      &EclipseState::getSchedule, ref() )
+    .def( "_schedule",      &EclipseState::getSchedule,     ref() )
     .def( "_props",         &EclipseState::get3DProperties, ref() )
+    .def( "_grid",          &EclipseState::getInputGrid,    ref() )
     .def( "has_input_nnc",  &EclipseState::hasInputNNC )
     .def( "input_nnc",      state::getNNC )
-    .def( "_getXYZ",        state::getXYZ )
-    .def( "nactive",        state::getNumActive )
-    .def( "cartesianSize",  state::getCartesianSize )
-    .def( "globalIndex",    state::getGlobalIndex )
-    .def( "getIJK",         state::getIJK )
+    ;
+
+py::class_< EclipseGrid >( "EclipseGrid", py::no_init )
+    .def( "_getXYZ",        grid::getXYZ )
+    .def( "nactive",        grid::getNumActive )
+    .def( "cartesianSize",  grid::getCartesianSize )
+    .def( "globalIndex",    grid::getGlobalIndex )
+    .def( "getIJK",         grid::getIJK )
     ;
 
 py::class_< Eclipse3DProperties >( "Eclipse3DProperties", py::no_init )

@@ -31,6 +31,7 @@ def main():
     wi = sc.wells[20] # injector at ts 100
     print('state:     %s' % es)
     print('schedule:  %s' % sc)
+    print('the grid:  %s' % es.grid())
     print('at timestep 100 (%s)' % sc.timesteps[100])
     print('prod well: %s' % wp)
     print('inj  well: %s' % wi)
