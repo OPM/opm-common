@@ -143,6 +143,7 @@ py::list get_groups( const Schedule& sch ) {
 }
 
 EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;
+EclipseState (*parseData) (const std::string &data, const ParseContext& context) = &Parser::parseData;
 void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
 
 }
@@ -161,6 +162,7 @@ py::to_python_converter< const boost::posix_time::ptime,
 py::register_exception_translator< key_error >( &key_error::translate );
 
 py::def( "parse", parse );
+py::def( "parseData", parseData );
 
 py::class_< EclipseState >( "EclipseState", py::no_init )
     .add_property( "title", &EclipseState::getTitle )

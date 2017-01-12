@@ -1,3 +1,4 @@
+from os.path import isfile
 import libsunbeam as lib
 
 class _delegate(object):
@@ -163,5 +164,8 @@ def _parse_context(actions):
 
     return ctx
 
-def parse(path, actions = None):
-    return EclipseState(lib.parse(path, _parse_context(actions)))
+def parse(deck, actions = None):
+    """deck may be a deck string, or a file path"""
+    if isfile(deck):
+        return EclipseState(lib.parse(deck, _parse_context(actions)))
+    return EclipseState(lib.parseData(deck, _parse_context(actions)))
