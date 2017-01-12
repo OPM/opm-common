@@ -1,5 +1,5 @@
 {
  "name" : "OPERNUM",
- "sections" : [ "GRID" ],
+ "sections" : [ "GRID", "REGIONS" ],
  "data" : {"value_type" : "INT" }
 }
