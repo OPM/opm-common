@@ -187,6 +187,16 @@ namespace Opm {
 
     static std::vector< GridProperties< int >::SupportedKeywordInfo >
     makeSupportedIntKeywords() {
+         /*
+          * A note on the OPERNUM keyword: According to Eclipse documentation,
+          * the OPERNUM may be defined in the GRID section and re-defined in the
+          * REGIONS section.  This means one can define OPERNUM twice in the
+          * deck and have it mean different things.  The Parser currently does
+          * _not_ support this functionality.  Note furthermore that the REGIONS
+          * section is scanned before the other sections, thus if OPERNUM is
+          * defined in both GRID and REGIONS, the information in GRID will
+          * overwrite the information in REGIONS.
+          */
         return {
             GridProperties< int >::SupportedKeywordInfo( "ENDNUM" , 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1" ),
@@ -194,7 +204,7 @@ namespace Opm {
             GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 0, "1" ),//*
             GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "ROCKNUM", 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" )
