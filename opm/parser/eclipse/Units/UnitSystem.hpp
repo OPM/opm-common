@@ -25,6 +25,8 @@
 #include <vector>
 #include <memory>
 
+#include <ert/ecl/ecl_util.h>
+
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
 namespace Opm {
@@ -67,9 +69,11 @@ namespace Opm {
         };
 
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
+        explicit UnitSystem(ert_ecl_unit_enum ecl_type);
 
         const std::string& getName() const;
         UnitType getType() const;
+        ert_ecl_unit_enum getEclType( ) const;
 
         void addDimension(const std::string& dimension, double SIfactor, double SIoffset = 0.0);
         void addDimension( Dimension );

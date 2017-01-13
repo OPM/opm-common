@@ -329,6 +329,26 @@ namespace {
         };
     }
 
+    namespace {
+
+        UnitSystem::UnitType fromEclType(ert_ecl_unit_enum unit_type) {
+            switch ( unit_type ) {
+            case(ECL_METRIC_UNITS): return UnitSystem::UnitType::UNIT_TYPE_METRIC;
+            case(ECL_FIELD_UNITS):  return UnitSystem::UnitType::UNIT_TYPE_FIELD;
+            case(ECL_LAB_UNITS):    return UnitSystem::UnitType::UNIT_TYPE_LAB;
+            default:
+                throw std::runtime_error("What has happened here?");
+            }
+        }
+
+    }
+
+    UnitSystem::UnitSystem(const ert_ecl_unit_enum unit_type)
+        : UnitSystem( fromEclType( unit_type ))
+    {
+    }
+
+
     bool UnitSystem::hasDimension(const std::string& dimension) const {
         return (m_dimensions.find( dimension ) != m_dimensions.end());
     }
@@ -362,6 +382,18 @@ namespace {
     UnitSystem::UnitType UnitSystem::getType() const {
         return m_unittype;
     }
+
+
+    ert_ecl_unit_enum UnitSystem::getEclType() const {
+        switch ( m_unittype ) {
+          case UnitType::UNIT_TYPE_METRIC: return ECL_METRIC_UNITS;
+          case UnitType::UNIT_TYPE_FIELD:  return ECL_FIELD_UNITS;
+          case UnitType::UNIT_TYPE_LAB:    return ECL_LAB_UNITS;
+        default:
+            throw std::runtime_error("What has happened here?");
+        }
+    }
+
 
 
     Dimension UnitSystem::parseFactor(const std::string& dimension) const {

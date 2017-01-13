@@ -19,6 +19,8 @@
 #include <ostream>
 #include <type_traits>
 
+#include <ert/ecl/ecl_util.h>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
@@ -82,6 +84,16 @@ const Tabdims& Runspec::tabdims() const noexcept {
 
 const EndpointScaling& Runspec::endpointScaling() const noexcept {
     return this->endscale;
+}
+
+/*
+  Returns an integer in the range 0...7 which can be used to indicate
+  available phases in Eclipse restart and init files.
+*/
+int Runspec::eclPhaseMask( ) const noexcept {
+    return ( active_phases.active( Phase::WATER ) ? ECL_WATER_PHASE : 0 )
+         | ( active_phases.active( Phase::OIL ) ? ECL_OIL_PHASE : 0 )
+         | ( active_phases.active( Phase::GAS ) ? ECL_GAS_PHASE : 0 );
 }
 
 }

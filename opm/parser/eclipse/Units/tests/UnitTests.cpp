@@ -84,6 +84,18 @@ BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
 }
 
 
+BOOST_AUTO_TEST_CASE(UnitSystemFromECL_TYPE) {
+    UnitSystem system(ECL_METRIC_UNITS);
+    system.addDimension("Length" , 10 );
+    system.addDimension("Time" , 100);
+
+    BOOST_CHECK( !system.hasDimension("Length*Length/Time"));
+    Dimension comp = system.getNewDimension( "Length*Length/Time" );
+    BOOST_CHECK( system.hasDimension("Length*Length/Time"));
+    BOOST_CHECK_EQUAL(1 , comp.getSIScaling());
+}
+
+
 
 
 BOOST_AUTO_TEST_CASE(UnitSystemAddDimensions) {
@@ -142,6 +154,8 @@ BOOST_AUTO_TEST_CASE(CreateMetricSystem) {
     BOOST_CHECK_EQUAL( Metric::Time         , system.getDimension("Time").getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Permeability , system.getDimension("Permeability").getSIScaling() );
     BOOST_CHECK_EQUAL( Metric::Pressure     , system.getDimension("Pressure").getSIScaling() );
+
+    BOOST_CHECK_EQUAL( system.getEclType( ) , ECL_METRIC_UNITS );
 }
 
 
@@ -155,6 +169,8 @@ BOOST_AUTO_TEST_CASE(CreateFieldSystem) {
     BOOST_CHECK_EQUAL( Field::Time         , system.getDimension("Time").getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Permeability , system.getDimension("Permeability").getSIScaling() );
     BOOST_CHECK_EQUAL( Field::Pressure     , system.getDimension("Pressure").getSIScaling() );
+
+    BOOST_CHECK_EQUAL( system.getEclType( ) , ECL_FIELD_UNITS );
 }
 
 
