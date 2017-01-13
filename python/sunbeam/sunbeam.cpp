@@ -8,6 +8,10 @@
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -24,6 +28,42 @@ py::list getNNC( const EclipseState& state ) {
     py::list l;
     for( const auto& x : state.getInputNNC().nncdata() )
         l.append( py::make_tuple( x.cell1, x.cell2, x.trans )  );
+    return l;
+}
+py::list faultNames( const EclipseState& state ) {
+    py::list l;
+    const auto& fc = state.getFaults();
+    for (size_t i = 0; i < fc.size(); i++) {
+        const auto& f = fc.getFault(i);
+        l.append(f.getName());
+    }
+    return l;
+}
+
+    const std::string faceDir( FaceDir::DirEnum dir ) {
+    switch (dir) {
+    case FaceDir::DirEnum::XPlus:  return "X+";
+    case FaceDir::DirEnum::XMinus: return "X-";
+    case FaceDir::DirEnum::YPlus:  return "Y+";
+    case FaceDir::DirEnum::YMinus: return "Y-";
+    case FaceDir::DirEnum::ZPlus:  return "Z+";
+    case FaceDir::DirEnum::ZMinus: return "Z-";
+    }
+    return "Unknown direction";
+}
+py::list faultFaces( const EclipseState& state, const std::string& name ) {
+    py::list l;
+    const auto& gr = state.getInputGrid(); // used for global -> IJK
+    const auto& fc = state.getFaults();
+    const Fault& f = fc.getFault(name);
+    for (const auto& ff : f) {
+        // for each fault face
+        for (size_t g : ff) {
+            // for global index g in ff
+            const auto ijk = gr.getIJK(g);
+            l.append(py::make_tuple(ijk[0], ijk[1], ijk[2], faceDir(ff.getDir())));
+        }
+    }
     return l;
 }
 }
@@ -192,6 +232,8 @@ py::class_< EclipseState >( "EclipseState", py::no_init )
     .def( "_cfg",           &EclipseState::cfg,             ref() )
     .def( "has_input_nnc",  &EclipseState::hasInputNNC )
     .def( "input_nnc",      state::getNNC )
+    .def( "faultNames",     state::faultNames )
+    .def( "faultFaces",     state::faultFaces )
     ;
 
 py::class_< EclipseGrid >( "EclipseGrid", py::no_init )

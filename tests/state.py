@@ -51,3 +51,7 @@ class TestState(unittest.TestCase):
         self.assertFalse(sim.useCPR())
         self.assertTrue(sim.hasDISGAS())
         self.assertTrue(sim.hasVAPOIL())
+
+    def test_faults(self):
+        self.assertEquals([], self.spe3.faultNames())
+        self.assertEquals({}, self.spe3.faults())
