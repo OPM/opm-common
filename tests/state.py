@@ -4,6 +4,50 @@ import sunbeam
 class TestState(unittest.TestCase):
 
     spe3 = None
+    FAULTS_DECK = """
+RUNSPEC
+
+DIMENS
+ 10 10 10 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'F1'  1  1  1  4   1  4  'X' /
+  'F2'  5  5  1  4   1  4  'X-' /
+/
+MULTFLT
+  'F1' 0.50 /
+  'F2' 0.50 /
+/
+EDIT
+MULTFLT /
+  'F2' 0.25 /
+/
+OIL
+
+GAS
+
+TITLE
+The title
+
+START
+8 MAR 1998 /
+
+PROPS
+REGIONS
+SWAT
+1000*1 /
+SATNUM
+1000*2 /
+\
+"""
 
     def setUp(self):
         if self.spe3 is None:
@@ -55,3 +99,9 @@ class TestState(unittest.TestCase):
     def test_faults(self):
         self.assertEquals([], self.spe3.faultNames())
         self.assertEquals({}, self.spe3.faults())
+        faultdeck = sunbeam.parse(self.FAULTS_DECK)
+        self.assertEqual(['F1', 'F2'], faultdeck.faultNames())
+        # 'F2'  5  5  1  4   1  4  'X-' / \n"
+        f2 = faultdeck.faultFaces('F2')
+        self.assertTrue((4,0,0,'X-') in f2)
+        self.assertFalse((3,0,0,'X-') in f2)
