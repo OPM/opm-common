@@ -22,6 +22,13 @@ class EclipseState(object):
     def cfg(self):
         return EclipseConfig(self._cfg())
 
+    def faults(self):
+        """Returns a map from fault names to list of (i,j,k,D) where D ~ 'X+'"""
+        fs = {}
+        for fn in self.faultNames():
+            fs[fn] = self.faultFaces(fn)
+        return fs
+
 
 @delegate(lib.Eclipse3DProperties)
 class Eclipse3DProperties(object):
