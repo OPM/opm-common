@@ -6,6 +6,9 @@ target_link_libraries( sunbeam ${Boost_LIBRARIES} ${opm-parser_LIBRARIES} )
 
 set(PYTHON_SOURCES
     __init__.py
-    sunbeam.py)
+    sunbeam.py
+    config.py
+    properties.py
+    schedule.py)
 
 add_python_package(sunbeam sunbeam "${PYTHON_SOURCES}")

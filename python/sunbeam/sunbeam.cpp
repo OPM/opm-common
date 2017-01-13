@@ -2,6 +2,11 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
@@ -21,6 +26,9 @@ py::list getNNC( const EclipseState& state ) {
         l.append( py::make_tuple( x.cell1, x.cell2, x.trans )  );
     return l;
 }
+}
+
+namespace cfg {
 }
 
 namespace grid {
@@ -172,11 +180,16 @@ py::register_exception_translator< key_error >( &key_error::translate );
 py::def( "parse", parse );
 py::def( "parseData", parseData );
 
+
+/*
+ * state, grid, properties
+ */
 py::class_< EclipseState >( "EclipseState", py::no_init )
     .add_property( "title", &EclipseState::getTitle )
     .def( "_schedule",      &EclipseState::getSchedule,     ref() )
     .def( "_props",         &EclipseState::get3DProperties, ref() )
     .def( "_grid",          &EclipseState::getInputGrid,    ref() )
+    .def( "_cfg",           &EclipseState::cfg,             ref() )
     .def( "has_input_nnc",  &EclipseState::hasInputNNC )
     .def( "input_nnc",      state::getNNC )
     ;
@@ -195,6 +208,45 @@ py::class_< Eclipse3DProperties >( "Eclipse3DProperties", py::no_init )
     .def( "__getitem__",  props::getitem )
     ;
 
+/*
+ * config
+ */
+py::class_< EclipseConfig >( "EclipseConfig", py::no_init )
+    .def( "summary",         &EclipseConfig::summary,    ref())
+    .def( "init",            &EclipseConfig::init,       ref())
+    .def( "restart",         &EclipseConfig::restart,    ref())
+    .def( "simulation",      &EclipseConfig::simulation, ref())
+    ;
+
+py::class_< SummaryConfig >( "SummaryConfig", py::no_init )
+    .def( "__contains__",    &SummaryConfig::hasKeyword )
+    ;
+
+py::class_< InitConfig >( "InitConfig", py::no_init )
+    .def( "hasEquil",           &InitConfig::hasEquil )
+    .def( "restartRequested",   &InitConfig::restartRequested )
+    .def( "getRestartStep"  ,   &InitConfig::getRestartStep )
+    ;
+
+py::class_< RestartConfig >( "RestartConfig", py::no_init )
+    .def( "getKeyword",          &RestartConfig::getKeyword )
+    .def( "getFirstRestartStep", &RestartConfig::getFirstRestartStep )
+    .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile )
+    ;
+
+py::class_< SimulationConfig >( "SimulationConfig", py::no_init )
+    .def("hasThresholdPressure", &SimulationConfig::hasThresholdPressure )
+    .def("useCPR",               &SimulationConfig::useCPR )
+    .def("hasDISGAS",            &SimulationConfig::hasDISGAS )
+    .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL )
+    ;
+
+
+
+
+/*
+ * schedule, well, completion, group
+ */
 py::class_< Well >( "Well", py::no_init )
     .add_property( "name", mkcopy( &Well::name ) )
     .add_property( "preferred_phase", &well::preferred_phase )
@@ -242,6 +294,11 @@ py::class_< Schedule >( "Schedule", py::no_init )
     .def( "_group", &Schedule::getGroup, ref() )
     ;
 
+
+
+/*
+ * misc
+ */
 py::class_< ParseContext >( "ParseContext" )
     .def( "update", ctx_update )
     ;
