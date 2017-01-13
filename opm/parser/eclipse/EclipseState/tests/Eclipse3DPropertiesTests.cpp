@@ -321,6 +321,8 @@ BOOST_AUTO_TEST_CASE(getRegions) {
             "TOPS\n"
             "4*0.25 /\n"
             "REGIONS\n"
+            "OPERNUM\n"
+            "3 3 1 3 /\n"
             "FIPPGDX\n"
             "2 1 1 2 /\n"
             "FIPREG\n"
@@ -343,4 +345,7 @@ BOOST_AUTO_TEST_CASE(getRegions) {
     BOOST_CHECK_EQUAL( 2, fipreg.at(0) );
     BOOST_CHECK_EQUAL( 3, fipreg.at(1) );
 
+    const auto& opernum = s.props.getRegions( "OPERNUM" );
+    BOOST_CHECK_EQUAL( 1, opernum.at(0) );
+    BOOST_CHECK_EQUAL( 3, opernum.at(1) );
 }
