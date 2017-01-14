@@ -29,6 +29,9 @@ def main():
     sc = es.schedule
     wp = sc.wells[23] # producer
     wi = sc.wells[20] # injector at ts 100
+    fn = es.faultNames()
+    f0 = fn[0]
+    fl = es.faults()[f0]
     print('state:     %s' % es)
     print('schedule:  %s' % sc)
     print('the grid:  %s' % es.grid())
@@ -36,11 +39,14 @@ def main():
     print('prod well: %s' % wp)
     print('inj  well: %s' % wi)
     print('pos:       %s' % list(wp.pos()))
+    print('fault:     %s' % f0)
+    print('           comprised of %d cells' % len(fl))
 
 if __name__ == '__main__':
     global OPMDATA_DIR
     OPMDATA_DIR = '../../opm-data'
     if haveopmdata():
+        print('Found norne, parsing ...')
         main()
     else:
         print('Need to have path "%s" or give opm-data as argument' % OPMDATA_DIR)
