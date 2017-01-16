@@ -684,7 +684,7 @@ void EclipseWriter::writeTimeStep(int report_step,
     const auto& es = this->impl->es;
     const auto& grid = this->impl->grid;
     const auto& units = es.getUnits();
-
+    const data::Solution cells_si = cells;
     const auto& restart = es.cfg().restart();
 
 
@@ -818,7 +818,7 @@ void EclipseWriter::writeTimeStep(int report_step,
                                       this->impl->es,
                                       this->impl->regionCache,
                                       wells ,
-                                      cells );
+                                      cells_si );
     this->impl->summary.write();
  }
 
