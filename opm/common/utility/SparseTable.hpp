@@ -39,7 +39,7 @@
 #include <numeric>
 #include <algorithm>
 #include <boost/range/iterator_range.hpp>
-#include <opm/common/ErrorMacros.hpp>
+#include <opm/grid/utility/ErrorMacros.hpp>
 
 #include <ostream>
 
