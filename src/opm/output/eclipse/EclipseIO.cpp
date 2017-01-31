@@ -191,8 +191,8 @@ class EclipseIO::Impl {
         void writeINITFile( const data::Solution& simProps, const NNC& nnc) const;
         void writeEGRIDFile( const NNC& nnc ) const;
 
-        EclipseGrid grid;
         const EclipseState& es;
+        EclipseGrid grid;
         std::string outputDir;
         std::string baseName;
         out::Summary summary;
@@ -388,15 +388,24 @@ void EclipseIO::writeTimeStep(int report_step,
 
 
 
-    const auto& schedule = es.getSchedule();
+    /*
+      Summary data is written unconditionally for every timestep.
+    */
+    {
+        this->impl->summary.add_timestep( report_step,
+                                          secs_elapsed,
+                                          es,
+                                          wells ,
+                                          cells );
+        this->impl->summary.write();
+    }
+
 
     /*
-       This routine can optionally write RFT and/or restart file; to
-       be certain that the data correctly converted to output units
-       the conversion is done once here - and not closer to the actual
-       use-site.
+      Current implementation will not write restart files for substep,
+      but there is an unsupported option to the RPTSCHED keyword which
+      will request restart output from every timestep.
     */
-    // Write restart file
     if(!isSubstep && restart.getWriteRestartFile(report_step))
     {
         std::string filename = ERT::EclFilename( this->impl->outputDir,
@@ -409,8 +418,14 @@ void EclipseIO::writeTimeStep(int report_step,
     }
 
 
-    const auto unit_type = es.getDeckUnitSystem().getType();
+    /*
+      RFT files are not written for substep.
+    */
+    if( isSubstep )
+        return;
+
     {
+        const auto& schedule = es.getSchedule();
         std::vector<const Well*> sched_wells = schedule.getWells( report_step );
         const auto rft_active = [report_step] (const Well* w) { return w->getRFTActive( report_step ) || w->getPLTActive( report_step ); };
         if (std::any_of(sched_wells.begin(), sched_wells.end(), rft_active)) {
@@ -424,14 +439,6 @@ void EclipseIO::writeTimeStep(int report_step,
         }
     }
 
-    if( isSubstep ) return;
-
-    this->impl->summary.add_timestep( report_step,
-                                      secs_elapsed,
-                                      this->impl->es,
-                                      wells ,
-                                      cells );
-    this->impl->summary.write();
  }
 
 
