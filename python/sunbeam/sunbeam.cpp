@@ -39,18 +39,43 @@ py::list faultNames( const EclipseState& state ) {
     }
     return l;
 }
+py::tuple jfunc( const EclipseState& s) {
+  const auto& tm = s.getTableManager();
+  if (!tm.useJFunc())
+    return py::make_tuple();
+  const auto& j = tm.getJFunc();
+  std::string flag = "BOTH";
+  std::string dir  = "XY";
+  if (j.flag() == JFunc::Flag::WATER)
+    flag = "WATER";
+  else if (j.flag() == JFunc::Flag::GAS)
+    flag = "GAS";
 
-    const std::string faceDir( FaceDir::DirEnum dir ) {
-    switch (dir) {
-    case FaceDir::DirEnum::XPlus:  return "X+";
-    case FaceDir::DirEnum::XMinus: return "X-";
-    case FaceDir::DirEnum::YPlus:  return "Y+";
-    case FaceDir::DirEnum::YMinus: return "Y-";
-    case FaceDir::DirEnum::ZPlus:  return "Z+";
-    case FaceDir::DirEnum::ZMinus: return "Z-";
-    }
-    return "Unknown direction";
+  if (j.direction() == JFunc::Direction::X)
+    dir = "X";
+  else if (j.direction() == JFunc::Direction::Y)
+    dir = "Y";
+  else if (j.direction() == JFunc::Direction::Z)
+    dir = "Z";
+
+  return py::make_tuple(flag, dir,
+                        j.alphaFactor(), j.betaFactor(),
+                        j.goSurfaceTension(), j.owSurfaceTension());
 }
+
+
+const std::string faceDir( FaceDir::DirEnum dir ) {
+  switch (dir) {
+  case FaceDir::DirEnum::XPlus:  return "X+";
+  case FaceDir::DirEnum::XMinus: return "X-";
+  case FaceDir::DirEnum::YPlus:  return "Y+";
+  case FaceDir::DirEnum::YMinus: return "Y-";
+  case FaceDir::DirEnum::ZPlus:  return "Z+";
+  case FaceDir::DirEnum::ZMinus: return "Z-";
+  }
+  return "Unknown direction";
+}
+
 py::list faultFaces( const EclipseState& state, const std::string& name ) {
     py::list l;
     const auto& gr = state.getInputGrid(); // used for global -> IJK
@@ -234,6 +259,7 @@ py::class_< EclipseState >( "EclipseState", py::no_init )
     .def( "input_nnc",      state::getNNC )
     .def( "faultNames",     state::faultNames )
     .def( "faultFaces",     state::faultFaces )
+    .def( "jfunc",          state::jfunc )
     ;
 
 py::class_< EclipseGrid >( "EclipseGrid", py::no_init )
