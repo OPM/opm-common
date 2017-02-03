@@ -26,6 +26,17 @@
 #include <algorithm>
 #include <string>
 
+
+// helper macro to handle error throws or not
+#define HANDLE_ERROR(type, message) \
+  { \
+    if (throwOnError) \
+      OPM_THROW(type, message); \
+    else \
+      std::cerr << message << std::endl; \
+  }
+
+
 //! \brief Prototyping struct, encapsuling the stringlist libraries.
 struct stringlist_struct;
 typedef struct stringlist_struct stringlist_type;
@@ -61,6 +72,7 @@ class SummaryComparator {
         const std::vector<double> * checkDataVec     = nullptr; //!< For storing the data values corresponding to each time step for the file containing the more time steps.
         bool printKeyword = false; //!< Boolean value for choosing whether to print the keywords or not
         bool printSpecificKeyword = false; //!< Boolean value for choosing whether to print the vectors of a keyword or not
+        bool throwOnError = true; //!< Throw on first error
 
         //! \brief Calculate deviation between two data values and stores it in a Deviation struct.
         //! \param[in] refIndex Index in reference data
@@ -161,6 +173,8 @@ class SummaryComparator {
         //! \brief Returns a value based on the unit step principle.
         static double unitStep(double value){return value;}
 
+        //! \brief Set whether to throw on errors or not.
+        void throwOnErrors(bool dothrow) { throwOnError = dothrow; }
 };
 
 #endif

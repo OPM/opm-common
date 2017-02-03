@@ -50,6 +50,7 @@ void printHelp(){
     std::cout << "-k keyword \tSpecify a specific keyword to compare, for example - k WOPR:PRODU1."<< std::endl;
     std::cout << "-K \t\tWill not allow different amount of keywords in the two files. Throws an exception if the amount are different." << std::endl;
     std::cout << "-m mainVar \tWill calculate the error ratio for one main variable. Valid input is WOPR, WWPR, WGPR or WBHP." << std::endl;
+    std::cout << "-n \tDo not throw on errors." << std::endl;
     std::cout << "-p \t\tWill print the keywords of the files." << std::endl;
     std::cout << "-P keyword \tWill print the summary vectors of a specified kewyord, for example -P WOPR:B-3H." << std::endl;
     std::cout << "-s int \t\tSets the number of spikes that are allowed for each keyword, for example: -s 5." << std::endl;
@@ -78,6 +79,7 @@ int main (int argc, char ** argv){
     bool oneOfTheMainVariables = false;
     bool throwExceptionForTooGreatErrorRatio = true;
     bool isRestartFile = false;
+    bool throwOnError = true;
     const char* keyword  = nullptr;
     const char* mainVariable = nullptr;
     int c = 0;
@@ -86,7 +88,7 @@ int main (int argc, char ** argv){
 
     //------------------------------------------------
     //For setting the options selected
-    while ((c = getopt(argc, argv, "dghik:Km:pP:rRs:vV:")) != -1) {
+    while ((c = getopt(argc, argv, "dghik:Kmn:pP:rRs:vV:")) != -1) {
         switch (c) {
             case 'd':
                 throwExceptionForTooGreatErrorRatio = false;
@@ -112,6 +114,9 @@ int main (int argc, char ** argv){
             case 'm':
                 oneOfTheMainVariables = true;
                 mainVariable = optarg;
+                break;
+            case 'n':
+                throwOnError = false;
                 break;
             case 'p':
                 printKeywords = true;
@@ -170,6 +175,7 @@ int main (int argc, char ** argv){
     try {
         if(regressionTest){
             RegressionTest compare(basename1,basename2, absoluteTolerance, relativeTolerance);
+            compare.throwOnErrors(throwOnError);
             if(printKeywords){compare.setPrintKeywords(true);}
             if(isRestartFile){compare.setIsRestartFile(true);}
             if(specificKeyword){
@@ -182,6 +188,7 @@ int main (int argc, char ** argv){
         }
         if(integrationTest){
             IntegrationTest compare(basename1,basename2, absoluteTolerance, relativeTolerance);
+            compare.throwOnErrors(throwOnError);
             if(findVectorWithGreatestErrorRatio){compare.setFindVectorWithGreatestErrorRatio(true);}
             if(allowSpikes){compare.setAllowSpikes(true);}
             if(oneOfTheMainVariables){

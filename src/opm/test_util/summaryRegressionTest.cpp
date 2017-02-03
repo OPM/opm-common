@@ -45,7 +45,7 @@ void RegressionTest::getRegressionTest(){
         }
         std::cout << std::endl;
 
-        OPM_THROW(std::runtime_error, "Different ammont of keywords in the two summary files.");
+        HANDLE_ERROR(std::runtime_error, "Different amount of keywords in the two summary files.");
     }
     if(printKeyword){
         printKeywords();
@@ -53,6 +53,7 @@ void RegressionTest::getRegressionTest(){
 
 
     //Iterates over all keywords from the restricted file, use iterator "ivar". Searches for a  match in the file with more keywords, use the iterator "jvar".
+    bool throwAtEnd = false;
     while(ivar < stringlist_get_size(keysShort)){
         const char* keyword = stringlist_iget(keysShort, ivar);
         std::string keywordString(keyword);
@@ -61,7 +62,7 @@ void RegressionTest::getRegressionTest(){
                 if (isRestartFile && keywordString.substr(3,1)=="T"){
                     break;
                 }
-                checkForKeyword(timeVec1, timeVec2, keyword);
+                throwAtEnd |= !checkForKeyword(timeVec1, timeVec2, keyword);
                 break;
             }
             //will only enter here if no keyword match
@@ -72,7 +73,10 @@ void RegressionTest::getRegressionTest(){
         }
         ivar++;
     }
-    std::cout << "Regression test succeeded." << std::endl;
+    if (throwAtEnd)
+      OPM_THROW(std::runtime_error, "Regression test failed.");
+    else
+      std::cout << "Regression test succeeded." << std::endl;
 }
 
 
@@ -86,8 +90,11 @@ void RegressionTest::getRegressionTest(const char* keyword){
         if (isRestartFile && keywordString.substr(3,1)=="T"){
             return;
         }
-        checkForKeyword(timeVec1, timeVec2, keyword);
-        std::cout << "Regression test succeeded." << std::endl;
+        if (checkForKeyword(timeVec1, timeVec2, keyword))
+          std::cout << "Regression test succeeded." << std::endl;
+        else
+          OPM_THROW(std::runtime_error, "Regression test failed");
+
         return;
     }
     std::cout << "The keyword suggested, " << keyword << ", is not supported by one or both of the summary files. Please use a different keyword." << std::endl;
@@ -96,7 +103,7 @@ void RegressionTest::getRegressionTest(const char* keyword){
 
 
 
-void RegressionTest::checkDeviation(Deviation deviation, const char* keyword, int refIndex, int checkIndex){
+bool RegressionTest::checkDeviation(Deviation deviation, const char* keyword, int refIndex, int checkIndex){
     double absTol = getAbsTolerance();
     double relTol = getRelTolerance();
 
@@ -107,26 +114,31 @@ void RegressionTest::checkDeviation(Deviation deviation, const char* keyword, in
         // -1 in [checkIndex -1] because checkIndex is updated after leaving getDeviation function
         std::cout << "The absolute deviation is " << deviation.abs << ". The tolerance limit is " << absTol << std::endl;
         std::cout << "The relative deviation is " << deviation.rel << ". The tolerance limit is " << relTol << std::endl;
-        OPM_THROW(std::runtime_error, "Deviation exceed the limit.");
+        HANDLE_ERROR(std::runtime_error, "Deviation exceed the limit.");
+        return false;
     }
+    return true;
 }
 
 
 
-void RegressionTest::checkForKeyword(std::vector<double>& timeVec1, std::vector<double>& timeVec2, const char* keyword){
+bool RegressionTest::checkForKeyword(std::vector<double>& timeVec1, std::vector<double>& timeVec2, const char* keyword){
     std::vector<double> dataVec1, dataVec2;
     getDataVecs(dataVec1,dataVec2,keyword);
     chooseReference(timeVec1, timeVec2,dataVec1,dataVec2);
-    startTest(keyword);
+    return startTest(keyword);
 }
 
 
 
-void RegressionTest::startTest(const char* keyword){
+bool RegressionTest::startTest(const char* keyword){
     size_t jvar = 0;
     Deviation deviation;
+    bool result = true;
     for (size_t ivar = 0; ivar < referenceVec->size(); ivar++){
         getDeviation(ivar, jvar, deviation);//Reads from the protected member variables in the super class.
-        checkDeviation(deviation, keyword,ivar, jvar);
+        result = checkDeviation(deviation, keyword,ivar, jvar);
     }
+
+    return result;
 }
