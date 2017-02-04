@@ -12,3 +12,4 @@ set(PYTHON_SOURCES
     schedule.py)
 
 add_python_package(sunbeam sunbeam "${PYTHON_SOURCES}")
+install(TARGETS sunbeam DESTINATION "${PYTHON_INSTALL_PREFIX}/sunbeam")
