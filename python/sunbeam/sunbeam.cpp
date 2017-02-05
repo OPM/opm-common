@@ -39,10 +39,10 @@ py::list faultNames( const EclipseState& state ) {
     }
     return l;
 }
-py::tuple jfunc( const EclipseState& s) {
+py::dict jfunc( const EclipseState& s) {
   const auto& tm = s.getTableManager();
   if (!tm.useJFunc())
-    return py::make_tuple();
+    return py::dict();
   const auto& j = tm.getJFunc();
   std::string flag = "BOTH";
   std::string dir  = "XY";
@@ -58,9 +58,16 @@ py::tuple jfunc( const EclipseState& s) {
   else if (j.direction() == JFunc::Direction::Z)
     dir = "Z";
 
-  return py::make_tuple(flag, dir,
-                        j.alphaFactor(), j.betaFactor(),
-                        j.goSurfaceTension(), j.owSurfaceTension());
+  py::dict ret;
+  ret["FLAG"] = flag;
+  ret["DIRECTION"] = dir;
+  ret["ALPHA_FACTOR"] = j.alphaFactor();
+  ret["BETA_FACTOR"] = j.betaFactor();
+  if (j.flag() == JFunc::Flag::WATER || j.flag() == JFunc::Flag::BOTH)
+    ret["OIL_WATER"] = j.owSurfaceTension();
+  if (j.flag() == JFunc::Flag::GAS || j.flag() == JFunc::Flag::BOTH)
+    ret["GAS_OIL"] = j.goSurfaceTension();
+  return ret;
 }
 
 
