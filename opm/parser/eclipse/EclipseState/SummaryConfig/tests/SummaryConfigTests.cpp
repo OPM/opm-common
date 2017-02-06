@@ -465,3 +465,80 @@ BOOST_AUTO_TEST_CASE( summary_FMWSET ) {
 
     BOOST_CHECK( !summary.hasKeyword("NO-NOT-THIS") );
 }
+
+
+BOOST_AUTO_TEST_CASE( summary_require3DField ) {
+    {
+        const auto input = "WWCT\n/\n";
+        const auto summary = createSummary( input );
+
+        BOOST_CHECK( !summary.require3DField( "NO-NOT-THIS"));
+
+        BOOST_CHECK( !summary.require3DField( "PRESSURE"));
+        BOOST_CHECK( !summary.require3DField( "OIP"));
+        BOOST_CHECK( !summary.require3DField( "GIP"));
+        BOOST_CHECK( !summary.require3DField( "WIP"));
+        BOOST_CHECK( !summary.require3DField( "OIPL"));
+        BOOST_CHECK( !summary.require3DField( "OIPG"));
+        BOOST_CHECK( !summary.require3DField( "GIPL"));
+        BOOST_CHECK( !summary.require3DField( "GIPG"));
+        BOOST_CHECK( !summary.require3DField( "SWAT"));
+        BOOST_CHECK( !summary.require3DField( "SGAS"));
+    }
+
+    {
+        const auto input = "BPR\n"
+            "3 3 6 /\n"
+            "4 3 6 /\n"
+            "/";
+
+        const auto summary = createSummary( input );
+        BOOST_CHECK( summary.require3DField( "PRESSURE"));
+        BOOST_CHECK( !summary.requireFIPNUM( ));
+    }
+
+
+    {
+        const auto input = "FPR\n";
+        const auto summary = createSummary( input );
+        BOOST_CHECK( summary.require3DField( "PRESSURE"));
+    }
+
+
+    {
+        const auto input = "BSWAT\n"
+            "3 3 6 /\n"
+            "4 3 6 /\n"
+            "/";
+
+        const auto summary = createSummary( input );
+        BOOST_CHECK( summary.require3DField( "SWAT"));
+    }
+
+    {
+        const auto input = "BSGAS\n"
+            "3 3 6 /\n"
+            "4 3 6 /\n"
+            "/";
+
+        const auto summary = createSummary( input );
+        BOOST_CHECK( summary.require3DField( "SGAS"));
+    }
+
+
+    {
+        const auto input = "RPR\n/\n";
+        const auto summary = createSummary( input );
+        BOOST_CHECK( summary.require3DField( "PRESSURE"));
+        BOOST_CHECK( summary.requireFIPNUM( ));
+    }
+
+
+    {
+        const auto input = "RGIPL\n/\n";
+        const auto summary = createSummary( input );
+        BOOST_CHECK( summary.require3DField( "GIPL"));
+        BOOST_CHECK( summary.requireFIPNUM( ));
+    }
+
+}

@@ -80,6 +80,30 @@ namespace {
         "FMWIS", "FMWIV", "FMWIP", "FMWDR", "FMWDT", "FMWWO", "FMWWT"
     };
 
+
+    /*
+      This is a hardcoded mapping between 3D field keywords,
+      e.g. 'PRESSURE' and 'SWAT' and summary keywords like 'RPR' and
+      'BPR'. The purpose of this mapping is to maintain an overview of
+      which 3D field keywords are needed by the Summary calculation
+      machinery, based on which summary keywords are requested. The
+      Summary calculations are implemented in the opm-output
+      repository.
+    */
+    const std::map<std::string , std::set<std::string>> required_fields =  {
+         {"PRESSURE", {"FPR" , "RPR" , "BPR"}},
+         {"OIP"  , {"ROIP" , "FOIP" , "FOE"}},
+         {"OIPL" , {"ROIPL"}},
+         {"OIPG" , {"ROIPG"}},
+         {"GIP"  , {"RGIP" , "FGIP"}},
+         {"GIPL" , {"RGIPL"}},
+         {"GIPG" , {"RGIPG"}},
+         {"WIP"  , {"RWIP"}},
+         {"SWAT" , {"BSWAT"}},
+         {"SGAS" , {"BSGAS"}}
+    };
+
+
 /*
     When the error handling config says that the error should be
     logged, the handleMissingWell and handleMissingGroup routines
@@ -97,6 +121,9 @@ namespace {
     refactoring required to pass a mutable proper MessageContainer
     all the way down here.
 */
+
+
+
 
 void handleMissingWell( const ParseContext& parseContext , const std::string& keyword, const std::string& well) {
     std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
@@ -322,7 +349,8 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const Eclipse3DProperties& props,
                               const ParseContext& parseContext,
-                              std::array< int, 3 > n_xyz ) {
+                              std::array< int, 3 > n_xyz )
+{
 
     SUMMARYSection section( deck );
     for( auto& x : section )
@@ -371,6 +399,42 @@ SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
 
 bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
     return (this->short_keywords.count( keyword ) == 1);
+}
+
+
+/*
+  Can be used to query if a certain 3D field, e.g. PRESSURE, is
+  required to calculate the summary variables.
+
+  The implementation is based on the hardcoded datastructure
+  required_fields defined in a anonymous namespaces at the top of this
+  file; the content of this datastructure again is based on the
+  implementation of the Summary calculations in the opm-output
+  repository: opm/output/eclipse/Summary.cpp.
+*/
+
+bool SummaryConfig::require3DField( const std::string& keyword ) const {
+    const auto iter = required_fields.find( keyword );
+    if (iter == required_fields.end())
+        return false;
+
+    for (const auto& kw : iter->second) {
+        if (this->hasKeyword( kw ))
+            return true;
+    }
+
+    return false;
+}
+
+
+bool SummaryConfig::requireFIPNUM( ) const {
+    return this->hasKeyword("ROIP")  ||
+           this->hasKeyword("ROIPL") ||
+           this->hasKeyword("RGIP")  ||
+           this->hasKeyword("RGIPL") ||
+           this->hasKeyword("RGIPG") ||
+           this->hasKeyword("RWIP")  ||
+           this->hasKeyword("RPR");
 }
 
 }

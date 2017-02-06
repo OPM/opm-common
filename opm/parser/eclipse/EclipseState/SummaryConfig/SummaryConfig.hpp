@@ -58,6 +58,13 @@ namespace Opm {
               identifiers like 'WWCT:OPX' and 'BPR:10,12,3'.
             */
             bool hasKeyword( const std::string& keyword ) const;
+
+            /*
+              Can be used to query if a certain 3D field, e.g. PRESSURE,
+              is required to calculate the summary variables.
+            */
+            bool require3DField( const std::string& keyword) const;
+            bool requireFIPNUM( ) const;
         private:
 
             /*
