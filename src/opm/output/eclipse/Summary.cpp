@@ -351,6 +351,13 @@ quantity region_sum( const fn_args& args , const std::string& keyword , UnitSyst
         return { 0.0, unit };
 
     const std::vector<double>& sim_value = args.state.data( keyword );
+    if (sim_value.size() != args.grid.getNumActive()) {
+      std::stringstream str;
+      str << "Wrongly sized data array passed to output for keyword "
+          << keyword << ", size=" << sim_value.size() << ", expected=" << args.grid.getNumActive() << ".";
+      throw std::runtime_error(str.str());
+    }
+
 
     for (auto cell_index : cells)
         sum += sim_value[cell_index];
