@@ -57,7 +57,7 @@ static const int day = 24 * 60 * 60;
 
 
 static data::Solution make_solution( const EclipseGrid& grid ) {
-    int numCells = grid.getCartesianSize();
+    int numCells = grid.getNumActive( );
     data::Solution sol = {
         {"TEMP" , { UnitSystem::measure::temperature, std::vector<double>( numCells ), data::TargetType::RESTART_SOLUTION} },
         {"SWAT" , { UnitSystem::measure::identity,    std::vector<double>( numCells ), data::TargetType::RESTART_SOLUTION} },
@@ -79,18 +79,21 @@ static data::Solution make_solution( const EclipseGrid& grid ) {
         std::vector<double> rgipg(numCells);
         std::vector<double> rwip(numCells);
 
+        size_t g = 0;
         for (size_t k=0; k < grid.getNZ(); k++) {
             for (size_t j=0; j < grid.getNY(); j++) {
                 for (size_t i=0; i < grid.getNX(); i++) {
-                    size_t g = grid.getNX()*grid.getNY()*k + j * grid.getNX() + i;
-                    pres[g] = 1.0*(k + 1);
-                    roip[g] = 2.0*(k + 1);
-                    roipl[g] = roip[g] - 1;
-                    roipg[g] = roip[g] + 1;
-                    rgip[g] = 2.1*(k + 1);
-                    rgipl[g] = rgip[g] - 1;
-                    rgipg[g] = rgip[g] + 1;
-                    rwip[g] = 2.2*(k + 1);
+                    if (grid.cellActive(i,j,k)) {
+                        pres[g] = 1.0*(k + 1);
+                        roip[g] = 2.0*(k + 1);
+                        roipl[g] = roip[g] - 1;
+                        roipg[g] = roip[g] + 1;
+                        rgip[g] = 2.1*(k + 1);
+                        rgipl[g] = rgip[g] - 1;
+                        rgipg[g] = rgip[g] + 1;
+                        rwip[g] = 2.2*(k + 1);
+                        g++;
+                    }
                 }
             }
         }
@@ -595,8 +598,8 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGORH" ), 1e-5 );
 
-    const double foip = 110.0 * 100;
-    const double fgip = 115.5 * 100;
+    const double foip = 11.0 * 1000 - 2*10;    // Cell (1,2,10) is inactive.
+    const double fgip = 11.55 * 1000 - 2.1*10; // Cell (1,2,10) is inactive.
     BOOST_CHECK_CLOSE( foip, ecl_sum_get_field_var( resp, 1, "FOIP" ), 1e-5 );
     BOOST_CHECK_CLOSE( fgip, ecl_sum_get_field_var( resp, 1, "FGIP" ), 1e-5 );
 
@@ -604,8 +607,9 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_EQUAL( 2, ecl_sum_get_field_var( resp, 1, "FMWPR" ) );
 
     UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
-    const double fpr = units.from_si( UnitSystem::measure::pressure, 5.5 );
-    BOOST_CHECK_CLOSE( fpr, ecl_sum_get_field_var( resp, 1, "FPR" ), 1e-5 );
+    const double fpr_si = (5.5 * 1000 - 10) / 999;
+    const double fpr = units.from_si( UnitSystem::measure::pressure, fpr_si );
+    BOOST_CHECK_CLOSE( fpr, ecl_sum_get_field_var( resp, 1, "FPR" ), 1e-5 ); //
 
     /* in this test, the initial OIP wasn't set */
     BOOST_CHECK_EQUAL( 0.0, ecl_sum_get_field_var( resp, 1, "FOE" ) );
@@ -615,7 +619,7 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
 BOOST_AUTO_TEST_CASE(foe_test) {
     setup cfg( "foe" );
 
-    std::vector< double > oip( cfg.grid.getCartesianSize(), 12.0 );
+    std::vector< double > oip( cfg.grid.getNumActive(), 12.0 );
     data::Solution sol;
     sol.insert( "OIP", UnitSystem::measure::volume, oip, data::TargetType::RESTART_AUXILLARY );
 
@@ -629,10 +633,13 @@ BOOST_AUTO_TEST_CASE(foe_test) {
     auto res = readsum( cfg.name );
     const auto* resp = res.get();
 
-    const double foe = (12000.0 - 11000.0) / 12000.0;
+    const double oip0 = 12 * cfg.grid.getNumActive();
+    const double oip1 = 11.0 * 1000 - 2*10;
+    const double foe = (oip0 - oip1) / oip0;
     BOOST_CHECK_CLOSE( foe, ecl_sum_get_field_var( resp, 1, "FOE" ), 1e-5 );
     BOOST_CHECK_CLOSE( foe, ecl_sum_get_field_var( resp, 2, "FOE" ), 1e-5 );
 }
+
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {
     setup cfg( "test_Summary_report_steps_time" );
