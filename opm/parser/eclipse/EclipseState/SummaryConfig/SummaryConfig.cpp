@@ -98,7 +98,7 @@ namespace {
          {"GIP"  , {"RGIP" , "FGIP"}},
          {"GIPL" , {"RGIPL"}},
          {"GIPG" , {"RGIPG"}},
-         {"WIP"  , {"RWIP"}},
+         {"WIP"  , {"RWIP" , "FWIP"}},
          {"SWAT" , {"BSWAT"}},
          {"SGAS" , {"BSGAS"}}
     };
