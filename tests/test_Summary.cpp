@@ -814,3 +814,40 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     // Cell is not active
     BOOST_CHECK( !ecl_sum_has_general_var( resp , "BPR:2,1,10"));
 }
+
+
+
+/*
+  The SummaryConfig.require3DField( ) implementation is slightly ugly:
+
+  1. Which 3D fields are required is implicitly given by the
+     implementation of the Summary() class here in opm-output.
+
+  2. The implementation of the SummaryConfig.require3DField( ) is
+     based on a hardcoded list in SummaryConfig.cpp - i.e. there is a
+     inverse dependency between the opm-parser and opm-output modules.
+
+  The test here just to ensure that *something* breaks if the
+  opm-parser implementation is changed/removed.
+*/
+
+
+
+BOOST_AUTO_TEST_CASE( require3D )
+{
+    setup cfg( "XXXX" );
+    const auto summaryConfig = cfg.es.getSummaryConfig( );
+
+    BOOST_CHECK( summaryConfig.require3DField( "PRESSURE" ));
+    BOOST_CHECK( summaryConfig.require3DField( "SGAS" ));
+    BOOST_CHECK( summaryConfig.require3DField( "SWAT" ));
+    BOOST_CHECK( summaryConfig.require3DField( "WIP" ));
+    BOOST_CHECK( summaryConfig.require3DField( "GIP" ));
+    BOOST_CHECK( summaryConfig.require3DField( "OIP" ));
+    BOOST_CHECK( summaryConfig.require3DField( "OIPL" ));
+    BOOST_CHECK( summaryConfig.require3DField( "OIPG" ));
+    BOOST_CHECK( summaryConfig.require3DField( "GIPL" ));
+    BOOST_CHECK( summaryConfig.require3DField( "GIPG" ));
+
+    BOOST_CHECK( summaryConfig.requireFIPNUM( ));
+}
