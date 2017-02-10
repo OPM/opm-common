@@ -39,8 +39,8 @@
 #define OPM_VALGRIND_OPTIM_UNUSED OPM_UNUSED
 #endif
 
-namespace Valgrind
-{
+namespace Opm {
+namespace Valgrind {
 /*!
  * \ingroup Valgrind
  * \brief Returns whether the program is running under Valgrind or not.
@@ -306,6 +306,6 @@ inline void SetNoAccess(const T *value OPM_VALGRIND_OPTIM_UNUSED, int size OPM_V
 #endif
 }
 
-} // namespace Valgrind
+}} // namespace Valgrind, Opm
 
 #endif
