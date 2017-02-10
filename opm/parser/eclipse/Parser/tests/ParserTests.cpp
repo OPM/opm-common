@@ -289,6 +289,7 @@ BOOST_AUTO_TEST_CASE( PATHS_has_global_scope ) {
 
     parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION);
     parser.parseFile( "testdata/parser/PATHSInInclude.data", parseContext );
+    BOOST_CHECK(parser.hasKeyword("OIL"));
     BOOST_CHECK_THROW( parser.parseFile( "testdata/parser/PATHSInIncludeInvalid.data", ParseContext() ), std::invalid_argument );
 }
 
@@ -298,6 +299,7 @@ BOOST_AUTO_TEST_CASE( PATHS_with_backslashes ) {
 
     parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION);
     parser.parseFile( "testdata/parser/PATHSWithBackslashes.data", parseContext );
+    BOOST_CHECK(parser.hasKeyword("OIL"));
 }
 
 BOOST_AUTO_TEST_CASE( handle_empty_title ) {
