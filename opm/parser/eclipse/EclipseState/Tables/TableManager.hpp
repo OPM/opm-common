@@ -60,8 +60,8 @@ namespace Opm {
         const TableContainer& operator[](const std::string& tableName) const;
         bool hasTables( const std::string& tableName ) const;
 
-
         const Tabdims& getTabdims() const;
+        const Eqldims& getEqldims() const;
 
         const TableContainer& getSwofTables() const;
         const TableContainer& getSgwfnTables() const;

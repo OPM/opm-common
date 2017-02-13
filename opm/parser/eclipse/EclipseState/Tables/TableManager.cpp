@@ -520,6 +520,9 @@ namespace Opm {
         return m_tabdims;
     }
 
+    const Eqldims& TableManager::getEqldims() const {
+        return *m_eqldims;
+    }
 
     /*
       const std::vector<SwofTable>& TableManager::getSwofTables() const {
