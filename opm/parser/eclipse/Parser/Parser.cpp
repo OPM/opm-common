@@ -372,6 +372,13 @@ boost::filesystem::path ParserState::getIncludeFilePath( std::string path ) cons
         boost::replace_all(path, pathKeywordPrefix + stringToFind, stringToReplace);
     }
 
+    // Check if there are any backslashes in the path...
+    if (path.find('\\') != std::string::npos) {
+        // ... if so, replace with slashes and create a warning.
+        std::replace(path.begin(), path.end(), '\\', '/');
+        deck.getMessageContainer().warning("Replaced one or more backslash with a slash in an INCLUDE path.");
+    }
+
     boost::filesystem::path includeFilePath(path);
 
     if (includeFilePath.is_relative())
