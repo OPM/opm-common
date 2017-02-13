@@ -39,6 +39,7 @@ namespace Opm {
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
+                           const Value<int>& satTableId,
                            const WellCompletion::DirectionEnum direction)
         : m_i(i), m_j(j), m_k(k),
           m_complnum( compnum ),
@@ -46,6 +47,7 @@ namespace Opm {
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
           m_wellPi(1.0),
           m_skinFactor(skinFactor),
+          m_satTableId(satTableId),
           m_state(state),
           m_direction(direction),
           m_center_depth( depth )
@@ -123,11 +125,13 @@ namespace Opm {
         Value<double> connectionTransmissibilityFactor("ConnectionTransmissibilityFactor");
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
+        Value<int> satTableId("SAT_TABLE");
 
         {
             const auto& connectionTransmissibilityFactorItem = compdatRecord.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
             const auto& diameterItem = compdatRecord.getItem("DIAMETER");
             const auto& skinFactorItem = compdatRecord.getItem("SKIN");
+            const auto& satTableIdItem = compdatRecord.getItem("SAT_TABLE");
 
             if (connectionTransmissibilityFactorItem.hasValue(0) && connectionTransmissibilityFactorItem.getSIDouble(0) > 0)
                 connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem.getSIDouble(0));
@@ -137,6 +141,12 @@ namespace Opm {
 
             if (skinFactorItem.hasValue(0))
                 skinFactor.setValue( skinFactorItem.get< double >(0));
+
+            if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
+                satTableId.setValue( satTableIdItem.get< int >(0));
+            else
+                satTableId.setValue( -1);
+
         }
 
         const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord.getItem("DIR").getTrimmedString(0));
@@ -149,6 +159,7 @@ namespace Opm {
                                       connectionTransmissibilityFactor,
                                       diameter,
                                       skinFactor,
+                                      satTableId,
                                       direction );
         }
 
@@ -246,6 +257,10 @@ namespace Opm {
         return m_skinFactor.getValue();
     }
 
+    int Completion::getSatTableId() const {
+        return m_satTableId.getValue();
+    }
+
     const Value<double>& Completion::getConnectionTransmissibilityFactorAsValueObject() const {
         return m_connectionTransmissibilityFactor;
     }
@@ -256,6 +271,10 @@ namespace Opm {
 
     Value<double> Completion::getSkinFactorAsValueObject() const {
         return m_skinFactor;
+    }
+
+    Value<int> Completion::getSatTableIdAsValueObject() const {
+        return m_satTableId;
     }
 
     WellCompletion::DirectionEnum Completion::getDirection() const {
@@ -298,6 +317,7 @@ namespace Opm {
                == rhs.m_connectionTransmissibilityFactor
             && this->m_wellPi == rhs.m_wellPi
             && this->m_skinFactor == rhs.m_skinFactor
+            && this->m_satTableId == rhs.m_satTableId
             && this->m_state == rhs.m_state
             && this->m_direction == rhs.m_direction
             && this->m_segment_number == rhs.m_segment_number
