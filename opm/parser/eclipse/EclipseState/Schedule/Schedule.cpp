@@ -67,6 +67,7 @@ namespace Opm {
 
     Schedule::Schedule( const ParseContext& parseContext,
                         const EclipseGrid& grid,
+                        const Eclipse3DProperties& eclipseProperties,
                         const Deck& deck,
                         const Phases &phases ) :
         m_timeMap( deck ),
@@ -96,7 +97,7 @@ namespace Opm {
         }
 
         if (Section::hasSCHEDULE(deck)) {
-            iterateScheduleSection( parseContext, SCHEDULESection( deck ), grid );
+            iterateScheduleSection( parseContext, SCHEDULESection( deck ), grid, eclipseProperties );
         }
     }
 
@@ -112,7 +113,8 @@ namespace Opm {
         return posixTime( this->m_timeMap.getEndTime() );
     }
 
-    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid) {
+    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid,
+                                          const Eclipse3DProperties& eclipseProperties) {
         /*
           geoModifiers is a list of geo modifiers which can be found in the schedule
           section. This is only partly supported, support is indicated by the bool
@@ -177,7 +179,7 @@ namespace Opm {
                 handleWGRUPCON(keyword, currentStep);
 
             else if (keyword.name() == "COMPDAT")
-                handleCOMPDAT(keyword, currentStep, grid);
+                handleCOMPDAT(keyword, currentStep, grid, eclipseProperties);
 
             else if (keyword.name() == "WELSEGS")
                 handleWELSEGS(keyword, currentStep);
@@ -1221,9 +1223,9 @@ namespace Opm {
 
 
 
-    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid) {
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
         const auto wells = this->getWells( currentStep );
-        auto completions = Completion::fromCOMPDAT( grid, keyword, wells );
+        auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, keyword, wells );
 
         for( const auto pair : completions ) {
             auto& well = this->m_wells.get( pair.first );

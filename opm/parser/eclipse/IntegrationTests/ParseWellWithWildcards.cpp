@@ -38,7 +38,9 @@ BOOST_AUTO_TEST_CASE( parse_WCONPROD_OK ) {
     std::string wconprodFile("testdata/integration_tests/WellWithWildcards/WCONPROD1");
     auto deck =  parser.parseFile(wconprodFile, ParseContext());
     EclipseGrid grid(30,30,30);
-    Schedule sched(ParseContext(), grid, deck, Phases(true, true, true) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(ParseContext(), grid, eclipseProperties, deck, Phases(true, true, true) );
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("INJE1"));
@@ -73,7 +75,9 @@ BOOST_AUTO_TEST_CASE( parse_WCONINJE_OK ) {
     std::string wconprodFile("testdata/integration_tests/WellWithWildcards/WCONINJE1");
     auto deck = parser.parseFile(wconprodFile, parseContext);
     EclipseGrid grid(30,30,30);
-    Schedule sched( parseContext, grid, deck, Phases(true, true, true) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched( parseContext, grid, eclipseProperties, deck, Phases(true, true, true) );
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("PROD1"));

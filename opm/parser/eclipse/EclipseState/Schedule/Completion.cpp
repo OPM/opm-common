@@ -20,10 +20,12 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -102,6 +104,7 @@ namespace Opm {
 
     inline std::vector< Completion >
     fromCOMPDAT( const EclipseGrid& grid,
+                 const Eclipse3DProperties& eclipseProperties,
                  const DeckRecord& compdatRecord,
                  const Well& well,
                  int prev_complnum ) {
@@ -126,7 +129,8 @@ namespace Opm {
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
         Value<int> satTableId("SAT_TABLE");
-
+        const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
+        bool defaultSatTable = true;
         {
             const auto& connectionTransmissibilityFactorItem = compdatRecord.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
             const auto& diameterItem = compdatRecord.getItem("DIAMETER");
@@ -143,15 +147,18 @@ namespace Opm {
                 skinFactor.setValue( skinFactorItem.get< double >(0));
 
             if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
+            {
                 satTableId.setValue( satTableIdItem.get< int >(0));
-            else
-                satTableId.setValue( -1);
-
+                defaultSatTable = false;
+            }
         }
 
         const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord.getItem("DIR").getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
+            if (defaultSatTable)
+                satTableId.setValue ( satnum.iget(grid.getGlobalIndex(I,J,k)) );
+
             completions.emplace_back( I, J, k,
                                       int( completions.size() + prev_complnum ) + 1,
                                       grid.getCellDepth( I,J,k ),
@@ -178,6 +185,7 @@ namespace Opm {
 
     std::map< std::string, std::vector< Completion > >
     Completion::fromCOMPDAT( const EclipseGrid& grid ,
+                             const Eclipse3DProperties& eclipseProperties,
                              const DeckKeyword& compdatKeyword,
                              const std::vector< const Well* >& wells ) {
 
@@ -199,6 +207,7 @@ namespace Opm {
             if( prev_compls[ index ] == 0 ) (*well)->getCompletions().size();
 
             auto completions = Opm::fromCOMPDAT( grid,
+                                                 eclipseProperties,
                                                  record,
                                                  **well,
                                                  prev_compls[ index ] );

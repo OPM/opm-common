@@ -36,6 +36,7 @@ namespace Opm {
     class DeckRecord;
     class Well;
     class EclipseGrid;
+    class Eclipse3DProperties;
 
     class Completion {
     public:
@@ -78,6 +79,7 @@ namespace Opm {
 
         static std::map< std::string, std::vector< Completion > >
         fromCOMPDAT( const EclipseGrid& grid,
+                     const Eclipse3DProperties& eclipseProperties,
                      const DeckKeyword& compdatKeyword,
                      const std::vector< const Well* >& );
 

@@ -38,11 +38,13 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     const auto scheduleFile = "testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1";
     auto deck =  parser.parseFile(scheduleFile, ParseContext());
     EclipseGrid grid(10,10,10);
-    const Schedule schedule( ParseContext(), grid, deck, Phases(true, true, true) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    const Schedule schedule( ParseContext(), grid, eclipseProperties, deck, Phases(true, true, true) );
     const auto& COMPDAT1 = deck.getKeyword("COMPDAT" , 1);
 
     const auto wells = schedule.getWells( 0 );
-    auto completions = Completion::fromCOMPDAT( grid, COMPDAT1, wells );
+    auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, COMPDAT1, wells );
     BOOST_CHECK_EQUAL( 3U , completions.size() );
 
     BOOST_CHECK( completions.find("W_1") != completions.end() );
@@ -82,5 +84,12 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK (well2->getCompletions(0).allCompletionsShut());
     BOOST_CHECK_EQUAL (well2->getStatus(0) , WellCommon::StatusEnum::SHUT);
 
+    // Check saturation table number for connection
+    std::vector<Completion> W_1Completions = completions.find("W_1")->second;
+    const auto& W1_completion0 = W_1Completions[0];
+    const auto& W1_completion3 = W_1Completions[3];
+
+    BOOST_CHECK_EQUAL( 1 , W1_completion0.getSatTableId());
+    BOOST_CHECK_EQUAL( 2 , W1_completion3.getSatTableId());
 
 }
