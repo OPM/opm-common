@@ -454,7 +454,7 @@ void writeSolution(ecl_rst_file_type* rst_file, const data::Solution& solution) 
      ecl_rst_file_end_solution( rst_file );
 
      for (const auto& elm: solution) {
-        if (elm.second.target == data::TargetType::RESTART_AUXILLARY)
+        if (elm.second.target == data::TargetType::RESTART_AUXILIARY)
             ecl_rst_file_add_kw( rst_file , ERT::EclKW<float>(elm.first, elm.second.data).get());
      }
 }

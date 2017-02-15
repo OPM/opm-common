@@ -41,7 +41,7 @@ namespace data {
        suturation. WIll end up in the SOLUTION section of the restart
        file.
 
-     RESTART_AUXILLARY : Fields with extra information, not required
+     RESTART_AUXILIARY : Fields with extra information, not required
        for restart. Examples of this include fluid in place values or
        evaluations of relative permeability. Will end up in the
        restart file.
@@ -57,7 +57,7 @@ namespace data {
 
     enum class TargetType {
         RESTART_SOLUTION,
-        RESTART_AUXILLARY,
+        RESTART_AUXILIARY,
         SUMMARY,
         INIT,
     };

@@ -99,13 +99,13 @@ static data::Solution make_solution( const EclipseGrid& grid ) {
         }
 
         sol.insert( "PRESSURE", UnitSystem::measure::pressure , pres , data::TargetType::RESTART_SOLUTION);
-        sol.insert( "OIP"     , UnitSystem::measure::volume   , roip , data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "OIPL"    , UnitSystem::measure::volume   , roipl, data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "OIPG"    , UnitSystem::measure::volume   , roipg, data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "GIP"     , UnitSystem::measure::volume   , rgip , data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "GIPL"    , UnitSystem::measure::volume   , rgipl, data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "GIPG"    , UnitSystem::measure::volume   , rgipg, data::TargetType::RESTART_AUXILLARY);
-        sol.insert( "WIP"     , UnitSystem::measure::volume   , rwip , data::TargetType::RESTART_AUXILLARY);
+        sol.insert( "OIP"     , UnitSystem::measure::volume   , roip , data::TargetType::RESTART_AUXILIARY);
+        sol.insert( "OIPL"    , UnitSystem::measure::volume   , roipl, data::TargetType::RESTART_AUXILIARY);
+        sol.insert( "OIPG"    , UnitSystem::measure::volume   , roipg, data::TargetType::RESTART_AUXILIARY);
+        sol.insert( "GIP"     , UnitSystem::measure::volume   , rgip , data::TargetType::RESTART_AUXILIARY);
+        sol.insert( "GIPL"    , UnitSystem::measure::volume   , rgipl, data::TargetType::RESTART_AUXILIARY);
+        sol.insert( "GIPG"    , UnitSystem::measure::volume   , rgipg, data::TargetType::RESTART_AUXILIARY);
+        sol.insert( "WIP"     , UnitSystem::measure::volume   , rwip , data::TargetType::RESTART_AUXILIARY);
     }
     return sol;
 }
@@ -621,7 +621,7 @@ BOOST_AUTO_TEST_CASE(foe_test) {
 
     std::vector< double > oip( cfg.grid.getNumActive(), 12.0 );
     data::Solution sol;
-    sol.insert( "OIP", UnitSystem::measure::volume, oip, data::TargetType::RESTART_AUXILLARY );
+    sol.insert( "OIP", UnitSystem::measure::volume, oip, data::TargetType::RESTART_AUXILIARY );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
     writer.set_initial( sol );

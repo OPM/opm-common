@@ -298,8 +298,8 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
 
         for( int i = first; i < last; ++i ) {
             data::Solution sol = createBlackoilState( i, 3 * 3 * 3 );
-            sol.insert("KRO", measure::identity , std::vector<double>(3*3*3 , i), TargetType::RESTART_AUXILLARY);
-            sol.insert("KRG", measure::identity , std::vector<double>(3*3*3 , i*10), TargetType::RESTART_AUXILLARY);
+            sol.insert("KRO", measure::identity , std::vector<double>(3*3*3 , i), TargetType::RESTART_AUXILIARY);
+            sol.insert("KRG", measure::identity , std::vector<double>(3*3*3 , i*10), TargetType::RESTART_AUXILIARY);
 
 
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
