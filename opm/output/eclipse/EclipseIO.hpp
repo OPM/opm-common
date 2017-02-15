@@ -53,19 +53,54 @@ public:
 
 
 
-    /// Write the static eclipse data (grid, PVT curves, etc) to disk, and set
-    /// up additional initial properties
-    ///
-    /// - simProps contains a list of properties which must be
-    ///   calculated by the simulator, e.g. the transmissibility
-    ///   vectors TRANX, TRANY and TRANZ.
-    ///
-    /// - The NNC argument is distributed between the EGRID and INIT
-    ///   files.
-    ///
-    /// If you want FOE in the SUMMARY section, you must pass the initial
-    /// oil-in-place "OIP" key in Solution
-    void writeInitial( data::Solution = data::Solution(), const NNC& = NNC());
+/**    \brief Output static properties in EGRID and INIT file.
+  *
+  *    Write the static eclipse data (grid, PVT curves, etc) to disk,
+  *    and set up additional initial properties. There are no specific
+  *    keywords to configure the output to the INIT files, it seems
+  *    like the algorithm is: "All available keywords are written to
+  *    INIT file". For the current code the algorithm is as such:
+  *
+  *
+  *    1. 3D properties which can be simply calculated in the output
+  *       layer are unconditionally written to disk, that currently
+  *       includes the DX, DY, DZ and DEPTH keyword.
+  *
+  *    2. All integer propeerties from the deck are written
+  *       unconditionally, that typically includes the MULTNUM, PVTNUM,
+  *       SATNUM and so on. Observe that the keywords PVTNUM, SATNUM,
+  *       EQLNUM and FIPNUM are autocreated in the output layer, so
+  *       they will be on disk even if they are not explicitly included
+  *       in the deck.
+  *
+  *    3. The PORV keyword will *always* be present in the INIT file,
+  *       and that keyword will have nx*ny*nz elements; all other 3D
+  *       properties will only have nactive elements.
+  *
+  *    4. For floating point 3D keywords from the deck - like PORO and
+  *       PERMX there is a *hardcoded* list in the writeINIFile( )
+  *       implementation of which keywords to output - if they are
+  *       available.
+  *
+  *    5. The container simProps contains additional 3D floating point
+  *       properties which have been calculated by the simulator, this
+  *       typically includes the transmissibilities TRANX, TRANY and
+  *       TRANZ but could in principle be anye floating point
+  *       property.
+  *
+  *       If you want the FOE keyword in the summary output the
+  *       simProps container must contain the initial OIP field.
+  *
+  *   In addition:
+  *
+  *   - The NNC argument is distributed between the EGRID and INIT
+  *     files.
+  *
+  *   - PVT curves are written unconditionally, saturation functions
+  *     are not yet written to disk.
+  */
+
+    void writeInitial( data::Solution simProps = data::Solution(), const NNC& nnc = NNC());
 
     /*!
      * \brief Write a reservoir state and summary information to disk.
