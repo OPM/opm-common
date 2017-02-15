@@ -7,6 +7,7 @@ ctable.cc
 ctable_index.cc
 ceclipse_grid.cc
 cschedule.cc
+cecl_props.cc
 )
 
 target_link_libraries(copmparser opmparser)
