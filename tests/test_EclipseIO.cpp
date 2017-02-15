@@ -172,6 +172,11 @@ void checkInitFile( const Deck& deck, const data::Solution& simProps) {
         }
     }
 
+    /*
+      These keyword should always be in the INIT file, irrespective of
+      whether they appear in the inut deck or not.
+    */
+    BOOST_CHECK( ecl_file_has_kw( initFile.get() , "NTG" ));
     BOOST_CHECK( ecl_file_has_kw( initFile.get() , "FIPNUM" ));
     BOOST_CHECK( ecl_file_has_kw( initFile.get() , "SATNUM" ));
 
