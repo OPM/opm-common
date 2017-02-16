@@ -549,7 +549,7 @@ namespace Opm {
             return m_intGridProperties.getKeyword( m_defaultRegion );
         else {
             const std::string regionArray = MULTREGT::RegionNameFromDeckValue( regionItem.get< std::string >(0) );
-            return m_intGridProperties.getInitializedKeyword( regionArray );
+            return m_intGridProperties.getDeckKeyword( regionArray );
         }
     }
 

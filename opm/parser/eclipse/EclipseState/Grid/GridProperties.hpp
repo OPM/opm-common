@@ -79,11 +79,31 @@ namespace Opm {
         T convertInputValue( double doubleValue ) const;
 
         bool supportsKeyword(const std::string& keyword) const;
+
+        /*
+          The difference between hasKeyword() and hasDeckKeyword( ) is
+          that hasDeckKeyword( ) will return false for keywords which
+          have only been auto created - and are not explicitly
+          mentioned in the deck.
+        */
+
         bool hasKeyword(const std::string& keyword) const;
+        bool hasDeckKeyword(const std::string& keyword) const;
+
+
         size_t size() const;
         void assertKeyword(const std::string& keyword) const;
+
+        /*
+          The getKeyword() method will auto create a keyword if
+          requested, the getDeckKeyword() method will onyl return a
+          keyword if it has been explicitly mentioned in the deck. The
+          getDeckKeyword( ) method will throw an exception instead of
+          auto creating the keyword.
+        */
+
         const GridProperty<T>& getKeyword(const std::string& keyword) const;
-        const GridProperty<T>& getInitializedKeyword(const std::string& keyword) const;
+        const GridProperty<T>& getDeckKeyword(const std::string& keyword) const;
 
 
         bool addKeyword(const std::string& keywordName);
