@@ -41,7 +41,7 @@ namespace Opm {
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
-                           const Value<int>& satTableId,
+                           const int satTableId,
                            const WellCompletion::DirectionEnum direction)
         : m_i(i), m_j(j), m_k(k),
           m_complnum( compnum ),
@@ -128,7 +128,7 @@ namespace Opm {
         Value<double> connectionTransmissibilityFactor("ConnectionTransmissibilityFactor");
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
-        Value<int> satTableId("SAT_TABLE");
+        int satTableId;
         const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
         bool defaultSatTable = true;
         {
@@ -148,7 +148,7 @@ namespace Opm {
 
             if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
             {
-                satTableId.setValue( satTableIdItem.get< int >(0));
+                satTableId = satTableIdItem.get< int >(0);
                 defaultSatTable = false;
             }
         }
@@ -157,7 +157,7 @@ namespace Opm {
 
         for (int k = K1; k <= K2; k++) {
             if (defaultSatTable)
-                satTableId.setValue ( satnum.iget(grid.getGlobalIndex(I,J,k)) );
+                satTableId = satnum.iget(grid.getGlobalIndex(I,J,k));
 
             completions.emplace_back( I, J, k,
                                       int( completions.size() + prev_complnum ) + 1,
@@ -267,7 +267,7 @@ namespace Opm {
     }
 
     int Completion::getSatTableId() const {
-        return m_satTableId.getValue();
+        return m_satTableId;
     }
 
     const Value<double>& Completion::getConnectionTransmissibilityFactorAsValueObject() const {
@@ -280,10 +280,6 @@ namespace Opm {
 
     Value<double> Completion::getSkinFactorAsValueObject() const {
         return m_skinFactor;
-    }
-
-    Value<int> Completion::getSatTableIdAsValueObject() const {
-        return m_satTableId;
     }
 
     WellCompletion::DirectionEnum Completion::getDirection() const {

@@ -47,7 +47,7 @@ namespace Opm {
                    const Value<double>& connectionTransmissibilityFactor,
                    const Value<double>& diameter,
                    const Value<double>& skinFactor,
-                   const Value<int>& satTableId,
+                   const int satTableId,
                    const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
         Completion(const Completion&, WellCompletion::StateEnum newStatus);
@@ -93,12 +93,11 @@ namespace Opm {
         Value<double> m_connectionTransmissibilityFactor;
         double m_wellPi;
         Value<double> m_skinFactor;
-        Value<int> m_satTableId;
+        int m_satTableId;
         WellCompletion::StateEnum m_state;
         WellCompletion::DirectionEnum m_direction;
         Value<double> getDiameterAsValueObject() const;
         Value<double> getSkinFactorAsValueObject() const;
-        Value<int> getSatTableIdAsValueObject() const;
         // related segment number
         // -1 means the completion is not related to segment
         int m_segment_number = -1;
