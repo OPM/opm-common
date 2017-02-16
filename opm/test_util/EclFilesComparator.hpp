@@ -60,6 +60,8 @@ class ECLFilesComparator {
         ecl_file_type* ecl_file2 = nullptr;
         ecl_grid_type* ecl_grid2 = nullptr;
         std::vector<std::string> keywords1, keywords2;
+        bool throwOnError = true; //!< Throw on first error
+        mutable size_t num_errors = 0;
 
         //! \brief Checks if the keyword exists in both cases.
         //! \param[in] keyword Keyword to check.
@@ -93,6 +95,12 @@ class ECLFilesComparator {
         ECLFilesComparator(int file_type, const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance);
         //! \brief Closing the ECLIPSE files.
         ~ECLFilesComparator();
+
+        //! \brief Set whether to throw on errors or not.
+        void throwOnErrors(bool dothrow) { throwOnError = dothrow; }
+
+        //! \brief Returns the number of errors encountered in the performed comparisons.
+        size_t getNoErrors() const { return num_errors; }
 
         //! \brief Returns the ECLIPSE filetype of this
         int getFileType() const {return file_type;}

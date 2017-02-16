@@ -31,6 +31,18 @@
 #include <numeric>
 
 
+// helper macro to handle error throws or not
+#define HANDLE_ERROR(type, message) \
+  { \
+    if (throwOnError) \
+      OPM_THROW(type, message); \
+    else { \
+      std::cerr << message << std::endl; \
+      ++num_errors; \
+    } \
+  }
+
+
 void ECLFilesComparator::keywordValidForComparing(const std::string& keyword) const {
     auto it = std::find(keywords1.begin(), keywords1.end(), keyword);
     if (it == keywords1.end()) {
@@ -249,7 +261,7 @@ void RegressionTest::boolComparisonForOccurrence(const std::string& keyword,
         bool data2 = ecl_kw_iget_bool(ecl_kw2, cell);
         if (data1 != data2) {
             printValuesForCell(keyword, occurrence1, occurrence2, cell, data1, data2);
-            OPM_THROW(std::runtime_error, "Values of bool type differ.");
+            HANDLE_ERROR(std::runtime_error, "Values of bool type differ.");
         }
     }
 }
@@ -265,7 +277,7 @@ void RegressionTest::charComparisonForOccurrence(const std::string& keyword, int
         std::string data2(ecl_kw_iget_char_ptr(ecl_kw2, cell));
         if (data1.compare(data2) != 0) {
             printValuesForCell(keyword, occurrence1, occurrence2, cell, data1, data2);
-            OPM_THROW(std::runtime_error, "Values of char type differ.");
+            HANDLE_ERROR(std::runtime_error, "Values of char type differ.");
         }
     }
 }
@@ -282,7 +294,7 @@ void RegressionTest::intComparisonForOccurrence(const std::string& keyword, int 
     for (size_t cell = 0; cell < values1.size(); cell++) {
         if (values1[cell] != values2[cell]) {
             printValuesForCell(keyword, occurrence1, occurrence2, cell, values1[cell], values2[cell]);
-            OPM_THROW(std::runtime_error, "Values of int type differ.");
+            HANDLE_ERROR(std::runtime_error, "Values of int type differ.");
         }
     }
 }
@@ -312,7 +324,7 @@ void RegressionTest::deviationsForCell(double val1, double val2, const std::stri
         if (val1 < 0) {
             if (std::abs(val1) > absTolerance) {
                 printValuesForCell(keyword, occurrence1, occurrence2, cell, val1, val2);
-                OPM_THROW(std::runtime_error, "Negative value in first file, "
+                HANDLE_ERROR(std::runtime_error, "Negative value in first file, "
                         << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
             }
             val1 = 0;
@@ -320,7 +332,7 @@ void RegressionTest::deviationsForCell(double val1, double val2, const std::stri
         if (val2 < 0) {
             if (std::abs(val2) > absTolerance) {
                 printValuesForCell(keyword, occurrence1, occurrence2, cell, val1, val2);
-                OPM_THROW(std::runtime_error, "Negative value in second file, "
+                HANDLE_ERROR(std::runtime_error, "Negative value in second file, "
                         << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
             }
             val2 = 0;
@@ -329,7 +341,7 @@ void RegressionTest::deviationsForCell(double val1, double val2, const std::stri
     Deviation dev = calculateDeviations(val1, val2);
     if (dev.abs > absTolerance && dev.rel > relTolerance) {
         printValuesForCell(keyword, occurrence1, occurrence2, cell, val1, val2);
-        OPM_THROW(std::runtime_error, "Deviations exceed tolerances."
+        HANDLE_ERROR(std::runtime_error, "Deviations exceed tolerances."
                 << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
                 << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
     }
@@ -371,7 +383,7 @@ void RegressionTest::gridCompare() const {
             ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
             // Coordinates from this function are zero-based, hence incrementing
             i++, j++, k++;
-            OPM_THROW(std::runtime_error, "In grid file: Deviations of cell volume exceed tolerances. "
+            HANDLE_ERROR(std::runtime_error, "In grid file: Deviations of cell volume exceed tolerances. "
                     << "\nFor cell with coordinate (" << i << ", " << j << ", " << k << "):"
                     << "\nCell volume in first file: "  << cellVolume1
                     << "\nCell volume in second file: " << cellVolume2

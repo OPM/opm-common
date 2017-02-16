@@ -17,6 +17,7 @@
    */
 
 #include <opm/test_util/EclFilesComparator.hpp>
+#include <opm/common/ErrorMacros.hpp>
 
 #include <ert/util/util.h>
 #include <ert/util/stringlist.h>
@@ -41,6 +42,7 @@ static void printHelp() {
         << "-I Same as -i, but throws an exception when the number of keywords in the two cases differ. Can not be used in combination with -t.\n"
         << "-k Specify specific keyword to compare (capitalized), for example -k PRESSURE.\n"
         << "-l Only do comparison for the last occurrence. This option is only for the regression test, and can therefore not be used in combination with -i or -I.\n"
+        << "-n Do not throw on errors.\n"
         << "-p Print keywords in both cases and exit. Can not be used in combination with -P.\n"
         << "-P Print common and uncommon keywords in both cases and exit. Can not be used in combination with -p.\n"
         << "-t Specify ECLIPSE filetype to compare (unified restart is default). Can not be used in combination with -i or -I. Different possible arguments are:\n"
@@ -111,11 +113,12 @@ int main(int argc, char** argv) {
     bool printKeywordsDifference = false;
     bool specificKeyword         = false;
     bool specificFileType        = false;
+    bool throwOnError            = true;
     char* keyword                = nullptr;
     char* fileTypeCstr           = nullptr;
     int c                        = 0;
 
-    while ((c = getopt(argc, argv, "hiIk:lpPt:")) != -1) {
+    while ((c = getopt(argc, argv, "hiIk:lnpPt:")) != -1) {
         switch (c) {
             case 'h':
                 printHelp();
@@ -126,6 +129,9 @@ int main(int argc, char** argv) {
             case 'I':
                 integrationTest = true;
                 checkNumKeywords = true;
+                break;
+            case 'n':
+                throwOnError = false;
                 break;
             case 'k':
                 specificKeyword = true;
@@ -235,6 +241,7 @@ int main(int argc, char** argv) {
         }
         else {
             RegressionTest comparator(file_type, basename1, basename2, absTolerance, relTolerance);
+            comparator.throwOnErrors(throwOnError);
             if (printKeywords) {
                 comparator.printKeywords();
                 return 0;
@@ -254,6 +261,8 @@ int main(int argc, char** argv) {
                 comparator.gridCompare();
                 comparator.results();
             }
+            if (comparator.getNoErrors() > 0)
+              OPM_THROW(std::runtime_error, comparator.getNoErrors() << " errors encountered in comparisons.");
         }
     }
     catch (const std::exception& e) {
