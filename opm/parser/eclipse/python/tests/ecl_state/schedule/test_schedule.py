@@ -6,8 +6,8 @@ from opm_test import OpmTest
 from opm.parser import Parser
 from opm.ecl_state.schedule import Schedule
 from opm.ecl_state.grid import EclipseGrid
-
-
+from opm.ecl_state.tables import TableManager
+from opm.ecl_state.grid import Eclipse3DProps
 
 class ScheduleTest(OpmTest):
     def setUp(self):
@@ -26,7 +26,9 @@ class ScheduleTest(OpmTest):
 
         sched_file = self.createPath("integration_tests/SCHEDULE/SCHEDULE1")
         sched_deck = p.parseFile( sched_file )
-        s = Schedule( grid , sched_deck )
+        tables = TableManager( grid_deck )
+        ecl_props = Eclipse3DProps( grid_deck , tables , grid )
+        s = Schedule( grid , ecl_props, sched_deck )
 
         end = s.endTime()
         self.assertEqual( datetime.datetime( end.year , end.month , end.day) , datetime.datetime( 2008 , 8 , 10 ))

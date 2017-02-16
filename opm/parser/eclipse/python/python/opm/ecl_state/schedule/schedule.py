@@ -4,19 +4,20 @@ from opm import OPMPrototype
 
 from opm.parser import ParseContext
 from opm.ecl_state.grid import EclipseGrid
+from opm.ecl_state.grid import Eclipse3DProps
 
 class Schedule(BaseCClass):
     TYPE_NAME = "schedule"
-    _alloc = OPMPrototype("void* schedule_alloc( parse_context , eclipse_grid , deck )" , bind = False)
+    _alloc = OPMPrototype("void* schedule_alloc( parse_context , eclipse_grid , ecl_props, deck )" , bind = False)
     _free  = OPMPrototype("void  schedule_free( schedule )")
     _end_time = OPMPrototype("time_t schedule_end(schedule)")
     _start_time = OPMPrototype("time_t schedule_start(schedule)")
     
     
-    def __init__(self , grid, deck , parse_context = None):
+    def __init__(self , grid, props, deck , parse_context = None):
         if parse_context is None:
             parse_context = ParseContext( )
-        c_ptr = self._alloc( parse_context , grid , deck )
+        c_ptr = self._alloc( parse_context , grid , props, deck )
         super(Schedule , self).__init__( c_ptr )
 
 

@@ -7,9 +7,9 @@ from opm.ecl_state.tables import TableManager
 
 
 class Eclipse3DProps(BaseCClass):
-    TYPE_NAME = "eclipse_3d_props"
+    TYPE_NAME = "ecl_props"
     _alloc = OPMPrototype("void* eclipse3d_properties_alloc( deck , table_manager , eclipse_grid)" , bind = False)
-    _free  = OPMPrototype("void  eclipse3d_properties_free( eclipse_3d_props )")
+    _free  = OPMPrototype("void  eclipse3d_properties_free( ecl_props )")
 
     
     def __init__(self , deck, tables, grid):
