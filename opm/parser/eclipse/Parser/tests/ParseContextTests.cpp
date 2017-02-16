@@ -189,14 +189,16 @@ BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
     auto deckSupported = parser.parseString( deckStringSupported , parseContext );
     auto deckUnSupported = parser.parseString( deckStringUnSupported , parseContext );
     EclipseGrid grid( deckSupported );
+    TableManager table ( deckSupported );
+    Eclipse3DProperties eclipseProperties ( deckSupported , table, grid);
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deckSupported, Phases(true, true, true) ));
-    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deckUnSupported, Phases(true, true, true) ));
+    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , eclipseProperties, deckSupported, Phases(true, true, true) ));
+    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , eclipseProperties, deckUnSupported, Phases(true, true, true) ));
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( Schedule( parseContext , grid , deckUnSupported, Phases(true, true, true) ), std::invalid_argument );
-    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deckSupported, Phases(true, true, true) ));
+    BOOST_CHECK_THROW( Schedule( parseContext , grid , eclipseProperties, deckUnSupported, Phases(true, true, true) ), std::invalid_argument );
+    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , eclipseProperties, deckSupported, Phases(true, true, true) ));
 }
 
 
@@ -263,12 +265,14 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
     auto deck = parser.parseString( deckString , parseContext );
 
     EclipseGrid grid( deck );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
-    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , deck, Phases(true, true, true) ));
+    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , eclipseProperties, deck, Phases(true, true, true) ));
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( Schedule( parseContext , grid , deck, Phases(true, true, true) ), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( parseContext , grid , eclipseProperties, deck, Phases(true, true, true) ), std::invalid_argument );
 }
 
 

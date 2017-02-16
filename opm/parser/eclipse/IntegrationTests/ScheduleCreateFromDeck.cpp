@@ -46,7 +46,9 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE1");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,10);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
     const auto& timeMap = sched.getTimeMap();
     BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched.getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap.size());
@@ -60,7 +62,9 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMMENTS_AFTER_KEYWORDS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,10);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
     const auto& timeMap = sched.getTimeMap();
     BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched.getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap.size());
@@ -73,7 +77,9 @@ BOOST_AUTO_TEST_CASE(WCONPROD_MissingCmode) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_MISSING_CMODE");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    BOOST_CHECK_NO_THROW( Schedule(parseContext , grid , deck, Phases(true, true, true) ) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    BOOST_CHECK_NO_THROW( Schedule(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) ) );
 }
 
 
@@ -83,8 +89,9 @@ BOOST_AUTO_TEST_CASE(WCONPROD_Missing_DATA) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_CMODE_MISSING_DATA");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-
-    BOOST_CHECK_THROW( Schedule(parseContext , grid , deck, Phases(true, true, true) ) , std::invalid_argument );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    BOOST_CHECK_THROW( Schedule(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) ) , std::invalid_argument );
 }
 
 
@@ -94,8 +101,10 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     BOOST_CHECK_EQUAL(3, 3);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true) );
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
     BOOST_CHECK_EQUAL(4, 4);
 
     auto* well1 = sched.getWell("W_1");
@@ -113,7 +122,9 @@ BOOST_AUTO_TEST_CASE(WellTestOpen) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
 
     auto well1 = sched.getWell( "W_1" );
     auto well2 = sched.getWell( "W_2" );
@@ -153,7 +164,9 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
 
     BOOST_CHECK_EQUAL(4U, sched.numWells());
     BOOST_CHECK(sched.hasWell("W_1"));
@@ -269,7 +282,9 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT_DEFAULTED_ITEMS) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_COMPDAT1");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    Schedule sched(parseContext , grid, deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid, eclipseProperties, deck, Phases(true, true, true));
 }
 
 
@@ -279,7 +294,9 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     BOOST_CHECK_EQUAL(4U, sched.numWells());
     BOOST_CHECK(sched.hasWell("W_1"));
@@ -309,7 +326,9 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GRUPTREE_EXPLICIT_PARENTING");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     const auto& grouptree = sched.getGroupTree( 0 );
 
@@ -333,7 +352,9 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GRUPTREE");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    Schedule schedule(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule schedule(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     BOOST_CHECK( schedule.hasGroup( "FIELD" ));
     BOOST_CHECK( schedule.hasGroup( "PROD" ));
@@ -352,7 +373,9 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_size ) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    Schedule schedule(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule schedule(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     // Time 0, only from WELSPECS
     BOOST_CHECK_EQUAL( 2U, schedule.getGroupTree(0).children("FIELD").size() );
@@ -367,7 +390,9 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    Schedule schedule(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule schedule(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     // Time 0, only from WELSPECS
     const auto& tree0 = schedule.getGroupTree( 0 );
@@ -398,7 +423,9 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS_REPARENT");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    Schedule schedule(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule schedule(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
 
     const auto& tree0 = schedule.getGroupTree( 0 );
@@ -417,7 +444,9 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     BOOST_CHECK_EQUAL( 3U , sched.numGroups() );
     BOOST_CHECK( sched.hasGroup( "INJ" ));
@@ -459,7 +488,9 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS_AND_GROUPS");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     auto& group1 = sched.getGroup("GROUP1");
     auto& group2 = sched.getGroup("GROUP2");
@@ -486,7 +517,9 @@ BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WELLS2");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,60,30);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     BOOST_CHECK_EQUAL(4U, sched.numWells());
     BOOST_CHECK(sched.hasWell("W_1"));
@@ -548,7 +581,9 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WGRUPCON");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,10);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     const auto* well1 = sched.getWell("W_1");
     BOOST_CHECK(well1->isAvailableForGroupControl(0));
@@ -587,7 +622,9 @@ COMPDAT \n\
 /\n";
     auto deck =  parser.parseString(deckString, parseContext);
     EclipseGrid grid(30,30,10);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
     const auto* well = sched.getWell("W1");
     const auto& completions = well->getCompletions(0);
     BOOST_CHECK_EQUAL( 10 , completions.get(0).getI() );
@@ -605,7 +642,9 @@ BOOST_AUTO_TEST_CASE(OpmCode) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/wells_group.data");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,3);
-    BOOST_CHECK_NO_THROW( Schedule(parseContext , grid , deck, Phases(true, true, true)) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    BOOST_CHECK_NO_THROW( Schedule(parseContext , grid , eclipseProperties, deck, Phases(true, true, true)) );
 }
 
 
@@ -616,7 +655,9 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_SHUT_WELL");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(20,40,1);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
 
     const auto* well1 = sched.getWell("W1");
@@ -640,7 +681,9 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_POLYMER");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(30,30,30);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
 
     BOOST_CHECK_EQUAL(4U, sched.numWells());
@@ -688,7 +731,9 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
     std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_WECON");
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(30,30,30);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
 
     BOOST_CHECK_EQUAL(3U, sched.numWells());
     BOOST_CHECK(sched.hasWell("INJE01"));
@@ -798,7 +843,9 @@ BOOST_AUTO_TEST_CASE(TestEvents) {
 
     auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(40,40,30);
-    Schedule sched(parseContext , grid , deck, Phases(true, true, true));
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
     const Events& events = sched.getEvents();
 
     BOOST_CHECK(  events.hasEvent(ScheduleEvents::NEW_WELL , 0 ) );

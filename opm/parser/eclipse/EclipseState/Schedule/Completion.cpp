@@ -20,10 +20,12 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -39,6 +41,7 @@ namespace Opm {
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
+                           const int satTableId,
                            const WellCompletion::DirectionEnum direction)
         : m_i(i), m_j(j), m_k(k),
           m_complnum( compnum ),
@@ -46,6 +49,7 @@ namespace Opm {
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
           m_wellPi(1.0),
           m_skinFactor(skinFactor),
+          m_satTableId(satTableId),
           m_state(state),
           m_direction(direction),
           m_center_depth( depth )
@@ -100,6 +104,7 @@ namespace Opm {
 
     inline std::vector< Completion >
     fromCOMPDAT( const EclipseGrid& grid,
+                 const Eclipse3DProperties& eclipseProperties,
                  const DeckRecord& compdatRecord,
                  const Well& well,
                  int prev_complnum ) {
@@ -123,11 +128,14 @@ namespace Opm {
         Value<double> connectionTransmissibilityFactor("ConnectionTransmissibilityFactor");
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
-
+        int satTableId;
+        const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
+        bool defaultSatTable = true;
         {
             const auto& connectionTransmissibilityFactorItem = compdatRecord.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
             const auto& diameterItem = compdatRecord.getItem("DIAMETER");
             const auto& skinFactorItem = compdatRecord.getItem("SKIN");
+            const auto& satTableIdItem = compdatRecord.getItem("SAT_TABLE");
 
             if (connectionTransmissibilityFactorItem.hasValue(0) && connectionTransmissibilityFactorItem.getSIDouble(0) > 0)
                 connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem.getSIDouble(0));
@@ -137,11 +145,20 @@ namespace Opm {
 
             if (skinFactorItem.hasValue(0))
                 skinFactor.setValue( skinFactorItem.get< double >(0));
+
+            if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
+            {
+                satTableId = satTableIdItem.get< int >(0);
+                defaultSatTable = false;
+            }
         }
 
         const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord.getItem("DIR").getTrimmedString(0));
 
         for (int k = K1; k <= K2; k++) {
+            if (defaultSatTable)
+                satTableId = satnum.iget(grid.getGlobalIndex(I,J,k));
+
             completions.emplace_back( I, J, k,
                                       int( completions.size() + prev_complnum ) + 1,
                                       grid.getCellDepth( I,J,k ),
@@ -149,6 +166,7 @@ namespace Opm {
                                       connectionTransmissibilityFactor,
                                       diameter,
                                       skinFactor,
+                                      satTableId,
                                       direction );
         }
 
@@ -167,6 +185,7 @@ namespace Opm {
 
     std::map< std::string, std::vector< Completion > >
     Completion::fromCOMPDAT( const EclipseGrid& grid ,
+                             const Eclipse3DProperties& eclipseProperties,
                              const DeckKeyword& compdatKeyword,
                              const std::vector< const Well* >& wells ) {
 
@@ -188,6 +207,7 @@ namespace Opm {
             if( prev_compls[ index ] == 0 ) (*well)->getCompletions().size();
 
             auto completions = Opm::fromCOMPDAT( grid,
+                                                 eclipseProperties,
                                                  record,
                                                  **well,
                                                  prev_compls[ index ] );
@@ -246,6 +266,10 @@ namespace Opm {
         return m_skinFactor.getValue();
     }
 
+    int Completion::getSatTableId() const {
+        return m_satTableId;
+    }
+
     const Value<double>& Completion::getConnectionTransmissibilityFactorAsValueObject() const {
         return m_connectionTransmissibilityFactor;
     }
@@ -298,6 +322,7 @@ namespace Opm {
                == rhs.m_connectionTransmissibilityFactor
             && this->m_wellPi == rhs.m_wellPi
             && this->m_skinFactor == rhs.m_skinFactor
+            && this->m_satTableId == rhs.m_satTableId
             && this->m_state == rhs.m_state
             && this->m_direction == rhs.m_direction
             && this->m_segment_number == rhs.m_segment_number

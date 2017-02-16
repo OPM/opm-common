@@ -46,6 +46,7 @@ namespace Opm
     class DeckRecord;
     class EclipseGrid;
     class ParseContext;
+    class Eclipse3DProperties;
     class SCHEDULESection;
     class TimeMap;
     class UnitSystem;
@@ -53,7 +54,7 @@ namespace Opm
     class Schedule {
     public:
         Schedule(const ParseContext& parseContext, const EclipseGrid& grid,
-                 const Deck& deck, const Phases &phases );
+                 const Eclipse3DProperties& eclipseProperties ,const Deck& deck, const Phases &phases );
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
@@ -110,7 +111,8 @@ namespace Opm
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
-        void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& , const EclipseGrid& grid);
+        void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& , const EclipseGrid& grid,
+                                    const Eclipse3DProperties& eclipseProperties);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
@@ -120,7 +122,7 @@ namespace Opm
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid);
+        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);

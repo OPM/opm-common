@@ -36,6 +36,7 @@ namespace Opm {
     class DeckRecord;
     class Well;
     class EclipseGrid;
+    class Eclipse3DProperties;
 
     class Completion {
     public:
@@ -46,6 +47,7 @@ namespace Opm {
                    const Value<double>& connectionTransmissibilityFactor,
                    const Value<double>& diameter,
                    const Value<double>& skinFactor,
+                   const int satTableId,
                    const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
         Completion(const Completion&, WellCompletion::StateEnum newStatus);
@@ -65,6 +67,7 @@ namespace Opm {
         const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
         double getDiameter() const;
         double getSkinFactor() const;
+        int getSatTableId() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
         void   shift_complnum( int );
         int getSegmentNumber() const;
@@ -76,6 +79,7 @@ namespace Opm {
 
         static std::map< std::string, std::vector< Completion > >
         fromCOMPDAT( const EclipseGrid& grid,
+                     const Eclipse3DProperties& eclipseProperties,
                      const DeckKeyword& compdatKeyword,
                      const std::vector< const Well* >& );
 
@@ -89,6 +93,7 @@ namespace Opm {
         Value<double> m_connectionTransmissibilityFactor;
         double m_wellPi;
         Value<double> m_skinFactor;
+        int m_satTableId;
         WellCompletion::StateEnum m_state;
         WellCompletion::DirectionEnum m_direction;
         Value<double> getDiameterAsValueObject() const;

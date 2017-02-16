@@ -125,8 +125,8 @@ namespace Opm {
         Runspec m_runspec;
         const GridDims m_gridDims;
         EclipseGrid m_inputGrid;
-        Schedule m_schedule;
         Eclipse3DProperties m_eclipseProperties;
+        Schedule m_schedule;
         EclipseConfig m_eclipseConfig;
         TransMult m_transMult;
         NNC m_inputNnc;

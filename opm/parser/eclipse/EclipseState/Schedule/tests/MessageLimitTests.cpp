@@ -79,7 +79,9 @@ BOOST_AUTO_TEST_CASE(MESSAGES) {
     ParseContext parseContext;
     auto deck = parser.parseString(input, parseContext);
     EclipseGrid grid(10,10,10);
-    Schedule schedule(parseContext , grid, deck, Phases(true, true, true) );
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule schedule(parseContext , grid, eclipseProperties, deck, Phases(true, true, true) );
     const MessageLimits limits = schedule.getMessageLimits();
 
     BOOST_CHECK_EQUAL( limits.getBugPrintLimit( 0 ) , 77 );   // The pre Schedule initialization
