@@ -88,8 +88,10 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     std::vector<Completion> W_1Completions = completions.find("W_1")->second;
     const auto& W1_completion0 = W_1Completions[0];
     const auto& W1_completion3 = W_1Completions[3];
+    const auto& W1_completion4 = W_1Completions[4];
 
     BOOST_CHECK_EQUAL( 1 , W1_completion0.getSatTableId());
     BOOST_CHECK_EQUAL( 2 , W1_completion3.getSatTableId());
+    BOOST_CHECK_EQUAL( 3 , W1_completion4.getSatTableId());
 
 }
