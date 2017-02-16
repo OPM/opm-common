@@ -81,6 +81,7 @@ namespace Opm {
         bool supportsKeyword(const std::string& keyword) const;
         bool hasKeyword(const std::string& keyword) const;
         size_t size() const;
+        void assertKeyword(const std::string& keyword) const;
         const GridProperty<T>& getKeyword(const std::string& keyword) const;
         const GridProperty<T>& getInitializedKeyword(const std::string& keyword) const;
 

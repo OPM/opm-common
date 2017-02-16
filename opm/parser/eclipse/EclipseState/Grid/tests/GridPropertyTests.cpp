@@ -434,6 +434,13 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         size_t g = eg.getGlobalIndex( i );
         BOOST_CHECK_EQUAL( compressedSatnum[i] , satnum.getData()[g]);
     }
+
+    {
+        const auto& double_props = props.getDoubleProperties( );
+        BOOST_CHECK( !double_props.hasKeyword( "NTG" ));
+        double_props.assertKeyword("NTG");
+        BOOST_CHECK( double_props.hasKeyword( "NTG" ));
+    }
 }
 
 
