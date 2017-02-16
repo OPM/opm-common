@@ -37,6 +37,13 @@ class Eclipse3DProperties(object):
         return 'Eclipse3DProperties()'
 
 
+@delegate(lib.Tables)
+class Tables(object):
+
+    def __repr__(self):
+        return 'Tables()'
+
+
 @delegate(lib.EclipseGrid)
 class EclipseGrid(object):
 

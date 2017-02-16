@@ -262,6 +262,7 @@ py::class_< EclipseState >( "EclipseState", py::no_init )
     .def( "_props",         &EclipseState::get3DProperties, ref() )
     .def( "_grid",          &EclipseState::getInputGrid,    ref() )
     .def( "_cfg",           &EclipseState::cfg,             ref() )
+    .def( "tables",         &EclipseState::getTableManager, ref() )
     .def( "has_input_nnc",  &EclipseState::hasInputNNC )
     .def( "input_nnc",      state::getNNC )
     .def( "faultNames",     state::faultNames )
@@ -281,6 +282,10 @@ py::class_< Eclipse3DProperties >( "Eclipse3DProperties", py::no_init )
     .def( "getRegions",   props::regions )
     .def( "__contains__", props::contains )
     .def( "__getitem__",  props::getitem )
+    ;
+
+py::class_< TableManager >( "Tables", py::no_init )
+    .def( "__contains__",   &TableManager::hasTables )
     ;
 
 /*

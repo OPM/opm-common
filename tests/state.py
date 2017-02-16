@@ -52,7 +52,9 @@ SATNUM
     def setUp(self):
         if self.spe3 is None:
             self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
+            self.cpa = sunbeam.parse('data/CORNERPOINT_ACTNUM.DATA')
         self.state = self.spe3
+        self.cp_state = self.cpa
 
     def test_repr_title(self):
         self.assertTrue('EclipseState' in repr(self.state))
@@ -95,6 +97,17 @@ SATNUM
         self.assertFalse(sim.useCPR())
         self.assertTrue(sim.hasDISGAS())
         self.assertTrue(sim.hasVAPOIL())
+
+    def test_tables(self):
+        tables = self.spe3.tables()
+        self.assertTrue('SGOF' in tables)
+        self.assertTrue('SWOF' in tables)
+        self.assertFalse('SOF' in tables)
+
+        ct = self.cp_state.tables()
+        self.assertFalse('SGOF' in ct)
+        self.assertTrue('SWOF' in ct)
+
 
     def test_faults(self):
         self.assertEquals([], self.spe3.faultNames())
