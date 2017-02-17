@@ -25,10 +25,13 @@
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
 #include <cmath>
 #include <numeric>
+
+#include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_grid.h>
+
+#include <ert/ecl_well/well_info.h>
 
 
 // helper macro to handle error throws or not
@@ -41,6 +44,22 @@
       ++num_errors; \
     } \
   }
+
+
+namespace {
+    /*
+      This is just a basic survival test; we verify that the ERT well
+      loader which is used in Resinsight can load the well description
+      from the restart file.
+    */
+
+    void loadWells( const ecl_grid_type * grid , ecl_file_type * rst_file ) {
+        well_info_type * well_info = well_info_alloc( grid );
+        well_info_add_UNRST_wells2( well_info , ecl_file_get_global_view( rst_file ), true );
+        well_info_free( well_info );
+    }
+
+}
 
 
 void ECLFilesComparator::keywordValidForComparing(const std::string& keyword) const {
@@ -89,7 +108,6 @@ template void ECLFilesComparator::printValuesForCell<bool>       (const std::str
 template void ECLFilesComparator::printValuesForCell<int>        (const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const int&         value1, const int&         value2) const;
 template void ECLFilesComparator::printValuesForCell<double>     (const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const double&      value1, const double&      value2) const;
 template void ECLFilesComparator::printValuesForCell<std::string>(const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const std::string& value1, const std::string& value2) const;
-
 
 
 ECLFilesComparator::ECLFilesComparator(int file_type_arg, const std::string& basename1,
@@ -141,6 +159,11 @@ ECLFilesComparator::ECLFilesComparator(int file_type_arg, const std::string& bas
     for (unsigned int i = 0; i < numKeywords2; ++i) {
         std::string keyword(ecl_file_iget_distinct_kw(ecl_file2, i));
         keywords2.push_back(keyword);
+    }
+
+    if (file_type == ECL_UNIFIED_RESTART_FILE) {
+        loadWells( ecl_grid1 , ecl_file1 );
+        loadWells( ecl_grid2 , ecl_file2 );
     }
 }
 
