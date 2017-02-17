@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 from os.path import isdir, join
 import sunbeam
@@ -24,6 +26,16 @@ def parse(fname):
     print('Parsing took %s sec' % (e - s).seconds)
     return es
 
+def swof_krw(ecl):
+    assert('SWOF' in ecl.table)
+    krw  = ecl.table['SWOF', 'KRW']
+    krow = ecl.table['SWOF', 'KROW']
+    pcow = ecl.table['SWOF', 'PCOW']
+
+    print('SWOF\tKRW\tKROW\tPCOW')
+    for i in range(21):
+        print('%.2f\t%.4f\t%.4f\t%.4f' % (i/20.0, krw(i/20.0), krow(i/20.0), pcow(i/20.0)))
+
 def main():
     es = parse(join(opmdatadir(), 'norne/NORNE_ATW2013.DATA'))
     sc = es.schedule
@@ -41,6 +53,7 @@ def main():
     print('pos:       %s' % list(wp.pos()))
     print('fault:     %s' % f0)
     print('           comprised of %d cells' % len(fl))
+    swof_krw(es)
 
 if __name__ == '__main__':
     global OPMDATA_DIR
