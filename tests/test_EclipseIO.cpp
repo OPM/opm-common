@@ -40,12 +40,16 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 // ERT stuff
+#include <ert/util/ert_unique_ptr.hpp>
+#include <ert/util/TestArea.hpp>
+
 #include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_endian_flip.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_util.h>
-#include <ert/util/ert_unique_ptr.hpp>
-#include <ert/util/TestArea.hpp>
+
+#include <ert/ecl_well/well_info.h>
 
 #include <memory>
 
@@ -144,6 +148,17 @@ void checkEgridFile( const EclipseGrid& eclGrid ) {
 
     fortio_fclose(egridFile);
 }
+
+void loadWells( const char* grid_file , const char* restart_file ) {
+    ecl_grid_type * grid = ecl_grid_alloc( grid_file );
+    well_info_type * well_info = well_info_alloc( grid );
+
+    well_info_load_rstfile( well_info , restart_file, true);
+
+    well_info_free( well_info );
+    ecl_grid_free( grid );
+}
+
 
 void checkInitFile( const Deck& deck, const data::Solution& simProps) {
     // use ERT directly to inspect the INIT file produced by EclipseIO
@@ -320,6 +335,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
 
         checkInitFile( deck , eGridProps);
         checkEgridFile( eclGrid );
+        loadWells( "FOO.EGRID", "FOO.UNRST" );
 
         std::ifstream file( "FOO.UNRST", std::ios::binary );
         std::streampos file_size = 0;
