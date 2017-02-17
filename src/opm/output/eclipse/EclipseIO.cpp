@@ -261,19 +261,32 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, const NNC& 
 
     // Write properties from the input deck.
     {
-        const auto& properties = this->es.get3DProperties();
+        const auto& properties = this->es.get3DProperties().getDoubleProperties();
         using double_kw = std::pair<std::string, UnitSystem::measure>;
+        /*
+          This is a rather arbitrary hardcoded list of 3D keywords
+          which are written to the INIT file, if they are in the
+          current EclipseState.
+        */
         std::vector<double_kw> doubleKeywords = {{"PORO"  , UnitSystem::measure::identity },
                                                  {"PERMX" , UnitSystem::measure::permeability },
                                                  {"PERMY" , UnitSystem::measure::permeability },
-                                                 {"PERMZ" , UnitSystem::measure::permeability }};
+                                                 {"PERMZ" , UnitSystem::measure::permeability },
+                                                 {"NTG"   , UnitSystem::measure::identity }};
+
+        // The INIT file should always contain the NTG property, we
+        // therefor invoke the auto create functionality to ensure
+        // that "NTG" is included in the properties container.
+        properties.assertKeyword("NTG");
 
         for (const auto& kw_pair : doubleKeywords) {
-            const auto& opm_property = properties.getDoubleGridProperty(kw_pair.first);
-            auto ecl_data = opm_property.compressedCopy( this->grid );
+            if (properties.hasKeyword( kw_pair.first)) {
+                const auto& opm_property = properties.getKeyword(kw_pair.first);
+                auto ecl_data = opm_property.compressedCopy( this->grid );
 
-            units.from_si( kw_pair.second, ecl_data );
-            writeKeyword( fortio, kw_pair.first, ecl_data );
+                units.from_si( kw_pair.second, ecl_data );
+                writeKeyword( fortio, kw_pair.first, ecl_data );
+            }
         }
     }
 
@@ -304,10 +317,10 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, const NNC& 
         // keywords, we therefor call getKeyword() here to invoke the
         // autocreation property, and ensure that the keywords exist
         // in the properties container.
-        properties.getKeyword("PVTNUM");
-        properties.getKeyword("SATNUM");
-        properties.getKeyword("EQLNUM");
-        properties.getKeyword("FIPNUM");
+        properties.assertKeyword("PVTNUM");
+        properties.assertKeyword("SATNUM");
+        properties.assertKeyword("EQLNUM");
+        properties.assertKeyword("FIPNUM");
 
         for (const auto& property : properties) {
             auto ecl_data = property.compressedCopy( this->grid );
