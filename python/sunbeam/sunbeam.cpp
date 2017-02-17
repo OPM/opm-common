@@ -230,6 +230,17 @@ py::list get_groups( const Schedule& sch ) {
 
 }
 
+namespace tables {
+double evaluate( const TableManager& tab,
+                 std::string tab_name,
+                 int tab_idx,
+                 std::string col_name, double x ) try {
+  return tab[tab_name].getTable(tab_idx).evaluate(col_name, x);
+} catch( std::invalid_argument& e ) {
+  throw key_error( e.what() );
+}
+}
+
 EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;
 EclipseState (*parseData) (const std::string &data, const ParseContext& context) = &Parser::parseData;
 void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
@@ -262,7 +273,7 @@ py::class_< EclipseState >( "EclipseState", py::no_init )
     .def( "_props",         &EclipseState::get3DProperties, ref() )
     .def( "_grid",          &EclipseState::getInputGrid,    ref() )
     .def( "_cfg",           &EclipseState::cfg,             ref() )
-    .def( "tables",         &EclipseState::getTableManager, ref() )
+    .def( "_tables",        &EclipseState::getTableManager, ref() )
     .def( "has_input_nnc",  &EclipseState::hasInputNNC )
     .def( "input_nnc",      state::getNNC )
     .def( "faultNames",     state::faultNames )
@@ -286,6 +297,7 @@ py::class_< Eclipse3DProperties >( "Eclipse3DProperties", py::no_init )
 
 py::class_< TableManager >( "Tables", py::no_init )
     .def( "__contains__",   &TableManager::hasTables )
+    .def("_evaluate",       tables::evaluate )
     ;
 
 /*

@@ -99,14 +99,25 @@ SATNUM
         self.assertTrue(sim.hasVAPOIL())
 
     def test_tables(self):
-        tables = self.spe3.tables()
+        tables = self.spe3.table
         self.assertTrue('SGOF' in tables)
         self.assertTrue('SWOF' in tables)
         self.assertFalse('SOF' in tables)
 
-        ct = self.cp_state.tables()
+        ct = self.cp_state.table
         self.assertFalse('SGOF' in ct)
         self.assertTrue('SWOF' in ct)
+
+        tab = 'SWOF'
+        col = 'KRW'
+        self.assertAlmostEqual(0.1345, self.spe3.table[tab](col, 0.5))
+        self.assertAlmostEqual(0.39,   self.spe3.table[tab](col, 0.72))
+
+        self.assertAlmostEqual(0.1345, self.spe3.table[tab, col](0.5))
+        self.assertAlmostEqual(0.39,   self.spe3.table[tab, col](0.72))
+
+        with self.assertRaises(KeyError):
+            self.spe3.table[tab, 'NO'](1)
 
 
     def test_faults(self):

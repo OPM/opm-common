@@ -21,7 +21,7 @@ class TestProps(unittest.TestCase):
         p = self.props
         self.assertTrue('PORO'  in p)
         self.assertFalse('NONO' in p)
-        self.assertFalse('PORV' in p)
+        self.assertTrue('PORV' in p) # auto generated
 
     def test_getitem(self):
         p = self.props
@@ -36,7 +36,7 @@ class TestProps(unittest.TestCase):
     def test_regions(self):
         p = self.props
         reg = p.getRegions('SATNUM')
-        self.assertEqual(0, len(reg))
+        self.assertEqual(1, len(reg)) # auto generated
 
     def test_permx_values(self):
         def md2si(md):
