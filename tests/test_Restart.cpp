@@ -345,7 +345,7 @@ data::Solution mkSolution( int numCells ) {
 }
 
 std::pair< data::Solution, data::Wells >
-first_sim(const EclipseState& es, EclipseIO& eclWriter) {
+first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_double) {
     const auto& grid = es.getInputGrid();
     auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
 
@@ -358,7 +358,7 @@ first_sim(const EclipseState& es, EclipseIO& eclWriter) {
     eclWriter.writeTimeStep( 1,
                              false,
                              first_step - start_time,
-                             sol, wells);
+                             sol, wells , write_double);
 
     return { sol, wells };
 }
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
     const auto& grid = eclipseState.getInputGrid();
     EclipseIO eclWriter( eclipseState, grid);
-    auto state1 = first_sim( eclipseState , eclWriter );
+    auto state1 = first_sim( eclipseState , eclWriter , false );
     auto state2 = second_sim( eclWriter , keys );
     compare(state1, state2 , keys);
 
@@ -403,5 +403,45 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
         std::map<std::string, UnitSystem::measure> extra_keys {{"SOIL" , UnitSystem::measure::pressure}};
         BOOST_CHECK_THROW( second_sim( eclWriter, extra_keys ) , std::runtime_error );
     }
+}
+
+
+void compare_equal( std::pair< data::Solution, data::Wells > fst,
+		    std::pair< data::Solution, data::Wells > snd ,
+		    const std::map<std::string, UnitSystem::measure>& keys) {
+
+    for (const auto& pair : keys) {
+
+        auto first = fst.first.data( pair.first ).begin();
+        auto second = snd.first.data( pair.first ).begin();
+
+        for( ; first != fst.first.data( pair.first ).end(); ++first, ++second )
+	    BOOST_CHECK_EQUAL( *first, *second);
+    }
+
+    BOOST_CHECK_EQUAL( fst.second, snd.second );
+}
+
+BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
+    /*
+      Observe that the purpose of this test is to verify that with
+      write_double == true we can load solution fields which are
+      bitwise equal to those we stored. Unfortunately the scaling back
+      and forth between SI units and output units is enough to break
+      this equality for the pressure. For this test we therefor only
+      consider the saturations which have identity unit.
+    */
+    std::map<std::string, UnitSystem::measure> keys {{"SWAT" , UnitSystem::measure::identity},
+	                                             {"SGAS" , UnitSystem::measure::identity}};
+    
+    ERT::TestArea testArea("test_Restart");
+    testArea.copyFile( "FIRST_SIM.DATA" );
+    
+    auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
+    const auto& grid = eclipseState.getInputGrid();
+    EclipseIO eclWriter( eclipseState, grid);
+    auto state1 = first_sim( eclipseState , eclWriter , true);
+    auto state2 = second_sim( eclWriter , keys );
+    compare_equal( state1 , state2 , keys);
 }
 }

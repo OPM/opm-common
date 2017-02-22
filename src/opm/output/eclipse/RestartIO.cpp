@@ -35,6 +35,7 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
+#include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_rft_file.h>
@@ -445,17 +446,36 @@ void writeHeader(ecl_rst_file_type * rst_file,
     ecl_rst_file_fwrite_header( rst_file, report_step , &rsthead_data );
 }
 
-void writeSolution(ecl_rst_file_type* rst_file, const data::Solution& solution) {
+  ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free > ecl_kw( const std::string& kw, const std::vector<double>& data, bool write_double) {
+      ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free > kw_ptr;
+
+      if (write_double) {
+	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_DOUBLE_TYPE );
+	  ecl_kw_set_memcpy_data( ecl_kw , data.data() );
+	  kw_ptr.reset( ecl_kw );
+      } else {
+	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_FLOAT_TYPE );
+	  float * float_data = ecl_kw_get_float_ptr( ecl_kw );
+	  for (size_t i=0; i < data.size(); i++)
+	      float_data[i] = data[i];
+	  kw_ptr.reset( ecl_kw );
+      }
+
+      return kw_ptr;
+  }
+
+
+  void writeSolution(ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
     ecl_rst_file_start_solution( rst_file );
     for (const auto& elm: solution) {
         if (elm.second.target == data::TargetType::RESTART_SOLUTION)
-            ecl_rst_file_add_kw( rst_file , ERT::EclKW<float>(elm.first, elm.second.data).get());
+	    ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
      }
      ecl_rst_file_end_solution( rst_file );
 
      for (const auto& elm: solution) {
         if (elm.second.target == data::TargetType::RESTART_AUXILIARY)
-            ecl_rst_file_add_kw( rst_file , ERT::EclKW<float>(elm.first, elm.second.data).get());
+            ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
      }
 }
 
@@ -488,7 +508,8 @@ void save(const std::string& filename,
           data::Solution cells,
           data::Wells wells,
           const EclipseState& es,
-          const EclipseGrid& grid)
+          const EclipseGrid& grid,
+	  bool write_double) 
 {
     const auto& ioConfig = es.getIOConfig();
     int ert_phase_mask = es.runspec().eclPhaseMask( );
@@ -506,7 +527,7 @@ void save(const std::string& filename,
     cells.convertFromSI( units );
     writeHeader( rst_file.get() , report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
     writeWell( rst_file.get() , report_step, es , grid, wells);
-    writeSolution( rst_file.get() , cells );
+    writeSolution( rst_file.get() , cells , write_double );
 
 }
 }

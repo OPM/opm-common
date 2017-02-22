@@ -386,7 +386,8 @@ void EclipseIO::writeTimeStep(int report_step,
                               bool  isSubstep,
                               double secs_elapsed,
                               data::Solution cells,
-                              data::Wells wells)
+                              data::Wells wells,
+			      bool write_double)
  {
 
     if( !this->impl->output_enabled )
@@ -427,7 +428,7 @@ void EclipseIO::writeTimeStep(int report_step,
                                                  report_step,
                                                  ioConfig.getFMTOUT() );
 
-        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid);
+        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid , write_double);
     }
 
 

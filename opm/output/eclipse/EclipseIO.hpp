@@ -119,13 +119,20 @@ public:
      * permeabilities KRO, KRW and KRG and fluxes. The keywords which
      * can be added here are represented with mnenonics in the RPTRST
      * keyword.
+     *
+     * If the optional argument write_double is sent in as true the
+     * fields in the solution container will be written in double
+     * precision. OPM can load and restart from files with double
+     * precision keywords, but this is non-standard, and other third
+     * party applications might choke on those.
      */
 
     void writeTimeStep( int report_step,
                         bool isSubstep,
                         double seconds_elapsed,
                         data::Solution,
-                        data::Wells);
+                        data::Wells,
+			bool write_double = false);
 
 
     /*

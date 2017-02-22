@@ -76,7 +76,8 @@ void save(const std::string& filename,
           data::Solution cells,
           data::Wells wells,
           const EclipseState& es,
-          const EclipseGrid& grid);
+          const EclipseGrid& grid,
+	  bool write_double = false);
 
 
 
