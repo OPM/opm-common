@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
+#include <set>
 #include <string>
 #include <vector>
 #include <array>
@@ -33,6 +34,7 @@
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 
 namespace Opm {
 
@@ -120,6 +122,18 @@ public:
      * can be added here are represented with mnenonics in the RPTRST
      * keyword.
      *
+     * The extra argument is an optional aergument which can be used
+     * to store arbitrary double vectors in the restart file. The
+     * following rules apply for the extra data:
+     *
+     *  1. There is no size constraints.
+     *
+     *  2. The keys must be unqiue across the SOlution container, and
+     *     also built in default keys like 'INTEHEAD'.
+     *
+     *  3. There is no unit conversion applied - the vectors are
+     *     written to disk verbatim.
+     *
      * If the optional argument write_double is sent in as true the
      * fields in the solution container will be written in double
      * precision. OPM can load and restart from files with double
@@ -132,6 +146,7 @@ public:
                         double seconds_elapsed,
                         data::Solution,
                         data::Wells,
+                        std::map<std::string, std::vector<double>> extra = {},
 			bool write_double = false);
 
 
@@ -162,9 +177,15 @@ public:
 
          - The returned double data has been converted to SI.
          . The target is unconditionally set to 'RESTART_SOLUTION'
+
+      The extra_keys argument can be used to request additional
+      kewyords from the restart value. The extra vectors will be
+      stored in the 'extra' field of the RestartValue return
+      value. These values must have been added to the restart file
+      previosuly with the extra argument to the writeTimeStep()
+      method.
     */
-    std::pair< data::Solution, data::Wells >
-    loadRestart(const std::map<std::string, UnitSystem::measure>& keys) const;
+    RestartValue loadRestart(const std::map<std::string, UnitSystem::measure>& keys, const std::set<std::string>& extra_keys = {}) const;
 
 
     EclipseIO( const EclipseIO& ) = delete;

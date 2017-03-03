@@ -24,6 +24,7 @@
 #define RESTART_IO_HPP
 
 #include <vector>
+#include <set>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -32,6 +33,7 @@
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 
 #include <ert/ecl/EclKW.hpp>
 #include <ert/ecl/ecl_rsthead.h>
@@ -77,15 +79,17 @@ void save(const std::string& filename,
           data::Wells wells,
           const EclipseState& es,
           const EclipseGrid& grid,
+          std::map<std::string, std::vector<double>> extra_data = {},
 	  bool write_double = false);
 
 
 
-std::pair< data::Solution, data::Wells > load( const std::string& filename,
-                                               int report_step,
-                                               const std::map<std::string, UnitSystem::measure>& keys,
-                                               const EclipseState& es,
-                                               const EclipseGrid& grid);
+RestartValue load( const std::string& filename,
+                   int report_step,
+                   const std::map<std::string, UnitSystem::measure>& keys,
+                   const EclipseState& es,
+                   const EclipseGrid& grid,
+                   const std::set<std::string>& extra_keys = {});
 
 }
 }

@@ -387,6 +387,7 @@ void EclipseIO::writeTimeStep(int report_step,
                               double secs_elapsed,
                               data::Solution cells,
                               data::Wells wells,
+                              std::map<std::string, std::vector<double>> extra,
 			      bool write_double)
  {
 
@@ -428,7 +429,7 @@ void EclipseIO::writeTimeStep(int report_step,
                                                  report_step,
                                                  ioConfig.getFMTOUT() );
 
-        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid , write_double);
+        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid , extra , write_double);
     }
 
 
@@ -456,8 +457,8 @@ void EclipseIO::writeTimeStep(int report_step,
  }
 
 
-std::pair< data::Solution, data::Wells >
-EclipseIO::loadRestart(const std::map<std::string, UnitSystem::measure>& keys) const {
+
+RestartValue EclipseIO::loadRestart(const std::map<std::string, UnitSystem::measure>& keys, const std::set<std::string>& extra_keys ) const {
     const auto& es                       = this->impl->es;
     const auto& grid                     = this->impl->grid;
     const InitConfig& initConfig         = es.getInitConfig();
@@ -467,7 +468,7 @@ EclipseIO::loadRestart(const std::map<std::string, UnitSystem::measure>& keys) c
                                                                         report_step,
                                                                         false );
 
-    return RestartIO::load( filename , report_step , keys , es, grid );
+    return RestartIO::load( filename , report_step , keys , es, grid , extra_keys);
 }
 
 EclipseIO::EclipseIO( const EclipseState& es, EclipseGrid grid)

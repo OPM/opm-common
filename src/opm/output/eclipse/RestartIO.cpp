@@ -39,6 +39,7 @@
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_rft_file.h>
+#include <ert/ecl/ecl_file_view.h>
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/util/util.h>
@@ -209,11 +210,12 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
 }
 
 /* should take grid as argument because it may be modified from the simulator */
-std::pair< data::Solution, data::Wells > load( const std::string& filename,
-                                               int report_step,
-                                               const std::map<std::string,UnitSystem::measure>& keys,
-                                               const EclipseState& es,
-                                               const EclipseGrid& grid) {
+RestartValue load( const std::string& filename,
+                   int report_step,
+                   const std::map<std::string,UnitSystem::measure>& keys,
+                   const EclipseState& es,
+                   const EclipseGrid& grid,
+                   const std::set<std::string>& extra_keys) {
 
     const bool unified                   = ( ERT::EclFiletype( filename ) == ECL_UNIFIED_RESTART_FILE );
     ERT::ert_unique_ptr< ecl_file_type, ecl_file_close > file(ecl_file_open( filename.c_str(), 0 ));
@@ -237,12 +239,20 @@ std::pair< data::Solution, data::Wells > load( const std::string& filename,
     const ecl_kw_type * zwel     = ecl_file_view_iget_named_kw( file_view , "ZWEL" , 0 );
 
     UnitSystem units( static_cast<ert_ecl_unit_enum>(ecl_kw_iget_int( intehead , INTEHEAD_UNIT_INDEX )));
-    return {
-        restoreSOLUTION( file_view, keys, units , grid.getNumActive( )),
-        restore_wells( opm_xwel, opm_iwel,zwel,
-                       report_step,
-                       es )
-    };
+    RestartValue rst_value( restoreSOLUTION( file_view, keys, units , grid.getNumActive( )),
+                            restore_wells( opm_xwel, opm_iwel,zwel, report_step , es));
+
+    for (const std::string& key : extra_keys) {
+        if (ecl_file_view_has_kw( file_view , key.c_str())) {
+            const ecl_kw_type * ecl_kw = ecl_file_view_iget_named_kw( file_view , key.c_str() , 0 );
+            const double * data_ptr = ecl_kw_get_double_ptr( ecl_kw );
+            const double * end_ptr  = data_ptr + ecl_kw_get_size( ecl_kw );
+            rst_value.extra[ key ] = { data_ptr, end_ptr };
+        } else
+            throw std::runtime_error("No such key in file: " + key);
+    }
+
+    return rst_value;
 }
 
 
@@ -465,11 +475,12 @@ void writeHeader(ecl_rst_file_type * rst_file,
   }
 
 
+
   void writeSolution(ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
     ecl_rst_file_start_solution( rst_file );
     for (const auto& elm: solution) {
         if (elm.second.target == data::TargetType::RESTART_SOLUTION)
-	    ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
+            ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
      }
      ecl_rst_file_end_solution( rst_file );
 
@@ -477,7 +488,21 @@ void writeHeader(ecl_rst_file_type * rst_file,
         if (elm.second.target == data::TargetType::RESTART_AUXILIARY)
             ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
      }
+  }
+
+
+void writeExtraData(ecl_rst_file_type* rst_file, const std::map<std::string,std::vector<double>>& extra_data) {
+    for (const auto& pair : extra_data) {
+        const std::string& key = pair.first;
+        const std::vector<double>& data = pair.second;
+        {
+            ecl_kw_type * ecl_kw = ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE_TYPE , const_cast<double *>(data.data()));
+            ecl_rst_file_add_kw( rst_file , ecl_kw);
+            ecl_kw_free( ecl_kw );
+        }
+    }
 }
+
 
 
 void writeWell(ecl_rst_file_type* rst_file, int report_step, const EclipseState& es , const EclipseGrid& grid, const data::Wells& wells) {
@@ -499,6 +524,31 @@ void writeWell(ecl_rst_file_type* rst_file, int report_step, const EclipseState&
     write_kw( rst_file, ERT::EclKW< int >( OPM_IWEL, opm_iwel ) );
     write_kw( rst_file, ERT::EclKW< int >( ICON_KW, icon_data ) );
 }
+
+void checkSaveArguments(const data::Solution& cells,
+                        const data::Wells& wells,
+                        const EclipseState& es,
+                        const EclipseGrid& grid,
+                        const std::map<std::string, std::vector<double>> extra_data) {
+
+    const std::set<std::string> reserved_keys = {"LOGIHEAD", "INTEHEAD" ,"DOUBHEAD", "IWEL", "XWEL","ICON", "XCON" , "OPM_IWEL" , "OPM_XWEL", "ZWEL"};
+
+    for (const auto& pair : extra_data) {
+        const std::string& key = pair.first;
+        if (key.size() > 8)
+            throw std::runtime_error("The keys in extra data must have maximum eight characaters");
+
+        if (cells.has( key ))
+            throw std::runtime_error("The keys used must unique across Solution and extra_data");
+
+        if (reserved_keys.find( key ) != reserved_keys.end())
+            throw std::runtime_error("The extra_data uses a reserved key");
+    }
+
+    for (const auto& elm: cells)
+        if (elm.second.data.size() != grid.getNumActive())
+            throw std::runtime_error("Wrong size on solution vector: " + elm.first);
+}
 }
 
 
@@ -509,26 +559,30 @@ void save(const std::string& filename,
           data::Wells wells,
           const EclipseState& es,
           const EclipseGrid& grid,
-	  bool write_double) 
+          std::map<std::string, std::vector<double>> extra_data,
+	  bool write_double)
 {
-    const auto& ioConfig = es.getIOConfig();
-    int ert_phase_mask = es.runspec().eclPhaseMask( );
-    const Schedule& schedule = es.getSchedule();
-    const auto& units = es.getUnits();
-    time_t posix_time = schedule.posixStartTime() + seconds_elapsed;
-    const auto sim_time = units.from_si( UnitSystem::measure::time, seconds_elapsed );
-    ERT::ert_unique_ptr< ecl_rst_file_type, ecl_rst_file_close > rst_file;
+    checkSaveArguments( cells , wells , es , grid  ,extra_data );
+    {
+        int ert_phase_mask = es.runspec().eclPhaseMask( );
+        const Schedule& schedule = es.getSchedule();
+        const auto& units = es.getUnits();
+        time_t posix_time = schedule.posixStartTime() + seconds_elapsed;
+        const auto sim_time = units.from_si( UnitSystem::measure::time, seconds_elapsed );
+        ERT::ert_unique_ptr< ecl_rst_file_type, ecl_rst_file_close > rst_file;
 
-    if (ERT::EclFiletype( filename ) == ECL_UNIFIED_RESTART_FILE)
-        rst_file.reset( ecl_rst_file_open_write_seek( filename.c_str(), report_step ) );
-    else
-        rst_file.reset( ecl_rst_file_open_write( filename.c_str() ) );
+        if (ERT::EclFiletype( filename ) == ECL_UNIFIED_RESTART_FILE)
+            rst_file.reset( ecl_rst_file_open_write_seek( filename.c_str(), report_step ) );
+        else
+            rst_file.reset( ecl_rst_file_open_write( filename.c_str() ) );
 
-    cells.convertFromSI( units );
-    writeHeader( rst_file.get() , report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
-    writeWell( rst_file.get() , report_step, es , grid, wells);
-    writeSolution( rst_file.get() , cells , write_double );
 
+        cells.convertFromSI( units );
+        writeHeader( rst_file.get() , report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
+        writeWell( rst_file.get() , report_step, es , grid, wells);
+        writeSolution( rst_file.get() , cells , write_double );
+        writeExtraData( rst_file.get() , extra_data );
+    }
 }
 }
 }

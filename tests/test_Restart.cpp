@@ -26,8 +26,10 @@
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/RestartIO.hpp>
+#include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Wells.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -344,10 +346,10 @@ data::Solution mkSolution( int numCells ) {
     return sol;
 }
 
-std::pair< data::Solution, data::Wells >
-first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_double) {
+
+RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_double) {
     const auto& grid = es.getInputGrid();
-    auto num_cells = grid.getNX() * grid.getNY() * grid.getNZ();
+    auto num_cells = grid.getNumActive( );
 
     auto start_time = ecl_util_make_date( 1, 11, 1979 );
     auto first_step = ecl_util_make_date( 10, 10, 2008 );
@@ -358,30 +360,30 @@ first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_double) {
     eclWriter.writeTimeStep( 1,
                              false,
                              first_step - start_time,
-                             sol, wells , write_double);
+                             sol, wells , {}, write_double);
 
-    return { sol, wells };
+    return { sol, wells , {}};
 }
 
-std::pair< data::Solution, data::Wells > second_sim(const EclipseIO& writer, const std::map<std::string, UnitSystem::measure>& keys) {
+RestartValue second_sim(const EclipseIO& writer, const std::map<std::string, UnitSystem::measure>& keys) {
     return writer.loadRestart( keys );
 }
 
 
-void compare( std::pair< data::Solution, data::Wells > fst,
-              std::pair< data::Solution, data::Wells > snd ,
+void compare( const RestartValue& fst,
+              const RestartValue& snd,
               const std::map<std::string, UnitSystem::measure>& keys) {
 
     for (const auto& pair : keys) {
 
-        auto first = fst.first.data( pair.first ).begin();
-        auto second = snd.first.data( pair.first ).begin();
+        auto first = fst.solution.data( pair.first ).begin();
+        auto second = snd.solution.data( pair.first ).begin();
 
-        for( ; first != fst.first.data( pair.first ).end(); ++first, ++second )
+        for( ; first != fst.solution.data( pair.first ).end(); ++first, ++second )
             BOOST_CHECK_CLOSE( *first, *second, 0.00001 );
     }
 
-    BOOST_CHECK_EQUAL( fst.second, snd.second );
+    BOOST_CHECK_EQUAL( fst.wells, snd.wells );
 }
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
@@ -406,20 +408,21 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
 }
 
 
-void compare_equal( std::pair< data::Solution, data::Wells > fst,
-		    std::pair< data::Solution, data::Wells > snd ,
+void compare_equal( const RestartValue& fst,
+		    const RestartValue& snd ,
 		    const std::map<std::string, UnitSystem::measure>& keys) {
 
     for (const auto& pair : keys) {
 
-        auto first = fst.first.data( pair.first ).begin();
-        auto second = snd.first.data( pair.first ).begin();
+        auto first = fst.solution.data( pair.first ).begin();
+        auto second = snd.solution.data( pair.first ).begin();
 
-        for( ; first != fst.first.data( pair.first ).end(); ++first, ++second )
+        for( ; first != fst.solution.data( pair.first ).end(); ++first, ++second )
 	    BOOST_CHECK_EQUAL( *first, *second);
     }
 
-    BOOST_CHECK_EQUAL( fst.second, snd.second );
+    BOOST_CHECK_EQUAL( fst.wells, snd.wells );
+    //BOOST_CHECK_EQUAL( fst.extra, snd.extra );
 }
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
@@ -444,4 +447,124 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     auto state2 = second_sim( eclWriter , keys );
     compare_equal( state1 , state2 , keys);
 }
+
+
+BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
+    const auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
+    const auto& grid = eclipseState.getInputGrid();
+    {
+        ERT::TestArea testArea("test_Restart");
+        auto num_cells = grid.getNumActive( ) + 1;
+        auto cells = mkSolution( num_cells );
+        auto wells = mkWells();
+
+        BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+                                           100,
+                                           cells ,
+                                           wells ,
+                                           eclipseState ,
+                                           grid ),  std::runtime_error);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
+    auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
+    const auto& grid = eclipseState.getInputGrid();
+    {
+        ERT::TestArea testArea("test_Restart");
+        auto num_cells = grid.getNumActive( );
+        auto cells = mkSolution( num_cells );
+        auto wells = mkWells();
+
+        /* To fit with the eclipse format limitations the keys must be max 8 characters long. */
+        {
+            std::map<std::string , std::vector<double>> extra;
+            extra["TOO_LONG_KEY"] = {0,1,2,3};
+            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+                                               100,
+                                               cells ,
+                                               wells ,
+                                               eclipseState ,
+                                               grid,
+                                               extra),
+                               std::runtime_error);
+        }
+
+        /* The keys must be unique across solution and extra_data */
+        {
+            std::map<std::string , std::vector<double>> extra;
+            extra["PRESSURE"] = {0,1,2,3};
+            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+                                               100,
+                                               cells ,
+                                               wells ,
+                                               eclipseState ,
+                                               grid,
+                                               extra),
+                               std::runtime_error);
+        }
+
+        /* Must avoid using reserved keys like 'LOGIHEAD' */
+        {
+            std::map<std::string , std::vector<double>> extra;
+            extra["LOGIHEAD"] = {0,1,2,3};
+            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+                                               100,
+                                               cells ,
+                                               wells ,
+                                               eclipseState ,
+                                               grid,
+                                               extra),
+                               std::runtime_error);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ExtraData_content) {
+    auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
+    const auto& grid = eclipseState.getInputGrid();
+    {
+        ERT::TestArea testArea("test_Restart");
+        auto num_cells = grid.getNumActive( );
+        auto cells = mkSolution( num_cells );
+        auto wells = mkWells();
+        {
+            std::map<std::string , std::vector<double>> extra;
+            extra["EXTRA"] = {0,1,2,3};
+            RestartIO::save("FILE.UNRST", 1 ,
+                            100,
+                            cells ,
+                            wells ,
+                            eclipseState ,
+                            grid,
+                            extra);
+
+            {
+                ecl_file_type * f = ecl_file_open( "FILE.UNRST" , 0 );
+                BOOST_CHECK( ecl_file_has_kw( f , "EXTRA"));
+                {
+                    ecl_kw_type * ex = ecl_file_iget_named_kw( f , "EXTRA" , 0 );
+                    BOOST_CHECK_EQUAL( ecl_kw_get_header( ex) , "EXTRA" );
+                    BOOST_CHECK_EQUAL(  4, ecl_kw_get_size( ex ));
+                    BOOST_CHECK_EQUAL(  0 , ecl_kw_iget_double( ex, 0 ));
+                    BOOST_CHECK_EQUAL(  3 , ecl_kw_iget_double( ex, 3 ));
+                }
+                ecl_file_close( f );
+            }
+
+            BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {"NOT-THIS"}) , std::runtime_error );
+            {
+                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {"EXTRA"});
+                const auto pair = rst_value.extra.find( "EXTRA" );
+                const std::vector<double> extra = pair->second;
+                const std::vector<double> expected = {0,1,2,3};
+                
+                BOOST_CHECK_EQUAL( rst_value.extra.size() , 1 );
+                BOOST_CHECK_EQUAL( extra.size() , 4 );
+                BOOST_CHECK_EQUAL_COLLECTIONS( extra.begin(), extra.end(), expected.begin() , expected.end());
+            }
+        }
+    }
+}
+
 }
