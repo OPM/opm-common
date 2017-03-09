@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
-#include <set>
+#include <map>
 #include <string>
 #include <vector>
 #include <array>
@@ -183,9 +183,12 @@ public:
       stored in the 'extra' field of the RestartValue return
       value. These values must have been added to the restart file
       previosuly with the extra argument to the writeTimeStep()
-      method.
+      method. If the bool value in the map is true the value is
+      required, and the output layer will throw an exception if it is
+      missing, if the bool is false missing keywords will be ignored
+      (there will *not* be an empty vector in the return value).
     */
-    RestartValue loadRestart(const std::map<std::string, UnitSystem::measure>& keys, const std::set<std::string>& extra_keys = {}) const;
+    RestartValue loadRestart(const std::map<std::string, UnitSystem::measure>& keys, const std::map<std::string, bool>& extra_keys = {}) const;
 
 
     EclipseIO( const EclipseIO& ) = delete;

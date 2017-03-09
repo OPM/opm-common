@@ -215,7 +215,7 @@ RestartValue load( const std::string& filename,
                    const std::map<std::string,UnitSystem::measure>& keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
-                   const std::set<std::string>& extra_keys) {
+                   const std::map<std::string, bool>& extra_keys) {
 
     const bool unified                   = ( ERT::EclFiletype( filename ) == ECL_UNIFIED_RESTART_FILE );
     ERT::ert_unique_ptr< ecl_file_type, ecl_file_close > file(ecl_file_open( filename.c_str(), 0 ));
@@ -242,14 +242,18 @@ RestartValue load( const std::string& filename,
     RestartValue rst_value( restoreSOLUTION( file_view, keys, units , grid.getNumActive( )),
                             restore_wells( opm_xwel, opm_iwel,zwel, report_step , es));
 
-    for (const std::string& key : extra_keys) {
+    for (const auto& pair : extra_keys) {
+        const std::string& key = pair.first;
+        bool required = pair.second;
+
         if (ecl_file_view_has_kw( file_view , key.c_str())) {
             const ecl_kw_type * ecl_kw = ecl_file_view_iget_named_kw( file_view , key.c_str() , 0 );
             const double * data_ptr = ecl_kw_get_double_ptr( ecl_kw );
             const double * end_ptr  = data_ptr + ecl_kw_get_size( ecl_kw );
             rst_value.extra[ key ] = { data_ptr, end_ptr };
-        } else
+        } else if (required)
             throw std::runtime_error("No such key in file: " + key);
+
     }
 
     return rst_value;

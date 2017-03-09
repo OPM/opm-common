@@ -24,7 +24,7 @@
 #define RESTART_IO_HPP
 
 #include <vector>
-#include <set>
+#include <map>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -89,7 +89,7 @@ RestartValue load( const std::string& filename,
                    const std::map<std::string, UnitSystem::measure>& keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
-                   const std::set<std::string>& extra_keys = {});
+                   const std::map<std::string, bool>& extra_keys = {});
 
 }
 }

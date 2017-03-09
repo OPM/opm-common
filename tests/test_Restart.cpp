@@ -552,16 +552,19 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                 ecl_file_close( f );
             }
 
-            BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {"NOT-THIS"}) , std::runtime_error );
+            BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {{"NOT-THIS", true}}) , std::runtime_error );
             {
-                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {"EXTRA"});
+                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {{"EXTRA", true}, {"EXTRA2", false}});
                 const auto pair = rst_value.extra.find( "EXTRA" );
                 const std::vector<double> extra = pair->second;
                 const std::vector<double> expected = {0,1,2,3};
-                
+
                 BOOST_CHECK_EQUAL( rst_value.extra.size() , 1 );
                 BOOST_CHECK_EQUAL( extra.size() , 4 );
                 BOOST_CHECK_EQUAL_COLLECTIONS( extra.begin(), extra.end(), expected.begin() , expected.end());
+
+                const auto missing = rst_value.extra.find( "EXTRA2");
+                BOOST_CHECK( missing == rst_value.extra.end() );
             }
         }
     }
