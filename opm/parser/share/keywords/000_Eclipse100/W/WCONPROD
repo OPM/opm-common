@@ -7,7 +7,7 @@
        {"name" : "GRAT"         , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "GasSurfaceVolume/Time"},
        {"name" : "LRAT"         , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "LiquidSurfaceVolume/Time"},
        {"name" : "RESV"         , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "LiquidSurfaceVolume/Time"},
-       {"name" : "BHP"          , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "Pressure"},
+       {"name" : "BHP"          , "value_type" : "DOUBLE" , "default" : 1.01325 , "dimension" : "Pressure"},
        {"name" : "THP"          , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "Pressure"},
        {"name" : "VFP_TABLE"    , "value_type" : "INT"    , "default" :   0 },
        {"name" : "ALQ"          , "value_type" : "DOUBLE" , "default" : 0.0 },

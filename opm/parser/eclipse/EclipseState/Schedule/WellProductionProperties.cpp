@@ -107,14 +107,16 @@ namespace Opm {
         using mode = std::pair< const char*, wp::ControlModeEnum >;
         static const mode modes[] = {
             { "ORAT", wp::ORAT }, { "WRAT", wp::WRAT }, { "GRAT", wp::GRAT },
-            { "LRAT", wp::LRAT }, { "RESV", wp::RESV }, { "BHP", wp::BHP },
-            { "THP", wp::THP }
+            { "LRAT", wp::LRAT }, { "RESV", wp::RESV }, { "THP", wp::THP }
         };
 
         for( const auto& cmode : modes ) {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) )
                  p.addProductionControl( cmode.second );
         }
+
+        // There is always a BHP constraint, when not specified, will use the default value
+        p.addProductionControl( wp::BHP );
 
         if (addGroupProductionControl) {
             p.addProductionControl(WellProducer::GRUP);
