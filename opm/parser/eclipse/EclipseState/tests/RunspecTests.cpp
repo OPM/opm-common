@@ -125,6 +125,8 @@ BOOST_AUTO_TEST_CASE( EndpointScalingWithoutENDSCALE ) {
     BOOST_CHECK( !endscale.irreversible() );
 }
 
+
+
 BOOST_AUTO_TEST_CASE( EndpointScalingDefaulted ) {
     const std::string input = R"(
     RUNSPEC
@@ -264,7 +266,23 @@ BOOST_AUTO_TEST_CASE( endpoint_scaling_throw_invalid_argument ) {
 
     for( auto&& input : inputs ) {
         auto deck = Parser{}.parseString( input, ParseContext{} );
-        std::cout << input << std::endl;
         BOOST_CHECK_THROW( Runspec{ deck }, std::invalid_argument );
     }
+}
+
+
+BOOST_AUTO_TEST_CASE( SWATINIT ) {
+    const std::string input = R"(
+    SWATINIT
+       1000*0.25 /
+    )";
+
+    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    const auto& endscale = runspec.endpointScaling();
+    BOOST_CHECK( endscale );
+    BOOST_CHECK( !endscale.directional() );
+    BOOST_CHECK( endscale.nondirectional() );
+    BOOST_CHECK( endscale.reversible() );
+    BOOST_CHECK( !endscale.irreversible() );
+
 }
