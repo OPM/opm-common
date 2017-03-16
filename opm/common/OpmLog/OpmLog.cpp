@@ -176,12 +176,14 @@ namespace Opm {
 
 
 
-    void OpmLog::setupSimpleDefaultLogging(const bool use_prefix)
+    void OpmLog::setupSimpleDefaultLogging(const bool use_prefix,
+                                           const bool use_color_coding,
+                                           const int message_limit)
     {
          std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>(std::cout, Log::DefaultMessageTypes);
          OpmLog::addBackend( "SimpleDefaultLog", streamLog);
-         streamLog->setMessageLimiter(std::make_shared<MessageLimiter>(10));
-         streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(use_prefix, true));
+         streamLog->setMessageLimiter(std::make_shared<MessageLimiter>(message_limit));
+         streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(use_prefix, use_color_coding));
     }
 /******************************************************************/
 
