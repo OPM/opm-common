@@ -21,8 +21,16 @@
 #include <opm/common/OpmLog/Logger.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 #include <iostream>
+#include <unistd.h> // For isatty() etc.
 
 namespace Opm {
+
+    namespace {
+        bool stdoutIsTerminal()
+        {
+            return isatty(fileno(stdout));
+        }
+    }
 
 
     std::shared_ptr<Logger> OpmLog::getLogger() {
@@ -183,7 +191,7 @@ namespace Opm {
          std::shared_ptr<StreamLog> streamLog = std::make_shared<StreamLog>(std::cout, Log::DefaultMessageTypes);
          OpmLog::addBackend( "SimpleDefaultLog", streamLog);
          streamLog->setMessageLimiter(std::make_shared<MessageLimiter>(message_limit));
-         streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(use_prefix, use_color_coding));
+         streamLog->setMessageFormatter(std::make_shared<SimpleMessageFormatter>(use_prefix, use_color_coding && stdoutIsTerminal()));
     }
 /******************************************************************/
 
