@@ -21,14 +21,24 @@
 #include <opm/common/OpmLog/Logger.hpp>
 #include <opm/common/OpmLog/StreamLog.hpp>
 #include <iostream>
-#include <unistd.h> // For isatty() etc.
+#include <errno.h>  // For errno
+#include <stdio.h>  // For fileno() and stdout
+#include <unistd.h> // For isatty()
 
 namespace Opm {
 
     namespace {
         bool stdoutIsTerminal()
         {
-            return isatty(fileno(stdout));
+            const int errno_save = errno; // For playing nice with C error handling.
+            const int file_descriptor = fileno(stdout);
+            if (file_descriptor == -1) {
+                // stdout is an invalid stream
+                errno = errno_save;
+                return false;
+            } else {
+                return isatty(file_descriptor);
+            }
         }
     }
 
