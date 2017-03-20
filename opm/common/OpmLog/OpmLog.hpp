@@ -64,7 +64,16 @@ public:
     static void removeAllBackends();
     static bool enabledMessageType( int64_t messageType );
     static void addMessageType( int64_t messageType , const std::string& prefix);
-    static void setupSimpleDefaultLogging(const bool use_prefix);
+
+    /// Create a basic logging setup that will send all log messages to standard output.
+    ///
+    /// By default category prefixes will be printed (i.e. Error: or
+    /// Warning:), color coding will be used, and a maximum of 10
+    /// messages with the same tag will be printed. These settings can
+    /// be controlled by the function parameters.
+    static void setupSimpleDefaultLogging(const bool use_prefix = true,
+                                          const bool use_color_coding = true,
+                                          const int message_limit = 10);
 
     template <class BackendType>
     static std::shared_ptr<BackendType> getBackend(const std::string& name) {
