@@ -242,9 +242,10 @@ if (NOT (ERT_INCLUDE_DIR MATCHES "-NOTFOUND" OR ERT_LIBRARIES MATCHES "-NOTFOUND
   set (CMAKE_REQUIRED_INCLUDES ${ERT_INCLUDE_DIR})
   set (CMAKE_REQUIRED_LIBRARIES ${ERT_LIBRARIES})
   check_cxx_source_compiles (
-"#include <ert/ecl/EclKW.hpp>
+"#include <ert/ecl/ecl_grid.h>
 int main ( ) {
-    ERT::EclKW< int > kw( ecl_kw_alloc( \"SATNUM\", 0, ECL_INT_TYPE ) );
+    ecl_grid_type * grid = ecl_grid_alloc_rectangular( 10,10,10,1,1,1, NULL);
+    ecl_grid_free( grid );
     return 0;
 }" HAVE_ERT)
   cmake_pop_check_state ()
