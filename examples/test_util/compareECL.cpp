@@ -85,7 +85,7 @@ void concatenateRestart(const std::string& basename) {
     const char* target_file_name = ecl_util_alloc_filename(inputPath.c_str(), inputBase.c_str(), ECL_UNIFIED_RESTART_FILE, false, -1);
     fortio_type* target = fortio_open_writer(target_file_name, false, ECL_ENDIAN_FLIP);
     int dummy;
-    ecl_kw_type* seqnum_kw = ecl_kw_alloc_new("SEQNUM", 1, ECL_INT_TYPE, &dummy);
+    ecl_kw_type* seqnum_kw = ecl_kw_alloc_new("SEQNUM", 1, ECL_INT, &dummy);
 
     int reportStep = 0;
     for (int i = 0; i < numFiles; ++i) {
