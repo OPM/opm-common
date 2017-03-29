@@ -232,6 +232,7 @@ class ParserState {
         string_view nextKeyword = emptystr;
         Deck deck;
         const ParseContext& parseContext;
+        bool unknown_keyword = false;
 };
 
 
@@ -399,13 +400,17 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
             std::string msg = "Keyword " + keywordString + " not recognized.";
             auto& msgContainer = parserState.deck.getMessageContainer();
             parserState.parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD, msgContainer, msg );
+            parserState.unknown_keyword = true;
             return {};
         }
 
-        parserState.handleRandomText( keywordString );
-        return {};
+        if (!parserState.unknown_keyword)
+            parserState.handleRandomText( keywordString );
 
+        return {};
     }
+    parserState.unknown_keyword = false;
+
 
     const auto* parserKeyword = parser.getParserKeywordFromDeckName( keywordString );
 
@@ -479,9 +484,11 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
         if( parserState.rawKeyword == NULL ) {
             if( RawKeyword::isKeywordPrefix( line, keywordString ) ) {
                 parserState.rawKeyword = createRawKeyword( keywordString, parserState, parser );
-            } else
+            } else {
                 /* We are looking at some random gibberish?! */
-                parserState.handleRandomText( line );
+                if (!parserState.unknown_keyword)
+                    parserState.handleRandomText( line );
+            }
         } else {
             if (parserState.rawKeyword->getSizeType() == Raw::UNKNOWN) {
                 if( parser.isRecognizedKeyword( line ) ) {

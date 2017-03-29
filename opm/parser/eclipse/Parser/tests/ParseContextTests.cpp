@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
@@ -80,6 +81,61 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseContext ) );
+}
+
+
+BOOST_AUTO_TEST_CASE(TestUnkownKeyword_DATA) {
+    const char * deck_string1 =
+        "RUNSPEC\n"
+        "\n"
+        "UNKNOWN1\n"
+        "\n"
+        "UNKNOWN2\n"
+        "  10 10 10 /n"
+        "\n"
+        "UNKNOWN3\n"
+        "  11 11 11 /n"
+        "/\n"
+        "\n"
+        "DIMENS\n"
+        "  12 12 12 /n"
+        "\n";
+
+
+    const char * deck_string2 =
+        "RUNSPEC\n"
+        "\n"
+        "UNKNOWN1\n"
+        "\n"
+        "UNKNOWN2\n"
+        "  10 10 10 /n"
+        "\n"
+        "UNKNOWN3\n"
+        "  11 11 11 /n"
+        "/\n"
+        "\n"
+        "DIMENS\n"
+        "  12 12 12 /\n"
+        "Ran/dom Noise; \n"
+        "with 0 0 0 Data /\n"
+        "/\n"
+        "\n";
+
+
+    ParseContext parseContext;
+    Parser parser(false);
+
+
+    parser.addKeyword<ParserKeywords::RUNSPEC>();
+    parser.addKeyword<ParserKeywords::DIMENS>();
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
+    parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::THROW_EXCEPTION );
+    {
+        Deck deck = parser.parseString( deck_string1 , parseContext );
+        BOOST_CHECK( deck.hasKeyword( "RUNSPEC") );
+        BOOST_CHECK( deck.hasKeyword( "DIMENS") );
+    }
+    BOOST_CHECK_THROW( parser.parseString( deck_string2 , parseContext ) , std::invalid_argument);
 }
 
 
