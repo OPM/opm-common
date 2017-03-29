@@ -17,7 +17,7 @@ environment:
     BOOST_LIBRARYDIR: C:\Libraries\boost_1_59_0\lib64-msvc-14.0
     BOOST_FLAGS: -DBoost_USE_MULTITHREAD=ON -DBUILD_SHARED_LIBS=OFF -DBoost_USE_STATIC_LIBS=TRUE -DBOOST_ALL_DYN_LINK=OFF
     BOOST_OPTIONS: -DBOOST_ROOT=%BOOST_ROOT% -DBOOST_LIBRARYDIR=%BOOST_LIBRARYDIR% -DBOOST_INCLUDEDIR=%BOOST_INCLUDEDIR% %BOOST_FLAGS%
-    COMMON_ROOT: "C:/Program Files/Project/share/opm/"
+    COMMON_ROOT: "C:/projects/opm-parser/opm-common"
     DATA_ROOT: "C:/projects/opm-parser/opm-data/"
     ERT_ROOT: "C:/Program Files/ERT"
     GEN: "Visual Studio 14 2015 Win64"
@@ -32,9 +32,6 @@ build_script:
     - cd ert
     - cmake C:\projects\opm-parser\ert -G"%GEN%" -DCMAKE_BUILD_TYPE=%configuration% -DERT_BUILD_CXX=ON -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF
     - cmake --build . --target install --config %configuration%
-    - cd ../opm-common
-    - cmake C:\projects\opm-parser\opm-common -G"%GEN%" %BOOST_OPTIONS% -DCMAKE_BUILD_TYPE=%configuration% -DBUILD_TESTING=OFF
-    - cmake --build . --config %configuration% --target install
     - cd ..
     - cmake C:\projects\opm-parser -G"%GEN%" %BOOST_OPTIONS% -DOPM_DATA_ROOT=%DATA_ROOT% -DOPM_COMMON_ROOT="%COMMON_ROOT%" -DCMAKE_PREFIX_PATH="%ERT_ROOT%" -DCMAKE_BUILD_TYPE=%configuration%
     - cmake --build . --config %configuration%
