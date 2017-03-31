@@ -81,6 +81,18 @@ class EclipseGrid(object):
     def getNZ(self):
         return self._getXYZ()[2]
 
+    def getCellVolume(self, global_idx=None, i_idx=None, j_idx=None, k_idx=None):
+        if global_idx is not None:
+            if set([i_idx, j_idx, k_idx]) != set([None]):
+                raise ValueError('Specify exactly one of global and all three i,j,k.')
+            return self._cellVolume1G(global_idx)
+        if None in [i_idx, j_idx, k_idx]:
+            raise ValueError('If not global_idx, need all three of i_idx, j_idx, and k_idx.')
+        return self._cellVolume3(i_idx, j_idx, k_idx)
+
+    def eclGrid(self):
+        return self._ecl_grid_ptr()
+
     def __repr__(self):
         x,y,z = self._getXYZ()
         g = self.cartesianSize()
