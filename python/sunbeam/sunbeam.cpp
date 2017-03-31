@@ -122,6 +122,12 @@ py::tuple getIJK( const EclipseGrid& grid, int g ) {
     const auto& ijk = grid.getIJK(g);
     return py::make_tuple(ijk[0], ijk[1], ijk[2]);
 }
+double cellVolume1G( const EclipseGrid& grid, size_t glob_idx) {
+  return grid.getCellVolume(glob_idx);
+}
+double cellVolume3( const EclipseGrid& grid, size_t i_idx, size_t j_idx, size_t k_idx) {
+  return grid.getCellVolume(i_idx, j_idx, k_idx);
+}
 }
 
 namespace props {
@@ -287,6 +293,8 @@ py::class_< EclipseGrid >( "EclipseGrid", py::no_init )
     .def( "cartesianSize",  grid::getCartesianSize )
     .def( "globalIndex",    grid::getGlobalIndex )
     .def( "getIJK",         grid::getIJK )
+    .def( "_cellVolume1G",  grid::cellVolume1G)
+    .def( "_cellVolume3",   grid::cellVolume3)
     ;
 
 py::class_< Eclipse3DProperties >( "Eclipse3DProperties", py::no_init )
