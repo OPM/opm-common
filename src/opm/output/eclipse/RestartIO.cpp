@@ -36,6 +36,7 @@
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_kw.h>
+#include <ert/ecl/ecl_type.h>
 #include <ert/ecl/ecl_grid.h>
 #include <ert/ecl/ecl_util.h>
 #include <ert/ecl/ecl_rft_file.h>
@@ -90,7 +91,7 @@ namespace {
     std::vector<double> double_vector( const ecl_kw_type * ecl_kw ) {
         size_t size = ecl_kw_get_size( ecl_kw );
 
-        if (ecl_kw_get_type( ecl_kw ) == ECL_DOUBLE_TYPE ) {
+        if (ecl_type_get_type( ecl_kw_get_data_type( ecl_kw ) ) == ECL_DOUBLE_TYPE ) {
             const double * ecl_data = ecl_kw_get_double_ptr( ecl_kw );
             return { ecl_data , ecl_data + size };
         } else {
@@ -464,11 +465,11 @@ void writeHeader(ecl_rst_file_type * rst_file,
       ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free > kw_ptr;
 
       if (write_double) {
-	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_DOUBLE_TYPE );
+	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_DOUBLE );
 	  ecl_kw_set_memcpy_data( ecl_kw , data.data() );
 	  kw_ptr.reset( ecl_kw );
       } else {
-	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_FLOAT_TYPE );
+	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_FLOAT );
 	  float * float_data = ecl_kw_get_float_ptr( ecl_kw );
 	  for (size_t i=0; i < data.size(); i++)
 	      float_data[i] = data[i];
@@ -500,7 +501,7 @@ void writeExtraData(ecl_rst_file_type* rst_file, const std::map<std::string,std:
         const std::string& key = pair.first;
         const std::vector<double>& data = pair.second;
         {
-            ecl_kw_type * ecl_kw = ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE_TYPE , const_cast<double *>(data.data()));
+            ecl_kw_type * ecl_kw = ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE , const_cast<double *>(data.data()));
             ecl_rst_file_add_kw( rst_file , ecl_kw);
             ecl_kw_free( ecl_kw );
         }

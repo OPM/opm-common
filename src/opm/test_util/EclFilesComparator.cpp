@@ -30,6 +30,7 @@
 
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_type.h>
 
 #include <ert/ecl_well/well_info.h>
 
@@ -181,11 +182,11 @@ ECLFilesComparator::~ECLFilesComparator() {
 void ECLFilesComparator::printKeywords() const {
     std::cout << "\nKeywords in the first file:\n";
     for (const auto& it : keywords1) {
-        std::cout << std::setw(15) << std::left << it << " of type " << ecl_util_get_type_name(ecl_file_iget_named_type(ecl_file1, it.c_str(), 0)) << std::endl;
+        std::cout << std::setw(15) << std::left << it << " of type " << ecl_type_get_name( ecl_file_iget_named_data_type(ecl_file1, it.c_str(), 0)) << std::endl;
     }
     std::cout << "\nKeywords in second file:\n";
     for (const auto& it : keywords2) {
-        std::cout << std::setw(15) << std::left << it << " of type " << ecl_util_get_type_name(ecl_file_iget_named_type(ecl_file2, it.c_str(), 0)) << std::endl;
+        std::cout << std::setw(15) << std::left << it << " of type " << ecl_type_get_name( ecl_file_iget_named_data_type(ecl_file2, it.c_str(), 0)) << std::endl;
     }
 }
 
@@ -262,7 +263,7 @@ double ECLFilesComparator::average(const std::vector<double>& vec) {
 
 void RegressionTest::printResultsForKeyword(const std::string& keyword) const {
     std::cout << "Deviation results for keyword " << keyword << " of type "
-        << ecl_util_get_type_name(ecl_file_iget_named_type(ecl_file1, keyword.c_str(), 0))
+        << ecl_type_get_name(ecl_file_iget_named_data_type(ecl_file1, keyword.c_str(), 0))
         << ":\n";
     const double absDeviationAverage = average(absDeviation);
     const double relDeviationAverage = average(relDeviation);
@@ -450,7 +451,7 @@ void RegressionTest::resultsForKeyword(const std::string keyword) {
                 << "\nThe number of occurrences differ.");
     }
     // Assuming keyword type is constant for every occurrence:
-    const ecl_type_enum kw_type = ecl_file_iget_named_type(ecl_file1, keyword.c_str(), 0);
+    const ecl_type_enum kw_type = ecl_type_get_type( ecl_file_iget_named_data_type(ecl_file1, keyword.c_str(), 0) );
     switch(kw_type) {
         case ECL_DOUBLE_TYPE:
         case ECL_FLOAT_TYPE:
@@ -502,8 +503,7 @@ void RegressionTest::resultsForKeyword(const std::string keyword) {
             }
             break;
         case ECL_MESS_TYPE:
-            std::cout << "\nKeyword " << keyword << " is of type "
-                << ecl_util_get_type_name(kw_type)
+            std::cout << "\nKeyword " << keyword << " is of type MESS"
                 << ", which is not supported in regression test." << "\n\n";
             return;
         default:
