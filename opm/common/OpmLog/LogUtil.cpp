@@ -85,8 +85,9 @@ namespace Log {
             return message; // No color coding, not even the code for default color.
         case MessageType::Warning:
             return AnsiTerminalColors::blue_strong + message + AnsiTerminalColors::none;
-        case MessageType::Error:
         case MessageType::Problem:
+            return AnsiTerminalColors::magenta_strong + message + AnsiTerminalColors::none;  
+        case MessageType::Error:  
         case MessageType::Bug:
             return AnsiTerminalColors::red_strong + message + AnsiTerminalColors::none;
         default:
