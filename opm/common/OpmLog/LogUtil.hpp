@@ -49,8 +49,8 @@ namespace Log {
         const std::string yellow_strong = "\033[33;1m";
         const std::string blue = "\033[34m";
         const std::string blue_strong = "\033[34;1m";
-	const std::string magenta = "\033[35m";
-	const std::string magenta_strong = "\033[35;1m";
+        const std::string magenta = "\033[35m";
+        const std::string magenta_strong = "\033[35;1m";
         const std::string default_color = "\033[39m";
     }
 
