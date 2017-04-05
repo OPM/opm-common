@@ -44,11 +44,13 @@ namespace Opm
             */
             WELL_WELSPECS_UPDATE = 2,
 
+
+            WELL_POLYMER_UPDATE = 4,
             /*
                The NEW_GROUP event is triggered by the WELSPECS and
                GRUPTREE keywords.
             */
-            NEW_GROUP = 4,
+            NEW_GROUP = 8,
 
             /*
                The PRODUCTION_UPDATE event is triggered by the
@@ -57,32 +59,32 @@ namespace Opm
                is changed. Quite simlar for INJECTION_UPDATE and
                POLYMER_UPDATE.
             */
-            PRODUCTION_UPDATE = 8,
-            INJECTION_UPDATE = 16,
-            POLYMER_UPDATES = 32,
+            PRODUCTION_UPDATE = 16,
+            INJECTION_UPDATE = 32,
+            POLYMER_UPDATES = 64,
 
             /*
               This event is triggered if the well status is changed
               between {OPEN,SHUT,STOP,AUTO}. There are many keywords
               which can trigger a well status change.
             */
-            WELL_STATUS_CHANGE = 64,
+            WELL_STATUS_CHANGE = 128,
 
             /*
               COMPDAT and WELOPEN
             */
-            COMPLETION_CHANGE = 128,
+            COMPLETION_CHANGE = 256,
 
             /*
               The well group topolyg has changed.
             */
-            GROUP_CHANGE = 256,
+            GROUP_CHANGE = 512,
 
 
             /*
               Geology modifier.
             */
-            GEO_MODIFIER = 512
+            GEO_MODIFIER = 1024
         };
     }
 

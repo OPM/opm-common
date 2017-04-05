@@ -174,7 +174,11 @@ namespace Opm {
 
     bool Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties newProperties) {
         m_isProducer.update(timeStep , false);
-        return m_polymerProperties.update(timeStep, newProperties);
+        bool update = m_polymerProperties.update(timeStep, newProperties);
+        if (update)
+            addEvent( ScheduleEvents::WELL_POLYMER_UPDATE, timeStep );
+
+        return update;
     }
 
     WellPolymerProperties Well::getPolymerPropertiesCopy(size_t timeStep) const {
