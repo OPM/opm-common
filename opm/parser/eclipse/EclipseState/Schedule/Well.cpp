@@ -137,7 +137,11 @@ namespace Opm {
             switchToProducer( timeStep );
 
         m_isProducer.update(timeStep , true);
-        return m_productionProperties.update(timeStep, newProperties);
+        bool update = m_productionProperties.update(timeStep, newProperties);
+        if (update)
+            addEvent( ScheduleEvents::PRODUCTION_UPDATE, timeStep );
+
+        return update;
     }
 
     WellProductionProperties Well::getProductionPropertiesCopy(size_t timeStep) const {
@@ -153,7 +157,11 @@ namespace Opm {
             switchToInjector( timeStep );
 
         m_isProducer.update(timeStep , false);
-        return m_injectionProperties.update(timeStep, newProperties);
+        bool update = m_injectionProperties.update(timeStep, newProperties);
+        if (update)
+            addEvent( ScheduleEvents::INJECTION_UPDATE, timeStep );
+
+        return upd;
     }
 
     WellInjectionProperties Well::getInjectionPropertiesCopy(size_t timeStep) const {
@@ -195,6 +203,8 @@ namespace Opm {
     const double& Well::getSolventFraction(size_t timeStep) const {
         return m_solventFraction.at(timeStep);
     }
+
+
 
     bool Well::hasBeenDefined(size_t timeStep) const {
         if (timeStep < m_creationTimeStep)
@@ -410,6 +420,11 @@ namespace Opm {
             else
                 return rft_output;
         }
+    }
+
+
+    size_t Well::firstTimeStep( ) const {
+        return m_creationTimeStep;
     }
 
 

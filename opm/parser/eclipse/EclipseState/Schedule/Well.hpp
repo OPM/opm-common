@@ -133,6 +133,12 @@ namespace Opm {
         bool getPLTActive(size_t time_step) const;
         void setPLTActive(size_t time_step, bool value);
         int  findWellFirstOpen(int startTimeStep) const;
+
+        /*
+          Will return the report step when the well is created with
+          WELSPECS, actually opening the well might be later.
+        */
+        size_t firstTimeStep( ) const;
         void setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep);
 
         static bool wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern);

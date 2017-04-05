@@ -898,4 +898,7 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
 
     BOOST_CHECK( w1->hasEvent( ScheduleEvents::COMPLETION_CHANGE , 0 ));
     BOOST_CHECK( w1->hasEvent( ScheduleEvents::COMPLETION_CHANGE , 5 ));
+
+    BOOST_CHECK_EQUAL( w1->firstTimeStep( ) , 0 );
+    BOOST_CHECK_EQUAL( w2->firstTimeStep( ) , 2 );
 }
