@@ -28,15 +28,27 @@ namespace Opm
     namespace ScheduleEvents {
         // These values are used as bitmask - 2^n structure is essential.
         enum Events {
-            /* The NEW_WELL event is triggered by the WELSPECS
-               keyword. */
+            /*
+               The NEW_WELL event is triggered by the WELSPECS
+               keyword. For wells the event is triggered the first
+               time the well is mentioned in the WELSPECS keyword, for
+               the Schedule object the NEW_WELL event is triggered
+               every time a WELSPECS keyword is encountered.
+            */
             NEW_WELL = 1,
+
+            /*
+              WHen the well data is updated with the WELSPECS keyword
+              this event is triggered. Only applies to individual
+              wells, and not the global Schedule object.
+            */
+            WELL_WELSPECS_UPDATE = 2,
 
             /*
                The NEW_GROUP event is triggered by the WELSPECS and
                GRUPTREE keywords.
             */
-            NEW_GROUP = 2,
+            NEW_GROUP = 4,
 
             /*
                The PRODUCTION_UPDATE event is triggered by the
@@ -45,32 +57,32 @@ namespace Opm
                is changed. Quite simlar for INJECTION_UPDATE and
                POLYMER_UPDATE.
             */
-            PRODUCTION_UPDATE = 4,
-            INJECTION_UPDATE = 8,
-            POLYMER_UPDATES = 16,
+            PRODUCTION_UPDATE = 8,
+            INJECTION_UPDATE = 16,
+            POLYMER_UPDATES = 32,
 
             /*
               This event is triggered if the well status is changed
               between {OPEN,SHUT,STOP,AUTO}. There are many keywords
               which can trigger a well status change.
             */
-            WELL_STATUS_CHANGE = 32,
+            WELL_STATUS_CHANGE = 64,
 
             /*
               COMPDAT and WELOPEN
             */
-            COMPLETION_CHANGE = 64,
+            COMPLETION_CHANGE = 128,
 
             /*
               The well group topolyg has changed.
             */
-            GROUP_CHANGE = 128,
+            GROUP_CHANGE = 256,
 
 
             /*
               Geology modifier.
             */
-            GEO_MODIFIER = 256
+            GEO_MODIFIER = 512
         };
     }
 

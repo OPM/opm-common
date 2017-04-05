@@ -62,8 +62,11 @@ namespace Opm {
           m_allowCrossFlow(allowCrossFlow),
           m_automaticShutIn(automaticShutIn),
           m_segmentset( timeMap, SegmentSet{} ),
-          timesteps( timeMap.numTimesteps() )
-    {}
+          timesteps( timeMap.numTimesteps() ),
+          events( timeMap )
+    {
+        addEvent( ScheduleEvents::NEW_WELL , creationTimeStep );
+    }
 
     const std::string& Well::name() const {
         return m_name;
@@ -208,13 +211,19 @@ namespace Opm {
         if ((WellCommon::StatusEnum::OPEN == status) && getCompletions(timeStep).allCompletionsShut()) {
             m_messages.note("When handling keyword for well " + name() + ": Cannot open a well where all completions are shut");
             return false;
-        } else
-            return m_status.update( timeStep , status );
+        } else {
+            bool update = m_status.update( timeStep , status );
+            if (update)
+                addEvent( ScheduleEvents::WELL_STATUS_CHANGE , timeStep );
+
+            return update;
+        }
     }
 
     const MessageContainer& Well::getMessageContainer() const {
         return m_messages;
     }
+
     bool Well::isProducer(size_t timeStep) const {
         return bool( m_isProducer.get(timeStep) );
     }
@@ -354,6 +363,7 @@ namespace Opm {
         }
 
         m_completions.update( time_step, std::move( new_set ) );
+        addEvent( ScheduleEvents::COMPLETION_CHANGE , time_step );
     }
 
     const std::string Well::getGroupName(size_t time_step) const {
@@ -492,5 +502,17 @@ namespace Opm {
             throw std::logic_error(" unknown length_depth_type in the new_segmentset");
         }
         m_segmentset.update(time_step, new_segmentset);
+    }
+
+
+
+
+    void Well::addEvent(ScheduleEvents::Events event, size_t reportStep) {
+        this->events.addEvent( event , reportStep );
+    }
+
+
+    bool Well::hasEvent(uint64_t eventMask, size_t reportStep) const {
+        return this->events.hasEvent( eventMask , reportStep );
     }
 }

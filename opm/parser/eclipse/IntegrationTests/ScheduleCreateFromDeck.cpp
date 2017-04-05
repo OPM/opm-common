@@ -868,3 +868,34 @@ BOOST_AUTO_TEST_CASE(TestEvents) {
     BOOST_CHECK( !events.hasEvent(ScheduleEvents::NEW_GROUP , 2 ) );
     BOOST_CHECK(  events.hasEvent(ScheduleEvents::NEW_GROUP , 3 ) );
 }
+
+
+BOOST_AUTO_TEST_CASE(TestWellEvents) {
+    ParseContext parseContext;
+    Parser parser;
+    std::string scheduleFile("testdata/integration_tests/SCHEDULE/SCHEDULE_EVENTS");
+
+    auto deck =  parser.parseFile(scheduleFile, parseContext);
+    EclipseGrid grid(40,40,30);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true));
+    const auto& w1 = sched.getWell( "W_1");
+    const auto& w2 = sched.getWell( "W_2");
+
+
+    BOOST_CHECK( w1->hasEvent( ScheduleEvents::NEW_WELL , 0 ));
+    BOOST_CHECK( w2->hasEvent( ScheduleEvents::NEW_WELL , 2 ));
+    BOOST_CHECK( !w2->hasEvent( ScheduleEvents::NEW_WELL , 3 ));
+    BOOST_CHECK( w2->hasEvent( ScheduleEvents::WELL_WELSPECS_UPDATE , 3 ));
+
+
+    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 0 ));
+    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
+    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
+    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
+    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 5 ));
+
+    BOOST_CHECK( w1->hasEvent( ScheduleEvents::COMPLETION_CHANGE , 0 ));
+    BOOST_CHECK( w1->hasEvent( ScheduleEvents::COMPLETION_CHANGE , 5 ));
+}

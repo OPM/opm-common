@@ -327,6 +327,7 @@ namespace Opm {
             const auto& record = keyword.getRecord(recordNr);
             const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
+            bool new_well = false;
 
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep);
@@ -348,12 +349,15 @@ namespace Opm {
                     }
                 }
                 addWell(wellName, record, currentStep, wellCompletionOrder);
+                new_well = true;
             }
 
             auto& currentWell = this->m_wells.get( wellName );
 
             const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
             const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
+            if (!new_well)
+                currentWell.addEvent( ScheduleEvents::WELL_WELSPECS_UPDATE , currentStep );
 
             if( currentWell.getHeadI() != headI ) {
                 std::string msg = "HEAD_I changed for well " + currentWell.name();
@@ -467,7 +471,7 @@ namespace Opm {
                 updateWellStatus( *well , currentStep , status );
                 if (well->setProductionProperties(currentStep, properties))
                     m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
-                
+
                 if ( !well->getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
 
                     std::string msg =
