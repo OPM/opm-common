@@ -161,7 +161,7 @@ namespace Opm {
         if (update)
             addEvent( ScheduleEvents::INJECTION_UPDATE, timeStep );
 
-        return upd;
+        return update;
     }
 
     WellInjectionProperties Well::getInjectionPropertiesCopy(size_t timeStep) const {
