@@ -33,23 +33,34 @@ include(CheckIncludeFileCXX)
 # macro to only add option once
 include(AddOptions)
 
-if(CMAKE_VERSION VERSION_LESS 3.1)
-  if(NOT MSVC)
-    # try to use compiler flag -std=c++11
-    CHECK_CXX_ACCEPTS_FLAG("-std=c++11" CXX_FLAG_CXX11)
-    if(CXX_FLAG_CXX11)
-      add_options (CXX ALL_BUILDS "-std=c++11")
-      set(CXX_STD0X_FLAGS "-std=c++11")
-    else()
-      # try to use compiler flag -std=c++0x for older compilers
-      CHECK_CXX_ACCEPTS_FLAG("-std=c++0x" CXX_FLAG_CXX0X)
-      if(CXX_FLAG_CXX0X)
-        add_options (CXX ALL_BUILDS "-std=c++0x")
-        set(CXX_STD0X_FLAGS "-std=c++0x")
-      endif(CXX_FLAG_CXX0X)
-    endif(CXX_FLAG_CXX11)
-  endif(NOT MSVC)
+# Force CXX Standard cross platfrom for CMakeVersion >=3.1
+set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 11)
+
+
+  if(NOT MSVC)
+    foreach(_flag "14" "11")
+      set(_FLAG "CXX_FLAG_CXX${_flag}")
+      string(TOUPPER ${_FLAG} _FLAG)
+      # try to use compiler flag -std=c++${_flag}
+      CHECK_CXX_ACCEPTS_FLAG("-std=c++${_flag}" ${_FLAG})
+
+      if(${_FLAG})
+        if(CMAKE_VERSION VERSION_LESS 3.1)
+          add_options (CXX ALL_BUILDS "-std=c++${_flag}")
+        endif()
+        set(CXX_STD0X_FLAGS "-std=c++${_flag}")
+        #Use vriables for CMake > 3.1 set the standard with no extensions
+        set(CMAKE_CXX_STANDARD ${_flag})
+        break()
+      endif()
+    endforeach()
+  endif(NOT MSVC)
+endif()
+
+if(CMAKE_VERSION VERSION_LESS 3.1)
   # if we are building with an Apple toolchain in MacOS X,
   # we cannot use the old GCC 4.2 fork, but must use the
   # new runtime library
@@ -58,8 +69,8 @@ if(CMAKE_VERSION VERSION_LESS 3.1)
   if (APPLE AND (_comp_id MATCHES "CLANG"))
     CHECK_CXX_ACCEPTS_FLAG ("-stdlib=libc++" CXX_FLAG_STDLIB_LIBCXX)
     if (CXX_FLAG_STDLIB_LIBCXX)
-          add_options (CXX ALL_BUILDS "-stdlib=libc++")
-          set (CXX_STDLIB_FLAGS "-stdlib=libc++")
+      add_options (CXX ALL_BUILDS "-stdlib=libc++")
+      set (CXX_STDLIB_FLAGS "-stdlib=libc++")
     endif (CXX_FLAG_STDLIB_LIBCXX)
   endif (APPLE AND (_comp_id MATCHES "CLANG"))
 
@@ -69,13 +80,9 @@ if(CMAKE_VERSION VERSION_LESS 3.1)
   else (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
     set (CXX_SPACE)
   endif (CXX_STD0X_FLAGS AND CXX_STDLIB_FLAGS)
-else()
-  if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 11)
-  endif()
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
 
+if(NOT CMAKE_VERSION VERSION_LESS 3.1)
   # Workaround bug in cmake:
   # cxx standard flags are not applied in CheckCXXSourceCompiles
   if (CMAKE_CXX_STANDARD EQUAL 14)
@@ -84,6 +91,7 @@ else()
     add_options(CXX ALL_BUILDS ${CMAKE_CXX11_STANDARD_COMPILE_OPTION})
   endif()
 endif()
+
 
 # perform tests
 include(CheckCXXSourceCompiles)
