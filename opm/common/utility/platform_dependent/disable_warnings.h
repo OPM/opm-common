@@ -74,6 +74,8 @@
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #pragma GCC diagnostic ignored "-Wcast-align"
 #pragma GCC diagnostic ignored "-Wcast-qual"
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #endif // COMPATIBLE_COMPILER
 
 #endif // SILENCE_EXTERNAL_WARNINGS
