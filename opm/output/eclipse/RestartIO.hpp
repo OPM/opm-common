@@ -83,10 +83,9 @@ void save(const std::string& filename,
 	  bool write_double = false);
 
 
-
 RestartValue load( const std::string& filename,
                    int report_step,
-                   const std::map<std::string, UnitSystem::measure>& keys,
+                   const std::map<std::string, RestartKey>& keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
                    const std::map<std::string, bool>& extra_keys = {});

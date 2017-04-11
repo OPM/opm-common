@@ -365,14 +365,14 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_
     return { sol, wells , {}};
 }
 
-RestartValue second_sim(const EclipseIO& writer, const std::map<std::string, UnitSystem::measure>& keys) {
+RestartValue second_sim(const EclipseIO& writer, const std::map<std::string, RestartKey>& keys) {
     return writer.loadRestart( keys );
 }
 
 
 void compare( const RestartValue& fst,
               const RestartValue& snd,
-              const std::map<std::string, UnitSystem::measure>& keys) {
+              const std::map<std::string, RestartKey>& keys) {
 
     for (const auto& pair : keys) {
 
@@ -387,10 +387,10 @@ void compare( const RestartValue& fst,
 }
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
-    std::map<std::string, UnitSystem::measure> keys {{"PRESSURE" , UnitSystem::measure::pressure},
-                                                     {"SWAT" , UnitSystem::measure::identity},
-                                                     {"SGAS" , UnitSystem::measure::identity},
-                                                     {"TEMP" , UnitSystem::measure::temperature}};
+    std::map<std::string, RestartKey> keys {{"PRESSURE" , UnitSystem::measure::pressure},
+                                            {"SWAT" , UnitSystem::measure::identity},
+                                            {"SGAS" , UnitSystem::measure::identity},
+                                            {"TEMP" , UnitSystem::measure::temperature}};
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
 
@@ -401,16 +401,14 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     auto state2 = second_sim( eclWriter , keys );
     compare(state1, state2 , keys);
 
-    {
-        std::map<std::string, UnitSystem::measure> extra_keys {{"SOIL" , UnitSystem::measure::pressure}};
-        BOOST_CHECK_THROW( second_sim( eclWriter, extra_keys ) , std::runtime_error );
-    }
+    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , UnitSystem::measure::pressure}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , { UnitSystem::measure::pressure, true}}} ) , std::runtime_error );
 }
 
 
 void compare_equal( const RestartValue& fst,
 		    const RestartValue& snd ,
-		    const std::map<std::string, UnitSystem::measure>& keys) {
+		    const std::map<std::string, RestartKey>& keys) {
 
     for (const auto& pair : keys) {
 
@@ -434,12 +432,12 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
       this equality for the pressure. For this test we therefor only
       consider the saturations which have identity unit.
     */
-    std::map<std::string, UnitSystem::measure> keys {{"SWAT" , UnitSystem::measure::identity},
-	                                             {"SGAS" , UnitSystem::measure::identity}};
-    
+    std::map<std::string, RestartKey> keys {{"SWAT" , UnitSystem::measure::identity},
+	                                    {"SGAS" , UnitSystem::measure::identity}};
+
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
-    
+
     auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
     const auto& grid = eclipseState.getInputGrid();
     EclipseIO eclWriter( eclipseState, grid);
@@ -554,11 +552,15 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
 
             BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {{"NOT-THIS", true}}) , std::runtime_error );
             {
-                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {{"EXTRA", true}, {"EXTRA2", false}});
+                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {{"SWAT" , UnitSystem::measure::identity},
+                                                                            {"NO"   , {UnitSystem::measure::identity, false}}},
+                                                                            eclipseState, grid , {{"EXTRA", true}, {"EXTRA2", false}});
                 const auto pair = rst_value.extra.find( "EXTRA" );
                 const std::vector<double> extra = pair->second;
                 const std::vector<double> expected = {0,1,2,3};
 
+                BOOST_CHECK_EQUAL( rst_value.solution.has("SWAT") , true );
+                BOOST_CHECK_EQUAL( rst_value.solution.has("NO") , false );
                 BOOST_CHECK_EQUAL( rst_value.extra.size() , 1 );
                 BOOST_CHECK_EQUAL( extra.size() , 4 );
                 BOOST_CHECK_EQUAL_COLLECTIONS( extra.begin(), extra.end(), expected.begin() , expected.end());

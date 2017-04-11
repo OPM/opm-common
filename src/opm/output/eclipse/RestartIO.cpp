@@ -103,19 +103,25 @@ namespace {
 
 
     inline data::Solution restoreSOLUTION( ecl_file_view_type* file_view,
-                                           const std::map<std::string, UnitSystem::measure>& keys,
+                                           const std::map<std::string, RestartKey>& keys,
                                            const UnitSystem& units,
                                            int numcells) {
 
         data::Solution sol;
         for (const auto& pair : keys) {
             const std::string& key = pair.first;
-            UnitSystem::measure dim = pair.second;
-            if( !ecl_file_view_has_kw( file_view, key.c_str() ) )
-                throw std::runtime_error("Read of restart file: "
-                                         "File does not contain "
-                                         + key
-                                         + " data" );
+            UnitSystem::measure dim = pair.second.dim;
+            bool required = pair.second.required;
+
+            if( !ecl_file_view_has_kw( file_view, key.c_str() ) ) {
+                if (required)
+                    throw std::runtime_error("Read of restart file: "
+                                             "File does not contain "
+                                             + key
+                                             + " data" );
+                else
+                    continue;
+            }
 
             const ecl_kw_type * ecl_kw = ecl_file_view_iget_named_kw( file_view , key.c_str() , 0 );
             if( ecl_kw_get_size(ecl_kw) != numcells)
@@ -213,7 +219,7 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
 /* should take grid as argument because it may be modified from the simulator */
 RestartValue load( const std::string& filename,
                    int report_step,
-                   const std::map<std::string,UnitSystem::measure>& keys,
+                   const std::map<std::string, RestartKey>& keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
                    const std::map<std::string, bool>& extra_keys) {

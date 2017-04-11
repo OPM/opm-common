@@ -458,7 +458,7 @@ void EclipseIO::writeTimeStep(int report_step,
 
 
 
-RestartValue EclipseIO::loadRestart(const std::map<std::string, UnitSystem::measure>& keys, const std::map<std::string, bool>& extra_keys) const {
+RestartValue EclipseIO::loadRestart(const std::map<std::string, RestartKey>& keys, const std::map<std::string, bool>& extra_keys) const {
     const auto& es                       = this->impl->es;
     const auto& grid                     = this->impl->grid;
     const InitConfig& initConfig         = es.getInitConfig();

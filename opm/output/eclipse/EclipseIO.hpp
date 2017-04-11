@@ -188,7 +188,7 @@ public:
       missing, if the bool is false missing keywords will be ignored
       (there will *not* be an empty vector in the return value).
     */
-    RestartValue loadRestart(const std::map<std::string, UnitSystem::measure>& keys, const std::map<std::string, bool>& extra_keys = {}) const;
+    RestartValue loadRestart(const std::map<std::string, RestartKey>& keys, const std::map<std::string, bool>& extra_keys = {}) const;
 
 
     EclipseIO( const EclipseIO& ) = delete;

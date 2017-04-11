@@ -24,10 +24,48 @@
 
 namespace Opm {
 
+
+    /*
+      Small convenience class used in the map passed to the
+      RestartIO::load( ) function. A class instance can be constructed
+      from a UnitSystem::measure value, which will default to a
+      required key, but it can also be constructed from a
+      two-parameter constructor, and then the required/not required
+      can controlled explicitly:
+
+
+         RestartIO::load(..., {{"PRESSURE" , UnitSystem::measure::pressure},
+                               {"MAX_SWAT" , {UnitSystem::measure::identity, false}} )
+
+     The RestartKey( ) for pressure is implicitly created from
+     UnitSystem::measure::pressure and will be required, whereas the
+     MAX_SWAT keyword is optional.
+
+    */
+    class RestartKey {
+    public:
+
+        UnitSystem::measure dim;
+        bool required = true;
+
+        RestartKey( UnitSystem::measure _dim)
+            : dim(_dim)
+        {}
+
+
+        RestartKey( UnitSystem::measure _dim, bool _required)
+            : dim(_dim),
+              required(_required)
+        {}
+
+    };
+
+
     /*
       A simple struct - the only purpose is to facilitate return by value from the
       RestartIO::load( ) function.
     */
+
 
     struct RestartValue {
 
