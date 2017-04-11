@@ -249,8 +249,9 @@ RestartValue load( const std::string& filename,
 
         if (ecl_file_view_has_kw( file_view , key.c_str())) {
             const ecl_kw_type * ecl_kw = ecl_file_view_iget_named_kw( file_view , key.c_str() , 0 );
-            std::vector<double> data = double_vector( ecl_kw );
-            rst_value.extra[ key ] = std::move(data);
+            const double * data_ptr = ecl_kw_get_double_ptr( ecl_kw );
+            const double * end_ptr  = data_ptr + ecl_kw_get_size( ecl_kw );
+            rst_value.extra[ key ] = { data_ptr, end_ptr };
         } else if (required)
             throw std::runtime_error("No such key in file: " + key);
 
