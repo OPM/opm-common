@@ -95,13 +95,6 @@ void writeKeyword( ERT::FortIO& fortio ,
 
 
 
-/// Convert OPM phase usage to ERT bitmask
-inline int ertPhaseMask( const Phases& phase ) {
-    return ( phase.active( Phase::WATER ) ? ECL_WATER_PHASE : 0 )
-         | ( phase.active( Phase::OIL ) ? ECL_OIL_PHASE : 0 )
-         | ( phase.active( Phase::GAS ) ? ECL_GAS_PHASE : 0 );
-}
-
 class RFT {
     public:
     RFT( const std::string&  output_dir,
