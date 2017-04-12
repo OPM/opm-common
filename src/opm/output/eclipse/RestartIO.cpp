@@ -165,7 +165,7 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
 
     const auto expected_xwel_size = std::accumulate( sched_wells.begin(),
                                                      sched_wells.end(),
-                                                     size_t( 0 ),
+                                                     0,
                                                      well_size );
 
     if( ecl_kw_get_size( opm_xwel ) != expected_xwel_size ) {
@@ -175,7 +175,7 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
                 ", expected " + std::to_string( expected_xwel_size ) );
     }
 
-    if( ecl_kw_get_size( opm_iwel ) != sched_wells.size() )
+    if( ecl_kw_get_size( opm_iwel ) != int(sched_wells.size()) )
         throw std::runtime_error(
                 "Mismatch between OPM_IWEL and deck; "
                 "OPM_IWEL size was " + std::to_string( ecl_kw_get_size( opm_iwel ) ) +
