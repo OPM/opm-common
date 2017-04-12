@@ -142,7 +142,6 @@ namespace {
 using rt = data::Rates::opt;
 data::Wells restore_wells( const ecl_kw_type * opm_xwel,
                            const ecl_kw_type * opm_iwel,
-                           const ecl_kw_type * zwel,
                            int restart_step,
                            const EclipseState& es ) {
 
@@ -244,11 +243,10 @@ RestartValue load( const std::string& filename,
     const ecl_kw_type * intehead = ecl_file_view_iget_named_kw( file_view , "INTEHEAD", 0 );
     const ecl_kw_type * opm_xwel = ecl_file_view_iget_named_kw( file_view , "OPM_XWEL", 0 );
     const ecl_kw_type * opm_iwel = ecl_file_view_iget_named_kw( file_view, "OPM_IWEL", 0 );
-    const ecl_kw_type * zwel     = ecl_file_view_iget_named_kw( file_view , "ZWEL" , 0 );
 
     UnitSystem units( static_cast<ert_ecl_unit_enum>(ecl_kw_iget_int( intehead , INTEHEAD_UNIT_INDEX )));
     RestartValue rst_value( restoreSOLUTION( file_view, keys, units , grid.getNumActive( )),
-                            restore_wells( opm_xwel, opm_iwel,zwel, report_step , es));
+                            restore_wells( opm_xwel, opm_iwel, report_step , es));
 
     for (const auto& pair : extra_keys) {
         const std::string& key = pair.first;
@@ -538,8 +536,6 @@ void writeWell(ecl_rst_file_type* rst_file, int report_step, const EclipseState&
 }
 
 void checkSaveArguments(const data::Solution& cells,
-                        const data::Wells& wells,
-                        const EclipseState& es,
                         const EclipseGrid& grid,
                         const std::map<std::string, std::vector<double>> extra_data) {
 
@@ -574,7 +570,7 @@ void save(const std::string& filename,
           std::map<std::string, std::vector<double>> extra_data,
 	  bool write_double)
 {
-    checkSaveArguments( cells , wells , es , grid  ,extra_data );
+    checkSaveArguments( cells, grid, extra_data );
     {
         int ert_phase_mask = es.runspec().eclPhaseMask( );
         const Schedule& schedule = es.getSchedule();
