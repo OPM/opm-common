@@ -149,11 +149,12 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
     const auto& sched_wells = es.getSchedule().getWells( restart_step );
     const EclipseGrid& grid = es.getInputGrid( );
     std::vector< rt > phases;
-    const auto& phase = es.runspec().phases();
-    if( phase.active( Phase::WATER ) ) phases.push_back( rt::wat );
-    if( phase.active( Phase::OIL ) )   phases.push_back( rt::oil );
-    if( phase.active( Phase::GAS ) )   phases.push_back( rt::gas );
-
+    {
+        const auto& phase = es.runspec().phases();
+        if( phase.active( Phase::WATER ) ) phases.push_back( rt::wat );
+        if( phase.active( Phase::OIL ) )   phases.push_back( rt::oil );
+        if( phase.active( Phase::GAS ) )   phases.push_back( rt::gas );
+    }
 
     const auto well_size = [&]( size_t acc, const Well* w ) {
         return acc

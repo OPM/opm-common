@@ -556,14 +556,14 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                                                                             {"NO"   , {UnitSystem::measure::identity, false}}},
                                                                             eclipseState, grid , {{"EXTRA", true}, {"EXTRA2", false}});
                 const auto pair = rst_value.extra.find( "EXTRA" );
-                const std::vector<double> extra = pair->second;
+                const std::vector<double> extraval = pair->second;
                 const std::vector<double> expected = {0,1,2,3};
 
                 BOOST_CHECK_EQUAL( rst_value.solution.has("SWAT") , true );
                 BOOST_CHECK_EQUAL( rst_value.solution.has("NO") , false );
                 BOOST_CHECK_EQUAL( rst_value.extra.size() , 1 );
-                BOOST_CHECK_EQUAL( extra.size() , 4 );
-                BOOST_CHECK_EQUAL_COLLECTIONS( extra.begin(), extra.end(), expected.begin() , expected.end());
+                BOOST_CHECK_EQUAL( extraval.size() , 4 );
+                BOOST_CHECK_EQUAL_COLLECTIONS( extraval.begin(), extraval.end(), expected.begin() , expected.end());
 
                 const auto missing = rst_value.extra.find( "EXTRA2");
                 BOOST_CHECK( missing == rst_value.extra.end() );
