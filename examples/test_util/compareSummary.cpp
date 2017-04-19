@@ -88,7 +88,7 @@ int main (int argc, char ** argv){
 
     //------------------------------------------------
     //For setting the options selected
-    while ((c = getopt(argc, argv, "dghik:Kmn:pP:rRs:vV:")) != -1) {
+    while ((c = getopt(argc, argv, "dghik:Km:npP:rRs:vV:")) != -1) {
         switch (c) {
             case 'd':
                 throwExceptionForTooGreatErrorRatio = false;
@@ -146,8 +146,9 @@ int main (int argc, char ** argv){
                 keyword = optarg;
                 break;
             case '?':
-                if (optopt == 'k' || optopt == 'm' || optopt == 's') {
-                    std::cout << "Option requires an keyword." << std::endl;
+                if (optopt == 'k' || optopt == 'm' || optopt == 'P'
+                    || optopt == 's' || optopt == 'V') {
+                    std::cout << "Option -"<<optopt<<" requires an keyword." << std::endl;
                     return EXIT_FAILURE;
                 }
                 else {
