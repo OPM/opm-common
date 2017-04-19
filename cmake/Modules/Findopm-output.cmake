@@ -50,6 +50,9 @@ if(OPM_OUTPUT_FOUND)
   find_program(COMPARE_ECL_COMMAND compareECL
                PATHS ${opm-output_PREFIX_DIR}/../bin
                      ${opm-output_PREFIX_DIR}/../../bin)
+  find_program(RFT_REGRESSION_TEST_COMMAND rftRegressionTest
+               PATHS ${opm-output_PREFIX_DIR}/../bin
+                     ${opm-output_PREFIX_DIR}/../../bin)
 
 endif()
 
