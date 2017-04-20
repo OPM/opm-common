@@ -23,6 +23,9 @@ set (ewoms_CONFIG_VAR
 set (ewoms_DEPS
 	# compile with C++0x/11 support if available
 	"CXX11Features REQUIRED"
+	# we need boost::alignment (which is header-only, so it does not
+	# need to be specified by the COMPONENTS argument)
+	"Boost 1.44.0 REQUIRED"
 	# DUNE prerequisites
 	"dune-common REQUIRED"
 	"dune-geometry REQUIRED"
