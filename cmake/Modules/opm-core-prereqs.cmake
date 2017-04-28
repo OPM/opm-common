@@ -29,8 +29,6 @@ set (opm-core_DEPS
 	"SuiteSparse COMPONENTS umfpack"
 	# solver
 	"SuperLU"
-	# xml processing (for config parsing)
-	"TinyXML"
 	# Ensembles-based Reservoir Tools (ERT)
 	"ERT REQUIRED"
 	# Look for MPI support
