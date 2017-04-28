@@ -34,7 +34,7 @@ find_opm_package (
 #include <opm/core/utility/parameters/ParameterGroup.hpp>
 int main()
 {
-    Opm::parameter::ParameterGroup parameters;
+    Opm::ParameterGroup parameters;
     parameters.insertParameter(\"number\", \"7\");
     return 0;
 }
