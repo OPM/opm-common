@@ -33,7 +33,7 @@ endif (ERT_ROOT)
 find_path (ERT_ECL_INCLUDE_DIR
   NAMES "ert/ecl/ecl_util.h"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATHS "${PROJECT_SOURCE_DIR}/../libecl" "${PROJECT_SOURCE_DIR}/../ert"
   PATH_SUFFIXES "libecl/include/" "include"
   DOC "Path to ERT Eclipse library header files"
   ${_no_default_path}
@@ -41,7 +41,7 @@ find_path (ERT_ECL_INCLUDE_DIR
 find_path (ERT_ECL_WELL_INCLUDE_DIR
   NAMES "ert/ecl_well/well_const.h"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATHS "${PROJECT_SOURCE_DIR}/../libecl" "${PROJECT_SOURCE_DIR}/../ert"
   PATH_SUFFIXES "libecl_well/include/" "include"
   DOC "Path to ERT Eclipse library header files"
   ${_no_default_path}
@@ -49,7 +49,7 @@ find_path (ERT_ECL_WELL_INCLUDE_DIR
 find_path (ERT_ECLXX_INCLUDE_DIR
   NAMES "ert/ecl/EclKW.hpp"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATHS "${PROJECT_SOURCE_DIR}/../libecl" "${PROJECT_SOURCE_DIR}/../ert"
   PATH_SUFFIXES "libeclxx/include/" "include"
   DOC "Path to ERT Eclipse C++ library header files"
   ${_no_default_path}
@@ -57,7 +57,7 @@ find_path (ERT_ECLXX_INCLUDE_DIR
 find_path (ERT_UTIL_INCLUDE_DIR
   NAMES "ert/util/stringlist.h"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATHS "${PROJECT_SOURCE_DIR}/../libecl" "${PROJECT_SOURCE_DIR}/../ert"
   PATH_SUFFIXES "libert_util/include/" "include"
   DOC "Path to ERT Eclipse library header files"
   ${_no_default_path}
@@ -65,7 +65,7 @@ find_path (ERT_UTIL_INCLUDE_DIR
 find_path (ERT_UTILXX_INCLUDE_DIR
   NAMES "ert/util/ert_unique_ptr.hpp"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATHS "${PROJECT_SOURCE_DIR}/../libecl" "${PROJECT_SOURCE_DIR}/../ert"
   PATH_SUFFIXES "libert_utilxx/include/" "include"
   DOC "Path to ERT Eclipse C++ library header files"
   ${_no_default_path}
@@ -73,7 +73,7 @@ find_path (ERT_UTILXX_INCLUDE_DIR
 find_path (ERT_GEN_INCLUDE_DIR
   NAMES "ert/util/int_vector.h"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_SOURCE_DIR}/../ert"
+  PATHS "${PROJECT_SOURCE_DIR}/../libecl" "${PROJECT_SOURCE_DIR}/../ert"
   PATH_SUFFIXES "libert_util/include"
                 "include" "build/libert_util/include" "build/libert_util/include"
   DOC "Path to ERT generated library header files"
@@ -88,7 +88,10 @@ endif (CMAKE_SIZEOF_VOID_P)
 find_library (ERT_LIBRARY_ECL
   NAMES "ecl"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../ert"
+  PATHS "${PROJECT_BINARY_DIR}/../libecl"
+        "${PROJECT_SOURCE_DIR}/../libecl/build"
+        "${PROJECT_BINARY_DIR}/../libecl-build"
+        "${PROJECT_BINARY_DIR}/../ert"
         "${PROJECT_SOURCE_DIR}/../ert/build"
         "${PROJECT_BINARY_DIR}/../ert-build"
   PATH_SUFFIXES "lib" "lib/Release" "lib/Debug" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
@@ -98,7 +101,10 @@ find_library (ERT_LIBRARY_ECL
 find_library (ERT_LIBRARY_ECLXX
   NAMES "eclxx"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../ert"
+  PATHS "${PROJECT_BINARY_DIR}/../libecl"
+        "${PROJECT_SOURCE_DIR}/../libecl/build"
+        "${PROJECT_BINARY_DIR}/../libecl-build"
+        "${PROJECT_BINARY_DIR}/../ert"
         "${PROJECT_SOURCE_DIR}/../ert/build"
         "${PROJECT_BINARY_DIR}/../ert-build"
   PATH_SUFFIXES "lib" "lib/Release" "lib/Debug" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
@@ -108,7 +114,10 @@ find_library (ERT_LIBRARY_ECLXX
 find_library (ERT_LIBRARY_ECL_WELL
   NAMES "ecl_well"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../ert"
+  PATHS "${PROJECT_BINARY_DIR}/../libecl"
+        "${PROJECT_SOURCE_DIR}/../libecl/build"
+        "${PROJECT_BINARY_DIR}/../libecl-build"
+        "${PROJECT_BINARY_DIR}/../ert"
         "${PROJECT_SOURCE_DIR}/../ert/build"
         "${PROJECT_BINARY_DIR}/../ert-build"
   PATH_SUFFIXES "lib" "lib/Release" "lib/Debug" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
@@ -118,7 +127,10 @@ find_library (ERT_LIBRARY_ECL_WELL
 find_library (ERT_LIBRARY_GEOMETRY
   NAMES "ert_geometry"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../ert"
+  PATHS "${PROJECT_BINARY_DIR}/../libecl"
+        "${PROJECT_SOURCE_DIR}/../libecl/build"
+        "${PROJECT_BINARY_DIR}/../libecl-build"
+        "${PROJECT_BINARY_DIR}/../ert"
         "${PROJECT_SOURCE_DIR}/../ert/build"
         "${PROJECT_BINARY_DIR}/../ert-build"
   PATH_SUFFIXES "lib" "lib/Release" "lib/Debug" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
@@ -128,7 +140,10 @@ find_library (ERT_LIBRARY_GEOMETRY
 find_library (ERT_LIBRARY_UTIL
   NAMES "ert_util"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../ert"
+  PATHS "${PROJECT_BINARY_DIR}/../libecl"
+        "${PROJECT_SOURCE_DIR}/../libecl/build"
+        "${PROJECT_BINARY_DIR}/../libecl-build"
+        "${PROJECT_BINARY_DIR}/../ert"
         "${PROJECT_SOURCE_DIR}/../ert/build"
         "${PROJECT_BINARY_DIR}/../ert-build"
   PATH_SUFFIXES "lib" "lib/Release" "lib/Debug" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"
@@ -138,7 +153,10 @@ find_library (ERT_LIBRARY_UTIL
 find_library (ERT_LIBRARY_UTILXX
   NAMES "ert_utilxx"
   HINTS "${ERT_ROOT}"
-  PATHS "${PROJECT_BINARY_DIR}/../ert"
+  PATHS "${PROJECT_BINARY_DIR}/../libecl"
+        "${PROJECT_SOURCE_DIR}/../libecl/build"
+        "${PROJECT_BINARY_DIR}/../libecl-build"
+        "${PROJECT_BINARY_DIR}/../ert"
         "${PROJECT_SOURCE_DIR}/../ert/build"
         "${PROJECT_BINARY_DIR}/../ert-build"
   PATH_SUFFIXES "lib" "lib/Release" "lib/Debug" "lib${_BITS}" "lib/${CMAKE_LIBRARY_ARCHITECTURE}"

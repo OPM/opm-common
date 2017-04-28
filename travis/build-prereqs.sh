@@ -62,11 +62,11 @@ function install_python_deps {
 }
 
 
-function build_ert {
+function build_libecl {
     install_python_deps
-    git clone https://github.com/Ensembles/ert.git
-    mkdir -p ert/build
-    pushd ert/build > /dev/null
+    git clone https://github.com/Statoil/libecl.git
+    mkdir -p libecl/build
+    pushd libecl/build > /dev/null
     cmake .. && make
     popd > /dev/null
 }
@@ -75,7 +75,7 @@ function build_ert {
 #################################################################
 
 build_superlu
-build_ert
+build_libecl
 
 build_dune dune-common
 build_dune dune-istl
