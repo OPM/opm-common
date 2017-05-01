@@ -8,7 +8,7 @@ ln -sf $WORKSPACE deps/opm-common
 
 # Downstreams and revisions
 declare -a downstreams
-downstreams=(ert
+downstreams=(libecl
              opm-parser
              opm-output
              opm-material
@@ -20,7 +20,7 @@ downstreams=(ert
              )
 
 declare -A downstreamRev
-downstreamRev[ert]=master
+downstreamRev[libecl]=master
 downstreamRev[opm-parser]=master
 downstreamRev[opm-material]=master
 downstreamRev[opm-core]=master
