@@ -155,6 +155,7 @@ struct fn_args {
     const out::RegionCache& regionCache;
     const EclipseGrid& grid;
     double initial_oip;
+    const std::vector<double>& pv;
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -370,10 +371,16 @@ quantity fpr( const fn_args& args ) {
         return { 0.0, measure::pressure };
 
     const auto& p = args.state.data( "PRESSURE" );
-    const auto& total = std::accumulate( p.begin(), p.end(), 0.0 );
-    const auto size = std::max( p.size(), size_t( 1 ) );
-
-    return { total / size, measure::pressure };
+    const auto& pv = args.pv;
+    const auto& sw = args.state.data( "SWAT" );
+    double fpr = 0.0;
+    double sum_hcpv = 0.0;
+    for (size_t cell_index = 0; cell_index < sw.size(); ++cell_index) {
+        double hcpv = pv[cell_index]*(1.0 - sw[cell_index]);
+        fpr +=  hcpv * p[cell_index];
+        sum_hcpv += hcpv;
+    }
+    return { fpr / sum_hcpv, measure::pressure };
 }
 
 quantity rpr(const fn_args& args) {
@@ -804,7 +811,8 @@ Summary::Summary( const EclipseState& st,
                 st.getInputGrid().getNZ()
                 )
             ),
-    handlers( new keyword_handlers() )
+    handlers( new keyword_handlers() ),
+    porv( st.get3DProperties().getDoubleGridProperty("PORV").compressedCopy(grid_arg))
 {
     /* register all keywords handlers and pair with the newly-registered ert
      * entry.
@@ -831,7 +839,8 @@ Summary::Summary( const EclipseState& st,
                                 {},          // Solution::State
                                 {},          // Region <-> cell mappings.
                                 this->grid,
-                                this->initial_oip };
+                                this->initial_oip,
+                                {} };
 
         const auto val = handle( no_args );
         const auto* unit = st.getUnits().name( val.unit );
@@ -867,7 +876,8 @@ void Summary::add_timestep( int report_step,
                                      state,
                                      this->regionCache,
                                      this->grid,
-                                     this->initial_oip } );
+                                     this->initial_oip,
+                                     this->porv});
 
         const auto unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         const auto res = smspec_node_is_total( f.first ) && prev_tstep

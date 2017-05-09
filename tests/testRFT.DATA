@@ -14,6 +14,9 @@ DZV
 TOPS
 100*0.25 /
 
+PORO
+1000*0.2 /
+
 START             -- 0
 1 NOV 1979 / 
 SCHEDULE

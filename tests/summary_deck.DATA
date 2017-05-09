@@ -33,6 +33,8 @@ TOPS
 ACTNUM
   901*1 0 98*1 /
   
+PORO
+1000*0.2 /
 
 REGIONS
 

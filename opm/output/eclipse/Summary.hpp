@@ -70,6 +70,7 @@ class Summary {
         const ecl_sum_tstep_type* prev_tstep = nullptr;
         double prev_time_elapsed = 0;
         double initial_oip = 0.0;
+        const std::vector<double> porv;
 };
 
 }
