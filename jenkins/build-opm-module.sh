@@ -119,9 +119,9 @@ function clone_module {
   mkdir -p $WORKSPACE/deps/$1
   cd $WORKSPACE/deps/$1
   git init .
-  if [ "$1" == "ert" ]
+  if [ "$1" == "libecl" ]
   then
-    git remote add origin https://github.com/Ensembles/$1
+    git remote add origin https://github.com/Statoil/$1
   else
     git remote add origin https://github.com/OPM/$1
   fi
