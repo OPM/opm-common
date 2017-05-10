@@ -48,8 +48,6 @@
 using namespace Opm;
 using rt = data::Rates::opt;
 
-const char* path = "summary_deck.DATA";
-
 /* conversion factor for whenever 'day' is the unit of measure, whereas we
  * expect input in SI units (seconds)
  */
@@ -211,7 +209,7 @@ struct setup {
     data::Solution solution;
     std::unordered_map<int , std::vector<size_t>> cells;
 
-    setup( const std::string& fname , const ParseContext& parseContext = ParseContext( )) :
+    setup( const std::string& fname , const char* path = "summary_deck.DATA", const ParseContext& parseContext = ParseContext( )) :
         deck( Parser().parseFile( path, parseContext ) ),
         es( deck, ParseContext() ),
         config( deck, es, parseContext ),
@@ -850,4 +848,54 @@ BOOST_AUTO_TEST_CASE( require3D )
     BOOST_CHECK( summaryConfig.require3DField( "GIPG" ));
 
     BOOST_CHECK( summaryConfig.requireFIPNUM( ));
+}
+
+
+BOOST_AUTO_TEST_CASE(fpr) {
+    setup cfg( "test_fpr", "summary_deck_non_constant_porosity.DATA");
+
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution);
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    // fpr = sum_ (p * hcpv ) / hcpv, hcpv = pv * (1 - sw)
+    const double fpr_si =  ( (3 * 0.1 + 8 * 0.2) * 500 * (1 - 8.0) ) / ( (500*0.1 + 500*0.2) * (1 - 8.0));
+    const double fpr = units.from_si( UnitSystem::measure::pressure, fpr_si );
+    BOOST_CHECK_CLOSE( fpr, ecl_sum_get_field_var( resp, 1, "FPR" ), 1e-5 ); //
+
+    // change sw and pressure and test again.
+    size_t g = 0;
+    for (size_t k=0; k < cfg.grid.getNZ(); k++) {
+        for (size_t j=0; j < cfg.grid.getNY(); j++) {
+            for (size_t i=0; i < cfg.grid.getNX(); i++) {
+                if (cfg.grid.cellActive(i,j,k)) {
+                    cfg.solution.data("SWAT")[g] = 0.1*(k);
+                    cfg.solution.data("PRESSURE")[g] = units.to_si( UnitSystem::measure::pressure, 1 );
+                    g++;
+                }
+            }
+        }
+    }
+
+    out::Summary writer2( cfg.es, cfg.config, cfg.grid, cfg.name );
+    writer2.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution);
+    writer2.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution);
+    writer2.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution);
+    writer2.write();
+
+    auto res2 = readsum( cfg.name );
+    const auto* resp2 = res2.get();
+
+    // fpr = sum_ (p * hcpv ) / hcpv, hcpv = pv * (1 - sw)
+    const double fpr2_si =  ( (0.8 * 0.1 + 0.3 * 0.2) * 500 * 1 ) / ( (0.8 * 0.1 + 0.3 * 0.2) * 500);
+    BOOST_CHECK_CLOSE( fpr2_si, ecl_sum_get_field_var( resp2, 1, "FPR" ), 1e-5 ); //
+
+
+
 }
