@@ -5,7 +5,7 @@ MAIN_REPO=$1 # The repo the update was triggered from
 source $WORKSPACE/deps/opm-common/jenkins/build-opm-module.sh
 
 declare -a upstreams # Everything is considered an upstream to aid code reuse
-upstreams=(ert
+upstreams=(libecl
            opm-common
            opm-parser
            opm-output
@@ -18,7 +18,7 @@ upstreams=(ert
           )
 
 declare -A upstreamRev
-upstreamRev[ert]=master
+upstreamRev[libecl]=master
 upstreamRev[opm-common]=master
 upstreamRev[opm-parser]=master
 upstreamRev[opm-material]=master
