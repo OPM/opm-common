@@ -293,7 +293,7 @@ Utility/Typetools.hpp)
 # 1. Create an executable 'createDefaultKeywordList'.
 
 add_executable(createDefaultKeywordList Parser/createDefaultKeywordList.cpp ${build_parser_source})
-target_link_libraries( createDefaultKeywordList opmjson ${Boost_LIBRARIES} ${ERT_LIBRARIES})
+target_link_libraries( createDefaultKeywordList opmjson ${Boost_LIBRARIES} ecl)
 
 # 2. Run the generated application createDefaultKeywordlist - this
 #    application will recursively scan through all the json keyword
@@ -329,13 +329,14 @@ add_custom_target( generatedCode ALL COMMAND createDefaultKeywordList
 
 opm_add_test( runInlineKeywordTest SOURCES ${PROJECT_BINARY_DIR}/generated-source/inlineKeywordTest.cpp
               LIBRARIES opmparser ${opm-common_LIBRARIES} ${Boost_LIBRARIES}
+              eclxx ecl
               DEPENDS generatedCode )
 
 #-----------------------------------------------------------------
 
 add_library(opmparser ${generated_source} ${state_source} ${rawdeck_source} ${parser_source} ${deck_source} ${unit_source} ${generator_source} ${utility_source})
 add_dependencies( opmparser generatedCode )
-target_link_libraries(opmparser opmjson ${opm-common_LIBRARIES} ${Boost_LIBRARIES}  ${ERT_LIBRARIES})
+target_link_libraries(opmparser opmjson ${opm-common_LIBRARIES} ${Boost_LIBRARIES} eclxx)
 set_target_properties(opmparser PROPERTIES VERSION ${opm-parser_VERSION_MAJOR}.${opm-parser_VERSION_MINOR}
                                            SOVERSION ${opm-parser_VERSION_MAJOR})
 
