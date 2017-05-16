@@ -1,5 +1,6 @@
 import unittest
 import sunbeam
+import os.path
 
 class TestParse(unittest.TestCase):
 
@@ -28,6 +29,7 @@ FIPNUM
 
     def setUp(self):
         self.spe3fn = 'spe3/SPE3CASE1.DATA'
+        self.norne_fname = os.path.abspath('../../examples/data/norne/NORNE_ATW2013.DATA')
 
     def testParse(self):
         spe3 = sunbeam.parse(self.spe3fn)
@@ -58,3 +60,9 @@ FIPNUM
     def testData(self):
         regtest = sunbeam.parse(self.REGIONDATA)
         self.assertEqual([3,3,1,2], regtest.props()['OPERNUM'])
+
+    def test_parse_norne(self):
+         es = sunbeam.parse(self.norne_fname, ('PARSE_RANDOM_SLASH', sunbeam.action.ignore))
+         self.assertEqual(46, es.grid().getNX())
+         self.assertEqual(112, es.grid().getNY())
+         self.assertEqual(22, es.grid().getNZ())
