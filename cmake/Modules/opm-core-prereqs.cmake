@@ -30,7 +30,7 @@ set (opm-core_DEPS
 	# solver
 	"SuperLU"
 	# Ensembles-based Reservoir Tools (ERT)
-	"ERT REQUIRED"
+	"ecl REQUIRED"
 	# Look for MPI support
 	"MPI"
 	# PETSc numerical backend
