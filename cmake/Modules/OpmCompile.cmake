@@ -30,14 +30,28 @@ macro (opm_compile opm)
   add_definitions (${${opm}_DEFINITIONS})
   set (${opm}_VERSION "${${opm}_VERSION_MAJOR}.${${opm}_VERSION_MINOR}")
   if (${opm}_SOURCES)
-	add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE} ${${opm}_SOURCES})
-	set_target_properties (${${opm}_TARGET} PROPERTIES
-	  SOVERSION ${${opm}_VERSION_MAJOR}
-	  VERSION ${${opm}_VERSION}
-	  LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}"
+        add_library (${${opm}_TARGET} ${${opm}_LIBRARY_TYPE} ${${opm}_SOURCES})
+        set_target_properties (${${opm}_TARGET} PROPERTIES
+          SOVERSION ${${opm}_VERSION_MAJOR}
+          VERSION ${${opm}_VERSION}
+          LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}"
           POSITION_INDEPENDENT_CODE TRUE 
           )
-	target_link_libraries (${${opm}_TARGET} ${${opm}_LIBRARIES})
+        if (${${opm}_LIBRARY_TYPE} STREQUAL "SHARED")
+          # libs that will be linked with the main lib
+          string(REGEX REPLACE "([;^])[^;]+\\.a[;$]" "\\1" _public_libs
+            "${${opm}_LIBRARIES}")
+          # libs that will not actually linked to the library but
+          # transitively linked to binaries that link to the main library
+          string(REGEX REPLACE "([^;]+\\.[^a][a-zA-Z0-9]*|-[a-z]*)[;$]" "" _interface_libs
+            "${${opm}_LIBRARIES}")
+        else()
+          # Use all libs for real and transitive linking
+          set(_public_libs ${${opm}_LIBRARIES})
+          unset(_interface)
+        endif()
+        target_link_libraries (${${opm}_TARGET} PUBLIC ${_public_libs}
+          INTERFACE ${_interface_libs})
 
         if (STRIP_DEBUGGING_SYMBOLS)
 	  # queue this executable to be stripped
