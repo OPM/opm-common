@@ -1098,3 +1098,290 @@ BOOST_AUTO_TEST_CASE(MoveTest) {
     BOOST_CHECK( !grid1.c_ptr() );               // We peek at some internal details ...
     BOOST_CHECK( !grid1.circle( ));
 }
+
+
+
+
+static Opm::Deck radial_missing_INRAD() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "RADIAL\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+
+
+static Opm::Deck radial_keywords_OK() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 6 10 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "10*1 /\n"
+        "DTHETAV\n"
+        "6*60 /\n"
+        "DZV\n"
+        "10*0.25 /\n"
+        "TOPS\n"
+        "60*0.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+static Opm::Deck radial_keywords_OK_CIRCLE() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 6 10 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "CIRCLE\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "10*1 /\n"
+        "DTHETAV\n"
+        "6*60 /\n"
+        "DZV\n"
+        "10*0.25 /\n"
+        "TOPS\n"
+        "60*0.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(RadialTest) {
+    Opm::Deck deck = radial_missing_INRAD();
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ deck }, std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(RadialKeywordsOK) {
+    Opm::Deck deck = radial_keywords_OK();
+    Opm::EclipseGrid grid( deck );
+    BOOST_CHECK(!grid.circle());
+}
+
+BOOST_AUTO_TEST_CASE(RadialKeywordsOK_CIRCLE) {
+    Opm::Deck deck = radial_keywords_OK_CIRCLE();
+    Opm::EclipseGrid grid( deck );
+    BOOST_CHECK(grid.circle());
+}
+
+
+
+static Opm::Deck radial_keywords_DRV_size_mismatch() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "10 6 12 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "9*1 /\n"
+        "DTHETAV\n"
+        "6*60 /\n"
+        "DZV\n"
+        "12*0.25 /\n"
+        "TOPS\n"
+        "60*0.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+
+static Opm::Deck radial_keywords_DZV_size_mismatch() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "10 6 12 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "10*1 /\n"
+        "DTHETAV\n"
+        "6*60 /\n"
+        "DZV\n"
+        "11*0.25 /\n"
+        "TOPS\n"
+        "60*0.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+static Opm::Deck radial_keywords_DTHETAV_size_mismatch() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "10 6 12 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "10*1 /\n"
+        "DTHETAV\n"
+        "5*60 /\n"
+        "DZV\n"
+        "12*0.25 /\n"
+        "TOPS\n"
+        "60*0.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+/*
+  This is stricter than the ECLIPSE implementation; we assume that
+  *only* the top layer is explicitly given.
+*/
+
+static Opm::Deck radial_keywords_TOPS_size_mismatch() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "10 6 12 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "10*1 /\n"
+        "DTHETAV\n"
+        "6*60 /\n"
+        "DZV\n"
+        "12*0.25 /\n"
+        "TOPS\n"
+        "65*0.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+
+static Opm::Deck radial_keywords_ANGLE_OVERFLOW() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "10 6 12 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "10*1 /\n"
+        "DTHETAV\n"
+        "6*70 /\n"
+        "DZV\n"
+        "12*0.25 /\n"
+        "TOPS\n"
+        "60*0.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(RadialKeywords_SIZE_ERROR) {
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_DRV_size_mismatch() } , std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_DZV_size_mismatch() } , std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_TOPS_size_mismatch() } , std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_DTHETAV_size_mismatch() } , std::invalid_argument);
+    BOOST_CHECK_THROW( Opm::EclipseGrid{ radial_keywords_ANGLE_OVERFLOW() } , std::invalid_argument);
+}
+
+
+
+static Opm::Deck radial_details() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        "1 5 2 /\n"
+        "RADIAL\n"
+        "GRID\n"
+        "INRAD\n"
+        "1 /\n"
+        "DRV\n"
+        "1 /\n"
+        "DTHETAV\n"
+        "3*90 60 30/\n"
+        "DZV\n"
+        "2*1 /\n"
+        "TOPS\n"
+        "5*1.0 /\n"
+        "\n";
+
+    Opm::Parser parser;
+    return parser.parseString( deckData, Opm::ParseContext());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(RadialDetails) {
+    Opm::Deck deck = radial_details();
+    Opm::EclipseGrid grid( deck );
+
+    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.5*(2*2 - 1)*1, 0.0001);
+    BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 3 , 0 ) , sqrt(3.0)*0.25*( 4 - 1 ) , 0.0001);
+    auto pos0 = grid.getCellCenter(0,0,0);
+    auto pos2 = grid.getCellCenter(0,2,0);
+
+
+    BOOST_CHECK_CLOSE( std::get<0>(pos0) , 0.75 , 0.0001);
+    BOOST_CHECK_CLOSE( std::get<1>(pos0) , 0.75 , 0.0001);
+    BOOST_CHECK_CLOSE( std::get<2>(pos0) , 1.50 , 0.0001);
+
+    BOOST_CHECK_CLOSE( std::get<0>(pos2) , -0.75 , 0.0001);
+    BOOST_CHECK_CLOSE( std::get<1>(pos2) , -0.75 , 0.0001);
+    BOOST_CHECK_CLOSE( std::get<2>(pos2) , 1.50 , 0.0001);
+}
+
+
+BOOST_AUTO_TEST_CASE(CoordMapper) {
+    size_t nx = 10;
+    size_t ny = 7;
+    Opm::CoordMapper cmp = Opm::CoordMapper( nx , ny );
+    BOOST_CHECK_THROW( cmp.index(12,6,0,0), std::invalid_argument );
+    BOOST_CHECK_THROW( cmp.index(10,8,0,0), std::invalid_argument );
+    BOOST_CHECK_THROW( cmp.index(10,7,5,0), std::invalid_argument );
+    BOOST_CHECK_THROW( cmp.index(10,5,1,2), std::invalid_argument );
+
+    BOOST_CHECK_EQUAL( cmp.index(10,7,2,1) + 1 , cmp.size( ));
+}

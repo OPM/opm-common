@@ -78,6 +78,7 @@ namespace Opm {
         /// explicitly.  If a null pointer is passed, every cell is active.
         EclipseGrid(const Deck& deck, const int * actnum = nullptr);
 
+        static bool hasCylindricalKeywords(const Deck& deck);
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
         size_t  getNumActive( ) const;
@@ -210,6 +211,7 @@ namespace Opm {
                                  const int * actnum,
                                  const double * mapaxes);
 
+        void initCylindricalGrid(       const std::array<int, 3>&, const Deck&);
         void initCartesianGrid(         const std::array<int, 3>&, const Deck&);
         void initCornerPointGrid(       const std::array<int, 3>&, const Deck&);
         void initDTOPSGrid(             const std::array<int, 3>&, const Deck&);
@@ -227,11 +229,31 @@ namespace Opm {
         static void scatterDim(const std::array<int, 3>& dims , size_t dim , const std::vector<double>& DV , std::vector<double>& D);
    };
 
+    class CoordMapper {
+    public:
+        CoordMapper(size_t nx, size_t ny);
+        size_t size() const;
+
+
+        /*
+          dim = 0,1,2 for x, y and z coordinate respectively.
+          layer = 0,1 for k=0 and k=nz layers respectively.
+        */
+
+        size_t index(size_t i, size_t j, size_t dim, size_t layer) const;
+    private:
+        size_t nx;
+        size_t ny;
+    };
+
+
+
     class ZcornMapper {
     public:
         ZcornMapper(size_t nx, size_t ny, size_t nz);
         size_t index(size_t i, size_t j, size_t k, int c) const;
         size_t index(size_t g, int c) const;
+        size_t size() const;
 
         /*
           The fixupZCORN method will take a zcorn vector as input and

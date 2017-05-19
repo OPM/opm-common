@@ -17,12 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 #include <iostream>
 #include <tuple>
-#include <cmath>
-
-#include <boost/lexical_cast.hpp>
+#include <functional>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -35,8 +35,10 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/Z.hpp>
@@ -186,12 +188,16 @@ namespace Opm {
     }
 
     void EclipseGrid::initGrid( const std::array<int, 3>& dims, const Deck& deck) {
-        if (hasCornerPointKeywords(deck)) {
-            initCornerPointGrid(dims , deck);
-        } else if (hasCartesianKeywords(deck)) {
-            initCartesianGrid(dims , deck);
+        if (deck.hasKeyword<ParserKeywords::RADIAL>()) {
+            initCylindricalGrid( dims, deck );
         } else {
-            throw std::invalid_argument("EclipseGrid needs cornerpoint or cartesian keywords.");
+            if (hasCornerPointKeywords(deck)) {
+                initCornerPointGrid(dims , deck);
+            } else if (hasCartesianKeywords(deck)) {
+                initCartesianGrid(dims , deck);
+            } else {
+                throw std::invalid_argument("EclipseGrid needs cornerpoint or cartesian keywords.");
+            }
         }
 
         if (deck.hasKeyword<ParserKeywords::PINCH>()) {
@@ -311,6 +317,126 @@ namespace Opm {
     }
 
 
+    /*
+      Limited implementaton - requires keywords: DRV, DTHETAV, DZV and TOPS.
+    */
+
+    void EclipseGrid::initCylindricalGrid(const std::array<int, 3>& dims , const Deck& deck)
+    {
+        // The hasCyindricalKeywords( ) checks according to the
+        // eclipse specification. We currently do not support all
+        // aspects of cylindrical grids, we therefor have an
+        // additional test here, which checks if we have the keywords
+        // required by the current implementation.
+        if (!hasCylindricalKeywords(deck))
+            throw std::invalid_argument("Not all keywords required for cylindrical grids present");
+
+        if (!deck.hasKeyword<ParserKeywords::DTHETAV>())
+            throw std::logic_error("The current implementation *must* have theta values specified using the DTHETAV keyword");
+
+        if (!deck.hasKeyword<ParserKeywords::DRV>())
+            throw std::logic_error("The current implementation *must* have radial values specified using the DRV keyword");
+
+        if (!deck.hasKeyword<ParserKeywords::DZV>() || !deck.hasKeyword<ParserKeywords::TOPS>())
+            throw std::logic_error("The current implementation *must* have vertical cell size specified using the DZV and TOPS keywords");
+
+        const std::vector<double>& drv     = deck.getKeyword<ParserKeywords::DRV>().getSIDoubleData();
+        const std::vector<double>& dthetav = deck.getKeyword<ParserKeywords::DTHETAV>().getSIDoubleData();
+        const std::vector<double>& dzv     = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
+        const std::vector<double>& tops    = deck.getKeyword<ParserKeywords::TOPS>().getSIDoubleData();
+
+        if (drv.size() != dims[0])
+            throw std::invalid_argument("DRV keyword should have exactly " + std::to_string( dims[0] ) + " elements");
+
+        if (dthetav.size() != dims[1])
+            throw std::invalid_argument("DTHETAV keyword should have exactly " + std::to_string( dims[1] ) + " elements");
+
+        if (dzv.size() != dims[2])
+            throw std::invalid_argument("DZV keyword should have exactly " + std::to_string( dims[2] ) + " elements");
+
+        if (tops.size() != dims[0] * dims[1])
+            throw std::invalid_argument("TOPS keyword should have exactly " + std::to_string( dims[0] * dims[1] ) + " elements");
+
+        {
+            double total_angle = 0;
+            for (auto theta : dthetav)
+                total_angle += theta;
+
+            if (std::abs( total_angle - 360 ) < 0.01)
+                m_circle = deck.hasKeyword<ParserKeywords::CIRCLE>();
+            else {
+                if (total_angle > 360)
+                    throw std::invalid_argument("More than 360 degrees rotation - cells will be double covered");
+            }
+        }
+
+        /*
+          Now the data has been validated, now we continue to create
+          ZCORN and COORD vectors, and we are done.
+        */
+        {
+            ZcornMapper zm( dims[0], dims[1] , dims[2]);
+            CoordMapper cm(dims[0] , dims[1]);
+            std::vector<double> zcorn( zm.size() );
+            std::vector<double> coord( cm.size() );
+            {
+                std::vector<double> zk(dims[2]);
+                zk[0] = 0;
+                for (size_t k = 1; k < dims[2]; k++)
+                    zk[k] = zk[k - 1] + dzv[k - 1];
+
+                for (size_t k=  0; k < dims[2]; k++) {
+                    for (size_t j=0; j < dims[1]; j++) {
+                        for (size_t i = 0; i < dims[0]; i++) {
+                            size_t tops_value = tops[ i + dims[0] * j];
+                            for (size_t c=0; c < 4; c++) {
+                                zcorn[ zm.index(i,j,k,c) ]     = zk[k] + tops_value;
+                                zcorn[ zm.index(i,j,k,c + 4) ] = zk[k] + tops_value + dzv[k];
+                            }
+                        }
+                    }
+                }
+            }
+            {
+                std::vector<double> ri(dims[0] + 1);
+                std::vector<double> tj(dims[1] + 1);
+                double z1 = *std::min_element( zcorn.begin() , zcorn.end());
+                double z2 = *std::max_element( zcorn.begin() , zcorn.end());
+                ri[0] = deck.getKeyword<ParserKeywords::INRAD>().getRecord(0).getItem(0).getSIDouble( 0 );
+                for (size_t i = 1; i <= dims[0]; i++)
+                    ri[i] = ri[i - 1] + drv[i - 1];
+
+                tj[0] = 0;
+                for (size_t j = 1; j <= dims[1]; j++)
+                    tj[j] = tj[j - 1] + dthetav[j - 1];
+
+
+                for (size_t j = 0; j <= dims[1]; j++) {
+                    /*
+                      The theta value is supposed to go counterclockwise, starting at 'twelve o clock'.
+                    */
+                    double t = M_PI * (90 - tj[j]) / 180;
+                    double c = cos( t );
+                    double s = sin( t );
+                    for (size_t i=0; i <= dims[0]; i++) {
+                        double r = ri[i];
+                        double x = r*c;
+                        double y = r*s;
+
+                        coord[ cm.index(i,j,0,0) ] = x;
+                        coord[ cm.index(i,j,1,0) ] = y;
+                        coord[ cm.index(i,j,2,0) ] = z1;
+
+                        coord[ cm.index(i,j,0,1) ] = x;
+                        coord[ cm.index(i,j,1,1) ] = y;
+                        coord[ cm.index(i,j,2,1) ] = z2;
+                    }
+                }
+            }
+            initCornerPointGrid( dims , coord, zcorn, nullptr, nullptr);
+        }
+    }
+
 
     void EclipseGrid::initCornerPointGrid(const std::array<int,3>& dims ,
                                           const std::vector<double>& coord ,
@@ -411,6 +537,17 @@ namespace Opm {
             return true;
         else
             return hasDTOPSKeywords(deck);
+    }
+
+    bool EclipseGrid::hasCylindricalKeywords(const Deck& deck) {
+        if (deck.hasKeyword<ParserKeywords::INRAD>() &&
+            deck.hasKeyword<ParserKeywords::TOPS>() &&
+            (deck.hasKeyword<ParserKeywords::DZ>() || deck.hasKeyword<ParserKeywords::DZV>()) &&
+            (deck.hasKeyword<ParserKeywords::DRV>() || deck.hasKeyword<ParserKeywords::DR>()) &&
+            (deck.hasKeyword<ParserKeywords::DTHETA>() || deck.hasKeyword<ParserKeywords::DTHETAV>()))
+            return true;
+        else
+            return false;
     }
 
 
@@ -762,7 +899,9 @@ namespace Opm {
         return i*stride[0] + j*stride[1] + k*stride[2] + cell_shift[c];
     }
 
-
+    size_t ZcornMapper::size() const {
+        return dims[0] * dims[1] * dims[2] * 8;
+    }
 
     size_t ZcornMapper::index(size_t g, int c) const {
         int k = g / (dims[0] * dims[1]);
@@ -837,6 +976,35 @@ namespace Opm {
                         }
                     }
         return cells_adjusted;
+    }
+
+
+    CoordMapper::CoordMapper(size_t nx_, size_t ny_) :
+        nx(nx_),
+        ny(ny_)
+    {
+    }
+
+
+    size_t CoordMapper::size() const {
+        return (this->nx + 1) * (this->ny + 1) * 6;
+    }
+
+
+    size_t CoordMapper::index(size_t i, size_t j, size_t dim, size_t layer) const {
+        if (i > this->nx)
+            throw std::invalid_argument("Out of range");
+
+        if (j > this->ny)
+            throw std::invalid_argument("Out of range");
+
+        if (dim > 2)
+            throw std::invalid_argument("Out of range");
+
+        if (layer > 1)
+            throw std::invalid_argument("Out of range");
+
+        return 6*( i + j*(this->nx + 1) ) +  layer * 3 + dim;
     }
 }
 
