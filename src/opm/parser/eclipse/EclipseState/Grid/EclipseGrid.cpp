@@ -181,6 +181,9 @@ namespace Opm {
         }
     }
 
+    bool EclipseGrid::circle( ) const{
+        return this->m_circle;
+    }
 
     void EclipseGrid::initGrid( const std::array<int, 3>& dims, const Deck& deck) {
         if (hasCornerPointKeywords(deck)) {

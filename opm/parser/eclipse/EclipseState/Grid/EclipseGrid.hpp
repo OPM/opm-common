@@ -95,6 +95,13 @@ namespace Opm {
         size_t getGlobalIndex(size_t active_index) const;
         size_t getGlobalIndex(size_t i, size_t j, size_t k) const;
 
+        /*
+          For RADIAL grids you can *optionally* use the keyword
+          'CIRCLE' to denote that period boundary conditions should be
+          applied in the 'THETA' direction; this will only apply if
+          the theta keywords entered sum up to exactly 360 degrees!
+        */
+        bool circle( ) const;
         bool isPinchActive( ) const;
         double getPinchThresholdThickness( ) const;
         PinchMode::ModeEnum getPinchOption( ) const;
@@ -178,6 +185,7 @@ namespace Opm {
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
         mutable std::vector< int > activeMap;
+        bool m_circle = false;
 
         /*
           The internal class grid_ptr is a a std::unique_ptr with

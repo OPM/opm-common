@@ -1096,4 +1096,5 @@ BOOST_AUTO_TEST_CASE(MoveTest) {
     Opm::EclipseGrid grid2( std::move( grid1 )); // grid2 should be move constructed from grid1
 
     BOOST_CHECK( !grid1.c_ptr() );               // We peek at some internal details ...
+    BOOST_CHECK( !grid1.circle( ));
 }
