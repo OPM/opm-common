@@ -28,7 +28,7 @@ before_script:
     - git clone https://github.com/OPM/opm-common.git
     - opm-common/travis/clone-opm.sh opm-parser
     - opm-common/travis/build-prereqs.sh
-    
+
 
 script: opm-common/travis/build-and-test.sh opm-parser
 
