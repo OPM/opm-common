@@ -516,6 +516,14 @@ namespace Opm {
         }
     }
 
+    size_t TableManager::numFIPRegions() const {
+        size_t ntfip = m_tabdims.getNumFIPRegions();
+        if (m_regdims->getNTFIP( ) > ntfip)
+            return m_regdims->getNTFIP( );
+        else
+            return ntfip;
+    }
+
     const Tabdims& TableManager::getTabdims() const {
         return m_tabdims;
     }
