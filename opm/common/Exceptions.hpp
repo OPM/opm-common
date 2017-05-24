@@ -58,6 +58,13 @@ public:
         : NumericalProblem(message)
     {}
 };
+class TooManyIterations : public NumericalProblem
+{
+public:
+    explicit TooManyIterations(const std::string &message)
+        : NumericalProblem(message)
+    {}
+};
 }
 
 #endif // OPM_EXCEPTIONS_HPP
