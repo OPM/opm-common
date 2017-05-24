@@ -97,20 +97,20 @@ bool endscale_revers( const DeckKeyword& kw ) {
 
 EndpointScaling::EndpointScaling( const Deck& deck ) {
     if( deck.hasKeyword( "ENDSCALE" ) || deck.hasKeyword("SWATINIT")) {
-        const bool threep = threepoint_scaling( deck );
-        bool direct = false;
-        bool reversible = true;
+        const bool threep_ = threepoint_scaling( deck );
+        bool direct_ = false;
+        bool reversible_ = true;
 
         if (deck.hasKeyword("ENDSCALE")) {
             const auto& endscale = deck.getKeyword( "ENDSCALE" );
-            direct = !endscale_nodir( endscale );
-            reversible = endscale_revers( endscale );
+            direct_ = !endscale_nodir( endscale );
+            reversible_ = endscale_revers( endscale );
         }
 
         this->options.set( static_cast< ue >( option::any ), true );
-        this->options.set( static_cast< ue >( option::directional ), direct );
-        this->options.set( static_cast< ue >( option::reversible ), reversible );
-        this->options.set( static_cast< ue >( option::threepoint ), threep );
+        this->options.set( static_cast< ue >( option::directional ), direct_ );
+        this->options.set( static_cast< ue >( option::reversible ), reversible_ );
+        this->options.set( static_cast< ue >( option::threepoint ), threep_ );
     }
 }
 
