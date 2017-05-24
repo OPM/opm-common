@@ -292,9 +292,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
 
 
 
-BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) { 
- 
-    /* Test deck with well guide rates for group control: 
+BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
+
+    /* Test deck with well guide rates for group control:
        GRUPCON (well guide rates for group control)
        WCONPROD (conrol data for production wells) with GRUP control mode */
 
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
              " 'B-43A'   8  8   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
 	     "/\n"
 
-                       
+
              "WGRUPCON\n"
              " 'B-37T2'  YES 30 OIL / \n"
              " 'B-43A'   YES 30 OIL / \n"
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
              " 'B-43A'     'OPEN'     'GRUP'  1200  2*   3000.000  2* 1*   11  0.000      5* /  / \n"
              "/\n";
 
-           
+
 
     Opm::ParseContext parseContext;
     auto deck = parser.parseString(input, parseContext);
@@ -342,5 +342,56 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     BOOST_CHECK_EQUAL(currentWell->getGuideRatePhase(0), Opm::GuideRate::OIL);
     BOOST_CHECK_EQUAL(currentWell->getGuideRateScalingFactor(0), 1.0);
 
-    
+
+}
+
+BOOST_AUTO_TEST_CASE(CreateGroupTree_DefaultConstructor_HasFieldNode) {
+    GroupTree tree;
+    BOOST_CHECK(tree.exists("FIELD"));
+}
+
+BOOST_AUTO_TEST_CASE(GetNode_NonExistingNode_ReturnsNull) {
+    GroupTree tree;
+    BOOST_CHECK(!tree.exists("Non-existing"));
+}
+
+BOOST_AUTO_TEST_CASE(GetNodeAndParent_AllOK) {
+    GroupTree tree;
+    tree.update("GRANDPARENT", "FIELD");
+    tree.update("PARENT", "GRANDPARENT");
+    tree.update("GRANDCHILD", "PARENT");
+
+    const auto grandchild = tree.exists("GRANDCHILD");
+    BOOST_CHECK(grandchild);
+    auto parent = tree.parent("GRANDCHILD");
+    BOOST_CHECK_EQUAL("PARENT", parent);
+    BOOST_CHECK( tree.children( "PARENT" ).front() == "GRANDCHILD" );
+}
+
+BOOST_AUTO_TEST_CASE(UpdateTree_ParentNotSpecified_AddedUnderField) {
+    GroupTree tree;
+    tree.update("CHILD_OF_FIELD");
+    BOOST_CHECK(tree.exists("CHILD_OF_FIELD"));
+    BOOST_CHECK_EQUAL( "FIELD", tree.parent( "CHILD_OF_FIELD" ) );
+}
+
+BOOST_AUTO_TEST_CASE(UpdateTree_ParentIsField_AddedUnderField) {
+    GroupTree tree;
+    tree.update("CHILD_OF_FIELD", "FIELD");
+    BOOST_CHECK( tree.exists( "CHILD_OF_FIELD" ) );
+    BOOST_CHECK_EQUAL( "FIELD", tree.parent( "CHILD_OF_FIELD" ) );
+}
+
+BOOST_AUTO_TEST_CASE(UpdateTree_ParentNotAdded_ChildAndParentAdded) {
+    GroupTree tree;
+    tree.update("CHILD", "NEWPARENT");
+    BOOST_CHECK( tree.exists("CHILD") );
+    BOOST_CHECK_EQUAL( "NEWPARENT", tree.parent( "CHILD" ) );
+    BOOST_CHECK_EQUAL( "CHILD", tree.children( "NEWPARENT" ).front() );
+}
+
+BOOST_AUTO_TEST_CASE(UpdateTree_AddFieldNode_Throws) {
+    GroupTree tree;
+    BOOST_CHECK_THROW(tree.update("FIELD", "NEWPARENT"), std::invalid_argument );
+    BOOST_CHECK_THROW(tree.update("FIELD"), std::invalid_argument );
 }

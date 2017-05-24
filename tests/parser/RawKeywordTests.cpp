@@ -191,3 +191,75 @@ BOOST_AUTO_TEST_CASE(isUnknownSize) {
     BOOST_CHECK_EQUAL( Raw::UNKNOWN  , keyword.getSizeType( ));
  }
 
+BOOST_AUTO_TEST_CASE(RawRecordGetRecordsCorrectElementsReturned) {
+    Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20                                       ");
+
+    BOOST_CHECK_EQUAL((unsigned) 4, record.size());
+
+    BOOST_CHECK_EQUAL("'NODIR '", record.getItem(0));
+    BOOST_CHECK_EQUAL("'REVERS'", record.getItem(1));
+    BOOST_CHECK_EQUAL("1", record.getItem(2));
+    BOOST_CHECK_EQUAL("20", record.getItem(3));
+}
+
+BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordCompleteRecordReturnsTrue) {
+    bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       /");
+    BOOST_CHECK_EQUAL(true, isComplete);
+}
+
+BOOST_AUTO_TEST_CASE(RawRecordIsCompleteRecordInCompleteRecordReturnsFalse) {
+    bool isComplete = Opm::RawRecord::isTerminatedRecordString("'NODIR '  'REVERS'  1  20                                       ");
+    BOOST_CHECK_EQUAL(false, isComplete);
+}
+
+BOOST_AUTO_TEST_CASE(Rawrecord_OperatorThis_OK) {
+    Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20  ");
+
+    BOOST_CHECK_EQUAL("'NODIR '", record.getItem(0));
+    BOOST_CHECK_EQUAL("'REVERS'", record.getItem(1));
+    BOOST_CHECK_EQUAL("1", record.getItem(2));
+    BOOST_CHECK_EQUAL("20", record.getItem(3));
+    BOOST_CHECK_THROW(record.getItem(4), std::out_of_range);
+}
+
+BOOST_AUTO_TEST_CASE(Rawrecord_PushFront_OK) {
+    Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20  ");
+    record.prepend( 1, "String2" );
+    record.prepend( 1, "String1" );
+
+    BOOST_CHECK_EQUAL("String1", record.getItem(0));
+    BOOST_CHECK_EQUAL("String2", record.getItem(1));
+}
+
+BOOST_AUTO_TEST_CASE(Rawrecord_size_OK) {
+    Opm::RawRecord record(" 'NODIR '  'REVERS'  1  20  ");
+
+    BOOST_CHECK_EQUAL(4U, record.size());
+    record.prepend( 1, "String2");
+    record.prepend( 1, "String1");
+    BOOST_CHECK_EQUAL(6U, record.size());
+}
+
+BOOST_AUTO_TEST_CASE(Rawrecord_sizeEmpty_OK) {
+    Opm::RawRecord record("");
+    BOOST_CHECK_EQUAL(0U, record.size());
+}
+
+BOOST_AUTO_TEST_CASE(Rawrecord_spaceOnlyEmpty_OK) {
+    Opm::RawRecord record("   ");
+    BOOST_CHECK_EQUAL(0U, record.size());
+}
+
+BOOST_AUTO_TEST_CASE(Rawrecord_noFileAndKeywordGiven_EmptyStringUsed) {
+    Opm::RawRecord record("32 33  ");
+    BOOST_CHECK_EQUAL("", record.getKeywordName());
+    BOOST_CHECK_EQUAL("", record.getFileName());
+}
+
+BOOST_AUTO_TEST_CASE(Rawrecord_FileAndKeywordGiven_CorrectStringsReturned) {
+    const std::string fileName = "/this/is/it";
+    const std::string keywordName = "KEYWD";
+    Opm::RawRecord record("32 33  ", fileName, keywordName);
+    BOOST_CHECK_EQUAL(keywordName, record.getKeywordName());
+    BOOST_CHECK_EQUAL(fileName, record.getFileName());
+}

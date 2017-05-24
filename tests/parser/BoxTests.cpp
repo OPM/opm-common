@@ -28,6 +28,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
 
 BOOST_AUTO_TEST_CASE(CreateBox) {
     BOOST_CHECK_THROW( new Opm::Box(-1,0,0) , std::invalid_argument);
@@ -53,7 +54,7 @@ BOOST_AUTO_TEST_CASE(CreateBox) {
                 for (i=0; i < box.getDim(0); i++) {
                     size_t g = i + j*box.getDim(0) + k*box.getDim(0)*box.getDim(1);
                     BOOST_CHECK_EQUAL( indexList[g] , g);
-                    
+
                 }
             }
         }
@@ -83,19 +84,17 @@ BOOST_AUTO_TEST_CASE(CreateSubBox) {
     BOOST_CHECK( !subBox2.isGlobal());
     BOOST_CHECK_EQUAL( 60U , subBox2.size() );
 
-    {
-        size_t i,j,k;
-        size_t d = 0;
-        const std::vector<size_t>& indexList = subBox2.getIndexList();
+    size_t i,j,k;
+    size_t d = 0;
+    const std::vector<size_t>& indexList = subBox2.getIndexList();
 
-        for (k=0; k < subBox2.getDim(2); k++) {
-            for (j=0; j < subBox2.getDim(1); j++) {
-                for (i=0; i < subBox2.getDim(0); i++) {
+    for (k=0; k < subBox2.getDim(2); k++) {
+        for (j=0; j < subBox2.getDim(1); j++) {
+            for (i=0; i < subBox2.getDim(0); i++) {
 
-                    size_t g = (i + 1) + (j + 1)*globalBox.getDim(0) + (k + 1)*globalBox.getDim(0)*globalBox.getDim(1);
-                    BOOST_CHECK_EQUAL( indexList[d] , g);
-                    d++;
-                }
+                size_t g = (i + 1) + (j + 1)*globalBox.getDim(0) + (k + 1)*globalBox.getDim(0)*globalBox.getDim(1);
+                BOOST_CHECK_EQUAL( indexList[d] , g);
+                d++;
             }
         }
     }
@@ -120,4 +119,56 @@ BOOST_AUTO_TEST_CASE(BoxEqual) {
     BOOST_CHECK( !subBox4.equal( subBox5 ));
 }
 
+BOOST_AUTO_TEST_CASE(CreateBoxManager) {
+    Opm::BoxManager boxManager(10,10,10);
+    Opm::Box box(10,10,10);
 
+    BOOST_CHECK( box.equal( boxManager.getGlobalBox()) );
+    BOOST_CHECK( box.equal( boxManager.getActiveBox()) );
+    BOOST_CHECK( !boxManager.getInputBox() );
+    BOOST_CHECK( !boxManager.getKeywordBox() );
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(TestInputBox) {
+    Opm::BoxManager boxManager(10,10,10);
+    Opm::Box inputBox( boxManager.getGlobalBox(), 0,4,0,4,0,4);
+
+    boxManager.setInputBox( 0,4,0,4,0,4 );
+    BOOST_CHECK( inputBox.equal( boxManager.getInputBox()) );
+    BOOST_CHECK( inputBox.equal( boxManager.getActiveBox()) );
+
+
+    boxManager.endSection();
+    BOOST_CHECK( !boxManager.getInputBox() );
+    BOOST_CHECK( boxManager.getActiveBox().equal( boxManager.getGlobalBox()));
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(TestKeywordBox) {
+    Opm::BoxManager boxManager(10,10,10);
+    Opm::Box inputBox( boxManager.getGlobalBox() , 0,4,0,4,0,4);
+    Opm::Box keywordBox( boxManager.getGlobalBox() , 0,2,0,2,0,2);
+
+
+    boxManager.setInputBox( 0,4,0,4,0,4 );
+    boxManager.setKeywordBox( 0,2,0,2,0,2 );
+    BOOST_CHECK( inputBox.equal( boxManager.getInputBox()) );
+    BOOST_CHECK( keywordBox.equal( boxManager.getKeywordBox()) );
+    BOOST_CHECK( keywordBox.equal( boxManager.getActiveBox()) );
+
+    // Must end keyword first
+    BOOST_CHECK_THROW( boxManager.endSection() , std::invalid_argument );
+
+    boxManager.endKeyword();
+    BOOST_CHECK( inputBox.equal( boxManager.getActiveBox()) );
+    BOOST_CHECK( !boxManager.getKeywordBox() );
+
+    boxManager.endSection();
+    BOOST_CHECK( !boxManager.getInputBox() );
+    BOOST_CHECK( boxManager.getActiveBox().equal( boxManager.getGlobalBox()));
+}

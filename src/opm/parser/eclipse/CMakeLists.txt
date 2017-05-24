@@ -195,18 +195,11 @@ add_test(NAME EclipseStateTests
          COMMAND EclipseStateTests ${_testdir}/integration_tests/)
 
 foreach(test ADDREGTests
-             BoxManagerTests
              BoxTests
              ColumnSchemaTests
-             CompletionSetTests
              CompletionTests
              COMPSEGUnits
              CopyRegTests
-             DeckDoubleItemTests
-             DeckIntItemTests
-             DeckKeywordTests
-             DeckRecordTests
-             DeckStringItemTests
              DeckTests
              DynamicStateTests
              DynamicVectorTests
@@ -218,10 +211,8 @@ foreach(test ADDREGTests
              FaultTests
              FunctionalTests
              GeomodifierTests
-             GridPropertiesTests
              GridPropertyTests
              GroupTests
-             GroupTreeTests
              InitConfigTest
              IOConfigTests
              MessageContainerTest
@@ -230,24 +221,17 @@ foreach(test ADDREGTests
              MULTREGTScannerTests
              OrderedMapTests
              ParseContextTests
-             ParserEnumTests
-             ParserItemTests
-             ParserKeywordTests
-             ParserRecordTests
              PORVTests
              RawKeywordTests
-             RawRecordTests
              RestartConfigTests
              RunspecTests
              SatfuncPropertyInitializersTests
-             ScheduleEnumTests
              ScheduleTests
              SectionTests
              SimpleTableTests
              SimulationConfigTest
              StarTokenTests
              StringTests
-             StringviewTests
              SummaryConfigTests
              TabdimsTests
              TableColumnTests
@@ -260,7 +244,6 @@ foreach(test ADDREGTests
              TuningTests
              UnitTests
              ValueTests
-             WellPropertiesTests
              WellSolventTests
              WellTests
 )
@@ -277,42 +260,8 @@ foreach (test BoxTest
               IntegrationTests
               IOConfigIntegrationTest
               NNCTests
-              ParseCECON
-              ParseCOORDSYS
+              ParseKEYWORD
               ParseDATAWithDefault
-              ParseDEBUG
-              ParseDENSITY
-              ParseEND
-              ParseEQUIL
-              ParseGRUPRIG
-              ParseLGR
-              ParseMiscible
-              ParseMULTREGT
-              ParseMULTSEGWELL
-              ParsePLYADSS
-              ParsePLYDHFLF
-              ParsePLYSHLOG
-              ParsePLYVISC
-              ParsePORO
-              ParsePRORDER
-              ParsePVTG
-              ParsePVTO
-              ParseRSVD
-              ParseSGOF
-              ParseSLGOF
-              ParseSWOF
-              ParseTITLE
-              ParseTOPS
-              ParseTRACERS
-              ParseTUNINGDP
-              ParseTVDP
-              ParseVFPPROD
-              ParseWCONHIST
-              ParseWDFACCOR
-              ParseWEFAC
-              ParseWellProbe
-              ParseWellWithWildcards
-              ParseWORKLIM
               Polymer
               ResinsightTest
               ScheduleCreateFromDeck

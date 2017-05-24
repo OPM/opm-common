@@ -496,3 +496,62 @@ BOOST_AUTO_TEST_CASE(CheckLimits) {
     p1.checkLimits(0,2);
     BOOST_CHECK_THROW( p1.checkLimits(-2,0) , std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(PropertiesEmpty) {
+    typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    std::vector<SupportedKeywordInfo> supportedKeywords = {
+        SupportedKeywordInfo("SATNUM" , 0, "1"),
+        SupportedKeywordInfo("FIPNUM" , 2, "1")
+    };
+
+    const Opm::EclipseGrid grid(10, 7, 9);
+    Opm::GridProperties<int> gridProperties(grid, std::move(supportedKeywords));
+
+    BOOST_CHECK( gridProperties.supportsKeyword("SATNUM") );
+    BOOST_CHECK( gridProperties.supportsKeyword("FIPNUM") );
+    BOOST_CHECK( !gridProperties.supportsKeyword("FLUXNUM") );
+    BOOST_CHECK( !gridProperties.hasKeyword("SATNUM"));
+    BOOST_CHECK( !gridProperties.hasKeyword("FLUXNUM"));
+
+    BOOST_CHECK_THROW( gridProperties.getDeckKeyword("SATNUM") , std::invalid_argument);
+    BOOST_CHECK_THROW( gridProperties.getDeckKeyword("NONONO") , std::invalid_argument);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(addKeyword) {
+    typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    std::vector<SupportedKeywordInfo> supportedKeywords = {
+        SupportedKeywordInfo("SATNUM" , 0, "1")
+    };
+    Opm::EclipseGrid grid(10,7,9);
+    Opm::GridProperties<int> gridProperties(grid, std::move( supportedKeywords ));
+
+    BOOST_CHECK_THROW( gridProperties.addKeyword("NOT-SUPPORTED"), std::invalid_argument);
+
+    BOOST_CHECK(  gridProperties.addKeyword("SATNUM"));
+    BOOST_CHECK( !gridProperties.addKeyword("SATNUM"));
+    BOOST_CHECK(  gridProperties.hasKeyword("SATNUM"));
+}
+
+
+BOOST_AUTO_TEST_CASE(hasKeyword_assertKeyword) {
+    typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
+    std::vector<SupportedKeywordInfo> supportedKeywords = {
+        SupportedKeywordInfo("SATNUM" , 0, "1"),
+        SupportedKeywordInfo("FIPNUM" , 0, "1")
+    };
+    const Opm::EclipseGrid grid(10, 7, 9);
+    const Opm::GridProperties<int> gridProperties( grid, std::move( supportedKeywords ) );
+
+    // calling getKeyword() should not change the semantics of hasKeyword()!
+    BOOST_CHECK(!gridProperties.hasKeyword("SATNUM"));
+    BOOST_CHECK(!gridProperties.hasKeyword("FIPNUM"));
+
+    gridProperties.assertKeyword("FIPNUM");
+    gridProperties.getKeyword("SATNUM");
+    BOOST_CHECK(gridProperties.hasKeyword("SATNUM"));
+    BOOST_CHECK(gridProperties.hasKeyword("FIPNUM"));
+
+    BOOST_CHECK_THROW( gridProperties.getKeyword( "NOT-SUPPORTED" ), std::invalid_argument );
+}
