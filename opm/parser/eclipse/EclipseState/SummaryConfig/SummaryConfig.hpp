@@ -29,7 +29,7 @@
 namespace Opm {
 
     class Deck;
-    class Eclipse3DProperties;
+    class TableManager;
     class EclipseState;
     class ParserKeyword;
     class Schedule;
@@ -41,9 +41,9 @@ namespace Opm {
 
             SummaryConfig( const Deck&, const EclipseState& , const ParseContext&  );
             SummaryConfig( const Deck&, const Schedule&,
-                           const Eclipse3DProperties&, const ParseContext&, std::array< int, 3 > );
+                           const TableManager&, const ParseContext&, std::array< int, 3 > );
             SummaryConfig( const Deck&, const Schedule&,
-                           const Eclipse3DProperties&, const ParseContext&, int, int, int );
+                           const TableManager&, const ParseContext&, int, int, int );
 
             const_iterator begin() const;
             const_iterator end() const;
@@ -60,6 +60,11 @@ namespace Opm {
             bool hasKeyword( const std::string& keyword ) const;
 
             /*
+               The hasSummaryKey() method will look for fully
+               qualified keys like 'RPR:3' and 'BPR:10,15,20.
+            */
+            bool hasSummaryKey(const std::string& keyword ) const;
+            /*
               Can be used to query if a certain 3D field, e.g. PRESSURE,
               is required to calculate the summary variables.
             */
@@ -74,6 +79,7 @@ namespace Opm {
             */
             std::vector< ERT::smspec_node > keywords;
             std::set<std::string> short_keywords;
+            std::set<std::string> summary_keywords;
     };
 
 } //namespace Opm

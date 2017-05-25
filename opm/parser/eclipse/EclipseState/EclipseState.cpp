@@ -58,7 +58,7 @@ namespace Opm {
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
         m_schedule(          m_parseContext, m_inputGrid, m_eclipseProperties, deck, m_runspec.phases() ),
-        m_eclipseConfig(     deck, m_eclipseProperties, m_gridDims, m_schedule, parseContext ),
+        m_eclipseConfig(     deck, m_eclipseProperties, m_tables, m_gridDims, m_schedule, parseContext ),
         m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ(),
                              m_eclipseProperties, deck.getKeywordList( "MULTREGT" ) ),
         m_inputNnc(          deck, m_gridDims ),

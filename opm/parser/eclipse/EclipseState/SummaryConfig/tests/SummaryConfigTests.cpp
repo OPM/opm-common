@@ -38,6 +38,8 @@ static Deck createDeck( const std::string& summary ) {
             "\n"
             "DIMENS\n"
             " 10 10 10 /\n"
+            "REGDIMS\n"
+            "  3/\n"
             "GRID\n"
             "DXV \n 10*400 /\n"
             "DYV \n 10*400 /\n"
@@ -523,6 +525,7 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
 
         const auto summary = createSummary( input );
         BOOST_CHECK( summary.require3DField( "SGAS"));
+        BOOST_CHECK( summary.hasSummaryKey( "BSGAS:3,3,6" ) );
     }
 
 
@@ -531,7 +534,18 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
         const auto summary = createSummary( input );
         BOOST_CHECK( summary.require3DField( "PRESSURE"));
         BOOST_CHECK( summary.requireFIPNUM( ));
+        BOOST_CHECK( summary.hasKeyword( "RPR" ) );
+        BOOST_CHECK( summary.hasSummaryKey( "RPR:1" ) );
+        BOOST_CHECK( summary.hasSummaryKey( "RPR:3" ) );
+        BOOST_CHECK( !summary.hasSummaryKey( "RPR:4" ) );
     }
+
+
+    {
+        const auto input = "RPR\n 10 /\n";
+        BOOST_CHECK_THROW( createSummary( input ) , std::invalid_argument );
+    }
+
 
 
     {
@@ -540,5 +554,5 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
         BOOST_CHECK( summary.require3DField( "GIPL"));
         BOOST_CHECK( summary.requireFIPNUM( ));
     }
-
 }
+
