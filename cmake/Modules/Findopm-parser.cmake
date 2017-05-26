@@ -18,6 +18,14 @@ else ()
   set (OPM_PARSER_QUIET "")
 endif ()
 
+find_package(opm-parser CONFIG)
+if (opm-parser_FOUND)
+    set(HAVE_OPM_PARSER TRUE)
+    set(opm-parser_LIBRARIES opmparser)
+    set(opm-parser_INCLUDE_DIRS "")
+    return ()
+endif ()
+
 # use lowercase versions of the variables if those are set
 if (opm-parser_ROOT)
   set (OPM_PARSER_ROOT ${opm-parser_ROOT})
@@ -113,29 +121,22 @@ find_library (OPM_JSON_LIBRARY
   DOC "Path to OPM JSON library archive/shared object files"
   ${_no_default_path} )
 
-# get the prerequisite ERT libraries
-if (NOT ERT_FOUND)
-  find_package(ERT ${OPM_PARSER_QUIET})
-endif ()
-
 # get the prerequisite Boost libraries
 find_package(Boost 1.44.0 COMPONENTS filesystem date_time system unit_test_framework regex ${OPM_PARSER_QUIET})
 
-if (ERT_FOUND AND Boost_FOUND AND
+if (Boost_FOUND AND
     OPM_PARSER_LIBRARY AND OPM_JSON_LIBRARY AND OPM_PARSER_INCLUDE_DIR)
   # setup list of all required libraries to link with opm-parser. notice that
   # we use the plural form to get *all* the libraries needed by cjson
   set (opm-parser_INCLUDE_DIRS
     ${OPM_PARSER_INCLUDE_DIR}
     ${OPM_PARSER_GEN_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${ERT_INCLUDE_DIRS})
+    ${Boost_INCLUDE_DIRS})
 
   set (opm-parser_LIBRARIES
     ${OPM_PARSER_LIBRARY}
     ${OPM_JSON_LIBRARY}
-    ${Boost_LIBRARIES}
-    ${ERT_LIBRARIES})
+    ${Boost_LIBRARIES})
 
   # We might be using an external cJSON library
   # but we have to unset the OPM_PARSER_ROOT stuff to find it
