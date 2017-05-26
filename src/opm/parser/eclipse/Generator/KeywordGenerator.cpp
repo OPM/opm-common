@@ -82,26 +82,11 @@ namespace Opm {
     }
 
     bool KeywordGenerator::updateFile(const std::stringstream& newContent , const std::string& filename) {
-        bool update = true;
-        {
-            // Check if file already contains the newContent.
-            std::ifstream inputStream(filename);
-            if (inputStream) {
-                std::stringstream oldContent;
-                oldContent << inputStream.rdbuf();
-                if (oldContent.str() == newContent.str()) {
-                    update = false;
-                }
-            }
-        }
+        ensurePath(filename);
+        std::ofstream outputStream(filename);
+        outputStream << newContent.str();
 
-        if (update) {
-            ensurePath(filename);
-            std::ofstream outputStream(filename);
-            outputStream << newContent.str();
-        }
-
-        return update;
+        return true;
     }
 
     static bool write_file( const std::stringstream& stream, const std::string& file, bool verbose, std::string desc = "source" ) {
@@ -117,48 +102,30 @@ namespace Opm {
     }
 
 
-    bool KeywordGenerator::updateSource(const KeywordLoader& loader , const std::string& sourceFile, int blocks ) const {
+    bool KeywordGenerator::updateSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
         std::stringstream newSource;
+        newSource << sourceHeader << std::endl;
 
-        const int keywords = loader.size();
-        const int blocksize = (keywords / blocks) + 1;
-
-        std::vector< std::stringstream > streams( blocks );
-        for( unsigned int i = 0; i < streams.size(); ++i )
-            streams[ i ] << sourceHeader << std::endl
-                << "void addDefaultKeywords" << i << "(Parser& p);" << std::endl
-                << "void addDefaultKeywords" << i << "(Parser& p) {" << std::endl;
-
-        int bi = 0;
+        newSource << "void addDefaultKeywords(Parser& p);"  << std::endl
+                  << "void addDefaultKeywords(Parser& p) {" << std::endl;
         for( auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter ) {
-            auto block = bi++ / blocksize;
-            streams[ block ] << "p.addKeyword< ParserKeywords::"
-                << iter->second->className() << " >();" << std::endl;
+            newSource << "p.addKeyword< ParserKeywords::"
+                      << iter->second->className()
+                      << " >();" << std::endl;
         }
 
-        for( auto& stream : streams ) stream << "}}}" << std::endl;
+        newSource << "}" << std::endl;
 
-        for( unsigned int i = 0; i < streams.size(); ++i ) {
-            auto srcfile = sourceFile;
-            updateFile( streams[i], srcfile.insert( srcfile.size() - 4, std::to_string( i ) ) );
-        }
-
-        newSource << sourceHeader;
         for (auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter) {
             std::shared_ptr<ParserKeyword> keyword = (*iter).second;
             newSource << keyword->createCode() << std::endl;
         }
 
-        for( auto i = 0; i < blocks; ++i )
-            newSource << "void addDefaultKeywords" << i << "(Parser& p);" << std::endl;
-
         newSource << "}" << std::endl;
 
-        newSource << "void Parser::addDefaultKeywords() {" << std::endl;
-        for( auto i = 0; i < blocks; ++i )
-            newSource << "Opm::ParserKeywords::addDefaultKeywords" << i << "(*this);" << std::endl;
-
-        newSource << "}}" << std::endl;
+        newSource << "void Parser::addDefaultKeywords() {" << std::endl
+                  << "Opm::ParserKeywords::addDefaultKeywords(*this);" << std::endl
+                  << "}}" << std::endl;
 
         return write_file( newSource, sourceFile, m_verbose, "source" );
     }

@@ -27,28 +27,23 @@ target_include_directories(genkw PRIVATE include)
 file(GLOB_RECURSE keyword_templates share/keywords/*)
 add_custom_command(
     OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords0.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords1.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords2.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords3.cpp
-            ${CMAKE_CURRENT_BINARY_DIR}/inlinekw.cpp
     COMMAND genkw ${PROJECT_SOURCE_DIR}/share/keywords
                   ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp
                   ${CMAKE_CURRENT_BINARY_DIR}/include/
                   opm/parser/eclipse/Parser/ParserKeywords
+    DEPENDS genkw ${keyword_templates}
+)
+
+add_custom_command(
+    OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/inlinekw.cpp
+    COMMAND genkw ${PROJECT_SOURCE_DIR}/share/keywords
                   ${CMAKE_CURRENT_BINARY_DIR}/inlinekw.cpp
-                  4
-    DEPENDS genkw
+    DEPENDS genkw ${keyword_templates}
 )
 
 #-----------------------------------------------------------------
 
-add_library(opmparser ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp
-                      ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords0.cpp
-                      ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords1.cpp
-                      ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords2.cpp
-                      ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords3.cpp
-                      Deck/Deck.cpp
+add_library(opmparser Deck/Deck.cpp
                       Deck/DeckItem.cpp
                       Deck/DeckKeyword.cpp
                       Deck/DeckRecord.cpp
@@ -126,6 +121,7 @@ add_library(opmparser ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp
                       Units/UnitSystem.cpp
                       Utility/Functional.cpp
                       Utility/Stringview.cpp
+                      ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp
 )
 
 target_link_libraries(opmparser PUBLIC opmjson
