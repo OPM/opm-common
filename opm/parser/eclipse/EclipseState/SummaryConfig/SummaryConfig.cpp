@@ -264,6 +264,14 @@ inline void keywordR( std::vector< ERT::smspec_node >& list,
     }
 }
 
+
+inline void keywordMISC( std::vector< ERT::smspec_node >& list,
+                         const DeckKeyword& keyword)
+{
+    list.emplace_back( keyword.name() );
+}
+
+
 inline void keywordC( std::vector< ERT::smspec_node >& list,
                       const ParseContext& parseContext,
                       const DeckKeyword& keyword,
@@ -325,6 +333,7 @@ inline void handleKW( std::vector< ERT::smspec_node >& list,
         case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, n_xyz );
         case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables, n_xyz );
         case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, keyword, schedule, n_xyz );
+        case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
 
         default: return;
     }
