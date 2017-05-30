@@ -899,3 +899,17 @@ BOOST_AUTO_TEST_CASE(fpr) {
 
 
 }
+
+BOOST_AUTO_TEST_CASE(MISC) {
+    setup cfg( "test_MISC");
+
+    out::Summary writer( cfg.es, cfg.config, cfg.grid , cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution);
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+    BOOST_CHECK( ecl_sum_has_key( resp , "TCPU" ));
+}

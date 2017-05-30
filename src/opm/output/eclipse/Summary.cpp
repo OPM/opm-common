@@ -479,6 +479,10 @@ quantity bsgas( const fn_args& args) {
 }
 
 
+quantity extra_time( const fn_args& args) {
+    return { 0.0, measure::time };
+}
+
 
 template< typename F, typename G >
 auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
@@ -732,6 +736,9 @@ static const std::unordered_map< std::string, ofun > funs = {
     {"BWSAT" , bswat},
     {"BSGAS" , bsgas},
     {"BGSAS" , bsgas},
+
+    /* Misc keywords, the 'extra' handlers will only set the value 0 - with the correct dimension*/
+    {"TCPU" , extra_time}
 };
 
 
