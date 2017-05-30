@@ -45,9 +45,12 @@
 namespace Opm {
 
 namespace {
-    /* A dummy deck that holds a Summary section with the keyword list that ALL
-     * expands to, plus the SUMMARY header
-     */
+    /*
+      Small dummy decks which contain a list of keywords; observe that
+      these dummy decks will be used as proper decks and MUST START
+      WITH SUMMARY.
+    */
+
     const Deck ALL_keywords = {
         "SUMMARY",
         "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
@@ -80,6 +83,21 @@ namespace {
         "FMWIS", "FMWIV", "FMWIP", "FMWDR", "FMWDT", "FMWWO", "FMWWT"
     };
 
+
+    const Deck PERFORMA_keywords = {
+        "SUMMARY",
+        "TCPU", "ELAPSED","NEWTON","NLINERS","NLINSMIN", "NLINSMAX","MLINEARS",
+        "MSUMLINS","MSUMNEWT","TIMESTEP","TCPUTS","TCPUDAY","STEPTYPE","TELAPLIN"
+    };
+
+
+    /*
+      The variable type 'ECL_SMSPEC_MISC_TYPE' is a catch-all variable
+      type, and will by default internalize keywords like 'ALL' and
+      'PERFORMA', where only the keywords in the expanded list should
+      be included.
+    */
+    const std::set<std::string> meta_keywords = {"PERFORMA" , "ALL" , "FMWSET", "GMWSET"};
 
     /*
       This is a hardcoded mapping between 3D field keywords,
@@ -268,7 +286,8 @@ inline void keywordR( std::vector< ERT::smspec_node >& list,
 inline void keywordMISC( std::vector< ERT::smspec_node >& list,
                          const DeckKeyword& keyword)
 {
-    list.emplace_back( keyword.name() );
+    if (meta_keywords.count( keyword.name() ) == 0)
+        list.emplace_back( keyword.name() );
 }
 
 
@@ -383,6 +402,9 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 
     if( section.hasKeyword( "FMWSET" ) )
         this->merge( { FMWSET_keywords, schedule, tables, parseContext, n_xyz } );
+
+    if (section.hasKeyword( "PERFORMA" ) )
+        this->merge( { PERFORMA_keywords, schedule, props, parseContext, n_xyz } );
 
     uniq( this->keywords );
     for (const auto& kw: this->keywords) {

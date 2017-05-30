@@ -558,7 +558,15 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
 
 
 BOOST_AUTO_TEST_CASE( SUMMARY_MISC) {
-    const auto summary = createSummary( "TCPU\n" );
-    BOOST_CHECK( summary.hasKeyword( "TCPU" ) );
+    {
+        const auto summary = createSummary( "TCPU\n" );
+        BOOST_CHECK( summary.hasKeyword( "TCPU" ) );
+    }
+
+    {
+        const auto summary = createSummary( "PERFORMA\n" );
+        BOOST_CHECK( summary.hasKeyword( "ELAPSED" ) );
+        BOOST_CHECK( !summary.hasKeyword("PERFORMA"));
+    }
 }
 
