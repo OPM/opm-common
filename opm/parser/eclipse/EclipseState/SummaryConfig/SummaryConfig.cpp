@@ -404,7 +404,7 @@ SummaryConfig::SummaryConfig( const Deck& deck,
         this->merge( { FMWSET_keywords, schedule, tables, parseContext, n_xyz } );
 
     if (section.hasKeyword( "PERFORMA" ) )
-        this->merge( { PERFORMA_keywords, schedule, props, parseContext, n_xyz } );
+        this->merge( { PERFORMA_keywords, schedule, tables, parseContext, n_xyz } );
 
     uniq( this->keywords );
     for (const auto& kw: this->keywords) {
