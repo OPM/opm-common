@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
@@ -235,7 +235,7 @@ inline void keywordB( std::vector< ERT::smspec_node >& list,
 
 inline void keywordR( std::vector< ERT::smspec_node >& list,
                       const DeckKeyword& keyword,
-                      const Eclipse3DProperties& props,
+                      const TableManager& tables,
                       std::array< int, 3 > dims ) {
 
     /* RUNSUM is not a region keyword but a directive for how to format and
@@ -245,13 +245,23 @@ inline void keywordR( std::vector< ERT::smspec_node >& list,
     if( keyword.name() == "RUNSUM" ) return;
     if( keyword.name() == "RPTONLY" ) return;
 
+    const size_t numfip = tables.numFIPRegions( );
     const auto& item = keyword.getDataRecord().getDataItem();
-    const auto regions = item.hasValue( 0 )
-                       ? item.getData< int >()
-                       : props.getRegions( "FIPNUM" );
+    std::vector<int> regions;
 
-    for( const int region : regions )
-        list.emplace_back( keyword.name(), dims.data(), region );
+    if (item.size() > 0)
+        regions = item.getData< int >();
+    else {
+        for (size_t region=1; region <= numfip; region++)
+            regions.push_back( region );
+    }
+
+    for( const int region : regions ) {
+        if (region >= 1 && region <= numfip)
+            list.emplace_back( keyword.name(), dims.data(), region );
+        else
+            throw std::invalid_argument("Illegal region value: " + std::to_string( region ));
+    }
 }
 
 inline void keywordC( std::vector< ERT::smspec_node >& list,
@@ -303,7 +313,7 @@ inline void keywordC( std::vector< ERT::smspec_node >& list,
 inline void handleKW( std::vector< ERT::smspec_node >& list,
                       const DeckKeyword& keyword,
                       const Schedule& schedule,
-                      const Eclipse3DProperties& props,
+                      const TableManager& tables,
                       const ParseContext& parseContext,
                       std::array< int, 3 > n_xyz ) {
     const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
@@ -313,7 +323,7 @@ inline void handleKW( std::vector< ERT::smspec_node >& list,
         case ECL_SMSPEC_GROUP_VAR: return keywordG( list, parseContext, keyword, schedule );
         case ECL_SMSPEC_FIELD_VAR: return keywordF( list, keyword );
         case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, n_xyz );
-        case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, props, n_xyz );
+        case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables, n_xyz );
         case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, keyword, schedule, n_xyz );
 
         default: return;
@@ -340,34 +350,36 @@ inline void uniq( std::vector< ERT::smspec_node >& vec ) {
 SummaryConfig::SummaryConfig( const Deck& deck, const EclipseState& es , const ParseContext& parseContext)
     : SummaryConfig( deck,
                      es.getSchedule(),
-                     es.get3DProperties(),
+                     es.getTableManager(),
                      parseContext,
                      dimensions( es.getInputGrid() ) )
 {}
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
-                              const Eclipse3DProperties& props,
+                              const TableManager& tables,
                               const ParseContext& parseContext,
                               std::array< int, 3 > n_xyz )
 {
 
     SUMMARYSection section( deck );
     for( auto& x : section )
-        handleKW( this->keywords, x, schedule, props, parseContext, n_xyz );
+        handleKW( this->keywords, x, schedule, tables, parseContext, n_xyz );
 
     if( section.hasKeyword( "ALL" ) )
-        this->merge( { ALL_keywords, schedule, props, parseContext, n_xyz } );
+        this->merge( { ALL_keywords, schedule, tables, parseContext, n_xyz } );
 
     if( section.hasKeyword( "GMWSET" ) )
-        this->merge( { GMWSET_keywords, schedule, props, parseContext, n_xyz } );
+        this->merge( { GMWSET_keywords, schedule, tables, parseContext, n_xyz } );
 
     if( section.hasKeyword( "FMWSET" ) )
-        this->merge( { FMWSET_keywords, schedule, props, parseContext, n_xyz } );
+        this->merge( { FMWSET_keywords, schedule, tables, parseContext, n_xyz } );
 
     uniq( this->keywords );
-    for (const auto& kw: this->keywords)
+    for (const auto& kw: this->keywords) {
         this->short_keywords.insert( kw.keyword() );
+        this->summary_keywords.insert( kw.key1() );
+    }
 }
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
@@ -397,8 +409,14 @@ SummaryConfig& SummaryConfig::merge( SummaryConfig&& other ) {
     return *this;
 }
 
+
 bool SummaryConfig::hasKeyword( const std::string& keyword ) const {
     return (this->short_keywords.count( keyword ) == 1);
+}
+
+
+bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
+    return (this->summary_keywords.count( keyword ) == 1);
 }
 
 

@@ -63,6 +63,11 @@ namespace Opm {
         const Tabdims& getTabdims() const;
         const Eqldims& getEqldims() const;
 
+        /*
+          WIll return max{ Tabdims::NTFIP , Regdims::NTFIP }.
+        */
+        size_t numFIPRegions() const;
+
         const TableContainer& getSwofTables() const;
         const TableContainer& getSgwfnTables() const;
         const TableContainer& getSof2Tables() const;

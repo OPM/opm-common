@@ -1233,7 +1233,7 @@ BOOST_AUTO_TEST_CASE( TestParseDENSITY ) {
 BOOST_AUTO_TEST_CASE( TestParseROCK ) {
     const std::string data = R"(
       TABDIMS
-        1* 2 /
+        1* 2 * * 8/
 
       ROCK
         1.1 1.2 /
@@ -1251,12 +1251,16 @@ BOOST_AUTO_TEST_CASE( TestParseROCK ) {
     BOOST_CHECK_EQUAL( 2.2 * 1e-5, rock[1].compressibility );
 
     BOOST_CHECK_THROW( rock.at( 2 ), std::out_of_range );
+    BOOST_CHECK_EQUAL( 8 , tables.numFIPRegions( ));
 }
 
 BOOST_AUTO_TEST_CASE( TestParsePVCDO ) {
     const std::string data = R"(
       TABDIMS
         1* 1 /
+
+      REGDIMS
+        25 /
 
       PVCDO
         3600 1.12 1.6e-5 0.88 0.0 /
@@ -1274,7 +1278,7 @@ BOOST_AUTO_TEST_CASE( TestParsePVCDO ) {
     BOOST_CHECK_CLOSE( 0.0,     pvcdo[ 0 ].viscosibility * 1e5, 1e-5 );
 
     BOOST_CHECK_THROW( pvcdo.at( 1 ), std::out_of_range );
-
+    BOOST_CHECK_EQUAL( 25 , tables.numFIPRegions( ));
 
     const std::string malformed = R"(
       TABDIMS
