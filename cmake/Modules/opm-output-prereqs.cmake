@@ -16,7 +16,7 @@ set (opm-output_DEPS
 	"Boost 1.44.0
 		COMPONENTS unit_test_framework REQUIRED"
 	# Ensembles-based Reservoir Tools (ERT)
-	"ERT REQUIRED"
+	"ecl REQUIRED"
 	# Look for MPI support
 	"opm-common REQUIRED"
 	# Parser library for ECL-type simulation models
