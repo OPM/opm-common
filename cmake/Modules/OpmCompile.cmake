@@ -57,6 +57,7 @@ macro (opm_compile opm)
 	  # queue this executable to be stripped
 	  strip_debug_symbols (${${opm}_TARGET} ${opm}_DEBUG)
         endif()
+	  add_static_analysis_tests(${opm}_SOURCES ${opm}_INCLUDE_DIRS)
   else (${opm}_SOURCES)
 	# unset this variable to signal that no library is generated
 	set (${opm}_TARGET)
