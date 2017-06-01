@@ -158,6 +158,13 @@ BOOST_AUTO_TEST_CASE(fields) {
             names.begin(), names.end() );
 }
 
+BOOST_AUTO_TEST_CASE(field_oil_efficiency) {
+    const auto input = "FOE\n";
+    const auto summary = createSummary( input );
+
+    BOOST_CHECK_EQUAL( true , summary.hasKeyword( "FOE"));
+}
+
 BOOST_AUTO_TEST_CASE(blocks) {
     const auto input = "BPR\n"
                        "3 3 6 /\n"
