@@ -90,7 +90,12 @@ function build_module {
       cmake --build .
     fi
     test $? -eq 0 || exit 2
-    ctest -T Test --no-compress-output
+    if test -z "$CTEST_CONFIGURATION"
+    then
+      ctest -T Test --no-compress-output
+    else
+      ctest -C $CTEST_CONFIGURATION --timeout 5000 -T Test --no-compress-output
+    fi
 
     # Convert to junit format
     $WORKSPACE/deps/opm-common/jenkins/convert.py -x $WORKSPACE/deps/opm-common/jenkins/conv.xsl -t . > testoutput.xml
