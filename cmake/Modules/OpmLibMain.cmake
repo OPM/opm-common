@@ -102,6 +102,10 @@ find_openmp (${project})
 include (UseThreads)
 find_threads (${project})
 
+# static code analysis
+include(UseStaticAnalysis)
+setup_static_analysis_tools()
+
 # callback hook to setup additional dependencies
 if (COMMAND prereqs_hook)
 	prereqs_hook ()
