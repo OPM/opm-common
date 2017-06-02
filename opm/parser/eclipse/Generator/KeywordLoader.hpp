@@ -26,11 +26,7 @@
 #include <string>
 #include <vector>
 
-namespace boost {
-    namespace filesystem {
-        class path;
-    }
-}
+#include <boost/filesystem/path.hpp>
 
 namespace Opm {
 
