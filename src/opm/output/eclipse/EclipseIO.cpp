@@ -380,7 +380,8 @@ void EclipseIO::writeTimeStep(int report_step,
                               double secs_elapsed,
                               data::Solution cells,
                               data::Wells wells,
-                              std::map<std::string, std::vector<double>> extra,
+                              std::map<std::string, double> misc_summary_values,
+                              std::map<std::string, std::vector<double>> extra_restart,
 			      bool write_double)
  {
 
@@ -404,7 +405,8 @@ void EclipseIO::writeTimeStep(int report_step,
                                           secs_elapsed,
                                           es,
                                           wells ,
-                                          cells );
+                                          cells ,
+                                          misc_summary_values );
         this->impl->summary.write();
     }
 
@@ -422,7 +424,7 @@ void EclipseIO::writeTimeStep(int report_step,
                                                  report_step,
                                                  ioConfig.getFMTOUT() );
 
-        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid , extra , write_double);
+        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid , extra_restart , write_double);
     }
 
 

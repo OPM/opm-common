@@ -142,7 +142,8 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
                                      false,
                                      step_time - start_time,
                                      createBlackoilState( 2, numCells ),
-                                     wells);
+                                     wells,
+				     {});
     }
 
     verifyRFTFile("TESTRFT.RFT");

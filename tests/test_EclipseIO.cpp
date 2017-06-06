@@ -324,10 +324,12 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
 
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
             eclWriter.writeTimeStep( i,
-                    false,
-                    first_step - start_time,
-                    sol,
-                    wells);
+				     false,
+				     first_step - start_time,
+				     sol,
+				     wells,
+				     {});
+				     
 
 
             checkRestartFile( i );

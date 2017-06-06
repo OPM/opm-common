@@ -360,7 +360,7 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_
     eclWriter.writeTimeStep( 1,
                              false,
                              first_step - start_time,
-                             sol, wells , {}, write_double);
+                             sol, wells , {}, {}, write_double);
 
     return { sol, wells , {}};
 }

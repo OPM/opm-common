@@ -122,9 +122,9 @@ public:
      * can be added here are represented with mnenonics in the RPTRST
      * keyword.
      *
-     * The extra argument is an optional aergument which can be used
-     * to store arbitrary double vectors in the restart file. The
-     * following rules apply for the extra data:
+     * The extra_restart argument is an optional aergument which can
+     * be used to store arbitrary double vectors in the restart
+     * file. The following rules apply for the extra data:
      *
      *  1. There is no size constraints.
      *
@@ -139,6 +139,20 @@ public:
      * precision. OPM can load and restart from files with double
      * precision keywords, but this is non-standard, and other third
      * party applications might choke on those.
+     *
+     * The misc_summary_values argument is used to pass pass various
+     * summary values which are of type 'ECL_SMSPEC_MISC_VAR' to the
+     * summary writer. The ability to pass miscellanous values to the
+     * summary writer is not very flexible:
+     *
+     *  1. The keyword must be an already well defined ECLIPSE keyword
+     *     like e.g. one of the performance related keywords.
+     *
+     *  2. The keyword must have been requested in the SUMMARY section
+     *     of the input deck.
+     *
+     *  3. The dimension of the keyword must have specified in the
+     *     hardcoded static map misc_units in Summary.cpp.
      */
 
     void writeTimeStep( int report_step,
@@ -146,7 +160,8 @@ public:
                         double seconds_elapsed,
                         data::Solution,
                         data::Wells,
-                        std::map<std::string, std::vector<double>> extra = {},
+                        std::map<std::string, double> misc_summary_values,
+                        std::map<std::string, std::vector<double>> extra_restart = {},
 			bool write_double = false);
 
 

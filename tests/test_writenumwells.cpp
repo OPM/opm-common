@@ -155,7 +155,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
                                      false,
                                      timestep,
                                      solution,
-                                     wells );
+                                     wells ,
+				     {} );
     }
 
     verifyWellState(eclipse_restart_filename, es.getInputGrid(), es.getSchedule());

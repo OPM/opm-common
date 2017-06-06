@@ -53,7 +53,8 @@ class Summary {
                            double secs_elapsed,
                            const EclipseState& es,
                            const data::Wells&,
-                           const data::Solution& );
+                           const data::Solution&,
+                           const std::map<std::string, double>& misc_values);
 
         void set_initial( const data::Solution& );
         void write();

@@ -479,9 +479,6 @@ quantity bsgas( const fn_args& args) {
 }
 
 
-quantity extra_time( const fn_args& args) {
-    return { 0.0, measure::time };
-}
 
 
 template< typename F, typename G >
@@ -736,11 +733,25 @@ static const std::unordered_map< std::string, ofun > funs = {
     {"BWSAT" , bswat},
     {"BSGAS" , bsgas},
     {"BGSAS" , bsgas},
-
-    /* Misc keywords, the 'extra' handlers will only set the value 0 - with the correct dimension*/
-    {"TCPU" , extra_time}
 };
 
+
+static const std::unordered_map< std::string, UnitSystem::measure> misc_units = {
+  {"TCPU"     , UnitSystem::measure::identity },
+  {"ELAPSED"  , UnitSystem::measure::identity },
+  {"NEWTON"   , UnitSystem::measure::identity },
+  {"NLINERS"  , UnitSystem::measure::identity },
+  {"NLINSMIN" , UnitSystem::measure::identity },
+  {"NLINSMAX" , UnitSystem::measure::identity },
+  {"MLINEARS" , UnitSystem::measure::identity },
+  {"MSUMLINS" , UnitSystem::measure::identity },
+  {"MSUMNEWT" , UnitSystem::measure::identity },
+  {"TCPUTS"   , UnitSystem::measure::identity },
+  {"TIMESTEP" , UnitSystem::measure::time },
+  {"TCPUDAY"  , UnitSystem::measure::time },
+  {"STEPTYPE" , UnitSystem::measure::identity },
+  {"TELAPLIN" , UnitSystem::measure::time }
+};
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
                                               const smspec_node_type* node,
@@ -784,6 +795,7 @@ class Summary::keyword_handlers {
     public:
         using fn = ofun;
         std::vector< std::pair< smspec_node_type*, fn > > handlers;
+        std::map< std::string, smspec_node_type* > misc_nodes;
 };
 
 Summary::Summary( const EclipseState& st,
@@ -826,35 +838,60 @@ Summary::Summary( const EclipseState& st,
      */
     for( const auto& node : sum ) {
         const auto* keyword = node.keyword();
-        if( funs.find( keyword ) == funs.end() ) continue;
 
-        if ((node.type() == ECL_SMSPEC_COMPLETION_VAR) || (node.type() == ECL_SMSPEC_BLOCK_VAR)) {
-            int global_index = node.num() - 1;
-            if (!this->grid.cellActive(global_index))
-                continue;
-        }
+	/*
+	  All summary values of the type ECL_SMSPEC_MISC_VAR must be
+	  passed explicitly in the misc_values map when calling
+	  add_timestep.
+	*/
+	if (node.type() == ECL_SMSPEC_MISC_VAR) {
+	    const auto pair = misc_units.find( keyword );
+	    if (pair == misc_units.end())
+  	        continue;
 
-        /* get unit strings by calling each function with dummy input */
-        const auto handle = funs.find( keyword )->second;
-        const std::vector< const Well* > dummy_wells;
+	    auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
+					     keyword,
+					     node.wgname(),
+					     node.num(),
+					     st.getUnits().name( pair->second ),
+					     0 );
 
-        const fn_args no_args { dummy_wells, // Wells from Schedule object
-                                0,           // Duration of time step
-                                0,           // Timestep number
-                                node.num(),  // NUMS value for the summary output.
-                                {},          // Well results - data::Wells
-                                {},          // Solution::State
-                                {},          // Region <-> cell mappings.
-                                this->grid,
-                                this->initial_oip,
-                                {} };
+	    this->handlers->misc_nodes.emplace( keyword, nodeptr ); 
+        } else {
+	    if( funs.find( keyword ) == funs.end() ) continue;
 
-        const auto val = handle( no_args );
-        const auto* unit = st.getUnits().name( val.unit );
+            if ((node.type() == ECL_SMSPEC_COMPLETION_VAR) || (node.type() == ECL_SMSPEC_BLOCK_VAR)) {
+                int global_index = node.num() - 1;
+                if (!this->grid.cellActive(global_index))
+                    continue;
+            }
 
-        auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(), keyword,
-                                         node.wgname(), node.num(), unit, 0 );
-        this->handlers->handlers.emplace_back( nodeptr, handle );
+            /* get unit strings by calling each function with dummy input */
+            const auto handle = funs.find( keyword )->second;
+            const std::vector< const Well* > dummy_wells;
+
+            const fn_args no_args { dummy_wells, // Wells from Schedule object
+                                    0,           // Duration of time step
+                                    0,           // Timestep number
+                                    node.num(),  // NUMS value for the summary output.
+                                    {},          // Well results - data::Wells
+                                    {},          // Solution::State
+                                    {},          // Region <-> cell mappings.
+                                    this->grid,
+                                    this->initial_oip,
+                                    {} };
+
+            const auto val = handle( no_args );
+
+	    auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
+					     keyword,
+					     node.wgname(),
+					     node.num(),
+					     st.getUnits().name( val.unit ),
+					     0 );
+
+	    this->handlers->handlers.emplace_back( nodeptr, handle );
+	}
     }
 }
 
@@ -862,7 +899,8 @@ void Summary::add_timestep( int report_step,
                             double secs_elapsed,
                             const EclipseState& es,
                             const data::Wells& wells ,
-                            const data::Solution& state) {
+                            const data::Solution& state,
+                            const std::map<std::string, double>& misc_values) {
 
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
@@ -891,7 +929,20 @@ void Summary::add_timestep( int report_step,
             ? ecl_sum_tstep_get_from_key( prev_tstep, genkey ) + unit_applied_val
             : unit_applied_val;
 
-        ecl_sum_tstep_set_from_node( tstep, f.first, res );
+	ecl_sum_tstep_set_from_node( tstep, f.first, res );
+    }
+
+
+    for( const auto& value_pair : misc_values ) {
+        const std::string key = value_pair.first;
+	const auto node_pair = this->handlers->misc_nodes.find( key );
+	if (node_pair != this->handlers->misc_nodes.end()) {
+	    const auto * nodeptr = node_pair->second;
+	    const auto unit = misc_units.at( key );
+	    double si_value = value_pair.second;
+	    double output_value = es.getUnits().from_si(unit , si_value );
+	    ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
+	}
     }
 
     this->prev_tstep = tstep;
