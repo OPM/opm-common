@@ -77,7 +77,7 @@ public:
 
     template <class BackendType>
     static std::shared_ptr<BackendType> getBackend(const std::string& name) {
-        auto logger = OpmLog::getLogger();
+        auto logger = getLogger();
         return logger->getBackend<BackendType>(name);
     }
 
