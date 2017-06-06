@@ -35,7 +35,7 @@ inline std::string pathprefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
 
-BOOST_AUTO_TEST_CASE( DEBUG ) {
+BOOST_AUTO_TEST_CASE( debug ) {
     Parser().parseFile( pathprefix() + "DEBUG/DEBUG.DATA" );
 }
 
