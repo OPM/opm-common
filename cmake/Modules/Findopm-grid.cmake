@@ -20,7 +20,7 @@ find_opm_package (
   "${opm-grid_DEPS}"
   
   # header to search for
-  "dune/grid/CpGrid.hpp"
+  "dune/grid/cpgrid/Intersection.hpp"
 
   # library to search for
   "opmgrid"
@@ -29,9 +29,9 @@ find_opm_package (
   "HAVE_OPM_GRID"
 
   # test program
-"#include <dune/grid/CpGrid.hpp>
+"#include <dune/grid/cpgrid/GlobalIdMapping.hpp>
 int main (void) {
-  Dune::CpGrid g;
+  Dune::cpgrid::GlobalIdMapping g;
   return 0;
 }
 "
