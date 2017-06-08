@@ -48,7 +48,7 @@ namespace Opm {
         UnitSystem::measure dim;
         bool required = true;
 
-        RestartKey( UnitSystem::measure _dim)
+        explicit RestartKey( UnitSystem::measure _dim)
             : dim(_dim)
         {}
 

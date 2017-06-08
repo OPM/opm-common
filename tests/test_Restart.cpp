@@ -387,10 +387,10 @@ void compare( const RestartValue& fst,
 }
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
-    std::map<std::string, RestartKey> keys {{"PRESSURE" , UnitSystem::measure::pressure},
-                                            {"SWAT" , UnitSystem::measure::identity},
-                                            {"SGAS" , UnitSystem::measure::identity},
-                                            {"TEMP" , UnitSystem::measure::temperature}};
+    std::map<std::string, RestartKey> keys {{"PRESSURE" , RestartKey(UnitSystem::measure::pressure)},
+                                            {"SWAT" , RestartKey(UnitSystem::measure::identity)},
+                                            {"SGAS" , RestartKey(UnitSystem::measure::identity)},
+                                            {"TEMP" , RestartKey(UnitSystem::measure::temperature)}};
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
 
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     auto state2 = second_sim( eclWriter , keys );
     compare(state1, state2 , keys);
 
-    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , UnitSystem::measure::pressure}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , RestartKey(UnitSystem::measure::pressure)}} ) , std::runtime_error );
     BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , { UnitSystem::measure::pressure, true}}} ) , std::runtime_error );
 }
 
@@ -432,8 +432,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
       this equality for the pressure. For this test we therefor only
       consider the saturations which have identity unit.
     */
-    std::map<std::string, RestartKey> keys {{"SWAT" , UnitSystem::measure::identity},
-	                                    {"SGAS" , UnitSystem::measure::identity}};
+    std::map<std::string, RestartKey> keys {{"SWAT" , RestartKey(UnitSystem::measure::identity)},
+	                                    {"SGAS" , RestartKey(UnitSystem::measure::identity)}};
 
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
 
             BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {{"NOT-THIS", true}}) , std::runtime_error );
             {
-                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {{"SWAT" , UnitSystem::measure::identity},
+                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {{"SWAT" , RestartKey(UnitSystem::measure::identity)},
                                                                             {"NO"   , {UnitSystem::measure::identity, false}}},
                                                                             eclipseState, grid , {{"EXTRA", true}, {"EXTRA2", false}});
                 const auto pair = rst_value.extra.find( "EXTRA" );
