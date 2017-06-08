@@ -26,7 +26,6 @@ void RegressionTest::getRegressionTest(){
     std::vector<double> timeVec1, timeVec2;
     setTimeVecs(timeVec1, timeVec2);  // Sets the time vectors, they are equal for all keywords (WPOR:PROD01 etc)
     setDataSets(timeVec1, timeVec2); //Figures which dataset that contains more/less values pr keyword vector.
-    std::vector<double> dataVec1, dataVec2, absDevVec, relDevVec;
     std::cout << "Comparing " << timeVec1.size() << " steps." << std::endl;
     int ivar = 0;
     if(stringlist_get_size(keysShort) != stringlist_get_size(keysLong)){
