@@ -33,7 +33,7 @@ namespace Opm {
     class CounterLog : public LogBackend
     {
     public:
-        CounterLog(int64_t messageMask);
+        explicit CounterLog(int64_t messageMask);
         CounterLog();
 
         size_t numMessages(int64_t messageType) const;
