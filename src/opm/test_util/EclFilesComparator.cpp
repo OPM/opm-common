@@ -440,7 +440,7 @@ void RegressionTest::results() {
 
 
 
-void RegressionTest::resultsForKeyword(const std::string keyword) {
+void RegressionTest::resultsForKeyword(const std::string& keyword) {
     keywordValidForComparing(keyword);
     const unsigned int occurrences1 = ecl_file_get_num_named_kw(ecl_file1, keyword.c_str());
     const unsigned int occurrences2 = ecl_file_get_num_named_kw(ecl_file2, keyword.c_str());
@@ -651,7 +651,7 @@ void IntegrationTest::results() {
 
 
 
-void IntegrationTest::resultsForKeyword(const std::string keyword) {
+void IntegrationTest::resultsForKeyword(const std::string& keyword) {
     std::cout << "Comparing " << keyword << "...";
     keywordValidForComparing(keyword);
     const unsigned int occurrences1 = ecl_file_get_num_named_kw(ecl_file1, keyword.c_str());

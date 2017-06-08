@@ -183,7 +183,7 @@ class RegressionTest: public ECLFilesComparator {
         //! \brief Calculates deviations for a specific keyword.
         //! \param[in] keyword Keyword which should be compared, if this keyword is absent in one of the cases, an exception will be thrown.
         //! \details This function loops through every report step and every cell and compares the values for the given keyword from the two input cases. If the absolute or relative deviation between the two values for each step exceeds both the absolute tolerance and the relative tolerance (stored in ECLFilesComparator), an exception is thrown. In addition, some keywords are marked for "disallow negative values" -- these are SGAS, SWAT and PRESSURE. An exception is thrown if a value of one of these keywords is both negative and has an absolute value larger than the absolute tolerance. If no exceptions are thrown, resultsForKeyword() uses the private member funtion printResultsForKeyword to print the average and median deviations.
-        void resultsForKeyword(const std::string keyword);
+        void resultsForKeyword(const std::string& keyword);
 };
 
 
@@ -239,7 +239,7 @@ class IntegrationTest: public ECLFilesComparator {
         * For all other occurrences \f$n\f$, the deviation value \f$\Delta\f$ is calculated the same way, but the total value \f$S\f$ is calculated relative to the initial occurrence total \f$S_0\f$:
         * \f[ S = \sum_{i} |q_{n,i} - q_{0,i}| v_i. \f]
         * The error ratio is \f$ E = \Delta/S\f$. */
-        void resultsForKeyword(const std::string keyword);
+        void resultsForKeyword(const std::string& keyword);
 };
 
 #endif

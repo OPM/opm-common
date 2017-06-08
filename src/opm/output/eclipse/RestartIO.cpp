@@ -334,7 +334,7 @@ std::vector<int> serialize_IWEL( size_t step,
 
 
 std::vector< int > serialize_OPM_IWEL( const data::Wells& wells,
-                                       const std::vector< const Well* > sched_wells ) {
+                                       const std::vector< const Well* >& sched_wells ) {
 
     const auto getctrl = [&]( const Well* w ) {
         const auto itr = wells.find( w->name() );
@@ -348,7 +348,7 @@ std::vector< int > serialize_OPM_IWEL( const data::Wells& wells,
 
 std::vector< double > serialize_OPM_XWEL( const data::Wells& wells,
                                           int report_step,
-                                          const std::vector< const Well* > sched_wells,
+                                          const std::vector< const Well* >& sched_wells,
                                           const Phases& phase_spec,
                                           const EclipseGrid& grid ) {
 
@@ -537,7 +537,7 @@ void writeWell(ecl_rst_file_type* rst_file, int report_step, const EclipseState&
 
 void checkSaveArguments(const data::Solution& cells,
                         const EclipseGrid& grid,
-                        const std::map<std::string, std::vector<double>> extra_data) {
+                        const std::map<std::string, std::vector<double>>& extra_data) {
 
     const std::set<std::string> reserved_keys = {"LOGIHEAD", "INTEHEAD" ,"DOUBHEAD", "IWEL", "XWEL","ICON", "XCON" , "OPM_IWEL" , "OPM_XWEL", "ZWEL"};
 
