@@ -111,10 +111,12 @@ class IntegrationTest: public SummaryComparator {
                                     const char* currentKeyword,
                                     std::string &greatestErrorRatio);
 
+#if 0
         //! \brief Checks whether the unit of the two data vectors is the same
         //! \param[in] keyword The keyword of interest
         //! \param[out] boolean True/false, depending on whether the units are equal or not
         bool checkUnits(const char* keyword);
+#endif
     public:
         //! \brief Constructor, creates an object of IntegrationTest class.
         //! \param[in] basename1 Path to file1 without extension.

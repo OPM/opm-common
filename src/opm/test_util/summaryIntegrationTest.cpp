@@ -305,6 +305,7 @@ IntegrationTest::getSpecificWellVolume(const std::vector<double>& timeVec1,
 }
 
 
+#if 0
 bool IntegrationTest::checkUnits(const char * keyword){
     const smspec_node_type * node1 = ecl_sum_get_general_var_node (ecl_sum_fileShort ,keyword);
     const smspec_node_type * node2 = ecl_sum_get_general_var_node (ecl_sum_fileLong ,keyword);
