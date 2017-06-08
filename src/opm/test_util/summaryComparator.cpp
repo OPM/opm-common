@@ -59,13 +59,12 @@ SummaryComparator::~SummaryComparator(){
 
 
 Deviation SummaryComparator::calculateDeviations(double val1, double val2){
-    double absDev, relDev;
+    double absDev;
     Deviation deviation;
     absDev =  std::abs(val1 - val2);
     deviation.abs = absDev;
     if (val1 != 0 || val2 != 0) {
-        relDev = absDev/double(std::max(std::abs(val1), std::abs(val2)));
-        deviation.rel = relDev;
+        deviation.rel  = absDev/double(std::max(std::abs(val1), std::abs(val2)));
     }
     return deviation;
 }
