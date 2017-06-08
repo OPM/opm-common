@@ -83,7 +83,7 @@ public:
 
     template <class BackendType>
     static std::shared_ptr<BackendType> popBackend(const std::string& name) {
-        auto logger = OpmLog::getLogger();
+        auto logger = getLogger();
         return logger->popBackend<BackendType>(name);
     }
 
