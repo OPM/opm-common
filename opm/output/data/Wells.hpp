@@ -43,6 +43,7 @@ namespace Opm {
          */
 
         public:
+            Rates() = default;
             enum class opt : uint32_t {
                 wat     = (1 << 0),
                 oil     = (1 << 1),
