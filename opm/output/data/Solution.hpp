@@ -34,7 +34,7 @@ class Solution : public std::map< std::string, data::CellData > {
 
     public:
         Solution() = default;
-        Solution( bool si );
+        explicit Solution( bool si );
         using Base::map;
         using Base::insert;
 

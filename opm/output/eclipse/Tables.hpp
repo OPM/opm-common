@@ -35,7 +35,7 @@ namespace Opm {
 
     class Tables {
     public:
-        Tables( const UnitSystem& units_);
+        explicit Tables( const UnitSystem& units_);
         void fwrite( ERT::FortIO& fortio ) const;
         void addPVTO( const std::vector<PvtoTable>& pvtoTables);
         void addPVTG( const std::vector<PvtgTable>& pvtgTables);

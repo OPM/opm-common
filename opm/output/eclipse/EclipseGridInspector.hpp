@@ -57,7 +57,7 @@ class EclipseGridInspector
 public:
     /// Constructor taking a parser as argument.
     /// The parser must already have read an Eclipse file.
-    EclipseGridInspector(Opm::Deck);
+    explicit EclipseGridInspector(Opm::Deck);
 
     /// Assuming that the pillars are vertical, compute the
     /// volume of the cell given by logical coordinates (i, j, k).
