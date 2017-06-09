@@ -23,20 +23,16 @@
 
 namespace Opm {
 
-    DeckKeyword::DeckKeyword(const std::string& keywordName) {
-        m_knownKeyword = true;
-        m_keywordName = keywordName;
-        m_isDataKeyword = false;
-        m_fileName = "";
-        m_lineNumber = -1;
+    DeckKeyword::DeckKeyword(const std::string& keywordName) :
+        m_keywordName(keywordName), m_lineNumber(-1),
+        m_knownKeyword(true), m_isDataKeyword(false)
+    {
     }
 
-    DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) {
-        m_knownKeyword = knownKeyword;
-        m_keywordName = keywordName;
-        m_isDataKeyword = false;
-        m_fileName = "";
-        m_lineNumber = -1;
+    DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) :
+        m_keywordName(keywordName), m_lineNumber(-1),
+        m_knownKeyword(knownKeyword), m_isDataKeyword(false)
+    {
     }
 
     void DeckKeyword::setLocation(const std::string& fileName, int lineNumber) {
