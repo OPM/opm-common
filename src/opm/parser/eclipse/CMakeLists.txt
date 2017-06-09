@@ -1,25 +1,26 @@
 project(opm-parser-eclipse CXX)
 
-add_executable(genkw Parser/createDefaultKeywordList.cpp
-                     Deck/Deck.cpp
-                     Deck/DeckItem.cpp
-                     Deck/DeckKeyword.cpp
-                     Deck/DeckRecord.cpp
-                     Generator/KeywordGenerator.cpp
-                     Generator/KeywordLoader.cpp
-                     Parser/MessageContainer.cpp
-                     Parser/ParseContext.cpp
-                     Parser/ParserEnums.cpp
-                     Parser/ParserItem.cpp
-                     Parser/ParserKeyword.cpp
-                     Parser/ParserRecord.cpp
-                     RawDeck/RawKeyword.cpp
-                     RawDeck/RawRecord.cpp
-                     RawDeck/StarToken.cpp
-                     Units/Dimension.cpp
-                     Units/UnitSystem.cpp
-                     Utility/Stringview.cpp
+set(genkw_SOURCES Parser/createDefaultKeywordList.cpp
+                  Deck/Deck.cpp
+                  Deck/DeckItem.cpp
+                  Deck/DeckKeyword.cpp
+                  Deck/DeckRecord.cpp
+                  Generator/KeywordGenerator.cpp
+                  Generator/KeywordLoader.cpp
+                  Parser/MessageContainer.cpp
+                  Parser/ParseContext.cpp
+                  Parser/ParserEnums.cpp
+                  Parser/ParserItem.cpp
+                  Parser/ParserKeyword.cpp
+                  Parser/ParserRecord.cpp
+                  RawDeck/RawKeyword.cpp
+                  RawDeck/RawRecord.cpp
+                  RawDeck/StarToken.cpp
+                  Units/Dimension.cpp
+                  Units/UnitSystem.cpp
+                  Utility/Stringview.cpp
 )
+add_executable(genkw ${genkw_SOURCES})
 
 target_link_libraries(genkw opmjson ecl boost_regex)
 target_include_directories(genkw PRIVATE include)
@@ -42,8 +43,7 @@ add_custom_command(
 )
 
 #-----------------------------------------------------------------
-
-add_library(opmparser Deck/Deck.cpp
+set(opmparser_SOURCES Deck/Deck.cpp
                       Deck/DeckItem.cpp
                       Deck/DeckKeyword.cpp
                       Deck/DeckRecord.cpp
@@ -124,6 +124,8 @@ add_library(opmparser Deck/Deck.cpp
                       ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp
 )
 
+add_library(opmparser ${opmparser_SOURCES})
+
 target_link_libraries(opmparser PUBLIC opmjson
                                        ecl
                                        boost_filesystem
@@ -137,6 +139,21 @@ target_include_directories(opmparser
             $<INSTALL_INTERFACE:include>
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
 )
+
+set(opmparser_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/include
+                       ${CMAKE_CURRENT_BINARY_DIR}/include
+                       ${Boost_INCLUDE_DIRS})
+
+list(APPEND opmparser_SOURCES ${genkw_SOURCES})
+list(REMOVE_DUPLICATES opmparser_SOURCES)
+foreach(src ${opmparser_SOURCES})
+  if (src MATCHES "^/")
+    list(APPEND opmparser_SRC ${src})
+  else()
+    list(APPEND opmparser_SRC ${CMAKE_CURRENT_SOURCE_DIR}/${src})
+  endif()
+endforeach()
+add_static_analysis_tests(opmparser_SRC opmparser_INCLUDES)
 
 install(TARGETS opmparser
         EXPORT  opm-parser-config
