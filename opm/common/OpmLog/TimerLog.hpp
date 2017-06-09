@@ -39,8 +39,8 @@ public:
     static const int64_t StartTimer = 4096;
     static const int64_t StopTimer  = 8192;
 
-    TimerLog(const std::string& logFile);
-    TimerLog(std::ostream& os);
+    explicit TimerLog(const std::string& logFile);
+    explicit TimerLog(std::ostream& os);
 
     void clear();
     ~TimerLog() {};

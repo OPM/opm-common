@@ -62,7 +62,7 @@ namespace Opm
         {
         }
 
-        MessageLimiter(const int tag_limit, const std::map<int64_t, int> category_limits)
+        MessageLimiter(const int tag_limit, const std::map<int64_t, int>& category_limits)
             : tag_limit_(tag_limit < 0 ? NoLimit : tag_limit),
               category_limits_(category_limits)
         {

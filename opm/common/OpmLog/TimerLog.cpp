@@ -32,11 +32,13 @@ namespace Opm {
 TimerLog::TimerLog(const std::string& logFile) : StreamLog( logFile , StopTimer | StartTimer )
 {
     m_work.precision(8);
+    m_start = 0;
 }
 
 TimerLog::TimerLog(std::ostream& os) : StreamLog( os , StopTimer | StartTimer )
 {
     m_work.precision(8);
+    m_start = 0;
 }
 
 

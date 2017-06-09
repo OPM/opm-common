@@ -64,7 +64,7 @@ namespace Opm
         }
 
 
-        SimpleMessageFormatter(const bool use_color_coding)
+        explicit SimpleMessageFormatter(const bool use_color_coding)
             : use_color_coding_(use_color_coding)
         {
             prefix_flag_ = Log::MessageType::Warning + Log::MessageType::Error 
