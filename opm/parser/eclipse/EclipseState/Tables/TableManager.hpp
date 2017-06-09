@@ -54,7 +54,7 @@ namespace Opm {
 
     class TableManager {
     public:
-        TableManager( const Deck& deck );
+        explicit TableManager( const Deck& deck );
 
         const TableContainer& getTables( const std::string& tableName ) const;
         const TableContainer& operator[](const std::string& tableName) const;

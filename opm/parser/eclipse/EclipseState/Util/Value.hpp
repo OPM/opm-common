@@ -46,7 +46,7 @@ private:
 
 public:
 
-    Value(const std::string& name) :
+    explicit Value(const std::string& name) :
         m_name( name ),
         m_initialized( false )
     { }

@@ -37,7 +37,7 @@ namespace Opm {
 
     namespace GroupInjection {
         struct InjectionData {
-            InjectionData( const TimeMap& );
+            explicit InjectionData( const TimeMap& );
 
             DynamicState< Phase > phase;
             DynamicState< GroupInjection::ControlEnum > controlMode;
@@ -52,7 +52,7 @@ namespace Opm {
 
     namespace GroupProduction {
         struct ProductionData {
-            ProductionData( const TimeMap& );
+            explicit ProductionData( const TimeMap& );
 
             DynamicState< GroupProduction::ControlEnum > controlMode;
             DynamicState< GroupProductionExceedLimit::ActionEnum > exceedAction;

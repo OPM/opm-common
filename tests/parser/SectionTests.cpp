@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(SCHEDULESection_NotTerminated) {
 
 BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
 
-    ParseContext mode = { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
     Parser parser;
 
     const std::string minimal = "RUNSPEC\n"
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(Section_ValidDecks) {
 BOOST_AUTO_TEST_CASE(Section_InvalidDecks) {
 
     Parser parser;
-    ParseContext mode = { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
+    ParseContext mode { { { ParseContext::PARSE_UNKNOWN_KEYWORD, InputError::IGNORE } } };
 
     const std::string keyword_before_RUNSPEC =
                                 "WWCT \n /\n"

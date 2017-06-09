@@ -295,7 +295,7 @@ namespace Opm {
         public:
 
             RestartSchedule() = default;
-            RestartSchedule( size_t sched_restart);
+            explicit RestartSchedule( size_t sched_restart);
             RestartSchedule( size_t step, size_t b, size_t freq);
             bool writeRestartFile( size_t timestep , const TimeMap& timemap) const;
             bool operator!=(const RestartSchedule& rhs) const;

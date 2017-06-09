@@ -28,7 +28,7 @@ namespace Opm {
 
     class MiscTable : public SimpleTable {
     public:
-        MiscTable( const DeckItem& item );
+        explicit MiscTable( const DeckItem& item );
 
         const TableColumn& getSolventFractionColumn() const;
         const TableColumn& getMiscibilityColumn() const;

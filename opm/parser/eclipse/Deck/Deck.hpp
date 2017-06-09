@@ -97,7 +97,7 @@ namespace Opm {
             const std::vector< size_t >& offsets( const std::string& ) const;
 
             DeckView( const_iterator first, const_iterator last );
-            DeckView( std::pair< const_iterator, const_iterator > );
+            explicit DeckView( std::pair< const_iterator, const_iterator > );
 
         private:
             const_iterator first;

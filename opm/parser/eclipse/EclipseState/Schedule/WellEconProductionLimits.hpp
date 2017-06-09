@@ -30,7 +30,7 @@ namespace Opm {
 
     class WellEconProductionLimits{
     public:
-        WellEconProductionLimits(const DeckRecord& record);
+        explicit WellEconProductionLimits(const DeckRecord& record);
         WellEconProductionLimits();
 
         // TODO: not handling things related to m_secondary_max_water_cut

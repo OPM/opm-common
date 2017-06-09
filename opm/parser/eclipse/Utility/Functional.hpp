@@ -195,7 +195,7 @@ namespace fun {
      */
     class iota {
         public:
-            iota( int end );
+            explicit iota( int end );
             iota( int begin, int end );
 
             class const_iterator {
@@ -217,7 +217,7 @@ namespace fun {
                     bool operator!=( const const_iterator& rhs ) const;
 
                 private:
-                    const_iterator( int );
+                    explicit const_iterator( int );
                     int value;
 
                     friend class iota;

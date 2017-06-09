@@ -366,10 +366,10 @@ RPTSCHED( const DeckKeyword& keyword ) {
     auto mnemonics = RPT( keyword, is_RPTSCHED_mnemonic, RPTSCHED_integer );
 
     if( mnemonics.count( "NOTHING" ) )
-        return { std::move( mnemonics ), { 0 } };
+        return { std::move( mnemonics ), { RestartSchedule(0) } };
 
     if( mnemonics.count( "RESTART" ) )
-        return { std::move( mnemonics ), size_t( mnemonics.at( "RESTART" ) ) };
+        return { std::move( mnemonics ), RestartSchedule( size_t( mnemonics.at( "RESTART" )) ) };
 
     return { std::move( mnemonics ), {} };
 }

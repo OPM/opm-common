@@ -72,7 +72,7 @@ namespace Opm {
                        const UnitSystem*  deckUnitSystem,
                        std::vector< SupportedKeywordInfo >&& supportedKeywords);
 
-        GridProperties(const EclipseGrid& eclipseGrid,
+        explicit GridProperties(const EclipseGrid& eclipseGrid,
                        std::vector< SupportedKeywordInfo >&& supportedKeywords);
 
         T convertInputValue(  const GridProperty<T>& property , double doubleValue) const;

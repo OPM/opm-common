@@ -49,7 +49,7 @@ namespace Opm {
         { }
 
 
-        Tabdims(const Deck& deck) :
+        explicit Tabdims(const Deck& deck) :
             Tabdims()
         {
             if (deck.hasKeyword("TABDIMS")) {

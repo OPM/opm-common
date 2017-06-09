@@ -30,11 +30,11 @@ namespace fun {
     }
 
     iota::const_iterator iota::begin() const {
-        return { first };
+        return const_iterator{ first };
     }
 
     iota::const_iterator iota::end() const {
-        return { last };
+        return const_iterator{ last };
     }
 
     int iota::const_iterator::operator*() const {

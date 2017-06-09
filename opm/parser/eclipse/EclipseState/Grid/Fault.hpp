@@ -32,7 +32,7 @@ namespace Opm {
 
 class Fault {
 public:
-    Fault(const std::string& faultName);
+    explicit Fault(const std::string& faultName);
 
     const  std::string& getName() const;
     void   setTransMult(double transMult);

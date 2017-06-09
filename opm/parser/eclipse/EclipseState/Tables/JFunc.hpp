@@ -32,7 +32,7 @@ public:
     enum class Flag { BOTH, WATER, GAS };
     enum class Direction { XY, X, Y, Z };
 
-    JFunc(const Deck& deck);
+    explicit JFunc(const Deck& deck);
     double alphaFactor() const;
     double betaFactor() const;
     double goSurfaceTension() const;

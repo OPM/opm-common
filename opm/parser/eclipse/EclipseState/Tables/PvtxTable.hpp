@@ -112,7 +112,7 @@ The first row actually corresponds to saturated values.
         static size_t numTables( const DeckKeyword& keyword);
         static std::vector<std::pair<size_t , size_t> > recordRanges( const DeckKeyword& keyword);
 
-        PvtxTable(const std::string& columnName);
+        explicit PvtxTable(const std::string& columnName);
         const SimpleTable& getUnderSaturatedTable(size_t tableNumber) const;
         void init(const DeckKeyword& keyword, size_t tableIdx);
         size_t size() const;

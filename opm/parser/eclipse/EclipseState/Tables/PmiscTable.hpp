@@ -29,7 +29,7 @@ namespace Opm {
     class PmiscTable : public SimpleTable {
     public:
 
-        PmiscTable( const DeckItem& item );
+        explicit PmiscTable( const DeckItem& item );
 
         const TableColumn& getOilPhasePressureColumn() const;
         const TableColumn& getMiscibilityColumn() const;

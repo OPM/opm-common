@@ -29,7 +29,7 @@ namespace Opm {
     class InitConfig {
 
     public:
-        InitConfig(const Deck& deck);
+        explicit InitConfig(const Deck& deck);
 
         void setRestart( const std::string& root, int step);
         bool restartRequested() const;

@@ -47,7 +47,7 @@ namespace Opm {
 
     class Parser {
     public:
-        Parser(bool addDefault = true);
+        explicit Parser(bool addDefault = true);
 
         static std::string stripComments(const std::string& inputString);
 

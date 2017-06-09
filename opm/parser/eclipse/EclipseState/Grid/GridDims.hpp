@@ -32,11 +32,11 @@ namespace Opm {
     {
     public:
 
-        GridDims(std::array<int, 3> xyz);
+        explicit GridDims(std::array<int, 3> xyz);
 
         GridDims(size_t nx, size_t ny, size_t nz);
 
-        GridDims(const Deck& deck);
+        explicit GridDims(const Deck& deck);
 
         size_t getNX() const;
 
