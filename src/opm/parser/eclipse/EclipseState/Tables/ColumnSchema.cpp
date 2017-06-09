@@ -26,7 +26,8 @@ namespace Opm {
     ColumnSchema::ColumnSchema(const std::string& nm, Table::ColumnOrderEnum order, Table::DefaultAction defaultAction) :
         m_name( nm ),
         m_order( order ),
-        m_defaultAction( defaultAction )
+        m_defaultAction( defaultAction ),
+        m_defaultValue ( 0.0 )
     {
 
     }
