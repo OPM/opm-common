@@ -120,7 +120,9 @@ namespace Opm {
             using iterator = std::vector< DeckKeyword >::iterator;
 
             Deck();
+            // cppcheck-suppress noExplicitConstructor
             Deck( std::initializer_list< DeckKeyword > );
+            // cppcheck-suppress noExplicitConstructor
             Deck( std::initializer_list< std::string > );
             void addKeyword( DeckKeyword&& keyword );
             void addKeyword( const DeckKeyword& keyword );

@@ -28,6 +28,7 @@ namespace Opm {
     class CompletionSet {
     public:
         CompletionSet() = default;
+        // cppcheck-suppress noExplicitConstructor
         CompletionSet( std::initializer_list< Completion > );
 
         using const_iterator = std::vector< Completion >::const_iterator;

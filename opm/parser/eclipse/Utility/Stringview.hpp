@@ -52,8 +52,10 @@ namespace Opm {
             inline string_view() = default;
             inline string_view( const_iterator, const_iterator );
             inline string_view( const_iterator, size_t );
+            //cppcheck-suppress noExplicitConstructor
             inline string_view( const std::string& );
             inline string_view( const std::string&, size_t );
+            //cppcheck-suppress noExplicitConstructor
             inline string_view( const char* );
 
             inline const_iterator begin() const;
