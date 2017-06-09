@@ -77,11 +77,11 @@ namespace Opm {
 
             opt mask = static_cast< opt >( 0 );
 
-            double wat;
-            double oil;
-            double gas;
-            double polymer;
-            double solvent;
+            double wat = 0.0;
+            double oil = 0.0;
+            double gas = 0.0;
+            double polymer = 0.0;
+            double solvent = 0.0;
     };
 
     struct Completion {
