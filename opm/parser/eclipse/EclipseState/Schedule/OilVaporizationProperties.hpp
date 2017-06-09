@@ -34,6 +34,7 @@ namespace Opm
      */
     class OilVaporizationProperties {
     public:
+        OilVaporizationProperties() = default;
         static OilVaporizationProperties createDRSDT(double maxDRSDT, std::string option);
         static OilVaporizationProperties createDRVDT(double maxDRVDT);
         static OilVaporizationProperties createVAPPARS(double vap1, double vap2);
