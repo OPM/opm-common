@@ -123,7 +123,7 @@ namespace Opm {
         }
     }
 
-    void Tuning::setTuningInitialValue(const std::string tuningItem, double value, bool resetVector) {
+    void Tuning::setTuningInitialValue(const std::string& tuningItem, double value, bool resetVector) {
         /*The following code diverges from coding standard to improve readabillity*/
         if        ("TSINIT" == tuningItem)  {  m_TSINIT.updateInitial(value); }  //RECORD 1
         else if   ("TSMAXZ" == tuningItem)  {  m_TSMAXZ.updateInitial(value); }
@@ -162,7 +162,7 @@ namespace Opm {
         }
     }
 
-    void Tuning::setTuningInitialValue(const std::string tuningItem, int value, bool resetVector) {
+    void Tuning::setTuningInitialValue(const std::string& tuningItem, int value, bool resetVector) {
         /*The following code diverges from coding standard to improve readabillity*/
         if        ("TRWGHT" == tuningItem)  { m_TRWGHT.updateInitial(value); }  //RECORD 2
 

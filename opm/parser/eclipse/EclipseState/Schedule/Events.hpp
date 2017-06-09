@@ -105,7 +105,7 @@ namespace Opm
 
     class Events {
     public:
-        Events(const TimeMap& timeMap);
+        explicit Events(const TimeMap& timeMap);
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
         bool hasEvent(uint64_t eventMask, size_t reportStep) const;
     private:

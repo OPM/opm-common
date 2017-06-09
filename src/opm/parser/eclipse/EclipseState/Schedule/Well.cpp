@@ -132,7 +132,7 @@ namespace Opm {
         return i.surfaceInjectionRate;
     }
 
-    bool Well::setProductionProperties(size_t timeStep , const WellProductionProperties newProperties) {
+    bool Well::setProductionProperties(size_t timeStep , const WellProductionProperties& newProperties) {
         if (isInjector(timeStep))
             switchToProducer( timeStep );
 
@@ -152,7 +152,7 @@ namespace Opm {
         return m_productionProperties.at(timeStep);
     }
 
-    bool Well::setInjectionProperties(size_t timeStep , const WellInjectionProperties newProperties) {
+    bool Well::setInjectionProperties(size_t timeStep , const WellInjectionProperties& newProperties) {
         if (isProducer(timeStep))
             switchToInjector( timeStep );
 
@@ -172,7 +172,7 @@ namespace Opm {
         return m_injectionProperties.at(timeStep);
     }
 
-    bool Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties newProperties) {
+    bool Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties& newProperties) {
         m_isProducer.update(timeStep , false);
         bool update = m_polymerProperties.update(timeStep, newProperties);
         if (update)

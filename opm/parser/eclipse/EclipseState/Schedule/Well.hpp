@@ -109,15 +109,15 @@ namespace Opm {
         bool operator==(const Well&) const;
         bool operator!=(const Well&) const;
 
-        bool                            setProductionProperties(size_t timeStep , const WellProductionProperties properties);
+        bool                            setProductionProperties(size_t timeStep , const WellProductionProperties& properties);
         WellProductionProperties        getProductionPropertiesCopy(size_t timeStep) const;
         const WellProductionProperties& getProductionProperties(size_t timeStep)  const;
 
-        bool                           setInjectionProperties(size_t timeStep , const WellInjectionProperties properties);
+        bool                           setInjectionProperties(size_t timeStep , const WellInjectionProperties& properties);
         WellInjectionProperties        getInjectionPropertiesCopy(size_t timeStep) const;
         const WellInjectionProperties& getInjectionProperties(size_t timeStep) const;
 
-        bool                           setPolymerProperties(size_t timeStep , const WellPolymerProperties properties);
+        bool                           setPolymerProperties(size_t timeStep , const WellPolymerProperties& properties);
         WellPolymerProperties          getPolymerPropertiesCopy(size_t timeStep) const;
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 

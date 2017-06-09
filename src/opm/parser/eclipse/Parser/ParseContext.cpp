@@ -46,7 +46,7 @@ namespace Opm {
       after the hawrdwired settings.
     */
 
-    ParseContext::ParseContext(const std::vector<std::pair<std::string , InputError::Action>> initial) {
+    ParseContext::ParseContext(const std::vector<std::pair<std::string , InputError::Action>>& initial) {
         initDefault();
 
         for (const auto& pair : initial)
