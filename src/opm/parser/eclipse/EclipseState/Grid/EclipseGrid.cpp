@@ -345,16 +345,16 @@ namespace Opm {
         const std::vector<double>& dzv     = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
         const std::vector<double>& tops    = deck.getKeyword<ParserKeywords::TOPS>().getSIDoubleData();
 
-        if (drv.size() != dims[0])
+        if (drv.size() != static_cast<size_t>(dims[0]))
             throw std::invalid_argument("DRV keyword should have exactly " + std::to_string( dims[0] ) + " elements");
 
-        if (dthetav.size() != dims[1])
+        if (dthetav.size() != static_cast<size_t>(dims[1]))
             throw std::invalid_argument("DTHETAV keyword should have exactly " + std::to_string( dims[1] ) + " elements");
 
-        if (dzv.size() != dims[2])
+        if (dzv.size() != static_cast<size_t>(dims[2]))
             throw std::invalid_argument("DZV keyword should have exactly " + std::to_string( dims[2] ) + " elements");
 
-        if (tops.size() != dims[0] * dims[1])
+        if (tops.size() != static_cast<size_t>(dims[0] * dims[1]))
             throw std::invalid_argument("TOPS keyword should have exactly " + std::to_string( dims[0] * dims[1] ) + " elements");
 
         {
@@ -382,12 +382,12 @@ namespace Opm {
             {
                 std::vector<double> zk(dims[2]);
                 zk[0] = 0;
-                for (size_t k = 1; k < dims[2]; k++)
+                for (int k = 1; k < dims[2]; k++)
                     zk[k] = zk[k - 1] + dzv[k - 1];
 
-                for (size_t k=  0; k < dims[2]; k++) {
-                    for (size_t j=0; j < dims[1]; j++) {
-                        for (size_t i = 0; i < dims[0]; i++) {
+                for (int k = 0; k < dims[2]; k++) {
+                    for (int j = 0; j < dims[1]; j++) {
+                        for (int i = 0; i < dims[0]; i++) {
                             size_t tops_value = tops[ i + dims[0] * j];
                             for (size_t c=0; c < 4; c++) {
                                 zcorn[ zm.index(i,j,k,c) ]     = zk[k] + tops_value;
@@ -403,22 +403,22 @@ namespace Opm {
                 double z1 = *std::min_element( zcorn.begin() , zcorn.end());
                 double z2 = *std::max_element( zcorn.begin() , zcorn.end());
                 ri[0] = deck.getKeyword<ParserKeywords::INRAD>().getRecord(0).getItem(0).getSIDouble( 0 );
-                for (size_t i = 1; i <= dims[0]; i++)
+                for (int i = 1; i <= dims[0]; i++)
                     ri[i] = ri[i - 1] + drv[i - 1];
 
                 tj[0] = 0;
-                for (size_t j = 1; j <= dims[1]; j++)
+                for (int j = 1; j <= dims[1]; j++)
                     tj[j] = tj[j - 1] + dthetav[j - 1];
 
 
-                for (size_t j = 0; j <= dims[1]; j++) {
+                for (int j = 0; j <= dims[1]; j++) {
                     /*
                       The theta value is supposed to go counterclockwise, starting at 'twelve o clock'.
                     */
                     double t = M_PI * (90 - tj[j]) / 180;
                     double c = cos( t );
                     double s = sin( t );
-                    for (size_t i=0; i <= dims[0]; i++) {
+                    for (int i = 0; i <= dims[0]; i++) {
                         double r = ri[i];
                         double x = r*c;
                         double y = r*s;

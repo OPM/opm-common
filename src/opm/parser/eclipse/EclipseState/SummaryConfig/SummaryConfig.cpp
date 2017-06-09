@@ -275,7 +275,7 @@ inline void keywordR( std::vector< ERT::smspec_node >& list,
     }
 
     for( const int region : regions ) {
-        if (region >= 1 && region <= numfip)
+        if (region >= 1 && region <= static_cast<int>(numfip))
             list.emplace_back( keyword.name(), dims.data(), region );
         else
             throw std::invalid_argument("Illegal region value: " + std::to_string( region ));
