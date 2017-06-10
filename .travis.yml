@@ -22,6 +22,11 @@ addons:
       - cmake
       - cmake-data
 
+env:
+  global:
+  - TRAVIS_CI=1
+
+
 before_script:
     - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
     - cd ..
