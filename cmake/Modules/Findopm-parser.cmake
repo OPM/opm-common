@@ -18,7 +18,8 @@ else ()
   set (OPM_PARSER_QUIET "")
 endif ()
 
-find_package(opm-parser CONFIG)
+find_package(opm-parser CONFIG
+                        NO_CMAKE_PACKAGE_REGISTRY)
 if (opm-parser_FOUND)
     find_package(ecl REQUIRED)
     set(HAVE_OPM_PARSER 1)
