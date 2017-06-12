@@ -292,7 +292,7 @@ endif ()
 foreach (deck ${OPM_DATA_ROOT}/norne/NORNE_ATW2013.DATA
               ${OPM_DATA_ROOT}/solvent_test_suite/SPE1CASE2_SOLVENT.DATA
               ${OPM_DATA_ROOT}/solvent_test_suite/SPE9_CP_SOLVENT_CO2.DATA
-              ${OPM_DATA_ROOT}/solvent_test_suite/SPE5CASE1.DATA
+              ${OPM_DATA_ROOT}/spe5/SPE5CASE1.DATA
               ${OPM_DATA_ROOT}/polymer_simple2D/2D_THREEPHASE_POLY_HETER.DATA
               ${OPM_DATA_ROOT}/spe1/SPE1CASE1.DATA
               ${OPM_DATA_ROOT}/spe1/SPE1CASE2.DATA
