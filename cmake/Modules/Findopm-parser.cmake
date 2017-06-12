@@ -18,31 +18,6 @@ else ()
   set (OPM_PARSER_QUIET "")
 endif ()
 
-find_package(opm-parser CONFIG)
-if (opm-parser_FOUND)
-    find_package(ecl REQUIRED)
-    set(HAVE_OPM_PARSER 1)
-    # setting HAVE_ERT is a mega hack here, but some downstreams require it.
-    # Eventually projets should move on to properly handle dependencies and
-    # configurations, and Findopm-parser be deprecated
-    set(HAVE_ERT 1)
-    set(opm-parser_CONFIG_VARS HAVE_OPM_PARSER HAVE_REGEX HAVE_ERT)
-    set(opm-parser_LIBRARIES opmparser)
-
-    find_package_handle_standard_args(opm-parser
-        DEFAULT_MSG
-        opm-parser_LIBRARIES HAVE_OPM_PARSER HAVE_ERT
-    )
-    return ()
-endif ()
-
-# use lowercase versions of the variables if those are set
-if (opm-parser_ROOT)
-  set (OPM_PARSER_ROOT ${opm-parser_ROOT})
-endif ()
-if (opm_ROOT)
-  set (OPM_ROOT ${opm_ROOT})
-endif ()
 
 # inherit "suite" root if not specifically set for this library
 if ((NOT OPM_PARSER_ROOT) AND OPM_ROOT)
@@ -66,6 +41,33 @@ else ()
     "${PROJECT_BINARY_DIR}/../opm-parser"
     "${PROJECT_BINARY_DIR}/../opm-parser${BUILD_DIR_SUFFIX}"
     "${PROJECT_BINARY_DIR}/../../opm-parser/${BUILD_DIR_SUFFIX}")
+endif ()
+
+
+find_package(opm-parser CONFIG HINTS ${_opm_parser_build})
+if (opm-parser_FOUND)
+    find_package(ecl REQUIRED)
+    set(HAVE_OPM_PARSER 1)
+    # setting HAVE_ERT is a mega hack here, but some downstreams require it.
+    # Eventually projets should move on to properly handle dependencies and
+    # configurations, and Findopm-parser be deprecated
+    set(HAVE_ERT 1)
+    set(opm-parser_CONFIG_VARS HAVE_OPM_PARSER HAVE_REGEX HAVE_ERT)
+    set(opm-parser_LIBRARIES opmparser)
+
+    find_package_handle_standard_args(opm-parser
+        DEFAULT_MSG
+        opm-parser_LIBRARIES HAVE_OPM_PARSER HAVE_ERT
+    )
+    return ()
+endif ()
+
+# use lowercase versions of the variables if those are set
+if (opm-parser_ROOT)
+  set (OPM_PARSER_ROOT ${opm-parser_ROOT})
+endif ()
+if (opm_ROOT)
+  set (OPM_ROOT ${opm_ROOT})
 endif ()
 
 # use this header as signature
