@@ -370,6 +370,7 @@ namespace Opm {
         supportedDoubleKeywords.emplace_back( "PRESSURE", 0.0 , "Pressure" );
         supportedDoubleKeywords.emplace_back( "SWAT", 0.0 , "1" );
         supportedDoubleKeywords.emplace_back( "SGAS", 0.0 , "1" );
+        supportedDoubleKeywords.emplace_back( "SSOL", 0.0 , "1" );
         supportedDoubleKeywords.emplace_back( "SPOLY", 0.0 , "Density" );
         supportedDoubleKeywords.emplace_back( "RS",  0.0, "1" );
         supportedDoubleKeywords.emplace_back( "RV",  0.0, "1" );
