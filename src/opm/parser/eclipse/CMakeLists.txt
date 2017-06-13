@@ -22,7 +22,7 @@ set(genkw_SOURCES Parser/createDefaultKeywordList.cpp
 )
 add_executable(genkw ${genkw_SOURCES})
 
-target_link_libraries(genkw opmjson ecl boost_regex)
+target_link_libraries(genkw opmjson ecl ${boost_regex})
 target_include_directories(genkw PRIVATE include)
 
 file(GLOB_RECURSE keyword_templates share/keywords/*)
@@ -128,10 +128,10 @@ add_library(opmparser ${opmparser_SOURCES})
 
 target_link_libraries(opmparser PUBLIC opmjson
                                        ecl
-                                       boost_filesystem
-                                       boost_system
-                                       boost_regex
-                                       boost_date_time)
+                                       ${boost_filesystem}
+                                       ${boost_system}
+                                       ${boost_regex}
+                                       ${boost_date_time})
 target_compile_definitions(opmparser PRIVATE -DOPM_PARSER_DECK_API=1)
 target_include_directories(opmparser
     PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
