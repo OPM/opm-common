@@ -61,4 +61,3 @@ if (opm-parser_FOUND)
     )
 endif ()
 
-mark_as_advanced(opm-parser_LIBRARIES)
