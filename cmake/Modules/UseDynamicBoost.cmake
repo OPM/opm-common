@@ -1,6 +1,4 @@
-if (NOT Boost_UNIT_TEST_FRAMEWORK_FOUND)
-  find_package (Boost 1.44.0 COMPONENTS unit_test_framework QUIET)
-endif ()
+find_package (Boost 1.44.0 COMPONENTS unit_test_framework QUIET)
 
 if (Boost_UNIT_TEST_FRAMEWORK_FOUND)
   # setup to do a test compile
