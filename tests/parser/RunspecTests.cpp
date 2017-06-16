@@ -286,3 +286,54 @@ BOOST_AUTO_TEST_CASE( SWATINIT ) {
     BOOST_CHECK( !endscale.irreversible() );
 
 }
+
+
+BOOST_AUTO_TEST_CASE(Solvent) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    GAS
+    WATER
+    SOLVENT
+    )";
+
+    Parser parser;
+    ParseContext parseContext;
+
+    auto deck = parser.parseString(input, parseContext);
+
+    Runspec runspec( deck );
+    const auto& phases = runspec.phases();
+    BOOST_CHECK_EQUAL( 4, phases.size() );
+    BOOST_CHECK( phases.active( Phase::OIL ) );
+    BOOST_CHECK( phases.active( Phase::GAS ) );
+    BOOST_CHECK( phases.active( Phase::WATER ) );
+    BOOST_CHECK( phases.active( Phase::SOLVENT ) );
+
+
+}
+
+BOOST_AUTO_TEST_CASE(Polymer) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    GAS
+    WATER
+    POLYMER
+    )";
+
+    Parser parser;
+    ParseContext parseContext;
+
+    auto deck = parser.parseString(input, parseContext);
+
+    Runspec runspec( deck );
+    const auto& phases = runspec.phases();
+    BOOST_CHECK_EQUAL( 4, phases.size() );
+    BOOST_CHECK( phases.active( Phase::OIL ) );
+    BOOST_CHECK( phases.active( Phase::GAS ) );
+    BOOST_CHECK( phases.active( Phase::WATER ) );
+    BOOST_CHECK( phases.active( Phase::POLYMER ) );
+
+
+}

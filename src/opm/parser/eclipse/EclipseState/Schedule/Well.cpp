@@ -113,6 +113,8 @@ namespace Opm {
             case Phase::GAS:   return p.GasRate;
             case Phase::SOLVENT:
                 throw std::invalid_argument( "Production of 'SOLVENT' requested." );
+            case Phase::POLYMER:
+                throw std::invalid_argument( "Production of 'POLYMER' requested." );
         }
 
         throw std::logic_error( "Unreachable state. Invalid Phase value. "
