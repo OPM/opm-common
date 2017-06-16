@@ -47,6 +47,9 @@ endif ()
 find_package(opm-parser CONFIG HINTS ${_opm_parser_build})
 if (opm-parser_FOUND)
     find_package(ecl REQUIRED)
+    find_package(Boost 1.44.0
+                 COMPONENTS regex filesystem system date_time
+                 REQUIRED)
     set(HAVE_OPM_PARSER 1)
     # setting HAVE_ERT is a mega hack here, but some downstreams require it.
     # Eventually projets should move on to properly handle dependencies and
