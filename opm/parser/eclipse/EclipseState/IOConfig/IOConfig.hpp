@@ -22,8 +22,6 @@
 
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-
 namespace Opm {
 
     class Deck;
@@ -133,9 +131,6 @@ namespace Opm {
         void overrideNOSIM(bool nosim);
 
 
-
-        boost::gregorian::date getTimestepDate(size_t timestep) const;
-
         std::string getRestartFileName(const std::string& restart_base, int report_step, bool output) const;
 
         bool getOutputEnabled() const;
@@ -161,7 +156,6 @@ namespace Opm {
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
     private:
-        TimeMap m_timemap;
         bool            m_write_INIT_file = false;
         bool            m_write_EGRID_file = true;
         bool            m_UNIFIN = false;
@@ -178,7 +172,6 @@ namespace Opm {
 
         IOConfig( const GRIDSection&,
                   const RUNSPECSection&,
-                  TimeMap,
                   bool nosim,
                   const std::string& input_path );
 

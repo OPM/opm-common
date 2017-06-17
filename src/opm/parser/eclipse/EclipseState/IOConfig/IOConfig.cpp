@@ -58,13 +58,11 @@ namespace Opm {
     IOConfig::IOConfig( const Deck& deck ) :
         IOConfig( GRIDSection( deck ),
                   RUNSPECSection( deck ),
-                  TimeMap( deck ),
                   deck.hasKeyword("NOSIM"),
                   deck.getDataFile() )
     {}
 
     IOConfig::IOConfig( const std::string& input_path ) :
-        m_timemap( TimeMap{ Deck{} } ),
         m_deck_filename( input_path ),
         m_output_dir( outputdir( input_path ) ),
         m_base_name( basename( input_path ) )
@@ -97,10 +95,8 @@ namespace Opm {
 
     IOConfig::IOConfig( const GRIDSection& grid,
                         const RUNSPECSection& runspec,
-                        TimeMap timemap,
                         bool nosim,
                         const std::string& input_path ) :
-        m_timemap( std::move( timemap ) ),
         m_write_INIT_file( grid.hasKeyword( "INIT" ) ),
         m_write_EGRID_file( write_egrid_file( grid ) ),
         m_UNIFIN( runspec.hasKeyword( "UNIFIN" ) ),
@@ -165,13 +161,6 @@ namespace Opm {
 
     bool IOConfig::getFMTOUT() const {
         return m_FMTOUT;
-    }
-
-
-
-    boost::gregorian::date IOConfig::getTimestepDate(size_t reportStep) const {
-        const auto& time = m_timemap[reportStep];
-        return time.date();
     }
 
 

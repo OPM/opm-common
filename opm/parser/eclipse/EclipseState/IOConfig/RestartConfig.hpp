@@ -332,11 +332,6 @@ namespace Opm {
         void handleSolutionSection(const SOLUTIONSection& solutionSection);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
-        boost::gregorian::date getTimestepDate(size_t reportStep) const {
-            const auto& time = this->m_timemap[reportStep];
-            return time.date();
-        }
-
         RestartSchedule getNode( size_t timestep ) const;
         static std::string getRestartFileName(const std::string& restart_base, int report_step, bool unified, bool fmt_file);
     private:
