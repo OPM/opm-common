@@ -96,8 +96,8 @@ BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
     BOOST_CHECK_EQUAL( 3U , timeMap.size());
 
     BOOST_CHECK_THROW( timeMap[3] , std::invalid_argument );
-    BOOST_CHECK_EQUAL( timeMap[0] , boost::posix_time::ptime(boost::posix_time::ptime(startDate)));
-    BOOST_CHECK_EQUAL( timeMap[2] , boost::posix_time::ptime(boost::posix_time::ptime( boost::gregorian::date( 2010 , boost::gregorian::Jan , 2 ))));
+    BOOST_CHECK_EQUAL( timeMap[0] , Opm::TimeMap::mkdate(2010, 1, 1 ));
+    BOOST_CHECK_EQUAL( timeMap[2] , Opm::TimeMap::mkdate(2010, 1, 2 ));
 }
 
 
@@ -342,5 +342,10 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
             BOOST_CHECK_EQUAL(false, tmap.isTimestepInFirstOfMonthsYearsSequence(timestep, true, false));
         }
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(mkdate) {
+    BOOST_CHECK_THROW( Opm::TimeMap::mkdate( 2010 , 0 , 0  ) , std::invalid_argument);
 }
 

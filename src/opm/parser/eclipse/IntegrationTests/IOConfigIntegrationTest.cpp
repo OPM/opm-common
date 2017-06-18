@@ -49,8 +49,12 @@ inline void verifyRestartConfig( const TimeMap& tm, const RestartConfig& rst, st
 
         BOOST_CHECK_EQUAL( save, rst.getWriteRestartFile( report_step ) );
         if (save) {
-            boost::posix_time::ptime ptime = tm[report_step];
-            BOOST_CHECK_EQUAL( report_date, ptime.date() );
+            std::time_t t = tm[report_step];
+            boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
+            boost::posix_time::ptime report_date_ptime(report_date);
+            boost::posix_time::time_duration::sec_type duration = (report_date_ptime - epoch).total_seconds();
+
+            BOOST_CHECK_EQUAL( duration , t );
         }
     }
 }
