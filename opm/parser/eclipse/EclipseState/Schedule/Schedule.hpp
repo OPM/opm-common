@@ -60,7 +60,7 @@ namespace Opm
          * If the input deck does not specify a start time, Eclipse's 1. Jan
          * 1983 is defaulted
          */
-        boost::posix_time::ptime getStartTime() const;
+        time_t getStartTime() const;
         time_t posixStartTime() const;
         time_t posixEndTime() const;
 

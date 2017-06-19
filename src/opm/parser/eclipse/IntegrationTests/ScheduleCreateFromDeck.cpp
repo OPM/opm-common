@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
@@ -54,7 +55,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
     const auto& timeMap = sched.getTimeMap();
-    BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched.getStartTime());
+    BOOST_CHECK_EQUAL(TimeMap::mkdate(2007 , 5 , 10), sched.getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap.size());
     BOOST_CHECK( deck.hasKeyword("NETBALAN") );
 }
@@ -70,7 +71,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_Comments_After_Keywords) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
     const auto& timeMap = sched.getTimeMap();
-    BOOST_CHECK_EQUAL(boost::posix_time::ptime(boost::gregorian::date(2007, boost::gregorian::May, 10)), sched.getStartTime());
+    BOOST_CHECK_EQUAL(TimeMap::mkdate(2007, 5 , 10) , sched.getStartTime());
     BOOST_CHECK_EQUAL(9U, timeMap.size());
 }
 

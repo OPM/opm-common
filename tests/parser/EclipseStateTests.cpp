@@ -26,6 +26,7 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
@@ -201,7 +202,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule) {
     EclipseState state(deck, ParseContext());
     const auto& schedule = state.getSchedule();
 
-    BOOST_CHECK_EQUAL(schedule.getStartTime(), boost::posix_time::ptime(boost::gregorian::date(1998, 3, 8)));
+    BOOST_CHECK_EQUAL(schedule.getStartTime(), TimeMap::mkdate( 1998 , 3 , 8));
 }
 
 

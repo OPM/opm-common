@@ -56,15 +56,6 @@
 
 namespace Opm {
 
-    namespace {
-
-        time_t posixTime( const boost::posix_time::ptime& t) {
-            boost::posix_time::ptime epoch( boost::gregorian::date( 1970, 1, 1 ) );
-            return time_t( ( t - epoch ).total_seconds() );
-        }
-
-    }
-
     Schedule::Schedule( const ParseContext& parseContext,
                         const EclipseGrid& grid,
                         const Eclipse3DProperties& eclipseProperties,
@@ -101,16 +92,16 @@ namespace Opm {
         }
     }
 
-    boost::posix_time::ptime Schedule::getStartTime() const {
-        return m_timeMap.getStartTime(/*timeStepIdx=*/0);
+    std::time_t Schedule::getStartTime() const {
+        return this->posixStartTime( );
     }
 
     time_t Schedule::posixStartTime() const {
-        return posixTime(this->getStartTime());
+        return m_timeMap.getStartTime( 0 );
     }
 
     time_t Schedule::posixEndTime() const {
-        return posixTime( this->m_timeMap.getEndTime() );
+        return this->m_timeMap.getEndTime();
     }
 
     void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid,

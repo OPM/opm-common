@@ -76,12 +76,12 @@ namespace Opm {
     }
 
 
-    boost::posix_time::ptime TimeMap::getStartTime(size_t tStepIdx) const {
-        return m_timeList[tStepIdx];
+    std::time_t TimeMap::getStartTime(size_t tStepIdx) const {
+        return this->operator[]( tStepIdx );
     }
 
-    boost::posix_time::ptime TimeMap::getEndTime() const {
-        return m_timeList.back();
+    std::time_t TimeMap::getEndTime() const {
+        return this->operator[]( this->size( ) - 1);
     }
 
     double TimeMap::getTotalTime() const
