@@ -64,6 +64,9 @@ namespace Opm {
         static boost::posix_time::ptime timeFromEclipse( const DeckRecord& dateRecord);
         static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
         static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
+
+        static std::time_t forward(std::time_t t0, int hours, int minutes, long seconds);
+        static std::time_t forward(std::time_t t0, long seconds);
         static std::time_t mkdate(int year, int month, int day);
     private:
         static const std::map<std::string , boost::gregorian::greg_month>& eclipseMonthNames();

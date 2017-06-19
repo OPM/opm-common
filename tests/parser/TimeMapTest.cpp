@@ -214,70 +214,69 @@ BOOST_AUTO_TEST_CASE( addTSTEPFromWrongKeywordThrows ) {
     BOOST_CHECK_THROW( timeMap.addFromTSTEPKeyword( deckKeyword ) , std::invalid_argument );
 }
 
-//BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
-//    const char *deckData =
-//        "START\n"
-//        " 21 MAY 1981 /\n"
-//        "\n"
-//        "TSTEP\n"
-//        " 1 2 3 4 5 /\n"
-//        "\n"
-//        "DATES\n"
-//        " 1 JAN 1982 /\n"
-//        " 1 JAN 1982 13:55:44 /\n"
-//        " 3 JAN 1982 14:56:45.123 /\n"
-//        "/\n"
-//        "\n"
-//        "TSTEP\n"
-//        " 6 7 /\n";
-//
-//    Opm::Parser parser( true );
-//    auto deck = parser.parseString(deckData, Opm::ParseContext());
-//    Opm::TimeMap tmap(deck);
-//
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/0),
-//                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21)));
-//    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/0), 1*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/1), 1.0*24*60*60);
-//
-//
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/1),
-//                      TimeMap::mkdate( 1981 , 5 , 21 ) + boost::posix_time::time_duration(1*24, 0, 0));
-//
-//    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/1), 2*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/2), (1.0 + 2.0)*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/2),
-//                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
-//                                               boost::posix_time::time_duration((1 + 2)*24, 0, 0)));
-//    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/2), 3*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/3), (1.0 + 2.0 + 3.0)*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/3),
-//                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
-//                                               boost::posix_time::time_duration((1 + 2 + 3)*24, 0, 0)));
-//    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/3), 4*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/4), (1.0 + 2.0 + 3.0 + 4.0)*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/4),
-//                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
-//                                               boost::posix_time::time_duration((1 + 2 + 3 + 4)*24, 0, 0)));
-//    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/4), 5*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(/*timeLevelIdx=*/5), (1.0 + 2.0 + 3.0 + 4.0 + 5.0)*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIdx=*/5),
-//                      boost::posix_time::ptime(boost::gregorian::date(1981, 5, 21),
-//                                               boost::posix_time::time_duration((1 + 2 + 3 + 4 + 5)*24, 0, 0)));
-//    // timestep 5 is the period between the last step specified using
-//    // of the TIMES keyword and the first record of DATES
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIndex=*/6),
-//                      boost::posix_time::ptime(boost::gregorian::date(1982, 1, 1)));
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIndex=*/7),
-//                      boost::posix_time::ptime(boost::gregorian::date(1982, 1, 1),
-//                                               boost::posix_time::time_duration(13, 55, 44)));
-//    BOOST_CHECK_EQUAL(tmap.getStartTime(/*timeLevelIndex=*/8),
-//                      boost::posix_time::ptime(boost::gregorian::date(1982, 1, 3),
-//                                               boost::posix_time::time_duration(14, 56, 45) +
-//                                               boost::posix_time::milliseconds(123)));
-//    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/8), 6*24*60*60);
-//    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(/*index=*/9), 7*24*60*60);
-//}
+BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
+    const char *deckData =
+        "START\n"
+        " 21 MAY 1981 /\n"
+        "\n"
+        "TSTEP\n"
+        " 1 2 3 4 5 /\n"
+        "\n"
+        "DATES\n"
+        " 1 JAN 1982 /\n"
+        " 1 JAN 1982 13:55:44 /\n"
+        " 3 JAN 1982 14:56:45.123 /\n"
+        "/\n"
+        "\n"
+        "TSTEP\n"
+        " 6 7 /\n";
+
+    Opm::Parser parser( true );
+    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    Opm::TimeMap tmap(deck);
+
+    BOOST_CHECK_EQUAL(tmap.getStartTime(0),Opm::TimeMap::mkdate( 1981 , 5 , 21 ));
+    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(0), 1*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(1), 1.0*24*60*60);
+
+
+    BOOST_CHECK_EQUAL(tmap.getStartTime(1),
+                      Opm::TimeMap::forward( Opm::TimeMap::mkdate( 1981 , 5 , 21 ) , 3600*24));
+
+    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(1), 2*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(2), (1.0 + 2.0)*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(2),
+                      Opm::TimeMap::forward( Opm::TimeMap::mkdate( 1981 , 5 , 21 ) , 3*24*3600));
+
+    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(2), 3*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(3), (1.0 + 2.0 + 3.0)*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(3),
+                      Opm::TimeMap::forward( Opm::TimeMap::mkdate( 1981 , 5 , 21 ) , 6*3600*24));
+
+    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(3), 4*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(4), (1.0 + 2.0 + 3.0 + 4.0)*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(4),
+                      Opm::TimeMap::forward( Opm::TimeMap::mkdate( 1981 , 5 , 21 ) , 10*3600*24));
+
+    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(4), 5*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimePassedUntil(5), (1.0 + 2.0 + 3.0 + 4.0 + 5.0)*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getStartTime(5),
+                      Opm::TimeMap::forward( Opm::TimeMap::mkdate( 1981 , 5 , 21 ) , 15*3600*24));
+
+    // timestep 5 is the period between the last step specified using
+    // of the TIMES keyword and the first record of DATES
+    BOOST_CHECK_EQUAL(tmap.getStartTime(6),
+                      Opm::TimeMap::mkdate( 1982 , 1 , 1 ));
+
+    BOOST_CHECK_EQUAL(tmap.getStartTime(7),
+                      Opm::TimeMap::forward( Opm::TimeMap::mkdate( 1982 , 1 , 1 ) , 13,55,44 ));
+
+    BOOST_CHECK_EQUAL(tmap.getStartTime(8),
+                      Opm::TimeMap::forward( Opm::TimeMap::mkdate( 1982 , 1 , 3 ) , 14,56,45));
+
+    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(8), 6*24*60*60);
+    BOOST_CHECK_EQUAL(tmap.getTimeStepLength(9), 7*24*60*60);
+}
 
 
 BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
@@ -349,5 +348,28 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
 
 BOOST_AUTO_TEST_CASE(mkdate) {
     BOOST_CHECK_THROW( Opm::TimeMap::mkdate( 2010 , 0 , 0  ) , std::invalid_argument);
+    std::time_t t0 = Opm::TimeMap::mkdate( 2010 , 1, 1);
+    std::time_t t1 = Opm::TimeMap::forward( t0 , 24*3600);
+
+    int year, day, month;
+
+    util_set_date_values_utc( t1, &day , &month, &year);
+    BOOST_CHECK_EQUAL( year , 2010 );
+    BOOST_CHECK_EQUAL( month , 1 );
+    BOOST_CHECK_EQUAL( day , 2 );
+
+    t1 = Opm::TimeMap::forward( t1 , -24*3600);
+    util_set_date_values_utc( t1, &day , &month, &year);
+    BOOST_CHECK_EQUAL( year , 2010 );
+    BOOST_CHECK_EQUAL( month , 1 );
+    BOOST_CHECK_EQUAL( day , 1 );
+
+
+    t1 = Opm::TimeMap::forward( t0 , 23, 55 , 300);
+    util_set_date_values_utc( t1, &day , &month, &year);
+    BOOST_CHECK_EQUAL( year , 2010 );
+    BOOST_CHECK_EQUAL( month , 1 );
+    BOOST_CHECK_EQUAL( day , 2 );
+
 }
 

@@ -353,6 +353,15 @@ namespace Opm {
     }
 
 
+    std::time_t TimeMap::forward(std::time_t t, long seconds) {
+        return t + seconds;
+    }
+
+    std::time_t TimeMap::forward(std::time_t t, int hours, int minutes, long seconds) {
+        return t + seconds + minutes * 60 + hours * 3600;
+    }
+
+
 }
 
 
