@@ -25,21 +25,19 @@ add_executable(genkw ${genkw_SOURCES})
 target_link_libraries(genkw opmjson ecl ${boost_regex})
 target_include_directories(genkw PRIVATE include)
 
-file(GLOB_RECURSE keyword_templates share/keywords/*)
+include( share/keywords/keyword_list.cmake )
+string(REGEX REPLACE "([^;]+)" "${CMAKE_CURRENT_SOURCE_DIR}/share/keywords/\\1" keyword_files "${keywords}")
+configure_file( keyword_list.argv.in keyword_list.argv )
+
 add_custom_command(
-    OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp
-    COMMAND genkw ${PROJECT_SOURCE_DIR}/share/keywords
+    OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp  ${CMAKE_CURRENT_BINARY_DIR}/inlinekw.cpp
+
+    COMMAND genkw keyword_list.argv
                   ${CMAKE_CURRENT_BINARY_DIR}/ParserKeywords.cpp
                   ${CMAKE_CURRENT_BINARY_DIR}/include/
                   opm/parser/eclipse/Parser/ParserKeywords
-    DEPENDS genkw ${keyword_templates}
-)
-
-add_custom_command(
-    OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/inlinekw.cpp
-    COMMAND genkw ${PROJECT_SOURCE_DIR}/share/keywords
                   ${CMAKE_CURRENT_BINARY_DIR}/inlinekw.cpp
-    DEPENDS genkw ${keyword_templates}
+    DEPENDS genkw ${keyword_files} share/keywords/keyword_list.cmake
 )
 
 #-----------------------------------------------------------------
