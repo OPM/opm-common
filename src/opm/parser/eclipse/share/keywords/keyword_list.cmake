@@ -181,6 +181,7 @@ set( keywords
      000_Eclipse100/P/PIMTDIMS
      000_Eclipse100/P/PIMULTAB
      000_Eclipse100/P/PINCH
+     000_Eclipse100/P/PLMIXNUM
      000_Eclipse100/P/PLMIXPAR
      000_Eclipse100/P/PLYADS
      000_Eclipse100/P/PLYADSS

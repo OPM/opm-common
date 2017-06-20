@@ -207,7 +207,8 @@ namespace Opm {
             GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1" ),
             GridProperties< int >::SupportedKeywordInfo( "ROCKNUM", 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" )
+            GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" ),
+            GridProperties< int >::SupportedKeywordInfo( "PLMIXNUM", 1, "1" )
         };
     }
 
