@@ -387,7 +387,7 @@ namespace Opm {
         supportedDoubleKeywords.emplace_back( "MULTPV", 1.0, "1" );
 
         // the permeability keywords
-        for( const auto& kw : { "PERMX", "PERMY", "PERMZ" } )
+        for( const auto& kw : { "PERMR", "PERMTHT", "PERMX", "PERMY", "PERMZ", } )
             supportedDoubleKeywords.emplace_back( kw, nan, distributeTopLayer, "Permeability" );
 
         /* E300 only */
