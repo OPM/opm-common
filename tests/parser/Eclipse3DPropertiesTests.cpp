@@ -167,6 +167,90 @@ static Opm::Deck createValidPERMXDeck() {
     return parser.parseString(deckData, Opm::ParseContext() );
 }
 
+static Opm::Deck createQuarterCircleDeck() {
+    const auto* input = R"(
+RUNSPEC
+
+TITLE
+  'Quarter Circle 100x21x20' /
+
+DIMENS
+  100 21 20 /
+
+METRIC
+
+RADIAL
+
+OIL
+WATER
+
+TABDIMS
+/
+
+START
+  19 JUN 2017
+/
+
+WELLDIMS
+  3 20 1
+/
+
+EQLDIMS
+    2* 100 2* /
+
+-- =====================================================================
+GRID    ================================================================
+
+INRAD
+  1.0D0
+/
+
+DRV
+  5.0D0 10.0D0 2*20.0D0 45.0D0 95*50.0D0
+/
+
+-- Quarter circle, 21 sectors of 4.285714 degrees each.
+DTHETAV
+  21*4.285714D0
+/
+
+DZV
+  20*0.5D0
+/
+
+BOX
+  1 100  1 21  1 1
+/
+
+PERMR
+  2100*100.0D0
+/
+
+PORO
+  2100*0.3D0
+/
+
+TOPS
+  2100*1000.0D0
+/
+
+-- =====================================================================
+EDIT    ================================================================
+
+COPY
+  'PERMR' 'PERMTHT' /
+  'PERMR' 'PERMZ' /
+/
+
+MULTIPLY
+  'PERMZ' 0.1D0 /
+/
+)";
+
+    Opm::Parser parser;
+    return parser.parseString(input, Opm::ParseContext() );
+}
+
 
 /// Setup fixture
 struct Setup
@@ -348,4 +432,27 @@ BOOST_AUTO_TEST_CASE(getRegions) {
     const auto& opernum = s.props.getRegions( "OPERNUM" );
     BOOST_CHECK_EQUAL( 1, opernum.at(0) );
     BOOST_CHECK_EQUAL( 3, opernum.at(1) );
+}
+
+BOOST_AUTO_TEST_CASE(RadialPermeabilityTensor) {
+    const Setup s(createQuarterCircleDeck());
+
+    const auto& permr   = s.props.getDoubleGridProperty("PERMR");
+    const auto& permtht = s.props.getDoubleGridProperty("PERMTHT");
+    const auto& permz   = s.props.getDoubleGridProperty("PERMZ");
+    const auto& poro    = s.props.getDoubleGridProperty("PORO");
+
+    const double check_tol = 1.0e-6;
+
+    // Top layer (explicitly assigned)
+    BOOST_CHECK_CLOSE(100.0*Opm::Metric::Permeability, permr.iget(0, 0, 0), check_tol);
+    BOOST_CHECK_CLOSE(permtht.iget(0, 0, 0), permr.iget(0, 0, 0), check_tol);
+    BOOST_CHECK_CLOSE(permz.iget(0, 0, 0), 0.1 * permr.iget(0, 0, 0), check_tol);
+    BOOST_CHECK_CLOSE(0.3, poro.iget(0, 0, 0), check_tol);
+
+    // Middle layer (copied ultimately form top)
+    BOOST_CHECK_CLOSE(100.0*Opm::Metric::Permeability, permr.iget(49, 10, 9), check_tol);
+    BOOST_CHECK_CLOSE(permtht.iget(49, 10, 9), permr.iget(49, 10, 9), check_tol);
+    BOOST_CHECK_CLOSE(permz.iget(49, 10, 9), 0.1 * permr.iget(49, 10, 9), check_tol);
+    BOOST_CHECK_CLOSE(0.3, poro.iget(49, 10, 9), check_tol);
 }
