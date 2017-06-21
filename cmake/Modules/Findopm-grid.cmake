@@ -20,7 +20,7 @@ find_opm_package (
   "${opm-grid_DEPS}"
   
   # header to search for
-  "dune/grid/cpgrid/Intersection.hpp"
+  "dune/grid/cpgrid/GlobalIdMapping.hpp"
 
   # library to search for
   "opmgrid"
