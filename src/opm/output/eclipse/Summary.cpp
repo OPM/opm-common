@@ -19,6 +19,8 @@
 
 #include <numeric>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -34,6 +36,7 @@
 #include <opm/output/eclipse/RegionCache.hpp>
 
 #include <ert/ecl/ecl_smspec.h>
+#include <ert/ecl/ecl_kw_magic.h>
 
 /*
  * This class takes simulator state and parser-provided information and
@@ -817,22 +820,31 @@ Summary::Summary( const EclipseState& st,
                   const char* basename ) :
     grid( grid_arg ),
     regionCache( st , grid_arg ),
-    ecl_sum(
-            ecl_sum_alloc_writer(
-                basename,
-                st.getIOConfig().getFMTOUT(),
-                st.getIOConfig().getUNIFOUT(),
-                ":",
-                st.getSchedule().posixStartTime(),
-                true,
-                st.getInputGrid().getNX(),
-                st.getInputGrid().getNY(),
-                st.getInputGrid().getNZ()
-                )
-            ),
+
     handlers( new keyword_handlers() ),
     porv( st.get3DProperties().getDoubleGridProperty("PORV").compressedCopy(grid_arg))
 {
+
+    const auto& init_config = st.getInitConfig();
+    const char * restart_case = nullptr;
+
+    if (init_config.restartRequested( )) {
+        if (init_config.getRestartRootName().size() <= ECL_STRING8_LENGTH * SUMMARY_RESTART_SIZE)
+            restart_case = init_config.getRestartRootName().c_str();
+        else
+            OpmLog::warning("Resart case too long - not embedded in SMSPEC file");
+    }
+    ecl_sum.reset( ecl_sum_alloc_restart_writer(basename,
+                                                restart_case,
+                                                st.getIOConfig().getFMTOUT(),
+                                                st.getIOConfig().getUNIFOUT(),
+                                                ":",
+                                                st.getSchedule().posixStartTime(),
+                                                true,
+                                                st.getInputGrid().getNX(),
+                                                st.getInputGrid().getNY(),
+                                                st.getInputGrid().getNZ()));
+
     /* register all keywords handlers and pair with the newly-registered ert
      * entry.
      */
