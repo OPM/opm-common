@@ -791,6 +791,38 @@ namespace Opm {
         }
     }
 
+    /*
+      This is the numbering of the corners in the cell.
+
+                                        j
+         6---7                        /|\
+         |   |                         |
+         4---5                         |
+                                       |
+                                       o---------->  i
+         2---3
+         |   |
+         0---1
+
+     */
+
+
+    std::array<double, 3> EclipseGrid::getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const {
+        assertIJK(i,j,k);
+        if (corner_index >= 8)
+            throw std::invalid_argument("Invalid corner position");
+        {
+            double x,y,z;
+            ecl_grid_get_cell_corner_xyz3( c_ptr() ,
+                                           static_cast<int>(i),
+                                           static_cast<int>(j),
+                                           static_cast<int>(k),
+                                           static_cast<int>(corner_index),
+                                           &x , &y , &z);
+            return std::array<double, 3>{{x,y,z}};
+        }
+    }
+
 
     std::array<double, 3> EclipseGrid::getCellCenter(size_t i,size_t j, size_t k) const {
         assertIJK(i,j,k);

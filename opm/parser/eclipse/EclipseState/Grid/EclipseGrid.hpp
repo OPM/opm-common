@@ -150,6 +150,7 @@ namespace Opm {
         const std::vector<int>& getActiveMap() const;
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
+        std::array<double, 3> getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const;
         double getCellVolume(size_t globalIndex) const;
         double getCellVolume(size_t i , size_t j , size_t k) const;
         double getCellThicknes(size_t globalIndex) const;
