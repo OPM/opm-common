@@ -278,7 +278,7 @@ foreach (test BoxTest
               ScheduleCreateFromDeck
               TransMultIntegrationTests
 )
-    add_executable(${test} IntegrationTests/${test}.cpp)
+    add_executable(${test} tests/integration/${test}.cpp)
     target_link_libraries(${test} opmparser boost_test)
     add_test(NAME ${test} COMMAND ${test} ${_testdir}/integration_tests/)
 endforeach ()
