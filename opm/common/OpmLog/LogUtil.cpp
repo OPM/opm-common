@@ -58,13 +58,13 @@ namespace Log {
             prefix = "Info";
             break;
         case MessageType::Warning:
-            prefix = "\nWarning";
+            prefix = "Warning";
             break;
         case MessageType::Error:
-            prefix = "\nError";
+            prefix = "Error";
             break;
         case MessageType::Problem:
-            prefix = "\nProblem";
+            prefix = "Problem";
             break;
         case MessageType::Bug:
             prefix = "Bug";
