@@ -457,30 +457,32 @@ std::vector<size_t> GridProperty<T>::cellsEqual(T value, const EclipseGrid& grid
 }
 
 std::vector< double > temperature_lookup( size_t size,
-                                            const TableManager* tables,
-                                            const EclipseGrid* grid,
-                                            const GridProperties<int>* ig_props ) {
+                                          const TableManager* tables,
+                                          const EclipseGrid* grid,
+                                          const GridProperties<int>* ig_props ) {
 
-    if( !tables->useEqlnum() ) {
-        /* if values are defaulted in the TEMPI keyword, but no
-            * EQLNUM is specified, you will get NaNs
-            */
-        return std::vector< double >( size, std::numeric_limits< double >::quiet_NaN() );
-    }
+    if (tables->hasTables("RTEMPVD")) {
+        if( !tables->useEqlnum() ) {
+            /* if values are defaulted in the TEMPI keyword, but no
+             * EQLNUM is specified, you will get NaNs.
+             */
+            return std::vector< double >( size, std::numeric_limits< double >::quiet_NaN() );
+        }
 
-    std::vector< double > values( size, 0 );
+        const auto& rtempvdTables = tables->getRtempvdTables();
+        const std::vector< int >& eqlNum = ig_props->getKeyword("EQLNUM").getData();
+        std::vector< double > values( size, 0 );
 
-    const auto& rtempvdTables = tables->getRtempvdTables();
-    const std::vector< int >& eqlNum = ig_props->getKeyword("EQLNUM").getData();
+        for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
+            int cellEquilNum = eqlNum[cellIdx];
+            const RtempvdTable& rtempvdTable = rtempvdTables.getTable<RtempvdTable>(cellEquilNum);
+            double cellDepth = std::get<2>(grid->getCellCenter(cellIdx));
+            values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
+        }
 
-    for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
-        int cellEquilNum = eqlNum[cellIdx];
-        const RtempvdTable& rtempvdTable = rtempvdTables.getTable<RtempvdTable>(cellEquilNum);
-        double cellDepth = std::get<2>(grid->getCellCenter(cellIdx));
-        values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
-    }
-
-    return values;
+        return values;
+    } else
+        return std::vector< double >( size, tables->rtemp( ) );
 }
 
 }

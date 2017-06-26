@@ -456,3 +456,10 @@ BOOST_AUTO_TEST_CASE(RadialPermeabilityTensor) {
     BOOST_CHECK_CLOSE(permz.iget(49, 10, 9), 0.1 * permr.iget(49, 10, 9), check_tol);
     BOOST_CHECK_CLOSE(0.3, poro.iget(49, 10, 9), check_tol);
 }
+
+
+
+BOOST_AUTO_TEST_CASE(TEMPI_TEST) {
+    Setup s(createDeck());
+    BOOST_CHECK_NO_THROW( s.props.getDoubleGridProperty("TEMPI") );
+}

@@ -133,6 +133,7 @@ namespace Opm {
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
 
+        double rtemp() const;
     private:
         TableContainer& forceGetTables( const std::string& tableName , size_t numTables);
 
@@ -306,6 +307,7 @@ namespace Opm {
         const JFunc m_jfunc;
 
         MessageContainer m_messages;
+        double m_rtemp;
     };
 }
 

@@ -81,7 +81,8 @@ namespace Opm {
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
         hasEqlnum (deck.hasKeyword("EQLNUM")),
-        m_jfunc( deck )
+        m_jfunc( deck ),
+        m_rtemp( ParserKeywords::RTEMP::TEMP::defaultValue )
     {
         initDims( deck );
         initSimpleTables( deck );
@@ -107,6 +108,11 @@ namespace Opm {
 
         initVFPProdTables(deck, m_vfpprodTables);
         initVFPInjTables(deck,  m_vfpinjTables);
+
+        if( deck.hasKeyword( "RTEMP" ) )
+            m_rtemp = deck.getKeyword("RTEMP").getRecord(0).getItem("TEMP").getSIDouble( 0 );
+        else if (deck.hasKeyword( "RTEMPA" ) )
+            m_rtemp = deck.getKeyword("RTEMPA").getRecord(0).getItem("TEMP").getSIDouble( 0 );
     }
 
     void TableManager::initDims(const Deck& deck) {
@@ -756,6 +762,11 @@ namespace Opm {
             m_messages.error(keywords[i]->getFileName(), msg, keywords[i]->getLineNumber());
         }
     }
+
+    double TableManager::rtemp() const {
+        return this->m_rtemp;
+    }
+
 }
 
 
