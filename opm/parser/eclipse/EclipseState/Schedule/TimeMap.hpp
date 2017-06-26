@@ -34,10 +34,13 @@ namespace Opm {
 
     class TimeMap {
     public:
+        explicit TimeMap(std::time_t startTime);
         explicit TimeMap(boost::posix_time::ptime startDate);
         explicit TimeMap( const Deck& deck);
 
+        void addTime(std::time_t newTime);
         void addTime(boost::posix_time::ptime newTime);
+        void addTStep(std::time_t step);
         void addTStep(boost::posix_time::time_duration step);
         void addFromDATESKeyword( const DeckKeyword& DATESKeyword );
         void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
@@ -70,13 +73,18 @@ namespace Opm {
         static std::time_t mkdate(int year, int month, int day);
     private:
         static const std::map<std::string , boost::gregorian::greg_month>& eclipseMonthNames();
+        static const std::map<std::string, int>& eclipseMonthIndices();
 
-        std::vector<boost::posix_time::ptime> m_timeList;
+        std::vector<std::time_t> m_timeList;
 
         const std::vector<size_t>& getFirstTimestepMonths() const;
         const std::vector<size_t>& getFirstTimestepYears() const;
         bool isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const;
         size_t closest(const std::vector<size_t> & vec, size_t value) const;
+
+        static void dateToTM(int year, int month, int day, struct tm *tm);
+        static std::time_t to_time_t(boost::posix_time::ptime t);
+        static std::time_t timeTFromEclipse(const DeckRecord& dateRecord);
 
         std::vector<size_t> m_first_timestep_years;   // A list of the first timestep of every year
         std::vector<size_t> m_first_timestep_months;  // A list of the first timestep of every month
