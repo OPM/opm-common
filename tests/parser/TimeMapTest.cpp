@@ -43,7 +43,14 @@ BOOST_AUTO_TEST_CASE(CreateTimeMap_InvalidThrow) {
 }
 
 
-BOOST_AUTO_TEST_CASE(CreateTimeMap) {
+BOOST_AUTO_TEST_CASE(CreateTimeMapFromTimeT) {
+    std::time_t startDate = time(0);
+    Opm::TimeMap timeMap(startDate);
+    BOOST_CHECK_EQUAL(1U , timeMap.size());
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateTimeMapFromPTime) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMap timeMap((boost::posix_time::ptime(startDate)));
     BOOST_CHECK_EQUAL(1U , timeMap.size());
@@ -78,7 +85,15 @@ BOOST_AUTO_TEST_CASE(AddDateAfterSizeCorrect) {
 }
 
 
-BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
+BOOST_AUTO_TEST_CASE(AddDateNegativeTimeTStepThrows) {
+    const std::time_t startDate = time(0);
+    Opm::TimeMap timeMap(startDate);
+
+    BOOST_CHECK_THROW(timeMap.addTStep(static_cast<time_t>(-1)) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(AddDateNegativePTimeStepThrows) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMap timeMap((boost::posix_time::ptime(startDate)));
 
@@ -86,8 +101,21 @@ BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
 }
 
 
+BOOST_AUTO_TEST_CASE(AddTimeTStepSizeCorrect) {
+    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
+    Opm::TimeMap timeMap{startDate};
 
-BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
+    timeMap.addTStep(static_cast<time_t>(1 * 60 * 60));
+    timeMap.addTStep(static_cast<time_t>(23 * 60 * 60));
+    BOOST_CHECK_EQUAL(3U, timeMap.size());
+
+    BOOST_CHECK_THROW(timeMap[3] , std::invalid_argument );
+    BOOST_CHECK_EQUAL(timeMap[0] , Opm::TimeMap::mkdate(2010, 1, 1 ));
+    BOOST_CHECK_EQUAL(timeMap[2] , Opm::TimeMap::mkdate(2010, 1, 2 ));
+}
+
+
+BOOST_AUTO_TEST_CASE(AddPTimeStepSizeCorrect) {
     boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
     Opm::TimeMap timeMap{ boost::posix_time::ptime(boost::posix_time::ptime(startDate)) };
 
