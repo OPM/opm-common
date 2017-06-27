@@ -73,24 +73,28 @@ namespace Opm {
         if( !grid.hasKeyword( "GRIDFILE" ) ) return true;
 
         const auto& keyword = grid.getKeyword( "GRIDFILE" );
-
-        if( keyword.size() == 0 ) return false;
-
         const auto& rec = keyword.getRecord( 0 );
-        const auto& item1 = rec.getItem( 0 );
 
-        if( item1.hasValue( 0 ) && item1.get< int >( 0 ) != 0 ) {
-            std::cerr << "IOConfig: Reading GRIDFILE keyword from GRID section: "
-                      << "Output of GRID file is not supported. "
-                      << "Supported format: EGRID"
-                      << std::endl;
-            return true;
+        {
+            const auto& grid_item = rec.getItem( 0 );
+            if (grid_item.get<int>(0) != 0) {
+                std::cerr << "IOConfig: Reading GRIDFILE keyword from GRID section: "
+                          << "Output of GRID file is not supported. "
+                          << "Supported format: EGRID"
+                          << std::endl;
+
+                // It was asked for GRID file - that output is not
+                // supported, but we will output EGRID file;
+                // irrespective of whether that was actually
+                // requested.
+                return true;
+            }
         }
 
-        if( rec.size() < 1 ) return true;
-
-        const auto& item2 = rec.getItem( 1 );
-        return !item2.hasValue( 0 ) || item2.get< int >( 0 ) != 0;
+        {
+            const auto& egrid_item = rec.getItem( 1 );
+            return (egrid_item.get<int>(0) == 1);
+        }
     }
 
     IOConfig::IOConfig( const GRIDSection& grid,
