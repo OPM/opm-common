@@ -1371,6 +1371,16 @@ BOOST_AUTO_TEST_CASE(RadialDetails) {
     BOOST_CHECK_CLOSE( std::get<0>(pos2) , -0.75 , 0.0001);
     BOOST_CHECK_CLOSE( std::get<1>(pos2) , -0.75 , 0.0001);
     BOOST_CHECK_CLOSE( std::get<2>(pos2) , 1.50 , 0.0001);
+
+    {
+        const auto& p0 = grid.getCornerPos( 0,0,0 , 0 );
+        const auto& p6 = grid.getCornerPos( 0,0,0 , 6 );
+
+        BOOST_CHECK_CLOSE( p0[0]*p0[0] + p0[1]*p0[1] , 1.0, 0.0001);
+        BOOST_CHECK_CLOSE( p6[0]*p6[0] + p6[1]*p6[1] , 1.0, 0.0001);
+
+        BOOST_CHECK_THROW( grid.getCornerPos( 0,0,0 , 8 ) , std::invalid_argument);
+    }
 }
 
 
