@@ -77,7 +77,8 @@ namespace Opm
         {
             std::string msg = message;
             if (message_flag & prefix_flag_) {
-                msg = "\n" + Log::prefixMessage(message_flag, msg);
+                //msg = "\n" + Log::prefixMessage(message_flag, msg);
+                msg = Log::prefixMessage(message_flag, msg);
             }
             if (use_color_coding_) {
                 msg = Log::colorCodeMessage(message_flag, msg);
