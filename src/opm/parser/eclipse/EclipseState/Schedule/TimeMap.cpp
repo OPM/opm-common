@@ -54,11 +54,9 @@ namespace Opm {
             // reference manual. We hence just assume it is same as for
             // the START keyword for Eclipse R100, i.e., January 1st,
             // 1983...
-            std::tm tm;
-            dateToTM(1983, 0, 1, &tm);
-            m_timeList.push_back(timegm(&tm));
+            const std::time_t time = mkdate(1983, 1, 1);
+            m_timeList.push_back(time);
         }
-
 
         // find all "TSTEP" and "DATES" keywords in the deck and deal
         // with them one after another
@@ -103,13 +101,13 @@ namespace Opm {
         const std::time_t lastTime = m_timeList.back();
         const size_t step = m_timeList.size();
         if (newTime > lastTime) {
-            const boost::gregorian::date new_date = boost::posix_time::from_time_t(newTime).date();
-            const boost::gregorian::date prev_date = boost::posix_time::from_time_t(lastTime).date();
+            const std::tm new_date = *gmtime(&newTime);
+            const std::tm prev_date = *gmtime(&lastTime);
 
-            if (new_date.month() != prev_date.month())
+            if (new_date.tm_mon != prev_date.tm_mon)
                 m_first_timestep_months.push_back(step);
 
-            if (new_date.year() != prev_date.year())
+            if (new_date.tm_year != prev_date.tm_year)
                 m_first_timestep_years.push_back(step);
 
             m_timeList.push_back(newTime);
@@ -117,7 +115,6 @@ namespace Opm {
             throw std::invalid_argument("Times added must be in strictly increasing order.");
     }
 
-    // TODO Suggest deprecation by replacement with void TimeMap::addTime(std::time_t newTime)
     void TimeMap::addTime(boost::posix_time::ptime newTime) {
         boost::posix_time::ptime lastTime = boost::posix_time::from_time_t(m_timeList.back());
         size_t step = m_timeList.size();
@@ -141,7 +138,6 @@ namespace Opm {
         addTime(newTime);
     }
 
-    // TODO Suggest deprecation by replacement with void TimeMap::addTStep(std::time_t step)
     void TimeMap::addTStep(boost::posix_time::time_duration step) {
         boost::posix_time::ptime newTime = boost::posix_time::from_time_t(m_timeList.back()) + step;
         addTime(newTime);
@@ -155,12 +151,6 @@ namespace Opm {
         return this->numTimesteps();
     }
 
-    // TODO Suggest deprecation when
-    // boost::posix_time::ptime TimeMap::timeFromEclipse(int day,
-    //                                                   const std::string& eclipseMonthName,
-    //                                                   int year,
-    //                                                   const std::string& eclipseTimeString)
-    // is deprecated.
     const std::map<std::string , boost::gregorian::greg_month>& TimeMap::eclipseMonthNames() {
         static std::map<std::string , boost::gregorian::greg_month> monthNames;
 
@@ -211,7 +201,6 @@ namespace Opm {
         return monthIndices;
     }
 
-    // TODO Suggest deprecation as obsolete
     boost::posix_time::ptime TimeMap::timeFromEclipse(int day,
                                                       const std::string& eclipseMonthName,
                                                       int year,
@@ -226,7 +215,6 @@ namespace Opm {
         return boost::posix_time::duration_from_string(eclipseTimeString);
     }
 
-    // TODO Suggest deprecation by std::time_t TimeMap::timeTFromEclipse(const DeckRecord &dateRecord)
     boost::posix_time::ptime TimeMap::timeFromEclipse( const DeckRecord& dateRecord ) {
         static const std::string errorMsg("The datarecord must consist of the four values "
                                           "\"DAY(int), MONTH(string), YEAR(int), TIME(string)\".\n");
@@ -264,14 +252,11 @@ namespace Opm {
         const auto &timeItem = dateRecord.getItem(3);
 
         try {
-            std::tm tm;
-            dateToTM(yearItem.get<int>(0), // TODO Check assumption of Eclipse year with 4 digits
-                     eclipseMonthIndices().at(monthItem.get<std::string>(0)),
-                     dayItem.get<int>(0),
-                     &tm);
-            strptime(timeItem.get<std::string>(0).c_str(), "%H:%M:%S", &tm);
+            const std::time_t date = mkdate(yearItem.get<int>(0), eclipseMonthIndices().at(monthItem.get<std::string>(0)) + 1, dayItem.get<int>(0));
+            std::tm *tm = gmtime(&date);
+            strptime(timeItem.get<std::string>(0).c_str(), "%H:%M:%S", tm);
 
-            time_t time = timegm(&tm);
+            time_t time = timegm(tm);
             return time;
         } catch (...) {
             throw std::invalid_argument(errorMsg);
@@ -401,16 +386,7 @@ namespace Opm {
         return 0;
     }
 
-    // This method assumes that a 4 digit year is input as it subtracts 1900 to
-    // support std::tm's convention.
-    void TimeMap::dateToTM(int year, int month, int day, struct tm *tm) {
-        tm->tm_year = year - 1900;
-        tm->tm_mon = month;
-        tm->tm_mday = day;
-    }
-
-    std::time_t TimeMap::to_time_t(boost::posix_time::ptime t)
-    {
+    std::time_t TimeMap::to_time_t(boost::posix_time::ptime t) {
         boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
         boost::posix_time::time_duration::sec_type seconds = (t - epoch).total_seconds();
         return std::time_t(seconds);
@@ -422,7 +398,6 @@ namespace Opm {
         } else
             throw std::invalid_argument("Index out of range");
     }
-
 
 
     std::time_t TimeMap::mkdate(int in_year, int in_month, int in_day) {

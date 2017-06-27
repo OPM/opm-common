@@ -82,7 +82,6 @@ namespace Opm {
         bool isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const;
         size_t closest(const std::vector<size_t> & vec, size_t value) const;
 
-        static void dateToTM(int year, int month, int day, struct tm *tm);
         static std::time_t to_time_t(boost::posix_time::ptime t);
         static std::time_t timeTFromEclipse(const DeckRecord& dateRecord);
 
