@@ -299,19 +299,7 @@ namespace Opm {
 
 
     std::time_t TimeMap::mkdate(int in_year, int in_month, int in_day) {
-        std::time_t t = util_make_date_utc( in_day , in_month , in_year );
-        {
-            /*
-               The underlying mktime( ) function will happily wrap
-               around dates like January 33, this function will check
-               that no such wrap-around has taken place.
-            */
-            int out_year, out_day, out_month;
-            util_set_date_values_utc( t, &out_day , &out_month, &out_year);
-            if ((in_day != out_day) || (in_month != out_month) || (in_year != out_year))
-                throw std::invalid_argument("Invalid input arguments for date.");
-        }
-        return t;
+        return mkdatetime(in_year , in_month , in_day, 0,0,0);
     }
 
     std::time_t TimeMap::mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second) {
