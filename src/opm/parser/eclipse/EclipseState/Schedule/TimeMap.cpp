@@ -109,8 +109,7 @@ namespace Opm {
     }
 
     void TimeMap::addTStep(int64_t step) {
-        const std::time_t newTime = m_timeList.back() + step;
-        addTime(newTime);
+        addTime(forward(m_timeList.back(), step));
     }
 
     size_t TimeMap::size() const {
@@ -153,15 +152,19 @@ namespace Opm {
         const auto &yearItem = dateRecord.getItem(2);
         const auto &timeItem = dateRecord.getItem(3);
 
-        std::tm tm;
-        strptime(timeItem.get<std::string>(0).c_str(), "%H:%M:%S", &tm);
+        int hour = 0, min = 0, second = 0;
+        if (timeItem.hasValue(0)) {
+            if (sscanf(timeItem.get<std::string>(0).c_str(), "%d:%d:%d" , &hour,&min,&second) != 3) {
+                hour = min = second = 0;
+            }
+        }
 
         std::time_t date = mkdatetime(yearItem.get<int>(0),
                                       eclipseMonthIndices().at(monthItem.get<std::string>(0)),
                                       dayItem.get<int>(0),
-                                      tm.tm_hour,
-                                      tm.tm_min,
-                                      tm.tm_sec);
+                                      hour,
+                                      min,
+                                      second);
         return date;
     }
 
