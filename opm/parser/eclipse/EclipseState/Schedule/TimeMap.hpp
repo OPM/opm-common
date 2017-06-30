@@ -61,8 +61,8 @@ namespace Opm {
 
         static std::time_t timeFromEclipse(const DeckRecord &dateRecord);
 
-        static std::time_t forward(std::time_t t0, int hours, int minutes, long seconds);
-        static std::time_t forward(std::time_t t0, long seconds);
+        static std::time_t forward(std::time_t t0, int64_t hours, int64_t minutes, int64_t seconds);
+        static std::time_t forward(std::time_t t0, int64_t seconds);
         static std::time_t mkdate(int year, int month, int day);
         static std::time_t mkdatetime(int year, int month, int day, int hour, int minute, int second);
     private:
