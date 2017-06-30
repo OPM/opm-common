@@ -44,10 +44,10 @@
 using namespace Opm;
 
 static Opm::TimeMap createXDaysTimeMap(size_t numDays) {
-    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap{ boost::posix_time::ptime(startDate ) };
+    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
+    Opm::TimeMap timeMap{ startDate };
     for (size_t i = 0; i < numDays; i++)
-        timeMap.addTStep( boost::posix_time::hours( (i+1) * 24 ));
+        timeMap.addTStep((i+1) * 24 * 60 * 60);
     return timeMap;
 }
 
