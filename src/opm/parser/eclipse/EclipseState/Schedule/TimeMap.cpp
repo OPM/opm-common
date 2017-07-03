@@ -17,7 +17,6 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <ctime>
 
 #include <ert/util/util.h>
@@ -30,28 +29,26 @@
 
 
 namespace Opm {
-    TimeMap::TimeMap(boost::posix_time::ptime startDate) {
-        if (startDate.is_not_a_date_time())
-          throw std::invalid_argument("Input argument not properly initialized.");
-
-        m_timeList.push_back( boost::posix_time::ptime(startDate) );
+    TimeMap::TimeMap(std::time_t startTime) {
+        m_timeList.push_back(startTime);
     }
 
     TimeMap::TimeMap( const Deck& deck) {
-        // The default start date is not specified in the Eclipse
-        // reference manual. We hence just assume it is same as for
-        // the START keyword for Eclipse R100, i.e., January 1st,
-        // 1983...
-        boost::posix_time::ptime startTime(boost::gregorian::date(1983, 1, 1));
 
-        // use the 'START' keyword to find out the start date (if the
-        // keyword was specified)
         if (deck.hasKeyword("START")) {
+            // Use the 'START' keyword to find out the start date (if the
+            // keyword was specified)
             const auto& keyword = deck.getKeyword("START");
-            startTime = timeFromEclipse(keyword.getRecord(0));
-        }
+            m_timeList.push_back(timeFromEclipse(keyword.getRecord(0)));
 
-        m_timeList.push_back( startTime );
+        } else {
+            // The default start date is not specified in the Eclipse
+            // reference manual. We hence just assume it is same as for
+            // the START keyword for Eclipse R100, i.e., January 1st,
+            // 1983...
+            const std::time_t time = mkdate(1983, 1, 1);
+            m_timeList.push_back(time);
+        }
 
         // find all "TSTEP" and "DATES" keywords in the deck and deal
         // with them one after another
@@ -88,35 +85,32 @@ namespace Opm {
     {
         if (m_timeList.size() < 2)
             return 0.0;
-        boost::posix_time::time_duration deltaT = m_timeList.back() - m_timeList.front();
-        return static_cast<double>(deltaT.total_milliseconds())/1000.0;
+        const time_t deltaT = m_timeList.back() - m_timeList.front();
+        return static_cast<double>(deltaT);
     }
 
-
-    void TimeMap::addTime(boost::posix_time::ptime newTime) {
-        boost::posix_time::ptime lastTime = m_timeList.back();
-        size_t step = m_timeList.size();
+    void TimeMap::addTime(std::time_t newTime) {
+        const std::time_t lastTime = m_timeList.back();
+        const size_t step = m_timeList.size();
         if (newTime > lastTime) {
-            boost::gregorian::date new_date = newTime.date();
-            boost::gregorian::date prev_date = lastTime.date();
+            int new_day, new_month, new_year, last_day, last_month, last_year;
+            util_set_date_values_utc(newTime, &new_day, &new_month, &new_year);
+            util_set_date_values_utc(lastTime, &last_day, &last_month, &last_year);
 
-            if (new_date.month() != prev_date.month())
-              m_first_timestep_months.push_back(step);
+            if (new_month != last_month)
+                m_first_timestep_months.push_back(step);
 
-            if (new_date.year() != prev_date.year())
-                m_first_timestep_years.push_back( step );
+            if (new_year != last_year)
+                m_first_timestep_years.push_back(step);
 
-            m_timeList.push_back( newTime );
+            m_timeList.push_back(newTime);
         } else
             throw std::invalid_argument("Times added must be in strictly increasing order.");
     }
 
-
-    void TimeMap::addTStep(boost::posix_time::time_duration step) {
-        boost::posix_time::ptime newTime = m_timeList.back() + step;
-        addTime(newTime);
+    void TimeMap::addTStep(int64_t step) {
+        addTime(forward(m_timeList.back(), step));
     }
-
 
     size_t TimeMap::size() const {
         return m_timeList.size();
@@ -126,94 +120,75 @@ namespace Opm {
         return this->numTimesteps();
     }
 
-    const std::map<std::string , boost::gregorian::greg_month>& TimeMap::eclipseMonthNames() {
-        static std::map<std::string , boost::gregorian::greg_month> monthNames;
+    const std::map<std::string , int>& TimeMap::eclipseMonthIndices() {
+        static std::map<std::string , int> monthIndices;
 
-        if (monthNames.size() == 0) {
-            monthNames.insert( std::make_pair( "JAN" , boost::gregorian::Jan ));
-            monthNames.insert( std::make_pair( "FEB" , boost::gregorian::Feb ));
-            monthNames.insert( std::make_pair( "MAR" , boost::gregorian::Mar ));
-            monthNames.insert( std::make_pair( "APR" , boost::gregorian::Apr ));
-            monthNames.insert( std::make_pair( "MAI" , boost::gregorian::May ));
-            monthNames.insert( std::make_pair( "MAY" , boost::gregorian::May ));
-            monthNames.insert( std::make_pair( "JUN" , boost::gregorian::Jun ));
-            monthNames.insert( std::make_pair( "JUL" , boost::gregorian::Jul ));
-            monthNames.insert( std::make_pair( "JLY" , boost::gregorian::Jul ));
-            monthNames.insert( std::make_pair( "AUG" , boost::gregorian::Aug ));
-            monthNames.insert( std::make_pair( "SEP" , boost::gregorian::Sep ));
-            monthNames.insert( std::make_pair( "OCT" , boost::gregorian::Oct ));
-            monthNames.insert( std::make_pair( "OKT" , boost::gregorian::Oct ));
-            monthNames.insert( std::make_pair( "NOV" , boost::gregorian::Nov ));
-            monthNames.insert( std::make_pair( "DEC" , boost::gregorian::Dec ));
-            monthNames.insert( std::make_pair( "DES" , boost::gregorian::Dec ));
+        if (monthIndices.size() == 0) {
+            monthIndices.insert( std::make_pair( "JAN" , 1 ));
+            monthIndices.insert( std::make_pair( "FEB" , 2 ));
+            monthIndices.insert( std::make_pair( "MAR" , 3 ));
+            monthIndices.insert( std::make_pair( "APR" , 4 ));
+            monthIndices.insert( std::make_pair( "MAI" , 5 ));
+            monthIndices.insert( std::make_pair( "MAY" , 5 ));
+            monthIndices.insert( std::make_pair( "JUN" , 6 ));
+            monthIndices.insert( std::make_pair( "JUL" , 7 ));
+            monthIndices.insert( std::make_pair( "JLY" , 7 ));
+            monthIndices.insert( std::make_pair( "AUG" , 8 ));
+            monthIndices.insert( std::make_pair( "SEP" , 9 ));
+            monthIndices.insert( std::make_pair( "OCT" , 10 ));
+            monthIndices.insert( std::make_pair( "OKT" , 10 ));
+            monthIndices.insert( std::make_pair( "NOV" , 11 ));
+            monthIndices.insert( std::make_pair( "DEC" , 12 ));
+            monthIndices.insert( std::make_pair( "DES" , 12 ));
         }
 
-        return monthNames;
+        return monthIndices;
     }
 
-    boost::posix_time::ptime TimeMap::timeFromEclipse(int day,
-                                                      const std::string& eclipseMonthName,
-                                                      int year,
-                                                      const std::string& eclipseTimeString) {
-        boost::gregorian::greg_month month = eclipseMonthNames().at( eclipseMonthName );
-        boost::gregorian::date date( year , month , day );
-        boost::posix_time::time_duration dayTime = dayTimeFromEclipse(eclipseTimeString);
-        return boost::posix_time::ptime(date, dayTime);
-    }
 
-    boost::posix_time::time_duration TimeMap::dayTimeFromEclipse(const std::string& eclipseTimeString) {
-        return boost::posix_time::duration_from_string(eclipseTimeString);
-    }
+    std::time_t TimeMap::timeFromEclipse(const DeckRecord &dateRecord) {
+        const auto &dayItem = dateRecord.getItem(0);
+        const auto &monthItem = dateRecord.getItem(1);
+        const auto &yearItem = dateRecord.getItem(2);
+        const auto &timeItem = dateRecord.getItem(3);
 
-    boost::posix_time::ptime TimeMap::timeFromEclipse( const DeckRecord& dateRecord ) {
-        static const std::string errorMsg("The datarecord must consist of the for values "
-                                          "\"DAY(int), MONTH(string), YEAR(int), TIME(string)\".\n");
-        if (dateRecord.size() != 4) {
-            throw std::invalid_argument( errorMsg);
+        int hour = 0, min = 0, second = 0;
+        if (timeItem.hasValue(0)) {
+            if (sscanf(timeItem.get<std::string>(0).c_str(), "%d:%d:%d" , &hour,&min,&second) != 3) {
+                hour = min = second = 0;
+            }
         }
 
-        const auto& dayItem = dateRecord.getItem( 0 );
-        const auto& monthItem = dateRecord.getItem( 1 );
-        const auto& yearItem = dateRecord.getItem( 2 );
-        const auto& timeItem = dateRecord.getItem( 3 );
-
-        try {
-            int day = dayItem.get< int >(0);
-            const std::string& month = monthItem.get< std::string >(0);
-            int year = yearItem.get< int >(0);
-            std::string eclipseTimeString = timeItem.get< std::string >(0);
-
-            return TimeMap::timeFromEclipse(day, month, year, eclipseTimeString);
-        } catch (...) {
-            throw std::invalid_argument( errorMsg );
-        }
+        std::time_t date = mkdatetime(yearItem.get<int>(0),
+                                      eclipseMonthIndices().at(monthItem.get<std::string>(0)),
+                                      dayItem.get<int>(0),
+                                      hour,
+                                      min,
+                                      second);
+        return date;
     }
 
-    void TimeMap::addFromDATESKeyword( const DeckKeyword& DATESKeyword ) {
+    void TimeMap::addFromDATESKeyword(const DeckKeyword &DATESKeyword) {
         if (DATESKeyword.name() != "DATES")
             throw std::invalid_argument("Method requires DATES keyword input.");
 
         for (size_t recordIndex = 0; recordIndex < DATESKeyword.size(); recordIndex++) {
-            const auto& record = DATESKeyword.getRecord( recordIndex );
-            boost::posix_time::ptime nextTime = TimeMap::timeFromEclipse( record );
-            addTime( nextTime );
+            const auto &record = DATESKeyword.getRecord(recordIndex);
+            const std::time_t nextTime = TimeMap::timeFromEclipse(record);
+            addTime(nextTime);
         }
     }
 
-    void TimeMap::addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword ) {
+    void TimeMap::addFromTSTEPKeyword(const DeckKeyword &TSTEPKeyword) {
         if (TSTEPKeyword.name() != "TSTEP")
             throw std::invalid_argument("Method requires TSTEP keyword input.");
         {
-            const auto& item = TSTEPKeyword.getRecord( 0 ).getItem( 0 );
+            const auto &item = TSTEPKeyword.getRecord(0).getItem(0);
 
             for (size_t itemIndex = 0; itemIndex < item.size(); itemIndex++) {
-                double days = item.get< double >( itemIndex );
-                long int wholeSeconds = static_cast<long int>(days * 24*60*60);
-                long int milliSeconds = static_cast<long int>((days * 24*60*60 - wholeSeconds)*1000);
-                boost::posix_time::time_duration step =
-                    boost::posix_time::seconds(wholeSeconds) +
-                    boost::posix_time::milliseconds(milliSeconds);
-                addTStep( step );
+                const double days = item.get<double>(itemIndex);
+                const int64_t seconds = static_cast<int64_t>(days * 24 * 60 * 60);
+                addTStep(seconds);
             }
         }
     }
@@ -221,28 +196,20 @@ namespace Opm {
     double TimeMap::getTimeStepLength(size_t tStepIdx) const
     {
         assert(tStepIdx < numTimesteps());
-        const boost::posix_time::ptime &t1
-            = m_timeList[tStepIdx];
-        const boost::posix_time::ptime &t2
-            = m_timeList[tStepIdx + 1];
-        const boost::posix_time::time_duration &deltaT
-            = t2 - t1;
-        return static_cast<double>(deltaT.total_milliseconds())/1000.0;
+        const std::time_t t1 = m_timeList[tStepIdx];
+        const std::time_t t2 = m_timeList[tStepIdx + 1];
+        const std::time_t deltaT = t2 - t1;
+        return static_cast<double>(deltaT);
     }
 
     double TimeMap::getTimePassedUntil(size_t tLevelIdx) const
     {
         assert(tLevelIdx < m_timeList.size());
-        const boost::posix_time::ptime &t1
-            = m_timeList.front();
-        const boost::posix_time::ptime &t2
-            = m_timeList[tLevelIdx];
-        const boost::posix_time::time_duration &deltaT
-            = t2 - t1;
-        return static_cast<double>(deltaT.total_milliseconds())/1000.0;
+        const std::time_t t1 = m_timeList.front();
+        const std::time_t t2 = m_timeList[tLevelIdx];
+        const std::time_t deltaT = t2 - t1;
+        return static_cast<double>(deltaT);
     }
-
-
 
 
     bool TimeMap::isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years, size_t start_timestep, size_t frequency) const {
@@ -325,19 +292,18 @@ namespace Opm {
 
     std::time_t TimeMap::operator[] (size_t index) const {
         if (index < m_timeList.size()) {
-            boost::posix_time::ptime boost_time = m_timeList[index];
-            boost::posix_time::ptime epoch(boost::gregorian::date(1970,1,1));
-            boost::posix_time::time_duration::sec_type duration = (boost_time - epoch).total_seconds();
-
-            return std::time_t( duration );
+            return m_timeList[index];
         } else
             throw std::invalid_argument("Index out of range");
     }
 
 
-
     std::time_t TimeMap::mkdate(int in_year, int in_month, int in_day) {
-        std::time_t t = util_make_date_utc( in_day , in_month , in_year );
+        return mkdatetime(in_year , in_month , in_day, 0,0,0);
+    }
+
+    std::time_t TimeMap::mkdatetime(int in_year, int in_month, int in_day, int hour, int minute, int second) {
+        std::time_t t = util_make_datetime_utc(second, minute, hour, in_day, in_month, in_year);
         {
             /*
                The underlying mktime( ) function will happily wrap
@@ -353,15 +319,13 @@ namespace Opm {
     }
 
 
-    std::time_t TimeMap::forward(std::time_t t, long seconds) {
+    std::time_t TimeMap::forward(std::time_t t, int64_t seconds) {
         return t + seconds;
     }
 
-    std::time_t TimeMap::forward(std::time_t t, int hours, int minutes, long seconds) {
+    std::time_t TimeMap::forward(std::time_t t, int64_t hours, int64_t minutes, int64_t seconds) {
         return t + seconds + minutes * 60 + hours * 3600;
     }
-
-
 }
 
 

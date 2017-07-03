@@ -23,8 +23,7 @@
 
 #include <vector>
 #include <ctime>
-
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <map>
 
 namespace Opm {
 
@@ -34,11 +33,11 @@ namespace Opm {
 
     class TimeMap {
     public:
-        explicit TimeMap(boost::posix_time::ptime startDate);
+        explicit TimeMap(std::time_t startTime);
         explicit TimeMap( const Deck& deck);
 
-        void addTime(boost::posix_time::ptime newTime);
-        void addTStep(boost::posix_time::time_duration step);
+        void addTime(std::time_t newTime);
+        void addTStep(int64_t step);
         void addFromDATESKeyword( const DeckKeyword& DATESKeyword );
         void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
         size_t size() const;
@@ -46,7 +45,6 @@ namespace Opm {
         size_t numTimesteps() const;
         double getTotalTime() const;
 
-        //boost::posix_time::ptime operator[] (size_t index) const;
         std::time_t operator[] (size_t index) const;
         /// Return the date and time where a given time step starts.
         std::time_t getStartTime(size_t tStepIdx) const;
@@ -61,17 +59,16 @@ namespace Opm {
         /// starting from start_timestep-1.
         bool isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years = true, size_t start_timestep = 1, size_t frequency = 1) const;
 
-        static boost::posix_time::ptime timeFromEclipse( const DeckRecord& dateRecord);
-        static boost::posix_time::ptime timeFromEclipse(int day , const std::string& month, int year, const std::string& eclipseTimeString = "00:00:00.000");
-        static boost::posix_time::time_duration dayTimeFromEclipse(const std::string& eclipseTimeString);
+        static std::time_t timeFromEclipse(const DeckRecord &dateRecord);
 
-        static std::time_t forward(std::time_t t0, int hours, int minutes, long seconds);
-        static std::time_t forward(std::time_t t0, long seconds);
+        static std::time_t forward(std::time_t t0, int64_t hours, int64_t minutes, int64_t seconds);
+        static std::time_t forward(std::time_t t0, int64_t seconds);
         static std::time_t mkdate(int year, int month, int day);
+        static std::time_t mkdatetime(int year, int month, int day, int hour, int minute, int second);
     private:
-        static const std::map<std::string , boost::gregorian::greg_month>& eclipseMonthNames();
+        static const std::map<std::string, int>& eclipseMonthIndices();
 
-        std::vector<boost::posix_time::ptime> m_timeList;
+        std::vector<std::time_t> m_timeList;
 
         const std::vector<size_t>& getFirstTimestepMonths() const;
         const std::vector<size_t>& getFirstTimestepYears() const;

@@ -29,12 +29,12 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 
 BOOST_AUTO_TEST_CASE(CreateEmpty) {
-    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap{boost::posix_time::ptime(startDate)};
+    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
+    Opm::TimeMap timeMap{ startDate };
     Opm::DynamicVector<double> vector(timeMap , 9.99);
 
     for (size_t i = 0; i < 11; i++)
-        timeMap.addTStep( boost::posix_time::hours( (i+1) * 24 ));
+        timeMap.addTStep((i+1) * 24 * 60 * 60);
 
     Opm::Events events( timeMap );
 
@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(CreateEmpty) {
 
 
 BOOST_AUTO_TEST_CASE(TestMultiple) {
-    boost::gregorian::date startDate( 2010 , boost::gregorian::Jan , 1);
-    Opm::TimeMap timeMap{boost::posix_time::ptime(startDate)};
+    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
+    Opm::TimeMap timeMap{ startDate };
     Opm::DynamicVector<double> vector(timeMap , 9.99);
     Opm::Events events( timeMap );
 
