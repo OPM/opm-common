@@ -38,5 +38,5 @@ build_script:
     - ps: pushd build
     - cmake .. -G"%GEN%" %BOOST_OPTIONS% -DOPM_DATA_ROOT=%DATA_ROOT% -DCMAKE_BUILD_TYPE=%configuration%
     - cmake --build . --config %configuration%
-    - ctest -C %configuration% --output-on-failure
+    - ctest -C %configuration% --output-on-failure -E SPE10
     - ps: popd
