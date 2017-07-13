@@ -1,0 +1,18 @@
+if(NOT opm-parser_FOUND)
+  #import the target
+  get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+  include("${_dir}/opm-parser-targets.cmake")
+
+  #report other information
+  set(opm-parser_INSTALLED "@OPM_PARSER_INSTALLED@")
+  set(opm-parser_PREFIX "@OPM_PARSER_PREFIX@")
+  set(opm-parser_INCLUDE_DIRS "@OPM_PARSER_INCLUDEDIRS@")
+  set(opm-parser_LIBRARY_DIRS "@OPM_PARSER_LIBDIRS@")
+  set(opm-parser_CXX_FLAGS "@CMAKE_CXX_FLAGS@")
+  set(opm-parser_CXX_FLAGS_DEBUG "@CMAKE_CXX_FLAGS_DEBUG@")
+  set(opm-parser_CXX_FLAGS_MINSIZEREL "@CMAKE_CXX_FLAGS_MINSIZEREL@")
+  set(opm-parser_CXX_FLAGS_RELEASE "@CMAKE_CXX_FLAGS_RELEASE@")
+  set(opm-parser_CXX_FLAGS_RELWITHDEBINFO "@CMAKE_CXX_FLAGS_RELWITHDEBINFO@")
+  set(opm-parser_LIBRARIES "opmparser")
+  set(opm-parser_MODULE_PATH "@OPM_PARSER_MODULE_PATH@")
+endif(NOT opm-parser_FOUND)

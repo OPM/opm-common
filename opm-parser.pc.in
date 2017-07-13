@@ -1,0 +1,15 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+CXX=@CMAKE_CXX_COMPILER@
+CC=@CMAKE_C_COMPILER@
+DEPENDENCIES=
+
+Name: opm-parser
+Version: @VERSION@
+Description: The opm-parser module
+URL: http://www.opm-project.org/
+Requires: ${DEPENDENCIES}
+Libs: -L${libdir} -lopmparser
+Cflags: -I${includedir}

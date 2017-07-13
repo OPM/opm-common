@@ -152,7 +152,7 @@ endforeach()
 add_static_analysis_tests(opmparser_SRC opmparser_INCLUDES)
 
 install(TARGETS opmparser
-        EXPORT  opm-parser-config
+        EXPORT  opm-parser-targets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
