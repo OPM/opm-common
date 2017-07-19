@@ -25,7 +25,7 @@ function build_dune {
    pushd . > /dev/null
    git clone ${url}
    cd ${project}
-   git checkout tags/v2.3.1
+   git checkout tags/v2.4.1
    mkdir build
    cd build
    cmake ../
