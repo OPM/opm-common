@@ -126,15 +126,13 @@ add_library(opmparser ${opmparser_SOURCES})
 
 target_link_libraries(opmparser PUBLIC opmjson
                                        ecl
-                                       ${boost_filesystem}
-                                       ${boost_system}
-                                       ${boost_regex}
-                                       ${boost_date_time})
+                                       ${Boost_LIBRARIES})
 target_compile_definitions(opmparser PRIVATE -DOPM_PARSER_DECK_API=1)
 target_include_directories(opmparser
     PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
             $<INSTALL_INTERFACE:include>
+            ${Boost_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
