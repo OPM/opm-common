@@ -1427,6 +1427,36 @@ namespace Opm {
         return getWells(m_timeMap.size()-1);
     }
 
+    /*
+      This will recursively go all the way down through the group tree
+      until the well leaf-nodes are encountered.
+    */
+    std::vector< const Well* > Schedule::getWells(const std::string& group_name, size_t timeStep) const {
+        if (!hasGroup(group_name))
+            throw std::invalid_argument("No such group: " + group_name);
+        {
+            const auto& group = getGroup( group_name );
+            std::vector<const Well*> wells;
+
+            if (group.hasBeenDefined( timeStep )) {
+                const GroupTree& group_tree = getGroupTree( timeStep );
+                const auto& child_groups = group_tree.children( group_name );
+
+                if (child_groups.size()) {
+                    for (const auto& child : child_groups) {
+                        const auto& child_wells = getWells( child, timeStep );
+                        wells.insert( wells.end() , child_wells.begin() , child_wells.end());
+                    }
+                } else {
+                    for (const auto& well_name : group.getWells( timeStep )) {
+                        wells.push_back( getWell( well_name ));
+                    }
+                }
+            }
+            return wells;
+        }
+    }
+
     std::vector< const Well* > Schedule::getWells(size_t timeStep) const {
         if (timeStep >= m_timeMap.size()) {
             throw std::invalid_argument("Timestep to large");

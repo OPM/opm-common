@@ -161,6 +161,28 @@ static Deck createDeckWithWellsOrdered() {
     return parser.parseString(input, ParseContext());
 }
 
+static Deck createDeckWithWellsOrderedGRUPTREE() {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "10 MAI 2007 / \n"
+            "SCHEDULE\n"
+            "GRUPTREE\n"
+            "  PG1 PLATFORM /\n"
+            "  PG2 PLATFORM /\n"
+            "  CG1  PG1 /\n"
+            "  CG2  PG2 /\n"
+            "/\n"
+            "WELSPECS\n"
+            "     \'DW_0\'        \'CG1\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'CW_1\'        \'CG1\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'BW_2\'        \'CG2\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'AW_3\'        \'CG2\'   20   51  3.92       \'OIL\'  7* /   \n"
+            "/\n";
+
+    return parser.parseString(input, ParseContext());
+}
+
 static Deck createDeckWithWellsAndCompletionData() {
     Opm::Parser parser;
     std::string input =
@@ -217,6 +239,64 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     BOOST_CHECK_EQUAL( "BW_2" , wells[1]->name());
     BOOST_CHECK_EQUAL( "AW_3" , wells[2]->name());
 }
+
+bool has_well( const std::vector<const Well*> wells, const std::string& well_name);
+
+bool has_well( const std::vector<const Well*> wells, const std::string& well_name) {
+    for (const auto& well : wells )
+        if (well->name( ) == well_name)
+            return true;
+
+    return false;
+}
+
+
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
+    auto deck = createDeckWithWellsOrderedGRUPTREE();
+    EclipseGrid grid(100,100,100);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule schedule(ParseContext() , grid , eclipseProperties, deck, Phases(true, true, true) );
+
+    BOOST_CHECK_THROW( schedule.getWells( "NO_SUCH_GROUP" , 1 ), std::invalid_argument);
+
+    {
+        auto field_wells = schedule.getWells("FIELD" , 0);
+        BOOST_CHECK_EQUAL( field_wells.size() , 4U);
+
+        BOOST_CHECK( has_well( field_wells, "DW_0" ));
+        BOOST_CHECK( has_well( field_wells, "CW_1" ));
+        BOOST_CHECK( has_well( field_wells, "BW_2" ));
+        BOOST_CHECK( has_well( field_wells, "AW_3" ));
+    }
+
+    {
+        auto platform_wells = schedule.getWells("PLATFORM" , 0);
+        BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
+
+        BOOST_CHECK( has_well( platform_wells, "DW_0" ));
+        BOOST_CHECK( has_well( platform_wells, "CW_1" ));
+        BOOST_CHECK( has_well( platform_wells, "BW_2" ));
+        BOOST_CHECK( has_well( platform_wells, "AW_3" ));
+    }
+
+    {
+        auto child_wells1 = schedule.getWells("CG1" , 0);
+        BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
+
+        BOOST_CHECK( has_well( child_wells1, "DW_0" ));
+        BOOST_CHECK( has_well( child_wells1, "CW_1" ));
+    }
+
+    {
+        auto parent_wells2 = schedule.getWells("PG2" , 0);
+        BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
+
+        BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
+        BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     auto deck = createDeck();

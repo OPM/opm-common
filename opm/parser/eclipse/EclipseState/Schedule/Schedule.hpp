@@ -75,6 +75,17 @@ namespace Opm
         std::vector< const Well* > getOpenWells(size_t timeStep) const;
         std::vector< const Well* > getWells() const;
         std::vector< const Well* > getWells(size_t timeStep) const;
+
+        /*
+          The overload with a group name argument will return all
+          wells beneath that particular group; i.e.
+
+             getWells("FIELD",t);
+
+          is an inefficient way to get all the wells defined at time
+          't'.
+        */
+        std::vector< const Well* > getWells(const std::string& group, size_t timeStep) const;
         std::vector< const Well* > getWellsMatching( const std::string& ) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
