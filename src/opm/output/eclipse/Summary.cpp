@@ -772,16 +772,7 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     if( type == ECL_SMSPEC_GROUP_VAR ) {
         if( !schedule.hasGroup( name ) ) return {};
 
-        const auto& names = schedule.getGroup( name ).getWells( timestep );
-        auto get = [&schedule]( const std::string& w ) {
-            return schedule.getWell( w );
-        };
-
-        std::vector< const Well* > wells;
-        auto insert = std::back_inserter( wells );
-        std::transform( names.begin(), names.end(), insert, get );
-
-        return wells;
+        return schedule.getWells( name, timestep );
     }
 
     if( type == ECL_SMSPEC_FIELD_VAR )
