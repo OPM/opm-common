@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(DoLogging) {
 BOOST_AUTO_TEST_CASE(Test_Format) {
     BOOST_CHECK_EQUAL( "There is an error here?\nIn file /path/to/file, line 100\n" , Log::fileMessage("/path/to/file" , 100 , "There is an error here?"));
 
-    BOOST_CHECK_EQUAL( "Error: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
-    BOOST_CHECK_EQUAL( "Warning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
+    BOOST_CHECK_EQUAL( "\nError: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
+    BOOST_CHECK_EQUAL( "\nWarning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
     BOOST_CHECK_EQUAL( "Info: This is the info" ,       Log::prefixMessage(Log::MessageType::Info , "This is the info"));
 }
 
@@ -250,10 +250,10 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
 
     // fileMessage
     BOOST_CHECK_EQUAL(fileMessage("foo/bar", 1, "message"), "message\nIn file foo/bar, line 1\n");
-    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, "foo/bar", 1, "message"), "Error: message\nIn file foo/bar, line 1\n");
+    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, "foo/bar", 1, "message"), "\nError: message\nIn file foo/bar, line 1\n");
 
     // prefixMessage
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "Error: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "\nError: message");
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "Info: message");
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "Note: message");
 
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(TestOpmLogWithLimits)
         + Log::colorCodeMessage(Log::MessageType::Info, "Info") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Bug, "Bug") + "\n"
         + Log::colorCodeMessage(Log::MessageType::Warning, "Warning") + "\n"
-        + Log::colorCodeMessage(Log::MessageType::Warning, "Message limit reached for message category: Warning") + "\n";
+        + Log::colorCodeMessage(Log::MessageType::Warning, "Message limit reached for message category: \nWarning") + "\n";
 
     BOOST_CHECK_EQUAL(log_stream2.str(), expected2);
 
