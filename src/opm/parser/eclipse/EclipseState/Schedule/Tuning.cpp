@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <string>
 
 namespace Opm {
 
