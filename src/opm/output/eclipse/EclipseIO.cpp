@@ -373,6 +373,10 @@ void EclipseIO::writeInitial( data::Solution simProps, const NNC& nnc) {
 }
 
 
+void  EclipseIO::overwriteInitialOIP( const data::Solution& simProps )
+{
+    this->impl->summary.set_initial( simProps );
+}
 
 // implementation of the writeTimeStep method
 void EclipseIO::writeTimeStep(int report_step,

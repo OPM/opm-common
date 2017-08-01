@@ -104,6 +104,16 @@ public:
 
     void writeInitial( data::Solution simProps = data::Solution(), const NNC& nnc = NNC());
 
+    /**
+     * \brief Overwrite the initial OIP values.
+     *
+     * These are also written when we call writeInitial if the simProps
+     * contains them. If not these are assumed to zero and the simulator
+     * can update them with this methods.
+     * \param simProps The properties containing at least OIP.
+     */
+    void overwriteInitialOIP( const data::Solution& simProps );
+
     /*!
      * \brief Write a reservoir state and summary information to disk.
      *
