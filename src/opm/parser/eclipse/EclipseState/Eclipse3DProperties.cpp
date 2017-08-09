@@ -676,18 +676,11 @@ namespace Opm {
     void Eclipse3DProperties::processGridProperties( const Deck& deck,
                                                      const EclipseGrid& eclipseGrid) {
 
-
-        /*
-          Observe that the REGIONS section is scanned out of order -
-          before the other section, to ensure that the integer region
-          keywords are correctly defined before parsing the remaining
-          keywords.
-        */
-        if (Section::hasREGIONS(deck))
-            scanSection(REGIONSSection(deck), eclipseGrid);
-
         if (Section::hasGRID(deck))
             scanSection(GRIDSection(deck), eclipseGrid);
+
+        if (Section::hasREGIONS(deck))
+            scanSection(REGIONSSection(deck), eclipseGrid);
 
         if (Section::hasEDIT(deck))
             scanSection(EDITSection(deck), eclipseGrid);
