@@ -1,5 +1,7 @@
 if(NOT opm-parser_FOUND)
   #import the target
+  set(ecl_DIR @ecl_DIR@)
+  find_package(ecl REQUIRED)
   get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
   include("${_dir}/opm-parser-targets.cmake")
 
