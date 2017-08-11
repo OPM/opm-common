@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
+#include <ert/ecl/Smspec.hpp>
 #include <ert/ecl/ecl_smspec.h>
 
 #include <iostream>
@@ -361,11 +362,12 @@ inline void handleKW( std::vector< ERT::smspec_node >& list,
 inline void uniq( std::vector< ERT::smspec_node >& vec ) {
     const auto lt = []( const ERT::smspec_node& lhs,
                         const ERT::smspec_node& rhs ) {
-        return std::strcmp( lhs.key1(), rhs.key1() ) < 0;
+        return ERT::smspec_node::cmp( lhs, rhs ) < 0;
     };
+
     const auto eq = []( const ERT::smspec_node& lhs,
                         const ERT::smspec_node& rhs ) {
-        return std::strcmp( lhs.key1(), rhs.key1() ) == 0;
+        return ERT::smspec_node::cmp( lhs, rhs ) == 0;
     };
 
     std::sort( vec.begin(), vec.end(), lt );
