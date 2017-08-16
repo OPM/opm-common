@@ -9,6 +9,7 @@ function (set_aliases)
   # are separated by space
   set (aliases
 	"HAVE_UMFPACK             HAVE_SUITESPARSE_UMFPACK_H"
+	"HAVE_SUITEPARSE_UMFPACK  HAVE_SUITESPARSE_UMFPACK_H"
 	"HAVE_DUNE_BOOST          HAVE_BOOST"
 	)
   foreach (alias IN LISTS aliases)
