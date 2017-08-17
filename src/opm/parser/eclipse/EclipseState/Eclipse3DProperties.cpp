@@ -395,6 +395,9 @@ namespace Opm {
         for( const auto& kw : { "PERMXY", "PERMYZ", "PERMZX" } )
             supportedDoubleKeywords.emplace_back( kw, nan, distributeTopLayer, "Permeability" );
 
+        /* A pure OPM keyword */
+        supportedDoubleKeywords.emplace_back( "RHO", nan, "Density" );
+
         /* the transmissibility keywords for neighboring connections. note that
          * these keywords don't seem to require a post-processor
          */

@@ -385,5 +385,6 @@ set( keywords
      900_OPM/G/GRUPRIG
      900_OPM/M/MINPVFIL
      900_OPM/O/OCOMPIDX
+     900_OPM/R/RHO
      900_OPM/T/TLPMIXPA)
-       
+
