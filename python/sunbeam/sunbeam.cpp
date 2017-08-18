@@ -217,11 +217,13 @@ boost::posix_time::ptime get_end_time( const Schedule& s ) {
 }
 
 py::list get_timesteps( const Schedule& s ) {
+    namespace time = boost::posix_time;
     const auto& tm = s.getTimeMap();
-    std::vector< boost::posix_time::ptime > v;
+    std::vector< time::ptime > v;
     v.reserve( tm.size() );
 
-    for( size_t i = 0; i < tm.size(); ++i ) v.push_back( tm[ i ] );
+    for( size_t i = 0; i < tm.size(); ++i )
+        v.push_back( time::from_time_t(tm[ i ]) );
 
     return iterable_to_pylist( v );
 }

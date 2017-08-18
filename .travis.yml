@@ -1,3 +1,4 @@
+dist: trusty
 language: python
 python:
   - "2.7"
@@ -19,40 +20,26 @@ addons:
       - libeigen3-dev
 before_script:
   - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
-  - SUNBEAM_ROOT=(`pwd`)
-  - echo $SUNBEAM_ROOT
-  - cd ..
-  - SUN_ROOT=(`pwd`)
-  - echo $SUN_ROOT
-  - git clone https://github.com/Ensembles/ert.git
-  - git clone https://github.com/OPM/opm-common.git
+  - pushd ..
+  - INSTALL_ROOT=$PWD/install
+  - git clone https://github.com/Statoil/libecl.git
   - git clone https://github.com/OPM/opm-parser.git
-  - cd ert
-  - ERT_ROOT=(`pwd`)
-  - echo $ERT_ROOT
-  - mkdir build
-  - cd build
-  - cmake -DBUILD_PYTHON=OFF -DBUILD_TESTS=OFF ..
-  - make
-  - cd $SUN_ROOT/opm-common
-  - OPM_COMMON_ROOT=(`pwd`)
-  - echo $OPM_COMMON_ROOT
-  - mkdir build
-  - cd build
-  - cmake ..
-  - make
-  - cd $SUN_ROOT/opm-parser
-  - OPM_PARSER_ROOT=(`pwd`)
-  - echo $OPM_PARSER_ROOT
-  - mkdir build
-  - cd build
-  - cmake -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
-  - make
-  - cd $SUNBEAM_ROOT
+  - mkdir libecl/build
+  - pushd libecl/build
+  - cmake -DBUILD_PYTHON=OFF -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
+  - make install
+  - popd
+  - mkdir opm-parser/build
+  - pushd opm-parser/build
+  - cmake -DCMAKE_MODULE_PATH=$INSTALL_ROOT/share/cmake/Modules -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+  - make install
+  - popd
+  - popd
   - mkdir build
   - cd build
 
 script:
-  - cmake -DCMAKE_MODULE_PATH=$OPM_COMMON_ROOT/cmake/Modules ..
+  - cmake -DCMAKE_MODULE_PATH=$INSTALL_ROOT/share/cmake/Modules -Dopm-parser_DIR=$INSTALL_ROOT/lib/cmake/opm-parser ..
   - make
+  - export PYTHONPATH=$PYTHONPATH:python
   - ctest --output-on-failure
