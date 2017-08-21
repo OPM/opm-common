@@ -15,6 +15,10 @@
 # SUPERLU_LIBRARIES           Name to the SuperLU library.
 #
 
+if(NOT USE_SUPERLU)
+  return()
+endif()
+
 include(CheckIncludeFiles)
 include(CMakePushCheckState)
 include(CheckCSourceCompiles)
@@ -118,6 +122,19 @@ int main(void)
   return 0;
 }"
 SUPERLU_POST_2005_VERSION)
+
+# check whether version is at least 5.0
+CHECK_C_SOURCE_COMPILES("
+typedef int int_t;
+#include <supermatrix.h>
+#include <slu_util.h>
+int main(void)
+{
+  GlobalLU_t glu;
+  return 0;
+}"
+SUPERLU_MIN_VERSION_5)
+
 cmake_pop_check_state()
 
 if(SUPERLU_MIN_VERSION_4_3)
@@ -126,6 +143,17 @@ if(SUPERLU_MIN_VERSION_4_3)
 else()
   set(SUPERLU_WITH_VERSION "SuperLU <= 4.2, post 2005" CACHE STRING
     "Human readable string containing SuperLU version information.")
+endif()
+
+if(SUPERLU_MIN_VERSION_5)
+  include(UseDuneVer)
+  find_dune_version("dune" "istl")
+  set(DUNE_ISTL_VERSION ${DUNE_ISTL_VERSION_MAJOR}.${DUNE_ISTL_VERSION_MINOR}.${DUNE_ISTL_VERSION_REVISION})
+  if(DUNE_ISTL_VERSION VERSION_LESS 2.5)
+    message(STATUS "SuperLU requested, but version found not compatible with dune-istl ${DUNE_ISTL_VERSION}")
+    set(SUPERLU_LIBRARY "")
+    set(SUPERLU_INCLUDE_DIR "")
+  endif()
 endif()
 
 # behave like a CMake module is supposed to behave
