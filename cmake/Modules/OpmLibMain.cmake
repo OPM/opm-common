@@ -102,6 +102,9 @@ find_openmp (${project})
 include (UseThreads)
 find_threads (${project})
 
+# SuperLU is optional
+option (USE_SUPERLU "Use SuperLU direct solvers" OFF)
+
 # static code analysis
 include(UseStaticAnalysis)
 setup_static_analysis_tools()
