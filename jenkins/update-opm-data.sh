@@ -52,6 +52,8 @@ export REASON
 export BRANCH_NAME
 $WORKSPACE/deps/opm-simulators/tests/update_reference_data.sh $OPM_DATA_ROOT
 
+sleep 5
+
 # Finally open the pull request
 cd $OPM_DATA_ROOT
 git remote add jenkins4opm git@github.com:jenkins4opm/opm-data
