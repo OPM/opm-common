@@ -19,6 +19,7 @@ addons:
       - libsuitesparse-dev
       - libeigen3-dev
 before_script:
+  - export PYTHON_VERSION="2.7"
   - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
   - pushd ..
   - export INSTALL_ROOT=$PWD/install
@@ -38,7 +39,8 @@ before_script:
   - mkdir build
   - cd build
 
+script:
   - cmake -DCMAKE_PREFIX_PATH=$INSTALL_ROOT -DUSE_RPATH=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
   - make install
-  - export PYTHONPATH=$PYTHONPATH:install/lib/python${PYTHON_VERSION}/site-packages
+  - export PYTHONPATH=$PYTHONPATH:$INSTALL_ROOT/lib/python${PYTHON_VERSION}/site-packages
   - ctest --output-on-failure
