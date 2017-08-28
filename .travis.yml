@@ -21,7 +21,7 @@ addons:
 before_script:
   - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
   - pushd ..
-  - INSTALL_ROOT=$PWD/install
+  - export INSTALL_ROOT=$PWD/install
   - git clone https://github.com/Statoil/libecl.git
   - git clone https://github.com/OPM/opm-parser.git
   - mkdir libecl/build
@@ -31,15 +31,14 @@ before_script:
   - popd
   - mkdir opm-parser/build
   - pushd opm-parser/build
-  - cmake -DCMAKE_MODULE_PATH=$INSTALL_ROOT/share/cmake/Modules -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+  - cmake -DCMAKE_PREFIX_PATH=$INSTALL_ROOT -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
   - make install
   - popd
   - popd
   - mkdir build
   - cd build
 
-script:
-  - cmake -DCMAKE_MODULE_PATH=$INSTALL_ROOT/share/cmake/Modules -Dopm-parser_DIR=$INSTALL_ROOT/lib/cmake/opm-parser ..
-  - make
-  - export PYTHONPATH=$PYTHONPATH:python
+  - cmake -DCMAKE_PREFIX_PATH=$INSTALL_ROOT -DUSE_RPATH=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
+  - make install
+  - export PYTHONPATH=$PYTHONPATH:install/lib/python${PYTHON_VERSION}/site-packages
   - ctest --output-on-failure
