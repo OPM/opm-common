@@ -228,10 +228,11 @@ set( keywords
      000_Eclipse100/R/RPTRUNSP
      000_Eclipse100/R/RPTSCHED
      000_Eclipse100/R/RPTSOL
+     000_Eclipse100/R/RPTSMRY
      000_Eclipse100/R/RS
      000_Eclipse100/R/RSVD
      000_Eclipse100/R/RTEMP
-     000_Eclipse100/R/RTEMPA     
+     000_Eclipse100/R/RTEMPA
      000_Eclipse100/R/RTEMPVD
      000_Eclipse100/R/RUNSPEC
      000_Eclipse100/R/RUNSUM
@@ -386,4 +387,4 @@ set( keywords
      900_OPM/M/MINPVFIL
      900_OPM/O/OCOMPIDX
      900_OPM/T/TLPMIXPA)
-       
+
