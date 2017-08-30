@@ -283,6 +283,9 @@ foreach (test BoxTest
     add_test(NAME ${test} COMMAND ${test} ${_testdir}/integration_tests/)
 endforeach ()
 
+add_executable(parse_write tests/integration/parse_write.cpp)
+target_link_libraries(parse_write opmparser boost_test)
+
 if (NOT HAVE_OPM_DATA)
     return ()
 endif ()
@@ -305,7 +308,7 @@ foreach (deck ${OPM_DATA_ROOT}/norne/NORNE_ATW2013.DATA
               ${OPM_DATA_ROOT}/spe10model2/SPE10_MODEL2.DATA
               ${OPM_DATA_ROOT}/msw_2d_h/2D_H__.DATA )
     get_filename_component(test_name ${deck} NAME_WE)
-    add_test(NAME ${test_name} COMMAND opmi ${deck})
+    add_test(NAME ${test_name} COMMAND parse_write ${deck})
 endforeach()
 set_property(TEST NORNE_ATW2013
              PROPERTY ENVIRONMENT "OPM_ERRORS_IGNORE=PARSE_RANDOM_SLASH")
