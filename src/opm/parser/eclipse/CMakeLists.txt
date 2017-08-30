@@ -5,6 +5,7 @@ set(genkw_SOURCES Parser/createDefaultKeywordList.cpp
                   Deck/DeckItem.cpp
                   Deck/DeckKeyword.cpp
                   Deck/DeckRecord.cpp
+                  Deck/DeckOutput.cpp
                   Generator/KeywordGenerator.cpp
                   Generator/KeywordLoader.cpp
                   Parser/MessageContainer.cpp
@@ -45,6 +46,7 @@ set(opmparser_SOURCES Deck/Deck.cpp
                       Deck/DeckItem.cpp
                       Deck/DeckKeyword.cpp
                       Deck/DeckRecord.cpp
+                      Deck/DeckOutput.cpp
                       Deck/Section.cpp
                       EclipseState/checkDeck.cpp
                       EclipseState/Eclipse3DProperties.cpp

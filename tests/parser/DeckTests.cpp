@@ -19,11 +19,13 @@
 
 
 #include <stdexcept>
+#include <sstream>
 
 #define BOOST_TEST_MODULE DeckTests
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -559,3 +561,39 @@ BOOST_AUTO_TEST_CASE(setUnknown_wasknown_nowunknown) {
     DeckKeyword deckKeyword( "KW", false );
     BOOST_CHECK(!deckKeyword.isKnown());
 }
+BOOST_AUTO_TEST_CASE(DeckOutputTest) {
+    std::string expected = "KEYWORD\n\
+==1-2\n\
+==3-1*\n\
+==5-1*\n\
+==7-8\n\
+==1*-10 /\n\
+/\n\
+ABC";
+    std::stringstream s;
+    DeckOutput out(s);
+
+    out.record_indent = "==";
+    out.item_sep = "-";
+    out.columns = 2;
+    out.keyword_sep = "ABC";
+
+    out.start_keyword("KEYWORD");
+    out.start_record();
+    out.write<int>(1);
+    out.write<int>(2);
+    out.write<int>(3);
+    out.stash_default( );
+    out.write<int>(5);
+    out.stash_default( );
+    out.write<int>(7);
+    out.write<int>(8);
+    out.stash_default( );
+    out.write<int>(10);
+    out.end_record();
+    out.end_keyword(true);
+    out.write_string( out.keyword_sep );
+
+    BOOST_CHECK_EQUAL( expected, s.str());
+}
+
