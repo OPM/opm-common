@@ -66,6 +66,10 @@ namespace Opm {
 
         const_iterator begin() const;
         const_iterator end() const;
+        bool equal_data(const DeckKeyword& other, bool cmp_default = false, bool cmp_numeric = true) const;
+        bool equal(const DeckKeyword& other, bool cmp_default = false, bool cmp_numeric = true) const;
+        bool operator==(const DeckKeyword& other) const;
+        bool operator!=(const DeckKeyword& other) const;
 
     private:
         std::string m_keywordName;

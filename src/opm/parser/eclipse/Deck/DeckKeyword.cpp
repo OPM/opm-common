@@ -120,5 +120,35 @@ namespace Opm {
         return this->getDataRecord().getDataItem().getSIDoubleData();
     }
 
+    bool DeckKeyword::equal_data(const DeckKeyword& other, bool cmp_default, bool cmp_numeric) const {
+        if (this->size() != other.size())
+            return false;
+
+        for (size_t index = 0; index < this->size(); index++) {
+            const auto& this_record = this->getRecord( index );
+            const auto& other_record = other.getRecord( index );
+            if (!this_record.equal( other_record , cmp_default, cmp_numeric))
+                return false;
+        }
+        return true;
+    }
+
+    bool DeckKeyword::equal(const DeckKeyword& other, bool cmp_default, bool cmp_numeric) const {
+        if (this->name() != other.name())
+            return false;
+
+        return this->equal_data(other, cmp_default, cmp_numeric);
+    }
+
+    bool DeckKeyword::operator==(const DeckKeyword& other) const {
+        bool cmp_default = false;
+        bool cmp_numeric = true;
+        return this->equal( other , cmp_default, cmp_numeric);
+    }
+
+    bool DeckKeyword::operator!=(const DeckKeyword& other) const {
+        return !(*this == other);
+    }
+
 }
 

@@ -79,6 +79,25 @@ namespace Opm {
 
         type_tag getType() const;
 
+        /*
+          The comparison can be adjusted with the cmp_default and
+          cmp_numeric flags. If cmp_default is set to true the
+          comparison will take the defaulted status of the items into
+          account, i.e. two items will compare differently if one is
+          defaulted and the other has the default value explicitly
+          set. The default behaviour is cmp_default == false -
+          i.e. only the actual values in the items will be compared,
+          itrespective of whether they have been set explicitly or
+          have been defaulted.
+        */
+        bool equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) const;
+
+        /*
+          The operator== is implemented based on the equal( ) method,
+          with the arguments cmp_default=false and cmp_numeric=true.
+        */
+        bool operator==(const DeckItem& other) const;
+        bool operator!=(const DeckItem& other) const;
     private:
         std::vector< double > dval;
         std::vector< int > ival;

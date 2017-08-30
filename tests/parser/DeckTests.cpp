@@ -597,3 +597,36 @@ ABC";
     BOOST_CHECK_EQUAL( expected, s.str());
 }
 
+
+BOOST_AUTO_TEST_CASE(DeckItemEqual) {
+    DeckItem item1("TEST1" , int());
+    DeckItem item2("TEST2" , int());
+    DeckItem item3("TEST1" , double());
+    DeckItem item4("TEST1" , int());
+    DeckItem item5("TEST1" , double());
+
+    BOOST_CHECK( item1 != item2 );
+    BOOST_CHECK( item1 != item3 );
+    BOOST_CHECK( item1 == item1 );
+    BOOST_CHECK( item1 == item4 );
+
+    item4.push_back(100);
+    BOOST_CHECK( item1 != item4 );
+    item1.push_back(100);
+    BOOST_CHECK( item1 == item4 );
+
+    item4.push_backDefault( 200 );
+    item1.push_back( 200 );
+    BOOST_CHECK( item1 == item4 );
+    BOOST_CHECK( !item1.equal( item4 , true , true));
+
+    item3.push_back(1.0);
+    item5.push_back(1.0);
+    BOOST_CHECK( item3.equal( item5 , false, true ));
+    BOOST_CHECK( item3.equal( item5 , false, false ));
+
+    item3.push_back(1.0);
+    item5.push_back(1.0 - 1e-8);
+    BOOST_CHECK( item3.equal( item5 , false, true ));
+    BOOST_CHECK( !item3.equal( item5 , false, false ));
+}

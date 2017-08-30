@@ -240,6 +240,78 @@ type_tag DeckItem::getType() const {
     return this->type;
 }
 
+namespace {
+bool double_equal(double value1, double value2, double abs_eps , double rel_eps) {
+
+    bool equal = true;
+    double diff = std::fabs(value1 - value2);
+    if (diff > abs_eps) {
+        double scale = std::max(std::fabs(value1), std::fabs(value2));
+
+        if (diff > scale * rel_eps) {
+            equal = false;
+        }
+    }
+    return equal;
+}
+}
+
+
+bool DeckItem::equal(const DeckItem& other, bool cmp_default, bool cmp_numeric) const {
+    double rel_eps = 1e-4;
+    double abs_eps = 1e-4;
+
+    if (this->type != other.type)
+        return false;
+
+    if (this->size() != other.size())
+        return false;
+
+    if (this->item_name != other.item_name)
+        return false;
+
+    if (cmp_default)
+        if (this->defaulted != other.defaulted)
+            return false;
+
+    switch( this->type ) {
+    case type_tag::integer:
+        if (this->ival != other.ival)
+            return false;
+        break;
+    case type_tag::string:
+        if (this->sval != other.sval)
+            return false;
+        break;
+    case type_tag::fdouble:
+        if (cmp_numeric) {
+            const std::vector<double>& this_data = this->dval;
+            const std::vector<double>& other_data = other.dval;
+            for (size_t i=0; i < this_data.size(); i++) {
+                if (!double_equal( this_data[i] , other_data[i], rel_eps, abs_eps))
+                    return false;
+            }
+        } else {
+            if (this->dval != other.dval)
+                return false;
+        }
+        break;
+    default:
+        break;
+    }
+
+    return true;
+}
+
+bool DeckItem::operator==(const DeckItem& other) const {
+    bool cmp_default = false;
+    bool cmp_numeric = true;
+    return this->equal( other , cmp_default, cmp_numeric);
+}
+
+bool DeckItem::operator!=(const DeckItem& other) const {
+    return !(*this == other);
+}
 /*
  * Explicit template instantiations. These must be manually maintained and
  * updated with changes in DeckItem so that code is emitted.

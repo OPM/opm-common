@@ -61,6 +61,10 @@ namespace Opm {
         const_iterator begin() const;
         const_iterator end() const;
 
+        bool equal(const DeckRecord& other, bool cmp_default, bool cmp_numeric) const;
+        bool operator==(const DeckRecord& other) const;
+        bool operator!=(const DeckRecord& other) const;
+
     private:
         std::vector< DeckItem > m_items;
 
