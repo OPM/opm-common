@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -24,15 +25,26 @@
 namespace Opm {
 
     DeckKeyword::DeckKeyword(const std::string& keywordName) :
-        m_keywordName(keywordName), m_lineNumber(-1),
-        m_knownKeyword(true), m_isDataKeyword(false)
+        m_keywordName(keywordName),
+        m_lineNumber(-1),
+        m_knownKeyword(true),
+        m_isDataKeyword(false),
+        m_slashTerminated(true)
     {
     }
 
     DeckKeyword::DeckKeyword(const std::string& keywordName, bool knownKeyword) :
-        m_keywordName(keywordName), m_lineNumber(-1),
-        m_knownKeyword(knownKeyword), m_isDataKeyword(false)
+        m_keywordName(keywordName),
+        m_lineNumber(-1),
+        m_knownKeyword(knownKeyword),
+        m_isDataKeyword(false),
+        m_slashTerminated(true)
     {
+    }
+
+
+    void DeckKeyword::setFixedSize() {
+        m_slashTerminated = false;
     }
 
     void DeckKeyword::setLocation(const std::string& fileName, int lineNumber) {
@@ -118,6 +130,36 @@ namespace Opm {
 
     const std::vector<double>& DeckKeyword::getSIDoubleData() const {
         return this->getDataRecord().getDataItem().getSIDoubleData();
+    }
+
+    void DeckKeyword::write_data( DeckOutput& output ) const {
+        for (const auto& record: *this)
+            record.write( output );
+    }
+
+    void DeckKeyword::write_TITLE( DeckOutput& output ) const {
+        output.start_keyword( this->name( ) );
+        {
+            const auto& record = this->getRecord(0);
+            output.write_string("  ");
+            record.write_data( output );
+        }
+    }
+
+    void DeckKeyword::write( DeckOutput& output ) const {
+        if (this->name() == "TITLE")
+            this->write_TITLE( output );
+        else {
+            output.start_keyword( this->name( ) );
+            this->write_data( output );
+            output.end_keyword( this->m_slashTerminated );
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const DeckKeyword& keyword) {
+        DeckOutput out( os );
+        keyword.write( out );
+        return os;
     }
 
     bool DeckKeyword::equal_data(const DeckKeyword& other, bool cmp_default, bool cmp_numeric) const {

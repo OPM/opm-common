@@ -15,13 +15,15 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
 #include <boost/algorithm/string.hpp>
 
+#include <iostream>
 #include <stdexcept>
 
 namespace Opm {
@@ -107,6 +109,11 @@ size_t DeckItem::size() const {
         case type_tag::string:  return this->sval.size();
         default: throw std::logic_error( "Type not set." );
     }
+}
+
+size_t DeckItem::out_size() const {
+    size_t data_size = this->size();
+    return std::max( data_size , this->defaulted.size() );
 }
 
 template< typename T >
@@ -240,6 +247,41 @@ type_tag DeckItem::getType() const {
     return this->type;
 }
 
+
+
+template< typename T >
+void DeckItem::write_vector(DeckOutput& stream, const std::vector<T>& data) const {
+    for (size_t index = 0; index < this->out_size(); index++) {
+        if (this->defaultApplied(index))
+            stream.stash_default( );
+        else
+            stream.write( data[index] );
+    }
+}
+
+
+void DeckItem::write(DeckOutput& stream) const {
+    switch( this->type ) {
+    case type_tag::integer:
+        this->write_vector( stream, this->ival );
+        break;
+    case type_tag::fdouble:
+        this->write_vector( stream,  this->dval );
+        break;
+    case type_tag::string:
+        this->write_vector( stream,  this->sval );
+        break;
+    default:
+        throw std::logic_error( "Type not set." );
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const DeckItem& item) {
+    DeckOutput stream(os);
+    item.write( stream );
+    return os;
+}
+
 namespace {
 bool double_equal(double value1, double value2, double abs_eps , double rel_eps) {
 
@@ -312,6 +354,9 @@ bool DeckItem::operator==(const DeckItem& other) const {
 bool DeckItem::operator!=(const DeckItem& other) const {
     return !(*this == other);
 }
+
+
+
 /*
  * Explicit template instantiations. These must be manually maintained and
  * updated with changes in DeckItem so that code is emitted.
@@ -324,5 +369,4 @@ template const std::string& DeckItem::get< std::string >( size_t ) const;
 template const std::vector< int >& DeckItem::getData< int >() const;
 template const std::vector< double >& DeckItem::getData< double >() const;
 template const std::vector< std::string >& DeckItem::getData< std::string >() const;
-
 }

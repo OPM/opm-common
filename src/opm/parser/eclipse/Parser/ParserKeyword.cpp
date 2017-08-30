@@ -490,6 +490,17 @@ void set_dimensions( ParserItem& item,
             record_nr++;
         }
 
+        if (this->hasFixedSize( ))
+            keyword.setFixedSize( );
+
+        if (this->m_keywordSizeType == OTHER_KEYWORD_IN_DECK) {
+            if (!m_isTableCollection)
+                keyword.setFixedSize( );
+        }
+
+        if (this->m_keywordSizeType == UNKNOWN)
+            keyword.setFixedSize( );
+
         return keyword;
     }
 

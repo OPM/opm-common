@@ -21,6 +21,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -205,4 +206,20 @@ namespace Opm {
         return this->keywordList.end();
     }
 
+
+    void Deck::write( DeckOutput& output ) const {
+        size_t kw_index = 1;
+        for (const auto& keyword: *this) {
+            keyword.write( output );
+            kw_index++;
+            if (kw_index < size())
+                output.write_string( output.keyword_sep );
+        }
+    }
+
+    std::ostream& operator<<(std::ostream& os, const Deck& deck) {
+        DeckOutput out( os );
+        deck.write( out );
+        return os;
+    }
 }

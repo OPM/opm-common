@@ -226,6 +226,11 @@ PERMR
   2100*100.0D0
 /
 
+PERMXY
+  2100*100.0D0
+/
+
+
 PORO
   2100*0.3D0
 /
@@ -455,6 +460,14 @@ BOOST_AUTO_TEST_CASE(RadialPermeabilityTensor) {
     BOOST_CHECK_CLOSE(permtht.iget(49, 10, 9), permr.iget(49, 10, 9), check_tol);
     BOOST_CHECK_CLOSE(permz.iget(49, 10, 9), 0.1 * permr.iget(49, 10, 9), check_tol);
     BOOST_CHECK_CLOSE(0.3, poro.iget(49, 10, 9), check_tol);
+
+    {
+        const auto& d1 = s.deck.getKeyword("PERMR");
+        const auto& d2 = s.deck.getKeyword("PERMXY");
+
+        BOOST_CHECK( !d1.equal( d2 ));
+        BOOST_CHECK( d1.equal_data( d2 ));
+    }
 }
 
 

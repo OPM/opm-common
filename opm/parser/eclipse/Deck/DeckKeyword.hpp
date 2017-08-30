@@ -28,6 +28,7 @@
 
 namespace Opm {
     class ParserKeyword;
+    class DeckOutput;
 
     class DeckKeyword {
     public:
@@ -37,6 +38,7 @@ namespace Opm {
         DeckKeyword(const std::string& keywordName, bool knownKeyword);
 
         const std::string& name() const;
+        void setFixedSize();
         void setLocation(const std::string& fileName, int lineNumber);
         const std::string& getFileName() const;
         int getLineNumber() const;
@@ -55,6 +57,9 @@ namespace Opm {
         const std::vector<double>& getSIDoubleData() const;
         const std::vector<std::string>& getStringData() const;
         size_t getDataSize() const;
+        void write( DeckOutput& output ) const;
+        void write_data( DeckOutput& output ) const;
+        void write_TITLE( DeckOutput& output ) const;
 
         template <class Keyword>
         bool isKeyword() const {
@@ -71,6 +76,7 @@ namespace Opm {
         bool operator==(const DeckKeyword& other) const;
         bool operator!=(const DeckKeyword& other) const;
 
+        friend std::ostream& operator<<(std::ostream& os, const DeckKeyword& keyword);
     private:
         std::string m_keywordName;
         std::string m_fileName;
@@ -79,6 +85,7 @@ namespace Opm {
         std::vector< DeckRecord > m_recordList;
         bool m_knownKeyword;
         bool m_isDataKeyword;
+        bool m_slashTerminated;
     };
 }
 

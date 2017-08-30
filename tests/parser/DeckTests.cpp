@@ -561,6 +561,31 @@ BOOST_AUTO_TEST_CASE(setUnknown_wasknown_nowunknown) {
     DeckKeyword deckKeyword( "KW", false );
     BOOST_CHECK(!deckKeyword.isKnown());
 }
+
+
+
+BOOST_AUTO_TEST_CASE(DeckItemWrite) {
+    DeckItem item("TEST", int());
+    std::stringstream s;
+    DeckOutput w(s);
+
+    item.push_back(1);
+    item.push_back(2);
+    item.push_back(3);
+
+    item.write(w);
+    {
+        int v1,v2,v3;
+        s >> v1;
+        s >> v2;
+        s >> v3;
+
+        BOOST_CHECK_EQUAL( v1 , 1 );
+        BOOST_CHECK_EQUAL( v2 , 2 );
+        BOOST_CHECK_EQUAL( v3 , 3 );
+    }
+}
+
 BOOST_AUTO_TEST_CASE(DeckOutputTest) {
     std::string expected = "KEYWORD\n\
 ==1-2\n\
@@ -595,6 +620,61 @@ ABC";
     out.write_string( out.keyword_sep );
 
     BOOST_CHECK_EQUAL( expected, s.str());
+}
+
+BOOST_AUTO_TEST_CASE(DeckItemWriteDefault) {
+    DeckItem item("TEST", int());
+    item.push_backDefault(1);
+    item.push_backDefault(1);
+    item.push_backDefault(1);
+
+    {
+        std::stringstream s;
+        DeckOutput w(s);
+        item.write( w );
+        BOOST_CHECK_EQUAL( s.str() , "");
+    }
+
+    item.push_back(13);
+    {
+        std::stringstream s;
+        DeckOutput w(s);
+        item.write( w );
+        BOOST_CHECK_EQUAL( s.str() , "3* 13");
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(DeckItemWriteString) {
+    DeckItem item("TEST", std::string());
+    item.push_back("NO");
+    item.push_back("YES");
+    std::stringstream s;
+    DeckOutput w(s);
+    item.write( w );
+    BOOST_CHECK_EQUAL( s.str() , "'NO' 'YES'");
+}
+
+
+BOOST_AUTO_TEST_CASE(RecordWrite) {
+
+    DeckRecord deckRecord;
+    DeckItem item1("TEST1", int());
+    DeckItem item2("TEST2", double());
+    DeckItem item3("TEST3", std::string());
+
+    item1.push_back( 123 );
+    item2.push_backDefault( 100.0 );
+    item3.push_back("VALUE");
+
+    deckRecord.addItem( item1 );
+    deckRecord.addItem( item2 );
+    deckRecord.addItem( item3 );
+
+    std::stringstream s;
+    DeckOutput w(s);
+    deckRecord.write_data( w );
+    BOOST_CHECK_EQUAL( s.str() , "123 1* 'VALUE'");
 }
 
 

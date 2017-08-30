@@ -23,11 +23,13 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <ostream>
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 
 namespace Opm {
+    class DeckOutput;
 
     class DeckItem {
     public:
@@ -54,6 +56,7 @@ namespace Opm {
         // creates the defaulted items if all their sizes are fully specified by the
         // keyword, though...
         size_t size() const;
+        size_t out_size() const;
 
         template< typename T > const T& get( size_t ) const;
         double getSIDouble( size_t ) const;
@@ -79,6 +82,10 @@ namespace Opm {
 
         type_tag getType() const;
 
+        void write(DeckOutput& writer) const;
+        friend std::ostream& operator<<(std::ostream& os, const DeckItem& item);
+
+
         /*
           The comparison can be adjusted with the cmp_default and
           cmp_numeric flags. If cmp_default is set to true the
@@ -98,6 +105,7 @@ namespace Opm {
         */
         bool operator==(const DeckItem& other) const;
         bool operator!=(const DeckItem& other) const;
+
     private:
         std::vector< double > dval;
         std::vector< int > ival;
@@ -115,6 +123,7 @@ namespace Opm {
         template< typename T > void push( T );
         template< typename T > void push( T, size_t );
         template< typename T > void push_default( T );
+        template< typename T > void write_vector(DeckOutput& writer, const std::vector<T>& data) const;
     };
 }
 #endif  /* DECKITEM_HPP */

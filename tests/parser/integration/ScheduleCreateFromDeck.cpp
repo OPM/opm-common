@@ -48,16 +48,22 @@ inline std::string pathprefix() {
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
     ParseContext parseContext;
     Parser parser;
-    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE1");
-    auto deck =  parser.parseFile(scheduleFile, parseContext);
     EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
-    const auto& timeMap = sched.getTimeMap();
-    BOOST_CHECK_EQUAL(TimeMap::mkdate(2007 , 5 , 10), sched.getStartTime());
-    BOOST_CHECK_EQUAL(9U, timeMap.size());
-    BOOST_CHECK( deck.hasKeyword("NETBALAN") );
+    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE1");
+    auto deck1 =  parser.parseFile(scheduleFile, parseContext);
+    std::stringstream ss;
+    ss << deck1;
+    auto deck2 = parser.parseString( ss.str(), parseContext );
+    for (const auto& deck : {deck1 , deck2}) {
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+
+        Schedule sched(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
+        const auto& timeMap = sched.getTimeMap();
+        BOOST_CHECK_EQUAL(TimeMap::mkdate(2007 , 5 , 10), sched.getStartTime());
+        BOOST_CHECK_EQUAL(9U, timeMap.size());
+        BOOST_CHECK( deck.hasKeyword("NETBALAN") );
+    }
 }
 
 

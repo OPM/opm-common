@@ -22,6 +22,7 @@
 
 #include <map>
 #include <memory>
+#include <ostream>
 #include <vector>
 #include <string>
 
@@ -54,6 +55,7 @@ namespace Opm {
      * alive as long as DeckItem (and friends) are needed, to avoid
      * use-after-free.
      */
+    class DeckOutput;
 
     class DeckView {
         public:
@@ -90,6 +92,7 @@ namespace Opm {
 
             const_iterator begin() const;
             const_iterator end() const;
+
 
         protected:
             void add( const DeckKeyword*, const_iterator, const_iterator );
@@ -140,7 +143,8 @@ namespace Opm {
 
             iterator begin();
             iterator end();
-
+            void write( DeckOutput& output ) const ;
+            friend std::ostream& operator<<(std::ostream& os, const Deck& deck);
         private:
             Deck( std::vector< DeckKeyword >&& );
 
