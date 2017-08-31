@@ -228,10 +228,11 @@ set( keywords
      000_Eclipse100/R/RPTRUNSP
      000_Eclipse100/R/RPTSCHED
      000_Eclipse100/R/RPTSOL
+     000_Eclipse100/R/RPTSMRY
      000_Eclipse100/R/RS
      000_Eclipse100/R/RSVD
      000_Eclipse100/R/RTEMP
-     000_Eclipse100/R/RTEMPA     
+     000_Eclipse100/R/RTEMPA
      000_Eclipse100/R/RTEMPVD
      000_Eclipse100/R/RUNSPEC
      000_Eclipse100/R/RUNSUM
