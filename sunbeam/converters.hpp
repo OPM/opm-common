@@ -11,7 +11,6 @@
 
 namespace py = boost::python;
 
-
 /*
  * boost.python lacks converters for a lot of types we use, or we need to
  * fine-tune the behaviour a little bit. They're often for one specific

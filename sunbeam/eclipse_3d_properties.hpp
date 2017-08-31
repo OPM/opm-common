@@ -14,6 +14,8 @@ namespace eclipse_3d_properties {
 
     py::list getitem( const Eclipse3DProperties& p, const std::string& kw);
     bool contains( const Eclipse3DProperties& p, const std::string& kw);
+    py::list regions( const Eclipse3DProperties& p, const std::string& kw);
+
     void export_Eclipse3DProperties();
 
 }

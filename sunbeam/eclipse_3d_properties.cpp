@@ -38,7 +38,6 @@ namespace eclipse_3d_properties {
 
     void export_Eclipse3DProperties() {
 
-
         py::class_< Eclipse3DProperties >( "Eclipse3DProperties", py::no_init )
             .def( "getRegions",   &regions )
             .def( "__contains__", &contains )

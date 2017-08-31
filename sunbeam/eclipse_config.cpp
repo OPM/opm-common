@@ -1,8 +1,10 @@
+#include <boost/python.hpp>
+
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 
 #include "eclipse_config.hpp"
 

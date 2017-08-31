@@ -1,6 +1,5 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include "eclipse_state.hpp"
 
@@ -88,15 +87,7 @@ namespace eclipse_state {
         return l;
     }
 
-    EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;
-    EclipseState (*parseData) (const std::string &data, const ParseContext& context) = &Parser::parseData;
-    void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
-
-
     void export_EclipseState() {
-
-        py::def( "parse", parse );
-        py::def( "parseData", parseData );
 
         py::class_< EclipseState >( "EclipseState", py::no_init )
             .add_property( "title", &EclipseState::getTitle )
@@ -112,21 +103,5 @@ namespace eclipse_state {
             .def( "jfunc",          &jfunc )
             ;
 
-
-        /*
-         * Temporarily
-         */
-        py::class_< ParseContext >( "ParseContext" )
-            .def( "update", ctx_update )
-            ;
-
-        py::enum_< InputError::Action >( "action" )
-            .value( "throw",  InputError::Action::THROW_EXCEPTION )
-            .value( "warn",   InputError::Action::WARN )
-            .value( "ignore", InputError::Action::IGNORE )
-            ;
-
     }
 }
-
-

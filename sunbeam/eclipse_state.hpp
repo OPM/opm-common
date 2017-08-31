@@ -2,8 +2,8 @@
 #define ECLIPSE_STATE_HPP
 
 #include <boost/python.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 
 namespace Opm {
     class EclipseState;
