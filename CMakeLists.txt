@@ -25,5 +25,6 @@ if (USE_RPATH)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif ()
 
+add_subdirectory( sunbeam )
 add_subdirectory( python )
 add_subdirectory( tests )
