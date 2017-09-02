@@ -23,6 +23,7 @@
 #include <string>
 #include <algorithm>
 
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
@@ -128,6 +129,48 @@ namespace Opm {
 
     DeckRecord::const_iterator DeckRecord::end() const {
         return this->m_items.end();
+    }
+
+
+    void DeckRecord::write_data(DeckOutput& writer) const {
+        for (const auto& item : *this)
+            item.write( writer );
+    }
+
+    void DeckRecord::write(DeckOutput& writer) const {
+        writer.start_record( );
+        this->write_data( writer );
+        writer.end_record( );
+    }
+
+
+    std::ostream& operator<<(std::ostream& os, const DeckRecord& record) {
+        DeckOutput output(os);
+        record.write( output );
+        return os;
+    }
+
+    bool DeckRecord::equal(const DeckRecord& other, bool cmp_default, bool cmp_numeric) const {
+        if (this->size() != other.size())
+            return false;
+
+        for (size_t index = 0; index < this->size(); index++) {
+            const auto& this_item = this->getItem( index );
+            const auto& other_item = other.getItem( index );
+            if (!this_item.equal( other_item , cmp_default, cmp_numeric))
+                return false;
+        }
+        return true;
+    }
+
+    bool DeckRecord::operator==(const DeckRecord& other) const {
+        bool cmp_default = false;
+        bool cmp_numeric = true;
+        return this->equal( other , cmp_default, cmp_numeric);
+    }
+
+    bool DeckRecord::operator!=(const DeckRecord& other) const {
+        return !(*this == other);
     }
 
 }

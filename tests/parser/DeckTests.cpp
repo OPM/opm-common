@@ -19,11 +19,13 @@
 
 
 #include <stdexcept>
+#include <sstream>
 
 #define BOOST_TEST_MODULE DeckTests
 
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -558,4 +560,153 @@ BOOST_AUTO_TEST_CASE(getRecord_outofrange_exceptionthrown) {
 BOOST_AUTO_TEST_CASE(setUnknown_wasknown_nowunknown) {
     DeckKeyword deckKeyword( "KW", false );
     BOOST_CHECK(!deckKeyword.isKnown());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(DeckItemWrite) {
+    DeckItem item("TEST", int());
+    std::stringstream s;
+    DeckOutput w(s);
+
+    item.push_back(1);
+    item.push_back(2);
+    item.push_back(3);
+
+    item.write(w);
+    {
+        int v1,v2,v3;
+        s >> v1;
+        s >> v2;
+        s >> v3;
+
+        BOOST_CHECK_EQUAL( v1 , 1 );
+        BOOST_CHECK_EQUAL( v2 , 2 );
+        BOOST_CHECK_EQUAL( v3 , 3 );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DeckOutputTest) {
+    std::string expected = "KEYWORD\n\
+==1-2\n\
+==3-1*\n\
+==5-1*\n\
+==7-8\n\
+==1*-10 /\n\
+/\n\
+ABC";
+    std::stringstream s;
+    DeckOutput out(s);
+
+    out.record_indent = "==";
+    out.item_sep = "-";
+    out.columns = 2;
+    out.keyword_sep = "ABC";
+
+    out.start_keyword("KEYWORD");
+    out.start_record();
+    out.write<int>(1);
+    out.write<int>(2);
+    out.write<int>(3);
+    out.stash_default( );
+    out.write<int>(5);
+    out.stash_default( );
+    out.write<int>(7);
+    out.write<int>(8);
+    out.stash_default( );
+    out.write<int>(10);
+    out.end_record();
+    out.end_keyword(true);
+    out.write_string( out.keyword_sep );
+
+    BOOST_CHECK_EQUAL( expected, s.str());
+}
+
+BOOST_AUTO_TEST_CASE(DeckItemWriteDefault) {
+    DeckItem item("TEST", int());
+    item.push_backDefault(1);
+    item.push_backDefault(1);
+    item.push_backDefault(1);
+
+    {
+        std::stringstream s;
+        DeckOutput w(s);
+        item.write( w );
+        BOOST_CHECK_EQUAL( s.str() , "");
+    }
+
+    item.push_back(13);
+    {
+        std::stringstream s;
+        DeckOutput w(s);
+        item.write( w );
+        BOOST_CHECK_EQUAL( s.str() , "3* 13");
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(DeckItemWriteString) {
+    DeckItem item("TEST", std::string());
+    item.push_back("NO");
+    item.push_back("YES");
+    std::stringstream s;
+    DeckOutput w(s);
+    item.write( w );
+    BOOST_CHECK_EQUAL( s.str() , "'NO' 'YES'");
+}
+
+
+BOOST_AUTO_TEST_CASE(RecordWrite) {
+
+    DeckRecord deckRecord;
+    DeckItem item1("TEST1", int());
+    DeckItem item2("TEST2", double());
+    DeckItem item3("TEST3", std::string());
+
+    item1.push_back( 123 );
+    item2.push_backDefault( 100.0 );
+    item3.push_back("VALUE");
+
+    deckRecord.addItem( item1 );
+    deckRecord.addItem( item2 );
+    deckRecord.addItem( item3 );
+
+    std::stringstream s;
+    DeckOutput w(s);
+    deckRecord.write_data( w );
+    BOOST_CHECK_EQUAL( s.str() , "123 1* 'VALUE'");
+}
+
+
+BOOST_AUTO_TEST_CASE(DeckItemEqual) {
+    DeckItem item1("TEST1" , int());
+    DeckItem item2("TEST2" , int());
+    DeckItem item3("TEST1" , double());
+    DeckItem item4("TEST1" , int());
+    DeckItem item5("TEST1" , double());
+
+    BOOST_CHECK( item1 != item2 );
+    BOOST_CHECK( item1 != item3 );
+    BOOST_CHECK( item1 == item1 );
+    BOOST_CHECK( item1 == item4 );
+
+    item4.push_back(100);
+    BOOST_CHECK( item1 != item4 );
+    item1.push_back(100);
+    BOOST_CHECK( item1 == item4 );
+
+    item4.push_backDefault( 200 );
+    item1.push_back( 200 );
+    BOOST_CHECK( item1 == item4 );
+    BOOST_CHECK( !item1.equal( item4 , true , true));
+
+    item3.push_back(1.0);
+    item5.push_back(1.0);
+    BOOST_CHECK( item3.equal( item5 , false, true ));
+    BOOST_CHECK( item3.equal( item5 , false, false ));
+
+    item3.push_back(1.0);
+    item5.push_back(1.0 - 1e-8);
+    BOOST_CHECK( item3.equal( item5 , false, true ));
+    BOOST_CHECK( !item3.equal( item5 , false, false ));
 }
