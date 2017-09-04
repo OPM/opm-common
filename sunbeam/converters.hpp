@@ -5,11 +5,12 @@
 #include <vector>
 
 #include <boost/python.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <datetime.h>
 
 namespace py = boost::python;
-using namespace Opm;
+
 
 /*
  * boost.python lacks converters for a lot of types we use, or we need to
