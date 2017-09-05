@@ -54,5 +54,5 @@ def parse_deck(deck, **kwargs):
 
     if 'actions' in kwargs:
         args.append(_parse_context(kwargs['actions']))
-
+    
     return lib.parse_deck(*args)

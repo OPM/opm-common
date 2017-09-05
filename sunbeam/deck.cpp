@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include "deck.hpp"
@@ -12,9 +14,6 @@ using copy = py::return_value_policy< py::copy_const_reference >;
 
 namespace deck {
 
-    /*
-     * Deck methods inherited from DeckView
-     */
     size_t size( const Deck& deck ) {
         return deck.size();
     }
@@ -40,6 +39,11 @@ namespace deck {
     const DeckView::const_iterator begin( const Deck& deck ) { return deck.begin(); }
     const DeckView::const_iterator   end( const Deck& deck ) { return deck.end();   }
 
+    std::string write( const Deck& deck ) {
+        std::stringstream stream;
+        stream << deck;
+        return stream.str();
+    }
 
     void export_Deck() {
 
@@ -50,6 +54,7 @@ namespace deck {
             .def( "__getitem__", &getKeyword0, ref() )
             .def( "__getitem__", &getKeyword1, ref() )
             .def( "__getitem__", &getKeyword2, ref() )
+            .def( "__str__", &write )
             .def( "count", &count )
             ;
 

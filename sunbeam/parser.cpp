@@ -21,9 +21,7 @@ namespace parser {
             const Json::JsonObject jkw(kw);
             p.addParserKeyword(jkw);
         }
-        if (isFile)
-            return p.parseFile(deckStr, pc);
-        return p.parseString(deckStr, pc);
+        return isFile ? p.parseFile(deckStr, pc) : p.parseString(deckStr, pc);
     }
 
     EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;

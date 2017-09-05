@@ -19,6 +19,7 @@ namespace deck {
     const DeckKeyword& getKeyword2( const Deck& deck, size_t index );
     const DeckView::const_iterator begin( const Deck& deck );
     const DeckView::const_iterator   end( const Deck& deck );
+    std::string write( const Deck& deck );
 
     void export_Deck();
 
