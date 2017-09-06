@@ -14,6 +14,9 @@ SUMMARYTESTS
 DIMENS
  10 10 10 /
 
+REGDIMS
+  3 /
+
 OIL
 GAS
 WATER
@@ -38,16 +41,9 @@ PORO
 REGIONS
 
 FIPNUM
-   100*1
-   100*2
-   100*3
-   100*4
-   100*5
-   100*6
-   100*7
-   100*8
-   100*9
-   100*10 /
+   400*1
+   200*2
+   400*3 /
    
 
 SUMMARY

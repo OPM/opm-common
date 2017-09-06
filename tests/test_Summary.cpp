@@ -952,8 +952,46 @@ BOOST_AUTO_TEST_CASE(fpr) {
     // fpr = sum_ (p * hcpv ) / hcpv, hcpv = pv * (1 - sw)
     const double fpr2_si =  ( (0.8 * 0.1 + 0.3 * 0.2) * 500 * 1 ) / ( (0.8 * 0.1 + 0.3 * 0.2) * 500);
     BOOST_CHECK_CLOSE( fpr2_si, ecl_sum_get_field_var( resp2, 1, "FPR" ), 1e-5 ); //
+}
 
+BOOST_AUTO_TEST_CASE(rpr) {
+    setup cfg( "test_rpr", "summary_deck_non_constant_porosity.DATA");
 
+    {
+        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells, cfg.solution, {});
+        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells, cfg.solution, {});
+        writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells, cfg.solution, {});
+        writer.write();
+    }
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:1"));
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:3"));
+    BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:4"));
+    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+
+    // rpr = sum_ (p * hcpv ) / hcpv, hcpv = pv * (1 - sw)
+    // region 1; layer 1:4
+    {
+        const double rpr_si =  ( 2.5 * 0.1 * 400 * (1 - 8.0) ) / ( (400*0.1) * (1 - 8.0));
+        std::string rpr_key   = "RPR:1";
+        BOOST_CHECK_CLOSE(   rpr_si        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
+    }
+    // region 2; layer 5:6
+    {
+        const double rpr_si =  ( (5 * 0.1 + 6 * 0.2) * 100 * (1 - 8.0) ) / ( (0.1 + 0.2) * 100 * (1 - 8.0));
+        std::string rpr_key   = "RPR:2";
+        BOOST_CHECK_CLOSE(   rpr_si        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
+    }
+    // region 3; layer 7:10
+    {
+        const double rpr_si =  ( 8.5 * 0.2 * 400 * (1 - 8.0) ) / ( (400*0.2) * (1 - 8.0));
+        std::string rpr_key   = "RPR:3";
+        BOOST_CHECK_CLOSE(   rpr_si        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
+    }
 
 }
 

@@ -387,11 +387,26 @@ quantity fpr( const fn_args& args ) {
 }
 
 quantity rpr(const fn_args& args) {
-    quantity p = region_sum( args , "PRESSURE" ,measure::pressure );
+
     const auto& cells = args.regionCache.cells( args.num );
-    if (cells.size() > 0)
-        p /= cells.size();
-    return p;
+    if (cells.empty())
+        return { 0.0 , measure::pressure };
+
+    if( !args.state.has( "PRESSURE" ) )
+        return { 0.0, measure::pressure };
+
+    const auto& p = args.state.data( "PRESSURE" );
+    const auto& pv = args.pv;
+    const auto& sw = args.state.data( "SWAT" );
+
+    double rpr = 0.0;
+    double sum_hcpv = 0.0;
+    for (auto cell_index : cells) {
+        double hcpv = pv[cell_index]*(1.0 - sw[cell_index]);
+        rpr +=  hcpv * p[cell_index];
+        sum_hcpv += hcpv;
+    }
+    return { rpr / sum_hcpv, measure::pressure };
 }
 
 quantity roip(const fn_args& args) {
