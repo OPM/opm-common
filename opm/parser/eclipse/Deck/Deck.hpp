@@ -102,6 +102,8 @@ namespace Opm {
             DeckView( const_iterator first, const_iterator last );
             explicit DeckView( std::pair< const_iterator, const_iterator > );
 
+            void reinit( const_iterator, const_iterator );
+
         private:
             const_iterator first;
             const_iterator last;
@@ -127,6 +129,9 @@ namespace Opm {
             Deck( std::initializer_list< DeckKeyword > );
             // cppcheck-suppress noExplicitConstructor
             Deck( std::initializer_list< std::string > );
+
+            Deck( const Deck& );
+
             void addKeyword( DeckKeyword&& keyword );
             void addKeyword( const DeckKeyword& keyword );
 
@@ -157,4 +162,3 @@ namespace Opm {
     };
 }
 #endif  /* DECK_HPP */
-

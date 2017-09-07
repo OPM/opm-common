@@ -117,6 +117,17 @@ namespace Opm {
             this->keywordMap[ kw.name() ].push_back( index++ );
     }
 
+    void DeckView::reinit( const_iterator first_arg, const_iterator last_arg ) {
+        this->first = first_arg;
+        this->last = last_arg;
+
+        this->keywordMap.clear();
+
+        size_t index = 0;
+        for( const auto& kw : *this )
+            this->keywordMap[ kw.name() ].push_back( index++ );
+    }
+
     DeckView::DeckView( std::pair< const_iterator, const_iterator > limits ) :
         DeckView( limits.first, limits.second )
     {}
@@ -150,6 +161,17 @@ namespace Opm {
     Deck::Deck( std::initializer_list< std::string > ilist ) :
         Deck( std::vector< DeckKeyword >( ilist.begin(), ilist.end() ) )
     {}
+
+    Deck::Deck( const Deck& d ) :
+        DeckView( d.begin(), d.begin() ),
+        keywordList( d.keywordList ),
+        m_messageContainer( d.m_messageContainer ),
+        defaultUnits( d.defaultUnits ),
+        activeUnits( d.activeUnits ),
+        m_dataFile( d.m_dataFile ) {
+
+        this->reinit(this->keywordList.begin(), this->keywordList.end());
+    }
 
     void Deck::addKeyword( DeckKeyword&& keyword ) {
         this->keywordList.push_back( std::move( keyword ) );
