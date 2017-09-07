@@ -13,12 +13,8 @@ def _parse_context(actions):
     # this might be a single tuple, in which case we unpack it and repack it
     # into a list. If it's not a tuple we assume it's an iterable and just
     # carry on
-    try:
-        key, action = actions
-    except ValueError:
-        pass
-    else:
-        actions = [(key, action)]
+    if not isinstance(actions, list):
+        actions = [actions]
 
     for key, action in actions:
         ctx.update(key, action)
@@ -54,5 +50,7 @@ def parse_deck(deck, **kwargs):
 
     if 'actions' in kwargs:
         args.append(_parse_context(kwargs['actions']))
-    
+    else:
+        args.append(lib.ParseContext())
+
     return lib.parse_deck(*args)
