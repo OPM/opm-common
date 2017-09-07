@@ -2,13 +2,10 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
-#include "parser.hpp"
-
-namespace py = boost::python;
-using namespace Opm;
+#include "sunbeam.hpp"
 
 
-namespace parser {
+namespace {
 
     Deck parseDeck( const std::string& deckStr,
                     const boost::python::list& keywords,
@@ -29,23 +26,22 @@ namespace parser {
 
     void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
 
+}
 
-    void export_Parser() {
+void sunbeam::export_Parser() {
 
-        py::def( "parse", parse );
-        py::def( "parse_data", parseData );
-        py::def( "parse_deck", &parseDeck );
+    py::def( "parse", parse );
+    py::def( "parse_data", parseData );
+    py::def( "parse_deck", &parseDeck );
 
-        py::class_< ParseContext >( "ParseContext" )
-            .def( "update", ctx_update )
-            ;
+    py::class_< ParseContext >( "ParseContext" )
+        .def( "update", ctx_update )
+        ;
 
-        py::enum_< InputError::Action >( "action" )
-            .value( "throw",  InputError::Action::THROW_EXCEPTION )
-            .value( "warn",   InputError::Action::WARN )
-            .value( "ignore", InputError::Action::IGNORE )
-            ;
-
-    }
+    py::enum_< InputError::Action >( "action" )
+        .value( "throw",  InputError::Action::THROW_EXCEPTION )
+        .value( "warn",   InputError::Action::WARN )
+        .value( "ignore", InputError::Action::IGNORE )
+        ;
 
 }

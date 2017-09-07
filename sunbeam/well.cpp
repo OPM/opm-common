@@ -1,15 +1,11 @@
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
-#include "well.hpp"
-
-namespace py = boost::python;
-using namespace Opm;
-
-using ref = py::return_internal_reference<>;
-using copy = py::return_value_policy< py::copy_const_reference >;
+#include "sunbeam.hpp"
 
 
-namespace well {
+namespace {
 
     py::list completions( const Well& w) {
         return iterable_to_pylist( w.getCompletions() );
@@ -36,33 +32,32 @@ namespace well {
     int    (Well::*headJ_at)(size_t) const = &Well::getHeadI;
     double (Well::*refD_at)(size_t)  const = &Well::getRefDepth;
 
+}
 
-    void export_Well() {
+void sunbeam::export_Well() {
 
-        py::class_< Well >( "Well", py::no_init )
-            .add_property( "name", mkcopy( &Well::name ) )
-            .add_property( "preferred_phase", &well::preferred_phase )
-            .def( "I",   headI )
-            .def( "I",   headI_at )
-            .def( "J",   headJ )
-            .def( "J",   headJ_at )
-            .def( "ref", refD )
-            .def( "ref", refD_at )
-            .def( "status",     &status )
-            .def( "isdefined",  &Well::hasBeenDefined )
-            .def( "isinjector", &Well::isInjector )
-            .def( "isproducer", &Well::isProducer )
-            .def( "group", &Well::getGroupName )
-            .def( "guide_rate", &Well::getGuideRate )
-            .def( "available_gctrl", &Well::isAvailableForGroupControl )
-            .def( "__eq__", &Well::operator== )
-            .def( "completions", &completions )
-            ;
+    py::class_< Well >( "Well", py::no_init )
+        .add_property( "name", mkcopy( &Well::name ) )
+        .add_property( "preferred_phase", &preferred_phase )
+        .def( "I",   headI )
+        .def( "I",   headI_at )
+        .def( "J",   headJ )
+        .def( "J",   headJ_at )
+        .def( "ref", refD )
+        .def( "ref", refD_at )
+        .def( "status",     &status )
+        .def( "isdefined",  &Well::hasBeenDefined )
+        .def( "isinjector", &Well::isInjector )
+        .def( "isproducer", &Well::isProducer )
+        .def( "group", &Well::getGroupName )
+        .def( "guide_rate", &Well::getGuideRate )
+        .def( "available_gctrl", &Well::isAvailableForGroupControl )
+        .def( "__eq__", &Well::operator== )
+        .def( "completions", &completions )
+        ;
 
-        py::class_< std::vector< Well > >( "WellList", py::no_init )
-            .def( py::vector_indexing_suite< std::vector< Well > >() )
-            ;
-
-    }
+    py::class_< std::vector< Well > >( "WellList", py::no_init )
+        .def( py::vector_indexing_suite< std::vector< Well > >() )
+        ;
 
 }

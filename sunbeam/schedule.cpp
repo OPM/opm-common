@@ -1,16 +1,10 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include "converters.hpp"
 
-#include "schedule.hpp"
-
-namespace py = boost::python;
-using namespace Opm;
-
-using ref = py::return_internal_reference<>;
-using copy = py::return_value_policy< py::copy_const_reference >;
+#include "sunbeam.hpp"
 
 
-namespace schedule {
+namespace {
 
     std::vector< Well > get_wells( const Schedule& sch ) {
         std::vector< Well > wells;
@@ -55,19 +49,19 @@ namespace schedule {
         return iterable_to_pylist( groups );
     }
 
-    void export_Schedule() {
+}
 
-        py::class_< Schedule >( "Schedule", py::no_init )
-            .add_property( "_wells", &schedule::get_wells )
-            .add_property( "_groups", &get_groups )
-            .add_property( "start",  &get_start_time )
-            .add_property( "end",    &get_end_time )
-            .add_property( "timesteps", &schedule::get_timesteps )
-            .def( "__contains__", &Schedule::hasWell )
-            .def( "__getitem__", &get_well, ref() )
-            .def( "_group", &Schedule::getGroup, ref() )
-            ;
+void sunbeam::export_Schedule() {
 
-    }
+    py::class_< Schedule >( "Schedule", py::no_init )
+        .add_property( "_wells", &get_wells )
+        .add_property( "_groups", &get_groups )
+        .add_property( "start",  &get_start_time )
+        .add_property( "end",    &get_end_time )
+        .add_property( "timesteps", &get_timesteps )
+        .def( "__contains__", &Schedule::hasWell )
+        .def( "__getitem__", &get_well, ref() )
+        .def( "_group", &Schedule::getGroup, ref() )
+        ;
 
 }

@@ -1,18 +1,9 @@
-#include <sstream>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 
-#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-
-#include "deck.hpp"
+#include "sunbeam.hpp"
 
 
-namespace py = boost::python;
-using namespace Opm;
-
-using ref = py::return_internal_reference<>;
-using copy = py::return_value_policy< py::copy_const_reference >;
-
-
-namespace deck {
+namespace {
 
     size_t size( const Deck& deck ) {
         return deck.size();
@@ -39,25 +30,19 @@ namespace deck {
     const DeckView::const_iterator begin( const Deck& deck ) { return deck.begin(); }
     const DeckView::const_iterator   end( const Deck& deck ) { return deck.end();   }
 
-    std::string write( const Deck& deck ) {
-        std::stringstream stream;
-        stream << deck;
-        return stream.str();
-    }
+}
 
-    void export_Deck() {
+void sunbeam::export_Deck() {
 
-        py::class_< Deck >( "Deck", py::no_init )
-            .def( "__len__", &size )
-            .def( "__contains__", &hasKeyword )
-            .def( "__iter__", py::range< ref >( &begin, &end ) )
-            .def( "__getitem__", &getKeyword0, ref() )
-            .def( "__getitem__", &getKeyword1, ref() )
-            .def( "__getitem__", &getKeyword2, ref() )
-            .def( "__str__", &write )
-            .def( "count", &count )
-            ;
-
-        }
+    py::class_< Deck >( "Deck", py::no_init )
+        .def( "__len__", &size )
+        .def( "__contains__", &hasKeyword )
+        .def( "__iter__", py::range< ref >( &begin, &end ) )
+        .def( "__getitem__", &getKeyword0, ref() )
+        .def( "__getitem__", &getKeyword1, ref() )
+        .def( "__getitem__", &getKeyword2, ref() )
+        .def( "__str__", &str<Deck> )
+        .def( "count", &count )
+        ;
 
 }

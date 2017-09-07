@@ -1,12 +1,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include "table_manager.hpp"
-
-namespace py = boost::python;
-using namespace Opm;
+#include "sunbeam.hpp"
 
 
-namespace table_manager {
+namespace {
 
     double evaluate( const TableManager& tab,
                      std::string tab_name,
@@ -17,13 +14,13 @@ namespace table_manager {
       throw key_error( e.what() );
     }
 
-    void export_TableManager() {
+}
 
-        py::class_< TableManager >( "Tables", py::no_init )
-            .def( "__contains__",   &TableManager::hasTables )
-            .def("_evaluate",       &evaluate )
-            ;
+void sunbeam::export_TableManager() {
 
-    }
+    py::class_< TableManager >( "Tables", py::no_init )
+        .def( "__contains__",   &TableManager::hasTables )
+        .def("_evaluate",       &evaluate )
+        ;
 
 }
