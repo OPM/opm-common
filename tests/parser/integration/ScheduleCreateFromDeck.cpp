@@ -191,7 +191,10 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL( 0 , well2->getProductionPropertiesCopy(8).ResVRate);
 
         BOOST_CHECK_EQUAL( WellCommon::SHUT , well2->getStatus(3));
-
+        BOOST_CHECK( !well2->getRFTActive( 2 ) );
+        BOOST_CHECK( well2->getRFTActive( 3 ) );
+        BOOST_CHECK( well2->getRFTActive( 4 ) );
+        BOOST_CHECK( !well2->getRFTActive( 5 ) );
         {
             const WellProductionProperties& prop3 = well2->getProductionProperties(3);
             BOOST_CHECK_EQUAL( WellProducer::ORAT , prop3.controlMode);
@@ -221,6 +224,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     {
         auto* well1 = sched.getWell("W_1");
 
+        BOOST_CHECK_EQUAL( well1->firstRFTOutput( ) , 3);
+        BOOST_CHECK( well1->getRFTActive( 3 ) );
         BOOST_CHECK(well1->getProductionPropertiesCopy(0).predictionMode);
         BOOST_CHECK_EQUAL(0, well1->getProductionPropertiesCopy(0).OilRate);
 

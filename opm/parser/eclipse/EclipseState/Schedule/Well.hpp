@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
@@ -129,9 +130,9 @@ namespace Opm {
 
         int  firstRFTOutput( ) const;
         bool getRFTActive(size_t time_step) const;
-        void setRFTActive(size_t time_step, bool value);
+        void updateRFTActive(size_t time_step, RFTConnections::RFTEnum mode);
         bool getPLTActive(size_t time_step) const;
-        void setPLTActive(size_t time_step, bool value);
+        void updatePLTActive(size_t time_step, PLTConnections::PLTEnum mode);
         int  findWellFirstOpen(int startTimeStep) const;
 
         /*
@@ -139,7 +140,7 @@ namespace Opm {
           WELSPECS, actually opening the well might be later.
         */
         size_t firstTimeStep( ) const;
-        void setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep);
+        void setRFTForWellWhenFirstOpen(size_t currentStep);
 
         static bool wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern);
 

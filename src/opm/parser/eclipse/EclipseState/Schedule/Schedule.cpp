@@ -1310,23 +1310,15 @@ namespace Opm {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
-            for( auto* well : getWells( wellNamePattern ) ) {
-
-                well->setRFTActive(currentStep, true);
-                size_t numStep = m_timeMap.numTimesteps();
-                if(currentStep<numStep){
-                    well->setRFTActive(currentStep+1, false);
-                }
-            }
+            for( auto* well : getWells( wellNamePattern ) )
+                well->updateRFTActive( currentStep, RFTConnections::RFTEnum::YES);
         }
 
-        for( auto& well : this->m_wells ) {
-            well.setRFTForWellWhenFirstOpen(m_timeMap.numTimesteps(), currentStep);
-        }
+        for( auto& well : this->m_wells )
+            well.setRFTForWellWhenFirstOpen( currentStep );
     }
 
     void Schedule::handleWRFTPLT( const DeckKeyword& keyword,  size_t currentStep) {
-
         for( const auto& record : keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -1335,38 +1327,8 @@ namespace Opm {
             PLTConnections::PLTEnum PLTKey = PLTConnections::PLTEnumFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
 
             for( auto* well : getWells( wellNamePattern ) ) {
-                switch(RFTKey){
-                    case RFTConnections::RFTEnum::YES:
-                        well->setRFTActive(currentStep, true);
-                        break;
-                    case RFTConnections::RFTEnum::REPT:
-                        well->setRFTActive(currentStep, true);
-                        break;
-                    case RFTConnections::RFTEnum::TIMESTEP:
-                        well->setRFTActive(currentStep, true);
-                        break;
-                    case RFTConnections::RFTEnum::FOPN:
-                        well->setRFTForWellWhenFirstOpen(m_timeMap.numTimesteps(),currentStep);
-                        break;
-                    case RFTConnections::RFTEnum::NO:
-                        well->setRFTActive(currentStep, false);
-                        break;
-                }
-
-                switch(PLTKey){
-                    case PLTConnections::PLTEnum::YES:
-                        well->setPLTActive(currentStep, true);
-                        break;
-                    case PLTConnections::PLTEnum::REPT:
-                        well->setPLTActive(currentStep, true);
-                        break;
-                    case PLTConnections::PLTEnum::TIMESTEP:
-                        well->setPLTActive(currentStep, true);
-                        break;
-                    case PLTConnections::PLTEnum::NO:
-                        well->setPLTActive(currentStep, false);
-                        break;
-                }
+                well->updateRFTActive( currentStep, RFTKey );
+                well->updatePLTActive( currentStep, PLTKey );
             }
         }
     }

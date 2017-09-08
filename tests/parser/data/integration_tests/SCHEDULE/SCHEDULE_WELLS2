@@ -19,6 +19,11 @@ WELSPECS
      'W_4'        'OP'   32   19    1*       'OIL'  7* /
 /
 
+WRFTPLT
+   'W_1'       'YES'        'NO'        'NO' /
+   'W_2'       'REPT'        'NO'        'NO' /
+/
+
 COMPDAT 
 -- WELL        I    J    K1  K2            Sat.        CF       DIAM        KH SKIN ND        DIR   Ro 
      'W_1'   30   37    1    3      'OPEN'  1*     32.948      0.311   3047.839  2*         'X'     22.100 /
@@ -50,6 +55,11 @@ TSTEP             -- 4
 
 TSTEP             -- 5
   10   /
+
+WRFTPLT
+   'W_2'       'NO'        'NO'        'NO' /
+/
+
 
 TSTEP             -- 6
   10   /

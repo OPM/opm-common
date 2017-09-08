@@ -393,8 +393,42 @@ namespace Opm {
 
 
 
-    void Well::setRFTActive(size_t time_step, bool value){
-        m_rft.update(time_step, value);
+    void Well::updateRFTActive(size_t time_step, RFTConnections::RFTEnum mode) {
+        switch(mode) {
+        case RFTConnections::RFTEnum::YES:
+            m_rft.update_elm(time_step, true);
+            break;
+        case RFTConnections::RFTEnum::TIMESTEP:
+            m_rft.update_elm(time_step, true);
+            break;
+        case RFTConnections::RFTEnum::REPT:
+            m_rft.update(time_step, true);
+            break;
+        case RFTConnections::RFTEnum::FOPN:
+            setRFTForWellWhenFirstOpen(time_step);
+            break;
+        case RFTConnections::RFTEnum::NO:
+            m_rft.update(time_step, false);
+            break;
+        default:
+            break;
+        }
+    }
+
+    void Well::updatePLTActive(size_t time_step, PLTConnections::PLTEnum mode){
+        switch(mode) {
+        case PLTConnections::PLTEnum::YES:
+            m_plt.update_elm(time_step, true);
+            break;
+        case PLTConnections::PLTEnum::REPT:
+            m_plt.update(time_step, true);
+            break;
+        case PLTConnections::PLTEnum::NO:
+            m_plt.update(time_step, false);
+            break;
+        default:
+            break;
+        }
     }
 
     bool Well::getRFTActive(size_t time_step) const{
@@ -403,9 +437,6 @@ namespace Opm {
 
     bool Well::getPLTActive(size_t time_step) const{
      return bool( m_plt.get(time_step) );
-    }
-    void Well::setPLTActive(size_t time_step, bool value){
-        m_plt.update(time_step, value);
     }
 
     /*
@@ -443,19 +474,15 @@ namespace Opm {
         return -1;
     }
 
-    void Well::setRFTForWellWhenFirstOpen(int numSteps,size_t currentStep){
+    void Well::setRFTForWellWhenFirstOpen(size_t currentStep){
         int time;
         if(getStatus(currentStep)==WellCommon::StatusEnum::OPEN ){
             time = currentStep;
         }else {
             time = findWellFirstOpen(currentStep);
         }
-        if(time>-1){
-            setRFTActive(time, true);
-            if(time < numSteps){
-                setRFTActive(time+1, false);
-            }
-        }
+        if (time > -1)
+            updateRFTActive(time, RFTConnections::RFTEnum::YES);
     }
 
     WellCompletion::CompletionOrderEnum Well::getWellCompletionOrdering() const {
