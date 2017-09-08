@@ -21,6 +21,7 @@
 #ifndef DYNAMICSTATE_HPP_
 #define DYNAMICSTATE_HPP_
 
+#include <stdexcept>
 #include <vector>
 #include <algorithm>
 
@@ -102,6 +103,13 @@ class DynamicState {
                        value );
 
             return true;
+        }
+
+        void update_elm( size_t index, const T& value ) {
+            if (this->m_data.size() <= index)
+                throw std::out_of_range("Invalid index for update_elm()");
+
+            this->m_data[index] = value;
         }
 
         /// Will return the index of the first occurence of @value, or

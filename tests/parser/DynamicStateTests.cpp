@@ -246,3 +246,23 @@ BOOST_AUTO_TEST_CASE( find ) {
     BOOST_CHECK_EQUAL( state.find( 400 ) ,  4 );
     BOOST_CHECK_EQUAL( state.find( 500 ) ,  -1 );
 }
+
+
+BOOST_AUTO_TEST_CASE( update_elm ) {
+    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
+    Opm::TimeMap timeMap{ startDate };
+    for (size_t i = 0; i < 5; i++)
+        timeMap.addTStep((i+1) * 24 * 60 * 60);
+
+    Opm::DynamicState<int> state(timeMap , 137);
+    state.update( 5, 88 );
+    BOOST_CHECK_THROW( state.update_elm(10,88) , std::out_of_range );
+    BOOST_CHECK_EQUAL( state[2],137 );
+    BOOST_CHECK_EQUAL( state[3],137 );
+    BOOST_CHECK_EQUAL( state[4],137 );
+
+    state.update_elm(3,88);
+    BOOST_CHECK_EQUAL( state[2],137 );
+    BOOST_CHECK_EQUAL( state[3],88 );
+    BOOST_CHECK_EQUAL( state[4],137 );
+}
