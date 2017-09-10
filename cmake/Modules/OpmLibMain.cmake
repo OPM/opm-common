@@ -105,6 +105,9 @@ find_threads (${project})
 # SuperLU is optional
 option (USE_SUPERLU "Use SuperLU direct solvers" OFF)
 
+# PETSc is optional
+option (USE_PETSC "Use PETSc iterative solvers" OFF)
+
 # static code analysis
 include(UseStaticAnalysis)
 setup_static_analysis_tools()
