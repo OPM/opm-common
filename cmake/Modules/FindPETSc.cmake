@@ -16,6 +16,11 @@
 
 # find out the size of a pointer. this is required to only search for
 # libraries in the directories relevant for the architecture
+
+if(NOT USE_PETSC)
+  return()
+endif()
+
 if (CMAKE_SIZEOF_VOID_P)
   math (EXPR _BITS "8 * ${CMAKE_SIZEOF_VOID_P}")
 endif (CMAKE_SIZEOF_VOID_P)
