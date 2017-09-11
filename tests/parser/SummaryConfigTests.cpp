@@ -213,6 +213,9 @@ BOOST_AUTO_TEST_CASE(completions) {
                        "CGIR\n" // all defaulted
                        " '*' /\n"
                        "/\n";
+                       "CPRL\n" // all defaulted
+                       " '*' /\n"
+                       "/\n";
 
     const auto summary = createSummary( input );
     const auto keywords = { "CGIR", "CGIR", "CGIR", "CGIR",
