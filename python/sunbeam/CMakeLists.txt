@@ -2,6 +2,7 @@ set(PYTHON_SOURCES
     __init__.py
     sunbeam.py
     config.py
+    parser.py
     properties.py
     schedule.py)
 

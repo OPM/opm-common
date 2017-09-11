@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <vector>
+#include <sstream>
 
 #include <boost/python.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -10,7 +11,6 @@
 #include <datetime.h>
 
 namespace py = boost::python;
-
 
 /*
  * boost.python lacks converters for a lot of types we use, or we need to
@@ -109,6 +109,13 @@ auto mkref( F f ) -> decltype( py::make_function( f, ref() ) ) {
 template< typename F >
 auto mkcopy( F f ) -> decltype( py::make_function( f, copy() ) ) {
     return py::make_function( f, copy() );
+}
+
+template< typename T >
+std::string str( const T& t ) {
+    std::stringstream stream;
+    stream << t;
+    return stream.str();
 }
 
 #endif //SUNBEAM_CONVERTERS_HPP

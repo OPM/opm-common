@@ -1,15 +1,7 @@
+#include <boost/python.hpp>
 
 #include "converters.hpp"
-#include "completion.hpp"
-#include "eclipse_3d_properties.hpp"
-#include "eclipse_config.hpp"
-#include "eclipse_grid.hpp"
-#include "eclipse_state.hpp"
-#include "group.hpp"
-#include "schedule.hpp"
-#include "table_manager.hpp"
-#include "well.hpp"
-
+#include "sunbeam.hpp"
 
 BOOST_PYTHON_MODULE(libsunbeam) {
 
@@ -25,18 +17,18 @@ BOOST_PYTHON_MODULE(libsunbeam) {
 
     py::register_exception_translator< key_error >( &key_error::translate );
 
-    eclipse_state::export_EclipseState();
-    eclipse_config::export_EclipseConfig();
-    completion::export_Completion();
-    eclipse_3d_properties::export_Eclipse3DProperties();
-    eclipse_grid::export_EclipseGrid();
-    group::export_Group();
-    schedule::export_Schedule();
-    table_manager::export_TableManager();
-    well::export_Well();
+    sunbeam::export_Completion();
+    sunbeam::export_Deck();
+    sunbeam::export_DeckKeyword();
+    sunbeam::export_Eclipse3DProperties();
+    sunbeam::export_EclipseConfig();
+    sunbeam::export_EclipseGrid();
+    sunbeam::export_EclipseState();
+    sunbeam::export_Group();
+    sunbeam::export_Parser();
+    sunbeam::export_Schedule();
+    sunbeam::export_TableManager();
+    sunbeam::export_Well();
 
-    // parser::export_Parser();
-    // deck::export_Deck();
-    // deck_keyword::export_DeckKeyword();
 
 }

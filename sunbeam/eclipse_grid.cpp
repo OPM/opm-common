@@ -4,15 +4,10 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp>
 
-#include "eclipse_grid.hpp"
+#include "sunbeam.hpp"
 
-namespace py = boost::python;
-using namespace Opm;
 
-using ref = py::return_internal_reference<>;
-using copy = py::return_value_policy< py::copy_const_reference >;
-
-namespace eclipse_grid {
+namespace {
     py::tuple getXYZ( const EclipseGrid& grid ) {
         return py::make_tuple( grid.getNX(),
                                grid.getNY(),
@@ -38,18 +33,18 @@ namespace eclipse_grid {
       return grid.getCellVolume(i_idx, j_idx, k_idx);
     }
 
+}
 
-    void export_EclipseGrid() {
+void sunbeam::export_EclipseGrid() {
 
-        py::class_< EclipseGrid >( "EclipseGrid", py::no_init )
-            .def( "_getXYZ",        &getXYZ )
-            .def( "nactive",        &getNumActive )
-            .def( "cartesianSize",  &getCartesianSize )
-            .def( "globalIndex",    &getGlobalIndex )
-            .def( "getIJK",         &getIJK )
-            .def( "_cellVolume1G",  &cellVolume1G)
-            .def( "_cellVolume3",   &cellVolume3)
-            ;
+    py::class_< EclipseGrid >( "EclipseGrid", py::no_init )
+        .def( "_getXYZ",        &getXYZ )
+        .def( "nactive",        &getNumActive )
+        .def( "cartesianSize",  &getCartesianSize )
+        .def( "globalIndex",    &getGlobalIndex )
+        .def( "getIJK",         &getIJK )
+        .def( "_cellVolume1G",  &cellVolume1G)
+        .def( "_cellVolume3",   &cellVolume3)
+        ;
 
-    }
 }

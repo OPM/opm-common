@@ -1,17 +1,10 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
 
-#include "eclipse_state.hpp"
-
-namespace py = boost::python;
-using namespace Opm;
-
-using ref = py::return_internal_reference<>;
-using copy = py::return_value_policy< py::copy_const_reference >;
+#include "sunbeam.hpp"
 
 
-namespace eclipse_state {
+namespace {
 
     py::list getNNC( const EclipseState& state ) {
         py::list l;
@@ -88,45 +81,22 @@ namespace eclipse_state {
         return l;
     }
 
-    EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;
-    EclipseState (*parseData) (const std::string &data, const ParseContext& context) = &Parser::parseData;
-    void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
-
-
-    void export_EclipseState() {
-
-        py::def( "parse", parse );
-        py::def( "parseData", parseData );
-
-        py::class_< EclipseState >( "EclipseState", py::no_init )
-            .add_property( "title", &EclipseState::getTitle )
-            .def( "_schedule",      &EclipseState::getSchedule,     ref() )
-            .def( "_props",         &EclipseState::get3DProperties, ref() )
-            .def( "_grid",          &EclipseState::getInputGrid,    ref() )
-            .def( "_cfg",           &EclipseState::cfg,             ref() )
-            .def( "_tables",        &EclipseState::getTableManager, ref() )
-            .def( "has_input_nnc",  &EclipseState::hasInputNNC )
-            .def( "input_nnc",      &getNNC )
-            .def( "faultNames",     &faultNames )
-            .def( "faultFaces",     &faultFaces )
-            .def( "jfunc",          &jfunc )
-            ;
-
-
-        /*
-         * Temporarily
-         */
-        py::class_< ParseContext >( "ParseContext" )
-            .def( "update", ctx_update )
-            ;
-
-        py::enum_< InputError::Action >( "action" )
-            .value( "throw",  InputError::Action::THROW_EXCEPTION )
-            .value( "warn",   InputError::Action::WARN )
-            .value( "ignore", InputError::Action::IGNORE )
-            ;
-
-    }
 }
 
+void sunbeam::export_EclipseState() {
 
+    py::class_< EclipseState >( "EclipseState", py::no_init )
+        .add_property( "title", &EclipseState::getTitle )
+        .def( "_schedule",      &EclipseState::getSchedule,     ref() )
+        .def( "_props",         &EclipseState::get3DProperties, ref() )
+        .def( "_grid",          &EclipseState::getInputGrid,    ref() )
+        .def( "_cfg",           &EclipseState::cfg,             ref() )
+        .def( "_tables",        &EclipseState::getTableManager, ref() )
+        .def( "has_input_nnc",  &EclipseState::hasInputNNC )
+        .def( "input_nnc",      &getNNC )
+        .def( "faultNames",     &faultNames )
+        .def( "faultFaces",     &faultFaces )
+        .def( "jfunc",          &jfunc )
+        ;
+
+}
