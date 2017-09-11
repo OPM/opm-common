@@ -47,7 +47,6 @@
 #include <utility>    // move
 
 #include <ert/ecl/EclKW.hpp>
-#include <ert/ecl/FortIO.hpp>
 #include <ert/ecl/EclFilename.hpp>
 
 #include <ert/ecl/ecl_kw_magic.h>
@@ -59,6 +58,8 @@
 #include <ert/ecl_well/well_const.h>
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/util/util.h>
+#include <ert/ecl/fortio.h>
+
 #define OPM_XWEL      "OPM_XWEL"
 #define OPM_IWEL      "OPM_IWEL"
 
@@ -110,13 +111,15 @@ class RFT {
                             data::Solution cells);
     private:
         std::string filename;
+        bool fmt_file;
 };
 
 
     RFT::RFT( const std::string& output_dir,
               const std::string& basename,
               bool format ) :
-        filename( ERT::EclFilename( output_dir, basename, ECL_RFT_FILE, format ) )
+        filename( ERT::EclFilename( output_dir, basename, ECL_RFT_FILE, format ) ),
+        fmt_file( format )
 {}
 
 
@@ -127,12 +130,20 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
                          double days,
                          const UnitSystem& units,
                          data::Solution cells) {
-
     using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
     const std::vector<double>& pressure = cells.data("PRESSURE");
     const std::vector<double>& swat = cells.data("SWAT");
     const std::vector<double>& sgas = cells.has("SGAS") ? cells.data("SGAS") : std::vector<double>( pressure.size() , 0 );
-    ERT::FortIO fortio(filename, std::ios_base::out);
+    fortio_type * fortio;
+    int first_report_step = report_step;
+
+    for (const auto* well : wells)
+        first_report_step = std::min( first_report_step, well->firstRFTOutput());
+
+    if (report_step > first_report_step)
+        fortio = fortio_open_append( filename.c_str() , fmt_file , ECL_ENDIAN_FLIP );
+    else
+        fortio = fortio_open_writer( filename.c_str() , fmt_file , ECL_ENDIAN_FLIP );
 
     cells.convertFromSI( units );
     for ( const auto& well : wells ) {
@@ -163,10 +174,10 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
         }
 
         rft ecl_node( rft_node );
-        ecl_rft_node_fwrite( ecl_node.get(), fortio.get(), units.getEclType() );
+        ecl_rft_node_fwrite( ecl_node.get(), fortio, units.getEclType() );
     }
 
-    fortio.close();
+    fortio_fclose( fortio );
 }
 
 inline std::string uppercase( std::string x ) {

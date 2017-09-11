@@ -36,7 +36,9 @@ COMPDAT
 DATES             -- 2
  10  OKT 2008 / 
 /
-WRFT 
+WRFTPLT
+   'OP_1'  'YES' /
+   'OP_2'  'REPT' /
 / 
 WELOPEN
  'OP_1' OPEN / 
@@ -44,4 +46,17 @@ WELOPEN
 /
 DATES             -- 3
  10  NOV 2008 / 
+/
+
+
+DATES             -- 4
+ 20  NOV 2008 / 
+/
+
+WRFTPLT
+   'OP_2'  'NO' /
+/ 
+
+DATES             -- 5
+ 30  NOV 2008 / 
 /

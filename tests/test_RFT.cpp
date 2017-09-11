@@ -148,3 +148,77 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
 
     verifyRFTFile("TESTRFT.RFT");
 }
+
+namespace {
+void verifyRFTFile2(const std::string& rft_filename) {
+    ecl_rft_file_type * rft_file = ecl_rft_file_alloc(rft_filename.c_str());
+    /*
+      Expected occurences:
+
+      WELL   |  DATE
+      ---------------------
+      OP_1   | 10. OKT 2008
+      OP_2   | 10. OKT 2008
+      OP_2   | 10. NOV 2008
+      ---------------------
+    */
+
+    BOOST_CHECK_EQUAL( 3 , ecl_rft_file_get_size( rft_file ));
+    BOOST_CHECK( ecl_rft_file_get_well_time_rft(rft_file , "OP_1" , ecl_util_make_date(10, 10, 2008)) != NULL );
+    BOOST_CHECK( ecl_rft_file_get_well_time_rft(rft_file , "OP_2" , ecl_util_make_date(10, 10, 2008)) != NULL );
+    BOOST_CHECK( ecl_rft_file_get_well_time_rft(rft_file , "OP_2" , ecl_util_make_date(10, 11, 2008)) != NULL );
+
+    ecl_rft_file_free( rft_file );
+}
+}
+
+
+BOOST_AUTO_TEST_CASE(test_RFT2) {
+
+    std::string eclipse_data_filename    = "testRFT.DATA";
+    ERT::TestArea test_area("test_RFT");
+    test_area.copyFile( eclipse_data_filename );
+
+    auto eclipseState = Parser::parse( eclipse_data_filename );
+    {
+        /* eclipseWriter is scoped here to ensure it is destroyed after the
+         * file itself has been written, because we're going to reload it
+         * immediately. first upon destruction can we guarantee it being
+         * written to disk and flushed.
+         */
+
+        const auto& grid = eclipseState.getInputGrid();
+        const auto numCells = grid.getCartesianSize( );
+
+        EclipseIO eclipseWriter( eclipseState, grid);
+        time_t start_time = eclipseState.getSchedule().posixStartTime();
+        const auto& time_map = eclipseState.getSchedule().getTimeMap( );
+
+        for (int counter = 0; counter < 2; counter++) {
+            for (size_t step = 0; step < time_map.size(); step++) {
+                time_t step_time = time_map[step];
+
+                data::Rates r1, r2;
+                r1.set( data::Rates::opt::wat, 4.11 );
+                r1.set( data::Rates::opt::oil, 4.12 );
+                r1.set( data::Rates::opt::gas, 4.13 );
+
+                r2.set( data::Rates::opt::wat, 4.21 );
+                r2.set( data::Rates::opt::oil, 4.22 );
+                r2.set( data::Rates::opt::gas, 4.23 );
+
+                Opm::data::Wells wells;
+                wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, {} };
+                wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, {} };
+
+                eclipseWriter.writeTimeStep( step,
+                                             false,
+                                             step_time - start_time,
+                                             createBlackoilState( 2, numCells ),
+                                             wells,
+                                             {});
+            }
+            verifyRFTFile2("TESTRFT.RFT");
+        }
+    }
+}
