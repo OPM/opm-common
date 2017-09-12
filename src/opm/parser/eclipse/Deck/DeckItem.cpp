@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <cmath>
 
 namespace Opm {
 
