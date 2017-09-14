@@ -28,6 +28,8 @@ def delegate(delegate_cls, to = '_sun'):
         setattr(cls, to, _property())
         for attr in attributes - set(cls.__dict__.keys() + ['__init__']):
             setattr(cls, attr, _delegate(to, attr))
+            src, dst = getattr(delegate_cls, attr), getattr(cls, attr)
+            setattr(dst, '__doc__', src.__doc__)
 
         def new__new__(_cls, this, *args, **kwargs):
             new = super(cls, _cls).__new__(_cls, *args, **kwargs)
