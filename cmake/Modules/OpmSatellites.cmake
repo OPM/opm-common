@@ -303,11 +303,6 @@ macro(opm_add_test TestName)
         if(CURTEST_DEPENDS)
           add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
         endif()
-
-        if(NOT TARGET test-suite)
-          add_custom_target(test-suite)
-        endif()
-        add_dependencies(test-suite "${CURTEST_EXE_NAME}")
       endif()
 
       # figure out how the test should be run. if a test driver script
@@ -335,6 +330,13 @@ macro(opm_add_test TestName)
       if (CURTEST_PROCESSORS)
         set_tests_properties(${TestName} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
       endif()
+    endif()
+
+    if (NOT CURTEST_NO_COMPILE)
+      if(NOT TARGET test-suite)
+        add_custom_target(test-suite)
+      endif()
+      add_dependencies(test-suite "${CURTEST_EXE_NAME}")
     endif()
 
   else() # test is skipped
