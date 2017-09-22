@@ -43,6 +43,10 @@ macro (find_openmp opm)
   # the appropriate libraries
   find_package (OpenMP ${${opm}_QUIET})
   list (APPEND ${opm}_LIBRARIES ${OpenMP_LIBRARIES})
+  # CMake OpenMP handling is broken and has been broken for 8 years.
+  # See https://gitlab.kitware.com/cmake/cmake/issues/9075
+  # 'Fix' it by adding flag to linker command and pray compiler accepts it.
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_CXX_FLAGS}")
   if (OPENMP_FOUND)
 	add_options (C ALL_BUILDS "${OpenMP_C_FLAGS}")
 	add_options (CXX ALL_BUILDS "${OpenMP_CXX_FLAGS}")
