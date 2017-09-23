@@ -39,7 +39,6 @@ namespace Opm {
         public:
             typedef std::vector< ERT::smspec_node >::const_iterator const_iterator;
 
-            SummaryConfig( const Deck&, const EclipseState& , const ParseContext&  );
             SummaryConfig( const Deck&, const Schedule&,
                            const TableManager&, const ParseContext&, std::array< int, 3 > );
             SummaryConfig( const Deck&, const Schedule&,
