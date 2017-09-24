@@ -130,9 +130,9 @@ namespace Opm {
         EclipseGrid m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
         const SimulationConfig m_simulationConfig;
+        TransMult m_transMult;
         Schedule m_schedule;
         const SummaryConfig m_summaryConfig;
-        TransMult m_transMult;
 
         FaultCollection m_faults;
         std::string m_title;
