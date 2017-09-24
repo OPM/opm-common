@@ -124,16 +124,15 @@ namespace Opm {
         ParseContext m_parseContext;
         const TableManager m_tables;
         Runspec m_runspec;
-        const GridDims m_gridDims;
         EclipseConfig m_eclipseConfig;
+        UnitSystem m_deckUnitSystem;
+        NNC m_inputNnc;
         EclipseGrid m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
         const SimulationConfig m_simulationConfig;
         Schedule m_schedule;
         const SummaryConfig m_summaryConfig;
         TransMult m_transMult;
-        NNC m_inputNnc;
-        UnitSystem m_deckUnitSystem;
 
         FaultCollection m_faults;
         std::string m_title;

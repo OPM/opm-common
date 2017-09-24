@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
@@ -54,17 +53,16 @@ namespace Opm {
         m_parseContext(      parseContext ),
         m_tables(            deck ),
         m_runspec(           deck ),
-        m_gridDims(          deck ),
         m_eclipseConfig(     deck ),
+        m_deckUnitSystem(    deck.getActiveUnitSystem() ),
+        m_inputNnc(          deck ),
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
         m_simulationConfig(  deck, m_eclipseProperties ),
         m_schedule(          m_parseContext, m_inputGrid, m_eclipseProperties, deck, m_runspec.phases() ),
         m_summaryConfig(     deck, m_schedule, m_tables, m_parseContext , m_inputGrid.getNXYZ()),
         m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ(),
-                             m_eclipseProperties, deck.getKeywordList( "MULTREGT" ) ),
-        m_inputNnc(          deck, m_gridDims ),
-        m_deckUnitSystem(    deck.getActiveUnitSystem() )
+                             m_eclipseProperties, deck.getKeywordList( "MULTREGT" ) )
     {
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
         m_eclipseConfig.io().initFirstRFTOutput(m_schedule);
