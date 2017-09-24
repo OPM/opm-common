@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 namespace Opm {
 
@@ -121,13 +122,14 @@ namespace Opm {
                                            const std::string& keywordName);
 
         ParseContext m_parseContext;
-        const SimulationConfig m_simulationConfig;
         const TableManager m_tables;
         Runspec m_runspec;
         const GridDims m_gridDims;
         EclipseGrid m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
+        const SimulationConfig m_simulationConfig;
         Schedule m_schedule;
+        const SummaryConfig m_summaryConfig;
         EclipseConfig m_eclipseConfig;
         TransMult m_transMult;
         NNC m_inputNnc;

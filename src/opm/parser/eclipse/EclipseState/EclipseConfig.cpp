@@ -42,7 +42,6 @@ namespace Opm {
                                  const ParseContext& parseContext) :
             m_ioConfig(        deck),
             m_initConfig(      deck),
-            m_summaryConfig(   deck, schedule, tables, parseContext , inputGrid.getNXYZ()),
             m_restartConfig(   deck )
     {
         this->m_ioConfig.initFirstRFTOutput(schedule);
@@ -61,17 +60,8 @@ namespace Opm {
         return m_ioConfig;
     }
 
-    const SummaryConfig& EclipseConfig::summary() const {
-        return m_summaryConfig;
-    }
-
     const RestartConfig& EclipseConfig::restart() const {
         return this->m_restartConfig;
-    }
-
-    // [[deprecated]] --- use summary()
-    const SummaryConfig& EclipseConfig::getSummaryConfig() const {
-        return summary();
     }
 
     // [[deprecated]] --- use restart()

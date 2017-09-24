@@ -22,7 +22,6 @@
 
 #include <memory>
 
-#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
@@ -49,17 +48,13 @@ namespace Opm {
         const InitConfig& init() const;
         const IOConfig& io() const;
         IOConfig& io();
-        const SummaryConfig& summary() const;
         const RestartConfig& restart() const;
-
         const InitConfig& getInitConfig() const;
-        const SummaryConfig& getSummaryConfig() const;
         const RestartConfig& getRestartConfig() const;
 
     private:
         IOConfig m_ioConfig;
         const InitConfig m_initConfig;
-        SummaryConfig m_summaryConfig;
         RestartConfig m_restartConfig;
     };
 }

@@ -57,8 +57,9 @@ namespace Opm {
         m_gridDims(          deck ),
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
-        m_simulationConfig( deck, m_eclipseProperties ),
+        m_simulationConfig(  deck, m_eclipseProperties ),
         m_schedule(          m_parseContext, m_inputGrid, m_eclipseProperties, deck, m_runspec.phases() ),
+        m_summaryConfig(     deck, m_schedule, m_tables, m_parseContext , m_inputGrid.getNXYZ()),
         m_eclipseConfig(     deck, m_eclipseProperties, m_tables, m_gridDims, m_schedule, parseContext ),
         m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ(),
                              m_eclipseProperties, deck.getKeywordList( "MULTREGT" ) ),
@@ -100,7 +101,7 @@ namespace Opm {
     }
 
     const SummaryConfig& EclipseState::getSummaryConfig() const {
-        return m_eclipseConfig.getSummaryConfig();
+        return m_summaryConfig;
     }
 
     const RestartConfig& EclipseState::getRestartConfig() const {
