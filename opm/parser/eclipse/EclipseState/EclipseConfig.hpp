@@ -29,21 +29,11 @@
 namespace Opm {
 
     class Deck;
-    class GridDims;
-    class Eclipse3DProperties;
-    class IOConfig;
-    class ParseContext;
-    class TableManager;
 
     class EclipseConfig
     {
     public:
-        EclipseConfig(const Deck& deck,
-                      const Eclipse3DProperties& eclipse3DProperties,
-                      const TableManager& tables,
-                      const GridDims& gridDims,
-                      const Schedule& schedule,
-                      const ParseContext& parseContext);
+        EclipseConfig(const Deck& deck);
 
         const InitConfig& init() const;
         const IOConfig& io() const;

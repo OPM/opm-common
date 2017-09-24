@@ -20,31 +20,19 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 namespace Opm {
 
-    EclipseConfig::EclipseConfig(const Deck& deck,
-                                 const Eclipse3DProperties& eclipse3DProperties,
-                                 const TableManager& tables,
-                                 const GridDims& inputGrid,
-                                 const Schedule& schedule,
-                                 const ParseContext& parseContext) :
+    EclipseConfig::EclipseConfig(const Deck& deck) :
             m_ioConfig(        deck),
             m_initConfig(      deck),
             m_restartConfig(   deck )
     {
-        this->m_ioConfig.initFirstRFTOutput(schedule);
     }
 
 
