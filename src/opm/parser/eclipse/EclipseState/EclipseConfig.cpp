@@ -31,7 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 
 namespace Opm {
 
@@ -43,7 +42,6 @@ namespace Opm {
                                  const ParseContext& parseContext) :
             m_ioConfig(        deck),
             m_initConfig(      deck),
-            m_simulationConfig(deck, eclipse3DProperties),
             m_summaryConfig(   deck, schedule, tables, parseContext , inputGrid.getNXYZ()),
             m_restartConfig(   deck )
     {
@@ -61,10 +59,6 @@ namespace Opm {
 
     IOConfig& EclipseConfig::io() {
         return m_ioConfig;
-    }
-
-    const SimulationConfig& EclipseConfig::simulation() const {
-        return m_simulationConfig;
     }
 
     const SummaryConfig& EclipseConfig::summary() const {
@@ -90,8 +84,4 @@ namespace Opm {
         return init();
     }
 
-    // [[deprecated]] --- use simulation()
-    const SimulationConfig& EclipseConfig::getSimulationConfig() const {
-        return simulation();
-    }
 }

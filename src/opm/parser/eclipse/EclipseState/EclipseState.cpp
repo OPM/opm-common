@@ -57,6 +57,7 @@ namespace Opm {
         m_gridDims(          deck ),
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
+        m_simulationConfig( deck, m_eclipseProperties ),
         m_schedule(          m_parseContext, m_inputGrid, m_eclipseProperties, deck, m_runspec.phases() ),
         m_eclipseConfig(     deck, m_eclipseProperties, m_tables, m_gridDims, m_schedule, parseContext ),
         m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ(),
@@ -104,6 +105,10 @@ namespace Opm {
 
     const RestartConfig& EclipseState::getRestartConfig() const {
         return m_eclipseConfig.getRestartConfig();
+    }
+
+    const SimulationConfig& EclipseState::getSimulationConfig() const {
+        return m_simulationConfig;
     }
 
     RestartConfig& EclipseState::getRestartConfig() {
@@ -162,11 +167,6 @@ namespace Opm {
 
     const Runspec& EclipseState::runspec() const {
         return this->m_runspec;
-    }
-
-    /// [[deprecated]] --- use cfg().simulation()
-    const SimulationConfig& EclipseState::getSimulationConfig() const {
-        return m_eclipseConfig.getSimulationConfig();
     }
 
     const FaultCollection& EclipseState::getFaults() const {

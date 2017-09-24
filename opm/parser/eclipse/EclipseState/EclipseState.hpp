@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 
 namespace Opm {
 
@@ -90,7 +91,6 @@ namespace Opm {
         bool hasInputNNC() const;
 
         const Eclipse3DProperties& get3DProperties() const;
-
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
         const EclipseConfig& cfg() const;
@@ -121,6 +121,7 @@ namespace Opm {
                                            const std::string& keywordName);
 
         ParseContext m_parseContext;
+        const SimulationConfig m_simulationConfig;
         const TableManager m_tables;
         Runspec m_runspec;
         const GridDims m_gridDims;
