@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
@@ -245,17 +246,17 @@ inline std::array< int, 3 > getijk( const Completion& completion ) {
 
 inline void keywordB( std::vector< ERT::smspec_node >& list,
                       const DeckKeyword& keyword,
-                      std::array< int, 3 > dims ) {
+                      const GridDims& dims) {
     for( const auto& record : keyword ) {
         auto ijk = getijk( record );
-        list.emplace_back( keyword.name(), dims.data(), ijk.data() );
+        list.emplace_back( keyword.name(), dims.getNXYZ().data(), ijk.data() );
     }
 }
 
 inline void keywordR( std::vector< ERT::smspec_node >& list,
                       const DeckKeyword& keyword,
                       const TableManager& tables,
-                      std::array< int, 3 > dims ) {
+                      const GridDims& dims) {
 
     /* RUNSUM is not a region keyword but a directive for how to format and
      * print output. Unfortunately its *recognised* as a region keyword
@@ -277,7 +278,7 @@ inline void keywordR( std::vector< ERT::smspec_node >& list,
 
     for( const int region : regions ) {
         if (region >= 1 && region <= static_cast<int>(numfip))
-            list.emplace_back( keyword.name(), dims.data(), region );
+            list.emplace_back( keyword.name(), dims.getNXYZ().data(), region );
         else
             throw std::invalid_argument("Illegal region value: " + std::to_string( region ));
     }
@@ -296,7 +297,7 @@ inline void keywordC( std::vector< ERT::smspec_node >& list,
                       const ParseContext& parseContext,
                       const DeckKeyword& keyword,
                       const Schedule& schedule,
-                      std::array< int, 3 > dims ) {
+                      const GridDims& dims) {
 
     const auto& keywordstring = keyword.name();
     const auto last_timestep = schedule.getTimeMap().last();
@@ -325,13 +326,13 @@ inline void keywordC( std::vector< ERT::smspec_node >& list,
                 auto cijk = getijk( completion );
 
                 if( record.getItem( 1 ).defaultApplied( 0 ) ) {
-                    list.emplace_back( keywordstring, name, dims.data(), cijk.data() );
+                    list.emplace_back( keywordstring, name, dims.getNXYZ().data(), cijk.data() );
                 }
                 else {
                     /* block coordinates specified */
                     auto recijk = getijk( record, 1 );
                     if( std::equal( recijk.begin(), recijk.end(), cijk.begin() ) )
-                        list.emplace_back( keywordstring, name, dims.data(), cijk.data() );
+                        list.emplace_back( keywordstring, name, dims.getNXYZ().data(), cijk.data() );
                 }
             }
         }
@@ -343,16 +344,16 @@ inline void handleKW( std::vector< ERT::smspec_node >& list,
                       const Schedule& schedule,
                       const TableManager& tables,
                       const ParseContext& parseContext,
-                      std::array< int, 3 > n_xyz ) {
+                      const GridDims& dims) {
     const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
 
     switch( var_type ) {
         case ECL_SMSPEC_WELL_VAR: return keywordW( list, parseContext, keyword, schedule );
         case ECL_SMSPEC_GROUP_VAR: return keywordG( list, parseContext, keyword, schedule );
         case ECL_SMSPEC_FIELD_VAR: return keywordF( list, keyword );
-        case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, n_xyz );
-        case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables, n_xyz );
-        case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, keyword, schedule, n_xyz );
+        case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, dims );
+        case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables, dims );
+        case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, keyword, schedule, dims);
         case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
 
         default: return;
@@ -382,30 +383,38 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const TableManager& tables,
                               const ParseContext& parseContext,
-                              std::array< int, 3 > n_xyz )
-{
-
+                              const GridDims& dims) {
     SUMMARYSection section( deck );
     for( auto& x : section )
-        handleKW( this->keywords, x, schedule, tables, parseContext, n_xyz );
+        handleKW( this->keywords, x, schedule, tables, parseContext, dims);
 
     if( section.hasKeyword( "ALL" ) )
-        this->merge( { ALL_keywords, schedule, tables, parseContext, n_xyz } );
+        this->merge( { ALL_keywords, schedule, tables, parseContext, dims} );
 
     if( section.hasKeyword( "GMWSET" ) )
-        this->merge( { GMWSET_keywords, schedule, tables, parseContext, n_xyz } );
+        this->merge( { GMWSET_keywords, schedule, tables, parseContext, dims} );
 
     if( section.hasKeyword( "FMWSET" ) )
-        this->merge( { FMWSET_keywords, schedule, tables, parseContext, n_xyz } );
+        this->merge( { FMWSET_keywords, schedule, tables, parseContext, dims} );
 
     if (section.hasKeyword( "PERFORMA" ) )
-        this->merge( { PERFORMA_keywords, schedule, tables, parseContext, n_xyz } );
+        this->merge( { PERFORMA_keywords, schedule, tables, parseContext, dims} );
 
     uniq( this->keywords );
     for (const auto& kw: this->keywords) {
         this->short_keywords.insert( kw.keyword() );
         this->summary_keywords.insert( kw.key1() );
     }
+
+}
+
+SummaryConfig::SummaryConfig( const Deck& deck,
+                              const Schedule& schedule,
+                              const TableManager& tables,
+                              const ParseContext& parseContext) :
+    SummaryConfig( deck , schedule, tables, parseContext, GridDims( deck ))
+{
+
 }
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
