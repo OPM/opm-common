@@ -55,4 +55,29 @@ $WORKSPACE/deps/opm-simulators/tests/update_reference_data.sh $OPM_DATA_ROOT
 # Finally open the pull request
 cd $OPM_DATA_ROOT
 git remote add jenkins4opm git@github.com:jenkins4opm/opm-data
+
+# Do some cleaning of old remote branches
+# Easier code with git 2.7+
+#BRANCHES=`git branch --sort=committerdate -r | grep jenkins4opm`
+#NBRANCHES=`git branch --sort=committerdate -r | grep jenkins4opm | wc -l`
+git fetch jenkins4opm # Sadly necessary with older git
+BRANCHES=`git for-each-ref --sort=committerdate refs/remotes/jenkins4opm/ --format='%(refname:short)'`
+NBRANCHES=`git for-each-ref --sort=committerdate refs/remotes/jenkins4opm/ --format='%(refname:short)' | wc -l`
+if test $NBRANCHES -gt 30
+then
+  for BRANCH in $BRANCHES
+  do
+    BNAME=`echo $BRANCH | cut -f1 -d '/' --complement`
+    if [ "$BNAME" != "HEAD" ]
+    then
+      git push jenkins4opm :$BNAME
+    fi
+    NBRANCHES=$((NBRANCHES-1))
+    if test $NBRANCHES -lt 30
+    then
+      break
+    fi
+  done
+fi
+
 git-open-pull -u jenkins4opm --base-account OPM --base-repo opm-data -r /tmp/cmsg $BRANCH_NAME
