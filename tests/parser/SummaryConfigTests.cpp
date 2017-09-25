@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(completions) {
                        "/\n"
                        "CGIR\n" // all defaulted
                        " '*' /\n"
-                       "/\n";
+                       "/\n"
                        "CPRL\n" // all defaulted
                        " '*' /\n"
                        "/\n";
