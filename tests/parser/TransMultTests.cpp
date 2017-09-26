@@ -29,10 +29,11 @@
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 
 BOOST_AUTO_TEST_CASE(Empty) {
     Opm::Eclipse3DProperties props;
-    Opm::TransMult transMult(10,10,10, props, {} );
+    Opm::TransMult transMult(Opm::GridDims(10,10,10) ,{} , props);
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Opm::FaceDir::XPlus) , std::invalid_argument );
     BOOST_CHECK_THROW( transMult.getMultiplier(1000 , Opm::FaceDir::XPlus) , std::invalid_argument );

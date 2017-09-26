@@ -20,34 +20,19 @@
 #include <memory>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 
 namespace Opm {
 
-    EclipseConfig::EclipseConfig(const Deck& deck,
-                                 const Eclipse3DProperties& eclipse3DProperties,
-                                 const TableManager& tables,
-                                 const GridDims& inputGrid,
-                                 const Schedule& schedule,
-                                 const ParseContext& parseContext) :
+    EclipseConfig::EclipseConfig(const Deck& deck) :
             m_ioConfig(        deck),
             m_initConfig(      deck),
-            m_simulationConfig(deck, eclipse3DProperties),
-            m_summaryConfig(   deck, schedule, tables, parseContext , inputGrid.getNXYZ()),
             m_restartConfig(   deck )
     {
-        this->m_ioConfig.initFirstRFTOutput(schedule);
     }
 
 
@@ -63,21 +48,8 @@ namespace Opm {
         return m_ioConfig;
     }
 
-    const SimulationConfig& EclipseConfig::simulation() const {
-        return m_simulationConfig;
-    }
-
-    const SummaryConfig& EclipseConfig::summary() const {
-        return m_summaryConfig;
-    }
-
     const RestartConfig& EclipseConfig::restart() const {
         return this->m_restartConfig;
-    }
-
-    // [[deprecated]] --- use summary()
-    const SummaryConfig& EclipseConfig::getSummaryConfig() const {
-        return summary();
     }
 
     // [[deprecated]] --- use restart()
@@ -90,8 +62,4 @@ namespace Opm {
         return init();
     }
 
-    // [[deprecated]] --- use simulation()
-    const SimulationConfig& EclipseConfig::getSimulationConfig() const {
-        return simulation();
-    }
 }

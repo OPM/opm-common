@@ -47,9 +47,7 @@ namespace Opm {
     class TransMult {
 
     public:
-        TransMult(size_t nx , size_t ny , size_t nz,
-                  const Eclipse3DProperties&,
-                  const std::vector< const DeckKeyword* >& );
+        TransMult(const GridDims& dims, const Deck& deck, const Eclipse3DProperties& props);
         double getMultiplier(size_t globalIndex, FaceDir::DirEnum faceDir) const;
         double getMultiplier(size_t i , size_t j , size_t k, FaceDir::DirEnum faceDir) const;
         double getRegionMultiplier( size_t globalCellIndex1, size_t globalCellIndex2, FaceDir::DirEnum faceDir) const;

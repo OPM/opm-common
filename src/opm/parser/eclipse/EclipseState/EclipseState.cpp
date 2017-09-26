@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Fault.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp>
@@ -54,17 +53,18 @@ namespace Opm {
         m_parseContext(      parseContext ),
         m_tables(            deck ),
         m_runspec(           deck ),
-        m_gridDims(          deck ),
+        m_eclipseConfig(     deck ),
+        m_deckUnitSystem(    deck.getActiveUnitSystem() ),
+        m_inputNnc(          deck ),
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
+        m_simulationConfig(  deck, m_eclipseProperties ),
+        m_transMult(         GridDims(deck), deck, m_eclipseProperties ),
         m_schedule(          m_parseContext, m_inputGrid, m_eclipseProperties, deck, m_runspec.phases() ),
-        m_eclipseConfig(     deck, m_eclipseProperties, m_tables, m_gridDims, m_schedule, parseContext ),
-        m_transMult(         m_inputGrid.getNX(), m_inputGrid.getNY(), m_inputGrid.getNZ(),
-                             m_eclipseProperties, deck.getKeywordList( "MULTREGT" ) ),
-        m_inputNnc(          deck, m_gridDims ),
-        m_deckUnitSystem(    deck.getActiveUnitSystem() )
+        m_summaryConfig(     deck, m_schedule, m_tables, m_parseContext)
     {
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
+        m_eclipseConfig.io().initFirstRFTOutput(m_schedule);
 
         if( this->runspec().phases().size() < 3 )
             m_messageContainer.info("Only " + std::to_string( this->runspec().phases().size() )
@@ -99,11 +99,15 @@ namespace Opm {
     }
 
     const SummaryConfig& EclipseState::getSummaryConfig() const {
-        return m_eclipseConfig.getSummaryConfig();
+        return m_summaryConfig;
     }
 
     const RestartConfig& EclipseState::getRestartConfig() const {
         return m_eclipseConfig.getRestartConfig();
+    }
+
+    const SimulationConfig& EclipseState::getSimulationConfig() const {
+        return m_simulationConfig;
     }
 
     RestartConfig& EclipseState::getRestartConfig() {
@@ -162,11 +166,6 @@ namespace Opm {
 
     const Runspec& EclipseState::runspec() const {
         return this->m_runspec;
-    }
-
-    /// [[deprecated]] --- use cfg().simulation()
-    const SimulationConfig& EclipseState::getSimulationConfig() const {
-        return m_eclipseConfig.getSimulationConfig();
     }
 
     const FaultCollection& EclipseState::getFaults() const {

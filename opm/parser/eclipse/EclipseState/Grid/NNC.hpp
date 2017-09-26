@@ -34,7 +34,6 @@ struct NNCdata {
 };
 
 class Deck;
-class GridDims;
 
 /// Represents non-neighboring connections (non-standard adjacencies).
 /// This class is essentially a directed weighted graph.
@@ -44,7 +43,7 @@ public:
     NNC() = default;
 
     /// Construct from input deck.
-    NNC(const Deck& deck, const GridDims& gridDims);
+    explicit NNC(const Deck& deck);
     void addNNC(const size_t cell1, const size_t cell2, const double trans);
     const std::vector<NNCdata>& nncdata() const { return m_nnc; }
     size_t numNNC() const;

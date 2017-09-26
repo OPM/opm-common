@@ -26,25 +26,25 @@
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp>
 
 
 namespace Opm {
 
-    TransMult::TransMult(size_t nx , size_t ny , size_t nz,
-                         const Eclipse3DProperties& props,
-                         const std::vector< const DeckKeyword* >& keywords ) :
-        m_nx(nx),
-        m_ny(ny),
-        m_nz(nz),
+    TransMult::TransMult(const GridDims& dims, const Deck& deck, const Eclipse3DProperties& props) :
         m_names( { { FaceDir::XPlus,  "MULTX"  },
                    { FaceDir::YPlus,  "MULTY"  },
                    { FaceDir::ZPlus,  "MULTZ"  },
                    { FaceDir::XMinus, "MULTX-" },
                    { FaceDir::YMinus, "MULTY-" },
-                   { FaceDir::ZMinus, "MULTZ-" }, } ),
-        m_multregtScanner( props, keywords )
-    {}
+                   { FaceDir::ZMinus, "MULTZ-" }}),
+        m_nx( dims.getNX()),
+        m_ny( dims.getNY()),
+        m_nz( dims.getNZ()),
+        m_multregtScanner( props, deck.getKeywordList( "MULTREGT" ))
+    {
+    }
 
     void TransMult::assertIJK(size_t i , size_t j , size_t k) const {
         if ((i >= m_nx) || (j >= m_ny) || (k >= m_nz))
@@ -133,4 +133,4 @@ namespace Opm {
             applyMULTFLT(fault);
         }
     }
-}
+    }

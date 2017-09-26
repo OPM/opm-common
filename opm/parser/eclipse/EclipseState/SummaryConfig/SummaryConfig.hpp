@@ -34,16 +34,14 @@ namespace Opm {
     class ParserKeyword;
     class Schedule;
     class ParseContext;
+    class GridDims;
 
     class SummaryConfig {
         public:
             typedef std::vector< ERT::smspec_node >::const_iterator const_iterator;
 
-            SummaryConfig( const Deck&, const EclipseState& , const ParseContext&  );
             SummaryConfig( const Deck&, const Schedule&,
-                           const TableManager&, const ParseContext&, std::array< int, 3 > );
-            SummaryConfig( const Deck&, const Schedule&,
-                           const TableManager&, const ParseContext&, int, int, int );
+                           const TableManager&, const ParseContext&);
 
             const_iterator begin() const;
             const_iterator end() const;
@@ -71,6 +69,11 @@ namespace Opm {
             bool require3DField( const std::string& keyword) const;
             bool requireFIPNUM( ) const;
         private:
+            SummaryConfig( const Deck& deck,
+                           const Schedule& schedule,
+                           const TableManager& tables,
+                           const ParseContext& parseContext,
+                           const GridDims& dims);
 
             /*
               The short_keywords set contains only the pure keyword
