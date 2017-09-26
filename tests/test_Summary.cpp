@@ -217,7 +217,7 @@ struct setup {
     setup( const std::string& fname , const char* path = "summary_deck.DATA", const ParseContext& parseContext = ParseContext( )) :
         deck( Parser().parseFile( path, parseContext ) ),
         es( deck, ParseContext() ),
-        config( deck, es, parseContext ),
+        config( deck, es.getSchedule(), es.getTableManager(), parseContext ),
         grid( es.getInputGrid() ),
         wells( result_wells() ),
         name( fname ),
