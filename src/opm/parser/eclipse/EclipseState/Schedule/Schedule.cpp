@@ -136,11 +136,15 @@ namespace Opm {
         for (size_t keywordIdx = 0; keywordIdx < section.size(); ++keywordIdx) {
             const auto& keyword = section.getKeyword(keywordIdx);
 
-            if (keyword.name() == "DATES")
+            if (keyword.name() == "DATES") {
+                checkIfAllConnectionsIsShut(currentStep);
                 currentStep += keyword.size();
+            }
 
-            else if (keyword.name() == "TSTEP")
+            else if (keyword.name() == "TSTEP") {
+                checkIfAllConnectionsIsShut(currentStep);
                 currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
+            }
 
             else if (keyword.name() == "WELSPECS")
                 handleWELSPECS( section, keywordIdx, currentStep );
@@ -240,6 +244,8 @@ namespace Opm {
                 }
             }
         }
+        checkIfAllConnectionsIsShut(currentStep);
+
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
             const DeckKeyword& keyword = *rftPair->first;
@@ -787,7 +793,6 @@ namespace Opm {
         };
 
         constexpr auto open = WellCommon::StatusEnum::OPEN;
-        constexpr auto shut = WellCommon::StatusEnum::SHUT;
 
         for( const auto& record : keyword ) {
             const auto& wellname = record.getItem( "WELL" ).getTrimmedString(0);
@@ -856,9 +861,6 @@ namespace Opm {
 
                 well->addCompletionSet( currentStep, new_completions );
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
-
-                if( new_completions.allCompletionsShut() )
-                    this->updateWellStatus( *well, currentStep, shut );
             }
         }
     }
@@ -1621,5 +1623,13 @@ namespace Opm {
             if( m_oilvaporizationproperties.at( i ).defined() ) return true;
 
         return false;
+    }
+
+    void Schedule::checkIfAllConnectionsIsShut(size_t timestep) {
+        for( auto& well : this->m_wells ) {
+            const auto& completions = well.getCompletions(timestep);
+            if( completions.allCompletionsShut() )
+                this->updateWellStatus( well, timestep, WellCommon::StatusEnum::SHUT);
+        }
     }
 }

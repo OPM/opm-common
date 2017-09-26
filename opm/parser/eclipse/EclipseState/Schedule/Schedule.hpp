@@ -159,6 +159,7 @@ namespace Opm
         void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
 
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
+        void checkIfAllConnectionsIsShut(size_t currentStep);
 
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
         static double convertInjectionRateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem &unitSystem);

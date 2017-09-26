@@ -658,6 +658,72 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
 }
 
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddNewCompletionsDoNotShutWell) {
+  Opm::Parser parser;
+  std::string input =
+          "START             -- 0 \n"
+                  "1 NOV 1979 / \n"
+                  "SCHEDULE\n"
+                  "DATES             -- 1\n"
+                  " 1 DES 1979/ \n"
+                  "/\n"
+                  "WELSPECS\n"
+                  "    'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+                  "/\n"
+                  "COMPDAT\n"
+                  " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                  " 'OP_1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+                  " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                  "/\n"
+                  "DATES             -- 2\n"
+                  " 10  JUL 2008 / \n"
+                  "/\n"
+                  "WELOPEN\n"
+                  " 'OP_1' OPEN / \n"
+                  "/\n"
+                  "DATES             -- 3\n"
+                  " 10  OKT 2008 / \n"
+                  "/\n"
+                  "WELOPEN\n"
+                  " 'OP_1' SHUT 0 0 0 0 0 / \n "
+                  "/\n"
+                  "COMPDAT\n"
+                  " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                  "/\n"
+                  "DATES             -- 4\n"
+                  " 10  NOV 2008 / \n"
+                  "/\n"
+                  "WELOPEN\n"
+                  " 'OP_1' SHUT 0 0 0 0 0 / \n "
+                  "/\n"
+                  "DATES             -- 5\n"
+                  " 11  NOV 2008 / \n"
+                  "/\n"
+                  "COMPDAT\n"
+                  " 'OP_1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+                  "/\n"
+                  "DATES             -- 6\n"
+                  " 12  NOV 2008 / \n"
+                  "/\n";
+
+  EclipseGrid grid(10,10,10);
+  ParseContext parseContext;
+  auto deck = parser.parseString(input, parseContext);
+  TableManager table ( deck );
+  Eclipse3DProperties eclipseProperties ( deck , table, grid);
+  Schedule schedule(parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
+  auto* well = schedule.getWell("OP_1");
+  // timestep 3. Close all completions with WELOPEN and immediately open new completions with COMPDAT.
+  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(3));
+  BOOST_CHECK( !well->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
+  // timestep 4. Close all completions with WELOPEN. The well will be shut since no completions
+  // are open.
+  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(4));
+  BOOST_CHECK( well->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
+  // timestep 5. Open new completions. But keep the well shut,
+  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(5));
+}
+
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
     Opm::Parser parser;
     std::string input =
