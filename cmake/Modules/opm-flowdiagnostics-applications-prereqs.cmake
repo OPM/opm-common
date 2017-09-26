@@ -13,7 +13,7 @@ set (opm-flowdiagnostics-applications_DEPS
 	"CXX11Features REQUIRED"
 	"Boost 1.44.0
 		COMPONENTS filesystem regex system unit_test_framework REQUIRED"
-	"ERT REQUIRED"
+	"ecl REQUIRED"
 	# prerequisite OPM modules
 	"opm-common REQUIRED;
 	opm-flowdiagnostics REQUIRED;
