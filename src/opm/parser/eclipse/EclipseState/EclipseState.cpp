@@ -60,8 +60,7 @@ namespace Opm {
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
         m_simulationConfig(  deck, m_eclipseProperties ),
         m_transMult(         GridDims(deck), deck, m_eclipseProperties ),
-        m_schedule(          m_parseContext, m_inputGrid, m_eclipseProperties, deck, m_runspec.phases() ),
-        m_summaryConfig(     deck, m_schedule, m_tables, m_parseContext)
+        m_schedule(          m_parseContext, m_inputGrid, m_eclipseProperties, deck, m_runspec.phases() )
     {
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
@@ -97,9 +96,6 @@ namespace Opm {
         return m_inputGrid;
     }
 
-    const SummaryConfig& EclipseState::getSummaryConfig() const {
-        return m_summaryConfig;
-    }
 
     const RestartConfig& EclipseState::getRestartConfig() const {
         return m_eclipseConfig.getRestartConfig();

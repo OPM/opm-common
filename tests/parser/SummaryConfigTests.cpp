@@ -101,7 +101,8 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     auto deck = createDeck( input );
     EclipseState state( deck, parseContext );
-    return state.getSummaryConfig();
+    auto schedule = state.getSchedule( );
+    return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext );
 }
 
 BOOST_AUTO_TEST_CASE(wells_all) {

@@ -35,7 +35,6 @@
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 namespace Opm {
 
@@ -77,7 +76,6 @@ namespace Opm {
 
         const InitConfig& getInitConfig() const;
         const SimulationConfig& getSimulationConfig() const;
-        const SummaryConfig& getSummaryConfig() const;
         const RestartConfig& getRestartConfig() const;
         RestartConfig& getRestartConfig();
 
@@ -132,7 +130,6 @@ namespace Opm {
         const SimulationConfig m_simulationConfig;
         TransMult m_transMult;
         Schedule m_schedule;
-        const SummaryConfig m_summaryConfig;
 
         FaultCollection m_faults;
         std::string m_title;

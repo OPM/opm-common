@@ -31,6 +31,8 @@ inline void loadDeck( const char * deck_file) {
 
     auto deck = parser.parseFile(deck_file, parseContext);
     Opm::EclipseState state( deck, parseContext );
+    auto schedule = state.getSchedule( );
+    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext );
     {
         std::stringstream ss;
 
