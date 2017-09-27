@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
@@ -448,7 +449,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     const auto& grid = state.getInputGrid();
     const TableManager table ( deck );
     const Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    const Schedule sched(parseContext, grid, eclipseProperties, deck, Phases(true, true, true) );
+    const Schedule sched(deck, grid, eclipseProperties, Phases(true, true, true), parseContext );
 
     // for WELSEGS keyword
     const auto& kw = deck.getKeyword("WELSEGS");
@@ -1348,7 +1349,8 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Schedule sched(ParseContext(), grid, eclipseProperties, deck, Phases(true, true, true) );
+
+    Schedule sched(deck, grid, eclipseProperties, Phases(true, true, true) , ParseContext());
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("INJE1"));
@@ -1385,7 +1387,7 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties( deck , table, grid );
-    Schedule sched( parseContext, grid, eclipseProperties, deck, Phases(true, true, true) );
+    Schedule sched( deck, grid, eclipseProperties, Phases(true, true, true) , parseContext);
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("PROD1"));

@@ -37,7 +37,6 @@
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -59,8 +58,7 @@ namespace Opm {
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
         m_simulationConfig(  deck, m_eclipseProperties ),
-        m_transMult(         GridDims(deck), deck, m_eclipseProperties ),
-        m_schedule(          m_parseContext, m_inputGrid, m_eclipseProperties, deck, m_runspec.phases() )
+        m_transMult(         GridDims(deck), deck, m_eclipseProperties )
     {
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
@@ -79,7 +77,6 @@ namespace Opm {
         initFaults(deck);
 
         m_messageContainer.appendMessages(m_tables.getMessageContainer());
-        m_messageContainer.appendMessages(m_schedule.getMessageContainer());
         m_messageContainer.appendMessages(m_inputGrid.getMessageContainer());
         m_messageContainer.appendMessages(m_eclipseProperties.getMessageContainer());
     }
@@ -129,10 +126,6 @@ namespace Opm {
 
     const ParseContext& EclipseState::getParseContext() const {
         return m_parseContext;
-    }
-
-    const Schedule& EclipseState::getSchedule() const {
-        return this->m_schedule;
     }
 
     /// [[deprecated]] --- use cfg().io()

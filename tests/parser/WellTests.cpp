@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Opm::Schedule schedule(Opm::ParseContext() , grid , eclipseProperties, deck, Opm::Phases(true, true, true) );
+    Opm::Schedule schedule(deck, grid , eclipseProperties, Opm::Phases(true, true, true) , Opm::ParseContext());
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Opm::Schedule schedule(Opm::ParseContext() , grid , eclipseProperties, deck, Opm::Phases(true, true, true) );
+    Opm::Schedule schedule(deck, grid , eclipseProperties, Opm::Phases(true, true, true) , Opm::ParseContext());
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Opm::Schedule schedule(Opm::ParseContext() , grid , eclipseProperties, deck, Opm::Phases(true, true, true) );
+    Opm::Schedule schedule(deck, grid , eclipseProperties, Opm::Phases(true, true, true) , Opm::ParseContext());
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;

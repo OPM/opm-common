@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -69,8 +68,6 @@ namespace Opm {
         EclipseState(const Deck& deck , ParseContext parseContext = ParseContext());
 
         const ParseContext& getParseContext() const;
-
-        const Schedule& getSchedule() const;
         const IOConfig& getIOConfig() const;
         IOConfig& getIOConfig();
 
@@ -129,7 +126,6 @@ namespace Opm {
         Eclipse3DProperties m_eclipseProperties;
         const SimulationConfig m_simulationConfig;
         TransMult m_transMult;
-        Schedule m_schedule;
 
         FaultCollection m_faults;
         std::string m_title;

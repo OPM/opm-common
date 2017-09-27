@@ -24,6 +24,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 inline void loadDeck( const char * deck_file) {
     Opm::ParseContext parseContext;
@@ -31,7 +33,7 @@ inline void loadDeck( const char * deck_file) {
 
     auto deck = parser.parseFile(deck_file, parseContext);
     Opm::EclipseState state( deck, parseContext );
-    auto schedule = state.getSchedule( );
+    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
     Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext );
     {
         std::stringstream ss;

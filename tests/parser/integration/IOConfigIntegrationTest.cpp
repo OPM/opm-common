@@ -304,9 +304,13 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     rptConfig.push_back( std::make_tuple(240 , true , boost::gregorian::date( 2006,10,1)) );
     rptConfig.push_back( std::make_tuple(241 , true , boost::gregorian::date( 2006,10,10)) );
 
+    Parser parser;
+    ParseContext ctx;
+    auto deck = parser.parseFile( prefix() + "IOConfig/RPTRST_DECK.DATA" , ctx);
+    EclipseState state(deck, ctx);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), ctx);
 
-    auto state = Parser::parse(prefix() + "IOConfig/RPTRST_DECK.DATA");
-    verifyRestartConfig(state.getSchedule().getTimeMap(), state.cfg().restart(), rptConfig);
+    verifyRestartConfig(schedule.getTimeMap(), state.cfg().restart(), rptConfig);
 }
 
 
@@ -344,12 +348,14 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
         else    rptConfig.push_back( std::make_tuple(report_step, false, boost::gregorian::date(2000,1,1)));
     }
 
+
     ParseContext parseContext;
     Parser parser;
     auto deck = parser.parseFile(prefix() + "IOConfig/RPT_TEST2.DATA", parseContext);
     EclipseState state( deck , parseContext );
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
     const auto& rstConfig = state.cfg().restart();
-    verifyRestartConfig(state.getSchedule().getTimeMap(), state.cfg().restart(), rptConfig);
+    verifyRestartConfig(schedule.getTimeMap(), state.cfg().restart(), rptConfig);
 
     BOOST_CHECK_EQUAL( rstConfig.getFirstRestartStep() , 0 );
 }

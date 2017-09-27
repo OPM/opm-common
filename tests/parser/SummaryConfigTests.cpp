@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
@@ -31,7 +32,7 @@ using namespace Opm;
 
 static Deck createDeck( const std::string& summary ) {
     Opm::Parser parser;
-    std::string input = 
+    std::string input =
             "START             -- 0 \n"
             "10 MAI 2007 / \n"
             "RUNSPEC\n"
@@ -101,7 +102,7 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     auto deck = createDeck( input );
     EclipseState state( deck, parseContext );
-    auto schedule = state.getSchedule( );
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
     return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext );
 }
 

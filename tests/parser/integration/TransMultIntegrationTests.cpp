@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     auto deck = parser.parseFile(scheduleFile, parseContext);
     EclipseState state(deck, parseContext);
     const auto& trans = state.getTransMult();
-    const auto& schedule = state.getSchedule();
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
     const Events& events = schedule.getEvents();
 
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 3,2,0,FaceDir::XPlus ));
