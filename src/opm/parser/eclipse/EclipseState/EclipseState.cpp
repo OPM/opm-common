@@ -64,7 +64,6 @@ namespace Opm {
         m_summaryConfig(     deck, m_schedule, m_tables, m_parseContext)
     {
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
-        m_eclipseConfig.io().initFirstRFTOutput(m_schedule);
 
         if( this->runspec().phases().size() < 3 )
             m_messageContainer.info("Only " + std::to_string( this->runspec().phases().size() )

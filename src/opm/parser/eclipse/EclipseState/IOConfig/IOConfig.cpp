@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
 #include <ert/ecl/EclFilename.hpp>
@@ -123,27 +122,6 @@ namespace Opm {
     }
 
 
-    /*
-      Will initialize an internal variable holding the first report
-      step when rft output is queried. The reason we are interested in
-      this report step is that when we reach this step the output
-      files should be opened with mode 'w' - whereas for subsequent
-      steps it should be opened with mode 'a'.
-    */
-
-    void IOConfig::initFirstRFTOutput(const Schedule& schedule) {
-        m_first_rft_step = -1;
-
-        for (const auto& well : schedule.getWells( )) {
-            int well_output = well->firstRFTOutput();
-            if (well_output >= 0) {
-                if ((m_first_rft_step < 0) || (well_output < m_first_rft_step))
-                    m_first_rft_step = well_output;
-            }
-        }
-    }
-
-
 
 
     void IOConfig::overrideNOSIM(bool nosim) {
@@ -177,10 +155,6 @@ namespace Opm {
         return ERT::EclFilename( restart_base , file_type , report_step , fmt_file );
     }
 
-
-    int IOConfig::getFirstRFTStep() const {
-        return m_first_rft_step;
-    }
 
     bool IOConfig::getOutputEnabled() const {
         return m_output_enabled;

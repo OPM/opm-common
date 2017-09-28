@@ -27,7 +27,6 @@ namespace Opm {
     class Deck;
     class GRIDSection;
     class RUNSPECSection;
-    class Schedule;
 
     /*The IOConfig class holds data about input / ouput configurations
 
@@ -119,7 +118,6 @@ namespace Opm {
         explicit IOConfig( const std::string& input_path );
 
 
-        int  getFirstRFTStep() const;
         bool getWriteEGRIDFile() const;
         bool getWriteINITFile() const;
         bool getUNIFOUT() const;
@@ -147,7 +145,6 @@ namespace Opm {
         std::string fullBasePath( ) const;
 
         bool initOnly() const;
-        void initFirstRFTOutput(const Schedule& schedule);
 
         // Proxy methods forwarding directly to corresponding RestartConfig
         bool getWriteRestartFile(size_t timestep) const;
@@ -163,7 +160,6 @@ namespace Opm {
         bool            m_FMTIN = false;
         bool            m_FMTOUT = false;
         int             m_first_restart_step;
-        int             m_first_rft_step;
         std::string     m_deck_filename;
         bool            m_output_enabled = true;
         std::string     m_output_dir;

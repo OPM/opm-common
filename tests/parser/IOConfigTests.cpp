@@ -154,20 +154,8 @@ const std::string deckStr_RFT = "RUNSPEC\n"
 
 
 
-static Deck createDeck(const std::string& input) {
-    Opm::Parser parser;
-    return parser.parseString(input, Opm::ParseContext());
-}
 
 
-BOOST_AUTO_TEST_CASE( RFT_TIME) {
-    Deck deck = createDeck(deckStr_RFT);
-    EclipseState state( deck , Opm::ParseContext() );
-    const IOConfig& ioConfig = state.cfg().io();
-
-
-    BOOST_CHECK_EQUAL( ioConfig.getFirstRFTStep() , 2 );
-}
 
 BOOST_AUTO_TEST_CASE(DefaultProperties) {
     const char* data =  "RUNSPEC\n"
