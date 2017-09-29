@@ -9,6 +9,7 @@ set (opm-simulators_CONFIG_VAR
         DUNE_ISTL_VERSION_MAJOR
         DUNE_ISTL_VERSION_MINOR
         DUNE_ISTL_VERSION_REVISION
+	HAVE_SUITESPARSE_UMFPACK
 	)
 
 # dependencies
