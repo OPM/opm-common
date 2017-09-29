@@ -5,6 +5,7 @@
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
+     000_Eclipse100/A/ACTION
      000_Eclipse100/A/ACTNUM
      000_Eclipse100/A/ADD
      000_Eclipse100/A/ADDREG
@@ -12,6 +13,7 @@ set( keywords
      000_Eclipse100/A/AITS
      000_Eclipse100/A/ALL
      000_Eclipse100/A/API
+     000_Eclipse100/A/APIGROUP
      000_Eclipse100/A/AQUANCON
      000_Eclipse100/A/AQUCON
      000_Eclipse100/A/AQUDIMS
@@ -59,6 +61,7 @@ set( keywords
      000_Eclipse100/E/EDITNNC
      000_Eclipse100/E/EHYSTR
      000_Eclipse100/E/END
+     000_Eclipse100/E/ENDACTIO
      000_Eclipse100/E/ENDBOX
      000_Eclipse100/E/ENDINC
      000_Eclipse100/E/ENDNUM
@@ -93,6 +96,7 @@ set( keywords
      000_Eclipse100/G/GDORIENT
      000_Eclipse100/G/GECON
      000_Eclipse100/G/GEFAC
+     000_Eclipse100/G/GLIFTOPT
      000_Eclipse100/G/GMWSET
      000_Eclipse100/G/GRAVITY
      000_Eclipse100/G/GRID
@@ -102,6 +106,7 @@ set( keywords
      000_Eclipse100/G/GROUP_PROBE
      000_Eclipse100/G/GRUPNET
      000_Eclipse100/G/GRUPTREE
+     000_Eclipse100/G/GSATPROD
      000_Eclipse100/I/IMBNUM
      000_Eclipse100/I/IMKRVD
      000_Eclipse100/I/IMPES
@@ -121,6 +126,7 @@ set( keywords
      000_Eclipse100/I/ISWU
      000_Eclipse100/J/JFUNC
      000_Eclipse100/L/LGR
+     000_Eclipse100/L/LIFTOPT
      000_Eclipse100/M/MAPAXES
      000_Eclipse100/M/MAPUNITS
      000_Eclipse100/M/MAXVALUE
@@ -155,6 +161,7 @@ set( keywords
      000_Eclipse100/N/NONNC
      000_Eclipse100/N/NORSSPEC
      000_Eclipse100/N/NOSIM
+     000_Eclipse100/N/NOWARN
      000_Eclipse100/N/NSTACK
      000_Eclipse100/N/NTG
      000_Eclipse100/N/NUMRES
@@ -196,6 +203,7 @@ set( keywords
      000_Eclipse100/P/POLYMER
      000_Eclipse100/P/PORO
      000_Eclipse100/P/PORV
+     000_Eclipse100/P/PPCWMAX
      000_Eclipse100/P/PRESSURE
      000_Eclipse100/P/PROPS
      000_Eclipse100/P/PRORDER
@@ -207,6 +215,7 @@ set( keywords
      000_Eclipse100/P/PVTNUM
      000_Eclipse100/P/PVTO
      000_Eclipse100/P/PVTW
+     000_Eclipse100/Q/QDRILL
      000_Eclipse100/R/RADFIN4
      000_Eclipse100/R/RADIAL
      000_Eclipse100/R/REGDIMS
@@ -314,6 +323,7 @@ set( keywords
      000_Eclipse100/V/VFPPDIMS
      000_Eclipse100/V/VFPPROD
      000_Eclipse100/V/VISCREF
+     000_Eclipse100/W/WARN
      000_Eclipse100/W/WATER
      000_Eclipse100/W/WATVISCT
      000_Eclipse100/W/WCONHIST
@@ -328,13 +338,18 @@ set( keywords
      000_Eclipse100/W/WELLDIMS
      000_Eclipse100/W/WELL_PROBE
      000_Eclipse100/W/WELOPEN
+     000_Eclipse100/W/WELPI
      000_Eclipse100/W/WELSEGS
      000_Eclipse100/W/WELSPECS
      000_Eclipse100/W/WELTARG
+     000_Eclipse100/W/WGASPROD
      000_Eclipse100/W/WGRUPCON
      000_Eclipse100/W/WHISTCTL
+     000_Eclipse100/W/WINJMULT
      000_Eclipse100/W/WLIFT
+     000_Eclipse100/W/WLIMTOL
      000_Eclipse100/W/WORKLIM
+     000_Eclipse100/W/WORKTHP
      000_Eclipse100/W/WPAVE
      000_Eclipse100/W/WPAVEDEP
      000_Eclipse100/W/WPIMULT
@@ -388,4 +403,3 @@ set( keywords
      900_OPM/O/OCOMPIDX
      900_OPM/R/RHO
      900_OPM/T/TLPMIXPA)
-
