@@ -145,16 +145,14 @@ macro (find_opm_package module deps header lib defs prog conf)
   # tidy the lists before returning them
   remove_dup_deps (${module})
 
-  if( NOT ${module}_CONFIG_VARS)
-    # these defines are used in dune/${module} headers, and should be put
-    # in config.h when we include those
-    foreach (_var IN ITEMS ${conf})
-      # massage the name to remove source code formatting
-      string (REGEX REPLACE "^[\n\t\ ]+" "" _var "${_var}")
-      string (REGEX REPLACE "[\n\t\ ]+$" "" _var "${_var}")
-      list (APPEND ${module}_CONFIG_VARS ${_var})
-    endforeach (_var)
-  endif()
+  # these defines are used in dune/${module} headers, and should be put
+  # in config.h when we include those
+  foreach (_var IN ITEMS ${conf})
+    # massage the name to remove source code formatting
+    string (REGEX REPLACE "^[\n\t\ ]+" "" _var "${_var}")
+    string (REGEX REPLACE "[\n\t\ ]+$" "" _var "${_var}")
+    list (APPEND ${module}_CONFIG_VARS ${_var})
+  endforeach (_var)
 
   # these are the defines that should be set when compiling
   # without config.h
