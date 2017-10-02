@@ -30,8 +30,7 @@
 namespace Opm {
 namespace out {
 
-    RegionCache::RegionCache(const EclipseState& state, const EclipseGrid& grid) {
-        const auto& properties = state.get3DProperties();
+    RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule) {
         const auto& fipnum = properties.getIntGridProperty("FIPNUM");
         const auto& region_values = properties.getRegions( "FIPNUM" );
 
@@ -40,7 +39,6 @@ namespace out {
 
 
         {
-            const auto& schedule = state.getSchedule();
             const auto& wells = schedule.getWells();
             for (const auto& well : wells) {
                 const auto& completions = well->getCompletions( );

@@ -41,6 +41,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -203,8 +204,9 @@ ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > readsum( const std::string& ba
 struct setup {
     Deck deck;
     EclipseState es;
-    SummaryConfig config;
     const EclipseGrid& grid;
+    Schedule schedule;
+    SummaryConfig config;
     data::Wells wells;
     std::string name;
     ERT::TestArea ta;
@@ -217,14 +219,14 @@ struct setup {
     setup( const std::string& fname , const char* path = "summary_deck.DATA", const ParseContext& parseContext = ParseContext( )) :
         deck( Parser().parseFile( path, parseContext ) ),
         es( deck, ParseContext() ),
-        config( deck, es.getSchedule(), es.getTableManager(), parseContext ),
         grid( es.getInputGrid() ),
+        schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), parseContext),
+        config( deck, schedule, es.getTableManager(), parseContext ),
         wells( result_wells() ),
         name( fname ),
         ta( ERT::TestArea("test_summary") ),
-        solution( make_solution( es.getInputGrid() ) )
+        solution( make_solution( grid ) )
     {
-        solution = make_solution( es.getInputGrid());
     }
 
 };
@@ -242,10 +244,10 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     util_make_path( "PATH" );
     cfg.name = "PATH/CASE";
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid , cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution , {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution , {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution , {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -378,10 +380,10 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
 BOOST_AUTO_TEST_CASE(group_keywords) {
     setup cfg( "test_Summary_group" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution , {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution , {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution , {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -476,10 +478,10 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
 BOOST_AUTO_TEST_CASE(group_group) {
     setup cfg( "test_Summary_group_group" , "group_group.DATA");
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution , {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution , {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution , {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -528,10 +530,10 @@ BOOST_AUTO_TEST_CASE(group_group) {
 BOOST_AUTO_TEST_CASE(completion_kewords) {
     setup cfg( "test_Summary_completion" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -581,10 +583,10 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
 BOOST_AUTO_TEST_CASE(field_keywords) {
     setup cfg( "test_Summary_field" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -678,11 +680,11 @@ BOOST_AUTO_TEST_CASE(foe_test) {
     data::Solution sol;
     sol.insert( "OIP", UnitSystem::measure::volume, oip, data::TargetType::RESTART_AUXILIARY );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     writer.set_initial( sol );
-    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 10 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -699,10 +701,10 @@ BOOST_AUTO_TEST_CASE(foe_test) {
 BOOST_AUTO_TEST_CASE(report_steps_time) {
     setup cfg( "test_Summary_report_steps_time" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells , cfg.solution, {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 10 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -721,10 +723,10 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
 BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     setup cfg( "test_Summary_skip_unknown_var" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 1, 2 *  day, cfg.es,  cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 5 *  day, cfg.es,  cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 10 * day, cfg.es,  cfg.wells , cfg.solution, {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 1, 2 *  day, cfg.es,  cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 5 *  day, cfg.es,  cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 10 * day, cfg.es,  cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -741,10 +743,10 @@ BOOST_AUTO_TEST_CASE(region_vars) {
     setup cfg( "region_vars" );
 
     {
-        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells, cfg.solution, {});
-        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells, cfg.solution, {});
-        writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells, cfg.solution, {});
+        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
+        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
+        writer.add_timestep( 2, 10 * day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
         writer.write();
     }
 
@@ -788,10 +790,10 @@ BOOST_AUTO_TEST_CASE(region_production) {
     setup cfg( "region_production" );
 
     {
-        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-        writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, {});
-        writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, {});
-        writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, {});
+        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+        writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+        writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+        writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
         writer.write();
     }
 
@@ -816,10 +818,10 @@ BOOST_AUTO_TEST_CASE(region_production) {
 BOOST_AUTO_TEST_CASE(region_injection) {
     setup cfg( "region_injection" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -845,10 +847,10 @@ BOOST_AUTO_TEST_CASE(region_injection) {
 BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     setup cfg( "region_injection" );
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -891,7 +893,7 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
 BOOST_AUTO_TEST_CASE( require3D )
 {
     setup cfg( "XXXX" );
-    const auto summaryConfig = cfg.es.getSummaryConfig( );
+    const auto summaryConfig = cfg.config;
 
     BOOST_CHECK( summaryConfig.require3DField( "PRESSURE" ));
     BOOST_CHECK( summaryConfig.require3DField( "SGAS" ));
@@ -911,10 +913,10 @@ BOOST_AUTO_TEST_CASE( require3D )
 BOOST_AUTO_TEST_CASE(fpr) {
     setup cfg( "test_fpr", "summary_deck_non_constant_porosity.DATA");
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -940,10 +942,10 @@ BOOST_AUTO_TEST_CASE(fpr) {
         }
     }
 
-    out::Summary writer2( cfg.es, cfg.config, cfg.grid, cfg.name );
-    writer2.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer2.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer2.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, {});
+    out::Summary writer2( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer2.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer2.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer2.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer2.write();
 
     auto res2 = readsum( cfg.name );
@@ -958,10 +960,10 @@ BOOST_AUTO_TEST_CASE(rpr) {
     setup cfg( "test_rpr", "summary_deck_non_constant_porosity.DATA");
 
     {
-        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.name );
-        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.wells, cfg.solution, {});
-        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.wells, cfg.solution, {});
-        writer.add_timestep( 2, 10 * day, cfg.es, cfg.wells, cfg.solution, {});
+        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
+        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
+        writer.add_timestep( 2, 10 * day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
         writer.write();
     }
 
@@ -998,10 +1000,10 @@ BOOST_AUTO_TEST_CASE(rpr) {
 BOOST_AUTO_TEST_CASE(MISC) {
     setup cfg( "test_MISC");
 
-    out::Summary writer( cfg.es, cfg.config, cfg.grid , cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, {});
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -1014,17 +1016,17 @@ BOOST_AUTO_TEST_CASE(EXTRA) {
     setup cfg( "test_EXTRA");
 
     {
-      out::Summary writer( cfg.es, cfg.config, cfg.grid , cfg.name );
-      writer.add_timestep( 0, 0 * day, cfg.es, cfg.wells , cfg.solution, { {"TCPU" , 0 }});
-      writer.add_timestep( 1, 1 * day, cfg.es, cfg.wells , cfg.solution, { {"TCPU" , 1 }});
-      writer.add_timestep( 2, 2 * day, cfg.es, cfg.wells , cfg.solution, { {"TCPU" , 2}});
+        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
+        writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, { {"TCPU" , 0 }});
+        writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, { {"TCPU" , 1 }});
+        writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, { {"TCPU" , 2}});
 
-      /* Add a not-recognized key; that is OK */
-      BOOST_CHECK_NO_THROW(  writer.add_timestep( 3, 3 * day, cfg.es, cfg.wells , cfg.solution, { {"MISSING" , 2 }}));
+        /* Add a not-recognized key; that is OK */
+        BOOST_CHECK_NO_THROW(  writer.add_timestep( 3, 3 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, { {"MISSING" , 2 }}));
 
-      /* Override a NOT MISC variable - ignored. */
-      writer.add_timestep( 4, 4 * day, cfg.es, cfg.wells , cfg.solution, { {"FOPR" , -1 }});
-      writer.write();
+        /* Override a NOT MISC variable - ignored. */
+        writer.add_timestep( 4, 4 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, { {"FOPR" , -1 }});
+        writer.write();
     }
 
     auto res = readsum( cfg.name );

@@ -191,12 +191,13 @@ inline std::string uppercase( std::string x ) {
 
 class EclipseIO::Impl {
     public:
-        Impl( const EclipseState& es, EclipseGrid grid );
+    Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& );
         void writeINITFile( const data::Solution& simProps, const NNC& nnc) const;
         void writeEGRIDFile( const NNC& nnc ) const;
 
         const EclipseState& es;
         EclipseGrid grid;
+        const Schedule& schedule;
         std::string outputDir;
         std::string baseName;
         out::Summary summary;
@@ -205,12 +206,15 @@ class EclipseIO::Impl {
 };
 
 EclipseIO::Impl::Impl( const EclipseState& eclipseState,
-                           EclipseGrid grid_)
+                       EclipseGrid grid_,
+                       const Schedule& schedule_,
+                       const SummaryConfig& summary_config)
     : es( eclipseState )
     , grid( std::move( grid_ ) )
+    , schedule( schedule_ )
     , outputDir( eclipseState.getIOConfig().getOutputDir() )
     , baseName( uppercase( eclipseState.getIOConfig().getBaseName() ) )
-    , summary( eclipseState, eclipseState.getSummaryConfig() , grid )
+    , summary( eclipseState, summary_config, grid , schedule )
     , rft( outputDir.c_str(), baseName.c_str(), es.getIOConfig().getFMTOUT() )
     , output_enabled( eclipseState.getIOConfig().getOutputEnabled() )
 {}
@@ -253,7 +257,7 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, const NNC& 
                                      NULL,
                                      units.getEclType(),
                                      this->es.runspec( ).eclPhaseMask( ),
-                                     this->es.getSchedule().posixStartTime( ));
+                                     this->schedule.posixStartTime( ));
 
         units.from_si( UnitSystem::measure::volume, ecl_data );
         writeKeyword( fortio, "PORV" , ecl_data );
@@ -406,6 +410,7 @@ void EclipseIO::writeTimeStep(int report_step,
 
     const auto& es = this->impl->es;
     const auto& grid = this->impl->grid;
+    const auto& schedule = this->impl->schedule;
     const auto& units = es.getUnits();
     const auto& ioConfig = es.getIOConfig();
     const auto& restart = es.cfg().restart();
@@ -419,6 +424,7 @@ void EclipseIO::writeTimeStep(int report_step,
         this->impl->summary.add_timestep( report_step,
                                           secs_elapsed,
                                           es,
+                                          schedule,
                                           wells ,
                                           cells ,
                                           misc_summary_values );
@@ -439,7 +445,7 @@ void EclipseIO::writeTimeStep(int report_step,
                                                  report_step,
                                                  ioConfig.getFMTOUT() );
 
-        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid , extra_restart , write_double);
+        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid , schedule, extra_restart , write_double);
     }
 
 
@@ -450,14 +456,13 @@ void EclipseIO::writeTimeStep(int report_step,
         return;
 
     {
-        const auto& schedule = es.getSchedule();
-        std::vector<const Well*> sched_wells = schedule.getWells( report_step );
+        std::vector<const Well*> sched_wells = this->impl->schedule.getWells( report_step );
         const auto rft_active = [report_step] (const Well* w) { return w->getRFTActive( report_step ) || w->getPLTActive( report_step ); };
         if (std::any_of(sched_wells.begin(), sched_wells.end(), rft_active)) {
             this->impl->rft.writeTimeStep( sched_wells,
                                            grid,
                                            report_step,
-                                           secs_elapsed + schedule.posixStartTime(),
+                                           secs_elapsed + this->impl->schedule.posixStartTime(),
                                            units.from_si( UnitSystem::measure::time, secs_elapsed ),
                                            units,
                                            cells );
@@ -471,6 +476,7 @@ void EclipseIO::writeTimeStep(int report_step,
 RestartValue EclipseIO::loadRestart(const std::map<std::string, RestartKey>& keys, const std::map<std::string, bool>& extra_keys) const {
     const auto& es                       = this->impl->es;
     const auto& grid                     = this->impl->grid;
+    const auto& schedule                 = this->impl->schedule;
     const InitConfig& initConfig         = es.getInitConfig();
     const auto& ioConfig                 = es.getIOConfig();
     const int report_step                = initConfig.getRestartStep();
@@ -478,11 +484,14 @@ RestartValue EclipseIO::loadRestart(const std::map<std::string, RestartKey>& key
                                                                         report_step,
                                                                         false );
 
-    return RestartIO::load( filename , report_step , keys , es, grid , extra_keys);
+    return RestartIO::load( filename , report_step , keys , es, grid , schedule, extra_keys);
 }
 
-EclipseIO::EclipseIO( const EclipseState& es, EclipseGrid grid)
-    : impl( new Impl( es, std::move( grid ) ) )
+EclipseIO::EclipseIO( const EclipseState& es,
+                      EclipseGrid grid,
+                      const Schedule& schedule,
+                      const SummaryConfig& summary_config)
+    : impl( new Impl( es, std::move( grid ), schedule , summary_config) )
 {
     if( !this->impl->output_enabled )
         return;

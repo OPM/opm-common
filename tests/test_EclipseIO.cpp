@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -291,12 +292,15 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
     ERT::TestArea ta("test_ecl_writer");
 
     auto write_and_check = [&]( int first = 1, int last = 5 ) {
-        auto deck = Parser().parseString( deckString, ParseContext() );
+        ParseContext parse_context;
+        auto deck = Parser().parseString( deckString, parse_context );
         auto es = Parser::parse( deck );
         auto& eclGrid = es.getInputGrid();
+        Schedule schedule(deck, eclGrid, es.get3DProperties(), es.runspec().phases(), parse_context);
+        SummaryConfig summary_config( deck, schedule, es.getTableManager( ), parse_context);
         es.getIOConfig().setBaseName( "FOO" );
 
-        EclipseIO eclWriter( es, eclGrid );
+        EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
 
         using measure = UnitSystem::measure;
         using TargetType = data::TargetType;

@@ -22,14 +22,14 @@
 #ifndef OPM_ECLIPSE_WRITER_HPP
 #define OPM_ECLIPSE_WRITER_HPP
 
-#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
-
 #include <map>
 #include <string>
 #include <vector>
 #include <array>
 #include <memory>
+
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
@@ -39,6 +39,8 @@
 namespace Opm {
 
 class EclipseState;
+class SummaryConfig;
+class Schedule;
 
 /*!
  * \brief A class to write the reservoir state and the well state of a
@@ -50,7 +52,10 @@ public:
      * \brief Sets the common attributes required to write eclipse
      *        binary files using ERT.
      */
-    EclipseIO( const EclipseState&, EclipseGrid );
+    EclipseIO( const EclipseState& es,
+               EclipseGrid grid,
+               const Schedule& schedule,
+               const SummaryConfig& summary_config);
 
 
 

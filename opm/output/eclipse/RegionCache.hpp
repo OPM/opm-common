@@ -23,14 +23,15 @@
 #include <vector>
 
 namespace Opm {
-    class EclipseState;
+    class Eclipse3DProperties;
+    class Schedule;
     class EclipseGrid;
 
 namespace out {
     class RegionCache {
     public:
         RegionCache() = default;
-        RegionCache(const EclipseState& state, const EclipseGrid& grid);
+        RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule);
         const std::vector<size_t>& cells( int region_id ) const;
         const std::vector<std::pair<std::string,size_t>>& completions( int region_id ) const;
 

@@ -79,6 +79,7 @@ void save(const std::string& filename,
           data::Wells wells,
           const EclipseState& es,
           const EclipseGrid& grid,
+          const Schedule& schedule,
           std::map<std::string, std::vector<double>> extra_data = {},
 	  bool write_double = false);
 
@@ -88,6 +89,7 @@ RestartValue load( const std::string& filename,
                    const std::map<std::string, RestartKey>& keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
+                   const Schedule& schedule,
                    const std::map<std::string, bool>& extra_keys = {});
 
 }
