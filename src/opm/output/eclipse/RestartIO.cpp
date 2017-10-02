@@ -143,10 +143,10 @@ using rt = data::Rates::opt;
 data::Wells restore_wells( const ecl_kw_type * opm_xwel,
                            const ecl_kw_type * opm_iwel,
                            int restart_step,
-                           const EclipseState& es ) {
+                           const EclipseState& es,
+                           const EclipseGrid& grid) {
 
     const auto& sched_wells = es.getSchedule().getWells( restart_step );
-    const EclipseGrid& grid = es.getInputGrid( );
     std::vector< rt > phases;
     {
         const auto& phase = es.runspec().phases();
@@ -246,7 +246,7 @@ RestartValue load( const std::string& filename,
 
     UnitSystem units( static_cast<ert_ecl_unit_enum>(ecl_kw_iget_int( intehead , INTEHEAD_UNIT_INDEX )));
     RestartValue rst_value( restoreSOLUTION( file_view, keys, units , grid.getNumActive( )),
-                            restore_wells( opm_xwel, opm_iwel, report_step , es));
+                            restore_wells( opm_xwel, opm_iwel, report_step , es, grid));
 
     for (const auto& pair : extra_keys) {
         const std::string& key = pair.first;
