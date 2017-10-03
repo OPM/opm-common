@@ -26,6 +26,7 @@ void export_Parser();
 void export_Schedule();
 void export_TableManager();
 void export_Well();
+void export_GroupTree();
 
 }
 

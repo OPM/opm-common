@@ -29,6 +29,6 @@ BOOST_PYTHON_MODULE(libsunbeam) {
     sunbeam::export_Schedule();
     sunbeam::export_TableManager();
     sunbeam::export_Well();
-
+    sunbeam::export_GroupTree();
 
 }

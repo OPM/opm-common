@@ -34,7 +34,7 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(dt.date(2015, 12, 31), timesteps[7])
 
     def testGroups(self):
-        g1 = self.sch.group('G1').wells(0)
+        g1 = self.sch.group()['G1'].wells(0)
         self.assertEqual(2, len(g1))
 
         def head(xs): return next(iter(xs))
@@ -45,5 +45,5 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(self.sch['INJ'],  inje)
         self.assertEqual(self.sch['PROD'], prod)
 
-        with self.assertRaises(ValueError):
-            self.sch.group('foo')
+        with self.assertRaises(KeyError):
+            self.sch.group()['foo']

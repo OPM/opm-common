@@ -13,14 +13,11 @@ class Schedule(object):
     def wells(self):
         return map(Well, self._wells)
 
-    def group(self, name):
-        return Group(self._group(name), self)
+    def group(self, timestep=0):
+        return {grp.name: grp for grp in self.groups(timestep)}
 
-    @property
-    def groups(self):
-        def mk(x): return Group(x, self)
-        def not_field(x): return x.name != 'FIELD'
-        return map(mk, filter(not_field, self._groups))
+    def groups(self, timestep=0):
+        return [Group(x, self, timestep) for x in self._groups if x.name != 'FIELD']
 
 
 @delegate(lib.Well)
@@ -68,12 +65,43 @@ class Well(object):
         def fn(well): return well.status(timestep) == 'AUTO'
         return fn
 
+
 @delegate(lib.Group)
 class Group(object):
-    def __init__(self, _, schedule):
+    def __init__(self, _, schedule, timestep):
+
+        try:
+            if not timestep == int(timestep):
+                raise ValueError
+        except ValueError:
+            raise ValueError('timestep must be int, not {}'.format(type(timestep)))
+
+        if not 0 <= timestep < len(schedule.timesteps):
+            raise IndexError('Timestep out of range')
+
         self._schedule = schedule
+        self.timestep = timestep
+
+    def __getitem__(self, name):
+        return Group(self._schedule._group(name), self._schedule, self.timestep)
 
     def wells(self, timestep):
         names = self._wellnames(timestep)
-        wells = { well.name: well for well in self._schedule.wells }
+        wells = {well.name: well for well in self._schedule.wells}
         return map(wells.__getitem__, filter(wells.__contains__, names))
+
+    @property
+    def parent(self):
+        par = self._schedule._group_tree(self.timestep)._parent(self.name)
+        if self.name == 'FIELD':
+            return None
+        else:
+            return Group(self._schedule._group(par), self._schedule, self.timestep)
+
+    @property
+    def children(self):
+        l = []
+        chl = self._schedule._group_tree(self.timestep)._children(self.name)
+        for elem in chl:
+            l.append(Group(self._schedule._group(elem), self._schedule, self.timestep))
+        return l

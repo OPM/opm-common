@@ -20,6 +20,9 @@ namespace {
         throw key_error( name );
     }
 
+    const GroupTree& get_grouptree ( const Schedule& sch, const size_t& timestep) {
+        return sch.getGroupTree(timestep);
+    }
 
     boost::posix_time::ptime get_start_time( const Schedule& s ) {
         return boost::posix_time::from_time_t( s.posixStartTime() );
@@ -62,6 +65,7 @@ void sunbeam::export_Schedule() {
         .def( "__contains__", &Schedule::hasWell )
         .def( "__getitem__", &get_well, ref() )
         .def( "_group", &Schedule::getGroup, ref() )
+        .def( "_group_tree", &get_grouptree, ref() )
         ;
 
 }

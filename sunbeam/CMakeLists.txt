@@ -17,7 +17,9 @@ add_library( sunbeam SHARED sunbeam.cpp
                             parser.cpp
                             schedule.cpp
                             table_manager.cpp
-                            well.cpp )
+                            well.cpp
+                            group_tree.cpp )
+
 set_target_properties( sunbeam PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/python/sunbeam )
 target_link_libraries( sunbeam ${Boost_LIBRARIES} ${opm-parser_LIBRARIES} )
 
