@@ -33,15 +33,15 @@
 namespace Opm {
 
     TransMult::TransMult(const GridDims& dims, const Deck& deck, const Eclipse3DProperties& props) :
+        m_nx( dims.getNX()),
+        m_ny( dims.getNY()),
+        m_nz( dims.getNZ()),
         m_names( { { FaceDir::XPlus,  "MULTX"  },
                    { FaceDir::YPlus,  "MULTY"  },
                    { FaceDir::ZPlus,  "MULTZ"  },
                    { FaceDir::XMinus, "MULTX-" },
                    { FaceDir::YMinus, "MULTY-" },
                    { FaceDir::ZMinus, "MULTZ-" }}),
-        m_nx( dims.getNX()),
-        m_ny( dims.getNY()),
-        m_nz( dims.getNZ()),
         m_multregtScanner( props, deck.getKeywordList( "MULTREGT" ))
     {
     }
