@@ -299,6 +299,93 @@ namespace {
         "SCC/RCC", /* oil inverse formation volume factor */
         "SCC/RCC", /* water inverse formation volume factor */
     };
+
+    static const double to_pvt_m[] = {
+        1,
+        1 / PVT_M::Length,
+        1 / PVT_M::Time,
+        1 / PVT_M::Density,
+        1 / PVT_M::Pressure,
+        1 / PVT_M::AbsoluteTemperature,
+        1 / PVT_M::Temperature,
+        1 / PVT_M::Viscosity,
+        1 / PVT_M::Permeability,
+        1 / PVT_M::LiquidSurfaceVolume,
+        1 / PVT_M::GasSurfaceVolume,
+        1 / PVT_M::ReservoirVolume,
+        1 / ( PVT_M::LiquidSurfaceVolume / PVT_M::Time ),
+        1 / ( PVT_M::GasSurfaceVolume / PVT_M::Time ),
+        1 / ( PVT_M::ReservoirVolume / PVT_M::Time ),
+        1 / PVT_M::Transmissibility,
+        1 / PVT_M::Mass,
+        1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume), // Rs
+        1 / (PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume), // Rv
+        1, /* water cut */
+        1 / (PVT_M::ReservoirVolume / PVT_M::GasSurfaceVolume), /* Bg */
+        1 / (PVT_M::ReservoirVolume / PVT_M::LiquidSurfaceVolume), /* Bo */
+        1 / (PVT_M::ReservoirVolume / PVT_M::LiquidSurfaceVolume), /* Bw */
+        1 / (PVT_M::GasSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bg */
+        1 / (PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bo */
+        1 / (PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bw */
+    };
+
+    static const double from_pvt_m[] = {
+        1,
+        PVT_M::Length,
+        PVT_M::Time,
+        PVT_M::Density,
+        PVT_M::Pressure,
+        PVT_M::AbsoluteTemperature,
+        PVT_M::Temperature,
+        PVT_M::Viscosity,
+        PVT_M::Permeability,
+        PVT_M::LiquidSurfaceVolume,
+        PVT_M::GasSurfaceVolume,
+        PVT_M::ReservoirVolume,
+        PVT_M::LiquidSurfaceVolume / PVT_M::Time,
+        PVT_M::GasSurfaceVolume / PVT_M::Time,
+        PVT_M::ReservoirVolume / PVT_M::Time,
+        PVT_M::Transmissibility,
+        PVT_M::Mass,
+        PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume, // Rs
+        PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume, // Rv
+        1, /* water cut */
+        PVT_M::ReservoirVolume / PVT_M::GasSurfaceVolume, /* Bg */
+        PVT_M::ReservoirVolume / PVT_M::LiquidSurfaceVolume, /* Bo */
+        PVT_M::ReservoirVolume / PVT_M::LiquidSurfaceVolume, /* Bw */
+        PVT_M::GasSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bg */
+        PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bo */
+        PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bw */
+    };
+
+    static constexpr const char* pvt_m_names[] = {
+        "",
+        "M",
+        "DAY",
+        "KG/M3",
+        "ATM",
+        "K",
+        "C",
+        "CP",
+        "MD",
+        "SM3",
+        "SM3",
+        "RM3",
+        "SM3/DAY",
+        "SM3/DAY",
+        "RM3/DAY",
+        "CPR3/DAY/ATM",
+        "KG",
+        "SM3/SM3",
+        "SM3/SM3",
+        "SM3/SM3",
+        "RM3/SM3", /* gas formation volume factor */
+        "RM3/SM3", /* oil formation volume factor */
+        "RM3/SM3", /* water formation volume factor */
+        "SM3/RM3", /* gas inverse formation volume factor */
+        "SM3/RM3", /* oil inverse formation volume factor */
+        "SM3/RM3", /* water inverse formation volume factor */
+    };
 }
 
     UnitSystem::UnitSystem(const UnitType unit) :
@@ -323,6 +410,12 @@ namespace {
                 this->measure_table_to_si = from_lab;
                 this->unit_name_table = lab_names;
                 break;
+            case(UnitType::UNIT_TYPE_PVT_M):
+                m_name = "PVT-M";
+                this->measure_table_from_si = to_pvt_m;
+                this->measure_table_to_si = from_pvt_m;
+                this->unit_name_table = pvt_m_names;
+                break;
             default:
                 //do nothing
                 break;
@@ -336,6 +429,7 @@ namespace {
             case(ECL_METRIC_UNITS): return UnitSystem::UnitType::UNIT_TYPE_METRIC;
             case(ECL_FIELD_UNITS):  return UnitSystem::UnitType::UNIT_TYPE_FIELD;
             case(ECL_LAB_UNITS):    return UnitSystem::UnitType::UNIT_TYPE_LAB;
+            case(ECL_PVT_M_UNITS):  return UnitSystem::UnitType::UNIT_TYPE_PVT_M;
             default:
                 throw std::runtime_error("What has happened here?");
             }
@@ -389,6 +483,7 @@ namespace {
           case UnitType::UNIT_TYPE_METRIC: return ECL_METRIC_UNITS;
           case UnitType::UNIT_TYPE_FIELD:  return ECL_FIELD_UNITS;
           case UnitType::UNIT_TYPE_LAB:    return ECL_LAB_UNITS;
+          case UnitType::UNIT_TYPE_PVT_M:  return ECL_PVT_M_UNITS;
         default:
             throw std::runtime_error("What has happened here?");
         }
@@ -564,6 +659,34 @@ namespace {
         system.addDimension("Viscosity", Lab::Viscosity);
         system.addDimension("Timestep", Lab::Timestep);
         system.addDimension("SurfaceTension"  , Lab::SurfaceTension);
+        system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        return system;
+    }
+
+
+    UnitSystem UnitSystem::newPVT_M() {
+        UnitSystem system( UnitType::UNIT_TYPE_PVT_M );
+
+        system.addDimension("1"         , 1.0);
+        system.addDimension("Pressure"  , PVT_M::Pressure );
+        system.addDimension("Temperature", PVT_M::Temperature, PVT_M::TemperatureOffset);
+        system.addDimension("AbsoluteTemperature", PVT_M::AbsoluteTemperature);
+        system.addDimension("Length"    , PVT_M::Length);
+        system.addDimension("Time"      , PVT_M::Time );
+        system.addDimension("Mass"         , PVT_M::Mass );
+        system.addDimension("Permeability", PVT_M::Permeability );
+        system.addDimension("Transmissibility", PVT_M::Transmissibility );
+        system.addDimension("GasDissolutionFactor", PVT_M::GasDissolutionFactor);
+        system.addDimension("OilDissolutionFactor", PVT_M::OilDissolutionFactor);
+        system.addDimension("LiquidSurfaceVolume", PVT_M::LiquidSurfaceVolume );
+        system.addDimension("GasSurfaceVolume" , PVT_M::GasSurfaceVolume );
+        system.addDimension("ReservoirVolume", PVT_M::ReservoirVolume );
+        system.addDimension("Density"   , PVT_M::Density );
+        system.addDimension("PolymerDensity", PVT_M::PolymerDensity);
+        system.addDimension("Salinity", PVT_M::Salinity);
+        system.addDimension("Viscosity" , PVT_M::Viscosity);
+        system.addDimension("Timestep"  , PVT_M::Timestep);
+        system.addDimension("SurfaceTension"  , PVT_M::SurfaceTension);
         system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }

@@ -36,7 +36,8 @@ namespace Opm {
         enum class UnitType {
           UNIT_TYPE_METRIC = 0,
           UNIT_TYPE_FIELD  = 1,
-          UNIT_TYPE_LAB    = 2
+          UNIT_TYPE_LAB    = 2,
+          UNIT_TYPE_PVT_M  = 3,
         };
 
         enum class measure : int {
@@ -96,6 +97,7 @@ namespace Opm {
         static UnitSystem newMETRIC();
         static UnitSystem newFIELD();
         static UnitSystem newLAB();
+        static UnitSystem newPVT_M();
     private:
         Dimension parseFactor( const std::string& ) const;
 

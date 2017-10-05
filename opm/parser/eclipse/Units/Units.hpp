@@ -321,6 +321,31 @@ namespace Opm {
         constexpr const double SurfaceTension       = dyne/(centi*meter);
     }
 
+
+    namespace PVT_M {
+        using namespace prefix;
+        using namespace unit;
+        constexpr const double Pressure             = atm;
+        constexpr const double Temperature          = degCelsius;
+        constexpr const double TemperatureOffset    = degCelsiusOffset;
+        constexpr const double AbsoluteTemperature  = degCelsius; // actually [K], but the these two are identical
+        constexpr const double Length               = meter;
+        constexpr const double Time                 = day;
+        constexpr const double Mass                 = kilogram;
+        constexpr const double Permeability         = milli*darcy;
+        constexpr const double Transmissibility     = centi*Poise*cubic(meter)/(day*atm);
+        constexpr const double LiquidSurfaceVolume  = cubic(meter);
+        constexpr const double GasSurfaceVolume     = cubic(meter);
+        constexpr const double ReservoirVolume      = cubic(meter);
+        constexpr const double GasDissolutionFactor = GasSurfaceVolume/LiquidSurfaceVolume;
+        constexpr const double OilDissolutionFactor = LiquidSurfaceVolume/GasSurfaceVolume;
+        constexpr const double Density              = kilogram/cubic(meter);
+        constexpr const double PolymerDensity       = kilogram/cubic(meter);
+        constexpr const double Salinity             = kilogram/cubic(meter);
+        constexpr const double Viscosity            = centi*Poise;
+        constexpr const double Timestep             = day;
+        constexpr const double SurfaceTension       = dyne/(centi*meter);
+    }
 }
 
 #endif // OPM_UNITS_HEADER
