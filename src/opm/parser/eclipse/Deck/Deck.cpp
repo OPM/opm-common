@@ -146,6 +146,8 @@ namespace Opm {
          * lab, and field over metric, for as long as we have no easy way of
          * figuring out which was requested last.
          */
+        if( this->hasKeyword( "PVT-M" ) )
+            this->activeUnits = UnitSystem::newPVT_M();
         if( this->hasKeyword( "LAB" ) )
             this->activeUnits = UnitSystem::newLAB();
         if( this->hasKeyword( "FIELD" ) )
