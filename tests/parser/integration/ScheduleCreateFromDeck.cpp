@@ -910,7 +910,7 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
     BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
     BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
-    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 5 ));
+    BOOST_CHECK( !w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 5 ));
 
     BOOST_CHECK( w1->hasEvent( ScheduleEvents::COMPLETION_CHANGE , 0 ));
     BOOST_CHECK( w1->hasEvent( ScheduleEvents::COMPLETION_CHANGE , 5 ));
