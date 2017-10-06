@@ -125,6 +125,7 @@ set( keywords
      000_Eclipse100/I/ISWL
      000_Eclipse100/I/ISWU
      000_Eclipse100/J/JFUNC
+     000_Eclipse100/L/LAB
      000_Eclipse100/L/LGR
      000_Eclipse100/L/LIFTOPT
      000_Eclipse100/M/MAPAXES
@@ -211,6 +212,7 @@ set( keywords
      000_Eclipse100/P/PVDG
      000_Eclipse100/P/PVDO
      000_Eclipse100/P/PVDS
+     000_Eclipse100/P/PVT_M
      000_Eclipse100/P/PVTG
      000_Eclipse100/P/PVTNUM
      000_Eclipse100/P/PVTO

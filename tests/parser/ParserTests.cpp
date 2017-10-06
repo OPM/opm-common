@@ -1829,3 +1829,23 @@ BOOST_AUTO_TEST_CASE(TestKeywordActionEnumLoop) {
     BOOST_CHECK_EQUAL( "IGNORE_WARNING"    , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "IGNORE_WARNING" ) ));
     BOOST_CHECK_EQUAL( "THROW_EXCEPTION" , ParserKeywordActionEnum2String(ParserKeywordActionEnumFromString(  "THROW_EXCEPTION" ) ));
 }
+
+/*****************************************************************/
+
+BOOST_AUTO_TEST_CASE(ParseUnitConventions)
+{
+    const auto* deck_string = R"(
+METRIC
+FIELD
+LAB
+PVT-M
+)";
+
+    Parser parser;
+    const auto deck = parser.parseString( deck_string, ParseContext() );
+
+    BOOST_CHECK( deck.hasKeyword( "METRIC" ) );
+    BOOST_CHECK( deck.hasKeyword( "FIELD" ) );
+    BOOST_CHECK( deck.hasKeyword( "LAB" ) );
+    BOOST_CHECK( deck.hasKeyword( "PVT-M" ) );
+}
