@@ -33,6 +33,7 @@
 #	)
 
 include (Duplicates)
+include (OpmSiblingSearch)
 
 # list of suffixes for all the project variables
 set (_opm_proj_vars
@@ -144,6 +145,15 @@ macro (find_and_append_package_to prefix name)
 		find_package (${name} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
 	  else ()
 		message (STATUS "Finding package ${name} using module mode")
+		if(${name} STREQUAL "ecl")
+			# Give us a chance to find ecl installed to CMAKE_INSTALL_PREFIX.
+			# We need to deactivate the package registry for this.
+			create_module_dir_var(ecl)
+			set(ARGN_NO_REQUIRED ${ARGN})
+			list(REMOVE_ITEM ARGN_NO_REQUIRED "REQUIRED")
+ 			find_package (${name} ${ARGN_NO_REQUIRED} NO_CMAKE_SYSTEM_PACKAGE_REGISTRY NO_CMAKE_PACKAGE_REGISTRY)
+			# If everything else failed fall back to the registry
+		endif()	
 		find_package (${name} ${ARGN})
 	  endif ()
 	endif ()
