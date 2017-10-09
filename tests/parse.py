@@ -31,38 +31,38 @@ FIPNUM
         self.spe3fn = 'spe3/SPE3CASE1.DATA'
         self.norne_fname = os.path.abspath('../../examples/data/norne/NORNE_ATW2013.DATA')
 
-    def testParse(self):
+    def test_parse(self):
         spe3 = sunbeam.parse(self.spe3fn)
         self.assertEqual('SPE 3 - CASE 1', spe3.title)
 
-    def testParseWithAction(self):
-        action = ("PARSE_RANDOM_SLASH", sunbeam.action.ignore)
-        spe3 = sunbeam.parse(self.spe3fn, action)
+    def test_parse_with_recovery(self):
+        recovery = ("PARSE_RANDOM_SLASH", sunbeam.action.ignore)
+        spe3 = sunbeam.parse(self.spe3fn, recovery=recovery)
         self.assertEqual('SPE 3 - CASE 1', spe3.title)
 
-    def testParseWithMultipleActions(self):
-        actions = [ ("PARSE_RANDOM_SLASH", sunbeam.action.ignore),
+    def test_parse_with_multiple_recoveries(self):
+        recoveries = [ ("PARSE_RANDOM_SLASH", sunbeam.action.ignore),
                     ("FOO", sunbeam.action.warn),
                     ("PARSE_RANDOM_TEXT", sunbeam.action.throw) ]
 
-        spe3 = sunbeam.parse(self.spe3fn, actions)
+        spe3 = sunbeam.parse(self.spe3fn, recovery=recoveries)
         self.assertEqual('SPE 3 - CASE 1', spe3.title)
 
-    def testThrowOnInvalidAction(self):
-        actions = [ ("PARSE_RANDOM_SLASH", 3.14 ) ]
+    def test_throw_on_invalid_recovery(self):
+        recoveries = [ ("PARSE_RANDOM_SLASH", 3.14 ) ]
 
         with self.assertRaises(TypeError):
-            sunbeam.parse(self.spe3fn, actions)
+            sunbeam.parse(self.spe3fn, recovery=recoveries)
 
         with self.assertRaises(ValueError):
-            sunbeam.parse(self.spe3fn, "PARSE_RANDOM_SLASH")
+            sunbeam.parse(self.spe3fn, recovery="PARSE_RANDOM_SLASH")
 
-    def testData(self):
+    def test_data(self):
         regtest = sunbeam.parse(self.REGIONDATA)
         self.assertEqual([3,3,1,2], regtest.props()['OPERNUM'])
 
     def test_parse_norne(self):
-         es = sunbeam.parse(self.norne_fname, ('PARSE_RANDOM_SLASH', sunbeam.action.ignore))
+         es = sunbeam.parse(self.norne_fname, recovery=('PARSE_RANDOM_SLASH', sunbeam.action.ignore))
          self.assertEqual(46, es.grid().getNX())
          self.assertEqual(112, es.grid().getNY())
          self.assertEqual(22, es.grid().getNZ())

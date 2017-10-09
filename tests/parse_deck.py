@@ -52,16 +52,16 @@ FIPNUM
         self.spe3fn = 'spe3/SPE3CASE1.DATA'
         self.norne_fname = os.path.abspath('../../examples/data/norne/NORNE_ATW2013.DATA')
 
-    def testParerFailWithoutExtension(self):
-        action = ("PARSE_RANDOM_SLASH", sunbeam.action.ignore)
+    def test_parser_fail_without_extension(self):
+        error_recovery = ("PARSE_RANDOM_SLASH", sunbeam.action.ignore)
         with self.assertRaises(ValueError):
             sunbeam.parse_deck(self.DECK_ADDITIONAL_KEYWORDS,
-                actions=action )
+                recovery=error_recovery )
 
-    def testParerExtension(self):
-        action = ("PARSE_RANDOM_SLASH", sunbeam.action.ignore)
+    def test_parser_extension(self):
+        error_recovery = ("PARSE_RANDOM_SLASH", sunbeam.action.ignore)
         deck = sunbeam.parse_deck(self.DECK_ADDITIONAL_KEYWORDS,
-            keywords=self.KEYWORDS, actions=action )
-        self.assertTrue( 'TESTKEY0' in deck )
-        self.assertTrue( 'TESTKEY1' in deck )
-        self.assertTrue( 'TESTKEY2' in deck )
+            keywords=self.KEYWORDS, recovery=error_recovery )
+        self.assertIn( 'TESTKEY0', deck )
+        self.assertIn( 'TESTKEY1', deck )
+        self.assertIn( 'TESTKEY2', deck )
