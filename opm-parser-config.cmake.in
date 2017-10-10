@@ -1,7 +1,13 @@
 if(NOT opm-parser_FOUND)
   #import the target
-  set(ecl_DIR @ecl_DIR@)
+  if(NOT ecl_DIR)
+      set(ecl_DIR @ECL_DIR@)
+  endif()
+  # Find without registry
+  find_package(ecl NO_CMAKE_PACKAGE_REGISTRY NO_CMAKE_SYSTEM_PACKAGE_REGISTRY)
+  # Fall back to registry
   find_package(ecl REQUIRED)
+
   get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
   include("${_dir}/opm-parser-targets.cmake")
 
