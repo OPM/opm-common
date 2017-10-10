@@ -144,7 +144,10 @@ macro (find_and_append_package_to prefix name)
 		message (STATUS "Finding package ${name} using config mode")
 		find_package (${name} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
 	  else ()
-		message (STATUS "Finding package ${name} using module mode")
+		# print message if this neither an opm module nor ecl
+		if (NOT _${name}_exempted EQUAL -1)
+		  message (STATUS "Finding package ${name} using module mode")
+		endif()
 		if(${name} STREQUAL "ecl")
 			# Give us a chance to find ecl installed to CMAKE_INSTALL_PREFIX.
 			# We need to deactivate the package registry for this.
