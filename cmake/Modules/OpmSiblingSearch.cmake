@@ -9,17 +9,23 @@ macro(create_module_dir_var module)
     get_filename_component(_parent_dir_name ${_parent_full_dir} NAME)
     #Try if <module-name>/<build-dir> is used
     get_filename_component(_modules_dir ${_parent_full_dir} DIRECTORY)
-    if(IS_DIRECTORY ${_modules_dir}/${module}/${_leaf_dir_name})
-      set(${module}_DIR ${_modules_dir}/${module}/${_leaf_dir_name})
+    if (module STREQUAL "ecl")
+      #use clone directory libecl
+      set(_clone_dir "libecl")
     else()
-      string(REPLACE ${PROJECT_NAME} ${module} _module_leaf ${_leaf_dir_name})
+      set(_clone_dir "${module}")
+    endif()
+    if(IS_DIRECTORY ${_modules_dir}/${_clone_dir}/${_leaf_dir_name})
+      set(${module}_DIR ${_modules_dir}/${_clone_dir}/${_leaf_dir_name})
+    else()
+      string(REPLACE ${PROJECT_NAME} ${_clone_dir} _module_leaf ${_leaf_dir_name})
       if(NOT _leaf_dir_name STREQUAL _module_leaf
           AND IS_DIRECTORY ${_parent_full_dir}/${_module_leaf})
         # We are using build directories named <prefix><module-name><postfix>
         set(${module}_DIR ${_parent_full_dir}/${_module_leaf})
-      elseif(IS_DIRECTORY ${_parent_full_dir}/${module})
+      elseif(IS_DIRECTORY ${_parent_full_dir}/${_clone_dir})
         # All modules are in a common build dir
-        set(${module}_DIR "${_parent_full_dir}/${module}}")
+        set(${module}_DIR "${_parent_full_dir}/${_clone_dir}}")
       endif()
     endif()
   endif()
