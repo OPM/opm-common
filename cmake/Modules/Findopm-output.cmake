@@ -42,14 +42,3 @@ include (UseDynamicBoost)
 #debug_find_vars ("opm-output")
 
 
-if(OPM_OUTPUT_FOUND)
-  get_filename_component(opm-output_PREFIX_DIR ${opm-output_LIBRARY} PATH)
-  find_program(COMPARE_SUMMARY_COMMAND compareSummary
-               PATHS ${opm-output_PREFIX_DIR}/../bin
-                     ${opm-output_PREFIX_DIR}/../../bin)
-  find_program(COMPARE_ECL_COMMAND compareECL
-               PATHS ${opm-output_PREFIX_DIR}/../bin
-                     ${opm-output_PREFIX_DIR}/../../bin)
-
-endif()
-
