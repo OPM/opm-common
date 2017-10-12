@@ -7,6 +7,7 @@ Module: opm-common
 Description: Open Porous Media Initiative shared infrastructure
 Version: 2018.04-pre
 Label: 2018.04-pre
+Depends: dune-common (>= 2.4)
 Maintainer: opm@opm-project.org
-MaintainerName: OPM community
+MaintainerName: The Open Porous Media Project
 Url: http://opm-project.org
