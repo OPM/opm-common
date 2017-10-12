@@ -36,9 +36,7 @@
 
 #include <config.h>
 
-#if HAVE_DYNAMIC_BOOST_TEST
 #define BOOST_TEST_DYN_LINK
-#endif
 #define NVERBOSE // to suppress our messages when throwing
 
 #define BOOST_TEST_MODULE ParameterTest
@@ -87,7 +85,7 @@ BOOST_AUTO_TEST_CASE(xml_syntax_init)
 {
     typedef const char* cp;
     std::vector<cp> argv = { "program_command",
-                             "testdata.param",
+                             "tests/testdata.param",
                              "/group/item=overridingstring",
                              "unhandledargument",
                              0};
@@ -115,7 +113,7 @@ BOOST_AUTO_TEST_CASE(failing_strict_xml_syntax_init)
 {
     typedef const char* cp;
     std::vector<cp> argv = { "program_command",
-                             "testdata.param",
+                             "tests/testdata.param",
                              "/group/item=overridingstring",
                              "unhandledargument",
                              0 };
