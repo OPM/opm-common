@@ -79,7 +79,16 @@ function printHeader {
 # $2 = 0 to build and install module, 1 to build and test module
 # $3 = Source root of module to build
 function build_module {
-  cmake $3 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=$2 -DCMAKE_TOOLCHAIN_FILE=${configurations[$configuration]} $1
+  CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=$2 -DCMAKE_INSTALL_PREFIX=\"$WORKSPACE/$configuration/install\" -DCMAKE_PREFIX_PATH=\"$WORKSPACE/$configuration/install\" -DCMAKE_TOOLCHAIN_FILE=${configurations[$configuration]}"
+  for upstream in ${upstreams[*]}
+  do
+      CMAKE_ARGS="$CMAKE_ARGS -D${upstream}_DIR=\"$WORKSPACE/$configuration/install\""
+  done
+
+  CMAKE_CMD="cmake $3 $CMAKE_ARGS $1"
+  echo "configuring: $CMAKE_CMD"
+  eval $CMAKE_CMD
+
   test $? -eq 0 || exit 1
   if test $2 -eq 1
   then
@@ -162,7 +171,7 @@ function build_upstreams {
   do
     echo "Building upstream $upstream=${upstreamRev[$upstream]} configuration=$configuration"
     # Build upstream and execute installation
-    clone_and_build_module $upstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install" ${upstreamRev[$upstream]} $WORKSPACE/$configuration
+    clone_and_build_module $upstream "" ${upstreamRev[$upstream]} $WORKSPACE/$configuration
     test $? -eq 0 || exit 1
   done
   test $? -eq 0 || exit 1
@@ -182,7 +191,7 @@ function build_downstreams {
   do
     echo "Building downstream $downstream=${downstreamRev[$downstream]} configuration=$configuration"
     # Build downstream and execute installation
-    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT" ${downstreamRev[$downstream]} $WORKSPACE/$configuration 1
+    clone_and_build_module $downstream "-DOPM_DATA_ROOT=$OPM_DATA_ROOT" ${downstreamRev[$downstream]} $WORKSPACE/$configuration 1
     test $? -eq 0 || exit 1
 
     # Installation for downstream
@@ -219,7 +228,7 @@ function build_module_full {
     mkdir -p $configuration/build-$1
     cd $configuration/build-$1
     echo "Building main module $1=$sha1 configuration=$configuration"
-    build_module "-DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_DATA_ROOT=$OPM_DATA_ROOT" 1 $WORKSPACE
+    build_module "-DOPM_DATA_ROOT=$OPM_DATA_ROOT" 1 $WORKSPACE
     test $? -eq 0 || exit 1
     popd
 
