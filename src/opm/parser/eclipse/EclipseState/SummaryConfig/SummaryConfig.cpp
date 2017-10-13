@@ -227,10 +227,6 @@ inline void keywordF( std::vector< ERT::smspec_node >& list,
     list.emplace_back( keyword.name() );
 }
 
-inline std::array< int, 3 > dimensions( const EclipseGrid& grid ) {
-    return {{ int( grid.getNX() ), int( grid.getNY() ), int( grid.getNZ() ) }};
-}
-
 inline std::array< int, 3 > getijk( const DeckRecord& record,
                                     int offset = 0 ) {
     return {{
