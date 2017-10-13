@@ -136,18 +136,25 @@ macro (find_and_append_package_to prefix name)
 	set (${name}_FOUND FALSE)
 	set (${NAME}_FOUND FALSE)
   else ()
-	# using config mode is better than using module (aka. find) mode
-	# because then the package has already done all its probes and
-	# stored them in the config file for us
-	if (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND)
-	  if (${name}_DIR)
-		message (STATUS "Finding package ${name} using config mode")
-		find_package (${name} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
-	  else ()
-		# print message if this neither an opm module nor ecl
-		if (NOT _${name}_exempted EQUAL -1)
-		  message (STATUS "Finding package ${name} using module mode")
-		endif()
+    # using config mode is better than using module (aka. find) mode
+    # because then the package has already done all its probes and
+    # stored them in the config file for us
+    # For dune and opm modules and exempted packages we force module mode.
+    # For dune and opm it will use config mode underneath.
+    # We even need to repeat the search for opm-common once as this is done
+    # in the top most CMakeLists.txt without querying defines, setting dependencies
+    # and the likes which is only done via opm_find_package
+    if (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND
+        OR ("${name}" STREQUAL "opm-common" AND NOT _opm_common_deps_processed))
+      string(REGEX MATCH "(dune|opm)-.*" _is_opm ${name})
+      if (${name}_DIR AND NOT (_${name}_exempted OR _is_opm))
+        message (STATUS "Finding package ${name} using config mode ${_${name}_exempted}")
+        find_package (${name} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
+      else ()
+        # print message if this neither an opm module nor ecl
+        if (NOT (${name}_exempted EQUAL -1 OR _is_opm_) )
+          message (STATUS "Finding package ${name} using module mode")
+        endif()
 		if(${name} STREQUAL "ecl")
 			# Give us a chance to find ecl installed to CMAKE_INSTALL_PREFIX.
 			# We need to deactivate the package registry for this.
