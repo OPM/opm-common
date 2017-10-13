@@ -173,6 +173,10 @@ macro (find_and_append_package_to prefix name)
 	if (NOT DEFINED ${NAME}_FOUND)
 	  set (${NAME}_FOUND "${${name}_FOUND}")
 	endif ()
+
+       if(name STREQUAL "opm-common")
+         set(_opm_common_deps_processed ON)
+       endif()
   endif ()
 
   # the variable "NAME" may be replaced during find_package (as this is
