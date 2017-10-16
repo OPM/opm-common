@@ -35,7 +35,7 @@ namespace Opm {
 
 
     void Tables::addData( size_t offset_index, const std::vector<double>& new_data) {
-        this->tabdims[ offset_index ] = this->data.size();
+        this->tabdims[ offset_index ] = this->data.size() + 1;
         this->data.insert( this->data.end() , new_data.begin() , new_data.end());
         this->tabdims[ TABDIMS_TAB_SIZE_ITEM ] = this->data.size();
     }

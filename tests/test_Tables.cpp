@@ -90,8 +90,8 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
         BOOST_CHECK_EQUAL( ecl_kw_get_size( tab ) , ecl_kw_iget_int( tabdims , TABDIMS_TAB_SIZE_ITEM ));
         /* PVTO */
         {
-            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTO_OFFSET_ITEM );
-            int rs_offset = ecl_kw_iget_int( tabdims , TABDIMS_JBPVTO_OFFSET_ITEM );
+            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTO_OFFSET_ITEM ) - 1;
+            int rs_offset = ecl_kw_iget_int( tabdims , TABDIMS_JBPVTO_OFFSET_ITEM ) - 1;
             int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NRPVTO_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NPPVTO_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NTPVTO_ITEM );
 
             BOOST_CHECK_EQUAL( 2, ecl_kw_iget_int( tabdims , TABDIMS_NRPVTO_ITEM ) );
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
 
         /* PVTG */
         {
-            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTG_OFFSET_ITEM );
-            int pg_offset = ecl_kw_iget_int( tabdims , TABDIMS_JBPVTG_OFFSET_ITEM );
+            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTG_OFFSET_ITEM ) - 1;
+            int pg_offset = ecl_kw_iget_int( tabdims , TABDIMS_JBPVTG_OFFSET_ITEM ) - 1;
             int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NRPVTG_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NPPVTG_ITEM ) * ecl_kw_iget_int( tabdims , TABDIMS_NTPVTG_ITEM );
 
             BOOST_CHECK_EQUAL( 2, ecl_kw_iget_int( tabdims , TABDIMS_NRPVTG_ITEM ) );
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
 
         /* PVTW */
         {
-            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTW_OFFSET_ITEM );
+            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBPVTW_OFFSET_ITEM ) - 1;
             int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NTPVTW_ITEM );
             BOOST_CHECK( ecl_kw_get_size( tab ) >= (offset + column_stride * 5 ));
 
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
 
         // Density
         {
-            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBDENS_OFFSET_ITEM );
+            int offset = ecl_kw_iget_int( tabdims , TABDIMS_IBDENS_OFFSET_ITEM ) - 1;
             int column_stride = ecl_kw_iget_int( tabdims , TABDIMS_NTDENS_ITEM );
             BOOST_CHECK( ecl_kw_get_size( tab ) >= (offset + column_stride * 3 ));
             BOOST_CHECK_CLOSE( 859.5 , ecl_kw_iget_double( tab , offset )     , 1e-6 );
