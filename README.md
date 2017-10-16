@@ -20,6 +20,19 @@ cmake ..
 make install
 ```
 
+# Use the correct version of OPM-Parser:
+
+As of October 2017 the master branch of opm-parser is not compatible with
+sunbeam. To build sunbeam you should check out and build the branch
+`sunbeam-2017.10` of opm-parser:
+```
+git clone git@github.com:OPM/opm-parser
+git checkout sunbeam-2017.10
+...
+...
+```
+
+
 # Quick start (WIP)
 Assumes you have built (and maybe installed) opm-parser
 

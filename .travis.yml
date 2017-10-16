@@ -32,7 +32,7 @@ before_script:
   - popd
   - mkdir opm-parser/build
   - pushd opm-parser/build
-  - git checkout 8d202adefd7f8b84c7124210a84af09af71ecb96
+  - git checkout sunbeam-2017.10
   - cmake -DCMAKE_PREFIX_PATH=$INSTALL_ROOT -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
   - make install
   - popd
