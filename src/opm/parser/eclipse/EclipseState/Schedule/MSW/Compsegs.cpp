@@ -23,7 +23,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp>
+#include "Compsegs.hpp"
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
@@ -168,18 +168,66 @@ namespace Opm {
             }
 
             compseg.m_segment_number = segment_number;
+
+            // when depth is default or zero, we obtain the depth of the completion based on the information
+            // of the related segments
             if (compseg.m_center_depth == 0.) {
-                // using the depth of the segment node as the depth of the completion
-                // TODO: now only one completion for one segment is hanlded,
-                // TODO: later we will try to handle more than one completion for each segment,
-                // TODO: which will be a linear interpolation based on the segment node depth
-                // TODO: in the same branch, while the actually way is not clear yet
-                const int segment_location = segment_set.numberToLocation(segment_number);
-                compseg.m_center_depth = segment_set[segment_location].depth();
+                compseg.calculateCenterDepthWithSegments(segment_set);
             }
         }
     }
 
+    void Compsegs::calculateCenterDepthWithSegments(const SegmentSet& segment_set) {
+
+        // the depth and distance of the segment to the well head
+        const Segment& segment = segment_set.getFromSegmentNumber(m_segment_number);
+        const double segment_depth = segment.depth();
+        const double segment_distance = segment.totalLength();
+
+        // for top segment, no interpolation is needed
+        if (m_segment_number == 1) {
+            m_center_depth = segment_depth;
+            return;
+        }
+
+        // for other cases, interpolation between two segments is needed.
+        // looking for the other segment needed for interpolation
+        // by default, it uses the outlet segment to do the interpolation
+        int interpolation_segment_number = segment.outletSegment();
+
+        const double center_distance = (m_distance_start + m_distance_end) / 2.0;
+        // if the perforation is further than the segment and the segment has inlet segments in the same branch
+        // we use the inlet segment to do the interpolation
+        if (center_distance > segment_distance) {
+            for (const int inlet : segment.inletSegments()) {
+                const int inlet_index = segment_set.segmentNumberToIndex(inlet);
+                if (segment_set[inlet_index].branchNumber() == m_branch_number) {
+                    interpolation_segment_number = inlet;
+                    break;
+                }
+            }
+        }
+
+        if (interpolation_segment_number == 0) {
+            throw std::runtime_error("Failed in finding a segment to do the interpolation with segment "
+                                      + std::to_string(m_segment_number));
+        }
+
+        // performing the interpolation
+        const Segment& interpolation_segment = segment_set.getFromSegmentNumber(interpolation_segment_number);
+        const double interpolation_detph = interpolation_segment.depth();
+        const double interpolation_distance = interpolation_segment.totalLength();
+
+        const double depth_change_segment = segment_depth - interpolation_detph;
+        const double segment_length = segment_distance - interpolation_distance;
+
+        if (segment_length == 0.) {
+            throw std::runtime_error("Zero segment length is botained when doing interpolation between segment "
+                                      + std::to_string(m_segment_number) + " and segment " + std::to_string(interpolation_segment_number) );
+        }
+
+        m_center_depth = segment_depth + (center_distance - segment_distance) / segment_length * depth_change_segment;
+    }
 
     void Compsegs::updateCompletionsWithSegment(const std::vector< Compsegs >& compsegs,
                                                 CompletionSet& completion_set) {
@@ -189,9 +237,8 @@ namespace Opm {
             const int j = compseg.m_j;
             const int k = compseg.m_k;
 
-            auto new_completion = completion_set.getFromIJK( i, j, k );
-            new_completion.attachSegment(compseg.m_segment_number, compseg.m_center_depth);
-            completion_set.add(new_completion);
+            const Completion& completion = completion_set.getFromIJK( i, j, k );
+            completion_set.add(Completion(completion, compseg.m_segment_number, compseg.m_center_depth) );
         }
 
         for (size_t ic = 0; ic < completion_set.size(); ++ic) {

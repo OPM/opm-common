@@ -39,8 +39,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -1254,15 +1254,11 @@ namespace Opm {
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         auto& well = this->m_wells.get( well_name );
 
-        auto compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( keyword );
+        const auto& segment_set = well.getSegmentSet(currentStep);
+        const auto& completion_set = well.getCompletions( currentStep );
+        const CompletionSet new_completion_set = updatingCompletionsWithSegments(keyword, completion_set, segment_set);
 
-        const auto& current_segmentSet = well.getSegmentSet(currentStep);
-        Compsegs::processCOMPSEGS(compsegs_vector, current_segmentSet);
-
-        // it is necessary to update the segment related information for some completions.
-        auto new_completionSet = well.getCompletions( currentStep );
-        Compsegs::updateCompletionsWithSegment(compsegs_vector, new_completionSet);
-        well.addCompletionSet(currentStep, new_completionSet);
+        well.addCompletionSet(currentStep, new_completion_set);
     }
 
     void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {

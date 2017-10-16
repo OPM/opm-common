@@ -77,6 +77,14 @@ namespace Opm {
         this->m_complnum = num;
     }
 
+    Completion::Completion(const Completion& completion_initial, int segment_number, double center_depth)
+      : Completion(completion_initial)
+    {
+        assert(segment_number > 0);
+        this->m_segment_number = segment_number;
+        this->m_center_depth = center_depth;
+    }
+
     bool Completion::sameCoordinate(const Completion& other) const {
         if ((m_i == other.m_i) &&
             (m_j == other.m_j) &&
@@ -299,13 +307,6 @@ namespace Opm {
 
     double Completion::getCenterDepth() const {
         return m_center_depth;
-    }
-
-    void Completion::attachSegment(int segmentNumber , double centerDepth) {
-        assert(segmentNumber > 0);
-
-        m_segment_number = segmentNumber;
-        m_center_depth = centerDepth;
     }
 
     bool Completion::attachedToSegment() const {

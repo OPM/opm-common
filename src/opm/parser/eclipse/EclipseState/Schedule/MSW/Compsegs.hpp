@@ -52,6 +52,8 @@ namespace Opm {
         Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
                  WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in);
 
+        void calculateCenterDepthWithSegments(const SegmentSet& segment_set);
+
         static std::vector< Compsegs > compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword );
 
         // get the segment number information and depth information based on the information from SegmentSet

@@ -22,7 +22,7 @@
 #include <map>
 
 #ifdef _WIN32
-#define _USE_MATH_DEFINES 
+#define _USE_MATH_DEFINES
 #include <math.h>
 #endif
 
@@ -75,9 +75,9 @@ namespace Opm {
         return m_segments[idx];
     }
 
-    int SegmentSet::numberToLocation(const int segment_number) const {
-        auto it = m_number_to_location.find(segment_number);
-        if (it != m_number_to_location.end()) {
+    int SegmentSet::segmentNumberToIndex(const int segment_number) const {
+        const auto it = m_segment_number_to_index.find(segment_number);
+        if (it != m_segment_number_to_index.end()) {
             return it->second;
         } else {
             return -1;
@@ -86,15 +86,15 @@ namespace Opm {
 
     void SegmentSet::addSegment( Segment new_segment ) {
        // decide whether to push_back or insert
-       int segment_number = new_segment.segmentNumber();
+       const int segment_number = new_segment.segmentNumber();
 
-       const int segment_location = numberToLocation(segment_number);
+       const int segment_index = segmentNumberToIndex(segment_number);
 
-       if (segment_location < 0) { // it is a new segment
-           m_number_to_location[segment_number] = numberSegment();
+       if (segment_index < 0) { // it is a new segment
+           m_segment_number_to_index[segment_number] = numberSegment();
            m_segments.push_back(new_segment);
        } else { // the segment already exists
-           m_segments[segment_location] = new_segment;
+           m_segments[segment_index] = new_segment;
        }
    }
 
@@ -197,15 +197,35 @@ namespace Opm {
             }
         }
 
-        for (size_t i_segment = 0; i_segment < m_segments.size(); ++i_segment){
+        for (size_t i_segment = 0; i_segment < m_segments.size(); ++i_segment) {
             const int segment_number = m_segments[i_segment].segmentNumber();
-            const int location = numberToLocation(segment_number);
-            if (location >= 0) { // found in the existing m_segments already
+            const int index = segmentNumberToIndex(segment_number);
+            if (index >= 0) { // found in the existing m_segments already
                 throw std::logic_error("Segments with same segment number are found!\n");
             }
-            m_number_to_location[segment_number] = i_segment;
+            m_segment_number_to_index[segment_number] = i_segment;
         }
 
+        for (size_t i_segment = 0; i_segment < m_segments.size(); ++i_segment) {
+            const int segment_number = m_segments[i_segment].segmentNumber();
+            const int outlet_segment = m_segments[i_segment].outletSegment();
+            if (outlet_segment <= 0) { // no outlet segment
+                continue;
+            }
+            const int outlet_segment_index = m_segment_number_to_index[outlet_segment];
+            m_segments[outlet_segment_index].addInletSegment(segment_number);
+        }
+
+    }
+
+    const Segment& SegmentSet::getFromSegmentNumber(const int segment_number) const {
+        // the index of segment in the vector of segments
+        const int segment_index = segmentNumberToIndex(segment_number);
+        if (segment_index < 0) {
+            throw std::runtime_error("Could not indexate the segment " + std::to_string(segment_number)
+                                     + " when trying to get the segment ");
+        }
+        return m_segments[segment_index];
     }
 
     void SegmentSet::processABS() {
@@ -213,18 +233,18 @@ namespace Opm {
 
         orderSegments();
 
-        int current_loc = 1;
-        while (current_loc < numberSegment()) {
-            if (m_segments[current_loc].dataReady()) {
-                current_loc ++;
+        int current_index= 1;
+        while (current_index< numberSegment()) {
+            if (m_segments[current_index].dataReady()) {
+                current_index++;
                 continue;
             }
 
-            const int range_begin = current_loc;
+            const int range_begin = current_index;
             const int outlet_segment = m_segments[range_begin].outletSegment();
-            const int outlet_loc = numberToLocation(outlet_segment);
+            const int outlet_index= segmentNumberToIndex(outlet_segment);
 
-            assert(m_segments[outlet_loc].dataReady() == true);
+            assert(m_segments[outlet_index].dataReady() == true);
 
             int range_end = range_begin + 1;
             for (; range_end < numberSegment(); ++range_end) {
@@ -241,8 +261,8 @@ namespace Opm {
             int number_segments = range_end - range_begin + 1;
             assert(number_segments > 1); //if only 1, the information should be complete
 
-            const double length_outlet = m_segments[outlet_loc].totalLength();
-            const double depth_outlet = m_segments[outlet_loc].depth();
+            const double length_outlet = m_segments[outlet_index].totalLength();
+            const double depth_outlet = m_segments[outlet_index].depth();
 
             const double length_last = m_segments[range_end].totalLength();
             const double depth_last = m_segments[range_end].depth();
@@ -265,7 +285,7 @@ namespace Opm {
                 }
                 addSegment(new_segment);
             }
-            current_loc = range_end + 1;
+            current_index= range_end + 1;
         }
 
         // then update the volume for all the segments except the top segment
@@ -275,8 +295,8 @@ namespace Opm {
             if (m_segments[i].volume() == invalid_value) {
                 Segment new_segment = m_segments[i];
                 const int outlet_segment = m_segments[i].outletSegment();
-                const int outlet_location = numberToLocation(outlet_segment);
-                const double segment_length = m_segments[i].totalLength() - m_segments[outlet_location].totalLength();
+                const int outlet_index = segmentNumberToIndex(outlet_segment);
+                const double segment_length = m_segments[i].totalLength() - m_segments[outlet_index].totalLength();
                 const double segment_volume = m_segments[i].crossArea() * segment_length;
                 new_segment.setVolume(segment_volume);
                 addSegment(new_segment);
@@ -296,24 +316,24 @@ namespace Opm {
         orderSegments();
 
         // begin with the second segment
-        for (int i_loc = 1; i_loc < numberSegment(); ++i_loc) {
-            if( m_segments[i_loc].dataReady() ) continue;
+        for (int i_index= 1; i_index< numberSegment(); ++i_index) {
+            if( m_segments[i_index].dataReady() ) continue;
 
             // find its outlet segment
-            const int outlet_segment = m_segments[i_loc].outletSegment();
-            const int outlet_loc = numberToLocation(outlet_segment);
+            const int outlet_segment = m_segments[i_index].outletSegment();
+            const int outlet_index= segmentNumberToIndex(outlet_segment);
 
             // assert some information of the outlet_segment
-            assert(outlet_loc >= 0);
-            assert(m_segments[outlet_loc].dataReady());
+            assert(outlet_index>= 0);
+            assert(m_segments[outlet_index].dataReady());
 
-            const double outlet_depth = m_segments[outlet_loc].depth();
-            const double outlet_length = m_segments[outlet_loc].totalLength();
-            const double temp_depth = outlet_depth + m_segments[i_loc].depth();
-            const double temp_length = outlet_length + m_segments[i_loc].totalLength();
+            const double outlet_depth = m_segments[outlet_index].depth();
+            const double outlet_length = m_segments[outlet_index].totalLength();
+            const double temp_depth = outlet_depth + m_segments[i_index].depth();
+            const double temp_length = outlet_length + m_segments[i_index].totalLength();
 
             // applying the calculated length and depth to the current segment
-            Segment new_segment = this->m_segments[i_loc];
+            Segment new_segment = this->m_segments[i_index];
             new_segment.setDepthAndLength(temp_depth, temp_length);
             addSegment(new_segment);
         }
@@ -322,39 +342,39 @@ namespace Opm {
     void SegmentSet::orderSegments() {
         // re-ordering the segments to make later use easier.
         // two principles
-        // 1. the location of the outlet segment will be stored in the lower location than the segment.
+        // 1. the index of the outlet segment will be stored in the lower index than the segment.
         // 2. the segments belong to the same branch will be continuously stored.
 
         // top segment will always be the first one
-        // before this location, the reordering is done.
-        int current_loc = 1;
+        // before this index, the reordering is done.
+        int current_index= 1;
 
-        // clear the mapping from segment number to store location
-        m_number_to_location.clear();
+        // clear the mapping from segment number to store index
+        m_segment_number_to_index.clear();
         // for the top segment
-        m_number_to_location[1] = 0;
+        m_segment_number_to_index[1] = 0;
 
-        while (current_loc < numberSegment()) {
+        while (current_index< numberSegment()) {
             // the branch number of the last segment that is done re-ordering
-            const int last_branch_number = m_segments[current_loc-1].branchNumber();
-            // the one need to be swapped to the current_loc.
-            int target_segment_loc = -1;
+            const int last_branch_number = m_segments[current_index-1].branchNumber();
+            // the one need to be swapped to the current_index.
+            int target_segment_index= -1;
 
-            // looking for target_segment_loc
-            for (int i_loc = current_loc; i_loc < numberSegment(); ++i_loc) {
-                const int outlet_segment_number = m_segments[i_loc].outletSegment();
-                const int outlet_segment_location = numberToLocation(outlet_segment_number);
-                if (outlet_segment_location < 0) { // not found the outlet_segment in the done re-ordering segments
+            // looking for target_segment_index
+            for (int i_index= current_index; i_index< numberSegment(); ++i_index) {
+                const int outlet_segment_number = m_segments[i_index].outletSegment();
+                const int outlet_segment_index = segmentNumberToIndex(outlet_segment_number);
+                if (outlet_segment_index < 0) { // not found the outlet_segment in the done re-ordering segments
                     continue;
                 }
-                if (target_segment_loc < 0) { // first time found a candidate
-                    target_segment_loc = i_loc;
+                if (target_segment_index< 0) { // first time found a candidate
+                    target_segment_index= i_index;
                 } else { // there is already a candidate, chosing the one with the same branch number with last_branch_number
-                    const int old_target_segment_loc_branch = m_segments[target_segment_loc].branchNumber();
-                    const int new_target_segment_loc_branch = m_segments[i_loc].branchNumber();
-                    if (new_target_segment_loc_branch == last_branch_number) {
-                        if (old_target_segment_loc_branch != last_branch_number) {
-                            target_segment_loc = i_loc;
+                    const int old_target_segment_index_branch = m_segments[target_segment_index].branchNumber();
+                    const int new_target_segment_index_branch = m_segments[i_index].branchNumber();
+                    if (new_target_segment_index_branch == last_branch_number) {
+                        if (old_target_segment_index_branch != last_branch_number) {
+                            target_segment_index= i_index;
                         } else {
                             throw std::logic_error("two segments in the same branch share the same outlet segment !!\n");
                         }
@@ -362,16 +382,16 @@ namespace Opm {
                 }
             }
 
-            if (target_segment_loc < 0) {
+            if (target_segment_index< 0) {
                 throw std::logic_error("could not find candidate segment to swap in before the re-odering process get done !!\n");
             }
-            assert(target_segment_loc >= current_loc);
-            if (target_segment_loc > current_loc) {
-                std::swap(m_segments[current_loc], m_segments[target_segment_loc]);
+            assert(target_segment_index>= current_index);
+            if (target_segment_index> current_index) {
+                std::swap(m_segments[current_index], m_segments[target_segment_index]);
             }
-            const int segment_number = m_segments[current_loc].segmentNumber();
-            m_number_to_location[segment_number] = current_loc;
-            current_loc++;
+            const int segment_number = m_segments[current_index].segmentNumber();
+            m_segment_number_to_index[segment_number] = current_index;
+            current_index++;
         }
     }
 
@@ -385,13 +405,13 @@ namespace Opm {
             && this->m_comp_pressure_drop == rhs.m_comp_pressure_drop
             && this->m_multiphase_model == rhs.m_multiphase_model
             && this->m_segments.size() == rhs.m_segments.size()
-            && this->m_number_to_location.size() == rhs.m_number_to_location.size()
+            && this->m_segment_number_to_index.size() == rhs.m_segment_number_to_index.size()
             && std::equal( this->m_segments.begin(),
                            this->m_segments.end(),
                            rhs.m_segments.begin() )
-            && std::equal( this->m_number_to_location.begin(),
-                           this->m_number_to_location.end(),
-                           rhs.m_number_to_location.begin() );
+            && std::equal( this->m_segment_number_to_index.begin(),
+                           this->m_segment_number_to_index.end(),
+                           rhs.m_segment_number_to_index.begin() );
     }
 
     bool SegmentSet::operator!=( const SegmentSet& rhs ) const {
