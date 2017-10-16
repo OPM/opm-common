@@ -109,6 +109,14 @@ namespace Opm {
         m_volume = volume_in;
     }
 
+    const std::vector<int>& Segment::inletSegments() const {
+        return m_inlet_segments;
+    }
+
+    void Segment::addInletSegment(const int segment_number) {
+        m_inlet_segments.push_back(segment_number);
+    }
+
     double Segment::invalidValue() {
         return invalid_value;
     }

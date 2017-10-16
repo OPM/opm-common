@@ -82,6 +82,7 @@ set(opmparser_SOURCES Deck/Deck.cpp
                       EclipseState/Schedule/MSW/Compsegs.cpp
                       EclipseState/Schedule/MSW/Segment.cpp
                       EclipseState/Schedule/MSW/SegmentSet.cpp
+                      EclipseState/Schedule/MSW/updatingCompletionsWithSegments.cpp
                       EclipseState/Schedule/OilVaporizationProperties.cpp
                       EclipseState/Schedule/Schedule.cpp
                       EclipseState/Schedule/ScheduleEnums.cpp
@@ -229,6 +230,7 @@ foreach(test ADDREGTests
              MessageContainerTest
              MessageLimitTests
              MultiRegTests
+             MultisegmentWellTests
              MULTREGTScannerTests
              OrderedMapTests
              ParseContextTests

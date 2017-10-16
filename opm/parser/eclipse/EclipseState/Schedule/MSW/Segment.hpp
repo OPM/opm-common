@@ -21,6 +21,7 @@
 #define SEGMENT_HPP_HEADER_INCLUDED
 
 #include <memory>
+#include <vector>
 
 namespace Opm {
 
@@ -45,6 +46,9 @@ namespace Opm {
         void setVolume(const double volume_in);
         void setDepthAndLength(const double depth_in, const double length_in);
 
+        const std::vector<int>& inletSegments() const;
+        void addInletSegment(const int segment_number);
+
         static double invalidValue();
 
         bool operator==( const Segment& ) const;
@@ -61,6 +65,8 @@ namespace Opm {
         // the outlet junction segment
         // for top segment, it should be -1
         int m_outlet_segment;
+        // the segments whose outlet segments are the current segment
+        std::vector<int> m_inlet_segments;
         // length of the segment node to the bhp reference point.
         // when reading in from deck, with 'INC',
         // it will be incremental length before processing.

@@ -45,10 +45,14 @@ namespace Opm {
         WellSegment::CompPressureDropEnum compPressureDrop() const;
         WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
 
-        int numberToLocation(const int segment_number) const;
+        // mapping the segment number to the index in the vector of segments
+        int segmentNumberToIndex(const int segment_number) const;
+
         void addSegment(Segment new_segment);
 
         void segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword);
+
+        const Segment& getFromSegmentNumber(const int segment_number) const;
 
         const Segment& operator[](size_t idx) const;
         void orderSegments();
@@ -86,8 +90,8 @@ namespace Opm {
 
         std::vector< Segment > m_segments;
         // the mapping from the segment number to the
-        // storage location in the vector
-        std::map<int, int> m_number_to_location;
+        // storage index in the vector
+        std::map<int, int> m_segment_number_to_index;
     };
 }
 

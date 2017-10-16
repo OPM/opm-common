@@ -440,9 +440,16 @@ BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
 }
 
 BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
-    Parser parser;
-    std::string deckFile(pathprefix() + "SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
-    auto deck =  parser.parseFile(deckFile, ParseContext());
+    const Parser parser;
+    const std::string deckFile(pathprefix() + "SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
+    const auto deck =  parser.parseFile(deckFile, ParseContext());
+    const ParseContext parseContext;
+    const EclipseState state(deck, parseContext);
+    const auto& grid = state.getInputGrid();
+    const TableManager table ( deck );
+    const Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    const Schedule sched(parseContext, grid, eclipseProperties, deck, Phases(true, true, true) );
+
     // for WELSEGS keyword
     const auto& kw = deck.getKeyword("WELSEGS");
 
@@ -495,7 +502,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     }
 
     {
-        const auto& rec6 = kw.getRecord(5);
+        const auto& rec6 = kw.getRecord(4);
         const int segment1 = rec6.getItem("SEGMENT2").get< int >(0);
         const int segment2 = rec6.getItem("SEGMENT2").get< int >(0);
         BOOST_CHECK_EQUAL( 6, segment1 );
@@ -507,9 +514,9 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         const double diameter = rec6.getItem("DIAMETER").get< double >(0);
         const double roughness = rec6.getItem("ROUGHNESS").get< double >(0);
         BOOST_CHECK_EQUAL( 2, branch );
-        BOOST_CHECK_EQUAL( 5, outlet_segment );
-        BOOST_CHECK_EQUAL( 3137.5, segment_length );
-        BOOST_CHECK_EQUAL( 2537.5, depth_change );
+        BOOST_CHECK_EQUAL( 4, outlet_segment );
+        BOOST_CHECK_EQUAL( 3037.5, segment_length );
+        BOOST_CHECK_EQUAL( 2539.5, depth_change );
         BOOST_CHECK_EQUAL( 0.2, diameter );
         BOOST_CHECK_EQUAL( 0.0001, roughness );
     }
@@ -517,7 +524,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     // for COMPSEG keyword
     const auto& kw1 = deck.getKeyword("COMPSEGS");
     // check the size of the keywords
-    BOOST_CHECK_EQUAL( 7, kw1.size() );
+    BOOST_CHECK_EQUAL( 8, kw1.size() );
     // first record only contains the well name
     {
         const auto& rec1 = kw1.getRecord(0);
@@ -558,6 +565,39 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL(  2, branch );
         BOOST_CHECK_EQUAL(  3037.5, distance_start );
         BOOST_CHECK_EQUAL(  3237.5, distance_end );
+    }
+
+    // checking the relation between segments and completions
+    // and also the depth of completions
+    {
+        BOOST_CHECK(sched.hasWell("PROD01"));
+        const auto* well = sched.getWell("PROD01");
+        const auto& completions = well->getCompletions(0);
+        BOOST_CHECK_EQUAL(7U, completions.size());
+
+        const Completion& completion5 = completions.get(4);
+        const int seg_number_completion5 = completion5.getSegmentNumber();
+        const double completion5_depth = completion5.getCenterDepth();
+        BOOST_CHECK_EQUAL(seg_number_completion5, 6);
+        BOOST_CHECK_CLOSE(completion5_depth, 2538.83, 0.001);
+
+        const Completion& completion6 = completions.get(5);
+        const int seg_number_completion6 = completion6.getSegmentNumber();
+        const double completion6_depth = completion6.getCenterDepth();
+        BOOST_CHECK_EQUAL(seg_number_completion6, 6);
+        BOOST_CHECK_CLOSE(completion6_depth, 2537.83, 0.001);
+
+        const Completion& completion1 = completions.get(0);
+        const int seg_number_completion1 = completion1.getSegmentNumber();
+        const double completion1_depth = completion1.getCenterDepth();
+        BOOST_CHECK_EQUAL(seg_number_completion1, 1);
+        BOOST_CHECK_EQUAL(completion1_depth, 2512.5);
+
+        const Completion& completion3 = completions.get(2);
+        const int seg_number_completion3 = completion3.getSegmentNumber();
+        const double completion3_depth = completion3.getCenterDepth();
+        BOOST_CHECK_EQUAL(seg_number_completion3, 3);
+        BOOST_CHECK_EQUAL(completion3_depth, 2562.5);
     }
 }
 

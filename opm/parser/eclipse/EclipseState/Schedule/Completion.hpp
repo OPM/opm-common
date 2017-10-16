@@ -53,6 +53,7 @@ namespace Opm {
         Completion(const Completion&, WellCompletion::StateEnum newStatus);
         Completion(const Completion&, double wellPi);
         Completion(const Completion&, int complnum );
+        Completion(const Completion& completion_initial, int segment_number, double center_depth);
 
         bool sameCoordinate(const Completion& other) const;
         bool sameCoordinate(const int i, const int j, const int k) const;
@@ -72,7 +73,6 @@ namespace Opm {
         void   shift_complnum( int );
         int getSegmentNumber() const;
         double getCenterDepth() const;
-        void attachSegment(const int segmentNumber , const double centerDepth);
         bool attachedToSegment() const;
 
         WellCompletion::DirectionEnum getDirection() const;
