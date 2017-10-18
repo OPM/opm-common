@@ -85,10 +85,10 @@ class Group(object):
     def __getitem__(self, name):
         return Group(self._schedule._group(name), self._schedule, self.timestep)
 
-    def wells(self, timestep):
-        names = self._wellnames(timestep)
-        wells = {well.name: well for well in self._schedule.wells}
-        return map(wells.__getitem__, filter(wells.__contains__, names))
+    @property
+    def wells(self):
+        names = self._wellnames(self.timestep)
+        return [w for w in self._schedule.wells if w.name in names]
 
     @property
     def parent(self):
@@ -100,8 +100,8 @@ class Group(object):
 
     @property
     def children(self):
-        l = []
         chl = self._schedule._group_tree(self.timestep)._children(self.name)
-        for elem in chl:
-            l.append(Group(self._schedule._group(elem), self._schedule, self.timestep))
-        return l
+        g = lambda elt : Group(self._schedule._group(elt),
+                               self._schedule,
+                               self.timestep)
+        return [g(elem) for elem in chl]
