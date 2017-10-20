@@ -26,5 +26,5 @@ function (find_dune_version suite module)
   set (${_SUITE}_${_MODULE}_VERSION_REVISION "${${suite}-${module}_VERSION_PATCH}" PARENT_SCOPE)
 
   # print the version number we detected in the configuration log
-  message (STATUS "Version ${${suite}-${module}_VERSION_MAJOR}.${${suite}-${module}_VERSION_MINOR}.${${suite}-${module}_VERSION_PATCH} of ${suite}-${module} from ${_dune_mod}")
+  message (STATUS "Version ${${suite}-${module}_VERSION_MAJOR}.${${suite}-${module}_VERSION_MINOR}.${${suite}-${module}_VERSION_PATCH} of ${suite}-${module} from ${${suite}-${module}_DIR}")
 endfunction (find_dune_version suite module)
