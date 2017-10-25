@@ -2,19 +2,19 @@
 # spec file for package opm-common
 #
 
-%define tag rc4
+%define tag rc1
 
 Name:           opm-common
-Version:        2015.10
+Version:        2017.10
 Release:        0
 Summary:        Open Porous Media - common helpers and buildsystem
 License:        GPL-3.0
 Group:          Development/Libraries/C and C++
 Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
-BuildRequires:  git doxygen bc
-%{?el6:BuildRequires: devtoolset-3-toolchain cmake28 boost148-devel}
-%{!?el6:BuildRequires: gcc gcc-c++ cmake boost-devel}
+BuildRequires:  git doxygen bc devtoolset-6-toolchain 
+%{?el6:BuildRequires: cmake3 boost148-devel}
+%{!?el6:BuildRequires: cmake boost-devel}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 
 %description
@@ -48,8 +48,8 @@ This package contains the documentation files for opm-common
 
 # consider using -DUSE_VERSIONED_DIR=ON if backporting
 %build
-%{?el6:scl enable devtoolset-3 bash}
-%{?el6:cmake28} %{?!el6:cmake} -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF %{?el6:-DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-3/root/usr/bin/gfortran -DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148}
+scl enable devtoolset-6 bash
+%{?el6:cmake28} %{?!el6:cmake} -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148}
 make
 
 %install
