@@ -36,10 +36,13 @@ set (ewoms_DEPS
 	"opm-parser"
 	"opm-grid"
 	"opm-core"
-	# librt (on some systems necessary for clock_gettime())
-	"librt REQUIRED"
 	# valgrind client requests
 	"Valgrind"
 	# quadruple precision floating point calculations
 	"Quadmath"
 	)
+
+if (NOT APPLE)
+	# librt (on some systems necessary for clock_gettime())
+	list(APPEND "librt REQUIRED" ewoms_DEPS)
+endif ()
