@@ -41,8 +41,3 @@ set (ewoms_DEPS
 	# quadruple precision floating point calculations
 	"Quadmath"
 	)
-
-if (NOT APPLE)
-	# librt (on some systems necessary for clock_gettime())
-	list(APPEND "librt REQUIRED" ewoms_DEPS)
-endif ()
