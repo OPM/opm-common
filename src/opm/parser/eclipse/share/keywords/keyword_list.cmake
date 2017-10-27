@@ -16,11 +16,13 @@ set( keywords
      000_Eclipse100/A/APIGROUP
      000_Eclipse100/A/AQUANCON
      000_Eclipse100/A/AQUCON
+     000_Eclipse100/A/AQUCT
      000_Eclipse100/A/AQUDIMS
      000_Eclipse100/A/AQUFETP
      000_Eclipse100/A/AQUIFER_PROBE_ANALYTIC
      000_Eclipse100/A/AQUIFER_PROBE_NUMERIC
      000_Eclipse100/A/AQUNUM
+     000_Eclipse100/A/AQUTAB
      000_Eclipse100/B/BLOCK_PROBE
      000_Eclipse100/B/BOX
      000_Eclipse100/C/CECON
@@ -171,6 +173,7 @@ set( keywords
      000_Eclipse100/O/OILVISCT
      000_Eclipse100/O/OLDTRAN
      000_Eclipse100/O/OPERATE
+     000_Eclipse100/O/OPERATER
      000_Eclipse100/O/OPERNUM
      000_Eclipse100/O/OPTIONS
      000_Eclipse100/O/OUTRAD
@@ -241,6 +244,7 @@ set( keywords
      000_Eclipse100/R/RPTSOL
      000_Eclipse100/R/RPTSMRY
      000_Eclipse100/R/RS
+     000_Eclipse100/R/RSCONST
      000_Eclipse100/R/RSVD
      000_Eclipse100/R/RTEMP
      000_Eclipse100/R/RTEMPA

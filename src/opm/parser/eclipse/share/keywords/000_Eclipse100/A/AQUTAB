@@ -1,0 +1,4 @@
+{"name" : "AQUTAB" , "sections" : ["PROPS"],
+ "items" : [
+ {"name" : "TD" , "value_type" : "DOUBLE"},
+ {"name" : "PD" , "value_type" : "DOUBLE"}]}

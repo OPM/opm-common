@@ -1,0 +1,4 @@
+{"name" : "RSCONST" , "sections" : ["PROPS"],
+ "items" : [
+ {"name" : "RS" , "value_type" : "DOUBLE"},
+ {"name" : "PB" , "value_type" : "DOUBLE", "dimension" : "Pressure"}]}
