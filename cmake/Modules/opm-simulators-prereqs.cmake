@@ -26,7 +26,7 @@ set (opm-simulators_DEPS
 	dune-istl REQUIRED"
 	"ERTPython"
 	# Tim Davis' SuiteSparse archive
-	"SuiteSparse COMPONENTS umfpack REQUIRED"
+	"SuiteSparse COMPONENTS umfpack"
   # OPM dependency
 	"opm-common REQUIRED;
    opm-parser REQUIRED;
