@@ -1,0 +1,4 @@
+{"name" : "RSCONSTT" , "sections" : ["PROPS"],
+ "items" : [
+ {"name" : "RS_CONSTT" , "value_type" : "DOUBLE"},
+ {"name" : "PB_CONSTT" , "value_type" : "DOUBLE", "dimension" : "Pressure"}]}

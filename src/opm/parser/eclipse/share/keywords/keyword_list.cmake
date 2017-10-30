@@ -245,6 +245,7 @@ set( keywords
      000_Eclipse100/R/RPTSMRY
      000_Eclipse100/R/RS
      000_Eclipse100/R/RSCONST
+     000_Eclipse100/R/RSCONSTT     
      000_Eclipse100/R/RSVD
      000_Eclipse100/R/RTEMP
      000_Eclipse100/R/RTEMPA
