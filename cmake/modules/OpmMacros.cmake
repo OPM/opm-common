@@ -50,6 +50,8 @@ endif()
 #              CONDITION FUNKY_GRID_FOUND
 #              SOURCES tests/MyFunkyTest.cpp
 #              LIBRARIES -lgmp -lm)
+include(UseWarnings)
+
 include(CMakeParseArguments)
 
 set(DUNE_REENABLE_ADD_TEST "YES")
