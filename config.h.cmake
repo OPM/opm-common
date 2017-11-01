@@ -39,6 +39,9 @@
 /* Define to the revision of opm-common */
 #define OPM_COMMON_VERSION_REVISION ${OPM_COMMON_VERSION_REVISION}
 
+/* Specify whether OpenMP is available or not */
+#cmakedefine HAVE_OPENMP 1
+
 /* Define whether valgrind is available */
 #cmakedefine HAVE_VALGRIND 1
 
