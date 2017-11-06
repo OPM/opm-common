@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -388,6 +389,27 @@ void compare( const RestartValue& fst,
     BOOST_CHECK_EQUAL( fst.wells, snd.wells );
 }
 
+
+struct Setup {
+    Deck deck;
+    EclipseState es;
+    const EclipseGrid& grid;
+    Schedule schedule;
+    SummaryConfig summary_config;
+
+    Setup( const char* path, const ParseContext& parseContext = ParseContext( )) :
+        deck( Parser().parseFile( path, parseContext ) ),
+        es( deck, parseContext ),
+        grid( es.getInputGrid( ) ),
+        schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), parseContext),
+        summary_config( deck, schedule, es.getTableManager( ), parseContext)
+    {
+    }
+
+};
+
+
+
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     std::map<std::string, RestartKey> keys {{"PRESSURE" , RestartKey(UnitSystem::measure::pressure)},
                                             {"SWAT" , RestartKey(UnitSystem::measure::identity)},
@@ -396,10 +418,9 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
 
-    auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
-    const auto& grid = eclipseState.getInputGrid();
-    EclipseIO eclWriter( eclipseState, grid);
-    auto state1 = first_sim( eclipseState , eclWriter , false );
+    Setup setup("FIRST_SIM.DATA");
+    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+    auto state1 = first_sim( setup.es , eclWriter , false );
     auto state2 = second_sim( eclWriter , keys );
     compare(state1, state2 , keys);
 
@@ -440,10 +461,10 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
 
-    auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
-    const auto& grid = eclipseState.getInputGrid();
-    EclipseIO eclWriter( eclipseState, grid);
-    auto state1 = first_sim( eclipseState , eclWriter , true);
+    Setup setup("FIRST_SIM.DATA");
+    EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
+
+    auto state1 = first_sim( setup.es , eclWriter , true);
     auto state2 = second_sim( eclWriter , keys );
     compare_equal( state1 , state2 , keys);
 }
@@ -454,11 +475,10 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
     if (std::getenv("TRAVIS_CI"))
         return;
 
-    const auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
-    const auto& grid = eclipseState.getInputGrid();
+    Setup setup("FIRST_SIM.DATA");
     {
         ERT::TestArea testArea("test_Restart");
-        auto num_cells = grid.getNumActive( ) + 1;
+        auto num_cells = setup.grid.getNumActive( ) + 1;
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
 
@@ -466,18 +486,19 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
                                            100,
                                            cells ,
                                            wells ,
-                                           eclipseState ,
-                                           grid ),  std::runtime_error);
+                                           setup.es,
+                                           setup.grid ,
+                                           setup.schedule),
+                                           std::runtime_error);
     }
 }
 
 
 BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
-    auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
-    const auto& grid = eclipseState.getInputGrid();
+    Setup setup("FIRST_SIM.DATA");
     {
         ERT::TestArea testArea("test_Restart");
-        auto num_cells = grid.getNumActive( );
+        auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
 
@@ -489,8 +510,9 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
                                                100,
                                                cells ,
                                                wells ,
-                                               eclipseState ,
-                                               grid,
+                                               setup.es,
+                                               setup.grid,
+                                               setup.schedule,
                                                extra),
                                std::runtime_error);
         }
@@ -503,8 +525,9 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
                                                100,
                                                cells ,
                                                wells ,
-                                               eclipseState ,
-                                               grid,
+                                               setup.es,
+                                               setup.grid,
+                                               setup.schedule,
                                                extra),
                                std::runtime_error);
         }
@@ -517,8 +540,9 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
                                                100,
                                                cells ,
                                                wells ,
-                                               eclipseState ,
-                                               grid,
+                                               setup.es,
+                                               setup.grid,
+                                               setup.schedule,
                                                extra),
                                std::runtime_error);
         }
@@ -526,11 +550,10 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
 }
 
 BOOST_AUTO_TEST_CASE(ExtraData_content) {
-    auto eclipseState = Parser::parse( "FIRST_SIM.DATA" );
-    const auto& grid = eclipseState.getInputGrid();
+    Setup setup("FIRST_SIM.DATA");
     {
         ERT::TestArea testArea("test_Restart");
-        auto num_cells = grid.getNumActive( );
+        auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
         {
@@ -540,8 +563,9 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                             100,
                             cells ,
                             wells ,
-                            eclipseState ,
-                            grid,
+                            setup.es,
+                            setup.grid,
+                            setup.schedule,
                             extra);
 
             {
@@ -557,11 +581,11 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                 ecl_file_close( f );
             }
 
-            BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, eclipseState, grid , {{"NOT-THIS", true}}) , std::runtime_error );
+            BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, setup.es, setup.grid , setup.schedule, {{"NOT-THIS", true}}) , std::runtime_error );
             {
                 const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {{"SWAT" , RestartKey(UnitSystem::measure::identity)},
                                                                             {"NO"   , {UnitSystem::measure::identity, false}}},
-                                                                            eclipseState, grid , {{"EXTRA", true}, {"EXTRA2", false}});
+                    setup.es, setup.grid , setup.schedule, {{"EXTRA", true}, {"EXTRA2", false}});
                 const auto pair = rst_value.extra.find( "EXTRA" );
                 const std::vector<double> extraval = pair->second;
                 const std::vector<double> expected = {0,1,2,3};

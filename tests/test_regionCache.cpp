@@ -30,6 +30,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -47,7 +48,8 @@ BOOST_AUTO_TEST_CASE(create) {
     Deck deck( parser.parseFile( path, parseContext ));
     EclipseState es(deck , parseContext );
     const EclipseGrid& grid = es.getInputGrid();
-    out::RegionCache rc(es , grid);
+    Schedule schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), ParseContext() );
+    out::RegionCache rc(es.get3DProperties() , grid, schedule);
 
 
     const auto& c1 = rc.cells( 1 );

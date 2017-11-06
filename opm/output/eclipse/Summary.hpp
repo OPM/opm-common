@@ -40,18 +40,20 @@ namespace Opm {
     class Schedule;
     class SummaryConfig;
     class EclipseGrid;
+    class Schedule;
 
 namespace out {
 
 class Summary {
     public:
-        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid& );
-        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&,  const std::string& );
-        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&,  const char* basename );
+        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule& );
+        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule&, const std::string& );
+        Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule&, const char* basename );
 
         void add_timestep( int report_step,
                            double secs_elapsed,
                            const EclipseState& es,
+                           const Schedule& schedule,
                            const data::Wells&,
                            const data::Solution&,
                            const std::map<std::string, double>& misc_values);

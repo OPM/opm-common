@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -104,12 +105,13 @@ data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
 }
 
 BOOST_AUTO_TEST_CASE(test_RFT) {
-
+    ParseContext parse_context;
     std::string eclipse_data_filename    = "testRFT.DATA";
     ERT::TestArea test_area("test_RFT");
     test_area.copyFile( eclipse_data_filename );
 
-    auto eclipseState = Parser::parse( eclipse_data_filename );
+    auto deck = Parser().parseFile( eclipse_data_filename, parse_context );
+    auto eclipseState = Parser::parse( deck );
     {
         /* eclipseWriter is scoped here to ensure it is destroyed after the
          * file itself has been written, because we're going to reload it
@@ -119,10 +121,10 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
 
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
-
-        EclipseIO eclipseWriter( eclipseState, grid);
-        time_t start_time = eclipseState.getSchedule().posixStartTime();
-        /* step time read from deck and hard-coded here */
+        Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec().phases(), parse_context);
+        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), parse_context);
+        EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
+        time_t start_time = schedule.posixStartTime();
         time_t step_time = ecl_util_make_date(10, 10, 2008 );
 
         data::Rates r1, r2;
@@ -174,12 +176,13 @@ void verifyRFTFile2(const std::string& rft_filename) {
 
 
 BOOST_AUTO_TEST_CASE(test_RFT2) {
-
+    ParseContext parse_context;
     std::string eclipse_data_filename    = "testRFT.DATA";
     ERT::TestArea test_area("test_RFT");
     test_area.copyFile( eclipse_data_filename );
 
-    auto eclipseState = Parser::parse( eclipse_data_filename );
+    auto deck = Parser().parseFile( eclipse_data_filename, parse_context );
+    auto eclipseState = Parser::parse( deck );
     {
         /* eclipseWriter is scoped here to ensure it is destroyed after the
          * file itself has been written, because we're going to reload it
@@ -190,9 +193,11 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
 
-        EclipseIO eclipseWriter( eclipseState, grid);
-        time_t start_time = eclipseState.getSchedule().posixStartTime();
-        const auto& time_map = eclipseState.getSchedule().getTimeMap( );
+        Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec().phases(), parse_context);
+        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), parse_context);
+        EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
+        time_t start_time = schedule.posixStartTime();
+        const auto& time_map = schedule.getTimeMap( );
 
         for (int counter = 0; counter < 2; counter++) {
             for (size_t step = 0; step < time_map.size(); step++) {

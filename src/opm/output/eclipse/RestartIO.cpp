@@ -144,9 +144,10 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
                            const ecl_kw_type * opm_iwel,
                            int restart_step,
                            const EclipseState& es,
-                           const EclipseGrid& grid) {
+                           const EclipseGrid& grid,
+                           const Schedule& schedule) {
 
-    const auto& sched_wells = es.getSchedule().getWells( restart_step );
+    const auto& sched_wells = schedule.getWells( restart_step );
     std::vector< rt > phases;
     {
         const auto& phase = es.runspec().phases();
@@ -222,6 +223,7 @@ RestartValue load( const std::string& filename,
                    const std::map<std::string, RestartKey>& keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
+                   const Schedule& schedule,
                    const std::map<std::string, bool>& extra_keys) {
 
     const bool unified                   = ( ERT::EclFiletype( filename ) == ECL_UNIFIED_RESTART_FILE );
@@ -246,7 +248,7 @@ RestartValue load( const std::string& filename,
 
     UnitSystem units( static_cast<ert_ecl_unit_enum>(ecl_kw_iget_int( intehead , INTEHEAD_UNIT_INDEX )));
     RestartValue rst_value( restoreSOLUTION( file_view, keys, units , grid.getNumActive( )),
-                            restore_wells( opm_xwel, opm_iwel, report_step , es, grid));
+                            restore_wells( opm_xwel, opm_iwel, report_step , es, grid, schedule));
 
     for (const auto& pair : extra_keys) {
         const std::string& key = pair.first;
@@ -515,9 +517,7 @@ void writeExtraData(ecl_rst_file_type* rst_file, const std::map<std::string,std:
 
 
 
-void writeWell(ecl_rst_file_type* rst_file, int report_step, const EclipseState& es , const EclipseGrid& grid, const data::Wells& wells) {
-
-    const auto& schedule = es.getSchedule();
+void writeWell(ecl_rst_file_type* rst_file, int report_step, const EclipseState& es , const EclipseGrid& grid, const Schedule& schedule, const data::Wells& wells) {
     const auto sched_wells  = schedule.getWells(report_step);
     const auto& phases = es.runspec().phases();
     const size_t ncwmax = schedule.getMaxNumCompletionsForWells(report_step);
@@ -567,13 +567,13 @@ void save(const std::string& filename,
           data::Wells wells,
           const EclipseState& es,
           const EclipseGrid& grid,
+          const Schedule& schedule,
           std::map<std::string, std::vector<double>> extra_data,
 	  bool write_double)
 {
     checkSaveArguments( cells, grid, extra_data );
     {
         int ert_phase_mask = es.runspec().eclPhaseMask( );
-        const Schedule& schedule = es.getSchedule();
         const auto& units = es.getUnits();
         time_t posix_time = schedule.posixStartTime() + seconds_elapsed;
         const auto sim_time = units.from_si( UnitSystem::measure::time, seconds_elapsed );
@@ -587,7 +587,7 @@ void save(const std::string& filename,
 
         cells.convertFromSI( units );
         writeHeader( rst_file.get() , report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
-        writeWell( rst_file.get() , report_step, es , grid, wells);
+        writeWell( rst_file.get() , report_step, es , grid, schedule, wells);
         writeSolution( rst_file.get() , cells , write_double );
         writeExtraData( rst_file.get() , extra_data );
     }

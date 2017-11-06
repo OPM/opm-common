@@ -809,24 +809,26 @@ class Summary::keyword_handlers {
 
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum ,
-                  const EclipseGrid& grid_arg) :
-    Summary( st, sum, grid_arg, st.getIOConfig().fullBasePath().c_str() )
+                  const EclipseGrid& grid_arg,
+                  const Schedule& schedule) :
+    Summary( st, sum, grid_arg, schedule, st.getIOConfig().fullBasePath().c_str() )
 {}
 
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum,
                   const EclipseGrid& grid_arg,
+                  const Schedule& schedule,
                   const std::string& basename ) :
-    Summary( st, sum, grid_arg, basename.c_str() )
+    Summary( st, sum, grid_arg, schedule, basename.c_str() )
 {}
 
 Summary::Summary( const EclipseState& st,
                   const SummaryConfig& sum,
                   const EclipseGrid& grid_arg,
+                  const Schedule& schedule,
                   const char* basename ) :
     grid( grid_arg ),
-    regionCache( st , grid_arg ),
-
+    regionCache( st.get3DProperties( ) , grid_arg, schedule ),
     handlers( new keyword_handlers() ),
     porv( st.get3DProperties().getDoubleGridProperty("PORV").compressedCopy(grid_arg))
 {
@@ -845,7 +847,7 @@ Summary::Summary( const EclipseState& st,
                                                 st.getIOConfig().getFMTOUT(),
                                                 st.getIOConfig().getUNIFOUT(),
                                                 ":",
-                                                st.getSchedule().posixStartTime(),
+                                                schedule.posixStartTime(),
                                                 true,
                                                 st.getInputGrid().getNX(),
                                                 st.getInputGrid().getNY(),
@@ -916,15 +918,14 @@ Summary::Summary( const EclipseState& st,
 void Summary::add_timestep( int report_step,
                             double secs_elapsed,
                             const EclipseState& es,
+                            const Schedule& schedule,
                             const data::Wells& wells ,
                             const data::Solution& state,
                             const std::map<std::string, double>& misc_values) {
 
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
-
     const size_t timestep = report_step;
-    const auto& schedule = es.getSchedule();
 
     for( auto& f : this->handlers->handlers ) {
         const int num = smspec_node_get_num( f.first );

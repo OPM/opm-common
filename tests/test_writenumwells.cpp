@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -134,15 +135,19 @@ void verifyWellState(const std::string& rst_filename,
 BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     std::string eclipse_data_filename    = "testBlackoilState3.DATA";
     std::string eclipse_restart_filename = "TESTBLACKOILSTATE3.X0004";
-
     test_work_area_type * test_area = test_work_area_alloc("TEST_EclipseWriteNumWells");
     test_work_area_copy_file(test_area, eclipse_data_filename.c_str());
 
-    auto es = Parser::parse( eclipse_data_filename, ParseContext() );
-    const auto num_cells = es.getInputGrid().getCartesianSize();
-    EclipseIO eclipseWriter( es,  es.getInputGrid() );
-
-    int countTimeStep = es.getSchedule().getTimeMap().numTimesteps();
+    ParseContext parseContext;
+    Parser parser;
+    Deck deck( parser.parseFile( eclipse_data_filename, parseContext ));
+    EclipseState es(deck , parseContext );
+    const EclipseGrid& grid = es.getInputGrid();
+    Schedule schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), parseContext);
+    SummaryConfig summary_config( deck, schedule, es.getTableManager( ), parseContext);
+    const auto num_cells = grid.getCartesianSize();
+    EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
+    int countTimeStep = schedule.getTimeMap().numTimesteps();
 
     data::Solution solution;
     solution.insert( "PRESSURE",UnitSystem::measure::pressure , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
@@ -159,7 +164,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 				     {} );
     }
 
-    verifyWellState(eclipse_restart_filename, es.getInputGrid(), es.getSchedule());
+    verifyWellState(eclipse_restart_filename, grid, schedule);
 
     test_work_area_free(test_area);
 }
