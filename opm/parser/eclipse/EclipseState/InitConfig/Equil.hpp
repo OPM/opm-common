@@ -1,6 +1,8 @@
 #ifndef OPM_EQUIL_HPP
 #define OPM_EQUIL_HPP
 
+#include <vector>
+
 namespace Opm {
 
     class DeckKeyword;
