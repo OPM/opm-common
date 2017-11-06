@@ -11,10 +11,8 @@ void sunbeam::export_EclipseConfig()
 {
 
     py::class_< EclipseConfig >( "EclipseConfig", py::no_init )
-        .def( "summary",         &EclipseConfig::summary,    ref())
         .def( "init",            &EclipseConfig::init,       ref())
         .def( "restart",         &EclipseConfig::restart,    ref())
-        .def( "simulation",      &EclipseConfig::simulation, ref())
         ;
 
     py::class_< SummaryConfig >( "SummaryConfig", py::no_init )

@@ -93,6 +93,8 @@ void sunbeam::export_EclipseState() {
         .def( "_cfg",           &EclipseState::cfg,             ref() )
         .def( "_tables",        &EclipseState::getTableManager, ref() )
         .def( "has_input_nnc",  &EclipseState::hasInputNNC )
+        .def( "simulation",     &EclipseState::getSimulationConfig, ref())
+        .def( "summary",        &EclipseState::getSummaryConfig   , ref())
         .def( "input_nnc",      &getNNC )
         .def( "faultNames",     &faultNames )
         .def( "faultFaces",     &faultFaces )

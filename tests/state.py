@@ -76,13 +76,9 @@ SATNUM
         self.assertEqual((i,j,k), grid.getIJK(g))
 
     def test_config(self):
-        cfg = self.spe3.cfg()
-        smry = cfg.summary()
+        cfg = self.state.cfg()
         self.assertTrue('EclipseConfig' in repr(cfg))
-        self.assertTrue('SummaryConfig' in repr(smry))
-        self.assertTrue('WOPR' in smry) # hasKeyword
-        self.assertFalse('NONO' in smry) # hasKeyword
-
+        
         init = cfg.init()
         self.assertTrue(init.hasEquil())
         self.assertFalse(init.restartRequested())
@@ -91,8 +87,15 @@ SATNUM
         rst = cfg.restart()
         self.assertFalse(rst.getWriteRestartFile(0))
         self.assertEqual(8, rst.getFirstRestartStep())
-
-        sim = cfg.simulation()
+        
+    def test_summary(self):
+        smry = self.state.summary()
+        self.assertTrue('SummaryConfig' in repr(smry))
+        self.assertTrue('WOPR' in smry) # hasKeyword
+        self.assertFalse('NONO' in smry) # hasKeyword
+    
+    def test_simulation(self):
+        sim = self.state.simulation()
         self.assertFalse(sim.hasThresholdPressure())
         self.assertFalse(sim.useCPR())
         self.assertTrue(sim.hasDISGAS())
