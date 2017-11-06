@@ -2,6 +2,13 @@
 # explicitly. In the root CMakeLists.txt which includes this file
 # individual dependencies on all the Json files is established, in
 # addition to an explicit dependency on this file.
+#
+# When a keyword is added here the parser will recognize the keyword and
+# correctly internalize it as a DeckKeyword, but the simulator 'flow' in
+# opm-simulators will not automatically do anything sensible with the keyword,
+# you are therefore encouraged to go to the opm-simulators repository and update
+# the file: opm/autodiff/MissingFeatures.cpp
+
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
