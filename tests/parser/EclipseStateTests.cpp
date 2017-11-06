@@ -200,8 +200,7 @@ const char *deckData =
 BOOST_AUTO_TEST_CASE(CreateSchedule) {
     auto deck = createDeck();
     EclipseState state(deck, ParseContext());
-    const auto& schedule = state.getSchedule();
-
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), ParseContext( ));
     BOOST_CHECK_EQUAL(schedule.getStartTime(), TimeMap::mkdate( 1998 , 3 , 8));
 }
 

@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    const Schedule schedule( ParseContext(), grid, eclipseProperties, deck, Phases(true, true, true) );
+    const Schedule schedule( deck, grid, eclipseProperties, Phases(true, true, true) , ParseContext());
     const auto& COMPDAT1 = deck.getKeyword("COMPDAT" , 1);
 
     const auto wells = schedule.getWells( 0 );

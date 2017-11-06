@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     {
-        Schedule schedule( parseContext , grid , eclipseProperties, deck, Phases(true, true, true) );
+        Schedule schedule( deck, grid , eclipseProperties, Phases(true, true, true) , parseContext);
         auto events = schedule.getEvents( );
         BOOST_CHECK_EQUAL( false , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 1 ));
         BOOST_CHECK_EQUAL( true  , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 2 ));

@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
-  Schedule schedule( ParseContext() , grid , eclipseProperties, deck, Phases(true, true, true) );
+  Schedule schedule( deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
   auto tuning = schedule.getTuning();
 
 
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
-  Schedule schedule(ParseContext() , grid , eclipseProperties, deck, Phases(true, true, true));
+  Schedule schedule(deck , grid , eclipseProperties, Phases(true, true, true), ParseContext());
   auto tuning = schedule.getTuning();
 
 
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
-  Schedule schedule(ParseContext() , grid , eclipseProperties, deck, Phases(true, true, true));
+  Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true), ParseContext());
   auto tuning = schedule.getTuning();
 
 
@@ -374,5 +374,4 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   TSINIT_default = tuning.getTSINIT(timestep);
   BOOST_CHECK_CLOSE(TSINIT_default, 666.00, diff);
 
-  
-  }
+}

@@ -249,12 +249,12 @@ BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
     Eclipse3DProperties eclipseProperties ( deckSupported , table, grid);
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , eclipseProperties, deckSupported, Phases(true, true, true) ));
-    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , eclipseProperties, deckUnSupported, Phases(true, true, true) ));
+    BOOST_CHECK_NO_THROW( Schedule( deckSupported  , grid , eclipseProperties, Phases(true, true, true), parseContext  ));
+    BOOST_CHECK_NO_THROW( Schedule( deckUnSupported, grid , eclipseProperties, Phases(true, true, true), parseContext  ));
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( Schedule( parseContext , grid , eclipseProperties, deckUnSupported, Phases(true, true, true) ), std::invalid_argument );
-    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , eclipseProperties, deckSupported, Phases(true, true, true) ));
+    BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , eclipseProperties, Phases(true, true, true) , parseContext), std::invalid_argument );
+    BOOST_CHECK_NO_THROW( Schedule( deckSupported , grid , eclipseProperties, Phases(true, true, true) , parseContext));
 }
 
 
@@ -325,10 +325,10 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
-    BOOST_CHECK_NO_THROW( Schedule( parseContext , grid , eclipseProperties, deck, Phases(true, true, true) ));
+    BOOST_CHECK_NO_THROW( Schedule( deck , grid , eclipseProperties,  Phases(true, true, true), parseContext ));
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( Schedule( parseContext , grid , eclipseProperties, deck, Phases(true, true, true) ), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( deck,  grid , eclipseProperties, Phases(true, true, true) , parseContext), std::invalid_argument );
 }
 
 

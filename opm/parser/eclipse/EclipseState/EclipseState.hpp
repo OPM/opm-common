@@ -30,12 +30,10 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 namespace Opm {
 
@@ -70,14 +68,11 @@ namespace Opm {
         EclipseState(const Deck& deck , ParseContext parseContext = ParseContext());
 
         const ParseContext& getParseContext() const;
-
-        const Schedule& getSchedule() const;
         const IOConfig& getIOConfig() const;
         IOConfig& getIOConfig();
 
         const InitConfig& getInitConfig() const;
         const SimulationConfig& getSimulationConfig() const;
-        const SummaryConfig& getSummaryConfig() const;
         const RestartConfig& getRestartConfig() const;
         RestartConfig& getRestartConfig();
 
@@ -131,8 +126,6 @@ namespace Opm {
         Eclipse3DProperties m_eclipseProperties;
         const SimulationConfig m_simulationConfig;
         TransMult m_transMult;
-        Schedule m_schedule;
-        const SummaryConfig m_summaryConfig;
 
         FaultCollection m_faults;
         std::string m_title;

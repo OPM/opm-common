@@ -24,7 +24,9 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 inline void dumpMessages( const Opm::MessageContainer& messageContainer) {
     auto extractMessage = [](const Opm::Message& msg) {
@@ -49,6 +51,8 @@ inline void loadDeck( const char * deck_file) {
     auto deck = parser.parseFile(deck_file, parseContext);
     std::cout << "parse complete - creating EclipseState .... ";  std::cout.flush();
     Opm::EclipseState state( deck, parseContext );
+    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
+    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext );
     std::cout << "complete." << std::endl;
 
     dumpMessages( deck.getMessageContainer() );

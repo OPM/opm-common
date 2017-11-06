@@ -56,11 +56,11 @@
 
 namespace Opm {
 
-    Schedule::Schedule( const ParseContext& parseContext,
+    Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
                         const Eclipse3DProperties& eclipseProperties,
-                        const Deck& deck,
-                        const Phases &phases ) :
+                        const Phases &phases,
+                        const ParseContext& parseContext) :
         m_timeMap( deck ),
         m_rootGroupTree( this->m_timeMap, GroupTree{} ),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties{} ),
