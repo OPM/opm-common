@@ -87,7 +87,7 @@ function (opm_cmake_config name)
 	${template_dir}/opm-project.pc.in
 	${PROJECT_BINARY_DIR}/${${name}_NAME}.pc
 	${PROJECT_BINARY_DIR}
-	${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+	"${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
 	${PROJECT_SOURCE_DIR}
 	)
 
