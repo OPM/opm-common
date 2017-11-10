@@ -1,4 +1,4 @@
 [submodule "pycmake"]
     path = pycmake
-    url = https://github.com/statoil/pycmake
+    url = git://github.com/Statoil/pycmake.git
     branch = 21f1eb9
