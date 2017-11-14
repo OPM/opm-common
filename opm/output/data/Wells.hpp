@@ -45,11 +45,12 @@ namespace Opm {
         public:
             Rates() = default;
             enum class opt : uint32_t {
-                wat     = (1 << 0),
-                oil     = (1 << 1),
-                gas     = (1 << 2),
-                polymer = (1 << 3),
-                solvent = (1 << 4),
+                wat           = (1 << 0),
+                oil           = (1 << 1),
+                gas           = (1 << 2),
+                polymer       = (1 << 3),
+                solvent       = (1 << 4),
+                dissolved_gas = (1 << 5),
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -82,6 +83,7 @@ namespace Opm {
             double gas = 0.0;
             double polymer = 0.0;
             double solvent = 0.0;
+            double dissolved_gas = 0.0;
     };
 
     struct Completion {
@@ -187,6 +189,7 @@ namespace Opm {
             case opt::gas: return this->gas;
             case opt::polymer: return this->polymer;
             case opt::solvent: return this->solvent;
+            case opt::dissolved_gas: return this->dissolved_gas;
         }
 
         throw std::invalid_argument(
