@@ -192,7 +192,7 @@ inline std::string uppercase( std::string x ) {
 class EclipseIO::Impl {
     public:
     Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& );
-        void writeINITFile( const data::Solution& simProps, const NNC& nnc) const;
+        void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > map, const NNC& nnc) const;
         void writeEGRIDFile( const NNC& nnc ) const;
 
         const EclipseState& es;
@@ -221,7 +221,7 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
 
 
 
-void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, const NNC& nnc) const {
+void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > map, const NNC& nnc) const {
     const auto& units = this->es.getUnits();
     const IOConfig& ioConfig = this->es.cfg().io();
 
@@ -337,6 +337,25 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, const NNC& 
     }
 
 
+    //Write Integer Vector Map
+    {
+        std::map<std::string, std::vector<int> >::iterator it = map.begin();
+
+        while(it != map.end())  {
+            std::string key = it->first;
+            if (key.size() > ECL_STRING8_LENGTH)
+              throw std::invalid_argument("Keyword is too long.");
+            
+            std::vector<int> int_field = it->second;
+            if (int_field.size() < this->grid.getCartesianSize())
+              int_field = grid.scatterVector( int_field );
+            writeKeyword( fortio, key, int_field);
+
+            it++;
+        }
+    }
+
+
     // Write NNC transmissibilities
     {
         std::vector<double> tran;
@@ -368,7 +387,7 @@ void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) const {
 }
 
 
-void EclipseIO::writeInitial( data::Solution simProps, const NNC& nnc) {
+void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std::vector<int> > map, const NNC& nnc) {
     if( !this->impl->output_enabled )
         return;
 
@@ -378,7 +397,7 @@ void EclipseIO::writeInitial( data::Solution simProps, const NNC& nnc) {
 
         simProps.convertFromSI( es.getUnits() );
         if( ioConfig.getWriteINITFile() )
-            this->impl->writeINITFile( simProps , nnc );
+            this->impl->writeINITFile( simProps , map, nnc );
 
         if( ioConfig.getWriteEGRIDFile( ) )
             this->impl->writeEGRIDFile( nnc );

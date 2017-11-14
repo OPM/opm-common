@@ -43,6 +43,7 @@
 // ERT stuff
 #include <ert/util/ert_unique_ptr.hpp>
 #include <ert/util/TestArea.hpp>
+#include <ert/util/test_util.hpp>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_grid.h>
@@ -50,9 +51,11 @@
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_util.h>
 
+
 #include <ert/ecl_well/well_info.h>
 
 #include <memory>
+#include <map>
 
 using namespace Opm;
 
@@ -314,9 +317,19 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
             { "TRANZ", { measure::transmissibility, tranz, TargetType::INIT } },
         };
 
+        std::map<std::string, std::vector<int> > map;
+        std::vector<int> u(27); u[2] = 67; u[5] = 89;
+        map["STR_ULONGNAME"] = u;
+
+        std::vector<int> v(27); v[2] = 67; v[26] = 89;
+        map["STR_V"] = v;
 
         eclWriter.writeInitial( );
-        eclWriter.writeInitial( eGridProps );
+
+        test_assert_throw( eclWriter.writeInitial( eGridProps , map) , std::invalid_argument);
+
+        map.erase("STR_ULONGNAME");
+        eclWriter.writeInitial( eGridProps , map );
 
         data::Wells wells;
 
@@ -342,6 +355,13 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         checkInitFile( deck , eGridProps);
         checkEgridFile( eclGrid );
         loadWells( "FOO.EGRID", "FOO.UNRST" );
+
+        ecl_file_type * ecl_file = ecl_file_open("./FOO.INIT", 0);
+        test_assert_true( ecl_file_has_kw(ecl_file, "STR_V") );
+        ecl_kw_type * kw = ecl_file_iget_named_kw(ecl_file, "STR_V", 0);
+        test_assert_double_equal(67, ecl_kw_iget_as_double(kw, 2));
+        test_assert_double_equal(89, ecl_kw_iget_as_double(kw, 26));
+
 
         std::ifstream file( "FOO.UNRST", std::ios::binary );
         std::streampos file_size = 0;
