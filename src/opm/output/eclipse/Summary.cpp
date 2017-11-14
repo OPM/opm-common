@@ -626,6 +626,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPTH", mul( production_history< Phase::WATER >, duration ) },
     { "GOPTH", mul( production_history< Phase::OIL >, duration ) },
     { "GGPTH", mul( production_history< Phase::GAS >, duration ) },
+    { "GGPRF", sub( rate < rt::gas, producer >, rate< rt::dissolved_gas, producer > )},
+    { "GGPRS", rate< rt::dissolved_gas, producer>},
     { "GGLR",  div( rate< rt::gas, producer >,
                     sum( rate< rt::wat, producer >,
                          rate< rt::oil, producer > ) ) },

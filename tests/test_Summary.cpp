@@ -136,18 +136,21 @@ static data::Wells result_wells() {
     rates1.set( rt::oil, -10.1 / day );
     rates1.set( rt::gas, -10.2 / day );
     rates1.set( rt::solvent, -10.3 / day );
+    rates1.set( rt::dissolved_gas, -10.4 / day );
 
     data::Rates rates2;
     rates2.set( rt::wat, -20.0 / day );
     rates2.set( rt::oil, -20.1 / day );
     rates2.set( rt::gas, -20.2 / day );
     rates2.set( rt::solvent, -20.3 / day );
+    rates2.set( rt::dissolved_gas, -20.4 / day );
 
     data::Rates rates3;
     rates3.set( rt::wat, 30.0 / day );
     rates3.set( rt::oil, 30.1 / day );
     rates3.set( rt::gas, 30.2 / day );
     rates3.set( rt::solvent, 30.3 / day );
+    rates3.set( rt::dissolved_gas, 30.4 / day );
 
 
     /* completion rates */
@@ -156,18 +159,21 @@ static data::Wells result_wells() {
     crates1.set( rt::oil, -100.1 / day );
     crates1.set( rt::gas, -100.2 / day );
     crates1.set( rt::solvent, -100.3 / day );
+    crates1.set( rt::dissolved_gas, -100.4 / day );
 
     data::Rates crates2;
     crates2.set( rt::wat, -200.0 / day );
     crates2.set( rt::oil, -200.1 / day );
     crates2.set( rt::gas, -200.2 / day );
     crates2.set( rt::solvent, -200.3 / day );
+    crates2.set( rt::dissolved_gas, -200.4 / day );
 
     data::Rates crates3;
     crates3.set( rt::wat, 300.0 / day );
     crates3.set( rt::oil, 300.1 / day );
     crates3.set( rt::gas, 300.2 / day );
     crates3.set( rt::solvent, 300.3 / day );
+    crates3.set( rt::dissolved_gas, 300.4 / day );
 
     /*
       The active index assigned to the completion must be manually
@@ -394,6 +400,9 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_group_var( resp, 1, "G_1", "GOPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2 + 20.2, ecl_sum_get_group_var( resp, 1, "G_1", "GGPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.3 + 20.3, ecl_sum_get_group_var( resp, 1, "G_1", "GNPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.4 + 20.4, ecl_sum_get_group_var( resp, 1, "G_1", "GGPRS" ), 1e-5 );
+    BOOST_CHECK_CLOSE((10.2 - 10.4) + (20.2 - 20.4),
+                                    ecl_sum_get_group_var( resp, 1, "G_1", "GGPRF" ), 1e-5 );
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPT" ), 1e-5 );
