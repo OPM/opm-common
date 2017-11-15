@@ -70,6 +70,9 @@ Opm::DifferentiateOutputTable::calcSlopes(const std::size_t      nDep,
         dy.push_back(table.column(desc.tableID, desc.primID, j + 1 + 1*nDep));
 
         y1[j] = *y.back();  ++y.back();
+
+        // Store derivatives at right interval end-point.
+        ++dy.back();
     }
 
     using std::swap;
