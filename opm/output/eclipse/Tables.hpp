@@ -35,20 +35,40 @@ namespace Opm {
 
     class Tables {
     public:
-        explicit Tables( const UnitSystem& units_);
-        void fwrite( ERT::FortIO& fortio ) const;
-        void addPVTO( const std::vector<PvtoTable>& pvtoTables);
-        void addPVTG( const std::vector<PvtgTable>& pvtgTables);
-        void addPVTW( const PvtwTable& pvtwTable);
-        void addDensity( const DensityTable& density);
+        explicit Tables( const UnitSystem& units);
+
+        void addPVTO(const std::vector<PvtoTable>& pvtoTables);
+        void addPVTG(const std::vector<PvtgTable>& pvtgTables);
+        void addPVTW(const PvtwTable& pvtwTable);
+        void addDensity(const DensityTable& density);
+
+        /// Acquire read-only reference to internal TABDIMS vector.
+        const std::vector<int>& tabdims() const;
+
+        /// Acquire read-only reference to internal TAB vector.
+        const std::vector<double>& tab() const;
 
     private:
-        void addData( size_t offset_index , const std::vector<double>& new_data);
+        const UnitSystem&   units_;
+        std::vector<int>    tabdims_;
+        std::vector<double> data_;
 
-        const UnitSystem&  units;
-        ERT::EclKW<int> tabdims;
-        std::vector<double> data;
+        void addData(const std::size_t          offset_index,
+                     const std::vector<double>& new_data);
     };
+
+    /// Emit normalised tabular information (TABDIMS and TAB vectors) to
+    /// ECL-like result set file (typically INIT file).
+    ///
+    /// \param[in,out] fortio ECL-like result set file.  Typically
+    ///    corresponds to a preopened stream attached to the INIT file.
+    ///
+    /// \param[in] tables Collection of normalised tables.  Its \code
+    ///    tabdims() \endcode and \code tab() \endcode vectors will be
+    ///    emitted to \p fortio as ECL keywords "TABDIMS" and "TAB",
+    ///    respectively.
+    void fwrite(const Tables& tables,
+                ERT::FortIO&  fortio);
 }
 
 

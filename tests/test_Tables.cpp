@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(Test_PVTX) {
     tables.addDensity( cfg.es.getTableManager().getDensityTable( ) );
     {
         ERT::FortIO f("TEST.INIT" , std::fstream::out);
-        tables.fwrite( f );
+        fwrite(tables, f);
     }
 
 

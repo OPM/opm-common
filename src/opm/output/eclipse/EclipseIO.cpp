@@ -313,7 +313,7 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<st
         tables.addPVTG( this->es.getTableManager().getPvtgTables() );
         tables.addPVTW( this->es.getTableManager().getPvtwTable() );
         tables.addDensity( this->es.getTableManager().getDensityTable( ) );
-        tables.fwrite( fortio );
+        fwrite(tables, fortio);
     }
 
     // Write all integer field properties from the input deck.
