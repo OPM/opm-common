@@ -29,9 +29,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 
-
 namespace Opm {
     class UnitSystem;
+    class EclipseState;
 
     class Tables {
     public:
@@ -41,6 +41,13 @@ namespace Opm {
         void addPVTG(const std::vector<PvtgTable>& pvtgTables);
         void addPVTW(const PvtwTable& pvtwTable);
         void addDensity(const DensityTable& density);
+
+        /// Add normalised saturation function tables to INIT file's TAB
+        /// vector.
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate RUNSPEC
+        ///    information on active phases and table dimensions ("TABDIMS").
+        void addSatFunc(const EclipseState& es);
 
         /// Acquire read-only reference to internal TABDIMS vector.
         const std::vector<int>& tabdims() const;
@@ -55,6 +62,40 @@ namespace Opm {
 
         void addData(const std::size_t          offset_index,
                      const std::vector<double>& new_data);
+
+        /// Add saturation function tables corresponding to family I (SGOF,
+        /// SWOF) to the tabular data (TABDIMS and TAB vectors).
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate table
+        ///    dimensions ("TABDIMS" keyword) and an initialised \c
+        ///    TableManager sub-object.
+        ///
+        /// \param[in] gas Whether or not gas is active the current run.
+        ///
+        /// \param[in] oil Whether or not oil is active the current run.
+        ///
+        /// \param[in] wat Whether or not water is active the current run.
+        void addSatFunc_FamilyOne(const EclipseState& es,
+                                  const bool          gas,
+                                  const bool          oil,
+                                  const bool          wat);
+
+        /// Add saturation function tables corresponding to family II (SGFN,
+        /// SOF{2,3}, SWFN) to the tabular data (TABDIMS and TAB vectors).
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate table
+        ///    dimensions ("TABDIMS" keyword) and an initialised \c
+        ///    TableManager sub-object.
+        ///
+        /// \param[in] gas Whether or not gas is active the current run.
+        ///
+        /// \param[in] oil Whether or not oil is active the current run.
+        ///
+        /// \param[in] wat Whether or not water is active the current run.
+        void addSatFunc_FamilyTwo(const EclipseState& es,
+                                  const bool          gas,
+                                  const bool          oil,
+                                  const bool          wat);
     };
 
     /// Emit normalised tabular information (TABDIMS and TAB vectors) to
