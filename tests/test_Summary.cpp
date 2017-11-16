@@ -137,6 +137,7 @@ static data::Wells result_wells() {
     rates1.set( rt::gas, -10.2 / day );
     rates1.set( rt::solvent, -10.3 / day );
     rates1.set( rt::dissolved_gas, -10.4 / day );
+    rates1.set( rt::vaporized_oil, -10.5 / day );
 
     data::Rates rates2;
     rates2.set( rt::wat, -20.0 / day );
@@ -144,6 +145,7 @@ static data::Wells result_wells() {
     rates2.set( rt::gas, -20.2 / day );
     rates2.set( rt::solvent, -20.3 / day );
     rates2.set( rt::dissolved_gas, -20.4 / day );
+    rates2.set( rt::vaporized_oil, -20.5 / day );
 
     data::Rates rates3;
     rates3.set( rt::wat, 30.0 / day );
@@ -151,6 +153,7 @@ static data::Wells result_wells() {
     rates3.set( rt::gas, 30.2 / day );
     rates3.set( rt::solvent, 30.3 / day );
     rates3.set( rt::dissolved_gas, 30.4 / day );
+    rates3.set( rt::vaporized_oil, 30.5 / day );
 
 
     /* completion rates */
@@ -160,6 +163,7 @@ static data::Wells result_wells() {
     crates1.set( rt::gas, -100.2 / day );
     crates1.set( rt::solvent, -100.3 / day );
     crates1.set( rt::dissolved_gas, -100.4 / day );
+    crates1.set( rt::vaporized_oil, -100.5 / day );
 
     data::Rates crates2;
     crates2.set( rt::wat, -200.0 / day );
@@ -167,6 +171,7 @@ static data::Wells result_wells() {
     crates2.set( rt::gas, -200.2 / day );
     crates2.set( rt::solvent, -200.3 / day );
     crates2.set( rt::dissolved_gas, -200.4 / day );
+    crates2.set( rt::vaporized_oil, -200.5 / day );
 
     data::Rates crates3;
     crates3.set( rt::wat, 300.0 / day );
@@ -174,6 +179,7 @@ static data::Wells result_wells() {
     crates3.set( rt::gas, 300.2 / day );
     crates3.set( rt::solvent, 300.3 / day );
     crates3.set( rt::dissolved_gas, 300.4 / day );
+    crates3.set( rt::vaporized_oil, 300.5 / day );
 
     /*
       The active index assigned to the completion must be manually
