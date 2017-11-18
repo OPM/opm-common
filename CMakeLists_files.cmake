@@ -30,6 +30,9 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/OpmLog/OpmLog.cpp
       opm/common/OpmLog/StreamLog.cpp
       opm/common/OpmLog/TimerLog.cpp
+      opm/core/utility/parameters/Parameter.cpp
+      opm/core/utility/parameters/ParameterGroup.cpp
+      opm/core/utility/parameters/ParameterTools.cpp
 )
 
 list (APPEND TEST_SOURCE_FILES
@@ -37,18 +40,20 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_cmp.cpp
       tests/test_OpmLog.cpp
       tests/test_messagelimiter.cpp
-      )
+      tests/test_param.cpp
+)
 
 list (APPEND TEST_DATA_FILES
-	)
+      tests/testdata.param
+)
 
 list (APPEND EXAMPLE_SOURCE_FILES
-	)
+)
 
 # programs listed here will not only be compiled, but also marked for
 # installation
 list (APPEND PROGRAM_SOURCE_FILES
-	)
+)
 
 
 list( APPEND PUBLIC_HEADER_FILES
@@ -70,4 +75,12 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/TimerLog.hpp
       opm/common/util/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
-      opm/common/utility/platform_dependent/reenable_warnings.h)
+      opm/common/utility/platform_dependent/reenable_warnings.h
+      opm/core/utility/parameters/ParameterGroup.hpp
+      opm/core/utility/parameters/ParameterGroup_impl.hpp
+      opm/core/utility/parameters/Parameter.hpp
+      opm/core/utility/parameters/ParameterMapItem.hpp
+      opm/core/utility/parameters/ParameterRequirement.hpp
+      opm/core/utility/parameters/ParameterStrings.hpp
+      opm/core/utility/parameters/ParameterTools.hpp
+)
