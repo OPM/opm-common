@@ -50,8 +50,9 @@ namespace Opm {
                 gas           = (1 << 2),
                 polymer       = (1 << 3),
                 solvent       = (1 << 4),
-                dissolved_gas = (1 << 5),
-                vaporized_oil = (1 << 6),
+                energy        = (1 << 5),
+                dissolved_gas = (1 << 6),
+                vaporized_oil = (1 << 7),
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -84,6 +85,7 @@ namespace Opm {
             double gas = 0.0;
             double polymer = 0.0;
             double solvent = 0.0;
+            double energy = 0.0;
             double dissolved_gas = 0.0;
             double vaporized_oil = 0.0;
     };
@@ -191,6 +193,7 @@ namespace Opm {
             case opt::gas: return this->gas;
             case opt::polymer: return this->polymer;
             case opt::solvent: return this->solvent;
+            case opt::energy: return this->energy;
             case opt::dissolved_gas: return this->dissolved_gas;
             case opt::vaporized_oil: return this->vaporized_oil;
         }
