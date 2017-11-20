@@ -220,7 +220,6 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
 {}
 
 
-
 void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) const {
     const auto& units = this->es.getUnits();
     const IOConfig& ioConfig = this->es.cfg().io();
@@ -339,19 +338,18 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<st
 
     //Write Integer Vector Map
     {
-        std::map<std::string, std::vector<int> >::iterator it = int_data.begin();
-
-        while(it != int_data.end())  {
-            std::string key = it->first;
+        for( const auto& pair : int_data)  {
+            const std::string& key = pair.first;
+            const std::vector<int>& int_data = pair.second;
             if (key.size() > ECL_STRING8_LENGTH)
-              throw std::invalid_argument("Keyword is too long.");
-            
-            std::vector<int> int_field = it->second;
-            if (int_field.size() < this->grid.getCartesianSize())
-              int_field = grid.scatterVector( int_field );
-            writeKeyword( fortio, key, int_field);
+              throw std::invalid_argument("Keyword is too long.");            
 
-            it++;
+            if (int_data.size() == this->grid.getCartesianSize( ))
+                writeKeyword( fortio , key , int_data );
+            else  {
+                std::vector<int> global_copy = grid.scatterVector( int_data );
+                writeKeyword( fortio , key , global_copy );
+            }
         }
     }
 
@@ -386,8 +384,16 @@ void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) const {
     }
 }
 
-
-void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std::vector<int> > map, const NNC& nnc) {
+/*
+int_data: Writes key(string) and integers vector to INIT file as eclipse keywords
+- Key: Max 8 chars.
+- vector: Size number of grid cells (N_grid = nx*ny*nz) OR number of active cells.
+    If vector size equals number of active cells, then vector is expanded to size N_grid.
+       - expanded_vector[j] = vector[i], global cell j corresponds to active cell i. 
+       - expanded_vector[j] = default (-1), if j corresponds to an inactive cell.    
+- Wrong input: invalid_argument exception.                                   
+*/
+void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) {
     if( !this->impl->output_enabled )
         return;
 
@@ -397,7 +403,7 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
 
         simProps.convertFromSI( es.getUnits() );
         if( ioConfig.getWriteINITFile() )
-            this->impl->writeINITFile( simProps , map, nnc );
+            this->impl->writeINITFile( simProps , int_data, nnc );
 
         if( ioConfig.getWriteEGRIDFile( ) )
             this->impl->writeEGRIDFile( nnc );
