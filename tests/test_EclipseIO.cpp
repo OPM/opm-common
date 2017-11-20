@@ -317,19 +317,19 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
             { "TRANZ", { measure::transmissibility, tranz, TargetType::INIT } },
         };
 
-        std::map<std::string, std::vector<int> > map;
+        std::map<std::string, std::vector<int> > int_data;
         std::vector<int> u(27); u[2] = 67; u[5] = 89;
-        map["STR_ULONGNAME"] = u;
+        int_data["STR_ULONGNAME"] = u;
 
         std::vector<int> v(27); v[2] = 67; v[26] = 89;
-        map["STR_V"] = v;
+        int_data["STR_V"] = v;
 
         eclWriter.writeInitial( );
 
-        test_assert_throw( eclWriter.writeInitial( eGridProps , map) , std::invalid_argument);
+        test_assert_throw( eclWriter.writeInitial( eGridProps , int_data) , std::invalid_argument);
 
-        map.erase("STR_ULONGNAME");
-        eclWriter.writeInitial( eGridProps , map );
+        int_data.erase("STR_ULONGNAME");
+        eclWriter.writeInitial( eGridProps , int_data );
 
         data::Wells wells;
 

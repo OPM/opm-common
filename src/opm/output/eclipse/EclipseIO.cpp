@@ -192,7 +192,7 @@ inline std::string uppercase( std::string x ) {
 class EclipseIO::Impl {
     public:
     Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& );
-        void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > map, const NNC& nnc) const;
+        void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) const;
         void writeEGRIDFile( const NNC& nnc ) const;
 
         const EclipseState& es;
@@ -221,7 +221,7 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
 
 
 
-void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > map, const NNC& nnc) const {
+void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) const {
     const auto& units = this->es.getUnits();
     const IOConfig& ioConfig = this->es.cfg().io();
 
@@ -339,9 +339,9 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<st
 
     //Write Integer Vector Map
     {
-        std::map<std::string, std::vector<int> >::iterator it = map.begin();
+        std::map<std::string, std::vector<int> >::iterator it = int_data.begin();
 
-        while(it != map.end())  {
+        while(it != int_data.end())  {
             std::string key = it->first;
             if (key.size() > ECL_STRING8_LENGTH)
               throw std::invalid_argument("Keyword is too long.");
