@@ -149,6 +149,7 @@ namespace Opm
         void handleGCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep);
+        void handleWEFAC( const DeckKeyword& keyword, size_t currentStep);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);
         void handleWRFT( const DeckKeyword& keyword, size_t currentStep);

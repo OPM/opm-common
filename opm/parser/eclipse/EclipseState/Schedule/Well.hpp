@@ -84,6 +84,9 @@ namespace Opm {
         double getGuideRateScalingFactor(size_t timeStep) const;
         void setGuideRateScalingFactor(size_t timeStep, double scalingFactor);
 
+        void setEfficiencyFactor (size_t timestep, double efficiencyFactor);
+        double getEfficiencyFactor (size_t timestep) const;
+
         void switchToInjector( size_t timeStep);
         void switchToProducer( size_t timeStep);
 
@@ -171,6 +174,7 @@ namespace Opm {
         DynamicState< double > m_guideRate;
         DynamicState< GuideRate::GuideRatePhaseEnum > m_guideRatePhase;
         DynamicState< double > m_guideRateScalingFactor;
+        DynamicState< double > m_efficiencyFactors;
 
         DynamicState< int > m_isProducer;
         DynamicState< CompletionSet > m_completions;

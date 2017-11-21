@@ -777,6 +777,14 @@ BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
     BOOST_CHECK_EQUAL(Opm::GuideRate::RAT, well.getGuideRatePhase(3));
 }
 
+BOOST_AUTO_TEST_CASE(WellEfficiencyFactorSet) {
+    auto timeMap = createXDaysTimeMap(20);
+    Opm::Well well("WELL1", 1, 2, 2334.32, Opm::Phase::WATER, timeMap, 0);
+    BOOST_CHECK_EQUAL(1.0, well.getEfficiencyFactor(0));
+    well.setEfficiencyFactor(3, 0.9);
+    BOOST_CHECK_EQUAL(1.0, well.getEfficiencyFactor(0));
+    BOOST_CHECK_EQUAL(0.9, well.getEfficiencyFactor(3));
+}
 
 BOOST_AUTO_TEST_CASE(WellSetScalingFactor_ScalingFactorSetSet) {
     auto timeMap = createXDaysTimeMap(20);

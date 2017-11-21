@@ -44,6 +44,7 @@ namespace Opm {
           m_guideRate( timeMap, -1.0 ),
           m_guideRatePhase( timeMap, GuideRate::UNDEFINED ),
           m_guideRateScalingFactor( timeMap, 1.0 ),
+          m_efficiencyFactors (timeMap, 1.0 ),
           m_isProducer( timeMap, true ) ,
           m_completions( timeMap, CompletionSet{} ),
           m_productionProperties( timeMap, WellProductionProperties() ),
@@ -278,6 +279,14 @@ namespace Opm {
 
     void Well::setGuideRateScalingFactor(size_t timeStep, double scalingFactor) {
         m_guideRateScalingFactor.update(timeStep, scalingFactor);
+    }
+
+    double Well::getEfficiencyFactor (size_t timeStep) const {
+        return m_efficiencyFactors.get(timeStep);
+    }
+
+    void Well::setEfficiencyFactor(size_t timeStep, double scalingFactor) {
+        m_efficiencyFactors.update(timeStep, scalingFactor);
     }
 
     /*****************************************************************/

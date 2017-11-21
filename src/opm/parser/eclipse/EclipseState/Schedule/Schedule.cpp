@@ -233,6 +233,9 @@ namespace Opm {
             else if (keyword.name() == "MESSAGES")
                 handleMESSAGES(keyword, currentStep);
 
+            else if (keyword.name() == "WEFAC")
+                handleWEFAC(keyword, currentStep);
+
             else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
                 bool supported = geoModifiers.at( keyword.name() );
                 if (supported) {
@@ -678,6 +681,17 @@ namespace Opm {
 
             for( auto* well : getWells( wellNamePattern ) ) {
                 well->setEconProductionLimits(currentStep, econ_production_limits);
+            }
+        }
+    }
+
+    void Schedule::handleWEFAC( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
+            const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
+
+            for( auto* well : getWells( wellNamePattern ) ) {
+                well->setEfficiencyFactor(currentStep, efficiencyFactor);
             }
         }
     }

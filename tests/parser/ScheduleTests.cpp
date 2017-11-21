@@ -2111,3 +2111,70 @@ BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2Loop) {
     BOOST_CHECK_EQUAL( "UNDEFINED"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "UNDEFINED"  ) ));
 
 }
+
+BOOST_AUTO_TEST_CASE(handleWEFAC) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "WELSPECS\n"
+            "    'P'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "/\n"
+            "COMPDAT\n"
+            " 'P'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            "/\n"
+            "WCONHIST\n"
+            " 'P' 'OPEN' 'RESV' 6*  500 / \n"
+            "/\n"
+            "WCONINJH\n"
+            " 'I' 'WATER' 1* 100 250 / \n"
+            "/\n"
+            "WEFAC\n"
+            "   'P' 0.5 / \n"
+            "   'I' 0.9 / \n"
+            "/\n"
+            "DATES             -- 2\n"
+            " 15  OKT 2008 / \n"
+            "/\n"
+
+            "DATES             -- 3\n"
+            " 18  OKT 2008 / \n"
+            "/\n"
+            "WEFAC\n"
+            "   'P' 1.0 / \n"
+            "/\n"
+            ;
+
+    ParseContext parseContext;
+    auto deck = parser.parseString(input, parseContext);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , parseContext);
+    auto* well_p = schedule.getWell("P");
+    auto* well_i = schedule.getWell("I");
+
+    //start
+    BOOST_CHECK_EQUAL(well_p->getEfficiencyFactor(0), 1.0);
+    BOOST_CHECK_EQUAL(well_i->getEfficiencyFactor(0), 1.0);
+
+    //1
+    BOOST_CHECK_EQUAL(well_p->getEfficiencyFactor(1), 0.5);
+    BOOST_CHECK_EQUAL(well_i->getEfficiencyFactor(1), 0.9);
+
+    //2
+    BOOST_CHECK_EQUAL(well_p->getEfficiencyFactor(2), 0.5);
+    BOOST_CHECK_EQUAL(well_i->getEfficiencyFactor(2), 0.9);
+
+    //3
+    BOOST_CHECK_EQUAL(well_p->getEfficiencyFactor(3), 1.0);
+    BOOST_CHECK_EQUAL(well_i->getEfficiencyFactor(3), 0.9);
+
+}
