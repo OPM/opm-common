@@ -340,16 +340,11 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<st
     {
         for( const auto& pair : int_data)  {
             const std::string& key = pair.first;
-            const std::vector<int>& int_data = pair.second;
+            const std::vector<int>& int_vector = pair.second;
             if (key.size() > ECL_STRING8_LENGTH)
               throw std::invalid_argument("Keyword is too long.");            
 
-            if (int_data.size() == this->grid.getCartesianSize( ))
-                writeKeyword( fortio , key , int_data );
-            else  {
-                std::vector<int> global_copy = grid.scatterVector( int_data );
-                writeKeyword( fortio , key , global_copy );
-            }
+            writeKeyword( fortio , key , int_vector );
         }
     }
 
