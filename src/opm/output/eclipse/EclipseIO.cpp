@@ -381,11 +381,7 @@ void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) const {
 
 /*
 int_data: Writes key(string) and integers vector to INIT file as eclipse keywords
-- Key: Max 8 chars.
-- vector: Size number of grid cells (N_grid = nx*ny*nz) OR number of active cells.
-    If vector size equals number of active cells, then vector is expanded to size N_grid.
-       - expanded_vector[j] = vector[i], global cell j corresponds to active cell i. 
-       - expanded_vector[j] = default (-1), if j corresponds to an inactive cell.    
+- Key: Max 8 chars.   
 - Wrong input: invalid_argument exception.                                   
 */
 void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) {
