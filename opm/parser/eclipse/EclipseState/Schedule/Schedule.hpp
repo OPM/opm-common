@@ -143,6 +143,7 @@ namespace Opm
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep);
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep);
+        void handleWTEMP( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep );
         void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);

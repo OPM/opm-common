@@ -16,6 +16,8 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 
 #include <iostream>
@@ -27,6 +29,9 @@ namespace Opm {
     WellInjectionProperties::WellInjectionProperties() {
         surfaceInjectionRate=0.0;
         reservoirInjectionRate=0.0;
+        temperature=
+            Metric::TemperatureOffset
+            + ParserKeywords::STCOND::TEMPERATURE::defaultValue;
         BHPLimit=0.0;
         THPLimit=0.0;
         VFPTableNumber=0;
@@ -40,6 +45,7 @@ namespace Opm {
     bool WellInjectionProperties::operator==(const WellInjectionProperties& other) const {
         if ((surfaceInjectionRate == other.surfaceInjectionRate) &&
             (reservoirInjectionRate == other.reservoirInjectionRate) &&
+            (temperature == other.temperature) &&
             (BHPLimit == other.BHPLimit) &&
             (THPLimit == other.THPLimit) &&
             (VFPTableNumber == other.VFPTableNumber) &&
@@ -62,6 +68,7 @@ namespace Opm {
             << "WellInjectionProperties { "
             << "surfacerate: "      << wp.surfaceInjectionRate << ", "
             << "reservoir rate "    << wp.reservoirInjectionRate << ", "
+            << "temperature: "      << wp.temperature << ", "
             << "BHP limit: "        << wp.BHPLimit << ", "
             << "THP limit: "        << wp.THPLimit << ", "
             << "VFP table: "        << wp.VFPTableNumber << ", "
