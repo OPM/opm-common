@@ -123,6 +123,12 @@ namespace Opm {
         constexpr const double pound    = 0.45359237 * kilogram;
         /// @}
 
+        /// \name Energy
+        /// @{
+        constexpr const double joule = 1;
+        constexpr const double btu = 1054.3503*joule; // "british thermal units"
+        /// @}
+
         // --------------------------------------------------------------
         // Standardised constants
         // --------------------------------------------------------------
@@ -267,6 +273,7 @@ namespace Opm {
         constexpr const double Viscosity            = centi*Poise;
         constexpr const double Timestep             = day;
         constexpr const double SurfaceTension       = dyne/(centi*meter);
+        constexpr const double Energy               = kilo*joule;
     }
 
 
@@ -293,6 +300,7 @@ namespace Opm {
         constexpr const double Viscosity            = centi*Poise;
         constexpr const double Timestep             = day;
         constexpr const double SurfaceTension       = dyne/(centi*meter);
+        constexpr const double Energy               = btu;
     }
 
 
@@ -319,6 +327,7 @@ namespace Opm {
         constexpr const double Viscosity            = centi*Poise;
         constexpr const double Timestep             = hour;
         constexpr const double SurfaceTension       = dyne/(centi*meter);
+        constexpr const double Energy               = joule;
     }
 
 
@@ -345,6 +354,7 @@ namespace Opm {
         constexpr const double Viscosity            = centi*Poise;
         constexpr const double Timestep             = day;
         constexpr const double SurfaceTension       = dyne/(centi*meter);
+        constexpr const double Energy               = kilo*joule;
     }
 }
 
