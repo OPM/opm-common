@@ -1202,6 +1202,8 @@ namespace Opm {
                 this->m_tuning.setXXXDPR(currentStep, XXXDPR);
             }
         }
+        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , currentStep);
+
     }
 
 

@@ -75,13 +75,15 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
   Schedule schedule( deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
   auto tuning = schedule.getTuning();
-
+  auto event = schedule.getEvents();
 
   const double diff = 1.0e-14;
 
   /*** TIMESTEP 4***/
   /********* Record 1 ***********/
   size_t timestep = 4;
+  BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
+
   double TSINIT_default = tuning.getTSINIT(timestep);
   BOOST_CHECK_CLOSE(TSINIT_default, 1 * Metric::Time, diff);
 
@@ -197,6 +199,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   /*** TIMESTEP 5***/
   /********* Record 1 ***********/
   timestep = 5;
+  BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
   double TSINIT = tuning.getTSINIT(timestep);
   BOOST_CHECK_CLOSE(TSINIT, 2 * Metric::Time, diff);
 
@@ -305,11 +308,13 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   BOOST_CHECK_CLOSE(XXXDPR, 1.0 * Metric::Pressure, diff);
 
 
-
+  /*** TIMESTEP 7 ***/
+  BOOST_CHECK(!event.hasEvent(ScheduleEvents::TUNING_CHANGE, 7));
 
   /*** TIMESTEP 10 ***/
   /********* Record 1 ***********/
   timestep = 10;
+  BOOST_CHECK(event.hasEvent(ScheduleEvents::TUNING_CHANGE, timestep));
   TMAXWC_has_value = tuning.getTMAXWChasValue(timestep);
   TMAXWC_default = tuning.getTMAXWC(timestep);
   BOOST_CHECK_EQUAL(true, TMAXWC_has_value);

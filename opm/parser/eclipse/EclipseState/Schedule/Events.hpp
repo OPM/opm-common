@@ -84,7 +84,12 @@ namespace Opm
             /*
               Geology modifier.
             */
-            GEO_MODIFIER = 1024
+            GEO_MODIFIER = 1024,
+
+            /*
+              TUNING has changed
+            */
+            TUNING_CHANGE = 2048
         };
     }
 
