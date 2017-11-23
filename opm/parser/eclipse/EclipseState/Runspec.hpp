@@ -35,6 +35,7 @@ enum class Phase {
     WATER   = 2,
     SOLVENT = 3,
     POLYMER = 4,
+    ENERGY  = 5,
 };
 
 Phase get_phase( const std::string& );
@@ -43,12 +44,12 @@ std::ostream& operator<<( std::ostream&, const Phase& );
 class Phases {
     public:
         Phases() noexcept = default;
-        Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false ) noexcept;
+        Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false ) noexcept;
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
     private:
-        std::bitset< 5 > bits;
+        std::bitset< 6 > bits;
 };
 
 
