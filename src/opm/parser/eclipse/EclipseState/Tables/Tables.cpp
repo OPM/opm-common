@@ -229,7 +229,7 @@ const TableColumn& SlgofTable::getJFuncColumn() const {
 
 Sof2Table::Sof2Table( const DeckItem& item ) {
     m_schema.addColumn( ColumnSchema( "SO"  , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
-    m_schema.addColumn( ColumnSchema( "KRO" , Table::INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "KRO" , Table::INCREASING , Table::DEFAULT_LINEAR));
 
     SimpleTable::init(item);
 }
