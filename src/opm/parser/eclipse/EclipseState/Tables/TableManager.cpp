@@ -62,6 +62,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SpecheatTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SpecrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
@@ -211,6 +212,7 @@ namespace Opm {
         addTables( "PVDS", m_tabdims.getNumPVTTables());
 
         addTables( "SPECHEAT", m_tabdims.getNumPVTTables());
+        addTables( "SPECROCK", m_tabdims.getNumSatTables());
 
         addTables( "OILVISCT", m_tabdims.getNumPVTTables());
         addTables( "WATVISCT", m_tabdims.getNumPVTTables());
@@ -310,6 +312,7 @@ namespace Opm {
         initSimpleTableContainer<PvdoTable>(deck, "PVDO", m_tabdims.getNumPVTTables());
         initSimpleTableContainer<PvdsTable>(deck, "PVDS", m_tabdims.getNumPVTTables());
         initSimpleTableContainer<SpecheatTable>(deck, "SPECHEAT", m_tabdims.getNumPVTTables());
+        initSimpleTableContainer<SpecrockTable>(deck, "SPECROCK", m_tabdims.getNumSatTables());
         initSimpleTableContainer<OilvisctTable>(deck, "OILVISCT", m_tabdims.getNumPVTTables());
         initSimpleTableContainer<WatvisctTable>(deck, "WATVISCT", m_tabdims.getNumPVTTables());
 
@@ -629,6 +632,10 @@ namespace Opm {
 
     const TableContainer& TableManager::getSpecheatTables() const {
         return getTables("SPECHEAT");
+    }
+
+    const TableContainer& TableManager::getSpecrockTables() const {
+        return getTables("SPECROCK");
     }
 
     const TableContainer& TableManager::getOilvisctTables() const {

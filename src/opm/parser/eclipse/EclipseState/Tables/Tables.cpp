@@ -64,6 +64,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SpecheatTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SpecrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
@@ -122,6 +123,20 @@ const TableColumn& SpecheatTable::getCpWaterColumn() const
 
 const TableColumn& SpecheatTable::getCpGasColumn() const
 { return SimpleTable::getColumn(3); }
+
+SpecrockTable::SpecrockTable(const DeckItem& item)
+{
+    m_schema.addColumn(ColumnSchema("TEMPERATURE", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(ColumnSchema("CP_ROCK", Table::RANDOM, Table::DEFAULT_LINEAR));
+
+    SimpleTable::init(item);
+}
+
+const TableColumn& SpecrockTable::getTemperatureColumn() const
+{ return SimpleTable::getColumn(0); }
+
+const TableColumn& SpecrockTable::getCpRockColumn() const
+{ return SimpleTable::getColumn(1); }
 
 SwofTable::SwofTable( const DeckItem& item , const bool jfunc) {
 
