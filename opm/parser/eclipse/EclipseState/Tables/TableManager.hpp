@@ -86,6 +86,7 @@ namespace Opm {
         const TableContainer& getPvdgTables() const;
         const TableContainer& getPvdoTables() const;
         const TableContainer& getPvdsTables() const;
+        const TableContainer& getSpecheatTables() const;
         const TableContainer& getWatvisctTables() const;
         const TableContainer& getOilvisctTables() const;
         const TableContainer& getGasvisctTables() const;
