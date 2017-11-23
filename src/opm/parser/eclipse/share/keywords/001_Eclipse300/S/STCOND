@@ -3,6 +3,6 @@
   "sections": ["PROPS"],
   "size": 1,
   "items": [
-    {"name": "TEMPERATURE", "value_type": "DOUBLE", "dimension": "Temperature", "default": 60},
-    {"name": "PRESSURE", "value_type": "DOUBLE", "dimension": "Pressure", "default": 14.6959}
+    {"name": "TEMPERATURE", "value_type": "DOUBLE", "dimension": "Temperature", "default": 15.56},
+    {"name": "PRESSURE", "value_type": "DOUBLE", "dimension": "Pressure", "default": 1.01325}
 ]}
