@@ -73,6 +73,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
 
+#include <opm/parser/eclipse/Units/Units.hpp>
+
 namespace Opm {
 
     TableManager::TableManager( const Deck& deck )
@@ -81,9 +83,12 @@ namespace Opm {
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
         hasEqlnum (deck.hasKeyword("EQLNUM")),
-        m_jfunc( deck ),
-        m_rtemp( ParserKeywords::RTEMP::TEMP::defaultValue )
+        m_jfunc( deck )
     {
+        // determine the default resevoir temperature in Kelvin
+        m_rtemp = ParserKeywords::RTEMP::TEMP::defaultValue;
+        m_rtemp += Metric::TemperatureOffset; // <- default values always use METRIC as the unit system!
+
         initDims( deck );
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
