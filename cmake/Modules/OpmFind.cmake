@@ -160,7 +160,7 @@ macro (find_and_append_package_to prefix name)
 			# We need to deactivate the package registry for this.
 			create_module_dir_var(ecl)
 			set(ARGN_NO_REQUIRED ${ARGN})
-			list(REMOVE_ITEM ARGN_NO_REQUIRED "REQUIRED")
+			list(REMOVE_ITEM "ARGN_NO_REQUIRED" "REQUIRED")
  			find_package (${name} ${ARGN_NO_REQUIRED} NO_CMAKE_SYSTEM_PACKAGE_REGISTRY NO_CMAKE_PACKAGE_REGISTRY)
 			# If everything else failed fall back to the registry
 		endif()	
