@@ -12,11 +12,12 @@ if (VALGRIND_FOUND)
 endif()
 
 find_path(VALGRIND_INCLUDE_DIR valgrind/memcheck.h
-  /usr/include /usr/local/include ${VALGRIND_ROOT}/include)
+  HINTS ${VALGRIND_ROOT}/include)
 
 # if VALGRIND_ROOT is empty, we explicitly add /bin to the search
 # path, but this does not hurt...
-find_program(VALGRIND_PROGRAM NAMES valgrind PATH ${VALGRIND_ROOT}/bin)
+find_program(VALGRIND_PROGRAM NAMES valgrind
+  HINTS ${VALGRIND_ROOT}/bin)
 
 find_package_handle_standard_args(VALGRIND DEFAULT_MSG
   VALGRIND_INCLUDE_DIR
