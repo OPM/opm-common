@@ -92,16 +92,16 @@ namespace Opm {
 
     private:
         /// Internal buffer for tabular data.
-        std::vector<double> data_;
+        std::vector<double> data;
 
-        /// Number of tables managed by \c data_.
-        std::size_t numTables_;
+        /// Number of tables managed by \c data.
+        std::size_t numTables;
 
         /// Number of primary look-up keys/sub-tables in \c data_.
-        std::size_t numPrimary_;
+        std::size_t numPrimary;
 
         /// Number of rows per sub-table in \c data_.
-        std::size_t numRows_;
+        std::size_t numRows;
     };
 
     /// Apply piecewise linear differentiation (i.e., compute slopes) on a

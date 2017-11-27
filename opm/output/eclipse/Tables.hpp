@@ -56,9 +56,14 @@ namespace Opm {
         const std::vector<double>& tab() const;
 
     private:
-        const UnitSystem&   units_;
-        std::vector<int>    tabdims_;
-        std::vector<double> data_;
+        /// Convention for units of measure of the result set.
+        const UnitSystem& units;
+
+        /// Offset and size information for the tabular data.
+        std::vector<int> m_tabdims;
+
+        /// Linearised tabular data of PVT and saturation functions.
+        std::vector<double> data;
 
         void addData(const std::size_t          offset_index,
                      const std::vector<double>& new_data);
@@ -101,13 +106,13 @@ namespace Opm {
     /// Emit normalised tabular information (TABDIMS and TAB vectors) to
     /// ECL-like result set file (typically INIT file).
     ///
-    /// \param[in,out] fortio ECL-like result set file.  Typically
-    ///    corresponds to a preopened stream attached to the INIT file.
-    ///
     /// \param[in] tables Collection of normalised tables.  Its \code
     ///    tabdims() \endcode and \code tab() \endcode vectors will be
     ///    emitted to \p fortio as ECL keywords "TABDIMS" and "TAB",
     ///    respectively.
+    ///
+    /// \param[in,out] fortio ECL-like result set file.  Typically
+    ///    corresponds to a preopened stream attached to the INIT file.
     void fwrite(const Tables& tables,
                 ERT::FortIO&  fortio);
 }

@@ -6,14 +6,14 @@
 #include <utility>
 
 Opm::LinearisedOutputTable::
-LinearisedOutputTable(const std::size_t numTables,
-                      const std::size_t numPrimary,
-                      const std::size_t numRows,
-                      const std::size_t numCols)
-    : data_      (numTables * numPrimary * numRows * numCols, 1.0e20)
-    , numTables_ (numTables)
-    , numPrimary_(numPrimary)
-    , numRows_   (numRows)
+LinearisedOutputTable(const std::size_t numTables0,
+                      const std::size_t numPrimary0,
+                      const std::size_t numRows0,
+                      const std::size_t numCols0)
+    : data      (numTables0 * numPrimary0 * numRows0 * numCols0, 1.0e20)
+    , numTables (numTables0)
+    , numPrimary(numPrimary0)
+    , numRows   (numRows0)
 {}
 
 std::vector<double>::iterator
@@ -21,27 +21,27 @@ Opm::LinearisedOutputTable::column(const std::size_t tableID,
                                    const std::size_t primID,
                                    const std::size_t colID)
 {
-    // Table format: numRows_ * numPrimary_ * numTables_ values for first
+    // Table format: numRows * numPrimary * numTables values for first
     // column (ID == 0), followed by same number of entries for second
     // column &c.
     const auto offset =
-        0 + this->numRows_*(primID + this->numPrimary_*(tableID + this->numTables_*colID));
+        0 + this->numRows*(primID + this->numPrimary*(tableID + this->numTables*colID));
 
-    assert (offset + this->numRows_ <= this->data_.size());
+    assert (offset + this->numRows <= this->data.size());
 
-    return this->data_.begin() + offset;
+    return this->data.begin() + offset;
 }
 
 const std::vector<double>&
 Opm::LinearisedOutputTable::getData() const
 {
-    return this->data_;
+    return this->data;
 }
 
 std::vector<double>
 Opm::LinearisedOutputTable::getDataDestructively()
 {
-    return std::move(this->data_);
+    return std::move(this->data);
 }
 
 // ---------------------------------------------------------------------
