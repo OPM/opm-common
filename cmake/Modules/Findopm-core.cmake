@@ -31,12 +31,14 @@ find_opm_package (
 
   # test program
 "
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/core/well_controls.h>
+#include <iostream>
 int main()
 {
-    Opm::ParameterGroup parameters;
-    parameters.insertParameter(\"number\", \"7\");
-    return 0;
+   WellControlType type;
+   type = BHP;
+   std::cout << type;
+   return 0;
 }
 "
   # config variables
