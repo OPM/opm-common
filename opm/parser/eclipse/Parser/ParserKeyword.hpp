@@ -42,11 +42,40 @@ namespace Opm {
     class string_view;
     class MessageContainer;
 
+    /*
+      Small helper struct to assemble the information needed to infer the size
+      of a keyword based on another keyword in the deck.
+    */
+    struct KeywordSize {
+        KeywordSize(const std::string& in_keyword, const std::string& in_item, int in_shift) :
+            keyword(in_keyword),
+            item(in_item),
+            shift(in_shift)
+        {}
+
+        KeywordSize() {}
+
+        bool operator==(const KeywordSize& other) const {
+            return ((this->keyword == other.keyword) &&
+                    (this->item == other.item) &&
+                    (this->shift == other.shift));
+        }
+
+        bool operator!=(const KeywordSize& other) const {
+            return !(*this == other);
+        }
+
+        std::string keyword;
+        std::string item;
+        int shift;
+    };
+
     class ParserKeyword {
     public:
         ParserKeyword(const std::string& name ,
                       const std::string& sizeKeyword ,
                       const std::string& sizeItem,
+                      int size_shift,
                       bool _isTableCollection = false);
         explicit ParserKeyword(const std::string& name);
         explicit ParserKeyword(const Json::JsonObject& jsonConfig);
@@ -54,7 +83,7 @@ namespace Opm {
         void setFixedSize( size_t keywordSize);
         void setSizeType( ParserKeywordSizeEnum sizeType );
         void setTableCollection(bool _isTableCollection);
-        void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem);
+        void initSizeKeyword( const std::string& sizeKeyword, const std::string& sizeItem, int size_shift);
 
 
         typedef std::set<std::string> DeckNameSet;
@@ -96,7 +125,7 @@ namespace Opm {
 
         DeckKeyword parse(const ParseContext& parseContext , MessageContainer& msgContainer, std::shared_ptr< RawKeyword > rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
-        const std::pair<std::string,std::string>& getSizeDefinitionPair() const;
+        const KeywordSize& getKeywordSize() const;
         bool isDataKeyword() const;
 
         std::string createDeclaration(const std::string& indent) const;
@@ -108,7 +137,7 @@ namespace Opm {
         bool operator!=( const ParserKeyword& ) const;
 
     private:
-        std::pair<std::string,std::string> m_sizeDefinitionPair;
+        KeywordSize keyword_size;
         std::string m_name;
         DeckNameSet m_deckNames;
         DeckNameSet m_validSectionNames;

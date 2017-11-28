@@ -57,7 +57,7 @@ std::shared_ptr<ParserKeyword> createTable(const std::string& name,
                                            const std::string& sizeItem,
                                            bool isTableCollection) {
     std::shared_ptr<ParserKeyword> pkw = std::make_shared<ParserKeyword>(name);
-    pkw->initSizeKeyword(sizeKeyword , sizeItem);
+    pkw->initSizeKeyword(sizeKeyword , sizeItem, 0);
     pkw->setTableCollection(isTableCollection);
     return pkw;
 }
@@ -1317,10 +1317,10 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_withSize_SizeTypeFIXED) {
 BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
     std::string keyword("KEYWORD");
     const auto& parserKeyword = createTable(keyword, "EQUILDIMS" , "NTEQUIL" , false);
-    const std::pair<std::string,std::string>& sizeKW = parserKeyword->getSizeDefinitionPair();
+    const auto& keyword_size = parserKeyword->getKeywordSize();
     BOOST_CHECK_EQUAL(OTHER_KEYWORD_IN_DECK , parserKeyword->getSizeType() );
-    BOOST_CHECK_EQUAL("EQUILDIMS", sizeKW.first );
-    BOOST_CHECK_EQUAL("NTEQUIL" , sizeKW.second );
+    BOOST_CHECK_EQUAL("EQUILDIMS", keyword_size.keyword );
+    BOOST_CHECK_EQUAL("NTEQUIL" , keyword_size.item );
 }
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_validDeckName) {
@@ -1452,12 +1452,12 @@ BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_nosize_notItems_OK) {
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_withSizeOther) {
     Json::JsonObject jsonObject("{\"name\": \"BPR\", \"sections\":[\"SUMMARY\"], \"size\" : {\"keyword\" : \"Bjarne\" , \"item\": \"BjarneIgjen\"},  \"items\" :[{\"name\":\"ItemX\" ,  \"value_type\" : \"DOUBLE\"}]}");
     const auto& parserKeyword = std::make_shared<const ParserKeyword>(jsonObject);
-    const std::pair<std::string,std::string>& sizeKW = parserKeyword->getSizeDefinitionPair();
+    const auto& keyword_size = parserKeyword->getKeywordSize();
     BOOST_CHECK_EQUAL("BPR" , parserKeyword->getName());
     BOOST_CHECK_EQUAL( false , parserKeyword->hasFixedSize() );
     BOOST_CHECK_EQUAL(OTHER_KEYWORD_IN_DECK , parserKeyword->getSizeType());
-    BOOST_CHECK_EQUAL("Bjarne", sizeKW.first );
-    BOOST_CHECK_EQUAL("BjarneIgjen" , sizeKW.second );
+    BOOST_CHECK_EQUAL("Bjarne", keyword_size.keyword);
+    BOOST_CHECK_EQUAL("BjarneIgjen" , keyword_size.item );
 }
 
 BOOST_AUTO_TEST_CASE(ConstructFromJsonObject_missingName_throws) {
@@ -1607,13 +1607,13 @@ BOOST_AUTO_TEST_CASE(DefaultIsNot_TableKeyword) {
 
 BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
     const auto& parserKeyword = createTable("JA" , "TABDIMS" , "NTPVT" , true);
-    const std::pair<std::string,std::string>& sizeKW = parserKeyword->getSizeDefinitionPair();
     BOOST_CHECK(parserKeyword->isTableCollection());
     BOOST_CHECK(!parserKeyword->hasFixedSize());
 
+    const auto& keyword_size = parserKeyword->getKeywordSize();
     BOOST_CHECK_EQUAL( parserKeyword->getSizeType() , OTHER_KEYWORD_IN_DECK);
-    BOOST_CHECK_EQUAL("TABDIMS", sizeKW.first );
-    BOOST_CHECK_EQUAL("NTPVT" , sizeKW.second );
+    BOOST_CHECK_EQUAL("TABDIMS", keyword_size.keyword );
+    BOOST_CHECK_EQUAL("NTPVT" , keyword_size.item);
 }
 
 BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
@@ -1849,3 +1849,27 @@ PVT-M
     BOOST_CHECK( deck.hasKeyword( "LAB" ) );
     BOOST_CHECK( deck.hasKeyword( "PVT-M" ) );
 }
+
+
+
+BOOST_AUTO_TEST_CASE(ParseAQUTAB) {
+  const auto * deck_string = R"(
+RUNSPEC
+
+AQUDIMS
+ * * 2 /
+
+PROPS
+
+AQUTAB
+  0    1
+  0.10 1.1
+  0.20 1.2 /
+)";
+
+  Parser parser;
+  const auto deck = parser.parseString( deck_string, ParseContext());
+  const auto& aqutab = deck.getKeyword("AQUTAB");
+  BOOST_CHECK_EQUAL( 1, aqutab.size());
+}
+

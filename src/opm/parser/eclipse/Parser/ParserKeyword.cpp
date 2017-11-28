@@ -66,11 +66,11 @@ namespace Opm {
     }
 
 
-    ParserKeyword::ParserKeyword(const std::string& name, const std::string& sizeKeyword, const std::string& sizeItem, bool _isTableCollection)
+    ParserKeyword::ParserKeyword(const std::string& name, const std::string& sizeKeyword, const std::string& sizeItem, int size_shift, bool _isTableCollection)
     {
         commonInit( name , OTHER_KEYWORD_IN_DECK);
         m_isTableCollection = _isTableCollection;
-        initSizeKeyword(sizeKeyword, sizeItem);
+        initSizeKeyword(sizeKeyword, sizeItem, size_shift);
     }
 
     void ParserKeyword::clearDeckNames() {
@@ -187,8 +187,8 @@ namespace Opm {
 
 
 
-    void ParserKeyword::initSizeKeyword(const std::string& sizeKeyword, const std::string& sizeItem) {
-        m_sizeDefinitionPair = std::pair<std::string, std::string>(sizeKeyword, sizeItem);
+    void ParserKeyword::initSizeKeyword(const std::string& sizeKeyword, const std::string& sizeItem, int size_shift) {
+        keyword_size = KeywordSize(sizeKeyword, sizeItem, size_shift); 
         m_keywordSizeType = OTHER_KEYWORD_IN_DECK;
     }
 
@@ -196,7 +196,11 @@ namespace Opm {
         if (sizeObject.is_object()) {
             std::string sizeKeyword = sizeObject.get_string("keyword");
             std::string sizeItem = sizeObject.get_string("item");
-            initSizeKeyword(sizeKeyword, sizeItem);
+            int size_shift = 0;
+            if (sizeObject.has_item("shift"))
+                size_shift = sizeObject.get_int("shift");
+
+            initSizeKeyword(sizeKeyword, sizeItem, size_shift);
         } else {
             m_keywordSizeType = ParserKeywordSizeEnumFromString( sizeObject.as_string() );
         }
@@ -518,10 +522,10 @@ void set_dimensions( ParserItem& item,
         return m_keywordSizeType;
     }
 
-    const std::pair<std::string, std::string>& ParserKeyword::getSizeDefinitionPair() const {
-        return m_sizeDefinitionPair;
-    }
 
+    const KeywordSize& ParserKeyword::getKeywordSize() const {
+        return keyword_size;
+    }
 
     bool ParserKeyword::isDataKeyword() const {
         if( this->m_records.empty() ) return false;
@@ -610,7 +614,7 @@ void set_dimensions( ParserItem& item,
                     break;
                 case OTHER_KEYWORD_IN_DECK:
                     ss << "setSizeType(" << sizeString << ");" << std::endl;
-                    ss << indent << "initSizeKeyword(\"" << m_sizeDefinitionPair.first << "\",\"" << m_sizeDefinitionPair.second << "\");" << std::endl;
+                    ss << indent << "initSizeKeyword(\"" << keyword_size.keyword << "\",\"" << keyword_size.item << "\"," << keyword_size.shift << ");" << std::endl;
                     if (m_isTableCollection)
                         ss << "setTableCollection( true );" << std::endl;
                     break;
@@ -714,11 +718,9 @@ void set_dimensions( ParserItem& item,
                 break;
 
             case OTHER_KEYWORD_IN_DECK:
-                if(  m_sizeDefinitionPair.first  != rhs.m_sizeDefinitionPair.first
-                  || m_sizeDefinitionPair.second != rhs.m_sizeDefinitionPair.second )
+                if (this->keyword_size != rhs.keyword_size)
                     return false;
                 break;
-
             default:
                 break;
         }

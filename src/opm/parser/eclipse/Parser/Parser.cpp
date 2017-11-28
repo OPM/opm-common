@@ -433,13 +433,13 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
                                                 parserKeyword->isTableCollection() );
     }
 
-    const auto& sizeKeyword = parserKeyword->getSizeDefinitionPair();
+    const auto& keyword_size = parserKeyword->getKeywordSize();
     const auto& deck = parserState.deck;
 
-    if( deck.hasKeyword(sizeKeyword.first ) ) {
-        const auto& sizeDefinitionKeyword = deck.getKeyword(sizeKeyword.first);
+    if( deck.hasKeyword(keyword_size.keyword ) ) {
+        const auto& sizeDefinitionKeyword = deck.getKeyword(keyword_size.keyword);
         const auto& record = sizeDefinitionKeyword.getRecord(0);
-        const auto targetSize = record.getItem( sizeKeyword.second ).get< int >( 0 );
+        const auto targetSize = record.getItem( keyword_size.item ).get< int >( 0 ) + keyword_size.shift;
         return std::make_shared< RawKeyword >( keywordString,
                                                 parserState.current_path().string(),
                                                 parserState.line(),
@@ -447,16 +447,16 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
                                                 parserKeyword->isTableCollection() );
     }
 
-    std::string msg = "Expected the kewyord: " + sizeKeyword.first
+    std::string msg = "Expected the kewyord: " +keyword_size.keyword 
                     + " to infer the number of records in: " + keywordString;
     auto& msgContainer = parserState.deck.getMessageContainer();
     parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msgContainer, msg );
 
-    const auto* keyword = parser.getKeyword( sizeKeyword.first );
+    const auto* keyword = parser.getKeyword( keyword_size.keyword );
     const auto& record = keyword->getRecord(0);
-    const auto& int_item = record.get( sizeKeyword.second );
+    const auto& int_item = record.get( keyword_size.item);
 
-    const auto targetSize = int_item.getDefault< int >( );
+    const auto targetSize = int_item.getDefault< int >( ) + keyword_size.shift;
     return std::make_shared< RawKeyword >( keywordString,
                                             parserState.current_path().string(),
                                             parserState.line(),
