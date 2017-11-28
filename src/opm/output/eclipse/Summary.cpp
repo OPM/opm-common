@@ -375,11 +375,14 @@ quantity fpr( const fn_args& args ) {
 
     const auto& p = args.state.data( "PRESSURE" );
     const auto& pv = args.pv;
-    const auto& sw = args.state.data( "SWAT" );
+    const bool hasSwat = args.state.has( "SWAT" );
+    const auto& swat = hasSwat? args.state.data( "SWAT" ): std::vector<double>(p.size(),0.0);
     double fpr = 0.0;
     double sum_hcpv = 0.0;
-    for (size_t cell_index = 0; cell_index < sw.size(); ++cell_index) {
-        double hcpv = pv[cell_index]*(1.0 - sw[cell_index]);
+    for (size_t cell_index = 0; cell_index < p.size(); ++cell_index) {
+        double hcs= 1.0;
+        hcs -= swat[cell_index];
+        double hcpv = pv[cell_index]*hcs;
         fpr +=  hcpv * p[cell_index];
         sum_hcpv += hcpv;
     }
@@ -397,12 +400,15 @@ quantity rpr(const fn_args& args) {
 
     const auto& p = args.state.data( "PRESSURE" );
     const auto& pv = args.pv;
-    const auto& sw = args.state.data( "SWAT" );
+    const bool hasSwat = args.state.has( "SWAT" );
 
+    const auto& swat = hasSwat? args.state.data( "SWAT" ): std::vector<double>(cells.size(),0.0);
     double rpr = 0.0;
     double sum_hcpv = 0.0;
     for (auto cell_index : cells) {
-        double hcpv = pv[cell_index]*(1.0 - sw[cell_index]);
+        double hcs= 1.0;
+        hcs -= swat[cell_index];
+        double hcpv = pv[cell_index]*hcs;
         rpr +=  hcpv * p[cell_index];
         sum_hcpv += hcpv;
     }
