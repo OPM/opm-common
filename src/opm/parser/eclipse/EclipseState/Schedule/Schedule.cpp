@@ -763,6 +763,11 @@ namespace Opm {
             }
             properties.predictionMode = false;
 
+            if ( record.getItem( "BHP" ).hasValue(0) )
+                properties.BHPH = record.getItem("BHP").getSIDouble(0);
+            if ( record.getItem( "THP" ).hasValue(0) )
+                properties.THPH = record.getItem("THP").getSIDouble(0);
+
             if (well.setInjectionProperties(currentStep, properties))
                 m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 

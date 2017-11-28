@@ -2178,3 +2178,47 @@ BOOST_AUTO_TEST_CASE(handleWEFAC) {
     BOOST_CHECK_EQUAL(well_i->getEfficiencyFactor(3), 0.9);
 
 }
+
+BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
+    Opm::Parser parser;
+    std::string input =
+        "START             -- 0 \n"
+        "19 JUN 2007 / \n"
+        "SCHEDULE\n"
+        "DATES             -- 1\n"
+        " 10  OKT 2008 / \n"
+        "/\n"
+        "WELSPECS\n"
+        " 'P' 'OP' 9 9 1* 'OIL' 1* / \n"
+        " 'P1' 'OP' 9 9 1* 'OIL' 1* / \n"
+        " 'I' 'OP' 9 9 1* 'WATER' 1* / \n"
+        "/\n"
+        "WCONHIST\n"
+        " P SHUT ORAT 6  500 0 0 0 1.2 1.1 / \n"
+        "/\n"
+        "WCONPROD\n"
+        " P1 SHUT ORAT 6  500 0 0 0 3.2 3.1 / \n"
+        "/\n"
+        "WCONINJH\n"
+        " I WATER STOP 100 2.1 2.2 / \n"
+        "/\n"
+        ;
+
+    ParseContext parseContext;
+    auto deck = parser.parseString(input, parseContext);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,parseContext);
+
+    const auto& prod = schedule.getWell("P")->getProductionProperties(1);
+    const auto& pro1 = schedule.getWell("P1")->getProductionProperties(1);
+    const auto& inje = schedule.getWell("I")->getInjectionProperties(1);
+
+    BOOST_CHECK_CLOSE( 1.1 * 1e5,  prod.BHPH, 1e-5 );
+    BOOST_CHECK_CLOSE( 1.2 * 1e5,  prod.THPH, 1e-5 );
+    BOOST_CHECK_CLOSE( 2.1 * 1e5,  inje.BHPH, 1e-5 );
+    BOOST_CHECK_CLOSE( 2.2 * 1e5,  inje.THPH, 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0 * 1e5,  pro1.BHPH, 1e-5 );
+    BOOST_CHECK_CLOSE( 0.0 * 1e5,  pro1.THPH, 1e-5 );
+}

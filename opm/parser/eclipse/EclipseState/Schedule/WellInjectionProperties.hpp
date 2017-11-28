@@ -32,6 +32,8 @@ namespace Opm {
         double  temperature;
         double  BHPLimit;
         double  THPLimit;
+        double  BHPH;
+        double  THPH;
         int     VFPTableNumber;
         bool    predictionMode;
         int     injectionControls;

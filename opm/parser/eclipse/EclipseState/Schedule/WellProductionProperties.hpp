@@ -39,6 +39,8 @@ namespace Opm {
         double  ResVRate    = 0.0;
         double  BHPLimit    = 0.0;
         double  THPLimit    = 0.0;
+        double  BHPH        = 0.0;
+        double  THPH        = 0.0;
         int     VFPTableNumber = 0;
         double  ALQValue    = 0.0;
         bool    predictionMode = false;

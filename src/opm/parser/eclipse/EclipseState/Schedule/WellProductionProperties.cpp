@@ -86,6 +86,11 @@ namespace Opm {
                 throw std::invalid_argument("Setting CMODE to unspecified control");
         }
 
+        if ( record.getItem( "BHP" ).hasValue(0) )
+            p.BHPH = record.getItem("BHP").getSIDouble(0);
+        if ( record.getItem( "THP" ).hasValue(0) )
+            p.THPH = record.getItem("THP").getSIDouble(0);
+
         return p;
     }
 
@@ -146,6 +151,8 @@ namespace Opm {
             && ResVRate             == other.ResVRate
             && BHPLimit             == other.BHPLimit
             && THPLimit             == other.THPLimit
+            && BHPH                 == other.BHPH
+            && THPH                 == other.THPH
             && VFPTableNumber       == other.VFPTableNumber
             && controlMode          == other.controlMode
             && m_productionControls == other.m_productionControls
@@ -168,6 +175,8 @@ namespace Opm {
             << "ResV rate: "    << wp.ResVRate          << ", "
             << "BHP limit: "    << wp.BHPLimit          << ", "
             << "THP limit: "    << wp.THPLimit          << ", "
+            << "BHPH: "         << wp.BHPH              << ", "
+            << "THPH: "         << wp.THPH              << ", "
             << "VFP table: "    << wp.VFPTableNumber    << ", "
             << "ALQ: "          << wp.ALQValue          << ", "
             << "prediction: "   << wp.predictionMode    << " }";

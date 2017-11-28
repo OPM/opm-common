@@ -34,6 +34,8 @@ namespace Opm {
             + ParserKeywords::STCOND::TEMPERATURE::defaultValue;
         BHPLimit=0.0;
         THPLimit=0.0;
+        BHPH=0.0;
+        THPH=0.0;
         VFPTableNumber=0;
         predictionMode=true;
         injectionControls=0;
@@ -48,6 +50,8 @@ namespace Opm {
             (temperature == other.temperature) &&
             (BHPLimit == other.BHPLimit) &&
             (THPLimit == other.THPLimit) &&
+            (BHPH == other.BHPH) &&
+            (THPH == other.THPH) &&
             (VFPTableNumber == other.VFPTableNumber) &&
             (predictionMode == other.predictionMode) &&
             (injectionControls == other.injectionControls) &&
@@ -71,6 +75,8 @@ namespace Opm {
             << "temperature: "      << wp.temperature << ", "
             << "BHP limit: "        << wp.BHPLimit << ", "
             << "THP limit: "        << wp.THPLimit << ", "
+            << "BHPH: "             << wp.BHPH << ", "
+            << "THPH: "             << wp.THPH << ", "
             << "VFP table: "        << wp.VFPTableNumber << ", "
             << "prediction mode: "  << wp.predictionMode << ", "
             << "injection ctrl: "   << wp.injectionControls << ", "
