@@ -867,7 +867,7 @@ Summary::Summary( const EclipseState& st,
         if (init_config.getRestartRootName().size() <= ECL_STRING8_LENGTH * SUMMARY_RESTART_SIZE)
             restart_case = init_config.getRestartRootName().c_str();
         else
-            OpmLog::warning("Resart case too long - not embedded in SMSPEC file");
+            OpmLog::warning("Restart case too long - not embedded in SMSPEC file");
     }
     ecl_sum.reset( ecl_sum_alloc_restart_writer(basename,
                                                 restart_case,
