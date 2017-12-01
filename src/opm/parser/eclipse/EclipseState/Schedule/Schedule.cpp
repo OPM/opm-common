@@ -167,6 +167,9 @@ namespace Opm {
             else if (keyword.name() == "WSOLVENT")
                 handleWSOLVENT(keyword, currentStep);
 
+            else if (keyword.name() == "WTEMP")
+                handleWTEMP(keyword, currentStep);
+
             else if (keyword.name() == "WCONINJH")
                 handleWCONINJH(section, keyword, currentStep);
 
@@ -709,6 +712,26 @@ namespace Opm {
                     well->setSolventFraction(currentStep, fraction);
                 } else {
                     throw std::invalid_argument("WSOLVENT keyword can only be applied to Gas injectors");
+                }
+            }
+        }
+    }
+
+    void Schedule::handleWTEMP( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+
+            for (auto* well : getWells(wellNamePattern)) {
+                // TODO: Can this be done like this? Setting the temperature only has an
+                // effect on injectors, but specifying this for producers won't hurt and
+                // wells can also switch their injector/producer status. Note that
+                // modifying the injector properties for producer wells currently leads
+                // to a very weird segmentation fault downstream. For now, let's take the
+                // water route.
+                if (well->isInjector(currentStep)) {
+                    WellInjectionProperties injectionProperties = well->getInjectionProperties(currentStep);
+                    injectionProperties.temperature = record.getItem("TEMP").getSIDouble(0);
+                    well->setInjectionProperties(currentStep, injectionProperties);
                 }
             }
         }

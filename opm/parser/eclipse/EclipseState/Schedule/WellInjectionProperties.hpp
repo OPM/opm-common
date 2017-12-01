@@ -29,6 +29,7 @@ namespace Opm {
     struct WellInjectionProperties {
         double  surfaceInjectionRate;
         double  reservoirInjectionRate;
+        double  temperature;
         double  BHPLimit;
         double  THPLimit;
         int     VFPTableNumber;

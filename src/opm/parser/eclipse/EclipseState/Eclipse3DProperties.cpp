@@ -387,6 +387,10 @@ namespace Opm {
         // pore volume multipliers
         supportedDoubleKeywords.emplace_back( "MULTPV", 1.0, "1" );
 
+        /* rock heat capacity, E300 only */
+        supportedDoubleKeywords.emplace_back("HEATCR", nan, distributeTopLayer, "Energy/AbsoluteTemperature*Length*Length*Length" );
+        supportedDoubleKeywords.emplace_back("HEATCRT", 0.0, distributeTopLayer, "Energy/AbsoluteTemperature*AbsoluteTemperature*Length*Length*Length" );
+
         // the permeability keywords
         for( const auto& kw : { "PERMR", "PERMTHT", "PERMX", "PERMY", "PERMZ", } )
             supportedDoubleKeywords.emplace_back( kw, nan, distributeTopLayer, "Permeability" );
@@ -415,7 +419,10 @@ namespace Opm {
 
         // initialisation
         supportedDoubleKeywords.emplace_back( "SWATINIT", 0.0, "1");
-        supportedDoubleKeywords.emplace_back( "THCONR", 0.0, "1");
+        supportedDoubleKeywords.emplace_back( "THCONR", 0.0, "Energy/AbsoluteTemperature*Length*Time");
+
+        // saturation dependence of thermal conductivity, E300 only
+        supportedDoubleKeywords.emplace_back( "THCONSF", 0.0, "1");
 
         return supportedDoubleKeywords;
     }

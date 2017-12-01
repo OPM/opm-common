@@ -66,6 +66,7 @@ namespace {
         1, /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        1 / Metric::Energy
     };
 
     static const double from_metric[] = {
@@ -95,6 +96,7 @@ namespace {
         1, /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        Metric::Energy
     };
 
     static constexpr const char* metric_names[] = {
@@ -124,6 +126,7 @@ namespace {
         "SM3/RM3", /* gas inverse formation volume factor */
         "SM3/RM3", /* oil inverse formation volume factor */
         "SM3/RM3", /* water inverse formation volume factor */
+        "KJ", /* energy */
     };
 
     static const double to_field[] = {
@@ -153,6 +156,7 @@ namespace {
         1 / (Field::GasSurfaceVolume / Field::ReservoirVolume), /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        1 / Field::Energy
     };
 
     static const double from_field[] = {
@@ -182,6 +186,7 @@ namespace {
          Field::GasSurfaceVolume / Field::ReservoirVolume, /* gas inverse formation volume factor */
          1, /* oil inverse formation volume factor */
          1, /* water inverse formation volume factor */
+         Field::Energy
     };
 
     static constexpr const char* field_names[] = {
@@ -211,6 +216,7 @@ namespace {
         "MSCF/RB", /* gas inverse formation volume factor */
         "STB/RB", /* oil inverse formation volume factor */
         "STB/RB", /* water inverse formation volume factor */
+        "BTU", /* energy */
     };
 
     static const double to_lab[] = {
@@ -240,6 +246,7 @@ namespace {
         1, /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        1 / Lab::Energy
     };
 
     static const double from_lab[] = {
@@ -269,6 +276,7 @@ namespace {
         1, /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        Lab::Energy
     };
 
     static constexpr const char* lab_names[] = {
@@ -298,6 +306,7 @@ namespace {
         "SCC/RCC", /* gas formation volume factor */
         "SCC/RCC", /* oil inverse formation volume factor */
         "SCC/RCC", /* water inverse formation volume factor */
+        "J", /* energy */
     };
 
     static const double to_pvt_m[] = {
@@ -327,6 +336,7 @@ namespace {
         1 / (PVT_M::GasSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bg */
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bo */
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bw */
+        1 / PVT_M::Energy
     };
 
     static const double from_pvt_m[] = {
@@ -356,6 +366,7 @@ namespace {
         PVT_M::GasSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bg */
         PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bo */
         PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bw */
+        PVT_M::Energy
     };
 
     static constexpr const char* pvt_m_names[] = {
@@ -385,6 +396,7 @@ namespace {
         "SM3/RM3", /* gas inverse formation volume factor */
         "SM3/RM3", /* oil inverse formation volume factor */
         "SM3/RM3", /* water inverse formation volume factor */
+        "KJ" /* energy */
     };
 }
 
@@ -601,6 +613,7 @@ namespace {
         system.addDimension("Viscosity" , Metric::Viscosity);
         system.addDimension("Timestep"  , Metric::Timestep);
         system.addDimension("SurfaceTension"  , Metric::SurfaceTension);
+        system.addDimension("Energy", Metric::Energy);
         system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
@@ -630,6 +643,7 @@ namespace {
         system.addDimension("Viscosity", Field::Viscosity);
         system.addDimension("Timestep", Field::Timestep);
         system.addDimension("SurfaceTension"  , Field::SurfaceTension);
+        system.addDimension("Energy", Field::Energy);
         system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
@@ -659,6 +673,7 @@ namespace {
         system.addDimension("Viscosity", Lab::Viscosity);
         system.addDimension("Timestep", Lab::Timestep);
         system.addDimension("SurfaceTension"  , Lab::SurfaceTension);
+        system.addDimension("Energy", Lab::Energy);
         system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
@@ -687,6 +702,7 @@ namespace {
         system.addDimension("Viscosity" , PVT_M::Viscosity);
         system.addDimension("Timestep"  , PVT_M::Timestep);
         system.addDimension("SurfaceTension"  , PVT_M::SurfaceTension);
+        system.addDimension("Energy", PVT_M::Energy);
         system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }

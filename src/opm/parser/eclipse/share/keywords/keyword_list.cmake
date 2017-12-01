@@ -30,6 +30,7 @@ set( keywords
      000_Eclipse100/A/AQUIFER_PROBE_NUMERIC
      000_Eclipse100/A/AQUNUM
      000_Eclipse100/A/AQUTAB
+     000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
      000_Eclipse100/B/BOX
      000_Eclipse100/C/CECON
@@ -385,11 +386,15 @@ set( keywords
      001_Eclipse300/C/COMPS
      001_Eclipse300/C/CREF
      001_Eclipse300/C/CREFS
+     001_Eclipse300/D/DEADOIL
      001_Eclipse300/D/DREF
      001_Eclipse300/D/DREFS
      001_Eclipse300/D/DZV
      001_Eclipse300/G/GASVISCT
      001_Eclipse300/G/GCONPROD
+     001_Eclipse300/H/HEATCR
+     001_Eclipse300/H/HEATCRT
+     001_Eclipse300/L/LIVEOIL
      001_Eclipse300/M/MW
      001_Eclipse300/M/MWS
      001_Eclipse300/O/OILCOMPR
@@ -400,10 +405,12 @@ set( keywords
      001_Eclipse300/S/STCOND
      001_Eclipse300/T/TEMPI
      001_Eclipse300/T/TEMPVD
+     001_Eclipse300/T/THCONSF
      001_Eclipse300/T/THERMAL
      001_Eclipse300/T/THERMEX1
      001_Eclipse300/T/TREF
      001_Eclipse300/T/TREFS
+     001_Eclipse300/W/WINJTEMP
      001_Eclipse300/W/WATDENT
      001_Eclipse300/Z/ZFACT1
      001_Eclipse300/Z/ZFACT1S
@@ -413,7 +420,9 @@ set( keywords
 
      900_OPM/G/GCOMPIDX
      900_OPM/G/GRUPRIG
+     900_OPM/G/GASDENT
      900_OPM/M/MINPVFIL
      900_OPM/O/OCOMPIDX
+     900_OPM/O/OILDENT
      900_OPM/R/RHO
      900_OPM/T/TLPMIXPA)
