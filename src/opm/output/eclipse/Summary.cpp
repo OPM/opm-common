@@ -867,7 +867,7 @@ Summary::Summary( const EclipseState& st,
         if (init_config.getRestartRootName().size() <= ECL_STRING8_LENGTH * SUMMARY_RESTART_SIZE)
             restart_case = init_config.getRestartRootName().c_str();
         else
-            OpmLog::warning("Resart case too long - not embedded in SMSPEC file");
+            OpmLog::warning("Restart case too long - not embedded in SMSPEC file");
     }
     ecl_sum.reset( ecl_sum_alloc_restart_writer(basename,
                                                 restart_case,
@@ -883,6 +883,8 @@ Summary::Summary( const EclipseState& st,
     /* register all keywords handlers and pair with the newly-registered ert
      * entry.
      */
+    std::set< std::string > unsupported_keywords;
+
     for( const auto& node : sum ) {
         const auto* keyword = node.keyword();
 
@@ -905,7 +907,10 @@ Summary::Summary( const EclipseState& st,
 
 	    this->handlers->misc_nodes.emplace( keyword, nodeptr ); 
         } else {
-	    if( funs.find( keyword ) == funs.end() ) continue;
+	        if( funs.find( keyword ) == funs.end() ) {
+                unsupported_keywords.insert(keyword);
+                continue;
+            }
 
             if ((node.type() == ECL_SMSPEC_COMPLETION_VAR) || (node.type() == ECL_SMSPEC_BLOCK_VAR)) {
                 int global_index = node.num() - 1;
@@ -939,6 +944,9 @@ Summary::Summary( const EclipseState& st,
 
 	    this->handlers->handlers.emplace_back( nodeptr, handle );
 	}
+    }
+    for ( const auto& keyword : unsupported_keywords ) {
+        Opm::OpmLog::info("Keyword " + std::string(keyword) + " is unhandled");
     }
 }
 
