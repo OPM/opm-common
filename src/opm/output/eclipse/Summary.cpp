@@ -261,6 +261,36 @@ inline quantity thp( const fn_args& args ) {
     return { p->second.thp, measure::pressure };
 }
 
+inline quantity bhp_history( const fn_args& args ) {
+    if( args.timestep == 0 ) return { 0.0, measure::pressure };
+
+    const auto timestep = args.timestep - 1;
+    const Well* sched_well = args.schedule_wells.front();
+
+    double bhp_hist;
+    if ( sched_well->isProducer( timestep ) )
+        bhp_hist = sched_well->getProductionProperties( timestep ).BHPH;
+    else
+        bhp_hist = sched_well->getInjectionProperties( timestep ).BHPH;
+
+    return { bhp_hist, measure::pressure };
+}
+
+inline quantity thp_history( const fn_args& args ) {
+    if( args.timestep == 0 ) return { 0.0, measure::pressure };
+
+    const auto timestep = args.timestep - 1;
+    const Well* sched_well = args.schedule_wells.front();
+
+    double thp_hist;
+    if ( sched_well->isProducer( timestep ) )
+       thp_hist = sched_well->getProductionProperties( timestep ).THPH;
+    else
+       thp_hist = sched_well->getInjectionProperties( timestep ).THPH;
+
+    return { thp_hist, measure::pressure };
+}
+
 template< Phase phase >
 inline quantity production_history( const fn_args& args ) {
     /*
@@ -630,6 +660,9 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WGLRH", div( production_history< Phase::GAS >,
                     sum( production_history< Phase::WATER >,
                          production_history< Phase::OIL > ) ) },
+
+    { "WTHPH", thp_history },
+    { "WBHPH", bhp_history },
 
     { "GWPRH", production_history< Phase::WATER > },
     { "GOPRH", production_history< Phase::OIL > },
