@@ -37,6 +37,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/MessageContainer.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 namespace Opm
 {
@@ -45,7 +46,6 @@ namespace Opm
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
-    class ParseContext;
     class Eclipse3DProperties;
     class SCHEDULESection;
     class TimeMap;
@@ -57,7 +57,7 @@ namespace Opm
                  const EclipseGrid& grid,
                  const Eclipse3DProperties& eclipseProperties,
                  const Phases &phases,
-                 const ParseContext& parseContext);
+                 const ParseContext& parseContext = ParseContext());
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
