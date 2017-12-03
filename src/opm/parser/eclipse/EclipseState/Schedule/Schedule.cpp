@@ -92,6 +92,16 @@ namespace Opm {
         }
     }
 
+
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context) :
+        Schedule(deck,
+                 es.getInputGrid(),
+                 es.get3DProperties(),
+                 es.runspec().phases(),
+                 parse_context)
+    {}
+
+
     std::time_t Schedule::getStartTime() const {
         return this->posixStartTime( );
     }

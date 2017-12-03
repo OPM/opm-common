@@ -50,6 +50,7 @@ namespace Opm
     class SCHEDULESection;
     class TimeMap;
     class UnitSystem;
+    class EclipseState;
 
     class Schedule {
     public:
@@ -59,6 +60,10 @@ namespace Opm
                  const Phases &phases,
                  const ParseContext& parseContext = ParseContext());
 
+        Schedule(const Deck& deck,
+                 const EclipseState& es,
+                 const ParseContext& parseContext = ParseContext());
+ 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
          * 1983 is defaulted
