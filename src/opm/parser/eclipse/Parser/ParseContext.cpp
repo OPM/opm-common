@@ -56,6 +56,17 @@ namespace Opm {
     }
 
 
+    /*
+      This constructor will initialize all actions to @default_action. The
+      environment variables will be used.
+    */
+
+    ParseContext::ParseContext(InputError::Action default_action) {
+        initDefault();
+        update(default_action);
+        initEnv();
+    }
+
     void ParseContext::initDefault() {
         addKey(PARSE_UNKNOWN_KEYWORD);
         addKey(PARSE_RANDOM_TEXT);

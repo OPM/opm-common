@@ -18,6 +18,7 @@
  */
 
 #include <stdexcept>
+#include <stdlib.h>
 #include <iostream>
 #include <boost/filesystem.hpp>
 #define BOOST_TEST_MODULE ParseContextTests
@@ -405,4 +406,14 @@ BOOST_AUTO_TEST_CASE( test_too_much_data ) {
 
     parseContext.update(ParseContext::PARSE_EXTRA_DATA , InputError::IGNORE );
     auto deck = parser.parseString( deckString , parseContext );
+}
+
+
+BOOST_AUTO_TEST_CASE(test_1arg_constructor) {
+    setenv("OPM_ERRORS_IGNORE", "PARSE_RANDOM_SLASH", 1);
+    {
+        ParseContext ctx(InputError::WARN);
+        BOOST_CHECK_EQUAL(ctx.get(ParseContext::UNSUPPORTED_COMPORD_TYPE), InputError::WARN);
+        BOOST_CHECK_EQUAL(ctx.get(ParseContext::PARSE_RANDOM_SLASH), InputError::IGNORE);
+    }
 }
