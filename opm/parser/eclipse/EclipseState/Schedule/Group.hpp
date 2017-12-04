@@ -118,6 +118,8 @@ namespace Opm {
         double getGroupEfficiencyFactor(size_t time_step) const;
         void   setTransferGroupEfficiencyFactor(size_t time_step, bool transfer);
         bool   getTransferGroupEfficiencyFactor(size_t time_step) const;
+        void   setGroupNetVFPTable(size_t time_step, int table);
+        int    getGroupNetVFPTable(size_t time_step) const;
 
         /*****************************************************************/
 
@@ -137,6 +139,7 @@ namespace Opm {
         DynamicState<int> m_isInjectionGroup;
         DynamicState<double> m_efficiencyFactor;
         DynamicState<int> m_transferEfficiencyFactor;
+        DynamicState<int> m_groupNetVFPTable;
     };
 }
 

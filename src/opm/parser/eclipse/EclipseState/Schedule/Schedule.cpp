@@ -204,6 +204,9 @@ namespace Opm {
             else if (keyword.name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
 
+            else if (keyword.name() == "GRUPNET")
+                handleGRUPNET(keyword, currentStep);
+
             else if (keyword.name() == "GCONINJE")
                 handleGCONINJE(section, keyword, currentStep);
 
@@ -1350,6 +1353,19 @@ namespace Opm {
                 addGroup( childName , currentStep );
         }
         m_rootGroupTree.update(currentStep, newTree);
+    }
+
+    void Schedule::handleGRUPNET( const DeckKeyword& keyword, size_t currentStep) {
+        for( const auto& record : keyword ) {
+            const auto& groupName = record.getItem("NAME").getTrimmedString(0);
+
+            if (!hasGroup(groupName))
+                addGroup(groupName , currentStep);
+
+            auto& group = this->m_groups.at( groupName );
+            int table = record.getItem("VFP_TABLE").get< int >(0);
+            group.setGroupNetVFPTable(currentStep, table);
+        }
     }
 
     void Schedule::handleWRFT( const DeckKeyword& keyword, size_t currentStep) {

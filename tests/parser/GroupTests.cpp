@@ -395,3 +395,40 @@ BOOST_AUTO_TEST_CASE(UpdateTree_AddFieldNode_Throws) {
     BOOST_CHECK_THROW(tree.update("FIELD", "NEWPARENT"), std::invalid_argument );
     BOOST_CHECK_THROW(tree.update("FIELD"), std::invalid_argument );
 }
+
+BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
+        Opm::Parser parser;
+        std::string input =
+        "START             -- 0 \n"
+        "31 AUG 1993 / \n"
+        "SCHEDULE\n"
+
+        "GRUPNET \n"
+        " 'FIELD'     20.000  5* / \n"
+        " 'PROD'     20.000  5* / \n"
+        " 'MANI-B2'  1*    8  1*        'NO'  2* / \n"
+        " 'MANI-B1'  1*    8  1*        'NO'  2* / \n"
+        " 'MANI-K1'  1* 9999  4* / \n"
+        " 'B1-DUMMY'  1* 9999  4* / \n"
+        " 'MANI-D1'  1*    8  1*        'NO'  2* / \n"
+        " 'MANI-D2'  1*    8  1*        'NO'  2* / \n"
+        " 'MANI-K2'  1* 9999  4* / \n"
+        " 'D2-DUMMY'  1* 9999  4* / \n"
+        " 'MANI-E1'  1*    9  1*        'NO'  2* / \n"
+        " 'MANI-E2'  1*    9  4* / \n"
+        "/\n";
+
+        Opm::ParseContext parseContext;
+        auto deck = parser.parseString(input, parseContext);
+        EclipseGrid grid(10,10,10);
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Opm::Schedule schedule(deck,  grid, eclipseProperties, Opm::Phases(true, true, true) , parseContext);
+
+        const auto& group1 = schedule.getGroup("PROD");
+        const auto& group2 = schedule.getGroup("MANI-E2");
+        const auto& group3 = schedule.getGroup("MANI-K1");
+        BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(0), 0);
+        BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(0), 9);
+        BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(0), 9999);
+}

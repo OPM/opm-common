@@ -59,7 +59,8 @@ namespace Opm {
         m_isProductionGroup( timeMap, false),
         m_isInjectionGroup( timeMap, false),
         m_efficiencyFactor( timeMap, 1.0),
-        m_transferEfficiencyFactor( timeMap, 1)
+        m_transferEfficiencyFactor( timeMap, 1),
+        m_groupNetVFPTable( timeMap, 0 )
     {}
 
 
@@ -256,6 +257,14 @@ namespace Opm {
 
     bool  Group::getTransferGroupEfficiencyFactor(size_t time_step) const {
         return m_transferEfficiencyFactor.get(time_step);
+    }
+
+    void   Group::setGroupNetVFPTable(size_t time_step, int table) {
+        m_groupNetVFPTable.update(time_step, table);
+    }
+
+    int  Group::getGroupNetVFPTable(size_t time_step) const {
+        return m_groupNetVFPTable.get(time_step);
     }
 
     /*****************************************************************/
