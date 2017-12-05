@@ -31,6 +31,9 @@ class Well(object):
     def __repr__(self):
         return 'Well(name = "%s")' % self.name
 
+    def completions(self, timestep):
+        return map(Completion, self._completions(timestep))
+
     @staticmethod
     def defined(timestep):
         def fn(well): return well.isdefined(timestep)
@@ -63,6 +66,36 @@ class Well(object):
     @staticmethod
     def auto(timestep):
         def fn(well): return well.status(timestep) == 'AUTO'
+        return fn
+
+
+@delegate(lib.Completion)
+class Completion(object):
+
+    @property
+    def pos(self):
+        return self.I, self.J, self.K
+
+    def __repr__(self):
+        return 'Completion(number = {})'.format(self.number)
+
+    # using the names flowing and closed for functions that test if a well is
+    # opened or closed at some point, because we might want to use the more
+    # imperative words 'open' and 'close' (or 'shut') for *changing* the status
+    # later
+    @staticmethod
+    def flowing():
+        def fn(completion): return completion.state == 'OPEN'
+        return fn
+
+    @staticmethod
+    def closed():
+        def fn(completion): return completion.state == 'SHUT'
+        return fn
+
+    @staticmethod
+    def auto():
+        def fn(completion): return completion.state == 'AUTO'
         return fn
 
 

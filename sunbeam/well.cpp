@@ -7,8 +7,8 @@
 
 namespace {
 
-    py::list completions( const Well& w) {
-        return iterable_to_pylist( w.getCompletions() );
+    py::list completions( const Well& w, size_t timestep ) {
+        return iterable_to_pylist( w.getCompletions( timestep ) );
     }
 
     std::string status( const Well& w, size_t timestep )  {
@@ -39,21 +39,21 @@ void sunbeam::export_Well() {
     py::class_< Well >( "Well", py::no_init )
         .add_property( "name", mkcopy( &Well::name ) )
         .add_property( "preferred_phase", &preferred_phase )
-        .def( "I",   headI )
-        .def( "I",   headI_at )
-        .def( "J",   headJ )
-        .def( "J",   headJ_at )
-        .def( "ref", refD )
-        .def( "ref", refD_at )
-        .def( "status",     &status )
-        .def( "isdefined",  &Well::hasBeenDefined )
-        .def( "isinjector", &Well::isInjector )
-        .def( "isproducer", &Well::isProducer )
-        .def( "group", &Well::getGroupName )
-        .def( "guide_rate", &Well::getGuideRate )
+        .def( "I",               headI )
+        .def( "I",               headI_at )
+        .def( "J",               headJ )
+        .def( "J",               headJ_at )
+        .def( "ref",             refD )
+        .def( "ref",             refD_at )
+        .def( "status",          &status )
+        .def( "isdefined",       &Well::hasBeenDefined )
+        .def( "isinjector",      &Well::isInjector )
+        .def( "isproducer",      &Well::isProducer )
+        .def( "group",           &Well::getGroupName )
+        .def( "guide_rate",      &Well::getGuideRate )
         .def( "available_gctrl", &Well::isAvailableForGroupControl )
-        .def( "__eq__", &Well::operator== )
-        .def( "completions", &completions )
+        .def( "__eq__",          &Well::operator== )
+        .def( "_completions",    &completions )
         ;
 
     py::class_< std::vector< Well > >( "WellList", py::no_init )
