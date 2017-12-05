@@ -181,11 +181,6 @@ function build_upstreams {
 # Uses pre-filled arrays downstreams, and associativ array downstreamRev
 # which holds the default revisions to use for downstreams
 function build_downstreams {
-  pushd .
-  cd $WORKSPACE/$configuration/build-$1
-  cmake --build . --target install
-  popd
-
   egrep_cmd="xml_grep --wrap testsuites --cond testsuite $WORKSPACE/$configuration/build-$1/testoutput.xml"
   for downstream in ${downstreams[*]}
   do
@@ -229,6 +224,8 @@ function build_module_full {
     cd $configuration/build-$1
     echo "Building main module $1=$sha1 configuration=$configuration"
     build_module "-DOPM_DATA_ROOT=$OPM_DATA_ROOT" 1 $WORKSPACE
+    test $? -eq 0 || exit 1
+    cmake --build . --target install
     test $? -eq 0 || exit 1
     popd
 
