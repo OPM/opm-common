@@ -2,8 +2,6 @@ import unittest
 import sunbeam
 
 class TestState(unittest.TestCase):
-
-    spe3 = None
     FAULTS_DECK = """
 RUNSPEC
 
@@ -49,12 +47,12 @@ SATNUM
 \
 """
 
-    def setUp(self):
-        if self.spe3 is None:
-            self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
-            self.cpa = sunbeam.parse('data/CORNERPOINT_ACTNUM.DATA')
-        self.state = self.spe3
-        self.cp_state = self.cpa
+    @classmethod
+    def setUpClass(cls):
+        cls.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
+        cls.cpa = sunbeam.parse('data/CORNERPOINT_ACTNUM.DATA')
+        cls.state = cls.spe3
+        cls.cp_state = cls.cpa
 
     def test_repr_title(self):
         self.assertTrue('EclipseState' in repr(self.state))
