@@ -2,13 +2,12 @@ import unittest
 import sunbeam
 
 class TestWells(unittest.TestCase):
-    spe3 = None
 
-    def setUp(self):
-        if self.spe3 is None:
-            self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
-        self.timesteps = self.spe3.schedule.timesteps
-        self.wells = self.spe3.schedule.wells
+    @classmethod
+    def setUpClass(cls):
+        cls.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
+        cls.timesteps = cls.spe3.schedule.timesteps
+        cls.wells = cls.spe3.schedule.wells
 
     def inje(self):
         return next(iter(filter(sunbeam.Well.injector(0), self.wells)))
