@@ -153,7 +153,7 @@ macro(opm_add_test TestName)
       add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
       target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
       target_include_directories(${CURTEST_EXE_NAME} PRIVATE ${CURTEST_INCLUDE_DIRS})
-      
+
       if(CURTEST_DEPENDS)
         add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
       endif()
@@ -259,6 +259,39 @@ macro(opm_recursive_add_library LIBNAME)
   dune_add_library("${LIBNAME}"
     SOURCES "${TMP2}"
     )
+endmacro()
+
+# add all source files from each modules CMakeLists_files.cmake
+# to the library and executables. Argument is the library name
+macro(opm_add_headers_library_and_executables LIBNAME)
+
+  # include list with source files and executables
+  include(${CMAKE_SOURCE_DIR}/CMakeLists_files.cmake)
+
+  dune_add_library("${LIBNAME}"
+    SOURCES "${MAIN_SOURCE_FILES}"
+    )
+
+  # add header for installation
+  foreach( HEADER ${PUBLIC_HEADER_FILES})
+    # extract header directory for installation
+    get_filename_component(DIRNAME "${HEADER}" DIRECTORY)
+    install(FILES "${HEADER}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${DIRNAME}")
+  endforeach()
+
+  # add executables from list of executables
+  foreach( FILE_NAME ${EXAMPLE_SOURCE_FILES} )
+    # extract executable name
+    get_filename_component(EXEC_NAME ${FILE_NAME} NAME_WE)
+    opm_add_application( ${EXEC_NAME} SOURCES ${FILE_NAME} )
+  endforeach()
+
+  # add tests from list of test files
+  foreach( FILE_NAME ${TEST_SOURCE_FILES} )
+    # extract executable name
+    get_filename_component(EXEC_NAME ${FILE_NAME} NAME_WE)
+    opm_add_test( ${EXEC_NAME} SOURCES "${FILE_NAME}" LIBRARIES "${Boost_LIBRARIES}" INCLUDE_DIRS "${Boost_INCLUDE_DIRS}")
+  endforeach()
 endmacro()
 
 macro(opm_recusive_copy_testdata)
