@@ -2,7 +2,6 @@ import unittest
 import sunbeam
 
 class TestProps(unittest.TestCase):
-    spe3 = None
 
     def assertClose(self, expected, observed, epsilon=1e-08):
         diff = abs(expected - observed)
@@ -10,8 +9,7 @@ class TestProps(unittest.TestCase):
         self.assertTrue(diff <= epsilon, msg=err_msg)
 
     def setUp(self):
-        if self.spe3 is None:
-            self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
+        self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
         self.props = self.spe3.props()
 
     def test_repr(self):
