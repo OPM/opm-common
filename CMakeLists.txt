@@ -20,6 +20,8 @@ if (USE_OPM_BUILDSYSTEM)
 # set up project
 project("opm-common" CXX)
 
+cmake_minimum_required (VERSION 2.8)
+
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
@@ -141,13 +143,6 @@ find_package(Boost COMPONENTS unit_test_framework  REQUIRED)
 
 # start a dune project with information from dune.module
 dune_project()
-
-# the cmake modules get a special treatment
-opm_export_cmake_modules()
-
-# we want all features detected by the build system to be enabled,
-# thank you!
-dune_enable_all_packages()
 
 # add headers, source files from CMakeLists_files.cmake to
 # library libopmgrid.a and create executables

@@ -264,6 +264,12 @@ endmacro()
 # add all source files from each modules CMakeLists_files.cmake
 # to the library and executables. Argument is the library name
 macro(opm_add_headers_library_and_executables LIBNAME)
+  # the cmake modules get a special treatment
+  opm_export_cmake_modules()
+
+  # we want all features detected by the build system to be enabled,
+  # thank you!
+  dune_enable_all_packages()
 
   # include list with source files and executables
   include(${CMAKE_SOURCE_DIR}/CMakeLists_files.cmake)
@@ -271,6 +277,8 @@ macro(opm_add_headers_library_and_executables LIBNAME)
   dune_add_library("${LIBNAME}"
     SOURCES "${MAIN_SOURCE_FILES}"
     )
+
+
 
   # add header for installation
   foreach( HEADER ${PUBLIC_HEADER_FILES})
