@@ -103,7 +103,7 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 		add_test (${_sat_FANCY} ${_sat_LOC})
 		# run the test in the directory where the data files are
 		set_tests_properties (${_sat_FANCY} PROPERTIES
-		  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/${${satellite}_DIR}
+		  WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/${${satellite}_DIR/bin}
 		  )
 	  endif (CMAKE_VERSION VERSION_LESS "2.8.4")
           if(NOT TARGET test-suite)
@@ -242,7 +242,7 @@ macro(opm_add_test TestName)
     if (OPM_TEST_DEFAULT_WORKING_DIRECTORY)
       set(CURTEST_WORKING_DIRECTORY ${OPM_TEST_DEFAULT_WORKING_DIRECTORY})
     else()
-      set(CURTEST_WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+      set(CURTEST_WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
     endif()
   endif()
 
