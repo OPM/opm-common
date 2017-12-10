@@ -1,3 +1,25 @@
+# -*- mode: cmake; tab-width: 2; indent-tabs-mode: t; truncate-lines: t
+# vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
+
+# specify the option that allows to select the build system. if
+# dunecontrol is used, we default to the opm build system.
+set(USE_OPM_BUILDSYSTEM_DEFAULT ON)
+
+# if dunecontrol is used switch to DUNE build system
+if (DEFINED ENV{DUNE_CONTROL_PATH})
+	set(USE_OPM_BUILDSYSTEM_DEFAULT OFF)
+endif()
+
+option(USE_OPM_BUILDSYSTEM "Use the OPM build system?" ${USE_OPM_BUILDSYSTEM_DEFAULT})
+
+if (USE_OPM_BUILDSYSTEM)
+#########################################
+# use the traditional OPM build system
+#########################################
+
+# set up project
+project("opm-common" CXX)
+
 cmake_minimum_required (VERSION 2.8)
 
 option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
@@ -52,3 +74,10 @@ include (OpmLibMain)
 
 # Install build system files
 install(DIRECTORY cmake DESTINATION share/opm)
+
+else()
+###############################################
+# use other build system provided outside OPM
+###############################################
+include(ExternalBuild)
+endif()
