@@ -66,3 +66,7 @@ class TestProps(unittest.TestCase):
                     if k == 0:
                         self.assertClose(exp, grid.getCellVolume(g_idx))
                     self.assertEqual(grid.getCellVolume(g_idx), grid.getCellVolume(None, i, j, k))
+
+
+if __name__ == "__main__":
+    unittest.main()
