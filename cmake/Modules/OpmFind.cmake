@@ -183,15 +183,18 @@ macro (find_and_append_package_to prefix name)
   # now a macro, and not a function anymore), so we must reinitialize
   string (TOUPPER "${name}" NAME)
   string (REPLACE "-" "_" NAME "${NAME}")
-
+  # Special treatment for MPI to deactivate CXX bindings 100%
+  string (REGEX REPLACE "^MPI" "MPI_C" NAME "${NAME}")
+  # We cannot overwrite name as it is a macro parameter. Go for name_for_mpi 
+  string (REGEX REPLACE "^MPI" "MPI_C" name_for_mpi "${name}")
   if (${name}_FOUND OR ${NAME}_FOUND)
 	foreach (var IN LISTS _opm_proj_vars)
-	  if (DEFINED ${name}_${var})
-		list (APPEND ${prefix}_${var} ${${name}_${var}})
+	  if (DEFINED ${name_for_mpi}_${var})
+		list (APPEND ${prefix}_${var} ${${name_for_mpi}_${var}})
 	  # some packages define an uppercase version of their own name
 	  elseif (DEFINED ${NAME}_${var})
 		list (APPEND ${prefix}_${var} ${${NAME}_${var}})
-	  endif (DEFINED ${name}_${var})
+	  endif (DEFINED ${name_for_mpi}_${var})
 	  # some packages define _PATH instead of _DIRS (Hi, MPI!)
 	  if ("${var}" STREQUAL "INCLUDE_DIRS")
 		if (DEFINED ${name}_INCLUDE_PATH)
