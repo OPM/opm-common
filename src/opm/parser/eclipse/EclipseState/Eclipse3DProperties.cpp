@@ -424,6 +424,12 @@ namespace Opm {
         // saturation dependence of thermal conductivity, E300 only
         supportedDoubleKeywords.emplace_back( "THCONSF", 0.0, "1");
 
+        // the THC* family of keywords to specify heat contuctivity, E300 only
+        supportedDoubleKeywords.emplace_back( "THCROCK", 0.0, "Energy/AbsoluteTemperature*Length*Time");
+        supportedDoubleKeywords.emplace_back( "THCOIL", 0.0, "Energy/AbsoluteTemperature*Length*Time");
+        supportedDoubleKeywords.emplace_back( "THCGAS", 0.0, "Energy/AbsoluteTemperature*Length*Time");
+        supportedDoubleKeywords.emplace_back( "THCWATER", 0.0, "Energy/AbsoluteTemperature*Length*Time");
+
         return supportedDoubleKeywords;
     }
 

@@ -405,7 +405,11 @@ set( keywords
      001_Eclipse300/S/STCOND
      001_Eclipse300/T/TEMPI
      001_Eclipse300/T/TEMPVD
+     001_Eclipse300/T/THCGAS
+     001_Eclipse300/T/THCOIL
      001_Eclipse300/T/THCONSF
+     001_Eclipse300/T/THCROCK
+     001_Eclipse300/T/THCWATER
      001_Eclipse300/T/THERMAL
      001_Eclipse300/T/THERMEX1
      001_Eclipse300/T/TREF
