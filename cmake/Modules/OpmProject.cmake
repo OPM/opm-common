@@ -76,6 +76,7 @@ function (opm_cmake_config name)
   set (template_dir "${OPM_MACROS_ROOT}/cmake/Templates")
 
   # write configuration file to locate library
+  set(DUNE_PREFIX ${PROJECT_SOURCE_DIR})
   set(OPM_PROJECT_EXTRA_CODE ${OPM_PROJECT_EXTRA_CODE_INTREE})
   set(PREREQ_LOCATION "${PROJECT_SOURCE_DIR}")
   configure_cmake_file (${name} "config" "")
@@ -123,6 +124,7 @@ function (opm_cmake_config name)
   # of the build directory (using the same input template)
   set(OPM_PROJECT_EXTRA_CODE ${OPM_PROJECT_EXTRA_CODE_INSTALLED})
   set(PREREQ_LOCATION "${CMAKE_INSTALL_PREFIX}/share/opm/cmake/Modules")
+  set(DUNE_PREFIX ${CMAKE_INSTALL_PREFIX})
   configure_cmake_file (${name} "install" "")
   configure_vars (
 	FILE CMAKE "${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake"
