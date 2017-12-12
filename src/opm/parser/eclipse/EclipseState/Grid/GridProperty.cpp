@@ -462,20 +462,14 @@ std::vector< double > temperature_lookup( size_t size,
                                           const GridProperties<int>* ig_props ) {
 
     if (tables->hasTables("RTEMPVD")) {
-        if( !tables->useEqlnum() ) {
-            /* if values are defaulted in the TEMPI keyword, but no
-             * EQLNUM is specified, you will get NaNs.
-             */
-            return std::vector< double >( size, std::numeric_limits< double >::quiet_NaN() );
-        }
+        const std::vector< int >& eqlNum = ig_props->getKeyword("EQLNUM").getData();
 
         const auto& rtempvdTables = tables->getRtempvdTables();
-        const std::vector< int >& eqlNum = ig_props->getKeyword("EQLNUM").getData();
         std::vector< double > values( size, 0 );
 
         for (size_t cellIdx = 0; cellIdx < eqlNum.size(); ++ cellIdx) {
-            int cellEquilNum = eqlNum[cellIdx];
-            const RtempvdTable& rtempvdTable = rtempvdTables.getTable<RtempvdTable>(cellEquilNum);
+            int cellEquilRegionIdx = eqlNum[cellIdx] - 1; // EQLNUM contains fortran-style indices!
+            const RtempvdTable& rtempvdTable = rtempvdTables.getTable<RtempvdTable>(cellEquilRegionIdx);
             double cellDepth = std::get<2>(grid->getCellCenter(cellIdx));
             values[cellIdx] = rtempvdTable.evaluate("Temperature", cellDepth);
         }
