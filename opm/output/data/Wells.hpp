@@ -45,14 +45,17 @@ namespace Opm {
         public:
             Rates() = default;
             enum class opt : uint32_t {
-                wat           = (1 << 0),
-                oil           = (1 << 1),
-                gas           = (1 << 2),
-                polymer       = (1 << 3),
-                solvent       = (1 << 4),
-                energy        = (1 << 5),
-                dissolved_gas = (1 << 6),
-                vaporized_oil = (1 << 7),
+                wat               = (1 << 0),
+                oil               = (1 << 1),
+                gas               = (1 << 2),
+                polymer           = (1 << 3),
+                solvent           = (1 << 4),
+                energy            = (1 << 5),
+                dissolved_gas     = (1 << 6),
+                vaporized_oil     = (1 << 7),
+                reservoir_water   = (1 << 8),
+                reservoir_oil     = (1 << 9),
+                reservoir_gas     = (1 << 10),
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -88,6 +91,9 @@ namespace Opm {
             double energy = 0.0;
             double dissolved_gas = 0.0;
             double vaporized_oil = 0.0;
+            double reservoir_water = 0.0;
+            double reservoir_oil = 0.0;
+            double reservoir_gas = 0.0;
     };
 
     struct Completion {
@@ -196,6 +202,9 @@ namespace Opm {
             case opt::energy: return this->energy;
             case opt::dissolved_gas: return this->dissolved_gas;
             case opt::vaporized_oil: return this->vaporized_oil;
+            case opt::reservoir_water: return this->reservoir_water;
+            case opt::reservoir_oil: return this->reservoir_oil;
+            case opt::reservoir_gas: return this->reservoir_gas;
         }
 
         throw std::invalid_argument(

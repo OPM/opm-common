@@ -94,6 +94,10 @@ measure mul_unit( measure lhs, measure rhs ) {
         ( rhs == measure::gas_surface_rate && lhs == measure::time ) )
         return measure::gas_surface_volume;
 
+    if( ( lhs == measure::rate && rhs == measure::time ) ||
+        ( rhs == measure::rate && lhs == measure::time ) )
+        return measure::volume;
+
     return lhs;
 }
 
@@ -178,6 +182,15 @@ measure rate_unit< Phase::GAS >() { return measure::gas_surface_rate; }
 
 template<> constexpr
 measure rate_unit< rt::solvent >() { return measure::gas_surface_rate; }
+
+template<> constexpr
+measure rate_unit< rt::reservoir_water >() { return measure::rate; }
+
+template<> constexpr
+measure rate_unit< rt::reservoir_oil >() { return measure::rate; }
+
+template<> constexpr
+measure rate_unit< rt::reservoir_gas >() { return measure::rate; }
 
 template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
@@ -615,6 +628,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GOPRS", rate< rt::vaporized_oil, producer > },
     { "GOPRF", sub (rate < rt::oil, producer >, rate< rt::vaporized_oil, producer > ) },
     { "GLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
+    { "GVPR", sum( sum( rate< rt::reservoir_water, producer >, rate< rt::reservoir_oil, producer > ),
+                        rate< rt::reservoir_gas, producer > ) },
 
     { "GWPT", mul( rate< rt::wat, producer >, duration ) },
     { "GOPT", mul( rate< rt::oil, producer >, duration ) },
