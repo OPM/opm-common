@@ -753,6 +753,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FOPR", rate< rt::oil, producer > },
     { "FGPR", rate< rt::gas, producer > },
     { "FNPR", rate< rt::solvent, producer > },
+    { "FVPR", sum( sum( rate< rt::reservoir_water, producer>, rate< rt::reservoir_oil, producer >),
+                   rate< rt::reservoir_gas, producer>)},
 
     { "FLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
     { "FWPT", mul( rate< rt::wat, producer >, duration ) },
@@ -761,11 +763,15 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FNPT", mul( rate< rt::solvent >, duration ) },
     { "FLPT", mul( sum( rate< rt::wat, producer >, rate< rt::oil, producer > ),
                    duration ) },
+    { "FVPT", mul(sum (sum( rate< rt::reservoir_water, producer>, rate< rt::reservoir_oil, producer >),
+                       rate< rt::reservoir_gas, producer>), duration)},
 
     { "FWIR", rate< rt::wat, injector > },
     { "FOIR", rate< rt::oil, injector > },
     { "FGIR", rate< rt::gas, injector > },
     { "FNIR", rate< rt::solvent, injector > },
+    { "FVIR", sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
+                   rate< rt::reservoir_gas, injector>)},
 
     { "FLIR", sum( rate< rt::wat, injector >, rate< rt::oil, injector > ) },
     { "FWIT", mul( rate< rt::wat, injector >, duration ) },
@@ -774,6 +780,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "FLIT", mul( sum( rate< rt::wat, injector >, rate< rt::oil, injector > ),
                    duration ) },
+    { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
+                   rate< rt::reservoir_gas, injector>), duration)},
 
     { "FOIP", foip },
     { "FGIP", fgip },
