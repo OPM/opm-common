@@ -822,7 +822,7 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
 
     /* verify that some non-supported keywords aren't written to the file */
     BOOST_CHECK( !ecl_sum_has_well_var( resp, "W_1", "WPI" ) );
-    BOOST_CHECK( !ecl_sum_has_field_var( resp, "FVIR" ) );
+    BOOST_CHECK( !ecl_sum_has_field_var( resp, "FGST" ) );
 }
 
 
