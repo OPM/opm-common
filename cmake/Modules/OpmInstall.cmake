@@ -8,7 +8,7 @@
 # _TARGET           CMake target which builds the library
 # _LIBRARY_TYPE     Static or shared library
 # _DEBUG            File containing debug symbols
-include (UseMultiArch)
+include (GNUInstallDirs)
 
 macro (opm_install opm)
   foreach (_hdr IN LISTS ${opm}_HEADERS)
@@ -59,6 +59,6 @@ macro (opm_install opm)
   # multiarch-aware and will thus put in lib64/ on RHEL and lib/ on Debian
   install (
 	FILES ${PROJECT_SOURCE_DIR}/dune.module
-	DESTINATION ${LIBDIR_MULTIARCH_UNAWARE}${${opm}_VER_DIR}/dunecontrol/${${opm}_NAME}
+	DESTINATION lib/${${opm}_VER_DIR}/dunecontrol/${${opm}_NAME}
 	)
 endmacro (opm_install opm)

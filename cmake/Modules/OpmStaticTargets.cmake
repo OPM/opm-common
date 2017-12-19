@@ -50,7 +50,7 @@ macro(opm_static_add_dependencies target)
 endmacro()
 
 include(ExternalProject)
-include(UseMultiArch)
+include(GNUInstallDirs)
 
 # Defaults to building master
 if(NOT OPM_BENCHMARK_VERSION)

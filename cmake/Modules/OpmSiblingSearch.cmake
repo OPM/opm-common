@@ -9,7 +9,7 @@ macro(create_module_dir_var module)
     get_filename_component(_parent_dir_name ${_parent_full_dir} NAME)
     #Try if <module-name>/<build-dir> is used
     get_filename_component(_modules_dir ${_parent_full_dir} DIRECTORY)
-    if (module STREQUAL "ecl")
+    if ("${module}" STREQUAL "ecl")
       #use clone directory libecl
       set(_clone_dir "libecl")
     else()

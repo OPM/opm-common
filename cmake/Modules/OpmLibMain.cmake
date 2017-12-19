@@ -138,7 +138,7 @@ include (UseDebugSymbols)
 include (UseDynamicBoost)
 
 # needed for Debian installation scheme
-include (UseMultiArch)
+include (GNUInstallDirs)
 
 # Run conditional file hook
 files_hook()

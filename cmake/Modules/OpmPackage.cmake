@@ -174,6 +174,58 @@ macro (find_opm_package module deps header lib defs prog conf)
   endif (${module}_DEBUG)
 endmacro (find_opm_package module deps header lib defs prog conf)
 
+macro (find_package_deps module)
+  # period because it should be something that evaluates to true
+  # in find_package_handle_standard_args
+  set (${module}_ALL_PREREQS ".")
+  foreach (_dep IN ITEMS ${${module}_DEPS})
+	separate_arguments (_${module}_args UNIX_COMMAND "${_dep}")
+	if (_${module}_args)
+          if(_dep MATCHES "opm-" OR _dep MATCHES "ewoms")
+            set(deplist ${_dep})
+            string(STRIP "${_dep}" _dep)
+            string(REPLACE " " ";" deplist "${_dep}")
+            list(GET deplist 0 depname)
+            create_module_dir_var(${depname})
+          endif()
+	  find_and_append_package_to (${module} ${_${module}_args} ${_${module}_quiet})
+	  list (GET _${module}_args 0 _name_only)
+	  string (TOUPPER "${_name_only}" _NAME_ONLY)
+	  string (REPLACE "-" "_" _NAME_ONLY "${_NAME_ONLY}")
+	  # check manually if it was found if REQUIRED; otherwise poison the
+	  # dependency list which is checked later (so that it will fail)
+	  if (("${_${module}_args}" MATCHES "REQUIRED") AND NOT (${_name_only}_FOUND OR ${_NAME_ONLY}_FOUND))
+		list (APPEND ${module}_ALL_PREREQS "${_name_only}-NOTFOUND")
+	  endif ()
+	else ()
+	  message (WARNING "Empty dependency in find module for ${module} (check for trailing semi-colon)")
+	endif ()
+  endforeach (_dep)
+
+  # tidy the lists before returning them
+  remove_dup_deps (${module})
+
+  # these defines are used in dune/${module} headers, and should be put
+  # in config.h when we include those
+  foreach (_var IN ITEMS ${conf})
+    # massage the name to remove source code formatting
+    string (REGEX REPLACE "^[\n\t\ ]+" "" _var "${_var}")
+    string (REGEX REPLACE "[\n\t\ ]+$" "" _var "${_var}")
+    list (APPEND ${module}_CONFIG_VARS ${_var})
+  endforeach (_var)
+
+  # these are the defines that should be set when compiling
+  # without config.h
+  config_cmd_line (${module}_CMD_CONFIG ${module}_CONFIG_VARS)
+
+  # This variable is used by UseDuneVer
+  list(GET ${module}_INCLUDE_DIRS 0 ${module}_INCLUDE_DIR)
+  # print everything out if we're asked to
+  if (${module}_DEBUG)
+	debug_find_vars (${module})
+  endif (${module}_DEBUG)
+endmacro ()
+
 # print all variables defined by the above macro
 function (debug_find_vars module)
   message (STATUS "${module}_FOUND        = ${${module}_FOUND}")
@@ -183,7 +235,7 @@ function (debug_find_vars module)
   message (STATUS "${module}_CONFIG_VARS  = ${${module}_CONFIG_VARS}")
   message (STATUS "${module}_LINKER_FLAGS = ${${module}_LINKER_FLAGS}")
   string (TOUPPER ${module} MODULE)
-  string (REPLACE "-" "_" MODULE ${MODULE})  
+  string (REPLACE "-" "_" MODULE ${MODULE})
   message (STATUS "HAVE_${MODULE}         = ${HAVE_${MODULE}}")
 endfunction (debug_find_vars module)
 

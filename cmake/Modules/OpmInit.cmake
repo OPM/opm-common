@@ -60,6 +60,9 @@ endmacro ()
 OpmInitProjVars ()
 OpmInitDirVars ()
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
+include(OpmPackage)
+
 # if we are backporting this release to a system which already have an
 # earlier version, set this flag to have everything scoped into a directory
 # which incorporates the label of the release. this is done by interjecting
