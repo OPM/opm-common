@@ -95,6 +95,8 @@ FGPTH
 FWPTH
 FGST
 FGCT
+FGPTS
+FGPTF
 -- Injection Cummulatives
 FVIT
 FWIT

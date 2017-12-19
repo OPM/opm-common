@@ -767,6 +767,8 @@ static const std::unordered_map< std::string, ofun > funs = {
                    duration ) },
     { "FVPT", mul(sum (sum( rate< rt::reservoir_water, producer>, rate< rt::reservoir_oil, producer >),
                        rate< rt::reservoir_gas, producer>), duration)},
+    { "FGPTS", mul( rate< rt::dissolved_gas, producer > , duration )},
+    { "FGPTF", mul( sub( rate< rt::gas, producer >, rate< rt::dissolved_gas, producer > ), duration )},
 
     { "FWIR", rate< rt::wat, injector > },
     { "FOIR", rate< rt::oil, injector > },
