@@ -72,6 +72,8 @@ FLPRH
 FGSR
 FGCR
 FNPR -- solvent
+FGPRF
+FGPRS
 --FTPRSEA
 -- Injection Rates
 FVIR

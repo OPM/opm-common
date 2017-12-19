@@ -678,6 +678,10 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
                                     ecl_sum_get_field_var( resp, 1, "FLPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.6 + 10.7 + 10.8 + 20.6 + 20.7 + 20.8,
                                     ecl_sum_get_field_var( resp, 1, "FVPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.4 + 20.4,
+                                    ecl_sum_get_field_var( resp, 1, "FGPRS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.2 - 10.4 + 20.2 - 20.4,
+                                    ecl_sum_get_field_var( resp, 1, "FGPRF" ), 1e-5 );
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPT" ), 1e-5 );
