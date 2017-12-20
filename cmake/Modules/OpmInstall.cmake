@@ -61,4 +61,8 @@ macro (opm_install opm)
 	FILES ${PROJECT_SOURCE_DIR}/dune.module
 	DESTINATION lib/${${opm}_VER_DIR}/dunecontrol/${${opm}_NAME}
 	)
+  install (
+        FILES ${PROJECT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}-prereqs.cmake
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/opm/cmake/Modules
+        )
 endmacro (opm_install opm)
