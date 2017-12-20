@@ -552,6 +552,7 @@ WELSPECS
      'W_1'        'G_1'   1    1  3.33       'OIL'  7* /
      'W_2'        'G_1'   2    1  3.33       'OIL'  7* /
      'W_3'        'G_2'   3    1  3.92       'WATER'  7* /
+     'W_5'        'G_3'   4    1  3.92       'OIL'  7* /
 /
 
 -- Completion data.
@@ -575,6 +576,10 @@ WCONHIST
 WCONINJH
 -- Injection historical rates (water only, as we only support pure injectors)
     W_3 WATER STOP 30.0 2.1 2.2 /
+/
+
+WCONPROD
+    W_5 SHUT ORAT 0.0 0.0 0.0 1* 30.1 /
 /
 
 TSTEP

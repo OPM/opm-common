@@ -344,6 +344,20 @@ inline quantity injection_history( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
+inline quantity res_vol_production_target( const fn_args& args ) {
+
+    if( args.timestep == 0 ) return { 0.0, measure::rate };
+
+    const auto timestep = args.timestep - 1;
+
+    double sum = 0.0;
+    for( const Well* sched_well : args.schedule_wells )
+        if (sched_well->getProductionProperties(timestep).predictionMode)
+            sum += sched_well->getProductionProperties( timestep ).ResVRate;
+
+    return { sum, measure::rate };
+}
+
 /*
  * A small DSL, really poor man's function composition, to avoid massive
  * repetition when declaring the handlers for each individual keyword. bin_op
@@ -716,6 +730,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GGITH", mul( injection_history< Phase::GAS >, duration ) },
     { "GMWIN", flowing< injector > },
     { "GMWPR", flowing< producer > },
+
+    { "GVPRT", res_vol_production_target },
 
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },

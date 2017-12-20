@@ -498,6 +498,9 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
                                       ecl_sum_get_group_var( resp, 1, "G_1", "GLPTH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0,             ecl_sum_get_group_var( resp, 1, "G_2", "GLPTH" ), 1e-5 );
 
+    /* Production targets */
+    BOOST_CHECK_CLOSE( 30.1 , ecl_sum_get_group_var( resp, 1, "G_3", "GVPRT" ), 1e-5 );
+
     /* Injection rates */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_group_var( resp, 1, "G_2", "GWIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_group_var( resp, 1, "G_2", "GGIR" ), 1e-5 );
