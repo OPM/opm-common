@@ -26,9 +26,10 @@ if(NOT @opm-project_NAME@_FOUND)
   set (@opm-project_NAME@_VERSION "@opm-project_VERSION@")
   set (@opm-project_NAME@_DEFINITIONS "@opm-project_DEFINITIONS@")
   set (@opm-project_NAME@_INCLUDE_DIRS "@opm-project_INCLUDE_DIRS@")
-  set (@opm-project_NAME@_LIBRARY_DIRS "@CMAKE_LIBRARY_OUTPUT_DIRECTORY@")
+  set (@opm-project_NAME@_LIBRARY_DIRS "@opm-project_LIBRARY_DIRS@" "@CMAKE_LIBRARY_OUTPUT_DIRECTORY@")
   set (@opm-project_NAME@_LINKER_FLAGS "@opm-project_LINKER_FLAGS@")
   set (@opm-project_NAME@_CONFIG_VARS "@opm-project_CONFIG_VARS@")
+  set (HAVE_@opm-project_NAME_UC@ 1)
 
   # libraries come from the build tree where this file was generated
   set (@opm-project_NAME@_LIBRARY "@opm-project_LIBRARY@")

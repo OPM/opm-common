@@ -54,13 +54,15 @@ foreach (name IN LISTS _opm_proj_vars)
   endif (NOT DEFINED ${CMAKE_PROJECT_NAME}_${name})
 endforeach (name)
 
-# these dependencies must always be handled by the find module
+# these dependencies needs special treatment
 set (_opm_proj_exemptions
   dune-common
   dune-istl
   dune-grid
   dune-geometry
-  opm-parser
+  dune-alugrid
+  dune-localfunctions
+  dune-fem
   )
 
 # although a DUNE module, it is delivered in the OPM suite
@@ -147,36 +149,57 @@ macro (find_and_append_package_to prefix name)
     if (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND
         OR ("${name}" STREQUAL "opm-common" AND NOT _opm_common_deps_processed))
       string(REGEX MATCH "(dune|opm)-.*" _is_opm ${name})
-      if (${name}_DIR AND NOT (_${name}_exempted OR _is_opm))
-        message (STATUS "Finding package ${name} using config mode ${_${name}_exempted}")
-        find_package (${name} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
-      else ()
-        # print message if this neither an opm module nor ecl
-        if (NOT (${name}_exempted EQUAL -1 OR _is_opm_) )
-          message (STATUS "Finding package ${name} using module mode")
+      if(NOT _is_opm)
+        string(REGEX MATCH "ewoms" _is_opm ${name})
+      endif()
+      if(${name} STREQUAL "ecl")
+        # Give us a chance to find ecl installed to CMAKE_INSTALL_PREFIX.
+        # We need to deactivate the package registry for this.
+        create_module_dir_var(ecl)
+        set(ARGN_NO_REQUIRED ${ARGN})
+        if(ARGN)
+          list(REMOVE_ITEM ARGN_NO_REQUIRED "REQUIRED")
         endif()
-		if(${name} STREQUAL "ecl")
-			# Give us a chance to find ecl installed to CMAKE_INSTALL_PREFIX.
-			# We need to deactivate the package registry for this.
-			create_module_dir_var(ecl)
-			set(ARGN_NO_REQUIRED ${ARGN})
-			list(REMOVE_ITEM ARGN_NO_REQUIRED "REQUIRED")
- 			find_package (${name} ${ARGN_NO_REQUIRED} NO_CMAKE_SYSTEM_PACKAGE_REGISTRY NO_CMAKE_PACKAGE_REGISTRY)
-			# If everything else failed fall back to the registry
-		endif()	
-		find_package (${name} ${ARGN})
-	  endif ()
-	endif ()
-	if (NOT DEFINED ${name}_FOUND)
-	  set (${name}_FOUND "${${NAME}_FOUND}")
-	endif ()
-	if (NOT DEFINED ${NAME}_FOUND)
-	  set (${NAME}_FOUND "${${name}_FOUND}")
-	endif ()
+        find_package (${name} ${ARGN_NO_REQUIRED} NO_CMAKE_SYSTEM_PACKAGE_REGISTRY NO_CMAKE_PACKAGE_REGISTRY)
+        if(TARGET ecl)
+          # Need to grab from target to enable transitional depends
+          get_target_property(ecl_INCLUDE_DIRS ecl INTERFACE_INCLUDE_DIRECTORIES)
+          get_target_property(ecl_LIBRARIES ecl INTERFACE_LINK_LIBRARIES)
+          get_target_property(ecl_lib ecl LOCATION)
+          set(ecl_LIBRARIES ${ecl_lib} ${ecl_LIBRARIES})
+          set(ecl_FOUND 1)
+          set(HAVE_ERT 1)
+        endif()
+      elseif(_${name}_exempted LESS 0 AND NOT _is_opm)
+        find_package (${name} ${ARGN})
+      elseif(_${name}_exempted GREATER -1)
+        find_package (${name} ${ARGN})
+      else()
+        if(${name}_DIR)
+          find_package (${name} ${${prefix}_VERSION_MAJOR}.${${prefix}_VERSION_MINOR} ${ARGN} NO_MODULE PATHS ${${name}_DIR} NO_DEFAULT_PATH)
+        else()
+          find_package (${name} ${${prefix}_VERSION_MAJOR}.${${prefix}_VERSION_MINOR} ${ARGN} NO_MODULE)
+        endif()
+        include(FindPackageHandleStandardArgs)
+        if(${name}_FOUND AND ${name}_LIBRARY STREQUAL "")
+          find_package_handle_standard_args(${name}
+                                            REQUIRED_VARS ${name}_INCLUDE_DIRS)
+        else()
+          find_package_handle_standard_args(${name}
+                                            REQUIRED_VARS ${name}_LIBRARY)
+        endif()
+      endif ()
+    endif ()
+    if (NOT DEFINED ${name}_FOUND)
+      set (${name}_FOUND "${${NAME}_FOUND}")
+    endif ()
+    if (NOT DEFINED ${NAME}_FOUND)
+      set (${NAME}_FOUND "${${name}_FOUND}")
+    endif ()
 
-       if(name STREQUAL "opm-common")
-         set(_opm_common_deps_processed ON)
-       endif()
+    if("${name}" STREQUAL "opm-common")
+      set(_opm_common_deps_processed ON)
+    endif()
   endif ()
 
   # the variable "NAME" may be replaced during find_package (as this is

@@ -56,6 +56,9 @@ function (configure_cmake_file name variant version)
 	set (opm-project_${suffix} "${${name}_${suffix}}")
   endforeach (suffix)
   set (opm-project_NAME "${${name}_NAME}")
+  set (opm-project_NAME_UC "${${name}_NAME}")
+  string(TOUPPER "${opm-project_NAME}" opm-project_NAME_UC)
+  string(REPLACE "-" "_" opm-project_NAME_UC "${opm-project_NAME_UC}")
 
   # make the file substitutions
   configure_file (
@@ -141,10 +144,10 @@ function (opm_cmake_config name)
   # put this in the right system location; if we have binaries then it
   # should go in the arch-specific lib/ directory, otherwise use the
   # common/noarch lib/ directory (these targets come from UseMultiArch)
-  if (${name}_TARGET)
+  if (TARGET ${name})
 	set (_pkg_dir ${CMAKE_INSTALL_LIBDIR})
   else ()
-	set (_pkg_dir ${LIBDIR_MULTIARCH_UNAWARE})
+	set (_pkg_dir lib)
   endif ()
   install (
 	FILES ${PROJECT_BINARY_DIR}/${${name}_NAME}-install.pc
