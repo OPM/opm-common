@@ -21,7 +21,8 @@
 
 # Prevent multiple inclusions
 if(NOT @opm-project_NAME@_FOUND)
-
+  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" @PREREQ_LOCATION@)
+  include(@opm-project_NAME@-prereqs)
   # propagate these properties from one build system to the other
   set (@opm-project_NAME@_VERSION "@opm-project_VERSION@")
   set (@opm-project_NAME@_DEFINITIONS "@opm-project_DEFINITIONS@")

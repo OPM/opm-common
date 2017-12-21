@@ -77,6 +77,7 @@ function (opm_cmake_config name)
 
   # write configuration file to locate library
   set(OPM_PROJECT_EXTRA_CODE ${OPM_PROJECT_EXTRA_CODE_INTREE})
+  set(PREREQ_LOCATION "${PROJECT_SOURCE_DIR}")
   configure_cmake_file (${name} "config" "")
   configure_cmake_file (${name} "config" "-version")
   configure_vars (
@@ -114,6 +115,7 @@ function (opm_cmake_config name)
   # create a config mode file which targets the install directory instead
   # of the build directory (using the same input template)
   set(OPM_PROJECT_EXTRA_CODE ${OPM_PROJECT_EXTRA_CODE_INSTALLED})
+  set(PREREQ_LOCATION "${CMAKE_INSTALL_PREFIX}/share/opm/cmake/Modules")
   configure_cmake_file (${name} "install" "")
   configure_vars (
 	FILE CMAKE "${PROJECT_BINARY_DIR}/${${name}_NAME}-install.cmake"
