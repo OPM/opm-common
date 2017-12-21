@@ -519,6 +519,15 @@ quantity foip( const fn_args& args ) {
              measure::volume };
 }
 
+quantity foipl( const fn_args& args ) {
+    if( !args.state.has( "OIPL" ) )
+        return { 0.0, measure::volume };
+
+    const auto& cells = args.state.at( "OIPL" ).data;
+    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
+             measure::volume };
+}
+
 quantity fwip( const fn_args& args ) {
     if( !args.state.has( "WIP" ) )
         return { 0.0, measure::volume };
@@ -797,6 +806,7 @@ static const std::unordered_map< std::string, ofun > funs = {
                    rate< rt::reservoir_gas, injector>), duration)},
 
     { "FOIP", foip },
+    { "FOIPL", foipl },
     { "FGIP", fgip },
     { "FWIP", fwip },
     { "FOE",  foe },
