@@ -144,7 +144,7 @@ function (opm_cmake_config name)
   # put this in the right system location; if we have binaries then it
   # should go in the arch-specific lib/ directory, otherwise use the
   # common/noarch lib/ directory (these targets come from UseMultiArch)
-  if (TARGET ${name})
+  if (${name}_TARGET)
 	set (_pkg_dir ${CMAKE_INSTALL_LIBDIR})
   else ()
 	set (_pkg_dir lib)
