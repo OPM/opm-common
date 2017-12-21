@@ -510,6 +510,16 @@ quantity fgip( const fn_args& args ) {
              measure::volume };
 }
 
+quantity fgipg( const fn_args& args ) {
+    quantity zero { 0.0, measure::volume };
+    if( !args.state.has( "GIPG" ) )
+        return zero;
+
+    const auto& cells = args.state.at( "GIPG" ).data;
+    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
+             measure::volume };
+}
+
 quantity foip( const fn_args& args ) {
     if( !args.state.has( "OIP" ) )
         return { 0.0, measure::volume };
@@ -808,6 +818,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FOIP", foip },
     { "FOIPL", foipl },
     { "FGIP", fgip },
+    { "FGIPG", fgipg },
     { "FWIP", fwip },
     { "FOE",  foe },
 

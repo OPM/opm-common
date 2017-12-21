@@ -759,10 +759,12 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     const double foip = 11.0 * 1000 - 2*10;    // Cell (1,2,10) is inactive.
     const double foipl = 10.0 * 1000 - (2*10 - 1);    // Cell (1,2,10) is inactive.
     const double fgip = 11.55 * 1000 - 2.1*10; // Cell (1,2,10) is inactive.
+    const double fgipg = 12.55 * 1000 - (2.1*10 + 1); // Cell (1,2,10) is inactive.
     const double fwip = 12.1 * 1000 - 2.2*10; // Cell (1,2,10) is inactive.
     BOOST_CHECK_CLOSE( foip, ecl_sum_get_field_var( resp, 1, "FOIP" ), 1e-5 );
     BOOST_CHECK_CLOSE( foipl, ecl_sum_get_field_var( resp, 1, "FOIPL" ), 1e-5 );
     BOOST_CHECK_CLOSE( fgip, ecl_sum_get_field_var( resp, 1, "FGIP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( fgipg, ecl_sum_get_field_var( resp, 1, "FGIPG" ), 1e-5 );
     BOOST_CHECK_CLOSE( fwip, ecl_sum_get_field_var( resp, 1, "FWIP" ), 1e-5 );
 
     BOOST_CHECK_EQUAL( 1, ecl_sum_get_field_var( resp, 1, "FMWIN" ) );
