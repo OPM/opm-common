@@ -519,6 +519,15 @@ quantity foip( const fn_args& args ) {
              measure::volume };
 }
 
+quantity fwip( const fn_args& args ) {
+    if( !args.state.has( "WIP" ) )
+        return { 0.0, measure::volume };
+
+    const auto& cells = args.state.at( "WIP" ).data;
+    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
+             measure::volume };
+}
+
 quantity foe( const fn_args& args ) {
     const quantity val = { foip( args ).value, measure::identity };
     return (args.initial_oip - val) / args.initial_oip;
@@ -789,6 +798,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "FOIP", foip },
     { "FGIP", fgip },
+    { "FWIP", fwip },
     { "FOE",  foe },
 
     { "FWPRH", production_history< Phase::WATER > },
