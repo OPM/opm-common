@@ -70,6 +70,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/AqutabTable.hpp>
 
 namespace Opm {
 
@@ -798,6 +799,20 @@ const TableColumn& RvvdTable::getDepthColumn() const {
 }
 
 const TableColumn& RvvdTable::getRvColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
+AqutabTable::AqutabTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema( "TD" ,  Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ) );
+    m_schema.addColumn( ColumnSchema( "PD"    ,  Table::RANDOM , Table::DEFAULT_LINEAR ) );
+    SimpleTable::init(item);
+}
+
+const TableColumn& AqutabTable::getTimeColumn() const {
+    return SimpleTable::getColumn(0); 
+}
+
+const TableColumn& AqutabTable::getPressureColumn() const {
     return SimpleTable::getColumn(1);
 }
 

@@ -9,7 +9,7 @@
  {"name" : "K2" , "value_type" : "INT"},
  {"name" : "FACE" , "value_type" : "STRING"},
  {"name" : "INFLUX_COEFF" , "value_type" : "DOUBLE" , "dimension" : "Length*Length"},
- {"name" : "INFLUX_MULT" , "value_type" : "DOUBLE" , "default_value" : 1.0},
+ {"name" : "INFLUX_MULT" , "value_type" : "DOUBLE" , "dimension" : "1" , "default_value" : 1.0},
  {"name" : "CONNECT_ADJOINING_ACTIVE_CELL" , "value_type" : "STRING" , "default_value" : "NO"}]}
  
  

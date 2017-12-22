@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp> // Phase::PhaseEnum
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
@@ -68,12 +69,13 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Tables/AqutabTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/JFunc.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 
@@ -82,6 +84,7 @@ namespace Opm {
     TableManager::TableManager( const Deck& deck )
         :
         m_tabdims( Tabdims(deck)),
+        m_aqudims( Aqudims(deck)),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
         hasEqlnum (deck.hasKeyword("EQLNUM")),
@@ -222,6 +225,7 @@ namespace Opm {
         addTables( "RSVD", m_eqldims->getNumEquilRegions());
         addTables( "RVVD", m_eqldims->getNumEquilRegions());
 
+        addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numMiscibleTables = ParserKeywords::MISCIBLE::NTMISC::defaultValue;
             if (deck.hasKeyword<ParserKeywords::MISCIBLE>()) {
@@ -278,6 +282,7 @@ namespace Opm {
 
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
 
@@ -549,6 +554,10 @@ namespace Opm {
     const Eqldims& TableManager::getEqldims() const {
         return *m_eqldims;
     }
+    
+    const Aqudims& TableManager::getAqudims() const {
+        return m_aqudims;
+    }
 
     /*
       const std::vector<SwofTable>& TableManager::getSwofTables() const {
@@ -682,6 +691,10 @@ namespace Opm {
     const TableContainer& TableManager::getPlyshlogTables() const {
         return getTables("PLYSHLOG");
     }
+    
+    const TableContainer& TableManager::getAqutabTables() const {
+        return getTables("AQUTAB");
+    } 
 
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
         return m_pvtgTables;
