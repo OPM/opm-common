@@ -355,6 +355,7 @@ set( keywords
      000_Eclipse100/W/WELOPEN
      000_Eclipse100/W/WELPI
      000_Eclipse100/W/WELSEGS
+     000_Eclipse100/W/WSEGSICD
      000_Eclipse100/W/WELSPECS
      000_Eclipse100/W/WELTARG
      000_Eclipse100/W/WGASPROD
