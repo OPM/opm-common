@@ -317,6 +317,7 @@ set( keywords
      000_Eclipse100/T/TITLE
      000_Eclipse100/T/TLMIXPAR
      000_Eclipse100/T/TNUM
+     000_Eclipse100/T/TOLCRIT
      000_Eclipse100/T/TOPS
      000_Eclipse100/T/TRACER
      000_Eclipse100/T/TRACERS

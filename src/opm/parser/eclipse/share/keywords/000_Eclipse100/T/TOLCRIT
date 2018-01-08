@@ -1,0 +1,8 @@
+{
+  "name": "TOLCRIT",
+  "sections": ["PROPS"],
+  "size" : 1,
+  "items" : [
+    {"name": "VALUE", "value_type": "DOUBLE", "default": 1e-6, "dimension": "1" }
+  ]
+}
