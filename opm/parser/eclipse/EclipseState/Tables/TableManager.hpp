@@ -1,5 +1,6 @@
 /*
   Copyright 2015 Statoil ASA.
+  Copyright 2018 IRIS
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -80,6 +81,8 @@ namespace Opm {
         const TableContainer& getSsfnTables() const;
         const TableContainer& getRsvdTables() const;
         const TableContainer& getRvvdTables() const;
+        const TableContainer& getPbvdTables() const;
+        const TableContainer& getPdvdTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;

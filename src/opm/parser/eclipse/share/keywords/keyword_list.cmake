@@ -189,6 +189,7 @@ set( keywords
      000_Eclipse100/P/PATHS
      000_Eclipse100/P/PBVD
      000_Eclipse100/P/PCG
+     000_Eclipse100/P/PDVD
      000_Eclipse100/P/PERFORMANCE_PROBE
      000_Eclipse100/P/PERMR
      000_Eclipse100/P/PERMTHT

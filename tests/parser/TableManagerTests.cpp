@@ -40,6 +40,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
+
 
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 
@@ -271,6 +274,60 @@ BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
     BOOST_CHECK_EQUAL(swof2Table.getSwColumn().back(), 17.0);
 }
 
+BOOST_AUTO_TEST_CASE(PbvdTable_Tests) {
+    const char *deckData =
+        "EQLDIMS\n"
+        "2 /\n"
+        "\n"
+        "PBVD\n"
+        " 1 1 \n"
+        " 2 1 / \n"
+        "  3 2\n"
+        " 2 2\n"
+        " 1 2/\n";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deckData, Opm::ParseContext());
+
+    Opm::PbvdTable pbvdTable1(deck.getKeyword("PBVD").getRecord(0).getItem(0));
+
+    BOOST_CHECK_EQUAL(pbvdTable1.numRows(), 2);
+    BOOST_CHECK_EQUAL(pbvdTable1.numColumns(), 2);
+    BOOST_CHECK_EQUAL(pbvdTable1.getDepthColumn().front(), 1);
+    BOOST_CHECK_EQUAL(pbvdTable1.getDepthColumn().back(), 2);
+    BOOST_CHECK_EQUAL(pbvdTable1.getPbubColumn().front(), 100000); // 1 barsa
+
+    // depth must be increasing down the column.
+    BOOST_CHECK_THROW(Opm::PbvdTable pbvdTable2(deck.getKeyword("PBVD").getRecord(1).getItem(0)), std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(PdvdTable_Tests) {
+    const char *deckData =
+        "EQLDIMS\n"
+        "2 /\n"
+        "\n"
+        "PDVD\n"
+        " 1 1 \n"
+        " 2 1 / \n"
+        "  3 2\n"
+        " 2 2\n"
+        " 1 2/\n";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deckData, Opm::ParseContext());
+
+    Opm::PdvdTable pdvdTable1(deck.getKeyword("PDVD").getRecord(0).getItem(0));
+
+    BOOST_CHECK_EQUAL(pdvdTable1.numRows(), 2);
+    BOOST_CHECK_EQUAL(pdvdTable1.numColumns(), 2);
+    BOOST_CHECK_EQUAL(pdvdTable1.getDepthColumn().front(), 1);
+    BOOST_CHECK_EQUAL(pdvdTable1.getDepthColumn().back(), 2);
+    BOOST_CHECK_EQUAL(pdvdTable1.getPdewColumn().front(), 100000); // 1 barsa
+
+    // depth must be increasing down the column.
+    BOOST_CHECK_THROW(Opm::PdvdTable pdvdTable2(deck.getKeyword("PDVD").getRecord(1).getItem(0)), std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
     const char *deckData =
