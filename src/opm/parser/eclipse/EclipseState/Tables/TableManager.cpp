@@ -1,5 +1,6 @@
 /*
   Copyright 2015 Statoil ASA.
+  Copyright 2018 IRIS
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -52,6 +53,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
@@ -224,6 +227,8 @@ namespace Opm {
         addTables( "PLYMAX", m_regdims->getNPLMIX());
         addTables( "RSVD", m_eqldims->getNumEquilRegions());
         addTables( "RVVD", m_eqldims->getNumEquilRegions());
+        addTables( "PBVD", m_eqldims->getNumEquilRegions());
+        addTables( "PDVD", m_eqldims->getNumEquilRegions());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -282,6 +287,8 @@ namespace Opm {
 
         initSimpleTableContainer<RsvdTable>(deck, "RSVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
@@ -608,6 +615,14 @@ namespace Opm {
 
     const TableContainer& TableManager::getRvvdTables() const {
         return getTables("RVVD");
+    }
+
+    const TableContainer& TableManager::getPbvdTables() const {
+        return getTables("PBVD");
+    }
+
+    const TableContainer& TableManager::getPdvdTables() const {
+        return getTables("PDVD");
     }
 
     const TableContainer& TableManager::getEnkrvdTables() const {
