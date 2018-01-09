@@ -286,6 +286,10 @@ foreach (test BoxTest
     add_test(NAME ${test} COMMAND ${test} ${_testdir}/integration_tests/)
 endforeach ()
 
+add_executable(generated-kw-test ${CMAKE_CURRENT_BINARY_DIR}/inlinekw.cpp)
+target_link_libraries(generated-kw-test opmparser boost_test)
+add_test(NAME generated-kw-test COMMAND generated-kw-test)
+
 add_executable(parse_write tests/integration/parse_write.cpp)
 target_link_libraries(parse_write opmparser boost_test)
 
