@@ -41,49 +41,36 @@ namespace Opm {
     {}
 
 
-    WellProductionProperties WellProductionProperties::history(double BHPLimit, const DeckRecord& record, const Phases &phases)
+    WellProductionProperties WellProductionProperties::history(const double BHPLimit, const DeckRecord& record)
     {
-        // Modes supported in WCONHIST just from {O,W,G}RAT values
-        //
-        // Note: The default value of observed {O,W,G}RAT is zero
-        // (numerically) whence the following control modes are
-        // unconditionally supported.
         WellProductionProperties p(record);
         p.predictionMode = false;
 
-        namespace wp = WellProducer;
-        if(phases.active(Phase::OIL))
-            p.addProductionControl( wp::ORAT );
-
-        if(phases.active(Phase::WATER))
-            p.addProductionControl( wp::WRAT );
-
-        if(phases.active(Phase::GAS))
-            p.addProductionControl( wp::GRAT );
-
-        for( auto cmode : { wp::LRAT, wp::RESV, wp::GRUP } ) {
-            p.addProductionControl( cmode );
-        }
-
-        /*
-          We do not update the BHPLIMIT based on the BHP value given
-          in WCONHIST, that is purely a historical value; instead we
-          copy the old value of the BHP limit from the previous
-          timestep.
-
-          To actually set the BHPLIMIT in historical mode you must
-          use the WELTARG keyword.
-        */
-        p.BHPLimit = BHPLimit;
 
         const auto& cmodeItem = record.getItem("CMODE");
-        if (!cmodeItem.defaultApplied(0)) {
-            const auto cmode = WellProducer::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
-
-            if (p.hasProductionControl( cmode ))
+        if ( !cmodeItem.defaultApplied(0) ) {
+            namespace wp = WellProducer;
+            const auto cmode = wp::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
+            if (cmode == wp::LRAT || cmode == wp::RESV || cmode == wp::ORAT ||
+                cmode == wp::WRAT || cmode == wp::GRAT || cmode == wp::BHP) {
+                p.addProductionControl( cmode );
                 p.controlMode = cmode;
+            } else {
+                const std::string cmode_string = cmodeItem.getTrimmedString( 0 );
+                const std::string msg = "unsupported control mode " + cmode_string + " for WCONHIST";
+                throw std::invalid_argument(msg);
+            }
+
+            // always have a BHP control/limit, while the limit value needs to be determined
+            // the control mode added above can be a BHP control or a type of RATE control
+            if ( !p.hasProductionControl( wp::BHP ) )
+                p.addProductionControl( wp::BHP );
+
+
+            if (cmode == wp::BHP)
+                p.BHPLimit = record.getItem( "BHP" ).getSIDouble( 0 );
             else
-                throw std::invalid_argument("Setting CMODE to unspecified control");
+                p.BHPLimit = BHPLimit;
         }
 
         if ( record.getItem( "BHP" ).hasValue(0) )

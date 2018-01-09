@@ -455,33 +455,16 @@ namespace Opm {
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
                 } else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
-                    double BHPLimit = prev_properties.BHPLimit;
-                    properties = WellProductionProperties::history( BHPLimit , record, m_phases);
+                    const double BHPLimit = prev_properties.BHPLimit;
+                    properties = WellProductionProperties::history( BHPLimit , record);
                 }
 
                 if (status != WellCommon::SHUT) {
-                        std::string cmodeString =
-                        record.getItem("CMODE").getTrimmedString(0);
-
-                    WellProducer::ControlModeEnum control =
-                        WellProducer::ControlModeFromString(cmodeString);
-
-
                     if ( m_controlModeWHISTCTL != WellProducer::CMODE_UNDEFINED &&
                          m_controlModeWHISTCTL != WellProducer::NONE && !isPredictionMode){
-                        control = m_controlModeWHISTCTL; // overwrite given control
-                        cmodeString = WellProducer::ControlMode2String(control); // update the string
-                    }
-
-                    if (properties.hasProductionControl(control)) {
-                        properties.controlMode = control;
-                    }
-                    else {
-                        std::string msg =
-                            "Tried to set invalid control: " +
-                            cmodeString + " for well: " + well->name();
-                        m_messages.error(keyword.getFileName(), msg, keyword.getLineNumber());
-                        throw std::invalid_argument(msg);
+                        if ( !properties.hasProductionControl(m_controlModeWHISTCTL) )
+                            properties.addProductionControl(m_controlModeWHISTCTL);
+                        properties.controlMode = m_controlModeWHISTCTL;
                     }
                 }
                 updateWellStatus( *well , currentStep , status );
