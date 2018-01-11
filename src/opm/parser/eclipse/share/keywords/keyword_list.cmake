@@ -99,6 +99,7 @@ set( keywords
      000_Eclipse100/F/FMTIN
      000_Eclipse100/F/FMTOUT
      000_Eclipse100/F/FMWSET
+     000_Eclipse100/F/FRICTION
      000_Eclipse100/F/FULLIMP
      000_Eclipse100/G/GAS
      000_Eclipse100/G/GCONINJE
