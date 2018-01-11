@@ -30,6 +30,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/OpmLog/OpmLog.cpp
       opm/common/OpmLog/StreamLog.cpp
       opm/common/OpmLog/TimerLog.cpp
+      opm/core/utility/MonotCubicInterpolator.cpp
       opm/core/utility/parameters/Parameter.cpp
       opm/core/utility/parameters/ParameterGroup.cpp
       opm/core/utility/parameters/ParameterTools.cpp
@@ -41,6 +42,7 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_ConditionalStorage.cpp
       tests/test_OpmLog.cpp
       tests/test_messagelimiter.cpp
+      tests/test_nonuniformtablelinear.cpp
       tests/test_param.cpp
 )
 
@@ -78,6 +80,11 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/util/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
+      opm/core/utility/linearInterpolation.hpp
+      opm/core/utility/MonotCubicInterpolator.hpp
+      opm/core/utility/NonuniformTableLinear.hpp
+      opm/core/utility/RootFinders.hpp
+      opm/core/utility/SparseVector.hpp
       opm/core/utility/parameters/ParameterGroup.hpp
       opm/core/utility/parameters/ParameterGroup_impl.hpp
       opm/core/utility/parameters/Parameter.hpp
