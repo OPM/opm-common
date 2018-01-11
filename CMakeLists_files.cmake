@@ -30,6 +30,10 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/OpmLog/OpmLog.cpp
       opm/common/OpmLog/StreamLog.cpp
       opm/common/OpmLog/TimerLog.cpp
+      opm/core/utility/compressedToCartesian.cpp
+      opm/core/utility/Event.cpp
+      opm/core/utility/MonotCubicInterpolator.cpp
+      opm/core/utility/NullStream.cpp
       opm/core/utility/parameters/Parameter.cpp
       opm/core/utility/parameters/ParameterGroup.cpp
       opm/core/utility/parameters/ParameterTools.cpp
@@ -40,8 +44,11 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_cmp.cpp
       tests/test_ConditionalStorage.cpp
       tests/test_OpmLog.cpp
+      tests/test_event.cpp
       tests/test_messagelimiter.cpp
+      tests/test_regionmapping.cpp
       tests/test_param.cpp
+      tests/test_sparsevector.cpp
 )
 
 list (APPEND TEST_DATA_FILES
@@ -78,6 +85,21 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/util/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
+      opm/core/utility/Average.hpp
+      opm/core/utility/compressedToCartesian.hpp
+      opm/core/utility/DataMap.hpp
+      opm/core/utility/Event.hpp
+      opm/core/utility/Event_impl.hpp
+      opm/core/utility/Factory.hpp
+      opm/core/utility/have_boost_redef.hpp
+      opm/core/utility/linearInterpolation.hpp
+      opm/core/utility/MonotCubicInterpolator.hpp
+      opm/core/utility/NullStream.hpp
+      opm/core/utility/RegionMapping.hpp
+      opm/core/utility/RootFinders.hpp
+      opm/core/utility/share_obj.hpp
+      opm/core/utility/SparseVector.hpp
+      opm/core/utility/UniformTableLinear.hpp
       opm/core/utility/parameters/ParameterGroup.hpp
       opm/core/utility/parameters/ParameterGroup_impl.hpp
       opm/core/utility/parameters/Parameter.hpp
