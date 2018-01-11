@@ -64,7 +64,7 @@ namespace Opm {
         }
     }
 
-    OilVaporizationProperties OilVaporizationProperties::createDRSDT(double maximum, std::string option){
+    OilVaporizationProperties OilVaporizationProperties::createDRSDT(double maximum, const std::string& option){
         OilVaporizationProperties ovp;
         ovp.m_type = Opm::OilVaporizationEnum::DRSDT;
         ovp.m_maxDRSDT = maximum;
