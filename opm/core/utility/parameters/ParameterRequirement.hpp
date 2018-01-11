@@ -205,7 +205,7 @@ namespace Opm {
 	/// @todo Doc me!
 	/// @param
 	struct ParameterRequirementMemberOf {
-	    ParameterRequirementMemberOf(const std::vector<std::string>& elements)
+	    explicit ParameterRequirementMemberOf(const std::vector<std::string>& elements)
 	    : elements_(elements) {
 		assert(elements_.size() > 0);
 	    }
