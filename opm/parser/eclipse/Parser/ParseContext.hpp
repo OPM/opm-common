@@ -100,6 +100,10 @@ namespace Opm {
         */
         void addKey(const std::string& key);
         /*
+          Add comment here.
+        */
+        const static std::string IGNORE_EXTRA_RECORDS;
+        /*
           The unknownKeyword field regulates how the parser should
           react when it encounters an unknwon keyword. Observe that
           'keyword' in this context means:

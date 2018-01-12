@@ -229,6 +229,8 @@ class ParserState {
 
     public:
         std::shared_ptr< RawKeyword > rawKeyword;
+        ParserKeywordSizeEnum lastSizeType;
+        
         string_view nextKeyword = emptystr;
         Deck deck;
         const ParseContext& parseContext;
@@ -337,7 +339,9 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
     std::stringstream msg;
     std::string trimmedCopy = keywordString.string();
 
-    if (trimmedCopy == "/") {
+    if (lastSizeType == OTHER_KEYWORD_IN_DECK)
+      errorKey = ParseContext::IGNORE_EXTRA_RECORDS;
+    else if (trimmedCopy == "/") {
         errorKey = ParseContext::PARSE_RANDOM_SLASH;
         msg << "Extra '/' detected at: "
             << this->current_path()
@@ -484,10 +488,15 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
         if( parserState.rawKeyword == NULL ) {
             if( RawKeyword::isKeywordPrefix( line, keywordString ) ) {
                 parserState.rawKeyword = createRawKeyword( keywordString, parserState, parser );
+                if ( parser.isRecognizedKeyword(line) ) {
+                   const auto* parserKeyword = parser.getParserKeywordFromDeckName( line );
+                   parserState.lastSizeType = parserKeyword->getSizeType();
+                }
             } else {
                 /* We are looking at some random gibberish?! */
-                if (!parserState.unknown_keyword)
+                if (!parserState.unknown_keyword) {
                     parserState.handleRandomText( line );
+                }
             }
         } else {
             if (parserState.rawKeyword->getSizeType() == Raw::UNKNOWN) {
