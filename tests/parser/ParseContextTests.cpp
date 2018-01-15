@@ -105,11 +105,11 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records) {
     parser.addKeyword<ParserKeywords::GRID>();
     BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext ) , std::invalid_argument );
 
-    parseContext.update(ParseContext::IGNORE_EXTRA_RECORDS , InputError::IGNORE );
+    parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::IGNORE );
     parser.parseString( deck_string , parseContext );
     BOOST_CHECK( parser.hasKeyword( "GRID" ) );
 
-    parseContext.update(ParseContext::IGNORE_EXTRA_RECORDS , InputError::THROW_EXCEPTION );
+    parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::THROW_EXCEPTION );
     BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext ) , std::invalid_argument);
 }
 

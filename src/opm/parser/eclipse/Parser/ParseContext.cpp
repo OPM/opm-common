@@ -68,7 +68,7 @@ namespace Opm {
     }
 
     void ParseContext::initDefault() {
-        addKey(IGNORE_EXTRA_RECORDS);
+        addKey(PARSE_EXTRA_RECORDS);
         addKey(PARSE_UNKNOWN_KEYWORD);
         addKey(PARSE_RANDOM_TEXT);
         addKey(PARSE_RANDOM_SLASH);
@@ -244,7 +244,7 @@ namespace Opm {
         }
     }
 
-    const std::string ParseContext::IGNORE_EXTRA_RECORDS = "IGNORE_EXTRA_RECORDS";
+    const std::string ParseContext::PARSE_EXTRA_RECORDS = "PARSE_EXTRA_RECORDS";
     const std::string ParseContext::PARSE_UNKNOWN_KEYWORD = "PARSE_UNKNOWN_KEYWORD";
     const std::string ParseContext::PARSE_RANDOM_TEXT = "PARSE_RANDOM_TEXT";
     const std::string ParseContext::PARSE_RANDOM_SLASH = "PARSE_RANDOM_SLASH";
