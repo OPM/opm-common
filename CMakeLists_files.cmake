@@ -37,13 +37,16 @@ list (APPEND MAIN_SOURCE_FILES
 )
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_SimulationDataContainer.cpp
       tests/test_cmp.cpp
       tests/test_ConditionalStorage.cpp
-      tests/test_OpmLog.cpp
+      tests/test_cubic.cpp
       tests/test_messagelimiter.cpp
       tests/test_nonuniformtablelinear.cpp
+      tests/test_OpmLog.cpp
       tests/test_param.cpp
+      tests/test_SimulationDataContainer.cpp
+      tests/test_sparsevector.cpp
+      tests/test_uniformtablelinear.cpp
 )
 
 list (APPEND TEST_DATA_FILES
@@ -80,11 +83,14 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/util/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
+      opm/core/linalg/blas_lapack.h
+      opm/core/utility/buildUniformMonotoneTable.hpp
       opm/core/utility/linearInterpolation.hpp
       opm/core/utility/MonotCubicInterpolator.hpp
       opm/core/utility/NonuniformTableLinear.hpp
       opm/core/utility/RootFinders.hpp
       opm/core/utility/SparseVector.hpp
+      opm/core/utility/UniformTableLinear.hpp
       opm/core/utility/parameters/ParameterGroup.hpp
       opm/core/utility/parameters/ParameterGroup_impl.hpp
       opm/core/utility/parameters/Parameter.hpp
