@@ -495,6 +495,7 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
         if( parserState.rawKeyword == NULL ) {
             if( RawKeyword::isKeywordPrefix( line, keywordString ) ) {
                 parserState.rawKeyword = createRawKeyword( keywordString, parserState, parser );
+                parserState.lastSizeType = SLASH_TERMINATED;
                 if ( parser.isRecognizedKeyword(line) ) {
                    const auto* parserKeyword = parser.getParserKeywordFromDeckName( line );
                    parserState.lastSizeType = parserKeyword->getSizeType();

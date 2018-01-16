@@ -114,6 +114,33 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records) {
 }
 
 
+BOOST_AUTO_TEST_CASE(Handle_extra_records_2) {
+    const char * deck_string = 
+         "EQLDIMS\n"
+         "  2  100  20  1  1  /\n"
+         "\n"
+         "EQUIL\n"
+         "  2469   382.4   1705.0  0.0    500    0.0     1     1      20 /\n"
+         "  2469   382.4   1705.0  0.0    500    0.0     1     1      20 /\n"
+         "GRID\n"
+         "DIMENS\n"
+          " 10 10 3 /\n"
+          " 5 3 2 /\n";
+
+    ParseContext parseContext;
+    Parser parser(false);
+    
+    parser.addKeyword<ParserKeywords::EQLDIMS>();
+    parser.addKeyword<ParserKeywords::EQUIL>();
+    parser.addKeyword<ParserKeywords::GRID>();
+    parser.addKeyword<ParserKeywords::DIMENS>();
+
+    parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::IGNORE );
+    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext ), std::invalid_argument );
+    
+}
+
+
 BOOST_AUTO_TEST_CASE(TestUnkownKeyword_DATA) {
     const char * deck_string1 =
         "RUNSPEC\n"
