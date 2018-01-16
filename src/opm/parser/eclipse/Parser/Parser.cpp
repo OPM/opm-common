@@ -229,7 +229,7 @@ class ParserState {
 
     public:
         std::shared_ptr< RawKeyword > rawKeyword;
-        ParserKeywordSizeEnum lastSizeType;
+        ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
         std::string lastKeyWord;
         
         string_view nextKeyword = emptystr;
@@ -495,7 +495,6 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
         if( parserState.rawKeyword == NULL ) {
             if( RawKeyword::isKeywordPrefix( line, keywordString ) ) {
                 parserState.rawKeyword = createRawKeyword( keywordString, parserState, parser );
-                parserState.lastSizeType = SLASH_TERMINATED;
                 if ( parser.isRecognizedKeyword(line) ) {
                    const auto* parserKeyword = parser.getParserKeywordFromDeckName( line );
                    parserState.lastSizeType = parserKeyword->getSizeType();
