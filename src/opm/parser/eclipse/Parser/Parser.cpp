@@ -340,18 +340,20 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
     std::stringstream msg;
     std::string trimmedCopy = keywordString.string();
 
-    if (lastSizeType == OTHER_KEYWORD_IN_DECK) {
+
+    if (trimmedCopy == "/") {
+        errorKey = ParseContext::PARSE_RANDOM_SLASH;
+        msg << "Extra '/' detected at: "
+            << this->current_path()
+            << ":" << this->line();
+    }
+    else if (lastSizeType == OTHER_KEYWORD_IN_DECK) {
       errorKey = ParseContext::PARSE_EXTRA_RECORDS;
       msg << "Too many records in keyword: " 
           << lastKeyWord
           << ".\n";
     }
-    else if (trimmedCopy == "/") {
-        errorKey = ParseContext::PARSE_RANDOM_SLASH;
-        msg << "Extra '/' detected at: "
-            << this->current_path()
-            << ":" << this->line();
-    } else {
+    else {
         errorKey = ParseContext::PARSE_RANDOM_TEXT;
         msg << "String \'" << keywordString
             << "\' not formatted/recognized as valid keyword at: "
