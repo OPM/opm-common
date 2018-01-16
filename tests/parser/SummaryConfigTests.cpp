@@ -222,6 +222,7 @@ BOOST_AUTO_TEST_CASE(completions) {
     const auto summary = createSummary( input );
     const auto keywords = { "CGIR", "CGIR", "CGIR", "CGIR",
                             "CGIT", "CGIT",
+                            "CPRL", "CPRL", "CPRL", "CPRL",
                             "CWIR", "CWIR",
                             "CWIT", "CWIT" };
     const auto names = sorted_keywords( summary );
