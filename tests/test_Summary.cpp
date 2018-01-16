@@ -1063,6 +1063,43 @@ BOOST_AUTO_TEST_CASE(fpr) {
     BOOST_CHECK_CLOSE( fpr2_si, ecl_sum_get_field_var( resp2, 1, "FPR" ), 1e-5 ); //
 }
 
+BOOST_AUTO_TEST_CASE(fprp) {
+    setup cfg( "test_fprp", "summary_deck_non_constant_porosity.DATA");
+
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    // fprp = sum_ (p * pv ) / pv
+    const double fprp_si =  ( (3 * 0.1 + 8 * 0.2) * 500 ) / ( (500*0.1 + 500*0.2));
+    const double fprp = units.from_si( UnitSystem::measure::pressure, fprp_si );
+    BOOST_CHECK_CLOSE( fprp, ecl_sum_get_field_var( resp, 1, "FPRP" ), 1e-5 );
+
+    // Change pressure and check again
+    for (size_t g = 0; g < cfg.grid.getNumActive(); g++){
+            cfg.solution.data("PRESSURE")[g] = units.to_si( UnitSystem::measure::pressure, 1 );
+    }
+
+    out::Summary writer2( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+    writer2.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer2.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer2.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer2.write();
+
+    auto res2 = readsum( cfg.name );
+    const auto* resp2 = res2.get();
+
+    // fprp = sum_ (p * pv ) / pv
+    const double fprp2_si =  ( (0.8 * 0.1 + 0.3 * 0.2) * 500) / ( (0.8 * 0.1 + 0.3 * 0.2) * 500);
+    BOOST_CHECK_CLOSE( fprp2_si, ecl_sum_get_field_var( resp2, 1, "FPRP" ), 1e-5 );
+}
+
 BOOST_AUTO_TEST_CASE(rpr) {
     setup cfg( "test_rpr", "summary_deck_non_constant_porosity.DATA");
 
