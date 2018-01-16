@@ -113,11 +113,11 @@ namespace {
     const std::map<std::string , std::set<std::string>> required_fields =  {
          {"PRESSURE", {"FPR" , "RPR" , "BPR"}},
          {"OIP"  , {"ROIP" , "FOIP" , "FOE"}},
-         {"OIPL" , {"ROIPL"}},
-         {"OIPG" , {"ROIPG"}},
+         {"OIPL" , {"ROIPL" ,"FOIPL" }},
+         {"OIPG" , {"ROIPG" ,"FOIPG"}},
          {"GIP"  , {"RGIP" , "FGIP"}},
-         {"GIPL" , {"RGIPL"}},
-         {"GIPG" , {"RGIPG"}},
+         {"GIPL" , {"RGIPL" , "FGIPL"}},
+         {"GIPG" , {"RGIPG", "FGIPG"}},
          {"WIP"  , {"RWIP" , "FWIP"}},
          {"SWAT" , {"BSWAT"}},
          {"SGAS" , {"BSGAS"}}
