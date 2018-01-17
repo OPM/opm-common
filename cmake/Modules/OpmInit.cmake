@@ -74,3 +74,10 @@ if (USE_VERSIONED_DIR)
 else ()
   set (${project}_VER_DIR "")
 endif ()
+
+# parallel computing must be explicitly enabled
+# This needs to be in OpmInit as prereqs is called before OpmLibMain is included.
+option (USE_MPI "Use Message Passing Interface for parallel computing" OFF)
+if (NOT USE_MPI)
+  set (CMAKE_DISABLE_FIND_PACKAGE_MPI TRUE)
+endif ()
