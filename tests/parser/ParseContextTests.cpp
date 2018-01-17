@@ -137,7 +137,6 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records_2) {
 
     parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::IGNORE );
     BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext ), std::invalid_argument );
-    
 }
 
 

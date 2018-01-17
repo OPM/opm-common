@@ -349,8 +349,13 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
     }
     else if (lastSizeType == OTHER_KEYWORD_IN_DECK) {
       errorKey = ParseContext::PARSE_EXTRA_RECORDS;
-      msg << "Too many records in keyword: " 
+      msg << "String: \'" 
+          << keywordString
+          << "\' invalid."
+          << "Too many records in keyword: " 
           << lastKeyWord
+          << " at: "
+          << this->line()
           << ".\n";
     }
     else {
