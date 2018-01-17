@@ -446,6 +446,21 @@ quantity fpr( const fn_args& args ) {
     return { fpr / sum_hcpv, measure::pressure };
 }
 
+quantity fprp( const fn_args& args ) {
+    if( !args.state.has( "PRESSURE" ) )
+        return { 0.0, measure::pressure };
+
+    const auto& p = args.state.data( "PRESSURE" );
+    const auto& pv = args.pv;
+    double fprp = 0.0;
+    double sum_pv = 0.0;
+    for (size_t cell_index = 0; cell_index < p.size(); ++cell_index) {
+        fprp +=  pv[cell_index] * p[cell_index];
+        sum_pv += pv[cell_index];
+    }
+    return { fprp / sum_pv, measure::pressure };
+}
+
 quantity rpr(const fn_args& args) {
 
     const auto& cells = args.regionCache.cells( args.num );
@@ -857,6 +872,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FPR",   fpr },
+    { "FPRP",   fprp },
 
     /* Region properties */
     { "RPR" , rpr},
