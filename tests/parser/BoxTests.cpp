@@ -172,3 +172,20 @@ BOOST_AUTO_TEST_CASE(TestKeywordBox) {
     BOOST_CHECK( !boxManager.getInputBox() );
     BOOST_CHECK( boxManager.getActiveBox().equal( boxManager.getGlobalBox()));
 }
+
+
+BOOST_AUTO_TEST_CASE(BoxNineArg) {
+    const size_t nx = 10;
+    const size_t ny = 7;
+    const size_t nz = 6;
+    BOOST_CHECK_NO_THROW( Opm::Box(nx,ny,nz,0,7,0,5,1,2) );
+
+    // Invalid x dimension
+    BOOST_CHECK_THROW( Opm::Box(0,ny,nz,0,0,1,1,2,2), std::invalid_argument);
+
+    // J2 < J1
+    BOOST_CHECK_THROW( Opm::Box(nx,ny,nz,1,1,4,3,2,2), std::invalid_argument);
+
+    // K2 >= Nz
+    BOOST_CHECK_THROW( Opm::Box(nx,ny,nz,1,1,2,2,3,nz), std::invalid_argument);
+}

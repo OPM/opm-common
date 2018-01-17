@@ -31,6 +31,7 @@ namespace Opm {
         Box() = default;
         Box(int nx , int ny , int nz);
         Box(const Box& globalBox , int i1 , int i2 , int j1 , int j2 , int k1 , int k2); // Zero offset coordinates.
+        Box(int nx, int ny, int nz, int i1 , int i2 , int j1 , int j2 , int k1 , int k2);
         size_t size() const;
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
@@ -43,7 +44,6 @@ namespace Opm {
 
     private:
         void initIndexList();
-        static void assertDims(const Box& globalBox, size_t idim , int l1 , int l2);
         size_t m_dims[3] = { 0, 0, 0 };
         size_t m_offset[3];
         size_t m_stride[3];

@@ -21,6 +21,22 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 
+namespace {
+
+    void assert_dims(int len,  int l1 , int l2) {
+        if (len <= 0)
+            throw std::invalid_argument("Box must have finite size in all directions");
+
+        if ((l1 < 0) || (l2 < 0) || (l1 > l2))
+            throw std::invalid_argument("Invalid index values for sub box");
+
+        if (l2 >= len)
+            throw std::invalid_argument("Invalid index values for sub box");
+    }
+
+
+}
+
 namespace Opm {
 
     Box::Box(int nx , int ny , int nz) {
@@ -50,10 +66,10 @@ namespace Opm {
     }
 
 
-    Box::Box(const Box& globalBox , int i1 , int i2 , int j1 , int j2 , int k1 , int k2) {
-        assertDims(globalBox , 0 , i1 , i2);
-        assertDims(globalBox , 1 , j1 , j2);
-        assertDims(globalBox , 2 , k1 , k2);
+    Box::Box(int nx, int ny, int nz, int i1 , int i2 , int j1 , int j2 , int k1 , int k2) {
+        assert_dims(nx , i1 , i2);
+        assert_dims(ny , j1 , j2);
+        assert_dims(nz , k1 , k2);
 
         m_dims[0] = (size_t) (i2 - i1 + 1);
         m_dims[1] = (size_t) (j2 - j1 + 1);
@@ -64,10 +80,10 @@ namespace Opm {
         m_offset[2] = (size_t) k1;
 
         m_stride[0] = 1;
-        m_stride[1] = globalBox.getDim(0);
-        m_stride[2] = globalBox.getDim(0) * globalBox.getDim(1);
+        m_stride[1] = nx;
+        m_stride[2] = nx*ny;
 
-        if (size() == globalBox.size())
+        if (size() == nx*ny*nz) 
             m_isGlobal = true;
         else
             m_isGlobal = false;
@@ -76,13 +92,10 @@ namespace Opm {
     }
 
 
-    void Box::assertDims(const Box& globalBox, size_t idim , int l1 , int l2) {
-        if ((l1 < 0) || (l2 < 0) || (l1 > l2))
-            throw std::invalid_argument("Invalid index values for sub box");
+    Box::Box(const Box& globalBox , int i1 , int i2 , int j1 , int j2 , int k1 , int k2) :
+        Box(globalBox.getDim(0), globalBox.getDim(1), globalBox.getDim(2), i1,i2,j1,j2,k1,k2)
+    { }
 
-        if ((size_t) l2 >= globalBox.getDim(idim))
-            throw std::invalid_argument("Invalid index values for sub box");
-    }
 
 
     size_t Box::size() const {
