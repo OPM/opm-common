@@ -278,7 +278,6 @@ MonotCubicInterpolator::
 toString() const
 {
   const int precision = 20;
-  std::string dataString;
   std::stringstream dataStringStream;
   for (map<double,double>::const_iterator it = data.begin();
        it != data.end(); ++it) {
@@ -528,21 +527,21 @@ chopFlatEndpoints(const double epsilon) {
     // Erase data points that are similar to its right value from the left end.
     while ((xf_next_iterator != data.end()) &&
            (fabs(xf_iterator->second - xf_next_iterator->second) < epsilon )) {
-        xf_next_iterator++;
+        ++xf_next_iterator;
         data.erase(xf_iterator);
-	xf_iterator++;
+        ++xf_iterator;
     }
 
     xf_iterator = data.end();
-    xf_iterator--;   // (data.end() points beyond the last element)
+    --xf_iterator;   // (data.end() points beyond the last element)
     xf_next_iterator = xf_iterator;
-    xf_next_iterator--;
+    --xf_next_iterator;
     // Erase data points that are similar to its left value from the right end.
     while ((xf_next_iterator != data.begin()) &&
            (fabs(xf_iterator->second - xf_next_iterator->second) < epsilon )) {
-        xf_next_iterator--;
+        --xf_next_iterator;
         data.erase(xf_iterator);
-	xf_iterator--;
+        --xf_iterator;
     }
 
     // Finished chopping, so recompute function data:
@@ -604,12 +603,12 @@ shrinkFlatAreas(const double epsilon) {
         if (fabs(xf_iterator->second - xf_next_iterator->second) < epsilon ) {
             //cout << "erasing data pair" << xf_next_iterator->first << " " << xf_next_iterator->second << "\n";
             map <double,double>::iterator xf_tobedeleted_iterator = xf_next_iterator;
-            xf_next_iterator++;
+            ++xf_next_iterator;
             data.erase(xf_tobedeleted_iterator);
         }
         else {
-            xf_iterator++;
-            xf_next_iterator++;
+            ++xf_iterator;
+            ++xf_next_iterator;
         }
     }
 
@@ -623,7 +622,6 @@ computeSimpleDerivatives() const {
   ddata.clear();
 
   // Do endpoints first:
-  map<double,double>::const_iterator xf_prev_iterator;
   map<double,double>::const_iterator xf_iterator;
   map<double,double>::const_iterator xf_next_iterator;
   double diff;
