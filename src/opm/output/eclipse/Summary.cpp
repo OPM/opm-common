@@ -890,19 +890,19 @@ static const std::unordered_map< std::string, ofun > funs = {
                          production_history< Phase::OIL > ) ) },
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
-    { "FPR",   fpr },
+   // { "FPR",   fpr },
     { "FPRP",   fprp },
     { "FVPRT", res_vol_production_target },
 
     /* Region properties */
-    { "RPR" , rpr},
-    { "ROIP" , roip},
-    { "ROIPL" , roipl},
-    { "ROIPG" , roipg},
-    { "RGIP"  , rgip},
-    { "RGIPL" , rgipl},
-    { "RGIPG" , rgipg},
-    { "RWIP"  , rwip},
+//    { "RPR" , rpr},
+//    { "ROIP" , roip},
+//    { "ROIPL" , roipl},
+//    { "ROIPG" , roipg},
+//    { "RGIP"  , rgip},
+//    { "RGIPL" , rgipl},
+//    { "RGIPG" , rgipg},
+//    { "RWIP"  , rwip},
     { "ROIR"  , region_rate< rt::oil, injector > },
     { "RGIR"  , region_rate< rt::gas, injector > },
     { "RWIR"  , region_rate< rt::wat, injector > },
@@ -940,7 +940,28 @@ static const std::unordered_map< std::string, UnitSystem::measure> misc_units = 
   {"TIMESTEP" , UnitSystem::measure::time },
   {"TCPUDAY"  , UnitSystem::measure::time },
   {"STEPTYPE" , UnitSystem::measure::identity },
-  {"TELAPLIN" , UnitSystem::measure::time }
+  {"TELAPLIN" , UnitSystem::measure::time },
+  {"FWIP"     , UnitSystem::measure::volume },
+  {"FOIP"     , UnitSystem::measure::volume },
+  {"FGIP"     , UnitSystem::measure::volume },
+  {"FOIPL"    , UnitSystem::measure::volume },
+  {"FOIPG"    , UnitSystem::measure::volume },
+  {"FGIPL"    , UnitSystem::measure::volume },
+  {"FGIPG"    , UnitSystem::measure::volume },
+  {"FPR"      , UnitSystem::measure::pressure },
+  {"RPR"      , UnitSystem::measure::pressure },
+
+};
+
+static const std::unordered_map< std::string, UnitSystem::measure> region_units = {
+  {"RPR"      , UnitSystem::measure::pressure },
+  {"ROIP"     , UnitSystem::measure::volume },
+  {"ROIPL"    , UnitSystem::measure::volume },
+  {"ROIPG"    , UnitSystem::measure::volume },
+  {"RGIP"     , UnitSystem::measure::volume },
+  {"RGIPL"    , UnitSystem::measure::volume },
+  {"RGIPG"    , UnitSystem::measure::volume },
+  {"RWIP"     , UnitSystem::measure::volume }
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
@@ -977,6 +998,8 @@ class Summary::keyword_handlers {
         using fn = ofun;
         std::vector< std::pair< smspec_node_type*, fn > > handlers;
         std::map< std::string, smspec_node_type* > misc_nodes;
+        std::map< std::string, smspec_node_type* > region_nodes;
+
 };
 
 Summary::Summary( const EclipseState& st,
@@ -1033,29 +1056,37 @@ Summary::Summary( const EclipseState& st,
     for( const auto& node : sum ) {
         const auto* keyword = node.keyword();
 
+         const auto misc_pair = misc_units.find( keyword );
+         const auto funs_pair = funs.find( keyword );
+         const auto region_pair = region_units.find( keyword );
+
 	/*
 	  All summary values of the type ECL_SMSPEC_MISC_VAR must be
 	  passed explicitly in the misc_values map when calling
 	  add_timestep.
 	*/
-	if (node.type() == ECL_SMSPEC_MISC_VAR) {
-	    const auto pair = misc_units.find( keyword );
-	    if (pair == misc_units.end())
-  	        continue;
+         if (misc_pair != misc_units.end()) {
 
 	    auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
 					     keyword,
 					     node.wgname(),
 					     node.num(),
-					     st.getUnits().name( pair->second ),
+                                             st.getUnits().name( misc_pair->second ),
 					     0 );
 
 	    this->handlers->misc_nodes.emplace( keyword, nodeptr ); 
-        } else {
-	        if( funs.find( keyword ) == funs.end() ) {
-                unsupported_keywords.insert(keyword);
-                continue;
-            }
+        } else if (region_pair != region_units.end()) {
+
+             auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
+                                              keyword,
+                                              node.wgname(),
+                                              node.num(),
+                                              st.getUnits().name( region_pair->second ),
+                                              0 );
+
+             this->handlers->region_nodes.emplace( keyword, nodeptr );
+
+        } else if (funs_pair != funs.end()) {
 
             if ((node.type() == ECL_SMSPEC_COMPLETION_VAR) || (node.type() == ECL_SMSPEC_BLOCK_VAR)) {
                 int global_index = node.num() - 1;
@@ -1064,7 +1095,7 @@ Summary::Summary( const EclipseState& st,
             }
 
             /* get unit strings by calling each function with dummy input */
-            const auto handle = funs.find( keyword )->second;
+            const auto handle = funs_pair->second;
             const std::vector< const Well* > dummy_wells;
 
             const fn_args no_args { dummy_wells, // Wells from Schedule object
@@ -1088,7 +1119,9 @@ Summary::Summary( const EclipseState& st,
 					     0 );
 
 	    this->handlers->handlers.emplace_back( nodeptr, handle );
-	}
+        } else {
+             unsupported_keywords.insert(keyword);
+        }
     }
     for ( const auto& keyword : unsupported_keywords ) {
         Opm::OpmLog::info("Keyword " + std::string(keyword) + " is unhandled");
@@ -1101,7 +1134,8 @@ void Summary::add_timestep( int report_step,
                             const Schedule& schedule,
                             const data::Wells& wells ,
                             const data::Solution& state,
-                            const std::map<std::string, double>& misc_values) {
+                            const std::map<std::string, double>& misc_values,
+                            const std::map<std::string, std::vector<double>>& region_values) {
 
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
@@ -1131,17 +1165,29 @@ void Summary::add_timestep( int report_step,
 	ecl_sum_tstep_set_from_node( tstep, f.first, res );
     }
 
+    for( const auto& value_pair : region_values ) {
+        const std::string key = value_pair.first;
+        const auto node_pair = this->handlers->region_nodes.find( key );
+        if (node_pair != this->handlers->region_nodes.end()) {
+	    const auto * nodeptr = node_pair->second;
+            const auto unit = region_units.at( key );
+            const int num = smspec_node_get_num( nodeptr );
+            double si_value = value_pair.second[num];
+	    double output_value = es.getUnits().from_si(unit , si_value );
+	    ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
+        }
+    }
 
     for( const auto& value_pair : misc_values ) {
         const std::string key = value_pair.first;
-	const auto node_pair = this->handlers->misc_nodes.find( key );
-	if (node_pair != this->handlers->misc_nodes.end()) {
-	    const auto * nodeptr = node_pair->second;
-	    const auto unit = misc_units.at( key );
-	    double si_value = value_pair.second;
-	    double output_value = es.getUnits().from_si(unit , si_value );
-	    ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
-	}
+        const auto node_pair = this->handlers->misc_nodes.find( key );
+        if (node_pair != this->handlers->misc_nodes.end()) {
+            const auto * nodeptr = node_pair->second;
+            const auto unit = misc_units.at( key );
+            double si_value = value_pair.second;
+            double output_value = es.getUnits().from_si(unit , si_value );
+            ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
+        }
     }
 
     this->prev_tstep = tstep;

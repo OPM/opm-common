@@ -417,6 +417,7 @@ void EclipseIO::writeTimeStep(int report_step,
                               data::Solution cells,
                               data::Wells wells,
                               std::map<std::string, double> misc_summary_values,
+                              std::map<std::string, std::vector<double>> region_summary_values,
                               std::map<std::string, std::vector<double>> extra_restart,
 			      bool write_double)
  {
@@ -444,7 +445,8 @@ void EclipseIO::writeTimeStep(int report_step,
                                           schedule,
                                           wells ,
                                           cells ,
-                                          misc_summary_values );
+                                          misc_summary_values ,
+                                          region_summary_values);
         this->impl->summary.write();
     }
 

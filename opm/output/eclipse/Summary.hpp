@@ -56,7 +56,8 @@ class Summary {
                            const Schedule& schedule,
                            const data::Wells&,
                            const data::Solution&,
-                           const std::map<std::string, double>& misc_values);
+                           const std::map<std::string, double>& misc_values,
+                           const std::map<std::string, std::vector<double>>& region_values = {});
 
         void set_initial( const data::Solution& );
         void write();

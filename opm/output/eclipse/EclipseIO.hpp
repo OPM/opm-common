@@ -176,6 +176,7 @@ public:
                         data::Solution,
                         data::Wells,
                         std::map<std::string, double> misc_summary_values,
+                        std::map<std::string, std::vector<double>> region_summary_values = {},
                         std::map<std::string, std::vector<double>> extra_restart = {},
 			bool write_double = false);
 
