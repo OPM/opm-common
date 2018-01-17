@@ -278,7 +278,6 @@ MonotCubicInterpolator::
 toString() const
 {
   const int precision = 20;
-  std::string dataString;
   std::stringstream dataStringStream;
   for (map<double,double>::const_iterator it = data.begin();
        it != data.end(); ++it) {
@@ -623,7 +622,6 @@ computeSimpleDerivatives() const {
   ddata.clear();
 
   // Do endpoints first:
-  map<double,double>::const_iterator xf_prev_iterator;
   map<double,double>::const_iterator xf_iterator;
   map<double,double>::const_iterator xf_next_iterator;
   double diff;
