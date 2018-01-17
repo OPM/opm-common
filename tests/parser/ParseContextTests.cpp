@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/O.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
@@ -82,6 +83,60 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
     parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
     parseContext.update(ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( parser.parseString( deck2 , parseContext ) );
+}
+
+
+BOOST_AUTO_TEST_CASE(Handle_extra_records) {
+    const char * deck_string = 
+         "EQLDIMS\n"
+         "  2  100  20  1  1  /\n"
+         "\n"
+         "EQUIL\n"
+         "  2469   382.4   1705.0  0.0    500    0.0     1     1      20 /\n"
+         "  2469   382.4   1705.0  0.0    500    0.0     1     1      20 /\n"
+         "  2470   382.4   1705.0  0.0    500    0.0     1     1      20 /\n"
+         "GRID\n";
+
+    ParseContext parseContext;
+    Parser parser(false);
+    
+    parser.addKeyword<ParserKeywords::EQLDIMS>();
+    parser.addKeyword<ParserKeywords::EQUIL>();
+    parser.addKeyword<ParserKeywords::GRID>();
+    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext ) , std::invalid_argument );
+
+    parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::IGNORE );
+    parser.parseString( deck_string , parseContext );
+    BOOST_CHECK( parser.hasKeyword( "GRID" ) );
+
+    parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext ) , std::invalid_argument);
+}
+
+
+BOOST_AUTO_TEST_CASE(Handle_extra_records_2) {
+    const char * deck_string = 
+         "EQLDIMS\n"
+         "  2  100  20  1  1  /\n"
+         "\n"
+         "EQUIL\n"
+         "  2469   382.4   1705.0  0.0    500    0.0     1     1      20 /\n"
+         "  2469   382.4   1705.0  0.0    500    0.0     1     1      20 /\n"
+         "GRID\n"
+         "DIMENS\n"
+          " 10 10 3 /\n"
+          " 5 3 2 /\n";
+
+    ParseContext parseContext;
+    Parser parser(false);
+    
+    parser.addKeyword<ParserKeywords::EQLDIMS>();
+    parser.addKeyword<ParserKeywords::EQUIL>();
+    parser.addKeyword<ParserKeywords::GRID>();
+    parser.addKeyword<ParserKeywords::DIMENS>();
+
+    parseContext.update(ParseContext::PARSE_EXTRA_RECORDS , InputError::IGNORE );
+    BOOST_CHECK_THROW( parser.parseString( deck_string , parseContext ), std::invalid_argument );
 }
 
 

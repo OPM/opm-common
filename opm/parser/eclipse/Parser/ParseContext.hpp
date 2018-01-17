@@ -100,6 +100,24 @@ namespace Opm {
         */
         void addKey(const std::string& key);
         /*
+          The PARSE_EXTRA_RECORDS field regulates how the parser 
+          responds to keywords whose size has been defined in the 
+          previous keyword. 
+          Example:
+          EQLDIMS
+            2  100  20  1  1  /
+          EQUIL\n
+           2469   382.4   1705.0  0.0    500    0.0     1     1      20 /
+           2469   382.4   1705.0  0.0    500    0.0     1     1      20 /
+           2470   382.4   1705.0  0.0    500    0.0     1     1      20 /
+          EQLDIMS's first entry is 2 and defines the record size of the 
+          EQUIL keyword. Since there are 3 records in EQUIL, this results 
+          in an error that needs to be handled by the parser. By default, 
+          an exception is thrown, or it may be specified in the 
+          PARSE_EXTRA_RECORDS field that this error is to be ignored. 
+        */
+        const static std::string PARSE_EXTRA_RECORDS;
+        /*
           The unknownKeyword field regulates how the parser should
           react when it encounters an unknwon keyword. Observe that
           'keyword' in this context means:

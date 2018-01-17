@@ -229,6 +229,9 @@ class ParserState {
 
     public:
         std::shared_ptr< RawKeyword > rawKeyword;
+        ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
+        std::string lastKeyWord;
+        
         string_view nextKeyword = emptystr;
         Deck deck;
         const ParseContext& parseContext;
@@ -337,12 +340,25 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
     std::stringstream msg;
     std::string trimmedCopy = keywordString.string();
 
+
     if (trimmedCopy == "/") {
         errorKey = ParseContext::PARSE_RANDOM_SLASH;
         msg << "Extra '/' detected at: "
             << this->current_path()
             << ":" << this->line();
-    } else {
+    }
+    else if (lastSizeType == OTHER_KEYWORD_IN_DECK) {
+      errorKey = ParseContext::PARSE_EXTRA_RECORDS;
+      msg << "String: \'" 
+          << keywordString
+          << "\' invalid."
+          << "Too many records in keyword: " 
+          << lastKeyWord
+          << " at: "
+          << this->line()
+          << ".\n";
+    }
+    else {
         errorKey = ParseContext::PARSE_RANDOM_TEXT;
         msg << "String \'" << keywordString
             << "\' not formatted/recognized as valid keyword at: "
@@ -484,10 +500,17 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
         if( parserState.rawKeyword == NULL ) {
             if( RawKeyword::isKeywordPrefix( line, keywordString ) ) {
                 parserState.rawKeyword = createRawKeyword( keywordString, parserState, parser );
+                parserState.lastSizeType = SLASH_TERMINATED;
+                if ( parser.isRecognizedKeyword(line) ) {
+                   const auto* parserKeyword = parser.getParserKeywordFromDeckName( line );
+                   parserState.lastSizeType = parserKeyword->getSizeType();
+                   parserState.lastKeyWord = parserState.rawKeyword->getKeywordName();
+                }
             } else {
                 /* We are looking at some random gibberish?! */
-                if (!parserState.unknown_keyword)
+                if (!parserState.unknown_keyword) {
                     parserState.handleRandomText( line );
+                }
             }
         } else {
             if (parserState.rawKeyword->getSizeType() == Raw::UNKNOWN) {
