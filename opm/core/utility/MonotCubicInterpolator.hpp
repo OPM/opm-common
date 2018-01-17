@@ -71,7 +71,7 @@ class MonotCubicInterpolator {
 
       Ignores all lines not conforming to \<whitespace\>\<float\>\<whitespace\>\<float\>\<whatever\>\<newline\>
    */
-  MonotCubicInterpolator(const std::string & datafilename)
+  explicit MonotCubicInterpolator(const std::string & datafilename)
   {
     if (!read(datafilename)) {
       throw("Unable to constuct MonotCubicInterpolator from file.") ;
@@ -92,7 +92,7 @@ class MonotCubicInterpolator {
 
    */
 
- MonotCubicInterpolator(const char* datafilename)
+ explicit MonotCubicInterpolator(const char* datafilename)
   {
     if (!read(std::string(datafilename))) {
       throw("Unable to constuct MonotCubicInterpolator from file.") ;
