@@ -13,7 +13,6 @@ downstreams=(libecl
              opm-output
              opm-material
              opm-grid
-             opm-core
              ewoms
              opm-simulators
              opm-upscaling
@@ -23,7 +22,6 @@ declare -A downstreamRev
 downstreamRev[libecl]=master
 downstreamRev[opm-parser]=master
 downstreamRev[opm-material]=master
-downstreamRev[opm-core]=master
 downstreamRev[opm-grid]=master
 downstreamRev[opm-output]=master
 downstreamRev[ewoms]=master
