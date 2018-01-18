@@ -25,6 +25,7 @@ find_opm_package (
   "CXX11Features REQUIRED;
   dune-common REQUIRED;
   dune-geometry REQUIRED;
+  dune-uggrid;
   MPI;
   UG
   "

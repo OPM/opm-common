@@ -60,6 +60,7 @@ set (_opm_proj_exemptions
   dune-istl
   dune-grid
   dune-geometry
+  dune-uggrid
   dune-alugrid
   dune-localfunctions
   dune-fem
