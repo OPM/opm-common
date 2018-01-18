@@ -177,5 +177,37 @@ namespace Opm {
         return this->size() != 0;
     }
 
-}
 
+    int Box::lower(int dim) const {
+        return m_offset[dim];
+    }
+
+    int Box::upper(int dim) const {
+        return m_offset[dim] + m_dims[dim] - 1;
+    }
+
+    int Box::I1() const {
+        return lower(0);
+    }
+
+    int Box::I2() const {
+        return upper(0);
+    }
+
+    int Box::J1() const {
+        return lower(1);
+    }
+
+    int Box::J2() const {
+        return upper(1);
+    }
+
+    int Box::K1() const {
+        return lower(2);
+    }
+
+    int Box::K2() const {
+        return upper(2);
+    }
+
+}

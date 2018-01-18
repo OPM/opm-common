@@ -42,6 +42,14 @@ namespace Opm {
         std::vector<size_t>::const_iterator begin() const;
         std::vector<size_t>::const_iterator end() const;
 
+
+        int I1() const;
+        int I2() const;
+        int J1() const;
+        int J2() const;
+        int K1() const;
+        int K2() const;
+
     private:
         void initIndexList();
         size_t m_dims[3] = { 0, 0, 0 };
@@ -50,6 +58,9 @@ namespace Opm {
 
         bool   m_isGlobal;
         std::vector<size_t> m_indexList;
+
+        int lower(int dim) const;
+        int upper(int dim) const;
     };
 }
 
