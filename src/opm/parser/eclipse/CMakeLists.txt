@@ -67,6 +67,7 @@ set(opmparser_SOURCES Deck/Deck.cpp
                       EclipseState/Grid/NNC.cpp
                       EclipseState/Grid/PinchMode.cpp
                       EclipseState/Grid/SatfuncPropertyInitializers.cpp
+                      EclipseState/Grid/setKeywordBox.cpp
                       EclipseState/Grid/TransMult.cpp
                       EclipseState/InitConfig/Equil.cpp
                       EclipseState/InitConfig/InitConfig.cpp

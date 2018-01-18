@@ -112,49 +112,6 @@ namespace Opm {
 
 
 
-    void setKeywordBox( const DeckRecord& deckRecord,
-                        BoxManager& boxManager) {
-        const auto& I1Item = deckRecord.getItem("I1");
-        const auto& I2Item = deckRecord.getItem("I2");
-        const auto& J1Item = deckRecord.getItem("J1");
-        const auto& J2Item = deckRecord.getItem("J2");
-        const auto& K1Item = deckRecord.getItem("K1");
-        const auto& K2Item = deckRecord.getItem("K2");
-
-        size_t setCount = 0;
-
-        if (!I1Item.defaultApplied(0))
-            setCount++;
-
-        if (!I2Item.defaultApplied(0))
-            setCount++;
-
-        if (!J1Item.defaultApplied(0))
-            setCount++;
-
-        if (!J2Item.defaultApplied(0))
-            setCount++;
-
-        if (!K1Item.defaultApplied(0))
-            setCount++;
-
-        if (!K2Item.defaultApplied(0))
-            setCount++;
-
-        if (setCount == 6) {
-            boxManager.setKeywordBox( I1Item.get< int >(0) - 1,
-                                      I2Item.get< int >(0) - 1,
-                                      J1Item.get< int >(0) - 1,
-                                      J2Item.get< int >(0) - 1,
-                                      K1Item.get< int >(0) - 1,
-                                      K2Item.get< int >(0) - 1);
-        } else if (setCount != 0) {
-            std::string msg = "BOX modifiers on keywords must be either "
-                "specified completely or not at all. Ignoring.";
-            throw std::invalid_argument( msg );
-        }
-    }
-
     template< typename T >
     const MessageContainer& GridProperties<T>::getMessageContainer() const {
         return m_messages;

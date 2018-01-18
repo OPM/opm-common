@@ -33,6 +33,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Utility/String.hpp>
 
+#include "Grid/setKeywordBox.hpp"
+
 namespace Opm {
 
     namespace {
@@ -931,48 +933,4 @@ namespace Opm {
         return messages;
     }
 
-
-    void Eclipse3DProperties::setKeywordBox( const DeckKeyword& deckKeyword,
-                                           const DeckRecord& deckRecord,
-                                           BoxManager& boxManager) {
-        const auto& I1Item = deckRecord.getItem("I1");
-        const auto& I2Item = deckRecord.getItem("I2");
-        const auto& J1Item = deckRecord.getItem("J1");
-        const auto& J2Item = deckRecord.getItem("J2");
-        const auto& K1Item = deckRecord.getItem("K1");
-        const auto& K2Item = deckRecord.getItem("K2");
-
-        size_t setCount = 0;
-
-        if (!I1Item.defaultApplied(0))
-            setCount++;
-
-        if (!I2Item.defaultApplied(0))
-            setCount++;
-
-        if (!J1Item.defaultApplied(0))
-            setCount++;
-
-        if (!J2Item.defaultApplied(0))
-            setCount++;
-
-        if (!K1Item.defaultApplied(0))
-            setCount++;
-
-        if (!K2Item.defaultApplied(0))
-            setCount++;
-
-        if (setCount == 6) {
-            boxManager.setKeywordBox( I1Item.get< int >(0) - 1,
-                                      I2Item.get< int >(0) - 1,
-                                      J1Item.get< int >(0) - 1,
-                                      J2Item.get< int >(0) - 1,
-                                      K1Item.get< int >(0) - 1,
-                                      K2Item.get< int >(0) - 1);
-        } else if (setCount != 0) {
-            std::string msg = "BOX modifiers on keywords must be either "
-                "specified completely or not at all. Ignoring.";
-            m_intGridProperties.getMessageContainer().error(deckKeyword.getFileName() + std::to_string(deckKeyword.getLineNumber()) + msg);
-        }
-    }
 }

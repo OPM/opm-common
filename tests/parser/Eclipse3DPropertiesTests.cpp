@@ -476,3 +476,86 @@ BOOST_AUTO_TEST_CASE(TEMPI_TEST) {
     Setup s(createDeck());
     BOOST_CHECK_NO_THROW( s.props.getDoubleGridProperty("TEMPI") );
 }
+
+
+static Opm::Deck createMultiplyDeck() {
+    const auto* input = R"(
+RUNSPEC
+
+TITLE
+ 'TITTEL'
+
+DIMENS
+  100 21 20 /
+
+METRIC
+
+OIL
+WATER
+
+TABDIMS
+/
+
+START
+  19 JUN 2017
+/
+
+WELLDIMS
+  3 20 1
+/
+
+EQLDIMS
+    2* 100 2* /
+
+GRID
+
+
+DXV
+  5.0D0 10.0D0 2*20.0D0 45.0D0 95*50.0D0
+/
+
+DYV
+  21*4.285714D0
+/
+
+DZV
+  20*0.5D0
+/
+
+TOPS
+  2100*1000.0D0
+/
+
+
+PERMX
+  42000*100.0D0
+/
+
+
+COPY
+  'PERMX' 'PERMZ' /
+  'PERMX' 'PERMY' /
+/
+
+MULTIPLY
+  'PERMZ' 0.1D0 /
+  'PERMX' 0.1D0 *  *  1  21  *  1 / -- This is a weird way to specify the top layer! 
+/
+)";
+
+    Opm::Parser parser;
+    return parser.parseString(input, Opm::ParseContext() );
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(DefaultedBox) {
+  const Setup s(createMultiplyDeck());
+
+  const auto& permx   = s.props.getDoubleGridProperty("PERMX");
+  const auto& permz   = s.props.getDoubleGridProperty("PERMZ");
+
+  BOOST_CHECK_EQUAL( permx.iget(0,0,0)        , permz.iget(0,0,0));
+  BOOST_CHECK_EQUAL( permx.iget(0,0,1) * 0.10 , permz.iget(0,0,1));
+}

@@ -92,8 +92,6 @@ namespace Opm {
         void loadGridPropertyFromDeckKeyword(const Box& inputBox,
                                              const DeckKeyword& deckKeyword);
 
-        void setKeywordBox(const DeckKeyword& deckKeyword, const DeckRecord&, BoxManager& boxManager);
-
         std::string            m_defaultRegion;
         UnitSystem             m_deckUnitSystem;
         GridProperties<int>    m_intGridProperties;
