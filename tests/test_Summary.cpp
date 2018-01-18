@@ -404,9 +404,9 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     setup cfg( "test_Summary_group" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , {});
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution , {});
     writer.write();
 
     auto res = readsum( cfg.name );

@@ -727,15 +727,6 @@ static const std::unordered_map< std::string, UnitSystem::measure> region_units 
   {"RWIP"     , UnitSystem::measure::volume }
 };
 
-static const std::unordered_map< std::string, UnitSystem::measure> block_units = {
-  {"BPR"        , UnitSystem::measure::pressure},
-  {"BPRESSUR"   , UnitSystem::measure::pressure},
-  {"BSWAT"      , UnitSystem::measure::identity},
-  {"BWSAT"      , UnitSystem::measure::identity},
-  {"BSGAS"      , UnitSystem::measure::identity},
-  {"BGSAS"      , UnitSystem::measure::identity},
-};
-
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
                                               const smspec_node_type* node,
                                               size_t timestep ) {
