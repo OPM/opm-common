@@ -161,8 +161,6 @@ struct fn_args {
     const data::Solution& state;
     const out::RegionCache& regionCache;
     const EclipseGrid& grid;
-    double initial_oip;
-    const std::vector<double>& pv;
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -399,172 +397,6 @@ quantity region_rate( const fn_args& args ) {
         return { sum, rate_unit< phase >() };
     else
         return { -sum, rate_unit< phase >() };
-}
-
-quantity region_sum( const fn_args& args , const std::string& keyword , UnitSystem::measure unit) {
-    const auto& cells = args.regionCache.cells( args.num );
-    if (cells.empty())
-        return { 0.0 , unit };
-
-    double sum = 0;
-
-    if( args.state.count( keyword ) == 0 )
-        return { 0.0, unit };
-
-    const std::vector<double>& sim_value = args.state.data( keyword );
-    if (sim_value.size() != args.grid.getNumActive()) {
-      std::stringstream str;
-      str << "Wrongly sized data array passed to output for keyword "
-          << keyword << ", size=" << sim_value.size() << ", expected=" << args.grid.getNumActive() << ".";
-      throw std::runtime_error(str.str());
-    }
-
-
-    for (auto cell_index : cells)
-        sum += sim_value[cell_index];
-
-    return { sum , unit };
-}
-
-quantity fpr( const fn_args& args ) {
-    if( !args.state.has( "PRESSURE" ) )
-        return { 0.0, measure::pressure };
-
-    const auto& p = args.state.data( "PRESSURE" );
-    const auto& pv = args.pv;
-    const bool hasSwat = args.state.has( "SWAT" );
-    const auto& swat = hasSwat? args.state.data( "SWAT" ): std::vector<double>(p.size(),0.0);
-    double fpr = 0.0;
-    double sum_hcpv = 0.0;
-    for (size_t cell_index = 0; cell_index < p.size(); ++cell_index) {
-        double hcs= 1.0;
-        hcs -= swat[cell_index];
-        double hcpv = pv[cell_index]*hcs;
-        fpr +=  hcpv * p[cell_index];
-        sum_hcpv += hcpv;
-    }
-    return { fpr / sum_hcpv, measure::pressure };
-}
-
-quantity fprp( const fn_args& args ) {
-    if( !args.state.has( "PRESSURE" ) )
-        return { 0.0, measure::pressure };
-
-    const auto& p = args.state.data( "PRESSURE" );
-    const auto& pv = args.pv;
-    double fprp = 0.0;
-    double sum_pv = 0.0;
-    for (size_t cell_index = 0; cell_index < p.size(); ++cell_index) {
-        fprp +=  pv[cell_index] * p[cell_index];
-        sum_pv += pv[cell_index];
-    }
-    return { fprp / sum_pv, measure::pressure };
-}
-
-quantity rpr(const fn_args& args) {
-
-    const auto& cells = args.regionCache.cells( args.num );
-    if (cells.empty())
-        return { 0.0 , measure::pressure };
-
-    if( !args.state.has( "PRESSURE" ) )
-        return { 0.0, measure::pressure };
-
-    const auto& p = args.state.data( "PRESSURE" );
-    const auto& pv = args.pv;
-    const bool hasSwat = args.state.has( "SWAT" );
-
-    const auto& swat = hasSwat? args.state.data( "SWAT" ): std::vector<double>(cells.size(),0.0);
-    double rpr = 0.0;
-    double sum_hcpv = 0.0;
-    for (auto cell_index : cells) {
-        double hcs= 1.0;
-        hcs -= swat[cell_index];
-        double hcpv = pv[cell_index]*hcs;
-        rpr +=  hcpv * p[cell_index];
-        sum_hcpv += hcpv;
-    }
-    return { rpr / sum_hcpv, measure::pressure };
-}
-
-quantity roip(const fn_args& args) {
-    return region_sum( args , "OIP", measure::volume );
-}
-
-quantity rgip(const fn_args& args) {
-    return region_sum( args , "GIP", measure::volume );
-}
-
-quantity rwip(const fn_args& args) {
-    return region_sum( args , "WIP", measure::volume );
-}
-
-quantity roipl(const fn_args& args) {
-    return region_sum( args , "OIPL", measure::volume );
-}
-
-quantity roipg(const fn_args& args) {
-    return region_sum( args , "OIPG", measure::volume );
-}
-
-quantity rgipl(const fn_args& args) {
-    return region_sum( args , "GIPL", measure::volume );
-}
-
-quantity rgipg(const fn_args& args) {
-    return region_sum( args , "GIPG", measure::volume );
-}
-
-quantity fgip( const fn_args& args ) {
-    quantity zero { 0.0, measure::volume };
-    if( !args.state.has( "GIP" ) )
-        return zero;
-
-    const auto& cells = args.state.at( "GIP" ).data;
-    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
-             measure::volume };
-}
-
-quantity fgipg( const fn_args& args ) {
-    quantity zero { 0.0, measure::volume };
-    if( !args.state.has( "GIPG" ) )
-        return zero;
-
-    const auto& cells = args.state.at( "GIPG" ).data;
-    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
-             measure::volume };
-}
-
-quantity foip( const fn_args& args ) {
-    if( !args.state.has( "OIP" ) )
-        return { 0.0, measure::volume };
-
-    const auto& cells = args.state.at( "OIP" ).data;
-    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
-             measure::volume };
-}
-
-quantity foipl( const fn_args& args ) {
-    if( !args.state.has( "OIPL" ) )
-        return { 0.0, measure::volume };
-
-    const auto& cells = args.state.at( "OIPL" ).data;
-    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
-             measure::volume };
-}
-
-quantity fwip( const fn_args& args ) {
-    if( !args.state.has( "WIP" ) )
-        return { 0.0, measure::volume };
-
-    const auto& cells = args.state.at( "WIP" ).data;
-    return { std::accumulate( cells.begin(), cells.end(), 0.0 ),
-             measure::volume };
-}
-
-quantity foe( const fn_args& args ) {
-    const quantity val = { foip( args ).value, measure::identity };
-    return (args.initial_oip - val) / args.initial_oip;
 }
 
 quantity bpr( const fn_args& args) {
@@ -849,13 +681,6 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>), duration)},
 
-    { "FOIP", foip },
-    { "FOIPL", foipl },
-    { "FGIP", fgip },
-    { "FGIPG", fgipg },
-    { "FWIP", fwip },
-    { "FOE",  foe },
-
     { "FWPRH", production_history< Phase::WATER > },
     { "FOPRH", production_history< Phase::OIL > },
     { "FGPRH", production_history< Phase::GAS > },
@@ -890,19 +715,9 @@ static const std::unordered_map< std::string, ofun > funs = {
                          production_history< Phase::OIL > ) ) },
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
-   // { "FPR",   fpr },
-    { "FPRP",   fprp },
     { "FVPRT", res_vol_production_target },
 
     /* Region properties */
-//    { "RPR" , rpr},
-//    { "ROIP" , roip},
-//    { "ROIPL" , roipl},
-//    { "ROIPG" , roipg},
-//    { "RGIP"  , rgip},
-//    { "RGIPL" , rgipl},
-//    { "RGIPG" , rgipg},
-//    { "RWIP"  , rwip},
     { "ROIR"  , region_rate< rt::oil, injector > },
     { "RGIR"  , region_rate< rt::gas, injector > },
     { "RWIR"  , region_rate< rt::wat, injector > },
@@ -1024,8 +839,7 @@ Summary::Summary( const EclipseState& st,
                   const char* basename ) :
     grid( grid_arg ),
     regionCache( st.get3DProperties( ) , grid_arg, schedule ),
-    handlers( new keyword_handlers() ),
-    porv( st.get3DProperties().getDoubleGridProperty("PORV").compressedCopy(grid_arg))
+    handlers( new keyword_handlers() )
 {
 
     const auto& init_config = st.getInitConfig();
@@ -1056,35 +870,40 @@ Summary::Summary( const EclipseState& st,
     for( const auto& node : sum ) {
         const auto* keyword = node.keyword();
 
-         const auto misc_pair = misc_units.find( keyword );
-         const auto funs_pair = funs.find( keyword );
-         const auto region_pair = region_units.find( keyword );
+        const auto misc_pair = misc_units.find( keyword );
+        const auto funs_pair = funs.find( keyword );
+        const auto region_pair = region_units.find( keyword );
 
-	/*
-	  All summary values of the type ECL_SMSPEC_MISC_VAR must be
-	  passed explicitly in the misc_values map when calling
-	  add_timestep.
-	*/
-         if (misc_pair != misc_units.end()) {
+        /*
+      All summary values of the type ECL_SMSPEC_MISC_VAR
+      and ECL_SMSPEC_FIELD_VAR must be passed explicitly
+      in the misc_values map when calling
+      add_timestep.
+    */
+        if (misc_pair != misc_units.end()) {
 
-	    auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
-					     keyword,
-					     node.wgname(),
-					     node.num(),
+            if ((node.type() != ECL_SMSPEC_FIELD_VAR) && (node.type() != ECL_SMSPEC_MISC_VAR)) {
+                continue;
+            }
+
+            auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
+                                             keyword,
+                                             node.wgname(),
+                                             node.num(),
                                              st.getUnits().name( misc_pair->second ),
-					     0 );
+                                             0 );
 
-	    this->handlers->misc_nodes.emplace( keyword, nodeptr ); 
+            this->handlers->misc_nodes.emplace( keyword, nodeptr );
         } else if (region_pair != region_units.end()) {
 
-             auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
-                                              keyword,
-                                              node.wgname(),
-                                              node.num(),
-                                              st.getUnits().name( region_pair->second ),
-                                              0 );
+            auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
+                                             keyword,
+                                             node.wgname(),
+                                             node.num(),
+                                             st.getUnits().name( region_pair->second ),
+                                             0 );
 
-             this->handlers->region_nodes.emplace( keyword, nodeptr );
+            this->handlers->region_nodes.emplace( keyword, nodeptr );
 
         } else if (funs_pair != funs.end()) {
 
@@ -1105,22 +924,20 @@ Summary::Summary( const EclipseState& st,
                                     {},          // Well results - data::Wells
                                     {},          // Solution::State
                                     {},          // Region <-> cell mappings.
-                                    this->grid,
-                                    this->initial_oip,
-                                    {} };
+                                    this->grid};
 
             const auto val = handle( no_args );
 
-	    auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
-					     keyword,
-					     node.wgname(),
-					     node.num(),
-					     st.getUnits().name( val.unit ),
-					     0 );
+            auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
+                                             keyword,
+                                             node.wgname(),
+                                             node.num(),
+                                             st.getUnits().name( val.unit ),
+                                             0 );
 
-	    this->handlers->handlers.emplace_back( nodeptr, handle );
+            this->handlers->handlers.emplace_back( nodeptr, handle );
         } else {
-             unsupported_keywords.insert(keyword);
+            unsupported_keywords.insert(keyword);
         }
     }
     for ( const auto& keyword : unsupported_keywords ) {
@@ -1153,9 +970,7 @@ void Summary::add_timestep( int report_step,
                                      wells,
                                      state,
                                      this->regionCache,
-                                     this->grid,
-                                     this->initial_oip,
-                                     this->porv});
+                                     this->grid});
 
         const auto unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         const auto res = smspec_node_is_total( f.first ) && prev_tstep
@@ -1192,13 +1007,6 @@ void Summary::add_timestep( int report_step,
 
     this->prev_tstep = tstep;
     this->prev_time_elapsed = secs_elapsed;
-}
-
-void Summary::set_initial( const data::Solution& sol ) {
-    if( !sol.has( "OIP" ) ) return;
-
-    const auto& cells = sol.at( "OIP" ).data;
-    this->initial_oip = std::accumulate( cells.begin(), cells.end(), 0.0 );
 }
 
 void Summary::write() {

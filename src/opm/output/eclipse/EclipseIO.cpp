@@ -401,13 +401,6 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
             this->impl->writeEGRIDFile( nnc );
     }
 
-    this->impl->summary.set_initial( simProps );
-}
-
-
-void  EclipseIO::overwriteInitialOIP( const data::Solution& simProps )
-{
-    this->impl->summary.set_initial( simProps );
 }
 
 // implementation of the writeTimeStep method
@@ -419,7 +412,7 @@ void EclipseIO::writeTimeStep(int report_step,
                               std::map<std::string, double> misc_summary_values,
                               std::map<std::string, std::vector<double>> region_summary_values,
                               std::map<std::string, std::vector<double>> extra_restart,
-			      bool write_double)
+                              bool write_double)
  {
 
     if( !this->impl->output_enabled )

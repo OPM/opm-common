@@ -59,7 +59,6 @@ class Summary {
                            const std::map<std::string, double>& misc_values,
                            const std::map<std::string, std::vector<double>>& region_values = {});
 
-        void set_initial( const data::Solution& );
         void write();
 
         ~Summary();
@@ -73,8 +72,6 @@ class Summary {
         std::unique_ptr< keyword_handlers > handlers;
         const ecl_sum_tstep_type* prev_tstep = nullptr;
         double prev_time_elapsed = 0;
-        double initial_oip = 0.0;
-        const std::vector<double> porv;
 };
 
 }

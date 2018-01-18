@@ -805,54 +805,10 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGORH" ), 1e-5 );
 
-    const double foip = 11.0 * 1000 - 2*10;    // Cell (1,2,10) is inactive.
-    const double foipl = 10.0 * 1000 - (2*10 - 1);    // Cell (1,2,10) is inactive.
-    const double fgip = 11.55 * 1000 - 2.1*10; // Cell (1,2,10) is inactive.
-    const double fgipg = 12.55 * 1000 - (2.1*10 + 1); // Cell (1,2,10) is inactive.
-    const double fwip = 12.1 * 1000 - 2.2*10; // Cell (1,2,10) is inactive.
-    BOOST_CHECK_CLOSE( foip, ecl_sum_get_field_var( resp, 1, "FOIP" ), 1e-5 );
-    BOOST_CHECK_CLOSE( foipl, ecl_sum_get_field_var( resp, 1, "FOIPL" ), 1e-5 );
-    BOOST_CHECK_CLOSE( fgip, ecl_sum_get_field_var( resp, 1, "FGIP" ), 1e-5 );
-    BOOST_CHECK_CLOSE( fgipg, ecl_sum_get_field_var( resp, 1, "FGIPG" ), 1e-5 );
-    BOOST_CHECK_CLOSE( fwip, ecl_sum_get_field_var( resp, 1, "FWIP" ), 1e-5 );
-
     BOOST_CHECK_EQUAL( 1, ecl_sum_get_field_var( resp, 1, "FMWIN" ) );
     BOOST_CHECK_EQUAL( 2, ecl_sum_get_field_var( resp, 1, "FMWPR" ) );
 
-    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
-    const double fpr_si = (5.5 * 1000 - 10) / 999;
-    const double fpr = units.from_si( UnitSystem::measure::pressure, fpr_si );
-    BOOST_CHECK_CLOSE( fpr, ecl_sum_get_field_var( resp, 1, "FPR" ), 1e-5 ); //
-
-    /* in this test, the initial OIP wasn't set */
-    BOOST_CHECK_EQUAL( 0.0, ecl_sum_get_field_var( resp, 1, "FOE" ) );
-    BOOST_CHECK_EQUAL( 0.0, ecl_sum_get_field_var( resp, 2, "FOE" ) );
 }
-
-BOOST_AUTO_TEST_CASE(foe_test) {
-    setup cfg( "foe" );
-
-    std::vector< double > oip( cfg.grid.getNumActive(), 12.0 );
-    data::Solution sol;
-    sol.insert( "OIP", UnitSystem::measure::volume, oip, data::TargetType::RESTART_AUXILIARY );
-
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    writer.set_initial( sol );
-    writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 10 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.write();
-
-    auto res = readsum( cfg.name );
-    const auto* resp = res.get();
-
-    const double oip0 = 12 * cfg.grid.getNumActive();
-    const double oip1 = 11.0 * 1000 - 2*10;
-    const double foe = (oip0 - oip1) / oip0;
-    BOOST_CHECK_CLOSE( foe, ecl_sum_get_field_var( resp, 1, "FOE" ), 1e-5 );
-    BOOST_CHECK_CLOSE( foe, ecl_sum_get_field_var( resp, 2, "FOE" ), 1e-5 );
-}
-
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {
     setup cfg( "test_Summary_report_steps_time" );
@@ -891,54 +847,6 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     /* verify that some non-supported keywords aren't written to the file */
     BOOST_CHECK( !ecl_sum_has_well_var( resp, "W_1", "WPI" ) );
     BOOST_CHECK( !ecl_sum_has_field_var( resp, "FGST" ) );
-}
-
-
-
-BOOST_AUTO_TEST_CASE(region_vars) {
-    setup cfg( "region_vars" );
-
-    {
-        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
-        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
-        writer.add_timestep( 2, 10 * day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
-        writer.write();
-    }
-
-    auto res = readsum( cfg.name );
-    const auto* resp = res.get();
-
-    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:1"));
-    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:10"));
-    BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:11"));
-    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
-
-    for (size_t r=1; r <= 10; r++) {
-        std::string rpr_key   = "RPR:"   + std::to_string( r );
-        std::string roip_key  = "ROIP:"  + std::to_string( r );
-        std::string rwip_key  = "RWIP:"  + std::to_string( r );
-        std::string rgip_key  = "RGIP:"  + std::to_string( r );
-        std::string roipl_key = "ROIPL:" + std::to_string( r );
-        std::string roipg_key = "ROIPG:" + std::to_string( r );
-        std::string rgipl_key = "RGIPL:" + std::to_string( r );
-        std::string rgipg_key = "RGIPG:" + std::to_string( r );
-        double area = cfg.grid.getNX() * cfg.grid.getNY();
-
-        BOOST_CHECK_CLOSE(   r * 1.0        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
-
-        // There is one inactive cell in the bottom layer.
-        if (r == 10)
-            area -= 1;
-
-        BOOST_CHECK_CLOSE( area *  2*r * 1.0       , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roip_key.c_str())) , 1e-5);
-        BOOST_CHECK_CLOSE( area * (2*r - 1) * 1.0  , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roipl_key.c_str())) , 1e-5);
-        BOOST_CHECK_CLOSE( area * (2*r + 1 ) * 1.0 , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roipg_key.c_str())) , 1e-5);
-        BOOST_CHECK_CLOSE( area *  2.1*r * 1.0     , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rgip_key.c_str())) , 1e-5);
-        BOOST_CHECK_CLOSE( area * (2.1*r - 1) * 1.0, units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rgipl_key.c_str())) , 1e-5);
-        BOOST_CHECK_CLOSE( area * (2.1*r + 1) * 1.0, units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rgipg_key.c_str())) , 1e-5);
-        BOOST_CHECK_CLOSE( area *  2.2*r * 1.0     , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rwip_key.c_str())) , 1e-5);
-    }
 }
 
 
@@ -1065,130 +973,6 @@ BOOST_AUTO_TEST_CASE( require3D )
     BOOST_CHECK( summaryConfig.requireFIPNUM( ));
 }
 
-
-BOOST_AUTO_TEST_CASE(fpr) {
-    setup cfg( "test_fpr", "summary_deck_non_constant_porosity.DATA");
-
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.write();
-
-    auto res = readsum( cfg.name );
-    const auto* resp = res.get();
-
-    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
-    // fpr = sum_ (p * hcpv ) / hcpv, hcpv = pv * (1 - sw)
-    const double fpr_si =  ( (3 * 0.1 + 8 * 0.2) * 500 * (1 - 8.0) ) / ( (500*0.1 + 500*0.2) * (1 - 8.0));
-    const double fpr = units.from_si( UnitSystem::measure::pressure, fpr_si );
-    BOOST_CHECK_CLOSE( fpr, ecl_sum_get_field_var( resp, 1, "FPR" ), 1e-5 ); //
-
-    // change sw and pressure and test again.
-    size_t g = 0;
-    for (size_t k=0; k < cfg.grid.getNZ(); k++) {
-        for (size_t j=0; j < cfg.grid.getNY(); j++) {
-            for (size_t i=0; i < cfg.grid.getNX(); i++) {
-                if (cfg.grid.cellActive(i,j,k)) {
-                    cfg.solution.data("SWAT")[g] = 0.1*(k);
-                    cfg.solution.data("PRESSURE")[g] = units.to_si( UnitSystem::measure::pressure, 1 );
-                    g++;
-                }
-            }
-        }
-    }
-
-    out::Summary writer2( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    writer2.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer2.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer2.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer2.write();
-
-    auto res2 = readsum( cfg.name );
-    const auto* resp2 = res2.get();
-
-    // fpr = sum_ (p * hcpv ) / hcpv, hcpv = pv * (1 - sw)
-    const double fpr2_si =  ( (0.8 * 0.1 + 0.3 * 0.2) * 500 * 1 ) / ( (0.8 * 0.1 + 0.3 * 0.2) * 500);
-    BOOST_CHECK_CLOSE( fpr2_si, ecl_sum_get_field_var( resp2, 1, "FPR" ), 1e-5 ); //
-}
-
-BOOST_AUTO_TEST_CASE(fprp) {
-    setup cfg( "test_fprp", "summary_deck_non_constant_porosity.DATA");
-
-    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.write();
-
-    auto res = readsum( cfg.name );
-    const auto* resp = res.get();
-
-    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
-    // fprp = sum_ (p * pv ) / pv
-    const double fprp_si =  ( (3 * 0.1 + 8 * 0.2) * 500 ) / ( (500*0.1 + 500*0.2));
-    const double fprp = units.from_si( UnitSystem::measure::pressure, fprp_si );
-    BOOST_CHECK_CLOSE( fprp, ecl_sum_get_field_var( resp, 1, "FPRP" ), 1e-5 );
-
-    // Change pressure and check again
-    for (size_t g = 0; g < cfg.grid.getNumActive(); g++){
-            cfg.solution.data("PRESSURE")[g] = units.to_si( UnitSystem::measure::pressure, 1 );
-    }
-
-    out::Summary writer2( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    writer2.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer2.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer2.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer2.write();
-
-    auto res2 = readsum( cfg.name );
-    const auto* resp2 = res2.get();
-
-    // fprp = sum_ (p * pv ) / pv
-    const double fprp2_si =  ( (0.8 * 0.1 + 0.3 * 0.2) * 500) / ( (0.8 * 0.1 + 0.3 * 0.2) * 500);
-    BOOST_CHECK_CLOSE( fprp2_si, ecl_sum_get_field_var( resp2, 1, "FPRP" ), 1e-5 );
-}
-
-BOOST_AUTO_TEST_CASE(rpr) {
-    setup cfg( "test_rpr", "summary_deck_non_constant_porosity.DATA");
-
-    {
-        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
-        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
-        writer.add_timestep( 2, 10 * day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {});
-        writer.write();
-    }
-
-    auto res = readsum( cfg.name );
-    const auto* resp = res.get();
-
-    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:1"));
-    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:3"));
-    BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:4"));
-    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
-
-    // rpr = sum_ (p * hcpv ) / hcpv, hcpv = pv * (1 - sw)
-    // region 1; layer 1:4
-    {
-        const double rpr_si =  ( 2.5 * 0.1 * 400 * (1 - 8.0) ) / ( (400*0.1) * (1 - 8.0));
-        std::string rpr_key   = "RPR:1";
-        BOOST_CHECK_CLOSE(   rpr_si        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
-    }
-    // region 2; layer 5:6
-    {
-        const double rpr_si =  ( (5 * 0.1 + 6 * 0.2) * 100 * (1 - 8.0) ) / ( (0.1 + 0.2) * 100 * (1 - 8.0));
-        std::string rpr_key   = "RPR:2";
-        BOOST_CHECK_CLOSE(   rpr_si        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
-    }
-    // region 3; layer 7:10
-    {
-        const double rpr_si =  ( 8.5 * 0.2 * 400 * (1 - 8.0) ) / ( (400*0.2) * (1 - 8.0));
-        std::string rpr_key   = "RPR:3";
-        BOOST_CHECK_CLOSE(   rpr_si        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
-    }
-
-}
 
 BOOST_AUTO_TEST_CASE(MISC) {
     setup cfg( "test_MISC");
