@@ -50,14 +50,15 @@ class Summary {
         Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule&, const std::string& );
         Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule&, const char* basename );
 
-        void add_timestep( int report_step,
+        void add_timestep(int report_step,
                            double secs_elapsed,
                            const EclipseState& es,
                            const Schedule& schedule,
                            const data::Wells&,
                            const data::Solution&,
-                           const std::map<std::string, double>& misc_values,
-                           const std::map<std::string, std::vector<double>>& region_values = {});
+                           const std::map<std::string, double>& single_values,
+                           const std::map<std::string, std::vector<double>>& region_values = {},
+                           const std::map<std::pair<std::string, int>, double>& block_values = {});
 
         void write();
 

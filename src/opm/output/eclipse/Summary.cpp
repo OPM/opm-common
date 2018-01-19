@@ -141,10 +141,6 @@ struct quantity {
     }
 };
 
-quantity operator-( double lhs, const quantity& rhs ) {
-    return { lhs - rhs.value, rhs.unit };
-}
-
 /*
  * All functions must have the same parameters, so they're gathered in a struct
  * and functions use whatever information they care about.
@@ -398,44 +394,6 @@ quantity region_rate( const fn_args& args ) {
     else
         return { -sum, rate_unit< phase >() };
 }
-
-quantity bpr( const fn_args& args) {
-    if (!args.state.has("PRESSURE"))
-        return { 0.0 , measure::pressure };
-
-    const auto global_index = args.num - 1;
-    const auto active_index = args.grid.activeIndex( global_index );
-
-    const auto& pressure  = args.state.at( "PRESSURE" ).data;
-    return { pressure[active_index] , measure::pressure };
-}
-
-
-quantity bswat( const fn_args& args) {
-    if (!args.state.has("SWAT"))
-        return { 0.0 , measure::identity };
-
-    const auto global_index = args.num - 1;
-    const auto active_index = args.grid.activeIndex( global_index );
-
-    const auto& swat  = args.state.at( "SWAT" ).data;
-    return { swat[active_index] , measure::identity };
-}
-
-
-quantity bsgas( const fn_args& args) {
-    if (!args.state.has("SGAS"))
-        return { 0.0 , measure::identity };
-
-    const auto global_index = args.num - 1;
-    const auto active_index = args.grid.activeIndex( global_index );
-
-    const auto& sgas  = args.state.at( "SGAS" ).data;
-    return { sgas[active_index] , measure::identity };
-}
-
-
-
 
 template< typename F, typename G >
 auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
@@ -730,18 +688,10 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROPT"  , mul( region_rate< rt::oil, producer >, duration ) },
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
-
-    /*Block properties */
-    {"BPR" , bpr},
-    {"BPRESSUR" , bpr},
-    {"BSWAT" , bswat},
-    {"BWSAT" , bswat},
-    {"BSGAS" , bsgas},
-    {"BGSAS" , bsgas},
 };
 
 
-static const std::unordered_map< std::string, UnitSystem::measure> misc_units = {
+static const std::unordered_map< std::string, UnitSystem::measure> single_values_units = {
   {"TCPU"     , UnitSystem::measure::identity },
   {"ELAPSED"  , UnitSystem::measure::identity },
   {"NEWTON"   , UnitSystem::measure::identity },
@@ -764,12 +714,11 @@ static const std::unordered_map< std::string, UnitSystem::measure> misc_units = 
   {"FGIPL"    , UnitSystem::measure::volume },
   {"FGIPG"    , UnitSystem::measure::volume },
   {"FPR"      , UnitSystem::measure::pressure },
-  {"RPR"      , UnitSystem::measure::pressure },
 
 };
 
 static const std::unordered_map< std::string, UnitSystem::measure> region_units = {
-  {"RPR"      , UnitSystem::measure::pressure },
+  {"RPR"      , UnitSystem::measure::pressure},
   {"ROIP"     , UnitSystem::measure::volume },
   {"ROIPL"    , UnitSystem::measure::volume },
   {"ROIPG"    , UnitSystem::measure::volume },
@@ -777,6 +726,15 @@ static const std::unordered_map< std::string, UnitSystem::measure> region_units 
   {"RGIPL"    , UnitSystem::measure::volume },
   {"RGIPG"    , UnitSystem::measure::volume },
   {"RWIP"     , UnitSystem::measure::volume }
+};
+
+static const std::unordered_map< std::string, UnitSystem::measure> block_units = {
+  {"BPR"        , UnitSystem::measure::pressure},
+  {"BPRESSUR"   , UnitSystem::measure::pressure},
+  {"BSWAT"      , UnitSystem::measure::identity},
+  {"BWSAT"      , UnitSystem::measure::identity},
+  {"BSGAS"      , UnitSystem::measure::identity},
+  {"BGSAS"      , UnitSystem::measure::identity},
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
@@ -812,8 +770,10 @@ class Summary::keyword_handlers {
     public:
         using fn = ofun;
         std::vector< std::pair< smspec_node_type*, fn > > handlers;
-        std::map< std::string, smspec_node_type* > misc_nodes;
-        std::map< std::string, smspec_node_type* > region_nodes;
+        std::map< std::string, smspec_node_type* > singel_value_nodes;
+        std::map< std::pair <std::string, int>, smspec_node_type* > region_nodes;
+        std::map< std::pair <std::string, int>, smspec_node_type* > block_nodes;
+
 
 };
 
@@ -870,9 +830,10 @@ Summary::Summary( const EclipseState& st,
     for( const auto& node : sum ) {
         const auto* keyword = node.keyword();
 
-        const auto misc_pair = misc_units.find( keyword );
+        const auto single_value_pair = single_values_units.find( keyword );
         const auto funs_pair = funs.find( keyword );
         const auto region_pair = region_units.find( keyword );
+        const auto block_pair = block_units.find( keyword );
 
         /*
       All summary values of the type ECL_SMSPEC_MISC_VAR
@@ -880,7 +841,7 @@ Summary::Summary( const EclipseState& st,
       in the misc_values map when calling
       add_timestep.
     */
-        if (misc_pair != misc_units.end()) {
+        if (single_value_pair != single_values_units.end()) {
 
             if ((node.type() != ECL_SMSPEC_FIELD_VAR) && (node.type() != ECL_SMSPEC_MISC_VAR)) {
                 continue;
@@ -890,10 +851,10 @@ Summary::Summary( const EclipseState& st,
                                              keyword,
                                              node.wgname(),
                                              node.num(),
-                                             st.getUnits().name( misc_pair->second ),
+                                             st.getUnits().name( single_value_pair->second ),
                                              0 );
 
-            this->handlers->misc_nodes.emplace( keyword, nodeptr );
+            this->handlers->singel_value_nodes.emplace( keyword, nodeptr );
         } else if (region_pair != region_units.end()) {
 
             auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
@@ -903,7 +864,26 @@ Summary::Summary( const EclipseState& st,
                                              st.getUnits().name( region_pair->second ),
                                              0 );
 
-            this->handlers->region_nodes.emplace( keyword, nodeptr );
+            this->handlers->region_nodes.emplace( std::make_pair(keyword, node.num()), nodeptr );
+
+        } else if (block_pair != block_units.end()) {
+            if (node.type() != ECL_SMSPEC_BLOCK_VAR)
+                continue;
+
+            int global_index = node.num() - 1;
+            if (!this->grid.cellActive(global_index))
+                continue;
+
+            auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
+                                             keyword,
+                                             node.wgname(),
+                                             node.num(),
+                                             st.getUnits().name( block_pair->second ),
+                                             0 );
+
+            this->handlers->block_nodes.emplace( std::make_pair(keyword, node.num()), nodeptr );
+
+
 
         } else if (funs_pair != funs.end()) {
 
@@ -951,8 +931,9 @@ void Summary::add_timestep( int report_step,
                             const Schedule& schedule,
                             const data::Wells& wells ,
                             const data::Solution& state,
-                            const std::map<std::string, double>& misc_values,
-                            const std::map<std::string, std::vector<double>>& region_values) {
+                            const std::map<std::string, double>& single_values,
+                            const std::map<std::string, std::vector<double>>& region_values,
+                            const std::map<std::pair<std::string, int>, double>& block_values) {
 
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
@@ -980,25 +961,39 @@ void Summary::add_timestep( int report_step,
 	ecl_sum_tstep_set_from_node( tstep, f.first, res );
     }
 
-    for( const auto& value_pair : region_values ) {
+    for( const auto& value_pair : single_values ) {
         const std::string key = value_pair.first;
-        const auto node_pair = this->handlers->region_nodes.find( key );
-        if (node_pair != this->handlers->region_nodes.end()) {
-	    const auto * nodeptr = node_pair->second;
-            const auto unit = region_units.at( key );
-            const int num = smspec_node_get_num( nodeptr );
-            double si_value = value_pair.second[num];
-	    double output_value = es.getUnits().from_si(unit , si_value );
-	    ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
+        const auto node_pair = this->handlers->singel_value_nodes.find( key );
+        if (node_pair != this->handlers->singel_value_nodes.end()) {
+            const auto * nodeptr = node_pair->second;
+            const auto unit = single_values_units.at( key );
+            double si_value = value_pair.second;
+            double output_value = es.getUnits().from_si(unit , si_value );
+            ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
         }
     }
 
-    for( const auto& value_pair : misc_values ) {
+    for( const auto& value_pair : region_values ) {
         const std::string key = value_pair.first;
-        const auto node_pair = this->handlers->misc_nodes.find( key );
-        if (node_pair != this->handlers->misc_nodes.end()) {
+        for (size_t reg = 0; reg < value_pair.second.size(); ++reg) {
+            const auto node_pair = this->handlers->region_nodes.find( std::make_pair(key, reg+1) );
+            if (node_pair != this->handlers->region_nodes.end()) {
+                const auto * nodeptr = node_pair->second;
+                const auto unit = region_units.at( key );
+                assert (smspec_node_get_num( nodeptr ) - 1 == static_cast<int>(reg));
+                double si_value = value_pair.second[reg];
+                double output_value = es.getUnits().from_si(unit , si_value );
+                ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
+            }
+        }
+    }
+
+    for( const auto& value_pair : block_values ) {
+        const std::pair<std::string, int> key = value_pair.first;
+        const auto node_pair = this->handlers->block_nodes.find( key );
+        if (node_pair != this->handlers->block_nodes.end()) {
             const auto * nodeptr = node_pair->second;
-            const auto unit = misc_units.at( key );
+            const auto unit = block_units.at( key.first );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
             ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );

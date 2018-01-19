@@ -805,9 +805,6 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGOR" ), 1e-5 );
     BOOST_CHECK_CLOSE( ggor, ecl_sum_get_field_var( resp, 1, "FGORH" ), 1e-5 );
 
-    BOOST_CHECK_EQUAL( 1, ecl_sum_get_field_var( resp, 1, "FMWIN" ) );
-    BOOST_CHECK_EQUAL( 2, ecl_sum_get_field_var( resp, 1, "FMWPR" ) );
-
 }
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {
@@ -847,6 +844,141 @@ BOOST_AUTO_TEST_CASE(skip_unknown_var) {
     /* verify that some non-supported keywords aren't written to the file */
     BOOST_CHECK( !ecl_sum_has_well_var( resp, "W_1", "WPI" ) );
     BOOST_CHECK( !ecl_sum_has_field_var( resp, "FGST" ) );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(region_vars) {
+    setup cfg( "region_vars" );
+
+    std::map<std::string, std::vector<double>> region_values;
+
+    {
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            values[r - 1] = r *1.0;
+        }
+        region_values["RPR"] = values;
+    }
+    {
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            if (r == 10)
+                area -= 1;
+
+            values[r - 1] = area *  2*r * 1.0;
+        }
+        region_values["ROIP"] = values;
+    }
+    {
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            if (r == 10)
+                area -= 1;
+
+            values[r - 1] = area * 2.2*r * 1.0;
+        }
+        region_values["RWIP"] = values;
+    }
+    {
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            if (r == 10)
+                area -= 1;
+
+            values[r - 1] = area *   2.1*r * 1.0;
+        }
+        region_values["RGIP"] = values;
+    }
+    {
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            if (r == 10)
+                area -= 1;
+
+            values[r - 1] = area *  (2*r - 1) * 1.0;
+        }
+        region_values["ROIPL"] = values;
+    }
+    {
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            if (r == 10)
+                area -= 1;
+
+            values[r - 1] = area *  (2*r + 1 ) * 1.0;
+        }
+        region_values["ROIPG"] = values;
+    }
+    {
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            if (r == 10)
+                area -= 1;
+
+            values[r - 1] = area *  (2.1*r - 1) * 1.0;
+        }
+        region_values["RGIPL"] = values;
+    }
+    {
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
+        std::vector<double> values(10, 0.0);
+        for (size_t r=1; r <= 10; r++) {
+            if (r == 10)
+                area -= 1;
+
+            values[r - 1] = area *  (2.1*r + 1) * 1.0;
+        }
+        region_values["RGIPG"] = values;
+    }
+
+    {
+        out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
+        writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {}, region_values);
+        writer.add_timestep( 1, 5 *  day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {}, region_values);
+        writer.add_timestep( 2, 10 * day, cfg.es, cfg.schedule, cfg.wells, cfg.solution, {}, region_values);
+        writer.write();
+    }
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:1"));
+    BOOST_CHECK( ecl_sum_has_general_var( resp , "RPR:10"));
+    BOOST_CHECK( !ecl_sum_has_general_var( resp , "RPR:11"));
+    UnitSystem units( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+
+    for (size_t r=1; r <= 10; r++) {
+        std::string rpr_key   = "RPR:"   + std::to_string( r );
+        std::string roip_key  = "ROIP:"  + std::to_string( r );
+        std::string rwip_key  = "RWIP:"  + std::to_string( r );
+        std::string rgip_key  = "RGIP:"  + std::to_string( r );
+        std::string roipl_key = "ROIPL:" + std::to_string( r );
+        std::string roipg_key = "ROIPG:" + std::to_string( r );
+        std::string rgipl_key = "RGIPL:" + std::to_string( r );
+        std::string rgipg_key = "RGIPG:" + std::to_string( r );
+        double area = cfg.grid.getNX() * cfg.grid.getNY();
+
+        //BOOST_CHECK_CLOSE(   r * 1.0        , units.to_si( UnitSystem::measure::pressure , ecl_sum_get_general_var( resp, 1, rpr_key.c_str())) , 1e-5);
+
+        // There is one inactive cell in the bottom layer.
+        if (r == 10)
+            area -= 1;
+
+        BOOST_CHECK_CLOSE( area *  2*r * 1.0       , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roip_key.c_str())) , 1e-5);
+        BOOST_CHECK_CLOSE( area * (2*r - 1) * 1.0  , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roipl_key.c_str())) , 1e-5);
+        BOOST_CHECK_CLOSE( area * (2*r + 1 ) * 1.0 , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, roipg_key.c_str())) , 1e-5);
+        BOOST_CHECK_CLOSE( area *  2.1*r * 1.0     , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rgip_key.c_str())) , 1e-5);
+        BOOST_CHECK_CLOSE( area * (2.1*r - 1) * 1.0, units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rgipl_key.c_str())) , 1e-5);
+        BOOST_CHECK_CLOSE( area * (2.1*r + 1) * 1.0, units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rgipg_key.c_str())) , 1e-5);
+        BOOST_CHECK_CLOSE( area *  2.2*r * 1.0     , units.to_si( UnitSystem::measure::volume   , ecl_sum_get_general_var( resp, 1, rwip_key.c_str())) , 1e-5);
+    }
 }
 
 
@@ -911,10 +1043,18 @@ BOOST_AUTO_TEST_CASE(region_injection) {
 BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     setup cfg( "region_injection" );
 
+
+    std::map<std::pair<std::string, int>, double> block_values;
+    for (size_t r=1; r <= 10; r++) {
+        block_values[std::make_pair("BPR", (r-1)*100 + 1)] = r*1.0;
+    }
+    block_values[std::make_pair("BSWAT", 1)] = 8.0;
+    block_values[std::make_pair("BSGAS", 1)] = 9.0;
+
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
-    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
-    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {});
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {},{}, block_values);
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {},{}, block_values);
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , cfg.solution, {},{}, block_values);
     writer.write();
 
     auto res = readsum( cfg.name );
