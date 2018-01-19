@@ -73,6 +73,7 @@ BOOST_AUTO_TEST_CASE(AquanconTest){
         for (int i = 0; i < it->global_index.size(); ++i){
             BOOST_CHECK_EQUAL(it->aquiferID , 1);
             BOOST_CHECK_EQUAL(it->global_index.at(i) , 0);
-            BOOST_CHECK_EQUAL(it->reservoir_face_dir.at(i) , 8);}
+            BOOST_CHECK_EQUAL(it->reservoir_face_dir.at(i) , 8);
+        }
     }    
 }    
