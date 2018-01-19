@@ -209,6 +209,7 @@ add_test(NAME EclipseStateTests
 
 foreach(test ADDREGTests
              AqudimsTests
+             AquanconTests
              BoxTests
              ColumnSchemaTests
              CompletionTests
