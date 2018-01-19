@@ -559,3 +559,144 @@ BOOST_AUTO_TEST_CASE(DefaultedBox) {
   BOOST_CHECK_EQUAL( permx.iget(0,0,0)        , permz.iget(0,0,0));
   BOOST_CHECK_EQUAL( permx.iget(0,0,1) * 0.10 , permz.iget(0,0,1));
 }
+
+static Opm::Deck createMultiplyPorvDeck() {
+    const auto* input = R"(
+RUNSPEC
+
+TITLE
+ 'TITTEL'
+
+DIMENS
+  10 10 5 /
+
+METRIC
+
+OIL
+WATER
+
+TABDIMS
+/
+
+START
+  19 JUN 2017
+/
+
+EQLDIMS
+    2* 100 2* /
+
+GRID
+
+DX
+  500*10
+/
+
+DY
+  500*10
+/
+
+DZ
+  500*10
+/
+
+TOPS
+  100*1000.0D0
+/
+
+PORO
+   500*0.5
+/
+
+MULTIPLY
+   PORV 0.2 /
+/
+
+BOX
+  1  2  1  2  1  1 /
+
+MULTIPLY
+   PORV 0.1 /
+/
+ENDBOX
+
+ADD
+   PORV 1.0  2 2 1 1 1 1 /
+/
+
+MULTIPLY
+   PORV 0.2 1 1 1 1 2 2 /
+/
+)";
+
+    Opm::Parser parser;
+    return parser.parseString(input, Opm::ParseContext() );
+}
+
+
+BOOST_AUTO_TEST_CASE(DefaultedBoxMultiplyPorv) {
+    const Setup s(createMultiplyPorvDeck());
+    const auto& porv   = s.props.getDoubleGridProperty("PORV");
+
+    BOOST_CHECK_CLOSE( porv.iget(9,9,4), 100, 1e-5);
+    BOOST_CHECK_CLOSE( porv.iget(0,0,1), 20, 1e-5);
+    BOOST_CHECK_CLOSE( porv.iget(0,0,0), 10, 1e-5);
+    BOOST_CHECK_CLOSE( porv.iget(1,0,0), 11, 1e-5);
+}
+
+static Opm::Deck createMultiplyPorvFailDeck() {
+    const auto* input = R"(
+RUNSPEC
+
+TITLE
+ 'TITTEL'
+
+DIMENS
+  10 10 5 /
+
+METRIC
+
+OIL
+WATER
+
+TABDIMS
+/
+
+START
+  19 JUN 2017
+/
+
+EQLDIMS
+    2* 100 2* /
+
+GRID
+
+DX
+  500*10
+/
+
+DY
+  500*10
+/
+
+DZ
+  500*10
+/
+
+TOPS
+  100*1000.0D0
+/
+
+MULTIPLY
+   PORV 0.2 /
+/
+
+)";
+    Opm::Parser parser;
+    return parser.parseString(input, Opm::ParseContext() );
+}
+
+
+BOOST_AUTO_TEST_CASE(DefaultedBoxFailMultiply) {
+    // PORO has not been defined
+    BOOST_CHECK_THROW( const Setup s(createMultiplyPorvFailDeck()), std::logic_error);
+}

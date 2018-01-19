@@ -48,33 +48,39 @@ namespace Opm {
             const std::string& name,
             std::function< std::vector< T >( size_t ) > init,
             std::function< void( std::vector< T >& ) > post,
-            const std::string& dimString ) :
+            const std::string& dimString,
+            bool defaultInitializable ) :
         m_keywordName( name ),
         m_initializer( init ),
         m_postProcessor( post ),
-        m_dimensionString( dimString )
+        m_dimensionString( dimString ),
+        m_defaultInitializable ( defaultInitializable )
     {}
 
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             std::function< std::vector< T >( size_t ) > init,
-            const std::string& dimString ) :
+            const std::string& dimString,
+            bool defaultInitializable ) :
         m_keywordName( name ),
         m_initializer( init ),
         m_postProcessor( noop< T >() ),
-        m_dimensionString( dimString )
+        m_dimensionString( dimString ),
+        m_defaultInitializable ( defaultInitializable )
     {}
 
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             const T defaultValue,
-            const std::string& dimString ) :
+            const std::string& dimString,
+            bool defaultInitializable ) :
         m_keywordName( name ),
         m_initializer( constant( defaultValue ) ),
         m_postProcessor( noop< T >() ),
-        m_dimensionString( dimString )
+        m_dimensionString( dimString ),
+        m_defaultInitializable ( defaultInitializable )
     {}
 
     template< typename T >
@@ -82,11 +88,13 @@ namespace Opm {
             const std::string& name,
             const T defaultValue,
             std::function< void( std::vector< T >& ) > post,
-            const std::string& dimString ) :
+            const std::string& dimString,
+            bool defaultInitializable ) :
         m_keywordName( name ),
         m_initializer( constant( defaultValue ) ),
         m_postProcessor( post ),
-        m_dimensionString( dimString )
+        m_dimensionString( dimString ),
+        m_defaultInitializable ( defaultInitializable )
     {}
 
     template< typename T >
@@ -107,6 +115,11 @@ namespace Opm {
     template< typename T >
     const std::function< void( std::vector< T >& ) >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
         return this->m_postProcessor;
+    }
+
+    template<typename T>
+    bool GridPropertySupportedKeywordInfo< T >::isDefaultInitializable() const {
+        return m_defaultInitializable;
     }
 
     template< typename T >

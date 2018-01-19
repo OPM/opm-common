@@ -73,20 +73,27 @@ namespace Opm {
                        const GridProperties<int>* intGridProperties,
                        const GridProperties<double>* doubleGridProperties)
         {
-            const auto& poro = doubleGridProperties->getKeyword("PORO");
-            const auto& ntg =  doubleGridProperties->getKeyword("NTG");
+            if ( doubleGridProperties->hasKeyword("PORO") ) {
+                const auto& poro = doubleGridProperties->getKeyword("PORO");
+                const auto& ntg =  doubleGridProperties->getKeyword("NTG");
 
-            const auto& poroData = poro.getData();
-            for (size_t globalIndex = 0; globalIndex < poro.getCartesianSize(); globalIndex++) {
-                if (!std::isfinite(values[globalIndex])) {
-                    double cell_poro = poroData[globalIndex];
-                    if (std::isnan(cell_poro))
-                        throw std::logic_error("Some cells neither specify the PORV keyword nor PORO");
+                const auto& poroData = poro.getData();
+                for (size_t globalIndex = 0; globalIndex < poro.getCartesianSize(); globalIndex++) {
+                    if (!std::isfinite(values[globalIndex])) {
+                        double cell_poro = poroData[globalIndex];
+                        if (std::isnan(cell_poro))
+                            throw std::logic_error("Some cells neither specify the PORV keyword nor PORO");
 
-                    double cell_ntg = ntg.iget(globalIndex);
-                    double cell_volume = eclipseGrid->getCellVolume(globalIndex);
-                    values[globalIndex] = cell_poro * cell_volume * cell_ntg;
+                        double cell_ntg = ntg.iget(globalIndex);
+                        double cell_volume = eclipseGrid->getCellVolume(globalIndex);
+                        values[globalIndex] = cell_poro * cell_volume * cell_ntg;
+                    }
                 }
+            }
+            else {
+                for (size_t globalIndex = 0; globalIndex < values.size(); globalIndex++)
+                    if ( !std::isfinite(values[globalIndex]) )
+                        throw std::logic_error("Some cells neither specify the PORV keyword nor PORO");
             }
 
             if (doubleGridProperties->hasKeyword("MULTPV")) {
@@ -200,17 +207,17 @@ namespace Opm {
           * overwrite the information in REGIONS.
           */
         return {
-            GridProperties< int >::SupportedKeywordInfo( "ENDNUM" , 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "FLUXNUM", 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "ROCKNUM", 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1" ),
-            GridProperties< int >::SupportedKeywordInfo( "PLMIXNUM", 1, "1" )
+            GridProperties< int >::SupportedKeywordInfo( "ENDNUM" , 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "EQLNUM" , 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "FLUXNUM", 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "IMBNUM" , 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "MISCNUM", 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "MULTNUM", 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "OPERNUM", 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "PVTNUM" , 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "ROCKNUM", 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "SATNUM" , 1, "1", true ),
+            GridProperties< int >::SupportedKeywordInfo( "PLMIXNUM", 1, "1", true)
         };
     }
 
@@ -370,13 +377,13 @@ namespace Opm {
             supportedDoubleKeywords.emplace_back( kw, IKRGRLookup, "1" );
 
         // Solution keywords - required fror enumerated restart.
-        supportedDoubleKeywords.emplace_back( "PRESSURE", 0.0 , "Pressure" );
-        supportedDoubleKeywords.emplace_back( "SWAT", 0.0 , "1" );
-        supportedDoubleKeywords.emplace_back( "SGAS", 0.0 , "1" );
-        supportedDoubleKeywords.emplace_back( "SSOL", 0.0 , "1" );
-        supportedDoubleKeywords.emplace_back( "SPOLY", 0.0 , "Density" );
-        supportedDoubleKeywords.emplace_back( "RS",  0.0, "1" );
-        supportedDoubleKeywords.emplace_back( "RV",  0.0, "1" );
+        supportedDoubleKeywords.emplace_back( "PRESSURE", 0.0 , "Pressure", true );
+        supportedDoubleKeywords.emplace_back( "SWAT", 0.0 , "1", true );
+        supportedDoubleKeywords.emplace_back( "SGAS", 0.0 , "1", true );
+        supportedDoubleKeywords.emplace_back( "SSOL", 0.0 , "1", true );
+        supportedDoubleKeywords.emplace_back( "SPOLY", 0.0 , "Density", true );
+        supportedDoubleKeywords.emplace_back( "RS",  0.0, "1", true );
+        supportedDoubleKeywords.emplace_back( "RV",  0.0, "1", true );
 
 
         // cell temperature (E300 only, but makes a lot of sense for E100, too)
@@ -387,11 +394,11 @@ namespace Opm {
         supportedDoubleKeywords.emplace_back( "PORO", nan, distributeTopLayer, "1" );
 
         // pore volume multipliers
-        supportedDoubleKeywords.emplace_back( "MULTPV", 1.0, "1" );
+        supportedDoubleKeywords.emplace_back( "MULTPV", 1.0, "1", true );
 
         /* rock heat capacity, E300 only */
         supportedDoubleKeywords.emplace_back("HEATCR", nan, distributeTopLayer, "Energy/AbsoluteTemperature*Length*Length*Length" );
-        supportedDoubleKeywords.emplace_back("HEATCRT", 0.0, distributeTopLayer, "Energy/AbsoluteTemperature*AbsoluteTemperature*Length*Length*Length" );
+        supportedDoubleKeywords.emplace_back("HEATCRT", 0.0, distributeTopLayer, "Energy/AbsoluteTemperature*AbsoluteTemperature*Length*Length*Length", true );
 
         // the permeability keywords
         for( const auto& kw : { "PERMR", "PERMTHT", "PERMX", "PERMY", "PERMZ", } )
@@ -413,24 +420,24 @@ namespace Opm {
         /* gross-to-net thickness (acts as a multiplier for PORO and the
          * permeabilities in the X-Y plane as well as for the well rates.)
          */
-        supportedDoubleKeywords.emplace_back( "NTG", 1.0, "1" );
+        supportedDoubleKeywords.emplace_back( "NTG", 1.0, "1", true );
 
         // transmissibility multipliers
         for( const auto& kw : { "MULTX", "MULTY", "MULTZ", "MULTX-", "MULTY-", "MULTZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, 1.0, "1" );
+            supportedDoubleKeywords.emplace_back( kw, 1.0, "1", true );
 
         // initialisation
-        supportedDoubleKeywords.emplace_back( "SWATINIT", 0.0, "1");
-        supportedDoubleKeywords.emplace_back( "THCONR", 0.0, "Energy/AbsoluteTemperature*Length*Time");
+        supportedDoubleKeywords.emplace_back( "SWATINIT", 0.0, "1", true );
+        supportedDoubleKeywords.emplace_back( "THCONR", 0.0, "Energy/AbsoluteTemperature*Length*Time", true);
 
         // saturation dependence of thermal conductivity, E300 only
-        supportedDoubleKeywords.emplace_back( "THCONSF", 0.0, "1");
+        supportedDoubleKeywords.emplace_back( "THCONSF", 0.0, "1", true);
 
         // the THC* family of keywords to specify heat contuctivity, E300 only
-        supportedDoubleKeywords.emplace_back( "THCROCK", 0.0, "Energy/AbsoluteTemperature*Length*Time");
-        supportedDoubleKeywords.emplace_back( "THCOIL", 0.0, "Energy/AbsoluteTemperature*Length*Time");
-        supportedDoubleKeywords.emplace_back( "THCGAS", 0.0, "Energy/AbsoluteTemperature*Length*Time");
-        supportedDoubleKeywords.emplace_back( "THCWATER", 0.0, "Energy/AbsoluteTemperature*Length*Time");
+        supportedDoubleKeywords.emplace_back( "THCROCK", 0.0, "Energy/AbsoluteTemperature*Length*Time", true);
+        supportedDoubleKeywords.emplace_back( "THCOIL", 0.0, "Energy/AbsoluteTemperature*Length*Time", true);
+        supportedDoubleKeywords.emplace_back( "THCGAS", 0.0, "Energy/AbsoluteTemperature*Length*Time", true);
+        supportedDoubleKeywords.emplace_back( "THCWATER", 0.0, "Energy/AbsoluteTemperature*Length*Time", true);
 
         return supportedDoubleKeywords;
     }
@@ -499,7 +506,8 @@ namespace Opm {
             m_doubleGridProperties.postAddKeyword( "PORV",
                                                    std::numeric_limits<double>::quiet_NaN(),
                                                    initPORVProcessor,
-                                                   "ReservoirVolume" );
+                                                   "ReservoirVolume",
+                                                   true );
         }
 
         {
@@ -510,7 +518,8 @@ namespace Opm {
             m_intGridProperties.postAddKeyword( "ACTNUM",
                                                 1,
                                                 actnumPP ,
-                                                "1");
+                                                "1",
+                                                true );
         }
 
         processGridProperties(deck, eclipseGrid);
@@ -823,9 +832,9 @@ namespace Opm {
            const std::string& targetArray = record.getItem("ARRAY").get< std::string >(0);
            const auto& regionProperty = getRegion( record.getItem("REGION_NAME") );
 
-           if (m_intGridProperties.hasKeyword( targetArray ))
+           if (m_intGridProperties.supportsKeyword( targetArray ))
                m_intGridProperties.handleADDREGRecord( record , regionProperty );
-           else if (m_doubleGridProperties.hasKeyword( targetArray ))
+           else if (m_doubleGridProperties.supportsKeyword( targetArray ))
                m_doubleGridProperties.handleADDREGRecord( record , regionProperty );
            else
                throw std::invalid_argument("Fatal error processing ADDREG keyword - invalid/undefined keyword: " + targetArray);
@@ -900,9 +909,9 @@ namespace Opm {
         for( const auto& record : deckKeyword ) {
             const std::string& field = record.getItem("field").get< std::string >(0);
 
-            if (m_doubleGridProperties.hasKeyword( field ))
+            if (m_doubleGridProperties.supportsKeyword( field ))
                 m_doubleGridProperties.handleMULTIPLYRecord( record , boxManager );
-            else if (m_intGridProperties.hasKeyword( field ))
+            else if (m_intGridProperties.supportsKeyword( field ))
                 m_intGridProperties.handleMULTIPLYRecord( record , boxManager );
             else
                 throw std::invalid_argument("Fatal error processing MULTIPLY keyword. Tried to scale not defined keyword " + field);

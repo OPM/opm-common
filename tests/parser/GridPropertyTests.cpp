@@ -220,8 +220,8 @@ BOOST_AUTO_TEST_CASE(SET) {
 
 BOOST_AUTO_TEST_CASE(ADD) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
-    SupportedKeywordInfo keywordInfo1( "P1", 1, "1" );
-    SupportedKeywordInfo keywordInfo2( "P2", 9, "1" );
+    SupportedKeywordInfo keywordInfo1( "P1", 1, "1", true );
+    SupportedKeywordInfo keywordInfo2( "P2", 9, "1", true );
     Opm::GridProperty<int> prop1( 4, 4, 2, keywordInfo1 );
     Opm::GridProperty<int> prop2( 4, 4, 2, keywordInfo2 );
 
@@ -538,8 +538,8 @@ BOOST_AUTO_TEST_CASE(addKeyword) {
 BOOST_AUTO_TEST_CASE(hasKeyword_assertKeyword) {
     typedef Opm::GridProperties<int>::SupportedKeywordInfo SupportedKeywordInfo;
     std::vector<SupportedKeywordInfo> supportedKeywords = {
-        SupportedKeywordInfo("SATNUM" , 0, "1"),
-        SupportedKeywordInfo("FIPNUM" , 0, "1")
+        SupportedKeywordInfo("SATNUM" , 0, "1", true),
+        SupportedKeywordInfo("FIPNUM" , 0, "1", true)
     };
     const Opm::EclipseGrid grid(10, 7, 9);
     const Opm::GridProperties<int> gridProperties( grid, std::move( supportedKeywords ) );

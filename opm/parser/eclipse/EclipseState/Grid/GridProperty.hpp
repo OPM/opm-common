@@ -51,12 +51,14 @@ class GridPropertySupportedKeywordInfo {
             const std::string& name,
             init initializer,
             post  postProcessor,
-            const std::string& dimString );
+            const std::string& dimString,
+            bool m_defaultInitializable = false );
 
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
                 init initializer,
-                const std::string& dimString);
+                const std::string& dimString,
+                bool m_defaultInitializable = false );
 
         /* this is a convenience constructor which can be used if the default
          * value for the grid property is just a constant.
@@ -64,18 +66,21 @@ class GridPropertySupportedKeywordInfo {
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
                 const T defaultValue,
-                const std::string& dimString );
+                const std::string& dimString,
+                bool m_defaultInitializable = false );
 
         GridPropertySupportedKeywordInfo(
                 const std::string& name,
                 const T defaultValue,
                 post postProcessor,
-                const std::string& dimString );
+                const std::string& dimString,
+                bool m_defaultInitializable = false );
 
         const std::string& getKeywordName() const;
         const std::string& getDimensionString() const;
         const init& initializer() const;
         const post& postProcessor() const;
+        bool isDefaultInitializable() const;
 
     private:
 
@@ -83,6 +88,7 @@ class GridPropertySupportedKeywordInfo {
         init m_initializer;
         post m_postProcessor;
         std::string m_dimensionString;
+        bool m_defaultInitializable;
 };
 
 template< typename T >
