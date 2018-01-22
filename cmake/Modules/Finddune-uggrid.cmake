@@ -30,5 +30,5 @@ find_opm_package (
 include (UseDuneVer)
 find_dune_version ("dune" "uggrid")
 
-# deactivate search for UH
+# deactivate search for UG
 set(UG_FOUND ${dune-uggrid_FOUND})
