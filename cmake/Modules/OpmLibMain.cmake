@@ -287,9 +287,6 @@ add_custom_target(check-commits
 include (OpmDoc)
 opm_doc (${project} ${doxy_dir})
 
-# provide compatibility with using this build in dunecontrol
-include (DuneCompat)
-
 ### clean in-source builds ###
 include (OpmDistClean)
 opm_dist_clean (${project})
