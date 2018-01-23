@@ -146,6 +146,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
                                      createBlackoilState( 2, numCells ),
                                      wells,
         {},
+        {},
 				     {});
     }
 
@@ -222,6 +223,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
                                              step_time - start_time,
                                              createBlackoilState( 2, numCells ),
                                              wells,
+                                             {},
                                              {},
                                              {});
             }

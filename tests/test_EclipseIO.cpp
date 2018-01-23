@@ -343,6 +343,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
 				     sol,
 				     wells,
                      {},
+                     {},
 				     {});
 				     
 

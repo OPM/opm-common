@@ -175,10 +175,10 @@ public:
                         double seconds_elapsed,
                         data::Solution,
                         data::Wells,
-                        std::map<std::string, double> single_summary_values,
-                        std::map<std::string, std::vector<double>> region_summary_values,
-                        std::map<std::pair<std::string, int>, double> block_summary_values = {},
-                        std::map<std::string, std::vector<double>> extra_restart = {},
+                        const std::map<std::string, double>& single_summary_values,
+                        const std::map<std::string, std::vector<double>>& region_summary_values,
+                        const std::map<std::pair<std::string, int>, double>& block_summary_values,
+                        const std::map<std::string, std::vector<double>>& extra_restart = {},
                         bool write_double = false);
 
 

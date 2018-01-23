@@ -161,8 +161,9 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
                                      timestep,
                                      solution,
                                      wells ,
-                                      {},
-				     {} );
+                                     {},
+                                     {},
+                                     {} );
     }
 
     verifyWellState(eclipse_restart_filename, grid, schedule);
