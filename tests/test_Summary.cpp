@@ -691,6 +691,10 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
                                     ecl_sum_get_field_var( resp, 1, "FGPRS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2 - 10.4 + 20.2 - 20.4,
                                     ecl_sum_get_field_var( resp, 1, "FGPRF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.5 + 20.5,
+                                    ecl_sum_get_field_var( resp, 1, "FOPRS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.1 - 10.5 + 20.1 - 20.5,
+                                    ecl_sum_get_field_var( resp, 1, "FOPRF" ), 1e-5 );
 
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPT" ), 1e-5 );
@@ -704,6 +708,10 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
                                     ecl_sum_get_field_var( resp, 1, "FGPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2 - 10.4 + 20.2 - 20.4,
                                     ecl_sum_get_field_var( resp, 1, "FGPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.5 + 20.5,
+                                    ecl_sum_get_field_var( resp, 1, "FOPTS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.1 - 10.5 + 20.1 - 20.5,
+                                    ecl_sum_get_field_var( resp, 1, "FOPTF" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 2 * (10.0 + 20.0), ecl_sum_get_field_var( resp, 2, "FWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (10.1 + 20.1), ecl_sum_get_field_var( resp, 2, "FOPT" ), 1e-5 );
@@ -716,6 +724,10 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
                                     ecl_sum_get_field_var( resp, 2, "FGPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * (10.2 - 10.4 + 20.2 - 20.4),
                                     ecl_sum_get_field_var( resp, 2, "FGPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.5 + 20.5),
+                                    ecl_sum_get_field_var( resp, 2, "FOPTS" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.1 - 10.5 + 20.1 - 20.5),
+                                    ecl_sum_get_field_var( resp, 2, "FOPTF" ), 1e-5 );
 
     /* Production rates (history) */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPRH" ), 1e-5 );

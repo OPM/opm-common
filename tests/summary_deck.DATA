@@ -74,6 +74,8 @@ FGCR
 FNPR -- solvent
 FGPRF
 FGPRS
+FOPRF
+FOPRS
 --FTPRSEA
 -- Injection Rates
 FVIR
@@ -97,6 +99,8 @@ FGST
 FGCT
 FGPTS
 FGPTF
+FOPTF
+FOPTS
 -- Injection Cummulatives
 FVIT
 FWIT

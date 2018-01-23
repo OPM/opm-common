@@ -802,6 +802,8 @@ static const std::unordered_map< std::string, ofun > funs = {
                    rate< rt::reservoir_gas, producer>)},
     { "FGPRS", rate< rt::dissolved_gas, producer > },
     { "FGPRF", sub( rate< rt::gas, producer >, rate< rt::dissolved_gas, producer > ) },
+    { "FOPRS", rate< rt::vaporized_oil, producer > },
+    { "FOPRF", sub (rate < rt::oil, producer >, rate< rt::vaporized_oil, producer > ) },
 
     { "FLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
     { "FWPT", mul( rate< rt::wat, producer >, duration ) },
@@ -814,6 +816,10 @@ static const std::unordered_map< std::string, ofun > funs = {
                        rate< rt::reservoir_gas, producer>), duration)},
     { "FGPTS", mul( rate< rt::dissolved_gas, producer > , duration )},
     { "FGPTF", mul( sub( rate< rt::gas, producer >, rate< rt::dissolved_gas, producer > ), duration )},
+    { "FOPTS", mul( rate< rt::vaporized_oil, producer >, duration ) },
+    { "FOPTF", mul( sub (rate < rt::oil, producer >,
+                         rate< rt::vaporized_oil, producer > ),
+                    duration ) },
 
     { "FWIR", rate< rt::wat, injector > },
     { "FOIR", rate< rt::oil, injector > },
