@@ -397,6 +397,9 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 60.0, ecl_sum_get_well_var( resp, 2, "W_3", "WWITH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 0,    ecl_sum_get_well_var( resp, 2, "W_3", "WGITH" ), 1e-5 );
 
+    /* Production targets */
+    BOOST_CHECK_CLOSE( 30.1 , ecl_sum_get_well_var( resp, 1, "W_5", "WVPRT" ), 1e-5 );
+
     /* WWCT - water cut */
     const double wwcut1 = 10.0 / ( 10.0 + 10.1 );
     const double wwcut2 = 20.0 / ( 20.0 + 20.1 );
@@ -778,6 +781,9 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     /* Injection totals (history) */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_field_var( resp, 1, "FWITH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 60.0, ecl_sum_get_field_var( resp, 2, "FWITH" ), 1e-5 );
+
+    /* Production targets */
+    BOOST_CHECK_CLOSE( 30.1 , ecl_sum_get_field_var( resp, 1, "FVPRT" ), 1e-5 );
 
     /* fwct - water cut */
     const double wcut = (10.0 + 20.0) / ( 10.0 + 10.1 + 20.0 + 20.1 );

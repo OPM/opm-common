@@ -674,6 +674,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "WBHP", bhp },
     { "WTHP", thp },
+    { "WVPRT", res_vol_production_target },
 
     { "GWIR", rate< rt::wat, injector > },
     { "GOIR", rate< rt::oil, injector > },
@@ -885,6 +886,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWPR", flowing< producer > },
     { "FPR",   fpr },
     { "FPRP",   fprp },
+    { "FVPRT", res_vol_production_target },
 
     /* Region properties */
     { "RPR" , rpr},
