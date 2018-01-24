@@ -282,6 +282,34 @@ namespace Opm {
     }
 
     template< typename T >
+    void GridProperty< T >::maxvalue( T value, const Box& inputBox ) {
+        if (inputBox.isGlobal()) {
+            for (size_t i = 0; i < m_data.size(); ++i)
+                m_data[i] = std::min(value,m_data[i]);
+        } else {
+            const std::vector<size_t>& indexList = inputBox.getIndexList();
+            for (size_t i = 0; i < indexList.size(); i++) {
+                size_t targetIndex = indexList[i];
+                m_data[targetIndex] = std::min(value,m_data[targetIndex]);
+            }
+        }
+    }
+
+    template< typename T >
+    void GridProperty< T >::minvalue( T value, const Box& inputBox ) {
+        if (inputBox.isGlobal()) {
+            for (size_t i = 0; i < m_data.size(); ++i)
+                m_data[i] = std::max(value,m_data[i]);
+        } else {
+            const std::vector<size_t>& indexList = inputBox.getIndexList();
+            for (size_t i = 0; i < indexList.size(); i++) {
+                size_t targetIndex = indexList[i];
+                m_data[targetIndex] = std::max(value,m_data[targetIndex]);
+            }
+        }
+    }
+
+    template< typename T >
     void GridProperty< T >::scale( T scaleFactor, const Box& inputBox ) {
         if (inputBox.isGlobal()) {
             for (size_t i = 0; i < m_data.size(); ++i)

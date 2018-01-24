@@ -268,6 +268,32 @@ namespace Opm {
     }
 
     template< typename T >
+    void GridProperties<T>::handleMAXVALUERecord( const DeckRecord& record, BoxManager& boxManager) {
+        const std::string& field = record.getItem("field").get< std::string >(0);
+
+        if (hasKeyword( field )) {
+            GridProperty<T>& property = getKeyword( field );
+            T value  = convertInputValue( record.getItem("value").get< double >(0) );
+            setKeywordBox(record, boxManager);
+            property.maxvalue( value , boxManager.getActiveBox() );
+        } else
+            throw std::invalid_argument("Fatal error processing MAXVALUE keyword. Tried to limit not defined keyword " + field);
+    }
+
+    template< typename T >
+    void GridProperties<T>::handleMINVALUERecord( const DeckRecord& record, BoxManager& boxManager) {
+        const std::string& field = record.getItem("field").get< std::string >(0);
+
+        if (hasKeyword( field )) {
+            GridProperty<T>& property = getKeyword( field );
+            T value  = convertInputValue( record.getItem("value").get< double >(0) );
+            setKeywordBox(record, boxManager);
+            property.minvalue( value , boxManager.getActiveBox() );
+        } else
+            throw std::invalid_argument("Fatal error processing MINVALUE keyword. Tried to limit not defined keyword " + field);
+    }
+
+    template< typename T >
     void GridProperties<T>::handleMULTIPLYRecord( const DeckRecord& record, BoxManager& boxManager) {
         const std::string& field = record.getItem("field").get< std::string >(0);
 
@@ -277,7 +303,7 @@ namespace Opm {
             setKeywordBox(record, boxManager);
             property.scale( factor , boxManager.getActiveBox() );
         } else
-            throw std::invalid_argument("Fatal error processing ADD keyword. Tried to shift not defined keyword " + field);
+            throw std::invalid_argument("Fatal error processing MULTIPLY keyword. Tried to scale not defined keyword " + field);
     }
 
 

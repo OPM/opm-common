@@ -152,5 +152,9 @@ BOOST_AUTO_TEST_CASE( OPERATE ) {
     BOOST_CHECK_EQUAL( ntg.iget( 0,5,1) , 4.0 );  // MINLIM
 
     BOOST_CHECK_EQUAL( ntg.iget( 0,0,2) , 2.0 );  // MAXLIM
+
+    BOOST_CHECK_EQUAL( ntg.iget( 0,0,3) , 0.5 );  // MAXVALUE
+
+    BOOST_CHECK_EQUAL( ntg.iget( 0,0,4) , 1.5 );  // MINVALUE
 }
 

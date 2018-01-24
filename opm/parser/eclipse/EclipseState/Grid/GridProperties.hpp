@@ -140,6 +140,8 @@ namespace Opm {
         */
 
         void handleADDRecord( const DeckRecord& record, BoxManager& boxManager);
+        void handleMAXVALUERecord( const DeckRecord& record, BoxManager& boxManager);
+        void handleMINVALUERecord( const DeckRecord& record, BoxManager& boxManager);
         void handleMULTIPLYRecord( const DeckRecord& record, BoxManager& boxManager);
         void handleCOPYRecord( const DeckRecord& record, BoxManager& boxManager);
         void handleEQUALSRecord( const DeckRecord& record, BoxManager& boxManager);

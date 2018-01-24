@@ -130,6 +130,8 @@ public:
 
     void copyFrom( const GridProperty< T >&, const Box& );
     void scale( T scaleFactor, const Box& );
+    void maxvalue( T value, const Box& );
+    void minvalue( T value, const Box& );
     void add( T shiftValue, const Box& );
     void setScalar( T value, const Box& );
 

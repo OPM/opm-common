@@ -27,7 +27,15 @@ OPERATE
   NTG  1 10 6 10 2  2  'MINLIM'  SWAT  2  /         -- NTG = max(swat, 2 )
 --
   NTG  1 10 1  5 3  3  'MAXLIM'  SWAT  2  /         -- NTG = min(swat, 2 )
-/  
+/
+
+MAXVALUE
+NTG 0.5 1 10 1  5 4  4 /  -- NTG <= 0.5
+/
+
+MINVALUE
+NTG 1.5 1 10 1  5 5  5 /  -- NTG >= 1.5
+/
 
 
 PERMX

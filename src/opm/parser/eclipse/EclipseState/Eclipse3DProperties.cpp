@@ -744,6 +744,12 @@ namespace Opm {
                 else if (deckKeyword.name() == "MULTIPLY")
                     handleMULTIPLYKeyword(deckKeyword, boxManager);
 
+                else if (deckKeyword.name() == "MAXVALUE")
+                    handleMAXVALUEKeyword(deckKeyword, boxManager);
+
+                else if (deckKeyword.name() == "MINVALUE")
+                    handleMINVALUEKeyword(deckKeyword, boxManager);
+
 
                 else if (deckKeyword.name() == "EQUALREG")
                     handleEQUALREGKeyword(deckKeyword);
@@ -857,7 +863,37 @@ namespace Opm {
         }
     }
 
+    //Note that the MAXVALUE kqeyword is processed in place for the current value of the keyword,
+    // and does not "stick" as a persistent attribute of the keyword.
+    void Eclipse3DProperties::handleMAXVALUEKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
+        for( const auto& record : deckKeyword ) {
+            const std::string& field = record.getItem("field").get< std::string >(0);
 
+            if (m_doubleGridProperties.hasKeyword( field ))
+                m_doubleGridProperties.handleMAXVALUERecord( record , boxManager );
+            else if (m_intGridProperties.hasKeyword( field ))
+                m_intGridProperties.handleMAXVALUERecord( record , boxManager );
+            else
+                throw std::invalid_argument("Fatal error processing MAXVALUE keyword. Tried to limit not defined keyword " + field);
+
+        }
+    }
+
+    //Note that the MINVALUE keyword is processed in place for the current value of the keyword,
+    // and does not "stick" as a persistent attribute of the keyword.
+    void Eclipse3DProperties::handleMINVALUEKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
+        for( const auto& record : deckKeyword ) {
+            const std::string& field = record.getItem("field").get< std::string >(0);
+
+            if (m_doubleGridProperties.hasKeyword( field ))
+                m_doubleGridProperties.handleMINVALUERecord( record , boxManager );
+            else if (m_intGridProperties.hasKeyword( field ))
+                m_intGridProperties.handleMINVALUERecord( record , boxManager );
+            else
+                throw std::invalid_argument("Fatal error processing MINVALUE keyword. Tried to limit not defined keyword " + field);
+
+        }
+    }
 
 
     void Eclipse3DProperties::handleMULTIPLYKeyword( const DeckKeyword& deckKeyword, BoxManager& boxManager) {
@@ -869,7 +905,7 @@ namespace Opm {
             else if (m_intGridProperties.hasKeyword( field ))
                 m_intGridProperties.handleMULTIPLYRecord( record , boxManager );
             else
-                throw std::invalid_argument("Fatal error processing MULTIPLY keyword. Tried to shift not defined keyword " + field);
+                throw std::invalid_argument("Fatal error processing MULTIPLY keyword. Tried to scale not defined keyword " + field);
 
         }
     }
