@@ -303,6 +303,10 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 20.4, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.2 - 10.4, ecl_sum_get_well_var( resp, 1, "W_1", "WGPRF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.2 - 20.4, ecl_sum_get_well_var( resp, 1, "W_2", "WGPRF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.6 + 10.7 + 10.8,
+                                    ecl_sum_get_well_var( resp, 1, "W_1", "WVPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.6 + 20.7 + 20.8,
+                                    ecl_sum_get_well_var( resp, 1, "W_2", "WVPR" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 10.5, ecl_sum_get_well_var( resp, 1, "W_1", "WOPRS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.5, ecl_sum_get_well_var( resp, 1, "W_2", "WOPRS" ), 1e-5 );
@@ -324,6 +328,10 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 20.5, ecl_sum_get_well_var( resp, 1, "W_2", "WOPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE( (10.1 - 10.5), ecl_sum_get_well_var( resp, 1, "W_1", "WOPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE( (20.1 - 20.5), ecl_sum_get_well_var( resp, 1, "W_2", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.6 + 10.7 + 10.8,
+                                        ecl_sum_get_well_var( resp, 1, "W_1", "WVPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.6 + 20.7 + 20.8,
+                                        ecl_sum_get_well_var( resp, 1, "W_2", "WVPT" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 2 * 10.0, ecl_sum_get_well_var( resp, 2, "W_1", "WWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 20.0, ecl_sum_get_well_var( resp, 2, "W_2", "WWPT" ), 1e-5 );
@@ -345,6 +353,10 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 2 * 20.5, ecl_sum_get_well_var( resp, 2, "W_2", "WOPTS" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * ( 10.1 - 10.5 ), ecl_sum_get_well_var( resp, 2, "W_1", "WOPTF" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * ( 20.1 - 20.5 ), ecl_sum_get_well_var( resp, 2, "W_2", "WOPTF" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (10.6 + 10.7 + 10.8),
+                                        ecl_sum_get_well_var( resp, 2, "W_1", "WVPT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 2 * (20.6 + 20.7 + 20.8),
+                                        ecl_sum_get_well_var( resp, 2, "W_2", "WVPT" ), 1e-5 );
 
     /* Production rates (history) */
     BOOST_CHECK_CLOSE( 10, ecl_sum_get_well_var( resp, 1, "W_1", "WWPRH" ), 1e-5 );
