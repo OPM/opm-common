@@ -409,10 +409,10 @@ void EclipseIO::writeTimeStep(int report_step,
                               double secs_elapsed,
                               data::Solution cells,
                               data::Wells wells,
-                              const std::map<std::__cxx11::string, double>& single_summary_values,
-                              const std::map<std::__cxx11::string, std::vector<double> >& region_summary_values,
-                              const std::map<std::pair<std::__cxx11::string, int>, double>& block_summary_values,
-                              const std::map<std::__cxx11::string, std::vector<double>>&extra_restart,
+                              const std::map<std::string, double>& single_summary_values,
+                              const std::map<std::string, std::vector<double> >& region_summary_values,
+                              const std::map<std::pair<std::string, int>, double>& block_summary_values,
+                              const std::map<std::string, std::vector<double>>& extra_restart,
                               bool write_double)
  {
 
@@ -438,7 +438,6 @@ void EclipseIO::writeTimeStep(int report_step,
                                           es,
                                           schedule,
                                           wells ,
-                                          cells ,
                                           single_summary_values ,
                                           region_summary_values,
                                           block_summary_values);

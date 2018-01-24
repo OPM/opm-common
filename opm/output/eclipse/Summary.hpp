@@ -30,8 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 #include <opm/output/data/Wells.hpp>
-#include <opm/output/data/Cells.hpp>
-#include <opm/output/data/Solution.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
 namespace Opm {
@@ -55,7 +53,6 @@ class Summary {
                            const EclipseState& es,
                            const Schedule& schedule,
                            const data::Wells&,
-                           const data::Solution&,
                            const std::map<std::string, double>& single_values,
                            const std::map<std::string, std::vector<double>>& region_values = {},
                            const std::map<std::pair<std::string, int>, double>& block_values = {});

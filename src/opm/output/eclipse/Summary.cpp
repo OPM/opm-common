@@ -154,7 +154,6 @@ struct fn_args {
     size_t timestep;
     int  num;
     const data::Wells& wells;
-    const data::Solution& state;
     const out::RegionCache& regionCache;
     const EclipseGrid& grid;
 };
@@ -902,7 +901,6 @@ Summary::Summary( const EclipseState& st,
                                     0,           // Timestep number
                                     node.num(),  // NUMS value for the summary output.
                                     {},          // Well results - data::Wells
-                                    {},          // Solution::State
                                     {},          // Region <-> cell mappings.
                                     this->grid};
 
@@ -930,7 +928,6 @@ void Summary::add_timestep( int report_step,
                             const EclipseState& es,
                             const Schedule& schedule,
                             const data::Wells& wells ,
-                            const data::Solution& state,
                             const std::map<std::string, double>& single_values,
                             const std::map<std::string, std::vector<double>>& region_values,
                             const std::map<std::pair<std::string, int>, double>& block_values) {
@@ -949,7 +946,6 @@ void Summary::add_timestep( int report_step,
                                      timestep,
                                      num,
                                      wells,
-                                     state,
                                      this->regionCache,
                                      this->grid});
 

@@ -30,40 +30,23 @@
 namespace Opm {
 namespace out {
 
-    RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule) {
-        const auto& fipnum = properties.getIntGridProperty("FIPNUM");
-        const auto& region_values = properties.getRegions( "FIPNUM" );
+RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule) {
+    const auto& fipnum = properties.getIntGridProperty("FIPNUM");
 
-        for (auto region_id : region_values)
-            this->cell_map.emplace( region_id , fipnum.cellsEqual( region_id , grid ));
-
-
-        {
-            const auto& wells = schedule.getWells();
-            for (const auto& well : wells) {
-                const auto& completions = well->getCompletions( );
-                for (const auto& c : completions) {
-                    size_t global_index = grid.getGlobalIndex( c.getI() , c.getJ() , c.getK());
-                    if (grid.cellActive( global_index )) {
-                        size_t active_index = grid.activeIndex( global_index );
-                        int region_id =fipnum.iget( global_index );
-                        auto& well_index_list = this->completion_map[ region_id ];
-                        well_index_list.push_back( { well->name() , active_index } );
-                    }
-                }
+    const auto& wells = schedule.getWells();
+    for (const auto& well : wells) {
+        const auto& completions = well->getCompletions( );
+        for (const auto& c : completions) {
+            size_t global_index = grid.getGlobalIndex( c.getI() , c.getJ() , c.getK());
+            if (grid.cellActive( global_index )) {
+                size_t active_index = grid.activeIndex( global_index );
+                int region_id =fipnum.iget( global_index );
+                auto& well_index_list = this->completion_map[ region_id ];
+                well_index_list.push_back( { well->name() , active_index } );
             }
         }
     }
-
-
-    const std::vector<size_t>& RegionCache::cells( int region_id ) const {
-        const auto iter = this->cell_map.find( region_id );
-        if (iter == this->cell_map.end())
-            return this->cells_empty;
-        else
-            return iter->second;
-    }
-
+}
 
 
     const std::vector<std::pair<std::string,size_t>>& RegionCache::completions( int region_id ) const {

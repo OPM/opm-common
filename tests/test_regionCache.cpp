@@ -51,13 +51,6 @@ BOOST_AUTO_TEST_CASE(create) {
     Schedule schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), ParseContext() );
     out::RegionCache rc(es.get3DProperties() , grid, schedule);
 
-
-    const auto& c1 = rc.cells( 1 );
-    BOOST_CHECK_EQUAL( c1.size() , 100 );
-
-    const auto& c = rc.cells( 100 );
-    BOOST_CHECK_EQUAL( c.size() , 0 );
-
     {
         const auto& empty = rc.completions( 4 );
         BOOST_CHECK_EQUAL( empty.size() , 0 );
