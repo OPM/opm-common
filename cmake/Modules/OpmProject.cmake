@@ -95,6 +95,13 @@ function (opm_cmake_config name)
 	${PROJECT_SOURCE_DIR}
 	)
 
+  # The next replace will result in bogus entries if install directory is
+  # a subdirectory of source tree,
+  # and we have existing entries pointing to that install directory.
+  # Since they will yield a duplicate in next replace anyways, we filter them out first
+  # to get avoid those the bogus entries.
+  string(REPLACE "${CMAKE_INSTALL_PREFIX}/include${${name}_VER_DIR}" "" ${name}_INCLUDE_DIRS "${${name}_INCLUDE_DIRS}")
+
   # replace the build directory with the target directory in the
   # variables that contains build paths
   string (REPLACE
