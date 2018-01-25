@@ -42,8 +42,8 @@ if(NOT @opm-project_NAME@_FOUND)
     # add the library as a target, so that other things in the project including
     # this file may depend on it and get rebuild if this library changes.
     if(NOT TARGET @opm-project_TARGET@)
-      add_library (@opm-project_TARGET@ UNKNOWN IMPORTED)
-      set_property (TARGET @opm-project_TARGET@ PROPERTY IMPORTED_LOCATION "${@opm-project_NAME@_LIBRARY}")
+      get_filename_component(_dir "${CMAKE_CURRENT_LIST_FILE}" PATH)
+      include("${_dir}/@opm-project_NAME@-targets.cmake")
     endif()
   endif (NOT "@opm-project_TARGET@" STREQUAL "")
 

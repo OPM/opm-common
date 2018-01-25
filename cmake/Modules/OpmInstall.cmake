@@ -20,10 +20,16 @@ macro (opm_install opm)
 	  )
   endforeach (_hdr)
   install (
-	TARGETS ${${opm}_TARGET}
+	TARGETS ${${opm}_TARGET} ${${opm}_EXTRA_TARGETS}
+	EXPORT ${opm}-targets
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}${${opm}_VER_DIR}
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}${${opm}_VER_DIR}
 	)
+  if(NOT "${${opm}_TARGET}" STREQUAL "")
+    export(TARGETS ${${opm}_TARGET} ${${opm}_EXTRA_TARGETS}
+            FILE ${opm}-targets.cmake)
+    install(EXPORT ${opm}-targets DESTINATION "share/cmake/${opm}")
+  endif()
   # only /usr/lib/debug seems to be searched for debug info; if we have
   # write access to that directory (package installation), then default
   # to use it; otherwise put the debug files together with the library
