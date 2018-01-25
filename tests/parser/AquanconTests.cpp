@@ -58,10 +58,8 @@ inline Deck createAQUANCONDeck() {
 
 inline std::vector<Aquancon::AquanconOutput> init_aquancon(){
     auto deck = createAQUANCONDeck();
-    EclipseState eclState = createAQUANCONDeck();
-    Parser parser;
-    
-    Aquancon aqucon = Aquancon(eclState.getInputGrid(), deck);
+    EclipseState eclState( deck );
+    Aquancon aqucon( eclState.getInputGrid(), deck);
     std::vector<Aquancon::AquanconOutput> aquifers = aqucon.getAquOutput();
 
     return aquifers;
@@ -69,11 +67,11 @@ inline std::vector<Aquancon::AquanconOutput> init_aquancon(){
 
 BOOST_AUTO_TEST_CASE(AquanconTest){
     std::vector< Aquancon::AquanconOutput > aquifers = init_aquancon();
-    for (auto it =aquifers.begin(); it != aquifers.end(); ++it){
-        for (int i = 0; i < it->global_index.size(); ++i){
-            BOOST_CHECK_EQUAL(it->aquiferID , 1);
-            BOOST_CHECK_EQUAL(it->global_index.at(i) , 0);
-            BOOST_CHECK_EQUAL(it->reservoir_face_dir.at(i) , 8);
+    for (const auto& it : aquifers){
+        for (int i = 0; i < it.global_index.size(); ++i){
+            BOOST_CHECK_EQUAL(it.aquiferID , 1);
+            BOOST_CHECK_EQUAL(it.global_index.at(i) , 0);
+            BOOST_CHECK_EQUAL(it.reservoir_face_dir.at(i) , 8);
         }
     }    
 }    
