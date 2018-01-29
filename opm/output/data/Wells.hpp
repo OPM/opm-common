@@ -77,6 +77,11 @@ namespace Opm {
             /// true if any option is set; false otherwise
             inline bool any() const noexcept;
 
+            template <class MessageBufferType>
+            void write(MessageBufferType& buffer) const;
+            template <class MessageBufferType>
+            void read(MessageBufferType& buffer);
+
         private:
             double& get_ref( opt );
             const double& get_ref( opt ) const;
@@ -104,6 +109,11 @@ namespace Opm {
         Rates rates;
         double pressure;
         double reservoir_rate;
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
     };
 
     struct Well {
@@ -115,6 +125,10 @@ namespace Opm {
         std::vector< Completion > completions;
 
         inline bool flowing() const noexcept;
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
     };
 
 
@@ -145,9 +159,35 @@ namespace Opm {
             return completion->rates.get( m, 0.0 );
         }
 
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const {
+            unsigned int size = this->size();
+            buffer.write(size);
+            for (const auto& witr : *this) {
+                const std::string& name = witr.first;
+                buffer.write(name);
+                const Well& well = witr.second;
+                well.write(buffer);
+            }
+        }
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer) {
+            unsigned int size;
+            buffer.read(size);
+            for (size_t i = 0; i < size; ++i) {
+                std::string name;
+                buffer.read(name);
+                Well well;
+                well.read(buffer);
+                this->emplace(name, well);
+            }
+        }
+
     };
 
-    using Wells = WellRates;
+    using Wells = WellRates;    
+
 
     /* IMPLEMENTATIONS */
 
@@ -228,7 +268,85 @@ namespace Opm {
         return this->rates.any();
     }
 
+    template <class MessageBufferType>
+    void Rates::write(MessageBufferType& buffer) const {
+            buffer.write(this->mask);
+            buffer.write(this->wat);
+            buffer.write(this->oil);
+            buffer.write(this->gas);
+            buffer.write(this->polymer);
+            buffer.write(this->solvent);
+            buffer.write(this->energy);
+            buffer.write(this->dissolved_gas);
+            buffer.write(this->vaporized_oil);
+            buffer.write(this->reservoir_water);
+            buffer.write(this->reservoir_oil);
+            buffer.write(this->reservoir_gas);
     }
+
+    template <class MessageBufferType>
+    void Completion::write(MessageBufferType& buffer) const {
+            buffer.write(this->index);
+            this->rates.write(buffer);
+            buffer.write(this->pressure);
+            buffer.write(this->reservoir_rate);
+    }
+
+    template <class MessageBufferType>
+    void Well::write(MessageBufferType& buffer) const {
+        this->rates.write(buffer);
+        buffer.write(this->bhp);
+        buffer.write(this->thp);
+        buffer.write(this->temperature);
+        buffer.write(this->control);
+        unsigned int size = this->completions.size();
+        buffer.write(size);
+        for (const Completion& comp : this->completions)
+            comp.write(buffer);
+    }
+
+    template <class MessageBufferType>
+    void Rates::read(MessageBufferType& buffer) {
+            buffer.read(this->mask);
+            buffer.read(this->wat);
+            buffer.read(this->oil);
+            buffer.read(this->gas);
+            buffer.read(this->polymer);
+            buffer.read(this->solvent);
+            buffer.read(this->energy);
+            buffer.read(this->dissolved_gas);
+            buffer.read(this->vaporized_oil);
+            buffer.read(this->reservoir_water);
+            buffer.read(this->reservoir_oil);
+            buffer.read(this->reservoir_gas);
+    }
+
+  template <class MessageBufferType>
+   void Completion::read(MessageBufferType& buffer) {
+            buffer.read(this->index);
+            this->rates.read(buffer);
+            buffer.read(this->pressure);
+            buffer.read(this->reservoir_rate);
+   }
+
+    template <class MessageBufferType>
+    void Well::read(MessageBufferType& buffer) {
+        this->rates.read(buffer);
+        buffer.read(this->bhp);
+        buffer.read(this->thp);
+        buffer.read(this->temperature);
+        buffer.read(this->control);
+        unsigned int size = 0.0; //this->completions.size();
+        buffer.read(size);
+        this->completions.resize(size);
+        for (size_t i = 0;  i < size; ++i)
+        {
+            auto& comp = this->completions[ i ];
+            comp.read(buffer);
+        }
+    }
+
+}
 }
 
 #endif //OPM_OUTPUT_WELLS_HPP

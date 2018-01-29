@@ -127,3 +127,4 @@ BOOST_AUTO_TEST_CASE(get_completions) {
     BOOST_CHECK_EQUAL( 0.0, wellRates.get("OP_2" , 10000 , data::Rates::opt::wat) );
     BOOST_CHECK_EQUAL( 26.41 , wellRates.get( "OP_2" , 188 , data::Rates::opt::wat));
 }
+
