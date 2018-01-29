@@ -36,7 +36,7 @@ function parseRevisions {
   declare -a BTYPES_ARRAY
   for btype in $BTYPES
   do
-    BTYPES_ARRAY=($BTYPES_ARRAY $btype)
+    BTYPES_ARRAY=(${BTYPES_ARRAY[*]} $btype)
   done
   TOOLCHAIN_ARRAY=($CMAKE_TOOLCHAIN_FILES)
   for index in ${!BTYPES_ARRAY[*]}

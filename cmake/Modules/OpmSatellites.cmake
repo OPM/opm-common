@@ -269,7 +269,7 @@ macro(opm_add_test TestName)
 
   # the libraries to link against
   if (NOT CURTEST_LIBRARIES)
-    SET(CURTEST_LIBRARIES "${${CMAKE_PROJECT_NAME}_LIBRARIES}")
+    SET(CURTEST_LIBRARIES "${${project}_LIBRARIES}")
   endif()
 
   # determine if the test should be completely ignored, i.e., the
@@ -291,6 +291,9 @@ macro(opm_add_test TestName)
       add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
       target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
 
+      if(TARGET ${opm}_prepare)
+        add_dependencies("${CURTEST_EXE_NAME}" ${opm}_prepare)
+      endif()
       if(CURTEST_DEPENDS)
         add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
       endif()
