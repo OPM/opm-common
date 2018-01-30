@@ -31,7 +31,7 @@
 
 
 #include "config.h"
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
+#include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 
 #include <iostream>
 #include <iomanip>

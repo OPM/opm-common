@@ -30,7 +30,7 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/OpmLog/OpmLog.cpp
       opm/common/OpmLog/StreamLog.cpp
       opm/common/OpmLog/TimerLog.cpp
-      opm/core/utility/MonotCubicInterpolator.cpp
+      opm/common/utility/numeric/MonotCubicInterpolator.cpp
       opm/common/utility/parameters/Parameter.cpp
       opm/common/utility/parameters/ParameterGroup.cpp
       opm/common/utility/parameters/ParameterTools.cpp
@@ -84,13 +84,13 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
       opm/common/utility/numeric/blas_lapack.h
-      opm/core/utility/buildUniformMonotoneTable.hpp
-      opm/core/utility/linearInterpolation.hpp
-      opm/core/utility/MonotCubicInterpolator.hpp
-      opm/core/utility/NonuniformTableLinear.hpp
-      opm/core/utility/RootFinders.hpp
-      opm/core/utility/SparseVector.hpp
-      opm/core/utility/UniformTableLinear.hpp
+      opm/common/utility/numeric/buildUniformMonotoneTable.hpp
+      opm/common/utility/numeric/linearInterpolation.hpp
+      opm/common/utility/numeric/MonotCubicInterpolator.hpp
+      opm/common/utility/numeric/NonuniformTableLinear.hpp
+      opm/common/utility/numeric/RootFinders.hpp
+      opm/common/utility/numeric/SparseVector.hpp
+      opm/common/utility/numeric/UniformTableLinear.hpp
       opm/common/utility/parameters/ParameterGroup.hpp
       opm/common/utility/parameters/ParameterGroup_impl.hpp
       opm/common/utility/parameters/Parameter.hpp

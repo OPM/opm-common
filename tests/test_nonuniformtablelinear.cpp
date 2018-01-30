@@ -28,7 +28,7 @@
 #define BOOST_TEST_MODULE NonuniformTableLinearTests
 #include <boost/test/unit_test.hpp>
 
-#include <opm/core/utility/NonuniformTableLinear.hpp>
+#include <opm/common/utility/numeric/NonuniformTableLinear.hpp>
 
 
 BOOST_AUTO_TEST_CASE(utility_functions)
