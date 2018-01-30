@@ -12,6 +12,7 @@ namespace {
             l.append( py::make_tuple( x.cell1, x.cell2, x.trans )  );
         return l;
     }
+
     py::list faultNames( const EclipseState& state ) {
         py::list l;
         const auto& fc = state.getFaults();
@@ -21,6 +22,7 @@ namespace {
         }
         return l;
     }
+
     py::dict jfunc( const EclipseState& s) {
       const auto& tm = s.getTableManager();
       if (!tm.useJFunc())
@@ -83,18 +85,18 @@ namespace {
 
 }
 
-void sunbeam::export_EclipseState() {
+void sunbeam::export_EclipseState(py::module& module) {
 
-    py::class_< EclipseState >( "EclipseState", py::no_init )
-        .add_property( "title", &EclipseState::getTitle )
-        .def( "_schedule",      &EclipseState::getSchedule,     ref() )
-        .def( "_props",         &EclipseState::get3DProperties, ref() )
-        .def( "_grid",          &EclipseState::getInputGrid,    ref() )
-        .def( "_cfg",           &EclipseState::cfg,             ref() )
-        .def( "_tables",        &EclipseState::getTableManager, ref() )
+    py::class_< EclipseState >( module, "EclipseState" )
+        .def_property_readonly( "title", &EclipseState::getTitle )
+        .def( "_schedule",      &EclipseState::getSchedule, ref_internal)
+        .def( "_props",         &EclipseState::get3DProperties, ref_internal)
+        .def( "_grid",          &EclipseState::getInputGrid, ref_internal)
+        .def( "_cfg",           &EclipseState::cfg, ref_internal)
+        .def( "_tables",        &EclipseState::getTableManager, ref_internal)
         .def( "has_input_nnc",  &EclipseState::hasInputNNC )
-        .def( "simulation",     &EclipseState::getSimulationConfig, ref())
-        .def( "summary",        &EclipseState::getSummaryConfig   , ref())
+        .def( "simulation",     &EclipseState::getSimulationConfig, ref_internal)
+        .def( "summary",        &EclipseState::getSummaryConfig, ref_internal)
         .def( "input_nnc",      &getNNC )
         .def( "faultNames",     &faultNames )
         .def( "faultFaces",     &faultFaces )

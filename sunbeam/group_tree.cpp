@@ -2,6 +2,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 #include "sunbeam.hpp"
+#include "converters.hpp"
 
 namespace {
 
@@ -14,9 +15,9 @@ namespace {
     }
 }
 
-void sunbeam::export_GroupTree() {
+void sunbeam::export_GroupTree(py::module& module) {
 
-    py::class_< GroupTree >( "GroupTree", py::no_init)
+  py::class_< GroupTree >(module, "GroupTree")
 
         .def( "_parent", &parent,                       "parent function returning parent of a group")
         .def( "_children", &children,                   "children function returning python"

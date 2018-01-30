@@ -14,6 +14,8 @@ namespace {
 /* DeckKeyword */
 const DeckRecord& (DeckKeyword::*getRecord)(size_t index) const = &DeckKeyword::getRecord;
 
+
+
 py::list item_to_pylist( const DeckItem& item )
 {
     switch (item.getType())
@@ -39,12 +41,14 @@ struct DeckRecordIterator
         this->record = record;
         this->it = this->record->begin();
     }
+
     const DeckRecord* record;
     DeckRecord::const_iterator it;
+
     py::list next() {
         if (it == record->end()) {
             PyErr_SetString(PyExc_StopIteration, "At end.");
-            py::throw_error_already_set();
+            throw py::error_already_set();
         }
         return item_to_pylist(*(it++));
     }
@@ -52,17 +56,18 @@ struct DeckRecordIterator
 
 }
 
-void sunbeam::export_DeckKeyword() {
-    py::class_< DeckKeyword >( "DeckKeyword", py::no_init )
-        .def( "__repr__", &DeckKeyword::name, copy() )
+void sunbeam::export_DeckKeyword(py::module& module) {
+    py::class_< DeckKeyword >( module, "DeckKeyword")
+        .def( "__repr__", &DeckKeyword::name )
         .def( "__str__", &str<DeckKeyword> )
-        .def( "__iter__", py::range< ref >( &DeckKeyword::begin, &DeckKeyword::end ))
-        .def( "__getitem__", getRecord, ref() )
+        .def("__iter__",  [] (const DeckKeyword &keyword) { return py::make_iterator(keyword.begin(), keyword.end()); }, py::keep_alive<0,1>())
+        .def( "__getitem__", getRecord, ref_internal)
         .def( "__len__", &DeckKeyword::size )
-        .add_property("name", py::make_function( &DeckKeyword::name, copy() ))
+        .def_property_readonly("name", &DeckKeyword::name )
         ;
 
-    py::class_< DeckRecord >( "DeckRecord", py::no_init )
+
+    py::class_< DeckRecord >( module, "DeckRecord")
         .def( "__repr__", &str<DeckRecord> )
         .def( "__iter__", +[](const DeckRecord& record){
             return DeckRecordIterator(&record);
@@ -76,8 +81,10 @@ void sunbeam::export_DeckKeyword() {
         .def( "__len__", &DeckRecord::size )
         ;
 
-    py::class_< DeckRecordIterator >( "DeckRecordIterator", py::no_init )
+
+    py::class_< DeckRecordIterator >( module, "DeckRecordIterator")
         .def( "__next__", &DeckRecordIterator::next )
         .def( "next", &DeckRecordIterator::next )
         ;
+
 }

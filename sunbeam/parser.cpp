@@ -2,20 +2,20 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
+#include <pybind11/stl.h>
+
 #include "sunbeam.hpp"
 
 
 namespace {
 
     Deck parseDeck( const std::string& deckStr,
-                    const boost::python::list& keywords,
+                    const std::vector<std::string>& keywords,
                     bool isFile,
                     const ParseContext& pc ) {
         Parser p;
-        size_t len = py::extract<size_t>(keywords.attr("__len__")());
-        for (size_t i = 0; i < len; i++) {
-            const std::string kw = py::extract<const std::string>(py::str(keywords[i]));
-            const Json::JsonObject jkw(kw);
+        for (const auto& keyword : keywords) {
+            const Json::JsonObject jkw(keyword);
             p.addParserKeyword(jkw);
         }
         return isFile ? p.parseFile(deckStr, pc) : p.parseString(deckStr, pc);
@@ -34,23 +34,20 @@ namespace {
     }
 
     void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
-
 }
 
-void sunbeam::export_Parser() {
+void sunbeam::export_Parser(py::module& module) {
 
-    py::def( "parse", parse );
-    py::def( "parse_data", parseData );
-    py::def( "parse_deck", &parseDeck );
+    module.def( "parse", parse );
+    module.def( "parse_data", parseData );
+    module.def( "parse_deck", &parseDeck );
 
-    py::class_< ParseContext >( "ParseContext" )
-        .def( "update", ctx_update )
-        ;
+    py::class_< ParseContext >(module, "ParseContext" )
+        .def(py::init<>())
+        .def( "update", ctx_update );
 
-    py::enum_< InputError::Action >( "action" )
-        .value( "throw",  InputError::Action::THROW_EXCEPTION )
-        .value( "warn",   InputError::Action::WARN )
-        .value( "ignore", InputError::Action::IGNORE )
-        ;
-
+    py::enum_< InputError::Action >( module, "action" )
+      .value( "throw",  InputError::Action::THROW_EXCEPTION )
+      .value( "warn",   InputError::Action::WARN )
+      .value( "ignore", InputError::Action::IGNORE );
 }

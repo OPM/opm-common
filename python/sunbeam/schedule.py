@@ -19,6 +19,9 @@ class Schedule(object):
     def groups(self, timestep=0):
         return [Group(x, self, timestep) for x in self._groups if x.name != 'FIELD']
 
+    def __getitem__(self,well):
+         return Well(self._getwell(well))
+
 
 @delegate(lib.Well)
 class Well(object):
@@ -33,6 +36,9 @@ class Well(object):
 
     def completions(self, timestep):
         return map(Completion, self._completions(timestep))
+
+    def __eq__(self,other):
+        return self._sun.__equal__(other._sun)
 
     @staticmethod
     def defined(timestep):
