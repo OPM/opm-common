@@ -66,7 +66,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/ConditionalStorage.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
-      opm/common/ResetLocale.hpp
+      opm/common/utility/ResetLocale.hpp
       opm/common/Unused.hpp
       opm/common/Valgrind.hpp
       opm/common/data/SimulationDataContainer.hpp
