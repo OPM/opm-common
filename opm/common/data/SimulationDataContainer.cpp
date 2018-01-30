@@ -18,7 +18,7 @@
  */
 
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/common/util/numeric/cmp.hpp>
+#include <opm/common/utility/numeric/cmp.hpp>
 #include <opm/common/data/SimulationDataContainer.hpp>
 
 namespace Opm {

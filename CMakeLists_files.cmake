@@ -80,7 +80,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/OpmLog/OpmLog.hpp
       opm/common/OpmLog/StreamLog.hpp
       opm/common/OpmLog/TimerLog.hpp
-      opm/common/util/numeric/cmp.hpp
+      opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
       opm/core/linalg/blas_lapack.h

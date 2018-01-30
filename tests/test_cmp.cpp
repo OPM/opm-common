@@ -24,7 +24,7 @@
 
 #include <stdexcept>
 
-#include <opm/common/util/numeric/cmp.hpp>
+#include <opm/common/utility/numeric/cmp.hpp>
 
 using namespace Opm;
 
