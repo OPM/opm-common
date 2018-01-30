@@ -270,10 +270,11 @@ if (COMMAND tests_hook)
 endif (COMMAND tests_hook)
 
 # make datafiles necessary for tests available in output directory
-if (BUILD_TESTING)
-	opm_data (tests datafiles "${tests_DIR}")
-	opm_compile_satellites (${project} tests "" "${tests_REGEXP}")
-endif (BUILD_TESTING)
+opm_data (tests datafiles "${tests_DIR}")
+if(NOT BUILD_TESTING)
+  set(excl_all EXCLUDE_FROM_ALL)
+endif()
+opm_compile_satellites (${project} tests "${excl_all}" "${tests_REGEXP}")
 
 # use this target to check local git commits
 add_custom_target(check-commits
