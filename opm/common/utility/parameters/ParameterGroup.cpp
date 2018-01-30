@@ -36,7 +36,7 @@
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 
 #include <cassert>
 #include <cstdlib>
@@ -44,9 +44,9 @@
 #include <iostream>
 #include <memory>
 
-#include <opm/core/utility/parameters/Parameter.hpp>
-#include <opm/core/utility/parameters/ParameterStrings.hpp>
-#include <opm/core/utility/parameters/ParameterTools.hpp>
+#include <opm/common/utility/parameters/Parameter.hpp>
+#include <opm/common/utility/parameters/ParameterStrings.hpp>
+#include <opm/common/utility/parameters/ParameterTools.hpp>
 
 namespace Opm {
 	ParameterGroup::ParameterGroup()

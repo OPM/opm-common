@@ -31,9 +31,9 @@ list (APPEND MAIN_SOURCE_FILES
       opm/common/OpmLog/StreamLog.cpp
       opm/common/OpmLog/TimerLog.cpp
       opm/core/utility/MonotCubicInterpolator.cpp
-      opm/core/utility/parameters/Parameter.cpp
-      opm/core/utility/parameters/ParameterGroup.cpp
-      opm/core/utility/parameters/ParameterTools.cpp
+      opm/common/utility/parameters/Parameter.cpp
+      opm/common/utility/parameters/ParameterGroup.cpp
+      opm/common/utility/parameters/ParameterTools.cpp
 )
 
 list (APPEND TEST_SOURCE_FILES
@@ -91,11 +91,11 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/core/utility/RootFinders.hpp
       opm/core/utility/SparseVector.hpp
       opm/core/utility/UniformTableLinear.hpp
-      opm/core/utility/parameters/ParameterGroup.hpp
-      opm/core/utility/parameters/ParameterGroup_impl.hpp
-      opm/core/utility/parameters/Parameter.hpp
-      opm/core/utility/parameters/ParameterMapItem.hpp
-      opm/core/utility/parameters/ParameterRequirement.hpp
-      opm/core/utility/parameters/ParameterStrings.hpp
-      opm/core/utility/parameters/ParameterTools.hpp
+      opm/common/utility/parameters/ParameterGroup.hpp
+      opm/common/utility/parameters/ParameterGroup_impl.hpp
+      opm/common/utility/parameters/Parameter.hpp
+      opm/common/utility/parameters/ParameterMapItem.hpp
+      opm/common/utility/parameters/ParameterRequirement.hpp
+      opm/common/utility/parameters/ParameterStrings.hpp
+      opm/common/utility/parameters/ParameterTools.hpp
 )
