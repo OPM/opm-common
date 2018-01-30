@@ -68,7 +68,7 @@ inline std::vector<Aquancon::AquanconOutput> init_aquancon(){
 BOOST_AUTO_TEST_CASE(AquanconTest){
     std::vector< Aquancon::AquanconOutput > aquifers = init_aquancon();
     for (const auto& it : aquifers){
-        for (int i = 0; i < it.global_index.size(); ++i){
+        for (size_t i = 0; i < it.global_index.size(); ++i){
             BOOST_CHECK_EQUAL(it.aquiferID , 1);
             BOOST_CHECK_EQUAL(it.global_index.at(i) , 0);
             BOOST_CHECK_EQUAL(it.reservoir_face_dir.at(i) , 8);

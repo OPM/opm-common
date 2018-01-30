@@ -83,7 +83,7 @@ namespace Opm {
         m_stride[1] = nx;
         m_stride[2] = nx*ny;
 
-        if (size() == nx*ny*nz) 
+        if (size() == size_t(nx*ny*nz))
             m_isGlobal = true;
         else
             m_isGlobal = false;
