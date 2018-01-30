@@ -29,7 +29,7 @@
 #include "config.h"
 
 #include <opm/common/Unused.hpp>
-#include <opm/common/ConditionalStorage.hpp>
+#include <opm/common/utility/ConditionalStorage.hpp>
 
 #include <string>
 #include <cstdlib>

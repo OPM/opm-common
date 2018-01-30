@@ -63,7 +63,7 @@ list (APPEND PROGRAM_SOURCE_FILES
 
 
 list( APPEND PUBLIC_HEADER_FILES
-      opm/common/ConditionalStorage.hpp
+      opm/common/utility/ConditionalStorage.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
       opm/common/ResetLocale.hpp
