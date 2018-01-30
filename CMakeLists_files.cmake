@@ -83,7 +83,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/numeric/cmp.hpp
       opm/common/utility/platform_dependent/disable_warnings.h
       opm/common/utility/platform_dependent/reenable_warnings.h
-      opm/core/linalg/blas_lapack.h
+      opm/common/utility/numeric/blas_lapack.h
       opm/core/utility/buildUniformMonotoneTable.hpp
       opm/core/utility/linearInterpolation.hpp
       opm/core/utility/MonotCubicInterpolator.hpp
