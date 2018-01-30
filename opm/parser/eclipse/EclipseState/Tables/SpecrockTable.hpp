@@ -30,7 +30,7 @@ namespace Opm {
         SpecrockTable(const DeckItem& item);
 
         const TableColumn& getTemperatureColumn() const;
-        const TableColumn& getCpRockColumn() const;
+        const TableColumn& getCvRockColumn() const;
     };
 }
 

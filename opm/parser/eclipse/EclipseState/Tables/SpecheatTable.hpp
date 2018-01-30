@@ -31,9 +31,9 @@ namespace Opm {
         SpecheatTable(const DeckItem& item);
 
         const TableColumn& getTemperatureColumn() const;
-        const TableColumn& getCpOilColumn() const;
-        const TableColumn& getCpWaterColumn() const;
-        const TableColumn& getCpGasColumn() const;
+        const TableColumn& getCvOilColumn() const;
+        const TableColumn& getCvWaterColumn() const;
+        const TableColumn& getCvGasColumn() const;
     };
 }
 
