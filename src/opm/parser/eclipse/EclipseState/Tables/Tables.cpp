@@ -108,9 +108,9 @@ PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
 SpecheatTable::SpecheatTable(const DeckItem& item)
 {
     m_schema.addColumn(ColumnSchema("TEMPERATURE", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
-    m_schema.addColumn(ColumnSchema("CP_OIL", Table::RANDOM, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("CP_WATER", Table::RANDOM, Table::DEFAULT_LINEAR));
-    m_schema.addColumn(ColumnSchema("CP_GAS", Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("CV_OIL", Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("CV_WATER", Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("CV_GAS", Table::RANDOM, Table::DEFAULT_LINEAR));
 
     SimpleTable::init(item);
 }
@@ -118,19 +118,19 @@ SpecheatTable::SpecheatTable(const DeckItem& item)
 const TableColumn& SpecheatTable::getTemperatureColumn() const
 { return SimpleTable::getColumn(0); }
 
-const TableColumn& SpecheatTable::getCpOilColumn() const
+const TableColumn& SpecheatTable::getCvOilColumn() const
 { return SimpleTable::getColumn(1); }
 
-const TableColumn& SpecheatTable::getCpWaterColumn() const
+const TableColumn& SpecheatTable::getCvWaterColumn() const
 { return SimpleTable::getColumn(2); }
 
-const TableColumn& SpecheatTable::getCpGasColumn() const
+const TableColumn& SpecheatTable::getCvGasColumn() const
 { return SimpleTable::getColumn(3); }
 
 SpecrockTable::SpecrockTable(const DeckItem& item)
 {
     m_schema.addColumn(ColumnSchema("TEMPERATURE", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
-    m_schema.addColumn(ColumnSchema("CP_ROCK", Table::RANDOM, Table::DEFAULT_LINEAR));
+    m_schema.addColumn(ColumnSchema("CV_ROCK", Table::RANDOM, Table::DEFAULT_LINEAR));
 
     SimpleTable::init(item);
 }
@@ -138,7 +138,7 @@ SpecrockTable::SpecrockTable(const DeckItem& item)
 const TableColumn& SpecrockTable::getTemperatureColumn() const
 { return SimpleTable::getColumn(0); }
 
-const TableColumn& SpecrockTable::getCpRockColumn() const
+const TableColumn& SpecrockTable::getCvRockColumn() const
 { return SimpleTable::getColumn(1); }
 
 SwofTable::SwofTable( const DeckItem& item , const bool jfunc) {
