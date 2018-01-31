@@ -156,6 +156,7 @@ struct fn_args {
     const data::Wells& wells;
     const out::RegionCache& regionCache;
     const EclipseGrid& grid;
+    const std::vector< std::pair< std::string, double > > eff_factors;
 };
 
 /* Since there are several enums in opm scattered about more-or-less
@@ -185,6 +186,15 @@ measure rate_unit< rt::reservoir_oil >() { return measure::rate; }
 template<> constexpr
 measure rate_unit< rt::reservoir_gas >() { return measure::rate; }
 
+double efac( const std::vector<std::pair<std::string,double>>& eff_factors, const std::string& name ) {
+    auto it = std::find_if( eff_factors.begin(), eff_factors.end(),
+                            [&] ( const std::pair< std::string, double > elem )
+                            { return elem.first == name; }
+                          );
+
+    return (it != eff_factors.end()) ? it->second : 1;
+}
+
 template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
@@ -192,7 +202,11 @@ inline quantity rate( const fn_args& args ) {
     for( const auto* sched_well : args.schedule_wells ) {
         const auto& name = sched_well->name();
         if( args.wells.count( name ) == 0 ) continue;
-        const auto v = args.wells.at( name ).rates.get( phase, 0.0 );
+
+        double eff_fac = efac( args.eff_factors, name );
+
+        const auto v = args.wells.at(name).rates.get(phase, 0.0) * eff_fac;
+
         if( ( v > 0 ) == injection )
             sum += v;
     }
@@ -239,7 +253,10 @@ inline quantity crate( const fn_args& args ) {
                                            } );
 
     if( completion == well.completions.end() ) return zero;
-    const auto v = completion->rates.get( phase, 0.0 );
+
+    double eff_fac = efac( args.eff_factors, name );
+
+    const auto v = completion->rates.get( phase, 0.0 ) * eff_fac;
     if( ( v > 0 ) != injection ) return zero;
 
     if( !injection ) return { -v, rate_unit< phase >() };
@@ -376,8 +393,12 @@ template<rt phase , bool injection>
 quantity region_rate( const fn_args& args ) {
     double sum = 0;
     const auto& well_completions = args.regionCache.completions( args.num );
+
     for (const auto& pair : well_completions) {
-        double rate = args.wells.get( pair.first , pair.second , phase );
+
+        double eff_fac = efac( args.eff_factors, pair.first );
+
+        double rate = args.wells.get( pair.first , pair.second , phase ) * eff_fac;
 
         // We are asking for the production rate in an injector - or
         // opposite. We just clamp to zero.
@@ -945,6 +966,66 @@ Summary::Summary( const EclipseState& st,
     }
 }
 
+/*
+ * The well efficiency factor will not impact the well rate itself, but is
+ * rather applied for accumulated values.The WEFAC can be considered to shut
+ * and open the well for short intervals within the same timestep, and the well
+ * is therefore solved at full speed.
+ *
+ * Groups are treated similarly as wells. The group's GEFAC is not applied for
+ * rates, only for accumulated volumes. When GEFAC is set for a group, it is
+ * considered that all wells are taken down simultaneously, and GEFAC is
+ * therefore not applied to the group's rate. However, any efficiency factors
+ * applied to the group's wells or sub-groups must be included.
+ *
+ * Regions and fields will have the well and group efficiency applied for both
+ * rates and accumulated values.
+ *
+ */
+std::vector< std::pair< std::string, double > >
+well_efficiency_factors( const smspec_node_type* type,
+                    const Schedule& schedule,
+                    const std::vector< const Well* >& schedule_wells,
+                    size_t timestep ) {
+    std::vector< std::pair< std::string, double > > efac;
+
+    if(    smspec_node_get_var_type(type) != ECL_SMSPEC_GROUP_VAR
+        && smspec_node_get_var_type(type) != ECL_SMSPEC_FIELD_VAR
+        && smspec_node_get_var_type(type) != ECL_SMSPEC_REGION_VAR
+        && !smspec_node_is_total( type ) ) {
+        return efac;
+    }
+
+    const bool is_group = smspec_node_get_var_type(type) == ECL_SMSPEC_GROUP_VAR;
+    const bool is_rate = !smspec_node_is_total( type );
+    const auto &groupTree = schedule.getGroupTree(timestep);
+
+    for( const auto* well : schedule_wells ) {
+        double eff_factor = well->getEfficiencyFactor(timestep);
+
+        if ( !well->hasBeenDefined( timestep ) )
+            continue;
+
+        const auto* node = &schedule.getGroup(well->getGroupName(timestep));
+
+        while(true){
+            if((   is_group
+                && is_rate
+                && node->name() == smspec_node_get_wgname(type) ))
+                break;
+            eff_factor *= node->getGroupEfficiencyFactor( timestep );
+
+            const auto& parent = groupTree.parent( node->name() );
+            if( !schedule.hasGroup( parent ) )
+                break;
+            node = &schedule.getGroup( parent );
+        }
+        efac.emplace_back( well->name(), eff_factor );
+    }
+
+    return efac;
+}
+
 void Summary::add_timestep( int report_step,
                             double secs_elapsed,
                             const EclipseState& es,
@@ -963,13 +1044,16 @@ void Summary::add_timestep( int report_step,
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
         const auto schedule_wells = find_wells( schedule, f.first, timestep, this->regionCache );
+        auto eff_factors = well_efficiency_factors( f.first, schedule, schedule_wells, timestep );
+
         const auto val = f.second( { schedule_wells,
                                      duration,
                                      timestep,
                                      num,
                                      wells,
                                      this->regionCache,
-                                     this->grid});
+                                     this->grid,
+                                     eff_factors});
 
         const auto unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         const auto res = smspec_node_is_total( f.first ) && prev_tstep
