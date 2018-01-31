@@ -135,9 +135,9 @@ static data::Wells result_wells() {
     crates3.set( rt::solvent, 300.3 / day );
     crates3.set( rt::dissolved_gas, 300.4 / day );
     crates3.set( rt::vaporized_oil, 300.5 / day );
-    crates2.set( rt::reservoir_water, 300.6 / day );
-    crates2.set( rt::reservoir_oil, 300.7 / day );
-    crates2.set( rt::reservoir_gas, 300.8 / day );
+    crates3.set( rt::reservoir_water, 300.6 / day );
+    crates3.set( rt::reservoir_oil, 300.7 / day );
+    crates3.set( rt::reservoir_gas, 300.8 / day );
 
     /*
       The global index assigned to the completion must be manually
