@@ -43,7 +43,7 @@
 #define BOOST_TEST_MODULE SparseVectorTest
 #include <boost/test/unit_test.hpp>
 
-#include <opm/core/utility/SparseVector.hpp>
+#include <opm/common/utility/numeric/SparseVector.hpp>
 
 using namespace Opm;
 

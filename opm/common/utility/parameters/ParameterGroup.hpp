@@ -41,8 +41,8 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <opm/core/utility/parameters/ParameterMapItem.hpp>
-#include <opm/core/utility/parameters/ParameterRequirement.hpp>
+#include <opm/common/utility/parameters/ParameterMapItem.hpp>
+#include <opm/common/utility/parameters/ParameterRequirement.hpp>
 
 namespace Opm {
 	/// ParameterGroup is a class that is used to provide run-time parameters.
@@ -267,6 +267,6 @@ namespace Opm {
 	};
 } // namespace Opm
 
-#include <opm/core/utility/parameters/ParameterGroup_impl.hpp>
+#include <opm/common/utility/parameters/ParameterGroup_impl.hpp>
 
 #endif // OPM_PARAMETERGROUP_HEADER

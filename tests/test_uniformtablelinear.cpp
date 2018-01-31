@@ -26,7 +26,7 @@
 
 #define BOOST_TEST_MODULE UniformTableLinearTests
 #include <boost/test/unit_test.hpp>
-#include <opm/core/utility/UniformTableLinear.hpp>
+#include <opm/common/utility/numeric/UniformTableLinear.hpp>
 
 
 

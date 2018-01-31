@@ -48,7 +48,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 
 /* --- our own headers --- */
-#include <opm/core/utility/MonotCubicInterpolator.hpp>
+#include <opm/common/utility/numeric/MonotCubicInterpolator.hpp>
 using namespace Opm;
 
 BOOST_AUTO_TEST_SUITE ()

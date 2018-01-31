@@ -44,7 +44,7 @@
 #define BOOST_TEST_MODULE ParameterTest
 #include <boost/test/unit_test.hpp>
 
-#include <opm/core/utility/parameters/ParameterGroup.hpp>
+#include <opm/common/utility/parameters/ParameterGroup.hpp>
 #include <cstddef>
 #include <sstream>
 #include <vector>

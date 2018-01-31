@@ -1,8 +1,8 @@
 //===========================================================================
 //
-// File: Parameter.cpp
+// File: ParameterTools.cpp
 //
-// Created: Tue Jun  2 19:18:25 2009
+// Created: Tue Jun  2 19:03:09 2009
 //
 // Author(s): Bård Skaflestad     <bard.skaflestad@sintef.no>
 //            Atgeirr F Rasmussen <atgeirr@sintef.no>
@@ -36,37 +36,18 @@
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <string>
-#include <opm/core/utility/parameters/Parameter.hpp>
+#include <opm/common/utility/parameters/ParameterTools.hpp>
+#include <opm/common/utility/parameters/ParameterStrings.hpp>
 
 namespace Opm {
-	std::string
-        correct_parameter_tag(const ParameterMapItem& item)
+	std::pair<std::string, std::string> splitParam(const std::string& name)
         {
-	    std::string tag = item.getTag();
-	    if (tag != ID_xmltag__param) {
-		std::string error = "The XML tag was '" +
-                                    tag + "' but should be '" +
-                                    ID_xmltag__param + "'.\n";
-		return error;
+	    int pos = name.find(ID_delimiter_path);
+	    if (pos == int(std::string::npos)) {
+		return std::make_pair(name, "");
 	    } else {
-		return "";
-	    }
-	}
-
-	std::string
-        correct_type(const Parameter& parameter,
-                     const std::string& param_type)
-        {
-	    std::string type = parameter.getType();
-	    if ( (type != param_type) &&
-                 (type != ID_param_type__cmdline) ) {
-		std::string error = "The data was of type '" + type +
-                                    "' but should be of type '" +
-                                    param_type + "'.\n";
-		return error;
-	    } else {
-		return "";
+		return std::make_pair(name.substr(0, pos),
+                                      name.substr(pos + ID_delimiter_path.size()));
 	    }
 	}
 } // namespace Opm

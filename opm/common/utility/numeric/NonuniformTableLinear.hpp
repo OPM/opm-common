@@ -27,7 +27,7 @@
 #include <utility>
 
 #include <opm/common/ErrorMacros.hpp>
-#include <opm/core/utility/linearInterpolation.hpp>
+#include <opm/common/utility/numeric/linearInterpolation.hpp>
 
 
 namespace Opm

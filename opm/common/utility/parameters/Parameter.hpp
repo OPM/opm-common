@@ -39,8 +39,8 @@
 #include <string>
 #include <sstream>
 
-#include <opm/core/utility/parameters/ParameterMapItem.hpp>
-#include <opm/core/utility/parameters/ParameterStrings.hpp>
+#include <opm/common/utility/parameters/ParameterMapItem.hpp>
+#include <opm/common/utility/parameters/ParameterStrings.hpp>
 
 namespace Opm {
 	/// @brief
