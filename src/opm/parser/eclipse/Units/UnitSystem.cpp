@@ -38,6 +38,35 @@ namespace {
      * metric and field arrays. C++ does not support designated initializers, so
      * this cannot be done in a declaration-order independent matter.
      */
+    static const double from_metric_offset[] = {
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        Metric::TemperatureOffset,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+    };
 
     static const double to_metric[] = {
         1,
@@ -127,6 +156,36 @@ namespace {
         "SM3/RM3", /* oil inverse formation volume factor */
         "SM3/RM3", /* water inverse formation volume factor */
         "KJ", /* energy */
+    };
+
+    static const double from_field_offset[] = {
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        Field::TemperatureOffset,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
     };
 
     static const double to_field[] = {
@@ -219,6 +278,36 @@ namespace {
         "BTU", /* energy */
     };
 
+    static const double from_lab_offset[] = {
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        Lab::TemperatureOffset,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+    };
+
     static const double to_lab[] = {
         1,
         1 / Lab::Length,
@@ -307,6 +396,36 @@ namespace {
         "SCC/RCC", /* oil inverse formation volume factor */
         "SCC/RCC", /* water inverse formation volume factor */
         "J", /* energy */
+    };
+
+    static const double from_pvt_m_offset[] = {
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        PVT_M::TemperatureOffset,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
     };
 
     static const double to_pvt_m[] = {
@@ -408,24 +527,28 @@ namespace {
                 m_name = "Metric";
                 this->measure_table_from_si = to_metric;
                 this->measure_table_to_si = from_metric;
+                this->measure_table_to_si_offset = from_metric_offset;
                 this->unit_name_table = metric_names;
                 break;
             case(UnitType::UNIT_TYPE_FIELD):
                 m_name = "Field";
                 this->measure_table_from_si = to_field;
                 this->measure_table_to_si = from_field;
+                this->measure_table_to_si_offset = from_field_offset;
                 this->unit_name_table = field_names;
                 break;
             case(UnitType::UNIT_TYPE_LAB):
                 m_name = "Lab";
                 this->measure_table_from_si = to_lab;
                 this->measure_table_to_si = from_lab;
+                this->measure_table_to_si_offset = from_lab_offset;
                 this->unit_name_table = lab_names;
                 break;
             case(UnitType::UNIT_TYPE_PVT_M):
                 m_name = "PVT-M";
                 this->measure_table_from_si = to_pvt_m;
                 this->measure_table_to_si = from_pvt_m;
+                this->measure_table_to_si_offset = from_pvt_m_offset;
                 this->unit_name_table = pvt_m_names;
                 break;
             default:
@@ -554,6 +677,7 @@ namespace {
             && std::equal( this->m_dimensions.begin(),
                            this->m_dimensions.end(),
                            rhs.m_dimensions.begin() )
+            && this->measure_table_to_si_offset == rhs.measure_table_to_si_offset
             && this->measure_table_from_si == rhs.measure_table_from_si
             && this->measure_table_to_si == rhs.measure_table_to_si
             && this->unit_name_table == rhs.unit_name_table;
@@ -564,23 +688,29 @@ namespace {
     }
 
     double UnitSystem::from_si( measure m, double val ) const {
-        return this->measure_table_from_si[ static_cast< int >( m ) ] * val;
+        return
+            this->measure_table_from_si[ static_cast< int >( m ) ]
+            * (val - this->measure_table_to_si_offset[ static_cast< int >( m ) ]);
     }
 
     double UnitSystem::to_si( measure m, double val ) const {
-        return this->measure_table_to_si[ static_cast< int >( m ) ] * val;
+        return
+            this->measure_table_to_si[ static_cast< int >( m ) ]*val
+            + this->measure_table_to_si_offset[ static_cast< int >( m ) ];
     }
 
     void UnitSystem::from_si( measure m, std::vector<double>& data ) const {
         double factor = this->measure_table_from_si[ static_cast< int >( m ) ];
-        auto scale = [=](double x) { return x * factor; };
+        double offset = this->measure_table_to_si_offset[ static_cast< int >( m ) ];
+        auto scale = [=](double x) { return (x - offset) * factor; };
         std::transform( data.begin() , data.end() , data.begin() , scale);
     }
 
 
     void UnitSystem::to_si( measure m, std::vector<double>& data) const {
         double factor = this->measure_table_to_si[ static_cast< int >( m ) ];
-        auto scale = [=](double x) { return x * factor; };
+        double offset = this->measure_table_to_si_offset[ static_cast< int >( m ) ];
+        auto scale = [=](double x) { return x * factor + offset; };
         std::transform( data.begin() , data.end() , data.begin() , scale);
     }
 
