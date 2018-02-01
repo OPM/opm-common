@@ -139,7 +139,7 @@ public:
         }
     }
 
-    ConditionalStorage& operator=(const ConditionalStorage& v)
+    ConditionalStorage& operator=(const ConditionalStorage&)
     {
         // ensure that the stored object can actually be assined to but not actually do
         // anything

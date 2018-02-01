@@ -48,7 +48,7 @@ public:
     IAmAnIslandLeaveMeAlone& operator=(const IAmAnIslandLeaveMeAlone&) = delete;
 };
 
-int main(int argc, char **argv)
+int main()
 {
     {
         typedef Opm::ConditionalStorage<true, std::string> ConditionalTrueString;
