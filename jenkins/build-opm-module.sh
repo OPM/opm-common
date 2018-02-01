@@ -15,6 +15,10 @@ function parseRevisions {
       upstreamRev[$upstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${upstream,,}=([0-9]+).*/\1/g"`/merge
     fi
   done
+
+  # We want to always build with downstreams
+  ghprbCommentBody="$ghprbCommentBody with downstreams"
+
   if grep -q "with downstreams" <<< $ghprbCommentBody
   then
     for downstream in ${downstreams[*]}
