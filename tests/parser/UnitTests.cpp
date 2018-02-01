@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::density , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::pressure , 1.0 ) , 101325.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::temperature_absolute , 1.0 ) , 1.0 , 1.0e-10 );
-    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::temperature , 1.0 ) , 274.15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::temperature , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::viscosity , 1.0 ) , 1.0e-3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::permeability , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::density , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::pressure , 1.0 ) , 9.869232667160129e-06 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::temperature_absolute , 1.0 ) , 1.0 , 1.0e-10 );
-    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::temperature , 274.15 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::temperature , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::viscosity , 1.0 ) , 1.0e+3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::permeability , 1.0 ) , 1.01325e+15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );

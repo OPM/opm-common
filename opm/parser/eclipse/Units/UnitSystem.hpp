@@ -104,7 +104,6 @@ namespace Opm {
         std::string m_name;
         UnitType m_unittype;
         std::map< std::string , Dimension > m_dimensions;
-        const double* measure_table_to_si_offset;
         const double* measure_table_from_si;
         const double* measure_table_to_si;
         const char* const*  unit_name_table;
