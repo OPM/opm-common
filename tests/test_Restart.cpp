@@ -378,12 +378,15 @@ void compare( const RestartValue& fst,
               const std::map<std::string, RestartKey>& keys) {
 
     for (const auto& pair : keys) {
-
+        double tol = 0.00001;
         auto first = fst.solution.data( pair.first ).begin();
         auto second = snd.solution.data( pair.first ).begin();
 
+        if (pair.first == "TEMP")
+            tol *= 10;
+
         for( ; first != fst.solution.data( pair.first ).end(); ++first, ++second )
-            BOOST_CHECK_CLOSE( *first, *second, 0.00001 );
+            BOOST_CHECK_CLOSE( *first, *second, tol );
     }
 
     BOOST_CHECK_EQUAL( fst.wells, snd.wells );
