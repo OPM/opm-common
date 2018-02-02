@@ -633,8 +633,6 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
-    { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
-                        rate< rt::reservoir_gas, injector > ), duration ) },
 
     { "WWPR", rate< rt::wat, producer > },
     { "WOPR", rate< rt::oil, producer > },
@@ -677,14 +675,10 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GOIR", rate< rt::oil, injector > },
     { "GGIR", rate< rt::gas, injector > },
     { "GNIR", rate< rt::solvent, injector > },
-    { "GVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
-                        rate< rt::reservoir_gas, injector > ) },
     { "GWIT", mul( rate< rt::wat, injector >, duration ) },
     { "GOIT", mul( rate< rt::oil, injector >, duration ) },
     { "GGIT", mul( rate< rt::gas, injector >, duration ) },
     { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
-    { "GVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
-                        rate< rt::reservoir_gas, injector > ), duration ) },
 
     { "GWPR", rate< rt::wat, producer > },
     { "GOPR", rate< rt::oil, producer > },
