@@ -11,7 +11,6 @@ upstreams=(libecl
            opm-output
            opm-material
            opm-grid
-           opm-core
            ewoms
            opm-simulators
            opm-upscaling
@@ -22,7 +21,6 @@ upstreamRev[libecl]=master
 upstreamRev[opm-common]=master
 upstreamRev[opm-parser]=master
 upstreamRev[opm-material]=master
-upstreamRev[opm-core]=master
 upstreamRev[opm-grid]=master
 upstreamRev[opm-output]=master
 upstreamRev[ewoms]=master
