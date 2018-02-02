@@ -645,8 +645,6 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WGPRF", sub( rate< rt::gas, producer >, rate< rt::dissolved_gas, producer > ) },
     { "WOPRS", rate< rt::vaporized_oil, producer > },
     { "WOPRF", sub (rate < rt::oil, producer >, rate< rt::vaporized_oil, producer > )  },
-    { "WVPR", sum( sum( rate< rt::reservoir_water, producer >, rate< rt::reservoir_oil, producer > ),
-                   rate< rt::reservoir_gas, producer > ) },
 
     { "WLPR", sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) },
     { "WWPT", mul( rate< rt::wat, producer >, duration ) },
@@ -662,8 +660,6 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPTS", mul( rate< rt::vaporized_oil, producer >, duration )},
     { "WOPTF", sub( mul( rate< rt::oil, producer >, duration ),
                         mul( rate< rt::vaporized_oil, producer >, duration ))},
-    { "WVPT", mul( sum( sum( rate< rt::reservoir_water, producer >, rate< rt::reservoir_oil, producer > ),
-                        rate< rt::reservoir_gas, producer > ), duration ) },
 
     { "WWCT", div( rate< rt::wat, producer >,
                    sum( rate< rt::wat, producer >, rate< rt::oil, producer > ) ) },
@@ -676,7 +672,6 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "WBHP", bhp },
     { "WTHP", thp },
-    { "WVPRT", res_vol_production_target },
 
     { "GWIR", rate< rt::wat, injector > },
     { "GOIR", rate< rt::oil, injector > },
@@ -892,7 +887,6 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWPR", flowing< producer > },
     { "FPR",   fpr },
     { "FPRP",   fprp },
-    { "FVPRT", res_vol_production_target },
 
     /* Region properties */
     { "RPR" , rpr},

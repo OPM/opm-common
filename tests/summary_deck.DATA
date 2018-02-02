@@ -101,7 +101,6 @@ FGPTS
 FGPTF
 FOPTF
 FOPTS
-FVPRT
 -- Injection Cummulatives
 FVIT
 FWIT
@@ -477,8 +476,6 @@ WGLIR
 WVPR
 /
 WVPT
-/
-WVPRT
 /
 WOPP
 /
