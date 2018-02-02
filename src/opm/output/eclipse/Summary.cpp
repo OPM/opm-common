@@ -740,7 +740,8 @@ static const std::unordered_map< std::string, UnitSystem::measure> block_units =
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
                                               const smspec_node_type* node,
-                                              size_t timestep ) {
+                                              size_t timestep,
+                                              const out::RegionCache& regionCache ) {
 
     const auto* name = smspec_node_get_wgname( node );
     const auto type = smspec_node_get_var_type( node );
@@ -759,6 +760,25 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
 
     if( type == ECL_SMSPEC_FIELD_VAR )
         return schedule.getWells();
+
+    if( type == ECL_SMSPEC_REGION_VAR ) {
+        std::vector< const Well* > wells;
+
+        const auto region = smspec_node_get_num( node );
+
+        for ( const auto& completion : regionCache.completions( region ) ){
+            const auto& w_name = completion.first;
+            const auto& well = schedule.getWell( w_name );
+
+            const auto& it = std::find_if( wells.begin(), wells.end(),
+                                           [&] ( const Well* elem )
+                                           { return *elem == *well; });
+            if ( it == wells.end() )
+                wells.push_back( schedule.getWell( w_name ) );
+        }
+
+        return wells;
+    }
 
     return {};
 }
@@ -942,7 +962,7 @@ void Summary::add_timestep( int report_step,
         const int num = smspec_node_get_num( f.first );
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
-        const auto schedule_wells = find_wells( schedule, f.first, timestep );
+        const auto schedule_wells = find_wells( schedule, f.first, timestep, this->regionCache );
         const auto val = f.second( { schedule_wells,
                                      duration,
                                      timestep,
