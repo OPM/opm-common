@@ -166,8 +166,8 @@ namespace Opm {
         constexpr const double degCelsius = 1.0; // scaling factor °C -> K
         constexpr const double degCelsiusOffset = 273.15; // offset for the °C -> K conversion
 
-        constexpr const double degFahrenheit = 5.0/9; // scaling factor °F -> K
-        constexpr const double degFahrenheitOffset = 459.67*5.0/9.0; // °F -> K offset (i.e. what's 0 °F?)
+        constexpr const double degFahrenheit = 5.0/9.0; // factor to convert a difference in °F to a difference in K
+        constexpr const double degFahrenheitOffset = 459.67*degFahrenheit; // °F -> K offset (i.e. how many K is 0 °F?)
         /// @}
 
         /// \name Viscosity
