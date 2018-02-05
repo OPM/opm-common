@@ -769,7 +769,7 @@ class Summary::keyword_handlers {
     public:
         using fn = ofun;
         std::vector< std::pair< smspec_node_type*, fn > > handlers;
-        std::map< std::string, smspec_node_type* > singel_value_nodes;
+        std::map< std::string, smspec_node_type* > single_value_nodes;
         std::map< std::pair <std::string, int>, smspec_node_type* > region_nodes;
         std::map< std::pair <std::string, int>, smspec_node_type* > block_nodes;
 
@@ -853,7 +853,7 @@ Summary::Summary( const EclipseState& st,
                                              st.getUnits().name( single_value_pair->second ),
                                              0 );
 
-            this->handlers->singel_value_nodes.emplace( keyword, nodeptr );
+            this->handlers->single_value_nodes.emplace( keyword, nodeptr );
         } else if (region_pair != region_units.end()) {
 
             auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
@@ -959,8 +959,8 @@ void Summary::add_timestep( int report_step,
 
     for( const auto& value_pair : single_values ) {
         const std::string key = value_pair.first;
-        const auto node_pair = this->handlers->singel_value_nodes.find( key );
-        if (node_pair != this->handlers->singel_value_nodes.end()) {
+        const auto node_pair = this->handlers->single_value_nodes.find( key );
+        if (node_pair != this->handlers->single_value_nodes.end()) {
             const auto * nodeptr = node_pair->second;
             const auto unit = single_values_units.at( key );
             double si_value = value_pair.second;
