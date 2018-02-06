@@ -147,4 +147,11 @@ namespace Opm {
         return !( *this == rhs );
     }
 
+
+    void CompletionSet::filter(const EclipseGrid& grid) {
+        auto new_end = std::remove_if(m_completions.begin(),
+                                      m_completions.end(),
+                                      [&grid](const Completion& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
+        m_completions.erase(new_end, m_completions.end());
+    }
 }

@@ -574,4 +574,14 @@ namespace Opm {
     bool Well::hasEvent(uint64_t eventMask, size_t reportStep) const {
         return this->events.hasEvent( eventMask , reportStep );
     }
+
+
+    void Well::filterCompletions(const EclipseGrid& grid) {
+        /*
+          The m_completions member variable is DynamicState<CompletionSet>
+          instance, hence this for loop is over all timesteps.
+        */
+        for (auto& completions : m_completions)
+            completions.filter(grid);
+    }
 }

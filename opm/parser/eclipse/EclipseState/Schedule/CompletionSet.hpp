@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 
 namespace Opm {
+    class EclipseGrid;
 
     class CompletionSet {
     public:
@@ -40,7 +41,7 @@ namespace Opm {
 
         const_iterator begin() const { return this->m_completions.begin(); }
         const_iterator end() const { return this->m_completions.end(); }
-
+        void filter(const EclipseGrid& grid);
         bool allCompletionsShut() const;
         /// Order completions irrespective of input order.
         /// The algorithm used is the following:

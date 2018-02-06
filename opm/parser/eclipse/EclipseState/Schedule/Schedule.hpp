@@ -111,6 +111,11 @@ namespace Opm
         const MessageContainer& getMessageContainer() const;
         MessageContainer& getMessageContainer();
 
+        /*
+          Will remove all completions which are connected to cell which is not
+          active. Will scan through all wells and all timesteps.
+        */
+        void filterCompletions(const EclipseGrid& grid);
 
     private:
         TimeMap m_timeMap;

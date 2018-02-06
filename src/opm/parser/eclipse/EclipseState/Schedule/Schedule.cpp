@@ -1681,4 +1681,11 @@ namespace Opm {
                 this->updateWellStatus( well, timestep, WellCommon::StatusEnum::SHUT);
         }
     }
+
+
+    void Schedule::filterCompletions(const EclipseGrid& grid) {
+        for (auto& well : this->m_wells)
+            well.filterCompletions(grid);
+    }
 }
+

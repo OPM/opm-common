@@ -2222,3 +2222,26 @@ BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
     BOOST_CHECK_CLOSE( 0.0 * 1e5,  pro1.BHPH, 1e-5 );
     BOOST_CHECK_CLOSE( 0.0 * 1e5,  pro1.THPH, 1e-5 );
 }
+
+
+BOOST_AUTO_TEST_CASE(FilterCompletions) {
+  EclipseGrid grid1(10,10,10);
+  std::vector<int> actnum(1000,1);
+  auto deck = createDeckWithWellsAndCompletionData();
+  TableManager table ( deck );
+  Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+  Schedule schedule(deck, grid1 , eclipseProperties, Phases(true, true, true) , ParseContext() );
+  const auto& well = schedule.getWell("OP_1");
+  const auto& c1_1 = well->getCompletions(1);
+  const auto& c1_3 = well->getCompletions(3);
+  BOOST_CHECK_EQUAL(2, c1_1.size());
+  BOOST_CHECK_EQUAL(9, c1_3.size());
+  actnum[grid1.getGlobalIndex(8,8,1)] = 0;
+  {
+      EclipseGrid grid2(grid1, actnum);
+      schedule.filterCompletions(grid2);
+      BOOST_CHECK_EQUAL(1, c1_1.size());
+      BOOST_CHECK_EQUAL(8, c1_3.size());
+  }
+}
+
