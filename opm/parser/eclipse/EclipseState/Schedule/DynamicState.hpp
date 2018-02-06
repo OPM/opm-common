@@ -57,6 +57,8 @@ template< class T >
 class DynamicState {
 
     public:
+        typedef typename std::vector< T >::iterator iterator;
+
         DynamicState( const TimeMap& timeMap, T initial ) :
             m_data( timeMap.size(), initial ),
             initial_range( timeMap.size() )
@@ -119,6 +121,17 @@ class DynamicState {
             if( iter == this->m_data.end() ) return -1;
 
             return std::distance( m_data.begin() , iter );
+        }
+
+
+
+        iterator begin() {
+            return this->m_data.begin();
+        }
+
+
+        iterator end() {
+            return this->m_data.end();
         }
 
     private:
