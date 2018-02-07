@@ -65,3 +65,8 @@ FIPNUM
         self.assertIn( 'TESTKEY0', deck )
         self.assertIn( 'TESTKEY1', deck )
         self.assertIn( 'TESTKEY2', deck )
+
+
+
+if __name__ == "__main__":
+    unittest.main()

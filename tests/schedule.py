@@ -46,3 +46,7 @@ class TestSchedule(unittest.TestCase):
 
         with self.assertRaises(KeyError):
             self.sch.group()['foo']
+
+
+if __name__ == "__main__":
+    unittest.main()

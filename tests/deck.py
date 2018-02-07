@@ -66,3 +66,8 @@ FIPNUM
         self.assertEqual(len(self.deck['FIPNUM']), 1)
         self.assertEqual(len(self.deck['FIPNUM'][0]), 1)
         self.assertEqual(len(self.deck['FIPNUM'][0][0]), 4)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
