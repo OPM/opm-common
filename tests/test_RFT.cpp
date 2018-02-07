@@ -66,21 +66,22 @@ void verifyRFTFile(const std::string& rft_filename) {
     const ecl_rft_cell_type * ecl_rft_cell2 = ecl_rft_node_lookup_ijk(ecl_rft_node, 8, 8, 1);
     const ecl_rft_cell_type * ecl_rft_cell3 = ecl_rft_node_lookup_ijk(ecl_rft_node, 8, 8, 2);
 
-    BOOST_CHECK_CLOSE(ecl_rft_cell_get_pressure(ecl_rft_cell1), 210088*0.00001, 0.00001);
-    BOOST_CHECK_CLOSE(ecl_rft_cell_get_pressure(ecl_rft_cell2), 210188*0.00001, 0.00001);
-    BOOST_CHECK_CLOSE(ecl_rft_cell_get_pressure(ecl_rft_cell3), 210288*0.00001, 0.00001);
+    double tol = 0.00001;
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_pressure(ecl_rft_cell1), 0.00000, tol);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_pressure(ecl_rft_cell2), 0.00001, tol);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_pressure(ecl_rft_cell3), 0.00002, tol);
 
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_sgas(ecl_rft_cell1), 0.0);
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_sgas(ecl_rft_cell2), 0.0);
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_sgas(ecl_rft_cell3), 0.0);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_sgas(ecl_rft_cell1), 0.0, tol);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_sgas(ecl_rft_cell2), 0.2, tol);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_sgas(ecl_rft_cell3), 0.4, tol);
 
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_swat(ecl_rft_cell1), 0.0);
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_swat(ecl_rft_cell2), 0.0);
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_swat(ecl_rft_cell3), 0.0);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_swat(ecl_rft_cell1), 0.0, tol);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_swat(ecl_rft_cell2), 0.1, tol);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_swat(ecl_rft_cell3), 0.2, tol);
 
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_soil(ecl_rft_cell1), 1.0);
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_soil(ecl_rft_cell2), 1.0);
-    BOOST_CHECK_EQUAL(ecl_rft_cell_get_soil(ecl_rft_cell3), 1.0);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_soil(ecl_rft_cell1), 1.0, tol);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_soil(ecl_rft_cell2), 0.7, tol);
+    BOOST_CHECK_CLOSE(ecl_rft_cell_get_soil(ecl_rft_cell3), 0.4, tol);
 
     BOOST_CHECK_EQUAL(ecl_rft_cell_get_depth(ecl_rft_cell1), (0.250 + (0.250/2)));
     BOOST_CHECK_EQUAL(ecl_rft_cell_get_depth(ecl_rft_cell2), (2*0.250 + (0.250/2)));
@@ -136,9 +137,21 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         r2.set( data::Rates::opt::oil, 4.22 );
         r2.set( data::Rates::opt::gas, 4.23 );
 
+        std::vector<Opm::data::Completion> well1_comps(9);
+        for (size_t i = 0; i < 9; ++i) {
+            Opm::data::Completion well_comp { grid.activeIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i};
+            well1_comps[i] = well_comp;
+        }
+        std::vector<Opm::data::Completion> well2_comps(6);
+        for (size_t i = 0; i < 6; ++i) {
+            Opm::data::Completion well_comp { grid.activeIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2};
+            well2_comps[i] = well_comp;
+        }
+
         Opm::data::Wells wells;
-        wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, {} };
-        wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, {} };
+        wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, well1_comps };
+        wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, well2_comps };
+
 
         eclipseWriter.writeTimeStep( 2,
                                      false,
@@ -214,9 +227,20 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
                 r2.set( data::Rates::opt::oil, 4.22 );
                 r2.set( data::Rates::opt::gas, 4.23 );
 
+                std::vector<Opm::data::Completion> well1_comps(9);
+                for (size_t i = 0; i < 9; ++i) {
+                    Opm::data::Completion well_comp { grid.activeIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i};
+                    well1_comps[i] = well_comp;
+                }
+                std::vector<Opm::data::Completion> well2_comps(6);
+                for (size_t i = 0; i < 6; ++i) {
+                    Opm::data::Completion well_comp { grid.activeIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2};
+                    well2_comps[i] = well_comp;
+                }
+
                 Opm::data::Wells wells;
-                wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, {} };
-                wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, {} };
+                wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, well1_comps };
+                wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, well2_comps };
 
                 eclipseWriter.writeTimeStep( step,
                                              false,
