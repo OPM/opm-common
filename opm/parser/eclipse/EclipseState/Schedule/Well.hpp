@@ -46,6 +46,7 @@ namespace Opm {
     class Segment;
     class SegmentSet;
     class TimeMap;
+    class EclipseGrid;
 
     class Well {
     public:
@@ -164,6 +165,12 @@ namespace Opm {
         const Events& getEvents() const;
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
         bool hasEvent(uint64_t eventMask, size_t reportStep) const;
+
+        /*
+          Will remove all completions which are attached to inactive cells. Will
+          scan through all timesteps.
+        */
+        void filterCompletions(const EclipseGrid& grid);
     private:
         size_t m_creationTimeStep;
         std::string m_name;

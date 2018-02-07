@@ -265,4 +265,11 @@ BOOST_AUTO_TEST_CASE( update_elm ) {
     BOOST_CHECK_EQUAL( state[2],137 );
     BOOST_CHECK_EQUAL( state[3],88 );
     BOOST_CHECK_EQUAL( state[4],137 );
+
+    for (auto& v : state)
+        v += 2;
+
+    BOOST_CHECK_EQUAL( state[2],139 );
+    BOOST_CHECK_EQUAL( state[3],90  );
+    BOOST_CHECK_EQUAL( state[4],139 );
 }
