@@ -21,8 +21,17 @@ namespace {
         return isFile ? p.parseFile(deckStr, pc) : p.parseString(deckStr, pc);
     }
 
-    EclipseState (*parse)( const std::string&, const ParseContext& ) = &Parser::parse;
-    EclipseState (*parseData) (const std::string &data, const ParseContext& context) = &Parser::parseData;
+    EclipseState * parse(const std::string& filename, const ParseContext& context) {
+        Parser p;
+        const auto deck = p.parseFile(filename, context);
+        return new EclipseState(deck,context);
+    }
+
+    EclipseState * parseData(const std::string& deckStr, const ParseContext& context) {
+        Parser p;
+        const auto deck = p.parseString(deckStr, context);
+        return new EclipseState(deck,context);
+    }
 
     void (ParseContext::*ctx_update)(const std::string&, InputError::Action) = &ParseContext::update;
 
