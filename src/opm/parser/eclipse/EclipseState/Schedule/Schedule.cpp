@@ -634,7 +634,11 @@ namespace Opm {
                 if (well->setInjectionProperties(currentStep, properties))
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 
-                if ( ! well->getAllowCrossFlow() && (properties.surfaceInjectionRate == 0) ) {
+                // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
+                // it should be turned off.
+                if ( ! well->getAllowCrossFlow()
+                     && ( (properties.hasInjectionControl(WellInjector::RATE) && properties.surfaceInjectionRate == 0)
+                       || (properties.hasInjectionControl(WellInjector::RESV) && properties.reservoirInjectionRate == 0) ) ) {
                     std::string msg =
                             "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";

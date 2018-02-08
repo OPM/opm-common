@@ -158,10 +158,26 @@ BOOST_AUTO_TEST_CASE(WellTestOpen) {
 
     {
         auto wells = sched.getOpenWells(12);
+        BOOST_CHECK_EQUAL( 3U , wells.size() );
+
+        BOOST_CHECK_EQUAL( well2 , wells[1] );
+        BOOST_CHECK_EQUAL( well3 , wells[2] );
+    }
+
+    {
+        auto wells = sched.getOpenWells(13);
         BOOST_CHECK_EQUAL( 2U , wells.size() );
 
         BOOST_CHECK_EQUAL( well2 , wells[0] );
         BOOST_CHECK_EQUAL( well3 , wells[1] );
+    }
+
+    {
+        auto wells = sched.getOpenWells(14);
+        BOOST_CHECK_EQUAL( 3U , wells.size() );
+
+        BOOST_CHECK_EQUAL( well2 , wells[1] );
+        BOOST_CHECK_EQUAL( well3 , wells[2] );
     }
 }
 
@@ -282,12 +298,14 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         }
 
 
-        BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 12 ));
+        BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 12 ));
         BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::RATE ));
         BOOST_CHECK( !well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::RESV));
         BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::THP ));
         BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::BHP ));
 
+        BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 13 ));
+        BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 14 ));
     }
 }
 
