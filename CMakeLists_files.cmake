@@ -38,7 +38,6 @@ list (APPEND MAIN_SOURCE_FILES
 
 list (APPEND TEST_SOURCE_FILES
       tests/test_cmp.cpp
-      tests/test_ConditionalStorage.cpp
       tests/test_cubic.cpp
       tests/test_messagelimiter.cpp
       tests/test_nonuniformtablelinear.cpp
@@ -63,12 +62,8 @@ list (APPEND PROGRAM_SOURCE_FILES
 
 
 list( APPEND PUBLIC_HEADER_FILES
-      opm/common/utility/ConditionalStorage.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
-      opm/common/utility/ResetLocale.hpp
-      opm/common/Unused.hpp
-      opm/common/Valgrind.hpp
       opm/common/data/SimulationDataContainer.hpp
       opm/common/OpmLog/CounterLog.hpp
       opm/common/OpmLog/EclipsePRTLog.hpp
