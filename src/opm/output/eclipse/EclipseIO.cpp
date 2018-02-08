@@ -164,7 +164,7 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
 
             if( !grid.cellActive( i, j, k ) ) continue;
 
-            const auto index = grid.activeIndex( i, j, k );
+            const auto index = grid.getGlobalIndex( i, j, k );
             const double depth = grid.getCellDepth( i, j, k );
 
             const auto& completionData = std::find_if( wellData.completions.begin(),

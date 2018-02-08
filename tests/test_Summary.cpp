@@ -144,8 +144,8 @@ static data::Wells result_wells() {
     crates2.set( rt::reservoir_gas, 300.8 / day );
 
     /*
-      The active index assigned to the completion must be manually
-      syncronized with the active index in the COMPDAT keyword in the
+      The global index assigned to the completion must be manually
+      syncronized with the global index in the COMPDAT keyword in the
       input deck.
     */
     data::Completion well1_comp1 { 0  , crates1, 1.9 , 123.4};

@@ -102,10 +102,10 @@ namespace Opm {
     };
 
     struct Completion {
-        using active_index = size_t;
+        using global_index = size_t;
         static const constexpr int restart_size = 2;
 
-        active_index index;
+        global_index index;
         Rates rates;
         double pressure;
         double reservoir_rate;
@@ -146,7 +146,7 @@ namespace Opm {
         }
 
 
-        double get(const std::string& well_name , Completion::active_index completion_grid_index, Rates::opt m) const {
+        double get(const std::string& well_name , Completion::global_index completion_grid_index, Rates::opt m) const {
             const auto& witr = this->find( well_name );
             if( witr == this->end() ) return 0.0;
 
