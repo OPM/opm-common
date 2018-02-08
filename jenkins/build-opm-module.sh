@@ -132,6 +132,7 @@ function clone_module {
   fi
   git fetch --depth 1 origin $2:branch_to_build
   git checkout branch_to_build
+  git log HEAD -1 | cat
   test $? -eq 0 || exit 1
   popd
 }
