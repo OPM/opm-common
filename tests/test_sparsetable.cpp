@@ -42,7 +42,7 @@
 #define BOOST_TEST_MODULE SparseTableTest
 #include <boost/test/unit_test.hpp>
 
-#include <opm/core/utility/SparseTable.hpp>
+#include <opm/grid/utility/SparseTable.hpp>
 
 using namespace Opm;
 
