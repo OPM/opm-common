@@ -8,34 +8,28 @@
 #include "sunbeam.hpp"
 
 
-void sunbeam::export_EclipseConfig()
+void sunbeam::export_EclipseConfig(py::module& module)
 {
+    py::class_< EclipseConfig >( module, "EclipseConfig" )
+      .def( "init",            &EclipseConfig::init, ref_internal)
+      .def( "restart",         &EclipseConfig::restart, ref_internal);
 
-    py::class_< EclipseConfig >( "EclipseConfig", py::no_init )
-        .def( "init",            &EclipseConfig::init,       ref())
-        .def( "restart",         &EclipseConfig::restart,    ref())
-        ;
+    py::class_< SummaryConfig >( module, "SummaryConfig")
+        .def( "__contains__",    &SummaryConfig::hasKeyword );
 
-    py::class_< SummaryConfig >( "SummaryConfig", py::no_init )
-        .def( "__contains__",    &SummaryConfig::hasKeyword )
-        ;
-
-    py::class_< InitConfig >( "InitConfig", py::no_init )
+    py::class_< InitConfig >( module, "InitConfig")
         .def( "hasEquil",           &InitConfig::hasEquil )
         .def( "restartRequested",   &InitConfig::restartRequested )
-        .def( "getRestartStep"  ,   &InitConfig::getRestartStep )
-        ;
+        .def( "getRestartStep"  ,   &InitConfig::getRestartStep );
 
-    py::class_< RestartConfig >( "RestartConfig", py::no_init )
+    py::class_< RestartConfig >( module, "RestartConfig")
         .def( "getKeyword",          &RestartConfig::getKeyword )
         .def( "getFirstRestartStep", &RestartConfig::getFirstRestartStep )
-        .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile )
-        ;
+        .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile );
 
-    py::class_< SimulationConfig >( "SimulationConfig", py::no_init )
+    py::class_< SimulationConfig >( module, "SimulationConfig")
         .def("hasThresholdPressure", &SimulationConfig::hasThresholdPressure )
         .def("useCPR",               &SimulationConfig::useCPR )
         .def("hasDISGAS",            &SimulationConfig::hasDISGAS )
-        .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL )
-        ;
+        .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL );
 }

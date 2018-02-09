@@ -76,7 +76,7 @@ SATNUM
     def test_config(self):
         cfg = self.state.cfg()
         self.assertTrue('EclipseConfig' in repr(cfg))
-        
+
         init = cfg.init()
         self.assertTrue(init.hasEquil())
         self.assertFalse(init.restartRequested())
@@ -84,14 +84,14 @@ SATNUM
 
         rst = cfg.restart()
         self.assertFalse(rst.getWriteRestartFile(0))
-        self.assertEqual(8, rst.getFirstRestartStep())
-        
+        self.assertEqual(7, rst.getFirstRestartStep())
+
     def test_summary(self):
         smry = self.state.summary()
         self.assertTrue('SummaryConfig' in repr(smry))
         self.assertTrue('WOPR' in smry) # hasKeyword
         self.assertFalse('NONO' in smry) # hasKeyword
-    
+
     def test_simulation(self):
         sim = self.state.simulation()
         self.assertFalse(sim.hasThresholdPressure())
@@ -176,3 +176,6 @@ PROPS\nREGIONS
         self.assertEqual(jf['GAS_OIL'], 13.0)
         self.assertEqual(jf["ALPHA_FACTOR"], 0.6) # default
         self.assertEqual(jf["BETA_FACTOR"],  0.7) # default
+
+if __name__ == "__main__":
+    unittest.main()

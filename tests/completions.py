@@ -43,3 +43,6 @@ class TestWells(unittest.TestCase):
             for timestep,_ in enumerate(self.timesteps):
                 for completion in well.completions(timestep):
                     self.assertFalse(completion.attached_to_segment)
+
+if __name__ == "__main__":
+    unittest.main()

@@ -468,7 +468,10 @@ WCONINJE
 
 TSTEP
 -- first year:
-7*52.14285714
+-- The first year was originally given as: 7*52.14285714. That timestep can not be
+-- represented as an integer number of seconds, and there was a small rounding error
+-- when this was used, changed in PR: Sunbeam#58 
+6*52 53
 -- next nine years:
 31 28 31 30 31 30 31 31 30 31 30 31
 31 28 31 30 31 30 31 31 30 31 30 31

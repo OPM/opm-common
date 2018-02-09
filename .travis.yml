@@ -1,9 +1,18 @@
+language: cpp
 dist: trusty
-language: python
-python:
-  - "2.7"
-install:
-  - pip install -r requirements.txt
+sudo: false
+
+compiler:
+  - gcc
+
+os:
+  - linux
+
+env:
+  global:
+    - PYENV_VERSION=2.7
+    - INSTALL_ROOT=$HOME/install
+
 addons:
   apt:
     sources:
@@ -13,21 +22,16 @@ addons:
       - libboost1.55-all-dev
       - gcc-4.8
       - g++-4.8
-      - gfortran-4.8
       - liblapack-dev
-      - libgmp3-dev
-      - libsuitesparse-dev
-      - libeigen3-dev
-before_script:
-  - export PYTHON_VERSION="2.7"
-  - export CXX="g++-4.8" CC="gcc-4.8" FC="gfortran-4.8"
+
+
+install:
   - pushd ..
-  - export INSTALL_ROOT=$PWD/install
   - git clone https://github.com/Statoil/libecl.git
   - git clone https://github.com/OPM/opm-parser.git
   - mkdir libecl/build
   - pushd libecl/build
-  - cmake -DBUILD_PYTHON=OFF -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
+  - cmake -DENABLE_PYTHON=OFF -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
   - make install
   - popd
   - mkdir opm-parser/build
@@ -37,11 +41,14 @@ before_script:
   - make install
   - popd
   - popd
-  - mkdir build
-  - cd build
+  - pip install --user -r requirements.txt
+
 
 script:
+  - mkdir build
+  - pushd build
   - cmake -DCMAKE_PREFIX_PATH=$INSTALL_ROOT -DUSE_RPATH=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
   - make install
-  - export PYTHONPATH=$PYTHONPATH:$INSTALL_ROOT/lib/python${PYTHON_VERSION}/site-packages
+  - export PYTHONPATH=$PYTHONPATH:$INSTALL_ROOT/lib/python${PYENV_VERSION}/site-packages
   - ctest --output-on-failure
+  - popd
