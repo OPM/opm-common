@@ -1098,3 +1098,55 @@ BOOST_AUTO_TEST_CASE(EXTRA) {
     /* Override a NOT MISC variable - ignored. */
     BOOST_CHECK(  ecl_sum_get_general_var( resp , 4 , "FOPR") > 0.0 );
 }
+
+struct MessageBuffer
+{
+  std::stringstream str_;
+
+  template <class T>
+  void read( T& value )
+  {
+    str_.read( (char *) &value, sizeof(value) );
+  }
+
+  template <class T>
+  void write( const T& value )
+  {
+    str_.write( (char *) &value, sizeof(value) );
+  }
+
+  void write( const std::string& str)
+  {
+      int size = str.size();
+      write(size);
+      for (int k = 0; k < size; ++k) {
+          write(str[k]);
+      }
+  }
+
+  void read( std::string& str)
+  {
+      int size = 0;
+      read(size);
+      str.resize(size);
+      for (int k = 0; k < size; ++k) {
+          read(str[k]);
+      }
+  }
+
+};
+
+BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
+
+            Opm::data::Wells wellRates = result_wells();
+
+            MessageBuffer buffer;
+            wellRates.write(buffer);
+
+            Opm::data::Wells wellRatesCopy;
+            wellRatesCopy.read(buffer);
+
+            BOOST_CHECK_CLOSE( wellRatesCopy.get( "W_1" , rt::wat) , wellRates.get( "W_1" , rt::wat), 1e-16);
+            BOOST_CHECK_CLOSE( wellRatesCopy.get( "W_2" , 101 , rt::wat) , wellRates.get( "W_2" , 101 , rt::wat), 1e-16);
+
+}
