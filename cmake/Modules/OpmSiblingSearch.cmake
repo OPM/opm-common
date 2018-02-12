@@ -25,7 +25,7 @@ macro(create_module_dir_var module)
         set(${module}_DIR ${_parent_full_dir}/${_module_leaf})
       elseif(IS_DIRECTORY ${_parent_full_dir}/${_clone_dir})
         # All modules are in a common build dir
-        set(${module}_DIR "${_parent_full_dir}/${_clone_dir}}")
+        set(${module}_DIR "${_parent_full_dir}/${_clone_dir}")
       endif()
     endif()
   endif()
