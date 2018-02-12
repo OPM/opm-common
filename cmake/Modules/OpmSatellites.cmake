@@ -82,11 +82,12 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 
 	# variable with regular expression doubles as a flag for
 	# whether tests should be setup or not
+	set(_sat_FANCY)
 	if (NOT "${test_regexp}" STREQUAL "")
 	  foreach (_regexp IN ITEMS ${test_regexp})
 		if ("${_sat_NAME}" MATCHES "${_regexp}")
 		  string (REGEX REPLACE "${_regexp}" "\\1" _sat_FANCY "${_sat_NAME}")
-		else()
+		elseif(NOT _sat_FANCY)
 		  set(_sat_FANCY ${_sat_NAME})
 		endif()
 	  endforeach (_regexp)
