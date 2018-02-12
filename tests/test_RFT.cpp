@@ -106,7 +106,7 @@ data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
 
 BOOST_AUTO_TEST_CASE(test_RFT) {
     ParseContext parse_context;
-    std::string eclipse_data_filename    = "testRFT.DATA";
+    std::string eclipse_data_filename    = "testrft.DATA";
     ERT::TestArea test_area("test_RFT");
     test_area.copyFile( eclipse_data_filename );
 
@@ -179,7 +179,7 @@ void verifyRFTFile2(const std::string& rft_filename) {
 
 BOOST_AUTO_TEST_CASE(test_RFT2) {
     ParseContext parse_context;
-    std::string eclipse_data_filename    = "testRFT.DATA";
+    std::string eclipse_data_filename    = "testrft.DATA";
     ERT::TestArea test_area("test_RFT");
     test_area.copyFile( eclipse_data_filename );
 

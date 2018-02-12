@@ -207,7 +207,7 @@ struct setup {
  * read it again (with ERT), and compare the read values with the input.
  */
 BOOST_AUTO_TEST_CASE(well_keywords) {
-    setup cfg( "test_Summary_well" );
+    setup cfg( "test_summary_well" );
 
     // Force to run in a directory, to make sure the basename with
     // leading path works.
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
 }
 
 BOOST_AUTO_TEST_CASE(group_keywords) {
-    setup cfg( "test_Summary_group" );
+    setup cfg( "test_summary_group" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
 }
 
 BOOST_AUTO_TEST_CASE(group_group) {
-    setup cfg( "test_Summary_group_group" , "group_group.DATA");
+    setup cfg( "test_summary_group_group" , "group_group.DATA");
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , {});
@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(group_group) {
 
 
 BOOST_AUTO_TEST_CASE(completion_kewords) {
-    setup cfg( "test_Summary_completion" );
+    setup cfg( "test_summary_completion" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(completion_kewords) {
 }
 
 BOOST_AUTO_TEST_CASE(field_keywords) {
-    setup cfg( "test_Summary_field" );
+    setup cfg( "test_summary_field" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -748,7 +748,7 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
 }
 
 BOOST_AUTO_TEST_CASE(report_steps_time) {
-    setup cfg( "test_Summary_report_steps_time" );
+    setup cfg( "test_summary_report_steps_time" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     writer.add_timestep( 1, 2 *  day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -770,7 +770,7 @@ BOOST_AUTO_TEST_CASE(report_steps_time) {
 }
 
 BOOST_AUTO_TEST_CASE(skip_unknown_var) {
-    setup cfg( "test_Summary_skip_unknown_var" );
+    setup cfg( "test_summary_skip_unknown_var" );
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     writer.add_timestep( 1, 2 *  day, cfg.es,  cfg.schedule, cfg.wells ,  {});
@@ -1055,7 +1055,7 @@ BOOST_AUTO_TEST_CASE( require3D )
 
 
 BOOST_AUTO_TEST_CASE(MISC) {
-    setup cfg( "test_MISC");
+    setup cfg( "test_misc");
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {});
@@ -1070,7 +1070,7 @@ BOOST_AUTO_TEST_CASE(MISC) {
 
 
 BOOST_AUTO_TEST_CASE(EXTRA) {
-    setup cfg( "test_EXTRA");
+    setup cfg( "test_extra");
 
     {
         out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
