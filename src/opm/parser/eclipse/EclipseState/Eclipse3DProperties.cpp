@@ -499,7 +499,7 @@ namespace Opm {
             m_doubleGridProperties.postAddKeyword( "PORV",
                                                    std::numeric_limits<double>::quiet_NaN(),
                                                    initPORVProcessor,
-                                                   "Volume" );
+                                                   "ReservoirVolume" );
         }
 
         {
