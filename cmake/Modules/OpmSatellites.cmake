@@ -142,7 +142,7 @@ macro (opm_data satellite target dirname)
   # even if there are no datafiles, create the directory so the
   # satellite programs have a homedir to run in
   execute_process (
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${dirname}
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/${dirname}
 	)
 
   # if ever huge test datafiles are necessary, then change this
