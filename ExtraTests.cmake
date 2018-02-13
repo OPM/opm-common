@@ -103,6 +103,6 @@ endif()
 # JSON tests
 opm_add_test(jsonTests
              SOURCES lib/json/tests/jsonTests.cpp
-             LIBRARIES ${TEST_LIBS} opmjson
+             LIBRARIES ${TEST_LIBS}
              TEST_ARGS ${PROJECT_SOURCE_DIR}/lib/json/tests/example1.json)
 list(APPEND EXTRA_TESTS jsonTests)

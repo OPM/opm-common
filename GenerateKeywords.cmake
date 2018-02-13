@@ -1,4 +1,5 @@
-set(genkw_SOURCES lib/eclipse/Parser/createDefaultKeywordList.cpp
+set(genkw_SOURCES lib/json/JsonObject.cpp
+                  lib/eclipse/Parser/createDefaultKeywordList.cpp
                   lib/eclipse/Deck/Deck.cpp
                   lib/eclipse/Deck/DeckItem.cpp
                   lib/eclipse/Deck/DeckKeyword.cpp
@@ -19,9 +20,12 @@ set(genkw_SOURCES lib/eclipse/Parser/createDefaultKeywordList.cpp
                   lib/eclipse/Units/UnitSystem.cpp
                   lib/eclipse/Utility/Stringview.cpp
 )
+if(NOT cjson_FOUND)
+  list(APPEND genkw_SOURCES external/cjson/cJSON.c)
+endif()
 add_executable(genkw ${genkw_SOURCES})
 
-target_link_libraries(genkw opmjson ecl Boost::regex Boost::filesystem Boost::system)
+target_link_libraries(genkw ecl Boost::regex Boost::filesystem Boost::system)
 target_include_directories(genkw PRIVATE lib/eclipse/include
                                          lib/json/include)
 
