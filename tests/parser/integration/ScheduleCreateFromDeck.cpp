@@ -142,6 +142,11 @@ BOOST_AUTO_TEST_CASE(WellTestOpen) {
     auto well3 = sched.getWell( "W_3" );
 
     {
+        auto wells = sched.getOpenWells( 0 );
+        BOOST_CHECK_EQUAL( 0U , wells.size() );
+    }
+
+    {
         auto wells = sched.getOpenWells( 3 );
         BOOST_CHECK_EQUAL( 1U , wells.size() );
         BOOST_CHECK_EQUAL( well1 , wells[0] );
