@@ -65,6 +65,11 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 	set_target_properties (${_sat_NAME} PROPERTIES
 	  LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}"
 	  )
+        if(HAVE_DYNAMIC_BOOST_TEST AND NOT (${opm} STREQUAL "opm-parser" AND NOT BUILD_SHARED_LIBS))
+	  set_target_properties (${_sat_NAME} PROPERTIES
+		  COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
+	  )
+	endif()
 	# are we building a test? luckily, the testing framework doesn't
 	# require anything else, so we don't have to figure out where it
 	# should go in the library list
