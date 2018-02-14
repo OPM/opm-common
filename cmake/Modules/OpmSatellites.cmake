@@ -82,11 +82,12 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 
 	# variable with regular expression doubles as a flag for
 	# whether tests should be setup or not
+	set(_sat_FANCY)
 	if (NOT "${test_regexp}" STREQUAL "")
 	  foreach (_regexp IN ITEMS ${test_regexp})
 		if ("${_sat_NAME}" MATCHES "${_regexp}")
 		  string (REGEX REPLACE "${_regexp}" "\\1" _sat_FANCY "${_sat_NAME}")
-		else()
+		elseif(NOT _sat_FANCY)
 		  set(_sat_FANCY ${_sat_NAME})
 		endif()
 	  endforeach (_regexp)
@@ -141,7 +142,7 @@ macro (opm_data satellite target dirname)
   # even if there are no datafiles, create the directory so the
   # satellite programs have a homedir to run in
   execute_process (
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${dirname}
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_BINARY_DIR}/${dirname}
 	)
 
   # if ever huge test datafiles are necessary, then change this
