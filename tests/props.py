@@ -9,7 +9,7 @@ class TestProps(unittest.TestCase):
         self.assertTrue(diff <= epsilon, msg=err_msg)
 
     def setUp(self):
-        self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
+        self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA').state
         self.props = self.spe3.props()
 
     def test_repr(self):

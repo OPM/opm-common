@@ -3,6 +3,7 @@ pybind11_add_module(libsunbeam sunbeam.cpp
                                deck_keyword.cpp
                                deck.cpp
                                well.cpp
+                               sunbeam_state.cpp
                                schedule.cpp
                                completion.cpp
                                eclipse_config.cpp

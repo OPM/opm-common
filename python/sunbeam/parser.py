@@ -1,118 +1,188 @@
 from __future__ import absolute_import
-from os.path import isfile
+import os.path
 import json
 
 from sunbeam import libsunbeam as lib
-from .properties import EclipseState
+from .properties import SunbeamState
 
 
-def _parse_context(recovery):
-    ctx = lib.ParseContext()
+def _init_parse(recovery, keywords):
+    context = lib.ParseContext(recovery)
+    parser = lib.Parser()
+    for kw in keywords:
+        parser.add_keyword(json.dumps(kw))
 
-    if not recovery:
-        return ctx
-
-    # this might be a single tuple, in which case we unpack it and repack it
-    # into a list. If it's not a tuple we assume it's an iterable and just
-    # carry on
-    if not isinstance(recovery, list):
-        recovery = [recovery]
-
-    for key, action in recovery:
-        ctx.update(key, action)
-
-    return ctx
+    return (context,parser)
 
 
-def parse(deck, recovery=[]):
-    """Parse a deck from either a string or file.
+def parse(deck_file, recovery=[], keywords=[]):
+    """Will parse a file and create a SunbeamState object.
 
-    Args:
-        deck (str): Either an eclipse deck string or path to a file to open.
-        recovery ((str, action)|[(str, action)]): List of error recoveries.
-            An error recovery is defined by a pair of a string naming the error
-            event to be handled and the action taken for this error event.
-            The named error event can be one of the following:
-                "PARSE_UNKNOWN_KEYWORD"
-                "PARSE_RANDOM_TEXT"
-                "PARSE_RANDOM_SLASH"
-                "PARSE_MISSING_DIMS_KEYWORD"
-                "PARSE_EXTRA_DATA"
-                "PARSE_MISSING_INCLUDE"
-                "UNSUPPORTED_SCHEDULE_GEO_MODIFIER"
-                "UNSUPPORTED_COMPORD_TYPE"
-                "UNSUPPORTED_INITIAL_THPRES"
-                "UNSUPPORTED_TERMINATE_IF_BHP"
-                "INTERNAL_ERROR_UNINITIALIZED_THPRES"
-                "SUMMARY_UNKNOWN_WELL"
-                "SUMMARY_UNKNOWN_GROUP"
-            The avaiable recovery actions can be one of the following:
-                sunbeam.action.throw
-                sunbeam.action.warn
-                sunbeam.action.ignore
+    The parse function will parse a complete ECLIPSE input deck and return a
+    SunbeamState instance which can be used to access all the properties of the
+    Eclipse parser has internalized. Assuming the following small script has
+    been executed:
 
-    Example:
-        Parses a EclipseState from the NORNE data set with recovery set to
-        ignore PARSE_RANDOM_SLASH error events.
-            es = sunbeam.parse('~/opm-data/norne/NORNE_ATW2013.DATA',
-                recovery=('PARSE_RANDOM_SLASH', sunbeam.action.ignore))
+        import sunbeam
 
-    :rtype: EclipseState
+        result = sunbeam.parse("ECLIPSE.DATA")
+
+    Then the main results can be found in .deck, .state and .schedule
+    properties of the result object:
+
+    result.deck: This is the first result of the parsing process. In the Deck
+    datastructure the original organisation with keywords found in the Eclipse
+    datafile still remains, but the following processing has been completed:
+
+      o All comments have been stripped out.
+
+      o All include files have been loaded.
+
+      o All values are converted to the correct type, i.e. string, integer or
+        double, and floating point values have been converted to SI units.
+
+      o '*' literals and values which have been omitted have been updated with
+        the correct default values.
+
+      o The content has been basically verified; at least datatypes and the
+        number of records in keywords with a fixed number of records.
+
+   You can always create a Deck data structure - even if your Eclipse input is
+   far from complete, however this is quite coarse information - and if
+   possible you are probably better off working with either the EclipseState
+   object found in result.state or the Schedule object found in
+   result.schedule.
+
+   result.state: This is a more processed result, where the different keywords
+   have been assembled into higher order objects, for instance the various
+   keywords which together constitute one Eclipse simulationgrid have been
+   assembled into a EclipseGrid class, the PERMX keywords - along with BOX
+   modifiers and such have been assembled into a properties object and the
+   various table objects have been assembled into Table class.
+
+
+   result.schedule: All the static information is assembled in the state
+   property, and all the dynamic information is in the schedule property. The
+   schedule property is an instance of the Schedule class from opm-parser, and
+   mainly consists of well and group related information, including all rate
+   information.
+
+   Example:
+
+        import sunbeam
+        result = sunbeam.parse("ECLIPSE.DATA")
+
+        # Fetch the static properties from the result.state object:
+        grid = result.state.grid
+        print("The grid dimensions are: (%d,%d,%d)" % (grid.getNX(),
+                                                       grid.getNY(),
+                                                       grid.getNZ()))
+        grid_properties = result.state.props()
+        poro = grid_properties["PORO"]
+        print("PORO[0]: %g" % poro[0])
+
+
+        # Look at the dynamic properties:
+        print("Wells: %s" % result.schedule.wells)
+
+
+    The C++ implementation underlying opm-parser implemenest support for a
+    large fraction of ECLIPSE properties, not all of that is exposed in Python,
+    but it is quite simple to extend the Python wrapping.
+
+    In addition to the deck_file argument the parse() function has two optional
+    arguments which can be used to alter the parsing process:
+
+    recovery: The specification of the ECLIPSE input format is not very strict,
+      and out in the wild there are many decks which are handled corectly by
+      ECLIPSE, although they seem to be in violation with the ECLIPSE input
+      specification. Also there are *many* more exotic features of the ECLIPSE
+      input specificiaction which are not yet handled by the opm-parser.
+
+      By default the parser is quite strict, and when an unknown situation is
+      encountered an exception will be raised - however for a set of recognized
+      error conditions it is possible to configure the parser to ignore the
+      errors. A quite common situation is for instance that an extra '/' is
+      found dangling in the deck - this is probably safe to ignore:
+
+          result = sunbeam.parse("ECLIPSE.DATE",
+                                  recovery = [("PARSE_RANDOM_SLASH", sunbeam.action.ignore)])
+
+      The full list of error modes which are recognized can be found in include
+      file ParseContext.hpp in the opm-parser source. To disable errors using
+      the recovery method is a slippery slope; you might very well end up
+      masking real problems in your input deck - and the final error when
+      things go *really atray* might be quite incomprihensible. If you can
+      modify your input deck that is recommended before ignoring errors with
+      the recovery mechanism.
+
+
+    keywords: The total number of kewords supported by ECLIPSE is immense, and
+      the parser code only supports a fraction of these. Using the keywords
+      argumnt you can tell the parser about additional keywords. The keyword
+      specifications should be supplied as Python dictionaries; see the
+      share/keywords directories in the opm-parser source for syntax. Assuming
+      you have an input deck with the keyword WECONCMF which opm-parser does
+      not yet support. You could then add that to your parser in the following
+      manner:
+
+         import sunbeam
+
+         weconmf = {"name" : "WECONMF",
+                    "sections" : ["SCHEDULE"],
+                    "items" : [{"name" : "well", "value_type" : "STRING"},
+                               {"name" : "comp_index", "value_type" : "INTEGER"},
+                               {"name" : "max_mole_fraction", "value_type" : "DOUBLE", "dimension" : "1"},
+                               {"name" : "workover", "value_type : "STRING", "default" : "NONE"},
+                               {"name" : "end_flag", "value_type": "STRING", "default" : "NO}]}
+
+         state = sunbeam.parse("ECLIPSE.DATA", keywords = [weconmf])
+
+      Adding keywords in this way will ensure that the relevant information is
+      inernalized in the deck, but it will not be taken into account when
+      constructing the EclipseState and Schedule objects.
+
     """
-    if isfile(deck):
-        return EclipseState(lib.parse(deck, _parse_context(recovery)))
-    return EclipseState(lib.parse_data(deck, _parse_context(recovery)))
+
+    if not os.path.isfile(deck_file):
+        raise IOError("No such file: {}".format(deck_file))
+
+    context, parser = _init_parse(recovery, keywords)
+    return SunbeamState( lib.parse(deck_file, context, parser))
 
 
-def parse_deck(deck, keywords=[], recovery=[]):
-    """Parse a deck from either a string or file.
 
-    Args:
-        deck (str): Either an eclipse deck string or path to a file to open.
-        keywords (dict|[dict]): List of keyword parser extensions in opm-parser
-            format. A description of the opm-parser keyword format can be found
-            at: https://github.com/OPM/opm-parser/blob/master/docs/keywords.txt
-        recovery ((str, action)|[(str, action)]): List of error recoveries.
-            An error recovery is defined by a pair of a string naming the error
-            event to be handled and the action taken for this error event. The
-            named error event can be one of the following:
-                "PARSE_UNKNOWN_KEYWORD"
-                "PARSE_RANDOM_TEXT"
-                "PARSE_RANDOM_SLASH"
-                "PARSE_MISSING_DIMS_KEYWORD"
-                "PARSE_EXTRA_DATA"
-                "PARSE_MISSING_INCLUDE"
-                "UNSUPPORTED_SCHEDULE_GEO_MODIFIER"
-                "UNSUPPORTED_COMPORD_TYPE"
-                "UNSUPPORTED_INITIAL_THPRES"
-                "UNSUPPORTED_TERMINATE_IF_BHP"
-                "INTERNAL_ERROR_UNINITIALIZED_THPRES"
-                "SUMMARY_UNKNOWN_WELL"
-                "SUMMARY_UNKNOWN_GROUP"
-            The avaiable recovery actions can be one of the following:
-                sunbeam.action.throw
-                sunbeam.action.warn
-                sunbeam.action.ignore
+def parse_string(deck_string, recovery=[], keywords=[]):
+    """Will parse a string and create SunbeamState object.
 
-    Examples:
-        Parses a deck from the string "RUNSPEC\\n\\nDIMENS\\n 2 2 1 /\\n"
-            deck = sunbeam.parse_deck("RUNSPEC\\n\\nDIMENS\\n 2 2 1 /\\n")
-        Parses a deck from the NORNE data set with recovery set to ignore
-        PARSE_RANDOM_SLASH error events.
-            deck = sunbeam.parse_deck('~/opm-data/norne/NORNE_ATW2013.DATA',
-                recovery=('PARSE_RANDOM_SLASH', sunbeam.action.ignore))
+    See function parse() for further details about return type and the recovery
+    and keyword arguments.
 
-    :rtype: sunbeam.libsunbeam.Deck
     """
-    if keywords:
-        # this might be a single keyword dictionary, in which case we pack it
-        # into a list. If it's not a dict we assume it's an iterable and just
-        # carry on
-        if isinstance(keywords, dict):
-            keywords = [keywords]
-        keywords = list(map(json.dumps, keywords))
-    is_file = isfile(deck) # If the deck is a file, the deck is read from
-                           # that file. Otherwise it is assumed to be a
-                           # string representation of the the deck.
-    pc = _parse_context(recovery) if recovery else lib.ParseContext()
-    return lib.parse_deck(deck, keywords, is_file, pc)
+    context, parser = _init_parse(recovery, keywords)
+    return SunbeamState(lib.parse_string(deck_string, context, parser))
+
+
+
+def deck(deck_file, keywords=[], recovery=[]):
+    """
+    Will parse a file and return a Deck object.
+
+    See function parse() for details about the keywords and recovery arguments.
+    """
+    if not os.path.isfile(deck_file):
+        raise IOError("No suc file: {}".format(deck_file))
+
+    context, parser = _init_parse(recovery, keywords)
+    return lib.create_deck(deck_file, context, parser)
+
+
+def deck_string(deck_string, recovery=[], keywords=[]):
+    """
+    Will parse a string and return a Deck object.
+
+    See function parse() for details about the keywords and recovery arguments.
+    """
+    context, parser = _init_parse(recovery, keywords)
+    return lib.create_deck_string(deck_string, context, parser)
+

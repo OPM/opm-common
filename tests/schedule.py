@@ -2,14 +2,12 @@ import unittest
 import datetime as dt
 import sunbeam
 
-spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
 
 class TestSchedule(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
-        cls.sch = cls.spe3.schedule
+        cls.sch = sunbeam.parse('spe3/SPE3CASE1.DATA').schedule
 
     def testWells(self):
         self.assertEqual(2, len(self.sch.wells))
