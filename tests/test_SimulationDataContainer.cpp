@@ -18,7 +18,6 @@
  */
 
 
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE SIMULATION_DATA_CONTAINER_TESTS
 #include <boost/test/unit_test.hpp>
 

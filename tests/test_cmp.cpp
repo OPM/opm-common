@@ -18,7 +18,6 @@
  */
 
 
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE FLOAT_CMP_TESTS
 #include <boost/test/unit_test.hpp>
 
