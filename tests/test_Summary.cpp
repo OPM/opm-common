@@ -233,7 +233,9 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WOPR" ), 1e-5 );
 
     BOOST_CHECK_CLOSE( 10.2, ecl_sum_get_well_var( resp, 1, "W_1", "WGPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.8, ecl_sum_get_well_var( resp, 1, "W_1", "WGVPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.2, ecl_sum_get_well_var( resp, 1, "W_2", "WGPR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.8, ecl_sum_get_well_var( resp, 1, "W_2", "WGVPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.0 + 10.1, ecl_sum_get_well_var( resp, 1, "W_1", "WLPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.0 + 20.1, ecl_sum_get_well_var( resp, 1, "W_2", "WLPR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.3, ecl_sum_get_well_var( resp, 1, "W_1", "WNPR" ), 1e-5 );
@@ -316,6 +318,8 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
 
     /* Injection rates */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_well_var( resp, 1, "W_3", "WWIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.6, ecl_sum_get_well_var( resp, 1, "W_3", "WWVIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.8, ecl_sum_get_well_var( resp, 1, "W_3", "WGVIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_well_var( resp, 1, "W_3", "WGIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.3, ecl_sum_get_well_var( resp, 1, "W_3", "WNIR" ), 1e-5 );
 

@@ -331,6 +331,8 @@ WWPRH
 /
 WOPR
 /
+WGVPR
+ W_1 W_2 /
 WOPRH
 /
 WGPR
@@ -364,6 +366,12 @@ WWIT
  W_3
 /
 WWIRH
+  W_3
+/
+WGVIR
+  W_3
+/
+WWVIR
   W_3
 /
 WWITH
