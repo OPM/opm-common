@@ -29,8 +29,8 @@ class TestWells(unittest.TestCase):
         flowing = sunbeam.Completion.flowing()
         closed = sunbeam.Completion.closed()
         completions = self.wells[0].completions(0)
-        self.assertEqual(len(filter(flowing, completions)), 2)
-        self.assertEqual(len(filter(closed, completions)), 0)
+        self.assertEqual(len(list(filter(flowing, completions))), 2)
+        self.assertEqual(len(list(filter(closed, completions))), 0)
 
     def test_direction(self):
         for well in self.wells:

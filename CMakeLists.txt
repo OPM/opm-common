@@ -5,7 +5,7 @@ include( CheckCXXSourceCompiles )
 include( CTest )
 
 find_package(opm-parser REQUIRED)
-find_package(PythonInterp 2.7 REQUIRED)
+find_package(PythonInterp REQUIRED)
 
 set( warnings "-Wall -Wextra -pedantic -Wpointer-arith" )
 set( warnings "${warnings} -Wformat-nonliteral -Wcast-align" )

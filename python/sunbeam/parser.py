@@ -1,6 +1,8 @@
+from __future__ import absolute_import
 from os.path import isfile
 import json
-import libsunbeam as lib
+
+from sunbeam import libsunbeam as lib
 from .properties import EclipseState
 
 
@@ -108,7 +110,7 @@ def parse_deck(deck, keywords=[], recovery=[]):
         # carry on
         if isinstance(keywords, dict):
             keywords = [keywords]
-        keywords = map(json.dumps, keywords)
+        keywords = list(map(json.dumps, keywords))
     is_file = isfile(deck) # If the deck is a file, the deck is read from
                            # that file. Otherwise it is assumed to be a
                            # string representation of the the deck.

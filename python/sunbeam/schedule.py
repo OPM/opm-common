@@ -1,4 +1,6 @@
-import libsunbeam as lib
+from __future__ import absolute_import
+
+from sunbeam import libsunbeam as lib
 from .sunbeam import delegate
 
 @delegate(lib.Schedule)
@@ -11,7 +13,7 @@ class Schedule(object):
 
     @property
     def wells(self):
-        return map(Well, self._wells)
+        return list(map(Well, self._wells))
 
     def group(self, timestep=0):
         return {grp.name: grp for grp in self.groups(timestep)}
@@ -35,7 +37,7 @@ class Well(object):
         return 'Well(name = "%s")' % self.name
 
     def completions(self, timestep):
-        return map(Completion, self._completions(timestep))
+        return list(map(Completion, self._completions(timestep)))
 
     def __eq__(self,other):
         return self._sun.__equal__(other._sun)

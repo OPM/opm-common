@@ -1,5 +1,6 @@
-from os.path import isfile
-import libsunbeam as lib
+from __future__ import absolute_import
+
+from sunbeam import libsunbeam as lib
 from .sunbeam import delegate
 
 @delegate(lib.SummaryConfig)
