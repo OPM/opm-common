@@ -31,11 +31,6 @@ class TestProps(unittest.TestCase):
         print(len(px))
         self.assertEqual(324, len(px))
 
-    def test_regions(self):
-        p = self.props
-        reg = p.getRegions('SATNUM')
-        self.assertEqual(1, len(reg)) # auto generated
-
     def test_permx_values(self):
         def md2si(md):
             """millidarcy->SI"""
