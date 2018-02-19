@@ -68,23 +68,23 @@ namespace Opm {
     }
 
     void ParseContext::initDefault() {
-        addKey(PARSE_EXTRA_RECORDS);
-        addKey(PARSE_UNKNOWN_KEYWORD);
-        addKey(PARSE_RANDOM_TEXT);
-        addKey(PARSE_RANDOM_SLASH);
-        addKey(PARSE_MISSING_DIMS_KEYWORD);
-        addKey(PARSE_EXTRA_DATA);
-        addKey(PARSE_MISSING_INCLUDE);
+        addKey(PARSE_EXTRA_RECORDS, InputError::THROW_EXCEPTION);
+        addKey(PARSE_UNKNOWN_KEYWORD, InputError::THROW_EXCEPTION);
+        addKey(PARSE_RANDOM_TEXT, InputError::THROW_EXCEPTION);
+        addKey(PARSE_RANDOM_SLASH, InputError::THROW_EXCEPTION);
+        addKey(PARSE_MISSING_DIMS_KEYWORD, InputError::THROW_EXCEPTION);
+        addKey(PARSE_EXTRA_DATA, InputError::THROW_EXCEPTION);
+        addKey(PARSE_MISSING_INCLUDE, InputError::THROW_EXCEPTION);
 
-        addKey(UNSUPPORTED_SCHEDULE_GEO_MODIFIER);
-        addKey(UNSUPPORTED_COMPORD_TYPE);
-        addKey(UNSUPPORTED_INITIAL_THPRES);
-        addKey(UNSUPPORTED_TERMINATE_IF_BHP);
+        addKey(UNSUPPORTED_SCHEDULE_GEO_MODIFIER, InputError::THROW_EXCEPTION);
+        addKey(UNSUPPORTED_COMPORD_TYPE, InputError::THROW_EXCEPTION);
+        addKey(UNSUPPORTED_INITIAL_THPRES, InputError::THROW_EXCEPTION);
+        addKey(UNSUPPORTED_TERMINATE_IF_BHP, InputError::THROW_EXCEPTION);
 
-        addKey(INTERNAL_ERROR_UNINITIALIZED_THPRES);
+        addKey(INTERNAL_ERROR_UNINITIALIZED_THPRES, InputError::THROW_EXCEPTION);
 
-        addKey(SUMMARY_UNKNOWN_WELL);
-        addKey(SUMMARY_UNKNOWN_GROUP);
+        addKey(SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
+        addKey(SUMMARY_UNKNOWN_GROUP, InputError::THROW_EXCEPTION);
     }
 
     void ParseContext::initEnv() {
@@ -126,14 +126,12 @@ namespace Opm {
 
     ParseContext ParseContext::withKey(const std::string& key, InputError::Action action) const {
         ParseContext pc(*this);
-        pc.addKey(key);
-        pc.updateKey(key, action);
+        pc.addKey(key, action);
         return pc;
     }
 
     ParseContext& ParseContext::withKey(const std::string& key, InputError::Action action) {
-        this->addKey(key);
-        this->updateKey(key, action);
+        this->addKey(key, action);
         return *this;
     }
 
@@ -145,12 +143,12 @@ namespace Opm {
     }
 
 
-    void ParseContext::addKey(const std::string& key) {
+    void ParseContext::addKey(const std::string& key, InputError::Action default_action) {
         if (key.find_first_of("|:*") != std::string::npos)
             throw std::invalid_argument("The ParseContext keys can not contain '|', '*' or ':'");
 
         if (!hasKey(key))
-            m_errorContexts.insert( std::pair<std::string , InputError::Action>( key , InputError::THROW_EXCEPTION ));
+            m_errorContexts.insert( std::pair<std::string , InputError::Action>( key , default_action));
     }
 
 

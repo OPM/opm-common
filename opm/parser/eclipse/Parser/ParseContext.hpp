@@ -98,7 +98,7 @@ namespace Opm {
           want a different value you must subsequently call the update
           method.
         */
-        void addKey(const std::string& key);
+      void addKey(const std::string& key, InputError::Action default_action);
         /*
           The PARSE_EXTRA_RECORDS field regulates how the parser 
           responds to keywords whose size has been defined in the 

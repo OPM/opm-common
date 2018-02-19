@@ -390,8 +390,8 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
 
 BOOST_AUTO_TEST_CASE(TestInvalidKey) {
     ParseContext parseContext;
-    BOOST_CHECK_THROW( parseContext.addKey("KEY*") , std::invalid_argument );
-    BOOST_CHECK_THROW( parseContext.addKey("KEY:") , std::invalid_argument );
+    BOOST_CHECK_THROW( parseContext.addKey("KEY*", InputError::THROW_EXCEPTION) , std::invalid_argument );
+    BOOST_CHECK_THROW( parseContext.addKey("KEY:", InputError::THROW_EXCEPTION) , std::invalid_argument );
 }
 
 
@@ -399,11 +399,11 @@ BOOST_AUTO_TEST_CASE(TestNew) {
     ParseContext parseContext;
 
     BOOST_CHECK_EQUAL( false , parseContext.hasKey("NO"));
-    parseContext.addKey("NEW_KEY");
+    parseContext.addKey("NEW_KEY", InputError::THROW_EXCEPTION);
     BOOST_CHECK_EQUAL( true , parseContext.hasKey("NEW_KEY"));
     BOOST_CHECK_THROW( parseContext.get("NO") , std::invalid_argument );
     BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::THROW_EXCEPTION );
-    parseContext.addKey("KEY2");
+    parseContext.addKey("KEY2", InputError::THROW_EXCEPTION);
     BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::THROW_EXCEPTION );
 
     BOOST_CHECK_THROW( parseContext.updateKey("NO" , InputError::IGNORE) , std::invalid_argument);
@@ -416,9 +416,9 @@ BOOST_AUTO_TEST_CASE(TestNew) {
     BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::IGNORE );
     BOOST_CHECK_EQUAL( parseContext.get("KEY2") , InputError::IGNORE );
 
-    parseContext.addKey("SECRET_KEY");
-    parseContext.addKey("NEW_KEY2");
-    parseContext.addKey("NEW_KEY3");
+    parseContext.addKey("SECRET_KEY", InputError::THROW_EXCEPTION);
+    parseContext.addKey("NEW_KEY2", InputError::THROW_EXCEPTION);
+    parseContext.addKey("NEW_KEY3", InputError::THROW_EXCEPTION);
     parseContext.update("NEW_KEY*" , InputError::WARN);
     BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY") , InputError::WARN );
     BOOST_CHECK_EQUAL( parseContext.get("NEW_KEY2") , InputError::WARN );
