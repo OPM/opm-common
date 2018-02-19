@@ -225,8 +225,7 @@ inline quantity crate( const fn_args& args ) {
     // NUMS array in the eclispe SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
     // up a completion with offset 0.
-    const auto global_index = args.num - 1;
-    const auto active_index = args.grid.activeIndex( global_index );
+    const size_t global_index = args.num - 1;
     if( args.schedule_wells.empty() ) return zero;
 
     const auto& name = args.schedule_wells.front()->name();
@@ -236,7 +235,7 @@ inline quantity crate( const fn_args& args ) {
     const auto& completion = std::find_if( well.completions.begin(),
                                            well.completions.end(),
                                            [=]( const data::Completion& c ) {
-                                                return c.index == active_index;
+                                                return c.index == global_index;
                                            } );
 
     if( completion == well.completions.end() ) return zero;

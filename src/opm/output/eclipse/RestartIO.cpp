@@ -364,13 +364,13 @@ std::vector< double > serialize_OPM_XWEL( const data::Wells& wells,
     std::vector< double > xwel;
     for( const auto* sched_well : sched_wells ) {
 
-        if( wells.count( sched_well->name() ) == 0 ) {
+        if( wells.count( sched_well->name() ) == 0 || sched_well->getStatus(report_step) == Opm::WellCommon::SHUT) {
             const auto elems = (sched_well->getCompletions( report_step ).size()
                                * (phases.size() + data::Completion::restart_size))
                 + 2 /* bhp, temperature */
                 + phases.size();
 
-            // write zeros if no well data is provided
+            // write zeros if no well data is provided or it is shut
             xwel.insert( xwel.end(), elems, 0.0 );
             continue;
         }

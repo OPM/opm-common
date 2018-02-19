@@ -108,7 +108,7 @@ class RFT {
                             time_t current_time,
                             double days,
                             const UnitSystem& units,
-                            data::Solution cells);
+                            data::Wells wellData);
     private:
         std::string filename;
         bool fmt_file;
@@ -129,11 +129,9 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
                          time_t current_time,
                          double days,
                          const UnitSystem& units,
-                         data::Solution cells) {
+                         data::Wells wellDatas) {
     using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
-    const std::vector<double>& pressure = cells.data("PRESSURE");
-    const std::vector<double>& swat = cells.data("SWAT");
-    const std::vector<double>& sgas = cells.has("SGAS") ? cells.data("SGAS") : std::vector<double>( pressure.size() , 0 );
+
     fortio_type * fortio;
     int first_report_step = report_step;
 
@@ -145,7 +143,6 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
     else
         fortio = fortio_open_writer( filename.c_str() , fmt_file , ECL_ENDIAN_FLIP );
 
-    cells.convertFromSI( units );
     for ( const auto& well : wells ) {
         if( !( well->getRFTActive( report_step )
             || well->getPLTActive( report_step ) ) )
@@ -154,18 +151,32 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
         auto* rft_node = ecl_rft_node_alloc_new( well->name().c_str(), "RFT",
                 current_time, days );
 
+        const auto& wellData = wellDatas.at(well->name());
+
+        if (wellData.completions.empty())
+            continue;
+
         for( const auto& completion : well->getCompletions( report_step ) ) {
+
             const size_t i = size_t( completion.getI() );
             const size_t j = size_t( completion.getJ() );
             const size_t k = size_t( completion.getK() );
 
             if( !grid.cellActive( i, j, k ) ) continue;
 
-            const auto index = grid.activeIndex( i, j, k );
+            const auto index = grid.getGlobalIndex( i, j, k );
             const double depth = grid.getCellDepth( i, j, k );
-            const double press = pressure[ index ];
-            const double satwat = swat[ index ];
-            const double satgas = sgas[ index ];
+
+            const auto& completionData = std::find_if( wellData.completions.begin(),
+                                                   wellData.completions.end(),
+                                                   [=]( const data::Completion& c ) {
+                                                        return c.index == index;
+                                                   } );
+
+
+            const double press = units.from_si(UnitSystem::measure::pressure,completionData->cell_pressure);
+            const double satwat = units.from_si(UnitSystem::measure::identity, completionData->cell_saturation_water);
+            const double satgas = units.from_si(UnitSystem::measure::identity, completionData->cell_saturation_gas);
 
             auto* cell = ecl_rft_cell_alloc_RFT(
                             i, j, k, depth, press, satwat, satgas );
@@ -478,7 +489,7 @@ void EclipseIO::writeTimeStep(int report_step,
                                            secs_elapsed + this->impl->schedule.posixStartTime(),
                                            units.from_si( UnitSystem::measure::time, secs_elapsed ),
                                            units,
-                                           cells );
+                                           wells );
         }
     }
 
