@@ -170,25 +170,23 @@ inline void keywordW( std::vector< ERT::smspec_node >& list,
                       const Schedule& schedule ) {
 
     const auto type = ECL_SMSPEC_WELL_VAR;
-    static const std::vector< std::string > wildcard = { "*" };
-
     const auto hasValue = []( const DeckKeyword& kw ) {
         return kw.getDataRecord().getDataItem().hasValue( 0 );
     };
 
-    const auto& patterns = keyword.size() > 0 && hasValue( keyword )
-                         ? keyword.getStringData()
-                         : wildcard;
+    if (keyword.size() && hasValue(keyword)) {
+        for( const std::string& pattern : keyword.getStringData()) {
+            auto wells = schedule.getWellsMatching( pattern );
 
-    for( const std::string& pattern : patterns ) {
-        auto wells = schedule.getWellsMatching( pattern );
+            if( wells.empty() )
+                handleMissingWell( parseContext, keyword.name(), pattern );
 
-        if( wells.empty() )
-            handleMissingWell( parseContext, keyword.name(), pattern );
-
-        for( const auto* well : wells )
-            list.emplace_back( type, well->name(), keyword.name() );
-    }
+            for( const auto* well : wells )
+                list.emplace_back( type, well->name(), keyword.name() );
+        }
+    } else
+        for (const auto* well : schedule.getWells())
+            list.emplace_back(type, well->name(), keyword.name());
 }
 
 inline void keywordG( std::vector< ERT::smspec_node >& list,
