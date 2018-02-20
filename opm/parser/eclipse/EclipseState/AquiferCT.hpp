@@ -66,8 +66,8 @@ namespace Opm {
             AquiferCT(const EclipseState& eclState, const Deck& deck);
 
             const std::vector<AquiferCT::AQUCT_data>& getAquifers() const;
-            const int getAqInflTabID(size_t aquiferIndex);
-            const int getAqPvtTabID(size_t aquiferIndex);
+            int getAqInflTabID(size_t aquiferIndex);
+            int getAqPvtTabID(size_t aquiferIndex);
     
         private:
   

@@ -66,12 +66,12 @@ namespace Opm {
         return m_aquct;
     }
 
-    const int AquiferCT::getAqInflTabID(size_t aquiferIndex)
+    int AquiferCT::getAqInflTabID(size_t aquiferIndex)
     {
         return m_aquct.at(aquiferIndex).inftableID;
     }
 
-    const int AquiferCT::getAqPvtTabID(size_t aquiferIndex)
+    int AquiferCT::getAqPvtTabID(size_t aquiferIndex)
     {
         return m_aquct.at(aquiferIndex).pvttableID;
     }
