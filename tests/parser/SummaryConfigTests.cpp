@@ -30,6 +30,33 @@
 
 using namespace Opm;
 
+static Deck createDeck_no_wells( const std::string& summary ) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "10 MAI 2007 / \n"
+            "RUNSPEC\n"
+            "\n"
+            "DIMENS\n"
+            " 10 10 10 /\n"
+            "REGDIMS\n"
+            "  3/\n"
+            "GRID\n"
+            "DXV \n 10*400 /\n"
+            "DYV \n 10*400 /\n"
+            "DZV \n 10*400 /\n"
+            "TOPS \n 100*2202 / \n"
+            "REGIONS\n"
+            "FIPNUM\n"
+            "200*1 300*2 500*3 /\n"
+            "SCHEDULE\n"
+            "SUMMARY\n"
+            + summary;
+
+    return parser.parseString(input, ParseContext());
+}
+
+
 static Deck createDeck( const std::string& summary ) {
     Opm::Parser parser;
     std::string input =
@@ -117,6 +144,17 @@ BOOST_AUTO_TEST_CASE(wells_all) {
             wells.begin(), wells.end(),
             names.begin(), names.end() );
 }
+
+BOOST_AUTO_TEST_CASE(wells_missingI) {
+    ParseContext parseContext;
+    const auto input = "WWCT\n/\n";
+    auto deck = createDeck_no_wells( input );
+    parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
+    EclipseState state( deck, parseContext );
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
+    BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext ));
+}
+
 
 BOOST_AUTO_TEST_CASE(wells_select) {
     const auto input = "WWCT\n'W_1' 'WX2' /\n";
