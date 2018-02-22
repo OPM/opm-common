@@ -1,6 +1,5 @@
-language: cpp
+language: python
 dist: trusty
-sudo: false
 
 compiler:
   - gcc
@@ -10,7 +9,6 @@ os:
 
 env:
   global:
-    - PYENV_VERSION=2.7
     - INSTALL_ROOT=$HOME/install
 
 addons:
@@ -20,9 +18,16 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - libboost1.55-all-dev
-      - gcc-4.8
-      - g++-4.8
       - liblapack-dev
+
+sudo: required
+
+python:
+  - 2.7
+  - 3.6
+
+matrix:
+    fast_finish: true
 
 
 install:
@@ -37,18 +42,23 @@ install:
   - mkdir opm-parser/build
   - pushd opm-parser/build
   - git checkout release/2017.10/final
-  - cmake -DCMAKE_PREFIX_PATH=$INSTALL_ROOT -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+  - cmake .. -DCMAKE_PREFIX_PATH=$INSTALL_ROOT
+             -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT
+             -DBUILD_TESTING=OFF
+             -DBUILD_SHARED_LIBS=ON
   - make install
   - popd
   - popd
-  - pip install --user -r requirements.txt
+  - pip install -r requirements.txt
 
 
 script:
   - mkdir build
   - pushd build
-  - cmake -DCMAKE_PREFIX_PATH=$INSTALL_ROOT -DUSE_RPATH=ON -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
+  - cmake .. -DCMAKE_PREFIX_PATH=$INSTALL_ROOT
+             -DUSE_RPATH=ON
+             -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT
+             -DPYTHON_EXECUTABLE=`which python`
   - make install
-  - export PYTHONPATH=$PYTHONPATH:$INSTALL_ROOT/lib/python${PYENV_VERSION}/site-packages
   - ctest --output-on-failure
   - popd
