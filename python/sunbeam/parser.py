@@ -164,7 +164,7 @@ def parse_string(deck_string, recovery=[], keywords=[]):
 
 
 
-def deck(deck_file, keywords=[], recovery=[]):
+def load_deck(deck_file, keywords=[], recovery=[]):
     """
     Will parse a file and return a Deck object.
 
@@ -177,7 +177,7 @@ def deck(deck_file, keywords=[], recovery=[]):
     return lib.create_deck(deck_file, context, parser)
 
 
-def deck_string(deck_string, recovery=[], keywords=[]):
+def load_deck_string(deck_string, recovery=[], keywords=[]):
     """
     Will parse a string and return a Deck object.
 

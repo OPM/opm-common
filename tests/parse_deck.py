@@ -1,5 +1,6 @@
 import unittest
 import sunbeam
+import sunbeam.deck
 import os.path
 
 class TestParse(unittest.TestCase):
@@ -57,21 +58,21 @@ FIPNUM
             sunbeam.parse("file/not/found")
 
         with self.assertRaises(IOError):
-            sunbeam.deck("/file/not/found")
+            sunbeam.deck.parse("/file/not/found")
 
 
 
     def test_parser_fail_without_extension(self):
         error_recovery = [("PARSE_RANDOM_SLASH", sunbeam.action.ignore)]
         with self.assertRaises(ValueError):
-            sunbeam.deck_string(self.DECK_ADDITIONAL_KEYWORDS,
-                                recovery=error_recovery )
+            sunbeam.deck.parse_string(self.DECK_ADDITIONAL_KEYWORDS,
+                                      recovery=error_recovery )
 
     def test_parser_extension(self):
         error_recovery = [("PARSE_RANDOM_SLASH", sunbeam.action.ignore)]
-        deck = sunbeam.deck_string(self.DECK_ADDITIONAL_KEYWORDS,
-                                    keywords=self.KEYWORDS,
-                                    recovery=error_recovery )
+        deck = sunbeam.deck.parse_string(self.DECK_ADDITIONAL_KEYWORDS,
+                                         keywords=self.KEYWORDS,
+                                         recovery=error_recovery )
         self.assertIn( 'TESTKEY0', deck )
         self.assertIn( 'TESTKEY1', deck )
         self.assertIn( 'TESTKEY2', deck )
