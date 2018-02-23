@@ -9,7 +9,7 @@ class TestProps(unittest.TestCase):
         self.assertTrue(diff <= epsilon, msg=err_msg)
 
     def setUp(self):
-        self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
+        self.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA').state
         self.props = self.spe3.props()
 
     def test_repr(self):
@@ -30,11 +30,6 @@ class TestProps(unittest.TestCase):
         px = p['PERMX']
         print(len(px))
         self.assertEqual(324, len(px))
-
-    def test_regions(self):
-        p = self.props
-        reg = p.getRegions('SATNUM')
-        self.assertEqual(1, len(reg)) # auto generated
 
     def test_permx_values(self):
         def md2si(md):

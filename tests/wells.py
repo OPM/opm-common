@@ -5,9 +5,9 @@ class TestWells(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
-        cls.timesteps = cls.spe3.schedule.timesteps
-        cls.wells = cls.spe3.schedule.wells
+        cls.sch = sunbeam.parse('spe3/SPE3CASE1.DATA').schedule
+        cls.timesteps = cls.sch.timesteps
+        cls.wells = cls.sch.wells
 
     def inje(self):
         return next(iter(filter(sunbeam.Well.injector(0), self.wells)))

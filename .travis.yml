@@ -41,7 +41,7 @@ install:
   - popd
   - mkdir opm-parser/build
   - pushd opm-parser/build
-  - git checkout release/2017.10/final
+  - git checkout 2018.01 
   - cmake .. -DCMAKE_PREFIX_PATH=$INSTALL_ROOT
              -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT
              -DBUILD_TESTING=OFF

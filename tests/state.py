@@ -50,9 +50,9 @@ SATNUM
     @classmethod
     def setUpClass(cls):
         cls.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
-        cls.cpa = sunbeam.parse('data/CORNERPOINT_ACTNUM.DATA')
-        cls.state = cls.spe3
-        cls.cp_state = cls.cpa
+        cpa = sunbeam.parse('data/CORNERPOINT_ACTNUM.DATA')
+        cls.state = cls.spe3.state
+        cls.cp_state = cpa.state
 
     def test_repr_title(self):
         self.assertTrue('EclipseState' in repr(self.state))
@@ -87,7 +87,7 @@ SATNUM
         self.assertEqual(7, rst.getFirstRestartStep())
 
     def test_summary(self):
-        smry = self.state.summary()
+        smry = self.spe3.summary_config
         self.assertTrue('SummaryConfig' in repr(smry))
         self.assertTrue('WOPR' in smry) # hasKeyword
         self.assertFalse('NONO' in smry) # hasKeyword
@@ -100,7 +100,7 @@ SATNUM
         self.assertTrue(sim.hasVAPOIL())
 
     def test_tables(self):
-        tables = self.spe3.table
+        tables = self.state.table
         self.assertTrue('SGOF' in tables)
         self.assertTrue('SWOF' in tables)
         self.assertFalse('SOF' in tables)
@@ -111,20 +111,20 @@ SATNUM
 
         tab = 'SWOF'
         col = 'KRW'
-        self.assertAlmostEqual(0.1345, self.spe3.table[tab](col, 0.5))
-        self.assertAlmostEqual(0.39,   self.spe3.table[tab](col, 0.72))
+        self.assertAlmostEqual(0.1345, self.state.table[tab](col, 0.5))
+        self.assertAlmostEqual(0.39,   self.state.table[tab](col, 0.72))
 
-        self.assertAlmostEqual(0.1345, self.spe3.table[tab, col](0.5))
-        self.assertAlmostEqual(0.39,   self.spe3.table[tab, col](0.72))
+        self.assertAlmostEqual(0.1345, self.state.table[tab, col](0.5))
+        self.assertAlmostEqual(0.39,   self.state.table[tab, col](0.72))
 
         with self.assertRaises(KeyError):
-            self.spe3.table[tab, 'NO'](1)
+            self.state.table[tab, 'NO'](1)
 
 
     def test_faults(self):
-        self.assertEquals([], self.spe3.faultNames())
-        self.assertEquals({}, self.spe3.faults())
-        faultdeck = sunbeam.parse(self.FAULTS_DECK)
+        self.assertEquals([], self.state.faultNames())
+        self.assertEquals({}, self.state.faults())
+        faultdeck = sunbeam.parse_string(self.FAULTS_DECK).state
         self.assertEqual(['F1', 'F2'], faultdeck.faultNames())
         # 'F2'  5  5  1  4   1  4  'X-' / \n"
         f2 = faultdeck.faultFaces('F2')
@@ -139,7 +139,7 @@ SATNUM
         # jf["OIL_WATER"]    = 21.0   # set in deck
         # jf["GAS_OIL"]      = -1.0   # N/A
 
-        js = sunbeam.parse('data/JFUNC.DATA')
+        js = sunbeam.parse('data/JFUNC.DATA').state
         self.assertEqual('JFUNC TEST', js.title)
         jf = js.jfunc()
         print(jf)
@@ -167,7 +167,7 @@ JFUNC
   GAS * 13.0 0.6 0.7 Z /
 PROPS\nREGIONS
 """
-        js_gas = sunbeam.parse(jfunc_gas)
+        js_gas = sunbeam.parse_string(jfunc_gas).state
         jf = js_gas.jfunc()
         self.assertEqual(jf['FLAG'], 'GAS')
         self.assertEqual(jf['DIRECTION'], 'Z')
