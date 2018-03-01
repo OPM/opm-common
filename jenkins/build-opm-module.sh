@@ -142,7 +142,15 @@ function clone_module {
 # $3 = git-rev to use for module
 # $4 = Build root
 function clone_and_build_module {
-  clone_module $1 $3
+  if [ "$REPRUN" == "1" ]
+  then
+    rm -rf $WORKSPACE/deps/$1
+    rm -rf $4/build-$1
+  fi
+  if ! test -d $WORKSPACE/deps/$1
+  then
+    clone_module $1 $3
+  fi
   pushd .
   mkdir -p $4/build-$1
   cd $4/build-$1
