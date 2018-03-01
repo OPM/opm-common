@@ -21,19 +21,19 @@
 #	                      the library needs it.
 
 list (APPEND MAIN_SOURCE_FILES
-      opm/common/data/SimulationDataContainer.cpp
-      opm/common/OpmLog/CounterLog.cpp
-      opm/common/OpmLog/EclipsePRTLog.cpp
-      opm/common/OpmLog/LogBackend.cpp
-      opm/common/OpmLog/Logger.cpp
-      opm/common/OpmLog/LogUtil.cpp
-      opm/common/OpmLog/OpmLog.cpp
-      opm/common/OpmLog/StreamLog.cpp
-      opm/common/OpmLog/TimerLog.cpp
-      opm/common/utility/numeric/MonotCubicInterpolator.cpp
-      opm/common/utility/parameters/Parameter.cpp
-      opm/common/utility/parameters/ParameterGroup.cpp
-      opm/common/utility/parameters/ParameterTools.cpp
+      src/opm/common/data/SimulationDataContainer.cpp
+      src/opm/common/OpmLog/CounterLog.cpp
+      src/opm/common/OpmLog/EclipsePRTLog.cpp
+      src/opm/common/OpmLog/LogBackend.cpp
+      src/opm/common/OpmLog/Logger.cpp
+      src/opm/common/OpmLog/LogUtil.cpp
+      src/opm/common/OpmLog/OpmLog.cpp
+      src/opm/common/OpmLog/StreamLog.cpp
+      src/opm/common/OpmLog/TimerLog.cpp
+      src/opm/common/utility/numeric/MonotCubicInterpolator.cpp
+      src/opm/common/utility/parameters/Parameter.cpp
+      src/opm/common/utility/parameters/ParameterGroup.cpp
+      src/opm/common/utility/parameters/ParameterTools.cpp
 )
 
 list (APPEND TEST_SOURCE_FILES
