@@ -45,7 +45,6 @@ Testing/
 # Build directory in source.
 build/
 
-.dir-locals.el
 gmon.out
 log.log
 build
@@ -55,3 +54,18 @@ install
 /testdata/statoil
 .idea
 /Debug/
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Mac OS X debug info
+*.dSYM
+
+# emacs directory setting:
+.dir-locals.el
