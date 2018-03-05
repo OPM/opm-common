@@ -35,6 +35,114 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/parameters/ParameterGroup.cpp
       src/opm/common/utility/parameters/ParameterTools.cpp
 )
+if(ENABLE_ECL_INPUT)
+  list(APPEND MAIN_SOURCE_FILES
+    src/opm/json/JsonObject.cpp
+    src/opm/parser/eclipse/Deck/Deck.cpp
+    src/opm/parser/eclipse/Deck/DeckItem.cpp
+    src/opm/parser/eclipse/Deck/DeckKeyword.cpp
+    src/opm/parser/eclipse/Deck/DeckRecord.cpp
+    src/opm/parser/eclipse/Deck/DeckOutput.cpp
+    src/opm/parser/eclipse/Deck/Section.cpp
+    src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
+    src/opm/parser/eclipse/EclipseState/Aquancon.cpp
+    src/opm/parser/eclipse/EclipseState/checkDeck.cpp
+    src/opm/parser/eclipse/EclipseState/Eclipse3DProperties.cpp
+    src/opm/parser/eclipse/EclipseState/EclipseConfig.cpp
+    src/opm/parser/eclipse/EclipseState/EclipseState.cpp
+    src/opm/parser/eclipse/EclipseState/EndpointScaling.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/Box.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/BoxManager.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/EclipseGrid.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/FaceDir.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/FaultCollection.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/Fault.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/FaultFace.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/GridDims.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/GridProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/GridProperty.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/NNC.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/PinchMode.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/setKeywordBox.cpp
+    src/opm/parser/eclipse/EclipseState/Grid/TransMult.cpp
+    src/opm/parser/eclipse/EclipseState/InitConfig/Equil.cpp
+    src/opm/parser/eclipse/EclipseState/InitConfig/InitConfig.cpp
+    src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
+    src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Runspec.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Completion.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/CompletionSet.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Group.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/GroupTree.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.cpp
+    src/opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
+    src/opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
+    src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/ColumnSchema.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/JFunc.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/PvtxTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/SimpleTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/TableColumn.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/TableContainer.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/TableIndex.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/TableManager.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/TableSchema.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Tables.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/VFPInjTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/VFPProdTable.cpp
+    src/opm/parser/eclipse/Parser/MessageContainer.cpp
+    src/opm/parser/eclipse/Parser/ParseContext.cpp
+    src/opm/parser/eclipse/Parser/Parser.cpp
+    src/opm/parser/eclipse/Parser/ParserEnums.cpp
+    src/opm/parser/eclipse/Parser/ParserItem.cpp
+    src/opm/parser/eclipse/Parser/ParserKeyword.cpp
+    src/opm/parser/eclipse/Parser/ParserRecord.cpp
+    src/opm/parser/eclipse/RawDeck/RawKeyword.cpp
+    src/opm/parser/eclipse/RawDeck/RawRecord.cpp
+    src/opm/parser/eclipse/RawDeck/StarToken.cpp
+    src/opm/parser/eclipse/Units/Dimension.cpp
+    src/opm/parser/eclipse/Units/UnitSystem.cpp
+    src/opm/parser/eclipse/Utility/Functional.cpp
+    src/opm/parser/eclipse/Utility/Stringview.cpp
+  )
+
+  if(NOT cjson_FOUND)
+    list(APPEND MAIN_SOURCE_FILES external/cjson/cJSON.c)
+  endif()
+endif()
+if(ENABLE_ECL_OUTPUT)
+  list( APPEND MAIN_SOURCE_FILES
+          src/opm/test_util/summaryIntegrationTest.cpp
+          src/opm/test_util/summaryRegressionTest.cpp
+          src/opm/test_util/summaryComparator.cpp
+          src/opm/test_util/EclFilesComparator.cpp
+          src/opm/output/eclipse/EclipseGridInspector.cpp
+          src/opm/output/eclipse/EclipseIO.cpp
+          src/opm/output/eclipse/LinearisedOutputTable.cpp
+          src/opm/output/eclipse/RestartIO.cpp
+          src/opm/output/eclipse/Summary.cpp
+          src/opm/output/eclipse/Tables.cpp
+          src/opm/output/eclipse/RegionCache.cpp
+          src/opm/output/data/Solution.cpp
+      )
+endif()
 
 list (APPEND TEST_SOURCE_FILES
       tests/test_cmp.cpp
@@ -47,19 +155,127 @@ list (APPEND TEST_SOURCE_FILES
       tests/test_sparsevector.cpp
       tests/test_uniformtablelinear.cpp
 )
+if(ENABLE_ECL_INPUT)
+  list(APPEND TEST_SOURCE_FILES
+    tests/parser/ADDREGTests.cpp
+    tests/parser/AquiferCTTests.cpp
+    tests/parser/AqudimsTests.cpp
+    tests/parser/AquanconTests.cpp
+    tests/parser/BoxTests.cpp
+    tests/parser/ColumnSchemaTests.cpp
+    tests/parser/CompletionTests.cpp
+    tests/parser/COMPSEGUnits.cpp
+    tests/parser/CopyRegTests.cpp
+    tests/parser/DeckTests.cpp
+    tests/parser/DynamicStateTests.cpp
+    tests/parser/DynamicVectorTests.cpp
+    tests/parser/Eclipse3DPropertiesTests.cpp
+    tests/parser/EclipseGridTests.cpp
+    tests/parser/EqualRegTests.cpp
+    tests/parser/EventTests.cpp
+    tests/parser/FaceDirTests.cpp
+    tests/parser/FaultTests.cpp
+    tests/parser/FunctionalTests.cpp
+    tests/parser/GeomodifierTests.cpp
+    tests/parser/GridPropertyTests.cpp
+    tests/parser/GroupTests.cpp
+    tests/parser/InitConfigTest.cpp
+    tests/parser/IOConfigTests.cpp
+    tests/parser/MessageContainerTest.cpp
+    tests/parser/MessageLimitTests.cpp
+    tests/parser/MultiRegTests.cpp
+    tests/parser/MultisegmentWellTests.cpp
+    tests/parser/MULTREGTScannerTests.cpp
+    tests/parser/OrderedMapTests.cpp
+    tests/parser/ParseContextTests.cpp
+    tests/parser/PORVTests.cpp
+    tests/parser/RawKeywordTests.cpp
+    tests/parser/RestartConfigTests.cpp
+    tests/parser/RunspecTests.cpp
+    tests/parser/SatfuncPropertyInitializersTests.cpp
+    tests/parser/ScheduleTests.cpp
+    tests/parser/SectionTests.cpp
+    tests/parser/SimpleTableTests.cpp
+    tests/parser/SimulationConfigTest.cpp
+    tests/parser/StarTokenTests.cpp
+    tests/parser/StringTests.cpp
+    tests/parser/SummaryConfigTests.cpp
+    tests/parser/TabdimsTests.cpp
+    tests/parser/TableColumnTests.cpp
+    tests/parser/TableContainerTests.cpp
+    tests/parser/TableManagerTests.cpp
+    tests/parser/TableSchemaTests.cpp
+    tests/parser/ThresholdPressureTest.cpp
+    tests/parser/TimeMapTest.cpp
+    tests/parser/TransMultTests.cpp
+    tests/parser/TuningTests.cpp
+    tests/parser/UnitTests.cpp
+    tests/parser/ValueTests.cpp
+    tests/parser/WellSolventTests.cpp
+    tests/parser/WellTests.cpp)
+endif()
+if(ENABLE_ECL_OUTPUT)
+  list (APPEND TEST_SOURCE_FILES
+          tests/test_compareSummary.cpp
+          tests/test_EclFilesComparator.cpp
+          tests/test_EclipseIO.cpp
+          tests/test_LinearisedOutputTable.cpp
+          tests/test_Restart.cpp
+          tests/test_RFT.cpp
+          tests/test_Summary.cpp
+          tests/test_Tables.cpp
+          tests/test_Wells.cpp
+          tests/test_writenumwells.cpp
+          tests/test_Solution.cpp
+          tests/test_regionCache.cpp
+      )
+endif()
 
 list (APPEND TEST_DATA_FILES
       tests/testdata.param
 )
+if(ENABLE_ECL_OUTPUT)
+  list (APPEND TEST_DATA_FILES
+          tests/FIRST_SIM.DATA
+          tests/summary_deck.DATA
+          tests/group_group.DATA
+          tests/testblackoilstate3.DATA
+          tests/testrft.DATA
+          tests/table_deck.DATA
+          tests/summary_deck_non_constant_porosity.DATA
+          tests/SUMMARY_EFF_FAC.DATA
+      )
+endif()
 
 list (APPEND EXAMPLE_SOURCE_FILES
 )
+if(ENABLE_ECL_INPUT)
+  list (APPEND EXAMPLE_SOURCE_FILES
+    examples/opmi.cpp
+  )
+endif()
+if(ENABLE_ECL_OUTPUT)
+  list(APPEND EXAMPLE_SOURCE_FILES
+          examples/test_util/compareECL.cpp
+          examples/test_util/compareSummary.cpp
+      )
+endif()
 
 # programs listed here will not only be compiled, but also marked for
 # installation
 list (APPEND PROGRAM_SOURCE_FILES
 )
-
+if(ENABLE_ECL_INPUT)
+  list (APPEND PROGRAM_SOURCE_FILES
+    examples/opmi.cpp
+  )
+endif()
+if(ENABLE_ECL_OUTPUT)
+  list(APPEND PROGRAM_SOURCE_FILES
+          examples/test_util/compareECL.cpp
+          examples/test_util/compareSummary.cpp
+      )
+endif()
 
 list( APPEND PUBLIC_HEADER_FILES
       opm/common/ErrorMacros.hpp
@@ -94,3 +310,171 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/parameters/ParameterStrings.hpp
       opm/common/utility/parameters/ParameterTools.hpp
 )
+if(ENABLE_ECL_INPUT)
+  list(APPEND PUBLIC_HEADER_FILES
+       opm/json/JsonObject.hpp
+       opm/parser/eclipse/Utility/Stringview.hpp
+       opm/parser/eclipse/Utility/Functional.hpp
+       opm/parser/eclipse/Utility/Typetools.hpp
+       opm/parser/eclipse/Utility/String.hpp
+       opm/parser/eclipse/Generator/KeywordGenerator.hpp
+       opm/parser/eclipse/Generator/KeywordLoader.hpp
+       opm/parser/eclipse/Units/UnitSystem.hpp
+       opm/parser/eclipse/Units/Units.hpp
+       opm/parser/eclipse/Units/Dimension.hpp
+       opm/parser/eclipse/Parser/ParserItem.hpp
+       opm/parser/eclipse/Parser/Parser.hpp
+       opm/parser/eclipse/Parser/ParserRecord.hpp
+       opm/parser/eclipse/Parser/MessageContainer.hpp
+       opm/parser/eclipse/Parser/ParserKeyword.hpp
+       opm/parser/eclipse/Parser/InputErrorAction.hpp
+       opm/parser/eclipse/Parser/ParserEnums.hpp
+       opm/parser/eclipse/Parser/ParseContext.hpp
+       opm/parser/eclipse/Parser/ParserConst.hpp
+       opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp
+       opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp
+       opm/parser/eclipse/EclipseState/Util/Value.hpp
+       opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp
+       opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
+       opm/parser/eclipse/EclipseState/Grid/GridDims.hpp
+       opm/parser/eclipse/EclipseState/Grid/TransMult.hpp
+       opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp
+       opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp
+       opm/parser/eclipse/EclipseState/Grid/MULTREGTScanner.hpp
+       opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp
+       opm/parser/eclipse/EclipseState/Grid/SatfuncPropertyInitializers.hpp
+       opm/parser/eclipse/EclipseState/Grid/Fault.hpp
+       opm/parser/eclipse/EclipseState/Grid/Box.hpp
+       opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp
+       opm/parser/eclipse/EclipseState/Grid/FaultFace.hpp
+       opm/parser/eclipse/EclipseState/Grid/NNC.hpp
+       opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp
+       opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp
+       opm/parser/eclipse/EclipseState/Grid/FaceDir.hpp
+       opm/parser/eclipse/EclipseState/Grid/MinpvMode.hpp
+       opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp
+       opm/parser/eclipse/EclipseState/EndpointScaling.hpp
+       opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/MsfnTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/Regdims.hpp
+       opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp
+       opm/parser/eclipse/EclipseState/Tables/SpecrockTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SpecheatTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp
+       opm/parser/eclipse/EclipseState/Tables/TableManager.hpp
+       opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp
+       opm/parser/eclipse/EclipseState/Tables/JFunc.hpp
+       opm/parser/eclipse/EclipseState/Tables/TableIndex.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp
+       opm/parser/eclipse/EclipseState/Tables/TableSchema.hpp
+       opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvtxTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/WatvisctTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/TableEnums.hpp
+       opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp
+       opm/parser/eclipse/EclipseState/Tables/AqutabTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/TableColumn.hpp
+       opm/parser/eclipse/EclipseState/Tables/SsfnTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/OilvisctTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/MiscTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp
+       opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/SlgofTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/ImptvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/ImkrvdTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/Sof3Table.hpp
+       opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp
+       opm/parser/eclipse/EclipseState/EclipseState.hpp
+       opm/parser/eclipse/EclipseState/EclipseConfig.hpp
+       opm/parser/eclipse/EclipseState/Aquancon.hpp
+       opm/parser/eclipse/EclipseState/AquiferCT.hpp
+       opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well.hpp
+       opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
+       opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp
+       opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Group.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Events.hpp
+       opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp
+       opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Completion.hpp
+       opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.hpp
+       opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp
+       opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
+       opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
+       opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp
+       opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp
+       opm/parser/eclipse/EclipseState/checkDeck.hpp
+       opm/parser/eclipse/EclipseState/Runspec.hpp
+       opm/parser/eclipse/Deck/DeckItem.hpp
+       opm/parser/eclipse/Deck/Deck.hpp
+       opm/parser/eclipse/Deck/Section.hpp
+       opm/parser/eclipse/Deck/DeckOutput.hpp
+       opm/parser/eclipse/Deck/DeckKeyword.hpp
+       opm/parser/eclipse/Deck/DeckRecord.hpp
+       opm/parser/eclipse/RawDeck/StarToken.hpp
+       opm/parser/eclipse/RawDeck/RawEnums.hpp
+       opm/parser/eclipse/RawDeck/RawRecord.hpp
+       opm/parser/eclipse/RawDeck/RawKeyword.hpp
+       opm/parser/eclipse/RawDeck/RawConsts.hpp)
+endif()
+if(ENABLE_ECL_OUTPUT)
+  list(APPEND PUBLIC_HEADER_FILES
+        opm/output/OutputWriter.hpp
+        opm/output/data/Wells.hpp
+        opm/output/data/Cells.hpp
+        opm/test_util/summaryRegressionTest.hpp
+        opm/test_util/summaryIntegrationTest.hpp
+        opm/test_util/summaryComparator.hpp
+        opm/output/eclipse/EclipseGridInspector.hpp
+        opm/output/eclipse/EclipseIOUtil.hpp
+        opm/output/eclipse/EclipseIO.hpp
+        opm/output/eclipse/LinearisedOutputTable.hpp
+        opm/output/eclipse/RestartIO.hpp
+        opm/output/eclipse/RestartValue.hpp
+        opm/output/eclipse/Summary.hpp
+        opm/output/eclipse/Tables.hpp
+        opm/output/eclipse/RegionCache.hpp
+        opm/output/data/Solution.hpp
+        opm/test_util/EclFilesComparator.hpp
+        opm/test_util/summaryRegressionTest.hpp
+        opm/test_util/summaryComparator.hpp)
+endif()

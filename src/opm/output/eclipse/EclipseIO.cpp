@@ -24,7 +24,7 @@
 
 #include "config.h"
 
-#include "EclipseIO.hpp"
+#include <opm/output/eclipse/EclipseIO.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
