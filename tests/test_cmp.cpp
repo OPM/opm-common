@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
 
 #define BOOST_TEST_MODULE FLOAT_CMP_TESTS
 #include <boost/test/unit_test.hpp>

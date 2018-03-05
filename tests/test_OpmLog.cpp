@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #define BOOST_TEST_MODULE LogTests
 
 #include <opm/common/utility/platform_dependent/disable_warnings.h>
