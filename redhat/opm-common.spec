@@ -12,7 +12,7 @@ License:        GPL-3.0
 Group:          Development/Libraries/C and C++
 Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
-BuildRequires:  git doxygen bc devtoolset-6-toolchain 
+BuildRequires:  git doxygen bc devtoolset-6-toolchain ecl-devel
 %{?el6:BuildRequires: cmake3 boost148-devel}
 %{!?el6:BuildRequires: cmake boost-devel}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build

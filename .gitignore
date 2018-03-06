@@ -44,3 +44,28 @@ Testing/
 
 # Build directory in source.
 build/
+
+gmon.out
+log.log
+build
+install
+.cproject
+.project
+/testdata/statoil
+.idea
+/Debug/
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Mac OS X debug info
+*.dSYM
+
+# emacs directory setting:
+.dir-locals.el

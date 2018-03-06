@@ -4,7 +4,8 @@ Maintainer: Arne Morten Kvarving <arne.morten.kvarving@sintef.no>
 Build-Depends: build-essential, debhelper (>= 9),
                pkg-config, cmake, git, libtool, doxygen,
                texlive-latex-extra, texlive-latex-recommended,
-               ghostscript, libboost-system-dev, libboost-test-dev
+               ghostscript, libboost-system-dev, libboost-test-dev,
+               libecl-dev, libboost-regex-dev, libboost-filesystem-dev
 Standards-Version: 3.9.2
 Section: libs
 Homepage: http://opm-project.org
