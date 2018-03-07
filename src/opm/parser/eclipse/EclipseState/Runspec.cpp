@@ -72,6 +72,23 @@ size_t Phases::size() const noexcept {
     return this->bits.count();
 }
 
+Welldims::Welldims(const Deck& deck)
+{
+    if (deck.hasKeyword("WELLDIMS")) {
+        const auto& wd = deck.getKeyword("WELLDIMS", 0).getRecord(0);
+
+        this->nCWMax = wd.getItem("MAXCONN")      .get<int>(0);
+        this->nWGMax = wd.getItem("MAX_GROUPSIZE").get<int>(0);
+
+        // This is the E100 definition.  E300 instead uses
+        //
+        //   Max{ "MAXGROUPS", "MAXWELLS" }
+        //
+        // i.e., the maximum of item 1 and item 4 here.
+        this->nGMax = wd.getItem("MAXGROUPS").get<int>(0);
+    }
+}
+
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases( deck.hasKeyword( "OIL" ),
                            deck.hasKeyword( "GAS" ),
@@ -80,7 +97,8 @@ Runspec::Runspec( const Deck& deck ) :
                            deck.hasKeyword( "POLYMER" ),
                            deck.hasKeyword( "THERMAL" ) ) ),
     m_tabdims( deck ),
-    endscale( deck )
+    endscale( deck ),
+    welldims( deck )
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -93,6 +111,11 @@ const Tabdims& Runspec::tabdims() const noexcept {
 
 const EndpointScaling& Runspec::endpointScaling() const noexcept {
     return this->endscale;
+}
+
+const Welldims& Runspec::wellDimensions() const noexcept
+{
+    return this->welldims;
 }
 
 /*
