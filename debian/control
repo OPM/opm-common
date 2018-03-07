@@ -5,7 +5,8 @@ Build-Depends: build-essential, debhelper (>= 9),
                pkg-config, cmake, git, libtool, doxygen,
                texlive-latex-extra, texlive-latex-recommended,
                ghostscript, libboost-system-dev, libboost-test-dev,
-               libecl-dev, libboost-regex-dev, libboost-filesystem-dev
+               libecl-dev, libboost-regex-dev, libboost-filesystem-dev,
+               zlib1g-dev
 Standards-Version: 3.9.2
 Section: libs
 Homepage: http://opm-project.org
