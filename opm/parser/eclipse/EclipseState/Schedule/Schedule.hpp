@@ -150,6 +150,7 @@ namespace Opm
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);
+        void handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep);
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep);

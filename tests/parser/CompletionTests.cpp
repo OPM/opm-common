@@ -53,12 +53,12 @@ inline std::ostream& operator<<( std::ostream& stream, const CompletionSet& cs )
 
 
 BOOST_AUTO_TEST_CASE(CreateCompletionOK) {
-    Opm::Completion completion(10,10,10, 1, 0.0,Opm::WellCompletion::OPEN,Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion(10,10,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN,Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
 }
 
 
 BOOST_AUTO_TEST_CASE(testGetFunctions) {
-    Opm::Completion completion(10,11,12, 1, 0.0, Opm::WellCompletion::OPEN,Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion(10,11,12, 1, 0.0, 0.0, Opm::WellCompletion::OPEN,Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     BOOST_CHECK_EQUAL( 10 , completion.getI() );
     BOOST_CHECK_EQUAL( 11 , completion.getJ() );
     BOOST_CHECK_EQUAL( 12 , completion.getK() );
@@ -72,11 +72,11 @@ BOOST_AUTO_TEST_CASE(testGetFunctions) {
 
 
 BOOST_AUTO_TEST_CASE(CompletionTestssameCoordinate) {
-    Opm::Completion completion1(10,10,10, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion2(10,10,10, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion3(11,10,10, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion4(10,11,10, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion5(10,10,11, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion1(10,10,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion2(10,10,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion3(11,10,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion4(10,11,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion5(10,10,11, 1, 0.0, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
 
     BOOST_CHECK( completion1.sameCoordinate( completion2 ));
     BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion3 ));
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(CreateCompletionSetOK) {
 
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     Opm::CompletionSet completionSet;
-    Opm::Completion completion1( 10,10,10, 1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion2( 11,10,10, 1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion1( 10,10,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion2( 11,10,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 
 BOOST_AUTO_TEST_CASE(CompletionSetGetOutOfRangeThrows) {
     Opm::CompletionSet completionSet;
-    Opm::Completion completion1( 10,10,10,1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion2( 11,10,10,1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion1( 10,10,10,1, 0.0, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion2( 11,10,10,1, 0.0, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(CompletionSetGetOutOfRangeThrows) {
 
 BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
     Opm::CompletionSet completionSet;
-    Opm::Completion completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion2( 10,10,10, 1, 0.0,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion1( 10,10,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion2( 10,10,10, 1, 0.0, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
 
 
     completionSet.add( completion1 );
@@ -139,9 +139,9 @@ BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
 BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
     Opm::CompletionSet completionSet;
 
-    Opm::Completion completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion completion3( 10,10,12, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion1( 10,10,10, 1, 0.0, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion2( 10,10,11, 1, 0.0, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion3( 10,10,12, 1, 0.0, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
 
     completionSet.add( completion1 );
     completionSet.add( completion2 );

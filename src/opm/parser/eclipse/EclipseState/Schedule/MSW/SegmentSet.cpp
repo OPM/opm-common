@@ -417,4 +417,25 @@ namespace Opm {
     bool SegmentSet::operator!=( const SegmentSet& rhs ) const {
         return !( *this == rhs );
     }
+
+    double SegmentSet::segmentLength(const int segment_number) const {
+        double segment_length;
+
+        const Segment& segment = getFromSegmentNumber(segment_number);
+        if (segment_number == 1) {// top segment
+            segment_length = segment.totalLength();
+        } else {
+            // other segments
+            const int outlet_segment_number = segment.outletSegment();
+            const Segment &outlet_segment = getFromSegmentNumber(outlet_segment_number);
+
+            segment_length = segment.totalLength() - outlet_segment.totalLength();
+        }
+
+        if (segment_length <= 0.)
+            throw std::runtime_error(" non positive segemnt length is obtained for segment "
+                                     + std::to_string(segment_number));
+
+        return segment_length;
+    }
 }

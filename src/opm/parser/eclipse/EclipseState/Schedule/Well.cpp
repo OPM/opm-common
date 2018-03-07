@@ -565,7 +565,9 @@ namespace Opm {
         m_segmentset.update(time_step, new_segmentset);
     }
 
-
+    void Well::updateSegmentSet(size_t time_step, const SegmentSet& new_segmentset) {
+        m_segmentset.update(time_step, new_segmentset);
+    }
 
 
     void Well::addEvent(ScheduleEvents::Events event, size_t reportStep) {

@@ -62,6 +62,8 @@ namespace Opm {
         bool operator==( const SegmentSet& ) const;
         bool operator!=( const SegmentSet& ) const;
 
+        double segmentLength(const int segment_number) const;
+
     private:
 
         // name of the well

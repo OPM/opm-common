@@ -99,6 +99,10 @@ namespace Opm {
         return m_data_ready;
     }
 
+    WellSegment::SegmentType Segment::segmentType() const {
+        return m_segment_type;
+    }
+
     void Segment::setDepthAndLength(const double depth_in,  const double length_in) {
         m_total_length = length_in;
         m_depth = depth_in;
@@ -146,4 +150,16 @@ namespace Opm {
             && this->m_volume            == rhs.m_volume
             && this->m_data_ready        == rhs.m_data_ready;
     }
+
+    void Segment::updateSpiralICD(const SpiralICD& spiral_icd) {
+        m_segment_type = WellSegment::SPIRALICD;
+        m_spiral_icd = std::make_shared<SpiralICD>(spiral_icd);
+    }
+
+    const std::shared_ptr<SpiralICD>& Segment::spiralICD() const {
+        return m_spiral_icd;
+    }
+
+
+
 }

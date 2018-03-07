@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     // for WELSEGS keyword
     const auto& kw = deck.getKeyword("WELSEGS");
 
-    BOOST_CHECK_EQUAL( 6, kw.size() );
+    BOOST_CHECK_EQUAL( 7, kw.size() );
 
     // check the information for the top segment and the segment set
     {
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         const std::string length_depth_type_string = WellSegment::LengthDepthEnumToString(length_depth_type);
         BOOST_CHECK_EQUAL( length_depth_type_string, "ABS" );
         const std::string comp_pressure_drop_string = WellSegment::CompPressureDropEnumToString(comp_pressure_drop);
-        BOOST_CHECK_EQUAL( comp_pressure_drop_string, "H--" );
+        BOOST_CHECK_EQUAL( comp_pressure_drop_string, "HF-" );
         const std::string multiphase_model_string = WellSegment::MultiPhaseModelEnumToString(multiphase_model);
         BOOST_CHECK_EQUAL( multiphase_model_string, "HO" );
     }
@@ -520,6 +520,26 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL( 2539.5, depth_change );
         BOOST_CHECK_EQUAL( 0.2, diameter );
         BOOST_CHECK_EQUAL( 0.0001, roughness );
+    }
+
+    {
+        const auto& rec7 = kw.getRecord(6);
+        const int segment1 = rec7.getItem("SEGMENT2").get< int >(0);
+        const int segment2 = rec7.getItem("SEGMENT2").get< int >(0);
+        BOOST_CHECK_EQUAL( 8, segment1 );
+        BOOST_CHECK_EQUAL( 8, segment2 );
+        const int branch = rec7.getItem("BRANCH").get< int >(0);
+        const int outlet_segment = rec7.getItem("JOIN_SEGMENT").get< int >(0);
+        const double segment_length = rec7.getItem("SEGMENT_LENGTH").get< double >(0);
+        const double depth_change = rec7.getItem("DEPTH_CHANGE").get< double >(0);
+        const double diameter = rec7.getItem("DIAMETER").get< double >(0);
+        const double roughness = rec7.getItem("ROUGHNESS").get< double >(0);
+        BOOST_CHECK_EQUAL( 3, branch );
+        BOOST_CHECK_EQUAL( 7, outlet_segment );
+        BOOST_CHECK_EQUAL( 3337.6, segment_length );
+        BOOST_CHECK_EQUAL( 2534.5, depth_change );
+        BOOST_CHECK_EQUAL( 0.2, diameter );
+        BOOST_CHECK_EQUAL( 0.00015, roughness );
     }
 
     // for COMPSEG keyword
@@ -568,6 +588,77 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL(  3237.5, distance_end );
     }
 
+    {
+        const auto& rec7 = kw1.getRecord(7);
+        const int i = rec7.getItem("I").get< int >(0);
+        const int j = rec7.getItem("J").get< int >(0);
+        const int k = rec7.getItem("K").get< int >(0);
+        const int branch = rec7.getItem("BRANCH").get< int >(0);
+        const double distance_start = rec7.getItem("DISTANCE_START").get< double >(0);
+        const double distance_end = rec7.getItem("DISTANCE_END").get< double >(0);
+
+        BOOST_CHECK_EQUAL( 16, i );
+        BOOST_CHECK_EQUAL(  1, j );
+        BOOST_CHECK_EQUAL(  2, k );
+        BOOST_CHECK_EQUAL(  3, branch );
+        BOOST_CHECK_EQUAL(  3237.5, distance_start );
+        BOOST_CHECK_EQUAL(  3437.5, distance_end );
+    }
+
+    {
+        const auto& wsegsicd = deck.getKeyword("WSEGSICD");
+        const auto map_spiral_icd = SpiralICD::fromWSEGSICD(wsegsicd);
+
+        BOOST_CHECK_EQUAL(1U, map_spiral_icd.size() );
+        const std::string well_name("PROD01");
+        const auto it = map_spiral_icd.find(well_name);
+        BOOST_CHECK_EQUAL(false, it == map_spiral_icd.end() );
+
+        const auto& sicd_vector = it->second;
+        BOOST_CHECK_EQUAL(1U, sicd_vector.size() );
+
+        const int segment_number = sicd_vector[0].first;
+        const SpiralICD& sicd = sicd_vector[0].second;
+
+        BOOST_CHECK_EQUAL(8, segment_number);
+
+        BOOST_CHECK_GT(sicd.maxAbsoluteRate(), 1.e99);
+        BOOST_CHECK_EQUAL(sicd.status(), "SHUT");
+        // 0.002 bars*day*day/Volume^2
+        BOOST_CHECK_EQUAL(sicd.strength(), 0.002*1.e5*86400.*86400.);
+        BOOST_CHECK_EQUAL(sicd.length(), -0.7);
+        BOOST_CHECK_EQUAL(sicd.densityCalibration(), 1000.25);
+        // 1.45 cp
+        BOOST_CHECK_EQUAL(sicd.viscosityCalibration(), 1.45 * 0.001);
+        BOOST_CHECK_EQUAL(sicd.criticalValue(), 0.6);
+        BOOST_CHECK_EQUAL(sicd.widthTransitionRegion(), 0.05);
+        BOOST_CHECK_EQUAL(sicd.maxViscosityRatio(), 5.0);
+        BOOST_CHECK_EQUAL(sicd.methodFlowScaling(), -1);
+    }
+
+
+    {
+        const auto& wsegsicd = deck.getKeyword("WSEGSICD");
+        BOOST_CHECK_EQUAL(1U, wsegsicd.size() );
+
+        const auto& record_sicd = wsegsicd.getRecord(0);
+
+        const SpiralICD sicd(record_sicd);
+
+        BOOST_CHECK_GT(sicd.maxAbsoluteRate(), 1.e99);
+        BOOST_CHECK_EQUAL(sicd.status(), "SHUT");
+        // 0.002 bars*day*day/Volume^2
+        BOOST_CHECK_EQUAL(sicd.strength(), 0.002*1.e5*86400.*86400.);
+        BOOST_CHECK_EQUAL(sicd.length(), -0.7);
+        BOOST_CHECK_EQUAL(sicd.densityCalibration(), 1000.25);
+        // 1.45 cp
+        BOOST_CHECK_EQUAL(sicd.viscosityCalibration(), 1.45 * 0.001);
+        BOOST_CHECK_EQUAL(sicd.criticalValue(), 0.6);
+        BOOST_CHECK_EQUAL(sicd.widthTransitionRegion(), 0.05);
+        BOOST_CHECK_EQUAL(sicd.maxViscosityRatio(), 5.0);
+        BOOST_CHECK_EQUAL(sicd.methodFlowScaling(), -1);
+    }
+
     // checking the relation between segments and completions
     // and also the depth of completions
     {
@@ -579,26 +670,42 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         const Completion& completion5 = completions.get(4);
         const int seg_number_completion5 = completion5.getSegmentNumber();
         const double completion5_depth = completion5.getCenterDepth();
+        const double completion5_length = completion5.getLength();
         BOOST_CHECK_EQUAL(seg_number_completion5, 6);
         BOOST_CHECK_CLOSE(completion5_depth, 2538.83, 0.001);
+        BOOST_CHECK_CLOSE(completion5_length, 200.0, 0.001);
 
         const Completion& completion6 = completions.get(5);
         const int seg_number_completion6 = completion6.getSegmentNumber();
         const double completion6_depth = completion6.getCenterDepth();
+        const double completion6_length = completion6.getLength();
         BOOST_CHECK_EQUAL(seg_number_completion6, 6);
         BOOST_CHECK_CLOSE(completion6_depth, 2537.83, 0.001);
+        BOOST_CHECK_CLOSE(completion6_length, 200.0, 0.001);
 
         const Completion& completion1 = completions.get(0);
         const int seg_number_completion1 = completion1.getSegmentNumber();
         const double completion1_depth = completion1.getCenterDepth();
+        const double completion1_length = completion1.getLength();
         BOOST_CHECK_EQUAL(seg_number_completion1, 1);
         BOOST_CHECK_EQUAL(completion1_depth, 2512.5);
+        BOOST_CHECK_EQUAL(completion1_length, 12.5);
 
         const Completion& completion3 = completions.get(2);
         const int seg_number_completion3 = completion3.getSegmentNumber();
         const double completion3_depth = completion3.getCenterDepth();
+        const double completion3_length = completion3.getLength();
         BOOST_CHECK_EQUAL(seg_number_completion3, 3);
         BOOST_CHECK_EQUAL(completion3_depth, 2562.5);
+        BOOST_CHECK_EQUAL(completion3_length, 25.0);
+
+        const Completion& completion7 = completions.get(6);
+        const int seg_number_completion7 = completion7.getSegmentNumber();
+        const double completion7_depth = completion7.getCenterDepth();
+        const double completion7_length = completion7.getLength();
+        BOOST_CHECK_EQUAL(seg_number_completion7, 8);
+        BOOST_CHECK_EQUAL(completion7_depth, 2534.5);
+        BOOST_CHECK_EQUAL(completion7_length, 200.);
     }
 }
 

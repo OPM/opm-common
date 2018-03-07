@@ -82,6 +82,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.cpp
@@ -436,6 +437,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/SpiralICD.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp

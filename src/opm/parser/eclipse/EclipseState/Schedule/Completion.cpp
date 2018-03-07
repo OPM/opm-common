@@ -37,6 +37,7 @@ namespace Opm {
     Completion::Completion(int i, int j , int k ,
                            int compnum,
                            double depth,
+                           const double length,
                            WellCompletion::StateEnum state ,
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
@@ -52,7 +53,8 @@ namespace Opm {
           m_satTableId(satTableId),
           m_state(state),
           m_direction(direction),
-          m_center_depth( depth )
+          m_center_depth( depth ),
+          m_length( length)
     {}
 
     Completion::Completion(const Completion& oldCompletion, WellCompletion::StateEnum newStatus ) :
@@ -77,12 +79,14 @@ namespace Opm {
         this->m_complnum = num;
     }
 
-    Completion::Completion(const Completion& completion_initial, int segment_number, double center_depth)
+    Completion::Completion(const Completion& completion_initial, const int segment_number,
+                           const double center_depth, const double length)
       : Completion(completion_initial)
     {
         assert(segment_number > 0);
         this->m_segment_number = segment_number;
         this->m_center_depth = center_depth;
+        this->m_length = length;
     }
 
     bool Completion::sameCoordinate(const Completion& other) const {
@@ -161,21 +165,40 @@ namespace Opm {
             }
         }
 
-        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(compdatRecord.getItem("DIR").getTrimmedString(0));
+        const std::string direction_string = compdatRecord.getItem("DIR").getTrimmedString(0);
+        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(direction_string);
 
         for (int k = K1; k <= K2; k++) {
             if (defaultSatTable)
                 satTableId = satnum.iget(grid.getGlobalIndex(I,J,k));
 
+            const std::array<double, 3> cellDims = grid.getCellDims(I, J, k);
+
+            double length; // length of the completion
+            switch (direction) {
+                case WellCompletion::DirectionEnum::X :
+                    length = cellDims[0];
+                    break;
+                case WellCompletion::DirectionEnum::Y :
+                    length = cellDims[1];
+                    break;
+                case WellCompletion::DirectionEnum::Z :
+                    length = cellDims[2];
+                    break;
+                default:
+                    throw std::logic_error(" Not recognized completion direction " + direction_string);
+            }
+
             completions.emplace_back( I, J, k,
                                       int( completions.size() + prev_complnum ) + 1,
                                       grid.getCellDepth( I,J,k ),
+                                      length,
                                       state,
                                       connectionTransmissibilityFactor,
                                       diameter,
                                       skinFactor,
                                       satTableId,
-                                      direction );
+                                      direction);
         }
 
         return completions;
@@ -309,6 +332,10 @@ namespace Opm {
         return m_center_depth;
     }
 
+    double Completion::getLength() const {
+        return m_length;
+    }
+
     bool Completion::attachedToSegment() const {
         return (m_segment_number > 0);
     }
@@ -327,7 +354,8 @@ namespace Opm {
             && this->m_state == rhs.m_state
             && this->m_direction == rhs.m_direction
             && this->m_segment_number == rhs.m_segment_number
-            && this->m_center_depth == rhs.m_center_depth;
+            && this->m_center_depth == rhs.m_center_depth
+            && this->m_length == rhs.m_length;
     }
 
     bool Completion::operator!=( const Completion& rhs ) const {

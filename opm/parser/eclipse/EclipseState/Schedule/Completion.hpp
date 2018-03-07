@@ -43,6 +43,7 @@ namespace Opm {
         Completion(int i, int j , int k ,
                    int complnum,
                    double depth,
+                   const double length,
                    WellCompletion::StateEnum state ,
                    const Value<double>& connectionTransmissibilityFactor,
                    const Value<double>& diameter,
@@ -53,7 +54,8 @@ namespace Opm {
         Completion(const Completion&, WellCompletion::StateEnum newStatus);
         Completion(const Completion&, double wellPi);
         Completion(const Completion&, int complnum );
-        Completion(const Completion& completion_initial, int segment_number, double center_depth);
+        Completion(const Completion& completion_initial, const int segment_number,
+                   const double center_depth, const double length);
 
         bool sameCoordinate(const Completion& other) const;
         bool sameCoordinate(const int i, const int j, const int k) const;
@@ -73,6 +75,7 @@ namespace Opm {
         void   shift_complnum( int );
         int getSegmentNumber() const;
         double getCenterDepth() const;
+        double getLength() const;
         bool attachedToSegment() const;
 
         WellCompletion::DirectionEnum getDirection() const;
@@ -102,6 +105,7 @@ namespace Opm {
         // -1 means the completion is not related to segment
         int m_segment_number = -1;
         double m_center_depth;
+        double m_length;
     };
 }
 

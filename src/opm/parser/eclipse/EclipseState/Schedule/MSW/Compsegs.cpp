@@ -238,7 +238,14 @@ namespace Opm {
             const int k = compseg.m_k;
 
             const Completion& completion = completion_set.getFromIJK( i, j, k );
-            completion_set.add(Completion(completion, compseg.m_segment_number, compseg.m_center_depth) );
+
+            const double completion_length = compseg.m_distance_end - compseg.m_distance_start;
+
+            if (completion_length <= 0.)
+                throw std::runtime_error("Non positive completion length is found for completion located in grid block "
+                                         + std::to_string(i) + " " + std::to_string(j) + " " + std::to_string(k));
+
+            completion_set.add(Completion(completion, compseg.m_segment_number, compseg.m_center_depth, completion_length) );
         }
 
         for (size_t ic = 0; ic < completion_set.size(); ++ic) {

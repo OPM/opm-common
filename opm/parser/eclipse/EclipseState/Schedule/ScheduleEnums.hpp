@@ -237,6 +237,11 @@ namespace Opm {
 
     namespace WellSegment{
 
+        enum SegmentType {
+            REGULAR = 0,
+            SPIRALICD = 1
+        };
+
         enum LengthDepthEnum {
             INC = 0,
             ABS = 1

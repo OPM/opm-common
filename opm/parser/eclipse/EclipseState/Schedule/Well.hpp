@@ -160,6 +160,7 @@ namespace Opm {
         const SegmentSet& getSegmentSet(size_t time_step) const;
 
         void addSegmentSet(size_t time_step, SegmentSet new_segmentset);
+        void updateSegmentSet(size_t time_step, const SegmentSet& new_segmentset);
 
         const MessageContainer& getMessageContainer() const;
         const Events& getEvents() const;
