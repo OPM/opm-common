@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     // for WELSEGS keyword
     const auto& kw = deck.getKeyword("WELSEGS");
 
-    BOOST_CHECK_EQUAL( 6, kw.size() );
+    BOOST_CHECK_EQUAL( 7, kw.size() );
 
     // check the information for the top segment and the segment set
     {
@@ -523,6 +523,26 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL( 0.0001, roughness );
     }
 
+    {
+        const auto& rec7 = kw.getRecord(6);
+        const int segment1 = rec7.getItem("SEGMENT2").get< int >(0);
+        const int segment2 = rec7.getItem("SEGMENT2").get< int >(0);
+        BOOST_CHECK_EQUAL( 8, segment1 );
+        BOOST_CHECK_EQUAL( 8, segment2 );
+        const int branch = rec7.getItem("BRANCH").get< int >(0);
+        const int outlet_segment = rec7.getItem("JOIN_SEGMENT").get< int >(0);
+        const double segment_length = rec7.getItem("SEGMENT_LENGTH").get< double >(0);
+        const double depth_change = rec7.getItem("DEPTH_CHANGE").get< double >(0);
+        const double diameter = rec7.getItem("DIAMETER").get< double >(0);
+        const double roughness = rec7.getItem("ROUGHNESS").get< double >(0);
+        BOOST_CHECK_EQUAL( 3, branch );
+        BOOST_CHECK_EQUAL( 7, outlet_segment );
+        BOOST_CHECK_EQUAL( 3337.6, segment_length );
+        BOOST_CHECK_EQUAL( 2534.5, depth_change );
+        BOOST_CHECK_EQUAL( 0.2, diameter );
+        BOOST_CHECK_EQUAL( 0.00015, roughness );
+    }
+
     // for COMPSEG keyword
     const auto& kw1 = deck.getKeyword("COMPSEGS");
     // check the size of the keywords
@@ -569,6 +589,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL(  3237.5, distance_end );
     }
 
+
     const EclipseState state(deck);
     const auto& grid = state.getInputGrid();
     const TableManager table ( deck );
@@ -606,6 +627,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     const double connection3_depth = connection3.depth();
     BOOST_CHECK_EQUAL(seg_number_connection3, 3);
     BOOST_CHECK_EQUAL(connection3_depth, 2562.5);
+
 }
 
 BOOST_AUTO_TEST_CASE( PLYADS ) {

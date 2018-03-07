@@ -325,6 +325,9 @@ namespace {
         else if (keyword.name() == "COMPSEGS")
             handleCOMPSEGS(keyword, currentStep, grid, parseContext, errors);
 
+            else if (keyword.name() == "WSEGSICD")
+                handleWSEGSICD(keyword, currentStep);
+
         else if (keyword.name() == "WELOPEN")
             handleWELOPEN(keyword, currentStep, parseContext, errors);
 
@@ -417,6 +420,7 @@ namespace {
             } else {
                 std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
                 parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg, errors );
+
             }
         }
     }
@@ -1958,6 +1962,35 @@ namespace {
             auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
             if (well_ptr->handleCOMPSEGS(keyword, grid, parseContext, errors))
                 this->updateWell(well_ptr, currentStep);
+        }
+    }
+
+    void Schedule::handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep) {
+
+        const std::map<std::string, std::vector<std::pair<int, SpiralICD> > > spiral_icds =
+                                SpiralICD::fromWSEGSICD(keyword);
+
+        for (const auto& map_elem : spiral_icds) {
+            const std::string& well_name = map_elem.first;
+            const std::vector<std::pair<int, SpiralICD> >& sicd_pairs = map_elem.second;
+            Well& well = this->m_wells.get( well_name );
+            SegmentSet segment_set = well.getSegmentSet(currentStep);
+            // to have spiral ICD devices, frictional pressure drop must be activated
+            if (segment_set.compPressureDrop() == WellSegment::H__) {
+                const std::string msg = "to use spiral ICD segment for well " + well_name
+                                      + " , you have to activate the frictional pressure drop calculation";
+                throw std::runtime_error(msg);
+            }
+
+            for (const auto& pair_elem : sicd_pairs) {
+                const int segment_number = pair_elem.first;
+                const SpiralICD& spiral_icd = pair_elem.second;
+                Segment segment = segment_set.getFromSegmentNumber(segment_number);
+                segment.updateSpiralICD(spiral_icd);
+                segment_set.addSegment(segment);
+            }
+            // update the segment set with new information
+            well.updateSegmentSet(currentStep, segment_set);
         }
     }
 

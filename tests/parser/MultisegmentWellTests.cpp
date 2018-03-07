@@ -42,6 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
+
     auto dir = Opm::Connection::Direction::Z;
     Opm::WellConnections connection_set(10,10);
     Opm::EclipseGrid grid(20,20,20);
@@ -58,12 +59,13 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     const std::string compsegs_string =
         "WELSEGS \n"
-        "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'H--' 'HO' /\n"
+        "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'HF-' 'HO' /\n"
         "2         2      1      1    2537.5 2537.5  0.3   0.00010 /\n"
         "3         3      1      2    2562.5 2562.5  0.2  0.00010 /\n"
         "4         4      2      2    2737.5 2537.5  0.2  0.00010 /\n"
         "6         6      2      4    3037.5 2539.5  0.2  0.00010 /\n"
         "7         7      2      6    3337.5 2534.5  0.2  0.00010 /\n"
+        "8         8      3      7    3337.6 2534.5  0.2  0.00015 /\n"
         "/\n"
         "\n"
         "COMPSEGS\n"
@@ -74,7 +76,10 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
         "19    1     2     2   2637.5   2837.5 /\n"
         "18    1     2     2   2837.5   3037.5 /\n"
         "17    1     2     2   3037.5   3237.5 /\n"
-        "16    1     2     2   3237.5   3437.5 /\n"
+        "16    1     2     3   3237.5   3437.5 /\n"
+        "/\n"
+        "WSEGSICD\n"
+        "'PROD01'  8   8   0.002   -0.7  1* 1* 0.6 1* 1* 2* 'SHUT' /\n"
         "/\n";
 
     Opm::Parser parser;
@@ -85,6 +90,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     Opm::WellSegments segment_set;
     const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+
     segment_set.loadWELSEGS(welsegs);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
@@ -127,6 +133,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const double center_depth_connection7 = connection7.depth();
     BOOST_CHECK_EQUAL(segment_number_connection7, 7);
     BOOST_CHECK_EQUAL(center_depth_connection7, 2534.5);
+
 }
 
 BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {

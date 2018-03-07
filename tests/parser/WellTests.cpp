@@ -219,6 +219,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     }
 
 
+
     {
         Opm::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
@@ -295,12 +296,14 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 BOOST_AUTO_TEST_CASE(InjectorType) {
     Opm::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
+
     auto injectionProps = std::make_shared<Opm::Well::WellInjectionProperties>(well.getInjectionProperties());
     injectionProps->injectorType = Opm::Well::InjectorType::WATER;
     well.updateInjection(injectionProps);
     // TODO: Should we test for something other than wate here, as long as
     //       the default value for InjectorType is WellInjector::WATER?
     BOOST_CHECK( Opm::Well::InjectorType::WATER == well.getInjectionProperties().injectorType);
+
 }
 
 

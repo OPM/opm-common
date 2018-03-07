@@ -83,6 +83,8 @@ namespace Opm {
         bool operator==( const WellSegments& ) const;
         bool operator!=( const WellSegments& ) const;
 
+        double segmentLength(const int segment_number) const;
+
     private:
         void processABS();
         void processINC(const bool first_time);
