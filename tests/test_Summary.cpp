@@ -1178,7 +1178,7 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
          * G_3 assigned to group G4. GEFAC G_4 = 0.03*/
         BOOST_CHECK_CLOSE( 30.1, ecl_sum_get_well_var( resp, 1, "W_3", "WOIR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_well_var( resp, 1, "W_3", "WOIT" ), 1e-5 );
-        BOOST_CHECK_CLOSE( 2 * 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_well_var( resp, 2, "W_3", "WOIT" ), 1e-5 );
+        BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03 + 30.1 * 0.3 * 0.02 * 0.04, ecl_sum_get_well_var( resp, 2, "W_3", "WOIT" ), 1e-5 );
 
         /* WEFAC 0.2 assigned to W_2.
          * W_2 assigned to group G2. GEFAC G2 = 0.01 */
@@ -1191,7 +1191,7 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
          * G_3 assigned to group G4. GEFAC G_4 = 0.03*/
         BOOST_CHECK_CLOSE( 30.1 * 0.3, ecl_sum_get_group_var( resp, 1, "G_3", "GOIR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_group_var( resp, 1, "G_3", "GOIT" ), 1e-5 );
-        BOOST_CHECK_CLOSE( 2 * 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_group_var( resp, 2, "G_3", "GOIT" ), 1e-5 );
+        BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03 + 30.1 * 0.3 * 0.02 * 0.04, ecl_sum_get_group_var( resp, 2, "G_3", "GOIT" ), 1e-5 );
 
         /* WEFAC 0.3 assigned to W_3.
          * W_3 assigned to group G3. GEFAC G_3 = 0.02
@@ -1199,7 +1199,7 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
          * The rate for a group is calculated including WEFAC and GEFAC for subgroups */
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02, ecl_sum_get_group_var( resp, 1, "G_4", "GOIR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_group_var( resp, 1, "G_4", "GOIT" ), 1e-5 );
-        BOOST_CHECK_CLOSE( 2 * 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_group_var( resp, 2, "G_4", "GOIT" ), 1e-5 );
+        BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03 + 30.1 * 0.3 * 0.02 * 0.04, ecl_sum_get_group_var( resp, 2, "G_4", "GOIT" ), 1e-5 );
 
         BOOST_CHECK_CLOSE( 10.1 + 20.1 * 0.2 * 0.01, ecl_sum_get_field_var( resp, 1, "FOPR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 10.1 + 20.1 * 0.2 * 0.01, ecl_sum_get_field_var( resp, 1, "FOPT" ), 1e-5 );
@@ -1207,11 +1207,7 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
 
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 1, "FOIR" ), 1e-5 );
         BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 1, "FOIT" ), 1e-5 );
-        BOOST_CHECK_CLOSE( 2 * 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 2, "FOIT" ), 1e-5 );
-
-        BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 1, "FOIR" ), 1e-5 );
-        BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 1, "FOIT" ), 1e-5 );
-        BOOST_CHECK_CLOSE( 2 * 30.1 * 0.3 * 0.02 * 0.03, ecl_sum_get_field_var( resp, 2, "FOIT" ), 1e-5 );
+        BOOST_CHECK_CLOSE( 30.1 * 0.3 * 0.02 * 0.03 + 30.1 * 0.3 * 0.02 * 0.04, ecl_sum_get_field_var( resp, 2, "FOIT" ), 1e-5 );
 
         BOOST_CHECK_CLOSE( 200.1 * 0.2 * 0.01, ecl_sum_get_general_var( resp , 1 , "ROPR:1" ) , 1e-5);
 

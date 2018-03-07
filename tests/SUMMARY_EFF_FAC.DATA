@@ -131,8 +131,14 @@ TSTEP
 -- and 2. Without this, totals/accumulations would fail (segfault) when looking
 -- up historical rates and volumes. These volumes however don't change, i.e.
 -- every time step has the same set of values
-10 10 /
+10 /
 
+GEFAC
+ G_4 0.04 /
+/
+
+TSTEP
+10 /
 
 TSTEP
 10 10 /
