@@ -64,8 +64,6 @@ namespace Opm {
         void assertJFuncPressure(const bool jf) const;
 
     protected:
-        std::map<std::string, size_t> m_columnNames;
-        std::vector<std::vector<bool> > m_valueDefaulted;
         TableSchema m_schema;
         OrderedMap<TableColumn> m_columns;
         bool m_jfunc = false;
