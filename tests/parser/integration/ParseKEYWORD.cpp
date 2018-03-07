@@ -839,19 +839,19 @@ TABDIMS
 
 PVTO
 --   Rs       PO           BO           MUO
-     1e-3     1            1.01         1.02
+     1e-3     1            1.20        1.02
               250          1.15         0.95
-              500          1.20         0.93 /
-     1e-2     14.8         1.05         1.03
+              500          1.01        0.93 /
+     1e-2     14.8         1.30        1.03
               251          1.25         0.98
-              502          1.30         0.95 /
+              502          1.05         0.95 /
 /
-     1e-1     1.1          1.02         1.03
+     1e-1     1.1          1.21         1.03
               253          1.16         0.96
-              504          1.21         0.97 /
-     1e00     15           1.06         1.04
+              504          1.02         0.97 /
+     1e00     15           1.31         1.04
               255          1.26         0.99
-              506          1.31         0.96 /
+              506          1.06         0.96 /
 /
 )";
 
@@ -905,8 +905,8 @@ PVTO
 
     BOOST_CHECK_EQUAL( 3, table0.numRows());
     BOOST_CHECK_EQUAL( 3, table0.numColumns());
-    BOOST_CHECK_EQUAL( BO.front( ) , 1.01 );
-    BOOST_CHECK_EQUAL( BO.back( ) , 1.20 );
+    BOOST_CHECK_EQUAL( BO.front( ) , 1.20 );
+    BOOST_CHECK_EQUAL( BO.back( ) , 1.01 );
 
     BOOST_CHECK_CLOSE(1.15 , table0.evaluate( "BO" , 250*1e5 ) , 1e-6);
 
