@@ -270,6 +270,100 @@ BOOST_AUTO_TEST_CASE( endpoint_scaling_throw_invalid_argument ) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(WELLDIMS_FullSpec)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WELLDIMS
+   130  36  15  84 /
+)" };
+
+    const auto wd = Welldims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 36);   // WELLDIMS(2)
+    BOOST_CHECK_EQUAL(wd.maxWellsPerGroup(), 84); // WELLDIMS(4)
+    BOOST_CHECK_EQUAL(wd.maxGroupsInField(), 15); // WELLDIMS(3)
+}
+
+BOOST_AUTO_TEST_CASE(WELLDIMS_AllDefaulted)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WELLDIMS
+/
+)" };
+
+    const auto wd = Welldims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 0);   // WELLDIMS(2), defaulted
+    BOOST_CHECK_EQUAL(wd.maxWellsPerGroup(), 0); // WELLDIMS(4), defaulted
+    BOOST_CHECK_EQUAL(wd.maxGroupsInField(), 0); // WELLDIMS(3), defaulted
+}
+
+BOOST_AUTO_TEST_CASE(WELLDIMS_MaxConn)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WELLDIMS
+1* 36 /
+)" };
+
+    const auto wd = Welldims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 36);  // WELLDIMS(2)
+    BOOST_CHECK_EQUAL(wd.maxWellsPerGroup(), 0); // WELLDIMS(4), defaulted
+    BOOST_CHECK_EQUAL(wd.maxGroupsInField(), 0); // WELLDIMS(3), defaulted
+}
+
+BOOST_AUTO_TEST_CASE(WELLDIMS_MaxGroups)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WELLDIMS
+2* 4 /
+)" };
+
+    const auto wd = Welldims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 0);   // WELLDIMS(2), defaulted
+    BOOST_CHECK_EQUAL(wd.maxWellsPerGroup(), 0); // WELLDIMS(4), defaulted
+    BOOST_CHECK_EQUAL(wd.maxGroupsInField(), 4); // WELLDIMS(3)
+}
+
+BOOST_AUTO_TEST_CASE(WELLDIMS_MaxWellsInGrp)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WELLDIMS
+3* 33 /
+)" };
+
+    const auto wd = Welldims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 0);    // WELLDIMS(2), defaulted
+    BOOST_CHECK_EQUAL(wd.maxWellsPerGroup(), 33); // WELLDIMS(4)
+    BOOST_CHECK_EQUAL(wd.maxGroupsInField(), 0);  // WELLDIMS(3), defaulted
+}
 
 BOOST_AUTO_TEST_CASE( SWATINIT ) {
     const std::string input = R"(

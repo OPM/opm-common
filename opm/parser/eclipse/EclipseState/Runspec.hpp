@@ -53,6 +53,31 @@ class Phases {
 };
 
 
+class Welldims {
+public:
+    explicit Welldims(const Deck& deck);
+
+    int maxConnPerWell() const
+    {
+        return this->nCWMax;
+    }
+
+    int maxWellsPerGroup() const
+    {
+        return this->nWGMax;
+    }
+
+    int maxGroupsInField() const
+    {
+        return this->nGMax;
+    }
+
+private:
+    int nCWMax { 0 };
+    int nWGMax { 0 };
+    int nGMax  { 0 };
+};
+
 class Runspec {
    public:
         explicit Runspec( const Deck& );
@@ -60,12 +85,14 @@ class Runspec {
         const Phases& phases() const noexcept;
         const Tabdims&  tabdims() const noexcept;
         const EndpointScaling& endpointScaling() const noexcept;
+        const Welldims& wellDimensions() const noexcept;
         int eclPhaseMask( ) const noexcept;
 
    private:
         Phases active_phases;
         Tabdims m_tabdims;
         EndpointScaling endscale;
+        Welldims welldims;
 };
 
 }
