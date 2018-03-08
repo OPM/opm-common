@@ -412,7 +412,7 @@ std::vector< double > serialize_OPM_XWEL( const data::Wells& wells,
     }
 
     return xwel;
-};
+}
 
 
 std::vector<const char*> serialize_ZWEL( const std::vector<const Well *>& wells) {
