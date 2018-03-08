@@ -118,6 +118,8 @@ namespace Opm {
                 throw std::invalid_argument( "Production of 'POLYMER' requested." );
             case Phase::ENERGY:
                 throw std::invalid_argument( "Production of 'ENERGY' requested." );
+            case Phase::POLYMW:
+                throw std::invalid_argument( "Production of 'POLYMW' requested.");
         }
 
         throw std::logic_error( "Unreachable state. Invalid Phase value. "
