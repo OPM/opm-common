@@ -11,6 +11,7 @@
     {"name" : "VAPOIL_C" , "value_type" : "DOUBLE" , "default" : 0},
     {"name" : "GAS_STEAM_RATIO" , "value_type" : "DOUBLE" , "default" : 0},
     {"name" : "SURFACE_OIL_FRACTION" , "value_type" : "DOUBLE" , "default" : 0},
+    {"name" : "SURFACE_WATER_FRACTION" , "value_type" : "DOUBLE" , "default" : 0},
     {"name" : "SURFACE_GAS_FRACTION" , "value_type" : "DOUBLE" , "default" : 0},
     {"name" : "OIL_STEAM_RATIO" , "value_type" : "DOUBLE" , "default" : 0}
 ]}
