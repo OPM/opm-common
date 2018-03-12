@@ -7,8 +7,6 @@ source $WORKSPACE/deps/opm-common/jenkins/build-opm-module.sh
 declare -a upstreams # Everything is considered an upstream to aid code reuse
 upstreams=(libecl
            opm-common
-           opm-parser
-           opm-output
            opm-material
            opm-grid
            ewoms
@@ -19,10 +17,8 @@ upstreams=(libecl
 declare -A upstreamRev
 upstreamRev[libecl]=master
 upstreamRev[opm-common]=master
-upstreamRev[opm-parser]=master
 upstreamRev[opm-material]=master
 upstreamRev[opm-grid]=master
-upstreamRev[opm-output]=master
 upstreamRev[ewoms]=master
 upstreamRev[opm-simulators]=master
 upstreamRev[opm-upscaling]=master
