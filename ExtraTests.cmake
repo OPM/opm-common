@@ -68,29 +68,29 @@ foreach (test BoxTest
   list(APPEND EXTRA_TESTS ${test})
 endforeach ()
 
-# opm-data dependent tests
-if(HAVE_OPM_DATA)
+# opm-tests dependent tests
+if(HAVE_OPM_TESTS)
   opm_add_test(parse_write ONLY_COMPILE
                SOURCES tests/parser/integration/parse_write.cpp
                LIBRARIES ${TEST_LIBS})
   list(APPEND EXTRA_TESTS parse_write)
-  foreach (deck ${OPM_DATA_ROOT}/norne/NORNE_ATW2013.DATA
-                ${OPM_DATA_ROOT}/solvent_test_suite/SPE1CASE2_SOLVENT.DATA
-                ${OPM_DATA_ROOT}/solvent_test_suite/SPE9_CP_SOLVENT_CO2.DATA
-                ${OPM_DATA_ROOT}/spe5/SPE5CASE1.DATA
-                ${OPM_DATA_ROOT}/polymer_simple2D/2D_THREEPHASE_POLY_HETER.DATA
-                ${OPM_DATA_ROOT}/spe1/SPE1CASE1.DATA
-                ${OPM_DATA_ROOT}/spe1/SPE1CASE2.DATA
-                ${OPM_DATA_ROOT}/spe1/SPE1CASE2_FAMII.DATA
-                ${OPM_DATA_ROOT}/spe1/SPE1CASE2_SLGOF.DATA
-                ${OPM_DATA_ROOT}/spe3/SPE3CASE1.DATA
-                ${OPM_DATA_ROOT}/spe3/SPE3CASE2.DATA
-                ${OPM_DATA_ROOT}/spe9/SPE9_CP.DATA
-                ${OPM_DATA_ROOT}/spe9/SPE9_CP_GROUP.DATA
-                ${OPM_DATA_ROOT}/spe9/SPE9.DATA
-                ${OPM_DATA_ROOT}/spe10model1/SPE10_MODEL1.DATA
-                ${OPM_DATA_ROOT}/spe10model2/SPE10_MODEL2.DATA
-                ${OPM_DATA_ROOT}/msw_2d_h/2D_H__.DATA )
+  foreach (deck ${OPM_TESTS_ROOT}/norne/NORNE_ATW2013.DATA
+                ${OPM_TESTS_ROOT}/spe1_solvent/SPE1CASE2_SOLVENT.DATA
+                ${OPM_TESTS_ROOT}/spe9_solvent/SPE9_CP_SOLVENT_CO2.DATA
+                ${OPM_TESTS_ROOT}/spe5/SPE5CASE1.DATA
+                ${OPM_TESTS_ROOT}/polymer_simple2D/2D_THREEPHASE_POLY_HETER.DATA
+                ${OPM_TESTS_ROOT}/spe1/SPE1CASE1.DATA
+                ${OPM_TESTS_ROOT}/spe1/SPE1CASE2.DATA
+                ${OPM_TESTS_ROOT}/spe1/SPE1CASE2_FAMII.DATA
+                ${OPM_TESTS_ROOT}/spe1/SPE1CASE2_SLGOF.DATA
+                ${OPM_TESTS_ROOT}/spe3/SPE3CASE1.DATA
+                ${OPM_TESTS_ROOT}/spe3/SPE3CASE2.DATA
+                ${OPM_TESTS_ROOT}/spe9/SPE9_CP.DATA
+                ${OPM_TESTS_ROOT}/spe9/SPE9_CP_GROUP.DATA
+                ${OPM_TESTS_ROOT}/spe9/SPE9.DATA
+                ${OPM_TESTS_ROOT}/spe10model1/SPE10_MODEL1.DATA
+                ${OPM_TESTS_ROOT}/spe10model2/SPE10_MODEL2.DATA
+                ${OPM_TESTS_ROOT}/msw_2d_h/2D_H__.DATA )
       get_filename_component(test_name ${deck} NAME_WE)
       opm_add_test(${test_name} NO_COMPILE
                    EXE_NAME parse_write

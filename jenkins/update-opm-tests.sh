@@ -48,7 +48,7 @@ $WORKSPACE/deps/opm-simulators/tests/update_reference_data.sh $OPM_DATA_ROOT
 
 # Finally open the pull request
 cd $OPM_DATA_ROOT
-git remote add jenkins4opm git@github.com:jenkins4opm/opm-data
+git remote add jenkins4opm git@github.com:jenkins4opm/opm-tests
 
 # Do some cleaning of old remote branches
 # Easier code with git 2.7+
@@ -79,9 +79,9 @@ then
   GH_TOKEN=`git config --get gitOpenPull.Token`
   REV=${upstreamRev[$MAIN_REPO]}
   PRNUMBER=${rev//[!0-9]/}
-  DATA_PR=`curl -X GET https://api.github.com/repos/OPM/opm-data/pulls?head=jenkins4opm:$BRANCH_NAME | grep '"number":' | awk -F ':' '{print $2}' | sed -e 's/,//' -e 's/ //'`
+  DATA_PR=`curl -X GET https://api.github.com/repos/OPM/opm-tests/pulls?head=jenkins4opm:$BRANCH_NAME | grep '"number":' | awk -F ':' '{print $2}' | sed -e 's/,//' -e 's/ //'`
   git push -u jenkins4opm $BRANCH_NAME -f
   curl -d "{ \"body\": \"Existing PR https://github.com/OPM/opm-data/pull/$DATA_PR was updated\" }" -X POST https://api.github.com/repos/OPM/$MAIN_REPO/issues/$PRNUMBER/comments?access_token=$GH_TOKEN
 else
-  git-open-pull -u jenkins4opm --base-account OPM --base-repo opm-data -r /tmp/cmsg $BRANCH_NAME
+  git-open-pull -u jenkins4opm --base-account OPM --base-repo opm-tests -r /tmp/cmsg $BRANCH_NAME
 fi
