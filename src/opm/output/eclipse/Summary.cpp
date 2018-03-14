@@ -151,7 +151,6 @@ struct quantity {
 struct fn_args {
     const std::vector< const Well* >& schedule_wells;
     double duration;
-    const int report_step;
     const int sim_step;
     int  num;
     const data::Wells& wells;
@@ -219,7 +218,7 @@ inline quantity rate( const fn_args& args ) {
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
-    const auto ts = args.report_step;
+    const auto ts = args.sim_step;
     auto pred = [&wells,ts]( const Well* w ) {
         const auto& name = w->name();
         return w->isInjector( ts ) == injection
@@ -930,7 +929,6 @@ Summary::Summary( const EclipseState& st,
 
             const fn_args no_args { dummy_wells, // Wells from Schedule object
                                     0,           // Duration of time step
-                                    0,           // Report step
                                     0,           // Simulation step
                                     node.num(),  // NUMS value for the summary output.
                                     {},          // Well results - data::Wells
@@ -1043,7 +1041,6 @@ void Summary::add_timestep( int report_step,
 
         const auto val = f.second( { schedule_wells,
                                      duration,
-                                     report_step,
                                      sim_step,
                                      num,
                                      wells,
