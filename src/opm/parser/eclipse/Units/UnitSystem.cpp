@@ -517,6 +517,129 @@ namespace {
         "SM3/RM3", /* water inverse formation volume factor */
         "KJ" /* energy */
     };
+
+
+    static const double from_input_offset[] = {
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+    };
+
+    static const double to_input[] = {
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    };
+
+    static const double from_input[] = {
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    };
+
+    static constexpr const char* input_names[] = {
+        "",
+        "M",
+        "DAY",
+        "KG/M3",
+        "BARSA",
+        "K",
+        "C",
+        "CP",
+        "MD",
+        "SM3",
+        "SM3",
+        "RM3",
+        "SM3/DAY",
+        "SM3/DAY",
+        "RM3/DAY",
+        "CPR3/DAY/BARS",
+        "KG",
+        "SM3/SM3",
+        "SM3/SM3",
+        "SM3/SM3",
+        "RM3/SM3", /* gas formation volume factor */
+        "RM3/SM3", /* oil formation volume factor */
+        "RM3/SM3", /* water formation volume factor */
+        "SM3/RM3", /* gas inverse formation volume factor */
+        "SM3/RM3", /* oil inverse formation volume factor */
+        "SM3/RM3", /* water inverse formation volume factor */
+        "KJ", /* energy */
+    };
+
+
 }
 
     UnitSystem::UnitSystem(const UnitType unit) :
@@ -836,5 +959,34 @@ namespace {
         system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
+
+    UnitSystem UnitSystem::newINPUT() {
+        UnitSystem system( UnitType::UNIT_TYPE_INPUT );
+
+        system.addDimension("1"         , 1.0);
+        system.addDimension("Pressure"  , 1.0);
+        system.addDimension("Temperature", 1.0);
+        system.addDimension("AbsoluteTemperature", 1.0, 0.0);
+        system.addDimension("Length"    , 1.0);
+        system.addDimension("Time"      , 1.0);
+        system.addDimension("Mass"         , 1.0);
+        system.addDimension("Permeability", 1.0);
+        system.addDimension("Transmissibility", 1.0);
+        system.addDimension("GasDissolutionFactor", 1.0);
+        system.addDimension("OilDissolutionFactor", 1.0);
+        system.addDimension("LiquidSurfaceVolume", 1.0);
+        system.addDimension("GasSurfaceVolume" , 1.0);
+        system.addDimension("ReservoirVolume", 1.0);
+        system.addDimension("Density"   , 1.0);
+        system.addDimension("PolymerDensity", 1.0);
+        system.addDimension("Salinity", 1.0);
+        system.addDimension("Viscosity" , 1.0);
+        system.addDimension("Timestep"  , 1.0);
+        system.addDimension("SurfaceTension"  , 1.0);
+        system.addDimension("Energy", 1.0);
+        system.addDimension("ContextDependent", 1.0);
+        return system;
+     }
+
 
 }
