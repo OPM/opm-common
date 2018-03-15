@@ -151,7 +151,7 @@ struct quantity {
 struct fn_args {
     const std::vector< const Well* >& schedule_wells;
     double duration;
-    size_t timestep;
+    const int sim_step;
     int  num;
     const data::Wells& wells;
     const out::RegionCache& regionCache;
@@ -218,7 +218,7 @@ inline quantity rate( const fn_args& args ) {
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
-    const auto ts = args.timestep;
+    const auto ts = args.sim_step;
     auto pred = [&wells,ts]( const Well* w ) {
         const auto& name = w->name();
         return w->isInjector( ts ) == injection
@@ -284,31 +284,29 @@ inline quantity thp( const fn_args& args ) {
 }
 
 inline quantity bhp_history( const fn_args& args ) {
-    if( args.timestep == 0 ) return { 0.0, measure::pressure };
+    if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
-    const auto timestep = args.timestep - 1;
     const Well* sched_well = args.schedule_wells.front();
 
     double bhp_hist;
-    if ( sched_well->isProducer( timestep ) )
-        bhp_hist = sched_well->getProductionProperties( timestep ).BHPH;
+    if ( sched_well->isProducer( args.sim_step ) )
+        bhp_hist = sched_well->getProductionProperties( args.sim_step ).BHPH;
     else
-        bhp_hist = sched_well->getInjectionProperties( timestep ).BHPH;
+        bhp_hist = sched_well->getInjectionProperties( args.sim_step ).BHPH;
 
     return { bhp_hist, measure::pressure };
 }
 
 inline quantity thp_history( const fn_args& args ) {
-    if( args.timestep == 0 ) return { 0.0, measure::pressure };
+    if( args.schedule_wells.empty() ) return { 0.0, measure::pressure };
 
-    const auto timestep = args.timestep - 1;
     const Well* sched_well = args.schedule_wells.front();
 
     double thp_hist;
-    if ( sched_well->isProducer( timestep ) )
-       thp_hist = sched_well->getProductionProperties( timestep ).THPH;
+    if ( sched_well->isProducer( args.sim_step ) )
+       thp_hist = sched_well->getProductionProperties( args.sim_step ).THPH;
     else
-       thp_hist = sched_well->getInjectionProperties( timestep ).THPH;
+       thp_hist = sched_well->getInjectionProperties( args.sim_step ).THPH;
 
     return { thp_hist, measure::pressure };
 }
@@ -329,40 +327,30 @@ inline quantity production_history( const fn_args& args ) {
      * special-case timestep N == 0, and for all other timesteps look up the
      * value *reported* at N-1 which applies to timestep N.
      */
-    if( args.timestep == 0 ) return { 0.0, rate_unit< phase >() };
-
-    const auto timestep = args.timestep - 1;
 
     double sum = 0.0;
     for( const Well* sched_well : args.schedule_wells )
-        sum += sched_well->production_rate( phase, timestep );
+        sum += sched_well->production_rate( phase, args.sim_step );
 
     return { sum, rate_unit< phase >() };
 }
 
 template< Phase phase >
 inline quantity injection_history( const fn_args& args ) {
-    if( args.timestep == 0 ) return { 0.0, rate_unit< phase >() };
-
-    const auto timestep = args.timestep - 1;
 
     double sum = 0.0;
     for( const Well* sched_well : args.schedule_wells )
-        sum += sched_well->injection_rate( phase, timestep );
+        sum += sched_well->injection_rate( phase, args.sim_step );
 
     return { sum, rate_unit< phase >() };
 }
 
 inline quantity res_vol_production_target( const fn_args& args ) {
 
-    if( args.timestep == 0 ) return { 0.0, measure::rate };
-
-    const auto timestep = args.timestep - 1;
-
     double sum = 0.0;
     for( const Well* sched_well : args.schedule_wells )
-        if (sched_well->getProductionProperties(timestep).predictionMode)
-            sum += sched_well->getProductionProperties( timestep ).ResVRate;
+        if (sched_well->getProductionProperties(args.sim_step).predictionMode)
+            sum += sched_well->getProductionProperties( args.sim_step ).ResVRate;
 
     return { sum, measure::rate };
 }
@@ -761,7 +749,7 @@ static const std::unordered_map< std::string, UnitSystem::measure> block_units =
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
                                               const smspec_node_type* node,
-                                              size_t timestep,
+                                              const int sim_step,
                                               const out::RegionCache& regionCache ) {
 
     const auto* name = smspec_node_get_wgname( node );
@@ -776,7 +764,7 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     if( type == ECL_SMSPEC_GROUP_VAR ) {
         if( !schedule.hasGroup( name ) ) return {};
 
-        return schedule.getWells( name, timestep );
+        return schedule.getWells( name, sim_step );
     }
 
     if( type == ECL_SMSPEC_FIELD_VAR )
@@ -941,7 +929,7 @@ Summary::Summary( const EclipseState& st,
 
             const fn_args no_args { dummy_wells, // Wells from Schedule object
                                     0,           // Duration of time step
-                                    0,           // Timestep number
+                                    0,           // Simulation step
                                     node.num(),  // NUMS value for the summary output.
                                     {},          // Well results - data::Wells
                                     {},          // Region <-> cell mappings.
@@ -986,7 +974,7 @@ std::vector< std::pair< std::string, double > >
 well_efficiency_factors( const smspec_node_type* type,
                     const Schedule& schedule,
                     const std::vector< const Well* >& schedule_wells,
-                    size_t timestep ) {
+                    const int sim_step ) {
     std::vector< std::pair< std::string, double > > efac;
 
     if(    smspec_node_get_var_type(type) != ECL_SMSPEC_GROUP_VAR
@@ -998,22 +986,22 @@ well_efficiency_factors( const smspec_node_type* type,
 
     const bool is_group = smspec_node_get_var_type(type) == ECL_SMSPEC_GROUP_VAR;
     const bool is_rate = !smspec_node_is_total( type );
-    const auto &groupTree = schedule.getGroupTree(timestep);
+    const auto &groupTree = schedule.getGroupTree(sim_step);
 
     for( const auto* well : schedule_wells ) {
-        double eff_factor = well->getEfficiencyFactor(timestep);
+        double eff_factor = well->getEfficiencyFactor(sim_step);
 
-        if ( !well->hasBeenDefined( timestep ) )
+        if ( !well->hasBeenDefined( sim_step ) )
             continue;
 
-        const auto* node = &schedule.getGroup(well->getGroupName(timestep));
+        const auto* node = &schedule.getGroup(well->getGroupName(sim_step));
 
         while(true){
             if((   is_group
                 && is_rate
                 && node->name() == smspec_node_get_wgname(type) ))
                 break;
-            eff_factor *= node->getGroupEfficiencyFactor( timestep );
+            eff_factor *= node->getGroupEfficiencyFactor( sim_step );
 
             const auto& parent = groupTree.parent( node->name() );
             if( !schedule.hasGroup( parent ) )
@@ -1037,18 +1025,23 @@ void Summary::add_timestep( int report_step,
 
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
-    const size_t timestep = report_step;
+
+    /* report_step is the number of the file we are about to write - i.e. for instance CASE.S$report_step
+     * for the data in a non-unified summary file.
+     * sim_step is the timestep which has been effective in the simulator, and as such is the value
+     * necessary to use when consulting the Schedule object. */
+    const auto sim_step = std::max( 0, report_step - 1 );
 
     for( auto& f : this->handlers->handlers ) {
         const int num = smspec_node_get_num( f.first );
         const auto* genkey = smspec_node_get_gen_key1( f.first );
 
-        const auto schedule_wells = find_wells( schedule, f.first, timestep, this->regionCache );
-        auto eff_factors = well_efficiency_factors( f.first, schedule, schedule_wells, timestep );
+        const auto schedule_wells = find_wells( schedule, f.first, sim_step, this->regionCache );
+        auto eff_factors = well_efficiency_factors( f.first, schedule, schedule_wells, sim_step );
 
         const auto val = f.second( { schedule_wells,
                                      duration,
-                                     timestep,
+                                     sim_step,
                                      num,
                                      wells,
                                      this->regionCache,
