@@ -1,45 +1,22 @@
-//===========================================================================
-//
-// File: monotcubicinterpolator_test.cpp
-//
-// Created: Tue Dec  8 12:25:30 2009
-//
-// Author(s): Atgeirr F Rasmussen <atgeirr@sintef.no>
-//            Bård Skaflestad     <bard.skaflestad@sintef.no>
-//
-// $Date$
-//
-// $Revision$
-//
-//===========================================================================
 
 /*
-  Copyright 2009, 2010 SINTEF ICT, Applied Mathematics.
-  Copyright 2009, 2010 Statoil ASA.
-  Portions Copyright 2013 Uni Research AS.
+  Copyright 2018 Statoil ASA.
 
-  This file is part of The Open Reservoir Simulator Project (OpenRS).
-
-  OpenRS is free software: you can redistribute it and/or modify
+  OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
 
-  OpenRS is distributed in the hope that it will be useful,
+  OPM is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with OpenRS.  If not, see <http://www.gnu.org/licenses/>.
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "config.h"
-
-/* --- Boost.Test boilerplate --- */
-#if HAVE_DYNAMIC_BOOST_TEST
-#define BOOST_TEST_DYN_LINK
-#endif
 
 #define NVERBOSE  // Suppress own messages when throw()ing
 
@@ -58,6 +35,8 @@ BOOST_AUTO_TEST_SUITE ()
 
 BOOST_AUTO_TEST_CASE (calc_cellvol)
 {
+ 
+ /* This is four example cells with different geometries.  */
     
     std::vector<double> x1 {488100.140035,488196.664549,488085.584866,488182.365605,488099.065709,488195.880889,488084.559409,488181.633495};
     std::vector<double> y1 {6692539.945578,6692550.834909,6692638.574346,6692650.086244,6692538.810649,6692550.080826,6692637.628127,6692649.429649};
