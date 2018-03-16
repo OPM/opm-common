@@ -34,6 +34,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/parameters/Parameter.cpp
       src/opm/common/utility/parameters/ParameterGroup.cpp
       src/opm/common/utility/parameters/ParameterTools.cpp
+      src/opm/common/utility/numeric/calc_cellvol.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
@@ -228,6 +229,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_writenumwells.cpp
           tests/test_Solution.cpp
           tests/test_regionCache.cpp
+          tests/test_calc_cellvol.cpp
       )
 endif()
 
@@ -309,6 +311,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/parameters/ParameterRequirement.hpp
       opm/common/utility/parameters/ParameterStrings.hpp
       opm/common/utility/parameters/ParameterTools.hpp
+      opm/common/utility/numeric/calc_cellvol.hpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
