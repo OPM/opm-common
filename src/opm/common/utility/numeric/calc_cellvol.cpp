@@ -1,6 +1,14 @@
 #include <opm/common/utility/numeric/calc_cellvol.hpp>
 
 
+/* 
+    Cell volume calculation based on following publication:
+   
+    D. K Pointing, Corner Point Geometry in Reservoir Simulation , 
+    ECMOR I - 1st European Conference on the Mathematics of Oil Recovery, 
+    1989 
+*/
+ 
 using namespace std;
 
 
