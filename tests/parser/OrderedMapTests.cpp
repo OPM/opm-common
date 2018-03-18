@@ -34,6 +34,8 @@ BOOST_AUTO_TEST_CASE( check_empty) {
     BOOST_CHECK( !map.hasKey("KEY"));
     BOOST_CHECK_THROW( map.get( 0 ) , std::invalid_argument);
     BOOST_CHECK_THROW( map.get( "KEY" ) , std::invalid_argument);
+    BOOST_CHECK_THROW( map.at("KEY"), std::invalid_argument);
+    BOOST_CHECK_THROW( map.at(0), std::invalid_argument);
 }
 
 
@@ -54,8 +56,8 @@ BOOST_AUTO_TEST_CASE( check_order ) {
     BOOST_CHECK_EQUAL( "Value2" , map.get("BKEY2"));
     BOOST_CHECK_EQUAL( "Value2" , map.get( 1 ));
 
-    BOOST_CHECK_EQUAL( "Value3" , map.get("AKEY3"));
-    BOOST_CHECK_EQUAL( "Value3" , map.get( 2 ));
+    BOOST_CHECK_EQUAL( "Value3" , map.at("AKEY3"));
+    BOOST_CHECK_EQUAL( "Value3" , map.at( 2 ));
 
     map.insert( "CKEY1" , "NewValue1");
     BOOST_CHECK_EQUAL( "NewValue1" , map.get("CKEY1"));
