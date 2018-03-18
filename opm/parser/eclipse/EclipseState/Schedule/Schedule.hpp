@@ -120,7 +120,7 @@ namespace Opm
     private:
         TimeMap m_timeMap;
         OrderedMap< Well > m_wells;
-        std::map<std::string, Group > m_groups;
+        OrderedMap< Group > m_groups;
         DynamicState< GroupTree > m_rootGroupTree;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
