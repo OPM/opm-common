@@ -61,7 +61,8 @@ namespace Opm {
 	  m_minpvMode(MinpvMode::ModeEnum::Inactive),
 	  m_pinch("PINCH"),
 	  m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-	  m_multzMode(PinchMode::ModeEnum::TOP)
+	  m_multzMode(PinchMode::ModeEnum::TOP),
+    volume_cache(dims[0] * dims[1] * dims[2], -1)
     {
         initCornerPointGrid( dims, coord , zcorn , actnum , mapaxes );
     }
@@ -78,7 +79,8 @@ namespace Opm {
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP)
+          m_multzMode(PinchMode::ModeEnum::TOP),
+          volume_cache(dims[0] * dims[1] * dims[2], -1)
     {
         ecl_grid_type * new_ptr = ecl_grid_load_case__( filename.c_str() , false );
         if (new_ptr)
@@ -100,6 +102,7 @@ namespace Opm {
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
           m_multzMode(PinchMode::ModeEnum::TOP),
+          volume_cache(dims[0] * dims[1] * dims[2], -1)
           m_grid( ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL) )
     {
     }
@@ -110,7 +113,8 @@ namespace Opm {
           m_minpvMode( src.m_minpvMode ),
           m_pinch( src.m_pinch ),
           m_pinchoutMode( src.m_pinchoutMode ),
-          m_multzMode( src.m_multzMode )
+          m_multzMode( src.m_multzMode ),
+          volume_cache(dims[0] * dims[1] * dims[2], -1)
     {
         const int * actnum_data = (actnum.empty()) ? nullptr : actnum.data();
         m_grid.reset( ecl_grid_alloc_processed_copy( src.c_ptr(), zcorn , actnum_data ));
@@ -163,7 +167,8 @@ namespace Opm {
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP)
+          m_multzMode(PinchMode::ModeEnum::TOP),
+          volume_cache(dims[0] * dims[1] * dims[2], -1)
     {
 
         const std::array<int, 3> dims = getNXYZ();
@@ -728,7 +733,18 @@ namespace Opm {
 
     double EclipseGrid::getCellVolume(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
-        return ecl_grid_get_cell_volume1( c_ptr() , static_cast<int>(globalIndex));
+        if (volume_cache[global_index] < 0) {
+            std::vector<double> x(8,0);
+            std::vector<double> y(8,0);
+            std::vector<double> z(8,0);
+
+            for (int i=0; i < 8; i++)
+                ecl_grid_gell_corner_xyz1(c_ptr(), static_cast<int>(globalIndex), i, &x.data()[i], &y.data()[i], &z.data()[i]);
+
+
+            volume_cache[i] = calc_cell_volume(x,y,z);
+        }
+        return volume_cache[global_index];
     }
 
 
