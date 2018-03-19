@@ -1542,7 +1542,7 @@ namespace Opm {
     }
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
-        m_groups.emplace( groupName, Group { groupName, m_timeMap, timeStep } );
+        m_groups.insert( groupName, Group { groupName, m_timeMap, timeStep } );
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
@@ -1551,7 +1551,7 @@ namespace Opm {
     }
 
     bool Schedule::hasGroup(const std::string& groupName) const {
-        return m_groups.find(groupName) != m_groups.end();
+        return m_groups.hasKey(groupName);
     }
 
 
@@ -1565,8 +1565,8 @@ namespace Opm {
     std::vector< const Group* > Schedule::getGroups() const {
         std::vector< const Group* > groups;
 
-        for( const auto& itr : m_groups )
-            groups.push_back( &itr.second );
+        for( const auto& group : m_groups )
+            groups.push_back( &group );
 
         return groups;
     }

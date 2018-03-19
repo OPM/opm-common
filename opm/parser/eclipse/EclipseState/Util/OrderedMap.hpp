@@ -91,6 +91,22 @@ public:
         return m_vector[index];
     }
 
+    const T& at(size_t index) const {
+        return this->get(index);
+    }
+
+    const T& at(const std::string &key) const {
+        return this->get(key);
+    }
+
+    T& at(size_t index) {
+        return this->get(index);
+    }
+
+    T& at(const std::string& key) {
+        return this->get(key);
+    }
+
 
     T* getPtr(const std::string& key) const {
         auto iter = m_map.find( key );

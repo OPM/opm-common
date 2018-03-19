@@ -153,9 +153,9 @@ static Deck createDeckWithWellsOrdered() {
             "10 MAI 2007 / \n"
             "SCHEDULE\n"
             "WELSPECS\n"
-            "     \'CW_1\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
-            "     \'BW_2\'        \'OP\'   30   37  3.33       \'OIL\'  7* /   \n"
-            "     \'AW_3\'        \'OP\'   20   51  3.92       \'OIL\'  7* /  \n"
+            "     \'CW_1\'        \'CG\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'BW_2\'        \'BG\'   30   37  3.33       \'OIL\'  7* /   \n"
+            "     \'AW_3\'        \'AG\'   20   51  3.92       \'OIL\'  7* /  \n"
             "/\n";
 
     return parser.parseString(input, ParseContext());
@@ -238,6 +238,12 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     BOOST_CHECK_EQUAL( "CW_1" , wells[0]->name());
     BOOST_CHECK_EQUAL( "BW_2" , wells[1]->name());
     BOOST_CHECK_EQUAL( "AW_3" , wells[2]->name());
+
+    auto groups = schedule.getGroups();
+    // groups[0] is 'FIELD'
+    BOOST_CHECK_EQUAL( "CG", groups[1]->name());
+    BOOST_CHECK_EQUAL( "BG", groups[2]->name());
+    BOOST_CHECK_EQUAL( "AG", groups[3]->name());
 }
 
 bool has_well( const std::vector<const Well*> wells, const std::string& well_name);
