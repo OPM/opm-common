@@ -9,4 +9,4 @@ set(PYTHON_SOURCES
 add_python_package(sunbeam sunbeam "${PYTHON_SOURCES}")
 
 add_subdirectory(deck)
-
+add_subdirectory(tools)
