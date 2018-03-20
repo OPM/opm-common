@@ -25,7 +25,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 
 /* --- our own headers --- */
-#include <opm/common/utility/numeric/CalculateCellvol.hpp>
+#include <opm/common/utility/numeric/calculateCellVol.hpp>
 
 
 
@@ -54,10 +54,10 @@ BOOST_AUTO_TEST_CASE (calc_cellvol)
     std::vector<double> y4 {6694510.504054, 6694525.862296, 6694608.410134, 6694621.029382, 6694510.504054, 6694526.272988, 6694608.819829, 6694621.467114};
     std::vector<double> z4 {2740.7340, 2754.7810, 2730.0150, 2726.1080, 2740.7340, 2758.3530, 2733.9490, 2730.1080};
     
-    BOOST_REQUIRE_CLOSE (CalculateCellvol(x1,y1,z1), 40368.7852157, 1e-9);
-    BOOST_REQUIRE_CLOSE (CalculateCellvol(x2,y2,z2), 15766.9187847524, 1e-9);
-    BOOST_REQUIRE_CLOSE (CalculateCellvol(x3,y3,z3), 3268.8819007839, 1e-9);
-    BOOST_REQUIRE_CLOSE (CalculateCellvol(x4,y4,z4), 23391.4917234564, 1e-9);
+    BOOST_REQUIRE_CLOSE (calculateCellVol(x1,y1,z1), 40368.7852157, 1e-9);
+    BOOST_REQUIRE_CLOSE (calculateCellVol(x2,y2,z2), 15766.9187847524, 1e-9);
+    BOOST_REQUIRE_CLOSE (calculateCellVol(x3,y3,z3), 3268.8819007839, 1e-9);
+    BOOST_REQUIRE_CLOSE (calculateCellVol(x4,y4,z4), 23391.4917234564, 1e-9);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

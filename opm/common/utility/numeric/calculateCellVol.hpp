@@ -19,6 +19,6 @@
 #include <math.h>  
 
 
-double CalculateCellvol(std::vector<double>& X, std::vector<double>& Y, std::vector<double>& Z);
+double calculateCellVol(const std::vector<double>& X, const std::vector<double>& Y, const std::vector<double>& Z);
 
 

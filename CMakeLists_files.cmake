@@ -34,7 +34,7 @@ list (APPEND MAIN_SOURCE_FILES
       src/opm/common/utility/parameters/Parameter.cpp
       src/opm/common/utility/parameters/ParameterGroup.cpp
       src/opm/common/utility/parameters/ParameterTools.cpp
-      src/opm/common/utility/numeric/CalculateCellvol.cpp
+      src/opm/common/utility/numeric/calculateCellVol.cpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND MAIN_SOURCE_FILES
@@ -146,7 +146,7 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_CalculateCellvol.cpp
+      tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_cubic.cpp
       tests/test_messagelimiter.cpp
