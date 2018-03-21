@@ -566,6 +566,10 @@ namespace Opm {
         return m_aqudims;
     }
 
+    const Regdims& TableManager::getRegdims() const {
+        return *this->m_regdims;
+    }
+
     /*
       const std::vector<SwofTable>& TableManager::getSwofTables() const {
         return m_swofTables;

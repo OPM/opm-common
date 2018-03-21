@@ -31,6 +31,7 @@
 
 // keyword specific table classes
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwfnTable.hpp>
@@ -1356,4 +1357,48 @@ BOOST_AUTO_TEST_CASE( TestParseTABDIMS ) {
       "  1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 /\n";
     Opm::Parser parser;
     BOOST_CHECK_NO_THROW( parser.parseString(data, Opm::ParseContext()));
+}
+
+BOOST_AUTO_TEST_CASE (Regdims_Entries) {
+
+    // All defaulted
+    {
+        const auto input = std::string {
+            R"~(
+REGDIMS
+/
+)~"     };
+
+        const auto tabMgr = ::Opm::TableManager {
+            ::Opm::Parser{}.parseString(input)
+        };
+
+        const auto& rd = tabMgr.getRegdims();
+
+        BOOST_CHECK_EQUAL(rd.getNTFIP() , std::size_t{1});
+        BOOST_CHECK_EQUAL(rd.getNMFIPR(), std::size_t{1});
+        BOOST_CHECK_EQUAL(rd.getNRFREG(), std::size_t{0});
+        BOOST_CHECK_EQUAL(rd.getNTFREG(), std::size_t{0});
+    }
+
+    // All user-specified
+    {
+        const auto input = std::string {
+            R"~(
+REGDIMS
+  11 22 33 44 55 66 77 88 99 110
+/
+)~"     };
+
+        const auto tabMgr = ::Opm::TableManager {
+            ::Opm::Parser{}.parseString(input)
+        };
+
+        const auto& rd = tabMgr.getRegdims();
+
+        BOOST_CHECK_EQUAL(rd.getNTFIP() , std::size_t{11});
+        BOOST_CHECK_EQUAL(rd.getNMFIPR(), std::size_t{22});
+        BOOST_CHECK_EQUAL(rd.getNRFREG(), std::size_t{33});
+        BOOST_CHECK_EQUAL(rd.getNTFREG(), std::size_t{44});
+    }
 }

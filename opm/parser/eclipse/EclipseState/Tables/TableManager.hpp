@@ -64,6 +64,7 @@ namespace Opm {
         const Tabdims& getTabdims() const;
         const Eqldims& getEqldims() const;
         const Aqudims& getAqudims() const;
+        const Regdims& getRegdims() const;
 
         /*
           WIll return max{ Tabdims::NTFIP , Regdims::NTFIP }.
