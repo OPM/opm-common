@@ -6,5 +6,5 @@ from .config     import EclipseConfig
 from .parser     import parse, parse_string
 
 
-__version__     = '0.0.4'
+__version__     = '0.0.5'
 __license__     = 'GNU General Public License version 3'
