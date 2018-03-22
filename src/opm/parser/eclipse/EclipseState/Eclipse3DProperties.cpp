@@ -382,6 +382,7 @@ namespace Opm {
         supportedDoubleKeywords.emplace_back( "SGAS", 0.0 , "1", true );
         supportedDoubleKeywords.emplace_back( "SSOL", 0.0 , "1", true );
         supportedDoubleKeywords.emplace_back( "SPOLY", 0.0 , "Density", true );
+        supportedDoubleKeywords.emplace_back( "SPOLYMW", 0.0 , "1", true );
         supportedDoubleKeywords.emplace_back( "RS",  0.0, "1", true );
         supportedDoubleKeywords.emplace_back( "RV",  0.0, "1", true );
 

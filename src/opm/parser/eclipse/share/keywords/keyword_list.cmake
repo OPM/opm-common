@@ -437,4 +437,5 @@ set( keywords
      900_OPM/P/PLYVMH
      900_OPM/P/POLYMW
      900_OPM/R/RHO
+     900_OPM/S/SPOLYMW
      900_OPM/T/TLPMIXPA)
