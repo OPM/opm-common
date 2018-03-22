@@ -80,6 +80,31 @@ private:
     int nGMax  { 0 };
 };
 
+class WellSegmentDims {
+public:
+    explicit WellSegmentDims(const Deck& deck);
+
+    int maxSegmentedWells() const
+    {
+        return this->nSegWellMax;
+    }
+
+    int maxSegmentsPerWell() const
+    {
+        return this->nSegmentMax;
+    }
+
+    int maxLateralBranchesPerWell() const
+    {
+        return this->nLatBranchMax;
+    }
+
+private:
+    int nSegWellMax   { 0 };
+    int nSegmentMax   { 1 };
+    int nLatBranchMax { 1 };
+};
+
 class Runspec {
    public:
         explicit Runspec( const Deck& );
@@ -88,6 +113,7 @@ class Runspec {
         const Tabdims&  tabdims() const noexcept;
         const EndpointScaling& endpointScaling() const noexcept;
         const Welldims& wellDimensions() const noexcept;
+        const WellSegmentDims& wellSegmentDimensions() const noexcept;
         int eclPhaseMask( ) const noexcept;
 
    private:
@@ -95,6 +121,7 @@ class Runspec {
         Tabdims m_tabdims;
         EndpointScaling endscale;
         Welldims welldims;
+        WellSegmentDims wsegdims;
 };
 
 }

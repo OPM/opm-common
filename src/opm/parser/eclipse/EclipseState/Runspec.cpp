@@ -92,6 +92,20 @@ Welldims::Welldims(const Deck& deck)
     }
 }
 
+WellSegmentDims::WellSegmentDims(const Deck& deck) :
+    nSegWellMax( 0 ),
+    nSegmentMax( 1 ),
+    nLatBranchMax( 1 )
+{
+    if (deck.hasKeyword("WSEGDIMS")) {
+        const auto& wsd = deck.getKeyword("WSEGDIMS", 0).getRecord(0);
+
+        this->nSegWellMax   = wsd.getItem("NSWLMX").get<int>(0);
+        this->nSegmentMax   = wsd.getItem("NSEGMX").get<int>(0);
+        this->nLatBranchMax = wsd.getItem("NLBRMX").get<int>(0);
+    }
+}
+
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases( deck.hasKeyword( "OIL" ),
                            deck.hasKeyword( "GAS" ),
@@ -102,7 +116,8 @@ Runspec::Runspec( const Deck& deck ) :
                            deck.hasKeyword( "POLYMW"  ) ) ),
     m_tabdims( deck ),
     endscale( deck ),
-    welldims( deck )
+    welldims( deck ),
+    wsegdims( deck )
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -120,6 +135,11 @@ const EndpointScaling& Runspec::endpointScaling() const noexcept {
 const Welldims& Runspec::wellDimensions() const noexcept
 {
     return this->welldims;
+}
+
+const WellSegmentDims& Runspec::wellSegmentDimensions() const noexcept
+{
+    return this->wsegdims;
 }
 
 /*

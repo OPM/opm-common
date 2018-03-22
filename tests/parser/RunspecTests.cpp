@@ -367,6 +367,101 @@ WELLDIMS
     BOOST_CHECK_EQUAL(wd.maxGroupsInField(), 0);  // WELLDIMS(3), defaulted
 }
 
+BOOST_AUTO_TEST_CASE(WSEGDIMS_NotSpecified)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+)" };
+
+    const auto wsd = WellSegmentDims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 0);         // WSEGDIMS1), defaulted
+    BOOST_CHECK_EQUAL(wsd.maxSegmentsPerWell(), 1);        // WSEGDIMS(2), defaulted
+    BOOST_CHECK_EQUAL(wsd.maxLateralBranchesPerWell(), 1); // WSEGDIMS(3), defaulted
+}
+
+BOOST_AUTO_TEST_CASE(WSEGDIMS_AllDefaulted)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WSEGDIMS
+/
+)" };
+
+    const auto wsd = WellSegmentDims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 0);         // WSEGDIMS1), defaulted
+    BOOST_CHECK_EQUAL(wsd.maxSegmentsPerWell(), 1);        // WSEGDIMS(2), defaulted
+    BOOST_CHECK_EQUAL(wsd.maxLateralBranchesPerWell(), 1); // WSEGDIMS(3), defaulted
+}
+
+BOOST_AUTO_TEST_CASE(WSEGDIMS_MaxSegmentedWells)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WSEGDIMS
+  11
+/
+)" };
+
+    const auto wsd = WellSegmentDims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 11);        // WSEGDIMS(1)
+    BOOST_CHECK_EQUAL(wsd.maxSegmentsPerWell(), 1);        // WSEGDIMS(2), defaulted
+    BOOST_CHECK_EQUAL(wsd.maxLateralBranchesPerWell(), 1); // WSEGDIMS(3), defaulted
+}
+
+BOOST_AUTO_TEST_CASE(WSEGDIMS_MaxSegmentsPerWell)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WSEGDIMS
+  1* 22
+/
+)" };
+
+    const auto wsd = WellSegmentDims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 0);         // WSEGDIMS(1), defaulted
+    BOOST_CHECK_EQUAL(wsd.maxSegmentsPerWell(), 22);       // WSEGDIMS(2)
+    BOOST_CHECK_EQUAL(wsd.maxLateralBranchesPerWell(), 1); // WSEGDIMS(3), defaulted
+}
+
+BOOST_AUTO_TEST_CASE(WSEGDIMS_MaxLatBrPerWell)
+{
+    const auto input = std::string {
+        R"(
+RUNSPEC
+
+WSEGDIMS
+  2* 33
+/
+)" };
+
+    const auto wsd = WellSegmentDims {
+        Parser{}.parseString(input, ParseContext{})
+    };
+
+    BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 0);          // WSEGDIMS(1), defaulted
+    BOOST_CHECK_EQUAL(wsd.maxSegmentsPerWell(), 1);         // WSEGDIMS(2), defaulted
+    BOOST_CHECK_EQUAL(wsd.maxLateralBranchesPerWell(), 33); // WSEGDIMS(3)
+}
+
 BOOST_AUTO_TEST_CASE( SWATINIT ) {
     const std::string input = R"(
     SWATINIT
