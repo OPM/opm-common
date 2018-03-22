@@ -23,6 +23,9 @@
 
 #include <set>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -46,7 +49,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
 
@@ -136,9 +138,6 @@ namespace Opm {
 
         /// deck has keyword "JFUNC" --- Use Leverett's J Function for capillary pressure
         bool useJFunc() const;
-
-        const MessageContainer& getMessageContainer() const;
-        MessageContainer& getMessageContainer();
 
         double rtemp() const;
     private:
@@ -259,7 +258,7 @@ namespace Opm {
                     // should be copied...
                     if (tableIdx == 0) {
                         std::string msg = "The first table for keyword "+keywordName+" must be explicitly defined! Ignoring keyword";
-                        m_messages.warning(tableKeyword.getFileName() + std::to_string(tableKeyword.getLineNumber()) + msg);
+                        OpmLog::warning(Log::fileMessage(tableKeyword.getFileName(), tableKeyword.getLineNumber(), msg));
                         return;
                     }
                     tableVector.push_back(tableVector.back());
@@ -315,7 +314,6 @@ namespace Opm {
 
         const JFunc m_jfunc;
 
-        MessageContainer m_messages;
         double m_rtemp;
     };
 }

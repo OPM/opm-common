@@ -18,6 +18,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
@@ -507,7 +509,6 @@ namespace Opm {
 
             VFPProdTable table;
             table.init(keyword, unit_system);
-            m_messages.appendMessages(table.getMessageContainer());
 
             //Check that the table in question has a unique ID
             int table_id = table.getTableNum();
@@ -792,22 +793,13 @@ namespace Opm {
         return m_jfunc;
     }
 
-    const MessageContainer& TableManager::getMessageContainer() const {
-        return m_messages;
-    }
-
-
-    MessageContainer& TableManager::getMessageContainer() {
-        return m_messages;
-    }
-
 
     void TableManager::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
-        m_messages.error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
+        OpmLog::error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         const auto& keywords = deck.getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {
             std::string msg = "Ambiguous keyword "+keywordName+" defined here";
-            m_messages.error(keywords[i]->getFileName(), msg, keywords[i]->getLineNumber());
+            OpmLog::error(Log::fileMessage(keywords[i]->getFileName(), keywords[i]->getLineNumber(), msg));
         }
     }
 

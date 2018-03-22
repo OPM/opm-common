@@ -36,7 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 namespace Opm
@@ -108,8 +107,6 @@ namespace Opm
         const Events& getEvents() const;
         const Deck& getModifierDeck(size_t timeStep) const;
         bool hasOilVaporizationProperties() const;
-        const MessageContainer& getMessageContainer() const;
-        MessageContainer& getMessageContainer();
 
         /*
           Will remove all completions which are connected to cell which is not
@@ -129,7 +126,6 @@ namespace Opm
         MessageLimits m_messageLimits;
         Phases m_phases;
 
-        MessageContainer m_messages;
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);

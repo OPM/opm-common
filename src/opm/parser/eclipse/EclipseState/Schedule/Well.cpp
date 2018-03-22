@@ -19,6 +19,8 @@
 
 #include <iostream>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
@@ -230,7 +232,7 @@ namespace Opm {
 
     bool Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
         if ((WellCommon::StatusEnum::OPEN == status) && getCompletions(timeStep).allCompletionsShut()) {
-            m_messages.note("When handling keyword for well " + name() + ": Cannot open a well where all completions are shut");
+            OpmLog::note("When handling keyword for well " + name() + ": Cannot open a well where all completions are shut" );
             return false;
         } else {
             bool update = m_status.update( timeStep , status );
@@ -239,10 +241,6 @@ namespace Opm {
 
             return update;
         }
-    }
-
-    const MessageContainer& Well::getMessageContainer() const {
-        return m_messages;
     }
 
     bool Well::isProducer(size_t timeStep) const {

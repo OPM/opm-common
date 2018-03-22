@@ -24,6 +24,8 @@
 #include <tuple>
 #include <functional>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
@@ -104,7 +106,6 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn , const std::vector<int>& actnum)
         : GridDims(src.getNX(), src.getNY(), src.getNZ()),
-          m_messages( src.m_messages ),
           m_minpvValue( src.m_minpvValue ),
           m_minpvMode( src.m_minpvMode ),
           m_pinch( src.m_pinch ),
@@ -177,7 +178,7 @@ namespace Opm {
                     resetACTNUM( actnumData.data());
                 else {
                     const std::string msg = "The ACTNUM keyword has " + std::to_string( actnumData.size() ) + " elements - expected : " + std::to_string( getCartesianSize()) + " - ignored.";
-                    m_messages.warning(msg);
+                    OpmLog::warning(msg);
                 }
             }
         }
@@ -512,7 +513,7 @@ namespace Opm {
                     "Wrong size of the ZCORN keyword: Expected 8*x*ny*nz = "
                     + std::to_string(static_cast<long long>(8*nx*ny*nz)) + " is "
                     + std::to_string(static_cast<long long>(ZCORNKeyWord.getDataSize()));
-                m_messages.error(msg);
+                OpmLog::error(msg);
                 throw std::invalid_argument(msg);
             }
         }
@@ -524,7 +525,7 @@ namespace Opm {
                     "Wrong size of the COORD keyword: Expected 6*(nx + 1)*(ny + 1) = "
                     + std::to_string(static_cast<long long>(6*(nx + 1)*(ny + 1))) + " is "
                     + std::to_string(static_cast<long long>(COORDKeyWord.getDataSize()));
-                m_messages.error(msg);
+                OpmLog::error(msg);
                 throw std::invalid_argument(msg);
             }
         }
@@ -696,16 +697,6 @@ namespace Opm {
 
     const ecl_grid_type * EclipseGrid::c_ptr() const {
         return m_grid.get();
-    }
-
-
-    const MessageContainer& EclipseGrid::getMessageContainer() const {
-        return m_messages;
-    }
-
-
-    MessageContainer& EclipseGrid::getMessageContainer() {
-        return m_messages;
     }
 
 

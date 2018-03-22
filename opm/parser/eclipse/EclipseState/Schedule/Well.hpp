@@ -35,7 +35,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 namespace Opm {
 
@@ -161,7 +160,6 @@ namespace Opm {
 
         void addSegmentSet(size_t time_step, SegmentSet new_segmentset);
 
-        const MessageContainer& getMessageContainer() const;
         const Events& getEvents() const;
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
         bool hasEvent(uint64_t eventMask, size_t reportStep) const;
@@ -202,7 +200,6 @@ namespace Opm {
         WellCompletion::CompletionOrderEnum m_comporder;
         bool m_allowCrossFlow;
         bool m_automaticShutIn;
-        MessageContainer m_messages;
         // WELSEGS DATA - for mutli-segment wells
         // flag indicating if the well is a multi-segment well
         DynamicState< SegmentSet > m_segmentset;

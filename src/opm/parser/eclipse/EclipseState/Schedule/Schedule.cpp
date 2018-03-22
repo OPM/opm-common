@@ -24,6 +24,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -259,7 +261,7 @@ namespace Opm {
                     m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
                 } else {
                     std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
-                    parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , m_messages, msg );
+                    parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
                 }
             }
         }
@@ -301,8 +303,8 @@ namespace Opm {
             const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
             if (bhp_terminate == "YES") {
                 std::string msg = "The WHISTCTL keyword does not handle 'YES'. i.e. to terminate the run";
-                m_messages.error(msg);
-                parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , m_messages, msg );
+                OpmLog::error(msg);
+                parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg );
             }
 
         }
@@ -314,8 +316,8 @@ namespace Opm {
             const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {
                 std::string msg = "The COMPORD keyword only handles 'TRACK' or 'INPUT' order.";
-                m_messages.error(msg);
-                parseContext.handleError( ParseContext::UNSUPPORTED_COMPORD_TYPE , m_messages, msg );
+                OpmLog::error(msg);
+                parseContext.handleError( ParseContext::UNSUPPORTED_COMPORD_TYPE , msg );
             }
         }
     }
@@ -377,13 +379,13 @@ namespace Opm {
 
             if( currentWell.getHeadI() != headI ) {
                 std::string msg = "HEAD_I changed for well " + currentWell.name();
-                this->m_messages.info(keyword.getFileName(), msg, keyword.getLineNumber());
+                OpmLog::info(Log::fileMessage(keyword.getFileName(), keyword.getLineNumber(), msg));
                 currentWell.setHeadI( currentStep, headI );
             }
 
             if( currentWell.getHeadJ() != headJ ) {
                 std::string msg = "HEAD_J changed for well " + currentWell.name();
-                this->m_messages.info( keyword.getFileName(), msg, keyword.getLineNumber() );
+                OpmLog::info(Log::fileMessage(keyword.getFileName(), keyword.getLineNumber(), msg));
                 currentWell.setHeadJ( currentStep, headJ );
             }
 
@@ -397,8 +399,6 @@ namespace Opm {
             if (handleGroupFromWELSPECS(groupName, newTree))
                 needNewTree = true;
 
-            //Collect messages from wells.
-            m_messages.appendMessages(currentWell.getMessageContainer());
         }
 
         if (needNewTree) {
@@ -476,7 +476,7 @@ namespace Opm {
                     std::string msg =
                             "Well " + well->name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    m_messages.note(msg);
+                    OpmLog::note(msg);
                     updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
@@ -642,7 +642,7 @@ namespace Opm {
                     std::string msg =
                             "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    m_messages.note(msg);
+                    OpmLog::note(msg);
                     updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT );
                 }
             }
@@ -775,7 +775,7 @@ namespace Opm {
                 std::string msg =
                         "Well " + well.name() + " is an injector with zero rate where crossflow is banned. " +
                         "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                m_messages.note(msg);
+                OpmLog::note(msg);
                 updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT );
             }
         }
@@ -853,7 +853,7 @@ namespace Opm {
                             + " where crossflow is banned has zero total rate."
                             + " This well is prevented from opening at "
                             + std::to_string( days ) + " days";
-                        m_messages.note(msg);
+                        OpmLog::note(msg);
                     } else {
                         this->updateWellStatus( *well, currentStep, status );
                     }
@@ -1275,7 +1275,7 @@ namespace Opm {
                 std::string msg =
                         "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
                         "The well is therefore also shut.";
-                m_messages.note(msg);
+                OpmLog::note(msg);
                 updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT);
             }
         }
@@ -1653,14 +1653,7 @@ namespace Opm {
         return m_messageLimits;
     }
 
-    const MessageContainer& Schedule::getMessageContainer() const {
-        return m_messages;
-    }
-
-
-    MessageContainer& Schedule::getMessageContainer() {
-        return m_messages;
-    }
+    
 
 
     const Events& Schedule::getEvents() const {

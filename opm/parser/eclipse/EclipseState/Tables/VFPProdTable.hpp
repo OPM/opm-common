@@ -23,8 +23,6 @@
 
 #include <boost/multi_array.hpp>
 
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
-
 namespace Opm {
 
     class DeckItem;
@@ -230,8 +228,6 @@ public:
         return m_data;
     }
 
-    const MessageContainer& getMessageContainer() const;
-
 private:
 
     //"Header" variables
@@ -252,7 +248,6 @@ private:
     //The data itself, using the data ordering m_data[thp][wfr][gfr][alq][flo]
     array_type m_data;
 
-    MessageContainer m_messages;
     /**
      * Debug function that runs a series of asserts to check for sanity of inputs.
      * Called after init to check that everything looks ok.

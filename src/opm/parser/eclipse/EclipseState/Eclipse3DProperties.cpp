@@ -969,13 +969,4 @@ namespace Opm {
         }
     }
 
-
-
-    MessageContainer Eclipse3DProperties::getMessageContainer() {
-        MessageContainer messages;
-        messages.appendMessages(m_intGridProperties.getMessageContainer());
-        messages.appendMessages(m_doubleGridProperties.getMessageContainer());
-        return messages;
-    }
-
 }

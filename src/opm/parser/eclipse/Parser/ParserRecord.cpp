@@ -22,7 +22,6 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -124,7 +123,7 @@ namespace {
         return *itr;
     }
 
-    DeckRecord ParserRecord::parse(const ParseContext& parseContext , MessageContainer& msgContainer, RawRecord& rawRecord ) const {
+    DeckRecord ParserRecord::parse(const ParseContext& parseContext , RawRecord& rawRecord ) const {
         std::vector< DeckItem > items;
         items.reserve( this->size() + 20 );
         for( const auto& parserItem : *this )
@@ -134,7 +133,7 @@ namespace {
             std::string msg = "The RawRecord for keyword \""  + rawRecord.getKeywordName() + "\" in file\"" + rawRecord.getFileName() + "\" contained " +
                 std::to_string(rawRecord.size()) +
                 " too many items according to the spec. RawRecord was: " + rawRecord.getRecordString();
-            parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msgContainer, msg);
+            parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msg);
         }
 
         return { std::move( items ) };

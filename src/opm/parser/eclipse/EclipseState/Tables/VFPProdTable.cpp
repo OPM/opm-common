@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -394,7 +396,7 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
     }
 
     if (!points.empty()) {
-        m_messages.warning("VFP table for production wells has BHP versus THP not " 
+        OpmLog::warning("VFP table for production wells has BHP versus THP not " 
                            + std::string("monotonically increasing.\nThis may cause convergence ")
                            + "issues due to switching between BHP and THP control mode."
                            + std::string("\nIn keyword VFPPROD table number ") 
@@ -402,7 +404,7 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
                            + ", file " + keyword.getFileName()
                            + ", line " + std::to_string(keyword.getLineNumber())
                            + "\n");
-        m_messages.note(points);
+        OpmLog::note(points);
     }
 }
 
@@ -536,13 +538,6 @@ void VFPProdTable::convertALQToSI(const ALQ_TYPE& type,
             throw std::logic_error("Invalid FLO type");
     }
     scaleValues(values, scaling_factor);
-}
-
-
-
-const MessageContainer& VFPProdTable::getMessageContainer() const
-{
-    return m_messages;
 }
 
 

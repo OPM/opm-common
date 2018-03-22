@@ -24,6 +24,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+
 #include <opm/json/JsonObject.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -292,7 +295,7 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
         inputFileCanonical = boost::filesystem::canonical(inputFile);
     } catch (boost::filesystem::filesystem_error fs_error) {
         std::string msg = "Could not open file: " + inputFile.string();
-        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , deck.getMessageContainer() , msg);
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg);
         return;
     }
 
@@ -305,7 +308,7 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
     // make sure the file we'd like to parse is readable
     if( !ufp ) {
         std::string msg = "Could not read from file: " + inputFile.string();
-        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , deck.getMessageContainer() , msg);
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg);
         return;
     }
 
@@ -365,7 +368,7 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
             << this->current_path()
             << ":" << this->line();
     }
-    parseContext.handleError( errorKey , deck.getMessageContainer() , msg.str() );
+    parseContext.handleError( errorKey , msg.str() );
 }
 
 void ParserState::openRootFile( const boost::filesystem::path& inputFile) {
@@ -393,7 +396,7 @@ boost::filesystem::path ParserState::getIncludeFilePath( std::string path ) cons
     if (path.find('\\') != std::string::npos) {
         // ... if so, replace with slashes and create a warning.
         std::replace(path.begin(), path.end(), '\\', '/');
-        deck.getMessageContainer().warning("Replaced one or more backslash with a slash in an INCLUDE path.");
+        OpmLog::warning("Replaced one or more backslash with a slash in an INCLUDE path.");
     }
 
     boost::filesystem::path includeFilePath(path);
@@ -414,8 +417,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
     if( !parser.isRecognizedKeyword( keywordString ) ) {
         if( ParserKeyword::validDeckName( keywordString ) ) {
             std::string msg = "Keyword " + keywordString + " not recognized.";
-            auto& msgContainer = parserState.deck.getMessageContainer();
-            parserState.parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD, msgContainer, msg );
+            parserState.parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD, msg );
             parserState.unknown_keyword = true;
             return {};
         }
@@ -465,8 +467,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
 
     std::string msg = "Expected the kewyord: " +keyword_size.keyword 
                     + " to infer the number of records in: " + keywordString;
-    auto& msgContainer = parserState.deck.getMessageContainer();
-    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msgContainer, msg );
+    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg );
 
     const auto* keyword = parser.getKeyword( keyword_size.keyword );
     const auto& record = keyword->getRecord(0);
@@ -580,15 +581,14 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if( parser.isRecognizedKeyword( parserState.rawKeyword->getKeywordName() ) ) {
             const auto& kwname = parserState.rawKeyword->getKeywordName();
             const auto* parserKeyword = parser.getParserKeywordFromDeckName( kwname );
-            parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.deck.getMessageContainer(), parserState.rawKeyword ) );
+            parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.rawKeyword ) );
         } else {
             DeckKeyword deckKeyword( parserState.rawKeyword->getKeywordName(), false );
             const std::string msg = "The keyword " + parserState.rawKeyword->getKeywordName() + " is not recognized";
             deckKeyword.setLocation( parserState.rawKeyword->getFilename(),
                     parserState.rawKeyword->getLineNR());
             parserState.deck.addKeyword( std::move( deckKeyword ) );
-            parserState.deck.getMessageContainer().warning(
-                parserState.current_path().string(), msg, parserState.line() );
+            OpmLog::warning(Log::fileMessage(parserState.current_path().string(), parserState.line(), msg));
         }
     }
 
@@ -865,7 +865,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
     {
         if( deck.size() == 0 ) {
             std::string msg = "empty decks are invalid\n";
-            deck.getMessageContainer().warning(msg);
+            OpmLog::warning(msg);
             return false;
         }
 
@@ -874,7 +874,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         if( deck.getKeyword(0).name() != "RUNSPEC" ) {
             std::string msg = "The first keyword of a valid deck must be RUNSPEC\n";
             auto curKeyword = deck.getKeyword(0);
-            deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+            OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
             deckValid = false;
         }
 
@@ -894,7 +894,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                     std::string msg =
                         "The keyword '"+curKeywordName+"' is located in the '"+curSectionName
                         +"' section where it is invalid";
-                    deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                    OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                     deckValid = false;
                 }
 
@@ -905,7 +905,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "GRID") {
                     std::string msg =
                         "The RUNSPEC section must be followed by GRID instead of "+curKeywordName;
-                    deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                    OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                     deckValid = false;
                 }
 
@@ -915,7 +915,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "EDIT" && curKeywordName != "PROPS") {
                     std::string msg =
                         "The GRID section must be followed by EDIT or PROPS instead of "+curKeywordName;
-                    deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                    OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                     deckValid = false;
                 }
 
@@ -925,7 +925,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "PROPS") {
                     std::string msg =
                         "The EDIT section must be followed by PROPS instead of "+curKeywordName;
-                    deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                    OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                     deckValid = false;
                 }
 
@@ -935,7 +935,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "REGIONS" && curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The PROPS section must be followed by REGIONS or SOLUTION instead of "+curKeywordName;
-                    deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                    OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                     deckValid = false;
                 }
 
@@ -945,7 +945,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SOLUTION") {
                     std::string msg =
                         "The REGIONS section must be followed by SOLUTION instead of "+curKeywordName;
-                    deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                    OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                     deckValid = false;
                 }
 
@@ -955,7 +955,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SUMMARY" && curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SOLUTION section must be followed by SUMMARY or SCHEDULE instead of "+curKeywordName;
-                    deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                    OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                     deckValid = false;
                 }
 
@@ -965,7 +965,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 if (curKeywordName != "SCHEDULE") {
                     std::string msg =
                         "The SUMMARY section must be followed by SCHEDULE instead of "+curKeywordName;
-                    deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                    OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                     deckValid = false;
                 }
 
@@ -976,7 +976,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                 std::string msg =
                     "The SCHEDULE section must be the last one ("
                     +curKeywordName+" specified after SCHEDULE)";
-                deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+                OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
                 deckValid = false;
             }
         }
@@ -986,7 +986,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
             const auto& curKeyword = deck.getKeyword(deck.size() - 1);
             std::string msg =
                 "The last section of a valid deck must be SCHEDULE (is "+curSectionName+")";
-            deck.getMessageContainer().warning(msg, curKeyword.getFileName(), curKeyword.getLineNumber());
+            OpmLog::warning(Log::fileMessage(curKeyword.getFileName(), curKeyword.getLineNumber(), msg) );
             deckValid = false;
         }
 

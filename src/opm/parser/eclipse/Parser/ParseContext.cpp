@@ -94,25 +94,21 @@ namespace Opm {
     }
 
 
-    Message::type ParseContext::handleError(
+    void ParseContext::handleError(
             const std::string& errorKey,
-            MessageContainer& msgContainer,
             const std::string& msg ) const {
 
         InputError::Action action = get( errorKey );
 
         if (action == InputError::WARN) {
-            msgContainer.warning(msg);
-            return Message::Warning;
+            OpmLog::warning(msg);
+            return;
         }
 
         else if (action == InputError::THROW_EXCEPTION) {
-            msgContainer.error(msg);
+            OpmLog::error(msg);
             throw std::invalid_argument(errorKey + ": " + msg);
         }
-
-        return Message::Debug;
-
     }
 
     std::map<std::string,InputError::Action>::const_iterator ParseContext::begin() const {

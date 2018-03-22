@@ -31,7 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/BoxManager.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -111,10 +110,6 @@ namespace Opm {
         void copyKeyword(const std::string& srcField ,
                          const std::string& targetField ,
                          const Box& inputBox);
-
-
-        const MessageContainer& getMessageContainer() const;
-        MessageContainer& getMessageContainer();
 
 
         template <class Keyword>
@@ -199,7 +194,6 @@ namespace Opm {
         size_t ny = 0;
         size_t nz = 0;
         const UnitSystem *  m_deckUnitSystem = nullptr;
-        MessageContainer m_messages;
 
         mutable std::unordered_map<std::string, SupportedKeywordInfo> m_supportedKeywords;
         mutable storage m_properties;

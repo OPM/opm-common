@@ -107,7 +107,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/Tables.cpp
     src/opm/parser/eclipse/EclipseState/Tables/VFPInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/VFPProdTable.cpp
-    src/opm/parser/eclipse/Parser/MessageContainer.cpp
     src/opm/parser/eclipse/Parser/ParseContext.cpp
     src/opm/parser/eclipse/Parser/Parser.cpp
     src/opm/parser/eclipse/Parser/ParserEnums.cpp
@@ -181,7 +180,6 @@ if(ENABLE_ECL_INPUT)
     tests/parser/GroupTests.cpp
     tests/parser/InitConfigTest.cpp
     tests/parser/IOConfigTests.cpp
-    tests/parser/MessageContainerTest.cpp
     tests/parser/MessageLimitTests.cpp
     tests/parser/MultiRegTests.cpp
     tests/parser/MultisegmentWellTests.cpp
@@ -325,7 +323,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Parser/ParserItem.hpp
        opm/parser/eclipse/Parser/Parser.hpp
        opm/parser/eclipse/Parser/ParserRecord.hpp
-       opm/parser/eclipse/Parser/MessageContainer.hpp
        opm/parser/eclipse/Parser/ParserKeyword.hpp
        opm/parser/eclipse/Parser/InputErrorAction.hpp
        opm/parser/eclipse/Parser/ParserEnums.hpp

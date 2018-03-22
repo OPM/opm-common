@@ -30,7 +30,6 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 #ifdef OPM_PARSER_DECK_API_WARNING
 #ifndef OPM_PARSER_DECK_API
@@ -136,7 +135,6 @@ namespace Opm {
             void addKeyword( const DeckKeyword& keyword );
 
             DeckKeyword& getKeyword( size_t );
-            MessageContainer& getMessageContainer() const;
 
             const UnitSystem& getDefaultUnitSystem() const;
             const UnitSystem& getActiveUnitSystem() const;
@@ -154,7 +152,6 @@ namespace Opm {
             Deck( std::vector< DeckKeyword >&& );
 
             std::vector< DeckKeyword > keywordList;
-            mutable MessageContainer m_messageContainer;
             UnitSystem defaultUnits;
             UnitSystem activeUnits;
 
