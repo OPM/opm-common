@@ -311,7 +311,7 @@ list( APPEND PUBLIC_HEADER_FILES
       opm/common/utility/parameters/ParameterRequirement.hpp
       opm/common/utility/parameters/ParameterStrings.hpp
       opm/common/utility/parameters/ParameterTools.hpp
-      opm/common/utility/numeric/CalculateCellvol.hpp
+      opm/common/utility/numeric/calculateCellVol.hpp
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND PUBLIC_HEADER_FILES
