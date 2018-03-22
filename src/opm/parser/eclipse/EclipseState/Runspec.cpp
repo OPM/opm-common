@@ -22,6 +22,7 @@
 #include <ert/ecl/ecl_util.h>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
@@ -92,6 +93,23 @@ Welldims::Welldims(const Deck& deck)
     }
 }
 
+WellSegmentDims::WellSegmentDims() :
+    nSegWellMax( ParserKeywords::WSEGDIMS::NSWLMX::defaultValue ),
+    nSegmentMax( ParserKeywords::WSEGDIMS::NSEGMX::defaultValue ),
+    nLatBranchMax( ParserKeywords::WSEGDIMS::NLBRMX::defaultValue )
+{}
+
+WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
+{
+    if (deck.hasKeyword("WSEGDIMS")) {
+        const auto& wsd = deck.getKeyword("WSEGDIMS", 0).getRecord(0);
+
+        this->nSegWellMax   = wsd.getItem("NSWLMX").get<int>(0);
+        this->nSegmentMax   = wsd.getItem("NSEGMX").get<int>(0);
+        this->nLatBranchMax = wsd.getItem("NLBRMX").get<int>(0);
+    }
+}
+
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases( deck.hasKeyword( "OIL" ),
                            deck.hasKeyword( "GAS" ),
@@ -102,7 +120,8 @@ Runspec::Runspec( const Deck& deck ) :
                            deck.hasKeyword( "POLYMW"  ) ) ),
     m_tabdims( deck ),
     endscale( deck ),
-    welldims( deck )
+    welldims( deck ),
+    wsegdims( deck )
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -120,6 +139,11 @@ const EndpointScaling& Runspec::endpointScaling() const noexcept {
 const Welldims& Runspec::wellDimensions() const noexcept
 {
     return this->welldims;
+}
+
+const WellSegmentDims& Runspec::wellSegmentDimensions() const noexcept
+{
+    return this->wsegdims;
 }
 
 /*
