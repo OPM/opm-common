@@ -5,6 +5,7 @@ configure_file(data/schedule/part1.sch data/schedule/part1.sch COPYONLY)
 configure_file(data/schedule/part2.sch data/schedule/part2.sch COPYONLY)
 configure_file(data/schedule/part3.sch data/schedule/part3.sch COPYONLY)
 configure_file(data/schedule/fragment.sch data/schedule/fragment.sch COPYONLY)
+configure_file(data/schedule/fragment_dates.sch data/schedule/fragment_dates.sch COPYONLY)
 
 
 foreach(prog time_vector completions deck group_tree grupnet parse_deck parse state props schedule wells)

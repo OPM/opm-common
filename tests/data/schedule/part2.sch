@@ -1,3 +1,7 @@
+DATES
+1 'JAN' 1998 /
+/
+
 WCONHIST 
      'B-2H'      'OPEN'      'RESV'   5194.690      0.000 576611.282  5* /
      'D-1H'      'OPEN'      'RESV'   5169.755      0.000 703808.288  5* /
@@ -126,10 +130,5 @@ WCONINJE
 
 WRFTPLT 
      'B-4H'       'YES'       'YES'  1* /
-/
-
--- 144.000000 days from start of simulation ( 6 'NOV' 1997 )
-DATES
- 30 'MAR' 1998 /
 /
 

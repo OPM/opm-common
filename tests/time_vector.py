@@ -10,8 +10,12 @@ class TestTimeVector(unittest.TestCase):
 
     def test_create(self):
         start_date = datetime.date(2018,1,1)
+        start_datetime = datetime.datetime(2018,1,1)
+        with self.assertRaises(ValueError):
+            tv = TimeVector(start_date, base_string = "string", base_file="XYZ")
+
         tv = TimeVector( start_date )
-        self.assertEqual(len(tv), 0)
+        self.assertEqual(len(tv), 1)
         with self.assertRaises(IndexError):
             tv[1]
 
@@ -21,27 +25,23 @@ class TestTimeVector(unittest.TestCase):
 
         next_date = datetime.datetime(2018,2,1)
         tv.add_keywords(next_date, ["KEY1"])
-        self.assertEqual(len(tv), 1)
+        self.assertEqual(len(tv), 2)
 
         middle_date = datetime.datetime(2018,1,15)
         tv.add_keywords(middle_date,[])
-        self.assertEqual(len(tv) ,2)
+        self.assertEqual(len(tv) ,3)
 
         ts1 = tv[0]
-        self.assertEqual(ts1.dt, middle_date)
+        self.assertEqual(ts1.dt, start_datetime)
 
         tv.add_keywords(next_date, ["KEY2"])
-        self.assertEqual(len(tv),2)
+        self.assertEqual(len(tv),3)
 
         ts = tv[-1]
         self.assertEqual(ts.keywords, ["KEY1", "KEY2"])
 
         self.assertIn(middle_date, tv)
-        self.assertEqual(tv.dates, [middle_date, next_date])
-
-        tv.append_tstep(10, [])
-        ts = tv[-1]
-        self.assertTrue(ts.is_tstep)
+        self.assertEqual(tv.dates, [start_datetime, middle_date, next_date])
 
 
         with self.assertRaises(KeyError):
@@ -54,12 +54,13 @@ class TestTimeVector(unittest.TestCase):
 
 
     def test_load(self):
-        tv = TimeVector(datetime.date(1997, 11, 6))
-        tv.load("data/schedule/part1.sch")
+        tv = TimeVector(datetime.date(1997, 11, 6), base_file = "data/schedule/part1.sch")
         tv.load("data/schedule/part3.sch")
+        tv.load("data/schedule/fragment_dates.sch")
         tv.load("data/schedule/part2.sch")
 
-        self.assertEqual(tv.dates, [datetime.datetime(1997, 11, 14),
+        self.assertEqual(tv.dates, [datetime.datetime(1997, 11,  6),
+                                    datetime.datetime(1997, 11, 14),
                                     datetime.datetime(1997, 12,  1),
                                     datetime.datetime(1997, 12, 17),
                                     datetime.datetime(1998,  1,  1),
@@ -72,13 +73,11 @@ class TestTimeVector(unittest.TestCase):
                                     datetime.datetime(1998,  5,  1),
                                     datetime.datetime(1998,  5, 26),
                                     datetime.datetime(1998,  5, 27),
-                                    datetime.datetime(1998,  5, 28),
-                                    datetime.datetime(1998,  5, 29),
-                                    datetime.datetime(1998,  6,  1)])
+                                    datetime.datetime(1998,  6,  1),
+                                    datetime.datetime(1998,  8,  1)])
 
     def test_str(self):
-        tv = TimeVector(datetime.date(1997, 11, 6))
-        tv.load("data/schedule/part1.sch")
+        tv = TimeVector(datetime.date(1997, 11, 6), base_string = open("data/schedule/part1.sch").read())
         tv.load("data/schedule/part3.sch")
         tv.load("data/schedule/part2.sch")
 
@@ -91,8 +90,16 @@ class TestTimeVector(unittest.TestCase):
 
 
     def test_optional(self):
-        tv = TimeVector(datetime.date(1997, 11, 6))
-        tv.load("data/schedule/part1.sch")
+        tv = TimeVector(datetime.date(1997, 11, 6), base_file = "data/schedule/part1.sch")
+
+        # Must have a starting date, either as first keyword in loaded file,
+        # or alternatively as the optional date argument.
+        with self.assertRaises(ValueError):
+            tv.load("data/schedule/fragment.sch")
+
+        with self.assertRaises(ValueError):
+            tv.load("data/schedule/fragment_dates.sch", date = datetime.datetime(1998, 1,1))
+
         tv.load("data/schedule/fragment.sch", date = datetime.datetime(1998, 1, 10))
         ts = tv[-1]
         self.assertEqual(ts.dt, datetime.datetime(1998, 1 , 10))
