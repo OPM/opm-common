@@ -22,6 +22,7 @@
 #include <ert/ecl/ecl_util.h>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 
 namespace Opm {
@@ -92,10 +93,13 @@ Welldims::Welldims(const Deck& deck)
     }
 }
 
-WellSegmentDims::WellSegmentDims(const Deck& deck) :
-    nSegWellMax( 0 ),
-    nSegmentMax( 1 ),
-    nLatBranchMax( 1 )
+WellSegmentDims::WellSegmentDims() :
+    nSegWellMax( ParserKeywords::WSEGDIMS::NSWLMX::defaultValue ),
+    nSegmentMax( ParserKeywords::WSEGDIMS::NSEGMX::defaultValue ),
+    nLatBranchMax( ParserKeywords::WSEGDIMS::NLBRMX::defaultValue )
+{}
+
+WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
 {
     if (deck.hasKeyword("WSEGDIMS")) {
         const auto& wsd = deck.getKeyword("WSEGDIMS", 0).getRecord(0);

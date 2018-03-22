@@ -82,6 +82,7 @@ private:
 
 class WellSegmentDims {
 public:
+    WellSegmentDims();
     explicit WellSegmentDims(const Deck& deck);
 
     int maxSegmentedWells() const
@@ -100,9 +101,9 @@ public:
     }
 
 private:
-    int nSegWellMax   { 0 };
-    int nSegmentMax   { 1 };
-    int nLatBranchMax { 1 };
+    int nSegWellMax;
+    int nSegmentMax;
+    int nLatBranchMax;
 };
 
 class Runspec {
