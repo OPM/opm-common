@@ -171,7 +171,4 @@ WCONINJE
 /
 
 -- 56.000000 days from start of simulation ( 6 'NOV' 1997 )
-DATES
- 1 'JAN' 1998 /
-/
 

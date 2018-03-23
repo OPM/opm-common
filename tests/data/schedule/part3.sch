@@ -1,3 +1,8 @@
+-- 144.000000 days from start of simulation ( 6 'NOV' 1997 )
+DATES
+30 'MAR' 1998 /
+/
+
 WCONHIST 
      'B-2H'      'OPEN'      'RESV'   6174.300      0.000 685348.969  5* /
      'D-1H'      'OPEN'      'RESV'   5427.250      0.000 906735.000  5* /
@@ -178,8 +183,6 @@ DATES
  27 'MAY' 1998 /
 /
 
-TSTEP
-1 1 /
 
 --      : D-4H Squeeze  Top:  2715.00 Bot:  3038.00
 --      : >> --for RFT pressure points

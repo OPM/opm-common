@@ -61,7 +61,6 @@ class TimeStep(object):
         """
         self.dt = dt
         self.keywords = keywords
-        self.is_tstep = False
         self.tstep = None
 
 
@@ -69,34 +68,25 @@ class TimeStep(object):
         self.keywords.append(kw)
 
 
-    @classmethod
-    def create_tstep(cls, tstep, dt, keywords):
-        ts = cls(dt, keywords)
-        ts.is_tstep = True
-        ts.tstep = tstep
-        return ts
-
 
     def __str__(self):
         string = StringIO()
+
+        day = self.dt.day
+        month = self.dt.month
+        year = self.dt.year
+        string.write("DATES\n  {day} '{month}' {year}/\n/\n\n".format( day=day, month = inv_ecl_month[month], year=year))
+
         for kw in self.keywords:
             string.write(str(kw))
             string.write("\n")
-
-        if self.is_tstep:
-            string.write("TSTEP\n  {}/\n\n".format( self.tstep ))
-        else:
-            day = self.dt.day
-            month = self.dt.month
-            year = self.dt.year
-            string.write("DATES\n  {day} '{month}' {year}/\n/\n\n".format( day=day, month = inv_ecl_month[month], year=year))
 
         return string.getvalue()
 
 
 class TimeVector(object):
 
-    def __init__(self, start_date):
+    def __init__(self, start_date, base_string = None, base_file = None):
         """The TimeVector class is a simple vector class with DATES/TSTEP blocks.
 
         The TimeVector class is a basic building block for tools designed to
@@ -121,20 +111,20 @@ class TimeVector(object):
            'C1' 'OPEN'  'ORAT' 1000 /
         /
 
+        --- Step 2 ----------------------
+
         DATES
            10  'MAY' 2016 /
         /
-
-        --- Step 2 ----------------------
 
         WCONHIST
            'C1'  'OPEN'  'ORAT' 2000 /
         /
 
+       --- Step 3 ----------------------
+
         TSTEP
             10 /
-
-        --- Step 3 ----------------------
 
         WELSPECS
            'W2'  'G1'  5 5 5 'OIL' /
@@ -148,6 +138,8 @@ class TimeVector(object):
            'C1' 'OPEN' 'ORAT' 3000 /
            'W2' 'OPEN' 'ORAT' 1500 /
         /
+
+        --- Step 4 ----------------------
 
         DATES
            30 'MAY' 2016 /
@@ -191,10 +183,23 @@ class TimeVector(object):
 
 
         """
+        if base_string and base_file:
+            raise ValueError("Can only supply one of base_string and base_file arguments")
+
         self.start_date = datetime.datetime( start_date.year, start_date.month, start_date.day)
         self.time_steps_list = []
         self.time_steps_dict = {}
 
+        ts = TimeStep(self.start_date, [])
+        self._add_dates_block(ts)
+        start_dt = datetime.datetime(start_date.year, start_date.month, start_date.day)
+        if base_file:
+            deck = sunbeam.deck.parse(base_file)
+            self._add_deck(deck, start_dt)
+
+        if base_string:
+            deck = sunbeam.deck.parse_string(base_string)
+            self._add_deck(deck, start_dt)
 
 
     def __len__(self):
@@ -233,8 +238,8 @@ class TimeVector(object):
 
 
     def add_keywords(self, dt, keywords):
-        if dt <= self.start_date:
-            raise ValueError("Invalid datetime argument")
+        if dt < self.start_date:
+            raise ValueError("Invalid datetime argument: {}".format(dt))
 
         if dt in self.time_steps_dict:
             ts = self[dt]
@@ -246,40 +251,38 @@ class TimeVector(object):
             self.time_steps_list.sort( key = attrgetter("dt"))
 
 
-    def append_tstep(self, tstep, keywords):
-        if len(self) == 0:
-            last_dt = self.start_data
+    def _add_deck(self, deck, start_date):
+        first_kw = deck[0]
+        if start_date is None:
+            if first_kw.name != "DATES":
+                raise ValueError("When loading you must *either* specify date - or file must start with DATES keyword")
         else:
-            last_dt = self[-1].dt
+            if first_kw.name == "DATES":
+                raise ValueError("When loading you must *either* specify date - or file must start with DATES keyword")
 
-        new_dt = last_dt + datetime.timedelta(days = tstep)
-        ts = TimeStep.create_tstep(tstep, new_dt, keywords)
-        self._add_dates_block(ts)
-
-
-    def _add_deck(self, deck, last_date):
         keywords = []
+        dt = start_date
         for kw in deck:
 
             if kw.name == "DATES":
-                for record in kw:
-                    dt = _make_datetime(record)
+                if keywords:
                     self.add_keywords(dt, keywords)
-                    keywords = []
+
+                for index in range(len(kw)-1):
+                    dt = _make_datetime(kw[index])
+                    self.add_keywords(dt, [])
+
+                dt = _make_datetime(kw[len(kw)-1])
+
+                keywords = []
                 continue
 
-            if kw.name == "TSTEP":
-                record = kw[0]
-                for tstep in record[0]:
-                    self.append_tstep(tstep, keywords)
-                    keywords = []
-                continue
+            #if kw.name == "TSTEP":
+            #raise ValueError("Must block the ranges with active TSTEP - getting a DATES in there is ERROR")
 
             keywords.append(kw)
 
-        if last_date:
-            if keywords:
-                self.add_keywords(last_date, keywords)
+        self.add_keywords(dt, keywords)
 
 
     def load(self, filename, date = None):
