@@ -337,7 +337,9 @@ set( keywords
      000_Eclipse100/T/TVDP
      000_Eclipse100/U/UDQ
      000_Eclipse100/U/UDADIMS
+     000_Eclipse100/U/UDQ
      000_Eclipse100/U/UDQDIMS
+     000_Eclipse100/U/UDQPARAM
      000_Eclipse100/U/UNIFIN
      000_Eclipse100/U/UNIFOUT
      000_Eclipse100/V/VAPOIL

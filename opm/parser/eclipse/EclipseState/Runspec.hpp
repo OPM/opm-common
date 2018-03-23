@@ -24,6 +24,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
+#include <opm/parser/eclipse/EclipseState/UDQConfig.hpp>
 
 namespace Opm {
 class Deck;
@@ -110,6 +111,7 @@ class Runspec {
    public:
         explicit Runspec( const Deck& );
 
+        const UDQConfig& udqConfig() const noexcept;
         const Phases& phases() const noexcept;
         const Tabdims&  tabdims() const noexcept;
         const EndpointScaling& endpointScaling() const noexcept;
@@ -123,6 +125,7 @@ class Runspec {
         EndpointScaling endscale;
         Welldims welldims;
         WellSegmentDims wsegdims;
+        UDQConfig udq_config;
 };
 
 }

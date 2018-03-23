@@ -121,7 +121,8 @@ Runspec::Runspec( const Deck& deck ) :
     m_tabdims( deck ),
     endscale( deck ),
     welldims( deck ),
-    wsegdims( deck )
+    wsegdims( deck ),
+    udq_config( deck )
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -154,6 +155,11 @@ int Runspec::eclPhaseMask( ) const noexcept {
     return ( active_phases.active( Phase::WATER ) ? ECL_WATER_PHASE : 0 )
          | ( active_phases.active( Phase::OIL ) ? ECL_OIL_PHASE : 0 )
          | ( active_phases.active( Phase::GAS ) ? ECL_GAS_PHASE : 0 );
+}
+
+
+const UDQConfig& Runspec::udqConfig() const noexcept {
+    return this->udq_config;
 }
 
 }

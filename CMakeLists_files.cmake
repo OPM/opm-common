@@ -108,6 +108,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/Tables.cpp
     src/opm/parser/eclipse/EclipseState/Tables/VFPInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/VFPProdTable.cpp
+    src/opm/parser/eclipse/EclipseState/UDQConfig.cpp
     src/opm/parser/eclipse/Parser/ParseContext.cpp
     src/opm/parser/eclipse/Parser/Parser.cpp
     src/opm/parser/eclipse/Parser/ParserEnums.cpp
@@ -209,6 +210,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/TimeMapTest.cpp
     tests/parser/TransMultTests.cpp
     tests/parser/TuningTests.cpp
+    tests/parser/UDQTests.cpp
     tests/parser/UnitTests.cpp
     tests/parser/ValueTests.cpp
     tests/parser/WellSolventTests.cpp
@@ -444,6 +446,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp
        opm/parser/eclipse/EclipseState/checkDeck.hpp
        opm/parser/eclipse/EclipseState/Runspec.hpp
+       opm/parser/eclipse/EclipseState/UDQConfig.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp
        opm/parser/eclipse/Deck/Deck.hpp
        opm/parser/eclipse/Deck/Section.hpp
