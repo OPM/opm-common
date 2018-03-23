@@ -329,8 +329,12 @@ inline quantity production_history( const fn_args& args ) {
      */
 
     double sum = 0.0;
-    for( const Well* sched_well : args.schedule_wells )
-        sum += sched_well->production_rate( phase, args.sim_step );
+    for( const Well* sched_well : args.schedule_wells ){
+
+        double eff_fac = efac( args.eff_factors, sched_well->name() );
+        sum += sched_well->production_rate( phase, args.sim_step ) * eff_fac;
+    }
+
 
     return { sum, rate_unit< phase >() };
 }
@@ -339,8 +343,12 @@ template< Phase phase >
 inline quantity injection_history( const fn_args& args ) {
 
     double sum = 0.0;
-    for( const Well* sched_well : args.schedule_wells )
-        sum += sched_well->injection_rate( phase, args.sim_step );
+    for( const Well* sched_well : args.schedule_wells ){
+
+        double eff_fac = efac( args.eff_factors, sched_well->name() );
+        sum += sched_well->injection_rate( phase, args.sim_step ) * eff_fac;
+    }
+
 
     return { sum, rate_unit< phase >() };
 }
