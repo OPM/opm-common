@@ -21,6 +21,8 @@
 
 #include <boost/algorithm/string/join.hpp>
 
+#include <opm/common/OpmLog/LogUtil.hpp>
+
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
@@ -43,7 +45,6 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 
 
 namespace Opm {
@@ -63,8 +64,8 @@ namespace Opm {
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
 
         if( this->runspec().phases().size() < 3 )
-            m_messageContainer.info("Only " + std::to_string( this->runspec().phases().size() )
-                                    + " fluid phases are enabled" );
+            OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )
+                                                                + " fluid phases are enabled" );
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
@@ -75,10 +76,6 @@ namespace Opm {
 
         initTransMult();
         initFaults(deck);
-
-        m_messageContainer.appendMessages(m_tables.getMessageContainer());
-        m_messageContainer.appendMessages(m_inputGrid.getMessageContainer());
-        m_messageContainer.appendMessages(m_eclipseProperties.getMessageContainer());
     }
 
     const UnitSystem& EclipseState::getDeckUnitSystem() const {
@@ -108,15 +105,6 @@ namespace Opm {
 
     const Eclipse3DProperties& EclipseState::get3DProperties() const {
         return m_eclipseProperties;
-    }
-
-    const MessageContainer& EclipseState::getMessageContainer() const {
-        return m_messageContainer;
-    }
-
-
-    MessageContainer& EclipseState::getMessageContainer() {
-        return m_messageContainer;
     }
 
 
@@ -224,11 +212,11 @@ namespace Opm {
     }
 
     void EclipseState::complainAboutAmbiguousKeyword(const Deck& deck, const std::string& keywordName) {
-        m_messageContainer.error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
+        OpmLog::error("The " + keywordName + " keyword must be unique in the deck. Ignoring all!");
         auto keywords = deck.getKeywordList(keywordName);
         for (size_t i = 0; i < keywords.size(); ++i) {
             std::string msg = "Ambiguous keyword "+keywordName+" defined here";
-            m_messageContainer.error(keywords[i]->getFileName(), msg, keywords[i]->getLineNumber());
+            OpmLog::error(Log::fileMessage(keywords[i]->getFileName(), keywords[i]->getLineNumber(), msg));
         }
     }
 

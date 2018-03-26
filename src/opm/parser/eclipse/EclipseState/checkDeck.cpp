@@ -18,6 +18,9 @@
  */
 #include <opm/parser/eclipse/EclipseState/checkDeck.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -33,7 +36,7 @@ bool checkDeck( Deck& deck, const Parser& parser, size_t enabledChecks) {
             const auto& keyword = deck.getKeyword(keywordIdx);
             if (!parser.isRecognizedKeyword( keyword.name() ) ) {
                 std::string msg("Keyword '" + keyword.name() + "' is unknown.");
-                deck.getMessageContainer().warning(msg, keyword.getFileName(), keyword.getLineNumber());
+                OpmLog::warning( Log::fileMessage(keyword.getFileName(), keyword.getLineNumber(), msg) );
                 deckValid = false;
             }
         }

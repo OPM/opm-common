@@ -27,8 +27,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/PinchMode.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
-
 #include <ert/ecl/ecl_grid.h>
 #include <ert/util/ert_unique_ptr.hpp>
 
@@ -176,11 +174,8 @@ namespace Opm {
         void resetACTNUM( const int * actnum);
         bool equal(const EclipseGrid& other) const;
         const ecl_grid_type * c_ptr() const;
-        const MessageContainer& getMessageContainer() const;
-        MessageContainer& getMessageContainer();
-    private:
-        MessageContainer m_messages;
 
+    private:
         double m_minpvValue;
         MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;

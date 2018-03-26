@@ -7,7 +7,6 @@ set(genkw_SOURCES src/opm/json/JsonObject.cpp
                   src/opm/parser/eclipse/Deck/DeckOutput.cpp
                   src/opm/parser/eclipse/Generator/KeywordGenerator.cpp
                   src/opm/parser/eclipse/Generator/KeywordLoader.cpp
-                  src/opm/parser/eclipse/Parser/MessageContainer.cpp
                   src/opm/parser/eclipse/Parser/ParseContext.cpp
                   src/opm/parser/eclipse/Parser/ParserEnums.cpp
                   src/opm/parser/eclipse/Parser/ParserItem.cpp
@@ -19,6 +18,11 @@ set(genkw_SOURCES src/opm/json/JsonObject.cpp
                   src/opm/parser/eclipse/Units/Dimension.cpp
                   src/opm/parser/eclipse/Units/UnitSystem.cpp
                   src/opm/parser/eclipse/Utility/Stringview.cpp
+                  src/opm/common/OpmLog/OpmLog.cpp
+                  src/opm/common/OpmLog/Logger.cpp
+                  src/opm/common/OpmLog/StreamLog.cpp
+                  src/opm/common/OpmLog/LogBackend.cpp
+                  src/opm/common/OpmLog/LogUtil.cpp
 )
 if(NOT cjson_FOUND)
   list(APPEND genkw_SOURCES external/cjson/cJSON.c)

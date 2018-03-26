@@ -20,27 +20,12 @@
 #include <iostream>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-
-inline void dumpMessages( const Opm::MessageContainer& messageContainer) {
-    auto extractMessage = [](const Opm::Message& msg) {
-        const auto& location = msg.location;
-        if (location)
-            return location.filename + ":" + std::to_string( location.lineno ) + " " + msg.message;
-        else
-            return msg.message;
-    };
-
-
-    for(const auto& msg : messageContainer)
-        std::cout << extractMessage(msg) << std::endl;
-}
 
 
 inline void loadDeck( const char * deck_file) {
@@ -55,7 +40,6 @@ inline void loadDeck( const char * deck_file) {
     Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext );
     std::cout << "complete." << std::endl;
 
-    dumpMessages( deck.getMessageContainer() );
 }
 
 

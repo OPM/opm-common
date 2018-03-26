@@ -167,7 +167,6 @@ namespace Opm {
     Deck::Deck( const Deck& d ) :
         DeckView( d.begin(), d.begin() ),
         keywordList( d.keywordList ),
-        m_messageContainer( d.m_messageContainer ),
         defaultUnits( d.defaultUnits ),
         activeUnits( d.activeUnits ),
         m_dataFile( d.m_dataFile ) {
@@ -192,10 +191,6 @@ namespace Opm {
 
     DeckKeyword& Deck::getKeyword( size_t index ) {
         return this->keywordList.at( index );
-    }
-
-    MessageContainer&  Deck::getMessageContainer() const {
-        return this->m_messageContainer;
     }
 
     UnitSystem& Deck::getDefaultUnitSystem() {

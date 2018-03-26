@@ -509,11 +509,10 @@ BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     ParserRecord record1;
     RawRecord rawRecord( " ' VALUE ' " );
     ParseContext parseContext;
-    MessageContainer msgContainer;
     record1.addItem( itemString );
 
 
-    const auto deckRecord = record1.parse( parseContext , msgContainer, rawRecord );
+    const auto deckRecord = record1.parse( parseContext , rawRecord );
     BOOST_CHECK_EQUAL(" VALUE " , deckRecord.getItem(0).get< std::string >(0));
 }
 

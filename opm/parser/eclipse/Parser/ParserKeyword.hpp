@@ -40,7 +40,6 @@ namespace Opm {
     class ParserDoubleItem;
     class RawKeyword;
     class string_view;
-    class MessageContainer;
 
     /*
       Small helper struct to assemble the information needed to infer the size
@@ -123,7 +122,7 @@ namespace Opm {
         SectionNameSet::const_iterator validSectionNamesBegin() const;
         SectionNameSet::const_iterator validSectionNamesEnd() const;
 
-        DeckKeyword parse(const ParseContext& parseContext , MessageContainer& msgContainer, std::shared_ptr< RawKeyword > rawKeyword) const;
+        DeckKeyword parse(const ParseContext& parseContext , std::shared_ptr< RawKeyword > rawKeyword) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const KeywordSize& getKeywordSize() const;
         bool isDataKeyword() const;

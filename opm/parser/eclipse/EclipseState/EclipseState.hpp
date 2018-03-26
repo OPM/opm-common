@@ -31,7 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 
@@ -97,9 +96,6 @@ namespace Opm {
         const UnitSystem& getDeckUnitSystem() const;
         const UnitSystem& getUnits() const;
 
-        const MessageContainer& getMessageContainer() const;
-        MessageContainer& getMessageContainer();
-
         std::string getTitle() const;
 
         void applyModifierDeck(const Deck& deck);
@@ -129,8 +125,6 @@ namespace Opm {
 
         FaultCollection m_faults;
         std::string m_title;
-
-        MessageContainer m_messageContainer;
 
     };
 }

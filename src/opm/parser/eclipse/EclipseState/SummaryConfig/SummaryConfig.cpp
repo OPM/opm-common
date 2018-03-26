@@ -19,7 +19,6 @@
 
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -124,44 +123,22 @@ namespace {
     };
 
 
-/*
-    When the error handling config says that the error should be
-    logged, the handleMissingWell and handleMissingGroup routines
-    cheat. Ideally we should have a MessageContainer instance around
-    and pass that to the parseContext::handlError() routine. Instead
-    we:
-
-    1. We instantiate new MessageContainer() which is just
-        immediately dropped to floor, leaving the messages behind.
-
-    2. Print a message on stderr.
-
-    The case of incorrectly/missing well/group names in the SUMMARY
-    section did just not seem important enough to warrant the
-    refactoring required to pass a mutable proper MessageContainer
-    all the way down here.
-*/
-
-
-
 
 void handleMissingWell( const ParseContext& parseContext , const std::string& keyword, const std::string& well) {
     std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
-    MessageContainer msgContainer;
     if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_WELL) == InputError::WARN)
         std::cerr << "ERROR: " << msg << std::endl;
 
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msgContainer , msg );
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msg );
 }
 
 
 void handleMissingGroup( const ParseContext& parseContext , const std::string& keyword, const std::string& group) {
     std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such group: ") + group;
-    MessageContainer msgContainer;
     if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_GROUP) == InputError::WARN)
         std::cerr << "ERROR: " << msg << std::endl;
 
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msgContainer , msg );
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg );
 }
 
 inline void keywordW( std::vector< ERT::smspec_node >& list,

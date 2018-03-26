@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/Parser/MessageContainer.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
@@ -476,7 +475,6 @@ void set_dimensions( ParserItem& item,
     }
 
     DeckKeyword ParserKeyword::parse(const ParseContext& parseContext,
-                                     MessageContainer& msgContainer,
                                      std::shared_ptr< RawKeyword > rawKeyword) const {
         if( !rawKeyword->isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword->getKeywordName());
@@ -490,7 +488,7 @@ void set_dimensions( ParserItem& item,
             if( m_records.size() == 0 && rawRecord.size() > 0 )
                 throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
 
-            keyword.addRecord( getRecord( record_nr ).parse( parseContext, msgContainer, rawRecord ) );
+            keyword.addRecord( getRecord( record_nr ).parse( parseContext, rawRecord ) );
             record_nr++;
         }
 
