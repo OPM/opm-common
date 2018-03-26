@@ -30,12 +30,6 @@ namespace Opm {
         OTHER_KEYWORD_IN_DECK = 2,
         UNKNOWN=3
     };
-    enum ParserValueTypeEnum {
-        INT = 0,
-        FLOAT = 1,
-        STRING = 2,
-        DOUBLE = 3
-    };
 
 
     enum ParserKeywordActionEnum {
@@ -47,10 +41,8 @@ namespace Opm {
 
     const std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue);
     const std::string ParserKeywordSizeEnum2String(ParserKeywordSizeEnum enumValue);
-    const std::string ParserValueTypeEnum2String(ParserValueTypeEnum enumValue);
 
     ParserKeywordSizeEnum ParserKeywordSizeEnumFromString(const std::string& stringValue);
-    ParserValueTypeEnum ParserValueTypeEnumFromString(const std::string& stringValue);
     ParserKeywordActionEnum ParserKeywordActionEnumFromString(const std::string& stringValue);
 }
 

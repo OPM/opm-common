@@ -1762,35 +1762,6 @@ BOOST_AUTO_TEST_CASE(TestKeywordSizeEnumLoop) {
 }
 
 
-/*****************************************************************/
-
-
-BOOST_AUTO_TEST_CASE(TestValueTypeEnum2String) {
-    BOOST_CHECK_EQUAL( "INT"    , ParserValueTypeEnum2String(INT));
-    BOOST_CHECK_EQUAL( "FLOAT" , ParserValueTypeEnum2String(FLOAT));
-    BOOST_CHECK_EQUAL( "STRING"    , ParserValueTypeEnum2String(STRING));
-}
-
-
-BOOST_AUTO_TEST_CASE(TestValueTypeEnumFromString) {
-    BOOST_CHECK_THROW( ParserValueTypeEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( INT , ParserValueTypeEnumFromString("INT"));
-    BOOST_CHECK_EQUAL( STRING , ParserValueTypeEnumFromString("STRING"));
-    BOOST_CHECK_EQUAL( FLOAT , ParserValueTypeEnumFromString("FLOAT"));
-}
-
-
-
-BOOST_AUTO_TEST_CASE(TestValueTypeEnumLoop) {
-    BOOST_CHECK_EQUAL( INT    , ParserValueTypeEnumFromString( ParserValueTypeEnum2String( INT ) ));
-    BOOST_CHECK_EQUAL( FLOAT , ParserValueTypeEnumFromString( ParserValueTypeEnum2String( FLOAT ) ));
-    BOOST_CHECK_EQUAL( STRING    , ParserValueTypeEnumFromString( ParserValueTypeEnum2String( STRING ) ));
-
-    BOOST_CHECK_EQUAL( "INT"    , ParserValueTypeEnum2String(ParserValueTypeEnumFromString(  "INT" ) ));
-    BOOST_CHECK_EQUAL( "FLOAT" , ParserValueTypeEnum2String(ParserValueTypeEnumFromString(  "FLOAT" ) ));
-    BOOST_CHECK_EQUAL( "STRING"    , ParserValueTypeEnum2String(ParserValueTypeEnumFromString(  "STRING" ) ));
-}
-
 
 /*****************************************************************/
 

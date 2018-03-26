@@ -61,38 +61,6 @@ namespace Opm {
 
     /*****************************************************************/
 
-    const std::string ParserValueTypeEnum2String(ParserValueTypeEnum enumValue) {
-        switch (enumValue) {
-        case INT:
-            return "INT";
-            break;
-        case FLOAT:
-            return "FLOAT";
-            break;
-        case STRING:
-            return "STRING";
-            break;
-        default:
-            throw std::invalid_argument("Implementation error - should NOT be here");
-        }
-    }
-
-
-    ParserValueTypeEnum ParserValueTypeEnumFromString(const std::string& stringValue) {
-        if (stringValue == "INT")
-            return INT;
-        else if (stringValue == "FLOAT")
-            return FLOAT;
-        else if (stringValue == "DOUBLE")
-            return DOUBLE;
-        else if (stringValue == "STRING")
-            return STRING;
-        else
-            throw std::invalid_argument("String: " + stringValue + " can not be converted to enum value");
-    }
-
-    /*****************************************************************/
-
     const std::string ParserKeywordActionEnum2String(ParserKeywordActionEnum enumValue) {
         switch (enumValue) {
         case INTERNALIZE:
