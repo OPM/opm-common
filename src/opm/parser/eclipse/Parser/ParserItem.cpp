@@ -51,9 +51,10 @@ template<> const std::string& default_value< std::string >() {
 }
 
 type_tag get_type_json( const std::string& str ) {
-    if( str == "INT" )    return type_tag::integer;
-    if( str == "DOUBLE" ) return type_tag::fdouble;
-    if( str == "STRING" ) return type_tag::string;
+    if( str == "INT" )       return type_tag::integer;
+    if( str == "DOUBLE" )    return type_tag::fdouble;
+    if( str == "STRING" )    return type_tag::string;
+    if( str == "RAW_STRING") return type_tag::string;
     throw std::invalid_argument( str + " cannot be converted to enum 'tag'" );
 }
 
@@ -167,6 +168,8 @@ ParserItem::ParserItem( const Json::JsonObject& json ) :
             );
         }
     }
+    if (json.get_string("value_type") == "RAW_STRING")
+        this->raw_string = true;
 
     if( !json.has_item( "default" ) ) return;
 
@@ -199,9 +202,16 @@ void ParserItem::setDefault( T val ) {
 }
 
 template< typename T >
-void ParserItem::setType( T ) {
+void ParserItem::setType( T) {
     this->type = get_type< T >();
 }
+
+template< typename T >
+void ParserItem::setType( T, bool raw ) {
+    this->type = get_type< T >();
+    this->raw_string = raw;
+}
+
 
 bool ParserItem::hasDefault() const {
     return this->m_defaultSet;
@@ -348,7 +358,11 @@ std::string ParserItem::createCode() const {
            }
         }
 
-    stream << " ); item.setType( " << tag_name( this->type ) << "() );";
+    if (raw_string)
+        stream << " ); item.setType( " << tag_name( this->type ) << "(), true );"; 
+    else
+        stream << " ); item.setType( " << tag_name( this->type ) << "() );";
+
     return stream.str();
 }
 
@@ -357,8 +371,17 @@ namespace {
 template< typename T >
 DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
     DeckItem item( p.name(), T(), record.size() );
+    bool parse_raw = p.parseRaw();
 
     if( p.sizeType() == ParserItem::item_size::ALL ) {
+        if (parse_raw) {
+            while (record.size()) {
+                auto token = record.pop_front();
+                item.push_back( token.string() );
+            }
+            return item;
+        }
+
         while( record.size() > 0 ) {
             auto token = record.pop_front();
 
@@ -399,20 +422,25 @@ DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
         return item;
     }
 
+    if (parse_raw) {
+        item.push_back( record.pop_front().string());
+        return item;
+    }
+
     // The '*' should be interpreted as a repetition indicator, but it must
     // be preceeded by an integer...
     auto token = record.pop_front();
     std::string countString;
     std::string valueString;
     if( !isStarToken(token, countString, valueString) ) {
-        item.push_back( readValueToken<T>( token ) );
+        item.push_back( readValueToken<T>( token) );
         return item;
     }
 
     StarToken st(token, countString, valueString);
 
     if( st.hasValue() )
-        item.push_back(readValueToken< T >( st.valueString() ) );
+        item.push_back(readValueToken< T >( st.valueString()) );
     else if( p.hasDefault() )
         item.push_backDefault( p.getDefault< T >() );
     else
@@ -549,6 +577,10 @@ std::ostream& operator<<( std::ostream& stream, const ParserItem& item ) {
     return stream << " }";
 }
 
+bool ParserItem::parseRaw( ) const {
+    return this->raw_string;
+}
+
 template void ParserItem::setDefault( int );
 template void ParserItem::setDefault( double );
 template void ParserItem::setDefault( std::string );
@@ -556,6 +588,7 @@ template void ParserItem::setDefault( std::string );
 template void ParserItem::setType( int );
 template void ParserItem::setType( double );
 template void ParserItem::setType( std::string );
+template void ParserItem::setType( std::string , bool);
 
 template const int& ParserItem::getDefault() const;
 template const double& ParserItem::getDefault() const;

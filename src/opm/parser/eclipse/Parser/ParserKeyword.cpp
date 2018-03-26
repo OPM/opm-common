@@ -370,8 +370,12 @@ void set_dimensions( ParserItem& item,
         }
 
 
-        if (value_type == "STRING") {
-            item.setType( std::string() );
+        if (value_type == "STRING" || value_type == "RAW_STRING") {
+            if (value_type == "RAW_STRING")
+                item.setType( std::string(), true );
+            else
+                item.setType( std::string() );
+
             if (hasDefault) {
                 std::string defaultValue = dataConfig.get_string("default");
                 item.setDefault(defaultValue);
