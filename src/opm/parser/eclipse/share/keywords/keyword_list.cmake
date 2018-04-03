@@ -33,8 +33,10 @@ set( keywords
      000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
      000_Eclipse100/B/BOX
+     000_Eclipse100/C/CARFIN
      000_Eclipse100/C/CECON
      000_Eclipse100/C/COMPDAT
+     000_Eclipse100/C/COMPDATL
      000_Eclipse100/C/COMPIMB
      000_Eclipse100/C/COMPLUMP
      000_Eclipse100/C/COMPORD
@@ -74,6 +76,7 @@ set( keywords
      000_Eclipse100/E/ENDACTIO
      000_Eclipse100/E/ENDBOX
      000_Eclipse100/E/ENDINC
+     000_Eclipse100/E/ENDFIN
      000_Eclipse100/E/ENDNUM
      000_Eclipse100/E/ENDPOINT_SPECIFIERS
      000_Eclipse100/E/ENDSCALE
@@ -234,6 +237,7 @@ set( keywords
      000_Eclipse100/Q/QDRILL
      000_Eclipse100/R/RADFIN4
      000_Eclipse100/R/RADIAL
+     000_Eclipse100/R/REFINE
      000_Eclipse100/R/REGDIMS
      000_Eclipse100/R/REGION_PROBE
      000_Eclipse100/R/REGIONS
@@ -360,6 +364,7 @@ set( keywords
      000_Eclipse100/W/WELPI
      000_Eclipse100/W/WELSEGS
      000_Eclipse100/W/WSEGSICD
+     000_Eclipse100/W/WELSPECL
      000_Eclipse100/W/WELSPECS
      000_Eclipse100/W/WELTARG
      000_Eclipse100/W/WGASPROD
