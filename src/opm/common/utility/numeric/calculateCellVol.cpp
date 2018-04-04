@@ -16,7 +16,8 @@
 */
 
 
-#include <algorithm>    
+#include <algorithm>
+#include <cmath>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
 
