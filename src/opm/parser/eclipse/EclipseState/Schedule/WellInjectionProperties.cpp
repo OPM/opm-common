@@ -26,7 +26,9 @@
 
 namespace Opm {
 
-    WellInjectionProperties::WellInjectionProperties() {
+    WellInjectionProperties::WellInjectionProperties()
+      : injectorType(WellInjector::WATER),
+        controlMode(WellInjector::CMODE_UNDEFINED) {
         surfaceInjectionRate=0.0;
         reservoirInjectionRate=0.0;
         temperature=
@@ -39,8 +41,6 @@ namespace Opm {
         VFPTableNumber=0;
         predictionMode=true;
         injectionControls=0;
-        injectorType = WellInjector::WATER;
-        controlMode = WellInjector::CMODE_UNDEFINED;
     }
 
 
