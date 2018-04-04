@@ -335,6 +335,7 @@ set( keywords
      000_Eclipse100/T/TUNING
      000_Eclipse100/T/TUNINGDP
      000_Eclipse100/T/TVDP
+     000_Eclipse100/U/UDQ
      000_Eclipse100/U/UDADIMS
      000_Eclipse100/U/UDQDIMS
      000_Eclipse100/U/UNIFIN

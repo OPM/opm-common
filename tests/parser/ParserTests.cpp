@@ -1762,35 +1762,6 @@ BOOST_AUTO_TEST_CASE(TestKeywordSizeEnumLoop) {
 }
 
 
-/*****************************************************************/
-
-
-BOOST_AUTO_TEST_CASE(TestValueTypeEnum2String) {
-    BOOST_CHECK_EQUAL( "INT"    , ParserValueTypeEnum2String(INT));
-    BOOST_CHECK_EQUAL( "FLOAT" , ParserValueTypeEnum2String(FLOAT));
-    BOOST_CHECK_EQUAL( "STRING"    , ParserValueTypeEnum2String(STRING));
-}
-
-
-BOOST_AUTO_TEST_CASE(TestValueTypeEnumFromString) {
-    BOOST_CHECK_THROW( ParserValueTypeEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( INT , ParserValueTypeEnumFromString("INT"));
-    BOOST_CHECK_EQUAL( STRING , ParserValueTypeEnumFromString("STRING"));
-    BOOST_CHECK_EQUAL( FLOAT , ParserValueTypeEnumFromString("FLOAT"));
-}
-
-
-
-BOOST_AUTO_TEST_CASE(TestValueTypeEnumLoop) {
-    BOOST_CHECK_EQUAL( INT    , ParserValueTypeEnumFromString( ParserValueTypeEnum2String( INT ) ));
-    BOOST_CHECK_EQUAL( FLOAT , ParserValueTypeEnumFromString( ParserValueTypeEnum2String( FLOAT ) ));
-    BOOST_CHECK_EQUAL( STRING    , ParserValueTypeEnumFromString( ParserValueTypeEnum2String( STRING ) ));
-
-    BOOST_CHECK_EQUAL( "INT"    , ParserValueTypeEnum2String(ParserValueTypeEnumFromString(  "INT" ) ));
-    BOOST_CHECK_EQUAL( "FLOAT" , ParserValueTypeEnum2String(ParserValueTypeEnumFromString(  "FLOAT" ) ));
-    BOOST_CHECK_EQUAL( "STRING"    , ParserValueTypeEnum2String(ParserValueTypeEnumFromString(  "STRING" ) ));
-}
-
 
 /*****************************************************************/
 
@@ -1867,3 +1838,21 @@ AQUTAB
   BOOST_CHECK_EQUAL( 1, aqutab.size());
 }
 
+
+BOOST_AUTO_TEST_CASE(ParseRAW_STRING) {
+    const std::string deck_string = R"(
+UDQ
+   DEFINE WUBHP 'P*X*' /
+   DEFINE WUBHP 'P*X*' 5*(1 + LOG(WBHP)) /
+/
+)";
+    Parser parser;
+    const auto deck = parser.parseString( deck_string, ParseContext());
+    const auto& udq = deck.getKeyword("UDQ");
+    const auto& data0 = udq.getRecord(0).getItem("DATA").getData<std::string>();
+    const auto& data1 = udq.getRecord(1).getItem("DATA").getData<std::string>();
+    const std::vector<std::string> expected0 = {"'P*X*'"};
+    const std::vector<std::string> expected1 = {"'P*X*'", "5*(1", "+", "LOG(WBHP))"};
+    BOOST_CHECK_EQUAL_COLLECTIONS( data0.begin(), data0.end(), expected0.begin(), expected0.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS( data1.begin(), data1.end(), expected1.begin(), expected1.end());
+ }

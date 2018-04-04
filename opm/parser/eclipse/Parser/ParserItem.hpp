@@ -64,6 +64,8 @@ namespace Opm {
         template< typename T > void setDefault( T );
         /* set type without a default value. will reset dimension etc. */
         template< typename T > void setType( T );
+        template< typename T > void setType( T , bool raw);
+        bool parseRaw() const;
         bool hasDefault() const;
         template< typename T > const T& getDefault() const;
 
@@ -81,6 +83,7 @@ namespace Opm {
         double dval;
         int ival;
         std::string sval;
+        bool raw_string = false;
         std::vector< std::string > dimensions;
 
         std::string m_name;

@@ -352,51 +352,54 @@ void set_dimensions( ParserItem& item,
         if (!dataConfig.has_item("value_type") )
             throw std::invalid_argument("The 'value_type' JSON item of keyword "+getName()+" is missing");
 
-        ParserValueTypeEnum valueType = ParserValueTypeEnumFromString(dataConfig.get_string("value_type"));
+        const std::string value_type = dataConfig.get_string("value_type");
         const std::string itemName("data");
         bool hasDefault = dataConfig.has_item("default");
-
-        ParserRecord record;
         ParserItem item( itemName, ParserItem::item_size::ALL );
+        ParserRecord record;
 
-        switch (valueType) {
-            case INT:
-                {
-                    item.setType( int() );
-                    if(hasDefault) {
-                        int defaultValue = dataConfig.get_int("default");
-                        item.setDefault(defaultValue);
-                    }
-                    record.addDataItem( item );
-                }
-                break;
-            case STRING:
-                {
-                    item.setType( std::string() );
-                    if (hasDefault) {
-                        std::string defaultValue = dataConfig.get_string("default");
-                        item.setDefault(defaultValue);
-                    }
-                    record.addItem( item );
-                }
-                break;
-            case DOUBLE:
-                {
-                    item.setType( double() );
-                    if (hasDefault) {
-                        double defaultValue = dataConfig.get_double("default");
-                        item.setDefault(defaultValue);
-                    }
-                    set_dimensions( item, dataConfig, this->getName() );
-                    record.addDataItem( item );
-                }
-                break;
-            default:
-                throw std::invalid_argument("While initializing keyword "+getName()+": Values of type "+dataConfig.get_string("value_type")+" are not implemented.");
+        if (value_type == "INT") {
+            item.setType( int() );
+            if(hasDefault) {
+                int defaultValue = dataConfig.get_int("default");
+                item.setDefault(defaultValue);
+            }
+            record.addDataItem(item);
+            this->addDataRecord(record);
+            return;
         }
 
-        this->addDataRecord( record );
+
+        if (value_type == "STRING" || value_type == "RAW_STRING") {
+            if (value_type == "RAW_STRING")
+                item.setType( std::string(), true );
+            else
+                item.setType( std::string() );
+
+            if (hasDefault) {
+                std::string defaultValue = dataConfig.get_string("default");
+                item.setDefault(defaultValue);
+            }
+            record.addDataItem(item);
+            this->addDataRecord(record);
+            return;
+        }
+
+        if (value_type == "DOUBLE") {
+            item.setType( double() );
+            if (hasDefault) {
+                double defaultValue = dataConfig.get_double("default");
+                item.setDefault(defaultValue);
+            }
+            set_dimensions( item, dataConfig, this->getName() );
+            record.addDataItem(item);
+            this->addDataRecord(record);
+            return;
+        }
+
+        throw std::invalid_argument("While initializing keyword "+getName()+": Values of type "+dataConfig.get_string("value_type")+" are not implemented.");
     }
+
 
     const ParserRecord& ParserKeyword::getRecord(size_t recordIndex) const {
         if( this->m_records.empty() )
@@ -430,7 +433,7 @@ void set_dimensions( ParserItem& item,
     }
 
 
-    void ParserKeyword::addDataRecord( ParserRecord record ) {
+    void ParserKeyword::addDataRecord( ParserRecord record) {
         if ((m_keywordSizeType == FIXED) && (m_fixedSize == 1U))
             addRecord( std::move( record ) );
         else
