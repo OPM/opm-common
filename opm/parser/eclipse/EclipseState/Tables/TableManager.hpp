@@ -45,6 +45,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlymwinjTable.hpp>
 
 namespace Opm {
 
@@ -121,6 +122,7 @@ namespace Opm {
         const RockTable& getRockTable() const;
         const ViscrefTable& getViscrefTable() const;
         const WatdentTable& getWatdentTable() const;
+        const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
 
         /// deck has keyword "IMPTVD" --- Imbition end-point versus depth tables
         bool useImptvd() const;
@@ -150,6 +152,7 @@ namespace Opm {
         void initPlymaxTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);
         void initPlyshlogTables(const Deck& deck);
+        void initPlymwinjTables(const Deck& deck);
 
 
 
@@ -287,6 +290,7 @@ namespace Opm {
         RockTable m_rockTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
+        std::map<int, PlymwinjTable> m_plymwinjTables;
 
         Tabdims m_tabdims;
         std::shared_ptr<Regdims> m_regdims;

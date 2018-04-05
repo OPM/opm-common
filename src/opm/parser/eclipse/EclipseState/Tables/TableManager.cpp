@@ -342,6 +342,7 @@ namespace Opm {
         initRTempTables(deck);
         initRocktabTables(deck);
         initPlyshlogTables(deck);
+        initPlymwinjTables(deck);
     }
 
 
@@ -413,6 +414,32 @@ namespace Opm {
             if (dataItem.size() > 0) {
                 std::shared_ptr<PlyshlogTable> table = std::make_shared<PlyshlogTable>(indexRecord , dataRecord);
                 container.addTable( tableIdx , table );
+            }
+        }
+    }
+
+    void TableManager::initPlymwinjTables(const Deck& deck) {
+        if (!deck.hasKeyword("PLYMWINJ")) {
+            return;
+        }
+
+        const size_t num_tables = deck.count("PLYMWINJ");
+        const auto keywords = deck.getKeywordList<ParserKeywords::PLYMWINJ>();
+        for (size_t i = 0; i < num_tables; ++i) {
+            const DeckKeyword &keyword = *keywords[i];
+
+            // not const for std::move
+            PlymwinjTable table(keyword);
+
+            // we need to check the value of the table_number against the allowed ones
+            const int table_number = table.getTableNumber();
+            // we should check if the table_number is valid
+            if (m_plymwinjTables.find(table_number) == m_plymwinjTables.end()) {
+                m_plymwinjTables.insert(std::make_pair(table_number, std::move(table)));
+            } else {
+                throw std::invalid_argument("Duplicated table number "
+                                            + std::to_string(table_number)
+                                            + " for keyword SKPRWAT found");
             }
         }
     }
@@ -722,6 +749,11 @@ namespace Opm {
         if (!jfunc)
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
         return *jfunc;
+    }
+
+
+    const std::map<int, PlymwinjTable>& TableManager::getPlymwinjTables() const {
+        return m_plymwinjTables;
     }
 
     bool TableManager::useImptvd() const {
