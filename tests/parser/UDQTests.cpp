@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
 
 using namespace Opm;
@@ -48,6 +49,36 @@ UDQPARAM
     BOOST_CHECK(udq_config.reseedRNG());
     BOOST_CHECK_EQUAL(0.25, udq_config.cmpEpsilon());
 }
+
+
+BOOST_AUTO_TEST_CASE(UDQ_KEWYORDS) {
+    const std::string input = R"(
+RUNSPEC
+
+UDQDIMS
+   10* 'Y'/
+
+UDQPARAM
+  3* 0.25 /
+
+SCHEDULE
+
+UDQ
+  ASSIGN WUBHP 0.0 /
+  UNITS  WUBHP 'BARSA' /
+  DEFINE FUOPR  AVEG(WOPR) + 1/
+/
+)";
+
+    Parser parser;
+    ParseContext parseContext;
+
+    auto deck = parser.parseString(input, parseContext);
+    auto udq_config = UDQConfig(deck);
+    auto udq = UDQ(udq_config, deck);
+    BOOST_CHECK_EQUAL(3, udq.expressions().size());
+}
+
 BOOST_AUTO_TEST_CASE(UDQ_KEYWORD) {
     // Invalid action
     BOOST_REQUIRE_THROW( UDQExpression("INVALID_ACTION", "WUBHP" , {"DATA1" ,"1"}), std::invalid_argument);
@@ -57,3 +88,40 @@ BOOST_AUTO_TEST_CASE(UDQ_KEYWORD) {
 
     BOOST_CHECK_NO_THROW(UDQExpression("ASSIGN" ,"WUBHP", {"1"}));
 }
+
+
+BOOST_AUTO_TEST_CASE(UDQ_DATA) {
+    const std::string input = R"(
+RUNSPEC
+
+UDQDIMS
+   10* 'Y'/
+
+UDQPARAM
+  3* 0.25 /
+
+SCHEDULE
+
+UDQ
+ASSIGN CUMW1 P12 10 12 1 (4.0 + 6*(4 - 2)) /
+DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
+/
+
+
+)";
+    Parser parser;
+    ParseContext parseContext;
+
+    auto deck = parser.parseString(input, parseContext);
+    auto udq_config = UDQConfig(deck);
+    auto udq = UDQ(udq_config, deck);
+    const auto& records = udq.expressions();
+    const auto& rec0 = records[0];
+    const auto& rec1 = records[1];
+    const std::vector<std::string> exp0 = {"P12", "10", "12", "1", "(", "4.0", "+", "6", "*", "(", "4", "-", "2", ")", ")"};
+    const std::vector<std::string> exp1 = {"WBHP", "P*1*", "UMAX", "WBHP" , "P*4*"};
+    BOOST_CHECK_EQUAL_COLLECTIONS(rec0.tokens().begin(), rec0.tokens().end(), exp0.begin(), exp0.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(rec1.tokens().begin(), rec1.tokens().end(), exp1.begin(), exp1.end());
+}
+
+

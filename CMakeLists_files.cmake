@@ -109,6 +109,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/VFPInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/VFPProdTable.cpp
     src/opm/parser/eclipse/EclipseState/UDQConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQExpression.cpp
     src/opm/parser/eclipse/Parser/ParseContext.cpp
     src/opm/parser/eclipse/Parser/Parser.cpp
@@ -447,6 +448,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp
        opm/parser/eclipse/EclipseState/checkDeck.hpp
        opm/parser/eclipse/EclipseState/Runspec.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp
        opm/parser/eclipse/EclipseState/UDQConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp
