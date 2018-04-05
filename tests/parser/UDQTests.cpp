@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
 
 using namespace Opm;
 
@@ -46,4 +47,13 @@ UDQPARAM
 
     BOOST_CHECK(udq_config.reseedRNG());
     BOOST_CHECK_EQUAL(0.25, udq_config.cmpEpsilon());
+}
+BOOST_AUTO_TEST_CASE(UDQ_KEYWORD) {
+    // Invalid action
+    BOOST_REQUIRE_THROW( UDQExpression("INVALID_ACTION", "WUBHP" , {"DATA1" ,"1"}), std::invalid_argument);
+
+    // Invalid keyword
+    BOOST_REQUIRE_THROW( UDQExpression("ASSIGN", "INVALID_KEYWORD", {}), std::invalid_argument);
+
+    BOOST_CHECK_NO_THROW(UDQExpression("ASSIGN" ,"WUBHP", {"1"}));
 }
