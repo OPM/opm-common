@@ -1,4 +1,5 @@
 {"name" : "RSCONSTT" , "sections" : ["PROPS"],
+ "size": {"keyword": "TABDIMS", "item": "NTPVT"},
  "items" : [
  {"name" : "RS_CONSTT" , "value_type" : "DOUBLE"},
  {"name" : "PB_CONSTT" , "value_type" : "DOUBLE", "dimension" : "Pressure"}]}
