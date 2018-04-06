@@ -89,7 +89,11 @@ namespace Opm
             /*
               TUNING has changed
             */
-            TUNING_CHANGE = 2048
+            TUNING_CHANGE = 2048,
+
+            /* The VFP tables have changed */
+            VFPINJ_UPDATE = 4096,
+            VFPPROD_UPDATE = 8192
         };
     }
 
