@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -92,6 +93,8 @@ namespace Opm {
         if (Section::hasSCHEDULE(deck)) {
             iterateScheduleSection( parseContext, SCHEDULESection( deck ), grid, eclipseProperties );
         }
+        initVFPProdTables(deck, m_vfpprodTables);
+        initVFPInjTables(deck,  m_vfpinjTables);
     }
 
 
@@ -102,6 +105,58 @@ namespace Opm {
                  es.runspec().phases(),
                  parse_context)
     {}
+
+    void Schedule::initVFPProdTables(const Deck& deck,
+                                     std::map<int, VFPProdTable>& tableMap) {
+        if (!deck.hasKeyword(ParserKeywords::VFPPROD::keywordName)) {
+            return;
+        }
+
+        int num_tables = deck.count(ParserKeywords::VFPPROD::keywordName);
+        const auto& keywords = deck.getKeywordList<ParserKeywords::VFPPROD>();
+        const auto& unit_system = deck.getActiveUnitSystem();
+        for (int i=0; i<num_tables; ++i) {
+            const auto& keyword = *keywords[i];
+
+            VFPProdTable table;
+            table.init(keyword, unit_system);
+
+            //Check that the table in question has a unique ID
+            int table_id = table.getTableNum();
+            if (tableMap.find(table_id) == tableMap.end()) {
+                tableMap.insert(std::make_pair(table_id, std::move(table)));
+            }
+            else {
+                throw std::invalid_argument("Duplicate table numbers for VFPPROD found");
+            }
+        }
+    }
+
+    void Schedule::initVFPInjTables(const Deck& deck,
+                                    std::map<int, VFPInjTable>& tableMap) {
+        if (!deck.hasKeyword(ParserKeywords::VFPINJ::keywordName)) {
+            return;
+        }
+
+        int num_tables = deck.count(ParserKeywords::VFPINJ::keywordName);
+        const auto& keywords = deck.getKeywordList<ParserKeywords::VFPINJ>();
+        const auto& unit_system = deck.getActiveUnitSystem();
+        for (int i=0; i<num_tables; ++i) {
+            const auto& keyword = *keywords[i];
+
+            VFPInjTable table;
+            table.init(keyword, unit_system);
+
+            //Check that the table in question has a unique ID
+            int table_id = table.getTableNum();
+            if (tableMap.find(table_id) == tableMap.end()) {
+                tableMap.insert(std::make_pair(table_id, std::move(table)));
+            }
+            else {
+                throw std::invalid_argument("Duplicate table numbers for VFPINJ found");
+            }
+        }
+    }
 
 
     std::time_t Schedule::getStartTime() const {
@@ -1684,5 +1739,14 @@ namespace Opm {
         for (auto& well : this->m_wells)
             well.filterCompletions(grid);
     }
+
+    const std::map<int, VFPProdTable>& Schedule::getVFPProdTables() const {
+        return m_vfpprodTables;
+    }
+
+    const std::map<int, VFPInjTable>& Schedule::getVFPInjTables() const {
+        return m_vfpinjTables;
+    }
+
 }
 

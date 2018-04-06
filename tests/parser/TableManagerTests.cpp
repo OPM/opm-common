@@ -38,12 +38,12 @@
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords.hpp>
 

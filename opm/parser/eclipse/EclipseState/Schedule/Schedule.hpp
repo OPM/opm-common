@@ -37,6 +37,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 
 namespace Opm
 {
@@ -107,6 +109,8 @@ namespace Opm
         const Events& getEvents() const;
         const Deck& getModifierDeck(size_t timeStep) const;
         bool hasOilVaporizationProperties() const;
+        const std::map<int, VFPProdTable>& getVFPProdTables() const;
+        const std::map<int, VFPInjTable>& getVFPInjTables() const;
 
         /*
           Will remove all completions which are connected to cell which is not
@@ -125,8 +129,17 @@ namespace Opm
         Tuning m_tuning;
         MessageLimits m_messageLimits;
         Phases m_phases;
+        std::map<int, VFPProdTable> m_vfpprodTables;
+        std::map<int, VFPInjTable> m_vfpinjTables;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
+
+        void initVFPProdTables(const Deck& deck,
+                               std::map<int, VFPProdTable>& tableMap);
+
+        void initVFPInjTables(const Deck& deck,
+                              std::map<int, VFPInjTable>& tableMap);
+
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
