@@ -48,6 +48,8 @@ public:
     };
 
 
+    inline VFPInjTable() {};
+
     VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
 
         inline int getTableNum() const {

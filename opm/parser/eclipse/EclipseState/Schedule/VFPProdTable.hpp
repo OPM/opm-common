@@ -72,7 +72,7 @@ public:
         ALQ_UNDEF, //< Undefined
         ALQ_INVALID
     };
-
+    inline VFPProdTable() {};
     VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system);
     /**
      * Returns the table number
