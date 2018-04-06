@@ -204,6 +204,7 @@ set( keywords
      000_Eclipse100/P/PERMYZ
      000_Eclipse100/P/PERMZ
      000_Eclipse100/P/PERMZX
+     000_Eclipse100/P/PETOPTS
      000_Eclipse100/P/PIMTDIMS
      000_Eclipse100/P/PIMULTAB
      000_Eclipse100/P/PINCH
