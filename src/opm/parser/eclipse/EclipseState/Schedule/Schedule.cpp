@@ -340,6 +340,7 @@ namespace Opm {
         }
         auto & table_state = vfpinj_tables.at(table_id);
         table_state.update(currentStep, table);
+        this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , currentStep);
     }
 
     void Schedule::handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep) {
@@ -353,6 +354,7 @@ namespace Opm {
         }
         auto & table_state = vfpprod_tables.at(table_id);
         table_state.update(currentStep, table);
+        this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , currentStep);
     }
 
 
@@ -1687,7 +1689,7 @@ namespace Opm {
         return m_messageLimits;
     }
 
-    
+
 
 
     const Events& Schedule::getEvents() const {

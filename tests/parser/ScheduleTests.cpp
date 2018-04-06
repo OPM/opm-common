@@ -2303,6 +2303,11 @@ VFPINJ \n                                       \
     Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     Schedule schedule(deck, grid1 , eclipseProperties, Phases(true, true, true) , ParseContext() );
 
+
+    BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 0));
+    BOOST_CHECK( !schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 1));
+    BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 2));
+
     // No such table id
     BOOST_CHECK_THROW(schedule.getVFPInjTable(77,0), std::invalid_argument);
 
