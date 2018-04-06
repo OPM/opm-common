@@ -31,7 +31,6 @@ inline std::string prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
 
-#ifdef OPM_PARSER_BUILD_HAVE_SYMLINK
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
     boost::filesystem::path inputFilePath(prefix() + "includeInvalid.data");
@@ -46,6 +45,16 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
     BOOST_CHECK_NO_THROW(parser.parseFile(inputFilePath.string() , parseContext));
 }
 
+
+BOOST_AUTO_TEST_CASE(DATA_FILE_IS_SYMLINK) {
+  boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink4/path/case.data");
+  Opm::Parser parser;
+  std::cout << "Input file: " << inputFilePath.string() << std::endl;
+  auto deck = parser.parseFile(inputFilePath.string() , Opm::ParseContext());
+
+  BOOST_CHECK_EQUAL(true , deck.hasKeyword("OIL"));
+  BOOST_CHECK_EQUAL(false , deck.hasKeyword("WATER"));
+}
 
 
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
@@ -76,8 +85,6 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_file_that_again_
     BOOST_CHECK_EQUAL(true , deck.hasKeyword("OIL"));
     BOOST_CHECK_EQUAL(false , deck.hasKeyword("WATER"));
 }
-
-#endif
 
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
