@@ -170,19 +170,22 @@ namespace Opm
         void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
+
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
+        void handleWPMITAB( const DeckKeyword& keyword,  const size_t currentStep);
         void handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-        void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext );
-        void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-        void handleGCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-        void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-        void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-        void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
+        void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
+        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep );
+        void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
+        void handleGCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
+        void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep);
+        void handleGEFAC( const DeckKeyword& keyword, size_t currentStep);
+        void handleWEFAC( const DeckKeyword& keyword, size_t currentStep);
+
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep);

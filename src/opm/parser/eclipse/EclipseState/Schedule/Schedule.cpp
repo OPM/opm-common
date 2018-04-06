@@ -197,6 +197,10 @@ namespace Opm {
         else if (keyword.name() == "WTEMP")
             handleWTEMP(keyword, currentStep, parseContext);
 
+            else if (keyword.name() == "WPMITAB")
+                handleWPMITAB(keyword, currentStep);
+
+
         else if (keyword.name() == "WINJTEMP")
             handleWINJTEMP(keyword, currentStep, parseContext);
 
@@ -760,6 +764,19 @@ namespace Opm {
         }
     }
 
+
+    void Schedule::handleWPMITAB( const DeckKeyword& keyword,  const size_t currentStep) {
+        for (const auto& record : keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            for (auto* well : getWells(wellNamePattern) ) {
+                // TODO: it needs to be an injector
+                WellPolymerProperties properties(well->getPolymerProperties(currentStep));
+                properties.m_plymwinjtable = record.getItem("TABLE_NUMBER").get<int>(0);
+                // TODO: some sanity check about the table number?
+                well->setPolymerProperties(currentStep, properties);
+            }
+        }
+    }
 
 
     void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
