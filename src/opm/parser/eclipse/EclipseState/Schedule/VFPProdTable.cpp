@@ -160,7 +160,7 @@ void VFPProdTable::init(int table_num,
     //check();
 }
 
-void VFPProdTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
+VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPPROD;
 
     //Check that the table has enough records

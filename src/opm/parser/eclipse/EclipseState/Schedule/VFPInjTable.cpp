@@ -79,7 +79,7 @@ void VFPInjTable::init(int table_num,
 
 
 
-void VFPInjTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
+VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPINJ;
 
     //Check that the table has enough records
