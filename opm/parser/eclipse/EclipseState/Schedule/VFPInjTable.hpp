@@ -50,23 +50,6 @@ public:
 
     VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
 
-    /**
-         * Initializes objects from raw data. NOTE: All raw data assumed to be in SI units
-         * @param table_num VFP table number
-         * @param datum_depth Reference depth for BHP
-         * @param flo_type Specifies what flo_data represents
-         * @param flo_data Axis for flo_type
-         * @param thp_data Axis for thp_type
-         * @param data BHP to be interpolated. Given as a 2D array so that
-         *        BHP = data[thp][flo] for the indices thp, flo.
-         */
-        void init(int table_num,
-                double datum_depth,
-                FLO_TYPE flo_type,
-                const std::vector<double>& flo_data,
-                const std::vector<double>& thp_data,
-                const array_type& data);
-
         inline int getTableNum() const {
             return m_table_num;
         }
