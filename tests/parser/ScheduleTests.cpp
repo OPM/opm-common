@@ -2329,6 +2329,11 @@ VFPINJ \n                                       \
     BOOST_CHECK_EQUAL(vfpinjTable.getDatumDepth(), 32.9);
     BOOST_CHECK_EQUAL(vfpinjTable.getFloType(), Opm::VFPInjTable::FLO_WAT);
 
+    const auto vfp_tables0 = schedule.getVFPInjTables(0);
+    BOOST_CHECK_EQUAL( vfp_tables0.size(), 1);
+
+    const auto vfp_tables2 = schedule.getVFPInjTables(2);
+    BOOST_CHECK_EQUAL( vfp_tables2.size(), 2);
     //Flo axis
     {
         const std::vector<double>& flo = vfpinjTable.getFloAxis();

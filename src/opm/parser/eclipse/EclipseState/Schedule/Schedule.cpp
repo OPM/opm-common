@@ -1744,5 +1744,28 @@ namespace Opm {
 
         return *table_ptr;
     }
+
+    std::map<int, const VFPInjTable&> Schedule::getVFPInjTables(size_t timeStep) const {
+        std::map<int, const VFPInjTable&> tables;
+        for (const auto& pair : this->vfpinj_tables) {
+            if (pair.second.get(timeStep)) {
+                std::pair<int, const VFPInjTable&> table_pair = std::make_pair(pair.first, *pair.second.get(timeStep));
+                tables.insert(table_pair);
+            }
+        }
+        return tables;
+    }
+
+    std::map<int, const VFPProdTable&> Schedule::getVFPProdTables(size_t timeStep) const {
+        std::map<int, const VFPProdTable&> tables;
+        for (const auto& pair : this->vfpprod_tables) {
+            if (pair.second.get(timeStep)) {
+                std::pair<int, const VFPProdTable&> table_pair = std::make_pair(pair.first, *pair.second.get(timeStep));
+                tables.insert(table_pair);
+            }
+        }
+        return tables;
+    }
+
 }
 
