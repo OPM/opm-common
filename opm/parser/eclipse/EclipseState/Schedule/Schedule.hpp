@@ -111,8 +111,8 @@ namespace Opm
         bool hasOilVaporizationProperties() const;
         const VFPProdTable& getVFPProdTable(int table_id, size_t timeStep) const;
         const VFPInjTable& getVFPInjTable(int table_id, size_t timeStep) const;
-        std::map<int, const VFPProdTable&> getVFPProdTables(size_t timeStep) const;
-        std::map<int, const VFPInjTable&>  getVFPInjTables(size_t timeStep) const;
+        std::map<int, const VFPProdTable*> getVFPProdTables(size_t timeStep) const;
+        std::map<int, const VFPInjTable*>  getVFPInjTables(size_t timeStep) const;
         /*
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
