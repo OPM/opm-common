@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# Temporary backwards compat code
-if test -n "$OPM_DATA_ROOT"
-then
-  OPM_TESTS_ROOT=$OPM_DATA_ROOT
-fi
-if test -n "$OPM_DATA_ROOT_PREDEFINED"
-then
-  OPM_TESTS_ROOT_PREDEFINED=$OPM_DATA_ROOT_PREDEFINED
-fi
-
 # Predefined by environment
 if test -z "$OPM_TESTS_ROOT"
 then
