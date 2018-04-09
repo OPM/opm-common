@@ -48,6 +48,13 @@ public:
     };
 
 
+    inline VFPInjTable() : m_table_num(-1),
+            m_datum_depth(-1),
+            m_flo_type(FLO_INVALID) {
+
+    }
+
+
 
     VFPInjTable(int table_num,
                 double datum_depth,

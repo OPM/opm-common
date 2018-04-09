@@ -73,6 +73,16 @@ public:
         ALQ_INVALID
     };
 
+    inline VFPProdTable() : m_table_num(-1),
+                            m_datum_depth(-1),
+                            m_flo_type(FLO_INVALID),
+                            m_wfr_type(WFR_INVALID),
+                            m_gfr_type(GFR_INVALID),
+                            m_alq_type(ALQ_INVALID) {
+
+    }
+
+
     VFPProdTable(int table_num,
                  double datum_depth,
                  FLO_TYPE flo_type,
