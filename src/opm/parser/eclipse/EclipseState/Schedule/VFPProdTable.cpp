@@ -123,6 +123,43 @@ VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
 }
 
 }
+VFPProdTable::VFPProdTable(int table_num,
+                           double datum_depth,
+                           FLO_TYPE flo_type,
+                           WFR_TYPE wfr_type,
+                           GFR_TYPE gfr_type,
+                           ALQ_TYPE alq_type,
+                           const std::vector<double>& flo_data,
+                           const std::vector<double>& thp_data,
+                           const std::vector<double>& wfr_data,
+                           const std::vector<double>& gfr_data,
+                           const std::vector<double>& alq_data,
+                           const array_type& data) {
+
+    m_table_num = table_num;
+    m_datum_depth = datum_depth;
+    m_flo_type = flo_type;
+    m_wfr_type = wfr_type;
+    m_gfr_type = gfr_type;
+    m_alq_type = alq_type;
+    m_flo_data = flo_data;
+    m_thp_data = thp_data;
+    m_wfr_data = wfr_data;
+    m_gfr_data = gfr_data;
+    m_alq_data = alq_data;
+
+    extents shape;
+    shape[0] = data.shape()[0];
+    shape[1] = data.shape()[1];
+    shape[2] = data.shape()[2];
+    shape[3] = data.shape()[3];
+    shape[4] = data.shape()[4];
+    m_data.resize(shape);
+    m_data = data;
+
+    //check();
+}
+
 
 VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPPROD;

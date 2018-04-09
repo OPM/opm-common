@@ -72,7 +72,20 @@ public:
         ALQ_UNDEF, //< Undefined
         ALQ_INVALID
     };
-    inline VFPProdTable() {};
+
+    VFPProdTable(int table_num,
+                 double datum_depth,
+                 FLO_TYPE flo_type,
+                 WFR_TYPE wfr_type,
+                 GFR_TYPE gfr_type,
+                 ALQ_TYPE alq_type,
+                 const std::vector<double>& flo_data,
+                 const std::vector<double>& thp_data,
+                 const std::vector<double>& wfr_data,
+                 const std::vector<double>& gfr_data,
+                 const std::vector<double>& alq_data,
+                 const array_type& data);
+
     VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system);
     /**
      * Returns the table number
@@ -182,6 +195,7 @@ public:
         return m_data;
     }
 
+ 
 private:
 
     //"Header" variables

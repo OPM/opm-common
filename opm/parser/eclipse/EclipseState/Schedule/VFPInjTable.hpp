@@ -48,7 +48,13 @@ public:
     };
 
 
-    inline VFPInjTable() {};
+
+    VFPInjTable(int table_num,
+                double datum_depth,
+                FLO_TYPE flo_type,
+                const std::vector<double>& flo_data,
+                const std::vector<double>& thp_data,
+                const array_type& data);
 
     VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
 

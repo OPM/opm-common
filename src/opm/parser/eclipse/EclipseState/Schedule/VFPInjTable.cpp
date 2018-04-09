@@ -53,7 +53,26 @@ namespace Opm {
 
 
 
+VFPInjTable::VFPInjTable(int table_num,
+                         double datum_depth,
+                         FLO_TYPE flo_type,
+                         const std::vector<double>& flo_data,
+                         const std::vector<double>& thp_data,
+                         const array_type& data) {
+    m_table_num = table_num;
+    m_datum_depth = datum_depth;
+    m_flo_type = flo_type;
+    m_flo_data = flo_data;
+    m_thp_data = thp_data;
 
+    extents shape;
+    shape[0] = data.shape()[0];
+    shape[1] = data.shape()[1];
+    m_data.resize(shape);
+    m_data = data;
+
+    check();
+}
 
 
 
