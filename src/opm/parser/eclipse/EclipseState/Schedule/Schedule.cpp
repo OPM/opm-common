@@ -1740,11 +1740,11 @@ namespace Opm {
             well.filterCompletions(grid);
     }
 
-    const std::map<int, VFPProdTable>& Schedule::getVFPProdTables() const {
+    const std::map<int, VFPProdTable>& Schedule::getVFPProdTables(size_t timeStep) const {
         return m_vfpprodTables;
     }
 
-    const std::map<int, VFPInjTable>& Schedule::getVFPInjTables() const {
+    const std::map<int, VFPInjTable>& Schedule::getVFPInjTables(size_t timeStep) const {
         return m_vfpinjTables;
     }
 

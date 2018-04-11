@@ -109,8 +109,8 @@ namespace Opm
         const Events& getEvents() const;
         const Deck& getModifierDeck(size_t timeStep) const;
         bool hasOilVaporizationProperties() const;
-        const std::map<int, VFPProdTable>& getVFPProdTables() const;
-        const std::map<int, VFPInjTable>& getVFPInjTables() const;
+        const std::map<int, VFPProdTable>& getVFPProdTables(size_t timeStep) const;
+        const std::map<int, VFPInjTable>& getVFPInjTables(size_t timeStep) const;
 
         /*
           Will remove all completions which are connected to cell which is not
