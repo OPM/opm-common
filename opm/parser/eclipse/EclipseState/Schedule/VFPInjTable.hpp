@@ -56,6 +56,15 @@ public:
 
     }
 
+  VFPInjTable(int table_num,
+              double datum_depth,
+              FLO_TYPE flo_type,
+              const std::vector<double>& flo_data,
+              const std::vector<double>& thp_data,
+              const array_type& data);
+
+  VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
+
     /**
          * Initializes objects from raw data. NOTE: All raw data assumed to be in SI units
          * @param table_num VFP table number
