@@ -37,6 +37,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 
 namespace Opm
 {
@@ -107,7 +109,10 @@ namespace Opm
         const Events& getEvents() const;
         const Deck& getModifierDeck(size_t timeStep) const;
         bool hasOilVaporizationProperties() const;
-
+        const VFPProdTable& getVFPProdTable(int table_id, size_t timeStep) const;
+        const VFPInjTable& getVFPInjTable(int table_id, size_t timeStep) const;
+        std::map<int, const VFPProdTable*> getVFPProdTables(size_t timeStep) const;
+        std::map<int, const VFPInjTable*>  getVFPInjTables(size_t timeStep) const;
         /*
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
@@ -125,8 +130,11 @@ namespace Opm
         Tuning m_tuning;
         MessageLimits m_messageLimits;
         Phases m_phases;
+        std::map<int, DynamicState<std::shared_ptr<VFPProdTable>>> vfpprod_tables;
+        std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>> vfpinj_tables;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
+
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
@@ -170,7 +178,8 @@ namespace Opm
         void handleWECON( const DeckKeyword& keyword, size_t currentStep);
         void handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword);
         void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
-
+        void handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
+        void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(size_t currentStep);
 

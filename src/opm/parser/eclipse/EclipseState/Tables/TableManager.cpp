@@ -121,9 +121,6 @@ namespace Opm {
         if( deck.hasKeyword( "WATDENT" ) )
             this->m_watdentTable = WatdentTable( deck.getKeyword( "WATDENT" ) );
 
-        initVFPProdTables(deck, m_vfpprodTables);
-        initVFPInjTables(deck,  m_vfpinjTables);
-
         if( deck.hasKeyword( "RTEMP" ) )
             m_rtemp = deck.getKeyword("RTEMP").getRecord(0).getItem("TEMP").getSIDouble( 0 );
         else if (deck.hasKeyword( "RTEMPA" ) )
@@ -495,59 +492,7 @@ namespace Opm {
 
 
 
-    void TableManager::initVFPProdTables(const Deck& deck,
-                                          std::map<int, VFPProdTable>& tableMap) {
-        if (!deck.hasKeyword(ParserKeywords::VFPPROD::keywordName)) {
-            return;
-        }
-
-        int num_tables = deck.count(ParserKeywords::VFPPROD::keywordName);
-        const auto& keywords = deck.getKeywordList<ParserKeywords::VFPPROD>();
-        const auto& unit_system = deck.getActiveUnitSystem();
-        for (int i=0; i<num_tables; ++i) {
-            const auto& keyword = *keywords[i];
-
-            VFPProdTable table;
-            table.init(keyword, unit_system);
-
-            //Check that the table in question has a unique ID
-            int table_id = table.getTableNum();
-            if (tableMap.find(table_id) == tableMap.end()) {
-                tableMap.insert(std::make_pair(table_id, std::move(table)));
-            }
-            else {
-                throw std::invalid_argument("Duplicate table numbers for VFPPROD found");
-            }
-        }
-    }
-
-    void TableManager::initVFPInjTables(const Deck& deck,
-                                        std::map<int, VFPInjTable>& tableMap) {
-        if (!deck.hasKeyword(ParserKeywords::VFPINJ::keywordName)) {
-            return;
-        }
-
-        int num_tables = deck.count(ParserKeywords::VFPINJ::keywordName);
-        const auto& keywords = deck.getKeywordList<ParserKeywords::VFPINJ>();
-        const auto& unit_system = deck.getActiveUnitSystem();
-        for (int i=0; i<num_tables; ++i) {
-            const auto& keyword = *keywords[i];
-
-            VFPInjTable table;
-            table.init(keyword, unit_system);
-
-            //Check that the table in question has a unique ID
-            int table_id = table.getTableNum();
-            if (tableMap.find(table_id) == tableMap.end()) {
-                tableMap.insert(std::make_pair(table_id, std::move(table)));
-            }
-            else {
-                throw std::invalid_argument("Duplicate table numbers for VFPINJ found");
-            }
-        }
-    }
-
-    size_t TableManager::numFIPRegions() const {
+        size_t TableManager::numFIPRegions() const {
         size_t ntfip = m_tabdims.getNumFIPRegions();
         if (m_regdims->getNTFIP( ) > ntfip)
             return m_regdims->getNTFIP( );
@@ -771,14 +716,6 @@ namespace Opm {
         if (!useJFunc())
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
         return m_jfunc;
-    }
-
-    const std::map<int, VFPProdTable>& TableManager::getVFPProdTables() const {
-        return m_vfpprodTables;
-    }
-
-    const std::map<int, VFPInjTable>& TableManager::getVFPInjTables() const {
-        return m_vfpinjTables;
     }
 
     bool TableManager::useImptvd() const {

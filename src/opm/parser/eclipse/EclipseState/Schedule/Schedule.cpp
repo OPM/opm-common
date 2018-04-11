@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -89,9 +90,8 @@ namespace Opm {
                 handleMESSAGES(keyword, 0);
         }
 
-        if (Section::hasSCHEDULE(deck)) {
+        if (Section::hasSCHEDULE(deck))
             iterateScheduleSection( parseContext, SCHEDULESection( deck ), grid, eclipseProperties );
-        }
     }
 
 
@@ -144,6 +144,7 @@ namespace Opm {
 
         size_t currentStep = 0;
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
+        const auto& unit_system = section.unitSystem();
 
         for (size_t keywordIdx = 0; keywordIdx < section.size(); ++keywordIdx) {
             const auto& keyword = section.getKeyword(keywordIdx);
@@ -257,6 +258,12 @@ namespace Opm {
             else if (keyword.name() == "WEFAC")
                 handleWEFAC(keyword, currentStep);
 
+            else if (keyword.name() == "VFPINJ")
+                handleVFPINJ(keyword, unit_system, currentStep);
+
+            else if (keyword.name() == "VFPPROD")
+                handleVFPPROD(keyword, unit_system, currentStep);
+
             else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
                 bool supported = geoModifiers.at( keyword.name() );
                 if (supported) {
@@ -324,6 +331,35 @@ namespace Opm {
             }
         }
     }
+
+    void Schedule::handleVFPINJ(const DeckKeyword& vfpinjKeyword, const UnitSystem& unit_system, size_t currentStep) {
+        std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(vfpinjKeyword, unit_system);
+        int table_id = table->getTableNum();
+
+        const auto iter = vfpinj_tables.find(table_id);
+        if (iter == vfpinj_tables.end()) {
+            std::pair<int, DynamicState<std::shared_ptr<VFPInjTable> > > pair = std::make_pair(table_id, DynamicState<std::shared_ptr<VFPInjTable> >(this->m_timeMap, nullptr));
+            vfpinj_tables.insert( pair );
+        }
+        auto & table_state = vfpinj_tables.at(table_id);
+        table_state.update(currentStep, table);
+        this->m_events.addEvent( ScheduleEvents::VFPINJ_UPDATE , currentStep);
+    }
+
+    void Schedule::handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep) {
+        std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(vfpprodKeyword, unit_system);
+        int table_id = table->getTableNum();
+
+        const auto iter = vfpprod_tables.find(table_id);
+        if (iter == vfpprod_tables.end()) {
+            std::pair<int, DynamicState<std::shared_ptr<VFPProdTable> > > pair = std::make_pair(table_id, DynamicState<std::shared_ptr<VFPProdTable> >(this->m_timeMap, nullptr));
+            vfpprod_tables.insert( pair );
+        }
+        auto & table_state = vfpprod_tables.at(table_id);
+        table_state.update(currentStep, table);
+        this->m_events.addEvent( ScheduleEvents::VFPPROD_UPDATE , currentStep);
+    }
+
 
     void Schedule::handleWELSPECS( const SCHEDULESection& section,
                                    size_t index,
@@ -1678,7 +1714,7 @@ namespace Opm {
         return m_messageLimits;
     }
 
-    
+
 
 
     const Events& Schedule::getEvents() const {
@@ -1709,5 +1745,52 @@ namespace Opm {
         for (auto& well : this->m_wells)
             well.filterCompletions(grid);
     }
+
+    const VFPProdTable& Schedule::getVFPProdTable(int table_id, size_t timeStep) const {
+        const auto pair = vfpprod_tables.find(table_id);
+        if (pair == vfpprod_tables.end())
+            throw std::invalid_argument("No such table id: " + std::to_string(table_id));
+
+        auto table_ptr = pair->second.get(timeStep);
+        if (!table_ptr)
+            throw std::invalid_argument("Table not yet defined at timeStep:" + std::to_string(timeStep));
+
+        return *table_ptr;
+    }
+
+    const VFPInjTable& Schedule::getVFPInjTable(int table_id, size_t timeStep) const {
+        const auto pair = vfpinj_tables.find(table_id);
+        if (pair == vfpinj_tables.end())
+            throw std::invalid_argument("No such table id: " + std::to_string(table_id));
+
+        auto table_ptr = pair->second.get(timeStep);
+        if (!table_ptr)
+            throw std::invalid_argument("Table not yet defined at timeStep:" + std::to_string(timeStep));
+
+        return *table_ptr;
+    }
+
+    std::map<int, const VFPInjTable*> Schedule::getVFPInjTables(size_t timeStep) const {
+        std::map<int, const VFPInjTable*> tables;
+        for (const auto& pair : this->vfpinj_tables) {
+            if (pair.second.get(timeStep)) {
+                std::pair<int, const VFPInjTable*> table_pair = std::make_pair(pair.first, pair.second.get(timeStep).get());
+                tables.insert(table_pair);
+            }
+        }
+        return tables;
+    }
+
+    std::map<int, const VFPProdTable*> Schedule::getVFPProdTables(size_t timeStep) const {
+        std::map<int, const VFPProdTable*> tables;
+        for (const auto& pair : this->vfpprod_tables) {
+            if (pair.second.get(timeStep)) {
+                std::pair<int, const VFPProdTable*> table_pair = std::make_pair(pair.first, pair.second.get(timeStep).get());
+                tables.insert(table_pair);
+            }
+        }
+        return tables;
+    }
+
 }
 

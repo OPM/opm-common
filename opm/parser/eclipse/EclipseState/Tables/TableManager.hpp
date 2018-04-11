@@ -35,8 +35,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/MiscTable.hpp>
@@ -46,8 +44,6 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Aqudims.hpp>
 
 namespace Opm {
@@ -125,8 +121,6 @@ namespace Opm {
         const RockTable& getRockTable() const;
         const ViscrefTable& getViscrefTable() const;
         const WatdentTable& getWatdentTable() const;
-        const std::map<int, VFPProdTable>& getVFPProdTables() const;
-        const std::map<int, VFPInjTable>& getVFPInjTables() const;
 
         /// deck has keyword "IMPTVD" --- Imbition end-point versus depth tables
         bool useImptvd() const;
@@ -152,13 +146,6 @@ namespace Opm {
         void initDims(const Deck& deck);
         void initRocktabTables(const Deck& deck);
         void initGasvisctTables(const Deck& deck);
-
-        void initVFPProdTables(const Deck& deck,
-                               std::map<int, VFPProdTable>& tableMap);
-
-        void initVFPInjTables(const Deck& deck,
-                              std::map<int, VFPInjTable>& tableMap);
-
 
         void initPlymaxTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);
@@ -292,8 +279,6 @@ namespace Opm {
         }
 
         std::map<std::string , TableContainer> m_simpleTables;
-        std::map<int, VFPProdTable> m_vfpprodTables;
-        std::map<int, VFPInjTable> m_vfpinjTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
         PvtwTable m_pvtwTable;

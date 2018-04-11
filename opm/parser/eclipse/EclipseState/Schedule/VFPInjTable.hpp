@@ -47,74 +47,40 @@ public:
         FLO_INVALID
     };
 
-    /**
-     * Constructor
-     */
+
     inline VFPInjTable() : m_table_num(-1),
             m_datum_depth(-1),
             m_flo_type(FLO_INVALID) {
 
     }
 
-    /**
-         * Initializes objects from raw data. NOTE: All raw data assumed to be in SI units
-         * @param table_num VFP table number
-         * @param datum_depth Reference depth for BHP
-         * @param flo_type Specifies what flo_data represents
-         * @param flo_data Axis for flo_type
-         * @param thp_data Axis for thp_type
-         * @param data BHP to be interpolated. Given as a 2D array so that
-         *        BHP = data[thp][flo] for the indices thp, flo.
-         */
-        void init(int table_num,
+
+
+    VFPInjTable(int table_num,
                 double datum_depth,
                 FLO_TYPE flo_type,
                 const std::vector<double>& flo_data,
                 const std::vector<double>& thp_data,
                 const array_type& data);
 
-        /**
-         * Constructor which parses a deck keyword and retrieves the relevant parts for a
-         * VFP table.
-         */
-        void init(const DeckKeyword& table, const UnitSystem& deck_unit_system);
+    VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
 
-        /**
-         * Returns the table number
-         * @return table number
-         */
         inline int getTableNum() const {
             return m_table_num;
         }
 
-        /**
-         * Returns the datum depth for the table data
-         * @return datum depth
-         */
         inline double getDatumDepth() const {
             return m_datum_depth;
         }
 
-        /**
-         * Returns the rate/flo type for the flo axis
-         * @return flo type
-         */
         inline FLO_TYPE getFloType() const {
             return m_flo_type;
         }
 
-        /**
-         * Returns the coordinates of the FLO sample points in the table
-         * @return Flo sample coordinates
-         */
         inline const std::vector<double>& getFloAxis() const {
             return m_flo_data;
         }
 
-        /**
-         * Returns the coordinates for the tubing head pressure sample points in the table
-         * @return Tubing head pressure coordinates
-         */
         inline const std::vector<double>& getTHPAxis() const {
             return m_thp_data;
         }
@@ -138,7 +104,6 @@ public:
         }
 private:
 
-    //"Header" variables
     int m_table_num;
     double m_datum_depth;
     FLO_TYPE m_flo_type;

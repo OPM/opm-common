@@ -22,11 +22,11 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 
 //Anonymous namespace
 namespace {
@@ -52,12 +52,13 @@ namespace Opm {
 
 
 
-void VFPInjTable::init(int table_num,
-        double datum_depth,
-        FLO_TYPE flo_type,
-        const std::vector<double>& flo_data,
-        const std::vector<double>& thp_data,
-        const array_type& data) {
+
+VFPInjTable::VFPInjTable(int table_num,
+                         double datum_depth,
+                         FLO_TYPE flo_type,
+                         const std::vector<double>& flo_data,
+                         const std::vector<double>& thp_data,
+                         const array_type& data) {
     m_table_num = table_num;
     m_datum_depth = datum_depth;
     m_flo_type = flo_type;
@@ -75,11 +76,7 @@ void VFPInjTable::init(int table_num,
 
 
 
-
-
-
-
-void VFPInjTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
+VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPINJ;
 
     //Check that the table has enough records

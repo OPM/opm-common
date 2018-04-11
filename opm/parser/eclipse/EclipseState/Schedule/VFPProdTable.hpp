@@ -73,53 +73,30 @@ public:
         ALQ_INVALID
     };
 
-    /**
-     * Constructor
-     */
     inline VFPProdTable() : m_table_num(-1),
-            m_datum_depth(-1),
-            m_flo_type(FLO_INVALID),
-            m_wfr_type(WFR_INVALID),
-            m_gfr_type(GFR_INVALID),
-            m_alq_type(ALQ_INVALID) {
+                            m_datum_depth(-1),
+                            m_flo_type(FLO_INVALID),
+                            m_wfr_type(WFR_INVALID),
+                            m_gfr_type(GFR_INVALID),
+                            m_alq_type(ALQ_INVALID) {
 
     }
 
-    /**
-     * Initializes objects from raw data. NOTE: All raw data assumed to be in SI units
-     * @param table_num VFP table number
-     * @param datum_depth Reference depth for BHP
-     * @param flo_type Specifies what flo_data represents
-     * @param wfr_type Specifies what wfr_data represents
-     * @param gfr_type Specifies what gfr_data represents
-     * @param alq_type Specifies what alq_data represents
-     * @param flo_data Axis for flo_type
-     * @param thp_data Axis for tubing head pressure
-     * @param wfr_data Axis for wfr_type
-     * @param gfr_data Axis for gfr_type
-     * @param alq_data Axis for alq_type
-     * @param data BHP to be interpolated. Given as a 5D array so that
-     *        BHP = data[thp][wfr][gfr][alq][flo] for the indices thp, wfr, etc.
-     */
-    void init(int table_num,
-            double datum_depth,
-            FLO_TYPE flo_type,
-            WFR_TYPE wfr_type,
-            GFR_TYPE gfr_type,
-            ALQ_TYPE alq_type,
-            const std::vector<double>& flo_data,
-            const std::vector<double>& thp_data,
-            const std::vector<double>& wfr_data,
-            const std::vector<double>& gfr_data,
-            const std::vector<double>& alq_data,
-            const array_type& data);
 
-    /**
-     * Constructor which parses a deck keyword and retrieves the relevant parts for a
-     * VFP table.
-     */
-    void init( const DeckKeyword& table, const UnitSystem& deck_unit_system);
+    VFPProdTable(int table_num,
+                 double datum_depth,
+                 FLO_TYPE flo_type,
+                 WFR_TYPE wfr_type,
+                 GFR_TYPE gfr_type,
+                 ALQ_TYPE alq_type,
+                 const std::vector<double>& flo_data,
+                 const std::vector<double>& thp_data,
+                 const std::vector<double>& wfr_data,
+                 const std::vector<double>& gfr_data,
+                 const std::vector<double>& alq_data,
+                 const array_type& data);
 
+    VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system);
     /**
      * Returns the table number
      * @return table number
@@ -228,6 +205,7 @@ public:
         return m_data;
     }
 
+ 
 private:
 
     //"Header" variables

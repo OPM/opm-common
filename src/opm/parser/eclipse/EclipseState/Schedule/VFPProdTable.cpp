@@ -25,10 +25,11 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 
 
 namespace Opm {
@@ -122,19 +123,19 @@ VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
 }
 
 }
+VFPProdTable::VFPProdTable(int table_num,
+                           double datum_depth,
+                           FLO_TYPE flo_type,
+                           WFR_TYPE wfr_type,
+                           GFR_TYPE gfr_type,
+                           ALQ_TYPE alq_type,
+                           const std::vector<double>& flo_data,
+                           const std::vector<double>& thp_data,
+                           const std::vector<double>& wfr_data,
+                           const std::vector<double>& gfr_data,
+                           const std::vector<double>& alq_data,
+                           const array_type& data) {
 
-void VFPProdTable::init(int table_num,
-        double datum_depth,
-        FLO_TYPE flo_type,
-        WFR_TYPE wfr_type,
-        GFR_TYPE gfr_type,
-        ALQ_TYPE alq_type,
-        const std::vector<double>& flo_data,
-        const std::vector<double>& thp_data,
-        const std::vector<double>& wfr_data,
-        const std::vector<double>& gfr_data,
-        const std::vector<double>& alq_data,
-        const array_type& data) {
     m_table_num = table_num;
     m_datum_depth = datum_depth;
     m_flo_type = flo_type;
@@ -159,7 +160,8 @@ void VFPProdTable::init(int table_num,
     //check();
 }
 
-void VFPProdTable::init( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
+
+VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPPROD;
 
     //Check that the table has enough records
