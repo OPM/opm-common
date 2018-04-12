@@ -7,6 +7,7 @@ configure_file(data/schedule/part3.sch data/schedule/part3.sch COPYONLY)
 configure_file(data/schedule/fragment.sch data/schedule/fragment.sch COPYONLY)
 configure_file(data/schedule/fragment_dates.sch data/schedule/fragment_dates.sch COPYONLY)
 
+configure_file(utils.py utils.py COPYONLY)
 
 foreach(prog time_vector completions deck group_tree grupnet parse_deck parse state props schedule wells)
     add_python_test(${prog} ${prog}.py)
