@@ -256,17 +256,17 @@ class TimeVector(object):
         if start_date is None:
             if first_kw.name != "DATES":
                 raise ValueError("When loading you must *either* specify date - or file must start with DATES keyword")
+            dt = _make_datetime(first_kw[len(first_kw) - 1])
         else:
             if first_kw.name == "DATES":
                 raise ValueError("When loading you must *either* specify date - or file must start with DATES keyword")
+            dt = start_date
 
         keywords = []
-        dt = start_date
         for kw in deck:
 
             if kw.name == "DATES":
-                if keywords:
-                    self.add_keywords(dt, keywords)
+                self.add_keywords(dt, keywords)
 
                 for index in range(len(kw)-1):
                     dt = _make_datetime(kw[index])

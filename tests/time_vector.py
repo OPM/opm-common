@@ -2,6 +2,7 @@ import unittest
 import datetime
 from sunbeam.tools import *
 
+from utils import tmp
 class TestTimeVector(unittest.TestCase):
 
     def setUp(self):
@@ -104,6 +105,16 @@ class TestTimeVector(unittest.TestCase):
         ts = tv[-1]
         self.assertEqual(ts.dt, datetime.datetime(1998, 1 , 10))
         self.assertEqual(ts.keywords[0].name, "WCONINJE")
+
+
+
+    def test_user_test(self):
+       tv=TimeVector(datetime.date(1999,12,31))
+       tv.load('data/schedule/TEMPLATE.SCH', date=datetime.datetime(1999,12,31))
+       self.assertListEqual(tv.dates, [datetime.datetime(1999,12,31),
+                                       datetime.datetime(2000,1,1),
+                                       datetime.datetime(2000,2,1),
+                                       datetime.datetime(2000,3,1)])
 
 
 if __name__ == "__main__":
