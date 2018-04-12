@@ -69,44 +69,20 @@ public:
         ALQ_INVALID
     };
 
-    inline VFPProdTable() : m_table_num(-1),
-            m_datum_depth(-1),
-            m_flo_type(FLO_INVALID),
-            m_wfr_type(WFR_INVALID),
-            m_gfr_type(GFR_INVALID),
-            m_alq_type(ALQ_INVALID) {
+    VFPProdTable(int table_num,
+                 double datum_depth,
+                 FLO_TYPE flo_type,
+                 WFR_TYPE wfr_type,
+                 GFR_TYPE gfr_type,
+                 ALQ_TYPE alq_type,
+                 const std::vector<double>& flo_data,
+                 const std::vector<double>& thp_data,
+                 const std::vector<double>& wfr_data,
+                 const std::vector<double>& gfr_data,
+                 const std::vector<double>& alq_data,
+                 const array_type& data);
 
-    }
-
-  VFPProdTable(int table_num,
-               double datum_depth,
-               FLO_TYPE flo_type,
-               WFR_TYPE wfr_type,
-               GFR_TYPE gfr_type,
-               ALQ_TYPE alq_type,
-               const std::vector<double>& flo_data,
-               const std::vector<double>& thp_data,
-               const std::vector<double>& wfr_data,
-               const std::vector<double>& gfr_data,
-               const std::vector<double>& alq_data,
-               const array_type& data);
-
-  VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system);
- 
-    void init(int table_num,
-            double datum_depth,
-            FLO_TYPE flo_type,
-            WFR_TYPE wfr_type,
-            GFR_TYPE gfr_type,
-            ALQ_TYPE alq_type,
-            const std::vector<double>& flo_data,
-            const std::vector<double>& thp_data,
-            const std::vector<double>& wfr_data,
-            const std::vector<double>& gfr_data,
-            const std::vector<double>& alq_data,
-            const array_type& data);
-
-    void init( const DeckKeyword& table, const UnitSystem& deck_unit_system);
+    VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system);
 
     inline int getTableNum() const {
         return m_table_num;
@@ -172,6 +148,7 @@ public:
         return m_data;
     }
 
+
 private:
 
     int m_table_num;
@@ -187,7 +164,6 @@ private:
     std::vector<double> m_gfr_data;
     std::vector<double> m_alq_data;
 
-    //The data itself, using the data ordering m_data[thp][wfr][gfr][alq][flo]
     array_type m_data;
 
     void check(const DeckKeyword& table, const double factor);

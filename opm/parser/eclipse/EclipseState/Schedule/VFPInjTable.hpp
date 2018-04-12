@@ -48,16 +48,12 @@ public:
             m_flo_type(FLO_INVALID) {
 
     }
-
   VFPInjTable(int table_num,
               double datum_depth,
               FLO_TYPE flo_type,
               const std::vector<double>& flo_data,
               const std::vector<double>& thp_data,
               const array_type& data);
-
-  VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
-
         void init(int table_num,
                 double datum_depth,
                 FLO_TYPE flo_type,
@@ -65,45 +61,46 @@ public:
                 const std::vector<double>& thp_data,
                 const array_type& data);
 
-        void init(const DeckKeyword& table, const UnitSystem& deck_unit_system);
+    VFPInjTable(const DeckKeyword& table, const UnitSystem& deck_unit_system);
 
-        inline int getTableNum() const {
-            return m_table_num;
-        }
+    inline int getTableNum() const {
+        return m_table_num;
+    }
 
-        inline double getDatumDepth() const {
-            return m_datum_depth;
-        }
+    inline double getDatumDepth() const {
+        return m_datum_depth;
+    }
 
-        inline FLO_TYPE getFloType() const {
-            return m_flo_type;
-        }
+    inline FLO_TYPE getFloType() const {
+        return m_flo_type;
+    }
 
-        inline const std::vector<double>& getFloAxis() const {
-            return m_flo_data;
-        }
+    inline const std::vector<double>& getFloAxis() const {
+        return m_flo_data;
+    }
 
-        inline const std::vector<double>& getTHPAxis() const {
-            return m_thp_data;
-        }
+    inline const std::vector<double>& getTHPAxis() const {
+        return m_thp_data;
+    }
 
-        /**
-         * Returns the data of the table itself. The data is ordered so that
-         *
-         * table = getTable();
-         * bhp = table[thp_idx][flo_idx];
-         *
-         * gives the bottom hole pressure value in the table for the coordinate
-         * given by
-         * flo_axis = getFloAxis();
-         * thp_axis = getTHPAxis();
-         *
-         * flo_coord = flo_axis(flo_idx);
-         * thp_coord = thp_axis(thp_idx);
-         */
-        inline const array_type& getTable() const {
-            return m_data;
-        }
+    /**
+     * Returns the data of the table itself. The data is ordered so that
+     *
+     * table = getTable();
+     * bhp = table[thp_idx][flo_idx];
+     *
+     * gives the bottom hole pressure value in the table for the coordinate
+     * given by
+     * flo_axis = getFloAxis();
+     * thp_axis = getTHPAxis();
+     *
+     * flo_coord = flo_axis(flo_idx);
+     * thp_coord = thp_axis(thp_idx);
+     */
+    inline const array_type& getTable() const {
+        return m_data;
+    }
+
 private:
 
     int m_table_num;
