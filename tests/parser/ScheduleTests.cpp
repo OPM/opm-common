@@ -2251,3 +2251,131 @@ BOOST_AUTO_TEST_CASE(FilterCompletions) {
   }
 }
 
+
+BOOST_AUTO_TEST_CASE(VFPINJ_TEST) {
+    const char *deckData = "\
+START\n \
+8 MAR 1998 /\n \
+\n \
+SCHEDULE \n\
+VFPINJ \n                                       \
+-- Table Depth  Rate   TAB  UNITS  BODY    \n\
+-- ----- ----- ----- ----- ------ -----    \n\
+       5  32.9   WAT   THP METRIC   BHP /  \n\
+-- Rate axis \n\
+1 3 5 /      \n\
+-- THP axis  \n\
+7 11 /       \n\
+-- Table data with THP# <values 1-num_rates> \n\
+1 1.5 2.5 3.5 /    \n\
+2 4.5 5.5 6.5 /    \n\
+TSTEP \n\
+10 10/\n\
+VFPINJ \n                                       \
+-- Table Depth  Rate   TAB  UNITS  BODY    \n\
+-- ----- ----- ----- ----- ------ -----    \n\
+       5  100   GAS   THP METRIC   BHP /  \n\
+-- Rate axis \n\
+1 3 5 /      \n\
+-- THP axis  \n\
+7 11 /       \n\
+-- Table data with THP# <values 1-num_rates> \n\
+1 1.5 2.5 3.5 /    \n\
+2 4.5 5.5 6.5 /    \n\
+--\n\
+VFPINJ \n                                       \
+-- Table Depth  Rate   TAB  UNITS  BODY    \n\
+-- ----- ----- ----- ----- ------ -----    \n\
+       10 200  WAT   THP METRIC   BHP /  \n\
+-- Rate axis \n\
+1 3 5 /      \n\
+-- THP axis  \n\
+7 11 /       \n\
+-- Table data with THP# <values 1-num_rates> \n\
+1 1.5 2.5 3.5 /    \n\
+2 4.5 5.5 6.5 /    \n";
+
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Schedule schedule(deck, grid1 , eclipseProperties, Phases(true, true, true) , ParseContext() );
+
+
+    BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 0));
+    BOOST_CHECK( !schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 1));
+    BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 2));
+
+    // No such table id
+    BOOST_CHECK_THROW(schedule.getVFPInjTable(77,0), std::invalid_argument);
+
+    // Table not defined at step 0
+    BOOST_CHECK_THROW(schedule.getVFPInjTable(10,0), std::invalid_argument);
+
+    const Opm::VFPInjTable& vfpinjTable2 = schedule.getVFPInjTable(5, 2);
+    BOOST_CHECK_EQUAL(vfpinjTable2.getTableNum(), 5);
+    BOOST_CHECK_EQUAL(vfpinjTable2.getDatumDepth(), 100);
+    BOOST_CHECK_EQUAL(vfpinjTable2.getFloType(), Opm::VFPInjTable::FLO_GAS);
+
+    const Opm::VFPInjTable& vfpinjTable3 = schedule.getVFPInjTable(10, 2);
+    BOOST_CHECK_EQUAL(vfpinjTable3.getTableNum(), 10);
+    BOOST_CHECK_EQUAL(vfpinjTable3.getDatumDepth(), 200);
+    BOOST_CHECK_EQUAL(vfpinjTable3.getFloType(), Opm::VFPInjTable::FLO_WAT);
+
+    const Opm::VFPInjTable& vfpinjTable = schedule.getVFPInjTable(5, 0);
+    BOOST_CHECK_EQUAL(vfpinjTable.getTableNum(), 5);
+    BOOST_CHECK_EQUAL(vfpinjTable.getDatumDepth(), 32.9);
+    BOOST_CHECK_EQUAL(vfpinjTable.getFloType(), Opm::VFPInjTable::FLO_WAT);
+
+    const auto vfp_tables0 = schedule.getVFPInjTables(0);
+    BOOST_CHECK_EQUAL( vfp_tables0.size(), 1);
+
+    const auto vfp_tables2 = schedule.getVFPInjTables(2);
+    BOOST_CHECK_EQUAL( vfp_tables2.size(), 2);
+    //Flo axis
+    {
+        const std::vector<double>& flo = vfpinjTable.getFloAxis();
+        BOOST_REQUIRE_EQUAL(flo.size(), 3);
+
+        //Unit of FLO is SM3/day, convert to SM3/second
+        double conversion_factor = 1.0 / (60*60*24);
+        BOOST_CHECK_EQUAL(flo[0], 1*conversion_factor);
+        BOOST_CHECK_EQUAL(flo[1], 3*conversion_factor);
+        BOOST_CHECK_EQUAL(flo[2], 5*conversion_factor);
+    }
+
+    //THP axis
+    {
+        const std::vector<double>& thp = vfpinjTable.getTHPAxis();
+        BOOST_REQUIRE_EQUAL(thp.size(), 2);
+
+        //Unit of THP is barsa => convert to pascal
+        double conversion_factor = 100000.0;
+        BOOST_CHECK_EQUAL(thp[0], 7*conversion_factor);
+        BOOST_CHECK_EQUAL(thp[1], 11*conversion_factor);
+    }
+
+    //The data itself
+    {
+        typedef Opm::VFPInjTable::array_type::size_type size_type;
+        const Opm::VFPInjTable::array_type& data = vfpinjTable.getTable();
+        const size_type* size = data.shape();
+
+        BOOST_CHECK_EQUAL(size[0], 2);
+        BOOST_CHECK_EQUAL(size[1], 3);
+
+        //Table given as BHP => barsa. Convert to pascal
+        double conversion_factor = 100000.0;
+
+        double index = 0.5;
+        for (size_type t=0; t<size[0]; ++t) {
+            for (size_type f=0; f<size[1]; ++f) {
+                index += 1.0;
+                BOOST_CHECK_EQUAL(data[t][f], index*conversion_factor);
+            }
+        }
+    }
+}
+

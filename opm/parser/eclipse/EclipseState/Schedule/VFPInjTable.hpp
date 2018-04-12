@@ -43,18 +43,8 @@ public:
         FLO_INVALID
     };
 
-    inline VFPInjTable() : m_table_num(-1),
-            m_datum_depth(-1),
-            m_flo_type(FLO_INVALID) {
 
-    }
-  VFPInjTable(int table_num,
-              double datum_depth,
-              FLO_TYPE flo_type,
-              const std::vector<double>& flo_data,
-              const std::vector<double>& thp_data,
-              const array_type& data);
-        void init(int table_num,
+    VFPInjTable(int table_num,
                 double datum_depth,
                 FLO_TYPE flo_type,
                 const std::vector<double>& flo_data,
