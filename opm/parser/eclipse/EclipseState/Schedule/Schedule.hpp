@@ -177,6 +177,7 @@ namespace Opm
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWPMITAB( const DeckKeyword& keyword,  const size_t currentStep);
+        void handleWSKPTAB( const DeckKeyword& keyword,  const size_t currentStep);
         void handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep );

@@ -1,5 +1,5 @@
 /*
-  Copyright 2014 Statoil ASA.
+  Copyright (C) 2018 Statoil ASA
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -15,25 +15,28 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
-#ifndef WELLPOLYMERPROPERTIES_HPP_HEADER_INCLUDED
-#define WELLPOLYMERPROPERTIES_HPP_HEADER_INCLUDED
+#ifndef OPM_PARSER_SKPRPOLY_TABLE_HPP
+#define OPM_PARSER_SKPRPOLY_TABLE_HPP
 
-
+#include <opm/parser/eclipse/EclipseState/Tables/Simple2DTable.hpp>
 namespace Opm {
 
-    struct WellPolymerProperties {
-        double m_polymerConcentration;
-        double m_saltConcentration;
-        int m_plymwinjtable;
-        int m_skprwattable;
-        int m_skprpolytable;
+    class DeckKeyword;
 
-        bool operator==(const WellPolymerProperties& other) const;
-        bool operator!=(const WellPolymerProperties& other) const;
-        WellPolymerProperties();
+    class SkprpolyTable : public Simple2DTable {
+    public:
+
+        explicit SkprpolyTable(const DeckKeyword& table);
+
+        double referenceConcentration() const;
+
+    private:
+        double m_ref_polymer_concentration;
+
     };
+
 }
 
-#endif
+#endif //OPM_PARSER_SKPRPOLY_TABLE_HPP

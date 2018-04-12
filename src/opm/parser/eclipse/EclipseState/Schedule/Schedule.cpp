@@ -779,7 +779,21 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWSKPTAB( const DeckKeyword& keyword,  const size_t currentStep) {
+        for (const auto& record : keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            for (auto* well : getWells(wellNamePattern) ) {
+                // TODO: it needs to be an injector
+                WellPolymerProperties properties(well->getPolymerProperties(currentStep));
+                properties.m_skprwattable = record.getItem("TABLE_NUMBER_WATER").get<int>(0);
+                properties.m_skprpolytable = record.getItem("TABLE_NUMBER_POLYMER").get<int>(0);
+                // TODO: some sanity check about the table number?
+                well->setPolymerProperties(currentStep, properties);
+            }
+        }
+    }
+
+
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             WellEconProductionLimits econ_production_limits(record);
