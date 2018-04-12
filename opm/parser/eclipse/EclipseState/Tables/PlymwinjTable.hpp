@@ -30,9 +30,6 @@ namespace Opm {
 
         explicit PlymwinjTable(const DeckKeyword& table);
 
-    private:
-        // TODO: maybe this one is not necessary
-        // TODO: maybe table number should go to base class
     };
 
 }
