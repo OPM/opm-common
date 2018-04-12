@@ -25,10 +25,11 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 
 
 namespace Opm {
@@ -122,6 +123,195 @@ VFPProdTable::ALQ_TYPE getALQType( const DeckItem& item) {
 }
 
 }
+
+VFPProdTable::VFPProdTable(int table_num,
+                           double datum_depth,
+                           FLO_TYPE flo_type,
+                           WFR_TYPE wfr_type,
+                           GFR_TYPE gfr_type,
+                           ALQ_TYPE alq_type,
+                           const std::vector<double>& flo_data,
+                           const std::vector<double>& thp_data,
+                           const std::vector<double>& wfr_data,
+                           const std::vector<double>& gfr_data,
+                           const std::vector<double>& alq_data,
+                           const array_type& data) {
+
+    m_table_num = table_num;
+    m_datum_depth = datum_depth;
+    m_flo_type = flo_type;
+    m_wfr_type = wfr_type;
+    m_gfr_type = gfr_type;
+    m_alq_type = alq_type;
+    m_flo_data = flo_data;
+    m_thp_data = thp_data;
+    m_wfr_data = wfr_data;
+    m_gfr_data = gfr_data;
+    m_alq_data = alq_data;
+
+    extents shape;
+    shape[0] = data.shape()[0];
+    shape[1] = data.shape()[1];
+    shape[2] = data.shape()[2];
+    shape[3] = data.shape()[3];
+    shape[4] = data.shape()[4];
+    m_data.resize(shape);
+    m_data = data;
+
+    //check();
+}
+
+
+VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
+    using ParserKeywords::VFPPROD;
+
+    //Check that the table has enough records
+    if (table.size() < 7) {
+        throw std::invalid_argument("VFPPROD table does not appear to have enough records to be valid");
+    }
+
+    //Get record 1, the metadata for the table
+    const auto& header = table.getRecord(0);
+
+    //Get the different header items
+    m_table_num   = header.getItem<VFPPROD::TABLE>().get< int >(0);
+    m_datum_depth = header.getItem<VFPPROD::DATUM_DEPTH>().getSIDouble(0);
+
+    m_flo_type = Opm::getFloType(header.getItem<VFPPROD::RATE_TYPE>());
+    m_wfr_type = Opm::getWFRType(header.getItem<VFPPROD::WFR>());
+    m_gfr_type = Opm::getGFRType(header.getItem<VFPPROD::GFR>());
+
+    //Not used, but check that PRESSURE_DEF is indeed THP
+    std::string quantity_string = header.getItem<VFPPROD::PRESSURE_DEF>().get< std::string >(0);
+    if (quantity_string != "THP") {
+        throw std::invalid_argument("PRESSURE_DEF is required to be THP");
+    }
+
+    m_alq_type = Opm::getALQType(header.getItem<VFPPROD::ALQ_DEF>());
+
+    //Check units used for this table
+    std::string units_string = "";
+    if (header.getItem<VFPPROD::UNITS>().hasValue(0)) {
+        units_string = header.getItem<VFPPROD::UNITS>().get< std::string >(0);
+    }
+    else {
+        //If units does not exist in record, the default value is the
+        //unit system of the deck itself: do nothing...
+    }
+
+    if (units_string != "") {
+        UnitSystem::UnitType table_unit_type;
+
+        //FIXME: Only metric and field supported at the moment.
+        //Need to change all of the convertToSI functions to support LAB/PVT-M
+
+        if (units_string == "METRIC") {
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_METRIC;
+        }
+        else if (units_string == "FIELD") {
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_FIELD;
+        }
+        else if (units_string == "LAB") {
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_LAB;
+        }
+        else if (units_string == "PVT-M") {
+            throw std::invalid_argument("Unsupported UNITS string: 'PVT-M'");
+        }
+        else {
+            throw std::invalid_argument("Invalid UNITS string");
+        }
+
+        //Sanity check
+        if(table_unit_type != deck_unit_system.getType()) {
+            throw std::invalid_argument("Deck units are not equal VFPPROD table units.");
+        }
+    }
+
+    //Quantity in the body of the table
+    std::string body_string = header.getItem<VFPPROD::BODY_DEF>().get< std::string >(0);
+    if (body_string == "TEMP") {
+        throw std::invalid_argument("Invalid BODY_DEF string: TEMP not supported");
+    }
+    else if (body_string == "BHP") {
+
+    }
+    else {
+        throw std::invalid_argument("Invalid BODY_DEF string");
+    }
+
+
+    //Get actual rate / flow values
+    m_flo_data = table.getRecord(1).getItem<VFPPROD::FLOW_VALUES>().getData< double >();
+    convertFloToSI(m_flo_type, m_flo_data, deck_unit_system);
+
+    //Get actual tubing head pressure values
+    m_thp_data = table.getRecord(2).getItem<VFPPROD::THP_VALUES>().getData< double >();
+    convertTHPToSI(m_thp_data, deck_unit_system);
+
+    //Get actual water fraction values
+    m_wfr_data = table.getRecord(3).getItem<VFPPROD::WFR_VALUES>().getData< double >();
+    convertWFRToSI(m_wfr_type, m_wfr_data, deck_unit_system);
+
+    //Get actual gas fraction values
+    m_gfr_data = table.getRecord(4).getItem<VFPPROD::GFR_VALUES>().getData< double >();
+    convertGFRToSI(m_gfr_type, m_gfr_data, deck_unit_system);
+
+    //Get actual gas fraction values
+    m_alq_data = table.getRecord(5).getItem<VFPPROD::ALQ_VALUES>().getData< double >();
+    convertALQToSI(m_alq_type, m_alq_data, deck_unit_system);
+
+    //Finally, read the actual table itself.
+    size_t nt = m_thp_data.size();
+    size_t nw = m_wfr_data.size();
+    size_t ng = m_gfr_data.size();
+    size_t na = m_alq_data.size();
+    size_t nf = m_flo_data.size();
+    extents shape;
+    shape[0] = nt;
+    shape[1] = nw;
+    shape[2] = ng;
+    shape[3] = na;
+    shape[4] = nf;
+    m_data.resize(shape);
+    std::fill_n(m_data.data(), m_data.num_elements(), std::nan("0"));
+
+    //Check that size of table matches size of axis:
+    if (table.size() != nt*nw*ng*na + 6) {
+        throw std::invalid_argument("VFPPROD table does not contain enough records.");
+    }
+
+    //FIXME: Unit for TEMP=Tubing head temperature is not Pressure, see BODY_DEF
+    const double table_scaling_factor = deck_unit_system.parse("Pressure").getSIScaling();
+    for (size_t i=6; i<table.size(); ++i) {
+        const auto& record = table.getRecord(i);
+        //Get indices (subtract 1 to get 0-based index)
+        int t = record.getItem<VFPPROD::THP_INDEX>().get< int >(0) - 1;
+        int w = record.getItem<VFPPROD::WFR_INDEX>().get< int >(0) - 1;
+        int g = record.getItem<VFPPROD::GFR_INDEX>().get< int >(0) - 1;
+        int a = record.getItem<VFPPROD::ALQ_INDEX>().get< int >(0) - 1;
+
+        //Rest of values (bottom hole pressure or tubing head temperature) have index of flo value
+        const std::vector<double>& bhp_tht = record.getItem<VFPPROD::VALUES>().getData< double >();
+
+        if (bhp_tht.size() != nf) {
+            throw std::invalid_argument("VFPPROD table does not contain enough FLO values.");
+        }
+
+        for (size_t f=0; f<bhp_tht.size(); ++f) {
+            //Check that all data is within reasonable ranges, defined to be up-to 1.0e10...
+            if (bhp_tht[f] > 1.0e10) {
+                //TODO: Replace with proper log message
+                std::cerr << "VFPPROD element ["
+                        << t << "," << w << "," << g << "," << a << "," << f
+                        << "]=" << bhp_tht[f] << " too large" << std::endl;
+            }
+            m_data[t][w][g][a][f] = table_scaling_factor*bhp_tht[f];
+        }
+    }
+
+    check(table, table_scaling_factor);
+}
+
 
 void VFPProdTable::init(int table_num,
         double datum_depth,

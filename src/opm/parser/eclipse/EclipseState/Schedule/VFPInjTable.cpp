@@ -22,11 +22,11 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 
 //Anonymous namespace
 namespace {
@@ -49,6 +49,147 @@ inline const Opm::DeckItem& getNonEmptyItem( const Opm::DeckRecord& record) {
 
 
 namespace Opm {
+
+VFPInjTable::VFPInjTable(int table_num,
+                         double datum_depth,
+                         FLO_TYPE flo_type,
+                         const std::vector<double>& flo_data,
+                         const std::vector<double>& thp_data,
+                         const array_type& data) {
+    m_table_num = table_num;
+    m_datum_depth = datum_depth;
+    m_flo_type = flo_type;
+    m_flo_data = flo_data;
+    m_thp_data = thp_data;
+
+    extents shape;
+    shape[0] = data.shape()[0];
+    shape[1] = data.shape()[1];
+    m_data.resize(shape);
+    m_data = data;
+
+    check();
+}
+
+
+
+VFPInjTable::VFPInjTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
+    using ParserKeywords::VFPINJ;
+
+    //Check that the table has enough records
+    if (table.size() < 4) {
+        throw std::invalid_argument("VFPINJ table does not appear to have enough records to be valid");
+    }
+
+    //Get record 1, the metadata for the table
+    const auto& header = table.getRecord(0);
+
+    //Get the different header items
+    m_table_num   = getNonEmptyItem<VFPINJ::TABLE>(header).get< int >(0);
+    m_datum_depth = getNonEmptyItem<VFPINJ::DATUM_DEPTH>(header).getSIDouble(0);
+
+    m_flo_type = getFloType(getNonEmptyItem<VFPINJ::RATE_TYPE>(header).get< std::string >(0));
+
+    //Not used, but check that PRESSURE_DEF is indeed THP
+    std::string quantity_string = getNonEmptyItem<VFPINJ::PRESSURE_DEF>(header).get< std::string >(0);
+    if (quantity_string != "THP") {
+        throw std::invalid_argument("PRESSURE_DEF is required to be THP");
+    }
+
+    //Check units used for this table
+    std::string units_string = "";
+    if (header.getItem<VFPINJ::UNITS>().hasValue(0)) {
+        units_string = header.getItem<VFPINJ::UNITS>().get< std::string >(0);
+    }
+    else {
+        //If units does not exist in record, the default value is the
+        //unit system of the deck itself: do nothing...
+    }
+
+    if (units_string != "") {
+        UnitSystem::UnitType table_unit_type;
+
+        //FIXME: Only metric and field supported at the moment.
+        //Need to change all of the convertToSI functions to support LAB/PVT-M
+
+        if (units_string == "METRIC") {
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_METRIC;
+        }
+        else if (units_string == "FIELD") {
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_FIELD;
+        }
+        else if (units_string == "LAB") {
+            table_unit_type = UnitSystem::UnitType::UNIT_TYPE_FIELD;
+        }
+        else if (units_string == "PVT-M") {
+            throw std::invalid_argument("Unsupported UNITS string: 'PVT-M'");
+        }
+        else {
+            throw std::invalid_argument("Invalid UNITS string");
+        }
+
+        //Sanity check
+        if(table_unit_type != deck_unit_system.getType()) {
+            throw std::invalid_argument("Deck units are not equal VFPINJ table units.");
+        }
+    }
+
+    //Quantity in the body of the table
+    std::string body_string = getNonEmptyItem<VFPINJ::BODY_DEF>(header).get< std::string >(0);
+    if (body_string != "BHP") {
+        throw std::invalid_argument("Invalid BODY_DEF string");
+    }
+
+
+    //Get actual rate / flow values
+    m_flo_data = getNonEmptyItem<VFPINJ::FLOW_VALUES>(table.getRecord(1)).getData< double >();
+    convertFloToSI(m_flo_type, m_flo_data, deck_unit_system);
+
+    //Get actual tubing head pressure values
+    m_thp_data = getNonEmptyItem<VFPINJ::THP_VALUES>(table.getRecord(2)).getData< double >();
+    convertTHPToSI(m_thp_data, deck_unit_system);
+
+    //Finally, read the actual table itself.
+    size_t nt = m_thp_data.size();
+    size_t nf = m_flo_data.size();
+    extents shape;
+    shape[0] = nt;
+    shape[1] = nf;
+    m_data.resize(shape);
+    std::fill_n(m_data.data(), m_data.num_elements(), std::nan("0"));
+
+    //Check that size of table matches size of axis:
+    if (table.size() != nt + 3) {
+        throw std::invalid_argument("VFPINJ table does not contain enough records.");
+    }
+
+    const double table_scaling_factor = deck_unit_system.parse("Pressure").getSIScaling();
+    for (size_t i=3; i<table.size(); ++i) {
+        const auto& record = table.getRecord(i);
+        //Get indices (subtract 1 to get 0-based index)
+        int t = getNonEmptyItem<VFPINJ::THP_INDEX>(record).get< int >(0) - 1;
+
+        //Rest of values (bottom hole pressure or tubing head temperature) have index of flo value
+        const std::vector<double>& bhp_tht = getNonEmptyItem<VFPINJ::VALUES>(record).getData< double >();
+
+        if (bhp_tht.size() != nf) {
+            throw std::invalid_argument("VFPINJ table does not contain enough FLO values.");
+        }
+
+        for (unsigned int f=0; f<bhp_tht.size(); ++f) {
+            const double& value = bhp_tht[f];
+            if (value > 1.0e10) {
+                //TODO: Replace with proper log message
+                std::cerr << "Too large value encountered in VFPINJ in ["
+                        << t << "," << f << "]=" << value << std::endl;
+            }
+            m_data[t][f] = table_scaling_factor*value;
+        }
+    }
+
+    check();
+}
+
 
 
 

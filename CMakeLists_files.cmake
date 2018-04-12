@@ -106,11 +106,11 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/TableManager.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/Tables.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/VFPInjTable.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/VFPProdTable.cpp
     src/opm/parser/eclipse/EclipseState/UDQConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQExpression.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.cpp
     src/opm/parser/eclipse/Parser/ParseContext.cpp
     src/opm/parser/eclipse/Parser/Parser.cpp
     src/opm/parser/eclipse/Parser/ParserEnums.cpp
@@ -362,7 +362,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp
-       opm/parser/eclipse/EclipseState/Tables/VFPProdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/MsfnTable.hpp
        opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp
        opm/parser/eclipse/EclipseState/Tables/Regdims.hpp
@@ -371,7 +370,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/PlydhflfTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp
        opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp
-       opm/parser/eclipse/EclipseState/Tables/VFPInjTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SpecheatTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp
        opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp
@@ -422,6 +420,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Aquancon.hpp
        opm/parser/eclipse/EclipseState/AquiferCT.hpp
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
+       opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
+       opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp
