@@ -109,9 +109,10 @@ namespace Opm
         const Events& getEvents() const;
         const Deck& getModifierDeck(size_t timeStep) const;
         bool hasOilVaporizationProperties() const;
-        const std::map<int, VFPProdTable>& getVFPProdTables(size_t timeStep) const;
-        const std::map<int, VFPInjTable>& getVFPInjTables(size_t timeStep) const;
-
+        const VFPProdTable& getVFPProdTable(int table_id, size_t timeStep) const;
+        const VFPInjTable& getVFPInjTable(int table_id, size_t timeStep) const;
+        std::map<int, VFPProdTable> getVFPProdTables(size_t timeStep) const;
+        std::map<int, VFPInjTable>  getVFPInjTables(size_t timeStep) const;
         /*
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
@@ -129,17 +130,10 @@ namespace Opm
         Tuning m_tuning;
         MessageLimits m_messageLimits;
         Phases m_phases;
-        std::map<int, VFPProdTable> m_vfpprodTables;
-        std::map<int, VFPInjTable> m_vfpinjTables;
+        std::map<int, DynamicState<std::shared_ptr<VFPProdTable>>> vfpprod_tables;
+        std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>> vfpinj_tables;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
-
-        void initVFPProdTables(const Deck& deck,
-                               std::map<int, VFPProdTable>& tableMap);
-
-        void initVFPInjTables(const Deck& deck,
-                              std::map<int, VFPInjTable>& tableMap);
-
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
@@ -183,7 +177,8 @@ namespace Opm
         void handleWECON( const DeckKeyword& keyword, size_t currentStep);
         void handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword);
         void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
-
+        void handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
+        void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(size_t currentStep);
 
