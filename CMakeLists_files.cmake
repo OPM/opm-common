@@ -136,8 +136,10 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/test_util/summaryRegressionTest.cpp
           src/opm/test_util/summaryComparator.cpp
           src/opm/test_util/EclFilesComparator.cpp
+          src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
           src/opm/output/eclipse/CreateLogiHead.cpp
+          src/opm/output/eclipse/DoubHEAD.cpp
           src/opm/output/eclipse/EclipseGridInspector.cpp
           src/opm/output/eclipse/EclipseIO.cpp
           src/opm/output/eclipse/InteHEAD.cpp
@@ -227,6 +229,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_compareSummary.cpp
           tests/test_EclFilesComparator.cpp
           tests/test_EclipseIO.cpp
+          tests/test_DoubHEAD.cpp
           tests/test_InteHEAD.cpp
           tests/test_LinearisedOutputTable.cpp
           tests/test_LogiHEAD.cpp
@@ -474,6 +477,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/OutputWriter.hpp
         opm/output/data/Wells.hpp
         opm/output/data/Cells.hpp
+        opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
         opm/output/eclipse/EclipseIOUtil.hpp
