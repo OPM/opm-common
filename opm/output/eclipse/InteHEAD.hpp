@@ -1,5 +1,5 @@
 /*
-  Copyright 2016, 2017 Statoil ASA.
+  Copyright 2016, 2017, 2018 Statoil ASA.
 
   This file is part of the Open Porous Media Project (OPM).
 
@@ -39,26 +39,25 @@ namespace Opm { namespace RestartIO {
             int maxWellInGroup;
             int maxGroupInField;
         };
-	
-	struct WellSegDims {
-	    int nsegwl;	
-	    int nswlmx;	
-	    int nsegmx;	
-	    int nlbrmx;	
-	    int nisegz; 	
-	    int nrsegz;
-	    int nilbrz; 	
 
+        struct WellSegDims {
+            int nsegwl;
+            int nswlmx;
+            int nsegmx;
+            int nlbrmx;
+            int nisegz;
+            int nrsegz;
+            int nilbrz;
         };
 
-	struct RegDims {
-	    int ntfip;	
-	    int nmfipr;
-	    int nrfreg;
-	    int ntfreg;
-	    int nplmix;
+        struct RegDims {
+            int ntfip;
+            int nmfipr;
+            int nrfreg;
+            int ntfreg;
+            int nplmix;
+        };
 
-        };	
 	
         struct Date {
             int year;
@@ -81,10 +80,10 @@ namespace Opm { namespace RestartIO {
             int newtmn;
             int litmax;
             int litmin;
-	    int mxwsit;	
-	    int mxwpit;
+            int mxwsit;
+            int mxwpit;
         };
-	
+
         InteHEAD();
         ~InteHEAD() = default;
 
@@ -102,23 +101,23 @@ namespace Opm { namespace RestartIO {
         InteHEAD& wellTableDimensions(const WellTableDim& wtdim);
         InteHEAD& calenderDate(const Date& date);
         InteHEAD& activePhases(const Phases& phases);
-	InteHEAD& params_NWELZ(const int niwelz, const int nswelz, const int nxwelz, const int nzwelz);
-	InteHEAD& params_NCON(const int niconz, const int nsconz, const int nxconz);
-	InteHEAD& params_GRPZ(const std::array<int, 4>& grpz);
-	InteHEAD& params_NAAQZ(const int ncamax, const int niaaqz, const int nsaaqz, const int nxaaqz, const int nicaqz, const int nscaqz, const int nacaqz);
-	InteHEAD& stepParam(const int tstep, const int repstep);
-	InteHEAD& tuningParam(const TuningPar& tunpar);
-	InteHEAD& variousParam(const int iprog, const int ih101, const int ih103);
-	InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
-	InteHEAD& regionDimensions(const RegDims& rdim);
-	
+        InteHEAD& params_NWELZ(const int niwelz, const int nswelz, const int nxwelz, const int nzwelz);
+        InteHEAD& params_NCON(const int niconz, const int nsconz, const int nxconz);
+        InteHEAD& params_GRPZ(const std::array<int, 4>& grpz);
+        InteHEAD& params_NAAQZ(const int ncamax, const int niaaqz, const int nsaaqz, const int nxaaqz, const int nicaqz, const int nscaqz, const int nacaqz);
+        InteHEAD& stepParam(const int tstep, const int repstep);
+        InteHEAD& tuningParam(const TuningPar& tunpar);
+        InteHEAD& variousParam(const int version, const int iprog);
+        InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
+        InteHEAD& regionDimensions(const RegDims& rdim);
+
         const std::vector<int>& data() const
-	{
-	    return this->data_;
-	}
+        {
+            return this->data_;
+        }
 
     private:
-	std::vector<int> data_;
+        std::vector<int> data_;
     };
 
 }} // Opm::RestartIO

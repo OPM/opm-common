@@ -137,10 +137,12 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/test_util/summaryComparator.cpp
           src/opm/test_util/EclFilesComparator.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
+          src/opm/output/eclipse/CreateLogiHead.cpp
           src/opm/output/eclipse/EclipseGridInspector.cpp
           src/opm/output/eclipse/EclipseIO.cpp
           src/opm/output/eclipse/InteHEAD.cpp
           src/opm/output/eclipse/LinearisedOutputTable.cpp
+          src/opm/output/eclipse/LogiHEAD.cpp
           src/opm/output/eclipse/RestartIO.cpp
           src/opm/output/eclipse/Summary.cpp
           src/opm/output/eclipse/Tables.cpp
@@ -227,8 +229,9 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_EclipseIO.cpp
           tests/test_InteHEAD.cpp
           tests/test_LinearisedOutputTable.cpp
-          tests/test_Restart.cpp
+          tests/test_LogiHEAD.cpp
           tests/test_regionCache.cpp
+          tests/test_Restart.cpp
           tests/test_RFT.cpp
           tests/test_Solution.cpp
           tests/test_Summary.cpp
@@ -475,6 +478,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/EclipseIO.hpp
         opm/output/eclipse/EclipseIOUtil.hpp
         opm/output/eclipse/InteHEAD.hpp
+        opm/output/eclipse/LogiHEAD.hpp
         opm/output/eclipse/LinearisedOutputTable.hpp
         opm/output/eclipse/RegionCache.hpp
         opm/output/eclipse/RestartIO.hpp

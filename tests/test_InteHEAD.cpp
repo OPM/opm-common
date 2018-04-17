@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(Dimensions_Individual)
 BOOST_AUTO_TEST_CASE(Dimensions_Array)
 {
     const auto ih = Opm::RestartIO::InteHEAD{}
-    .dimensions({100, 60, 15});
+        .dimensions({100, 60, 15});
 
     const auto& v = ih.data();
 
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(Dimensions_Array)
 BOOST_AUTO_TEST_CASE(NumActive)
 {
     const auto ih = Opm::RestartIO::InteHEAD{}
-    .numActive(72390);
+        .numActive(72390);
 
     const auto& v = ih.data();
 
@@ -118,11 +118,12 @@ BOOST_AUTO_TEST_CASE(WellTableDimensions)
         });
 
     const auto& v = ih.data();
+    const auto nwgmax = std::max(maxWellInGroup, maxGroupInField);
 
-    BOOST_CHECK_EQUAL(v[17 - 1], numWells);        // NWELLS
-    BOOST_CHECK_EQUAL(v[18 - 1], maxPerf);         // NCWMAX
-    BOOST_CHECK_EQUAL(v[20 - 1], maxWellInGroup);  // NWGMAX
-    BOOST_CHECK_EQUAL(v[21 - 1], maxGroupInField); // NGMAXZ
+    BOOST_CHECK_EQUAL(v[17 - 1], numWells);            // NWELLS
+    BOOST_CHECK_EQUAL(v[18 - 1], maxPerf);             // NCWMAX
+    BOOST_CHECK_EQUAL(v[20 - 1], nwgmax);              // NWGMAX
+    BOOST_CHECK_EQUAL(v[21 - 1], maxGroupInField + 1); // NGMAXZ
 }
 
 BOOST_AUTO_TEST_CASE(CalendarDate)
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE(CalendarDate)
     // 2015-04-09T11:22:33+0000
 
     const auto ih = Opm::RestartIO::InteHEAD{}
-    . calenderDate({
+        .calenderDate({
             2015, 4, 9, 11, 22, 33
         });
 
@@ -276,9 +277,8 @@ BOOST_AUTO_TEST_CASE(Time_and_report_step)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[67], 12);       // TSTEP
-    BOOST_CHECK_EQUAL(v[68],  2);      // REP_STEP
-
+    BOOST_CHECK_EQUAL(v[67], 12); // TSTEP
+    BOOST_CHECK_EQUAL(v[68],  2); // REP_STEP
 }
 
 BOOST_AUTO_TEST_CASE(Tuning_param)
@@ -301,20 +301,22 @@ BOOST_AUTO_TEST_CASE(Tuning_param)
     BOOST_CHECK_EQUAL(v[81], newtmn);        // NEWTMN
     BOOST_CHECK_EQUAL(v[82], litmax);        // LITMAX
     BOOST_CHECK_EQUAL(v[83], litmin);        // LITMIN
-    BOOST_CHECK_EQUAL(v[84], mxwsit);        // MXWSIT
-    BOOST_CHECK_EQUAL(v[85], mxwpit);        // MXWPIT
+    BOOST_CHECK_EQUAL(v[86], mxwsit);        // MXWSIT
+    BOOST_CHECK_EQUAL(v[87], mxwpit);        // MXWPIT
 }
 
 BOOST_AUTO_TEST_CASE(Various_Parameters)
 {
     const auto ih = Opm::RestartIO::InteHEAD{}
-        .variousParam(100, 2, 3);
+        .variousParam(2015, 100);
 
     const auto& v = ih.data();
 
+    BOOST_CHECK_EQUAL(v[  1], 2015); // VERSION
     BOOST_CHECK_EQUAL(v[ 94], 100); // IPROG
-    BOOST_CHECK_EQUAL(v[101],   2); // IH_101
-    BOOST_CHECK_EQUAL(v[103],   3); // IH_103
+    BOOST_CHECK_EQUAL(v[ 76],   2); // IH_076
+    BOOST_CHECK_EQUAL(v[101],   1); // IH_101
+    BOOST_CHECK_EQUAL(v[103],   1); // IH_103
 }
 
 BOOST_AUTO_TEST_CASE(wellSegDimensions)
@@ -345,24 +347,21 @@ BOOST_AUTO_TEST_CASE(wellSegDimensions)
 
 BOOST_AUTO_TEST_CASE(regionDimensions)
 {
-
     const auto ntfip  = 12;
     const auto nmfipr = 22;
     const auto nrfreg = 5;
     const auto ntfreg = 6;
     const auto nplmix = 7;
 
-  const auto ih = Opm::RestartIO::InteHEAD{}
+    const auto ih = Opm::RestartIO::InteHEAD{}
         .regionDimensions({
-          ntfip, nmfipr, nrfreg, ntfreg, nplmix
-
+            ntfip, nmfipr, nrfreg, ntfreg, nplmix
         });
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[88], ntfip);       // NTFIP
-    BOOST_CHECK_EQUAL(v[99], nmfipr);       // NMFIPR
-
+    BOOST_CHECK_EQUAL(v[89], ntfip);  // NTFIP
+    BOOST_CHECK_EQUAL(v[99], nmfipr); // NMFIPR
 }
 
 

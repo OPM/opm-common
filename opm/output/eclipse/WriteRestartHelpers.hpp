@@ -42,6 +42,9 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                    const double        simTime,
                    const int           report_step);
 
+    std::vector<bool>
+    createLogiHead(const EclipseState& es);
+
 }}} // Opm::RestartIO::Helpers
 
 #endif  // OPM_WRITE_RESTART_HELPERS_HPP
