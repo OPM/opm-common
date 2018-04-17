@@ -35,9 +35,6 @@ SKIPREST
 RPTRST
 BASIC=1
 /
-DATES             -- 1
- 10  OKT 2008 / 
-/
 WELSPECS
       'OP_1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
       'OP_2'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
@@ -54,7 +51,7 @@ WCONINJE
       'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /
 /
 
-DATES             -- 2
+DATES             -- 1
  20  JAN 2011 / 
 /
 WELSPECS
@@ -67,7 +64,7 @@ WCONPROD
       'OP_3' 'OPEN' 'ORAT' 20000  4* 1000 /
 /
 
-DATES             -- 3
+DATES             -- 2
  15  JUN 2013 / 
 /
 COMPDAT
@@ -75,7 +72,7 @@ COMPDAT
       'OP_1'  9  9   7  7 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
 /
 
-DATES             -- 4
+DATES             -- 3
  22  APR 2014 / 
 /
 WELSPECS
@@ -89,7 +86,7 @@ WCONPROD
       'OP_4' 'OPEN' 'ORAT' 20000  4* 1000 /
 /
 
-DATES             -- 5
+DATES             -- 4
  30  AUG 2014 / 
 /
 WELSPECS
@@ -102,14 +99,14 @@ WCONPROD
       'OP_5' 'OPEN' 'ORAT' 20000  4* 1000 /
 /
 
-DATES             -- 6
+DATES             -- 5
  15  SEP 2014 / 
 /
 WCONPROD
       'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /
 /
 
-DATES             -- 7
+DATES             -- 6
  9  OCT 2014 / 
 /
 WELSPECS
@@ -121,5 +118,5 @@ COMPDAT
 WCONPROD
       'OP_6' 'OPEN' 'ORAT' 20000  4* 1000 /
 /
-TSTEP            -- 8
+TSTEP            -- 7
 10 /
