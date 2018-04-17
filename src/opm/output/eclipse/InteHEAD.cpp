@@ -1,5 +1,10 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <ctime>
+#include <ratio>
 #include <utility>
 #include <vector>
 
@@ -491,17 +496,21 @@ Opm::RestartIO::InteHEAD::wellTableDimensions(const WellTableDim& wtdim)
 }
 
 Opm::RestartIO::InteHEAD&
-Opm::RestartIO::InteHEAD::calenderDate(const Date& date)
+Opm::RestartIO::InteHEAD::calenderDate(const TimePoint& timePoint)
 {
-    this->data_[DAY]   = date.day;
-    this->data_[MONTH] = date.month;
-    this->data_[YEAR]  = date.year;
+    this->data_[DAY]   = timePoint.day;
+    this->data_[MONTH] = timePoint.month;
+    this->data_[YEAR]  = timePoint.year;
 
-    this->data_[IHOURZ] = date.hour;
-    this->data_[IMINTS] = date.minute;
+    this->data_[IHOURZ] = timePoint.hour;
+    this->data_[IMINTS] = timePoint.minute;
+
+    this->data_[IHOURZ] = timePoint.hour;
+    this->data_[IMINTS] = timePoint.minute;
 
     // Microseonds...
-    this->data_[ISECND] = (date.second * 1000) * 1000;
+    this->data_[ISECND] =
+        ((timePoint.second * 1000) * 1000) + timePoint.microseconds;
 
     return *this;
 }
@@ -633,4 +642,66 @@ Opm::RestartIO::InteHEAD::regionDimensions(const RegDims& rdim)
     this->data_[NMFIPR] = rdim.nmfipr;
 
     return *this;
+}
+
+// =====================================================================
+// Free functions (calendar/time utilities)
+// =====================================================================
+
+namespace {
+    std::time_t advance(const std::time_t tp, const double sec)
+    {
+        using namespace std::chrono;
+
+        using TP      = time_point<system_clock>;
+        using DoubSec = duration<double, seconds::period>;
+
+        const auto t = system_clock::from_time_t(tp) +
+            duration_cast<TP::duration>(DoubSec(sec));
+
+        return system_clock::to_time_t(t);
+    }
+}
+
+std::time_t
+Opm::RestartIO::makeUTCTime(const std::tm& timePoint)
+{
+    auto       tp    =  timePoint; // Mutable copy.
+    const auto ltime =  std::mktime(&tp);
+    auto       tmval = *std::gmtime(&ltime); // Mutable.
+
+    // offset =  ltime - tmval
+    //        == #seconds by which 'ltime' is AHEAD of tmval.
+    const auto offset =
+        std::difftime(ltime, std::mktime(&tmval));
+
+    // Advance 'ltime' by 'offset' so that std::gmtime(return value) will
+    // have the same broken-down elements as 'tp'.
+    return advance(ltime, offset);
+}
+
+Opm::RestartIO::InteHEAD::TimePoint
+Opm::RestartIO::getSimulationTimePoint(const std::time_t start,
+                                       const double      elapsed)
+{
+    const auto now = advance(start, elapsed);
+    const auto tp  = *std::gmtime(&now);
+
+    auto sec  = 0.0;            // Not really used here.
+    auto usec = std::floor(1.0e6 * std::modf(elapsed, &sec));
+
+    return {
+        // Y-m-d
+        tp.tm_year + 1900,
+        tp.tm_mon  +    1,
+        tp.tm_mday ,
+
+        // H:M:S
+        tp.tm_hour ,
+        tp.tm_min  ,
+        std::min(tp.tm_sec, 59), // Ignore leap seconds
+
+        // Fractional seconds in microsecond resolution.
+        static_cast<int>(usec),
+    };
 }

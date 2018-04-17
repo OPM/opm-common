@@ -33,7 +33,6 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
-#include <chrono>
 #include <cstddef>
 #include <exception>
 #include <stdexcept>
@@ -105,44 +104,6 @@ namespace {
         }
 
         return US::Metric;
-    }
-
-    Opm::RestartIO::InteHEAD::Date
-    getSimulationDate(const ::Opm::Schedule& sched,
-                      const double           simTime)
-    {
-        // Would have liked to use H.Hinnant's "date" library here
-        // (https://github.com/HowardHinnant/date), especially to avoid
-        // dealing with std::time_t and the threading issues of calendar
-        // function std::gmtime().  Library proposed (LEWG) for C++20.
-        //
-        // Pray that we're on a system for which std::time_t is 64 bits (or
-        // more) so that we at least don't run into 2k38 with the typical
-        // definition of time_point::time_since_epoch(system_clock::now())
-
-        using namespace std::chrono;
-
-        const auto start = system_clock::
-            from_time_t(sched.posixStartTime());
-
-        // Discard sub-second resolution.
-        const auto now = start + duration_cast<seconds>(
-            duration<double, seconds::period>(simTime));
-
-        const auto t = system_clock::to_time_t(now);
-
-        // Not thread-safe (returns pointer to internal, static storage).
-        // May wish to add some locking here...
-        const auto timepoint = *std::localtime(&t);
-
-        return {
-            timepoint.tm_year + 1900,
-            timepoint.tm_mon  + 1,
-            timepoint.tm_mday ,
-            timepoint.tm_hour ,
-            timepoint.tm_min  ,
-            std::min(timepoint.tm_sec, 59), // Ignore leap seconds...
-        };
     }
 
     Opm::RestartIO::InteHEAD::Phases
@@ -256,7 +217,7 @@ createInteHead(const EclipseState& es,
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (getUnitConvention(es.getDeckUnitSystem()))
         .wellTableDimensions(getWellTableDims(rspec, sched, report_step))
-        .calenderDate       (getSimulationDate(sched, simTime))
+        .calenderDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
         .params_NWELZ       (155, 122, 130, 3)
         .params_NCON        (25, 40, 58)

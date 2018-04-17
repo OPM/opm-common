@@ -21,6 +21,7 @@
 #define OPM_INTEHEAD_HEADER_INCLUDED
 
 #include <array>
+#include <ctime>
 #include <memory>
 #include <vector>
 
@@ -58,15 +59,16 @@ namespace Opm { namespace RestartIO {
             int nplmix;
         };
 
-	
-        struct Date {
+        struct TimePoint {
             int year;
-            int month;		// 1..12
-            int day;		// 1..31
+            int month;          // 1..12
+            int day;            // 1..31
 
-            int hour;		// 0..23
-            int minute;		// 0..59
-            int second;		// 0..59
+            int hour;           // 0..23
+            int minute;         // 0..59
+            int second;         // 0..59
+
+            int microseconds;   // 0..999999
         };
 
         struct Phases {
@@ -99,7 +101,7 @@ namespace Opm { namespace RestartIO {
 
         InteHEAD& unitConventions(const UnitSystem& usys);
         InteHEAD& wellTableDimensions(const WellTableDim& wtdim);
-        InteHEAD& calenderDate(const Date& date);
+        InteHEAD& calenderDate(const TimePoint& date);
         InteHEAD& activePhases(const Phases& phases);
         InteHEAD& params_NWELZ(const int niwelz, const int nswelz, const int nxwelz, const int nzwelz);
         InteHEAD& params_NCON(const int niconz, const int nsconz, const int nxconz);
@@ -120,6 +122,11 @@ namespace Opm { namespace RestartIO {
         std::vector<int> data_;
     };
 
+    std::time_t makeUTCTime(const std::tm& timePoint);
+
+    InteHEAD::TimePoint
+    getSimulationTimePoint(const std::time_t start,
+                           const double      elapsed);
 }} // Opm::RestartIO
 
 #endif // OPM_INTEHEAD_HEADER_INCLUDED
