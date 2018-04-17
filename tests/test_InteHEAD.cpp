@@ -23,8 +23,52 @@
 
 #include <opm/output/eclipse/InteHEAD.hpp>
 
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+
+#include <algorithm>
 #include <array>
 #include <initializer_list>
+#include <iterator>
+#include <numeric>              // partial_sum()
+#include <string>
+#include <vector>
+
+namespace {
+    std::vector<double> elapsedTime(const Opm::TimeMap& tmap)
+    {
+        auto elapsed = std::vector<double>{};
+
+        elapsed.reserve(tmap.numTimesteps() + 1);
+        elapsed.push_back(0.0);
+
+        for (auto nstep = tmap.numTimesteps(),
+                  step  = 0*nstep; step < nstep; ++step)
+        {
+            elapsed.push_back(tmap.getTimeStepLength(step));
+        }
+
+        std::partial_sum(std::begin(elapsed), std::end(elapsed),
+                         std::begin(elapsed));
+
+        return elapsed;
+    }
+
+    void expectDate(const Opm::RestartIO::InteHEAD::TimePoint& tp,
+                    const int year, const int month, const int day)
+    {
+        BOOST_CHECK_EQUAL(tp.year  , year);
+        BOOST_CHECK_EQUAL(tp.month , month);
+        BOOST_CHECK_EQUAL(tp.day   , day);
+
+        BOOST_CHECK_EQUAL(tp.hour        , 0);
+        BOOST_CHECK_EQUAL(tp.minute      , 0);
+        BOOST_CHECK_EQUAL(tp.second      , 0);
+        BOOST_CHECK_EQUAL(tp.microseconds, 0);
+    }
+} // Anonymous
 
 BOOST_AUTO_TEST_SUITE(Member_Functions)
 
@@ -128,11 +172,11 @@ BOOST_AUTO_TEST_CASE(WellTableDimensions)
 
 BOOST_AUTO_TEST_CASE(CalendarDate)
 {
-    // 2015-04-09T11:22:33+0000
+    // 2015-04-09T11:22:33.987654+0000
 
     const auto ih = Opm::RestartIO::InteHEAD{}
         .calenderDate({
-            2015, 4, 9, 11, 22, 33
+            2015, 4, 9, 11, 22, 33, 987654,
         });
 
     const auto& v = ih.data();
@@ -143,7 +187,7 @@ BOOST_AUTO_TEST_CASE(CalendarDate)
 
     BOOST_CHECK_EQUAL(v[207 - 1], 11); // Hour
     BOOST_CHECK_EQUAL(v[208 - 1], 22); // Minute
-    BOOST_CHECK_EQUAL(v[411 - 1], 33000000); // Second (in microseconds)
+    BOOST_CHECK_EQUAL(v[411 - 1], 33987654); // Second (in microseconds)
 }
 
 BOOST_AUTO_TEST_CASE(ActivePhases)
@@ -364,5 +408,64 @@ BOOST_AUTO_TEST_CASE(regionDimensions)
     BOOST_CHECK_EQUAL(v[99], nmfipr); // NMFIPR
 }
 
+BOOST_AUTO_TEST_CASE(SimulationDate)
+{
+    const auto input = std::string { R"(
+RUNSPEC
+
+START
+  1 JAN 2000
+/
+
+SCHEDULE
+
+DATES
+  1 'JAN' 2001 /
+/
+
+TSTEP
+--Advance the simulater for TEN years:
+  10*365.0D0 /
+)"  };
+
+    const auto tmap = ::Opm::TimeMap {
+        ::Opm::Parser{}.parseString(input)
+    };
+
+    const auto start   = tmap.getStartTime(0);
+    const auto elapsed = elapsedTime(tmap);
+
+    auto checkDate = [start, &elapsed]
+        (const std::vector<double>::size_type i,
+         const std::array<int, 3>&            expectYMD) -> void
+    {
+        using ::Opm::RestartIO::getSimulationTimePoint;
+
+        expectDate(getSimulationTimePoint(start, elapsed[i]),
+                   expectYMD[0], expectYMD[1], expectYMD[2]);
+    };
+
+    // START
+    checkDate(0, { 2000, 1, 1 });  // Start   == 2000-01-01
+
+    // DATES (2000 being leap year is immaterial)
+    checkDate(1, { 2001, 1, 1 });  // RStep 1 == 2000-01-01 -> 2001-01-01
+
+    // TSTEP
+    checkDate(2, { 2002, 1, 1 });  // RStep 2 == 2001-01-01 -> 2002-01-01
+    checkDate(3, { 2003, 1, 1 });  // RStep 3 == 2002-01-01 -> 2003-01-01
+    checkDate(4, { 2004, 1, 1 });  // RStep 4 == 2003-01-01 -> 2004-01-01
+
+    // Leap year: 2004
+    checkDate(5, { 2004, 12, 31 }); // RStep 5 == 2004-01-01 -> 2004-12-31
+    checkDate(6, { 2005, 12, 31 }); // RStep 6 == 2004-12-31 -> 2005-12-31
+    checkDate(7, { 2006, 12, 31 }); // RStep 7 == 2005-12-31 -> 2006-12-31
+    checkDate(8, { 2007, 12, 31 }); // RStep 8 == 2006-12-31 -> 2007-12-31
+
+    // Leap year: 2008
+    checkDate( 9, { 2008, 12, 30 }); // RStep  9 == 2007-12-31 -> 2008-12-30
+    checkDate(10, { 2009, 12, 30 }); // RStep 10 == 2008-12-30 -> 2009-12-30
+    checkDate(11, { 2010, 12, 30 }); // RStep 11 == 2009-12-30 -> 2010-12-30
+}
 
 BOOST_AUTO_TEST_SUITE_END()
