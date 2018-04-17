@@ -474,9 +474,9 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list(APPEND PUBLIC_HEADER_FILES
-        opm/output/OutputWriter.hpp
-        opm/output/data/Wells.hpp
         opm/output/data/Cells.hpp
+        opm/output/data/Solution.hpp
+        opm/output/data/Wells.hpp
         opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
@@ -490,7 +490,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/Summary.hpp
         opm/output/eclipse/Tables.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
-        opm/output/data/Solution.hpp
+        opm/output/OutputWriter.hpp
         opm/test_util/EclFilesComparator.hpp
         opm/test_util/summaryComparator.hpp
         opm/test_util/summaryIntegrationTest.hpp
