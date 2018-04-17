@@ -27,12 +27,14 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <exception>
 #include <stdexcept>
 #include <vector>
@@ -40,12 +42,13 @@
 namespace {
     Opm::RestartIO::InteHEAD::WellTableDim
     getWellTableDims(const ::Opm::Runspec&  rspec,
-                     const ::Opm::Schedule& sched)
+                     const ::Opm::Schedule& sched,
+                     const std::size_t      step)
     {
-        const auto& td = rspec.tabdims();
         const auto& wd = rspec.wellDimensions();
 
-        const auto numWells = static_cast<int>(sched.numWells());
+        const std::size_t step_minus_one = step == 0 ? 0 : step - 1;
+        const auto numWells = static_cast<int>(sched.numWells(step_minus_one));
 
         const auto maxPerf         = wd.maxConnPerWell();
         const auto maxWellInGroup  = wd.maxWellsPerGroup();
@@ -62,8 +65,9 @@ namespace {
     std::array<int, 4> getNGRPZ(const ::Opm::Runspec& rspec)
     {
         const auto& wd = rspec.wellDimensions();
-        const auto maxWellInGroup  = wd.maxWellsPerGroup();
-        const int nigrpz = 97 + maxWellInGroup;
+
+        const int nigrpz = 97 + std::max(wd.maxWellsPerGroup(),
+                                         wd.maxGroupsInField());
         const int nsgrpz = 112;
         const int nxgrpz = 180;
         const int nzgrpz = 5;
@@ -156,84 +160,80 @@ namespace {
     }
 
     Opm::RestartIO::InteHEAD::TuningPar
-    getTuningPars(const ::Opm::Tuning&  tuning, const size_t step)
+    getTuningPars(const ::Opm::Tuning& tuning,
+                  const std::size_t    step)
     {
         const auto& newtmx = tuning.getNEWTMX(step);
-	const auto& newtmn = tuning.getNEWTMN(step);
-	const auto& litmax = tuning.getLITMAX(step);
-	const auto& litmin = tuning.getLITMIN(step);
-	const auto& mxwsit = tuning.getMXWSIT(step);
-	const auto& mxwpit = tuning.getMXWPIT(step);
+        const auto& newtmn = tuning.getNEWTMN(step);
+        const auto& litmax = tuning.getLITMAX(step);
+        const auto& litmin = tuning.getLITMIN(step);
+        const auto& mxwsit = tuning.getMXWSIT(step);
+        const auto& mxwpit = tuning.getMXWPIT(step);
 
         return {
             newtmx,
             newtmn,
-	    litmax,
-	    litmin,
+            litmax,
+            litmin,
             mxwsit,
             mxwpit,
         };
     }
-    
+
     Opm::RestartIO::InteHEAD::WellSegDims
     getWellSegDims(const ::Opm::Runspec&  rspec,
-		   const ::Opm::Schedule sched,
-		   const size_t step)
+                   const ::Opm::Schedule& sched,
+                   const std::size_t      step)
     {
         const auto& wsd = rspec.wellSegmentDimensions();
-	const auto& sched_wells = sched.getWells( step );
-	int n_act_seg_wels = 0; 
-	for (const auto& wl : sched_wells)  {
-	  /*if (wl->isMultiSegment(step)) {
-	    std::cout << "sched_well wl: " << wl->name() << std::endl;
-	    n_act_seg_wels += 1;
-	  }
-	  else {
-	    std::cout << "non_sched_well wl: " << wl->name() << std::endl;
-	  }*/
-	    n_act_seg_wels = (wl->isMultiSegment(step))
-	      ? n_act_seg_wels +1 : n_act_seg_wels;
-	}
 
-	const auto nsegwl	= n_act_seg_wels;
-        const auto nswlmx	= wsd.maxSegmentedWells();
-        const auto nsegmx	= wsd.maxSegmentsPerWell();
-        const auto nlbrmx 	= wsd.maxLateralBranchesPerWell();
-	const auto nisegz 	= 22;
-	const auto nrsegz	= 140;
-	const auto nilbrz 	= 10;
+        const std::size_t step_minus_one = step == 0 ? 0 : step - 1;
+        const auto& sched_wells = sched.getWells(step_minus_one);
+
+        const auto nsegwl =
+            std::count_if(std::begin(sched_wells), std::end(sched_wells),
+                [step_minus_one](const Opm::Well* wellPtr)
+            {
+                return wellPtr->isMultiSegment(step_minus_one);
+            });
+
+        const auto nswlmx = wsd.maxSegmentedWells();
+        const auto nsegmx = wsd.maxSegmentsPerWell();
+        const auto nlbrmx = wsd.maxLateralBranchesPerWell();
+        const auto nisegz = 22;
+        const auto nrsegz = 140;
+        const auto nilbrz = 10;
 
         return {
-            nsegwl,
+            static_cast<int>(nsegwl),
             nswlmx,
             nsegmx,
             nlbrmx,
-	    nisegz,
-	    nrsegz,
-	    nilbrz
+            nisegz,
+            nrsegz,
+            nilbrz
         };
     }
-    
-    Opm::RestartIO::InteHEAD::RegDims
-    getRegDims(const ::Opm::TableManager tdims,  const ::Opm::Regdims&  rdims)
-    {
-        const auto& ntfip  = tdims.numFIPRegions();
-	const auto& nmfipr = rdims.getNMFIPR();
-	const auto& nrfreg = rdims.getNRFREG();
-	const auto& ntfreg = rdims.getNTFREG();
-	const auto& nplmix = rdims.getNPLMIX();
 
+    Opm::RestartIO::InteHEAD::RegDims
+    getRegDims(const ::Opm::TableManager& tdims,
+               const ::Opm::Regdims&      rdims)
+    {
+        const auto ntfip  = tdims.numFIPRegions();
+        const auto nmfipr = rdims.getNMFIPR();
+        const auto nrfreg = rdims.getNRFREG();
+        const auto ntfreg = rdims.getNTFREG();
+        const auto nplmix = rdims.getNPLMIX();
 
         return {
-            ntfip,
-            nmfipr,
-            nrfreg,
-            ntfreg,
-	    nplmix
+            static_cast<int>(ntfip),
+            static_cast<int>(nmfipr),
+            static_cast<int>(nrfreg),
+            static_cast<int>(ntfreg),
+            static_cast<int>(nplmix),
         };
     }
-} 
-// Anonymous
+} // Anonymous
 
 // #####################################################################
 // Public Interface (createInteHead()) Below Separator
@@ -248,26 +248,26 @@ createInteHead(const EclipseState& es,
                const int           report_step)
 {
     const auto& rspec = es.runspec();
-    const auto& tdim = es.getTableManager();
-    const auto& rdim = tdim.getRegdims();
+    const auto& tdim  = es.getTableManager();
+    const auto& rdim  = tdim.getRegdims();
 
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (getUnitConvention(es.getDeckUnitSystem()))
-        .wellTableDimensions(getWellTableDims(rspec, sched))
+        .wellTableDimensions(getWellTableDims(rspec, sched, report_step))
         .calenderDate       (getSimulationDate(sched, simTime))
         .activePhases       (getActivePhases(rspec))
         .params_NWELZ       (155, 122, 130, 3)
         .params_NCON        (25, 40, 58)
         .params_GRPZ        (getNGRPZ(rspec))
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
-	.stepParam(report_step, report_step)
-	.tuningParam(getTuningPars(sched.getTuning(), report_step))
-	.wellSegDimensions(getWellSegDims(rspec, sched, report_step))
-	.regionDimensions(getRegDims(tdim, rdim))
-	.variousParam(100, 1, 1)
-	;
+        .stepParam          (report_step, report_step)
+        .tuningParam        (getTuningPars(sched.getTuning(), report_step))
+        .wellSegDimensions  (getWellSegDims(rspec, sched, report_step))
+        .regionDimensions   (getRegDims(tdim, rdim))
+        .variousParam       (2014, 100)
+        ;
 
     return ih.data();
 }
