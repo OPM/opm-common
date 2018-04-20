@@ -1770,23 +1770,21 @@ namespace Opm {
         return *table_ptr;
     }
 
-    std::map<int, VFPInjTable> Schedule::getVFPInjTables(size_t timeStep) const {
-        std::map<int, VFPInjTable> tables;
+    std::map<int, std::shared_ptr<const VFPInjTable> > Schedule::getVFPInjTables(size_t timeStep) const {
+        std::map<int, std::shared_ptr<const VFPInjTable> > tables;
         for (const auto& pair : this->vfpinj_tables) {
             if (pair.second.get(timeStep)) {
-                std::pair<int, VFPInjTable> table_pair = std::make_pair(pair.first, *pair.second.get(timeStep).get());
-                tables.insert(table_pair);
+                tables.insert(std::make_pair(pair.first, pair.second.get(timeStep)) );
             }
         }
         return tables;
     }
 
-    std::map<int, VFPProdTable> Schedule::getVFPProdTables(size_t timeStep) const {
-        std::map<int, VFPProdTable> tables;
+    std::map<int, std::shared_ptr<const VFPProdTable> > Schedule::getVFPProdTables(size_t timeStep) const {
+        std::map<int, std::shared_ptr<const VFPProdTable> > tables;
         for (const auto& pair : this->vfpprod_tables) {
             if (pair.second.get(timeStep)) {
-                std::pair<int, VFPProdTable> table_pair = std::make_pair(pair.first, *pair.second.get(timeStep).get());
-                tables.insert(table_pair);
+                tables.insert(std::make_pair(pair.first, pair.second.get(timeStep)) );
             }
         }
         return tables;
