@@ -82,7 +82,7 @@ class ECLFilesComparator {
         //! \param[in] value2 Value for second file, the data type can be bool, int, double or std::string.
         //! \details Templatefunction for printing values when exceptions are thrown. The function is defined for bool, int, double and std::string.
         template <typename T>
-        void printValuesForCell(const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const T& value1, const T& value2) const;
+        void printValuesForCell(const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, const T& value1, const T& value2) const;
 
     public:
         //! \brief Open ECLIPSE files and set tolerances and keywords.
@@ -159,7 +159,7 @@ class RegressionTest: public ECLFilesComparator {
         // are larger than absTolerance and relTolerance, respectively. In addition,
         // if allowNegativeValues is passed as false, an exception will be thrown when the absolute value
         // of a negative value exceeds absTolerance. If no exceptions are thrown, the absolute and relative deviations are added to absDeviation and relDeviation.
-        void deviationsForCell(double val1, double val2, const std::string& keyword, int occurrence1, int occurrence2, size_t cell, bool allowNegativeValues = true);
+        void deviationsForCell(double val1, double val2, const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, bool allowNegativeValues = true);
     public:
         //! \brief Sets up the regression test.
         //! \param[in] file_type Specifies which filetype to be compared, possible inputs are UNRSTFILE, INITFILE and RFTFILE.
