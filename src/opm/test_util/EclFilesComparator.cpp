@@ -94,21 +94,47 @@ unsigned int ECLFilesComparator::getEclKeywordData(ecl_kw_type*& ecl_kw1, ecl_kw
 
 
 template <typename T>
-void ECLFilesComparator::printValuesForCell(const std::string& /*keyword*/, int occurrence1, int occurrence2, size_t cell, const T& value1, const T& value2) const {
-    int i, j, k;
-    ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
-    // Coordinates from this function are zero-based, hence incrementing
-    i++, j++, k++;
+void ECLFilesComparator::printValuesForCell(const std::string& /*keyword*/, int occurrence1, int occurrence2, size_t kw_size, size_t cell, const T& value1, const T& value2) const {
+    if (kw_size == ecl_grid_get_active_size(ecl_grid1)) {
+        int i, j, k;
+        ecl_grid_get_ijk1A(ecl_grid1, cell, &i, &j, &k);
+        // Coordinates from this function are zero-based, hence incrementing
+        i++, j++, k++;
+        std::cout << std::endl
+                  << "Occurrence in first file    = "  << occurrence1 << "\n"
+                  << "Occurrence in second file   = "  << occurrence2 << "\n"
+                  << "Value index                 = "  << cell << "\n"
+                  << "Grid coordinate             = (" << i << ", " << j << ", " << k << ")" << "\n"
+                  << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
+
+        return;
+    }
+
+    if (kw_size == ecl_grid_get_global_size(ecl_grid1)) {
+        int i, j, k;
+        ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
+        // Coordinates from this function are zero-based, hence incrementing
+        i++, j++, k++;
+        std::cout << std::endl
+                  << "Occurrence in first file    = "  << occurrence1 << "\n"
+                  << "Occurrence in second file   = "  << occurrence2 << "\n"
+                  << "Value index                 = "  << cell << "\n"
+                  << "Grid coordinate             = (" << i << ", " << j << ", " << k << ")" << "\n"
+                  << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
+        return;
+    }
+
     std::cout << std::endl
               << "Occurrence in first file    = "  << occurrence1 << "\n"
               << "Occurrence in second file   = "  << occurrence2 << "\n"
-              << "Grid coordinate             = (" << i << ", " << j << ", " << k << ")" << "\n"
+              << "Value index                 = "  << cell << "\n"
               << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
 }
-template void ECLFilesComparator::printValuesForCell<bool>       (const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const bool&        value1, const bool&        value2) const;
-template void ECLFilesComparator::printValuesForCell<int>        (const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const int&         value1, const int&         value2) const;
-template void ECLFilesComparator::printValuesForCell<double>     (const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const double&      value1, const double&      value2) const;
-template void ECLFilesComparator::printValuesForCell<std::string>(const std::string& keyword, int occurrence1, int occurrence2, size_t cell, const std::string& value1, const std::string& value2) const;
+
+template void ECLFilesComparator::printValuesForCell<bool>       (const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, const bool&        value1, const bool&        value2) const;
+template void ECLFilesComparator::printValuesForCell<int>        (const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, const int&         value1, const int&         value2) const;
+template void ECLFilesComparator::printValuesForCell<double>     (const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, const double&      value1, const double&      value2) const;
+template void ECLFilesComparator::printValuesForCell<std::string>(const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, const std::string& value1, const std::string& value2) const;
 
 
 ECLFilesComparator::ECLFilesComparator(int file_type_arg, const std::string& basename1,
@@ -284,7 +310,7 @@ void RegressionTest::boolComparisonForOccurrence(const std::string& keyword,
         bool data1 = ecl_kw_iget_bool(ecl_kw1, cell);
         bool data2 = ecl_kw_iget_bool(ecl_kw2, cell);
         if (data1 != data2) {
-            printValuesForCell(keyword, occurrence1, occurrence2, cell, data1, data2);
+            printValuesForCell(keyword, occurrence1, occurrence2, numCells, cell, data1, data2);
             HANDLE_ERROR(std::runtime_error, "Values of bool type differ.");
         }
     }
@@ -300,7 +326,7 @@ void RegressionTest::charComparisonForOccurrence(const std::string& keyword, int
         std::string data1(ecl_kw_iget_char_ptr(ecl_kw1, cell));
         std::string data2(ecl_kw_iget_char_ptr(ecl_kw2, cell));
         if (data1.compare(data2) != 0) {
-            printValuesForCell(keyword, occurrence1, occurrence2, cell, data1, data2);
+            printValuesForCell(keyword, occurrence1, occurrence2, numCells, cell, data1, data2);
             HANDLE_ERROR(std::runtime_error, "Values of char type differ.");
         }
     }
@@ -317,7 +343,7 @@ void RegressionTest::intComparisonForOccurrence(const std::string& keyword, int 
     ecl_kw_get_memcpy_int_data(ecl_kw2, values2.data());
     for (size_t cell = 0; cell < values1.size(); cell++) {
         if (values1[cell] != values2[cell]) {
-            printValuesForCell(keyword, occurrence1, occurrence2, cell, values1[cell], values2[cell]);
+            printValuesForCell(keyword, occurrence1, occurrence2, values1.size(), cell, values1[cell], values2[cell]);
             HANDLE_ERROR(std::runtime_error, "Values of int type differ.");
         }
     }
@@ -341,13 +367,13 @@ void RegressionTest::doubleComparisonForOccurrence(const std::string& keyword, i
 
 
 
-void RegressionTest::deviationsForCell(double val1, double val2, const std::string& keyword, int occurrence1, int occurrence2, size_t cell, bool allowNegativeValues) {
+void RegressionTest::deviationsForCell(double val1, double val2, const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, bool allowNegativeValues) {
     double absTolerance = getAbsTolerance();
     double relTolerance = getRelTolerance();
     if (!allowNegativeValues) {
         if (val1 < 0) {
             if (std::abs(val1) > absTolerance) {
-                printValuesForCell(keyword, occurrence1, occurrence2, cell, val1, val2);
+                printValuesForCell(keyword, occurrence1, occurrence2, kw_size, cell, val1, val2);
                 HANDLE_ERROR(std::runtime_error, "Negative value in first file, "
                         << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
             }
@@ -355,7 +381,7 @@ void RegressionTest::deviationsForCell(double val1, double val2, const std::stri
         }
         if (val2 < 0) {
             if (std::abs(val2) > absTolerance) {
-                printValuesForCell(keyword, occurrence1, occurrence2, cell, val1, val2);
+                printValuesForCell(keyword, occurrence1, occurrence2, kw_size, cell, val1, val2);
                 HANDLE_ERROR(std::runtime_error, "Negative value in second file, "
                         << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
             }
@@ -364,7 +390,7 @@ void RegressionTest::deviationsForCell(double val1, double val2, const std::stri
     }
     Deviation dev = calculateDeviations(val1, val2);
     if (dev.abs > absTolerance && dev.rel > relTolerance) {
-        printValuesForCell(keyword, occurrence1, occurrence2, cell, val1, val2);
+        printValuesForCell(keyword, occurrence1, occurrence2, kw_size, cell, val1, val2);
         HANDLE_ERROR(std::runtime_error, "Deviations exceed tolerances."
                 << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
                 << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
