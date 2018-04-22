@@ -25,11 +25,13 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 namespace Opm {
@@ -195,7 +197,9 @@ namespace Opm {
     Completion::fromCOMPDAT( const EclipseGrid& grid ,
                              const Eclipse3DProperties& eclipseProperties,
                              const DeckKeyword& compdatKeyword,
-                             const std::vector< const Well* >& wells ) {
+                             const std::vector< const Well* >& wells,
+                             const ParseContext& parseContext,
+                             const Schedule& schedule) {
 
         std::map< std::string, std::vector< Completion > > res;
         std::vector< int > prev_compls( wells.size(), 0 );
@@ -209,7 +213,8 @@ namespace Opm {
 
             auto well = std::find_if( wells.begin(), wells.end(), name_eq );
 
-            if( well == wells.end() ) continue;
+            if( well == wells.end() )
+                schedule.InvalidWellPattern(wellname, parseContext, compdatKeyword);
 
             const auto index = std::distance( wells.begin(), well );
 

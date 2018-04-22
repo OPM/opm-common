@@ -1479,7 +1479,6 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
             'W1' 0 0 1 1 'SHUT' 1*    / -- regular completion (1)
             'W1' 0 0 2 2 'SHUT' 1*    / -- regular completion (2)
             'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
-            'W3' 0 0 1 3 'SHUT' 1*    / -- doesn't exist, ignored
             'W2' 0 0 3 3 'SHUT' 1*    / -- regular completion (1)
             'W2' 0 0 1 3 'SHUT' 1*    / -- two completions (one exist already) (2, 3)
         /

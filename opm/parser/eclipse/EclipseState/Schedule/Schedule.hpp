@@ -105,6 +105,7 @@ namespace Opm
         std::vector< const Group* > getGroups() const;
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
+        void InvalidWellPattern (const std::string& wellNamePattern, const ParseContext& parseContext, const DeckKeyword& keyword) const;
 
         const Events& getEvents() const;
         const Deck& getModifierDeck(size_t timeStep) const;
@@ -149,7 +150,7 @@ namespace Opm
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
+        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);

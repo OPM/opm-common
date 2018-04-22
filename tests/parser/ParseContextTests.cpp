@@ -472,3 +472,60 @@ BOOST_AUTO_TEST_CASE(test_1arg_constructor) {
         BOOST_CHECK_EQUAL(ctx.get(ParseContext::PARSE_RANDOM_SLASH), InputError::IGNORE);
     }
 }
+
+BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
+        const std::string defDeckString = R"(
+    START  -- 0
+     10 'JAN' 2000 /
+    RUNSPEC
+    DIMENS
+      10 10 10 /
+    GRID
+    DX
+    1000*0.25 /
+    DY
+    1000*0.25 /
+    DZ
+    1000*0.25 /
+    TOPS
+    100*0.25 /
+    SCHEDULE
+    DATES             -- 1
+     10  OKT 2008 /
+    /
+    WELSPECS
+        'PROD' 'G1'  10 10 100 'OIL' /
+        'INJ'  'G1'   3  3 100 'WATER' /
+    /
+    )";
+
+    ParseContext parseContext;
+    Parser parser;
+
+    parseContext.update(ParseContext::SCHEDULE_INVALID_WELL , InputError::THROW_EXCEPTION );
+
+    std::vector < std::string > testSamples;
+    std::string testSample;
+
+    // Invalid well name in COMPDAT
+    testSample = R"(
+    COMPDAT
+    'SOMETHINGELSE' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
+    std::string deckinput;
+
+    for (std::string sample : testSamples) {
+
+        deckinput = defDeckString + sample;
+        auto deckUnSupported = parser.parseString( deckinput , parseContext );
+
+        EclipseGrid grid( deckUnSupported );
+        TableManager table ( deckUnSupported );
+        Eclipse3DProperties eclipseProperties ( deckUnSupported , table, grid);
+
+        BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , eclipseProperties, Phases(true, true, true) , parseContext), std::invalid_argument );
+    }
+}

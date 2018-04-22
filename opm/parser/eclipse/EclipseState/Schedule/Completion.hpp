@@ -25,7 +25,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
@@ -37,6 +37,7 @@ namespace Opm {
     class Well;
     class EclipseGrid;
     class Eclipse3DProperties;
+    class Schedule;
 
     class Completion {
     public:
@@ -81,7 +82,9 @@ namespace Opm {
         fromCOMPDAT( const EclipseGrid& grid,
                      const Eclipse3DProperties& eclipseProperties,
                      const DeckKeyword& compdatKeyword,
-                     const std::vector< const Well* >& );
+                     const std::vector< const Well* >&,
+                     const ParseContext&,
+                     const Schedule&);
 
         bool operator==( const Completion& ) const;
         bool operator!=( const Completion& ) const;

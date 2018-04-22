@@ -193,7 +193,7 @@ namespace Opm {
                 handleWGRUPCON(keyword, currentStep);
 
             else if (keyword.name() == "COMPDAT")
-                handleCOMPDAT(keyword, currentStep, grid, eclipseProperties);
+                handleCOMPDAT(keyword, currentStep, grid, eclipseProperties, parseContext);
 
             else if (keyword.name() == "WELSEGS")
                 handleWELSEGS(keyword, currentStep);
@@ -1325,9 +1325,9 @@ namespace Opm {
 
 
 
-    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext) {
         const auto wells = this->getWells( currentStep );
-        auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, keyword, wells );
+        auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, keyword, wells, parseContext, *this );
 
         for( const auto pair : completions ) {
             auto& well = this->m_wells.get( pair.first );
@@ -1447,6 +1447,12 @@ namespace Opm {
                 well->updatePLTActive( currentStep, PLTKey );
             }
         }
+    }
+
+    void Schedule::InvalidWellPattern( const std::string& wellNamePattern,  const ParseContext& parseContext, const DeckKeyword& keyword ) const {
+        std::string msg = "Error when handling " + keyword.name() +". No wells match " +
+                          wellNamePattern;
+        parseContext.handleError( ParseContext::SCHEDULE_INVALID_WELL, msg );
     }
 
     const TimeMap& Schedule::getTimeMap() const {
