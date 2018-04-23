@@ -37,7 +37,7 @@ enum index : std::vector<int>::size_type {
   ih_015	=	15	,		//	0	0
   NWELLS	=	VI::intehead::NWELLS	,		//	NWELLS	39		NWELL = number of wells
   NCWMAX	=	VI::intehead::NCWMAX	,		//	NCWMAX	108	Weldims item2	NCWMAX = maximum number of completions per well
-  ih_018	=	18	,		//	NGRP?	0	Number of actual groups
+  NGRP	=	18	,		//	NGRP?	0	Number of actual groups
   NWGMAX	=	VI::intehead::NWGMAX	,		//	NWGMAX	0	maximum of weldims item3 or item4	NWGMAX = maximum number of wells in any well group
   NGMAXZ	=	VI::intehead::NGMAXZ	,		//	NGMAXZ	0	weldims item3 + 1	NGMAXZ = maximum number of groups in field
   ih_021	=	21	,		//	0	0

@@ -157,7 +157,7 @@ namespace {
 	return indexGroupMap;
     }
 
-    std::map <std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
+    std::map <const std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
     {
 	const auto& groups = sched.getGroups(simStep);
 	// make group name to index map for the current time step
@@ -184,13 +184,6 @@ namespace {
 	return wellIndexMap;
     }
 
-#if 0
-    std::vector< const Opm::Group* > currentGroups(Opm::Schedule& sched, size_t simStep)
-    {
-	const std::vector< const Opm::Group* >  groups = sched.getGroups(simStep);
-	return groups;
-    }
-#endif
 
     const int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t simStep)
     {
@@ -218,116 +211,6 @@ namespace {
 	return level;
     }
 
-#if 0
-    namespace SWell {
-        template <class SWellArray>
-        void staticContrib(SWellArray& sWell)
-        {
-            const auto dflt  = -1.0e+20f;
-            const auto infty =  1.0e+20f;
-            const auto zero  =  0.0f;
-            const auto one   =  1.0f;
-            const auto half  =  0.5f;
-
-            // Initial data by Statoil ASA.
-            const auto init = std::vector<float> { // 122 Items (0..121)
-                // 0     1      2      3      4      5
-                infty, infty, infty, infty, infty, infty,    //   0..  5  ( 0)
-                one  , zero , zero , zero , zero , 1.0e-05f, //   6.. 11  ( 1)
-                zero , zero , infty, infty, zero , dflt ,    //  12.. 17  ( 2)
-                infty, infty, infty, infty, infty, zero ,    //  18.. 23  ( 3)
-                one  , zero , zero , zero , zero , zero ,    //  24.. 29  ( 4)
-                zero , one  , zero , infty, zero , zero ,    //  30.. 35  ( 5)
-                zero , zero , zero , zero , zero , zero ,    //  36.. 41  ( 6)
-                zero , zero , zero , zero , zero , zero ,    //  42.. 47  ( 7)
-                zero , zero , zero , zero , zero , zero ,    //  48.. 53  ( 8)
-                infty, zero , zero , zero , zero , zero ,    //  54.. 59  ( 9)
-                zero , zero , zero , zero , zero , zero ,    //  60.. 65  (10)
-                zero , zero , zero , zero , zero , zero ,    //  66.. 71  (11)
-                zero , zero , zero , zero , zero , zero ,    //  72.. 77  (12)
-                zero , infty, infty, zero , zero , one  ,    //  78.. 83  (13)
-                one  , one  , zero , infty, zero , infty,    //  84.. 89  (14)
-                one  , dflt , one  , zero , zero , zero ,    //  90.. 95  (15)
-                zero , zero , zero , zero , zero , zero ,    //  96..101  (16)
-                zero , zero , zero , zero , zero , zero ,    // 102..107  (17)
-                zero , zero , half , one  , zero , zero ,    // 108..113  (18)
-                zero , zero , zero , zero , zero , infty,    // 114..119  (19)
-                zero , one  ,                                // 120..121  (20)
-            };
-
-            const auto sz = static_cast<
-                decltype(init.size())>(sWell.size());
-
-            auto b = std::begin(init);
-            auto e = b + std::min(init.size(), sz);
-
-            std::copy(b, e, std::begin(sWell));
-        }
-    } // SWell
-
-    namespace XWell {
-        bool activeGas(const ::Opm::Phases& phases)
-        {
-            return phases.active(::Opm::Phase::GAS);
-        }
-
-        bool activeOil(const ::Opm::Phases& phases)
-        {
-            return phases.active(::Opm::Phase::OIL);
-        }
-
-        bool activeWater(const ::Opm::Phases& phases)
-        {
-            return phases.active(::Opm::Phase::WATER);
-        }
-
-        template <class XWellArray>
-        void assignProducer(const ::Opm::data::Well& xw,
-                            const ::Opm::Phases&     phases,
-                            XWellArray&              xWell)
-        {
-            using SolnQuant = ::Opm::data::Rates::opt;
-
-            if (activeGas(phases)) {
-                if (xw.rates.has(SolnQuant::gas)) {
-                    xWell[2] = xw.rates.get(SolnQuant::gas);
-                }
-            }
-
-            if (activeOil(phases)) {
-                if (xw.rates.has(SolnQuant::oil)) {
-                    xWell[0] = xw.rates.get(SolnQuant::oil);
-                }
-            }
-
-            if (activeWater(phases)) {
-                if (xw.rates.has(SolnQuant::wat)) {
-                    xWell[1] = xw.rates.get(SolnQuant::wat);
-                }
-            }
-        }
-
-        template <class XWellArray>
-        void dynamicContrib(const ::Opm::Well&      well,
-                            const ::Opm::Phases&    phases,
-                            const ::Opm::WellRates& wRates,
-                            XWellArray&             xWell)
-        {
-            auto x = wRates.find(well.name());
-            if (x == wRates.end()) { return; }
-
-            const auto& xw = *x->second;
-        }
-    } // XWell
-
-    namespace ZWell {
-        template <class ZWellArray>
-        void staticContrib(const Opm::Well& well, ZWellArray& zWell)
-        {
-            zWell[1 - 1] = well.name();
-        }
-    } // ZWell
-#endif
 
     namespace IGrp {
         std::size_t entriesPerGroup(const std::vector<int>& inteHead)
@@ -361,8 +244,8 @@ namespace {
 
 	    const auto childGroups = sched.getChildGroups(group.name(), simStep);
 	    const auto childWells  = sched.getChildWells(group.name(), simStep);
-	    const auto groupMapNameIndex = currentMapGroup_nameIndex(sched, simStep, inteHead);
-	    const auto mapIndexGroup = currentMapIndexGroup(sched, simStep, inteHead);
+	    const auto groupMapNameIndex =  currentGroupMapNameIndex(sched, simStep, inteHead);
+	    const auto mapIndexGroup = currentGroupMapIndexGroup(sched, simStep, inteHead);
 	    if ((childGroups.size() != 0) && (childWells.size()!=0))
 	      throw std::invalid_argument("group has both wells and child groups" + group.name());
             int igrpCount = 0;
@@ -573,11 +456,11 @@ namespace {
 		  const auto itr = keyToIndex.find(key);
 		  xGrp[itr->second] = keyValue;
 	      }
-	      else {
+	      /*else {
 		  std::cout << "AggregateGroupData_compkey: " << compKey << std::endl;
 		  std::cout << "AggregateGroupData, empty " << std::endl;
 		  //throw std::invalid_argument("No such keyword: " + compKey);
-	    }
+	    }*/
 	  }
 	}
     }
@@ -670,11 +553,9 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 			 const Opm::SummaryState&             sumState,
 			 const std::vector<int>&              inteHead)
 {
-    const auto indexGroupMap = currentMapIndexGroup(sched, simStep, inteHead);
-    const auto nameIndexMap = currentMapGroup_nameIndex(sched, simStep, inteHead);
+    const auto indexGroupMap = currentGroupMapIndexGroup(sched, simStep, inteHead);
+    const auto nameIndexMap = currentGroupMapNameIndex(sched, simStep, inteHead);
 
-    //Opm::RestartIO::Helpers::groupMaps grpMaps;
-    //grpMaps.currentGrpTreeNameSeqIndMap(sched, simStep, nameIndexMap,indexGroupMap);
     std::vector<const Opm::Group*> curGroups;
     curGroups.resize(ngmaxz(inteHead));
     //
@@ -687,16 +568,6 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 	    curGroups[static_cast<int>(it->first)] = it->second;
 	    it++;
 	}
-
-    /*for (const auto* grp : curGroups)
-    {
-	if (grp != nullptr)
-	{
-	    const std::string gname = grp->name();
-	    const auto itr = nameIndexMap.find(gname);
-	    const int ind = itr->second;
-	}
-    }  */
 
     {
 	groupLoop(curGroups, [sched, simStep, inteHead, this]
@@ -724,36 +595,6 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
         XGrp::dynamicContrib( restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, group, sumState, xg);
     });
 
-#if 0
-    // Define Static Contributions to ZWell Array.
-    wellLoop(wells,
-        [this](const Well& well, const std::size_t wellID) -> void
-    {
-        auto zw = this->zWell_[wellID];
-
-        ZWell::staticContrib(well, zw);
-    });
-#endif
 }
 
 // ---------------------------------------------------------------------
-
-#if 0
-void
-Opm::RestartIO::Helpers::AggregateWellData::
-captureDynamicWellData(const Phases&                 phases,
-                       const Schedule&               sched,
-                       const std::size_t             simStep,
-                       const ::Opm::data::WellRates& wRates)
-{
-    const auto& wells = sched.getWells(simStep);
-
-    wellLoop(wells, [this, &phases, &wRates]
-        (const Well& well, const std::size_t wellID) -> void
-    {
-        auto xw = this->xWell_[wellID];
-
-        XWell::dynamicContrib(well, phases, wRates, xw);
-    });
-}
-#endif

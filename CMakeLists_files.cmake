@@ -495,6 +495,8 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/AggregateWellData.hpp
         opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/DoubHEAD.hpp
+        opm/output/eclipse/AggregateWellData.hpp
+        opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
         opm/output/eclipse/EclipseIOUtil.hpp
