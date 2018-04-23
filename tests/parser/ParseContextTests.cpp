@@ -515,6 +515,17 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     )";
     testSamples.push_back(testSample);
 
+    // Invalid well name in WCONPROD
+    testSample = R"(
+    COMPDAT
+    'PROD' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONPROD
+    'SOMETHINGELSE' 'OPEN' 'ORAT' 20000 4* 1000 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
     std::string deckinput;
 
     for (std::string sample : testSamples) {

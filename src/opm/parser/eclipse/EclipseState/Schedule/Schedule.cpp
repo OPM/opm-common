@@ -166,10 +166,10 @@ namespace Opm {
                 handleWHISTCTL(parseContext, keyword);
 
             else if (keyword.name() == "WCONHIST")
-                handleWCONHIST(keyword, currentStep);
+                handleWCONHIST(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WCONPROD")
-                handleWCONPROD(keyword, currentStep);
+                handleWCONPROD(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WCONINJE")
                 handleWCONINJE(section, keyword, currentStep);
@@ -475,7 +475,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode) {
+    void Schedule::handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
@@ -484,8 +484,10 @@ namespace Opm {
                 WellCommon::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             auto wells = getWells(wellNamePattern);
+            if (wells.empty())
+                InvalidWellPattern(wellNamePattern, parseContext, keyword);
 
-            for( auto* well : getWells( wellNamePattern ) ) {
+            for( auto* well : wells ) {
                 WellProductionProperties properties;
 
 
@@ -528,12 +530,12 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWCONHIST(const DeckKeyword& keyword, size_t currentStep) {
-        handleWCONProducer(keyword, currentStep, false);
+    void Schedule::handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+        handleWCONProducer(keyword, currentStep, false, parseContext);
     }
 
-    void Schedule::handleWCONPROD( const DeckKeyword& keyword, size_t currentStep) {
-        handleWCONProducer(keyword, currentStep, true);
+    void Schedule::handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+        handleWCONProducer( keyword, currentStep, true, parseContext);
     }
 
     static Opm::Value<int> getValueItem( const DeckItem& item ){
