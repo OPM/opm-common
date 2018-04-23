@@ -85,6 +85,10 @@ namespace Opm { namespace RestartIO {
             int mxwsit;
             int mxwpit;
         };
+	
+	struct Group {
+	  int ngroups;
+	};
 
         InteHEAD();
         ~InteHEAD() = default;
@@ -112,6 +116,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& variousParam(const int version, const int iprog);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
         InteHEAD& regionDimensions(const RegDims& rdim);
+	InteHEAD& ngroups(const Group& gr);
 
         const std::vector<int>& data() const
         {

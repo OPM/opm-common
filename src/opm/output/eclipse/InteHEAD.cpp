@@ -657,6 +657,16 @@ Opm::RestartIO::InteHEAD::regionDimensions(const RegDims& rdim)
     return *this;
 }
 
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+ngroups(const Group& gr)
+{
+    this -> data_[NGRP] = gr.ngroups;
+
+    return *this;
+}
+
+
 // =====================================================================
 // Free functions (calendar/time utilities)
 // =====================================================================

@@ -192,6 +192,17 @@ namespace {
             static_cast<int>(nplmix),
         };
     }
+    
+    
+    Opm::RestartIO::InteHEAD::Group
+    getNoGroups(const ::Opm::Schedule& sched)
+    {
+        const auto ngroups = sched.numGroups();
+
+        return {
+	  ngroups
+	};
+    }
 } // Anonymous
 
 // #####################################################################
@@ -233,6 +244,7 @@ createInteHead(const EclipseState& es,
         .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
+	.ngroups(getNoGroups(sched))
         .variousParam       (2014, 100) // Output should be compatible with Eclipse 100, 2014 version.
         ;
 
