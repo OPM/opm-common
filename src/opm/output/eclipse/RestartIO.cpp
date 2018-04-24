@@ -26,6 +26,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
+#include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 
 #include <opm/output/eclipse/RestartIO.hpp>
 
@@ -274,6 +276,19 @@ RestartValue load( const std::string& filename,
 
 namespace {
 
+std::vector<double> serialize_THPRES(int ntequil, const ThresholdPressure& thpres, const UnitSystem& units) {
+    std::vector<double> data(ntequil * ntequil , 0);
+    for (int reg1 = 1; reg1 <= ntequil; reg1++)
+        for (int reg2 = 1; reg2 <= ntequil; reg2++) {
+            int index = (reg1 - 1) * ntequil + reg2 - 1;
+            data[index] = thpres.getThresholdPressure(reg1,reg2);
+        }
+
+    units.from_si( UnitSystem::measure::pressure, data);
+    return data;
+}
+
+
 std::vector<int> serialize_ICON( int sim_step,
                                  int ncwmax,
                                  const std::vector<const Well*>& sched_wells) {
@@ -518,6 +533,14 @@ void writeExtraData(ecl_rst_file_type* rst_file, const std::map<std::string,std:
 }
 
 
+void writeTHPRES(ecl_rst_file_type * rst_file, int ntequil, const ThresholdPressure& thpres, const UnitSystem& units) {
+    if (thpres.size() == 0)
+        return;
+
+    const auto thpres_data = serialize_THPRES(ntequil, thpres, units);
+    write_kw( rst_file, ERT::EclKW<double>("THPRES", thpres_data));
+}
+
 
 void writeWell(ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es , const EclipseGrid& grid, const Schedule& schedule, const data::Wells& wells) {
     const auto sched_wells  = schedule.getWells(sim_step);
@@ -592,6 +615,10 @@ void save(const std::string& filename,
         writeHeader( rst_file.get() , sim_step, report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
         writeWell( rst_file.get() , sim_step, es , grid, schedule, wells);
         writeSolution( rst_file.get() , cells , write_double );
+        writeTHPRES(rst_file.get(),
+                    es.getTableManager().getEqldims().getNumEquilRegions(),
+                    es.getSimulationConfig().getThresholdPressure(),
+                    units);
         writeExtraData( rst_file.get() , extra_data );
     }
 }

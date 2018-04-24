@@ -241,6 +241,7 @@ list (APPEND TEST_DATA_FILES
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_DATA_FILES
           tests/FIRST_SIM.DATA
+          tests/FIRST_SIM_THPRES.DATA
           tests/summary_deck.DATA
           tests/group_group.DATA
           tests/testblackoilstate3.DATA

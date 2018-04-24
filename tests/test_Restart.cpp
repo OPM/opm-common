@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -600,6 +601,40 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
             }
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(SAVE_THPRES) {
+    Setup setup("FIRST_SIM_THPRES.DATA");
+    {
+        ERT::TestArea testArea("test_Restart");
+        auto num_cells = setup.grid.getNumActive( );
+        auto cells = mkSolution( num_cells );
+        auto wells = mkWells();
+        const auto& eqldims = setup.es.getTableManager().getEqldims();
+
+        RestartIO::save("FILE.UNRST", 1 ,
+                        100,
+                        cells ,
+                        wells ,
+                        setup.es,
+                        setup.grid,
+                        setup.schedule);
+
+        {
+            ecl_file_type * f = ecl_file_open( "FILE.UNRST" , 0 );
+            BOOST_CHECK( ecl_file_has_kw( f , "THPRES"));
+            {
+                ecl_kw_type * thpres = ecl_file_iget_named_kw( f , "THPRES" , 0 );
+                BOOST_CHECK_EQUAL( ecl_kw_get_header( thpres) , "THPRES" );
+                BOOST_CHECK_EQUAL( ecl_kw_get_size(thpres), eqldims.getNumEquilRegions() * eqldims.getNumEquilRegions());
+
+                for (size_t index=0; index < eqldims.getNumEquilRegions(); index++)
+                    BOOST_CHECK_CLOSE( ecl_kw_iget_double(thpres, index), (index + 1) * 0.10 , 1e-6);
+
+            }
+            ecl_file_close( f );
+        }
+     }
 }
 
 }
