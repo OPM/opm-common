@@ -103,9 +103,11 @@ namespace Opm
 
         const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;
+		size_t numGroups(size_t timeStep) const;
         bool hasGroup(const std::string& groupName) const;
         const Group& getGroup(const std::string& groupName) const;
         std::vector< const Group* > getGroups() const;
+		std::vector< const Group* > getGroups(size_t timeStep) const;
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, const DeckKeyword& keyword) const;

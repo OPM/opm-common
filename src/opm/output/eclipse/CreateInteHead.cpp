@@ -195,12 +195,14 @@ namespace {
     
     
     Opm::RestartIO::InteHEAD::Group
-    getNoGroups(const ::Opm::Schedule& sched)
+    getNoGroups(const ::Opm::Schedule& sched,
+		const std::size_t      step)
     {
-        const auto ngroups = sched.numGroups();
+	const std::size_t simStep = step == 0 ? 0 : step - 1;
+        const auto ngroups = sched.numGroups(simStep)-1;
 
         return {
-	  ngroups
+	    ngroups
 	};
     }
 } // Anonymous
@@ -244,7 +246,7 @@ createInteHead(const EclipseState& es,
         .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
-	.ngroups(getNoGroups(sched))
+	.ngroups(getNoGroups(sched, report_step))
         .variousParam       (2014, 100) // Output should be compatible with Eclipse 100, 2014 version.
         ;
 

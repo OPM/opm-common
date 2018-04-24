@@ -106,6 +106,9 @@ namespace Opm {
     {}
 
 
+
+
+
     std::time_t Schedule::getStartTime() const {
         return this->posixStartTime( );
     }
@@ -1605,6 +1608,9 @@ namespace Opm {
     size_t Schedule::numGroups() const {
         return m_groups.size();
     }
+    size_t Schedule::numGroups(size_t timeStep) const {
+        return this->getGroups( timeStep ).size();
+    }
 
     bool Schedule::hasGroup(const std::string& groupName) const {
         return m_groups.hasKey(groupName);
@@ -1645,6 +1651,25 @@ namespace Opm {
         return groups;
     }
 
+    std::vector< const Group* > Schedule::getGroups(size_t timeStep) const {
+      
+	if (timeStep >= m_timeMap.size()) {
+            throw std::invalid_argument("Timestep to large");
+        }
+        
+        auto defined = [=]( const Group& g ) {
+            return g.hasBeenDefined( timeStep );
+        };
+	
+        std::vector< const Group* > groups;
+
+        for( const auto& group : m_groups ) {
+	    if( !defined( group ) ) continue;
+	    groups.push_back( &group );
+	}
+        return groups;
+    }
+	
     void Schedule::addWellToGroup( Group& newGroup, Well& well , size_t timeStep) {
         const std::string currentGroupName = well.getGroupName(timeStep);
         if (currentGroupName != "") {
