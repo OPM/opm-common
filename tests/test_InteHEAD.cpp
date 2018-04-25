@@ -415,6 +415,17 @@ BOOST_AUTO_TEST_CASE(regionDimensions)
     BOOST_CHECK_EQUAL(v[99], nmfipr); // NMFIPR
 }
 
+BOOST_AUTO_TEST_CASE(ngroups)
+{
+    const auto ngroup  = 8;
+
+    const auto ih = Opm::RestartIO::InteHEAD{}
+        .ngroups({ ngroup });
+	
+    const auto& v = ih.data();
+
+    BOOST_CHECK_EQUAL(v[18], ngroup);  // NGRP
+}
 BOOST_AUTO_TEST_CASE(SimulationDate)
 {
     const auto input = std::string { R"(

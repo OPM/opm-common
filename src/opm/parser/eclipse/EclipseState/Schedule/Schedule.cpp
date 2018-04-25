@@ -1533,6 +1533,45 @@ namespace Opm {
         }
     }
 
+    std::vector< const std::string* > Schedule::getChildGroups(const std::string& group_name, size_t timeStep) const {
+        if (!hasGroup(group_name))
+            throw std::invalid_argument("No such group: " + group_name);
+        {
+            const auto& group = getGroup( group_name );
+            std::vector<const std::string> child_groups;
+
+            if (group.hasBeenDefined( timeStep )) {
+                const GroupTree& group_tree = getGroupTree( timeStep );
+                child_groups = group_tree.children( group_name );
+                }
+         return &child_groups;
+      }
+    }
+
+        std::vector< const Well* > Schedule::getChildWells(const std::string& group_name, size_t timeStep) const {
+        if (!hasGroup(group_name))
+            throw std::invalid_argument("No such group: " + group_name);
+        {
+            const auto& group = getGroup( group_name );
+            std::vector<const Well*> wells;
+
+            if (group.hasBeenDefined( timeStep )) {
+                const GroupTree& group_tree = getGroupTree( timeStep );
+                const auto& child_groups = group_tree.children( group_name );
+
+                if (!child_groups.size()) {
+                    for (const auto& well_name : group.getWells( timeStep )) {
+                        wells.push_back( getWell( well_name ));
+                    }
+                }
+            }
+            return wells;
+        }
+    }
+
+    
+    
+    
     std::vector< const Well* > Schedule::getWells(size_t timeStep) const {
         if (timeStep >= m_timeMap.size()) {
             throw std::invalid_argument("Timestep to large");
