@@ -212,7 +212,6 @@ namespace Opm {
             if( well == wells.end() ) continue;
 
             const auto index = std::distance( wells.begin(), well );
-            if( prev_compls[ index ] == 0 ) (*well)->getCompletions().size();
 
             auto completions = Opm::fromCOMPDAT( grid,
                                                  eclipseProperties,
