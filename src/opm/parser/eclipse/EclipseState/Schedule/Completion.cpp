@@ -206,29 +206,28 @@ namespace Opm {
 
         for( const auto& record : compdatKeyword ) {
 
-            const auto wellname = record.getItem( "WELL" ).getTrimmedString( 0 );
-            const auto name_eq = [&]( const Well* w ) {
-                return w->name() == wellname;
-            };
+            const auto wellNamePattern = record.getItem( "WELL" ).getTrimmedString( 0 );
+            const auto& matched_wells = schedule.getWellsMatching(wellNamePattern);
 
-            auto well = std::find_if( wells.begin(), wells.end(), name_eq );
+            if (matched_wells.empty())
+                schedule.InvalidWellPattern(wellNamePattern, parseContext, compdatKeyword);
 
-            if( well == wells.end() )
-                schedule.InvalidWellPattern(wellname, parseContext, compdatKeyword);
+            for (const auto& well : matched_wells){
+                const auto it_pos = std::find( wells.begin(), wells.end(), well);
+                const auto index = std::distance( wells.begin(), it_pos );
 
-            const auto index = std::distance( wells.begin(), well );
+                auto completions = Opm::fromCOMPDAT( grid,
+                                                     eclipseProperties,
+                                                     record,
+                                                     *well,
+                                                     prev_compls[ index ] );
 
-            auto completions = Opm::fromCOMPDAT( grid,
-                                                 eclipseProperties,
-                                                 record,
-                                                 **well,
-                                                 prev_compls[ index ] );
+                prev_compls[ index ] += completions.size();
 
-            prev_compls[ index ] += completions.size();
-
-            res[ wellname ].insert( res[ wellname ].end(),
-                                    std::make_move_iterator( completions.begin() ),
-                                    std::make_move_iterator( completions.end() ) );
+                res[ well->name() ].insert( res[ well->name() ].end(),
+                                           std::make_move_iterator( completions.begin() ),
+                                           std::make_move_iterator( completions.end() ) );
+            }
         }
 
         return res;

@@ -1481,6 +1481,8 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
             'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
             'W2' 0 0 3 3 'SHUT' 1*    / -- regular completion (1)
             'W2' 0 0 1 3 'SHUT' 1*    / -- two completions (one exist already) (2, 3)
+            'W*' 0 0 3 5 'SHUT' 1*    / -- two completions, two wells (includes existing
+                                        -- and adding for both wells)
         /
     )";
 
@@ -1496,12 +1498,16 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     BOOST_CHECK_EQUAL( 2, w1cs.get( 1 ).complnum() );
     BOOST_CHECK_EQUAL( 3, w1cs.get( 2 ).complnum() );
     BOOST_CHECK_EQUAL( 4, w1cs.get( 3 ).complnum() );
+    BOOST_CHECK_EQUAL( 5, w1cs.get( 4 ).complnum() );
 
     const auto& w2cs = schedule.getWell( "W2" )->getCompletions();
     BOOST_CHECK_EQUAL( 1, w2cs.getFromIJK( 4, 4, 2 ).complnum() );
     BOOST_CHECK_EQUAL( 2, w2cs.getFromIJK( 4, 4, 0 ).complnum() );
     BOOST_CHECK_EQUAL( 3, w2cs.getFromIJK( 4, 4, 1 ).complnum() );
-    BOOST_CHECK_THROW( w2cs.get( 3 ).complnum(), std::out_of_range );
+    BOOST_CHECK_EQUAL( 4, w2cs.getFromIJK( 4, 4, 3 ).complnum() );
+    BOOST_CHECK_EQUAL( 5, w2cs.getFromIJK( 4, 4, 4 ).complnum() );
+
+    BOOST_CHECK_THROW( w2cs.get( 5 ).complnum(), std::out_of_range );
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
