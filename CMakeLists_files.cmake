@@ -136,6 +136,7 @@ endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES
           src/opm/output/eclipse/AggregateWellData.cpp
+          src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
           src/opm/output/eclipse/CreateLogiHead.cpp
@@ -487,6 +488,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/AggregateWellData.hpp
+        opm/output/eclipse/AggregateGroupData.hpp
         opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp

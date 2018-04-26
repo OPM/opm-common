@@ -1538,14 +1538,17 @@ namespace Opm {
             throw std::invalid_argument("No such group: " + group_name);
         {
             const auto& group = getGroup( group_name );
-            std::vector<const std::string> child_groups;
+	    std::vector<const std::string*> child_groups;
 
             if (group.hasBeenDefined( timeStep )) {
                 const GroupTree& group_tree = getGroupTree( timeStep );
-                child_groups = group_tree.children( group_name );
-                }
-         return &child_groups;
-      }
+                const auto& ch_grps = group_tree.children( group_name );
+		for (const std::string& group_name : ch_grps) {
+                        child_groups.push_back( &group_name);
+                    }
+	    }
+	    return child_groups;
+	}
     }
 
         std::vector< const Well* > Schedule::getChildWells(const std::string& group_name, size_t timeStep) const {

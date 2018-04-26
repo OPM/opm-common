@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -32,21 +33,48 @@
 #include <string>
 
 // #####################################################################
-// Class Opm::RestartIO::Helpers::AggregateWellData
+// Class Opm::RestartIO::Helpers::AggregateGroupData
 // ---------------------------------------------------------------------
+//namespace Opm {
+//    class Phases;
+//    class Schedule;
+//    class Group;
+//} // Opm
 
 namespace {
-    std::size_t numWells(const std::vector<int>& inteHead)
+  
+  int nigrpz(const std::vector<int>& inteHead)
     {
-        // INTEHEAD(17) = NWELLS
-        return inteHead[17 - 1];
+        // INTEHEAD(36) = NIGRPZ
+        return inteHead[36];
     }
 
-    int maxNumGroups(const std::vector<int>& inteHead)
+    int nsgrpz(const std::vector<int>& inteHead)
     {
-        return inteHead[20 - 1];
+        return inteHead[37];
     }
-
+    
+    int nxgrpz(const std::vector<int>& inteHead)
+    {
+        return inteHead[38];
+    }
+    
+    int nzgrpz(const std::vector<int>& inteHead)
+    {
+        return inteHead[39];
+    }
+    // maximum number of groups
+    int ngmaxz(const std::vector<int>& inteHead)
+    {
+        return inteHead[20];
+    }
+    // maximum number of wells in any group
+    int nwgmax(const std::vector<int>& inteHead)
+    {
+        return inteHead[19];
+    }
+    
+    
     std::string trim(const std::string& s)
     {
         const auto b = s.find_first_not_of(" \t");
@@ -78,25 +106,48 @@ namespace {
         return gnms;
     }
 
-    template <typename WellOp>
-    void wellLoop(const std::vector<const Opm::Well*>& wells,
-                  WellOp&&                             wellOp)
+        const int groupType(const Opm::Schedule& sched,
+		      const Opm::Group& group,
+		      const std::size_t rptStep)
+        {
+	    const std::string& groupName = group.name();
+	    if (!sched.hasGroup(groupName))
+            throw std::invalid_argument("No such group: " + groupName);
+        {
+            if (group.hasBeenDefined( rptStep )) {
+                const auto& groupTree = sched.getGroupTree( rptStep );
+                const auto& childGroups = groupTree.children( groupName );
+
+                if (childGroups.size()) {
+		    return 1;
+                } 
+                else {
+		    return 0;
+		}
+            }
+            return 0;
+        }
+    }
+    
+    template <typename GroupOp>
+    void wellgroupLoop(const std::vector<const Opm::Group*>& groups,
+                  GroupOp&&                             groupOp)
     {
-        auto wellID = std::size_t{0};
-        for (const auto* well : wells) {
-            wellID += 1;
+        auto groupID = std::size_t{0};
+        for (const auto* group : groups) {
+            groupID += 1;
 
-            if (well == nullptr) { continue; }
+            if (group == nullptr) { continue; }
 
-            wellOp(*well, wellID - 1);
+            groupOp(*group, groupID - 1);
         }
     }
 
-    namespace IWell {
-        std::size_t entriesPerWell(const std::vector<int>& inteHead)
+    namespace IGrp {
+              std::size_t entriesPerGroup(const std::vector<int>& inteHead)
         {
-            // INTEHEAD(25) = NIWELZ
-            return inteHead[25 - 1];
+            // INTEHEAD[36] = NIGRPZ
+            return inteHead[36];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<int>
@@ -105,11 +156,44 @@ namespace {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
 
             return WV {
-                WV::NumWindows{ numWells(inteHead) },
-                WV::WindowSize{ entriesPerWell(inteHead) }
+                WV::NumWindows{ ngmaxz(inteHead) },
+                WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
+      const std::map <int, std::string>  currentGroupIndex(Opm::Schedule& sched, size_t rptStep)
+      {
+	const std::vector< const Opm::Group* > groups = sched.getGroups(rptStep);
+	// make group index for current report step
+	std::map <int, std::string> groupIndexMap;
+	int groupIndex = 0;
+	for (const auto* group : groups) {
+	  groupIndex+=1;
+	  std::pair<int, std::string> groupPair = std::make_pair(groupIndex, group->name()); 
+	  groupIndexMap.insert(groupPair);
+	}
+	return groupIndexMap;
+      }
+      
 
+      std::map <std::string, int>  currentWellIndex(Opm::Schedule& sched, size_t rptStep)
+      {
+	const std::vector< const Opm::Well* > wells = sched.getWells(rptStep);
+	// make group index for current report step
+	std::map <std::string, int> wellIndexMap;
+	int wellIndex = 0;
+	for (const auto* well : wells) {
+	  wellIndex+=1;
+	  std::pair<std::string, int> wellPair = std::make_pair(well->name(), wellIndex); 
+	  wellIndexMap.insert(wellPair);
+	}
+	return wellIndexMap;
+      }
+
+      std::vector< const Opm::Group* > currentGroups(Opm::Schedule& sched, size_t rptStep)
+      {
+	const std::vector< const Opm::Group* >  groups = sched.getGroups(rptStep);
+	return groups;
+      }
         int groupIndex(const std::string&              grpName,
                        const std::vector<std::string>& groupNames,
                        const int                       maxGroups)
@@ -132,161 +216,36 @@ namespace {
             return std::distance(b, i) + 1;
         }
 
-        int wellType(const Opm::Well&  well,
-                     const std::size_t rptStep)
+
+        template <class IGrpArray>
+        void staticContrib( const Opm::Schedule& sched,
+			    const Opm::Group&               group,
+			    const int                       nwgmax,
+			    const std::size_t               rptStep,
+			    IGrpArray&                      igrp)
         {
-            if (well.isProducer(rptStep)) {
-                return 1;      // Producer flag
-            }
-
-            using IType = ::Opm::WellInjector::TypeEnum;
-
-            const auto itype = well
-                .getInjectionProperties(rptStep).injectorType;
-
-            switch (itype) {
-            case IType::OIL:   return 2; // Oil Injector
-            case IType::WATER: return 3; // Water Injector
-            case IType::GAS:   return 4; // Gas Injector
-            default:           return 0; // Undefined
-            }
+	  // find the number of wells or child groups belonging to a group and store in 
+	  // location nwgmax +1 in the igrp array
+	  
+	    const auto* childGroups = sched.getChildGroups(group.name(), rptStep);
+	    const auto* childWells = sched.getChildWells(group.name(), rptStep);
+	    if ((childGroups.size() == 0) && (childGroups.size())) 
+		throw std::invalid_argument("group has neither wells nor child groups" + group.name());
+            igrp[nwgmax] =  (childGroups.size() == 0)
+                    ? childWells.size() : childGroups.size();
+	    
+	    // find the group type (well group (type 0) or node group (type 1) and store in 
+	    // location nwgmax + 26
+	    const auto grpType = groupType(sched, group,rptStep);
+	    igrp[nwgmax+26] = grpType;
         }
+    } // Igrp
 
-        int wellVFPTab(const Opm::Well&  well,
-                       const std::size_t rptStep)
+    namespace SGrp {
+        std::size_t entriesPerGroup(const std::vector<int>& inteHead)
         {
-            if (well.isInjector(rptStep)) {
-                return well.getInjectionProperties(rptStep).VFPTableNumber;
-            }
-
-            return well.getProductionProperties(rptStep).VFPTableNumber;
-        }
-
-#if 0
-        int ctrlMode(const Opm::Well&  well,
-                     const std::size_t rptStep)
-        {
-            {
-                const auto stat = well.getStatus(rptStep);
-
-                using WStat = ::Opm::WellCommon::StatusEnum;
-
-                if ((stat == WStat::SHUT) || (stat == WStat::STOP)) {
-                    return 0;
-                }
-            }
-
-            if (well.isInjector(rptStep)) {
-                const auto& prop = well
-                    .getInjectionProperties(rptStep);
-
-                const auto wmctl = prop.controlMode;
-                const auto wtype = prop.injectorType;
-
-                using CMode = ::Opm::WellInjector::ControlModeEnum;
-                using WType = ::Opm::WellInjector::TypeEnum;
-
-                switch (wmctl) {
-                case CMode::RATE: {
-                    switch (wtype) {
-                    case WType::OIL:   return 1; // ORAT
-                    case WType::WATER: return 2; // WRAT
-                    case WType::GAS:   return 3; // GRAT
-                    }
-                }
-                    break;
-
-                case CMode::RESV: return 5; // RESV
-                case CMode::THP:  return 6;
-                case CMode::BHP:  return 7;
-                case CMode::GRUP: return -1;
-
-                default:
-                    return 0;
-                }
-            }
-            else if (well.isProducer(rptStep)) {
-                const auto& prop = well
-                    .getProductionProperties(rptStep);
-
-                using CMode = ::Opm::WellProducer::ControlModeEnum;
-
-                switch (prop.controlMode) {
-                case CMode::ORAT: return 1;
-                case CMode::WRAT: return 2;
-                case CMode::GRAT: return 3;
-                case CMode::LRAT: return 4;
-                case CMode::RESV: return 5;
-                case CMode::THP:  return 6;
-                case CMode::BHP:  return 7;
-                case CMode::CRAT: return 9;
-                case CMode::GRUP: return -1;
-
-                default: return 0;
-                }
-            }
-        }
-#endif
-
-        int compOrder(const Opm::Well& well)
-        {
-            using WCO = ::Opm::WellCompletion::CompletionOrderEnum;
-
-            switch (well.getWellCompletionOrdering()) {
-            case WCO::TRACK: return 0;
-            case WCO::DEPTH: return 1; // Not really supported in Flow
-            case WCO::INPUT: return 2;
-            }
-
-            return 0;
-        }
-
-        template <class IWellArray>
-        void staticContrib(const Opm::Well&                well,
-                           const std::vector<std::string>& groupNames,
-                           const int                       maxGroups,
-                           const std::size_t               rptStep,
-                           IWellArray&                     iWell)
-        {
-            iWell[1 - 1] = well.getHeadI(rptStep) + 1;
-            iWell[2 - 1] = well.getHeadJ(rptStep) + 1;
-
-            // Completions
-            {
-                const auto& cmpl = well.getCompletions(rptStep);
-
-                iWell[5 - 1] = static_cast<int>(cmpl.size());
-                iWell[3 - 1] = (iWell[5 - 1] == 0)
-                    ? 0 : cmpl.get(0).getK() + 1;
-            }
-
-            iWell[ 6 - 1] =
-                groupIndex(trim(well.getGroupName(rptStep)),
-                           groupNames, maxGroups);
-
-            iWell[ 7 - 1] = wellType  (well, rptStep);
-            iWell[12 - 1] = wellVFPTab(well, rptStep);
-
-            // The following items aren't fully characterised yet, but
-            // needed for restart of M2.  Will need further refinement.
-            iWell[17 - 1] = -100;
-            iWell[25 - 1] = -  1;
-            iWell[32 - 1] =    7;
-            iWell[48 - 1] = -  1;
-
-            // Multi-segmented well information (not complete)
-            iWell[71 - 1] = 0;  // ID of Segmented Well
-            iWell[72 - 1] = 0;  // Segment ID
-
-            iWell[99 - 1] = compOrder(well);
-        }
-    } // IWell
-
-    namespace SWell {
-        std::size_t entriesPerWell(const std::vector<int>& inteHead)
-        {
-            // INTEHEAD(26) = NSWELZ
-            return inteHead[26 - 1];
+            // INTEHEAD[37] = NSGRPZ
+            return inteHead[37];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<float>
@@ -295,11 +254,12 @@ namespace {
             using WV = Opm::RestartIO::Helpers::WindowedArray<float>;
 
             return WV {
-                WV::NumWindows{ numWells(inteHead) },
-                WV::WindowSize{ entriesPerWell(inteHead) }
+                WV::NumWindows{ ngmaxz(inteHead) },
+                WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
-
+    }
+#if 0
         template <class SWellArray>
         void staticContrib(SWellArray& sWell)
         {
@@ -344,14 +304,14 @@ namespace {
             std::copy(b, e, std::begin(sWell));
         }
     } // SWell
-
-    namespace XWell {
+#endif
+    namespace XGrp {
         using SolnQuant = ::Opm::data::Rates::opt;
 
-        std::size_t entriesPerWell(const std::vector<int>& inteHead)
+        std::size_t entriesPerGroup(const std::vector<int>& inteHead)
         {
-            // INTEHEAD(27) = NXWELZ
-            return inteHead[27 - 1];
+            // INTEHEAD[38] = NXGRPZ
+            return inteHead[38];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<double>
@@ -360,11 +320,12 @@ namespace {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
 
             return WV {
-                WV::NumWindows{ numWells(inteHead) },
-                WV::WindowSize{ entriesPerWell(inteHead) }
+                WV::NumWindows{ ngmaxz(inteHead) },
+                WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
-
+    }
+#if 0
         bool activeGas(const ::Opm::Phases& phases)
         {
             return phases.active(::Opm::Phase::GAS);
@@ -418,12 +379,13 @@ namespace {
             const auto& xw = *x->second;
         }
     } // XWell
+#endif
 
-    namespace ZWell {
-        std::size_t entriesPerWell(const std::vector<int>& inteHead)
+    namespace ZGrp {
+        std::size_t entriesPerGroup(const std::vector<int>& inteHead)
         {
-            // INTEHEAD(28) = NZWELZ
-            return inteHead[28 - 1];
+            // INTEHEAD[39] = NZGRPZ
+            return inteHead[39];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<
@@ -436,10 +398,13 @@ namespace {
             >;
 
             return WV {
-                WV::NumWindows{ numWells(inteHead) },
-                WV::WindowSize{ entriesPerWell(inteHead) }
+                WV::NumWindows{ ngmaxz(inteHead) },
+                WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
+    }
+
+#if 0
 
         template <class ZWellArray>
         void staticContrib(const Opm::Well& well, ZWellArray& zWell)
@@ -447,32 +412,39 @@ namespace {
             zWell[1 - 1] = well.name();
         }
     } // ZWell
+#endif
 } // Anonymous
+
+
+
 
 // =====================================================================
 
-Opm::RestartIO::Helpers::AggregateWellData::
-AggregateWellData(const std::vector<int>& inteHead)
-    : iWell_ (IWell::allocate(inteHead))
-    , sWell_ (SWell::allocate(inteHead))
-    , xWell_ (XWell::allocate(inteHead))
-    , zWell_ (ZWell::allocate(inteHead))
-    , nWGMax_(maxNumGroups(inteHead))
+Opm::RestartIO::Helpers::AggregateGroupData::
+AggregateGroupData(const std::vector<int>& inteHead)
+    : iGroup_ (IGrp::allocate(inteHead))
+    , sGroup_ (SGrp::allocate(inteHead))
+    , xGroup_ (XGrp::allocate(inteHead))
+    , zGroup_ (ZGrp::allocate(inteHead))
+    , nWGMax_(nwgmax(inteHead))
+    , nGMaxz_(ngmaxz(inteHead))
 {}
 
 // ---------------------------------------------------------------------
 
 void
-Opm::RestartIO::Helpers::AggregateWellData::
-captureDeclaredWellData(const Schedule&   sched,
+Opm::RestartIO::Helpers::AggregateGroupData::
+captureDeclaredGroupData(const Schedule&   sched,
                         const std::size_t rptStep)
 {
-    const auto& wells = sched.getWells(rptStep);
+    const auto& groups = sched.getGroups(rptStep);
 
-    // Extract Static Contributions to IWell Array
+    // 
     {
-        const auto grpNames = groupNames(sched.getGroups());
-
+      const auto* groupIndMap = currentGroupIndex( sched, rptStep);
+      const auto grpNames = groupNames(sched.getGroups());
+    }
+#if 0
         wellLoop(wells, [&grpNames, rptStep, this]
             (const Well& well, const std::size_t wellID) -> void
         {
@@ -499,10 +471,11 @@ captureDeclaredWellData(const Schedule&   sched,
 
         ZWell::staticContrib(well, zw);
     });
+#endif
 }
 
 // ---------------------------------------------------------------------
-
+#if 0
 void
 Opm::RestartIO::Helpers::AggregateWellData::
 captureDynamicWellData(const Phases&                 phases,
@@ -520,3 +493,4 @@ captureDynamicWellData(const Phases&                 phases,
         XWell::dynamicContrib(well, phases, wRates, xw);
     });
 }
+#endif 
