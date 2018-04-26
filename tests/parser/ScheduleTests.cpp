@@ -1415,6 +1415,104 @@ BOOST_AUTO_TEST_CASE(change_ref_depth) {
     BOOST_CHECK_CLOSE( 2873.94, well.getRefDepth( 1 ), 1e-5 );
 }
 
+BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
+        std::string input = R"(
+            START             -- 0
+            19 JUN 2007 /
+            SCHEDULE
+            DATES             -- 1
+             10  OKT 2008 /
+            /
+            WELSPECS
+                'W1' 'G1'  3 3 2873.94 'OIL' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W2' 'G2'  5 5 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W3' 'G2'  6 6 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            /
+
+            WCONINJE
+            'W2' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            'W3' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            /
+
+            DATES             -- 2
+                15  OKT 2008 /
+            /
+
+            WTEMP
+                'W*' 40.0 /
+            /
+    )";
+
+        ParseContext ctx;
+        auto deck = Parser().parseString(input, ctx);
+        EclipseGrid grid(10,10,10);
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
+
+        // Producerwell - currently setting temperature only acts on injectors.
+        const auto& w1 = *schedule.getWell( "W1" );
+        BOOST_CHECK_CLOSE( 288.71, w1.getInjectionProperties( 1 ).temperature, 1e-5 ); // Default value
+        BOOST_CHECK_CLOSE( 288.71, w1.getInjectionProperties( 1 ).temperature, 1e-5 ); // Default value Remains
+
+        const auto& w2 = *schedule.getWell( "W2" );
+        BOOST_CHECK_CLOSE( 288.71, w2.getInjectionProperties( 1 ).temperature, 1e-5 );
+        BOOST_CHECK_CLOSE( 313.15, w2.getInjectionProperties( 2 ).temperature, 1e-5 );
+
+        const auto& w3 = *schedule.getWell( "W3" );
+        BOOST_CHECK_CLOSE( 288.71, w3.getInjectionProperties( 1 ).temperature, 1e-5 );
+        BOOST_CHECK_CLOSE( 313.15, w3.getInjectionProperties( 2 ).temperature, 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
+        std::string input = R"(
+            START             -- 0
+            19 JUN 2007 /
+            SCHEDULE
+            DATES             -- 1
+             10  OKT 2008 /
+            /
+            WELSPECS
+                'W1' 'G1'  3 3 2873.94 'OIL' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W2' 'G2'  5 5 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W3' 'G2'  6 6 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            /
+
+            WCONINJE
+            'W2' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            'W3' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            /
+
+            DATES             -- 2
+                15  OKT 2008 /
+            /
+
+            WINJTEMP
+                'W*' 1* 40.0 1* /
+            /
+    )";
+
+        ParseContext ctx;
+        auto deck = Parser().parseString(input, ctx);
+        EclipseGrid grid(10,10,10);
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
+
+        // Producerwell - currently setting temperature only acts on injectors.
+        const auto& w1 = *schedule.getWell( "W1" );
+        BOOST_CHECK_CLOSE( 288.71, w1.getInjectionProperties( 1 ).temperature, 1e-5 ); // Default value
+        BOOST_CHECK_CLOSE( 288.71, w1.getInjectionProperties( 1 ).temperature, 1e-5 ); // Default value Remains
+
+        const auto& w2 = *schedule.getWell( "W2" );
+        BOOST_CHECK_CLOSE( 288.71, w2.getInjectionProperties( 1 ).temperature, 1e-5 );
+        BOOST_CHECK_CLOSE( 313.15, w2.getInjectionProperties( 2 ).temperature, 1e-5 );
+
+        const auto& w3 = *schedule.getWell( "W3" );
+        BOOST_CHECK_CLOSE( 288.71, w3.getInjectionProperties( 1 ).temperature, 1e-5 );
+        BOOST_CHECK_CLOSE( 313.15, w3.getInjectionProperties( 2 ).temperature, 1e-5 );
+}
+
 BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     std::string input = R"(
         START             -- 0

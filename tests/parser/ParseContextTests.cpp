@@ -548,6 +548,40 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     )";
     testSamples.push_back(testSample);
 
+    // Invalid well name in WTEMP
+    testSample = R"(
+    COMPDAT
+    'INJ' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONINJE
+    'INJ' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+    /
+    DATES
+    15  OKT 2008 /
+    /
+    WTEMP
+    'SOMETHINGELSE' 40.0 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
+    // Invalid well name in WINJTEMP
+    testSample = R"(
+    COMPDAT
+    'INJ' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONINJE
+    'INJ' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+    /
+    DATES
+    15  OKT 2008 /
+    /
+    WINJTEMP
+    'SOMETHINGELSE' 1* 40.0 1*  /
+    /
+    )";
+    testSamples.push_back(testSample);
+
     std::string deckinput;
 
     for (std::string sample : testSamples) {

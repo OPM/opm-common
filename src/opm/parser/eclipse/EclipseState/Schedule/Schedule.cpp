@@ -181,10 +181,10 @@ namespace Opm {
                 handleWSOLVENT(keyword, currentStep);
 
             else if (keyword.name() == "WTEMP")
-                handleWTEMP(keyword, currentStep);
+                handleWTEMP(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WINJTEMP")
-                handleWINJTEMP(keyword, currentStep);
+                handleWINJTEMP(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WCONINJH")
                 handleWCONINJH(section, keyword, currentStep, parseContext);
@@ -762,11 +762,15 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWTEMP( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            auto wells = getWells( wellNamePattern );
 
-            for (auto* well : getWells(wellNamePattern)) {
+            if (wells.empty())
+                InvalidWellPattern( wellNamePattern, parseContext, keyword);
+
+            for (auto* well : wells) {
                 // TODO: Is this the right approach? Setting the well temperature only
                 // has an effect on injectors, but specifying it for producers won't hurt
                 // and wells can also switch their injector/producer status. Note that
@@ -782,13 +786,17 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         // we do not support the "enthalpy" field yet. how to do this is a more difficult
         // question.
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            auto wells = getWells( wellNamePattern );
 
-            for (auto* well : getWells(wellNamePattern)) {
+            if (wells.empty())
+                InvalidWellPattern( wellNamePattern, parseContext, keyword);
+
+            for (auto* well : wells) {
                 // TODO: Is this the right approach? Setting the well temperature only
                 // has an effect on injectors, but specifying it for producers won't hurt
                 // and wells can also switch their injector/producer status. Note that
