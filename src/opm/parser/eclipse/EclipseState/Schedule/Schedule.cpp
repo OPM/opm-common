@@ -172,7 +172,7 @@ namespace Opm {
                 handleWCONPROD(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WCONINJE")
-                handleWCONINJE(section, keyword, currentStep);
+                handleWCONINJE(section, keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WPOLYMER")
                 handleWPOLYMER(keyword, currentStep);
@@ -187,7 +187,7 @@ namespace Opm {
                 handleWINJTEMP(keyword, currentStep);
 
             else if (keyword.name() == "WCONINJH")
-                handleWCONINJH(section, keyword, currentStep);
+                handleWCONINJH(section, keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WGRUPCON")
                 handleWGRUPCON(keyword, currentStep);
@@ -612,11 +612,15 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWCONINJE( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWCONINJE( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
-            for( auto* well : getWells( wellNamePattern ) ) {
+            auto wells = getWells(wellNamePattern);
+            if (wells.empty())
+                InvalidWellPattern(wellNamePattern, parseContext, keyword);
+
+            for( auto* well : wells) {
                 WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
                 WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
@@ -800,9 +804,9 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
-            const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
             // convert injection rates to SI
             WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0));
@@ -811,35 +815,41 @@ namespace Opm {
 
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
 
-            auto& well = this->m_wells.get( wellName );
-            updateWellStatus( well, currentStep, status );
-            WellInjectionProperties properties(well.getInjectionPropertiesCopy(currentStep));
+            auto wells = getWells( wellNamePattern );
 
-            properties.injectorType = injectorType;
+            if (wells.empty())
+                InvalidWellPattern( wellNamePattern, parseContext, keyword);
 
-            const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
-            if (!record.getItem("RATE").defaultApplied(0)) {
-                properties.surfaceInjectionRate = injectionRate;
-                properties.addInjectionControl(controlMode);
-                properties.controlMode = controlMode;
-            }
-            properties.predictionMode = false;
+            for (auto* well : wells) {
+                updateWellStatus( *well, currentStep, status );
+                WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
 
-            if ( record.getItem( "BHP" ).hasValue(0) )
-                properties.BHPH = record.getItem("BHP").getSIDouble(0);
-            if ( record.getItem( "THP" ).hasValue(0) )
-                properties.THPH = record.getItem("THP").getSIDouble(0);
+                properties.injectorType = injectorType;
 
-            if (well.setInjectionProperties(currentStep, properties))
-                m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
+                WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
+                if (!record.getItem("RATE").defaultApplied(0)) {
+                    properties.surfaceInjectionRate = injectionRate;
+                    properties.addInjectionControl(controlMode);
+                    properties.controlMode = controlMode;
+                }
+                properties.predictionMode = false;
 
-            if ( ! well.getAllowCrossFlow() && (injectionRate == 0) ) {
-                std::string msg =
-                        "Well " + well.name() + " is an injector with zero rate where crossflow is banned. " +
-                        "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                OpmLog::note(msg);
-                updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT );
+                if ( record.getItem( "BHP" ).hasValue(0) )
+                    properties.BHPH = record.getItem("BHP").getSIDouble(0);
+                if ( record.getItem( "THP" ).hasValue(0) )
+                    properties.THPH = record.getItem("THP").getSIDouble(0);
+
+                if (well->setInjectionProperties(currentStep, properties))
+                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+
+                if ( ! well->getAllowCrossFlow() && (injectionRate == 0) ) {
+                    std::string msg =
+                            "Well " + well->name() + " is an injector with zero rate where crossflow is banned. " +
+                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                    OpmLog::note(msg);
+                    updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT );
+                }
             }
         }
     }

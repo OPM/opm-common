@@ -526,6 +526,28 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     )";
     testSamples.push_back(testSample);
 
+    // Invalid well name in WCONINJE
+    testSample = R"(
+    COMPDAT
+    'INJ' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONINJE
+    'SOMETHINGELSE' 'WATER' 'OPEN' 'RATE' 20000 4* 1000 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
+    // Invalid well name in WCONINJH
+    testSample = R"(
+    COMPDAT
+    'INJ' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONINJH
+    'SOMETHINGELSE' 'WAT' 'OPEN' 20000 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
     std::string deckinput;
 
     for (std::string sample : testSamples) {
