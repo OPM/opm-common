@@ -359,7 +359,8 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_
     eclWriter.writeTimeStep( 1,
                              false,
                              first_step - start_time,
-                             sol, wells , {}, {}, {}, {}, write_double);
+                             RestartValue(sol,wells),
+                             {}, {}, {}, write_double);
 
     return { sol, wells , {}};
 }
@@ -483,8 +484,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
         BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                            100,
-                                           cells ,
-                                           wells ,
+                                           RestartValue(cells, wells),
                                            setup.es,
                                            setup.grid ,
                                            setup.schedule),
@@ -507,12 +507,10 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
             extra["TOO_LONG_KEY"] = {0,1,2,3};
             BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                                100,
-                                               cells ,
-                                               wells ,
+                                               RestartValue(cells, wells, extra),
                                                setup.es,
                                                setup.grid,
-                                               setup.schedule,
-                                               extra),
+                                               setup.schedule),
                                std::runtime_error);
         }
 
@@ -522,12 +520,10 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
             extra["PRESSURE"] = {0,1,2,3};
             BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                                100,
-                                               cells ,
-                                               wells ,
+                                               RestartValue(cells, wells, extra),
                                                setup.es,
                                                setup.grid,
-                                               setup.schedule,
-                                               extra),
+                                               setup.schedule),
                                std::runtime_error);
         }
 
@@ -537,12 +533,10 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
             extra["LOGIHEAD"] = {0,1,2,3};
             BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                                100,
-                                               cells ,
-                                               wells ,
+                                               RestartValue(cells, wells, extra),
                                                setup.es,
                                                setup.grid,
-                                               setup.schedule,
-                                               extra),
+                                               setup.schedule),
                                std::runtime_error);
         }
     }
@@ -560,12 +554,10 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
             extra["EXTRA"] = {0,1,2,3};
             RestartIO::save("FILE.UNRST", 1 ,
                             100,
-                            cells ,
-                            wells ,
+                            RestartValue(cells, wells, extra),
                             setup.es,
                             setup.grid,
-                            setup.schedule,
-                            extra);
+                            setup.schedule);
 
             {
                 ecl_file_type * f = ecl_file_open( "FILE.UNRST" , 0 );

@@ -565,16 +565,14 @@ void checkSaveArguments(const data::Solution& cells,
 void save(const std::string& filename,
           int report_step,
           double seconds_elapsed,
-          data::Solution cells,
-          data::Wells wells,
+          RestartValue value,
           const EclipseState& es,
           const EclipseGrid& grid,
           const Schedule& schedule,
-          std::map<std::string, std::vector<double>> extra_data,
-	  bool write_double)
+          bool write_double)
 {
-    checkSaveArguments( cells, grid, extra_data );
-    {
+  checkSaveArguments( value.solution, grid, value.extra);
+  {
         int sim_step = std::max(report_step - 1, 0);
         int ert_phase_mask = es.runspec().eclPhaseMask( );
         const auto& units = es.getUnits();
@@ -588,11 +586,11 @@ void save(const std::string& filename,
             rst_file.reset( ecl_rst_file_open_write( filename.c_str() ) );
 
 
-        cells.convertFromSI( units );
-        writeHeader( rst_file.get() , sim_step, report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
-        writeWell( rst_file.get() , sim_step, es , grid, schedule, wells);
-        writeSolution( rst_file.get() , cells , write_double );
-        writeExtraData( rst_file.get() , extra_data );
+        value.solution.convertFromSI( units );
+        writeHeader( rst_file.get(), sim_step, report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
+        writeWell( rst_file.get(), sim_step, es , grid, schedule, value.wells);
+        writeSolution( rst_file.get(), value.solution, write_double );
+        writeExtraData( rst_file.get(), value.extra );
     }
 }
 }
