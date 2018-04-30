@@ -1476,8 +1476,10 @@ namespace Opm {
         if (automaticShutInStr == "STOP") {
             automaticShutIn = false;
         }
-
-        Well well(wellName,
+	
+	const size_t wseqIndex = m_wells.size(); 
+        
+        Well well(wellName, wseqIndex,
                   headI, headJ, refDepth,
                   preferredPhase, m_timeMap,
                   timeStep,
@@ -1533,18 +1535,18 @@ namespace Opm {
         }
     }
 
-    std::vector< const std::string* > Schedule::getChildGroups(const std::string& group_name, size_t timeStep) const {
+    std::vector< const Group* > Schedule::getChildGroups(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: " + group_name);
         {
             const auto& group = getGroup( group_name );
-	    std::vector<const std::string*> child_groups;
+	    std::vector<const Group*> child_groups;
 
             if (group.hasBeenDefined( timeStep )) {
                 const GroupTree& group_tree = getGroupTree( timeStep );
                 const auto& ch_grps = group_tree.children( group_name );
 		for (const std::string& group_name : ch_grps) {
-                        child_groups.push_back( &group_name);
+                        child_groups.push_back( &getGroup(group_name));
                     }
 	    }
 	    return child_groups;
@@ -1643,7 +1645,8 @@ namespace Opm {
     }
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
-        m_groups.insert( groupName, Group { groupName, m_timeMap, timeStep } );
+	const size_t gseqIndex = m_groups.size(); 
+        m_groups.insert( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } );
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 

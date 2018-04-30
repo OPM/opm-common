@@ -40,21 +40,19 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     class AggregateGroupData
     {
     public:
-        std::vector< const Group* > currentGroups(Opm::Schedule& sched, size_t reportStep);
-	std::map <std::string, int>  currentGroupIndex(Opm::Schedule& sched, size_t reportStep);
-	std::map <std::string, int>  currentWellIndex(Opm::Schedule& sched, size_t rptStep);
-	
-#if 0        
+        //std::vector< const Group* > currentGroups(Opm::Schedule& sched, size_t reportStep);
 	explicit AggregateGroupData(const std::vector<int>& inteHead);
 
-        void captureDeclaredGroupData(const Opm::Schedule& sched,
-                                     const std::size_t    rptStep);
+	void captureDeclaredGroupData(const Opm::Schedule& sched,
+	                              const std::size_t    rptStep);
 
+#if 0
         void captureDynamicGroupData(const Opm::Phases&          phases,
-                                    const Opm::Schedule&        sched,
-                                    const std::size_t           rptStep,
-                                    const Opm::data::WellRates& wRates);
+                                     const Opm::Schedule&        sched,
+                                     const std::size_t           rptStep,
+                                     const Opm::data::WellRates& wRates);
 #endif
+
         /// Retrieve Integer Well Data Array.
         const std::vector<int>& getIGroup() const
         {

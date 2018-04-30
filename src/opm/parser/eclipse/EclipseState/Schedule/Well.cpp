@@ -33,13 +33,14 @@
 
 namespace Opm {
 
-    Well::Well(const std::string& name_, int headI,
+    Well::Well(const std::string& name_, const size_t& seqIndex_, int headI,
                int headJ, double refDepth , Phase preferredPhase,
                const TimeMap& timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
         : m_creationTimeStep( creationTimeStep ),
           m_name( name_ ),
+          m_seqIndex( seqIndex_),
           m_status( timeMap, WellCommon::SHUT ),
           m_isAvailableForGroupControl( timeMap, true ),
           m_guideRate( timeMap, -1.0 ),
@@ -72,6 +73,10 @@ namespace Opm {
 
     const std::string& Well::name() const {
         return m_name;
+    }
+
+        const size_t& Well::seqIndex() const {
+        return m_seqIndex;
     }
 
 

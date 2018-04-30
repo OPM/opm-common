@@ -66,9 +66,10 @@ namespace Opm {
 
     class Group {
     public:
-        Group(const std::string& name, const TimeMap& timeMap , size_t creationTimeStep);
+        Group(const std::string& name, const size_t& seqIndex, const TimeMap& timeMap , size_t creationTimeStep);
         bool hasBeenDefined(size_t timeStep) const;
         const std::string& name() const;
+	const size_t& seqIndex() const;
         bool isProductionGroup(size_t timeStep) const;
         bool isInjectionGroup(size_t timeStep) const;
         void setProductionGroup(size_t timeStep, bool isProductionGroup);
@@ -133,6 +134,7 @@ namespace Opm {
     private:
         size_t m_creationTimeStep;
         std::string m_name;
+	size_t m_seqIndex;
         GroupInjection::InjectionData m_injection;
         GroupProduction::ProductionData m_production;
         DynamicState< std::set< std::string > > m_wells;

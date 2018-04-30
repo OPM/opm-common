@@ -50,9 +50,10 @@ namespace Opm {
 
     /*****************************************************************/
 
-    Group::Group(const std::string& name_, const TimeMap& timeMap , size_t creationTimeStep) :
+    Group::Group(const std::string& name_, const size_t& seqIndex_, const TimeMap& timeMap , size_t creationTimeStep) :
         m_creationTimeStep( creationTimeStep ),
         m_name( name_ ),
+        m_seqIndex( seqIndex_),
         m_injection( timeMap ),
         m_production( timeMap ),
         m_wells( timeMap, {} ),
@@ -68,6 +69,9 @@ namespace Opm {
         return m_name;
     }
 
+    const size_t& Group::seqIndex() const {
+        return m_seqIndex;
+    }
 
     bool Group::hasBeenDefined(size_t timeStep) const {
         if (timeStep < m_creationTimeStep)

@@ -106,12 +106,12 @@ namespace {
         return gnms;
     }
 
-        const int groupType(const Opm::Schedule& sched,
+    const int groupType(const Opm::Schedule& sched,
 		      const Opm::Group& group,
 		      const std::size_t rptStep)
-        {
-	    const std::string& groupName = group.name();
-	    if (!sched.hasGroup(groupName))
+    {
+	const std::string& groupName = group.name();
+	if (!sched.hasGroup(groupName))
             throw std::invalid_argument("No such group: " + groupName);
         {
             if (group.hasBeenDefined( rptStep )) {
@@ -130,7 +130,7 @@ namespace {
     }
     
     template <typename GroupOp>
-    void wellgroupLoop(const std::vector<const Opm::Group*>& groups,
+    void groupLoop(const std::vector<const Opm::Group*>& groups,
                   GroupOp&&                             groupOp)
     {
         auto groupID = std::size_t{0};
@@ -143,8 +143,80 @@ namespace {
         }
     }
 
+    std::map <size_t, std::string>  currentGroupMapIndexName(const Opm::Schedule& sched, const size_t rptStep)
+    {
+	//const std::vector< const Opm::Group* > groups = sched.getGroups(rptStep);
+	const auto& groups = sched.getGroups(rptStep);
+	// make group index for current report step
+	std::map <size_t, std::string> groupIndexMap;
+	for (const auto* group : groups) {
+	    const std::pair<size_t, std::string> groupPair = std::make_pair(group->seqIndex(), group->name()); 
+	    groupIndexMap.insert(groupPair);
+	}
+	return groupIndexMap;
+    }
+    
+    std::map <std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t rptStep)
+    {
+	//const std::vector< const Opm::Group* > groups = sched.getGroups(rptStep);
+	const auto& groups = sched.getGroups(rptStep);
+	// make group index for current report step
+	std::map <std::string, size_t> groupIndexMap;
+	for (const auto* group : groups) {
+	    std::pair<std::string, size_t> groupPair = std::make_pair(group->name(), group->seqIndex()); 
+	    groupIndexMap.insert(groupPair);
+	}
+	return groupIndexMap;
+    }
+  
+    const std::map <std::string, size_t>  currentWellIndex(const Opm::Schedule& sched, const size_t rptStep)
+    {
+	const auto& wells = sched.getWells(rptStep);
+	//const std::vector< const Opm::Well* > wells = sched.getWells(rptStep);
+	// make group index for current report step
+	std::map <std::string, size_t> wellIndexMap;
+	for (const auto* well : wells) {
+	    std::pair<std::string, size_t> wellPair = std::make_pair(well->name(), well->seqIndex()); 
+	    wellIndexMap.insert(wellPair);
+	}
+	return wellIndexMap;
+    }
+
+#if 0  
+    std::vector< const Opm::Group* > currentGroups(Opm::Schedule& sched, size_t rptStep)
+    {
+	const std::vector< const Opm::Group* >  groups = sched.getGroups(rptStep);
+	return groups;
+    }
+#endif     
+    const int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t rptStep)
+    {
+	int level = 0;
+	const std::vector< const Opm::Group* >  groups = sched.getGroups(rptStep);
+      	const std::string& groupName = group.name();
+	if (!sched.hasGroup(groupName))
+            throw std::invalid_argument("No such group: " + groupName);
+        {
+            if (group.hasBeenDefined( rptStep )) {
+                const auto& groupTree = sched.getGroupTree( rptStep );
+		//find group level - field level is 0
+		std::string tstGrpName = groupName;
+		while (((tstGrpName.size())>0) && (!(tstGrpName=="FIELD"))) {
+		    std::string curParent = groupTree.parent(tstGrpName);
+		    level+=1;
+		    tstGrpName = curParent;
+		}
+		return level;
+	    }
+	    else {
+		throw std::invalid_argument("actual group has not been defined at report time: " + rptStep );	      	      
+	    }
+	}
+	return level;
+    }
+    
     namespace IGrp {
-              std::size_t entriesPerGroup(const std::vector<int>& inteHead)
+	std::size_t entriesPerGroup(const std::vector<int>& inteHead)
         {
             // INTEHEAD[36] = NIGRPZ
             return inteHead[36];
@@ -160,84 +232,64 @@ namespace {
                 WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
-      const std::map <int, std::string>  currentGroupIndex(Opm::Schedule& sched, size_t rptStep)
-      {
-	const std::vector< const Opm::Group* > groups = sched.getGroups(rptStep);
-	// make group index for current report step
-	std::map <int, std::string> groupIndexMap;
-	int groupIndex = 0;
-	for (const auto* group : groups) {
-	  groupIndex+=1;
-	  std::pair<int, std::string> groupPair = std::make_pair(groupIndex, group->name()); 
-	  groupIndexMap.insert(groupPair);
-	}
-	return groupIndexMap;
-      }
-      
 
-      std::map <std::string, int>  currentWellIndex(Opm::Schedule& sched, size_t rptStep)
-      {
-	const std::vector< const Opm::Well* > wells = sched.getWells(rptStep);
-	// make group index for current report step
-	std::map <std::string, int> wellIndexMap;
-	int wellIndex = 0;
-	for (const auto* well : wells) {
-	  wellIndex+=1;
-	  std::pair<std::string, int> wellPair = std::make_pair(well->name(), wellIndex); 
-	  wellIndexMap.insert(wellPair);
-	}
-	return wellIndexMap;
-      }
-
-      std::vector< const Opm::Group* > currentGroups(Opm::Schedule& sched, size_t rptStep)
-      {
-	const std::vector< const Opm::Group* >  groups = sched.getGroups(rptStep);
-	return groups;
-      }
-        int groupIndex(const std::string&              grpName,
-                       const std::vector<std::string>& groupNames,
-                       const int                       maxGroups)
-        {
-            if (grpName == "FIELD") {
-                // Not really supposed to happen...
-                return maxGroups + 1;
-            }
-
-            auto b = std::begin(groupNames);
-            auto e = std::end  (groupNames);
-            auto i = std::find(b, e, grpName);
-
-            if (i == e) {
-                // Not really supposed to happen...
-                return maxGroups + 1;
-            }
-
-            // One-based indexing.
-            return std::distance(b, i) + 1;
-        }
 
 
         template <class IGrpArray>
-        void staticContrib( const Opm::Schedule& sched,
-			    const Opm::Group&               group,
-			    const int                       nwgmax,
-			    const std::size_t               rptStep,
-			    IGrpArray&                      igrp)
+        void staticContrib( const Opm::Schedule& 	sched,
+			    const Opm::Group&         	group,
+			    const int                  	nwgmax,
+			    const std::size_t         	rptStep,
+			    IGrpArray&             	igrp)
         {
 	  // find the number of wells or child groups belonging to a group and store in 
 	  // location nwgmax +1 in the igrp array
 	  
-	    const auto* childGroups = sched.getChildGroups(group.name(), rptStep);
-	    const auto* childWells = sched.getChildWells(group.name(), rptStep);
-	    if ((childGroups.size() == 0) && (childGroups.size())) 
+	    const auto& childGroups = sched.getChildGroups(group.name(), rptStep);
+	    const auto& childWells  = sched.getChildWells(group.name(), rptStep);
+	    const auto& groupMapIndexName = currentGroupMapIndexName(sched, rptStep);
+	    const auto& groupMapNameIndex = currentGroupMapNameIndex(sched, rptStep);
+	    if ((childGroups.size() == 0) && (childWells.size()==0)) 
 		throw std::invalid_argument("group has neither wells nor child groups" + group.name());
-            igrp[nwgmax] =  (childGroups.size() == 0)
+            int igrpCount = 0;
+	    if (childGroups.size() == 0) {
+		//group has child wells
+		for (const auto* well : childWells ) {
+		    igrp[igrpCount] = well->seqIndex()+1;
+		    igrpCount+=1;
+		}
+	    }
+	    else {
+		//group has child groups
+		for (const auto& group : childGroups ) {
+		    igrp[igrpCount] = group->seqIndex() + 1;
+		    igrpCount+=1;
+		}
+	    }
+	    //assign the number of child wells or child groups to 
+	    // location nwgmax
+	    igrp[nwgmax] =  (childGroups.size() == 0)
                     ? childWells.size() : childGroups.size();
 	    
-	    // find the group type (well group (type 0) or node group (type 1) and store in 
+	    // find the group type (well group (type 0) or node group (type 1) and store the type in  
 	    // location nwgmax + 26
-	    const auto grpType = groupType(sched, group,rptStep);
+	    const auto grpType = groupType(sched, group, rptStep);
 	    igrp[nwgmax+26] = grpType;
+	    
+	    //find group level ("FIELD" is level 0) and store the level in 
+	    //location nwgmax + 27
+	    const auto grpLevel = currentGroupLevel(sched, group, rptStep);
+	    igrp[nwgmax+27] = grpLevel;
+	    
+	    //find parent group and store index of parent group in
+	    //location nwgmax + 28
+	    const auto& groupTree = sched.getGroupTree( rptStep );
+	    const std::string& parent = groupTree.parent(group.name());
+	    if (parent.size() == 0) 
+		throw std::invalid_argument("parent group does not exist" + group.name());
+	    const auto itr = groupMapNameIndex.find(parent);
+	    igrp[nwgmax+28] = itr->second;
+	    
         }
     } // Igrp
 
@@ -441,19 +493,19 @@ captureDeclaredGroupData(const Schedule&   sched,
 
     // 
     {
-      const auto* groupIndMap = currentGroupIndex( sched, rptStep);
-      const auto grpNames = groupNames(sched.getGroups());
-    }
-#if 0
-        wellLoop(wells, [&grpNames, rptStep, this]
-            (const Well& well, const std::size_t wellID) -> void
-        {
-            auto iw = this->iWell_[wellID];
+      //const auto& groupIndMap = currentGroupMapIndexName( sched, rptStep);
+      //const auto& grpNames = groupNames(groups);
 
-            IWell::staticContrib(well, grpNames, this->nWGMax_, rptStep, iw);
+        groupLoop(groups, [sched, rptStep, this]
+            (const Group& group, const std::size_t groupID) -> void
+        {
+            auto ig = this->iGroup_[groupID];
+
+            IGrp::staticContrib(sched, group, this->nGMaxz_, rptStep, ig);
         });
     }
-
+    
+#if 0
     // Define Static Contributions to SWell Array.
     wellLoop(wells,
         [this](const Well& /* well */, const std::size_t wellID) -> void

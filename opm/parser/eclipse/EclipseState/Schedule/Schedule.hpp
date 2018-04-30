@@ -94,8 +94,9 @@ namespace Opm
 
           is an inefficient way to get all the wells defined at time
           't'.
-        */
-	std::vector< const std::string* > getChildGroups(const std::string& group_name, size_t timeStep) const; 
+        */ 
+	//std::vector< const Group& > getChildGroups(const std::string& group_name, size_t timeStep) const;
+        std::vector< const Group* > getChildGroups(const std::string& group_name, size_t timeStep) const;
         std::vector< const Well* > getWells(const std::string& group, size_t timeStep) const;
 	std::vector< const Well* > getChildWells(const std::string& group_name, size_t timeStep) const;
         std::vector< const Well* > getWellsMatching( const std::string& ) const;
