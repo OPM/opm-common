@@ -37,15 +37,19 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     std::vector<double>
     createDoubHead(const EclipseState& es,
                    const Schedule&     sched,
-                   const std::size_t   rptStep,
+                   const std::size_t   lookup_step,
                    const double        simTime);
+
+
 
     std::vector<int>
     createInteHead(const EclipseState& es,
                    const EclipseGrid&  grid,
                    const Schedule&     sched,
                    const double        simTime,
-                   const int           report_step);
+                   const int           num_solver_steps,
+                   const int           lookup_step,   // The integer index used to look up dynamic properties, e.g. the number of well.
+                   const int           report_step);  // The integer number this INTEHEAD keyword will be saved to, typically report_step = lookup_step + 1.
 
     std::vector<bool>
     createLogiHead(const EclipseState& es);

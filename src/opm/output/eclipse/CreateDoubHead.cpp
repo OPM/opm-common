@@ -75,14 +75,14 @@ std::vector<double>
 Opm::RestartIO::Helpers::
 createDoubHead(const EclipseState& es,
                const Schedule&     sched,
-               const std::size_t   rptStep,
+               const std::size_t   lookup_step,
                const double        simTime)
 {
     const auto dh = DoubHEAD{}
-        .tuningParameters(sched.getTuning(), rptStep,
+        .tuningParameters(sched.getTuning(), lookup_step,
                           getTimeConv(es.getDeckUnitSystem()))
         .timeStamp       (computeTimeStamp(sched, simTime))
-        .drsdt           (sched, rptStep)
+        .drsdt           (sched, lookup_step)
         ;
 
     return dh.data();

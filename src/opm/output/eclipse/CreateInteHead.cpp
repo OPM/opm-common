@@ -42,12 +42,11 @@ namespace {
     Opm::RestartIO::InteHEAD::WellTableDim
     getWellTableDims(const ::Opm::Runspec&  rspec,
                      const ::Opm::Schedule& sched,
-                     const std::size_t      step)
+                     const std::size_t      lookup_step)
     {
         const auto& wd = rspec.wellDimensions();
 
-        const std::size_t step_minus_one = step == 0 ? 0 : step - 1;
-        const auto numWells = static_cast<int>(sched.numWells(step_minus_one));
+        const auto numWells = static_cast<int>(sched.numWells(lookup_step));
 
         const auto maxPerf         = wd.maxConnPerWell();
         const auto maxWellInGroup  = wd.maxWellsPerGroup();
@@ -122,14 +121,14 @@ namespace {
 
     Opm::RestartIO::InteHEAD::TuningPar
     getTuningPars(const ::Opm::Tuning& tuning,
-                  const std::size_t    step)
+                  const std::size_t    lookup_step)
     {
-        const auto& newtmx = tuning.getNEWTMX(step);
-        const auto& newtmn = tuning.getNEWTMN(step);
-        const auto& litmax = tuning.getLITMAX(step);
-        const auto& litmin = tuning.getLITMIN(step);
-        const auto& mxwsit = tuning.getMXWSIT(step);
-        const auto& mxwpit = tuning.getMXWPIT(step);
+        const auto& newtmx = tuning.getNEWTMX(lookup_step);
+        const auto& newtmn = tuning.getNEWTMN(lookup_step);
+        const auto& litmax = tuning.getLITMAX(lookup_step);
+        const auto& litmin = tuning.getLITMIN(lookup_step);
+        const auto& mxwsit = tuning.getMXWSIT(lookup_step);
+        const auto& mxwpit = tuning.getMXWPIT(lookup_step);
 
         return {
             newtmx,
@@ -144,18 +143,17 @@ namespace {
     Opm::RestartIO::InteHEAD::WellSegDims
     getWellSegDims(const ::Opm::Runspec&  rspec,
                    const ::Opm::Schedule& sched,
-                   const std::size_t      step)
+                   const std::size_t      lookup_step)
     {
         const auto& wsd = rspec.wellSegmentDimensions();
 
-        const std::size_t step_minus_one = step == 0 ? 0 : step - 1;
-        const auto& sched_wells = sched.getWells(step_minus_one);
+        const auto& sched_wells = sched.getWells(lookup_step);
 
         const auto nsegwl =
             std::count_if(std::begin(sched_wells), std::end(sched_wells),
-                [step_minus_one](const Opm::Well* wellPtr)
+                [lookup_step](const Opm::Well* wellPtr)
             {
-                return wellPtr->isMultiSegment(step_minus_one);
+                return wellPtr->isMultiSegment(lookup_step);
             });
 
         const auto nswlmx = wsd.maxSegmentedWells();
@@ -206,6 +204,8 @@ createInteHead(const EclipseState& es,
                const EclipseGrid&  grid,
                const Schedule&     sched,
                const double        simTime,
+               const int           num_solver_steps,
+               const int           lookup_step,
                const int           report_step)
 {
     const auto& rspec = es.runspec();
@@ -216,16 +216,16 @@ createInteHead(const EclipseState& es,
         .dimensions         (grid.getNXYZ())
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (getUnitConvention(es.getDeckUnitSystem()))
-        .wellTableDimensions(getWellTableDims(rspec, sched, report_step))
+        .wellTableDimensions(getWellTableDims(rspec, sched, lookup_step))
         .calenderDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
         .params_NWELZ       (155, 122, 130, 3)
         .params_NCON        (25, 40, 58)
         .params_GRPZ        (getNGRPZ(rspec))
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
-        .stepParam          (report_step, report_step)
-        .tuningParam        (getTuningPars(sched.getTuning(), report_step))
-        .wellSegDimensions  (getWellSegDims(rspec, sched, report_step))
+        .stepParam          (num_solver_steps, report_step)
+        .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
+        .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
         .variousParam       (2014, 100)
         ;

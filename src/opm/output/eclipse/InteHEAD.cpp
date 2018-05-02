@@ -76,8 +76,8 @@ enum index : std::vector<int>::size_type {
   DAY	=	64	,		//	IDAY	2		IDAY = calendar day at this report time
   MONTH	=	65	,		//	IMON	6		IMON = calendar month at this report time
   YEAR	=	66	,		//	IYEAR	2016		IYEAR = calendar year at this report time
-  TSTEP	=	67	,		//	CurrentTimestep	0
-  REPSTEP	=	68	,		//	CurrentReportStep	0
+  NUM_SOLVER_STEPS	=	67	,		//  The number of solver steps the simulator has performed so far.
+  REPORT_STEP	=	68	,		// The sequence/report number for for this restart file.
   ih_069	=	69	,		//	0	0
   ih_070	=	70	,		//	0	0
   ih_071	=	71	,		//	0	0
@@ -586,10 +586,12 @@ params_NAAQZ(const int ncamax,
 
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::
-stepParam(const int tstep, const int repstep)
+stepParam(const int num_solver_steps, const int report_step)
 {
-    this -> data_[TSTEP] = tstep;
-    this -> data_[REPSTEP] = repstep;
+    this -> data_[NUM_SOLVER_STEPS] = num_solver_steps;
+    this -> data_[REPORT_STEP] = report_step;
+
+
 
     return *this;
 }

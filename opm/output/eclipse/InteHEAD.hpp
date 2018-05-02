@@ -107,7 +107,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& params_NCON(const int niconz, const int nsconz, const int nxconz);
         InteHEAD& params_GRPZ(const std::array<int, 4>& grpz);
         InteHEAD& params_NAAQZ(const int ncamax, const int niaaqz, const int nsaaqz, const int nxaaqz, const int nicaqz, const int nscaqz, const int nacaqz);
-        InteHEAD& stepParam(const int tstep, const int repstep);
+        InteHEAD& stepParam(const int tstep, const int report_step);
         InteHEAD& tuningParam(const TuningPar& tunpar);
         InteHEAD& variousParam(const int version, const int iprog);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);

@@ -529,40 +529,38 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
 
 Opm::RestartIO::DoubHEAD&
 Opm::RestartIO::DoubHEAD::tuningParameters(const Tuning&     tuning,
-                                           const std::size_t rptStep,
+                                           const std::size_t lookup_step,
                                            const double      cnvT)
 {
-    const std::size_t rptStep_m = (rptStep == 0) ? 0 : rptStep - 1;
-
     // Record 1
-    this->data_[Index::TsInit] = tuning.getTSINIT(rptStep_m) / cnvT;
-    this->data_[Index::TsMaxz] = tuning.getTSMAXZ(rptStep_m) / cnvT;
-    this->data_[Index::TsMinz] = tuning.getTSMINZ(rptStep_m) / cnvT;
-    this->data_[Index::TsMchp] = tuning.getTSMCHP(rptStep_m) / cnvT;
-    this->data_[Index::TsFMax] = tuning.getTSFMAX(rptStep_m);
-    this->data_[Index::TsFMin] = tuning.getTSFMIN(rptStep_m);
-    this->data_[Index::TsFcnv] = tuning.getTSFCNV(rptStep_m);
-    this->data_[Index::ThrUPT] = tuning.getTHRUPT(rptStep_m);
-    this->data_[Index::TfDIFF] = tuning.getTFDIFF(rptStep_m);
+    this->data_[Index::TsInit] = tuning.getTSINIT(lookup_step) / cnvT;
+    this->data_[Index::TsMaxz] = tuning.getTSMAXZ(lookup_step) / cnvT;
+    this->data_[Index::TsMinz] = tuning.getTSMINZ(lookup_step) / cnvT;
+    this->data_[Index::TsMchp] = tuning.getTSMCHP(lookup_step) / cnvT;
+    this->data_[Index::TsFMax] = tuning.getTSFMAX(lookup_step);
+    this->data_[Index::TsFMin] = tuning.getTSFMIN(lookup_step);
+    this->data_[Index::TsFcnv] = tuning.getTSFCNV(lookup_step);
+    this->data_[Index::ThrUPT] = tuning.getTHRUPT(lookup_step);
+    this->data_[Index::TfDIFF] = tuning.getTFDIFF(lookup_step);
 
     // Record 2
-    this->data_[Index::TrgTTE] = tuning.getTRGTTE(rptStep_m);
-    this->data_[Index::TrgCNV] = tuning.getTRGCNV(rptStep_m);
-    this->data_[Index::TrgMBE] = tuning.getTRGMBE(rptStep_m);
-    this->data_[Index::TrgLCV] = tuning.getTRGLCV(rptStep_m);
-    this->data_[Index::XxxTTE] = tuning.getXXXTTE(rptStep_m);
-    this->data_[Index::XxxCNV] = tuning.getXXXCNV(rptStep_m);
-    this->data_[Index::XxxMBE] = tuning.getXXXMBE(rptStep_m);
-    this->data_[Index::XxxLCV] = tuning.getXXXLCV(rptStep_m);
-    this->data_[Index::XxxWFL] = tuning.getXXXWFL(rptStep_m);
-    this->data_[Index::TrgFIP] = tuning.getTRGFIP(rptStep_m);
-    this->data_[Index::TrgSFT] = tuning.getTRGSFT(rptStep_m);
+    this->data_[Index::TrgTTE] = tuning.getTRGTTE(lookup_step);
+    this->data_[Index::TrgCNV] = tuning.getTRGCNV(lookup_step);
+    this->data_[Index::TrgMBE] = tuning.getTRGMBE(lookup_step);
+    this->data_[Index::TrgLCV] = tuning.getTRGLCV(lookup_step);
+    this->data_[Index::XxxTTE] = tuning.getXXXTTE(lookup_step);
+    this->data_[Index::XxxCNV] = tuning.getXXXCNV(lookup_step);
+    this->data_[Index::XxxMBE] = tuning.getXXXMBE(lookup_step);
+    this->data_[Index::XxxLCV] = tuning.getXXXLCV(lookup_step);
+    this->data_[Index::XxxWFL] = tuning.getXXXWFL(lookup_step);
+    this->data_[Index::TrgFIP] = tuning.getTRGFIP(lookup_step);
+    this->data_[Index::TrgSFT] = tuning.getTRGSFT(lookup_step);
 
     // Record 3
-    this->data_[Index::TrgDPR] = tuning.getTRGDPR(rptStep_m);
-    this->data_[Index::XxxDPR] = tuning.getXXXDPR(rptStep_m);
-    this->data_[Index::DdpLim] = tuning.getDDPLIM(rptStep_m);
-    this->data_[Index::DdsLim] = tuning.getDDSLIM(rptStep_m);
+    this->data_[Index::TrgDPR] = tuning.getTRGDPR(lookup_step);
+    this->data_[Index::XxxDPR] = tuning.getXXXDPR(lookup_step);
+    this->data_[Index::DdpLim] = tuning.getDDPLIM(lookup_step);
+    this->data_[Index::DdsLim] = tuning.getDDSLIM(lookup_step);
 
     return *this;
 }
@@ -589,10 +587,10 @@ Opm::RestartIO::DoubHEAD::timeStamp(const TimeStamp& ts)
 
 Opm::RestartIO::DoubHEAD&
 Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
-                                const std::size_t rptStep)
+                                const std::size_t lookup_step)
 {
     const auto& vappar =
-        sched.getOilVaporizationProperties(rptStep);
+        sched.getOilVaporizationProperties(lookup_step);
 
     this->data_[dRsdt] =
         (vappar.getType() == Opm::OilVaporizationEnum::DRSDT)
