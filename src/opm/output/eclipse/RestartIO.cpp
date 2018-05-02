@@ -104,10 +104,9 @@ namespace {
 
     inline data::Solution restoreSOLUTION( ecl_file_view_type* file_view,
                                            const std::vector<RestartKey>& solution_keys,
-                                           const UnitSystem& units,
                                            int numcells) {
 
-        data::Solution sol;
+        data::Solution sol( false );
         for (const auto& value : solution_keys) {
             const std::string& key = value.key;
             UnitSystem::measure dim = value.dim;
@@ -130,8 +129,6 @@ namespace {
                                          + ", mismatched number of cells" );
 
             std::vector<double> data = double_vector( ecl_kw );
-            units.to_si( dim , data );
-
             sol.insert( key, dim, data , data::TargetType::RESTART_SOLUTION );
         }
 
@@ -224,7 +221,7 @@ RestartValue load( const std::string& filename,
                    const EclipseState& es,
                    const EclipseGrid& grid,
                    const Schedule& schedule,
-                   const std::map<std::string, bool>& extra_keys) {
+                   const std::vector<RestartKey>& extra_keys) {
 
     int sim_step = std::max(report_step - 1, 0);
     const bool unified                   = ( ERT::EclFiletype( filename ) == ECL_UNIFIED_RESTART_FILE );
@@ -248,23 +245,24 @@ RestartValue load( const std::string& filename,
     const ecl_kw_type * opm_iwel = ecl_file_view_iget_named_kw( file_view, "OPM_IWEL", 0 );
 
     UnitSystem units( static_cast<ert_ecl_unit_enum>(ecl_kw_iget_int( intehead , INTEHEAD_UNIT_INDEX )));
-    RestartValue rst_value( restoreSOLUTION( file_view, solution_keys, units , grid.getNumActive( )),
+    RestartValue rst_value( restoreSOLUTION( file_view, solution_keys, grid.getNumActive( )),
                             restore_wells( opm_xwel, opm_iwel, sim_step , es, grid, schedule));
 
-    for (const auto& pair : extra_keys) {
-        const std::string& key = pair.first;
-        bool required = pair.second;
+    for (const auto& extra : extra_keys) {
+        const std::string& key = extra.key;
+        bool required = extra.required;
 
         if (ecl_file_view_has_kw( file_view , key.c_str())) {
             const ecl_kw_type * ecl_kw = ecl_file_view_iget_named_kw( file_view , key.c_str() , 0 );
             const double * data_ptr = ecl_kw_get_double_ptr( ecl_kw );
             const double * end_ptr  = data_ptr + ecl_kw_get_size( ecl_kw );
-            rst_value.extra[ key ] = { data_ptr, end_ptr };
+            rst_value.add_extra(key, extra.dim, {data_ptr, end_ptr});
         } else if (required)
             throw std::runtime_error("No such key in file: " + key);
 
     }
 
+    rst_value.convertToSI(units);
     return rst_value;
 }
 
@@ -505,10 +503,10 @@ void writeHeader(ecl_rst_file_type * rst_file,
   }
 
 
-void writeExtraData(ecl_rst_file_type* rst_file, const std::map<std::string,std::vector<double>>& extra_data) {
-    for (const auto& pair : extra_data) {
-        const std::string& key = pair.first;
-        const std::vector<double>& data = pair.second;
+  void writeExtraData(ecl_rst_file_type* rst_file, const RestartValue::extra_vector& extra_data) {
+    for (const auto& extra_value : extra_data) {
+        const std::string& key = extra_value.first.key;
+        const std::vector<double>& data = extra_value.second;
         {
             ecl_kw_type * ecl_kw = ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE , const_cast<double *>(data.data()));
             ecl_rst_file_add_kw( rst_file , ecl_kw);
@@ -538,26 +536,10 @@ void writeWell(ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es
 }
 
 void checkSaveArguments(const data::Solution& cells,
-                        const EclipseGrid& grid,
-                        const std::map<std::string, std::vector<double>>& extra_data) {
-
-    const std::set<std::string> reserved_keys = {"LOGIHEAD", "INTEHEAD" ,"DOUBHEAD", "IWEL", "XWEL","ICON", "XCON" , "OPM_IWEL" , "OPM_XWEL", "ZWEL"};
-
-    for (const auto& pair : extra_data) {
-        const std::string& key = pair.first;
-        if (key.size() > 8)
-            throw std::runtime_error("The keys in extra data must have maximum eight characaters");
-
-        if (cells.has( key ))
-            throw std::runtime_error("The keys used must unique across Solution and extra_data");
-
-        if (reserved_keys.find( key ) != reserved_keys.end())
-            throw std::runtime_error("The extra_data uses a reserved key");
-    }
-
-    for (const auto& elm: cells)
-        if (elm.second.data.size() != grid.getNumActive())
-            throw std::runtime_error("Wrong size on solution vector: " + elm.first);
+                        const EclipseGrid& grid) {
+  for (const auto& elm: cells)
+    if (elm.second.data.size() != grid.getNumActive())
+      throw std::runtime_error("Wrong size on solution vector: " + elm.first);
 }
 }
 
@@ -571,7 +553,7 @@ void save(const std::string& filename,
           const Schedule& schedule,
           bool write_double)
 {
-  checkSaveArguments( value.solution, grid, value.extra);
+  checkSaveArguments( value.solution, grid);
   {
         int sim_step = std::max(report_step - 1, 0);
         int ert_phase_mask = es.runspec().eclPhaseMask( );
@@ -586,7 +568,7 @@ void save(const std::string& filename,
             rst_file.reset( ecl_rst_file_open_write( filename.c_str() ) );
 
 
-        value.solution.convertFromSI( units );
+        value.convertFromSI( units );
         writeHeader( rst_file.get(), sim_step, report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
         writeWell( rst_file.get(), sim_step, es , grid, schedule, value.wells);
         writeSolution( rst_file.get(), value.solution, write_double );

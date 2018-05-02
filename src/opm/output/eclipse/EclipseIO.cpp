@@ -495,7 +495,7 @@ void EclipseIO::writeTimeStep(int report_step,
 
 
 
-RestartValue EclipseIO::loadRestart(const std::vector<RestartKey>& solution_keys, const std::map<std::string, bool>& extra_keys) const {
+RestartValue EclipseIO::loadRestart(const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys) const {
     const auto& es                       = this->impl->es;
     const auto& grid                     = this->impl->grid;
     const auto& schedule                 = this->impl->schedule;

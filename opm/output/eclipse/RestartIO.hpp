@@ -88,7 +88,7 @@ RestartValue load( const std::string& filename,
                    const EclipseState& es,
                    const EclipseGrid& grid,
                    const Schedule& schedule,
-                   const std::map<std::string, bool>& extra_keys = {});
+                   const std::vector<RestartKey>& extra_keys = {});
 
 }
 }
