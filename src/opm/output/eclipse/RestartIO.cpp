@@ -103,15 +103,15 @@ namespace {
 
 
     inline data::Solution restoreSOLUTION( ecl_file_view_type* file_view,
-                                           const std::map<std::string, RestartKey>& keys,
+                                           const std::vector<RestartKey>& solution_keys,
                                            const UnitSystem& units,
                                            int numcells) {
 
         data::Solution sol;
-        for (const auto& pair : keys) {
-            const std::string& key = pair.first;
-            UnitSystem::measure dim = pair.second.dim;
-            bool required = pair.second.required;
+        for (const auto& value : solution_keys) {
+            const std::string& key = value.key;
+            UnitSystem::measure dim = value.dim;
+            bool required = value.required;
 
             if( !ecl_file_view_has_kw( file_view, key.c_str() ) ) {
                 if (required)
@@ -220,7 +220,7 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
 /* should take grid as argument because it may be modified from the simulator */
 RestartValue load( const std::string& filename,
                    int report_step,
-                   const std::map<std::string, RestartKey>& keys,
+                   const std::vector<RestartKey>& solution_keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
                    const Schedule& schedule,
@@ -248,7 +248,7 @@ RestartValue load( const std::string& filename,
     const ecl_kw_type * opm_iwel = ecl_file_view_iget_named_kw( file_view, "OPM_IWEL", 0 );
 
     UnitSystem units( static_cast<ert_ecl_unit_enum>(ecl_kw_iget_int( intehead , INTEHEAD_UNIT_INDEX )));
-    RestartValue rst_value( restoreSOLUTION( file_view, keys, units , grid.getNumActive( )),
+    RestartValue rst_value( restoreSOLUTION( file_view, solution_keys, units , grid.getNumActive( )),
                             restore_wells( opm_xwel, opm_iwel, sim_step , es, grid, schedule));
 
     for (const auto& pair : extra_keys) {

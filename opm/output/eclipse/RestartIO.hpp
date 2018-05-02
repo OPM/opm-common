@@ -84,7 +84,7 @@ void save(const std::string& filename,
 
 RestartValue load( const std::string& filename,
                    int report_step,
-                   const std::map<std::string, RestartKey>& keys,
+                   const std::vector<RestartKey>& solution_keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
                    const Schedule& schedule,

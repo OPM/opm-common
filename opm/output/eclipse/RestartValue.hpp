@@ -25,36 +25,22 @@
 namespace Opm {
 
 
-    /*
-      Small convenience class used in the map passed to the
-      RestartIO::load( ) function. A class instance can be constructed
-      from a UnitSystem::measure value, which will default to a
-      required key, but it can also be constructed from a
-      two-parameter constructor, and then the required/not required
-      can controlled explicitly:
-
-
-         RestartIO::load(..., {{"PRESSURE" , UnitSystem::measure::pressure},
-                               {"MAX_SWAT" , {UnitSystem::measure::identity, false}} )
-
-     The RestartKey( ) for pressure is implicitly created from
-     UnitSystem::measure::pressure and will be required, whereas the
-     MAX_SWAT keyword is optional.
-
-    */
     class RestartKey {
     public:
 
+        std::string key;
         UnitSystem::measure dim;
         bool required = true;
 
-        explicit RestartKey( UnitSystem::measure _dim)
-            : dim(_dim)
+        RestartKey( const std::string& _key, UnitSystem::measure _dim)
+            : key(_key),
+              dim(_dim)
         {}
 
 
-        RestartKey( UnitSystem::measure _dim, bool _required)
-            : dim(_dim),
+        RestartKey( const std::string& _key, UnitSystem::measure _dim, bool _required)
+            : key(_key),
+              dim(_dim),
               required(_required)
         {}
 

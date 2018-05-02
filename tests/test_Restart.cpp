@@ -365,24 +365,25 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_
     return { sol, wells , {}};
 }
 
-RestartValue second_sim(const EclipseIO& writer, const std::map<std::string, RestartKey>& keys) {
-    return writer.loadRestart( keys );
+RestartValue second_sim(const EclipseIO& writer, const std::vector<RestartKey>& solution_keys) {
+    return writer.loadRestart( solution_keys );
 }
 
 
 void compare( const RestartValue& fst,
               const RestartValue& snd,
-              const std::map<std::string, RestartKey>& keys) {
+              const std::vector<RestartKey>& solution_keys) {
 
-    for (const auto& pair : keys) {
+    for (const auto& value : solution_keys) {
         double tol = 0.00001;
-        auto first = fst.solution.data( pair.first ).begin();
-        auto second = snd.solution.data( pair.first ).begin();
+        const std::string& key = value.key;
+        auto first = fst.solution.data( key ).begin();
+        auto second = snd.solution.data( key ).begin();
 
-        if (pair.first == "TEMP")
+        if (key == "TEMP")
             tol *= 10;
 
-        for( ; first != fst.solution.data( pair.first ).end(); ++first, ++second )
+        for( ; first != fst.solution.data( key).end(); ++first, ++second )
             BOOST_CHECK_CLOSE( *first, *second, tol );
     }
 
@@ -411,10 +412,10 @@ struct Setup {
 
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
-    std::map<std::string, RestartKey> keys {{"PRESSURE" , RestartKey(UnitSystem::measure::pressure)},
-                                            {"SWAT" , RestartKey(UnitSystem::measure::identity)},
-                                            {"SGAS" , RestartKey(UnitSystem::measure::identity)},
-                                            {"TEMP" , RestartKey(UnitSystem::measure::temperature)}};
+    std::vector<RestartKey> keys {{"PRESSURE" , UnitSystem::measure::pressure},
+                                  {"SWAT" , UnitSystem::measure::identity},
+                                  {"SGAS" , UnitSystem::measure::identity},
+                                  {"TEMP" , UnitSystem::measure::temperature}};
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
 
@@ -424,22 +425,23 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     auto state2 = second_sim( eclWriter , keys );
     compare(state1, state2 , keys);
 
-    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , RestartKey(UnitSystem::measure::pressure)}} ) , std::runtime_error );
-    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , { UnitSystem::measure::pressure, true}}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
 }
 
 
+
 void compare_equal( const RestartValue& fst,
-		    const RestartValue& snd ,
-		    const std::map<std::string, RestartKey>& keys) {
+                    const RestartValue& snd ,
+                    const std::vector<RestartKey>& keys) {
 
-    for (const auto& pair : keys) {
+    for (const auto& value : keys) {
+        const std::string& key = value.key;
+        auto first = fst.solution.data( key ).begin();
+        auto second = snd.solution.data( key ).begin();
 
-        auto first = fst.solution.data( pair.first ).begin();
-        auto second = snd.solution.data( pair.first ).begin();
-
-        for( ; first != fst.solution.data( pair.first ).end(); ++first, ++second )
-	    BOOST_CHECK_EQUAL( *first, *second);
+        for( ; first != fst.solution.data( key ).end(); ++first, ++second )
+          BOOST_CHECK_EQUAL( *first, *second);
     }
 
     BOOST_CHECK_EQUAL( fst.wells, snd.wells );
@@ -455,8 +457,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
       this equality for the pressure. For this test we therefor only
       consider the saturations which have identity unit.
     */
-    std::map<std::string, RestartKey> keys {{"SWAT" , RestartKey(UnitSystem::measure::identity)},
-	                                    {"SGAS" , RestartKey(UnitSystem::measure::identity)}};
+    std::vector<RestartKey> solution_keys {RestartKey("SWAT", UnitSystem::measure::identity),
+                                           RestartKey("SGAS", UnitSystem::measure::identity)};
 
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
@@ -465,8 +467,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
 
     auto state1 = first_sim( setup.es , eclWriter , true);
-    auto state2 = second_sim( eclWriter , keys );
-    compare_equal( state1 , state2 , keys);
+    auto state2 = second_sim( eclWriter , solution_keys );
+    compare_equal( state1 , state2 , solution_keys);
 }
 
 BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
@@ -574,9 +576,9 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
 
             BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, setup.es, setup.grid , setup.schedule, {{"NOT-THIS", true}}) , std::runtime_error );
             {
-                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {{"SWAT" , RestartKey(UnitSystem::measure::identity)},
-                                                                            {"NO"   , {UnitSystem::measure::identity, false}}},
-                    setup.es, setup.grid , setup.schedule, {{"EXTRA", true}, {"EXTRA2", false}});
+              const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , { RestartKey("SWAT", UnitSystem::measure::identity),
+                                                                           RestartKey("NO", UnitSystem::measure::identity, false)},
+                                                      setup.es, setup.grid , setup.schedule, {{"EXTRA", true}, {"EXTRA2", false}});
                 const auto pair = rst_value.extra.find( "EXTRA" );
                 const std::vector<double> extraval = pair->second;
                 const std::vector<double> expected = {0,1,2,3};
