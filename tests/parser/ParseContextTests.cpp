@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(test_1arg_constructor) {
 }
 
 BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
-        const std::string defDeckString = R"(
+    const std::string defDeckString = R"(
     START  -- 0
      10 'JAN' 2000 /
     RUNSPEC
@@ -581,6 +581,41 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     /
     )";
     testSamples.push_back(testSample);
+
+    // Invalid well name in WSOLVENT
+    testSample = R"(
+    COMPDAT
+    'INJ' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONINJE
+    'INJ' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+    /
+    DATES
+    15  OKT 2008 /
+    /
+    WSOLVENT
+    'SOMETHINGELSE' 1.0  /
+    /
+    )";
+    testSamples.push_back(testSample);
+
+    // Invalid well name in WPOLYMER
+    testSample = R"(
+    COMPDAT
+    'INJ' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONINJE
+    'INJ' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+    /
+    DATES
+    15  OKT 2008 /
+    /
+    WPOLYMER
+    'SOMETHINGELSE' 1.0  0.0 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
 
     std::string deckinput;
 

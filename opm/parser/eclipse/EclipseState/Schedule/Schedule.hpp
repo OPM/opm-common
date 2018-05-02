@@ -155,8 +155,8 @@ namespace Opm
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-        void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep);
-        void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep);
+        void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
+        void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);

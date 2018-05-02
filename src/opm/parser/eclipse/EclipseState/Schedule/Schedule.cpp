@@ -175,10 +175,10 @@ namespace Opm {
                 handleWCONINJE(section, keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WPOLYMER")
-                handleWPOLYMER(keyword, currentStep);
+                handleWPOLYMER(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WSOLVENT")
-                handleWSOLVENT(keyword, currentStep);
+                handleWSOLVENT(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WTEMP")
                 handleWTEMP(keyword, currentStep, parseContext);
@@ -695,11 +695,15 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto wells = getWells( wellNamePattern );
 
-            for( auto* well : getWells( wellNamePattern ) ) {
+            if (wells.empty())
+                InvalidWellPattern(wellNamePattern, parseContext, keyword);
+
+            for( auto* well : wells) {
                 WellPolymerProperties properties(well->getPolymerPropertiesCopy(currentStep));
 
                 properties.m_polymerConcentration = record.getItem("POLYMER_CONCENTRATION").getSIDouble(0);
@@ -745,12 +749,16 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
 
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto wells = getWells( wellNamePattern );
 
-            for( auto* well : getWells( wellNamePattern ) ) {
+            if (wells.empty())
+                InvalidWellPattern(wellNamePattern, parseContext, keyword);
+
+            for( auto* well : wells) {
                 WellInjectionProperties injectionProperties = well->getInjectionProperties( currentStep );
                 if (well->isInjector( currentStep ) && injectionProperties.injectorType == WellInjector::GAS) {
                     double fraction = record.getItem("SOLVENT_FRACTION").get< double >(0);
