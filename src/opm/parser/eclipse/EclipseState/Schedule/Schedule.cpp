@@ -214,13 +214,13 @@ namespace Opm {
                 handleGRUPNET(keyword, currentStep);
 
             else if (keyword.name() == "GCONINJE")
-                handleGCONINJE(section, keyword, currentStep);
+                handleGCONINJE(section, keyword, currentStep, parseContext);
 
             else if (keyword.name() == "GCONPROD")
-                handleGCONPROD(keyword, currentStep);
+                handleGCONPROD(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "GEFAC")
-                handleGEFAC(keyword, currentStep);
+                handleGEFAC(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "TUNING")
                 handleTUNING(keyword, currentStep);
@@ -1141,10 +1141,13 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             auto groups = getGroups ( groupNamePattern );
+
+            if (groups.empty())
+                invalidNamePattern(groupNamePattern, parseContext, keyword);
 
             for (auto* group : groups){
                 {
@@ -1173,10 +1176,13 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             auto groups = getGroups ( groupNamePattern );
+
+            if (groups.empty())
+                invalidNamePattern(groupNamePattern, parseContext, keyword);
 
             for (auto* group : groups){
                 {
@@ -1199,10 +1205,13 @@ namespace Opm {
     }
 
 
-    void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             auto groups = getGroups ( groupNamePattern );
+
+            if (groups.empty())
+                invalidNamePattern(groupNamePattern, parseContext, keyword);
 
             for (auto* group : groups){
                 group->setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));

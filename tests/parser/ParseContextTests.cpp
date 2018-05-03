@@ -673,6 +673,30 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     'SOMETHINGELSE' 0.5 /
     /
     )";
+
+    testSamples.push_back(testSample);
+    // Invalid group name in GCONPROD
+    testSample = R"(
+    GCONPROD
+    'SOMETHINGELSE' 'ORAT' 20000 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
+    // Invalid group name in GEFAC
+    testSample = R"(
+    GEFAC
+    'SOMETHINGELSE' 0.5 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
+    // Invalid group name in GCONINJE
+    testSample = R"(
+    GCONINJE
+    'SOMETHINGELSE' 'WAT' 'RATE' 20000 /
+    /
+    )";
     testSamples.push_back(testSample);
 
     std::string deckinput;
