@@ -535,12 +535,18 @@ void writeWell(ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es
     write_kw( rst_file, ERT::EclKW< int >( ICON_KW, icon_data ) );
 }
 
-void checkSaveArguments(const data::Solution& cells,
+void checkSaveArguments(const EclipseState& es,
+                        const data::Solution& cells,
                         const EclipseGrid& grid) {
   for (const auto& elm: cells)
     if (elm.second.data.size() != grid.getNumActive())
       throw std::runtime_error("Wrong size on solution vector: " + elm.first);
-}
+
+
+  if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
+      if (!restart_value.has_extra("THPRES"))
+          throw std::runtime_error("This model has THPRES active - must have THPRES as part of restart data.")
+  }
 }
 
 
@@ -553,7 +559,7 @@ void save(const std::string& filename,
           const Schedule& schedule,
           bool write_double)
 {
-  checkSaveArguments( value.solution, grid);
+    checkSaveArguments( value.solution, grid, es);
   {
         int sim_step = std::max(report_step - 1, 0);
         int ert_phase_mask = es.runspec().eclPhaseMask( );
