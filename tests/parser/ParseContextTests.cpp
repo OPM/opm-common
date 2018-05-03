@@ -647,6 +647,34 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     )";
     testSamples.push_back(testSample);
 
+    // Invalid well name in WECON
+    testSample = R"(
+    COMPDAT
+    'PROD' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONPROD
+    'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+    /
+    WECON
+    'SOMETHINGELSE' 15000 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
+    // Invalid well name in WEFAC
+    testSample = R"(
+    COMPDAT
+    'PROD' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONPROD
+    'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+    /
+    WEFAC
+    'SOMETHINGELSE' 0.5 /
+    /
+    )";
+    testSamples.push_back(testSample);
+
     std::string deckinput;
 
     for (std::string sample : testSamples) {

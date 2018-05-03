@@ -250,13 +250,13 @@ namespace Opm {
                 handleVAPPARS(keyword, currentStep);
 
             else if (keyword.name() == "WECON")
-                handleWECON(keyword, currentStep);
+                handleWECON(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "MESSAGES")
                 handleMESSAGES(keyword, currentStep);
 
             else if (keyword.name() == "WEFAC")
-                handleWEFAC(keyword, currentStep);
+                handleWEFAC(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "VFPINJ")
                 handleVFPINJ(keyword, unit_system, currentStep);
@@ -726,23 +726,31 @@ namespace Opm {
 
 
 
-    void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             WellEconProductionLimits econ_production_limits(record);
+            const auto wells = getWells( wellNamePattern );
 
-            for( auto* well : getWells( wellNamePattern ) ) {
+            if (wells.empty())
+                InvalidWellPattern(wellNamePattern, parseContext, keyword);
+
+            for( auto* well : wells ) {
                 well->setEconProductionLimits(currentStep, econ_production_limits);
             }
         }
     }
 
-    void Schedule::handleWEFAC( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
             const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
+            const auto wells = getWells( wellNamePattern );
 
-            for( auto* well : getWells( wellNamePattern ) ) {
+            if (wells.empty())
+                InvalidWellPattern(wellNamePattern, parseContext, keyword);
+
+            for( auto* well : wells ) {
                 well->setEfficiencyFactor(currentStep, efficiencyFactor);
             }
         }

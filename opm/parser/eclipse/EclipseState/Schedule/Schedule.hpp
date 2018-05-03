@@ -165,7 +165,7 @@ namespace Opm
         void handleGCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep);
-        void handleWEFAC( const DeckKeyword& keyword, size_t currentStep);
+        void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep);
@@ -175,7 +175,7 @@ namespace Opm
         void handleDRSDT( const DeckKeyword& keyword, size_t currentStep);
         void handleDRVDT( const DeckKeyword& keyword, size_t currentStep);
         void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
-        void handleWECON( const DeckKeyword& keyword, size_t currentStep);
+        void handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword);
         void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
         void handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
