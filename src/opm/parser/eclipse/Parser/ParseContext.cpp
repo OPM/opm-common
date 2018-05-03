@@ -85,7 +85,7 @@ namespace Opm {
 
         addKey(SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
         addKey(SUMMARY_UNKNOWN_GROUP, InputError::THROW_EXCEPTION);
-        addKey(SCHEDULE_INVALID_WELL, InputError::THROW_EXCEPTION);
+        addKey(SCHEDULE_INVALID_NAME, InputError::THROW_EXCEPTION);
     }
 
     void ParseContext::initEnv() {
@@ -259,7 +259,7 @@ namespace Opm {
     const std::string ParseContext::SUMMARY_UNKNOWN_WELL  = "SUMMARY_UNKNOWN_WELL";
     const std::string ParseContext::SUMMARY_UNKNOWN_GROUP = "SUMMARY_UNKNOWN_GROUP";
 
-    const std::string ParseContext::SCHEDULE_INVALID_WELL = "SCHEDULE_INVALID_WELL";
+    const std::string ParseContext::SCHEDULE_INVALID_NAME = "SCHEDULE_INVALID_NAME";
 }
 
 

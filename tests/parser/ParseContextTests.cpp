@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     ParseContext parseContext;
     Parser parser;
 
-    parseContext.update(ParseContext::SCHEDULE_INVALID_WELL , InputError::THROW_EXCEPTION );
+    parseContext.update(ParseContext::SCHEDULE_INVALID_NAME , InputError::THROW_EXCEPTION );
 
     std::vector < std::string > testSamples;
     std::string testSample;

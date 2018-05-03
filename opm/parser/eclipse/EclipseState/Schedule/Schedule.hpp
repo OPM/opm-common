@@ -105,7 +105,7 @@ namespace Opm
         std::vector< const Group* > getGroups() const;
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
-        void InvalidWellPattern (const std::string& wellNamePattern, const ParseContext& parseContext, const DeckKeyword& keyword) const;
+        void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, const DeckKeyword& keyword) const;
 
         const Events& getEvents() const;
         const Deck& getModifierDeck(size_t timeStep) const;
@@ -137,6 +137,8 @@ namespace Opm
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);
+        std::vector< Group* > getGroups(const std::string& groupNamePattern);
+
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  const SCHEDULESection& , const EclipseGrid& grid,

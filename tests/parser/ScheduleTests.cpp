@@ -1022,6 +1022,67 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
+        Opm::Parser parser;
+        const std::string input = R"(
+        START  -- 0
+         10 'JAN' 2000 /
+        RUNSPEC
+        DIMENS
+          10 10 10 /
+        GRID
+        DX
+        1000*0.25 /
+        DY
+        1000*0.25 /
+        DZ
+        1000*0.25 /
+        TOPS
+        100*0.25 /
+        SCHEDULE
+        DATES             -- 1
+         10  OKT 2008 /
+        /
+        WELSPECS
+            'PROD1' 'G1'  1 1 10 'OIL' /
+            'PROD2' 'G2'  2 2 10 'OIL' /
+            'PROD3' 'H1'  3 3 10 'OIL' /
+        /
+        GCONPROD
+        'G1' 'ORAT' 1000 /
+        /
+        DATES             -- 2
+         10  NOV 2008 /
+        /
+        GCONPROD
+        'G*' 'ORAT' 2000 /
+        /
+        )";
+
+        Opm::ParseContext parseContext;
+        auto deck = parser.parseString(input, parseContext);
+        EclipseGrid grid( deck );
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Opm::Schedule schedule(deck,  grid, eclipseProperties, Opm::Phases(true, true, true) , parseContext);
+
+        Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
+        double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
+
+        auto g_g1 = schedule.getGroup("G1");
+        BOOST_CHECK_EQUAL(g_g1.getOilTargetRate(1), 1000 * siFactorL);
+        BOOST_CHECK_EQUAL(g_g1.getOilTargetRate(2), 2000 * siFactorL);
+
+        auto g_g2 = schedule.getGroup("G2");
+        BOOST_CHECK_EQUAL(g_g2.getOilTargetRate(1), -999e100); // Invalid group rate - default
+        BOOST_CHECK_EQUAL(g_g2.getOilTargetRate(2), 2000 * siFactorL);
+
+        auto g_h1 = schedule.getGroup("H1");
+        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(0), -999e100);
+        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(1), -999e100);
+        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(2), -999e100);
+}
+
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
     Opm::Parser parser;
     std::string input =

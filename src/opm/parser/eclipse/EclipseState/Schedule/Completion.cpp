@@ -210,7 +210,7 @@ namespace Opm {
             const auto& matched_wells = schedule.getWellsMatching(wellNamePattern);
 
             if (matched_wells.empty())
-                schedule.InvalidWellPattern(wellNamePattern, parseContext, compdatKeyword);
+                schedule.invalidNamePattern(wellNamePattern, parseContext, compdatKeyword);
 
             for (const auto& well : matched_wells){
                 const auto it_pos = std::find( wells.begin(), wells.end(), well);
