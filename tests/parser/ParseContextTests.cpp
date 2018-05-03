@@ -616,6 +616,36 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     )";
     testSamples.push_back(testSample);
 
+    // Invalid well name in WELOPEN
+    testSample = R"(
+    COMPDAT
+    'INJ' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONINJE
+    'INJ' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+    /
+    DATES
+    15  OKT 2008 /
+    /
+    WELOPEN
+    'SOMETHINGELSE' /
+    /
+    )";
+    testSamples.push_back(testSample);
+
+    // Invalid well name in WELTARG
+    testSample = R"(
+    COMPDAT
+    'PROD' 10 10 3 3 'OPEN' 1* 1* 0.5 /
+    /
+    WCONHIST
+    'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
+    /
+    WELTARG
+    'SOMETHINGELSE' 'ORAT' 15000 /
+    /
+    )";
+    testSamples.push_back(testSample);
 
     std::string deckinput;
 

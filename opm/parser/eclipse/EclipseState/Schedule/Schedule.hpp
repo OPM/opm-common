@@ -160,8 +160,8 @@ namespace Opm
         void handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep );
-        void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
+        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext );
+        void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleGCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep);
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep);

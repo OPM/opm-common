@@ -202,10 +202,10 @@ namespace Opm {
                 handleCOMPSEGS(keyword, currentStep);
 
             else if (keyword.name() == "WELOPEN")
-                handleWELOPEN(keyword, currentStep);
+                handleWELOPEN(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WELTARG")
-                handleWELTARG(section, keyword, currentStep);
+                handleWELTARG(section, keyword, currentStep, parseContext);
 
             else if (keyword.name() == "GRUPTREE")
                 handleGRUPTREE(keyword, currentStep);
@@ -913,7 +913,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep ) {
+    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext ) {
 
         auto all_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -926,8 +926,13 @@ namespace Opm {
         constexpr auto open = WellCommon::StatusEnum::OPEN;
 
         for( const auto& record : keyword ) {
-            const auto& wellname = record.getItem( "WELL" ).getTrimmedString(0);
+            const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
+
+            auto wells = getWells( wellNamePattern );
+
+            if (wells.empty())
+                InvalidWellPattern( wellNamePattern, parseContext, keyword);
 
             /* if all records are defaulted or just the status is set, only
              * well status is updated
@@ -935,7 +940,7 @@ namespace Opm {
             if( all_defaulted( record ) ) {
                 const auto status = WellCommon::StatusFromString( status_str );
 
-                for( auto* well : getWells( wellname ) ) {
+                for( auto* well : wells ) {
                     if( status == open && !well->canOpen(currentStep) ) {
                         auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
                         std::string msg = "Well " + well->name()
@@ -985,7 +990,7 @@ namespace Opm {
                 return { completion, status };
             };
 
-            for( auto* well : getWells( wellname ) ) {
+            for( auto* well : wells ) {
                 CompletionSet new_completions;
                 for( const auto& c : well->getCompletions( currentStep ) )
                     new_completions.add( new_completion( c ) );
@@ -1008,7 +1013,10 @@ namespace Opm {
       WCONxxxx keyword).
     */
 
-    void Schedule::handleWELTARG( const SCHEDULESection& section ,  const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleWELTARG( const SCHEDULESection& section ,
+                                  const DeckKeyword& keyword,
+                                  size_t currentStep,
+                                  const ParseContext& parseContext) {
         Opm::UnitSystem unitSystem = section.unitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
         double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
@@ -1023,9 +1031,7 @@ namespace Opm {
             const auto wells = getWells( wellNamePattern );
 
             if( wells.empty() )
-                throw std::invalid_argument(
-                        wellNamePattern + " does not match any wells. " +
-                        "Specify wells with the WCONxxxx keywords." );
+                InvalidWellPattern( wellNamePattern, parseContext, keyword);
 
             for( auto* well : wells ) {
                 if(well->isProducer(currentStep)){
