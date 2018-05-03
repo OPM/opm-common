@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <opm/output/eclipse/RestartIO.hpp>
 
@@ -536,18 +537,30 @@ void writeWell(ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es
 }
 
 void checkSaveArguments(const EclipseState& es,
-                        const data::Solution& cells,
+                        const RestartValue& restart_value,
                         const EclipseGrid& grid) {
-  for (const auto& elm: cells)
+
+  for (const auto& elm: restart_value.solution)
     if (elm.second.data.size() != grid.getNumActive())
       throw std::runtime_error("Wrong size on solution vector: " + elm.first);
 
 
   if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
-      if (!restart_value.has_extra("THPRES"))
-          throw std::runtime_error("This model has THPRES active - must have THPRES as part of restart data.")
+      // If the the THPRES option is active the restart_value should have a
+      // THPRES field. This is not enforced here because not all the opm
+      // simulators have been updated to include the THPRES values.
+      if (!restart_value.hasExtra("THPRES")) {
+          OpmLog::warning("This model has THPRES active - should have THPRES as part of restart data.");
+          return;
+      }
+
+      size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
+      const auto& thpres = restart_value.get_extra("THPRES");
+      if (thpres.size() != num_regions * num_regions)
+          throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
   }
 }
+} // Anonymous namespace
 
 
 void save(const std::string& filename,
@@ -559,8 +572,8 @@ void save(const std::string& filename,
           const Schedule& schedule,
           bool write_double)
 {
-    checkSaveArguments( value.solution, grid, es);
-  {
+    checkSaveArguments(es, value, grid);
+    {
         int sim_step = std::max(report_step - 1, 0);
         int ert_phase_mask = es.runspec().eclPhaseMask( );
         const auto& units = es.getUnits();
@@ -583,4 +596,3 @@ void save(const std::string& filename,
 }
 }
 }
-

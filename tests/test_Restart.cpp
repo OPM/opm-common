@@ -28,6 +28,7 @@
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Wells.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -572,6 +573,43 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(STORE_THPRES) {
+    Setup setup("FIRST_SIM_THPRES.DATA");
+    {
+        ERT::TestArea testArea("test_Restart_THPRES");
+        auto num_cells = setup.grid.getNumActive( );
+        auto cells = mkSolution( num_cells );
+        auto wells = mkWells();
+        const auto& units = setup.es.getUnits();
+        {
+            RestartValue restart_value(cells, wells);
+            RestartValue restart_value2(cells, wells);
+
+            /* Missing THPRES data in extra container. */
+            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+                                               100,
+                                               restart_value,
+                                               setup.es,
+                                               setup.grid,
+                                               setup.schedule), std::runtime_error);
+
+
+            restart_value.add_extra("THPRES", UnitSystem::measure::pressure, {0,1});
+            /* THPRES data has wrong size in extra container. */
+            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+                                               100,
+                                               restart_value,
+                                               setup.es,
+                                               setup.grid,
+                                               setup.schedule), std::runtime_error);
+
+            int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
+            std::vector<double>  thpres(num_regions * num_regions, 78);
+            restart_value2.add_extra("THPRES", UnitSystem::measure::pressure, thpres);
+        }
+    }
+}
 
 
 
