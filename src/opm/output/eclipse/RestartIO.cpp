@@ -308,7 +308,7 @@ data::Wells restore_wells( const ::Opm::RestartIO::ecl_kw_type * opm_xwel,
 
     return wells;
 }
-}
+//}
 
 
 //* should take grid as argument because it may be modified from the simulator */
@@ -373,8 +373,7 @@ RestartValue load( const std::string& filename,
     return rst_value;
 }
 
-
-namespace {
+//namespace {
 
 std::vector<int> serialize_ICON( int sim_step,
                                  int ncwmax,
