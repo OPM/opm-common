@@ -42,7 +42,7 @@ namespace Opm {
 namespace Opm { namespace RestartIO { namespace Helpers {
 
     const double UNIMPLEMENTED_VALUE = 1e-100; // placeholder for values not yet available 
-            
+
     std::vector<double>
     createDoubHead(const EclipseState& es,
                    const Schedule&     sched,
@@ -62,6 +62,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
     std::vector<bool>
     createLogiHead(const EclipseState& es);
+
 
     std::vector<int> serialize_ICON(int lookup_step, // The integer index used to look up dynamic properties, e.g. the number of well.
                                     int ncwmax,      // Max number of completions per well, should be entry 17 from createInteHead.

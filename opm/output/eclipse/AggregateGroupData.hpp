@@ -43,8 +43,9 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         //std::vector< const Group* > currentGroups(Opm::Schedule& sched, size_t reportStep);
 	explicit AggregateGroupData(const std::vector<int>& inteHead);
 
-	void captureDeclaredGroupData(const Opm::Schedule& sched,
-	                              const std::size_t    rptStep);
+	void captureDeclaredGroupData( const Schedule&   sched,
+				  const std::size_t simStep,
+				  const std::vector<int>& inteHead );
 
 #if 0
         void captureDynamicGroupData(const Opm::Phases&          phases,
@@ -59,19 +60,19 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->iGroup_.data();
         }
 
-        /// Retrieve Floating-Point (Real) Well Data Array.
+        /// Retrieve Floating-Point (Real) Group Data Array.
         const std::vector<float>& getSGroup() const
         {
             return this->sGroup_.data();
         }
 
-        /// Retrieve Floating-Point (Double Precision) Well Data Array.
+        /// Retrieve Floating-Point (Double Precision) Group Data Array.
         const std::vector<double>& getXGroup() const
         {
             return this->xGroup_.data();
         }
 
-        /// Retrieve Character Well Data Array.
+        /// Retrieve Character Group Data Array.
         const std::vector<CharArrayNullTerm<8>>& getZGroup() const
         {
             return this->zGroup_.data();
