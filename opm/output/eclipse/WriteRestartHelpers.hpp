@@ -29,6 +29,7 @@ namespace Opm {
     class EclipseGrid;
     class EclipseState;
     class Schedule;
+    class Well;
 
 } // Opm
 
@@ -53,6 +54,11 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
     std::vector<bool>
     createLogiHead(const EclipseState& es);
+
+    std::vector<int> serialize_ICON(int report_step,
+                                    int ncwmax,
+                                    int niconz, // should be entry 32 from createInteHead
+                                    const std::vector<const Well*>& sched_wells);
 
 }}} // Opm::RestartIO::Helpers
 
