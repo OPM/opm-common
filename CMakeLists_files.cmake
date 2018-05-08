@@ -243,6 +243,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_Wells.cpp
           tests/test_writenumwells.cpp
 	  tests/test_serialize_ICON.cpp
+	  tests/test_serialize_SCON.cpp
       )
 endif()
 

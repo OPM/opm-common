@@ -19,12 +19,12 @@
 
 #include <config.h>
 
-#define BOOST_TEST_MODULE serialize_ICON_TEST
+#define BOOST_TEST_MODULE serialize_SCON_TEST
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <ert/ecl_well/well_const.h> // containts ICON_XXX_INDEX
+#include <ert/ecl_well/well_const.h> // containts SCON_CF_INDEX
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 BOOST_AUTO_TEST_CASE( serialize_icon_test )
@@ -39,13 +39,13 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
 
         const size_t ncwmax = schedule.getMaxNumCompletionsForWells(tstep);
 
-        const int ICONZ = 25; // normally obtained from InteHead
+        const int SCONZ = 40; // normally obtained from InteHead
         const auto wells = schedule.getWells(tstep);
         
-        const std::vector<int> icondata =
-            Opm::RestartIO::Helpers::serialize_ICON(tstep,
+        const std::vector<double> scondata =
+            Opm::RestartIO::Helpers::serialize_SCON(tstep,
                                                     ncwmax,
-                                                    ICONZ,
+                                                    SCONZ,
                                                     wells);
         size_t w_offset = 0;
         for (const auto w : wells) {
@@ -55,34 +55,14 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
 
                 const size_t offset = w_offset + c_offset;
 
-                BOOST_CHECK_EQUAL(icondata[offset + ICON_IC_INDEX],
-                                  c.complnum());
-                BOOST_CHECK_EQUAL(icondata[offset + ICON_I_INDEX],
-                                  c.getI() + 1);
-                BOOST_CHECK_EQUAL(icondata[offset + ICON_J_INDEX],
-                                  c.getJ() + 1);
-                BOOST_CHECK_EQUAL(icondata[offset + ICON_K_INDEX],
-                                  c.getK() + 1);
-                BOOST_CHECK_EQUAL(icondata[offset + ICON_DIRECTION_INDEX],
-                                  c.getDirection());
+                BOOST_CHECK_EQUAL(scondata[offset + SCON_CF_INDEX],
+                                  c.getConnectionTransmissibilityFactor());
+                BOOST_CHECK_EQUAL(scondata[offset + SCON_KH_INDEX], 
+                             Opm::RestartIO::Helpers::UNIMPLEMENTED_VALUE); 
 
-                if (c.getState() == Opm::WellCompletion::StateEnum::OPEN)
-                    BOOST_CHECK_EQUAL(icondata[offset + ICON_STATUS_INDEX],
-                                      1);
-                else
-                    BOOST_CHECK_EQUAL(icondata[offset + ICON_STATUS_INDEX],
-                                      -1000);
-
-                if (c.attachedToSegment()) 
-                    BOOST_CHECK_EQUAL(icondata[offset + ICON_SEGMENT_INDEX],
-                                      c.getSegmentNumber());
-                else
-                    BOOST_CHECK_EQUAL(icondata[offset + ICON_SEGMENT_INDEX],
-                                      0);
-                
-                c_offset += ICONZ;
+                c_offset += SCONZ;
             }
-            w_offset += (ICONZ * ncwmax);
+            w_offset += (SCONZ * ncwmax);
         }
     }
 };
