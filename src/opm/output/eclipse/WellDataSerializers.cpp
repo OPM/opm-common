@@ -23,6 +23,36 @@
 #include <vector>
 
 // ----------------------------------------------------------------------------
+std::vector<double>
+Opm::RestartIO::Helpers::
+serialize_SCON(int lookup_step,
+               int ncwmax,
+               int nsconz,
+               const std::vector<const Well*>& sched_wells)
+// ----------------------------------------------------------------------------
+{
+    const size_t well_field_size = ncwmax * nsconz;
+    std::vector<double> data(sched_wells.size() * well_field_size, 0);
+    size_t well_offset = 0;
+    for (const Opm::Well* well : sched_wells) {
+        const auto& completions = well->getCompletions( lookup_step );
+        size_t completion_offset = 0;
+        for (const auto& completion : completions) {
+
+            const size_t offset = well_offset + completion_offset;
+
+            data[ offset + SCON_CF_INDEX ] =
+                completion.getConnectionTransmissibilityFactor();
+            data[ offset + SCON_KH_INDEX ] = UNIMPLEMENTED_VALUE;
+
+            completion_offset += nsconz;
+        }
+        well_offset += well_field_size;
+    }
+    return data; 
+}
+
+// ----------------------------------------------------------------------------
 std::vector<int>
 Opm::RestartIO::Helpers::
 serialize_ICON(int lookup_step,
