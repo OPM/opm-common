@@ -136,9 +136,15 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/test_util/summaryRegressionTest.cpp
           src/opm/test_util/summaryComparator.cpp
           src/opm/test_util/EclFilesComparator.cpp
+          src/opm/output/eclipse/CreateDoubHead.cpp
+          src/opm/output/eclipse/CreateInteHead.cpp
+          src/opm/output/eclipse/CreateLogiHead.cpp
+          src/opm/output/eclipse/DoubHEAD.cpp
           src/opm/output/eclipse/EclipseGridInspector.cpp
           src/opm/output/eclipse/EclipseIO.cpp
+          src/opm/output/eclipse/InteHEAD.cpp
           src/opm/output/eclipse/LinearisedOutputTable.cpp
+          src/opm/output/eclipse/LogiHEAD.cpp
           src/opm/output/eclipse/RestartIO.cpp
           src/opm/output/eclipse/Summary.cpp
           src/opm/output/eclipse/Tables.cpp
@@ -223,15 +229,18 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_compareSummary.cpp
           tests/test_EclFilesComparator.cpp
           tests/test_EclipseIO.cpp
+          tests/test_DoubHEAD.cpp
+          tests/test_InteHEAD.cpp
           tests/test_LinearisedOutputTable.cpp
+          tests/test_LogiHEAD.cpp
+          tests/test_regionCache.cpp
           tests/test_Restart.cpp
           tests/test_RFT.cpp
+          tests/test_Solution.cpp
           tests/test_Summary.cpp
           tests/test_Tables.cpp
           tests/test_Wells.cpp
           tests/test_writenumwells.cpp
-          tests/test_Solution.cpp
-          tests/test_regionCache.cpp
       )
 endif()
 
@@ -465,23 +474,26 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list(APPEND PUBLIC_HEADER_FILES
-        opm/output/OutputWriter.hpp
-        opm/output/data/Wells.hpp
         opm/output/data/Cells.hpp
-        opm/test_util/summaryRegressionTest.hpp
-        opm/test_util/summaryIntegrationTest.hpp
-        opm/test_util/summaryComparator.hpp
+        opm/output/data/Solution.hpp
+        opm/output/data/Wells.hpp
+        opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
-        opm/output/eclipse/EclipseIOUtil.hpp
         opm/output/eclipse/EclipseIO.hpp
+        opm/output/eclipse/EclipseIOUtil.hpp
+        opm/output/eclipse/InteHEAD.hpp
+        opm/output/eclipse/LogiHEAD.hpp
         opm/output/eclipse/LinearisedOutputTable.hpp
+        opm/output/eclipse/RegionCache.hpp
         opm/output/eclipse/RestartIO.hpp
         opm/output/eclipse/RestartValue.hpp
         opm/output/eclipse/Summary.hpp
         opm/output/eclipse/Tables.hpp
-        opm/output/eclipse/RegionCache.hpp
-        opm/output/data/Solution.hpp
+        opm/output/eclipse/WriteRestartHelpers.hpp
+        opm/output/OutputWriter.hpp
         opm/test_util/EclFilesComparator.hpp
+        opm/test_util/summaryComparator.hpp
+        opm/test_util/summaryIntegrationTest.hpp
         opm/test_util/summaryRegressionTest.hpp
-        opm/test_util/summaryComparator.hpp)
+        )
 endif()
