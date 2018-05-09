@@ -377,6 +377,8 @@ namespace {
 Opm::RestartIO::DoubHEAD::DoubHEAD()
     : data_(Index::NUMBER_OF_ITEMS, -1.0e20)
 {
+    // Numbers below have unknown usage, values have been determined by
+    // experiments to be constant across a range of reference cases.
     this->data_[Index::dh_024] = 1.0e+20;
     this->data_[Index::dh_026] = 0.0;
     this->data_[Index::dh_027] = 0.0;

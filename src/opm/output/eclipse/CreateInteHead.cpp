@@ -159,9 +159,9 @@ namespace {
         const auto nswlmx = wsd.maxSegmentedWells();
         const auto nsegmx = wsd.maxSegmentsPerWell();
         const auto nlbrmx = wsd.maxLateralBranchesPerWell();
-        const auto nisegz = 22;
-        const auto nrsegz = 140;
-        const auto nilbrz = 10;
+        const auto nisegz = 22;  // Number of entries per segment in ISEG.
+        const auto nrsegz = 140; // Number of entries per segment in RSEG array.
+        const auto nilbrz = 10;  // Number of entries per segment in ILBR array.
 
         return {
             static_cast<int>(nsegwl),
@@ -219,15 +219,21 @@ createInteHead(const EclipseState& es,
         .wellTableDimensions(getWellTableDims(rspec, sched, lookup_step))
         .calenderDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
-        .params_NWELZ       (155, 122, 130, 3)
-        .params_NCON        (25, 40, 58)
+             // The numbers below have been determined experimentally to work
+             // across a range of reference cases, but are not guaranteed to be
+             // universally valid.
+        .params_NWELZ       (155, 122, 130, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
+        .params_NCON        (25, 40, 58)       // n{isx}conz: number of data elements per completion in ICON
         .params_GRPZ        (getNGRPZ(rspec))
+             // ncamax: max number of analytical aquifer connections
+             // n{isx}aaqz: number of data elements per aquifer in {ISX}AAQ
+             // n{isa}caqz: number of data elements per aquifer connection in {ISA}CAQ
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
         .stepParam          (num_solver_steps, report_step)
         .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
-        .variousParam       (2014, 100)
+        .variousParam       (2014, 100) // Output should be compatible with Eclipse 100, 2014 version.
         ;
 
     return ih.data();

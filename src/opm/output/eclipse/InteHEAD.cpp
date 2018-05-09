@@ -615,9 +615,13 @@ Opm::RestartIO::InteHEAD::variousParam(const int version,
 {
     this->data_[VERSION] = version;
     this->data_[IPROG]   = iprog;
-    this->data_[ih_076]  = 2;
+    // ih_076: Usage unknown, experiments fails (zero determinant in well message) with too low numbers. 5 is highest observed across reference cases.
+    this->data_[ih_076]  = 5;
+    // ih_101: Usage unknown, value fixed across reference cases.
     this->data_[ih_101]  = 1;
+    // ih_103: Usage unknown, value not fixed across reference cases, experiments generate warning with 0 but not with 1.
     this->data_[ih_103]  = 1;
+    // ih_200: Usage unknown, value fixed across reference cases.
     this->data_[ih_200]  = 1;
 
     return *this;
