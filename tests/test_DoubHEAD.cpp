@@ -77,6 +77,9 @@ BOOST_AUTO_TEST_CASE(Time_Stamp)
 
     const auto& v = dh.data();
 
+    // Start + elapsed = current (in days)
+    BOOST_CHECK_CLOSE(v[1 - 1] + v[161 - 1], v[162 - 1], 1.0e-10);
+
     // Elapsed time in days.
     BOOST_CHECK_CLOSE(v[1 - 1], 123.0, 1.0e-10);
 
