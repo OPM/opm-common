@@ -496,7 +496,7 @@ Opm::RestartIO::InteHEAD::wellTableDimensions(const WellTableDim& wtdim)
 }
 
 Opm::RestartIO::InteHEAD&
-Opm::RestartIO::InteHEAD::calenderDate(const TimePoint& timePoint)
+Opm::RestartIO::InteHEAD::calendarDate(const TimePoint& timePoint)
 {
     this->data_[DAY]   = timePoint.day;
     this->data_[MONTH] = timePoint.month;

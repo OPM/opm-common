@@ -101,7 +101,7 @@ namespace Opm { namespace RestartIO {
 
         InteHEAD& unitConventions(const UnitSystem& usys);
         InteHEAD& wellTableDimensions(const WellTableDim& wtdim);
-        InteHEAD& calenderDate(const TimePoint& date);
+        InteHEAD& calendarDate(const TimePoint& date);
         InteHEAD& activePhases(const Phases& phases);
         InteHEAD& params_NWELZ(const int niwelz, const int nswelz, const int nxwelz, const int nzwelz);
         InteHEAD& params_NCON(const int niconz, const int nsconz, const int nxconz);

@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(CalendarDate)
     // 2015-04-09T11:22:33.987654+0000
 
     const auto ih = Opm::RestartIO::InteHEAD{}
-        .calenderDate({
+        .calendarDate({
             2015, 4, 9, 11, 22, 33, 987654,
         });
 

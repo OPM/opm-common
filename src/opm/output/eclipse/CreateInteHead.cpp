@@ -217,7 +217,7 @@ createInteHead(const EclipseState& es,
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (getUnitConvention(es.getDeckUnitSystem()))
         .wellTableDimensions(getWellTableDims(rspec, sched, lookup_step))
-        .calenderDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
+        .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
              // The numbers below have been determined experimentally to work
              // across a range of reference cases, but are not guaranteed to be
