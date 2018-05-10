@@ -345,11 +345,11 @@ namespace {
         const auto t0  =  std::chrono::system_clock::to_time_t(tp);
         const auto tm0 = *std::gmtime(&t0);
 
-        // Set clock to 01:00:00+0000 on 1901-<month>-<day> to get
+        // Set clock to 01:00:00+0000 on 2001-<month>-<day> to get
         // "accurate" day-of-year calculation (no leap year, no DST offset,
         // not previous day reported).
         auto tm1 = std::tm{};
-        tm1.tm_year = 1;        // 1901
+        tm1.tm_year = 101;      // 2001
         tm1.tm_mon  = tm0.tm_mon;
         tm1.tm_mday = tm0.tm_mday;
 
