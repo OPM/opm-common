@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(Various_Parameters)
 
     BOOST_CHECK_EQUAL(v[  1], 2015); // VERSION
     BOOST_CHECK_EQUAL(v[ 94], 100); // IPROG
-    BOOST_CHECK_EQUAL(v[ 76],   2); // IH_076
+    BOOST_CHECK_EQUAL(v[ 76],   5); // IH_076
     BOOST_CHECK_EQUAL(v[101],   1); // IH_101
     BOOST_CHECK_EQUAL(v[103],   1); // IH_103
 }
