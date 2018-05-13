@@ -25,7 +25,7 @@
 // ----------------------------------------------------------------------------
 std::vector<int>
 Opm::RestartIO::Helpers::
-serialize_ICON(int report_step,
+serialize_ICON(int lookup_step,
                int ncwmax,
                int niconz,
                const std::vector<const Opm::Well*>& sched_wells)
@@ -35,7 +35,7 @@ serialize_ICON(int report_step,
     std::vector<int> data(sched_wells.size() * well_field_size, 0);
     size_t well_offset = 0;
     for (const Opm::Well* well : sched_wells) {
-        const auto& completions = well->getCompletions( report_step );
+        const auto& completions = well->getCompletions( lookup_step );
         size_t completion_offset = 0;
         for (const auto& completion : completions) {
             const size_t offset = well_offset + completion_offset;

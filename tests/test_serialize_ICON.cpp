@@ -33,7 +33,7 @@
 
 BOOST_AUTO_TEST_CASE( serialize_icon_test )
 {
-    const Opm::Deck deck(Opm::Parser{}.parseFile("tests/FIRST_SIM.DATA"));
+    const Opm::Deck deck(Opm::Parser{}.parseFile("FIRST_SIM.DATA"));
     const Opm::EclipseState state(deck);
     const Opm::Schedule schedule(deck, state);
     const Opm::TimeMap timemap(deck);
