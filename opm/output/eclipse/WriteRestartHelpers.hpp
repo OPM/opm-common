@@ -22,6 +22,11 @@
 
 #include <vector>
 
+// Missing definitions (really belong in ert/ecl_well/well_const.h, but not
+// defined there)
+#define SCON_KH_INDEX 3
+
+
 // Forward declarations
 
 namespace Opm {
@@ -29,11 +34,14 @@ namespace Opm {
     class EclipseGrid;
     class EclipseState;
     class Schedule;
+    class Well;
 
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {
 
+    const double UNIMPLEMENTED_VALUE = 1e-100; // placeholder for values not yet available 
+            
     std::vector<double>
     createDoubHead(const EclipseState& es,
                    const Schedule&     sched,
@@ -54,6 +62,17 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     std::vector<bool>
     createLogiHead(const EclipseState& es);
 
+    std::vector<int> serialize_ICON(int lookup_step,
+                                    int ncwmax,
+                                    int niconz, // should be entry 32 from createInteHead
+                                    const std::vector<const Well*>& sched_wells);
+
+    std::vector<double> serialize_SCON(int lookup_step,
+                                       int ncwmax,
+                                       int nsconz, // should be entry 33 from createInteHead
+                                       const std::vector<const Well*>& sched_wells);
+                                               
+            
 }}} // Opm::RestartIO::Helpers
 
 #endif  // OPM_WRITE_RESTART_HELPERS_HPP
