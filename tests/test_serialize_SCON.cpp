@@ -27,14 +27,15 @@
 #include <ert/ecl_well/well_const.h> // containts SCON_CF_INDEX
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-BOOST_AUTO_TEST_CASE( serialize_icon_test )
+BOOST_AUTO_TEST_CASE( serialize_scon_test )
 {
-    const Opm::Deck deck(Opm::Parser{}.parseFile("tests/FIRST_SIM.DATA"));
+    const Opm::Deck deck(Opm::Parser{}.parseFile("FIRST_SIM.DATA"));
+    Opm::UnitSystem units(Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC); // Unit system used in deck FIRST_SIM.DATA.
     const Opm::EclipseState state(deck);
     const Opm::Schedule schedule(deck, state);
     const Opm::TimeMap timemap(deck);
 
-  
+
     for (size_t tstep = 0; tstep != timemap.numTimesteps(); ++tstep) {
 
         const size_t ncwmax = schedule.getMaxNumCompletionsForWells(tstep);
@@ -46,7 +47,8 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
             Opm::RestartIO::Helpers::serialize_SCON(tstep,
                                                     ncwmax,
                                                     SCONZ,
-                                                    wells);
+                                                    wells,
+                                                    units);
         size_t w_offset = 0;
         for (const auto w : wells) {
 
@@ -54,11 +56,15 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
             for (const auto c : w->getCompletions(tstep)) {
 
                 const size_t offset = w_offset + c_offset;
-
+                const auto ctf = c.getConnectionTransmissibilityFactorAsValueObject();
+                const double expected =
+                    ctf.hasValue()
+                    ? units.from_si(Opm::UnitSystem::measure::transmissibility, ctf.getValue())
+                    : Opm::RestartIO::Helpers::UNIMPLEMENTED_VALUE;
                 BOOST_CHECK_EQUAL(scondata[offset + SCON_CF_INDEX],
-                                  c.getConnectionTransmissibilityFactor());
+                                  expected);
                 BOOST_CHECK_EQUAL(scondata[offset + SCON_KH_INDEX], 
-                             Opm::RestartIO::Helpers::UNIMPLEMENTED_VALUE); 
+                                  Opm::RestartIO::Helpers::UNIMPLEMENTED_VALUE);
 
                 c_offset += SCONZ;
             }
