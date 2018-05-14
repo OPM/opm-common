@@ -39,6 +39,9 @@ RPTRST
 --ALLPROPS --> fluid densities, viscosities , reciprocal formation volume factors and phase relative permeabilities
 --NORST=1  --> output for visualization only 
 
+WELSPECS
+     'F-14A'    'FIELD'   12   85  1*       'OIL'  7* /
+/
 
 DATES
  3 'JAN' 2000  /

@@ -71,7 +71,8 @@ namespace Opm {
         m_modifierDeck( this->m_timeMap, Deck{} ),
         m_tuning( this->m_timeMap ),
         m_messageLimits( this->m_timeMap ),
-        m_phases(phases)
+        m_phases(phases),
+        wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() )
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
@@ -179,6 +180,9 @@ namespace Opm {
 
             else if (keyword.name() == "WSOLVENT")
                 handleWSOLVENT(keyword, currentStep, parseContext);
+
+            else if (keyword.name() == "WTEST")
+                handleWTEST(keyword, currentStep, parseContext);
 
             else if (keyword.name() == "WTEMP")
                 handleWTEMP(keyword, currentStep, parseContext);
@@ -756,6 +760,30 @@ namespace Opm {
         }
     }
 
+
+    void Schedule::handleWTEST(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+        const auto& current = *this->wtest_config.get(currentStep);
+        std::shared_ptr<WellTestConfig> new_config(new WellTestConfig(current));
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto wells = getWells( wellNamePattern );
+            if (wells.empty())
+                invalidNamePattern(wellNamePattern, parseContext, keyword);
+
+            double test_interval = record.getItem("INTERVAL").getSIDouble(0);
+            const std::string& reason = record.getItem("REASON").get<std::string>(0);
+            int num_test = record.getItem("TEST_NUM").get<int>(0);
+            double startup_time = record.getItem("START_TIME").getSIDouble(0);
+
+            for( auto* well : wells) {
+                if (reason.size() == 0)
+                    new_config->drop_well(well->name());
+                else
+                    new_config->add_well(well->name(), reason, test_interval, num_test, startup_time);
+            }
+        }
+        this->wtest_config.update(currentStep, new_config);
+    }
 
     void Schedule::handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
 
@@ -1872,5 +1900,10 @@ namespace Opm {
         return tables;
     }
 
+
+    const WellTestConfig& Schedule::wtestConfig(size_t timeStep) const {
+        const auto& ptr = this->wtest_config.get(timeStep);
+        return *ptr;
+    }
 }
 
