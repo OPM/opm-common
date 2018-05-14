@@ -243,6 +243,13 @@ namespace Opm {
         const static std::string SUMMARY_UNKNOWN_WELL;
         const static std::string SUMMARY_UNKNOWN_GROUP;
 
+        /*
+          A well must be specified (e.g. WELSPECS) and have completions
+          (e.g. COMPDAT) to be able to set control mode (e.g. WCONPROD).
+          A well missing specification and/or completion(s) will throw.
+        */
+        const static std::string SCHEDULE_INVALID_NAME;
+
     private:
         void initDefault();
         void initEnv();

@@ -267,6 +267,11 @@ namespace Opm {
         return m_groupNetVFPTable.get(time_step);
     }
 
+    bool Group::groupNameInGroupNamePattern(const std::string& groupName, const std::string& groupNamePattern) {
+        if (util_fnmatch( groupNamePattern.c_str() , groupName.c_str()) == 0)
+            return true;
+        return false;
+    }
     /*****************************************************************/
 
     bool Group::hasWell(const std::string& wellName , size_t time_step) const {

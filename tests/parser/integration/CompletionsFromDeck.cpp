@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     const auto& COMPDAT1 = deck.getKeyword("COMPDAT" , 1);
 
     const auto wells = schedule.getWells( 0 );
-    auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, COMPDAT1, wells );
+    auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, COMPDAT1, wells, ParseContext(), schedule );
     BOOST_CHECK_EQUAL( 3U , completions.size() );
 
     BOOST_CHECK( completions.find("W_1") != completions.end() );

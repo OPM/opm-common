@@ -120,6 +120,7 @@ namespace Opm {
         bool   getTransferGroupEfficiencyFactor(size_t time_step) const;
         void   setGroupNetVFPTable(size_t time_step, int table);
         int    getGroupNetVFPTable(size_t time_step) const;
+        static bool   groupNameInGroupNamePattern(const std::string& groupName, const std::string& groupNamePattern);
 
         /*****************************************************************/
 

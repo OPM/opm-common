@@ -1022,6 +1022,67 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
+        Opm::Parser parser;
+        const std::string input = R"(
+        START  -- 0
+         10 'JAN' 2000 /
+        RUNSPEC
+        DIMENS
+          10 10 10 /
+        GRID
+        DX
+        1000*0.25 /
+        DY
+        1000*0.25 /
+        DZ
+        1000*0.25 /
+        TOPS
+        100*0.25 /
+        SCHEDULE
+        DATES             -- 1
+         10  OKT 2008 /
+        /
+        WELSPECS
+            'PROD1' 'G1'  1 1 10 'OIL' /
+            'PROD2' 'G2'  2 2 10 'OIL' /
+            'PROD3' 'H1'  3 3 10 'OIL' /
+        /
+        GCONPROD
+        'G1' 'ORAT' 1000 /
+        /
+        DATES             -- 2
+         10  NOV 2008 /
+        /
+        GCONPROD
+        'G*' 'ORAT' 2000 /
+        /
+        )";
+
+        Opm::ParseContext parseContext;
+        auto deck = parser.parseString(input, parseContext);
+        EclipseGrid grid( deck );
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Opm::Schedule schedule(deck,  grid, eclipseProperties, Opm::Phases(true, true, true) , parseContext);
+
+        Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
+        double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
+
+        auto g_g1 = schedule.getGroup("G1");
+        BOOST_CHECK_EQUAL(g_g1.getOilTargetRate(1), 1000 * siFactorL);
+        BOOST_CHECK_EQUAL(g_g1.getOilTargetRate(2), 2000 * siFactorL);
+
+        auto g_g2 = schedule.getGroup("G2");
+        BOOST_CHECK_EQUAL(g_g2.getOilTargetRate(1), -999e100); // Invalid group rate - default
+        BOOST_CHECK_EQUAL(g_g2.getOilTargetRate(2), 2000 * siFactorL);
+
+        auto g_h1 = schedule.getGroup("H1");
+        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(0), -999e100);
+        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(1), -999e100);
+        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(2), -999e100);
+}
+
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
     Opm::Parser parser;
     std::string input =
@@ -1415,6 +1476,104 @@ BOOST_AUTO_TEST_CASE(change_ref_depth) {
     BOOST_CHECK_CLOSE( 2873.94, well.getRefDepth( 1 ), 1e-5 );
 }
 
+BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
+        std::string input = R"(
+            START             -- 0
+            19 JUN 2007 /
+            SCHEDULE
+            DATES             -- 1
+             10  OKT 2008 /
+            /
+            WELSPECS
+                'W1' 'G1'  3 3 2873.94 'OIL' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W2' 'G2'  5 5 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W3' 'G2'  6 6 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            /
+
+            WCONINJE
+            'W2' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            'W3' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            /
+
+            DATES             -- 2
+                15  OKT 2008 /
+            /
+
+            WTEMP
+                'W*' 40.0 /
+            /
+    )";
+
+        ParseContext ctx;
+        auto deck = Parser().parseString(input, ctx);
+        EclipseGrid grid(10,10,10);
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
+
+        // Producerwell - currently setting temperature only acts on injectors.
+        const auto& w1 = *schedule.getWell( "W1" );
+        BOOST_CHECK_CLOSE( 288.71, w1.getInjectionProperties( 1 ).temperature, 1e-5 ); // Default value
+        BOOST_CHECK_CLOSE( 288.71, w1.getInjectionProperties( 1 ).temperature, 1e-5 ); // Default value Remains
+
+        const auto& w2 = *schedule.getWell( "W2" );
+        BOOST_CHECK_CLOSE( 288.71, w2.getInjectionProperties( 1 ).temperature, 1e-5 );
+        BOOST_CHECK_CLOSE( 313.15, w2.getInjectionProperties( 2 ).temperature, 1e-5 );
+
+        const auto& w3 = *schedule.getWell( "W3" );
+        BOOST_CHECK_CLOSE( 288.71, w3.getInjectionProperties( 1 ).temperature, 1e-5 );
+        BOOST_CHECK_CLOSE( 313.15, w3.getInjectionProperties( 2 ).temperature, 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
+        std::string input = R"(
+            START             -- 0
+            19 JUN 2007 /
+            SCHEDULE
+            DATES             -- 1
+             10  OKT 2008 /
+            /
+            WELSPECS
+                'W1' 'G1'  3 3 2873.94 'OIL' 0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W2' 'G2'  5 5 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+                'W3' 'G2'  6 6 1       'WATER'   0.00 'STD' 'SHUT' 'NO' 0 'SEG' /
+            /
+
+            WCONINJE
+            'W2' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            'W3' 'WATER' 'OPEN' 'RATE' 20000 4*  /
+            /
+
+            DATES             -- 2
+                15  OKT 2008 /
+            /
+
+            WINJTEMP
+                'W*' 1* 40.0 1* /
+            /
+    )";
+
+        ParseContext ctx;
+        auto deck = Parser().parseString(input, ctx);
+        EclipseGrid grid(10,10,10);
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
+
+        // Producerwell - currently setting temperature only acts on injectors.
+        const auto& w1 = *schedule.getWell( "W1" );
+        BOOST_CHECK_CLOSE( 288.71, w1.getInjectionProperties( 1 ).temperature, 1e-5 ); // Default value
+        BOOST_CHECK_CLOSE( 288.71, w1.getInjectionProperties( 1 ).temperature, 1e-5 ); // Default value Remains
+
+        const auto& w2 = *schedule.getWell( "W2" );
+        BOOST_CHECK_CLOSE( 288.71, w2.getInjectionProperties( 1 ).temperature, 1e-5 );
+        BOOST_CHECK_CLOSE( 313.15, w2.getInjectionProperties( 2 ).temperature, 1e-5 );
+
+        const auto& w3 = *schedule.getWell( "W3" );
+        BOOST_CHECK_CLOSE( 288.71, w3.getInjectionProperties( 1 ).temperature, 1e-5 );
+        BOOST_CHECK_CLOSE( 313.15, w3.getInjectionProperties( 2 ).temperature, 1e-5 );
+}
+
 BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     std::string input = R"(
         START             -- 0
@@ -1479,9 +1638,10 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
             'W1' 0 0 1 1 'SHUT' 1*    / -- regular completion (1)
             'W1' 0 0 2 2 'SHUT' 1*    / -- regular completion (2)
             'W1' 0 0 3 4 'SHUT' 1*    / -- two completions in one record (3, 4)
-            'W3' 0 0 1 3 'SHUT' 1*    / -- doesn't exist, ignored
             'W2' 0 0 3 3 'SHUT' 1*    / -- regular completion (1)
             'W2' 0 0 1 3 'SHUT' 1*    / -- two completions (one exist already) (2, 3)
+            'W*' 0 0 3 5 'SHUT' 1*    / -- two completions, two wells (includes existing
+                                        -- and adding for both wells)
         /
     )";
 
@@ -1497,12 +1657,16 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     BOOST_CHECK_EQUAL( 2, w1cs.get( 1 ).complnum() );
     BOOST_CHECK_EQUAL( 3, w1cs.get( 2 ).complnum() );
     BOOST_CHECK_EQUAL( 4, w1cs.get( 3 ).complnum() );
+    BOOST_CHECK_EQUAL( 5, w1cs.get( 4 ).complnum() );
 
     const auto& w2cs = schedule.getWell( "W2" )->getCompletions();
     BOOST_CHECK_EQUAL( 1, w2cs.getFromIJK( 4, 4, 2 ).complnum() );
     BOOST_CHECK_EQUAL( 2, w2cs.getFromIJK( 4, 4, 0 ).complnum() );
     BOOST_CHECK_EQUAL( 3, w2cs.getFromIJK( 4, 4, 1 ).complnum() );
-    BOOST_CHECK_THROW( w2cs.get( 3 ).complnum(), std::out_of_range );
+    BOOST_CHECK_EQUAL( 4, w2cs.getFromIJK( 4, 4, 3 ).complnum() );
+    BOOST_CHECK_EQUAL( 5, w2cs.getFromIJK( 4, 4, 4 ).complnum() );
+
+    BOOST_CHECK_THROW( w2cs.get( 5 ).complnum(), std::out_of_range );
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {

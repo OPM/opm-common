@@ -25,11 +25,13 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 namespace Opm {
@@ -195,36 +197,37 @@ namespace Opm {
     Completion::fromCOMPDAT( const EclipseGrid& grid ,
                              const Eclipse3DProperties& eclipseProperties,
                              const DeckKeyword& compdatKeyword,
-                             const std::vector< const Well* >& wells ) {
+                             const std::vector< const Well* >& wells,
+                             const ParseContext& parseContext,
+                             const Schedule& schedule) {
 
         std::map< std::string, std::vector< Completion > > res;
         std::vector< int > prev_compls( wells.size(), 0 );
 
         for( const auto& record : compdatKeyword ) {
 
-            const auto wellname = record.getItem( "WELL" ).getTrimmedString( 0 );
-            const auto name_eq = [&]( const Well* w ) {
-                return w->name() == wellname;
-            };
+            const auto wellNamePattern = record.getItem( "WELL" ).getTrimmedString( 0 );
+            const auto& matched_wells = schedule.getWellsMatching(wellNamePattern);
 
-            auto well = std::find_if( wells.begin(), wells.end(), name_eq );
+            if (matched_wells.empty())
+                schedule.invalidNamePattern(wellNamePattern, parseContext, compdatKeyword);
 
-            if( well == wells.end() ) continue;
+            for (const auto& well : matched_wells){
+                const auto it_pos = std::find( wells.begin(), wells.end(), well);
+                const auto index = std::distance( wells.begin(), it_pos );
 
-            const auto index = std::distance( wells.begin(), well );
-            if( prev_compls[ index ] == 0 ) (*well)->getCompletions().size();
+                auto completions = Opm::fromCOMPDAT( grid,
+                                                     eclipseProperties,
+                                                     record,
+                                                     *well,
+                                                     prev_compls[ index ] );
 
-            auto completions = Opm::fromCOMPDAT( grid,
-                                                 eclipseProperties,
-                                                 record,
-                                                 **well,
-                                                 prev_compls[ index ] );
+                prev_compls[ index ] += completions.size();
 
-            prev_compls[ index ] += completions.size();
-
-            res[ wellname ].insert( res[ wellname ].end(),
-                                    std::make_move_iterator( completions.begin() ),
-                                    std::make_move_iterator( completions.end() ) );
+                res[ well->name() ].insert( res[ well->name() ].end(),
+                                           std::make_move_iterator( completions.begin() ),
+                                           std::make_move_iterator( completions.end() ) );
+            }
         }
 
         return res;
