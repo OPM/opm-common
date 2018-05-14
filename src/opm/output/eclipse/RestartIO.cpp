@@ -257,13 +257,21 @@ RestartValue load( const std::string& filename,
             const ecl_kw_type * ecl_kw = ecl_file_view_iget_named_kw( file_view , key.c_str() , 0 );
             const double * data_ptr = ecl_kw_get_double_ptr( ecl_kw );
             const double * end_ptr  = data_ptr + ecl_kw_get_size( ecl_kw );
-            rst_value.add_extra(key, extra.dim, {data_ptr, end_ptr});
+            rst_value.addExtra(key, extra.dim, {data_ptr, end_ptr});
         } else if (required)
             throw std::runtime_error("No such key in file: " + key);
 
     }
 
-    rst_value.convertToSI(units);
+    // Convert solution fields and extra data from user units to SI
+    rst_value.solution.convertToSI(units);
+    for (auto & extra_value : rst_value.extra) {
+        const auto& restart_key = extra_value.first;
+        auto & data = extra_value.second;
+
+        units.to_si(restart_key.dim, data);
+    }
+
     return rst_value;
 }
 
@@ -473,15 +481,15 @@ void writeHeader(ecl_rst_file_type * rst_file,
       ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free > kw_ptr;
 
       if (write_double) {
-	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_DOUBLE );
-	  ecl_kw_set_memcpy_data( ecl_kw , data.data() );
-	  kw_ptr.reset( ecl_kw );
+          ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_DOUBLE );
+          ecl_kw_set_memcpy_data( ecl_kw , data.data() );
+          kw_ptr.reset( ecl_kw );
       } else {
-	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_FLOAT );
-	  float * float_data = ecl_kw_get_float_ptr( ecl_kw );
-	  for (size_t i=0; i < data.size(); i++)
-	      float_data[i] = data[i];
-	  kw_ptr.reset( ecl_kw );
+          ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_FLOAT );
+          float * float_data = ecl_kw_get_float_ptr( ecl_kw );
+          for (size_t i=0; i < data.size(); i++)
+              float_data[i] = data[i];
+          kw_ptr.reset( ecl_kw );
       }
 
       return kw_ptr;
@@ -504,7 +512,7 @@ void writeHeader(ecl_rst_file_type * rst_file,
   }
 
 
-  void writeExtraData(ecl_rst_file_type* rst_file, const RestartValue::extra_vector& extra_data) {
+  void writeExtraData(ecl_rst_file_type* rst_file, const RestartValue::ExtraVector& extra_data) {
     for (const auto& extra_value : extra_data) {
         const std::string& key = extra_value.first.key;
         const std::vector<double>& data = extra_value.second;
@@ -555,7 +563,7 @@ void checkSaveArguments(const EclipseState& es,
       }
 
       size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
-      const auto& thpres = restart_value.get_extra("THPRES");
+      const auto& thpres = restart_value.getExtra("THPRES");
       if (thpres.size() != num_regions * num_regions)
           throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
   }
@@ -586,8 +594,15 @@ void save(const std::string& filename,
         else
             rst_file.reset( ecl_rst_file_open_write( filename.c_str() ) );
 
+        // Convert solution fields and extra values from SI to user units.
+        value.solution.convertFromSI(units);
+        for (auto & extra_value : value.extra) {
+            const auto& restart_key = extra_value.first;
+            auto & data = extra_value.second;
 
-        value.convertFromSI( units );
+            units.from_si(restart_key.dim, data);
+        }
+
         writeHeader( rst_file.get(), sim_step, report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
         writeWell( rst_file.get(), sim_step, es , grid, schedule, value.wells);
         writeSolution( rst_file.get(), value.solution, write_double );

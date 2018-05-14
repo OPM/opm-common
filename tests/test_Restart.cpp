@@ -504,17 +504,17 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
     auto wells = mkWells();
     RestartValue restart_value(cells, wells);
 
-    BOOST_CHECK_THROW( restart_value.add_extra("TOO-LONG-KEY", {0,1,2}), std::runtime_error);
+    BOOST_CHECK_THROW( restart_value.addExtra("TOO-LONG-KEY", {0,1,2}), std::runtime_error);
 
     // Keys must be unique
-    restart_value.add_extra("KEY", {0,1,1});
-    BOOST_CHECK_THROW( restart_value.add_extra("KEY", {0,1,1}), std::runtime_error);
+    restart_value.addExtra("KEY", {0,1,1});
+    BOOST_CHECK_THROW( restart_value.addExtra("KEY", {0,1,1}), std::runtime_error);
 
     /* The keys must be unique across solution and extra_data */
-    BOOST_CHECK_THROW( restart_value.add_extra("PRESSURE", {0,1}), std::runtime_error); 
+    BOOST_CHECK_THROW( restart_value.addExtra("PRESSURE", {0,1}), std::runtime_error); 
 
     /* Must avoid using reserved keys like 'LOGIHEAD' */
-    BOOST_CHECK_THROW( restart_value.add_extra("LOGIHEAD", {0,1}), std::runtime_error);
+    BOOST_CHECK_THROW( restart_value.addExtra("LOGIHEAD", {0,1}), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ExtraData_content) {
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         {
             RestartValue restart_value(cells, wells);
 
-            restart_value.add_extra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
+            restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
             RestartIO::save("FILE.UNRST", 1 ,
                             100,
                             restart_value,
@@ -559,10 +559,10 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                 {{"EXTRA", UnitSystem::measure::pressure, true},
                  {"EXTRA2", UnitSystem::measure::identity, false}});
 
-                BOOST_CHECK(!rst_value.has_extra("EXTRA2"));
-                BOOST_CHECK( rst_value.has_extra("EXTRA"));
-                BOOST_CHECK_THROW(rst_value.get_extra("EXTRA2"), std::invalid_argument);
-                const auto& extraval = rst_value.get_extra("EXTRA");
+                BOOST_CHECK(!rst_value.hasExtra("EXTRA2"));
+                BOOST_CHECK( rst_value.hasExtra("EXTRA"));
+                BOOST_CHECK_THROW(rst_value.getExtra("EXTRA2"), std::invalid_argument);
+                const auto& extraval = rst_value.getExtra("EXTRA");
                 const std::vector<double> expected = {10,1,2,3};
 
                 BOOST_CHECK_EQUAL( rst_value.solution.has("NO") , false );
@@ -581,21 +581,24 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
-        const auto& units = setup.es.getUnits();
         {
             RestartValue restart_value(cells, wells);
             RestartValue restart_value2(cells, wells);
 
             /* Missing THPRES data in extra container. */
+            /* Because it proved to difficult to update the legacy simulators
+               to pass THPRES values when writing restart files this BOOST_CHECK_THROW
+               had to be disabled. The RestartIO::save() function will just log a warning.
+
             BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                                100,
                                                restart_value,
                                                setup.es,
                                                setup.grid,
                                                setup.schedule), std::runtime_error);
+            */
 
-
-            restart_value.add_extra("THPRES", UnitSystem::measure::pressure, {0,1});
+            restart_value.addExtra("THPRES", UnitSystem::measure::pressure, {0,1});
             /* THPRES data has wrong size in extra container. */
             BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                                100,
@@ -606,7 +609,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
 
             int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
-            restart_value2.add_extra("THPRES", UnitSystem::measure::pressure, thpres);
+            restart_value2.addExtra("THPRES", UnitSystem::measure::pressure, thpres);
         }
     }
 }

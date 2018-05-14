@@ -60,20 +60,17 @@ namespace Opm {
 
     class RestartValue {
     public:
-        using extra_vector = std::vector<std::pair<RestartKey, std::vector<double>>>;
+        using ExtraVector = std::vector<std::pair<RestartKey, std::vector<double>>>;
         data::Solution solution;
         data::Wells wells;
-        extra_vector extra;
+        ExtraVector extra;
 
         RestartValue(data::Solution sol, data::Wells wells_arg);
 
-        bool has_extra(const std::string& key) const;
-        void add_extra(const std::string& key, UnitSystem::measure dimension, std::vector<double> data);
-        void add_extra(const std::string& key, const std::vector<double>& data);
-        const std::vector<double>& get_extra(const std::string& key) const;
-
-        void convertFromSI(const UnitSystem& units);
-        void convertToSI(const UnitSystem& units);
+        bool hasExtra(const std::string& key) const;
+        void addExtra(const std::string& key, UnitSystem::measure dimension, std::vector<double> data);
+        void addExtra(const std::string& key, std::vector<double> data);
+        const std::vector<double>& getExtra(const std::string& key) const;
     };
 
 }

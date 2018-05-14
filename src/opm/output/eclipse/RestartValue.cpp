@@ -38,24 +38,34 @@ namespace Opm {
     {
     }
 
-    const std::vector<double>& RestartValue::get_extra(const std::string& key) const {
-        const auto iter = std::find_if(this->extra.begin(), this->extra.end(), [&](std::pair<RestartKey, std::vector<double>> pair) {return (pair.first.key == key);});
+    const std::vector<double>& RestartValue::getExtra(const std::string& key) const {
+        const auto iter = std::find_if(this->extra.begin(),
+                                       this->extra.end(),
+                                       [&](const std::pair<RestartKey, std::vector<double>>& pair)
+                                       {
+                                         return (pair.first.key == key);
+                                       });
         if (iter == this->extra.end())
             throw std::invalid_argument("No such extra key " + key);
 
         return iter->second;
     }
 
-    bool RestartValue::has_extra(const std::string& key) const {
-        const auto iter = std::find_if(this->extra.begin(), this->extra.end(), [&](std::pair<RestartKey, std::vector<double>> pair) {return (pair.first.key == key);});
+    bool RestartValue::hasExtra(const std::string& key) const {
+        const auto iter = std::find_if(this->extra.begin(),
+                                       this->extra.end(),
+                                       [&](const std::pair<RestartKey, std::vector<double>>& pair)
+                                       {
+                                         return (pair.first.key == key);
+                                       });
         return  (iter != this->extra.end());
     }
 
-    void RestartValue::add_extra(const std::string& key, UnitSystem::measure dimension, std::vector<double> data) {
+    void RestartValue::addExtra(const std::string& key, UnitSystem::measure dimension, std::vector<double> data) {
         if (key.size() > 8)
             throw std::runtime_error("The keys used for Eclipse output must be maximum 8 characters long.");
 
-        if (this->has_extra(key))
+        if (this->hasExtra(key))
             throw std::runtime_error("The keys in the extra vector must be unique.");
 
         if (this->solution.has(key))
@@ -64,32 +74,11 @@ namespace Opm {
         if (reserved_keys.find(key) != reserved_keys.end())
             throw std::runtime_error("Can not use reserved key:" + key);
 
-        this->extra.push_back( std::make_pair(RestartKey(key, dimension), data));
+        this->extra.push_back( std::make_pair(RestartKey(key, dimension), std::move(data)));
     }
 
-    void RestartValue::add_extra(const std::string& key, const std::vector<double>& data) {
-        this->add_extra(key, UnitSystem::measure::identity, data);
-    }
-
-
-    void RestartValue::convertFromSI(const UnitSystem& units) {
-        this->solution.convertFromSI(units);
-        for (auto & extra_value : this->extra) {
-            const auto& restart_key = extra_value.first;
-            auto & data = extra_value.second;
-
-            units.from_si(restart_key.dim, data);
-        }
-    }
-
-    void RestartValue::convertToSI(const UnitSystem& units) {
-        this->solution.convertToSI(units);
-        for (auto & extra_value : this->extra) {
-            const auto& restart_key = extra_value.first;
-            auto & data = extra_value.second;
-
-            units.to_si(restart_key.dim, data);
-        }
+    void RestartValue::addExtra(const std::string& key, std::vector<double> data) {
+        this->addExtra(key, UnitSystem::measure::identity, std::move(data));
     }
 
 
