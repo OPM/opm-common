@@ -317,15 +317,7 @@ inline quantity production_history( const fn_args& args ) {
      * For well data, looking up historical rates (both for production and
      * injection) before simulation actually starts is impossible and
      * nonsensical. We therefore default to writing zero (which is what eclipse
-     * seems to do as well). Additionally, when an input deck is parsed,
-     * timesteps and rates are structured as such:
-     *
-     * The rates observed in timestep N is denoted at timestep N-1, i.e. at the
-     * **end** of the previous timestep. Which means that what observed at
-     * timestep 1 is denoted at timestep 0, and what happens "on" timestep 0
-     * doesn't exist and would in code give an arithmetic error. We therefore
-     * special-case timestep N == 0, and for all other timesteps look up the
-     * value *reported* at N-1 which applies to timestep N.
+     * seems to do as well).
      */
 
     double sum = 0.0;
