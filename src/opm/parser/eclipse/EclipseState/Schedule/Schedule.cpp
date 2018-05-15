@@ -1714,7 +1714,7 @@ namespace Opm {
 	}
         return groups;
     }
-	
+
     void Schedule::addWellToGroup( Group& newGroup, Well& well , size_t timeStep) {
         const std::string currentGroupName = well.getGroupName(timeStep);
         if (currentGroupName != "") {

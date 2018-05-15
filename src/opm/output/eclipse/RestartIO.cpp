@@ -250,8 +250,8 @@ data::Wells restore_wells( const ::Opm::RestartIO::ecl_kw_type * opm_xwel,
     }
 
     const auto well_size = [&]( size_t acc, const Well* w ) {
-	return acc
-	    + 2 + phases.size()
+        return acc
+            + 2 + phases.size()
 	    + (  w->getConnections( sim_step ).size()
 	      * (phases.size() + data::Connection::restart_size) );
     };
@@ -308,7 +308,7 @@ data::Wells restore_wells( const ::Opm::RestartIO::ecl_kw_type * opm_xwel,
 
     return wells;
 }
-//}
+}
 
 
 //* should take grid as argument because it may be modified from the simulator */
@@ -359,7 +359,6 @@ RestartValue load( const std::string& filename,
 	    rst_value.addExtra(key, extra.dim, {data_ptr, end_ptr});
 	} else if (required)
 	    throw std::runtime_error("No such key in file: " + key);
-
     }
 
     // Convert solution fields and extra data from user units to SI
@@ -374,8 +373,8 @@ RestartValue load( const std::string& filename,
     return rst_value;
 }
 
-//namespace {
 
+namespace {
 
 std::vector<int> serialize_ICON( int sim_step,
                                  int ncwmax,
@@ -455,10 +454,10 @@ std::vector< int > serialize_OPM_IWEL( const data::Wells& wells,
 }
 
 std::vector< double > serialize_OPM_XWEL( const data::Wells& wells,
-					  int sim_step,
-					  const std::vector< const Well* >& sched_wells,
-					  const Phases& phase_spec,
-					  const EclipseGrid& grid ) {
+                                          int sim_step,
+                                          const std::vector< const Well* >& sched_wells,
+                                          const Phases& phase_spec,
+                                          const EclipseGrid& grid ) {
 
     using rt = data::Rates::opt;
 
@@ -539,7 +538,7 @@ void write_kw(::Opm::RestartIO::ecl_rst_file_type * rst_file , Opm::RestartIO::E
 }
 /*
 void writeHeader(::Opm::RestartIO::ecl_rst_file_type * rst_file,
-		 int sim_step,
+                 int sim_step,
 		 int report_step,
 		 time_t posix_time,
 		 double sim_days,
@@ -621,14 +620,14 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
     // find inteHead
     //const auto ih = Helpers::createInteHead(es, grid, schedule, simTime, report_step);
     // write IGRP to restart file
-    std::cout << "writeGroup before initializing groupData" << std::endl;
+    //std::cout << "writeGroup before initializing groupData" << std::endl;
     const size_t simStep = static_cast<size_t> (sim_step);
     auto  groupData = Helpers::AggregateGroupData(ih);
-    std::cout << "writeGroup before captureDeclaredGroupData" << std::endl;
+    //std::cout << "writeGroup before captureDeclaredGroupData" << std::endl;
     groupData.captureDeclaredGroupData(schedule, simStep, ih);
-    std::cout << "writeGroup before write_kw IGRP" << std::endl;
-    write_kw(rst_file, EclKW<int>("IGRP", groupData.getIGroup()));
-    //write_kw(rst_file, EclKW<float>("SGRP", groupData.getSGroup()));
+    //std::cout << "writeGroup before write_kw IGRP" << std::endl;
+    write_kw(rst_file, EclKW<int>  ("IGRP", groupData.getIGroup()));
+    write_kw(rst_file, EclKW<float>("SGRP", groupData.getSGroup()));
 }
 
 
@@ -714,13 +713,12 @@ void writeExtraData(::Opm::RestartIO::ecl_rst_file_type* rst_file, const Restart
 
 
 void writeWell(::Opm::RestartIO::ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es , const EclipseGrid& grid, const Schedule& schedule, const data::Wells& wells) {
-
     const auto sched_wells  = schedule.getWells(sim_step);
     const auto& phases = es.runspec().phases();
     const size_t ncwmax = schedule.getMaxNumConnectionsForWells(sim_step);
 
     const auto iwel_data = serialize_IWEL(sim_step, sched_wells, grid);
-    const auto icon_data = serialize_ICON(sim_step, ncwmax, sched_wells, grid);
+    const auto icon_data = serialize_ICON(sim_step , ncwmax, sched_wells, grid);
     const auto zwel_data = serialize_ZWEL( sched_wells );
 
     ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< int >( IWEL_KW, iwel_data) );
@@ -759,7 +757,7 @@ void checkSaveArguments(const EclipseState& es,
       if (thpres.size() != num_regions * num_regions)
           throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
 
-	/*	const RestartValue& restart_value,
+		const RestartValue& restart_value,
 			const EclipseGrid& grid) {
 
     for (const auto& elm: restart_value.solution)
@@ -767,7 +765,7 @@ void checkSaveArguments(const EclipseState& es,
 	    throw std::runtime_error("Wrong size on solution vector: " + elm.first);
 
 
-    if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
+	    /*if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
 	// If the the THPRES option is active the restart_value should have a
 	// THPRES field. This is not enforced here because not all the opm
 	// simulators have been updated to include the THPRES values.
@@ -779,12 +777,15 @@ void checkSaveArguments(const EclipseState& es,
 	size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
 	const auto& thpres = restart_value.getExtra("THPRES");
 	if (thpres.size() != num_regions * num_regions)
-	    throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");*/
+	    throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
+
+      size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
+      const auto& thpres = restart_value.getExtra("THPRES");
+      if (thpres.size() != num_regions * num_regions)
+          throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");*/
   }
 }
-
-
-//} // Anonymous namespace
+} // Anonymous namespace
 
 
 void save(const std::string&  filename,
