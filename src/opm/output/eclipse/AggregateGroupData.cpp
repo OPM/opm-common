@@ -385,8 +385,10 @@ namespace {
 		//group has child groups
 		//The field group always has seqIndex = 0 because it is always defined first
 	        //Hence the all groups except the Field group uses the seqIndex assigned
-		for (const auto& group : childGroups ) {
-		    igrp[igrpCount] = group->seqIndex()+1;
+		//std::cout << "IGrpArray - staticContrib: childGroups for group.name(): " << group.name()  << "childGroups - size: " << childGroups.size() << std::endl;
+		for (const auto grp : childGroups ) {
+		    //std::cout << "Child Group name: " << grp->name() << " Group seqIndex(): " << grp->seqIndex()-1 << std::endl;
+		    igrp[igrpCount] = grp->seqIndex();
 		    igrpCount+=1;
 		    //std::cout << "childGroups: igrpCount after increment: " << igrpCount <<  std::endl;
 		}
