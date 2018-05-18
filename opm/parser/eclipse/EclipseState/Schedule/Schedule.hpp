@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp>
 
 namespace Opm
 {
@@ -64,7 +65,7 @@ namespace Opm
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  const ParseContext& parseContext = ParseContext());
- 
+
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan
          * 1983 is defaulted
@@ -97,6 +98,8 @@ namespace Opm
         std::vector< const Well* > getWells(const std::string& group, size_t timeStep) const;
         std::vector< const Well* > getWellsMatching( const std::string& ) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
+
+        const WellTestConfig& wtestConfig(size_t timestep) const;
 
         const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;
@@ -133,6 +136,7 @@ namespace Opm
         Phases m_phases;
         std::map<int, DynamicState<std::shared_ptr<VFPProdTable>>> vfpprod_tables;
         std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>> vfpinj_tables;
+        DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
 
@@ -172,6 +176,7 @@ namespace Opm
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep);
         void handleWRFT( const DeckKeyword& keyword, size_t currentStep);
+        void handleWTEST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWRFTPLT( const DeckKeyword& keyword, size_t currentStep);
         void handleWPIMULT( const DeckKeyword& keyword, size_t currentStep);
         void handleDRSDT( const DeckKeyword& keyword, size_t currentStep);

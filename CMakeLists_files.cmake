@@ -93,6 +93,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
@@ -224,7 +225,8 @@ if(ENABLE_ECL_INPUT)
     tests/parser/UnitTests.cpp
     tests/parser/ValueTests.cpp
     tests/parser/WellSolventTests.cpp
-    tests/parser/WellTests.cpp)
+    tests/parser/WellTests.cpp
+    tests/parser/WTEST.cpp)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
@@ -455,6 +457,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp

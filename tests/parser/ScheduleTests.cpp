@@ -81,6 +81,80 @@ static Deck createDeckWithWells() {
     return parser.parseString(input, ParseContext());
 }
 
+static Deck createDeckWTEST() {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "10 MAI 2007 / \n"
+            "SCHEDULE\n"
+            "WELSPECS\n"
+            "     \'DEFAULT\'    \'OP\'   30   37  3.33       \'OIL\'  7*/   \n"
+            "     \'ALLOW\'      \'OP\'   30   37  3.33       \'OIL\'  3*  YES / \n"
+            "     \'BAN\'        \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "/\n"
+
+            "COMPDAT\n"
+            " \'BAN\'  1  1   1   1 \'OPEN\' 1*    1.168   0.311   107.872 1*  1*  \'Z\'  21.925 / \n"
+            "/\n"
+
+            "WCONHIST\n"
+            "     'BAN'      'OPEN'      'RESV'      0.000      0.000      0.000  5* / \n"
+            "/\n"
+
+            "WTEST\n"
+            "   'ALLOW'   1   'PE' / \n"
+            "/\n"
+
+            "DATES             -- 1\n"
+            " 10  JUN 2007 / \n"
+            "/\n"
+
+            "WTEST\n"
+            "   'ALLOW'  1  '' / \n"
+            "   'BAN'    1  'DGC' / \n"
+            "/\n"
+
+            "WCONHIST\n"
+            "     'BAN'      'OPEN'      'RESV'      1.000      0.000      0.000  5* / \n"
+            "/\n"
+
+            "DATES             -- 2\n"
+            " 10  JUL 2007 / \n"
+            "/\n"
+
+            "WCONPROD\n"
+            "     'BAN'      'OPEN'      'ORAT'      0.000      0.000      0.000  5* / \n"
+            "/\n"
+
+
+            "DATES             -- 3\n"
+            " 10  AUG 2007 / \n"
+            "/\n"
+
+            "WCONINJH\n"
+            "     'BAN'      'WATER'      1*      0 / \n"
+            "/\n"
+
+            "DATES             -- 4\n"
+            " 10  SEP 2007 / \n"
+            "/\n"
+
+            "WELOPEN\n"
+            " 'BAN' OPEN / \n"
+            "/\n"
+
+            "DATES             -- 4\n"
+            " 10  NOV 2007 / \n"
+            "/\n"
+
+            "WCONINJH\n"
+            "     'BAN'      'WATER'      1*      1.0 / \n"
+            "/\n";
+
+
+    return parser.parseString(input, ParseContext());
+}
+
 static Deck createDeckForTestingCrossFlow() {
     Opm::Parser parser;
     std::string input =
@@ -2391,6 +2465,16 @@ BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
     BOOST_CHECK_CLOSE( 2.2 * 1e5,  inje.THPH, 1e-5 );
     BOOST_CHECK_CLOSE( 0.0 * 1e5,  pro1.BHPH, 1e-5 );
     BOOST_CHECK_CLOSE( 0.0 * 1e5,  pro1.THPH, 1e-5 );
+
+    {
+        const auto& wtest_config = schedule.wtestConfig(0);
+        BOOST_CHECK_EQUAL(wtest_config.size(), 0);
+    }
+
+    {
+        const auto& wtest_config = schedule.wtestConfig(1);
+        BOOST_CHECK_EQUAL(wtest_config.size(), 0);
+    }
 }
 
 
@@ -2543,3 +2627,24 @@ VFPINJ \n                                       \
     }
 }
 
+
+
+BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
+    auto deck = createDeckWTEST();
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Schedule schedule(deck, grid1 , eclipseProperties, Phases(true, true, true) , ParseContext() );
+
+    const auto& wtest_config1 = schedule.wtestConfig(0);
+    BOOST_CHECK_EQUAL(wtest_config1.size(), 2);
+    BOOST_CHECK(wtest_config1.has("ALLOW"));
+    BOOST_CHECK(!wtest_config1.has("BAN"));
+
+    const auto& wtest_config2 = schedule.wtestConfig(1);
+    BOOST_CHECK_EQUAL(wtest_config2.size(), 3);
+    BOOST_CHECK(!wtest_config2.has("ALLOW"));
+    BOOST_CHECK(wtest_config2.has("BAN"));
+    BOOST_CHECK(wtest_config2.has("BAN", WellTestConfig::Reason::GROUP));
+    BOOST_CHECK(!wtest_config2.has("BAN", WellTestConfig::Reason::PHYSICAL));
+}
