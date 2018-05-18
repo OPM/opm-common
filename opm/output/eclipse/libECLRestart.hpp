@@ -968,7 +968,7 @@ void ecl_kw_iset_type(::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::RestartIO::
 #undef  ECL_DOUBLE
 #undef  ECL_BOOL 
 #undef  ECL_CHAR
-#undef  ECL_MESS 
+//#undef  ECL_MESS 
 #undef  ECL_STRING
   
 #ifdef __cplusplus
@@ -978,7 +978,7 @@ void ecl_kw_iset_type(::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::RestartIO::
 #define ECL_DOUBLE ::Opm::RestartIO::ecl_data_type{ ECL_DOUBLE_TYPE, sizeof(double)}
 #define ECL_BOOL ::Opm::RestartIO::ecl_data_type{ ECL_BOOL_TYPE, sizeof(int)}
 #define ECL_CHAR ::Opm::RestartIO::ecl_data_type{ ECL_CHAR_TYPE, ECL_STRING8_LENGTH + 1}
-#define ECL_MESS ::Opm::RestartIO::ecl_data_type{ ECL_MESS_TYPE, 0}
+#define ECL_MESS_2 ::Opm::RestartIO::ecl_data_type{ ECL_MESS_TYPE, 0}
 #define ECL_STRING(size) ::Opm::RestartIO::ecl_data_type{ECL_STRING_TYPE, (size) + 1}
 
 }
@@ -990,7 +990,7 @@ void ecl_kw_iset_type(::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::RestartIO::
 #define ECL_FLOAT (::Opm::RestartIO::ecl_data_type) {.type = ECL_FLOAT_TYPE, .element_size = sizeof(float)}
 #define ECL_DOUBLE (::Opm::RestartIO::ecl_data_type) {.type = ECL_DOUBLE_TYPE, .element_size = sizeof(double)}
 #define ECL_BOOL (::Opm::RestartIO::ecl_data_type) {.type = ECL_BOOL_TYPE, .element_size = sizeof(int)}
-#define ECL_MESS (::Opm::RestartIO::ecl_data_type) {.type = ECL_MESS_TYPE, .element_size = 0}
+#define ECL_MESS_2 (::Opm::RestartIO::ecl_data_type) {.type = ECL_MESS_TYPE, .element_size = 0}
 #define ECL_STRING(size) (::Opm::RestartIO::ecl_data_type) {.type = ECL_STRING_TYPE, .element_size = (size) + 1}
 
 #endif // __cplusplus

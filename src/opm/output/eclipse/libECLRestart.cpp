@@ -4217,13 +4217,13 @@ void ecl_rst_file_fwrite_header( ::Opm::RestartIO::ecl_rst_file_type * rst_file 
 }
 
 void ecl_rst_file_start_solution( Opm::RestartIO::ecl_rst_file_type * rst_file ) {
-  ::Opm::RestartIO::ecl_kw_type * startsol_kw = ::Opm::RestartIO::ecl_kw_alloc( STARTSOL_KW , 0 , ECL_MESS );
+  ::Opm::RestartIO::ecl_kw_type * startsol_kw = ::Opm::RestartIO::ecl_kw_alloc( STARTSOL_KW , 0 , ECL_MESS_2 );
   ::Opm::RestartIO::ecl_kw_fwrite( startsol_kw , rst_file->fortio );
   ::Opm::RestartIO::ecl_kw_free( startsol_kw );
 }
 
 void ecl_rst_file_end_solution( ::Opm::RestartIO::ecl_rst_file_type * rst_file ) {
-  ::Opm::RestartIO::ecl_kw_type * endsol_kw = ::Opm::RestartIO::ecl_kw_alloc( ENDSOL_KW , 0 , ECL_MESS );
+  ::Opm::RestartIO::ecl_kw_type * endsol_kw = ::Opm::RestartIO::ecl_kw_alloc( ENDSOL_KW , 0 , ECL_MESS_2 );
   ::Opm::RestartIO::ecl_kw_fwrite( endsol_kw , rst_file->fortio );
   ::Opm::RestartIO::ecl_kw_free( endsol_kw );
 }
@@ -4497,7 +4497,7 @@ static size_t get_ecl_string_length(const char * type_name) {
   else if (::Opm::RestartIO::is_ecl_string_name(type_name))
     return ECL_STRING(::Opm::RestartIO::get_ecl_string_length(type_name));
   else if (strncmp( type_name , ECL_TYPE_NAME_MESSAGE , ECL_TYPE_LENGTH) == 0)
-    return ECL_MESS;
+    return ECL_MESS_2;
   else if (strncmp( type_name , ECL_TYPE_NAME_BOOL , ECL_TYPE_LENGTH) == 0)
     return ECL_BOOL;
   else {
@@ -4617,7 +4617,7 @@ void * ecl_kw_get_ptr(const ::Opm::RestartIO::ecl_kw_type *ecl_kw) {
   case(ECL_BOOL_TYPE):
     return ECL_BOOL;
   case(ECL_MESS_TYPE):
-    return ECL_MESS;
+    return ECL_MESS_2;
   case(ECL_STRING_TYPE):
     util_abort("%s: Variable length string type cannot be created"
             " from type alone!\n" , __func__);

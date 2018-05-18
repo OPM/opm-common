@@ -57,8 +57,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                    const Schedule&     sched,
                    const double        simTime,
                    const int           num_solver_steps,
-                   const int           lookup_step,   // The integer index used to look up dynamic properties, e.g. the number of well.
-                   const int           report_step);  // The integer number this INTEHEAD keyword will be saved to, typically report_step = lookup_step + 1.
+                   const int           lookup_step);   // The integer index used to look up dynamic properties, e.g. the number of well.
 
     std::vector<bool>
     createLogiHead(const EclipseState& es);

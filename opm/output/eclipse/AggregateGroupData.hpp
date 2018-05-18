@@ -40,7 +40,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     class AggregateGroupData
     {
     public:
-        //std::vector< const Group* > currentGroups(Opm::Schedule& sched, size_t reportStep);
 	explicit AggregateGroupData(const std::vector<int>& inteHead);
 
 	void captureDeclaredGroupData( const Schedule&   sched,

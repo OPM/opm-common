@@ -198,8 +198,7 @@ namespace {
     getNoGroups(const ::Opm::Schedule& sched,
 		const std::size_t      step)
     {
-	const std::size_t simStep = step == 0 ? 0 : step - 1;
-        const auto ngroups = sched.numGroups(simStep)-1;
+        const auto ngroups = sched.numGroups(step)-1;
 
         return {
 	    ngroups
@@ -218,8 +217,8 @@ createInteHead(const EclipseState& es,
                const Schedule&     sched,
                const double        simTime,
                const int           num_solver_steps,
-               const int           lookup_step,
-               const int           report_step)
+               const int           lookup_step
+	      )
 {
     const auto& rspec = es.runspec();
     const auto& tdim  = es.getTableManager();
@@ -242,12 +241,12 @@ createInteHead(const EclipseState& es,
              // n{isx}aaqz: number of data elements per aquifer in {ISX}AAQ
              // n{isa}caqz: number of data elements per aquifer connection in {ISA}CAQ
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
-        .stepParam          (num_solver_steps, report_step)
+        .stepParam          (num_solver_steps, lookup_step)
         .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
-	.ngroups(getNoGroups(sched, report_step))
-        .variousParam       (2014, 100) // Output should be compatible with Eclipse 100, 2014 version.
+	.ngroups(getNoGroups(sched, lookup_step))
+        .variousParam       (2014, 100)  // Output should be compatible with Eclipse 100, 2014 version.
         ;
 
     return ih.data();

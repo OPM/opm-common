@@ -587,7 +587,7 @@ writeHeader(::Opm::RestartIO::ecl_rst_file_type* rst_file,
         ::Opm::RestartIO::ecl_rst_file_fwrite_SEQNUM(rst_file, report_step);
 
     // write INTEHEAD to restart file
-    const auto ih = Helpers::createInteHead(es, grid, schedule, simTime, sim_step);
+    const auto ih = Helpers::createInteHead(es, grid, schedule, simTime, sim_step, sim_step);
 
     write_kw(rst_file, EclKW<int>("INTEHEAD", ih));
 
@@ -676,6 +676,7 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
       }
       //  temporarily comment out jals original version
       /*void writeSolution(::Opm::RestartIO::ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
+     void writeSolution(::Opm::RestartIO::ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
     ::Opm::RestartIO::ecl_rst_file_start_solution( rst_file );
     for (const auto& elm: solution) {
 	if (elm.second.target == data::TargetType::RESTART_SOLUTION)

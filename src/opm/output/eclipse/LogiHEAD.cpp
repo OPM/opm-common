@@ -148,18 +148,18 @@ variousParam(const bool e300_radial, const bool e100_radial, const int nswlmx)
     this -> data_[lh_001] = true;
     this -> data_[lh_003] = e300_radial;
     this -> data_[lh_004] = e100_radial;
-    this -> data_[lh_016] = true;
-    this -> data_[lh_018] = true;
-    this -> data_[lh_031] = true;
-    this -> data_[lh_044] = true;
+    //this -> data_[lh_016] = true;
+    //this -> data_[lh_018] = true;
+    //this -> data_[lh_031] = true;
+    //this -> data_[lh_044] = true;
     this -> data_[lh_075] = nswlmx >= 1; // True if MS Wells exist.
-    this -> data_[lh_076] = true;
-    this -> data_[lh_087] = true;
-    this -> data_[lh_099] = true;
-    this -> data_[lh_113] = true;
-    this -> data_[lh_114] = true;
-    this -> data_[lh_115] = true;
-    this -> data_[lh_117] = true;
+    //this -> data_[lh_076] = true;
+    //this -> data_[lh_087] = true;
+    //this -> data_[lh_099] = true;
+    //this -> data_[lh_113] = true;
+    //this -> data_[lh_114] = true;
+    //this -> data_[lh_115] = true;
+    //this -> data_[lh_117] = true;
 
     return *this;
 }

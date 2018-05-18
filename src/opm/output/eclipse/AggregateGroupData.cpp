@@ -374,9 +374,10 @@ namespace {
 	    if (childWells.size() != 0) {
 		//group has child wells
 		//std::cout << "IGrpArray - staticContrib: childwells for group.name(): " << group.name()  << "childWells - size: " << childWells.size() << std::endl;
-		for (const auto well : childWells ) {
-		    //std::cout << "Child well name: " << well->name() << " Well seqIndex(): " << well->seqIndex() << std::endl;
-		    igrp[igrpCount] = well->seqIndex()+1;
+		//for (const auto well : childWells ) {
+		for ( auto it = childWells.begin() ; it != childWells.end(); it++) {
+		    //std::cout << "Child well name: " << it->name() << " Well seqIndex(): " << it->seqIndex() << std::endl;
+		    igrp[igrpCount] = (*it)->seqIndex()+1;
 		    igrpCount+=1;
 		    //std::cout << "childWells: igrpCount after increment: " << igrpCount <<  std::endl;
 		}
@@ -386,9 +387,10 @@ namespace {
 		//The field group always has seqIndex = 0 because it is always defined first
 	        //Hence the all groups except the Field group uses the seqIndex assigned
 		//std::cout << "IGrpArray - staticContrib: childGroups for group.name(): " << group.name()  << "childGroups - size: " << childGroups.size() << std::endl;
-		for (const auto grp : childGroups ) {
-		    //std::cout << "Child Group name: " << grp->name() << " Group seqIndex(): " << grp->seqIndex()-1 << std::endl;
-		    igrp[igrpCount] = grp->seqIndex();
+		//for (const auto grp : childGroups ) {
+		for ( auto it = childGroups.begin() ; it != childGroups.end(); it++) {
+		    //std::cout << "Child Group name: " << it->name() << " Group seqIndex(): " << it->seqIndex()-1 << std::endl;
+		    igrp[igrpCount] = (*it)->seqIndex();
 		    igrpCount+=1;
 		    //std::cout << "childGroups: igrpCount after increment: " << igrpCount <<  std::endl;
 		}

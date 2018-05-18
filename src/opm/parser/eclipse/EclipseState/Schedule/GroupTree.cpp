@@ -78,9 +78,14 @@ std::vector< std::string > GroupTree::children( const std::string& other_parent 
         throw std::out_of_range( "Node '" + other_parent + "' does not exist." );
 
     std::vector< std::string > kids;
-    for( const auto& node : this->groups ) {
+    /*    for( const auto& node : this->groups ) {
         if( node.parent != other_parent ) continue;
         kids.push_back( node.name );
+    }
+*/ 
+    for( auto it = this->groups.begin(); it != this->groups.end(); it++ ) {
+        if( (*it).parent != other_parent ) continue;
+        kids.push_back( (*it).name );
     }
 
     return kids;

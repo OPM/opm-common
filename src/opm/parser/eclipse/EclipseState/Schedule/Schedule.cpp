@@ -1545,8 +1545,9 @@ namespace Opm {
             if (group.hasBeenDefined( timeStep )) {
                 const GroupTree& group_tree = getGroupTree( timeStep );
                 const auto& ch_grps = group_tree.children( group_name );
-		for (const std::string& group_name : ch_grps) {
-                        child_groups.push_back( &getGroup(group_name));
+		//for (const std::string& group_name : ch_grps) {
+		for ( auto it = ch_grps.begin() ; it != ch_grps.end(); it++) {
+                        child_groups.push_back( &getGroup(*it));
                     }
 	    }
 	    return child_groups;
@@ -1565,8 +1566,10 @@ namespace Opm {
                 const auto& child_groups = group_tree.children( group_name );
 
                 if (!child_groups.size()) {
-                    for (const auto& well_name : group.getWells( timeStep )) {
-                        wells.push_back( getWell( well_name ));
+                    //for (const auto& well_name : group.getWells( timeStep )) {
+		    const auto& ch_wells = group.getWells( timeStep );
+                    for (auto it= ch_wells.begin(); it != ch_wells.end(); it++) {		      
+                        wells.push_back( getWell( *it ));
                     }
                 }
             }
