@@ -75,22 +75,20 @@ namespace RestartIO {
 void save(const std::string& filename,
           int report_step,
           double seconds_elapsed,
-          data::Solution cells,
-          data::Wells wells,
+          RestartValue value,
           const EclipseState& es,
           const EclipseGrid& grid,
           const Schedule& schedule,
-          std::map<std::string, std::vector<double>> extra_data = {},
-	  bool write_double = false);
+          bool write_double = false);
 
 
 RestartValue load( const std::string& filename,
                    int report_step,
-                   const std::map<std::string, RestartKey>& keys,
+                   const std::vector<RestartKey>& solution_keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
                    const Schedule& schedule,
-                   const std::map<std::string, bool>& extra_keys = {});
+                   const std::vector<RestartKey>& extra_keys = {});
 
 }
 }

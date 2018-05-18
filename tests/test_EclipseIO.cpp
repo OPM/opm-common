@@ -331,17 +331,16 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
             sol.insert("KRO", measure::identity , std::vector<double>(3*3*3 , i), TargetType::RESTART_AUXILIARY);
             sol.insert("KRG", measure::identity , std::vector<double>(3*3*3 , i*10), TargetType::RESTART_AUXILIARY);
 
-
+            RestartValue restart_value(sol, wells);
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
             eclWriter.writeTimeStep( i,
-				     false,
-				     first_step - start_time,
-				     sol,
-				     wells,
-                     {},
-                     {},
-				     {});
-				     
+                                     false,
+                                     first_step - start_time,
+                                     restart_value,
+                                     {},
+                                     {},
+                                     {});
+
 
 
             checkRestartFile( i );

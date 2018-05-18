@@ -28,6 +28,7 @@
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Wells.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
@@ -355,33 +356,36 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();
+    RestartValue restart_value(sol, wells);
 
     eclWriter.writeTimeStep( 1,
                              false,
                              first_step - start_time,
-                             sol, wells , {}, {}, {}, {}, write_double);
+                             restart_value,
+                             {}, {}, {}, write_double);
 
-    return { sol, wells , {}};
+    return restart_value;
 }
 
-RestartValue second_sim(const EclipseIO& writer, const std::map<std::string, RestartKey>& keys) {
-    return writer.loadRestart( keys );
+RestartValue second_sim(const EclipseIO& writer, const std::vector<RestartKey>& solution_keys) {
+    return writer.loadRestart( solution_keys );
 }
 
 
 void compare( const RestartValue& fst,
               const RestartValue& snd,
-              const std::map<std::string, RestartKey>& keys) {
+              const std::vector<RestartKey>& solution_keys) {
 
-    for (const auto& pair : keys) {
+    for (const auto& value : solution_keys) {
         double tol = 0.00001;
-        auto first = fst.solution.data( pair.first ).begin();
-        auto second = snd.solution.data( pair.first ).begin();
+        const std::string& key = value.key;
+        auto first = fst.solution.data( key ).begin();
+        auto second = snd.solution.data( key ).begin();
 
-        if (pair.first == "TEMP")
+        if (key == "TEMP")
             tol *= 10;
 
-        for( ; first != fst.solution.data( pair.first ).end(); ++first, ++second )
+        for( ; first != fst.solution.data( key).end(); ++first, ++second )
             BOOST_CHECK_CLOSE( *first, *second, tol );
     }
 
@@ -410,10 +414,10 @@ struct Setup {
 
 
 BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
-    std::map<std::string, RestartKey> keys {{"PRESSURE" , RestartKey(UnitSystem::measure::pressure)},
-                                            {"SWAT" , RestartKey(UnitSystem::measure::identity)},
-                                            {"SGAS" , RestartKey(UnitSystem::measure::identity)},
-                                            {"TEMP" , RestartKey(UnitSystem::measure::temperature)}};
+    std::vector<RestartKey> keys {{"PRESSURE" , UnitSystem::measure::pressure},
+                                  {"SWAT" , UnitSystem::measure::identity},
+                                  {"SGAS" , UnitSystem::measure::identity},
+                                  {"TEMP" , UnitSystem::measure::temperature}};
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
 
@@ -423,22 +427,23 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     auto state2 = second_sim( eclWriter , keys );
     compare(state1, state2 , keys);
 
-    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , RestartKey(UnitSystem::measure::pressure)}} ) , std::runtime_error );
-    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL" , { UnitSystem::measure::pressure, true}}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
+    BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
 }
 
 
+
 void compare_equal( const RestartValue& fst,
-		    const RestartValue& snd ,
-		    const std::map<std::string, RestartKey>& keys) {
+                    const RestartValue& snd ,
+                    const std::vector<RestartKey>& keys) {
 
-    for (const auto& pair : keys) {
+    for (const auto& value : keys) {
+        const std::string& key = value.key;
+        auto first = fst.solution.data( key ).begin();
+        auto second = snd.solution.data( key ).begin();
 
-        auto first = fst.solution.data( pair.first ).begin();
-        auto second = snd.solution.data( pair.first ).begin();
-
-        for( ; first != fst.solution.data( pair.first ).end(); ++first, ++second )
-	    BOOST_CHECK_EQUAL( *first, *second);
+        for( ; first != fst.solution.data( key ).end(); ++first, ++second )
+          BOOST_CHECK_EQUAL( *first, *second);
     }
 
     BOOST_CHECK_EQUAL( fst.wells, snd.wells );
@@ -454,8 +459,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
       this equality for the pressure. For this test we therefor only
       consider the saturations which have identity unit.
     */
-    std::map<std::string, RestartKey> keys {{"SWAT" , RestartKey(UnitSystem::measure::identity)},
-	                                    {"SGAS" , RestartKey(UnitSystem::measure::identity)}};
+    std::vector<RestartKey> solution_keys {RestartKey("SWAT", UnitSystem::measure::identity),
+                                           RestartKey("SGAS", UnitSystem::measure::identity)};
 
     ERT::TestArea testArea("test_Restart");
     testArea.copyFile( "FIRST_SIM.DATA" );
@@ -464,8 +469,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
 
     auto state1 = first_sim( setup.es , eclWriter , true);
-    auto state2 = second_sim( eclWriter , keys );
-    compare_equal( state1 , state2 , keys);
+    auto state2 = second_sim( eclWriter , solution_keys );
+    compare_equal( state1 , state2 , solution_keys);
 }
 
 BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
@@ -483,8 +488,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
         BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                            100,
-                                           cells ,
-                                           wells ,
+                                           RestartValue(cells, wells),
                                            setup.es,
                                            setup.grid ,
                                            setup.schedule),
@@ -495,57 +499,22 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
 
 BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
     Setup setup("FIRST_SIM.DATA");
-    {
-        ERT::TestArea testArea("test_Restart");
-        auto num_cells = setup.grid.getNumActive( );
-        auto cells = mkSolution( num_cells );
-        auto wells = mkWells();
+    auto num_cells = setup.grid.getNumActive( );
+    auto cells = mkSolution( num_cells );
+    auto wells = mkWells();
+    RestartValue restart_value(cells, wells);
 
-        /* To fit with the eclipse format limitations the keys must be max 8 characters long. */
-        {
-            std::map<std::string , std::vector<double>> extra;
-            extra["TOO_LONG_KEY"] = {0,1,2,3};
-            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
-                                               100,
-                                               cells ,
-                                               wells ,
-                                               setup.es,
-                                               setup.grid,
-                                               setup.schedule,
-                                               extra),
-                               std::runtime_error);
-        }
+    BOOST_CHECK_THROW( restart_value.addExtra("TOO-LONG-KEY", {0,1,2}), std::runtime_error);
 
-        /* The keys must be unique across solution and extra_data */
-        {
-            std::map<std::string , std::vector<double>> extra;
-            extra["PRESSURE"] = {0,1,2,3};
-            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
-                                               100,
-                                               cells ,
-                                               wells ,
-                                               setup.es,
-                                               setup.grid,
-                                               setup.schedule,
-                                               extra),
-                               std::runtime_error);
-        }
+    // Keys must be unique
+    restart_value.addExtra("KEY", {0,1,1});
+    BOOST_CHECK_THROW( restart_value.addExtra("KEY", {0,1,1}), std::runtime_error);
 
-        /* Must avoid using reserved keys like 'LOGIHEAD' */
-        {
-            std::map<std::string , std::vector<double>> extra;
-            extra["LOGIHEAD"] = {0,1,2,3};
-            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
-                                               100,
-                                               cells ,
-                                               wells ,
-                                               setup.es,
-                                               setup.grid,
-                                               setup.schedule,
-                                               extra),
-                               std::runtime_error);
-        }
-    }
+    /* The keys must be unique across solution and extra_data */
+    BOOST_CHECK_THROW( restart_value.addExtra("PRESSURE", {0,1}), std::runtime_error); 
+
+    /* Must avoid using reserved keys like 'LOGIHEAD' */
+    BOOST_CHECK_THROW( restart_value.addExtra("LOGIHEAD", {0,1}), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ExtraData_content) {
@@ -555,17 +524,17 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
+        const auto& units = setup.es.getUnits();
         {
-            std::map<std::string , std::vector<double>> extra;
-            extra["EXTRA"] = {0,1,2,3};
+            RestartValue restart_value(cells, wells);
+
+            restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
             RestartIO::save("FILE.UNRST", 1 ,
                             100,
-                            cells ,
-                            wells ,
+                            restart_value,
                             setup.es,
                             setup.grid,
-                            setup.schedule,
-                            extra);
+                            setup.schedule);
 
             {
                 ecl_file_type * f = ecl_file_open( "FILE.UNRST" , 0 );
@@ -573,33 +542,78 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                 {
                     ecl_kw_type * ex = ecl_file_iget_named_kw( f , "EXTRA" , 0 );
                     BOOST_CHECK_EQUAL( ecl_kw_get_header( ex) , "EXTRA" );
-                    BOOST_CHECK_EQUAL(  4, ecl_kw_get_size( ex ));
-                    BOOST_CHECK_EQUAL(  0 , ecl_kw_iget_double( ex, 0 ));
-                    BOOST_CHECK_EQUAL(  3 , ecl_kw_iget_double( ex, 3 ));
+                    BOOST_CHECK_EQUAL(  4 , ecl_kw_get_size( ex ));
+
+                    BOOST_CHECK_CLOSE( 10 ,                                                units.to_si( UnitSystem::measure::pressure, ecl_kw_iget_double( ex, 0 )), 0.00001);
+                    BOOST_CHECK_CLOSE( units.from_si( UnitSystem::measure::pressure, 3)  , ecl_kw_iget_double( ex, 3 ),                                              0.00001);
                 }
                 ecl_file_close( f );
             }
 
-            BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, setup.es, setup.grid , setup.schedule, {{"NOT-THIS", true}}) , std::runtime_error );
+            BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, setup.es, setup.grid , setup.schedule,
+                                                {{"NOT-THIS", UnitSystem::measure::identity, true}}) , std::runtime_error );
             {
-                const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , {{"SWAT" , RestartKey(UnitSystem::measure::identity)},
-                                                                            {"NO"   , {UnitSystem::measure::identity, false}}},
-                    setup.es, setup.grid , setup.schedule, {{"EXTRA", true}, {"EXTRA2", false}});
-                const auto pair = rst_value.extra.find( "EXTRA" );
-                const std::vector<double> extraval = pair->second;
-                const std::vector<double> expected = {0,1,2,3};
+              const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , { RestartKey("SWAT", UnitSystem::measure::identity),
+                                                                           RestartKey("NO", UnitSystem::measure::identity, false)},
+                setup.es, setup.grid , setup.schedule,
+                {{"EXTRA", UnitSystem::measure::pressure, true},
+                 {"EXTRA2", UnitSystem::measure::identity, false}});
 
-                BOOST_CHECK_EQUAL( rst_value.solution.has("SWAT") , true );
+                BOOST_CHECK(!rst_value.hasExtra("EXTRA2"));
+                BOOST_CHECK( rst_value.hasExtra("EXTRA"));
+                BOOST_CHECK_THROW(rst_value.getExtra("EXTRA2"), std::invalid_argument);
+                const auto& extraval = rst_value.getExtra("EXTRA");
+                const std::vector<double> expected = {10,1,2,3};
+
                 BOOST_CHECK_EQUAL( rst_value.solution.has("NO") , false );
-                BOOST_CHECK_EQUAL( rst_value.extra.size() , 1 );
-                BOOST_CHECK_EQUAL( extraval.size() , 4 );
-                BOOST_CHECK_EQUAL_COLLECTIONS( extraval.begin(), extraval.end(), expected.begin() , expected.end());
-
-                const auto missing = rst_value.extra.find( "EXTRA2");
-                BOOST_CHECK( missing == rst_value.extra.end() );
+                for (size_t i=0; i < expected.size(); i++)
+                    BOOST_CHECK_CLOSE(extraval[i], expected[i], 1e-5);
             }
         }
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(STORE_THPRES) {
+    Setup setup("FIRST_SIM_THPRES.DATA");
+    {
+        ERT::TestArea testArea("test_Restart_THPRES");
+        auto num_cells = setup.grid.getNumActive( );
+        auto cells = mkSolution( num_cells );
+        auto wells = mkWells();
+        {
+            RestartValue restart_value(cells, wells);
+            RestartValue restart_value2(cells, wells);
+
+            /* Missing THPRES data in extra container. */
+            /* Because it proved to difficult to update the legacy simulators
+               to pass THPRES values when writing restart files this BOOST_CHECK_THROW
+               had to be disabled. The RestartIO::save() function will just log a warning.
+
+            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+                                               100,
+                                               restart_value,
+                                               setup.es,
+                                               setup.grid,
+                                               setup.schedule), std::runtime_error);
+            */
+
+            restart_value.addExtra("THPRES", UnitSystem::measure::pressure, {0,1});
+            /* THPRES data has wrong size in extra container. */
+            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+                                               100,
+                                               restart_value,
+                                               setup.es,
+                                               setup.grid,
+                                               setup.schedule), std::runtime_error);
+
+            int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
+            std::vector<double>  thpres(num_regions * num_regions, 78);
+            restart_value2.addExtra("THPRES", UnitSystem::measure::pressure, thpres);
+        }
+    }
+}
+
+
 
 }

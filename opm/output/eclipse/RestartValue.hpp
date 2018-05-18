@@ -22,39 +22,30 @@
 #include <map>
 #include <vector>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/output/data/Solution.hpp>
+#include <opm/output/data/Wells.hpp>
+
 namespace Opm {
 
 
-    /*
-      Small convenience class used in the map passed to the
-      RestartIO::load( ) function. A class instance can be constructed
-      from a UnitSystem::measure value, which will default to a
-      required key, but it can also be constructed from a
-      two-parameter constructor, and then the required/not required
-      can controlled explicitly:
-
-
-         RestartIO::load(..., {{"PRESSURE" , UnitSystem::measure::pressure},
-                               {"MAX_SWAT" , {UnitSystem::measure::identity, false}} )
-
-     The RestartKey( ) for pressure is implicitly created from
-     UnitSystem::measure::pressure and will be required, whereas the
-     MAX_SWAT keyword is optional.
-
-    */
     class RestartKey {
     public:
 
+        std::string key;
         UnitSystem::measure dim;
-        bool required = true;
+        bool required;
 
-        explicit RestartKey( UnitSystem::measure _dim)
-            : dim(_dim)
+        RestartKey( const std::string& _key, UnitSystem::measure _dim)
+            : key(_key),
+              dim(_dim),
+              required(true)
         {}
 
 
-        RestartKey( UnitSystem::measure _dim, bool _required)
-            : dim(_dim),
+        RestartKey( const std::string& _key, UnitSystem::measure _dim, bool _required)
+            : key(_key),
+              dim(_dim),
               required(_required)
         {}
 
@@ -62,32 +53,24 @@ namespace Opm {
 
 
     /*
-      A simple struct - the only purpose is to facilitate return by value from the
-      RestartIO::load( ) function.
+      A simple class used to communicate values between the simulator and the
+      RestartIO function.
     */
 
 
-    struct RestartValue {
-
+    class RestartValue {
+    public:
+        using ExtraVector = std::vector<std::pair<RestartKey, std::vector<double>>>;
         data::Solution solution;
         data::Wells wells;
-        std::map<std::string,std::vector<double>> extra = {};
+        ExtraVector extra;
 
+        RestartValue(data::Solution sol, data::Wells wells_arg);
 
-        RestartValue(data::Solution sol, data::Wells wells_arg, std::map<std::string, std::vector<double>> extra_arg) :
-            solution(std::move(sol)),
-            wells(std::move(wells_arg)),
-            extra(std::move(extra_arg))
-        {
-        }
-
-
-        RestartValue(data::Solution sol, data::Wells wells_arg) :
-            solution(std::move(sol)),
-            wells(std::move(wells_arg))
-        {
-        }
-
+        bool hasExtra(const std::string& key) const;
+        void addExtra(const std::string& key, UnitSystem::measure dimension, std::vector<double> data);
+        void addExtra(const std::string& key, std::vector<double> data);
+        const std::vector<double>& getExtra(const std::string& key) const;
     };
 
 }

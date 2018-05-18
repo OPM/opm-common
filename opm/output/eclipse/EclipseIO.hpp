@@ -173,12 +173,10 @@ public:
     void writeTimeStep( int report_step,
                         bool isSubstep,
                         double seconds_elapsed,
-                        data::Solution,
-                        data::Wells,
+                        RestartValue value,
                         const std::map<std::string, double>& single_summary_values,
                         const std::map<std::string, std::vector<double>>& region_summary_values,
                         const std::map<std::pair<std::string, int>, double>& block_summary_values,
-                        const std::map<std::string, std::vector<double>>& extra_restart = {},
                         bool write_double = false);
 
 
@@ -220,7 +218,7 @@ public:
       missing, if the bool is false missing keywords will be ignored
       (there will *not* be an empty vector in the return value).
     */
-    RestartValue loadRestart(const std::map<std::string, RestartKey>& keys, const std::map<std::string, bool>& extra_keys = {}) const;
+    RestartValue loadRestart(const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys = {}) const;
 
 
     EclipseIO( const EclipseIO& ) = delete;

@@ -150,6 +150,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/Summary.cpp
           src/opm/output/eclipse/Tables.cpp
           src/opm/output/eclipse/RegionCache.cpp
+          src/opm/output/eclipse/RestartValue.cpp
           src/opm/output/data/Solution.cpp
       )
 endif()
@@ -253,6 +254,7 @@ list (APPEND TEST_DATA_FILES
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_DATA_FILES
           tests/FIRST_SIM.DATA
+          tests/FIRST_SIM_THPRES.DATA
           tests/summary_deck.DATA
           tests/group_group.DATA
           tests/testblackoilstate3.DATA

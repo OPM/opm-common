@@ -155,8 +155,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
         eclipseWriter.writeTimeStep( timestep,
                                      false,
                                      timestep,
-                                     solution,
-                                     wells ,
+                                     RestartValue(solution, wells),
                                      {},
                                      {},
                                      {} );

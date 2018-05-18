@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <opm/output/eclipse/RestartIO.hpp>
 
@@ -103,15 +104,14 @@ namespace {
 
 
     inline data::Solution restoreSOLUTION( ecl_file_view_type* file_view,
-                                           const std::map<std::string, RestartKey>& keys,
-                                           const UnitSystem& units,
+                                           const std::vector<RestartKey>& solution_keys,
                                            int numcells) {
 
-        data::Solution sol;
-        for (const auto& pair : keys) {
-            const std::string& key = pair.first;
-            UnitSystem::measure dim = pair.second.dim;
-            bool required = pair.second.required;
+        data::Solution sol( false );
+        for (const auto& value : solution_keys) {
+            const std::string& key = value.key;
+            UnitSystem::measure dim = value.dim;
+            bool required = value.required;
 
             if( !ecl_file_view_has_kw( file_view, key.c_str() ) ) {
                 if (required)
@@ -130,8 +130,6 @@ namespace {
                                          + ", mismatched number of cells" );
 
             std::vector<double> data = double_vector( ecl_kw );
-            units.to_si( dim , data );
-
             sol.insert( key, dim, data , data::TargetType::RESTART_SOLUTION );
         }
 
@@ -220,11 +218,11 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
 /* should take grid as argument because it may be modified from the simulator */
 RestartValue load( const std::string& filename,
                    int report_step,
-                   const std::map<std::string, RestartKey>& keys,
+                   const std::vector<RestartKey>& solution_keys,
                    const EclipseState& es,
                    const EclipseGrid& grid,
                    const Schedule& schedule,
-                   const std::map<std::string, bool>& extra_keys) {
+                   const std::vector<RestartKey>& extra_keys) {
 
     int sim_step = std::max(report_step - 1, 0);
     const bool unified                   = ( ERT::EclFiletype( filename ) == ECL_UNIFIED_RESTART_FILE );
@@ -248,21 +246,30 @@ RestartValue load( const std::string& filename,
     const ecl_kw_type * opm_iwel = ecl_file_view_iget_named_kw( file_view, "OPM_IWEL", 0 );
 
     UnitSystem units( static_cast<ert_ecl_unit_enum>(ecl_kw_iget_int( intehead , INTEHEAD_UNIT_INDEX )));
-    RestartValue rst_value( restoreSOLUTION( file_view, keys, units , grid.getNumActive( )),
+    RestartValue rst_value( restoreSOLUTION( file_view, solution_keys, grid.getNumActive( )),
                             restore_wells( opm_xwel, opm_iwel, sim_step , es, grid, schedule));
 
-    for (const auto& pair : extra_keys) {
-        const std::string& key = pair.first;
-        bool required = pair.second;
+    for (const auto& extra : extra_keys) {
+        const std::string& key = extra.key;
+        bool required = extra.required;
 
         if (ecl_file_view_has_kw( file_view , key.c_str())) {
             const ecl_kw_type * ecl_kw = ecl_file_view_iget_named_kw( file_view , key.c_str() , 0 );
             const double * data_ptr = ecl_kw_get_double_ptr( ecl_kw );
             const double * end_ptr  = data_ptr + ecl_kw_get_size( ecl_kw );
-            rst_value.extra[ key ] = { data_ptr, end_ptr };
+            rst_value.addExtra(key, extra.dim, {data_ptr, end_ptr});
         } else if (required)
             throw std::runtime_error("No such key in file: " + key);
 
+    }
+
+    // Convert solution fields and extra data from user units to SI
+    rst_value.solution.convertToSI(units);
+    for (auto & extra_value : rst_value.extra) {
+        const auto& restart_key = extra_value.first;
+        auto & data = extra_value.second;
+
+        units.to_si(restart_key.dim, data);
     }
 
     return rst_value;
@@ -474,15 +481,15 @@ void writeHeader(ecl_rst_file_type * rst_file,
       ERT::ert_unique_ptr< ecl_kw_type, ecl_kw_free > kw_ptr;
 
       if (write_double) {
-	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_DOUBLE );
-	  ecl_kw_set_memcpy_data( ecl_kw , data.data() );
-	  kw_ptr.reset( ecl_kw );
+          ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_DOUBLE );
+          ecl_kw_set_memcpy_data( ecl_kw , data.data() );
+          kw_ptr.reset( ecl_kw );
       } else {
-	  ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_FLOAT );
-	  float * float_data = ecl_kw_get_float_ptr( ecl_kw );
-	  for (size_t i=0; i < data.size(); i++)
-	      float_data[i] = data[i];
-	  kw_ptr.reset( ecl_kw );
+          ecl_kw_type * ecl_kw = ecl_kw_alloc( kw.c_str() , data.size() , ECL_FLOAT );
+          float * float_data = ecl_kw_get_float_ptr( ecl_kw );
+          for (size_t i=0; i < data.size(); i++)
+              float_data[i] = data[i];
+          kw_ptr.reset( ecl_kw );
       }
 
       return kw_ptr;
@@ -505,10 +512,10 @@ void writeHeader(ecl_rst_file_type * rst_file,
   }
 
 
-void writeExtraData(ecl_rst_file_type* rst_file, const std::map<std::string,std::vector<double>>& extra_data) {
-    for (const auto& pair : extra_data) {
-        const std::string& key = pair.first;
-        const std::vector<double>& data = pair.second;
+  void writeExtraData(ecl_rst_file_type* rst_file, const RestartValue::ExtraVector& extra_data) {
+    for (const auto& extra_value : extra_data) {
+        const std::string& key = extra_value.first.key;
+        const std::vector<double>& data = extra_value.second;
         {
             ecl_kw_type * ecl_kw = ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE , const_cast<double *>(data.data()));
             ecl_rst_file_add_kw( rst_file , ecl_kw);
@@ -537,43 +544,43 @@ void writeWell(ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es
     write_kw( rst_file, ERT::EclKW< int >( ICON_KW, icon_data ) );
 }
 
-void checkSaveArguments(const data::Solution& cells,
-                        const EclipseGrid& grid,
-                        const std::map<std::string, std::vector<double>>& extra_data) {
+void checkSaveArguments(const EclipseState& es,
+                        const RestartValue& restart_value,
+                        const EclipseGrid& grid) {
 
-    const std::set<std::string> reserved_keys = {"LOGIHEAD", "INTEHEAD" ,"DOUBHEAD", "IWEL", "XWEL","ICON", "XCON" , "OPM_IWEL" , "OPM_XWEL", "ZWEL"};
+  for (const auto& elm: restart_value.solution)
+    if (elm.second.data.size() != grid.getNumActive())
+      throw std::runtime_error("Wrong size on solution vector: " + elm.first);
 
-    for (const auto& pair : extra_data) {
-        const std::string& key = pair.first;
-        if (key.size() > 8)
-            throw std::runtime_error("The keys in extra data must have maximum eight characaters");
 
-        if (cells.has( key ))
-            throw std::runtime_error("The keys used must unique across Solution and extra_data");
+  if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
+      // If the the THPRES option is active the restart_value should have a
+      // THPRES field. This is not enforced here because not all the opm
+      // simulators have been updated to include the THPRES values.
+      if (!restart_value.hasExtra("THPRES")) {
+          OpmLog::warning("This model has THPRES active - should have THPRES as part of restart data.");
+          return;
+      }
 
-        if (reserved_keys.find( key ) != reserved_keys.end())
-            throw std::runtime_error("The extra_data uses a reserved key");
-    }
-
-    for (const auto& elm: cells)
-        if (elm.second.data.size() != grid.getNumActive())
-            throw std::runtime_error("Wrong size on solution vector: " + elm.first);
+      size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
+      const auto& thpres = restart_value.getExtra("THPRES");
+      if (thpres.size() != num_regions * num_regions)
+          throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
+  }
 }
-}
+} // Anonymous namespace
 
 
 void save(const std::string& filename,
           int report_step,
           double seconds_elapsed,
-          data::Solution cells,
-          data::Wells wells,
+          RestartValue value,
           const EclipseState& es,
           const EclipseGrid& grid,
           const Schedule& schedule,
-          std::map<std::string, std::vector<double>> extra_data,
-	  bool write_double)
+          bool write_double)
 {
-    checkSaveArguments( cells, grid, extra_data );
+    checkSaveArguments(es, value, grid);
     {
         int sim_step = std::max(report_step - 1, 0);
         int ert_phase_mask = es.runspec().eclPhaseMask( );
@@ -587,14 +594,20 @@ void save(const std::string& filename,
         else
             rst_file.reset( ecl_rst_file_open_write( filename.c_str() ) );
 
+        // Convert solution fields and extra values from SI to user units.
+        value.solution.convertFromSI(units);
+        for (auto & extra_value : value.extra) {
+            const auto& restart_key = extra_value.first;
+            auto & data = extra_value.second;
 
-        cells.convertFromSI( units );
-        writeHeader( rst_file.get() , sim_step, report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
-        writeWell( rst_file.get() , sim_step, es , grid, schedule, wells);
-        writeSolution( rst_file.get() , cells , write_double );
-        writeExtraData( rst_file.get() , extra_data );
+            units.from_si(restart_key.dim, data);
+        }
+
+        writeHeader( rst_file.get(), sim_step, report_step, posix_time , sim_time, ert_phase_mask, units, schedule , grid );
+        writeWell( rst_file.get(), sim_step, es , grid, schedule, value.wells);
+        writeSolution( rst_file.get(), value.solution, write_double );
+        writeExtraData( rst_file.get(), value.extra );
     }
 }
 }
 }
-

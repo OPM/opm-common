@@ -418,12 +418,10 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
 void EclipseIO::writeTimeStep(int report_step,
                               bool  isSubstep,
                               double secs_elapsed,
-                              data::Solution cells,
-                              data::Wells wells,
+                              RestartValue value,
                               const std::map<std::string, double>& single_summary_values,
                               const std::map<std::string, std::vector<double> >& region_summary_values,
                               const std::map<std::pair<std::string, int>, double>& block_summary_values,
-                              const std::map<std::string, std::vector<double>>& extra_restart,
                               bool write_double)
  {
 
@@ -448,7 +446,7 @@ void EclipseIO::writeTimeStep(int report_step,
                                           secs_elapsed,
                                           es,
                                           schedule,
-                                          wells ,
+                                          value.wells ,
                                           single_summary_values ,
                                           region_summary_values,
                                           block_summary_values);
@@ -469,7 +467,7 @@ void EclipseIO::writeTimeStep(int report_step,
                                                  report_step,
                                                  ioConfig.getFMTOUT() );
 
-        RestartIO::save( filename , report_step, secs_elapsed, cells, wells, es , grid , schedule, extra_restart , write_double);
+        RestartIO::save( filename , report_step, secs_elapsed, value, es , grid , schedule, write_double);
     }
 
 
@@ -489,7 +487,7 @@ void EclipseIO::writeTimeStep(int report_step,
                                            secs_elapsed + this->impl->schedule.posixStartTime(),
                                            units.from_si( UnitSystem::measure::time, secs_elapsed ),
                                            units,
-                                           wells );
+                                           value.wells );
         }
     }
 
@@ -497,7 +495,7 @@ void EclipseIO::writeTimeStep(int report_step,
 
 
 
-RestartValue EclipseIO::loadRestart(const std::map<std::string, RestartKey>& keys, const std::map<std::string, bool>& extra_keys) const {
+RestartValue EclipseIO::loadRestart(const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys) const {
     const auto& es                       = this->impl->es;
     const auto& grid                     = this->impl->grid;
     const auto& schedule                 = this->impl->schedule;
@@ -508,7 +506,7 @@ RestartValue EclipseIO::loadRestart(const std::map<std::string, RestartKey>& key
                                                                         report_step,
                                                                         false );
 
-    return RestartIO::load( filename , report_step , keys , es, grid , schedule, extra_keys);
+    return RestartIO::load( filename , report_step , solution_keys , es, grid , schedule, extra_keys);
 }
 
 EclipseIO::EclipseIO( const EclipseState& es,
