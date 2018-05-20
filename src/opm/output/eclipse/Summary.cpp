@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
@@ -955,6 +956,12 @@ Summary::Summary( const EclipseState& st,
     for ( const auto& keyword : unsupported_keywords ) {
         Opm::OpmLog::info("Keyword " + std::string(keyword) + " is unhandled");
     }
+
+    for (const auto& pair : this->handlers->handlers) {
+        const auto * nodeptr = pair.first;
+        if (smspec_node_is_total(nodeptr))
+            this->prev_state.add(smspec_node_get_gen_key1(nodeptr), 0);
+    }
 }
 
 /*
@@ -1028,6 +1035,7 @@ void Summary::add_timestep( int report_step,
 
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
+    SummaryState st;
 
     /* report_step is the number of the file we are about to write - i.e. for instance CASE.S$report_step
      * for the data in a non-unified summary file.
@@ -1051,12 +1059,11 @@ void Summary::add_timestep( int report_step,
                                      this->grid,
                                      eff_factors});
 
-        const auto unit_applied_val = es.getUnits().from_si( val.unit, val.value );
-        const auto res = smspec_node_is_total( f.first ) && prev_tstep
-            ? ecl_sum_tstep_get_from_key( prev_tstep, genkey ) + unit_applied_val
-            : unit_applied_val;
+        double unit_applied_val = es.getUnits().from_si( val.unit, val.value );
+        if (smspec_node_is_total(f.first))
+            unit_applied_val += this->prev_state.get(genkey);
 
-	ecl_sum_tstep_set_from_node( tstep, f.first, res );
+        st.add(genkey, unit_applied_val);
     }
 
     for( const auto& value_pair : single_values ) {
@@ -1064,10 +1071,11 @@ void Summary::add_timestep( int report_step,
         const auto node_pair = this->handlers->single_value_nodes.find( key );
         if (node_pair != this->handlers->single_value_nodes.end()) {
             const auto * nodeptr = node_pair->second;
+            const auto * genkey = smspec_node_get_gen_key1( nodeptr );
             const auto unit = single_values_units.at( key );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
+            st.add(genkey, output_value);
         }
     }
 
@@ -1077,11 +1085,13 @@ void Summary::add_timestep( int report_step,
             const auto node_pair = this->handlers->region_nodes.find( std::make_pair(key, reg+1) );
             if (node_pair != this->handlers->region_nodes.end()) {
                 const auto * nodeptr = node_pair->second;
+                const auto* genkey = smspec_node_get_gen_key1( nodeptr );
                 const auto unit = region_units.at( key );
+
                 assert (smspec_node_get_num( nodeptr ) - 1 == static_cast<int>(reg));
                 double si_value = value_pair.second[reg];
                 double output_value = es.getUnits().from_si(unit , si_value );
-                ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
+                st.add(genkey, output_value);
             }
         }
     }
@@ -1091,14 +1101,18 @@ void Summary::add_timestep( int report_step,
         const auto node_pair = this->handlers->block_nodes.find( key );
         if (node_pair != this->handlers->block_nodes.end()) {
             const auto * nodeptr = node_pair->second;
+            const auto * genkey = smspec_node_get_gen_key1( nodeptr );
             const auto unit = block_units.at( key.first );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            ecl_sum_tstep_set_from_node( tstep, nodeptr , output_value );
+            st.add(genkey, output_value);
         }
     }
 
-    this->prev_tstep = tstep;
+    for (const auto& pair: st)
+        ecl_sum_tstep_set_from_key(tstep, pair.first.c_str(), pair.second);
+
+    this->prev_state = st;
     this->prev_time_elapsed = secs_elapsed;
 }
 

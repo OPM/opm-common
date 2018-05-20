@@ -29,6 +29,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
+#include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
@@ -68,8 +69,8 @@ class Summary {
         out::RegionCache regionCache;
         ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > ecl_sum;
         std::unique_ptr< keyword_handlers > handlers;
-        const ecl_sum_tstep_type* prev_tstep = nullptr;
         double prev_time_elapsed = 0;
+        SummaryState prev_state;
 };
 
 }

@@ -26,11 +26,13 @@
 #include <stdexcept>
 
 #include <ert/ecl/ecl_sum.h>
+#include <ert/ecl/smspec_node.h>
 #include <ert/util/util.h>
 #include <ert/util/TestArea.hpp>
 
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/SummaryState.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -1217,4 +1219,16 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
 
         BOOST_CHECK_CLOSE( 200.1, ecl_sum_get_well_completion_var( resp, 1, "W_2", "COPR", 2 ), 1e-5 );
         BOOST_CHECK_CLOSE( 200.1 * 0.2 * 0.01, ecl_sum_get_well_completion_var( resp, 1, "W_2", "COPT", 2 ), 1e-5 );
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(Test_SummaryState) {
+    Opm::SummaryState st;
+    st.add("WWCT:OP_2", 100);
+    BOOST_CHECK_CLOSE(st.get("WWCT:OP_2"), 100, 1e-5);
+    BOOST_CHECK_THROW(st.get("NO_SUCH_KEY"), std::invalid_argument);
+    BOOST_CHECK(st.has("WWCT:OP_2"));
+    BOOST_CHECK(!st.has("NO_SUCH_KEY"));
 }
