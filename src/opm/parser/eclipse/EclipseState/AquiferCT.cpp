@@ -33,7 +33,7 @@ namespace Opm {
             AquiferCT::AQUCT_data data;
 
             data.c1 = 1.0;
-            data.c2 = 6.283;          
+            data.c2 = 6.283;        // Value of C2 used by E100 (for METRIC, PVT-M and LAB unit systems)        
             data.aquiferID = aquctRecord.getItem("AQUIFER_ID").template get<int>(0);
             data.h = aquctRecord.getItem("THICKNESS_AQ").getSIDouble(0);
             data.p0 = aquctRecord.getItem("P_INI").getSIDouble(0);
