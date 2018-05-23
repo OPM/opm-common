@@ -149,6 +149,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/LogiHEAD.cpp
           src/opm/output/eclipse/RestartIO.cpp
           src/opm/output/eclipse/Summary.cpp
+          src/opm/output/eclipse/SummaryState.cpp
           src/opm/output/eclipse/Tables.cpp
           src/opm/output/eclipse/RegionCache.cpp
           src/opm/output/eclipse/RestartValue.cpp
@@ -496,6 +497,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/RestartIO.hpp
         opm/output/eclipse/RestartValue.hpp
         opm/output/eclipse/Summary.hpp
+        opm/output/eclipse/SummaryState.hpp
         opm/output/eclipse/Tables.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
         opm/output/OutputWriter.hpp
