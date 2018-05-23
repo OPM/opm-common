@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e # Exit on all errors
+
 declare -A configurations
 
 # Parse revisions from trigger comment and setup arrays
@@ -12,7 +14,7 @@ function parseRevisions {
   do
     if grep -qi "$upstream=" <<< $ghprbCommentBody
     then
-      upstreamRev[$upstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${upstream,,}=([0-9]+).*/\1/g"`/merge
+      upstreamRev[$upstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${upstream,,}=([0-9]+).*/\1/g"`/head
     fi
   done
   if grep -q "with downstreams" <<< $ghprbCommentBody
@@ -21,7 +23,7 @@ function parseRevisions {
     do
       if grep -qi "$downstream=" <<< $ghprbCommentBody
       then
-        downstreamRev[$downstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${downstream,,}=([0-9]+).*/\1/g"`/merge
+        downstreamRev[$downstream]=pull/`echo $ghprbCommentBody | sed -r "s/.*${downstream,,}=([0-9]+).*/\1/g"`/head
       fi
     done
   fi
@@ -130,8 +132,18 @@ function clone_module {
   else
     git remote add origin https://github.com/OPM/$1
   fi
-  git fetch --depth 1 origin $2:branch_to_build
-  git checkout branch_to_build
+  # Complication due to github slow merge ref updates
+  if [ "$2" == "master" ]
+  then
+    git fetch --depth 1 origin $2:branch_to_build
+    git checkout branch_to_build
+  else
+    git fetch --depth 1 origin master
+    git fetch --depth 1 origin $2:branch_to_build
+    git checkout master
+    git merge branch_to_build
+    test $? -eq 0 || exit 1
+  fi
   git log HEAD -1 | cat
   test $? -eq 0 || exit 1
   popd
