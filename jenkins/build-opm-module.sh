@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e # Exit on all errors
-
 declare -A configurations
 
 # Parse revisions from trigger comment and setup arrays
