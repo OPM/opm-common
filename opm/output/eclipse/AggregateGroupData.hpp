@@ -20,19 +20,15 @@
 #ifndef OPM_AGGREGATE_GROUP_DATA_HPP
 #define OPM_AGGREGATE_GROUP_DATA_HPP
 
-#include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/CharArrayNullTerm.hpp>
 #include <opm/output/eclipse/WindowedArray.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 
 #include <string>
 #include <vector>
 
 namespace Opm {
-    class Phases;
     class Schedule;
-    class Group;
+    class SummaryState;
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {
@@ -42,9 +38,10 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     public:
 	explicit AggregateGroupData(const std::vector<int>& inteHead);
 
-	void captureDeclaredGroupData( const Schedule&   sched,
-				  const std::size_t simStep,
-				  const std::vector<int>& inteHead );
+	void captureDeclaredGroupData(const Opm::Schedule&     sched,
+				      const std::size_t        simStep,
+				      const Opm::SummaryState& smry,
+				      const std::vector<int>&  inteHead);
 
 #if 0
         void captureDynamicGroupData(const Opm::Phases&          phases,
@@ -92,8 +89,9 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
         /// Maximum number of wells in a group.
         int nWGMax_;
-	/// Maximum number of groups
-	int nGMaxz_;
+
+        /// Maximum number of groups
+        int nGMaxz_;
     };
 
 }}} // Opm::RestartIO::Helpers

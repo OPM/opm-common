@@ -46,6 +46,7 @@ class EclipseGrid;
 class EclipseState;
 class Phases;
 class Schedule;
+class SummaryState;
 
 namespace RestartIO {
 
@@ -80,8 +81,8 @@ namespace RestartIO {
           const EclipseState& es,
           const EclipseGrid& grid,
           const Schedule& schedule,
-           std::map<std::string, std::vector<double>> extra_data = {},
-	  bool write_double = false);
+          std::map<std::string, std::vector<double>> extra_data = {},
+          bool write_double = false);
 */
 void save(const std::string& filename,
           int report_step,
@@ -90,6 +91,7 @@ void save(const std::string& filename,
           const EclipseState& es,
           const EclipseGrid& grid,
           const Schedule& schedule,
+          const SummaryState& smry,
           bool write_double = false);
 
 RestartValue load( const std::string& filename,

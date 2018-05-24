@@ -22,7 +22,9 @@
 */
 
 #include <opm/output/eclipse/RestartIO.hpp>
+
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <string>
@@ -607,14 +609,15 @@ writeHeader(::Opm::RestartIO::ecl_rst_file_type* rst_file,
 
 
 void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
-		 int                     sim_step,
-		 double                  simTime,
-		 int                     ert_phase_mask,
-		 const UnitSystem&       units,
-		 const Schedule&         schedule,
-		 const EclipseGrid&      grid,
-		 const EclipseState&     es,
-		 const std::vector<int>& ih)
+		 int                      sim_step,
+		 double                   simTime,
+		 int                      ert_phase_mask,
+		 const UnitSystem&        units,
+		 const Schedule&          schedule,
+		 const EclipseGrid&       grid,
+		 const EclipseState&      es,
+		 const std::vector<int>&  ih,
+		 const Opm::SummaryState& smry)
 {
     // find inteHead
     //const auto ih = Helpers::createInteHead(es, grid, schedule, simTime, report_step);
@@ -623,7 +626,7 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
     const size_t simStep = static_cast<size_t> (sim_step);
     auto  groupData = Helpers::AggregateGroupData(ih);
     //std::cout << "writeGroup before captureDeclaredGroupData" << std::endl;
-    groupData.captureDeclaredGroupData(schedule, simStep, ih);
+    groupData.captureDeclaredGroupData(schedule, simStep, smry, ih);
     //std::cout << "writeGroup before write_kw IGRP" << std::endl;
     write_kw(rst_file, EclKW<int>  ("IGRP", groupData.getIGroup()));
     write_kw(rst_file, EclKW<float>("SGRP", groupData.getSGroup()));
@@ -795,6 +798,7 @@ void save(const std::string&  filename,
 	  const EclipseState& es,
 	  const EclipseGrid&  grid,
 	  const Schedule&     schedule,
+	  const SummaryState& smry,
 	  bool                write_double)
 {
     ::Opm::RestartIO::checkSaveArguments(es, value, grid);
@@ -824,7 +828,7 @@ void save(const std::string&  filename,
 	}
 
 	std::vector<int> inteHD = ::Opm::RestartIO::writeHeader(rst_file.get() , sim_step, report_step, seconds_elapsed, ert_phase_mask, units, schedule , grid, es);
-	::Opm::RestartIO::writeGroup(rst_file.get() , sim_step, seconds_elapsed, ert_phase_mask, units, schedule , grid, es, inteHD);
+	::Opm::RestartIO::writeGroup(rst_file.get() , sim_step, seconds_elapsed, ert_phase_mask, units, schedule , grid, es, inteHD, smry);
 	::Opm::RestartIO::writeWell( rst_file.get() , sim_step, es , grid, schedule, wells);
 	//::Opm::RestartIO::writeSolution( rst_file.get() , value.solution , write_double );
 	::Opm::RestartIO::writeSolution( rst_file.get() , value , write_double );

@@ -19,6 +19,7 @@
 
 #include <opm/output/eclipse/AggregateGroupData.hpp>
 
+#include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -348,19 +349,17 @@ namespace {
             };
         }
 
-
-
         template <class IGrpArray>
         void staticContrib(const Opm::Schedule&    sched,
 			   const Opm::Group&       group,
 			   const int               nwgmax,
 			   const int               ngmaxz,
 			   const std::size_t       simStep,
-			   IGrpArray&              igrp,
+			   IGrpArray&              iGrp,
 			   const std::vector<int>& inteHead)
         {
 	  // find the number of wells or child groups belonging to a group and store in 
-	  // location nwgmax +1 in the igrp array
+	  // location nwgmax +1 in the iGrp array
 
 	    const auto childGroups = sched.getChildGroups(group.name(), simStep);
 	    const auto childWells  = sched.getChildWells(group.name(), simStep);
@@ -377,7 +376,7 @@ namespace {
 		//for (const auto well : childWells ) {
 		for ( auto it = childWells.begin() ; it != childWells.end(); it++) {
 		    //std::cout << "Child well name: " << it->name() << " Well seqIndex(): " << it->seqIndex() << std::endl;
-		    igrp[igrpCount] = (*it)->seqIndex()+1;
+		    iGrp[igrpCount] = (*it)->seqIndex()+1;
 		    igrpCount+=1;
 		    //std::cout << "childWells: igrpCount after increment: " << igrpCount <<  std::endl;
 		}
@@ -390,7 +389,7 @@ namespace {
 		//for (const auto grp : childGroups ) {
 		for ( auto it = childGroups.begin() ; it != childGroups.end(); it++) {
 		    //std::cout << "Child Group name: " << it->name() << " Group seqIndex(): " << it->seqIndex()-1 << std::endl;
-		    igrp[igrpCount] = (*it)->seqIndex();
+		    iGrp[igrpCount] = (*it)->seqIndex();
 		    igrpCount+=1;
 		    //std::cout << "childGroups: igrpCount after increment: " << igrpCount <<  std::endl;
 		}
@@ -400,41 +399,40 @@ namespace {
 	    // location nwgmax
 	    //std::cout << "IGrpArray - staticContrib: childGroups.size() " << childGroups.size()  << "childWells.size(): " << childWells.size() << std::endl;
 	    //std::cout << "IGrpArray - staticContrib: nwgmax: " << nwgmax  << std::endl;
-	    igrp[nwgmax] =  (childGroups.size() == 0)
+	    iGrp[nwgmax] =  (childGroups.size() == 0)
                     ? childWells.size() : childGroups.size();
 
 	    // find the group type (well group (type 0) or node group (type 1) and store the type in  
 	    // location nwgmax + 26
 	    const auto grpType = groupType(sched, group, simStep);
-	    igrp[nwgmax+26] = grpType;
+	    iGrp[nwgmax+26] = grpType;
 
 	    //find group level ("FIELD" is level 0) and store the level in
 	    //location nwgmax + 27
 	    const auto grpLevel = currentGroupLevel(sched, group, simStep);
-	    igrp[nwgmax+27] = grpLevel;
 
 	    // set values for group probably connected to GCONPROD settings
 	    //
 	    if (group.name() != "FIELD")
 	    {
-		igrp[nwgmax+ 5] = -1;
-		igrp[nwgmax+12] = -1;
-		igrp[nwgmax+17] = -1;
-		igrp[nwgmax+22] = -1;
+		iGrp[nwgmax+ 5] = -1;
+		iGrp[nwgmax+12] = -1;
+		iGrp[nwgmax+17] = -1;
+		iGrp[nwgmax+22] = -1;
 
 		//assign values to group number (according to group sequence)
-		igrp[nwgmax+88] = group.seqIndex();
-		igrp[nwgmax+89] = group.seqIndex();
-		igrp[nwgmax+95] = group.seqIndex();
-		igrp[nwgmax+96] = group.seqIndex();
+		iGrp[nwgmax+88] = group.seqIndex();
+		iGrp[nwgmax+89] = group.seqIndex();
+		iGrp[nwgmax+95] = group.seqIndex();
+		iGrp[nwgmax+96] = group.seqIndex();
 	    }
 	    else
 	    {
 		//assign values to group number (according to group sequence)
-		igrp[nwgmax+88] = ngmaxz;
-		igrp[nwgmax+89] = ngmaxz;
-		igrp[nwgmax+95] = ngmaxz;
-		igrp[nwgmax+96] = ngmaxz;
+		iGrp[nwgmax+88] = ngmaxz;
+		iGrp[nwgmax+89] = ngmaxz;
+		iGrp[nwgmax+95] = ngmaxz;
+		iGrp[nwgmax+96] = ngmaxz;
 	    }
 	    //find parent group and store index of parent group in
 	    //location nwgmax + 28
@@ -442,12 +440,12 @@ namespace {
 	    const std::string& parent = groupTree.parent(group.name());
 	    //std::cout << "IGrpArray - staticContrib - before groupMapNameIndex.find(parent)"  <<  std::endl;
 	    if (group.name() == "FIELD")
-	      igrp[nwgmax+28] = 0;
+	      iGrp[nwgmax+28] = 0;
 	    else {
 		if (parent.size() == 0)
 		    throw std::invalid_argument("parent group does not exist" + group.name());
 		const auto itr = groupMapNameIndex.find(parent);
-		igrp[nwgmax+28] = (itr->second)+1;
+		iGrp[nwgmax+28] = (itr->second)+1;
 	    }
         }
     } // Igrp
@@ -513,12 +511,10 @@ namespace {
 		auto e = b + std::min(init.size(), sz);
 
 		std::copy(b, e, std::begin(sGrp));
-	    }
-	} // SGrp
+	}
+    } // SGrp
 
     namespace XGrp {
-        using SolnQuant = ::Opm::data::Rates::opt;
-
         std::size_t entriesPerGroup(const std::vector<int>& inteHead)
         {
             // INTEHEAD[38] = NXGRPZ
@@ -535,6 +531,27 @@ namespace {
                 WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
+
+        // here define the dynamic group quantities to be written to the restart file
+        template <class XGrpArray>
+        void dynamicContrib(const Opm::Schedule&     sched,
+			    //const Opm::Group&        group,
+			    //const Opm::Well&         well,
+			    const Opm::SummaryState& smry,
+			    //const int                nwgmax,
+			    //const int                ngmaxz,
+			    //const std::size_t        rptStep,
+			    XGrpArray&               xGrp)
+        {
+	  std::string s_wopt = "WOPT:A-1H";
+	  std::cout << "AggregateGroupData_wopt:A-1H: " << s_wopt << std::endl;
+	  if (smry.has(s_wopt)) {
+	      std::cout << "AggregateGroupData_wopt_: " << smry.get(s_wopt) << std::endl;
+	  }
+	  else {
+	      std::cout << "AggregateGroupData, empty wopt_rst: " << std::endl;
+	  }
+	}
     }
 
     namespace ZGrp {
@@ -577,9 +594,10 @@ AggregateGroupData(const std::vector<int>& inteHead)
 
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
-captureDeclaredGroupData(const Schedule&         sched,
-                         const std::size_t       simStep,
-			 const std::vector<int>& inteHead)
+captureDeclaredGroupData(const Opm::Schedule&     sched,
+			 const std::size_t        simStep,
+			 const Opm::SummaryState& smry,
+			 const std::vector<int>&  inteHead)
 {
     std::map <size_t, const Opm::Group*> indexGroupMap = currentGroupMapIndexGroup(sched, simStep, inteHead);
     std::map <std::string, size_t> nameIndexMap = currentGroupMapNameIndex(sched, simStep, inteHead);
@@ -622,6 +640,20 @@ captureDeclaredGroupData(const Schedule&         sched,
         auto sw = this->sGroup_[groupID];
         SGrp::staticContrib(sw);
     });
+
+    auto xg = this->xGroup_[0];
+    XGrp::dynamicContrib( sched, smry, xg);
+
+#if 0
+    // Define Static Contributions to ZWell Array.
+    wellLoop(wells,
+        [this](const Well& well, const std::size_t wellID) -> void
+    {
+        auto zw = this->zWell_[wellID];
+
+        ZWell::staticContrib(well, zw);
+    });
+#endif
 }
 
 // ---------------------------------------------------------------------

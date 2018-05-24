@@ -20,8 +20,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <unordered_map>
-
 #include "config.h"
 
 #include <opm/output/eclipse/EclipseIO.hpp>
@@ -38,12 +36,15 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
-#include <opm/output/eclipse/Summary.hpp>
-#include <opm/output/eclipse/Tables.hpp>
+
 #include <opm/output/eclipse/RestartIO.hpp>
+#include <opm/output/eclipse/Summary.hpp>
+#include <opm/output/eclipse/SummaryState.hpp>
+#include <opm/output/eclipse/Tables.hpp>
 
 #include <cstdlib>
 #include <memory>     // unique_ptr
+#include <unordered_map>
 #include <utility>    // move
 
 #include <ert/ecl/EclKW.hpp>
@@ -468,7 +469,8 @@ void EclipseIO::writeTimeStep(int report_step,
                                                  report_step,
                                                  ioConfig.getFMTOUT() );
 
-        RestartIO::save( filename , report_step, secs_elapsed, value, es , grid , schedule, write_double);
+        RestartIO::save(filename, report_step, secs_elapsed, value, es, grid, schedule,
+                        this->impl->summary.get_restart_vectors(), write_double);
     }
 
 
