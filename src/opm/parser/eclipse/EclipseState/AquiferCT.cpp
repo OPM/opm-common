@@ -31,17 +31,18 @@ namespace Opm {
         for (auto& aquctRecord : aquctKeyword){
   
             AquiferCT::AQUCT_data data;
-    
+
+            data.c1 = 1.0;
+            data.c2 = 6.283;        // Value of C2 used by E100 (for METRIC, PVT-M and LAB unit systems)        
             data.aquiferID = aquctRecord.getItem("AQUIFER_ID").template get<int>(0);
             data.h = aquctRecord.getItem("THICKNESS_AQ").getSIDouble(0);
+            data.p0 = aquctRecord.getItem("P_INI").getSIDouble(0);
             data.phi_aq = aquctRecord.getItem("PORO_AQ").getSIDouble(0);
             data.d0 = aquctRecord.getItem("DAT_DEPTH").getSIDouble(0);
             data.C_t = aquctRecord.getItem("C_T").getSIDouble(0);
             data.r_o = aquctRecord.getItem("RAD").getSIDouble(0);
             data.k_a = aquctRecord.getItem("PERM_AQ").getSIDouble(0);
-            data.theta = aquctRecord.getItem("INFLUENCE_ANGLE").getSIDouble(0);
-            data.c1 = 0.008527; // We are using SI
-            data.c2 = 6.283;
+            data.theta = aquctRecord.getItem("INFLUENCE_ANGLE").getSIDouble(0)/360.0; 
             data.inftableID = aquctRecord.getItem("TABLE_NUM_INFLUENCE_FN").template get<int>(0);
             data.pvttableID = aquctRecord.getItem("TABLE_NUM_WATER_PRESS").template get<int>(0);
 
