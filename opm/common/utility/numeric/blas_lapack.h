@@ -65,6 +65,12 @@ void dgetrf_(const MAT_SIZE_T *m   , const MAT_SIZE_T *n ,
              double           *A   , const MAT_SIZE_T *ld,
              MAT_SIZE_T       *ipiv, MAT_SIZE_T       *info);
 
+/* A = A^-1 with LU(A) from dgetrf_*/
+void dgetri_(const MAT_SIZE_T  *n    ,  double     *A    ,
+             const MAT_SIZE_T  *lda  ,  MAT_SIZE_T *ipiv ,
+             double            *work ,  MAT_SIZE_T *lwork,
+             MAT_SIZE_T        *info);
+
 /* B <- A \ B, when A is LU(A) from dgetrf() */
 void dgetrs_(const char       *trans, const MAT_SIZE_T *n,
              const MAT_SIZE_T *nrhs ,
