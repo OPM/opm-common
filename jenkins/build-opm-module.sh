@@ -131,7 +131,7 @@ function clone_module {
     git remote add origin https://github.com/OPM/$1
   fi
   # Complication due to github slow merge ref updates
-  if [ "$2" == "master" ]
+  if [ "$2" == "master" ] || [ "$1" == "opm-tests" ]
   then
     git fetch --depth 1 origin $2:branch_to_build
     git checkout branch_to_build
