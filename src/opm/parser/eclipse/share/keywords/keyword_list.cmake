@@ -112,6 +112,7 @@ set( keywords
      000_Eclipse100/G/GEFAC
      000_Eclipse100/G/GLIFTOPT
      000_Eclipse100/G/GMWSET
+     000_Eclipse100/G/GNETINJE
      000_Eclipse100/G/GRAVITY
      000_Eclipse100/G/GRID
      000_Eclipse100/G/GRIDFILE
