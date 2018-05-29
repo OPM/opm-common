@@ -53,6 +53,32 @@ const std::string& inputStr = "RUNSPEC\n"
                               "2 3 7.0/\n"
                               "/\n"
                               "\n";
+const std::string& inputStr_RESTART = "RUNSPEC\n"
+  "EQLOPTS\n"
+  "THPRES /\n "
+  "\n"
+  "SOLUTION\n"
+  "RESTART\n"
+  " CASE 100 /\n"
+  "\n";
+
+const std::string& inputStr_RESTART2 = "RUNSPEC\n"
+  "EQLOPTS\n"
+  "THPRES /\n "
+  "\n"
+  "REGIONS\n"
+  "EQLNUM\n"
+  "   27*4 /\n"
+  "SOLUTION\n"
+  "RESTART\n"
+  "  CASE 100/\n"
+  "THPRES\n"
+  "1 3 5.0/\n"
+  "2 3 33.0 /\n"
+  "2 4 7.0/\n"
+  "/\n"
+  "\n";
+
 
 const std::string& inputStrWithEqlNum =
                               "RUNSPEC\n"
@@ -108,6 +134,7 @@ const std::string& inputStrTHPRESinRUNSPECnotSoultion = "RUNSPEC\n"
                                                         "\n"
                                                         "SOLUTION\n"
                                                         "\n";
+
 
 
 const std::string& inputStrIrrevers = "RUNSPEC\n"
@@ -184,6 +211,7 @@ struct Setup
     TableManager tablemanager;
     EclipseGrid grid;
     Eclipse3DProperties props;
+    InitConfig initConfig;
     ThresholdPressure threshPres;
 
     explicit Setup(const std::string& input) :
@@ -192,7 +220,8 @@ struct Setup
             tablemanager(deck),
             grid(10, 3, 4),
             props(deck, tablemanager, grid),
-            threshPres(deck, props)
+            initConfig(deck),
+            threshPres(initConfig.restartRequested(), deck, props)
     {
     }
     explicit Setup(const std::string& input, ParseContext& parseContextArg) :
@@ -201,7 +230,8 @@ struct Setup
             tablemanager(deck),
             grid(10, 3, 4),
             props(deck, tablemanager, grid),
-            threshPres(deck, props)
+            initConfig(deck),
+            threshPres(initConfig.restartRequested(), deck, props)
     {
     }
 
@@ -258,6 +288,24 @@ BOOST_AUTO_TEST_CASE(ThresholdPressureThrowTest) {
     pc.update(ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES, InputError::THROW_EXCEPTION);
     BOOST_CHECK_THROW(s.threshPres.getThresholdPressure(2, 3), std::invalid_argument);
 }
+
+
+BOOST_AUTO_TEST_CASE(Restart) {
+    Setup sx(inputStr_RESTART);
+    BOOST_CHECK(sx.threshPres.active());
+    BOOST_CHECK_EQUAL(sx.threshPres.size(), 0);
+    BOOST_CHECK(sx.threshPres.restart());
+}
+
+BOOST_AUTO_TEST_CASE(Restart2) {
+  Setup sx(inputStr_RESTART2);
+  BOOST_CHECK(sx.threshPres.active());
+  BOOST_CHECK_EQUAL(sx.threshPres.size(), 3);
+  BOOST_CHECK(sx.threshPres.restart());
+}
+
+
+
 
 BOOST_AUTO_TEST_CASE(HasPair) {
     Setup s(inputStrWithEqlNum);

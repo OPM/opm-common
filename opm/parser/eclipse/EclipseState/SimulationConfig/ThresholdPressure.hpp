@@ -32,8 +32,8 @@ namespace Opm {
     class ThresholdPressure {
 
     public:
-
-        ThresholdPressure(const Deck& deck,
+        ThresholdPressure(bool restart,
+                          const Deck& deck,
                           const Eclipse3DProperties& eclipseProperties);
 
 
@@ -63,8 +63,11 @@ namespace Opm {
         */
         double getThresholdPressure(int r1 , int r2) const;
         size_t size() const;
-
+        bool active() const;
+        bool restart() const;
     private:
+        bool m_active;
+        bool m_restart;
         static std::pair<int,int> makeIndex(int r1 , int r2);
         void addPair(int r1 , int r2 , const std::pair<bool , double>& valuePair);
         void addBarrier(int r1 , int r2);

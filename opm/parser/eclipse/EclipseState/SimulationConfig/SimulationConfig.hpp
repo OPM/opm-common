@@ -31,11 +31,12 @@ namespace Opm {
 
     public:
 
-        SimulationConfig(const Deck& deck,
+        SimulationConfig(bool restart,
+                         const Deck& deck,
                          const Eclipse3DProperties& gridProperties);
 
         const ThresholdPressure& getThresholdPressure() const;
-        bool hasThresholdPressure() const;
+        bool useThresholdPressure() const;
         bool useCPR() const;
         bool hasDISGAS() const;
         bool hasVAPOIL() const;

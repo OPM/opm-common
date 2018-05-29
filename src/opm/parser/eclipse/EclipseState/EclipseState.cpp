@@ -58,7 +58,7 @@ namespace Opm {
         m_inputNnc(          deck ),
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
-        m_simulationConfig(  deck, m_eclipseProperties ),
+        m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, m_eclipseProperties ),
         m_transMult(         GridDims(deck), deck, m_eclipseProperties )
     {
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
