@@ -501,7 +501,8 @@ namespace Opm {
                 } else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
                     const double BHPLimit = prev_properties.BHPLimit;
-                    properties = WellProductionProperties::history( BHPLimit , record);
+                    const int VFPTableNumber = prev_properties.VFPTableNumber;
+                    properties = WellProductionProperties::history(prev_properties, record);
                 }
 
                 if (status != WellCommon::SHUT) {
@@ -892,6 +893,11 @@ namespace Opm {
                     properties.BHPH = record.getItem("BHP").getSIDouble(0);
                 if ( record.getItem( "THP" ).hasValue(0) )
                     properties.THPH = record.getItem("THP").getSIDouble(0);
+
+                const int VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
+                if (VFPTableNumber > 0) {
+                    properties.VFPTableNumber = VFPTableNumber;
+                }
 
                 if (well->setInjectionProperties(currentStep, properties))
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );

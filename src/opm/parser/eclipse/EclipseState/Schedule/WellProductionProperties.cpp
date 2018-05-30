@@ -41,7 +41,7 @@ namespace Opm {
     {}
 
 
-    WellProductionProperties WellProductionProperties::history(const double BHPLimit, const DeckRecord& record)
+    WellProductionProperties WellProductionProperties::history(const WellProductionProperties& prev_properties, const DeckRecord& record)
     {
         WellProductionProperties p(record);
         p.predictionMode = false;
@@ -70,13 +70,23 @@ namespace Opm {
             if (cmode == wp::BHP)
                 p.BHPLimit = record.getItem( "BHP" ).getSIDouble( 0 );
             else
-                p.BHPLimit = BHPLimit;
+                p.BHPLimit = prev_properties.BHPLimit;
         }
 
         if ( record.getItem( "BHP" ).hasValue(0) )
             p.BHPH = record.getItem("BHP").getSIDouble(0);
         if ( record.getItem( "THP" ).hasValue(0) )
             p.THPH = record.getItem("THP").getSIDouble(0);
+
+        p.VFPTableNumber = record.getItem("VFPTable").get< int >(0);
+
+        if (p.VFPTableNumber == 0)
+            p.VFPTableNumber = prev_properties.VFPTableNumber;
+
+        p.ALQValue       = record.getItem("Lift").get< double >(0); //NOTE: Unit of ALQ is never touched
+
+        if (p.ALQValue == 0.)
+            p.ALQValue = prev_properties.ALQValue;
 
         return p;
     }
