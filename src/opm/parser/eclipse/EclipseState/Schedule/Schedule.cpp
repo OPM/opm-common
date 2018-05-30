@@ -500,8 +500,6 @@ namespace Opm {
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
                 } else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
-                    const double BHPLimit = prev_properties.BHPLimit;
-                    const int VFPTableNumber = prev_properties.VFPTableNumber;
                     properties = WellProductionProperties::history(prev_properties, record);
                 }
 
