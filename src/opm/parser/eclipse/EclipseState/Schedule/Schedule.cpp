@@ -650,10 +650,11 @@ namespace Opm {
 
                 if (!record.getItem("THP").defaultApplied(0)) {
                     properties.THPLimit       = record.getItem("THP").getSIDouble(0);
-                    properties.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
                     properties.addInjectionControl(WellInjector::THP);
                 } else
                     properties.dropInjectionControl(WellInjector::THP);
+
+                properties.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
 
                 /*
                   There is a sensible default BHP limit defined, so the BHPLimit can be
