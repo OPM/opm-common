@@ -617,17 +617,17 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
 		 const EclipseGrid&       grid,
 		 const EclipseState&      es,
 		 const std::vector<int>&  ih,
-		 const Opm::SummaryState& smry)
+		 const Opm::SummaryState& sumState)
 {
-    // find inteHead
-    //const auto ih = Helpers::createInteHead(es, grid, schedule, simTime, report_step);
     // write IGRP to restart file
     //std::cout << "writeGroup before initializing groupData" << std::endl;
     const size_t simStep = static_cast<size_t> (sim_step);
     auto  groupData = Helpers::AggregateGroupData(ih);
-    //std::cout << "writeGroup before captureDeclaredGroupData" << std::endl;
-    groupData.captureDeclaredGroupData(schedule, simStep, smry, ih);
-    //std::cout << "writeGroup before write_kw IGRP" << std::endl;
+    auto & rst_g_keys = groupData.restart_group_keys;
+    auto & rst_f_keys = groupData.restart_field_keys;
+    auto & grpKeyToInd = groupData.groupKeyToIndex;
+    auto & fldKeyToInd = groupData.fieldKeyToIndex;
+    groupData.captureDeclaredGroupData(schedule, rst_g_keys, rst_f_keys, grpKeyToInd, fldKeyToInd, simStep, sumState, ih);
     write_kw(rst_file, EclKW<int>  ("IGRP", groupData.getIGroup()));
     write_kw(rst_file, EclKW<float>("SGRP", groupData.getSGroup()));
 }
@@ -798,7 +798,7 @@ void save(const std::string&  filename,
 	  const EclipseState& es,
 	  const EclipseGrid&  grid,
 	  const Schedule&     schedule,
-	  const SummaryState& smry,
+	  const SummaryState& sumState,
 	  bool                write_double)
 {
     ::Opm::RestartIO::checkSaveArguments(es, value, grid);
@@ -808,7 +808,7 @@ void save(const std::string&  filename,
 	int ert_phase_mask = es.runspec().eclPhaseMask( );
 	const auto& units = es.getUnits();
 
-	::Opm::RestartIO::ert_unique_ptr< ::Opm::RestartIO::ecl_rst_file_type, ecl_rst_file_close > rst_file;
+	::Opm::RestartIO::ert_unique_ptr< ::Opm::RestartIO::ecl_rst_file_type, ::Opm::RestartIO::ecl_rst_file_close > rst_file;
 
 	if (::Opm::RestartIO::EclFiletype( filename ) == ECL_UNIFIED_RESTART_FILE)
 	    rst_file.reset( ::Opm::RestartIO::ecl_rst_file_open_write_seek( filename.c_str(), report_step ) );

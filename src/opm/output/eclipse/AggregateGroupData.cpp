@@ -534,22 +534,33 @@ namespace {
 
         // here define the dynamic group quantities to be written to the restart file
         template <class XGrpArray>
-        void dynamicContrib(const Opm::Schedule&     sched,
-			    //const Opm::Group&        group,
-			    //const Opm::Well&         well,
-			    const Opm::SummaryState& smry,
-			    //const int                nwgmax,
-			    //const int                ngmaxz,
-			    //const std::size_t        rptStep,
-			    XGrpArray&               xGrp)
+        void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
+			    const std::vector<std::string>&      restart_field_keys,
+			    const std::map<std::string, size_t>& groupKeyToIndex,
+			    const std::map<std::string, size_t>& fieldKeyToIndex,
+			    const Opm::Group&                    group,
+			    const Opm::SummaryState&             sumState,
+			    XGrpArray&                           xGrp)
         {
-	  std::string s_wopt = "WOPT:A-1H";
-	  std::cout << "AggregateGroupData_wopt:A-1H: " << s_wopt << std::endl;
-	  if (smry.has(s_wopt)) {
-	      std::cout << "AggregateGroupData_wopt_: " << smry.get(s_wopt) << std::endl;
-	  }
-	  else {
-	      std::cout << "AggregateGroupData, empty wopt_rst: " << std::endl;
+	  std::string groupName = group.name();
+	  const std::vector<std::string>& keys = (groupName == "FIELD")
+	  ? restart_field_keys : restart_group_keys;
+	  const std::map<std::string, size_t>& keyToIndex = (groupName == "FIELD")
+	  ? fieldKeyToIndex : groupKeyToIndex;
+	  for (const auto key : keys) {
+	      std::string compKey = (groupName == "FIELD")
+	      ? key : key + ":" + groupName;
+	      std::cout << "AggregateGroupData compKey: " << compKey << std::endl;
+	      if (sumState.has(compKey)) {
+		  double keyValue = sumState.get(compKey);
+		  std::cout << "AggregateGroupData_compkey: " << compKey << std::endl;
+		  const auto itr = keyToIndex.find(key);
+		  xGrp[itr->second] = keyValue;
+	      }
+	      else {
+		  std::cout << "AggregateGroupData, empty " << std::endl;
+		  //throw std::invalid_argument("No such keyword: " + compKey);
+	    }
 	  }
 	}
     }
@@ -594,10 +605,14 @@ AggregateGroupData(const std::vector<int>& inteHead)
 
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
-captureDeclaredGroupData(const Opm::Schedule&     sched,
-			 const std::size_t        simStep,
-			 const Opm::SummaryState& smry,
-			 const std::vector<int>&  inteHead)
+captureDeclaredGroupData(const Opm::Schedule&                 sched,
+			 const std::vector<std::string>&      restart_group_keys,
+			 const std::vector<std::string>&      restart_field_keys,
+			 const std::map<std::string, size_t>& groupKeyToIndex,
+			 const std::map<std::string, size_t>& fieldKeyToIndex,
+			 const std::size_t                    simStep,
+			 const Opm::SummaryState&             sumState,
+			 const std::vector<int>&              inteHead)
 {
     std::map <size_t, const Opm::Group*> indexGroupMap = currentGroupMapIndexGroup(sched, simStep, inteHead);
     std::map <std::string, size_t> nameIndexMap = currentGroupMapNameIndex(sched, simStep, inteHead);
@@ -633,7 +648,7 @@ captureDeclaredGroupData(const Opm::Schedule&     sched,
 	    });
     }
 
-    // Define Static Contributions to SWell Array.
+    // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
         [this](const Group& group, const std::size_t groupID) -> void
     {
@@ -641,8 +656,14 @@ captureDeclaredGroupData(const Opm::Schedule&     sched,
         SGrp::staticContrib(sw);
     });
 
-    auto xg = this->xGroup_[0];
-    XGrp::dynamicContrib( sched, smry, xg);
+    // Define DynamicContributions to XGrp Array.
+    groupLoop(curGroups,
+        [restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, sumState, this]
+	(const Group& group, const std::size_t groupID) -> void
+    {
+        auto xg = this->xGroup_[groupID];
+        XGrp::dynamicContrib( restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, group, sumState, xg);
+    });
 
 #if 0
     // Define Static Contributions to ZWell Array.

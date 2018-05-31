@@ -27,14 +27,7 @@ namespace Opm {
     namespace {
 
         const std::set<std::string> reserved_keys = {"LOGIHEAD", "INTEHEAD" ,"DOUBHEAD", "IWEL", "XWEL","ICON", "XCON" , "OPM_IWEL" , "OPM_XWEL", "ZWEL"};
-	const std::vector<std::string> restart_group_keys = {"GOPP", "GWPP", "GOPR", "GWPR", "GGPR",
-							     "GVPR", "GWIR", "GGIR", "GWCT", "GGOR", 
-							     "GOPT", "GWPT", "GGPT", "GVPT", "GWIT",
-							     "GGIT", 
-							     "FOPP", "FWPP", "FOPR", "FWPR", "FGPR", 
-							     "FVPR", "FWIR", "FGIR", "FWCT", "FGOR", 
-							     "FOPT", "FWPT", "FGPT", "FVPT", "FWIT",
-							     "FGIT"};
+
     }
 
 

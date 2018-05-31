@@ -91,7 +91,7 @@ void save(const std::string& filename,
           const EclipseState& es,
           const EclipseGrid& grid,
           const Schedule& schedule,
-          const SummaryState& smry,
+          const SummaryState& sumState,
           bool write_double = false);
 
 RestartValue load( const std::string& filename,

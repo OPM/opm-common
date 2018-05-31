@@ -23,6 +23,7 @@
 #include <opm/output/eclipse/CharArrayNullTerm.hpp>
 #include <opm/output/eclipse/WindowedArray.hpp>
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -38,10 +39,14 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     public:
 	explicit AggregateGroupData(const std::vector<int>& inteHead);
 
-	void captureDeclaredGroupData(const Opm::Schedule&     sched,
-				      const std::size_t        simStep,
-				      const Opm::SummaryState& smry,
-				      const std::vector<int>&  inteHead);
+	void captureDeclaredGroupData(const Opm::Schedule&                 sched,
+				      const std::vector<std::string>&      restart_group_keys,
+				      const std::vector<std::string>&      restart_field_keys,
+				      const std::map<std::string, size_t>& groupKeyToIndex,
+				      const std::map<std::string, size_t>& fieldKeyToIndex,
+				      const std::size_t                    simStep,
+				      const Opm::SummaryState&             sumState,
+				      const std::vector<int>&              inteHead);
 
 #if 0
         void captureDynamicGroupData(const Opm::Phases&          phases,
@@ -50,7 +55,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                      const Opm::data::WellRates& wRates);
 #endif
 
-        /// Retrieve Integer Well Data Array.
+        /// Retrieve Integer Group Data Array.
         const std::vector<int>& getIGroup() const
         {
             return this->iGroup_.data();
@@ -73,6 +78,54 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         {
             return this->zGroup_.data();
         }
+
+        const std::vector<std::string> restart_group_keys = {"GOPP", "GWPP", "GOPR", "GWPR", "GGPR",
+							     "GVPR", "GWIR", "GGIR", "GWCT", "GGOR", 
+							     "GOPT", "GWPT", "GGPT", "GVPT", "GWIT",
+							     "GGIT"};
+
+	const std::vector<std::string> restart_field_keys = {"FOPP", "FWPP", "FOPR", "FWPR", "FGPR", 
+							     "FVPR", "FWIR", "FGIR", "FWCT", "FGOR", 
+							     "FOPT", "FWPT", "FGPT", "FVPT", "FWIT",
+							     "FGIT"};
+
+	const std::map<std::string, size_t> groupKeyToIndex = {
+	  {"GOPR",  0},
+	  {"GWPR",  1},
+	  {"GGPR",  2},
+	  {"GVPR",  3},
+	  {"GWIR",  5},
+	  {"GGIR",  6},
+	  {"GWCT",  8},
+	  {"GGOR",  8},
+	  {"GOPT", 10},
+	  {"GWPT", 11},
+	  {"GGPT", 12},
+	  {"GVPT", 13},
+	  {"GWIT", 15},
+	  {"GGIT", 16},
+	  {"GOPP", 22},
+	  {"GWPP", 23},
+	};
+
+	const std::map<std::string, size_t> fieldKeyToIndex = {
+	  {"FOPR",  0},
+	  {"FWPR",  1},
+	  {"FGPR",  2},
+	  {"FVPR",  3},
+	  {"FWIR",  5},
+	  {"FGIR",  6},
+	  {"FWCT",  8},
+	  {"FGOR",  8},
+	  {"FOPT", 10},
+	  {"FWPT", 11},
+	  {"FGPT", 12},
+	  {"FVPT", 13},
+	  {"FWIT", 15},
+	  {"FGIT", 16},
+	  {"FOPP", 22},
+	  {"FWPP", 23},
+	};
 
     private:
         /// Aggregate 'IWEL' array (Integer) for all wells.

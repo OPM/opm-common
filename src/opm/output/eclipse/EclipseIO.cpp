@@ -423,7 +423,7 @@ void EclipseIO::writeTimeStep(int report_step,
                               const std::map<std::string, double>& single_summary_values,
                               const std::map<std::string, std::vector<double> >& region_summary_values,
                               const std::map<std::pair<std::string, int>, double>& block_summary_values,
-                              bool write_double)
+                              const bool write_double)
  {
 
     if( !this->impl->output_enabled )
@@ -454,7 +454,6 @@ void EclipseIO::writeTimeStep(int report_step,
                                           block_summary_values);
         this->impl->summary.write();
     }
-
 
     /*
       Current implementation will not write restart files for substep,
