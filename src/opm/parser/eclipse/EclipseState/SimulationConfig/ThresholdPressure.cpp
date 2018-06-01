@@ -28,8 +28,11 @@
 
 namespace Opm {
 
-    ThresholdPressure::ThresholdPressure(const Deck& deck,
-                                         const Eclipse3DProperties& eclipseProperties)
+    ThresholdPressure::ThresholdPressure(bool restart,
+                                         const Deck& deck,
+                                         const Eclipse3DProperties& eclipseProperties) :
+        m_active(false),
+        m_restart(restart)
     {
 
         if( !Section::hasRUNSPEC( deck ) || !Section::hasSOLUTION( deck ) )
@@ -38,7 +41,6 @@ namespace Opm {
         RUNSPECSection runspecSection( deck );
         SOLUTIONSection solutionSection( deck );
 
-        bool       thpresOption     = false;
         const bool thpresKeyword    = solutionSection.hasKeyword<ParserKeywords::THPRES>();
         const bool hasEqlnumKeyword = eclipseProperties.hasDeckIntGridProperty( "EQLNUM" );
         int        maxEqlnum        = 0;
@@ -55,19 +57,35 @@ namespace Opm {
                     throw std::runtime_error("Cannot use IRREVERS version of THPRES option, not implemented");
 
                 if( opt == "THPRES" )
-                    thpresOption = true;
+                    m_active = true;
             }
         }
 
-        if( thpresOption && !thpresKeyword ) {
-            throw std::runtime_error("Invalid solution section; "
-                                     "the EQLOPTS THPRES option is set in RUNSPEC, "
-                                     "but no THPRES keyword is found in SOLUTION." );
+        /*
+          When performing a restart in Eclipse the solution section must be
+          updated, and in particuar the THPRES keyword should be removed. The
+          THPRES values should be read from the restart file instead. To ensure
+          that reservoir engineers can follow the same file-manipulation
+          workflow they are used to when running Eclipse we accept a deck
+          without THPRES and just assume it will come from the restart file at a
+          later stage.
+
+          If this is a restart AND the deck still contains the THPRES values
+          they will be loaded from the deck, but quite probably - the simulator
+          will ignore the deck initialized values and just use the values from
+          the restart file.
+        */
+
+        if( m_active && !thpresKeyword ) {
+            if (!m_restart)
+                throw std::runtime_error("Invalid solution section; "
+                                         "the EQLOPTS THPRES option is set in RUNSPEC, "
+                                         "but no THPRES keyword is found in SOLUTION." );
         }
 
 
         //Option is set and keyword is found
-        if( thpresOption && thpresKeyword ) {
+        if( m_active && thpresKeyword ) {
             if( !hasEqlnumKeyword )
                 throw std::runtime_error("Error when internalizing THPRES: EQLNUM keyword not found in deck");
 
@@ -164,6 +182,13 @@ namespace Opm {
         return m_pressureTable.size();
     }
 
+    bool ThresholdPressure::active() const {
+        return m_active;
+    }
+
+    bool ThresholdPressure::restart() const {
+        return m_restart;
+    }
 
     bool ThresholdPressure::hasThresholdPressure(int r1 , int r2) const {
         std::pair<int,int> indexPair = makeIndex(r1,r2);

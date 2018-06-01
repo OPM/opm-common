@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(CreateSimulationConfig) {
     EclipseState state(deck, ParseContext());
     const auto& simConf = state.getSimulationConfig();
 
-    BOOST_CHECK(simConf.hasThresholdPressure());
+    BOOST_CHECK(simConf.useThresholdPressure());
     BOOST_CHECK_EQUAL(simConf.getThresholdPressure().size(), 3);
 }
 

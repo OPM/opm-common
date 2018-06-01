@@ -46,9 +46,10 @@
 
 namespace Opm {
 
-    SimulationConfig::SimulationConfig(const Deck& deck,
+    SimulationConfig::SimulationConfig(bool restart,
+                                       const Deck& deck,
                                        const Eclipse3DProperties& eclipseProperties) :
-        m_ThresholdPressure( deck, eclipseProperties ),
+        m_ThresholdPressure( restart, deck, eclipseProperties ),
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false)
@@ -75,8 +76,8 @@ namespace Opm {
         return m_ThresholdPressure;
     }
 
-    bool SimulationConfig::hasThresholdPressure() const {
-        return m_ThresholdPressure.size() > 0;
+    bool SimulationConfig::useThresholdPressure() const {
+        return m_ThresholdPressure.active();
     }
 
     bool SimulationConfig::useCPR() const {
