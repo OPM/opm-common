@@ -20,7 +20,7 @@
 #ifndef SUMMARY_STATE_H
 #define SUMMARY_STATE_H
 
-#include <cstddef>
+#include <string>
 #include <unordered_map>
 
 namespace Opm{
