@@ -41,7 +41,7 @@ namespace Opm {
     {}
 
 
-    WellProductionProperties WellProductionProperties::history(const double BHPLimit, const DeckRecord& record)
+    WellProductionProperties WellProductionProperties::history(const WellProductionProperties& prev_properties, const DeckRecord& record)
     {
         WellProductionProperties p(record);
         p.predictionMode = false;
@@ -70,13 +70,23 @@ namespace Opm {
             if (cmode == wp::BHP)
                 p.BHPLimit = record.getItem( "BHP" ).getSIDouble( 0 );
             else
-                p.BHPLimit = BHPLimit;
+                p.BHPLimit = prev_properties.BHPLimit;
         }
 
         if ( record.getItem( "BHP" ).hasValue(0) )
             p.BHPH = record.getItem("BHP").getSIDouble(0);
         if ( record.getItem( "THP" ).hasValue(0) )
             p.THPH = record.getItem("THP").getSIDouble(0);
+
+        p.VFPTableNumber = record.getItem("VFPTable").get< int >(0);
+
+        if (p.VFPTableNumber == 0)
+            p.VFPTableNumber = prev_properties.VFPTableNumber;
+
+        p.ALQValue       = record.getItem("Lift").get< double >(0); //NOTE: Unit of ALQ is never touched
+
+        if (p.ALQValue == 0.)
+            p.ALQValue = prev_properties.ALQValue;
 
         return p;
     }
@@ -96,15 +106,21 @@ namespace Opm {
         p.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
 
         namespace wp = WellProducer;
-        using mode = std::pair< const char*, wp::ControlModeEnum >;
+        using mode = std::pair< const std::string, wp::ControlModeEnum >;
         static const mode modes[] = {
             { "ORAT", wp::ORAT }, { "WRAT", wp::WRAT }, { "GRAT", wp::GRAT },
             { "LRAT", wp::LRAT }, { "RESV", wp::RESV }, { "THP", wp::THP }
         };
 
         for( const auto& cmode : modes ) {
-            if( !record.getItem( cmode.first ).defaultApplied( 0 ) )
-                 p.addProductionControl( cmode.second );
+            if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
+
+                // a zero value THP limit will not be handled as a THP limit
+                if (cmode.first == "THP" && p.THPLimit == 0.)
+                    continue;
+
+                p.addProductionControl( cmode.second );
+            }
         }
 
         // There is always a BHP constraint, when not specified, will use the default value

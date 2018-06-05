@@ -500,8 +500,7 @@ namespace Opm {
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
                 } else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
-                    const double BHPLimit = prev_properties.BHPLimit;
-                    properties = WellProductionProperties::history( BHPLimit , record);
+                    properties = WellProductionProperties::history(prev_properties, record);
                 }
 
                 if (status != WellCommon::SHUT) {
@@ -650,10 +649,11 @@ namespace Opm {
 
                 if (!record.getItem("THP").defaultApplied(0)) {
                     properties.THPLimit       = record.getItem("THP").getSIDouble(0);
-                    properties.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
                     properties.addInjectionControl(WellInjector::THP);
                 } else
                     properties.dropInjectionControl(WellInjector::THP);
+
+                properties.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
 
                 /*
                   There is a sensible default BHP limit defined, so the BHPLimit can be
@@ -891,6 +891,11 @@ namespace Opm {
                     properties.BHPH = record.getItem("BHP").getSIDouble(0);
                 if ( record.getItem( "THP" ).hasValue(0) )
                     properties.THPH = record.getItem("THP").getSIDouble(0);
+
+                const int VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
+                if (VFPTableNumber > 0) {
+                    properties.VFPTableNumber = VFPTableNumber;
+                }
 
                 if (well->setInjectionProperties(currentStep, properties))
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );

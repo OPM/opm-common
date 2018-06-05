@@ -859,12 +859,34 @@ namespace {
             return input;
         }
 
+        std::string bhp_defaulted() {
+            const std::string input =
+                "WCONHIST\n"
+                "-- 1    2     3    4-9 10\n"
+                "  'P' 'OPEN' 'BHP' 6*  500/\n/\n";
+
+            return input;
+        }
+
+        std::string all_defaulted_with_bhp_vfp_table() {
+            const std::string input =
+                "WCONHIST\n"
+                "-- 1    2     3    4-6  7  8  9  10\n"
+                "  'P' 'OPEN' 'RESV' 3*  3 10. 1* 500/\n/\n";
+
+            return input;
+        }
+
         Opm::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
 
             auto deck = parser.parseString(input, Opm::ParseContext());
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
-            Opm::WellProductionProperties hist = Opm::WellProductionProperties::history( 100 , record);;
+            Opm::WellProductionProperties prev_p;
+            prev_p.BHPLimit = 100.;
+            prev_p.VFPTableNumber = 12;
+            prev_p.ALQValue = 18.;
+            Opm::WellProductionProperties hist = Opm::WellProductionProperties::history(prev_p, record);;
 
             return hist;
         }
@@ -875,8 +897,35 @@ namespace {
         all_specified_CMODE_BHP()
         {
             const std::string input =
-                "WCONPROD\n"
+                "WCONHIST\n"
                 "'P' 'OPEN' 'BHP' 1 2 3/\n/\n";
+
+            return input;
+        }
+
+        std::string orat_CMODE_other_defaulted()
+        {
+            const std::string input =
+                "WCONPROD\n"
+                "'P' 'OPEN' 'ORAT' 1 2 3/\n/\n";
+
+            return input;
+        }
+
+        std::string thp_CMODE()
+        {
+            const std::string input =
+                "WCONPROD\n"
+                "'P' 'OPEN' 'THP' 1 2 3 3* 10. 8 13./\n/\n";
+
+            return input;
+        }
+
+        std::string bhp_CMODE()
+        {
+            const std::string input =
+                "WCONPROD\n"
+                "'P' 'OPEN' 'BHP' 1 2 3 2* 20. 10. 8 13./\n/\n";
 
             return input;
         }
@@ -888,7 +937,7 @@ namespace {
             Opm::Parser parser;
 
             auto deck = parser.parseString(input, Opm::ParseContext());
-            const auto& kwd     = deck.getKeyword("WCONHIST");
+            const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
             Opm::WellProductionProperties pred = Opm::WellProductionProperties::prediction( record, false );
 
@@ -912,6 +961,9 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
+    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
@@ -927,6 +979,9 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::WRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
+    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
@@ -942,6 +997,9 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::GRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
+    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
@@ -957,6 +1015,9 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::LRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
+    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
@@ -973,6 +1034,112 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
+    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+}
+
+BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
+{
+    const Opm::WellProductionProperties& p =
+        WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table());
+
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
+
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
+
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
+    BOOST_CHECK_EQUAL(p.ALQValue, 10.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+}
+
+BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
+{
+    const Opm::WellProductionProperties& p =
+        WCONHIST::properties(WCONHIST::bhp_defaulted());
+
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
+
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::BHP);
+
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
+    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 5.e7); // 500 barsa
+}
+
+BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
+{
+    const Opm::WellProductionProperties& p =
+        WCONPROD::properties(WCONPROD::orat_CMODE_other_defaulted());
+
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::THP));
+
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
+
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 0);
+    BOOST_CHECK_EQUAL(p.ALQValue, 0.);
+}
+
+BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
+{
+    const Opm::WellProductionProperties& p =
+        WCONPROD::properties(WCONPROD::thp_CMODE());
+
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::THP));
+
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::THP);
+
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
+    BOOST_CHECK_EQUAL(p.ALQValue, 13.);
+    BOOST_CHECK_EQUAL(p.THPLimit, 1000000.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.); // 1 atm.
+}
+
+BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
+{
+    const Opm::WellProductionProperties& p =
+        WCONPROD::properties(WCONPROD::bhp_CMODE());
+
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::ORAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::WRAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::THP));
+
+    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::BHP);
+
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+
+    BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
+    BOOST_CHECK_EQUAL(p.ALQValue, 13.);
+    BOOST_CHECK_EQUAL(p.THPLimit, 1000000.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPLimit, 2000000.); // 20 barsa
 }
 
 

@@ -5,7 +5,7 @@
        {"name" : "ORAT"         , "value_type" : "DOUBLE",  "default" : 0.0, "dimension" : "LiquidSurfaceVolume/Time"},
        {"name" : "WRAT"         , "value_type" : "DOUBLE" , "default" : 0.0, "dimension" : "LiquidSurfaceVolume/Time"},
        {"name" : "GRAT"         , "value_type" : "DOUBLE" , "default" : 0.0, "dimension" : "GasSurfaceVolume/Time"},
-       {"name" : "VFPTable"     , "value_type" : "INT"   , "default" : 0.0 , "comment":"The default is a state variable"},
+       {"name" : "VFPTable"     , "value_type" : "INT"   , "default" : 0, "comment":"The default is a state variable"},
        {"name" : "Lift"         , "value_type" : "DOUBLE" , "default" : 0.0 , "comment":"The default is a state variable"},
        {"name" : "THP"          , "value_type" : "DOUBLE" , "default" : 0.0 , "dimension" : "Pressure"},
        {"name" : "BHP"          , "value_type" : "DOUBLE" , "default" : 0.0 ,"dimension" : "Pressure"},
