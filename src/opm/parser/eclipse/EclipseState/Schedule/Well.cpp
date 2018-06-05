@@ -351,6 +351,10 @@ namespace Opm {
         return m_completions.get( timeStep );
     }
 
+    CompletionSet Well::getActiveCompletions(size_t timeStep, const EclipseGrid& grid) const {
+        return CompletionSet(this->getCompletions(timeStep), grid);
+    }
+
     const CompletionSet& Well::getCompletions() const {
         return m_completions.back();
     }
