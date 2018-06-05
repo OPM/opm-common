@@ -32,6 +32,14 @@ namespace Opm {
         for( auto&& c : cs ) this->add( c );
     }
 
+
+    CompletionSet::CompletionSet(const CompletionSet& src, const EclipseGrid& grid) {
+        for (const auto& c : src) {
+            if (grid.cellActive(c.getI(), c.getJ(), c.getK()))
+                this->add(c);
+        }
+    }
+
     size_t CompletionSet::size() const {
         return m_completions.size();
     }
