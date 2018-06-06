@@ -52,6 +52,7 @@ public:
     bool has(const std::string& well, Reason reason) const;
     const WTESTWell& get(const std::string& well, Reason reason) const;
     size_t size() const;
+    const std::vector<WTESTWell>& getWells() const;
 
 private:
     std::vector<WTESTWell> wells;
