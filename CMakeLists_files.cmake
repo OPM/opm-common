@@ -94,6 +94,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/WellTestState.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
@@ -459,6 +460,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp
+       opm/parser/eclipse/EclipseState/Schedule/WellTestState.hpp
        opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp

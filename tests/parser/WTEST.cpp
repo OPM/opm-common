@@ -24,6 +24,7 @@
 #define BOOST_TEST_MODULE WTEST
 #include <boost/test/unit_test.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/WellTestState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -61,10 +62,60 @@ BOOST_AUTO_TEST_CASE(CreateWellTestConfig) {
     BOOST_CHECK(!wc.has("NAMEX", WellTestConfig::Reason::ECONOMIC));
     BOOST_CHECK(!wc.has("NAME"));
 
-
     BOOST_CHECK_THROW(wc.get("NAMEX", WellTestConfig::Reason::ECONOMIC), std::invalid_argument);
     BOOST_CHECK_THROW(wc.get("NO_NAME", WellTestConfig::Reason::ECONOMIC), std::invalid_argument);
     const auto& wt = wc.get("NAMEX", WellTestConfig::Reason::PHYSICAL);
     BOOST_CHECK_EQUAL(wt.name, "NAMEX");
 }
 
+
+BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
+    WellTestConfig wc;
+    WellTestState st;
+    wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 0, 0, 0);
+    st.addClosedWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    BOOST_CHECK_EQUAL(st.size(), 1);
+
+    auto shut_wells = st.update(wc, 5000);
+    BOOST_CHECK_EQUAL( shut_wells.size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(WTEST_STATE) {
+    WellTestConfig wc;
+    WellTestState st;
+    st.addClosedWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
+    BOOST_CHECK_EQUAL(st.size(), 1);
+
+    st.addClosedWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
+    BOOST_CHECK_EQUAL(st.size(), 1);
+
+    st.addClosedWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    BOOST_CHECK_EQUAL(st.size(), 2);
+
+    st.addClosedWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100);
+    BOOST_CHECK_EQUAL(st.size(), 3);
+
+    auto shut_wells = st.update(wc, 5000);
+    BOOST_CHECK_EQUAL( shut_wells.size(), 0);
+
+    wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000, 2, 0);
+    // Not sufficient time has passed.
+    BOOST_CHECK_EQUAL( st.update(wc, 200).size(), 0);
+
+    // We should test it:
+    BOOST_CHECK_EQUAL( st.update(wc, 1200).size(), 1);
+
+    // Not sufficient time has passed.
+    BOOST_CHECK_EQUAL( st.update(wc, 1700).size(), 0);
+
+    // We should test it:
+    BOOST_CHECK_EQUAL( st.update(wc, 2400).size(), 1);
+
+    // Too many attempts:
+    BOOST_CHECK_EQUAL( st.update(wc, 24000).size(), 0);
+
+    st.drop("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
+
+    st.openWell("WELL_NAME");
+    BOOST_CHECK_EQUAL(st.size(), 1);
+}
