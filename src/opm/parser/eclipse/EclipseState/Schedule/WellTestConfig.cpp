@@ -108,11 +108,6 @@ size_t WellTestConfig::size() const {
     return wells.size();
 }
 
-const std::vector<WellTestConfig::WTESTWell>& WellTestConfig::getWells() const {
-    return wells;
-}
-
-
 }
 
 
