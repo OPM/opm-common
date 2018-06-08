@@ -47,7 +47,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <ert/ecl/ecl_grid.h>
+#include <ert/ecl/ecl_grid.hpp>
 
 namespace Opm {
 
@@ -445,8 +445,6 @@ namespace Opm {
                                           const int * actnum,
                                           const double * mapaxes)
     {
-        const std::vector<float> zcorn_float( zcorn.begin() , zcorn.end() );
-        const std::vector<float> coord_float( coord.begin() , coord.end() );
         float * mapaxes_float = nullptr;
         if (mapaxes) {
             mapaxes_float = new float[6];
@@ -454,14 +452,14 @@ namespace Opm {
                 mapaxes_float[i] = mapaxes[i];
         }
 
-        m_grid.reset( ecl_grid_alloc_GRDECL_data(dims[0] ,
-                                                 dims[1] ,
-                                                 dims[2] ,
-                                                 zcorn_float.data() ,
-                                                 coord_float.data() ,
-                                                 actnum ,
-                                                 false,  // We do not apply the MAPAXES transformations
-                                                 mapaxes_float) );
+        m_grid.reset( ecl::ecl_grid_alloc_GRDECL_data(dims[0] ,
+                                                      dims[1] ,
+                                                      dims[2] ,
+                                                      zcorn.data() ,
+                                                      coord.data() ,
+                                                      actnum ,
+                                                      false,  // We do not apply the MAPAXES transformations
+                                                      mapaxes_float) );
 
         if (mapaxes)
             delete[] mapaxes_float;
