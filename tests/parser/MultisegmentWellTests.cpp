@@ -32,7 +32,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
@@ -43,13 +43,13 @@
 
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     Opm::CompletionSet completion_set;
-    completion_set.add(Opm::Completion( 19, 0, 0, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.5), Opm::Value<double>("SKIN", 0.), 0) );
-    completion_set.add(Opm::Completion( 19, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.5), Opm::Value<double>("SKIN", 0.), 0) );
-    completion_set.add(Opm::Completion( 19, 0, 2, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0) );
-    completion_set.add(Opm::Completion( 18, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0,  Opm::WellCompletion::DirectionEnum::X) );
-    completion_set.add(Opm::Completion( 17, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0,  Opm::WellCompletion::DirectionEnum::X) );
-    completion_set.add(Opm::Completion( 16, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0,  Opm::WellCompletion::DirectionEnum::X) );
-    completion_set.add(Opm::Completion( 15, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0,  Opm::WellCompletion::DirectionEnum::X) );
+    completion_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.5), Opm::Value<double>("SKIN", 0.), 0) );
+    completion_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.5), Opm::Value<double>("SKIN", 0.), 0) );
+    completion_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0) );
+    completion_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0,  Opm::WellCompletion::DirectionEnum::X) );
+    completion_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0,  Opm::WellCompletion::DirectionEnum::X) );
+    completion_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0,  Opm::WellCompletion::DirectionEnum::X) );
+    completion_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0,  Opm::WellCompletion::DirectionEnum::X) );
 
     BOOST_CHECK_EQUAL( 7U , completion_set.size() );
 
@@ -90,31 +90,31 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     BOOST_CHECK_EQUAL(7U, new_completion_set.size());
 
-    const Opm::Completion& completion1 = new_completion_set.get(0);
+    const Opm::Connection& completion1 = new_completion_set.get(0);
     const int segment_number_completion1 = completion1.getSegmentNumber();
     const double center_depth_completion1 = completion1.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_completion1, 1);
     BOOST_CHECK_EQUAL(center_depth_completion1, 2512.5);
 
-    const Opm::Completion& completion3 = new_completion_set.get(2);
+    const Opm::Connection& completion3 = new_completion_set.get(2);
     const int segment_number_completion3 = completion3.getSegmentNumber();
     const double center_depth_completion3 = completion3.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_completion3, 3);
     BOOST_CHECK_EQUAL(center_depth_completion3, 2562.5);
 
-    const Opm::Completion& completion5 = new_completion_set.get(4);
+    const Opm::Connection& completion5 = new_completion_set.get(4);
     const int segment_number_completion5 = completion5.getSegmentNumber();
     const double center_depth_completion5 = completion5.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_completion5, 6);
     BOOST_CHECK_CLOSE(center_depth_completion5, 2538.83, 0.001);
 
-    const Opm::Completion& completion6 = new_completion_set.get(5);
+    const Opm::Connection& completion6 = new_completion_set.get(5);
     const int segment_number_completion6 = completion6.getSegmentNumber();
     const double center_depth_completion6 = completion6.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_completion6, 6);
     BOOST_CHECK_CLOSE(center_depth_completion6,  2537.83, 0.001);
 
-    const Opm::Completion& completion7 = new_completion_set.get(6);
+    const Opm::Connection& completion7 = new_completion_set.get(6);
     const int segment_number_completion7 = completion7.getSegmentNumber();
     const double center_depth_completion7 = completion7.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_completion7, 7);

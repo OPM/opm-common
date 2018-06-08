@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -211,7 +211,7 @@ inline std::array< int, 3 > getijk( const DeckRecord& record,
     }};
 }
 
-inline std::array< int, 3 > getijk( const Completion& completion ) {
+inline std::array< int, 3 > getijk( const Connection& completion ) {
     return {{ completion.getI(), completion.getJ(), completion.getK() }};
 }
 

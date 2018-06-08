@@ -39,9 +39,9 @@ namespace Opm {
     class Eclipse3DProperties;
     class Schedule;
 
-    class Completion {
+    class Connection {
     public:
-        Completion(int i, int j , int k ,
+        Connection(int i, int j , int k ,
                    int complnum,
                    double depth,
                    WellCompletion::StateEnum state ,
@@ -51,12 +51,12 @@ namespace Opm {
                    const int satTableId,
                    const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
-        Completion(const Completion&, WellCompletion::StateEnum newStatus);
-        Completion(const Completion&, double wellPi);
-        Completion(const Completion&, int complnum );
-        Completion(const Completion& completion_initial, int segment_number, double center_depth);
+        Connection(const Connection&, WellCompletion::StateEnum newStatus);
+        Connection(const Connection&, double wellPi);
+        Connection(const Connection&, int complnum );
+        Connection(const Connection& connection_initial, int segment_number, double center_depth);
 
-        bool sameCoordinate(const Completion& other) const;
+        bool sameCoordinate(const Connection& other) const;
         bool sameCoordinate(const int i, const int j, const int k) const;
 
         int getI() const;
@@ -78,7 +78,7 @@ namespace Opm {
 
         WellCompletion::DirectionEnum getDirection() const;
 
-        static std::map< std::string, std::vector< Completion > >
+        static std::map< std::string, std::vector< Connection > >
         fromCOMPDAT( const EclipseGrid& grid,
                      const Eclipse3DProperties& eclipseProperties,
                      const DeckKeyword& compdatKeyword,
@@ -86,8 +86,8 @@ namespace Opm {
                      const ParseContext&,
                      const Schedule&);
 
-        bool operator==( const Completion& ) const;
-        bool operator!=( const Completion& ) const;
+        bool operator==( const Connection& ) const;
+        bool operator!=( const Connection& ) const;
 
     private:
         int m_i, m_j, m_k;

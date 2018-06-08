@@ -21,7 +21,7 @@
 #ifndef COMPLETIONSET_HPP_
 #define COMPLETIONSET_HPP_
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 
 namespace Opm {
     class EclipseGrid;
@@ -30,18 +30,18 @@ namespace Opm {
     public:
         CompletionSet() = default;
         // cppcheck-suppress noExplicitConstructor
-        CompletionSet( std::initializer_list< Completion > );
+        CompletionSet( std::initializer_list< Connection > );
         CompletionSet(const CompletionSet& src, const EclipseGrid& grid);
 
-        using const_iterator = std::vector< Completion >::const_iterator;
+        using const_iterator = std::vector< Connection >::const_iterator;
 
-        void add( Completion );
+        void add( Connection );
         size_t size() const;
-        const Completion& get(size_t index) const;
-        const Completion& getFromIJK(const int i, const int j, const int k) const;
+        const Connection& get(size_t index) const;
+        const Connection& getFromIJK(const int i, const int j, const int k) const;
 
-        const_iterator begin() const { return this->m_completions.begin(); }
-        const_iterator end() const { return this->m_completions.end(); }
+        const_iterator begin() const { return this->m_connections.begin(); }
+        const_iterator end() const { return this->m_connections.end(); }
         void filter(const EclipseGrid& grid);
         bool allCompletionsShut() const;
         /// Order completions irrespective of input order.
@@ -62,7 +62,7 @@ namespace Opm {
         bool operator!=( const CompletionSet& ) const;
 
     private:
-        std::vector< Completion > m_completions;
+        std::vector< Connection > m_connections;
         size_t findClosestCompletion(int oi, int oj, double oz, size_t start_pos);
     };
 }

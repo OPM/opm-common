@@ -576,25 +576,25 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         const auto& completions = well->getCompletions(0);
         BOOST_CHECK_EQUAL(7U, completions.size());
 
-        const Completion& completion5 = completions.get(4);
+        const Connection& completion5 = completions.get(4);
         const int seg_number_completion5 = completion5.getSegmentNumber();
         const double completion5_depth = completion5.getCenterDepth();
         BOOST_CHECK_EQUAL(seg_number_completion5, 6);
         BOOST_CHECK_CLOSE(completion5_depth, 2538.83, 0.001);
 
-        const Completion& completion6 = completions.get(5);
+        const Connection& completion6 = completions.get(5);
         const int seg_number_completion6 = completion6.getSegmentNumber();
         const double completion6_depth = completion6.getCenterDepth();
         BOOST_CHECK_EQUAL(seg_number_completion6, 6);
         BOOST_CHECK_CLOSE(completion6_depth, 2537.83, 0.001);
 
-        const Completion& completion1 = completions.get(0);
+        const Connection& completion1 = completions.get(0);
         const int seg_number_completion1 = completion1.getSegmentNumber();
         const double completion1_depth = completion1.getCenterDepth();
         BOOST_CHECK_EQUAL(seg_number_completion1, 1);
         BOOST_CHECK_EQUAL(completion1_depth, 2512.5);
 
-        const Completion& completion3 = completions.get(2);
+        const Connection& completion3 = completions.get(2);
         const int seg_number_completion3 = completion3.getSegmentNumber();
         const double completion3_depth = completion3.getCenterDepth();
         BOOST_CHECK_EQUAL(seg_number_completion3, 3);

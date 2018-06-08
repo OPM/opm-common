@@ -23,12 +23,12 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 
 namespace Opm {
 
-    CompletionSet::CompletionSet( std::initializer_list< Completion > cs ) {
+    CompletionSet::CompletionSet( std::initializer_list< Connection > cs ) {
         for( auto&& c : cs ) this->add( c );
     }
 
@@ -41,14 +41,14 @@ namespace Opm {
     }
 
     size_t CompletionSet::size() const {
-        return m_completions.size();
+        return m_connections.size();
     }
 
-    const Completion& CompletionSet::get(size_t index) const {
-        return this->m_completions.at( index );
+    const Connection& CompletionSet::get(size_t index) const {
+        return this->m_connections.at( index );
     }
 
-    const Completion& CompletionSet::getFromIJK(const int i, const int j, const int k) const {
+    const Connection& CompletionSet::getFromIJK(const int i, const int j, const int k) const {
         for (size_t ic = 0; ic < size(); ++ic) {
             if (get(ic).sameCoordinate(i, j, k)) {
                 return get(ic);
@@ -58,31 +58,31 @@ namespace Opm {
     }
 
 
-    void CompletionSet::add( Completion completion ) {
-        auto same = [&]( const Completion& c ) {
+    void CompletionSet::add( Connection completion ) {
+        auto same = [&]( const Connection& c ) {
             return c.sameCoordinate( completion );
         };
 
-        auto prev = std::find_if( this->m_completions.begin(),
-                                  this->m_completions.end(),
+        auto prev = std::find_if( this->m_connections.begin(),
+                                  this->m_connections.end(),
                                   same );
 
-        if( prev != this->m_completions.end() ) {
+        if( prev != this->m_connections.end() ) {
             // update the completion, but preserve it's number
-            *prev = Completion( completion, prev->complnum() );
+            *prev = Connection( completion, prev->complnum() );
             return;
         }
 
-        m_completions.emplace_back( completion );
+        m_connections.emplace_back( completion );
     }
 
     bool CompletionSet::allCompletionsShut( ) const {
-        auto shut = []( const Completion& c ) {
+        auto shut = []( const Connection& c ) {
             return c.getState() == WellCompletion::StateEnum::SHUT;
         };
 
-        return std::all_of( this->m_completions.begin(),
-                            this->m_completions.end(),
+        return std::all_of( this->m_connections.begin(),
+                            this->m_connections.end(),
                             shut );
     }
 
@@ -90,14 +90,14 @@ namespace Opm {
 
     void CompletionSet::orderCompletions(size_t well_i, size_t well_j)
     {
-        if (m_completions.empty()) {
+        if (m_connections.empty()) {
             return;
         }
 
         // Find the first completion and swap it into the 0-position.
         const double surface_z = 0.0;
         size_t first_index = findClosestCompletion(well_i, well_j, surface_z, 0);
-        std::swap(m_completions[first_index], m_completions[0]);
+        std::swap(m_connections[first_index], m_connections[0]);
 
         // Repeat for remaining completions.
         //
@@ -105,13 +105,13 @@ namespace Opm {
         // O(n^2) algorithm. However, it should be acceptable since
         // the expected number of completions is fairly low (< 100).
 
-        if( this->m_completions.empty() ) return;
+        if( this->m_connections.empty() ) return;
 
-        for (size_t pos = 1; pos < m_completions.size() - 1; ++pos) {
-            const auto& prev = m_completions[pos - 1];
+        for (size_t pos = 1; pos < m_connections.size() - 1; ++pos) {
+            const auto& prev = m_connections[pos - 1];
             const double prevz = prev.getCenterDepth();
             size_t next_index = findClosestCompletion(prev.getI(), prev.getJ(), prevz, pos);
-            std::swap(m_completions[next_index], m_completions[pos]);
+            std::swap(m_connections[next_index], m_connections[pos]);
         }
     }
 
@@ -122,8 +122,8 @@ namespace Opm {
         size_t closest = std::numeric_limits<size_t>::max();
         int min_ijdist2 = std::numeric_limits<int>::max();
         double min_zdiff = std::numeric_limits<double>::max();
-        for (size_t pos = start_pos; pos < m_completions.size(); ++pos) {
-            const auto& completion = m_completions[ pos ];
+        for (size_t pos = start_pos; pos < m_connections.size(); ++pos) {
+            const auto& completion = m_connections[ pos ];
 
             const double depth = completion.getCenterDepth();
             const int ci = completion.getI();
@@ -156,10 +156,16 @@ namespace Opm {
     }
 
 
+<<<<<<< HEAD:src/opm/parser/eclipse/EclipseState/Schedule/CompletionSet.cpp
     void CompletionSet::filter(const EclipseGrid& grid) {
         auto new_end = std::remove_if(m_completions.begin(),
                                       m_completions.end(),
-                                      [&grid](const Completion& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
-        m_completions.erase(new_end, m_completions.end());
+=======
+    void ConnectionSet::filter(const EclipseGrid& grid) {
+        auto new_end = std::remove_if(m_connections.begin(),
+                                      m_connections.end(),
+>>>>>>> e36a653... fixup! Rename Completion -> Connection:src/opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.cpp
+                                      [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
+        m_connections.erase(new_end, m_connections.end());
     }
 }

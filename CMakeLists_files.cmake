@@ -73,7 +73,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
     src/opm/parser/eclipse/EclipseState/Runspec.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Completion.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/CompletionSet.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group.cpp
@@ -178,7 +178,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/AquanconTests.cpp
     tests/parser/BoxTests.cpp
     tests/parser/ColumnSchemaTests.cpp
-    tests/parser/CompletionTests.cpp
+    tests/parser/ConnectionTests.cpp
     tests/parser/COMPSEGUnits.cpp
     tests/parser/CopyRegTests.cpp
     tests/parser/DeckTests.cpp
@@ -453,7 +453,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp
        opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Completion.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Connection.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp

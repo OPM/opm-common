@@ -606,7 +606,7 @@ namespace Opm {
                         continue;
                     }
 
-                    newCompletionSet.add( Completion{ currentCompletion, wellPi } );
+                    newCompletionSet.add( Connection{ currentCompletion, wellPi } );
                 }
 
                 well->addCompletionSet(currentStep, newCompletionSet);
@@ -935,7 +935,7 @@ namespace Opm {
             const int K1 = maybe( record, "K1" );
             const int K2 = maybe( record, "K2" );
 
-            auto new_completion = [=]( const Completion& c ) -> Completion {
+            auto new_completion = [=]( const Connection& c ) -> Connection {
                 if( !defaulted( I ) && c.getI() != I )  return c;
                 if( !defaulted( J ) && c.getJ() != J )  return c;
                 if( !defaulted( K1 ) && c.getK() < K1 ) return c;
@@ -1011,7 +1011,7 @@ namespace Opm {
              * criteria *and* the completion number. A defaulted field always
              * matches the property in question.
              */
-            auto new_completion = [=]( const Completion& completion ) -> Completion {
+            auto new_completion = [=]( const Connection& completion ) -> Connection {
                 if( !defaulted( I ) && completion.getI() != I ) return completion;
                 if( !defaulted( J ) && completion.getJ() != J ) return completion;
                 if( !defaulted( K ) && completion.getK() != K ) return completion;
@@ -1418,7 +1418,7 @@ namespace Opm {
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext) {
         const auto wells = this->getWells( currentStep );
-        auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, keyword, wells, parseContext, *this );
+        auto completions = Connection::fromCOMPDAT( grid, eclipseProperties, keyword, wells, parseContext, *this );
 
         for( const auto pair : completions ) {
             auto& well = this->m_wells.get( pair.first );

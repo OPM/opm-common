@@ -40,7 +40,7 @@ namespace Opm {
 
     template< typename > class DynamicState;
 
-    class Completion;
+    class COnnection;
     class CompletionSet;
     class Segment;
     class SegmentSet;
@@ -94,7 +94,7 @@ namespace Opm {
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(const DeckRecord& deckRecord);
 
-        void addCompletions(size_t time_step, const std::vector< Completion >& );
+        void addCompletions(size_t time_step, const std::vector< Connection >& );
         void addCompletionSet(size_t time_step, CompletionSet );
         const CompletionSet& getCompletions(size_t timeStep) const;
         const CompletionSet& getCompletions() const;

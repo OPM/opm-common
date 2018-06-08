@@ -23,10 +23,11 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
-#include "Compsegs.hpp"
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
+
+#include "Compsegs.hpp"
 
 namespace Opm {
 
@@ -237,8 +238,8 @@ namespace Opm {
             const int j = compseg.m_j;
             const int k = compseg.m_k;
 
-            const Completion& completion = completion_set.getFromIJK( i, j, k );
-            completion_set.add(Completion(completion, compseg.m_segment_number, compseg.m_center_depth) );
+            const Connection& connection = completion_set.getFromIJK( i, j, k );
+            completion_set.add(Connection(connection, compseg.m_segment_number, compseg.m_center_depth) );
         }
 
         for (size_t ic = 0; ic < completion_set.size(); ++ic) {

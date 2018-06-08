@@ -22,7 +22,7 @@
 #include <opm/common/OpmLog/OpmLog.hpp>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
@@ -359,7 +359,7 @@ namespace Opm {
         return m_completions.back();
     }
 
-    void Well::addCompletions(size_t time_step, const std::vector< Completion >& newCompletions ) {
+    void Well::addCompletions(size_t time_step, const std::vector< Connection >& newCompletions ) {
         auto new_set = this->getCompletions( time_step );
         int complnum_shift = new_set.size();
 

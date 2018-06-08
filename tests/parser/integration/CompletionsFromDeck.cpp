@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     const auto& COMPDAT1 = deck.getKeyword("COMPDAT" , 1);
 
     const auto wells = schedule.getWells( 0 );
-    auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, COMPDAT1, wells, ParseContext(), schedule );
+    auto completions = Connection::fromCOMPDAT( grid, eclipseProperties, COMPDAT1, wells, ParseContext(), schedule );
     BOOST_CHECK_EQUAL( 3U , completions.size() );
 
     BOOST_CHECK( completions.find("W_1") != completions.end() );
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK_EQUAL(  5U , completions.find("W_2")->second.size() );
     BOOST_CHECK_EQUAL(  5U , completions.find("W_3")->second.size() );
 
-    std::vector<Completion> W_3Completions = completions.find("W_3")->second;
+    std::vector<Connection> W_3Completions = completions.find("W_3")->second;
 
     const auto& completion0 = W_3Completions[0];
     const auto& completion4 = W_3Completions[4];
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE( CreateCompletionsFromKeyword ) {
     BOOST_CHECK_EQUAL (well2->getStatus(0) , WellCommon::StatusEnum::SHUT);
 
     // Check saturation table number for connection
-    std::vector<Completion> W_1Completions = completions.find("W_1")->second;
+    std::vector<Connection> W_1Completions = completions.find("W_1")->second;
     const auto& W1_completion0 = W_1Completions[0];
     const auto& W1_completion3 = W_1Completions[3];
     const auto& W1_completion4 = W_1Completions[4];

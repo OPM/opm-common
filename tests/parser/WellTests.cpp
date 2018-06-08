@@ -32,6 +32,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -52,7 +53,7 @@ static Opm::TimeMap createXDaysTimeMap(size_t numDays) {
 }
 
 namespace Opm {
-inline std::ostream& operator<<( std::ostream& stream, const Completion& c ) {
+inline std::ostream& operator<<( std::ostream& stream, const Connection& c ) {
     return stream << "(" << c.getI() << "," << c.getJ() << "," << c.getK() << ")";
 }
 inline std::ostream& operator<<( std::ostream& stream, const Well& well ) {
@@ -344,15 +345,15 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
     const auto& completions = well.getCompletions( 0 );
     BOOST_CHECK_EQUAL( 0U , completions.size());
 
-    Opm::Completion comp1( 10 , 10 , 10 , 1, 10, Opm::WellCompletion::AUTO , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion comp2( 10 , 10 , 11 , 1, 11, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion comp3( 10 , 10 , 12 , 1, 12, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion comp4( 10 , 10 , 12 , 1, 12, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Completion comp5( 10 , 10 , 13 , 1, 13, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Connection comp1( 10 , 10 , 10 , 1, 10, Opm::WellCompletion::AUTO , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Connection comp2( 10 , 10 , 11 , 1, 11, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Connection comp3( 10 , 10 , 12 , 1, 12, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Connection comp4( 10 , 10 , 12 , 1, 12, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Connection comp5( 10 , 10 , 13 , 1, 13, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
 
     //std::vector<Opm::CompletionConstPtr> newCompletions2{ comp4 , comp5}; Newer c++
 
-    std::vector< Opm::Completion > newCompletions, newCompletions2;
+    std::vector< Opm::Connection > newCompletions, newCompletions2;
     newCompletions.push_back( comp1 );
     newCompletions.push_back( comp2 );
     newCompletions.push_back( comp3 );
@@ -372,8 +373,8 @@ BOOST_AUTO_TEST_CASE(UpdateCompletions) {
 }
 
 // Helper function for CompletionOrder test.
-inline Opm::Completion completion( int i, int j, int k, int complnum = 1 ) {
-    return Opm::Completion{ i, j, k,
+inline Opm::Connection connection( int i, int j, int k, int complnum = 1 ) {
+    return Opm::Connection { i, j, k,
                             complnum,
                             k*1.0,
                             Opm::WellCompletion::AUTO,
@@ -390,10 +391,10 @@ BOOST_AUTO_TEST_CASE(CompletionOrder) {
     {
         // Vertical well.
         Opm::Well well("WELL1" , 5, 5, 0.0, Opm::Phase::OIL, timeMap , 0);
-        auto c1 = completion(5, 5, 8);
-        auto c2 = completion(5, 5, 9);
-        auto c3 = completion(5, 5, 1);
-        auto c4 = completion(5, 5, 0);
+        auto c1 = connection(5, 5, 8);
+        auto c2 = connection(5, 5, 9);
+        auto c3 = connection(5, 5, 1);
+        auto c4 = connection(5, 5, 0);
         Opm::CompletionSet cv1 = { c1, c2 };
         well.addCompletionSet(1, cv1);
         BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c1);
@@ -406,14 +407,14 @@ BOOST_AUTO_TEST_CASE(CompletionOrder) {
     {
         // Horizontal well.
         Opm::Well well("WELL1" ,  5, 5, 0.0, Opm::Phase::OIL, timeMap , 0);
-        auto c1 = completion(6, 5, 8, 1);
-        auto c2 = completion(5, 6, 7, 2);
-        auto c3 = completion(7, 5, 8, 1);
-        auto c4 = completion(9, 5, 8, 2);
-        auto c5 = completion(8, 5, 9, 3);
-        auto c6 = completion(5, 5, 4, 1);
+        auto c1 = connection(6, 5, 8, 1);
+        auto c2 = connection(5, 6, 7, 2);
+        auto c3 = connection(7, 5, 8, 1);
+        auto c4 = connection(9, 5, 8, 2);
+        auto c5 = connection(8, 5, 9, 3);
+        auto c6 = connection(5, 5, 4, 1);
 
-        std::vector< Opm::Completion > cv1 = { c1, c2 };
+        std::vector< Opm::Connection > cv1 = { c1, c2 };
         well.addCompletions(1, cv1);
         BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), c2);
 
@@ -423,29 +424,29 @@ BOOST_AUTO_TEST_CASE(CompletionOrder) {
          * comparing to the right value by forcing the right-hand-side of the
          * comparison to use the expected completion number
          */
-        std::vector< Opm::Completion > cv2 = { c3, c4, c5 };
+        std::vector< Opm::Connection > cv2 = { c3, c4, c5 };
         well.addCompletions(2, cv2);
-        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), Completion( c2, 2 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), Completion( c2, 2 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), Completion( c1, 1 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), Completion( c3, 3 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), Completion( c5, 5 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), Completion( c4, 4 ) );
-        std::vector< Opm::Completion > cv3 = { c6 };
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), Connection( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), Connection( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), Connection( c1, 1 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), Connection( c3, 3 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), Connection( c5, 5 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), Connection( c4, 4 ) );
+        std::vector< Opm::Connection > cv3 = { c6 };
 
         well.addCompletions(3, cv3);
-        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), Completion( c2, 2 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), Completion( c2, 2 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), Completion( c1, 1 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), Completion( c3, 3 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), Completion( c5, 5 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), Completion( c4, 4 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(0), Completion( c6, 6 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(1), Completion( c2, 2 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(2), Completion( c1, 1 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(3), Completion( c3, 3 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(4), Completion( c5, 5 ) );
-        BOOST_CHECK_EQUAL(well.getCompletions(3).get(5), Completion( c4, 4 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(1).get(0), Connection( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(0), Connection( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(1), Connection( c1, 1 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(2), Connection( c3, 3 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(3), Connection( c5, 5 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(2).get(4), Connection( c4, 4 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(0), Connection( c6, 6 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(1), Connection( c2, 2 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(2), Connection( c1, 1 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(3), Connection( c3, 3 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(4), Connection( c5, 5 ) );
+        BOOST_CHECK_EQUAL(well.getCompletions(3).get(5), Connection( c4, 4 ) );
     }
 }
 
@@ -636,8 +637,8 @@ BOOST_AUTO_TEST_CASE(WellStatus) {
 
     Opm::Well well("WELL1" ,  0, 0, 0.0, Opm::Phase::OIL, timeMap , 0);
 
-    std::vector<Opm::Completion> newCompletions;
-    Opm::Completion comp1(10 , 10 , 10 , 1, 0.25 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    std::vector<Opm::Connection> newCompletions;
+    Opm::Connection comp1(10 , 10 , 10 , 1, 0.25 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
 
     newCompletions.push_back( comp1 );
 
