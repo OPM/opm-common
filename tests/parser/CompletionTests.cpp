@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
 
@@ -155,3 +156,26 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
     BOOST_CHECK_EQUAL( completion2 , copy.get(1));
     BOOST_CHECK_EQUAL( completion3 , copy.get(2));
 }
+
+
+BOOST_AUTO_TEST_CASE(ActiveCompletions) {
+    Opm::EclipseGrid grid(10,10,10);
+    Opm::CompletionSet completions;
+    Opm::Completion completion1( 0,0,0, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion2( 0,0,1, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+    Opm::Completion completion3( 0,0,2, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
+
+    completions.add( completion1 );
+    completions.add( completion2 );
+    completions.add( completion3 );
+
+    std::vector<int> actnum(1000,1);
+    actnum[0] = 0;
+    grid.resetACTNUM( actnum.data() );
+
+    Opm::CompletionSet active_completions(completions, grid);
+    BOOST_CHECK_EQUAL( active_completions.size() , 2);
+    BOOST_CHECK_EQUAL( completion2, active_completions.get(0));
+    BOOST_CHECK_EQUAL( completion3, active_completions.get(1));
+}
+

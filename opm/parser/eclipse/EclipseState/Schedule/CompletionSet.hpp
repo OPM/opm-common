@@ -31,6 +31,7 @@ namespace Opm {
         CompletionSet() = default;
         // cppcheck-suppress noExplicitConstructor
         CompletionSet( std::initializer_list< Completion > );
+        CompletionSet(const CompletionSet& src, const EclipseGrid& grid);
 
         using const_iterator = std::vector< Completion >::const_iterator;
 

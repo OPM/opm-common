@@ -283,7 +283,8 @@ namespace {
 
 std::vector<int> serialize_ICON( int sim_step,
                                  int ncwmax,
-                                 const std::vector<const Well*>& sched_wells) {
+                                 const std::vector<const Well*>& sched_wells,
+                                 const EclipseGrid& grid) {
 
     size_t well_offset = 0;
     std::vector<int> data( sched_wells.size() * ncwmax * NICONZ , 0 );
@@ -313,12 +314,13 @@ std::vector<int> serialize_ICON( int sim_step,
 }
 
 std::vector<int> serialize_IWEL( size_t step,
-                                 const std::vector<const Well *>& wells) {
+                                 const std::vector<const Well *>& wells,
+                                 const EclipseGrid& grid) {
 
     std::vector<int> data( wells.size() * NIWELZ , 0 );
     size_t offset = 0;
     for (const auto well : wells) {
-        const auto& completions = well->getCompletions( step );
+        const auto& completions = well->getActiveCompletions( step, grid );
 
         data[ offset + IWEL_HEADI_INDEX ] = well->getHeadI( step ) + 1;
         data[ offset + IWEL_HEADJ_INDEX ] = well->getHeadJ( step ) + 1;
@@ -533,8 +535,8 @@ void writeWell(ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es
 
     const auto opm_xwel  = serialize_OPM_XWEL( wells, sim_step, sched_wells, phases, grid );
     const auto opm_iwel  = serialize_OPM_IWEL( wells, sched_wells );
-    const auto iwel_data = serialize_IWEL(sim_step, sched_wells);
-    const auto icon_data = serialize_ICON(sim_step , ncwmax, sched_wells);
+    const auto iwel_data = serialize_IWEL(sim_step, sched_wells, grid);
+    const auto icon_data = serialize_ICON(sim_step , ncwmax, sched_wells, grid);
     const auto zwel_data = serialize_ZWEL( sched_wells );
 
     write_kw( rst_file, ERT::EclKW< int >( IWEL_KW, iwel_data) );

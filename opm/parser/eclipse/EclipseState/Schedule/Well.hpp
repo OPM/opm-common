@@ -98,6 +98,7 @@ namespace Opm {
         void addCompletionSet(size_t time_step, CompletionSet );
         const CompletionSet& getCompletions(size_t timeStep) const;
         const CompletionSet& getCompletions() const;
+        CompletionSet getActiveCompletions(size_t timeStep, const EclipseGrid& grid) const;
 
         /* The rate of a given phase under the following assumptions:
          * * Returns zero if production is requested for an injector (and vice
