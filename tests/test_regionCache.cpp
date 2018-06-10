@@ -48,12 +48,12 @@ BOOST_AUTO_TEST_CASE(create) {
     out::RegionCache rc(es.get3DProperties() , grid, schedule);
 
     {
-        const auto& empty = rc.completions( 4 );
+        const auto& empty = rc.connections( 4 );
         BOOST_CHECK_EQUAL( empty.size() , 0 );
     }
 
     {
-        const auto& top_layer = rc.completions( 1 );
+        const auto& top_layer = rc.connections( 1 );
         BOOST_CHECK_EQUAL( top_layer.size() , 3 );
         {
             auto pair = top_layer[0];

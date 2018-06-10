@@ -247,13 +247,13 @@ inline quantity crate( const fn_args& args ) {
     if( args.wells.count( name ) == 0 ) return zero;
 
     const auto& well = args.wells.at( name );
-    const auto& completion = std::find_if( well.completions.begin(),
-                                           well.completions.end(),
-                                           [=]( const data::Completion& c ) {
+    const auto& completion = std::find_if( well.connections.begin(),
+                                           well.connections.end(),
+                                           [=]( const data::Connection& c ) {
                                                 return c.index == global_index;
                                            } );
 
-    if( completion == well.completions.end() ) return zero;
+    if( completion == well.connections.end() ) return zero;
 
     double eff_fac = efac( args.eff_factors, name );
 
@@ -381,9 +381,9 @@ inline quantity duration( const fn_args& args ) {
 template<rt phase , bool injection>
 quantity region_rate( const fn_args& args ) {
     double sum = 0;
-    const auto& well_completions = args.regionCache.completions( args.num );
+    const auto& well_connections = args.regionCache.connections( args.num );
 
-    for (const auto& pair : well_completions) {
+    for (const auto& pair : well_connections) {
 
         double eff_fac = efac( args.eff_factors, pair.first );
 
@@ -776,8 +776,8 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
 
         const auto region = smspec_node_get_num( node );
 
-        for ( const auto& completion : regionCache.completions( region ) ){
-            const auto& w_name = completion.first;
+        for ( const auto& connection : regionCache.connections( region ) ){
+            const auto& w_name = connection.first;
             const auto& well = schedule.getWell( w_name );
 
             const auto& it = std::find_if( wells.begin(), wells.end(),

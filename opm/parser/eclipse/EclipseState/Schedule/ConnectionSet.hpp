@@ -18,20 +18,20 @@
 */
 
 
-#ifndef COMPLETIONSET_HPP_
-#define COMPLETIONSET_HPP_
+#ifndef CONNECTIONSET_HPP_
+#define CONNECTIONSET_HPP_
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 
 namespace Opm {
     class EclipseGrid;
 
-    class CompletionSet {
+    class ConnectionSet {
     public:
-        CompletionSet() = default;
+        ConnectionSet() = default;
         // cppcheck-suppress noExplicitConstructor
-        CompletionSet( std::initializer_list< Connection > );
-        CompletionSet(const CompletionSet& src, const EclipseGrid& grid);
+        ConnectionSet( std::initializer_list< Connection > );
+        ConnectionSet(const ConnectionSet& src, const EclipseGrid& grid);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -43,27 +43,27 @@ namespace Opm {
         const_iterator begin() const { return this->m_connections.begin(); }
         const_iterator end() const { return this->m_connections.end(); }
         void filter(const EclipseGrid& grid);
-        bool allCompletionsShut() const;
-        /// Order completions irrespective of input order.
+        bool allConnectionsShut() const;
+        /// Order connections irrespective of input order.
         /// The algorithm used is the following:
-        ///     1. The completion nearest to the given (well_i, well_j)
-        ///        coordinates in terms of the completion's (i, j) is chosen
-        ///        to be the first completion. If non-unique, choose one with
+        ///     1. The connection nearest to the given (well_i, well_j)
+        ///        coordinates in terms of the connection's (i, j) is chosen
+        ///        to be the first connection. If non-unique, choose one with
         ///        lowest z-depth (shallowest).
-        ///     2. Choose next completion to be nearest to current in (i, j) sense.
+        ///     2. Choose next connection to be nearest to current in (i, j) sense.
         ///        If non-unique choose closest in z-depth (not logical cartesian k).
         ///
         /// \param[in] well_i  logical cartesian i-coordinate of well head
         /// \param[in] well_j  logical cartesian j-coordinate of well head
         /// \param[in] grid    EclipseGrid object, used for cell depths
-        void orderCompletions(size_t well_i, size_t well_j);
+        void orderConnections(size_t well_i, size_t well_j);
 
-        bool operator==( const CompletionSet& ) const;
-        bool operator!=( const CompletionSet& ) const;
+        bool operator==( const ConnectionSet& ) const;
+        bool operator!=( const ConnectionSet& ) const;
 
     private:
         std::vector< Connection > m_connections;
-        size_t findClosestCompletion(int oi, int oj, double oz, size_t start_pos);
+        size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
     };
 }
 

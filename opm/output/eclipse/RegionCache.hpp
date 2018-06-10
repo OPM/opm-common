@@ -32,12 +32,12 @@ namespace out {
     public:
         RegionCache() = default;
         RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule);
-        const std::vector<std::pair<std::string,size_t>>& completions( int region_id ) const;
+        const std::vector<std::pair<std::string,size_t>>& connections( int region_id ) const;
 
     private:
-        std::vector<std::pair<std::string,size_t>> completions_empty;
+        std::vector<std::pair<std::string,size_t>> connections_empty;
 
-        std::map<int , std::vector<std::pair<std::string,size_t>>> completion_map;
+        std::map<int , std::vector<std::pair<std::string,size_t>>> connection_map;
     };
 }
 }

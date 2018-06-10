@@ -28,7 +28,7 @@
 
 namespace Opm {
 
-    class CompletionSet;
+    class ConnectionSet;
     class DeckKeyword;
     class SegmentSet;
 
@@ -59,9 +59,9 @@ namespace Opm {
         // get the segment number information and depth information based on the information from SegmentSet
         static void processCOMPSEGS(std::vector< Compsegs >& compsegs, const SegmentSet& segment_set );
 
-        // update the segment related information for Completions
-        static void updateCompletionsWithSegment(const std::vector< Compsegs >& compsegs,
-                                                 CompletionSet& completion_set);
+        // update the segment related information for Connections
+        static void updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
+                                                 ConnectionSet& connection_set);
 
     };
 }

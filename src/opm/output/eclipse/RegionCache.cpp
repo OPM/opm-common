@@ -18,7 +18,7 @@
  */
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
@@ -35,13 +35,13 @@ RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGri
 
     const auto& wells = schedule.getWells();
     for (const auto& well : wells) {
-        const auto& completions = well->getCompletions( );
-        for (const auto& c : completions) {
+        const auto& connections = well->getConnections( );
+        for (const auto& c : connections) {
             size_t global_index = grid.getGlobalIndex( c.getI() , c.getJ() , c.getK());
             if (grid.cellActive( global_index )) {
                 size_t active_index = grid.activeIndex( global_index );
                 int region_id =fipnum.iget( global_index );
-                auto& well_index_list = this->completion_map[ region_id ];
+                auto& well_index_list = this->connection_map[ region_id ];
                 well_index_list.push_back( { well->name() , active_index } );
             }
         }
@@ -49,10 +49,10 @@ RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGri
 }
 
 
-    const std::vector<std::pair<std::string,size_t>>& RegionCache::completions( int region_id ) const {
-        const auto iter = this->completion_map.find( region_id );
-        if (iter == this->completion_map.end())
-            return this->completions_empty;
+    const std::vector<std::pair<std::string,size_t>>& RegionCache::connections( int region_id ) const {
+        const auto iter = this->connection_map.find( region_id );
+        if (iter == this->connection_map.end())
+            return this->connections_empty;
         else
             return iter->second;
     }

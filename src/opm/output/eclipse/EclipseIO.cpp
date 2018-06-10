@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
@@ -153,30 +153,30 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
 
         const auto& wellData = wellDatas.at(well->name());
 
-        if (wellData.completions.empty())
+        if (wellData.connections.empty())
             continue;
 
-        for( const auto& completion : well->getCompletions( report_step ) ) {
+        for( const auto& connection : well->getConnections( report_step ) ) {
 
-            const size_t i = size_t( completion.getI() );
-            const size_t j = size_t( completion.getJ() );
-            const size_t k = size_t( completion.getK() );
+            const size_t i = size_t( connection.getI() );
+            const size_t j = size_t( connection.getJ() );
+            const size_t k = size_t( connection.getK() );
 
             if( !grid.cellActive( i, j, k ) ) continue;
 
             const auto index = grid.getGlobalIndex( i, j, k );
             const double depth = grid.getCellDepth( i, j, k );
 
-            const auto& completionData = std::find_if( wellData.completions.begin(),
-                                                   wellData.completions.end(),
-                                                   [=]( const data::Completion& c ) {
+            const auto& connectionData = std::find_if( wellData.connections.begin(),
+                                                   wellData.connections.end(),
+                                                   [=]( const data::Connection& c ) {
                                                         return c.index == index;
                                                    } );
 
 
-            const double press = units.from_si(UnitSystem::measure::pressure,completionData->cell_pressure);
-            const double satwat = units.from_si(UnitSystem::measure::identity, completionData->cell_saturation_water);
-            const double satgas = units.from_si(UnitSystem::measure::identity, completionData->cell_saturation_gas);
+            const double press = units.from_si(UnitSystem::measure::pressure,connectionData->cell_pressure);
+            const double satwat = units.from_si(UnitSystem::measure::identity, connectionData->cell_saturation_water);
+            const double satgas = units.from_si(UnitSystem::measure::identity, connectionData->cell_saturation_gas);
 
             auto* cell = ecl_rft_cell_alloc_RFT(
                             i, j, k, depth, press, satwat, satgas );

@@ -27,7 +27,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
@@ -41,7 +41,7 @@ namespace Opm {
     template< typename > class DynamicState;
 
     class COnnection;
-    class CompletionSet;
+    class ConnectionSet;
     class Segment;
     class SegmentSet;
     class TimeMap;
@@ -94,11 +94,11 @@ namespace Opm {
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(const DeckRecord& deckRecord);
 
-        void addCompletions(size_t time_step, const std::vector< Connection >& );
-        void addCompletionSet(size_t time_step, CompletionSet );
-        const CompletionSet& getCompletions(size_t timeStep) const;
-        const CompletionSet& getCompletions() const;
-        CompletionSet getActiveCompletions(size_t timeStep, const EclipseGrid& grid) const;
+        void addConnections(size_t time_step, const std::vector< Connection >& );
+        void addConnectionSet(size_t time_step, ConnectionSet );
+        const ConnectionSet& getConnections(size_t timeStep) const;
+        const ConnectionSet& getConnections() const;
+        ConnectionSet getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
 
         /* The rate of a given phase under the following assumptions:
          * * Returns zero if production is requested for an injector (and vice
@@ -148,7 +148,7 @@ namespace Opm {
 
         static bool wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern);
 
-        WellCompletion::CompletionOrderEnum getWellCompletionOrdering() const;
+        WellCompletion::CompletionOrderEnum getWellConnectionOrdering() const;
 
         bool getAllowCrossFlow() const;
         bool getAutomaticShutIn() const;
@@ -169,7 +169,7 @@ namespace Opm {
           Will remove all completions which are attached to inactive cells. Will
           scan through all timesteps.
         */
-        void filterCompletions(const EclipseGrid& grid);
+        void filterConnections(const EclipseGrid& grid);
     private:
         size_t m_creationTimeStep;
         std::string m_name;
@@ -183,7 +183,7 @@ namespace Opm {
         DynamicState< double > m_efficiencyFactors;
 
         DynamicState< int > m_isProducer;
-        DynamicState< CompletionSet > m_completions;
+        DynamicState< ConnectionSet > m_completions;
         DynamicState< WellProductionProperties > m_productionProperties;
         DynamicState< WellInjectionProperties > m_injectionProperties;
         DynamicState< WellPolymerProperties > m_polymerProperties;

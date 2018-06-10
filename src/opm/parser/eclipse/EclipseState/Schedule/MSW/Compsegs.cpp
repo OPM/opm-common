@@ -22,7 +22,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
@@ -54,7 +54,7 @@ namespace Opm {
 
         for (size_t recordIndex = 1; recordIndex < compsegsKeyword.size(); ++recordIndex) {
             const auto& record = compsegsKeyword.getRecord(recordIndex);
-            // following the coordinate rule for completions
+            // following the coordinate rule for connections
             const int I = record.getItem<ParserKeywords::COMPSEGS::I>().get< int >(0) - 1;
             const int J = record.getItem<ParserKeywords::COMPSEGS::J>().get< int >(0) - 1;
             const int K = record.getItem<ParserKeywords::COMPSEGS::K>().get< int >(0) - 1;
@@ -69,7 +69,7 @@ namespace Opm {
             } else {
                 // TODO: the end of the previous connection or range
                 // 'previous' should be in term of the input order
-                // since basically no specific order for the completions
+                // since basically no specific order for the connections
                 throw std::runtime_error("this way to obtain DISTANCE_START not implemented yet!");
             }
             if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().hasValue(0)) {
@@ -90,7 +90,7 @@ namespace Opm {
             }
 
             /*
-             * Defaulted well completion. Must be non-defaulted if DISTANCE_END
+             * Defaulted well connection. Must be non-defaulted if DISTANCE_END
              * is set or a range is specified. If not this is effectively ignored.
              */
             WellCompletion::DirectionEnum direction = WellCompletion::X;
@@ -170,7 +170,7 @@ namespace Opm {
 
             compseg.m_segment_number = segment_number;
 
-            // when depth is default or zero, we obtain the depth of the completion based on the information
+            // when depth is default or zero, we obtain the depth of the connection based on the information
             // of the related segments
             if (compseg.m_center_depth == 0.) {
                 compseg.calculateCenterDepthWithSegments(segment_set);
@@ -230,21 +230,21 @@ namespace Opm {
         m_center_depth = segment_depth + (center_distance - segment_distance) / segment_length * depth_change_segment;
     }
 
-    void Compsegs::updateCompletionsWithSegment(const std::vector< Compsegs >& compsegs,
-                                                CompletionSet& completion_set) {
+    void Compsegs::updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
+                                                ConnectionSet& connection_set) {
 
         for( const auto& compseg : compsegs ) {
             const int i = compseg.m_i;
             const int j = compseg.m_j;
             const int k = compseg.m_k;
 
-            const Connection& connection = completion_set.getFromIJK( i, j, k );
-            completion_set.add(Connection(connection, compseg.m_segment_number, compseg.m_center_depth) );
+            const Connection& connection = connection_set.getFromIJK( i, j, k );
+            connection_set.add(Connection(connection, compseg.m_segment_number, compseg.m_center_depth) );
         }
 
-        for (size_t ic = 0; ic < completion_set.size(); ++ic) {
-            if ( !(completion_set.get(ic).attachedToSegment()) ) {
-                throw std::runtime_error("Not all the completions are attached with a segment. "
+        for (size_t ic = 0; ic < connection_set.size(); ++ic) {
+            if ( !(connection_set.get(ic).attachedToSegment()) ) {
+                throw std::runtime_error("Not all the connections are attached with a segment. "
                                          "The information from COMPSEGS is not complete");
             }
         }

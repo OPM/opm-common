@@ -23,7 +23,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -48,7 +48,7 @@ namespace Opm {
           m_guideRateScalingFactor( timeMap, 1.0 ),
           m_efficiencyFactors (timeMap, 1.0 ),
           m_isProducer( timeMap, true ) ,
-          m_completions( timeMap, CompletionSet{} ),
+          m_completions( timeMap, ConnectionSet{} ),
           m_productionProperties( timeMap, WellProductionProperties() ),
           m_injectionProperties( timeMap, WellInjectionProperties() ),
           m_polymerProperties( timeMap, WellPolymerProperties() ),
@@ -231,7 +231,7 @@ namespace Opm {
     }
 
     bool Well::setStatus(size_t timeStep, WellCommon::StatusEnum status) {
-        if ((WellCommon::StatusEnum::OPEN == status) && getCompletions(timeStep).allCompletionsShut()) {
+        if ((WellCommon::StatusEnum::OPEN == status) && getConnections(timeStep).allConnectionsShut()) {
             OpmLog::note("When handling keyword for well " + name() + ": Cannot open a well where all completions are shut" );
             return false;
         } else {
@@ -329,7 +329,7 @@ namespace Opm {
         if( depth >= 0.0 ) return depth;
 
         // ref depth was defaulted and we get the depth of the first completion
-        const auto& completions = this->getCompletions( timestep );
+        const auto& completions = this->getConnections( timestep );
         if( completions.size() == 0 ) {
             throw std::invalid_argument( "No completions defined for well: "
                                          + name()
@@ -347,34 +347,34 @@ namespace Opm {
         return m_preferredPhase;
     }
 
-    const CompletionSet& Well::getCompletions(size_t timeStep) const {
+    const ConnectionSet& Well::getConnections(size_t timeStep) const {
         return m_completions.get( timeStep );
     }
 
-    CompletionSet Well::getActiveCompletions(size_t timeStep, const EclipseGrid& grid) const {
-        return CompletionSet(this->getCompletions(timeStep), grid);
+    ConnectionSet Well::getActiveConnections(size_t timeStep, const EclipseGrid& grid) const {
+        return ConnectionSet(this->getConnections(timeStep), grid);
     }
 
-    const CompletionSet& Well::getCompletions() const {
+    const ConnectionSet& Well::getConnections() const {
         return m_completions.back();
     }
 
-    void Well::addCompletions(size_t time_step, const std::vector< Connection >& newCompletions ) {
-        auto new_set = this->getCompletions( time_step );
+    void Well::addConnections(size_t time_step, const std::vector< Connection >& newConnections ) {
+        auto new_set = this->getConnections( time_step );
         int complnum_shift = new_set.size();
 
         const auto headI = this->m_headI[ time_step ];
         const auto headJ = this->m_headJ[ time_step ];
 
         auto prev_size = new_set.size();
-        for( auto completion : newCompletions ) {
+        for( auto completion : newConnections ) {
             completion.fixDefaultIJ( headI , headJ );
             completion.shift_complnum( complnum_shift );
 
             new_set.add( completion );
             const auto new_size = new_set.size();
 
-            /* Completions can be "re-added", i.e. same coordinates but with a
+            /* Connections can be "re-added", i.e. same coordinates but with a
              * different set of properties. In this case they also inherit the
              * completion number (which must otherwise be shifted because
              * every COMPDAT keyword thinks it's the only one.
@@ -383,14 +383,14 @@ namespace Opm {
             else ++prev_size;
         }
 
-        this->addCompletionSet( time_step, new_set );
+        this->addConnectionSet( time_step, new_set );
     }
 
-    void Well::addCompletionSet(size_t time_step, CompletionSet new_set ){
-        if( getWellCompletionOrdering() == WellCompletion::TRACK) {
+    void Well::addConnectionSet(size_t time_step, ConnectionSet new_set ){
+        if( getWellConnectionOrdering() == WellCompletion::TRACK) {
             const auto headI = this->m_headI[ time_step ];
             const auto headJ = this->m_headJ[ time_step ];
-            new_set.orderCompletions( headI, headJ );
+            new_set.orderConnections( headI, headJ );
         }
 
         m_completions.update( time_step, std::move( new_set ) );
@@ -500,7 +500,7 @@ namespace Opm {
             updateRFTActive(time, RFTConnections::RFTEnum::YES);
     }
 
-    WellCompletion::CompletionOrderEnum Well::getWellCompletionOrdering() const {
+    WellCompletion::CompletionOrderEnum Well::getWellConnectionOrdering() const {
         return m_comporder;
     }
 
@@ -580,9 +580,9 @@ namespace Opm {
     }
 
 
-    void Well::filterCompletions(const EclipseGrid& grid) {
+    void Well::filterConnections(const EclipseGrid& grid) {
         /*
-          The m_completions member variable is DynamicState<CompletionSet>
+          The m_completions member variable is DynamicState<ConnectionSet>
           instance, hence this for loop is over all timesteps.
         */
         for (auto& completions : m_completions)

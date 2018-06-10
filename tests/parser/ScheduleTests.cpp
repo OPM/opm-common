@@ -31,7 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -551,8 +551,8 @@ BOOST_AUTO_TEST_CASE(ReturnMaxNumCompletionsForWellsInTimestep) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext() );
 
-    BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(1), 7);
-    BOOST_CHECK_EQUAL(schedule.getMaxNumCompletionsForWells(3), 9);
+    BOOST_CHECK_EQUAL(schedule.getMaxNumConnectionsForWells(1), 7);
+    BOOST_CHECK_EQUAL(schedule.getMaxNumConnectionsForWells(3), 9);
 }
 
 BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     }
 }
 
-static Deck createDeckWithWellsAndCompletionDataWithWELOPEN() {
+static Deck createDeckWithWellsAndConnectionDataWithWELOPEN() {
     Opm::Parser parser;
     std::string input =
             "START             -- 0 \n"
@@ -647,9 +647,9 @@ static Deck createDeckWithWellsAndCompletionDataWithWELOPEN() {
     return parser.parseString(input, ParseContext());
 }
 
-BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
+BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
     EclipseGrid grid(10,10,10);
-    auto deck = createDeckWithWellsAndCompletionDataWithWELOPEN();
+    auto deck = createDeckWithWellsAndConnectionDataWithWELOPEN();
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Schedule schedule(deck ,grid , eclipseProperties, Phases(true, true, true) , ParseContext());
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 3 ));
 
     well = schedule.getWell("OP_2");
-    const auto& cs = well->getCompletions( 3 );
+    const auto& cs = well->getConnections( 3 );
 
     constexpr auto shut = WellCompletion::StateEnum::SHUT;
     constexpr auto open = WellCompletion::StateEnum::OPEN;
@@ -669,18 +669,18 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndCompletionDataWithWELOPEN) {
     BOOST_CHECK_EQUAL(shut, cs.getFromIJK( 7, 6, 4 ).getState());
     BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 7, 2 ).getState());
 
-    const auto& cs2 = well->getCompletions( 4 );
+    const auto& cs2 = well->getConnections( 4 );
     BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 2 ).getState());
     BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 3 ).getState());
     BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 4 ).getState());
     BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 7, 2 ).getState());
 
     well = schedule.getWell("OP_3");
-    const auto& cs3 = well->getCompletions( 3 );
+    const auto& cs3 = well->getConnections( 3 );
 
     BOOST_CHECK_EQUAL(shut, cs3.get( 0 ).getState());
 
-    const auto& cs4 = well->getCompletions( 4 );
+    const auto& cs4 = well->getConnections( 4 );
 
     BOOST_CHECK_EQUAL(open, cs4.get( 0 ).getState());
 
@@ -1080,17 +1080,17 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , parseContext);
     auto* well = schedule.getWell("OP_1");
 
-    const auto& cs2 = well->getCompletions( 2 );
+    const auto& cs2 = well->getConnections( 2 );
     for(size_t i = 0; i < cs2.size(); i++) {
         BOOST_CHECK_EQUAL(cs2.get( i ).getWellPi(), 1.3);
     }
 
-    const auto& cs3 = well->getCompletions( 3 );
+    const auto& cs3 = well->getConnections( 3 );
     for(size_t i = 0; i < cs3.size(); i++ ) {
         BOOST_CHECK_EQUAL(cs3.get( i ).getWellPi(), (1.3*1.3));
     }
 
-    const auto& cs4 = well->getCompletions( 4 );
+    const auto& cs4 = well->getConnections( 4 );
     for(size_t i = 0; i < cs4.size(); i++ ) {
         BOOST_CHECK_EQUAL(cs4.get( i ).getWellPi(), 1.0);
     }
@@ -1682,13 +1682,13 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
 
-    const auto& cs1 = schedule.getWell( "W1" )->getCompletions( 1 );
+    const auto& cs1 = schedule.getWell( "W1" )->getConnections( 1 );
     BOOST_CHECK_EQUAL( 1, cs1.get( 0 ).complnum() );
     BOOST_CHECK_EQUAL( 2, cs1.get( 1 ).complnum() );
     BOOST_CHECK_EQUAL( 3, cs1.get( 2 ).complnum() );
     BOOST_CHECK_EQUAL( 4, cs1.get( 3 ).complnum() );
 
-    const auto& cs2 = schedule.getWell( "W1" )->getCompletions( 2 );
+    const auto& cs2 = schedule.getWell( "W1" )->getConnections( 2 );
     BOOST_CHECK_EQUAL( 1, cs2.get( 0 ).complnum() );
     BOOST_CHECK_EQUAL( 2, cs2.get( 1 ).complnum() );
     BOOST_CHECK_EQUAL( 3, cs2.get( 2 ).complnum() );
@@ -1726,14 +1726,14 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
 
-    const auto& w1cs = schedule.getWell( "W1" )->getCompletions();
+    const auto& w1cs = schedule.getWell( "W1" )->getConnections();
     BOOST_CHECK_EQUAL( 1, w1cs.get( 0 ).complnum() );
     BOOST_CHECK_EQUAL( 2, w1cs.get( 1 ).complnum() );
     BOOST_CHECK_EQUAL( 3, w1cs.get( 2 ).complnum() );
     BOOST_CHECK_EQUAL( 4, w1cs.get( 3 ).complnum() );
     BOOST_CHECK_EQUAL( 5, w1cs.get( 4 ).complnum() );
 
-    const auto& w2cs = schedule.getWell( "W2" )->getCompletions();
+    const auto& w2cs = schedule.getWell( "W2" )->getConnections();
     BOOST_CHECK_EQUAL( 1, w2cs.getFromIJK( 4, 4, 2 ).complnum() );
     BOOST_CHECK_EQUAL( 2, w2cs.getFromIJK( 4, 4, 0 ).complnum() );
     BOOST_CHECK_EQUAL( 3, w2cs.getFromIJK( 4, 4, 1 ).complnum() );
@@ -1770,7 +1770,7 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
 
-    const auto& cs = schedule.getWell( "W1" )->getCompletions();
+    const auto& cs = schedule.getWell( "W1" )->getConnections();
     BOOST_CHECK_EQUAL( 3U, cs.size() );
     BOOST_CHECK_EQUAL( 1, cs.get( 0 ).complnum() );
     BOOST_CHECK_EQUAL( 2, cs.get( 1 ).complnum() );
@@ -1850,7 +1850,7 @@ BOOST_AUTO_TEST_CASE( complump ) {
     Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
 
     const auto& well = *schedule.getWell( "W1" );
-    const auto& sc0  = well.getCompletions( 0 );
+    const auto& sc0  = well.getConnections( 0 );
 
     /* complnum should be modified by COMPLNUM */
     BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 0 ).complnum() );
@@ -1862,7 +1862,7 @@ BOOST_AUTO_TEST_CASE( complump ) {
     BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 1 ).getState() );
     BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 2 ).getState() );
 
-    const auto& sc1  = well.getCompletions( 1 );
+    const auto& sc1  = well.getConnections( 1 );
     BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 0 ).getState() );
     BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 1 ).getState() );
     BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 2 ).getState() );
@@ -1924,8 +1924,8 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
 
     const auto& well = *schedule.getWell( "W1" );
-    const auto& cs1 = well.getCompletions( 1 );
-    const auto& cs2 = well.getCompletions( 2 );
+    const auto& cs1 = well.getConnections( 1 );
+    const auto& cs2 = well.getConnections( 2 );
 
     BOOST_CHECK_EQUAL( 9U, cs1.size() );
     BOOST_CHECK_EQUAL( open, cs1.getFromIJK( 0, 0, 0 ).getState() );
@@ -2486,14 +2486,14 @@ BOOST_AUTO_TEST_CASE(FilterCompletions) {
   Eclipse3DProperties eclipseProperties ( deck , table, grid1);
   Schedule schedule(deck, grid1 , eclipseProperties, Phases(true, true, true) , ParseContext() );
   const auto& well = schedule.getWell("OP_1");
-  const auto& c1_1 = well->getCompletions(1);
-  const auto& c1_3 = well->getCompletions(3);
+  const auto& c1_1 = well->getConnections(1);
+  const auto& c1_3 = well->getConnections(3);
   BOOST_CHECK_EQUAL(2, c1_1.size());
   BOOST_CHECK_EQUAL(9, c1_3.size());
   actnum[grid1.getGlobalIndex(8,8,1)] = 0;
   {
       EclipseGrid grid2(grid1, actnum);
-      schedule.filterCompletions(grid2);
+      schedule.filterConnections(grid2);
       BOOST_CHECK_EQUAL(1, c1_1.size());
       BOOST_CHECK_EQUAL(8, c1_3.size());
   }

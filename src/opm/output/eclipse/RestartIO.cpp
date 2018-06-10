@@ -57,13 +57,13 @@ namespace {
 
     static const int NIWELZ = 11; //Number of data elements per well in IWEL array in restart file
     static const int NZWELZ = 3;  //Number of 8-character words per well in ZWEL array restart file
-    static const int NICONZ = 15; //Number of data elements per completion in ICON array restart file
+    static const int NICONZ = 15; //Number of data elements per connection in ICON array restart file
 
     /**
      * The constants NIWELZ and NZWELZ referes to the number of
      * elements per well that we write to the IWEL and ZWEL eclipse
      * restart file data arrays. The constant NICONZ refers to the
-     * number of elements per completion in the eclipse restart file
+     * number of elements per connection in the eclipse restart file
      * ICON data array.These numbers are written to the INTEHEAD
      * header.
      *
@@ -157,8 +157,8 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
     const auto well_size = [&]( size_t acc, const Well* w ) {
         return acc
             + 2 + phases.size()
-            + (  w->getCompletions( sim_step ).size()
-              * (phases.size() + data::Completion::restart_size) );
+            + (  w->getConnections( sim_step ).size()
+              * (phases.size() + data::Connection::restart_size) );
     };
 
     const auto expected_xwel_size = std::accumulate( sched_wells.begin(),
@@ -192,22 +192,22 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
         for( auto phase : phases )
             well.rates.set( phase, *opm_xwel_data++ );
 
-        for( const auto& sc : sched_well->getCompletions( sim_step ) ) {
+        for( const auto& sc : sched_well->getConnections( sim_step ) ) {
             const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
             if( !grid.cellActive( i, j, k ) || sc.getState() == WellCompletion::SHUT ) {
-                opm_xwel_data += data::Completion::restart_size + phases.size();
+                opm_xwel_data += data::Connection::restart_size + phases.size();
                 continue;
             }
 
             const auto active_index = grid.activeIndex( i, j, k );
 
-            well.completions.emplace_back();
-            auto& completion = well.completions.back();
-            completion.index = active_index;
-            completion.pressure = *opm_xwel_data++;
-            completion.reservoir_rate = *opm_xwel_data++;
+            well.connections.emplace_back();
+            auto& connection = well.connections.back();
+            connection.index = active_index;
+            connection.pressure = *opm_xwel_data++;
+            connection.reservoir_rate = *opm_xwel_data++;
             for( auto phase : phases )
-                completion.rates.set( phase, *opm_xwel_data++ );
+                connection.rates.set( phase, *opm_xwel_data++ );
         }
     }
 
@@ -289,24 +289,24 @@ std::vector<int> serialize_ICON( int sim_step,
     size_t well_offset = 0;
     std::vector<int> data( sched_wells.size() * ncwmax * NICONZ , 0 );
     for (const Well* well : sched_wells) {
-        const auto& completions = well->getCompletions( sim_step );
-        size_t completion_offset = 0;
-        for( const auto& completion : completions) {
-            size_t offset = well_offset + completion_offset;
+        const auto& connections = well->getConnections( sim_step );
+        size_t connection_offset = 0;
+        for( const auto& connection : connections) {
+            size_t offset = well_offset + connection_offset;
             data[ offset + ICON_IC_INDEX ] = 1;
 
-            data[ offset + ICON_I_INDEX ] = completion.getI() + 1;
-            data[ offset + ICON_J_INDEX ] = completion.getJ() + 1;
-            data[ offset + ICON_K_INDEX ] = completion.getK() + 1;
-            data[ offset + ICON_DIRECTION_INDEX ] = completion.getDirection();
+            data[ offset + ICON_I_INDEX ] = connection.getI() + 1;
+            data[ offset + ICON_J_INDEX ] = connection.getJ() + 1;
+            data[ offset + ICON_K_INDEX ] = connection.getK() + 1;
+            data[ offset + ICON_DIRECTION_INDEX ] = connection.getDirection();
             {
                 const auto open = WellCompletion::StateEnum::OPEN;
-                data[ offset + ICON_STATUS_INDEX ] = completion.getState() == open
+                data[ offset + ICON_STATUS_INDEX ] = connection.getState() == open
                     ? 1
                     : 0;
             }
 
-            completion_offset += NICONZ;
+            connection_offset += NICONZ;
         }
         well_offset += ncwmax * NICONZ;
     }
@@ -320,11 +320,11 @@ std::vector<int> serialize_IWEL( size_t step,
     std::vector<int> data( wells.size() * NIWELZ , 0 );
     size_t offset = 0;
     for (const auto well : wells) {
-        const auto& completions = well->getActiveCompletions( step, grid );
+        const auto& connections = well->getActiveConnections( step, grid );
 
         data[ offset + IWEL_HEADI_INDEX ] = well->getHeadI( step ) + 1;
         data[ offset + IWEL_HEADJ_INDEX ] = well->getHeadJ( step ) + 1;
-        data[ offset + IWEL_CONNECTIONS_INDEX ] = completions.size();
+        data[ offset + IWEL_CONNECTIONS_INDEX ] = connections.size();
         data[ offset + IWEL_GROUP_INDEX ] = 1;
 
         data[ offset + IWEL_TYPE_INDEX ] = to_ert_welltype( *well, step );
@@ -375,8 +375,8 @@ std::vector< double > serialize_OPM_XWEL( const data::Wells& wells,
     for( const auto* sched_well : sched_wells ) {
 
         if( wells.count( sched_well->name() ) == 0 || sched_well->getStatus(sim_step) == Opm::WellCommon::SHUT) {
-            const auto elems = (sched_well->getCompletions( sim_step ).size()
-                               * (phases.size() + data::Completion::restart_size))
+            const auto elems = (sched_well->getConnections( sim_step ).size()
+                               * (phases.size() + data::Connection::restart_size))
                 + 2 /* bhp, temperature */
                 + phases.size();
 
@@ -392,32 +392,32 @@ std::vector< double > serialize_OPM_XWEL( const data::Wells& wells,
         for( auto phase : phases )
             xwel.push_back( well.rates.get( phase ) );
 
-        for( const auto& sc : sched_well->getCompletions( sim_step ) ) {
+        for( const auto& sc : sched_well->getConnections( sim_step ) ) {
             const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
 
-            const auto rs_size = phases.size() + data::Completion::restart_size;
+            const auto rs_size = phases.size() + data::Connection::restart_size;
             if( !grid.cellActive( i, j, k ) || sc.getState() == WellCompletion::SHUT ) {
                 xwel.insert( xwel.end(), rs_size, 0.0 );
                 continue;
             }
 
             const auto active_index = grid.activeIndex( i, j, k );
-            const auto at_index = [=]( const data::Completion& c ) {
+            const auto at_index = [=]( const data::Connection& c ) {
                 return c.index == active_index;
             };
-            const auto& completion = std::find_if( well.completions.begin(),
-                                                   well.completions.end(),
+            const auto& connection = std::find_if( well.connections.begin(),
+                                                   well.connections.end(),
                                                    at_index );
 
-            if( completion == well.completions.end() ) {
+            if( connection == well.connections.end() ) {
                 xwel.insert( xwel.end(), rs_size, 0.0 );
                 continue;
             }
 
-            xwel.push_back( completion->pressure );
-            xwel.push_back( completion->reservoir_rate );
+            xwel.push_back( connection->pressure );
+            xwel.push_back( connection->reservoir_rate );
             for( auto phase : phases )
-                xwel.push_back( completion->rates.get( phase ) );
+                xwel.push_back( connection->rates.get( phase ) );
         }
     }
 
@@ -466,7 +466,7 @@ void writeHeader(ecl_rst_file_type * rst_file,
     rsthead_data.niwelz      = NIWELZ;
     rsthead_data.nzwelz      = NZWELZ;
     rsthead_data.niconz      = NICONZ;
-    rsthead_data.ncwmax      = schedule.getMaxNumCompletionsForWells(sim_step);
+    rsthead_data.ncwmax      = schedule.getMaxNumConnectionsForWells(sim_step);
     rsthead_data.phase_sum   = ert_phase_mask;
     rsthead_data.sim_days    = sim_days;
     rsthead_data.unit_system = units.getEclType( );
@@ -531,7 +531,7 @@ void writeHeader(ecl_rst_file_type * rst_file,
 void writeWell(ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es , const EclipseGrid& grid, const Schedule& schedule, const data::Wells& wells) {
     const auto sched_wells  = schedule.getWells(sim_step);
     const auto& phases = es.runspec().phases();
-    const size_t ncwmax = schedule.getMaxNumCompletionsForWells(sim_step);
+    const size_t ncwmax = schedule.getMaxNumConnectionsForWells(sim_step);
 
     const auto opm_xwel  = serialize_OPM_XWEL( wells, sim_step, sched_wells, phases, grid );
     const auto opm_iwel  = serialize_OPM_IWEL( wells, sched_wells );

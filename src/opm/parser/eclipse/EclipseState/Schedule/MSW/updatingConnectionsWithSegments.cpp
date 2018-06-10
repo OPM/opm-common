@@ -17,21 +17,21 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 #include "Compsegs.hpp"
 
 
 namespace Opm {
 
-    CompletionSet updatingCompletionsWithSegments(const DeckKeyword& compsegs,
-                                                  const CompletionSet& input_completions,
+    ConnectionSet updatingConnectionsWithSegments(const DeckKeyword& compsegs,
+                                                  const ConnectionSet& input_connections,
                                                   const SegmentSet& segment_set)
     {
-        CompletionSet new_completion_set(input_completions);
+        ConnectionSet new_connection_set(input_connections);
 
         std::vector<Compsegs> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs );
         Compsegs::processCOMPSEGS(compsegs_vector, segment_set);
-        Compsegs::updateCompletionsWithSegment(compsegs_vector, new_completion_set);
-        return new_completion_set;
+        Compsegs::updateConnectionsWithSegment(compsegs_vector, new_connection_set);
+        return new_connection_set;
     }
 }

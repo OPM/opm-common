@@ -37,12 +37,12 @@ serialize_SCON(int lookup_step,
     std::vector<double> data(sched_wells.size() * well_field_size, 0);
     size_t well_offset = 0;
     for (const Opm::Well* well : sched_wells) {
-        const auto& completions = well->getCompletions( lookup_step );
-        size_t completion_offset = 0;
+        const auto& connections = well->getConnections( lookup_step );
+        size_t connection_offset = 0;
         bool explicit_ctf_not_found = false;
-        for (const auto& completion : completions) {
-            const size_t offset = well_offset + completion_offset;
-            const auto& ctf = completion.getConnectionTransmissibilityFactorAsValueObject();
+        for (const auto& connection : connections) {
+            const size_t offset = well_offset + connection_offset;
+            const auto& ctf = connection.getConnectionTransmissibilityFactorAsValueObject();
             if (ctf.hasValue()) {
                 // CTF explicitly set in deck, overrides calculation
                 // from Peaceman model.  We should also give the Kh
@@ -65,10 +65,10 @@ serialize_SCON(int lookup_step,
                 data[ offset + SCON_KH_INDEX ] = UNIMPLEMENTED_VALUE;
                 explicit_ctf_not_found = true;
             }
-            completion_offset += nsconz;
+            connection_offset += nsconz;
         }
         if (explicit_ctf_not_found) {
-            OpmLog::warning("restart output completion data missing",
+            OpmLog::warning("restart output connection data missing",
                             "Explicit connection transmissibility factors for well " + well->name() + " missing, writing dummy values to restart file.");
         }
         well_offset += well_field_size;
@@ -89,25 +89,25 @@ serialize_ICON(int lookup_step,
     std::vector<int> data(sched_wells.size() * well_field_size, 0);
     size_t well_offset = 0;
     for (const Opm::Well* well : sched_wells) {
-        const auto& completions = well->getCompletions( lookup_step );
-        size_t completion_offset = 0;
-        for (const auto& completion : completions) {
-            const size_t offset = well_offset + completion_offset;
+        const auto& connections = well->getConnections( lookup_step );
+        size_t connection_offset = 0;
+        for (const auto& connection : connections) {
+            const size_t offset = well_offset + connection_offset;
 
-            data[ offset + ICON_IC_INDEX ] = completion.complnum();
-            data[ offset + ICON_I_INDEX ] = completion.getI() + 1;
-            data[ offset + ICON_J_INDEX ] = completion.getJ() + 1;
-            data[ offset + ICON_K_INDEX ] = completion.getK() + 1;
-            data[ offset + ICON_DIRECTION_INDEX ] = completion.getDirection();
+            data[ offset + ICON_IC_INDEX ] = connection.complnum();
+            data[ offset + ICON_I_INDEX ] = connection.getI() + 1;
+            data[ offset + ICON_J_INDEX ] = connection.getJ() + 1;
+            data[ offset + ICON_K_INDEX ] = connection.getK() + 1;
+            data[ offset + ICON_DIRECTION_INDEX ] = connection.getDirection();
             data[ offset + ICON_STATUS_INDEX ] =
-                (completion.getState() == WellCompletion::StateEnum::OPEN) ?
+                (connection.getState() == WellCompletion::StateEnum::OPEN) ?
                 1 : -1000;
             data[ offset + ICON_SEGMENT_INDEX ] =
-                completion.attachedToSegment() ?
-                completion.getSegmentNumber() : 0;
-            completion_offset += niconz;
+                connection.attachedToSegment() ?
+                connection.getSegmentNumber() : 0;
+            connection_offset += niconz;
         }
-      
+
         well_offset += well_field_size;
     }
 
