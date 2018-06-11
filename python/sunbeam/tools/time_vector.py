@@ -62,20 +62,31 @@ class TimeStep(object):
         self.dt = dt
         self.keywords = keywords
         self.tstep = None
+        self.is_start = False
 
+
+    @classmethod
+    def create_first(cls, dt):
+        ts = cls(dt, [])
+        ts.is_start = True
+        return ts
 
     def add_keyword(self, kw):
         self.keywords.append(kw)
 
 
 
+    def __len__(self):
+        return len(self.keywords)
+
     def __str__(self):
         string = StringIO()
 
-        day = self.dt.day
-        month = self.dt.month
-        year = self.dt.year
-        string.write("DATES\n  {day} '{month}' {year}/\n/\n\n".format( day=day, month = inv_ecl_month[month], year=year))
+        if not self.is_start:
+            day = self.dt.day
+            month = self.dt.month
+            year = self.dt.year
+            string.write("DATES\n  {day} '{month}' {year}/\n/\n\n".format( day=day, month = inv_ecl_month[month], year=year))
 
         for kw in self.keywords:
             string.write(str(kw))
@@ -190,7 +201,10 @@ class TimeVector(object):
         self.time_steps_list = []
         self.time_steps_dict = {}
 
-        ts = TimeStep(self.start_date, [])
+        ts = TimeStep.create_first(self.start_date)
+        tsx = TimeStep(self.start_date, [])
+        #print ts1,ts
+
         self._add_dates_block(ts)
         start_dt = datetime.datetime(start_date.year, start_date.month, start_date.day)
         if base_file:
