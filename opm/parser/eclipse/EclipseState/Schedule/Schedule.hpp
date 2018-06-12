@@ -79,7 +79,7 @@ namespace Opm
 
         size_t numWells() const;
         size_t numWells(size_t timestep) const;
-        size_t getMaxNumCompletionsForWells(size_t timestep) const;
+        size_t getMaxNumConnectionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
         const Well* getWell(const std::string& wellName) const;
         std::vector< const Well* > getOpenWells(size_t timeStep) const;
@@ -121,7 +121,7 @@ namespace Opm
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
         */
-        void filterCompletions(const EclipseGrid& grid);
+        void filterConnections(const EclipseGrid& grid);
 
     private:
         TimeMap m_timeMap;

@@ -73,8 +73,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
     src/opm/parser/eclipse/EclipseState/Runspec.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Completion.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/CompletionSet.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Connection.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/GroupTree.cpp
@@ -82,7 +82,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.cpp
@@ -178,7 +178,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/AquanconTests.cpp
     tests/parser/BoxTests.cpp
     tests/parser/ColumnSchemaTests.cpp
-    tests/parser/CompletionTests.cpp
+    tests/parser/ConnectionTests.cpp
     tests/parser/COMPSEGUnits.cpp
     tests/parser/CopyRegTests.cpp
     tests/parser/DeckTests.cpp
@@ -453,15 +453,15 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp
        opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Completion.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Connection.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp
-       opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellTestState.hpp
-       opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp
+       opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
        opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp

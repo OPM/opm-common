@@ -28,7 +28,7 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -36,7 +36,7 @@
 
 namespace Opm {
 
-    Completion::Completion(int i, int j , int k ,
+    Connection::Connection(int i, int j , int k ,
                            int compnum,
                            double depth,
                            WellCompletion::StateEnum state ,
@@ -57,14 +57,14 @@ namespace Opm {
           m_center_depth( depth )
     {}
 
-    Completion::Completion(const Completion& oldCompletion, WellCompletion::StateEnum newStatus ) :
-        Completion( oldCompletion )
+    Connection::Connection(const Connection& oldConnection, WellCompletion::StateEnum newStatus ) :
+        Connection( oldConnection )
     {
         this->m_state = newStatus;
     }
 
-    Completion::Completion(const Completion& oldCompletion, double wellPi) :
-        Completion( oldCompletion )
+    Connection::Connection(const Connection& oldConnection, double wellPi) :
+        Connection( oldConnection )
     {
         if( this->m_wellPi != 0 ) {
             this->m_wellPi *= wellPi;
@@ -73,21 +73,21 @@ namespace Opm {
         }
     }
 
-    Completion::Completion( const Completion& c, int num ) :
-        Completion( c )
+    Connection::Connection( const Connection& c, int num ) :
+        Connection( c )
     {
         this->m_complnum = num;
     }
 
-    Completion::Completion(const Completion& completion_initial, int segment_number, double center_depth)
-      : Completion(completion_initial)
+    Connection::Connection(const Connection& connection_initial, int segment_number, double center_depth)
+      : Connection(connection_initial)
     {
         assert(segment_number > 0);
         this->m_segment_number = segment_number;
         this->m_center_depth = center_depth;
     }
 
-    bool Completion::sameCoordinate(const Completion& other) const {
+    bool Connection::sameCoordinate(const Connection& other) const {
         if ((m_i == other.m_i) &&
             (m_j == other.m_j) &&
             (m_k == other.m_k))
@@ -96,7 +96,7 @@ namespace Opm {
             return false;
     }
 
-    bool Completion::sameCoordinate(const int i, const int j, const int k) const {
+    bool Connection::sameCoordinate(const int i, const int j, const int k) const {
         if ((m_i == i) && (m_j == j) && (m_k == k)) {
             return true;
         } else {
@@ -107,19 +107,19 @@ namespace Opm {
 
     /**
        This will break up one record and return a pair: <name ,
-       [Completion1, Completion2, ... , CompletionN]>. The reason it
+       [Connection1, Connection2, ... , ConnectionN]>. The reason it
        will return a list is that the 'K1 K2' structure is
        disentangled, and each completion is returned separately.
     */
 
-    inline std::vector< Completion >
+    inline std::vector< Connection >
     fromCOMPDAT( const EclipseGrid& grid,
                  const Eclipse3DProperties& eclipseProperties,
                  const DeckRecord& compdatRecord,
                  const Well& well,
                  int prev_complnum ) {
 
-        std::vector< Completion > completions;
+        std::vector< Connection > completions;
 
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         // I and J can be defaulted with 0 or *, in which case they are fetched
@@ -135,7 +135,7 @@ namespace Opm {
         int K1 = compdatRecord.getItem("K1").get< int >(0) - 1;
         int K2 = compdatRecord.getItem("K2").get< int >(0) - 1;
         WellCompletion::StateEnum state = WellCompletion::StateEnumFromString( compdatRecord.getItem("STATE").getTrimmedString(0) );
-        Value<double> connectionTransmissibilityFactor("ConnectionTransmissibilityFactor");
+        Value<double> connectionTransmissibilityFactor("CompletionTransmissibilityFactor");
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
         int satTableId;
@@ -187,21 +187,21 @@ namespace Opm {
       Will return a map:
 
       {
-         "WELL1" : [ Completion1 , Completion2 , ... , CompletionN ],
-         "WELL2" : [ Completion1 , Completion2 , ... , CompletionN ],
+         "WELL1" : [ Connection1 , Connection2 , ... , ConnectionN ],
+         "WELL2" : [ Connection1 , Connection2 , ... , ConnectionN ],
          ...
       }
     */
 
-    std::map< std::string, std::vector< Completion > >
-    Completion::fromCOMPDAT( const EclipseGrid& grid ,
+    std::map< std::string, std::vector< Connection > >
+    Connection::fromCOMPDAT( const EclipseGrid& grid ,
                              const Eclipse3DProperties& eclipseProperties,
                              const DeckKeyword& compdatKeyword,
                              const std::vector< const Well* >& wells,
                              const ParseContext& parseContext,
                              const Schedule& schedule) {
 
-        std::map< std::string, std::vector< Completion > > res;
+        std::map< std::string, std::vector< Connection > > res;
         std::vector< int > prev_compls( wells.size(), 0 );
 
         for( const auto& record : compdatKeyword ) {
@@ -233,7 +233,7 @@ namespace Opm {
         return res;
     }
 
-    void Completion::fixDefaultIJ(int wellHeadI , int wellHeadJ) {
+    void Connection::fixDefaultIJ(int wellHeadI , int wellHeadJ) {
         if (m_i < 0)
             m_i = wellHeadI;
 
@@ -241,82 +241,82 @@ namespace Opm {
             m_j = wellHeadJ;
     }
 
-    void Completion::shift_complnum( int shift ) {
+    void Connection::shift_complnum( int shift ) {
         this->m_complnum += shift;
     }
 
-    int Completion::getI() const {
+    int Connection::getI() const {
         return m_i;
     }
 
-    int Completion::getJ() const {
+    int Connection::getJ() const {
         return m_j;
     }
 
-    int Completion::getK() const {
+    int Connection::getK() const {
         return m_k;
     }
 
-    int Completion::complnum() const {
+    int Connection::complnum() const {
         return this->m_complnum;
     }
 
-    WellCompletion::StateEnum Completion::getState() const {
+    WellCompletion::StateEnum Connection::getState() const {
         return m_state;
     }
 
-    double Completion::getConnectionTransmissibilityFactor() const {
+    double Connection::getConnectionTransmissibilityFactor() const {
         return m_connectionTransmissibilityFactor.getValue();
     }
 
-    double Completion::getDiameter() const {
+    double Connection::getDiameter() const {
         return m_diameter.getValue();
     }
 
-    double Completion::getSkinFactor() const {
+    double Connection::getSkinFactor() const {
         return m_skinFactor.getValue();
     }
 
-    int Completion::getSatTableId() const {
+    int Connection::getSatTableId() const {
         return m_satTableId;
     }
 
-    const Value<double>& Completion::getConnectionTransmissibilityFactorAsValueObject() const {
+    const Value<double>& Connection::getConnectionTransmissibilityFactorAsValueObject() const {
         return m_connectionTransmissibilityFactor;
     }
 
-    Value<double> Completion::getDiameterAsValueObject() const {
+    Value<double> Connection::getDiameterAsValueObject() const {
         return m_diameter;
     }
 
-    Value<double> Completion::getSkinFactorAsValueObject() const {
+    Value<double> Connection::getSkinFactorAsValueObject() const {
         return m_skinFactor;
     }
 
-    WellCompletion::DirectionEnum Completion::getDirection() const {
+    WellCompletion::DirectionEnum Connection::getDirection() const {
         return m_direction;
     }
 
-    double Completion::getWellPi() const {
+    double Connection::getWellPi() const {
         return m_wellPi;
     }
 
-    int Completion::getSegmentNumber() const {
+    int Connection::getSegmentNumber() const {
         if (!attachedToSegment()) {
             throw std::runtime_error(" the completion is not attached to a segment!\n ");
         }
         return m_segment_number;
     }
 
-    double Completion::getCenterDepth() const {
+    double Connection::getCenterDepth() const {
         return m_center_depth;
     }
 
-    bool Completion::attachedToSegment() const {
+    bool Connection::attachedToSegment() const {
         return (m_segment_number > 0);
     }
 
-    bool Completion::operator==( const Completion& rhs ) const {
+    bool Connection::operator==( const Connection& rhs ) const {
         return this->m_i == rhs.m_i
             && this->m_j == rhs.m_j
             && this->m_k == rhs.m_k
@@ -333,7 +333,7 @@ namespace Opm {
             && this->m_center_depth == rhs.m_center_depth;
     }
 
-    bool Completion::operator!=( const Completion& rhs ) const {
+    bool Connection::operator!=( const Connection& rhs ) const {
         return !( *this == rhs );
     }
 }

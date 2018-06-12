@@ -197,7 +197,7 @@ std::ostream& operator<<( std::ostream& stream, const Rates& r ) {
                   << "}";
 }
 
-std::ostream& operator<<( std::ostream& stream, const Completion& c ) {
+std::ostream& operator<<( std::ostream& stream, const Connection& c ) {
     return stream << "{ index: "
                   << c.index << ", "
                   << c.rates << ", "
@@ -213,9 +213,9 @@ std::ostream& operator<<( std::ostream& stream,
                << "\t" << "bhp: " << p.second.bhp << "\n"
                << "\t" << "temp: " << p.second.temperature << "\n"
                << "\t" << "rates: " << p.second.rates << "\n"
-               << "\t" << "completions: [\n";
+               << "\t" << "connections: [\n";
 
-        for( const auto& c : p.second.completions )
+        for( const auto& c : p.second.connections )
             stream << c << " ";
 
         stream << "]\n";
@@ -239,7 +239,7 @@ bool operator==( const Rates& lhs, const Rates& rhs ) {
     return true;
 }
 
-bool operator==( const Completion& lhs, const Completion& rhs ) {
+bool operator==( const Connection& lhs, const Connection& rhs ) {
     BOOST_CHECK_EQUAL( lhs.index, rhs.index );
     BOOST_CHECK_EQUAL( lhs.rates, rhs.rates );
     BOOST_CHECK_EQUAL( lhs.pressure, rhs.pressure );
@@ -248,7 +248,7 @@ bool operator==( const Completion& lhs, const Completion& rhs ) {
     return true;
 }
 
-bool operator!=( const Completion& lhs, const Completion& rhs ) {
+bool operator!=( const Connection& lhs, const Connection& rhs ) {
     return !( lhs == rhs );
 }
 
@@ -259,8 +259,8 @@ bool operator==( const Well& lhs, const Well& rhs ) {
     BOOST_CHECK_EQUAL( lhs.control, rhs.control );
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
-            lhs.completions.begin(), lhs.completions.end(),
-            rhs.completions.begin(), rhs.completions.end() );
+            lhs.connections.begin(), lhs.connections.end(),
+            rhs.connections.begin(), rhs.connections.end() );
 
     return true;
 }
@@ -300,14 +300,14 @@ data::Wells mkWells() {
      *  the completion keys (active indices) and well names correspond to the
      *  input deck. All other entries in the well structures are arbitrary.
      */
-    w1.completions.push_back( { 88, rc1, 30.45, 123.4 } );
-    w1.completions.push_back( { 288, rc2, 33.19, 123.4 } );
+    w1.connections.push_back( { 88, rc1, 30.45, 123.4 } );
+    w1.connections.push_back( { 288, rc2, 33.19, 123.4 } );
 
     w2.rates = r2;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
     w2.control = 2;
-    w2.completions.push_back( { 188, rc3, 36.22, 123.4 } );
+    w2.connections.push_back( { 188, rc3, 36.22, 123.4 } );
 
     {
         data::Wells wellRates;

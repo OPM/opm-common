@@ -17,16 +17,16 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef UPDATING_COMPLETIONS_WITH_SEGMENTS
-#define UPDATING_COMPLETIONS_WITH_SEGMENTS
+#ifndef UPDATING_CONNECTIONS_WITH_SEGMENTS
+#define UPDATING_CONNECTIONS_WITH_SEGMENTS
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 
 namespace Opm {
-    CompletionSet updatingCompletionsWithSegments(const DeckKeyword& compsegs, const CompletionSet& input_completions, const SegmentSet& segments);
+    ConnectionSet updatingConnectionsWithSegments(const DeckKeyword& compsegs, const ConnectionSet& input_connections, const SegmentSet& segments);
 }
 
 #endif

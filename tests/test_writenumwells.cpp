@@ -25,7 +25,7 @@
 
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
@@ -108,15 +108,15 @@ void verifyWellState(const std::string& rst_filename,
       size_t num_wellconnections = well_conn_collection_get_size(well_connections);
 
       int report_nr = well_state_get_report_nr(well_state);
-      const auto& completions_set = well->getCompletions((size_t)report_nr);
+      const auto& connections_set = well->getConnections((size_t)report_nr);
 
-      BOOST_CHECK_EQUAL(num_wellconnections, completions_set.size());
+      BOOST_CHECK_EQUAL(num_wellconnections, connections_set.size());
 
       //Verify coordinates for each completion connection
       for (size_t k = 0; k < num_wellconnections; ++k) {
           const well_conn_type * well_connection = well_conn_collection_iget_const(well_connections , k);
 
-          const auto& completion = completions_set.get(k);
+          const auto& completion = connections_set.get(k);
 
           BOOST_CHECK_EQUAL(well_conn_get_i(well_connection), completion.getI());
           BOOST_CHECK_EQUAL(well_conn_get_j(well_connection), completion.getJ());

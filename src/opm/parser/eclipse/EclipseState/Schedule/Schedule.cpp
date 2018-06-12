@@ -36,14 +36,14 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingCompletionsWithSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -394,7 +394,7 @@ namespace Opm {
                 addGroup(groupName , currentStep);
 
             if (!hasWell(wellName)) {
-                WellCompletion::CompletionOrderEnum wellCompletionOrder = WellCompletion::TRACK;
+                WellCompletion::CompletionOrderEnum wellConnectionOrder = WellCompletion::TRACK;
 
                 if( const auto* compordp = COMPORD_in_timestep() ) {
                      const auto& compord = *compordp;
@@ -405,11 +405,11 @@ namespace Opm {
                         const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
                         if (Well::wellNameInWellNamePattern(wellName, wellNamePattern)) {
                             const std::string& compordString = compordRecord.getItem(1).getTrimmedString(0);
-                            wellCompletionOrder = WellCompletion::CompletionOrderEnumFromString(compordString);
+                            wellConnectionOrder = WellCompletion::CompletionOrderEnumFromString(compordString);
                         }
                     }
                 }
-                addWell(wellName, record, currentStep, wellCompletionOrder);
+                addWell(wellName, record, currentStep, wellConnectionOrder);
                 new_well = true;
             }
 
@@ -559,9 +559,9 @@ namespace Opm {
             double wellPi = record.getItem("WELLPI").get< double >(0);
 
             for( auto* well : getWells( wellNamePattern ) ) {
-                const auto& currentCompletionSet = well->getCompletions(currentStep);
+                const auto& currentConnectionSet = well->getConnections(currentStep);
 
-                CompletionSet newCompletionSet;
+                ConnectionSet newConnectionSet;
 
                 Opm::Value<int> I  = getValueItem(record.getItem("I"));
                 Opm::Value<int> J  = getValueItem(record.getItem("J"));
@@ -569,47 +569,47 @@ namespace Opm {
                 Opm::Value<int> FIRST = getValueItem(record.getItem("FIRST"));
                 Opm::Value<int> LAST = getValueItem(record.getItem("LAST"));
 
-                size_t completionSize = currentCompletionSet.size();
+                size_t completionSize = currentConnectionSet.size();
 
                 for(size_t i = 0; i < completionSize;i++) {
-                    const auto& currentCompletion = currentCompletionSet.get(i);
+                    const auto& currentConnection = currentConnectionSet.get(i);
 
                     if (FIRST.hasValue()) {
                         if (i < (size_t) FIRST.getValue()) {
-                            newCompletionSet.add(currentCompletion);
+                            newConnectionSet.add(currentConnection);
                             continue;
                         }
                     }
                     if (LAST.hasValue()) {
                         if (i > (size_t) LAST.getValue()) {
-                            newCompletionSet.add(currentCompletion);
+                            newConnectionSet.add(currentConnection);
                             continue;
                         }
                     }
 
-                    int ci = currentCompletion.getI();
-                    int cj = currentCompletion.getJ();
-                    int ck = currentCompletion.getK();
+                    int ci = currentConnection.getI();
+                    int cj = currentConnection.getJ();
+                    int ck = currentConnection.getK();
 
                     if (I.hasValue() && (!(I.getValue() == ci) )) {
-                        newCompletionSet.add(currentCompletion);
+                        newConnectionSet.add(currentConnection);
                         continue;
                     }
 
                     if (J.hasValue() && (!(J.getValue() == cj) )) {
-                        newCompletionSet.add(currentCompletion);
+                        newConnectionSet.add(currentConnection);
                         continue;
                     }
 
                     if (K.hasValue() && (!(K.getValue() == ck) )) {
-                        newCompletionSet.add(currentCompletion);
+                        newConnectionSet.add(currentConnection);
                         continue;
                     }
 
-                    newCompletionSet.add( Completion{ currentCompletion, wellPi } );
+                    newConnectionSet.add( Connection{ currentConnection, wellPi } );
                 }
 
-                well->addCompletionSet(currentStep, newCompletionSet);
+                well->addConnectionSet(currentStep, newConnectionSet);
             }
         }
     }
@@ -935,7 +935,7 @@ namespace Opm {
             const int K1 = maybe( record, "K1" );
             const int K2 = maybe( record, "K2" );
 
-            auto new_completion = [=]( const Completion& c ) -> Completion {
+            auto new_completion = [=]( const Connection& c ) -> Connection {
                 if( !defaulted( I ) && c.getI() != I )  return c;
                 if( !defaulted( J ) && c.getJ() != J )  return c;
                 if( !defaulted( K1 ) && c.getK() < K1 ) return c;
@@ -945,11 +945,11 @@ namespace Opm {
             };
 
             for( auto& well : this->getWells( wellname ) ) {
-                CompletionSet new_completions;
-                for( const auto& completion : well->getCompletions( timestep ) )
+                ConnectionSet new_completions;
+                for( const auto& completion : well->getConnections( timestep ) )
                     new_completions.add( new_completion( completion ) );
 
-                well->addCompletionSet( timestep, new_completions );
+                well->addConnectionSet( timestep, new_completions );
             }
         }
     }
@@ -1011,7 +1011,7 @@ namespace Opm {
              * criteria *and* the completion number. A defaulted field always
              * matches the property in question.
              */
-            auto new_completion = [=]( const Completion& completion ) -> Completion {
+            auto new_completion = [=]( const Connection& completion ) -> Connection {
                 if( !defaulted( I ) && completion.getI() != I ) return completion;
                 if( !defaulted( J ) && completion.getJ() != J ) return completion;
                 if( !defaulted( K ) && completion.getK() != K ) return completion;
@@ -1032,11 +1032,11 @@ namespace Opm {
             };
 
             for( auto* well : wells ) {
-                CompletionSet new_completions;
-                for( const auto& c : well->getCompletions( currentStep ) )
+                ConnectionSet new_completions;
+                for( const auto& c : well->getConnections( currentStep ) )
                     new_completions.add( new_completion( c ) );
 
-                well->addCompletionSet( currentStep, new_completions );
+                well->addConnectionSet( currentStep, new_completions );
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
             }
         }
@@ -1418,12 +1418,12 @@ namespace Opm {
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext) {
         const auto wells = this->getWells( currentStep );
-        auto completions = Completion::fromCOMPDAT( grid, eclipseProperties, keyword, wells, parseContext, *this );
+        auto completions = Connection::fromCOMPDAT( grid, eclipseProperties, keyword, wells, parseContext, *this );
 
         for( const auto pair : completions ) {
             auto& well = this->m_wells.get( pair.first );
-            well.addCompletions( currentStep, pair.second );
-            if (well.getCompletions( currentStep ).allCompletionsShut()) {
+            well.addConnections( currentStep, pair.second );
+            if (well.getConnections( currentStep ).allConnectionsShut()) {
                 std::string msg =
                         "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
                         "The well is therefore also shut.";
@@ -1451,10 +1451,10 @@ namespace Opm {
         auto& well = this->m_wells.get( well_name );
 
         const auto& segment_set = well.getSegmentSet(currentStep);
-        const auto& completion_set = well.getCompletions( currentStep );
-        const CompletionSet new_completion_set = updatingCompletionsWithSegments(keyword, completion_set, segment_set);
+        const auto& completion_set = well.getConnections( currentStep );
+        const ConnectionSet new_completion_set = updatingConnectionsWithSegments(keyword, completion_set, segment_set);
 
-        well.addCompletionSet(currentStep, new_completion_set);
+        well.addConnectionSet(currentStep, new_completion_set);
     }
 
     void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {
@@ -1554,7 +1554,7 @@ namespace Opm {
         return m_rootGroupTree.get(timeStep);
     }
 
-    void Schedule::addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder) {
+    void Schedule::addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellConnectionOrder) {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
@@ -1580,7 +1580,7 @@ namespace Opm {
                   headI, headJ, refDepth,
                   preferredPhase, m_timeMap,
                   timeStep,
-                  wellCompletionOrder, allowCrossFlow, automaticShutIn);
+                  wellConnectionOrder, allowCrossFlow, automaticShutIn);
 
         m_wells.insert( wellName, well );
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
@@ -1805,10 +1805,10 @@ namespace Opm {
         else throw std::invalid_argument("String " + eclipseString + " not recognized as a boolean-convertible string.");
     }
 
-    size_t Schedule::getMaxNumCompletionsForWells(size_t timestep) const {
+    size_t Schedule::getMaxNumConnectionsForWells(size_t timestep) const {
       size_t ncwmax = 0;
       for( const auto* wellPtr : getWells() ) {
-        const auto& completions = wellPtr->getCompletions(timestep);
+        const auto& completions = wellPtr->getConnections(timestep);
 
         if( completions.size() > ncwmax )
           ncwmax = completions.size();
@@ -1849,16 +1849,16 @@ namespace Opm {
 
     void Schedule::checkIfAllConnectionsIsShut(size_t timestep) {
         for( auto& well : this->m_wells ) {
-            const auto& completions = well.getCompletions(timestep);
-            if( completions.allCompletionsShut() )
+            const auto& completions = well.getConnections(timestep);
+            if( completions.allConnectionsShut() )
                 this->updateWellStatus( well, timestep, WellCommon::StatusEnum::SHUT);
         }
     }
 
 
-    void Schedule::filterCompletions(const EclipseGrid& grid) {
+    void Schedule::filterConnections(const EclipseGrid& grid) {
         for (auto& well : this->m_wells)
-            well.filterCompletions(grid);
+            well.filterConnections(grid);
     }
 
     const VFPProdTable& Schedule::getVFPProdTable(int table_id, size_t timeStep) const {

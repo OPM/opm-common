@@ -28,8 +28,8 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Completion.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -211,7 +211,7 @@ inline std::array< int, 3 > getijk( const DeckRecord& record,
     }};
 }
 
-inline std::array< int, 3 > getijk( const Completion& completion ) {
+inline std::array< int, 3 > getijk( const Connection& completion ) {
     return {{ completion.getI(), completion.getJ(), completion.getK() }};
 }
 
@@ -292,9 +292,9 @@ inline void keywordC( std::vector< ERT::smspec_node >& list,
              * over a well's completions regardless of the desired block is
              * defaulted or not
              */
-            for( const auto& completion : well->getCompletions( last_timestep ) ) {
+            for( const auto& connection : well->getConnections( last_timestep ) ) {
                 /* block coordinates defaulted */
-                auto cijk = getijk( completion );
+                auto cijk = getijk( connection );
 
                 if( record.getItem( 1 ).defaultApplied( 0 ) ) {
                     list.emplace_back( keywordstring, name, dims.getNXYZ().data(), cijk.data() );

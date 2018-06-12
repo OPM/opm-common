@@ -133,14 +133,14 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
         r2.set( data::Rates::opt::oil, 4.22 );
         r2.set( data::Rates::opt::gas, 4.23 );
 
-        std::vector<Opm::data::Completion> well1_comps(9);
+        std::vector<Opm::data::Connection> well1_comps(9);
         for (size_t i = 0; i < 9; ++i) {
-            Opm::data::Completion well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i};
+            Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i};
             well1_comps[i] = well_comp;
         }
-        std::vector<Opm::data::Completion> well2_comps(6);
+        std::vector<Opm::data::Connection> well2_comps(6);
         for (size_t i = 0; i < 6; ++i) {
-            Opm::data::Completion well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2};
+            Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2};
             well2_comps[i] = well_comp;
         }
 
@@ -225,14 +225,14 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
                 r2.set( data::Rates::opt::oil, 4.22 );
                 r2.set( data::Rates::opt::gas, 4.23 );
 
-                std::vector<Opm::data::Completion> well1_comps(9);
+                std::vector<Opm::data::Connection> well1_comps(9);
                 for (size_t i = 0; i < 9; ++i) {
-                    Opm::data::Completion well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i};
+                    Opm::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i};
                     well1_comps[i] = well_comp;
                 }
-                std::vector<Opm::data::Completion> well2_comps(6);
+                std::vector<Opm::data::Connection> well2_comps(6);
                 for (size_t i = 0; i < 6; ++i) {
-                    Opm::data::Completion well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2};
+                    Opm::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2};
                     well2_comps[i] = well_comp;
                 }
 

@@ -146,10 +146,10 @@ static data::Wells result_wells() {
       syncronized with the global index in the COMPDAT keyword in the
       input deck.
     */
-    data::Completion well1_comp1 { 0  , crates1, 1.9 , 123.4};
-    data::Completion well2_comp1 { 1  , crates2, 1.10 , 123.4};
-    data::Completion well2_comp2 { 101, crates3, 1.11 , 123.4};
-    data::Completion well3_comp1 { 2  , crates3, 1.11 , 123.4};
+    data::Connection well1_comp1 { 0  , crates1, 1.9 , 123.4};
+    data::Connection well2_comp1 { 1  , crates2, 1.10 , 123.4};
+    data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4};
+    data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4};
 
     /*
       The completions

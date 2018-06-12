@@ -34,14 +34,14 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
     const Opm::Schedule schedule(deck, state);
     const Opm::TimeMap timemap(deck);
 
-  
+
     for (size_t tstep = 0; tstep != timemap.numTimesteps(); ++tstep) {
 
-        const size_t ncwmax = schedule.getMaxNumCompletionsForWells(tstep);
+        const size_t ncwmax = schedule.getMaxNumConnectionsForWells(tstep);
 
         const int ICONZ = 25; // normally obtained from InteHead
         const auto wells = schedule.getWells(tstep);
-        
+
         const std::vector<int> icondata =
             Opm::RestartIO::Helpers::serialize_ICON(tstep,
                                                     ncwmax,
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
         for (const auto w : wells) {
 
             size_t c_offset = 0;
-            for (const auto c : w->getCompletions(tstep)) {
+            for (const auto c : w->getConnections(tstep)) {
 
                 const size_t offset = w_offset + c_offset;
 
@@ -73,17 +73,17 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_STATUS_INDEX],
                                       -1000);
 
-                if (c.attachedToSegment()) 
+                if (c.attachedToSegment())
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_SEGMENT_INDEX],
                                       c.getSegmentNumber());
                 else
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_SEGMENT_INDEX],
                                       0);
-                
+
                 c_offset += ICONZ;
             }
             w_offset += (ICONZ * ncwmax);
         }
     }
 };
-  
+

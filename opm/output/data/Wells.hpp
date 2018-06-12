@@ -101,7 +101,7 @@ namespace Opm {
             double reservoir_gas = 0.0;
     };
 
-    struct Completion {
+    struct Connection {
         using global_index = size_t;
         static const constexpr int restart_size = 2;
 
@@ -125,7 +125,7 @@ namespace Opm {
         double thp;
         double temperature;
         int control;
-        std::vector< Completion > completions;
+        std::vector< Connection > connections;
 
         inline bool flowing() const noexcept;
         template <class MessageBufferType>
@@ -146,20 +146,20 @@ namespace Opm {
         }
 
 
-        double get(const std::string& well_name , Completion::global_index completion_grid_index, Rates::opt m) const {
+        double get(const std::string& well_name , Connection::global_index connection_grid_index, Rates::opt m) const {
             const auto& witr = this->find( well_name );
             if( witr == this->end() ) return 0.0;
 
             const auto& well = witr->second;
-            const auto& completion = std::find_if( well.completions.begin() ,
-                                                   well.completions.end() ,
-                                                   [=]( const Completion& c ) {
-                                                        return c.index == completion_grid_index; });
+            const auto& connection = std::find_if( well.connections.begin() ,
+                                                   well.connections.end() ,
+                                                   [=]( const Connection& c ) {
+                                                        return c.index == connection_grid_index; });
 
-            if( completion == well.completions.end() )
+            if( connection == well.connections.end() )
                 return 0.0;
 
-            return completion->rates.get( m, 0.0 );
+            return connection->rates.get( m, 0.0 );
         }
 
         template <class MessageBufferType>
@@ -288,7 +288,7 @@ namespace Opm {
     }
 
     template <class MessageBufferType>
-    void Completion::write(MessageBufferType& buffer) const {
+    void Connection::write(MessageBufferType& buffer) const {
             buffer.write(this->index);
             this->rates.write(buffer);
             buffer.write(this->pressure);
@@ -305,9 +305,9 @@ namespace Opm {
         buffer.write(this->thp);
         buffer.write(this->temperature);
         buffer.write(this->control);
-        unsigned int size = this->completions.size();
+        unsigned int size = this->connections.size();
         buffer.write(size);
-        for (const Completion& comp : this->completions)
+        for (const Connection& comp : this->connections)
             comp.write(buffer);
     }
 
@@ -328,7 +328,7 @@ namespace Opm {
     }
 
   template <class MessageBufferType>
-   void Completion::read(MessageBufferType& buffer) {
+   void Connection::read(MessageBufferType& buffer) {
             buffer.read(this->index);
             this->rates.read(buffer);
             buffer.read(this->pressure);
@@ -345,12 +345,12 @@ namespace Opm {
         buffer.read(this->thp);
         buffer.read(this->temperature);
         buffer.read(this->control);
-        unsigned int size = 0.0; //this->completions.size();
+        unsigned int size = 0.0; //this->connections.size();
         buffer.read(size);
-        this->completions.resize(size);
+        this->connections.resize(size);
         for (size_t i = 0;  i < size; ++i)
         {
-            auto& comp = this->completions[ i ];
+            auto& comp = this->connections[ i ];
             comp.read(buffer);
         }
     }

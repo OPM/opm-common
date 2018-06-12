@@ -38,11 +38,11 @@ BOOST_AUTO_TEST_CASE( serialize_scon_test )
 
     for (size_t tstep = 0; tstep != timemap.numTimesteps(); ++tstep) {
 
-        const size_t ncwmax = schedule.getMaxNumCompletionsForWells(tstep);
+        const size_t ncwmax = schedule.getMaxNumConnectionsForWells(tstep);
 
         const int SCONZ = 40; // normally obtained from InteHead
         const auto wells = schedule.getWells(tstep);
-        
+
         const std::vector<double> scondata =
             Opm::RestartIO::Helpers::serialize_SCON(tstep,
                                                     ncwmax,
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( serialize_scon_test )
         for (const auto w : wells) {
 
             size_t c_offset = 0;
-            for (const auto c : w->getCompletions(tstep)) {
+            for (const auto c : w->getConnections(tstep)) {
 
                 const size_t offset = w_offset + c_offset;
                 const auto ctf = c.getConnectionTransmissibilityFactorAsValueObject();
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE( serialize_scon_test )
                     : Opm::RestartIO::Helpers::UNIMPLEMENTED_VALUE;
                 BOOST_CHECK_EQUAL(scondata[offset + SCON_CF_INDEX],
                                   expected);
-                BOOST_CHECK_EQUAL(scondata[offset + SCON_KH_INDEX], 
+                BOOST_CHECK_EQUAL(scondata[offset + SCON_KH_INDEX],
                                   Opm::RestartIO::Helpers::UNIMPLEMENTED_VALUE);
 
                 c_offset += SCONZ;
@@ -72,4 +72,4 @@ BOOST_AUTO_TEST_CASE( serialize_scon_test )
         }
     }
 };
-  
+

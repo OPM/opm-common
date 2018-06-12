@@ -34,7 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/CompletionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
@@ -344,18 +344,18 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     {
         auto* well1 = sched.getWell("W_1");
         BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionPropertiesCopy(8).OilRate , 0.0001);
-        BOOST_CHECK_EQUAL(0U, well1->getCompletions( 0 ).size() );
+        BOOST_CHECK_EQUAL(0U, well1->getConnections( 0 ).size() );
 
-        const auto& completions = well1->getCompletions(3);
-        BOOST_CHECK_EQUAL(4U, completions.size());
+        const auto& connections = well1->getConnections(3);
+        BOOST_CHECK_EQUAL(4U, connections.size());
 
-        BOOST_CHECK_EQUAL(WellCompletion::OPEN, completions.get(3).getState());
-        BOOST_CHECK_EQUAL(2.2836805555555556e-12 , completions.get(3).getConnectionTransmissibilityFactor());
-        BOOST_CHECK_EQUAL(0.311/Metric::Length, completions.get(3).getDiameter());
-        BOOST_CHECK_EQUAL(3.3, completions.get(3).getSkinFactor());
+        BOOST_CHECK_EQUAL(WellCompletion::OPEN, connections.get(3).getState());
+        BOOST_CHECK_EQUAL(2.2836805555555556e-12 , connections.get(3).getConnectionTransmissibilityFactor());
+        BOOST_CHECK_EQUAL(0.311/Metric::Length, connections.get(3).getDiameter());
+        BOOST_CHECK_EQUAL(3.3, connections.get(3).getSkinFactor());
 
-        BOOST_CHECK_EQUAL(4U, well1->getCompletions( 7 ).size() );
-        BOOST_CHECK_EQUAL(WellCompletion::SHUT, well1->getCompletions( 7 ).get( 3 ).getState() );
+        BOOST_CHECK_EQUAL(4U, well1->getConnections( 7 ).size() );
+        BOOST_CHECK_EQUAL(WellCompletion::SHUT, well1->getConnections( 7 ).get( 3 ).getState() );
     }
 }
 
@@ -665,9 +665,9 @@ COMPDAT \n\
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Schedule sched(deck,  grid , eclipseProperties, Phases(true, true, true) , parseContext);
     const auto* well = sched.getWell("W1");
-    const auto& completions = well->getCompletions(0);
-    BOOST_CHECK_EQUAL( 10 , completions.get(0).getI() );
-    BOOST_CHECK_EQUAL( 20 , completions.get(0).getJ() );
+    const auto& connections = well->getConnections(0);
+    BOOST_CHECK_EQUAL( 10 , connections.get(0).getI() );
+    BOOST_CHECK_EQUAL( 20 , connections.get(0).getJ() );
 }
 
 
