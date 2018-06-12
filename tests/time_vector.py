@@ -127,6 +127,20 @@ class TestTimeVector(unittest.TestCase):
         tv2 = TimeVector(datetime.date(2000,1,1))
         self.assertEqual("", str(tv2))
 
+    def test_drop_dates(self):
+        tv = TimeVector(datetime.date(1997, 11, 6), base_file="data/schedule/part1.sch")
+        with self.assertRaises(KeyError):
+            tv.delete(datetime.datetime(2019,1,1))
+
+        ts = tv[datetime.datetime(1997,11,14)]
+        self.assertTrue("WTEST" in ts)
+        tv.delete(datetime.datetime(1997,11,14))
+
+        with self.assertRaises(KeyError):
+            tv.delete(datetime.datetime(1997,11,14))
+
+        for ts in tv:
+            self.assertFalse("WTEST" in ts)
 
 if __name__ == "__main__":
     unittest.main()

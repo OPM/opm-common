@@ -79,6 +79,13 @@ class TimeStep(object):
     def __len__(self):
         return len(self.keywords)
 
+    def __contains__(self, arg):
+        for kw in self.keywords:
+            if arg == kw.name:
+                return True
+        return False
+
+
     def __str__(self):
         string = StringIO()
 
@@ -198,12 +205,10 @@ class TimeVector(object):
             raise ValueError("Can only supply one of base_string and base_file arguments")
 
         self.start_date = datetime.datetime( start_date.year, start_date.month, start_date.day)
-        self.time_steps_list = []
         self.time_steps_dict = {}
+        self.time_steps_list = []
 
         ts = TimeStep.create_first(self.start_date)
-        tsx = TimeStep(self.start_date, [])
-        #print ts1,ts
 
         self._add_dates_block(ts)
         start_dt = datetime.datetime(start_date.year, start_date.month, start_date.day)
@@ -220,7 +225,15 @@ class TimeVector(object):
         """
         The number of timesteps in the vector.
         """
-        return len(self.time_steps_list)
+        return len(self.time_steps_dict)
+
+    def __contains__(self, dt):
+        """
+        Will return true if the vector contains a timestep at date dt.
+        """
+        if isinstance(dt, datetime.date):
+            dt = datetime.datetime(dt.year, dt.month, dt.day)
+        return dt in self.time_steps_dict
 
 
     def __getitem__(self, index):
@@ -234,21 +247,17 @@ class TimeVector(object):
         else:
             if isinstance(index,datetime.date):
                 index = datetime.datetime(index.year, index.month, index.day)
-            return self.time_steps_dict[index]
-
-    def __contains__(self, dt):
-        """
-        Will return true if the vector contains a timestep at date dt.
-        """
-        if isinstance(dt, datetime.date):
-            dt = datetime.datetime(dt.year, dt.month, dt.day)
-        return dt in self.time_steps_dict
+            return self.time_steps_dict[index][0]
 
 
     def _add_dates_block(self, ts):
+        self.time_steps_dict[ts.dt] = (ts, len(self.time_steps_list))
         self.time_steps_list.append(ts)
-        self.time_steps_dict[ts.dt] = ts
 
+    def delete(self, dt):
+        (ts, index) = self.time_steps_dict[dt]
+        del self.time_steps_dict[dt]
+        del self.time_steps_list[index]
 
 
     def add_keywords(self, dt, keywords):
@@ -342,6 +351,8 @@ class TimeVector(object):
             string.write(str(ts))
 
         return string.getvalue()
+
+
 
 
     @property
