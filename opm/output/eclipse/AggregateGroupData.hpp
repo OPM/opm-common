@@ -34,6 +34,21 @@ namespace Opm {
 
 namespace Opm { namespace RestartIO { namespace Helpers {
 
+    class groupMaps {
+    public:
+	const std::map <size_t, const Opm::Group*>& indexGroupMap() const;
+	const std::map <const std::string, size_t>& groupNameIndexMap() const;
+
+	void currentGrpTreeNameSeqIndMap(const Opm::Schedule&                        sched,
+	                                 const size_t                                simStep,
+	                                 const std::map<const std::string , size_t>& GnIMap,
+	                                 const std::map<size_t, const Opm::Group*>&  IGMap);
+
+    private:
+	std::map <size_t, const Opm::Group*> m_indexGroupMap;
+	std::map <const std::string, size_t> m_groupNameIndexMap;
+    };
+
     class AggregateGroupData
     {
     public:
@@ -51,7 +66,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 #if 0
         void captureDynamicGroupData(const Opm::Phases&          phases,
                                      const Opm::Schedule&        sched,
-                                     const std::size_t           rptStep,
+                                     const std::size_t           simStep,
                                      const Opm::data::WellRates& wRates);
 #endif
 
@@ -79,13 +94,13 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->zGroup_.data();
         }
 
-        const std::vector<std::string> restart_group_keys = {"GOPP", "GWPP", "GOPR", "GWPR", "GGPR",
-							     "GVPR", "GWIR", "GGIR", "GWCT", "GGOR", 
+	const std::vector<std::string> restart_group_keys = {"GOPP", "GWPP", "GOPR", "GWPR", "GGPR",
+							     "GVPR", "GWIR", "GGIR", "GWCT", "GGOR",
 							     "GOPT", "GWPT", "GGPT", "GVPT", "GWIT",
 							     "GGIT"};
 
-	const std::vector<std::string> restart_field_keys = {"FOPP", "FWPP", "FOPR", "FWPR", "FGPR", 
-							     "FVPR", "FWIR", "FGIR", "FWCT", "FGOR", 
+	const std::vector<std::string> restart_field_keys = {"FOPP", "FWPP", "FOPR", "FWPR", "FGPR",
+							     "FVPR", "FWIR", "FGIR", "FWCT", "FGOR",
 							     "FOPT", "FWPT", "FGPT", "FVPT", "FWIT",
 							     "FGIT"};
 
@@ -97,7 +112,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	  {"GWIR",  5},
 	  {"GGIR",  6},
 	  {"GWCT",  8},
-	  {"GGOR",  8},
+	  {"GGOR",  9},
 	  {"GOPT", 10},
 	  {"GWPT", 11},
 	  {"GGPT", 12},
@@ -116,7 +131,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	  {"FWIR",  5},
 	  {"FGIR",  6},
 	  {"FWCT",  8},
-	  {"FGOR",  8},
+	  {"FGOR",  9},
 	  {"FOPT", 10},
 	  {"FWPT", 11},
 	  {"FGPT", 12},

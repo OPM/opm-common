@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <iostream>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -1385,6 +1386,7 @@ namespace Opm {
             const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
             const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
             newTree.update(childName, parentName);
+	    newTree.updateSeqIndex(childName, parentName);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep );

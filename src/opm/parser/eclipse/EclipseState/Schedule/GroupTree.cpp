@@ -19,13 +19,14 @@
 
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 
 namespace Opm {
 
-void GroupTree::update( const std::string& name ) {
-    this->update( name, "FIELD" );
+void GroupTree::update( const std::string& name) {
+    this->update( name, "FIELD");
 }
 
 /*
@@ -35,8 +36,16 @@ void GroupTree::update( const std::string& name ) {
  * this grouptree class is just meta data for the actual group objects (stored
  * and represented elsewhere)
  */
+ 
+const std::map<const std::string , size_t>& GroupTree::nameSeqIndMap() const {
+  return m_nameSeqIndMap;
+}
 
-void GroupTree::update( const std::string& name, const std::string& other_parent ) {
+const std::map<size_t, const std::string >& GroupTree::seqIndNameMap() const {
+  return m_seqIndNameMap;
+}
+
+void GroupTree::update( const std::string& name, const std::string& other_parent) {
     if( name == "FIELD" )
         throw std::invalid_argument( "The FIELD group name is reserved." );
 
@@ -44,12 +53,10 @@ void GroupTree::update( const std::string& name, const std::string& other_parent
         throw std::invalid_argument( "Parent group must have a name." );
 
     auto root = this->find( other_parent );
-
-    if( root == this->groups.end() || root->name != other_parent )
+    if( root == this->groups.end() || root->name != other_parent ) 
         this->groups.insert( root, 1, group { other_parent, "FIELD" } );
 
     auto node = this->find( name );
-
     if( node == this->groups.end() || node->name != name ) {
         this->groups.insert( node, 1, group { name, other_parent } );
         return;
@@ -57,6 +64,31 @@ void GroupTree::update( const std::string& name, const std::string& other_parent
 
     node->parent = other_parent;
 }
+
+void GroupTree::updateSeqIndex( const std::string& name, const std::string& other_parent) {
+    if( name == "FIELD" )
+        throw std::invalid_argument( "The FIELD group name is reserved." );
+
+    if( other_parent.empty() )
+        throw std::invalid_argument( "Parent group must have a name." );
+
+    // add code to set an index that determine the sequence of the groups
+    // defined in the group tree
+    size_t index = this->m_nameSeqIndMap.size();
+    std::cout << "GroupTree::update - index: " << index << " name: " << name << " other_parent: " << other_parent << std::endl;
+    auto name_itr = this->m_nameSeqIndMap.find(name);
+    if (name_itr == this->m_nameSeqIndMap.end()) {
+	this->m_nameSeqIndMap.insert(std::make_pair(name, index));
+	this->m_seqIndNameMap.insert(std::make_pair(index, name));    	
+	index +=1;
+    }
+    auto parent_itr = this->m_nameSeqIndMap.find(other_parent);
+    if (parent_itr == this->m_nameSeqIndMap.end()) {
+	this->m_nameSeqIndMap.insert(std::make_pair(other_parent, index));
+	this->m_seqIndNameMap.insert(std::make_pair(index, other_parent));
+    }
+}
+
 
 bool GroupTree::exists( const std::string& name ) const {
     return std::binary_search( this->groups.begin(),

@@ -145,7 +145,6 @@ namespace {
 
     std::map <size_t, const Opm::Group*>  currentGroupMapIndexGroup(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
     {
-	//const std::vector< const Opm::Group* > groups = sched.getGroups(simStep);
 	const auto& groups = sched.getGroups(simStep);
 	// make group index for current report step
 	std::map <size_t, const Opm::Group*> indexGroupMap;
@@ -160,14 +159,13 @@ namespace {
 
     std::map <std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
     {
-	//const std::vector< const Opm::Group* > groups = sched.getGroups(simStep);
 	const auto& groups = sched.getGroups(simStep);
-	// make group index for current report step
-	std::map <std::string, size_t> groupIndexMap;
+	// make group name to index map for the current time step
+	std::map <const std::string, size_t> groupIndexMap;
 	for (const auto* group : groups) {
 	    int ind = (group->name() == "FIELD")
                     ? ngmaxz(inteHead)-1 : group->seqIndex()-1;
-	    std::pair<std::string, size_t> groupPair = std::make_pair(group->name(), ind); 
+	    std::pair<const std::string, size_t> groupPair = std::make_pair(group->name(), ind); 
 	    groupIndexMap.insert(groupPair);
 	}
 	return groupIndexMap;
@@ -363,42 +361,61 @@ namespace {
 
 	    const auto childGroups = sched.getChildGroups(group.name(), simStep);
 	    const auto childWells  = sched.getChildWells(group.name(), simStep);
-	    //std::cout << "IGrpArray - staticContrib - before currentGroupMapIndexGroup(sched, simStep, inteHead)"  <<  std::endl;
-	    //const auto& groupMapIndexGroup = currentGroupMapIndexGroup(sched, simStep, inteHead);
-	    //std::cout << "IGrpArray - staticContrib - before currentGroupMapNameIndex(sched, simStep, inteHead)"  <<  std::endl;
-	    const auto groupMapNameIndex = currentGroupMapNameIndex(sched, simStep, inteHead);
+	    const auto groupMapNameIndex = currentMapGroup_nameIndex(sched, simStep, inteHead);
+	    const auto mapIndexGroup = currentMapIndexGroup(sched, simStep, inteHead);
 	    if ((childGroups.size() != 0) && (childWells.size()!=0))
 	      throw std::invalid_argument("group has both wells and child groups" + group.name());
             int igrpCount = 0;
 	    if (childWells.size() != 0) {
 		//group has child wells
-		//std::cout << "IGrpArray - staticContrib: childwells for group.name(): " << group.name()  << "childWells - size: " << childWells.size() << std::endl;
-		//for (const auto well : childWells ) {
 		for ( auto it = childWells.begin() ; it != childWells.end(); it++) {
-		    //std::cout << "Child well name: " << it->name() << " Well seqIndex(): " << it->seqIndex() << std::endl;
 		    iGrp[igrpCount] = (*it)->seqIndex()+1;
 		    igrpCount+=1;
-		    //std::cout << "childWells: igrpCount after increment: " << igrpCount <<  std::endl;
 		}
 	    }
 	    else if (childGroups.size() != 0) {
 		//group has child groups
 		//The field group always has seqIndex = 0 because it is always defined first
 	        //Hence the all groups except the Field group uses the seqIndex assigned
-		//std::cout << "IGrpArray - staticContrib: childGroups for group.name(): " << group.name()  << "childGroups - size: " << childGroups.size() << std::endl;
-		//for (const auto grp : childGroups ) {
-		for ( auto it = childGroups.begin() ; it != childGroups.end(); it++) {
-		    //std::cout << "Child Group name: " << it->name() << " Group seqIndex(): " << it->seqIndex()-1 << std::endl;
-		    iGrp[igrpCount] = (*it)->seqIndex();
-		    igrpCount+=1;
-		    //std::cout << "childGroups: igrpCount after increment: " << igrpCount <<  std::endl;
+		std::vector<size_t> childGroupIndex;
+		Opm::RestartIO::Helpers::groupMaps groupMap;
+		groupMap.currentGrpTreeNameSeqIndMap(sched, simStep, groupMapNameIndex,mapIndexGroup);
+		const auto indGroupMap = groupMap.indexGroupMap();
+		const auto gNameIndMap = groupMap.groupNameIndexMap();
+		for (auto* grp : childGroups) {
+		  auto groupName = grp->name();
+		  auto searchGTName = gNameIndMap.find(groupName);
+		  if (searchGTName != gNameIndMap.end()) {
+		      childGroupIndex.push_back(searchGTName->second);
+		  }
+		  else {
+		      throw std::invalid_argument( "Invalid group name" );
+		  }
+		}
+		std::sort(childGroupIndex.begin(), childGroupIndex.end());
+		for (auto groupTreeIndex : childGroupIndex) {
+		    auto searchGTIterator = indGroupMap.find(groupTreeIndex);
+		    if (searchGTIterator != indGroupMap.end()) {
+			auto gname = (searchGTIterator->second)->name();
+			auto gSeqNoItr = groupMapNameIndex.find(gname);
+			if (gSeqNoItr != groupMapNameIndex.end()) {
+			    iGrp[igrpCount] = (gSeqNoItr->second) + 1;
+			    igrpCount+=1;
+			}
+			else {
+			    std::cout << "AggregateGroupData, ChildGroups - Group name: groupMapNameIndex: " << gSeqNoItr->first << std::endl;
+			    throw std::invalid_argument( "Invalid group name" );
+			}
+		    }
+		    else {
+			std::cout << "AggregateGroupData, ChildGroups - GroupTreeIndex: " << groupTreeIndex << std::endl;
+			throw std::invalid_argument( "Invalid GroupTree index" );
+		    }
 		}
 	    }
 
 	    //assign the number of child wells or child groups to
 	    // location nwgmax
-	    //std::cout << "IGrpArray - staticContrib: childGroups.size() " << childGroups.size()  << "childWells.size(): " << childWells.size() << std::endl;
-	    //std::cout << "IGrpArray - staticContrib: nwgmax: " << nwgmax  << std::endl;
 	    iGrp[nwgmax] =  (childGroups.size() == 0)
                     ? childWells.size() : childGroups.size();
 
@@ -438,7 +455,6 @@ namespace {
 	    //location nwgmax + 28
 	    const auto& groupTree = sched.getGroupTree( simStep );
 	    const std::string& parent = groupTree.parent(group.name());
-	    //std::cout << "IGrpArray - staticContrib - before groupMapNameIndex.find(parent)"  <<  std::endl;
 	    if (group.name() == "FIELD")
 	      iGrp[nwgmax+28] = 0;
 	    else {
@@ -547,17 +563,18 @@ namespace {
 	  ? restart_field_keys : restart_group_keys;
 	  const std::map<std::string, size_t>& keyToIndex = (groupName == "FIELD")
 	  ? fieldKeyToIndex : groupKeyToIndex;
+
 	  for (const auto key : keys) {
 	      std::string compKey = (groupName == "FIELD")
 	      ? key : key + ":" + groupName;
-	      std::cout << "AggregateGroupData compKey: " << compKey << std::endl;
+
 	      if (sumState.has(compKey)) {
 		  double keyValue = sumState.get(compKey);
-		  std::cout << "AggregateGroupData_compkey: " << compKey << std::endl;
 		  const auto itr = keyToIndex.find(key);
 		  xGrp[itr->second] = keyValue;
 	      }
 	      else {
+		  std::cout << "AggregateGroupData_compkey: " << compKey << std::endl;
 		  std::cout << "AggregateGroupData, empty " << std::endl;
 		  //throw std::invalid_argument("No such keyword: " + compKey);
 	    }
@@ -589,6 +606,45 @@ namespace {
     }
 } // Anonymous
 
+void
+Opm::RestartIO::Helpers::groupMaps::
+currentGrpTreeNameSeqIndMap(const Opm::Schedule&                        sched,
+                            const size_t                                simStep,
+                            const std::map<const std::string , size_t>& GnIMap,
+                            const std::map<size_t, const Opm::Group*>&  IGMap)
+    {
+	const auto& grpTreeNSIMap = (sched.getGroupTree(simStep)).nameSeqIndMap();
+	const auto& grpTreeSINMap = (sched.getGroupTree(simStep)).seqIndNameMap();
+	// make group index for current report step
+	size_t index = 0;
+	for (auto itr = IGMap.begin(); itr != IGMap.end(); itr++) {
+	    auto name = (itr->second)->name();
+	    auto srchGN = grpTreeNSIMap.find(name);
+	    if (srchGN != grpTreeNSIMap.end()) {
+		//come here if group is in gruptree
+		this->m_indexGroupMap.insert(std::make_pair(srchGN->second, itr->second));
+		this->m_groupNameIndexMap.insert(std::make_pair(srchGN->first, srchGN->second));
+	    }
+	    else {
+	    //come here if group is not in gruptree to put in from global group list
+		this->m_indexGroupMap.insert(std::make_pair(itr->first, itr->second));
+		this->m_groupNameIndexMap.insert(std::make_pair(name, itr->first));
+	    }
+	}
+    }
+
+const std::map <size_t, const Opm::Group*>&
+Opm::RestartIO::Helpers::groupMaps::indexGroupMap() const
+{
+	return this->m_indexGroupMap;
+}
+
+const std::map <const std::string, size_t>&
+Opm::RestartIO::Helpers::groupMaps::groupNameIndexMap() const
+{
+	return this->m_groupNameIndexMap;
+}
+
 // =====================================================================
 
 Opm::RestartIO::Helpers::AggregateGroupData::
@@ -614,15 +670,18 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 			 const Opm::SummaryState&             sumState,
 			 const std::vector<int>&              inteHead)
 {
-    std::map <size_t, const Opm::Group*> indexGroupMap = currentGroupMapIndexGroup(sched, simStep, inteHead);
-    std::map <std::string, size_t> nameIndexMap = currentGroupMapNameIndex(sched, simStep, inteHead);
+    const auto indexGroupMap = currentMapIndexGroup(sched, simStep, inteHead);
+    const auto nameIndexMap = currentMapGroup_nameIndex(sched, simStep, inteHead);
+
+    //Opm::RestartIO::Helpers::groupMaps grpMaps;
+    //grpMaps.currentGrpTreeNameSeqIndMap(sched, simStep, nameIndexMap,indexGroupMap);
     std::vector<const Opm::Group*> curGroups;
     curGroups.resize(ngmaxz(inteHead));
     //
     //initialize curgroups
     for (auto* cg : curGroups) cg = nullptr;
 
-    std::map <size_t, const Opm::Group*>::iterator it = indexGroupMap.begin();
+    auto it = indexGroupMap.begin();
     while (it != indexGroupMap.end())
 	{
 	    curGroups[static_cast<int>(it->first)] = it->second;

@@ -630,6 +630,7 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
     groupData.captureDeclaredGroupData(schedule, rst_g_keys, rst_f_keys, grpKeyToInd, fldKeyToInd, simStep, sumState, ih);
     write_kw(rst_file, EclKW<int>  ("IGRP", groupData.getIGroup()));
     write_kw(rst_file, EclKW<float>("SGRP", groupData.getSGroup()));
+    write_kw(rst_file, EclKW<double>("XGRP", groupData.getXGroup()));
 }
 
 
