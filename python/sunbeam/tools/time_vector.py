@@ -247,17 +247,19 @@ class TimeVector(object):
         else:
             if isinstance(index,datetime.date):
                 index = datetime.datetime(index.year, index.month, index.day)
-            return self.time_steps_dict[index][0]
+            return self.time_steps_dict[index]
 
 
     def _add_dates_block(self, ts):
-        self.time_steps_dict[ts.dt] = (ts, len(self.time_steps_list))
+        self.time_steps_dict[ts.dt] = ts
         self.time_steps_list.append(ts)
 
     def delete(self, dt):
-        (ts, index) = self.time_steps_dict[dt]
         del self.time_steps_dict[dt]
-        del self.time_steps_list[index]
+        for (index,ts) in enumerate(self.time_steps_list):
+            if ts.dt == dt:
+                del self.time_steps_list[index]
+                break
 
 
     def add_keywords(self, dt, keywords):

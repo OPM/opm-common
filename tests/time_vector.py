@@ -142,6 +142,15 @@ class TestTimeVector(unittest.TestCase):
         for ts in tv:
             self.assertFalse("WTEST" in ts)
 
+    def test_drop_dates2(self):
+        tv = TimeVector(datetime.datetime(2017,1,1))
+        tv.add_keywords(datetime.datetime(2018,1,1), ['FOO18'])
+        tv.add_keywords(datetime.datetime(2019,1,1), ['FOO19'])
+        tv.add_keywords(datetime.datetime(2020,1,1), ['FOO20'])
+        tv.delete(datetime.datetime(2019,1,1))
+        tv.delete(datetime.datetime(2020,1,1))
+
+
 if __name__ == "__main__":
     unittest.main()
 
