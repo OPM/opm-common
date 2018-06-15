@@ -11,3 +11,4 @@
     {"name" : "PROBLEM_STOP_LIMIT"  , "value_type" : "INT" , "default" : 100},
     {"name" : "ERROR_STOP_LIMIT"  , "value_type" : "INT" , "default" : 10},
     {"name" : "BUG_STOP_LIMIT"  , "value_type" : "INT" , "default" : 1}]}
+    {"name" : "GROUP_PRINT_LIMIT", "value_type" : "INT" , "default" : 10}]}
