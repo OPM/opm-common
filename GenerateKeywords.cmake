@@ -38,11 +38,17 @@ configure_file(src/opm/parser/eclipse/keyword_list.argv.in keyword_list.argv)
 
 # Generate keyword source
 add_custom_command(
-    OUTPUT  ${PROJECT_BINARY_DIR}/ParserKeywords.cpp ${PROJECT_BINARY_DIR}/inlinekw.cpp
+    OUTPUT  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
     COMMAND genkw keyword_list.argv
-                  ${PROJECT_BINARY_DIR}/ParserKeywords.cpp
-                  ${PROJECT_BINARY_DIR}/include/
+                  ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp
+                  ${PROJECT_BINARY_DIR}/tmp_gen/include/
                   opm/parser/eclipse/Parser/ParserKeywords
-                  ${PROJECT_BINARY_DIR}/inlinekw.cpp
+                  ${PROJECT_BINARY_DIR}/tmp_gen/inlinekw.cpp
     DEPENDS genkw ${keyword_files} src/opm/parser/eclipse/share/keywords/keyword_list.cmake
 )
+
+# To avoid some rebuilds
+add_custom_command(OUTPUT ParserKeywords.cpp inlinekw.cpp
+                   DEPENDS ${PROJECT_BINARY_DIR}/tmp_gen/ParserKeywords.cpp
+                   COMMAND ${CMAKE_COMMAND} -DBASE_DIR=${PROJECT_BINARY_DIR}
+                                            -P ${PROJECT_SOURCE_DIR}/CopyHeaders.cmake)
