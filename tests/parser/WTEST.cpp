@@ -74,9 +74,9 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
     WellTestState st;
     wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 0, 0, 0);
     st.addClosedWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
-    BOOST_CHECK_EQUAL(st.size(), 1);
+    BOOST_CHECK_EQUAL(st.sizeWells(), 1);
 
-    auto shut_wells = st.update(wc, 5000);
+    auto shut_wells = st.updateWell(wc, 5000);
     BOOST_CHECK_EQUAL( shut_wells.size(), 1);
 }
 
@@ -84,38 +84,81 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     WellTestConfig wc;
     WellTestState st;
     st.addClosedWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
-    BOOST_CHECK_EQUAL(st.size(), 1);
+    BOOST_CHECK_EQUAL(st.sizeWells(), 1);
 
     st.addClosedWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
-    BOOST_CHECK_EQUAL(st.size(), 1);
+    BOOST_CHECK_EQUAL(st.sizeWells(), 1);
 
     st.addClosedWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
-    BOOST_CHECK_EQUAL(st.size(), 2);
+    BOOST_CHECK_EQUAL(st.sizeWells(), 2);
 
     st.addClosedWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100);
-    BOOST_CHECK_EQUAL(st.size(), 3);
+    BOOST_CHECK_EQUAL(st.sizeWells(), 3);
 
-    auto shut_wells = st.update(wc, 5000);
+    auto shut_wells = st.updateWell(wc, 5000);
     BOOST_CHECK_EQUAL( shut_wells.size(), 0);
 
     wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000, 2, 0);
     // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.update(wc, 200).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 200).size(), 0);
 
     // We should test it:
-    BOOST_CHECK_EQUAL( st.update(wc, 1200).size(), 1);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 1200).size(), 1);
 
     // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.update(wc, 1700).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 1700).size(), 0);
 
     // We should test it:
-    BOOST_CHECK_EQUAL( st.update(wc, 2400).size(), 1);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 2400).size(), 1);
 
     // Too many attempts:
-    BOOST_CHECK_EQUAL( st.update(wc, 24000).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 24000).size(), 0);
 
-    st.drop("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
+    st.dropWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
 
     st.openWell("WELL_NAME");
-    BOOST_CHECK_EQUAL(st.size(), 1);
+    BOOST_CHECK_EQUAL(st.sizeWells(), 1);
 }
+
+
+BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
+    WellTestConfig wc;
+    WellTestState st;
+    st.addClosedCompletion("WELL_NAME", 2, 100);
+    BOOST_CHECK_EQUAL(st.sizeCompletions(), 1);
+
+    st.addClosedCompletion("WELL_NAME", 2, 100);
+    BOOST_CHECK_EQUAL(st.sizeCompletions(), 1);
+
+    st.addClosedCompletion("WELL_NAME", 3, 100);
+    BOOST_CHECK_EQUAL(st.sizeCompletions(), 2);
+
+    st.addClosedCompletion("WELLX", 3, 100);
+    BOOST_CHECK_EQUAL(st.sizeCompletions(), 3);
+
+    auto closed_completions = st.updateWell(wc, 5000);
+    BOOST_CHECK_EQUAL( closed_completions.size(), 0);
+
+    wc.add_well("WELL_NAME", WellTestConfig::Reason::COMPLETION, 1000, 2, 0);
+    // Not sufficient time has passed.
+    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 200).size(), 0);
+
+    // We should test it:
+    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 1200).size(), 2);
+
+    // Not sufficient time has passed.
+    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 1700).size(), 0);
+
+    // We should test it:
+    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 2400).size(), 2);
+
+    // Too many attempts:
+    BOOST_CHECK_EQUAL( st.updateCompletion(wc, 24000).size(), 0);
+
+    st.dropCompletion("WELL_NAME", 2);
+    st.dropCompletion("WELLX", 3);
+    BOOST_CHECK_EQUAL(st.sizeCompletions(), 1);
+}
+
+
+

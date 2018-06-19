@@ -46,6 +46,13 @@ public:
         int num_attempt;
     };
 
+    struct ClosedCompletion {
+        std::string wellName;
+        size_t completion;
+        double last_test;
+        int num_attempt;
+    };
+
     /*
       The simulator has decided to close a particular well; we then add it here
       as a closed well with a particualar reason.
@@ -53,26 +60,53 @@ public:
     void addClosedWell(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
 
     /*
+      The simulator has decided to close a particular completion in a well; we then add it here
+      as a closed completions
+    */
+    void addClosedCompletion(const std::string& well_name, size_t completionIdx, double sim_time);
+
+    /*
       The update will consult the WellTestConfig object and return a list of
       wells which should be checked for possible reopening; observe that the
       update method will update the internal state of the object by counting up
       the openiing attempts, and also set the time for the last attempt to open.
     */
-    std::vector<std::pair<std::string, WellTestConfig::Reason>> update(const WellTestConfig& config, double sim_time);
+    std::vector<std::pair<std::string, WellTestConfig::Reason>> updateWell(const WellTestConfig& config, double sim_time);
 
     /*
-      If the simulator decides that a constraint is no longer met the drop()
+      The update will consult the WellTestConfig object and return a list of
+      completions which should be checked for possible reopening; observe that the
+      update method will update the internal state of the object by counting up
+      the openiing attempts, and also set the time for the last attempt to open.
+    */
+    std::vector<std::pair<std::string, size_t>> updateCompletion(const WellTestConfig& config, double sim_time);
+
+
+    /*
+      If the simulator decides that a constraint is no longer met the dropWell()
       method should be called to indicate that this reason for keeping the well
       closed is no longer active.
     */
-    void drop(const std::string& well_name, WellTestConfig::Reason reason);
+    void dropWell(const std::string& well_name, WellTestConfig::Reason reason);
 
+    /*
+      If the simulator decides that a constraint is no longer met the dropCompletion()
+      method should be called to indicate that this reason for keeping the well
+      closed is no longer active.
+    */
+    void dropCompletion(const std::string& well_name, size_t completionIdx);
 
-    bool has(const std::string well_name, WellTestConfig::Reason reason) const;
+    bool hasWell(const std::string well_name, WellTestConfig::Reason reason) const;
     void openWell(const std::string& well_name);
-    size_t size() const;
+
+    bool hasCompletion(const std::string well_name, const size_t completionIdx) const;
+
+    size_t sizeWells() const;
+    size_t sizeCompletions() const;
+
 private:
     std::vector<ClosedWell> wells;
+    std::vector<ClosedCompletion> completions;
 };
 
 
