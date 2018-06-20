@@ -17,6 +17,7 @@
 
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
@@ -126,6 +127,12 @@ double calculateCellVol(const std::vector<double>& X, const std::vector<double>&
 	   vect[j] = Y.data();
 	} else if (permutation[j] == 3){
 	   vect[j] = Z.data();
+	} else {
+	     // this condition can never happen, since all values in 'permutation'
+	     // is covered, but compiler analysis may not be deep enough to not give
+	     // warnings about 'vect' being uninitialized further down.
+	     assert(false);
+	     vect[j] = 0;
         } 
      }
     
