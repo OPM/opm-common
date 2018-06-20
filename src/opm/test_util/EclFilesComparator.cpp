@@ -95,7 +95,7 @@ unsigned int ECLFilesComparator::getEclKeywordData(ecl_kw_type*& ecl_kw1, ecl_kw
 
 template <typename T>
 void ECLFilesComparator::printValuesForCell(const std::string& /*keyword*/, int occurrence1, int occurrence2, size_t kw_size, size_t cell, const T& value1, const T& value2) const {
-    if (kw_size == ecl_grid_get_active_size(ecl_grid1)) {
+    if (kw_size == static_cast<size_t>(ecl_grid_get_active_size(ecl_grid1))) {
         int i, j, k;
         ecl_grid_get_ijk1A(ecl_grid1, cell, &i, &j, &k);
         // Coordinates from this function are zero-based, hence incrementing
@@ -110,7 +110,7 @@ void ECLFilesComparator::printValuesForCell(const std::string& /*keyword*/, int 
         return;
     }
 
-    if (kw_size == ecl_grid_get_global_size(ecl_grid1)) {
+    if (kw_size == static_cast<size_t>(ecl_grid_get_global_size(ecl_grid1))) {
         int i, j, k;
         ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
         // Coordinates from this function are zero-based, hence incrementing
