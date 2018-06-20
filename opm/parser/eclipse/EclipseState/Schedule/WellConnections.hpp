@@ -26,12 +26,12 @@
 namespace Opm {
     class EclipseGrid;
 
-    class ConnectionSet {
+    class WellConnections {
     public:
-        ConnectionSet() = default;
+        WellConnections() = default;
         // cppcheck-suppress noExplicitConstructor
-        ConnectionSet( std::initializer_list< Connection > );
-        ConnectionSet(const ConnectionSet& src, const EclipseGrid& grid);
+        WellConnections( std::initializer_list< Connection > );
+        WellConnections(const WellConnections& src, const EclipseGrid& grid);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -58,8 +58,8 @@ namespace Opm {
         /// \param[in] grid    EclipseGrid object, used for cell depths
         void orderConnections(size_t well_i, size_t well_j);
 
-        bool operator==( const ConnectionSet& ) const;
-        bool operator!=( const ConnectionSet& ) const;
+        bool operator==( const WellConnections& ) const;
+        bool operator!=( const WellConnections& ) const;
 
     private:
         std::vector< Connection > m_connections;

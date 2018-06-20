@@ -22,7 +22,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
@@ -231,7 +231,7 @@ namespace Opm {
     }
 
     void Compsegs::updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
-                                                ConnectionSet& connection_set) {
+                                                WellConnections& connection_set) {
 
         for( const auto& compseg : compsegs ) {
             const int i = compseg.m_i;

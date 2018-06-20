@@ -28,7 +28,7 @@
 
 namespace Opm {
 
-    class ConnectionSet;
+    class WellConnections;
     class DeckKeyword;
     class SegmentSet;
 
@@ -61,7 +61,7 @@ namespace Opm {
 
         // update the segment related information for Connections
         static void updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
-                                                 ConnectionSet& connection_set);
+                                                 WellConnections& connection_set);
 
     };
 }

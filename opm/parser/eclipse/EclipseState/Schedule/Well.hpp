@@ -27,7 +27,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
@@ -41,7 +41,7 @@ namespace Opm {
     template< typename > class DynamicState;
 
     class COnnection;
-    class ConnectionSet;
+    class WellConnections;
     class Segment;
     class SegmentSet;
     class TimeMap;
@@ -95,10 +95,10 @@ namespace Opm {
         void addWELSPECS(const DeckRecord& deckRecord);
 
         void addConnections(size_t time_step, const std::vector< Connection >& );
-        void addConnectionSet(size_t time_step, ConnectionSet );
-        const ConnectionSet& getConnections(size_t timeStep) const;
-        const ConnectionSet& getConnections() const;
-        ConnectionSet getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
+        void addWellConnections(size_t time_step, WellConnections );
+        const WellConnections& getConnections(size_t timeStep) const;
+        const WellConnections& getConnections() const;
+        WellConnections getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
 
         /* The rate of a given phase under the following assumptions:
          * * Returns zero if production is requested for an injector (and vice
@@ -183,7 +183,7 @@ namespace Opm {
         DynamicState< double > m_efficiencyFactors;
 
         DynamicState< int > m_isProducer;
-        DynamicState< ConnectionSet > m_completions;
+        DynamicState< WellConnections > m_completions;
         DynamicState< WellProductionProperties > m_productionProperties;
         DynamicState< WellInjectionProperties > m_injectionProperties;
         DynamicState< WellPolymerProperties > m_polymerProperties;

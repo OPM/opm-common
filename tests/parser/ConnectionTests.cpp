@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -43,7 +43,7 @@ inline std::ostream& operator<<( std::ostream& stream, const Connection& c ) {
     return stream << "(" << c.getI() << "," << c.getJ() << "," << c.getK() << ")";
 }
 
-inline std::ostream& operator<<( std::ostream& stream, const ConnectionSet& cs ) {
+inline std::ostream& operator<<( std::ostream& stream, const WellConnections& cs ) {
     stream << "{ ";
     for( const auto& c : cs ) stream << c << " ";
     return stream << "}";
@@ -85,15 +85,15 @@ BOOST_AUTO_TEST_CASE(CompletionTestssameCoordinate) {
     BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion5 ));
 }
 
-BOOST_AUTO_TEST_CASE(CreateConnectionSetOK) {
-    Opm::ConnectionSet completionSet;
+BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
+    Opm::WellConnections completionSet;
     BOOST_CHECK_EQUAL( 0U , completionSet.size() );
 }
 
 
 
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
-    Opm::ConnectionSet completionSet;
+    Opm::WellConnections completionSet;
     Opm::Connection completion1( 10,10,10, 1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 11,10,10, 1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     completionSet.add( completion1 );
@@ -106,8 +106,8 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 }
 
 
-BOOST_AUTO_TEST_CASE(ConnectionSetGetOutOfRangeThrows) {
-    Opm::ConnectionSet completionSet;
+BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
+    Opm::WellConnections completionSet;
     Opm::Connection completion1( 10,10,10,1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 11,10,10,1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     completionSet.add( completion1 );
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(ConnectionSetGetOutOfRangeThrows) {
 
 
 BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
-    Opm::ConnectionSet completionSet;
+    Opm::WellConnections completionSet;
     Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 10,10,10, 1, 0.0,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
 
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
 
 
 BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
-    Opm::ConnectionSet completionSet;
+    Opm::WellConnections completionSet;
 
     Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
 
 BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     Opm::EclipseGrid grid(10,10,10);
-    Opm::ConnectionSet completions;
+    Opm::WellConnections completions;
     Opm::Connection completion1( 0,0,0, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 0,0,1, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion3( 0,0,2, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     actnum[0] = 0;
     grid.resetACTNUM( actnum.data() );
 
-    Opm::ConnectionSet active_completions(completions, grid);
+    Opm::WellConnections active_completions(completions, grid);
     BOOST_CHECK_EQUAL( active_completions.size() , 2);
     BOOST_CHECK_EQUAL( completion2, active_completions.get(0));
     BOOST_CHECK_EQUAL( completion3, active_completions.get(1));

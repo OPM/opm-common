@@ -23,7 +23,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -48,7 +48,7 @@ namespace Opm {
           m_guideRateScalingFactor( timeMap, 1.0 ),
           m_efficiencyFactors (timeMap, 1.0 ),
           m_isProducer( timeMap, true ) ,
-          m_completions( timeMap, ConnectionSet{} ),
+          m_completions( timeMap, WellConnections{} ),
           m_productionProperties( timeMap, WellProductionProperties() ),
           m_injectionProperties( timeMap, WellInjectionProperties() ),
           m_polymerProperties( timeMap, WellPolymerProperties() ),
@@ -347,15 +347,15 @@ namespace Opm {
         return m_preferredPhase;
     }
 
-    const ConnectionSet& Well::getConnections(size_t timeStep) const {
+    const WellConnections& Well::getConnections(size_t timeStep) const {
         return m_completions.get( timeStep );
     }
 
-    ConnectionSet Well::getActiveConnections(size_t timeStep, const EclipseGrid& grid) const {
-        return ConnectionSet(this->getConnections(timeStep), grid);
+    WellConnections Well::getActiveConnections(size_t timeStep, const EclipseGrid& grid) const {
+        return WellConnections(this->getConnections(timeStep), grid);
     }
 
-    const ConnectionSet& Well::getConnections() const {
+    const WellConnections& Well::getConnections() const {
         return m_completions.back();
     }
 
@@ -383,10 +383,10 @@ namespace Opm {
             else ++prev_size;
         }
 
-        this->addConnectionSet( time_step, new_set );
+        this->addWellConnections( time_step, new_set );
     }
 
-    void Well::addConnectionSet(size_t time_step, ConnectionSet new_set ){
+    void Well::addWellConnections(size_t time_step, WellConnections new_set ){
         if( getWellConnectionOrdering() == WellCompletion::TRACK) {
             const auto headI = this->m_headI[ time_step ];
             const auto headJ = this->m_headJ[ time_step ];
@@ -582,7 +582,7 @@ namespace Opm {
 
     void Well::filterConnections(const EclipseGrid& grid) {
         /*
-          The m_completions member variable is DynamicState<ConnectionSet>
+          The m_completions member variable is DynamicState<WellConnections>
           instance, hence this for loop is over all timesteps.
         */
         for (auto& completions : m_completions)
