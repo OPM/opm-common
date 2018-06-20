@@ -12,7 +12,7 @@ License:        GPL-3.0
 Group:          Development/Libraries/C and C++
 Url:            http://www.opm-project.org/
 Source0:        https://github.com/OPM/%{name}/archive/release/%{version}/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
-BuildRequires:  git doxygen bc devtoolset-6-toolchain ecl-devel openmpi-devel zlib-devel
+BuildRequires:  git doxygen bc devtoolset-6-toolchain ecl-devel openmpi-devel mpich-devel
 %{?el6:BuildRequires: cmake3 boost148-devel}
 %{!?el6:BuildRequires: cmake boost-devel}
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -34,6 +34,13 @@ Group:          System/Libraries
 %description -n libopm-common1-openmpi
 This package contains library for opm-common
 
+%package -n libopm-common1-mpich
+Summary: OPM-common - library
+Group:          System/Libraries
+
+%description -n libopm-common1-mpich
+This package contains library for opm-common
+
 %package devel
 Summary:        Development and header files for opm-common
 Group:          Development/Libraries/C and C++
@@ -51,11 +58,19 @@ Requires:       libopm-common1-openmpi = %{version}
 %description openmpi-devel
 This package contains the development and header files for opm-common
 
+%package mpich-devel
+Summary:        Development and header files for opm-common
+Group:          Development/Libraries/C and C++
+Requires:       %{name} = %{version}
+Requires:       libopm-common1-mpich = %{version}
+
+%description mpich-devel
+This package contains the development and header files for opm-common
+
 %package bin
 Summary:        Applications for opm-common
 Group:          System/Binaries
 Requires:       %{name} = %{version}
-Requires:	libopm-common1 = %{version}
 
 %description bin
 This package the applications for opm-common
@@ -63,10 +78,17 @@ This package the applications for opm-common
 %package openmpi-bin
 Summary:        Applications for opm-common
 Group:          System/Binaries
-Requires:       %{name} = %{version}
 Requires:       libopm-common1-openmpi = %{version}
 
 %description openmpi-bin
+This package the applications for opm-common
+
+%package mpich-bin
+Summary:        Applications for opm-common
+Group:          System/Binaries
+Requires:       libopm-common1-mpich = %{version}
+
+%description mpich-bin
 This package the applications for opm-common
 
 %package doc
@@ -85,8 +107,8 @@ This package contains the documentation files for opm-common
 scl enable devtoolset-6 bash
 mkdir serial
 cd serial
-%{?el6:cmake3} %{?!el6:cmake} -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
-make
+%{?el6:cmake28} %{?!el6:cmake} -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_DOCDIR=share/doc/%{name}-%{version} -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
+make %{?_smp_mflags}
 make test
 cd ..
 
@@ -94,8 +116,19 @@ mkdir openmpi
 cd openmpi
 %{?el6:module load openmpi-x86_64}
 %{?!el6:module load mpi/openmpi-x86_64}
-%{?el6:cmake3} %{?!el6:cmake} -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
-make
+%{?el6:cmake28} %{?!el6:cmake} -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/openmpi -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
+make %{?_smp_mflags}
+make test
+cd ..
+
+mkdir mpich
+cd mpich
+%{?el6:module rm openmpi-x86_64}
+%{?el6:module load mpich-x86_64}
+%{?!el6:module rm mpi/openmpi-x86_64}
+%{?!el6:module load mpi/mpich-x86_64}
+%{?el6:cmake28} %{?!el6:cmake} -DUSE_MPI=1 -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo  -DSTRIP_DEBUGGING_SYMBOLS=ON -DCMAKE_INSTALL_PREFIX=%{_prefix}/lib64/mpich -DCMAKE_INSTALL_LIBDIR=lib -DUSE_RUNPATH=OFF -DWITH_NATIVE=OFF -DCMAKE_CXX_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/g++ -DCMAKE_C_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gcc -DCMAKE_Fortran_COMPILER=/opt/rh/devtoolset-6/root/usr/bin/gfortran %{?el6:-DBOOST_LIBRARYDIR=%{_libdir}/boost148 -DBOOST_INCLUDEDIR=%{_includedir}/boost148} ..
+make %{?_smp_mflags}
 make test
 
 %install
@@ -106,6 +139,11 @@ cd ..
 cd openmpi
 make install DESTDIR=${RPM_BUILD_ROOT}
 mv ${RPM_BUILD_ROOT}/usr/lib64/openmpi/include/* ${RPM_BUILD_ROOT}/usr/include/openmpi-x86_64/
+cd ..
+
+cd mpich
+make install DESTDIR=${RPM_BUILD_ROOT}
+mv ${RPM_BUILD_ROOT}/usr/lib64/mpich/include/* ${RPM_BUILD_ROOT}/usr/include/mpich-x86_64/
 
 %clean
 rm -rf %{buildroot}
@@ -122,13 +160,20 @@ rm -rf %{buildroot}
 %files openmpi-bin
 %{_libdir}/openmpi/bin/*
 
+%files mpich-bin
+%{_libdir}/mpich/bin/*
+
 %files -n libopm-common1
 %defattr(-,root,root,-)
 %{_libdir}/*.so.*
 
 %files -n libopm-common1-openmpi
 %defattr(-,root,root,-)
-%{_libdir}/openmpi/lib64/*.so.*
+%{_libdir}/openmpi/lib/*.so.*
+
+%files -n libopm-common1-mpich
+%defattr(-,root,root,-)
+%{_libdir}/mpich/lib/*.so.*
 
 %files devel
 %defattr(-,root,root,-)
@@ -142,8 +187,17 @@ rm -rf %{buildroot}
 %files openmpi-devel
 %defattr(-,root,root,-)
 %{_libdir}/openmpi/lib/dunecontrol/*
-%{_libdir}/openmpi/lib64/pkgconfig/*
+%{_libdir}/openmpi/lib/pkgconfig/*
 %{_includedir}/openmpi-x86_64/*
 %{_libdir}/openmpi/share/cmake/*
 %{_libdir}/openmpi/share/opm/*
-%{_libdir}/openmpi/lib64/*.so
+%{_libdir}/openmpi/lib/*.so
+
+%files mpich-devel
+%defattr(-,root,root,-)
+%{_libdir}/mpich/lib/dunecontrol/*
+%{_libdir}/mpich/lib/pkgconfig/*
+%{_includedir}/mpich-x86_64/*
+%{_libdir}/mpich/share/cmake/*
+%{_libdir}/mpich/share/opm/*
+%{_libdir}/mpich/lib/*.so
