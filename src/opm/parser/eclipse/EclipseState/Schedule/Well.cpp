@@ -537,7 +537,7 @@ namespace Opm {
     }
 
     bool Well::isMultiSegment(size_t time_step) const {
-        return (getWellSegments(time_step).numberSegment() > 0);
+        return (getWellSegments(time_step).size() > 0);
     }
 
     void Well::addWellSegments(size_t time_step, WellSegments new_segmentset ) {

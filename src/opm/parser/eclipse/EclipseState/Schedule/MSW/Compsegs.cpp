@@ -148,7 +148,7 @@ namespace Opm {
 
             int segment_number = 0;
             double min_distance_difference = 1.e100; // begin with a big value
-            for (int i_segment = 0; i_segment < segment_set.numberSegment(); ++i_segment) {
+            for (int i_segment = 0; i_segment < segment_set.size(); ++i_segment) {
                 const Segment& current_segment = segment_set[i_segment];
                 if( branch_number != current_segment.branchNumber() ) continue;
 

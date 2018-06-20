@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
     segment_set.segmentsFromWELSEGSKeyword(welsegs);
 
-    BOOST_CHECK_EQUAL(6U, segment_set.numberSegment());
+    BOOST_CHECK_EQUAL(6U, segment_set.size());
 
     const Opm::WellConnections new_connection_set = Opm::updatingConnectionsWithSegments(compsegs, connection_set, segment_set);
 

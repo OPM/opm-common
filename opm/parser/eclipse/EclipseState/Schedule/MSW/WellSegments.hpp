@@ -36,7 +36,7 @@ namespace Opm {
 
         std::string wellName() const;
         int numberBranch() const;
-        int numberSegment() const;
+        int size() const;
         double depthTopSegment() const;
         double lengthTopSegment() const;
         double volumeTopSegment() const;

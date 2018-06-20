@@ -43,7 +43,7 @@ namespace Opm {
         return m_number_branch;
     }
 
-    int WellSegments::numberSegment() const {
+  int WellSegments::size() const {
         return m_segments.size();
     }
 
@@ -91,7 +91,7 @@ namespace Opm {
        const int segment_index = segmentNumberToIndex(segment_number);
 
        if (segment_index < 0) { // it is a new segment
-           m_segment_number_to_index[segment_number] = numberSegment();
+           m_segment_number_to_index[segment_number] = size();
            m_segments.push_back(new_segment);
        } else { // the segment already exists
            m_segments[segment_index] = new_segment;
@@ -234,7 +234,7 @@ namespace Opm {
         orderSegments();
 
         int current_index= 1;
-        while (current_index< numberSegment()) {
+        while (current_index< size()) {
             if (m_segments[current_index].dataReady()) {
                 current_index++;
                 continue;
@@ -247,13 +247,13 @@ namespace Opm {
             assert(m_segments[outlet_index].dataReady() == true);
 
             int range_end = range_begin + 1;
-            for (; range_end < numberSegment(); ++range_end) {
+            for (; range_end < size(); ++range_end) {
                 if (m_segments[range_end].dataReady() == true) {
                     break;
                 }
             }
 
-            if (range_end >= numberSegment()) {
+            if (range_end >= size()) {
                 throw std::logic_error(" One range records in WELSEGS is wrong. ");
             }
 
@@ -290,7 +290,7 @@ namespace Opm {
 
         // then update the volume for all the segments except the top segment
         // this is for the segments specified individually while the volume is not specified.
-        for (int i = 1; i < numberSegment(); ++i) {
+        for (int i = 1; i < size(); ++i) {
             assert(m_segments[i].dataReady());
             if (m_segments[i].volume() == invalid_value) {
                 Segment new_segment = m_segments[i];
@@ -316,7 +316,7 @@ namespace Opm {
         orderSegments();
 
         // begin with the second segment
-        for (int i_index= 1; i_index< numberSegment(); ++i_index) {
+        for (int i_index= 1; i_index< size(); ++i_index) {
             if( m_segments[i_index].dataReady() ) continue;
 
             // find its outlet segment
@@ -354,14 +354,14 @@ namespace Opm {
         // for the top segment
         m_segment_number_to_index[1] = 0;
 
-        while (current_index< numberSegment()) {
+        while (current_index< size()) {
             // the branch number of the last segment that is done re-ordering
             const int last_branch_number = m_segments[current_index-1].branchNumber();
             // the one need to be swapped to the current_index.
             int target_segment_index= -1;
 
             // looking for target_segment_index
-            for (int i_index= current_index; i_index< numberSegment(); ++i_index) {
+            for (int i_index= current_index; i_index< size(); ++i_index) {
                 const int outlet_segment_number = m_segments[i_index].outletSegment();
                 const int outlet_segment_index = segmentNumberToIndex(outlet_segment_number);
                 if (outlet_segment_index < 0) { // not found the outlet_segment in the done re-ordering segments
