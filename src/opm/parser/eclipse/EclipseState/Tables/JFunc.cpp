@@ -23,11 +23,8 @@
 
 namespace Opm {
 
-    JFunc::JFunc(const Deck& deck) :
-                    m_exists(deck.hasKeyword("JFUNC"))
+    JFunc::JFunc(const Deck& deck)
     {
-        if (!m_exists)
-            return;
         const auto& kw = *deck.getKeywordList<ParserKeywords::JFUNC>()[0];
         const auto& rec = kw.getRecord(0);
         const auto& kw_flag = rec.getItem("FLAG").get<std::string>(0);
