@@ -48,7 +48,7 @@ namespace Opm {
     }
 
 
-    bool WellTestState::hasWell(const std::string well_name, WellTestConfig::Reason reason) const {
+    bool WellTestState::hasWell(const std::string& well_name, WellTestConfig::Reason reason) const {
         const auto well_iter = std::find_if(wells.begin(),
                                             wells.end(),
                                             [&well_name, &reason](const ClosedWell& well)
