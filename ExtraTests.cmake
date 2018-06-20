@@ -48,7 +48,6 @@ list(APPEND EXTRA_TESTS EclipseStateTests)
 
 foreach (test BoxTest
               CheckDeckValidity
-              CompletionsFromDeck
               EclipseGridCreateFromDeck
               IncludeTest
               IntegrationTests
