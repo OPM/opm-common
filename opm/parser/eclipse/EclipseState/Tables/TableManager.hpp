@@ -50,10 +50,10 @@ namespace Opm {
 
     class Eqldims;
     class Regdims;
-    
     class TableManager {
     public:
         explicit TableManager( const Deck& deck );
+        TableManager() = default;
 
         const TableContainer& getTables( const std::string& tableName ) const;
         const TableContainer& operator[](const std::string& tableName) const;
@@ -293,12 +293,10 @@ namespace Opm {
         std::shared_ptr<Eqldims> m_eqldims;
         Aqudims m_aqudims;
 
-        const bool hasImptvd;// if deck has keyword IMPTVD
-        const bool hasEnptvd;// if deck has keyword ENPTVD
-        const bool hasEqlnum;// if deck has keyword EQLNUM
-
-
-        const JFunc m_jfunc;
+        const bool hasImptvd = false;// if deck has keyword IMPTVD
+        const bool hasEnptvd = false;// if deck has keyword ENPTVD
+        const bool hasEqlnum = false;// if deck has keyword EQLNUM
+        std::shared_ptr<JFunc> jfunc;
 
         double m_rtemp;
     };

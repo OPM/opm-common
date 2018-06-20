@@ -39,7 +39,6 @@ public:
     double owSurfaceTension() const;
     const Flag& flag() const;
     const Direction& direction() const;
-    operator bool() const { return m_exists; }
 
 private:
     Flag       m_flag;             // JFUNC flag: WATER, GAS, or BOTH.  Default BOTH
@@ -48,7 +47,6 @@ private:
     double     m_alphaFactor;      // alternative porosity term. Default 0.5
     double     m_betaFactor;       // alternative permeability term. Default 0.5
     Direction  m_direction;        // XY, X, Y, Z.  Default XY
-    const bool m_exists;         // will be true if JFunc is specified in the deck
 };
 } // Opm::
 

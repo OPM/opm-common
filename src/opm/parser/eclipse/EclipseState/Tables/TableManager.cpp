@@ -18,6 +18,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <memory>
+
 #include <opm/common/OpmLog/LogUtil.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
@@ -86,15 +88,19 @@
 
 namespace Opm {
 
+
+
     TableManager::TableManager( const Deck& deck )
         :
         m_tabdims( Tabdims(deck)),
         m_aqudims( Aqudims(deck)),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
-        hasEqlnum (deck.hasKeyword("EQLNUM")),
-        m_jfunc( deck )
+        hasEqlnum (deck.hasKeyword("EQLNUM"))
     {
+        if (deck.hasKeyword("JFUNC"))
+            jfunc.reset( new JFunc(deck) );
+
         // determine the default resevoir temperature in Kelvin
         m_rtemp = ParserKeywords::RTEMP::TEMP::defaultValue;
         m_rtemp += Metric::TemperatureOffset; // <- default values always use METRIC as the unit system!
@@ -656,10 +662,10 @@ namespace Opm {
     const TableContainer& TableManager::getPlyshlogTables() const {
         return getTables("PLYSHLOG");
     }
-    
+
     const TableContainer& TableManager::getAqutabTables() const {
         return getTables("AQUTAB");
-    } 
+    }
 
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
         return m_pvtgTables;
@@ -713,9 +719,9 @@ namespace Opm {
     }
 
     const JFunc& TableManager::getJFunc() const {
-        if (!useJFunc())
+        if (!jfunc)
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
-        return m_jfunc;
+        return *jfunc;
     }
 
     bool TableManager::useImptvd() const {
@@ -731,7 +737,10 @@ namespace Opm {
     }
 
     bool TableManager::useJFunc() const {
-        return m_jfunc;
+        if (jfunc)
+            return true;
+        else
+            return false;
     }
 
 
