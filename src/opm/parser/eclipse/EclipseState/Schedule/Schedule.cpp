@@ -42,7 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
@@ -1435,14 +1435,14 @@ namespace Opm {
     }
 
     void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
-        SegmentSet newSegmentset;
+        WellSegments newSegmentset;
         newSegmentset.segmentsFromWELSEGSKeyword(keyword);
 
         const std::string& well_name = newSegmentset.wellName();
         auto& well = this->m_wells.get( well_name );
 
         // update multi-segment related information for the well
-        well.addSegmentSet(currentStep, newSegmentset);
+        well.addWellSegments(currentStep, newSegmentset);
     }
 
     void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep) {
@@ -1450,7 +1450,7 @@ namespace Opm {
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         auto& well = this->m_wells.get( well_name );
 
-        const auto& segment_set = well.getSegmentSet(currentStep);
+        const auto& segment_set = well.getWellSegments(currentStep);
         const auto& completion_set = well.getConnections( currentStep );
         const WellConnections new_completion_set = updatingConnectionsWithSegments(keyword, completion_set, segment_set);
 

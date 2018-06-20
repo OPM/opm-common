@@ -30,9 +30,9 @@ namespace Opm {
 
     class DeckKeyword;
 
-    class SegmentSet {
+    class WellSegments {
     public:
-        SegmentSet() = default;
+        WellSegments() = default;
 
         std::string wellName() const;
         int numberBranch() const;
@@ -59,8 +59,8 @@ namespace Opm {
         void processABS();
         void processINC(const bool first_time);
 
-        bool operator==( const SegmentSet& ) const;
-        bool operator!=( const SegmentSet& ) const;
+        bool operator==( const WellSegments& ) const;
+        bool operator!=( const WellSegments& ) const;
 
     private:
 

@@ -23,10 +23,10 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 
 namespace Opm {
-    WellConnections updatingConnectionsWithSegments(const DeckKeyword& compsegs, const WellConnections& input_connections, const SegmentSet& segments);
+    WellConnections updatingConnectionsWithSegments(const DeckKeyword& compsegs, const WellConnections& input_connections, const WellSegments& segments);
 }
 
 #endif

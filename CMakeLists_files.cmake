@@ -81,7 +81,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
@@ -456,7 +456,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Connection.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
-       opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp
+       opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp

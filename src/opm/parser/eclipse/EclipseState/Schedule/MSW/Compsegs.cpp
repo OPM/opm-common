@@ -23,7 +23,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 
@@ -135,7 +135,7 @@ namespace Opm {
         return compsegs;
     }
 
-    void Compsegs::processCOMPSEGS(std::vector< Compsegs >& compsegs, const SegmentSet& segment_set) {
+    void Compsegs::processCOMPSEGS(std::vector< Compsegs >& compsegs, const WellSegments& segment_set) {
         // for the current cases we have at the moment, the distance information is specified explicitly,
         // while the depth information is defaulted though, which need to be obtained from the related segment
         for( auto& compseg : compsegs ) {
@@ -178,7 +178,7 @@ namespace Opm {
         }
     }
 
-    void Compsegs::calculateCenterDepthWithSegments(const SegmentSet& segment_set) {
+    void Compsegs::calculateCenterDepthWithSegments(const WellSegments& segment_set) {
 
         // the depth and distance of the segment to the well head
         const Segment& segment = segment_set.getFromSegmentNumber(m_segment_number);

@@ -25,7 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
@@ -64,7 +64,7 @@ namespace Opm {
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
           m_automaticShutIn(automaticShutIn),
-          m_segmentset( timeMap, SegmentSet{} ),
+          m_segmentset( timeMap, WellSegments{} ),
           timesteps( timeMap.numTimesteps() ),
           events( timeMap )
     {
@@ -532,15 +532,15 @@ namespace Opm {
     }
 
 
-    const SegmentSet& Well::getSegmentSet(size_t time_step) const {
+    const WellSegments& Well::getWellSegments(size_t time_step) const {
         return m_segmentset.get(time_step);
     }
 
     bool Well::isMultiSegment(size_t time_step) const {
-        return (getSegmentSet(time_step).numberSegment() > 0);
+        return (getWellSegments(time_step).numberSegment() > 0);
     }
 
-    void Well::addSegmentSet(size_t time_step, SegmentSet new_segmentset ) {
+    void Well::addWellSegments(size_t time_step, WellSegments new_segmentset ) {
         // to see if it is the first time entering WELSEGS input to this well.
         // if the well is not multi-segment well, it will be the first time
         // not sure if a well can switch between mutli-segment well and other

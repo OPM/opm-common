@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 namespace Opm {
@@ -43,7 +43,7 @@ namespace Opm {
     class COnnection;
     class WellConnections;
     class Segment;
-    class SegmentSet;
+    class WellSegments;
     class TimeMap;
     class EclipseGrid;
 
@@ -157,9 +157,9 @@ namespace Opm {
 
         // for multi-segment wells
         bool isMultiSegment(size_t time_step) const;
-        const SegmentSet& getSegmentSet(size_t time_step) const;
+        const WellSegments& getWellSegments(size_t time_step) const;
 
-        void addSegmentSet(size_t time_step, SegmentSet new_segmentset);
+        void addWellSegments(size_t time_step, WellSegments new_segmentset);
 
         const Events& getEvents() const;
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
@@ -203,7 +203,7 @@ namespace Opm {
         bool m_automaticShutIn;
         // WELSEGS DATA - for mutli-segment wells
         // flag indicating if the well is a multi-segment well
-        DynamicState< SegmentSet > m_segmentset;
+        DynamicState< WellSegments > m_segmentset;
         size_t timesteps;
         Events events;
     };

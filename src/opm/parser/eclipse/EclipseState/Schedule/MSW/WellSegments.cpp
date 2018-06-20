@@ -30,52 +30,52 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 
 
 namespace Opm {
 
-    std::string SegmentSet::wellName() const {
+    std::string WellSegments::wellName() const {
         return m_well_name;
     }
 
-    int SegmentSet::numberBranch() const {
+    int WellSegments::numberBranch() const {
         return m_number_branch;
     }
 
-    int SegmentSet::numberSegment() const {
+    int WellSegments::numberSegment() const {
         return m_segments.size();
     }
 
-    double SegmentSet::depthTopSegment() const {
+    double WellSegments::depthTopSegment() const {
         return m_depth_top;
     }
 
-    double SegmentSet::lengthTopSegment() const {
+    double WellSegments::lengthTopSegment() const {
         return m_length_top;
     }
 
-    double SegmentSet::volumeTopSegment() const {
+    double WellSegments::volumeTopSegment() const {
         return m_volume_top;
     }
 
-    WellSegment::LengthDepthEnum SegmentSet::lengthDepthType() const {
+    WellSegment::LengthDepthEnum WellSegments::lengthDepthType() const {
         return m_length_depth_type;
     }
 
-    WellSegment::CompPressureDropEnum SegmentSet::compPressureDrop() const {
+    WellSegment::CompPressureDropEnum WellSegments::compPressureDrop() const {
         return m_comp_pressure_drop;
     }
 
-    WellSegment::MultiPhaseModelEnum SegmentSet::multiPhaseModel() const {
+    WellSegment::MultiPhaseModelEnum WellSegments::multiPhaseModel() const {
         return m_multiphase_model;
     }
 
-    const Segment& SegmentSet::operator[](size_t idx) const {
+    const Segment& WellSegments::operator[](size_t idx) const {
         return m_segments[idx];
     }
 
-    int SegmentSet::segmentNumberToIndex(const int segment_number) const {
+    int WellSegments::segmentNumberToIndex(const int segment_number) const {
         const auto it = m_segment_number_to_index.find(segment_number);
         if (it != m_segment_number_to_index.end()) {
             return it->second;
@@ -84,7 +84,7 @@ namespace Opm {
         }
     }
 
-    void SegmentSet::addSegment( Segment new_segment ) {
+    void WellSegments::addSegment( Segment new_segment ) {
        // decide whether to push_back or insert
        const int segment_number = new_segment.segmentNumber();
 
@@ -98,7 +98,7 @@ namespace Opm {
        }
    }
 
-    void SegmentSet::segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword ) {
+    void WellSegments::segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword ) {
 
         // for the first record, which provides the information for the top segment
         // and information for the whole segment set
@@ -218,7 +218,7 @@ namespace Opm {
 
     }
 
-    const Segment& SegmentSet::getFromSegmentNumber(const int segment_number) const {
+    const Segment& WellSegments::getFromSegmentNumber(const int segment_number) const {
         // the index of segment in the vector of segments
         const int segment_index = segmentNumberToIndex(segment_number);
         if (segment_index < 0) {
@@ -228,7 +228,7 @@ namespace Opm {
         return m_segments[segment_index];
     }
 
-    void SegmentSet::processABS() {
+    void WellSegments::processABS() {
         const double invalid_value = Segment::invalidValue(); // meaningless value to indicate unspecified/uncompleted values
 
         orderSegments();
@@ -304,9 +304,9 @@ namespace Opm {
         }
     }
 
-    void SegmentSet::processINC(const bool first_time) {
+    void WellSegments::processINC(const bool first_time) {
 
-        // update the information inside the SegmentSet to be in ABS way
+        // update the information inside the WellSegments to be in ABS way
         if (first_time) {
             Segment new_top_segment = (*this)[0];
             new_top_segment.setDepthAndLength(depthTopSegment(), lengthTopSegment());
@@ -339,7 +339,7 @@ namespace Opm {
         }
     }
 
-    void SegmentSet::orderSegments() {
+    void WellSegments::orderSegments() {
         // re-ordering the segments to make later use easier.
         // two principles
         // 1. the index of the outlet segment will be stored in the lower index than the segment.
@@ -395,7 +395,7 @@ namespace Opm {
         }
     }
 
-    bool SegmentSet::operator==( const SegmentSet& rhs ) const {
+    bool WellSegments::operator==( const WellSegments& rhs ) const {
         return this->m_well_name == rhs.m_well_name
             && this->m_number_branch == rhs.m_number_branch
             && this->m_depth_top == rhs.m_depth_top
@@ -414,7 +414,7 @@ namespace Opm {
                            rhs.m_segment_number_to_index.begin() );
     }
 
-    bool SegmentSet::operator!=( const SegmentSet& rhs ) const {
+    bool WellSegments::operator!=( const WellSegments& rhs ) const {
         return !( *this == rhs );
     }
 }

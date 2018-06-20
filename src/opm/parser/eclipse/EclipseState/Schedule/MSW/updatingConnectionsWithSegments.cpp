@@ -25,7 +25,7 @@ namespace Opm {
 
     WellConnections updatingConnectionsWithSegments(const DeckKeyword& compsegs,
                                                   const WellConnections& input_connections,
-                                                  const SegmentSet& segment_set)
+                                                  const WellSegments& segment_set)
     {
         WellConnections new_connection_set(input_connections);
 
