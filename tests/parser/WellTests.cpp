@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
@@ -395,11 +395,11 @@ BOOST_AUTO_TEST_CASE(CompletionOrder) {
         auto c2 = connection(5, 5, 9);
         auto c3 = connection(5, 5, 1);
         auto c4 = connection(5, 5, 0);
-        Opm::ConnectionSet cv1 = { c1, c2 };
-        well.addConnectionSet(1, cv1);
+        Opm::WellConnections cv1 = { c1, c2 };
+        well.addWellConnections(1, cv1);
         BOOST_CHECK_EQUAL(well.getConnections(1).get(0), c1);
-        Opm::ConnectionSet cv2 = { c3, c4 };
-        well.addConnectionSet(2, cv2);
+        Opm::WellConnections cv2 = { c3, c4 };
+        well.addWellConnections(2, cv2);
         BOOST_CHECK_EQUAL(well.getConnections(1).get(0), c1);
         BOOST_CHECK_EQUAL(well.getConnections(2).get(0), c4);
     }

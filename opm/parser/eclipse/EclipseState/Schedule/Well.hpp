@@ -27,13 +27,13 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/MSW/SegmentSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 namespace Opm {
@@ -41,9 +41,9 @@ namespace Opm {
     template< typename > class DynamicState;
 
     class COnnection;
-    class ConnectionSet;
+    class WellConnections;
     class Segment;
-    class SegmentSet;
+    class WellSegments;
     class TimeMap;
     class EclipseGrid;
 
@@ -95,10 +95,10 @@ namespace Opm {
         void addWELSPECS(const DeckRecord& deckRecord);
 
         void addConnections(size_t time_step, const std::vector< Connection >& );
-        void addConnectionSet(size_t time_step, ConnectionSet );
-        const ConnectionSet& getConnections(size_t timeStep) const;
-        const ConnectionSet& getConnections() const;
-        ConnectionSet getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
+        void addWellConnections(size_t time_step, WellConnections );
+        const WellConnections& getConnections(size_t timeStep) const;
+        const WellConnections& getConnections() const;
+        WellConnections getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
 
         /* The rate of a given phase under the following assumptions:
          * * Returns zero if production is requested for an injector (and vice
@@ -157,9 +157,9 @@ namespace Opm {
 
         // for multi-segment wells
         bool isMultiSegment(size_t time_step) const;
-        const SegmentSet& getSegmentSet(size_t time_step) const;
+        const WellSegments& getWellSegments(size_t time_step) const;
 
-        void addSegmentSet(size_t time_step, SegmentSet new_segmentset);
+        void addWellSegments(size_t time_step, WellSegments new_segmentset);
 
         const Events& getEvents() const;
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
@@ -183,7 +183,7 @@ namespace Opm {
         DynamicState< double > m_efficiencyFactors;
 
         DynamicState< int > m_isProducer;
-        DynamicState< ConnectionSet > m_completions;
+        DynamicState< WellConnections > m_completions;
         DynamicState< WellProductionProperties > m_productionProperties;
         DynamicState< WellInjectionProperties > m_injectionProperties;
         DynamicState< WellPolymerProperties > m_polymerProperties;
@@ -203,7 +203,7 @@ namespace Opm {
         bool m_automaticShutIn;
         // WELSEGS DATA - for mutli-segment wells
         // flag indicating if the well is a multi-segment well
-        DynamicState< SegmentSet > m_segmentset;
+        DynamicState< WellSegments > m_segmentset;
         size_t timesteps;
         Events events;
     };

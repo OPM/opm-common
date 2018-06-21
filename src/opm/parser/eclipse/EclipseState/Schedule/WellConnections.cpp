@@ -24,31 +24,31 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 
 namespace Opm {
 
-    ConnectionSet::ConnectionSet( std::initializer_list< Connection > cs ) {
+    WellConnections::WellConnections( std::initializer_list< Connection > cs ) {
         for( auto&& c : cs ) this->add( c );
     }
 
 
-    ConnectionSet::ConnectionSet(const ConnectionSet& src, const EclipseGrid& grid) {
+    WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) {
         for (const auto& c : src) {
             if (grid.cellActive(c.getI(), c.getJ(), c.getK()))
                 this->add(c);
         }
     }
 
-    size_t ConnectionSet::size() const {
+    size_t WellConnections::size() const {
         return m_connections.size();
     }
 
-    const Connection& ConnectionSet::get(size_t index) const {
+    const Connection& WellConnections::get(size_t index) const {
         return this->m_connections.at( index );
     }
 
-    const Connection& ConnectionSet::getFromIJK(const int i, const int j, const int k) const {
+    const Connection& WellConnections::getFromIJK(const int i, const int j, const int k) const {
         for (size_t ic = 0; ic < size(); ++ic) {
             if (get(ic).sameCoordinate(i, j, k)) {
                 return get(ic);
@@ -58,7 +58,7 @@ namespace Opm {
     }
 
 
-    void ConnectionSet::add( Connection connection ) {
+    void WellConnections::add( Connection connection ) {
         auto same = [&]( const Connection& c ) {
             return c.sameCoordinate( connection );
         };
@@ -76,7 +76,7 @@ namespace Opm {
         m_connections.emplace_back( connection );
     }
 
-    bool ConnectionSet::allConnectionsShut( ) const {
+    bool WellConnections::allConnectionsShut( ) const {
         auto shut = []( const Connection& c ) {
             return c.getState() == WellCompletion::StateEnum::SHUT;
         };
@@ -88,7 +88,7 @@ namespace Opm {
 
 
 
-    void ConnectionSet::orderConnections(size_t well_i, size_t well_j)
+    void WellConnections::orderConnections(size_t well_i, size_t well_j)
     {
         if (m_connections.empty()) {
             return;
@@ -117,7 +117,7 @@ namespace Opm {
 
 
 
-    size_t ConnectionSet::findClosestConnection(int oi, int oj, double oz, size_t start_pos)
+    size_t WellConnections::findClosestConnection(int oi, int oj, double oz, size_t start_pos)
     {
         size_t closest = std::numeric_limits<size_t>::max();
         int min_ijdist2 = std::numeric_limits<int>::max();
@@ -146,17 +146,17 @@ namespace Opm {
         return closest;
     }
 
-    bool ConnectionSet::operator==( const ConnectionSet& rhs ) const {
+    bool WellConnections::operator==( const WellConnections& rhs ) const {
         return this->size() == rhs.size()
             && std::equal( this->begin(), this->end(), rhs.begin() );
     }
 
-    bool ConnectionSet::operator!=( const ConnectionSet& rhs ) const {
+    bool WellConnections::operator!=( const WellConnections& rhs ) const {
         return !( *this == rhs );
     }
 
 
-    void ConnectionSet::filter(const EclipseGrid& grid) {
+    void WellConnections::filter(const EclipseGrid& grid) {
         auto new_end = std::remove_if(m_connections.begin(),
                                       m_connections.end(),
                                       [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });

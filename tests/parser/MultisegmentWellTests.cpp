@@ -21,7 +21,7 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 
-#define BOOST_TEST_MODULE ConnectionSetTests
+#define BOOST_TEST_MODULE WellConnectionsTests
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -33,7 +33,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ConnectionSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -42,7 +42,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
-    Opm::ConnectionSet connection_set;
+    Opm::WellConnections connection_set;
     connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.5), Opm::Value<double>("SKIN", 0.), 0) );
     connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.5), Opm::Value<double>("SKIN", 0.), 0) );
     connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), 0) );
@@ -80,13 +80,13 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Opm::SegmentSet segment_set;
+    Opm::WellSegments segment_set;
     const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
     segment_set.segmentsFromWELSEGSKeyword(welsegs);
 
-    BOOST_CHECK_EQUAL(6U, segment_set.numberSegment());
+    BOOST_CHECK_EQUAL(6U, segment_set.size());
 
-    const Opm::ConnectionSet new_connection_set = Opm::updatingConnectionsWithSegments(compsegs, connection_set, segment_set);
+    const Opm::WellConnections new_connection_set = Opm::updatingConnectionsWithSegments(compsegs, connection_set, segment_set);
 
     BOOST_CHECK_EQUAL(7U, new_connection_set.size());
 
