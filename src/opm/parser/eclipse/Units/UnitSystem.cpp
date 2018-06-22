@@ -65,6 +65,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         0.0
     };
 
@@ -86,6 +87,7 @@ namespace {
         1 / ( Metric::ReservoirVolume / Metric::Time ),
         1 / Metric::Transmissibility,
         1 / Metric::Mass,
+        1 / ( Metric::Mass / Metric::Time ),
         1, /* gas-oil ratio */
         1, /* oil-gas ratio */
         1, /* water cut */
@@ -116,6 +118,7 @@ namespace {
         Metric::ReservoirVolume / Metric::Time,
         Metric::Transmissibility,
         Metric::Mass,
+        Metric::Mass / Metric::Time,
         1, /* gas-oil ratio */
         1, /* oil-gas ratio */
         1, /* water cut */
@@ -146,6 +149,7 @@ namespace {
         "RM3/DAY",
         "CPR3/DAY/BARS",
         "KG",
+        "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
         "SM3/SM3",
@@ -166,6 +170,7 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -206,6 +211,7 @@ namespace {
         1 / ( Field::ReservoirVolume / Field::Time ),
         1 / Field::Transmissibility,
         1 / Field::Mass,
+        1 / ( Field::Mass / Field::Time ),
         1 / ( Field::GasSurfaceVolume / Field::LiquidSurfaceVolume ), /* gas-oil ratio */
         1 / ( Field::LiquidSurfaceVolume / Field::GasSurfaceVolume ), /* oil-gas ratio */
         1, /* water cut */
@@ -236,6 +242,7 @@ namespace {
          Field::ReservoirVolume / Field::Time,
          Field::Transmissibility,
          Field::Mass,
+         Field::Mass / Field::Time,
          Field::GasSurfaceVolume / Field::LiquidSurfaceVolume, /* gas-oil ratio */
          Field::LiquidSurfaceVolume / Field::GasSurfaceVolume, /* oil-gas ratio */
          1, /* water cut */
@@ -266,6 +273,7 @@ namespace {
         "RB/DAY",
         "CPRB/DAY/PSI",
         "LB",
+        "LB/DAY"
         "MSCF/STB",
         "STB/MSCF",
         "STB/STB",
@@ -286,6 +294,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -326,6 +335,7 @@ namespace {
         1 / ( Lab::ReservoirVolume / Lab::Time ),
         1 / Lab::Transmissibility,
         1 / Lab::Mass,
+        1 / ( Lab::Mass / Lab::Time ),
         1 / Lab::GasDissolutionFactor, /* gas-oil ratio */
         1 / Lab::OilDissolutionFactor, /* oil-gas ratio */
         1, /* water cut */
@@ -356,6 +366,7 @@ namespace {
         Lab::ReservoirVolume / Lab::Time,
         Lab::Transmissibility,
         Lab::Mass,
+        Lab::Mass / Lab::Time,
         Lab::GasDissolutionFactor,  /* gas-oil ratio */
         Lab::OilDissolutionFactor,  /* oil-gas ratio */
         1, /* water cut */
@@ -386,6 +397,7 @@ namespace {
         "RCC/HR",
         "CPRCC/HR/ATM",
         "G",
+        "G/HR",
         "SCC/SCC",
         "SCC/SCC",
         "SCC/SCC",
@@ -406,6 +418,7 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -446,6 +459,7 @@ namespace {
         1 / ( PVT_M::ReservoirVolume / PVT_M::Time ),
         1 / PVT_M::Transmissibility,
         1 / PVT_M::Mass,
+        1 / ( PVT_M::Mass / PVT_M::Time ),
         1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume), // Rs
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume), // Rv
         1, /* water cut */
@@ -476,6 +490,7 @@ namespace {
         PVT_M::ReservoirVolume / PVT_M::Time,
         PVT_M::Transmissibility,
         PVT_M::Mass,
+        PVT_M::Mass / PVT_M::Time,
         PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume, // Rs
         PVT_M::LiquidSurfaceVolume / PVT_M::GasSurfaceVolume, // Rv
         1, /* water cut */
@@ -506,6 +521,7 @@ namespace {
         "RM3/DAY",
         "CPR3/DAY/ATM",
         "KG",
+        "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
         "SM3/SM3",
@@ -520,6 +536,7 @@ namespace {
 
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -576,10 +593,12 @@ namespace {
         1,
         1,
         1,
+        1,
         1
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -627,6 +646,7 @@ namespace {
         "RM3/DAY",
         "CPR3/DAY/BARS",
         "KG",
+        "KG/DAY",
         "SM3/SM3",
         "SM3/SM3",
         "SM3/SM3",

@@ -321,16 +321,20 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 30.8, ecl_sum_get_well_var( resp, 1, "W_3", "WGVIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_well_var( resp, 1, "W_3", "WGIR" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.3, ecl_sum_get_well_var( resp, 1, "W_3", "WNIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.0 * 1.5, ecl_sum_get_well_var( resp, 1, "W_3", "WCIR" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.0 * 2.5, ecl_sum_get_well_var( resp, 2, "W_3", "WCIR" ), 1e-5 );
 
     /* Injection totals */
     BOOST_CHECK_CLOSE( 30.0, ecl_sum_get_well_var( resp, 1, "W_3", "WWIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.2, ecl_sum_get_well_var( resp, 1, "W_3", "WGIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 30.3, ecl_sum_get_well_var( resp, 1, "W_3", "WNIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.0 * 1.5, ecl_sum_get_well_var( resp, 1, "W_3", "WCIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( (30.6 + 30.7 + 30.8),
                        ecl_sum_get_well_var( resp, 1, "W_3", "WVIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 30.0, ecl_sum_get_well_var( resp, 2, "W_3", "WWIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 30.2, ecl_sum_get_well_var( resp, 2, "W_3", "WGIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2 * 30.3, ecl_sum_get_well_var( resp, 2, "W_3", "WNIT" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 30.0 * 1.5 + 30.0 * 2.5, ecl_sum_get_well_var( resp, 2, "W_3", "WCIT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2* (30.6 + 30.7 + 30.8),
                        ecl_sum_get_well_var( resp, 2, "W_3", "WVIT" ), 1e-5 );
 

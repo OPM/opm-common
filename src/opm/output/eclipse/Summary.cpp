@@ -132,6 +132,7 @@ using rt = data::Rates::opt;
 using measure = UnitSystem::measure;
 constexpr const bool injector = true;
 constexpr const bool producer = false;
+constexpr const bool polymer = true;
 
 /* Some numerical value with its unit tag embedded to enable caller to apply
  * unit conversion. This removes a lot of boilerplate. ad-hoc solution to poor
@@ -158,6 +159,10 @@ measure div_unit( measure denom, measure div ) {
         div   == measure::time )
         return measure::gas_surface_volume;
 
+    if( denom == measure::mass_rate &&
+        div   == measure::time )
+        return measure::mass;
+
     return measure::identity;
 }
 
@@ -175,6 +180,9 @@ measure mul_unit( measure lhs, measure rhs ) {
     if( ( lhs == measure::rate && rhs == measure::time ) ||
         ( rhs == measure::rate && lhs == measure::time ) )
         return measure::volume;
+
+    if(  lhs == measure::mass_rate && rhs == measure::time)
+        return measure::mass;
 
     return lhs;
 }
@@ -273,7 +281,7 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
-template< rt phase, bool injection = true >
+template< rt phase, bool injection = true, bool polymer = false >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
@@ -283,13 +291,19 @@ inline quantity rate( const fn_args& args ) {
 
         double eff_fac = efac( args.eff_factors, name );
 
-        const auto v = args.wells.at(name).rates.get(phase, 0.0) * eff_fac;
+        double concentration = polymer
+                             ? sched_well->getPolymerProperties( args.sim_step ).m_polymerConcentration
+                             : 1;
+
+        const auto v = args.wells.at(name).rates.get(phase, 0.0) * eff_fac * concentration;
 
         if( ( v > 0 ) == injection )
             sum += v;
     }
 
     if( !injection ) sum *= -1;
+
+    if( polymer ) return { sum, measure::mass_rate };
     return { sum, rate_unit< phase >() };
 }
 
@@ -503,11 +517,13 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WNIR", rate< rt::solvent, injector > },
+    { "WCIR", rate< rt::wat, injector, polymer > },
 
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
+    { "WCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
     { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
