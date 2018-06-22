@@ -43,7 +43,7 @@ namespace Opm {
         return m_number_branch;
     }
 
-  int WellSegments::size() const {
+    int WellSegments::size() const {
         return m_segments.size();
     }
 
@@ -98,8 +98,7 @@ namespace Opm {
        }
    }
 
-    void WellSegments::segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword ) {
-
+    void WellSegments::loadWELSEGS( const DeckKeyword& welsegsKeyword ) {
         // for the first record, which provides the information for the top segment
         // and information for the whole segment set
         const auto& record1 = welsegsKeyword.getRecord(0);

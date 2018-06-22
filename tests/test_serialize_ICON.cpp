@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
                 const size_t offset = w_offset + c_offset;
 
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_IC_INDEX],
-                                  c.complnum());
+                                  c.complnum);
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_I_INDEX],
                                   c.getI() + 1);
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_J_INDEX],
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_DIRECTION_INDEX],
                                   c.getDirection());
 
-                if (c.getState() == Opm::WellCompletion::StateEnum::OPEN)
+                if (c.state == Opm::WellCompletion::StateEnum::OPEN)
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_STATUS_INDEX],
                                       1);
                 else

@@ -18,27 +18,37 @@
 */
 
 
-#ifndef CONNECTIONSET_HPP_
-#define CONNECTIONSET_HPP_
+#ifndef WELL_CONNECTIONS_HPP
+#define WELL_CONNECTIONS_HPP
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 
 namespace Opm {
     class EclipseGrid;
+    class Eclipse3DProperties;
 
     class WellConnections {
     public:
-        WellConnections() = default;
+        WellConnections(int headI, int headJ);
         // cppcheck-suppress noExplicitConstructor
-        WellConnections( std::initializer_list< Connection > );
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
 
         using const_iterator = std::vector< Connection >::const_iterator;
-
+        void addConnection(int i, int j , int k ,
+                           double depth,
+                           WellCompletion::StateEnum state ,
+                           const Value<double>& connectionTransmissibilityFactor,
+                           const Value<double>& diameter,
+                           const Value<double>& skinFactor,
+                           const int satTableId,
+                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
+        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
         void add( Connection );
+
         size_t size() const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
+        Connection& getFromIJK(const int i, const int j, const int k);
 
         const_iterator begin() const { return this->m_connections.begin(); }
         const_iterator end() const { return this->m_connections.end(); }
@@ -53,7 +63,7 @@ namespace Opm {
         ///     2. Choose next connection to be nearest to current in (i, j) sense.
         ///        If non-unique choose closest in z-depth (not logical cartesian k).
         ///
-        /// \param[in] well_i  logical cartesian i-coordinate of well head
+        /// \param[in] w ell_i  logical cartesian i-coordinate of well head
         /// \param[in] well_j  logical cartesian j-coordinate of well head
         /// \param[in] grid    EclipseGrid object, used for cell depths
         void orderConnections(size_t well_i, size_t well_j);
@@ -62,8 +72,19 @@ namespace Opm {
         bool operator!=( const WellConnections& ) const;
 
     private:
+        void addConnection(int i, int j , int k ,
+                           int complnum,
+                           double depth,
+                           WellCompletion::StateEnum state ,
+                           const Value<double>& connectionTransmissibilityFactor,
+                           const Value<double>& diameter,
+                           const Value<double>& skinFactor,
+                           const int satTableId,
+                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
+
         std::vector< Connection > m_connections;
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
+        int headI, headJ;
     };
 }
 

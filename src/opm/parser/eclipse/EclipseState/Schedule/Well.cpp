@@ -28,6 +28,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
+#include "MSW/Compsegs.hpp"
 
 #include <ert/ecl/ecl_grid.h>
 
@@ -48,7 +50,7 @@ namespace Opm {
           m_guideRateScalingFactor( timeMap, 1.0 ),
           m_efficiencyFactors (timeMap, 1.0 ),
           m_isProducer( timeMap, true ) ,
-          m_completions( timeMap, WellConnections{} ),
+          connections( timeMap, std::make_shared<WellConnections>(headI, headJ) ),
           m_productionProperties( timeMap, WellProductionProperties() ),
           m_injectionProperties( timeMap, WellInjectionProperties() ),
           m_polymerProperties( timeMap, WellPolymerProperties() ),
@@ -336,7 +338,7 @@ namespace Opm {
                                          + ". Can not infer reference depth" );
         }
 
-        return completions.get( 0 ).getCenterDepth();
+        return completions.get( 0 ).center_depth;
     }
 
     void Well::setRefDepth( size_t timestep, double depth ) {
@@ -348,7 +350,7 @@ namespace Opm {
     }
 
     const WellConnections& Well::getConnections(size_t timeStep) const {
-        return m_completions.get( timeStep );
+        return *connections.get( timeStep );
     }
 
     WellConnections Well::getActiveConnections(size_t timeStep, const EclipseGrid& grid) const {
@@ -356,45 +358,175 @@ namespace Opm {
     }
 
     const WellConnections& Well::getConnections() const {
-        return m_completions.back();
+        return *connections.back();
     }
 
-    void Well::addConnections(size_t time_step, const std::vector< Connection >& newConnections ) {
-        auto new_set = this->getConnections( time_step );
-        int complnum_shift = new_set.size();
 
-        const auto headI = this->m_headI[ time_step ];
-        const auto headJ = this->m_headJ[ time_step ];
-
-        auto prev_size = new_set.size();
-        for( auto completion : newConnections ) {
-            completion.fixDefaultIJ( headI , headJ );
-            completion.shift_complnum( complnum_shift );
-
-            new_set.add( completion );
-            const auto new_size = new_set.size();
-
-            /* Connections can be "re-added", i.e. same coordinates but with a
-             * different set of properties. In this case they also inherit the
-             * completion number (which must otherwise be shifted because
-             * every COMPDAT keyword thinks it's the only one.
-             */
-            if( new_size == prev_size ) --complnum_shift;
-            else ++prev_size;
-        }
-
-        this->addWellConnections( time_step, new_set );
+    WellConnections * Well::newWellConnections(size_t time_step) {
+        return new WellConnections( this->m_headI[time_step], this->m_headJ[time_step]);
     }
 
-    void Well::addWellConnections(size_t time_step, WellConnections new_set ){
+    void Well::updateWellConnections(size_t time_step, WellConnections * new_set ){
         if( getWellConnectionOrdering() == WellCompletion::TRACK) {
             const auto headI = this->m_headI[ time_step ];
             const auto headJ = this->m_headJ[ time_step ];
-            new_set.orderConnections( headI, headJ );
+            new_set->orderConnections( headI, headJ );
         }
 
-        m_completions.update( time_step, std::move( new_set ) );
+        connections.update( time_step, std::shared_ptr<WellConnections>( new_set ));
         addEvent( ScheduleEvents::COMPLETION_CHANGE , time_step );
+    }
+
+    namespace {
+
+        bool defaulted(const DeckRecord& rec, const std::string& s) {
+            const auto& item = rec.getItem( s );
+            if (item.defaultApplied(0))
+                return true;
+
+            if (item.get<int>(0) == 0)
+                return true;
+
+            return false;
+        }
+
+
+        int limit(const DeckRecord& rec, const std::string&s , int shift) {
+            const auto& item = rec.getItem( s );
+            return shift + item.get<int>(0);
+        }
+
+        bool match_le(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
+            if (defaulted(rec,s))
+                return true;
+
+            return (value <= limit(rec,s,shift));
+        }
+
+        bool match_ge(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
+            if (defaulted(rec,s))
+                return true;
+
+            return (value >= limit(rec,s,shift));
+        }
+
+
+        bool match_eq(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
+            if (defaulted(rec,s))
+                return true;
+
+            return (limit(rec,s,shift) == value);
+        }
+    }
+
+    void Well::handleWELSEGS(const DeckKeyword& keyword, size_t time_step) {
+        WellSegments newSegmentset;
+        newSegmentset.loadWELSEGS(keyword);
+
+        // update multi-segment related information for the well
+        this->addWellSegments(time_step, newSegmentset);
+    }
+
+
+    void Well::handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step) {
+        const auto& connection_set = this->getConnections(time_step);
+        std::vector<Compsegs> compsegs = Compsegs::compsegsFromCOMPSEGSKeyword(keyword);
+        WellConnections * new_connection_set = this->newWellConnections(time_step);
+        Compsegs::processCOMPSEGS(compsegs, this->getWellSegments(time_step));
+
+        for( const auto& compseg : compsegs) {
+            const int i = compseg.m_i;
+            const int j = compseg.m_j;
+            const int k = compseg.m_k;
+
+            Connection connection = connection_set.getFromIJK( i, j, k );
+            connection.segment_number = compseg.m_segment_number;
+
+            new_connection_set->add(connection);
+        }
+        this->updateWellConnections(time_step, new_connection_set);
+    }
+
+
+    void Well::handleCOMPLUMP(const DeckRecord& record, size_t time_step)  {
+
+        auto match = [=]( const Connection& c ) -> bool {
+            if (!match_eq(c.getI(), record, "I", -1))  return false;
+            if (!match_eq(c.getJ(), record, "J", -1 )) return false;
+            if (!match_ge(c.getK(), record, "K1", -1)) return false;
+            if (!match_le(c.getK(), record, "K2", -1)) return false;
+
+            return true;
+        };
+
+        WellConnections * new_connections = this->newWellConnections(time_step);
+        const int complnum = record.getItem("N").get<int>(0);
+        for (auto c : this->getConnections(time_step)) {
+          if (match(c))
+              c.complnum = complnum;
+
+          new_connections->add(c);
+        }
+        this->updateWellConnections(time_step, new_connections);
+    }
+
+
+    void Well::handleWPIMULT(const DeckRecord& record, size_t time_step) {
+
+        auto match = [=]( const Connection &c) -> bool {
+            if (!match_ge(c.complnum, record, "FIRST"))  return false;
+            if (!match_le(c.complnum, record, "LAST"))   return false;
+            if (!match_eq(c.getI(), record, "I", -1))    return false;
+            if (!match_eq(c.getJ(), record, "J", -1))    return false;
+            if (!match_eq(c.getK(), record, "K", -1))    return false;
+
+            return true;
+        };
+
+        WellConnections * new_connections = this->newWellConnections(time_step);
+        double wellPi = record.getItem("WELLPI").get< double >(0);
+
+        for (auto c : this->getConnections(time_step)) {
+            if (match(c))
+                c.wellPi *= wellPi;
+
+            new_connections->add(c);
+        }
+
+        this->updateWellConnections(time_step, new_connections);
+    }
+
+
+    void Well::handleWELOPEN(const DeckRecord& record, size_t time_step, WellCompletion::StateEnum status) {
+
+        auto match = [=]( const Connection &c) -> bool {
+            if (!match_ge(c.complnum, record, "C1"))    return false;
+            if (!match_le(c.complnum, record, "C2"))    return false;
+            if (!match_eq(c.getI(),   record, "I", -1)) return false;
+            if (!match_eq(c.getJ(),   record, "J", -1)) return false;
+            if (!match_eq(c.getK(),   record, "K", -1)) return false;
+
+            return true;
+        };
+
+        WellConnections * new_connections = this->newWellConnections(time_step);
+
+        for (auto c : this->getConnections(time_step)) {
+            if (match(c))
+                c.state = status;
+
+            new_connections->add(c);
+        }
+
+        this->updateWellConnections(time_step, new_connections);
+    }
+
+
+
+    void Well::handleCOMPDAT(const DeckRecord& record, size_t time_step, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
+        WellConnections * connections = new WellConnections(this->getConnections(time_step));
+        connections->loadCOMPDAT(record, grid, eclipseProperties);
+        this->updateWellConnections(time_step, connections);
     }
 
     const std::string Well::getGroupName(size_t time_step) const {
@@ -582,10 +714,10 @@ namespace Opm {
 
     void Well::filterConnections(const EclipseGrid& grid) {
         /*
-          The m_completions member variable is DynamicState<WellConnections>
+          The connections member variable is DynamicState<WellConnections>
           instance, hence this for loop is over all timesteps.
         */
-        for (auto& completions : m_completions)
-            completions.filter(grid);
+        for (auto& conn_set : connections)
+            conn_set->filter(grid);
     }
 }

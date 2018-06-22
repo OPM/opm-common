@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(testGetFunctions) {
     BOOST_CHECK_EQUAL( 11 , completion.getJ() );
     BOOST_CHECK_EQUAL( 12 , completion.getK() );
 
-    BOOST_CHECK_EQUAL( Opm::WellCompletion::OPEN , completion.getState());
+    BOOST_CHECK_EQUAL( Opm::WellCompletion::OPEN , completion.state);
     BOOST_CHECK_EQUAL( 99.88 , completion.getConnectionTransmissibilityFactor());
     BOOST_CHECK_EQUAL( 22.33 , completion.getDiameter());
     BOOST_CHECK_EQUAL( 33.22 , completion.getSkinFactor());
@@ -86,14 +86,14 @@ BOOST_AUTO_TEST_CASE(CompletionTestssameCoordinate) {
 }
 
 BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
-    Opm::WellConnections completionSet;
+    Opm::WellConnections completionSet(10,100);
     BOOST_CHECK_EQUAL( 0U , completionSet.size() );
 }
 
 
 
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
-    Opm::WellConnections completionSet;
+    Opm::WellConnections completionSet(12,17);
     Opm::Connection completion1( 10,10,10, 1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 11,10,10, 1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     completionSet.add( completion1 );
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
-    Opm::WellConnections completionSet;
+    Opm::WellConnections completionSet(10,10);
     Opm::Connection completion1( 10,10,10,1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 11,10,10,1, 0.0,Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     completionSet.add( completion1 );
@@ -122,23 +122,8 @@ BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
 
 
 
-BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
-    Opm::WellConnections completionSet;
-    Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection completion2( 10,10,10, 1, 0.0,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-
-
-    completionSet.add( completion1 );
-    BOOST_CHECK_EQUAL( 1U , completionSet.size() );
-
-    completionSet.add( completion2 );
-    BOOST_CHECK_EQUAL( 1U , completionSet.size() );
-}
-
-
-
 BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
-    Opm::WellConnections completionSet;
+    Opm::WellConnections completionSet(10,10);
 
     Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
@@ -160,7 +145,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
 
 BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     Opm::EclipseGrid grid(10,10,10);
-    Opm::WellConnections completions;
+    Opm::WellConnections completions(1,1);
     Opm::Connection completion1( 0,0,0, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion2( 0,0,1, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
     Opm::Connection completion3( 0,0,2, 1, 0.0, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
