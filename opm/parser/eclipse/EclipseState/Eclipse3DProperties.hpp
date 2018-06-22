@@ -49,10 +49,14 @@ namespace Opm {
     public:
 
         Eclipse3DProperties() = default;
+
         Eclipse3DProperties(const Deck& deck,
                             const TableManager& tableManager,
                             const EclipseGrid& eclipseGrid);
 
+        Eclipse3DProperties( UnitSystem unit_system,
+                             const TableManager& tableManager,
+                             const EclipseGrid& eclipseGrid);
 
         std::vector< int > getRegions( const std::string& keyword ) const;
         std::string getDefaultRegionKeyword() const;
