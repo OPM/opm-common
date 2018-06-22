@@ -28,10 +28,6 @@
 
 namespace Opm {
 
-    WellConnections::WellConnections( std::initializer_list< Connection > cs ) {
-        for( auto&& c : cs ) this->add( c );
-    }
-
 
     WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) {
         for (const auto& c : src) {
@@ -55,6 +51,16 @@ namespace Opm {
             }
         }
         throw std::runtime_error(" the connection is not found! \n ");
+    }
+
+
+    Connection& WellConnections::getFromIJK(const int i, const int j, const int k) {
+      for (size_t ic = 0; ic < size(); ++ic) {
+        if (get(ic).sameCoordinate(i, j, k)) {
+          return this->m_connections[ic];
+        }
+      }
+      throw std::runtime_error(" the connection is not found! \n ");
     }
 
 
