@@ -17,7 +17,11 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <array>
+#include <cstddef>
+#include <initializer_list>
 #include <numeric>
+#include <string>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -795,6 +799,372 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
 
 }
 
+// ====================================================================
+
+struct RestartVectors
+{
+    void summarize(const ::Opm::Well&        w,
+                   const ::Opm::data::Wells& xw,
+                   const ::Opm::EclipseGrid& g,
+                   const int                 sim_step,
+                   const double              dt);
+
+    void incorporateEfficiency(const double effFac);
+
+    std::array<Opm::quantity, 4> prod_rate;
+    std::array<Opm::quantity, 4> prod_tot;
+    std::array<Opm::quantity, 2> inj_rate;
+    std::array<Opm::quantity, 2> inj_tot;
+
+    Opm::quantity bhp;
+    Opm::quantity gor;
+    Opm::quantity wct;
+
+    enum Ph : std::size_t {
+        W = 0, G = 1, O = 2, V = 3
+    }; // Water, Gas, Oil, Reservoir Volume
+};
+
+void
+RestartVectors::summarize(const ::Opm::Well&        w,
+                          const ::Opm::data::Wells& xw,
+                          const ::Opm::EclipseGrid& g,
+                          const int                 sim_step,
+                          const double              dt)
+{
+    const auto schWells = std::vector<const ::Opm::Well*>{ &w };
+    const auto regCache = ::Opm::out::RegionCache{};  // Unused
+    const auto effFac   = std::vector<std::pair<std::string,double>>{};
+
+    const auto args = ::Opm::fn_args {
+        schWells, dt, sim_step, 0, xw, regCache, g, effFac
+    };
+
+    auto calcRVec = [&args](const std::string& vector) -> ::Opm::quantity
+    {
+        auto f = funs.find(vector);
+        if (f == funs.end()) {
+            return {};
+        }
+
+        return f->second(args);
+    };
+
+    // Production rate
+    this->prod_rate[Ph::W] = calcRVec("WWPR");
+    this->prod_rate[Ph::G] = calcRVec("WGPR");
+    this->prod_rate[Ph::O] = calcRVec("WOPR");
+    this->prod_rate[Ph::V] = calcRVec("WVPR");
+
+    // Production total
+    this->prod_tot[Ph::W] = calcRVec("WWPT");
+    this->prod_tot[Ph::G] = calcRVec("WGPT");
+    this->prod_tot[Ph::O] = calcRVec("WOPT");
+    this->prod_tot[Ph::V] = calcRVec("WVPT");
+
+    // Injection rate
+    this->inj_rate[Ph::W] = calcRVec("WWIR");
+    this->inj_rate[Ph::G] = calcRVec("WGIR");
+
+    // Injection total
+    this->inj_tot[Ph::W] = calcRVec("WWIT");
+    this->inj_tot[Ph::G] = calcRVec("WGIT");
+
+    // Ancillary vectors
+    this->bhp = calcRVec("WBHP");
+    this->gor = calcRVec("WGOR");
+    this->wct = calcRVec("WWCT");
+
+    this->incorporateEfficiency(w.getEfficiencyFactor(sim_step));
+}
+
+void
+RestartVectors::incorporateEfficiency(const double effFac)
+{
+    const auto efac = Opm::quantity {
+        effFac, measure::identity
+    };
+
+    // Production rate
+    for (auto& q : this->prod_rate) { q = q * efac; }
+
+    // Production total
+    for (auto& q : this->prod_tot) { q = q * efac; }
+
+    // Injection rate
+    for (auto& q : this->inj_rate) { q = q * efac; }
+
+    // Injection total
+    for (auto& q : this->inj_tot) { q = q * efac; }
+}
+
+namespace {
+    // Adhere to conventions established by LibECL:
+    //   - Vectors attached to group or well (e.g.,
+    //     GOPT or WWIR) are named
+    //
+    //         vector + ':' + entity
+    //
+    //   - Vectors attached to FIELD have a key equal
+    //     to the vector name itself
+    std::string genKey(const std::string& vector,
+                       const std::string& entity)
+    {
+        return (entity == "FIELD")
+            ? vector
+            : vector + ':' + entity;
+    }
+
+    double outVal(const ::Opm::UnitSystem& usys,
+                  const ::Opm::quantity&   x)
+    {
+        return usys.from_si(x.unit, x.value);
+    }
+
+    double initialValue(const std::string&         vector,
+                        const std::string&         key,
+                        const ::Opm::SummaryState& cumulative)
+    {
+        return ((vector.back() == 'T') && cumulative.has(key))
+              ? cumulative.get(key) : 0.0;
+    }
+
+    bool hasGroupResults(const std::string&         group_name,
+                         const ::Opm::SummaryState& next)
+    {
+        return next.has(genKey("GWPR", group_name));
+    }
+
+    void makeZeroGroupResults(const std::string&         group_name,
+                              const ::Opm::SummaryState& cumulative,
+                              ::Opm::SummaryState&       next)
+    {
+        for (const auto* vector : {
+                "GWPR", "GOPR", "GGPR", "GVPR",
+                "GWPT", "GOPT", "GGPT", "GVPT",
+                "GWIR", "GGIR",
+                "GWIT", "GGIT",
+                "GWCT", "GGOR",
+        })
+        {
+            const auto key = genKey(vector, group_name);
+
+            next.add(key, initialValue(vector, key, cumulative));
+        }
+    }
+
+    std::vector<std::string>
+    wellParents(const ::Opm::Well&     well,
+                const ::Opm::Schedule& sched,
+                const int              sim_step)
+    {
+        auto prnts = std::vector<std::string>{};
+
+        // Start from leaf (well) level and go up the group
+        // tree towards FIELD (root).
+        const auto& gt = sched.getGroupTree(sim_step);
+        for (auto p = well.getGroupName(sim_step);
+             gt.exists(p); p = gt.parent(p))
+        {
+            prnts.push_back(p);
+        }
+
+        if (prnts.empty()) {
+            // Well's group does not appear in group tree.
+            //
+            // This is typically because the group is parented
+            // directly to FIELD in something resembling the
+            // standard three-level configuration.
+            prnts.assign({well.getGroupName(sim_step)});
+        }
+
+        if (prnts.back() == "FIELD") {
+            // E100 wells are ultimately parented to FIELD, but
+            // we handle FIELD separately in the context of summary
+            // vectors.  Remove this entry.
+            prnts.pop_back();
+        }
+
+        return prnts;
+    }
+
+    template <class AccumulateOp>
+    void accumulateWell(const RestartVectors& r_vec,
+                        const std::string&    var_cat,
+                        AccumulateOp&&        add)
+    {
+        // Production rates.
+        add(var_cat + "WPR", r_vec.prod_rate[RestartVectors::Ph::W]);
+        add(var_cat + "OPR", r_vec.prod_rate[RestartVectors::Ph::O]);
+        add(var_cat + "GPR", r_vec.prod_rate[RestartVectors::Ph::G]);
+        add(var_cat + "VPR", r_vec.prod_rate[RestartVectors::Ph::V]);
+
+        // Production total.
+        add(var_cat + "WPT", r_vec.prod_tot[RestartVectors::Ph::W]);
+        add(var_cat + "OPT", r_vec.prod_tot[RestartVectors::Ph::O]);
+        add(var_cat + "GPT", r_vec.prod_tot[RestartVectors::Ph::G]);
+        add(var_cat + "VPT", r_vec.prod_tot[RestartVectors::Ph::V]);
+
+        // Injection rates.
+        add(var_cat + "WIR", r_vec.inj_rate[RestartVectors::Ph::W]);
+        add(var_cat + "GIR", r_vec.inj_rate[RestartVectors::Ph::G]);
+
+        // Injection total.
+        add(var_cat + "WIT", r_vec.inj_tot[RestartVectors::Ph::W]);
+        add(var_cat + "GIT", r_vec.inj_tot[RestartVectors::Ph::G]);
+    }
+
+    void accumulateWell(const std::string&         well,
+                        const RestartVectors&      r_vec,
+                        const ::Opm::UnitSystem&   usys,
+                        const ::Opm::SummaryState& cumulative,
+                        ::Opm::SummaryState&       next)
+    {
+        // Well rates and cumulative totals.
+        accumulateWell(r_vec, "W", [&well, &usys, &cumulative, &next]
+            (const std::string& vector, const ::Opm::quantity& x) -> void
+        {
+            const auto key = genKey(vector, well);
+            const auto v0  = initialValue(vector, key, cumulative);
+
+            next.add(key, v0 + outVal(usys, x));
+        });
+
+        // Ancillary vectors.
+        next.add(genKey("WBHP", well), outVal(usys, r_vec.bhp));
+        next.add(genKey("WGOR", well), outVal(usys, r_vec.gor));
+        next.add(genKey("WWCT", well), outVal(usys, r_vec.wct));
+    }
+
+    void accumulateWellToGroup(const std::string&         group_name,
+                               const RestartVectors&      r_vec,
+                               const ::Opm::UnitSystem&   usys,
+                               const ::Opm::SummaryState& cumulative,
+                               ::Opm::SummaryState&       next)
+    {
+        const auto var_cat = (group_name == "FIELD")
+            ? std::string{"F"} : std::string{"G"};
+
+        // Group rates and cumulative totals.
+        accumulateWell(r_vec, var_cat,
+            [&group_name, &usys, &cumulative, &next]
+            (const std::string& vector, const ::Opm::quantity& x) -> void
+        {
+            const auto key = genKey(vector, group_name);
+            const auto val = outVal(usys, x);
+
+            if (next.has(key)) {
+                // We've seen this group/vector combination before.
+                //
+                // Accumulation (addition) appropriate for both rates and
+                // cumulative totals alike in the context of a group vector.
+                next.add(key, next.get(key) + val);
+            }
+            else {
+                // This is a new group/vector combination.
+                // Initialize new result variable.
+                const auto v0 = initialValue(vector, key, cumulative);
+
+                next.add(key, v0 + val);
+            }
+        });
+
+        // Water cut.
+        {
+            const auto wpr = next.get(genKey(var_cat + "WPR", group_name));
+            const auto opr = next.get(genKey(var_cat + "OPR", group_name));
+
+            const auto wct = (wpr + opr > 0.0)
+                ? wpr / (wpr + opr) : 0.0;
+
+            next.add(genKey(var_cat + "WCT", group_name), wct);
+        }
+
+        // Producing gas/oil ratio.
+        {
+            const auto opr = next.get(genKey(var_cat + "OPR", group_name));
+            const auto gpr = next.get(genKey(var_cat + "GPR", group_name));
+
+            const auto gor = (opr > 0.0) ? gpr / opr : 0.0;
+
+            next.add(genKey(var_cat + "GOR", group_name), gor);
+        }
+    }
+
+    void accumulateWellToGroups(const ::Opm::Well&         well,
+                                const ::Opm::Schedule&     sched,
+                                const ::Opm::UnitSystem&   usys,
+                                const ::Opm::SummaryState& cumulative,
+                                const int                  sim_step,
+                                RestartVectors&            r_vec, // Mutable
+                                ::Opm::SummaryState&       next)
+    {
+        // 1) Contributions to groups other than FIELD.
+        //
+        //    Well parents ordered according to the group tree upwards
+        //    from leaf (well) to top/root (FIELD) level.
+        for (const auto& group_name : wellParents(well, sched, sim_step)) {
+            // Update well's rates and cumulative totals according to
+            // group's efficiency factor.  Value persistently and
+            // observably mutated if factor different from one (1.0).
+            r_vec.incorporateEfficiency(sched.getGroup(group_name)
+                                        .getGroupEfficiencyFactor(sim_step));
+
+            accumulateWellToGroup(group_name, r_vec, usys, cumulative, next);
+        }
+
+        // 2) Contributions to FIELD.
+        //
+        //    Depends on all pertinent well and group efficiency factors
+        //    having already been applied to r_vec rates and totals.
+        accumulateWellToGroup("FIELD", r_vec, usys, cumulative, next);
+    }
+
+    ::Opm::SummaryState
+    calculateRestartVectors(const ::Opm::Schedule&     sched,
+                            const ::Opm::EclipseGrid&  g,
+                            const ::Opm::data::Wells&  xw,
+                            const ::Opm::SummaryState& cumulative,
+                            const ::Opm::UnitSystem&   usys,
+                            const int                  sim_step,
+                            const double               dt)
+    {
+        auto next = ::Opm::SummaryState{};
+
+        auto r_vec = RestartVectors{};
+        for (const auto* well : sched.getWells(sim_step)) {
+            r_vec.summarize(*well, xw, g, sim_step, dt);
+
+            accumulateWell(well->name(), r_vec, usys, cumulative, next);
+
+            accumulateWellToGroups(*well, sched, usys,
+                                   cumulative, sim_step,
+                                   r_vec, next);
+        }
+
+        for (const auto* grp : sched.getGroups()) {
+            const auto group_name = grp->name();
+
+            if ((group_name != "FIELD")       &&
+                grp->hasBeenDefined(sim_step) &&
+                !hasGroupResults(group_name, next))
+            {
+                // There are currently no wells that aggregate
+                // results to 'grp'.  This is unexpected, but
+                // we must provide restart vectors for all groups
+                // that are active at 'sim_step'.  Create a set
+                // of zero rate results for this group to honour
+                // minimum requirements.
+                makeZeroGroupResults(group_name, cumulative, next);
+            }
+        }
+
+        return next;
+    }
+} // namespace Anonymous
+
+// ====================================================================
+
 namespace out {
 
 class Summary::keyword_handlers {
@@ -1114,6 +1484,11 @@ void Summary::add_timestep( int report_step,
 
     this->prev_state = st;
     this->prev_time_elapsed = secs_elapsed;
+
+    this->rstrt_state =
+        calculateRestartVectors(schedule, this->grid, wells,
+                                this->rstrt_state, es.getUnits(),
+                                sim_step, duration);
 }
 
 void Summary::write() {
@@ -1122,5 +1497,9 @@ void Summary::write() {
 
 Summary::~Summary() {}
 
+const SummaryState& Summary::get_restart_vectors() const
+{
+    return this->rstrt_state;
 }
-}
+
+}} // namespace Opm::out
