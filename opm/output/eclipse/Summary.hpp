@@ -62,6 +62,8 @@ class Summary {
 
         ~Summary();
 
+        const SummaryState& get_restart_vectors() const;
+
     private:
         class keyword_handlers;
 
@@ -71,6 +73,7 @@ class Summary {
         std::unique_ptr< keyword_handlers > handlers;
         double prev_time_elapsed = 0;
         SummaryState prev_state;
+        SummaryState rstrt_state;
 };
 
 }
