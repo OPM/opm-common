@@ -443,6 +443,20 @@ namespace Opm {
         return supportedDoubleKeywords;
     }
 
+    Eclipse3DProperties::Eclipse3DProperties( UnitSystem unit_system,
+                                              const TableManager& tableManager,
+                                              const EclipseGrid& eclipseGrid):
+        m_defaultRegion("FLUXNUM"),
+        m_deckUnitSystem(unit_system),
+        // Note that the variants of grid keywords for radial grids are not
+        // supported. (and hopefully never will be)
+        // register the grid properties
+        m_intGridProperties(eclipseGrid, makeSupportedIntKeywords()),
+        m_doubleGridProperties(eclipseGrid, &unit_system,
+                               makeSupportedDoubleKeywords(&tableManager, &eclipseGrid, &m_intGridProperties))
+    {
+    }
+
     Eclipse3DProperties::Eclipse3DProperties( const Deck&         deck,
                                               const TableManager& tableManager,
                                               const EclipseGrid&  eclipseGrid)
