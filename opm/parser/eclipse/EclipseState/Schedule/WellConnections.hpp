@@ -30,7 +30,6 @@ namespace Opm {
     public:
         WellConnections() = default;
         // cppcheck-suppress noExplicitConstructor
-        WellConnections( std::initializer_list< Connection > );
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
 
         using const_iterator = std::vector< Connection >::const_iterator;
@@ -39,6 +38,7 @@ namespace Opm {
         size_t size() const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
+        Connection& getFromIJK(const int i, const int j, const int k);
 
         const_iterator begin() const { return this->m_connections.begin(); }
         const_iterator end() const { return this->m_connections.end(); }
@@ -64,7 +64,6 @@ namespace Opm {
     private:
         std::vector< Connection > m_connections;
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
-        Connection& getFromIJK(const int i, const int j, const int k);
     };
 }
 
