@@ -28,6 +28,13 @@
 
 namespace Opm {
 
+    WellConnections::WellConnections(int headI, int headJ) :
+        headI(headI),
+        headJ(headJ)
+    {
+    }
+
+
 
     WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) {
         for (const auto& c : src) {
@@ -35,6 +42,49 @@ namespace Opm {
                 this->add(c);
         }
     }
+
+    void WellConnections::addConnection(int i, int j , int k ,
+                                        int complnum,
+                                        double depth,
+                                        WellCompletion::StateEnum state ,
+                                        const Value<double>& connectionTransmissibilityFactor,
+                                        const Value<double>& diameter,
+                                        const Value<double>& skinFactor,
+                                        const int satTableId,
+                                        const WellCompletion::DirectionEnum direction)
+    {
+        int conn_i = (i < 0) ? this->headI : i;
+        int conn_j = (j < 0) ? this->headJ : j;
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, connectionTransmissibilityFactor, diameter, skinFactor, satTableId, direction);
+        this->add(conn);
+    }
+
+
+
+    void WellConnections::addConnection(int i, int j , int k ,
+                                        double depth,
+                                        WellCompletion::StateEnum state ,
+                                        const Value<double>& connectionTransmissibilityFactor,
+                                        const Value<double>& diameter,
+                                        const Value<double>& skinFactor,
+                                        const int satTableId,
+                                        const WellCompletion::DirectionEnum direction)
+    {
+        int complnum = -(this->m_connections.size() + 1);
+        this->addConnection(i,
+                            j,
+                            k,
+                            complnum,
+                            depth,
+                            state,
+                            connectionTransmissibilityFactor,
+                            diameter,
+                            skinFactor,
+                            satTableId,
+                            direction);
+    }
+
+
 
     size_t WellConnections::size() const {
         return m_connections.size();

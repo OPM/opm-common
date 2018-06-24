@@ -29,8 +29,17 @@ namespace Opm {
     class WellConnections {
     public:
         WellConnections() = default;
+        WellConnections(int headI, int headJ);
         // cppcheck-suppress noExplicitConstructor
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
+        void addConnection(int i, int j , int k ,
+                           double depth,
+                           WellCompletion::StateEnum state ,
+                           const Value<double>& connectionTransmissibilityFactor,
+                           const Value<double>& diameter,
+                           const Value<double>& skinFactor,
+                           const int satTableId,
+                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -62,8 +71,19 @@ namespace Opm {
         bool operator!=( const WellConnections& ) const;
 
     private:
+        void addConnection(int i, int j , int k ,
+                           int complnum,
+                           double depth,
+                           WellCompletion::StateEnum state ,
+                           const Value<double>& connectionTransmissibilityFactor,
+                           const Value<double>& diameter,
+                           const Value<double>& skinFactor,
+                           const int satTableId,
+                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
+
         std::vector< Connection > m_connections;
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
+        int headI, headJ;
     };
 }
 
