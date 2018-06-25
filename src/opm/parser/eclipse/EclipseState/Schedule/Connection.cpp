@@ -49,7 +49,7 @@ namespace Opm {
           complnum( compnum ),
           m_diameter(diameter),
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
-          m_wellPi(1.0),
+          wellPi(1.0),
           m_skinFactor(skinFactor),
           m_satTableId(satTableId),
           state(state),
@@ -66,10 +66,10 @@ namespace Opm {
     Connection::Connection(const Connection& oldConnection, double wellPi) :
         Connection( oldConnection )
     {
-        if( this->m_wellPi != 0 ) {
-            this->m_wellPi *= wellPi;
+        if( this->wellPi != 0 ) {
+            this->wellPi *= wellPi;
         } else {
-            this->m_wellPi = wellPi;
+            this->wellPi = wellPi;
         }
     }
 
@@ -162,9 +162,6 @@ namespace Opm {
         return m_direction;
     }
 
-    double Connection::getWellPi() const {
-        return m_wellPi;
-    }
 
     int Connection::getSegmentNumber() const {
         if (!attachedToSegment()) {
@@ -188,8 +185,8 @@ namespace Opm {
             && this->complnum == rhs.complnum
             && this->m_diameter == rhs.m_diameter
             && this->m_connectionTransmissibilityFactor
-               == rhs.m_connectionTransmissibilityFactor
-            && this->m_wellPi == rhs.m_wellPi
+                            == rhs.m_connectionTransmissibilityFactor
+            && this->wellPi == rhs.wellPi
             && this->m_skinFactor == rhs.m_skinFactor
             && this->m_satTableId == rhs.m_satTableId
             && this->state == rhs.state

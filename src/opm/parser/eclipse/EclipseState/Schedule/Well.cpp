@@ -700,6 +700,33 @@ namespace Opm {
     }
 
 
+    void Well::handleWPIMULT(const DeckRecord& record, size_t time_step) {
+
+        auto match = [=]( const Connection &c) -> bool {
+            if (!match_ge(c.complnum, record, "FIRST")) return false;
+            if (!match_le(c.complnum, record, "LAST"))  return false;
+            if (!match_eq(c.getI()  , record, "I", -1)) return false;
+            if (!match_eq(c.getJ()  , record, "J", -1)) return false;
+            if (!match_eq(c.getK()  , record, "K", -1)) return false;
+
+            return true;
+        };
+
+        WellConnections * new_connections = this->newWellConnections(time_step);
+        double wellPi = record.getItem("WELLPI").get< double >(0);
+
+        for (auto c : this->getConnections(time_step)) {
+            if (match(c))
+                c.wellPi *= wellPi;
+
+            new_connections->add(c);
+        }
+
+        this->updateWellConnections(time_step, new_connections);
+    }
+
+
+
 
 
 }

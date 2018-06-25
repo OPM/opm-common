@@ -552,67 +552,16 @@ namespace Opm {
         return data;
     }
 
-
     void Schedule::handleWPIMULT( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            double wellPi = record.getItem("WELLPI").get< double >(0);
 
-            for( auto* well : getWells( wellNamePattern ) ) {
-                const auto& currentWellConnections = well->getConnections(currentStep);
-
-                WellConnections * newWellConnections = well->newWellConnections(currentStep);
-
-                Opm::Value<int> I  = getValueItem(record.getItem("I"));
-                Opm::Value<int> J  = getValueItem(record.getItem("J"));
-                Opm::Value<int> K  = getValueItem(record.getItem("K"));
-                Opm::Value<int> FIRST = getValueItem(record.getItem("FIRST"));
-                Opm::Value<int> LAST = getValueItem(record.getItem("LAST"));
-
-                size_t completionSize = currentWellConnections.size();
-
-                for(size_t i = 0; i < completionSize;i++) {
-                    const auto& currentConnection = currentWellConnections.get(i);
-
-                    if (FIRST.hasValue()) {
-                        if (i < (size_t) FIRST.getValue()) {
-                            newWellConnections->add(currentConnection);
-                            continue;
-                        }
-                    }
-                    if (LAST.hasValue()) {
-                        if (i > (size_t) LAST.getValue()) {
-                            newWellConnections->add(currentConnection);
-                            continue;
-                        }
-                    }
-
-                    int ci = currentConnection.getI();
-                    int cj = currentConnection.getJ();
-                    int ck = currentConnection.getK();
-
-                    if (I.hasValue() && (!(I.getValue() == ci) )) {
-                        newWellConnections->add(currentConnection);
-                        continue;
-                    }
-
-                    if (J.hasValue() && (!(J.getValue() == cj) )) {
-                        newWellConnections->add(currentConnection);
-                        continue;
-                    }
-
-                    if (K.hasValue() && (!(K.getValue() == ck) )) {
-                        newWellConnections->add(currentConnection);
-                        continue;
-                    }
-
-                    newWellConnections->add( Connection{ currentConnection, wellPi } );
-                }
-
-                well->updateWellConnections(currentStep, newWellConnections);
-            }
+            for( auto* well : getWells( wellNamePattern ) )
+                well->handleWPIMULT(record, currentStep);
         }
     }
+
+
 
 
     void Schedule::handleWCONINJE( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {

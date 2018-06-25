@@ -1072,17 +1072,17 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
 
     const auto& cs2 = well->getConnections( 2 );
     for(size_t i = 0; i < cs2.size(); i++) {
-        BOOST_CHECK_EQUAL(cs2.get( i ).getWellPi(), 1.3);
+        BOOST_CHECK_EQUAL(cs2.get( i ).wellPi, 1.3);
     }
 
     const auto& cs3 = well->getConnections( 3 );
     for(size_t i = 0; i < cs3.size(); i++ ) {
-        BOOST_CHECK_EQUAL(cs3.get( i ).getWellPi(), (1.3*1.3));
+        BOOST_CHECK_EQUAL(cs3.get( i ).wellPi, (1.3*1.3));
     }
 
     const auto& cs4 = well->getConnections( 4 );
     for(size_t i = 0; i < cs4.size(); i++ ) {
-        BOOST_CHECK_EQUAL(cs4.get( i ).getWellPi(), 1.0);
+        BOOST_CHECK_EQUAL(cs4.get( i ).wellPi, 1.0);
     }
 }
 

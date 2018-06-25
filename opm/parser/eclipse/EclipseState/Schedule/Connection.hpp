@@ -63,7 +63,6 @@ namespace Opm {
         int getJ() const;
         int getK() const;
         double getConnectionTransmissibilityFactor() const;
-        double getWellPi() const;
         const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
         double getDiameter() const;
         double getSkinFactor() const;
@@ -84,12 +83,12 @@ namespace Opm {
       double m_center_depth;
       int complnum;
       WellCompletion::StateEnum state;
+      double wellPi = 1.0;
 
     private:
         int m_i, m_j, m_k;
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
-        double m_wellPi;
         Value<double> m_skinFactor;
         int m_satTableId;
         WellCompletion::DirectionEnum m_direction;
