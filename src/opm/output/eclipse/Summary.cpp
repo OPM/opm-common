@@ -17,7 +17,12 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <exception>
+#include <initializer_list>
+#include <iterator>
 #include <numeric>
+#include <stdexcept>
+#include <string>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -38,6 +43,78 @@
 
 #include <ert/ecl/ecl_smspec.h>
 #include <ert/ecl/ecl_kw_magic.h>
+
+namespace {
+    std::vector<std::string> requiredRestartVectors()
+    {
+        return {
+            "OPR", "WPR", "GPR", "VPR",
+            "OPT", "WPT", "GPT", "VPT",
+            "WIR", "GIR",
+            "WIT", "GIT",
+            "WCT", "GOR",
+        };
+    }
+
+    std::vector<std::pair<std::string, std::string>>
+    requiredRestartVectors(const ::Opm::Schedule& sched)
+    {
+        auto entities = std::vector<std::pair<std::string, std::string>>{};
+
+        const auto& vectors = requiredRestartVectors();
+
+        auto makeEntities = [&vectors, &entities]
+            (const char cat, const std::string& name)
+        {
+            for (const auto& vector : vectors) {
+                entities.emplace_back(cat + vector, name);
+            }
+        };
+
+        for (const auto* well : sched.getWells()) {
+            const auto& well_name = well->name();
+
+            makeEntities('W', well_name);
+
+            entities.emplace_back("WBHP", well_name);
+        }
+
+        for (const auto* grp : sched.getGroups()) {
+            const auto& grp_name = grp->name();
+
+            if (grp_name != "FIELD") {
+                makeEntities('G', grp_name);
+            }
+        }
+
+        makeEntities('F', "FIELD");
+
+        return entities;
+    }
+
+    std::string genKey(const std::string& vector,
+                       const std::string& entity)
+    {
+        return (entity == "FIELD")
+             ? vector
+             : vector + ':' + entity;
+    }
+
+    ERT::ert_unique_ptr<smspec_node_type, smspec_node_free>
+    makeRestartVectorSMSPEC(const std::string& vector,
+                            const std::string& entity)
+    {
+        const auto var_type =
+            ecl_smspec_identify_var_type(vector.c_str());
+
+        const int dims[] = { 1, 1, 1 };
+
+        return ERT::ert_unique_ptr<smspec_node_type, smspec_node_free> {
+            smspec_node_alloc(var_type, entity.c_str(), vector.c_str(),
+                              "UNIT", ":", dims, 0, 0, 0.0f)
+        };
+    }
+} // namespace Anonymous
 
 /*
  * This class takes simulator state and parser-provided information and
@@ -805,7 +882,10 @@ class Summary::keyword_handlers {
         std::map< std::pair <std::string, int>, smspec_node_type* > region_nodes;
         std::map< std::pair <std::string, int>, smspec_node_type* > block_nodes;
 
-
+        // Memory management for restart-related summary vectors
+        // that are not requested in SUMMARY section.
+        std::vector<ERT::ert_unique_ptr<smspec_node_type,
+                                        smspec_node_free>> rstvec_backing_store;
 };
 
 Summary::Summary( const EclipseState& st,
@@ -955,6 +1035,36 @@ Summary::Summary( const EclipseState& st,
     }
     for ( const auto& keyword : unsupported_keywords ) {
         Opm::OpmLog::info("Keyword " + std::string(keyword) + " is unhandled");
+    }
+
+    // Guarantee existence of certain summary vectors (mostly rates and
+    // cumulative totals for wells, groups, and field) that are required
+    // for simulation restart.
+    {
+        auto& rvec     = this->handlers->rstvec_backing_store;
+        auto& handlers = this->handlers->handlers;
+
+        for (const auto& vector : requiredRestartVectors(schedule)) {
+            const auto& kw     = vector.first;
+            const auto& entity = vector.second;
+
+            const auto key = genKey(kw, entity);
+            if (ecl_sum_has_key(this->ecl_sum.get(), key.c_str())) {
+                // Vector already requested in SUMMARY section.
+                // Don't add a second evaluation of this.
+                continue;
+            }
+
+            auto func = funs.find(kw);
+            if (func == std::end(funs)) {
+                throw std::logic_error {
+                    "Unable to find handler for '" + kw + "'"
+                };
+            }
+
+            rvec.push_back(makeRestartVectorSMSPEC(kw, entity));
+            handlers.emplace_back(rvec.back().get(), func->second);
+        }
     }
 
     for (const auto& pair : this->handlers->handlers) {
@@ -1109,8 +1219,13 @@ void Summary::add_timestep( int report_step,
         }
     }
 
-    for (const auto& pair: st)
-        ecl_sum_tstep_set_from_key(tstep, pair.first.c_str(), pair.second);
+    for (const auto& pair: st) {
+        const auto* key = pair.first.c_str();
+
+        if (ecl_sum_has_key(this->ecl_sum.get(), key)) {
+            ecl_sum_tstep_set_from_key(tstep, key, pair.second);
+        }
+    }
 
     this->prev_state = st;
     this->prev_time_elapsed = secs_elapsed;
@@ -1122,5 +1237,9 @@ void Summary::write() {
 
 Summary::~Summary() {}
 
+const SummaryState& Summary::get_restart_vectors() const
+{
+    return this->prev_state;
 }
-}
+
+}} // namespace Opm::out

@@ -199,6 +199,7 @@ struct setup {
 
 };
 
+BOOST_AUTO_TEST_SUITE(Summary)
 
 /*
  * Tests works by reading the Deck, write the summary output, then immediately
@@ -1232,3 +1233,705 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK(st.has("WWCT:OP_2"));
     BOOST_CHECK(!st.has("NO_SUCH_KEY"));
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// ####################################################################
+
+namespace {
+    Opm::SummaryState calculateRestartVectors(const setup& config)
+    {
+        ::Opm::out::Summary smry {
+            config.es, config.config, config.grid,
+            config.schedule, "Ignore.This"
+        };
+
+        smry.add_timestep(0, 0*day, config.es, config.schedule, config.wells, {});
+        smry.add_timestep(1, 1*day, config.es, config.schedule, config.wells, {});
+        smry.add_timestep(2, 2*day, config.es, config.schedule, config.wells, {});
+
+        return smry.get_restart_vectors();
+    }
+
+    auto calculateRestartVectors()
+        -> decltype(calculateRestartVectors({"test.Restart"}))
+    {
+        return calculateRestartVectors({"test.Restart"});
+    }
+
+    auto calculateRestartVectorsEffFac()
+        -> decltype(calculateRestartVectors({"test.Restart.EffFac",
+                                             "SUMMARY_EFF_FAC.DATA"}))
+    {
+        return calculateRestartVectors({
+            "test.Restart.EffFac", "SUMMARY_EFF_FAC.DATA"
+        });
+    }
+
+    std::vector<std::string> restartVectors()
+    {
+        return {
+            "WPR", "OPR", "GPR", "VPR",
+            "WPT", "OPT", "GPT", "VPT",
+            "WIR", "GIR", "WIT", "GIT",
+            "GOR", "WCT",
+        };
+    }
+
+    std::vector<std::string> activeWells()
+    {
+        return { "W_1", "W_2", "W_3" };
+    }
+
+    std::vector<std::string> activeGroups()
+    {
+        return { "G_1", "G_2" };
+    }
+
+    std::vector<std::string> activeGroupsEffFac()
+    {
+        return { "G_1", "G", "G_2", "G_3", "G_4" };
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_SUITE(Restart)
+
+BOOST_AUTO_TEST_CASE(Well_Vectors_Present)
+{
+    const auto rstrt = calculateRestartVectors();
+
+    for (const auto& vector : restartVectors()) {
+        for (const auto& w : activeWells()) {
+            BOOST_CHECK( rstrt.has("W" + vector + ':' + w));
+            BOOST_CHECK(!rstrt.has("W" + vector));
+        }
+    }
+
+    for (const auto& w : activeWells()) {
+        BOOST_CHECK( rstrt.has("WBHP:" + w));
+        BOOST_CHECK(!rstrt.has("WBHP"));
+    }
+}
+
+// --------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(Well_Vectors_Correct)
+{
+    const auto rstrt = calculateRestartVectors();
+
+    // W_1 (Producer)
+    {
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWPR:W_1"), 10.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPR:W_1"), 10.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPR:W_1"), 10.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPR:W_1"), 10.6 + 10.7 + 10.8, 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWPT:W_1"), 2 * 1.0 * 10.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPT:W_1"), 2 * 1.0 * 10.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPT:W_1"), 2 * 1.0 * 10.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPT:W_1"), 2 * 1.0 * (10.6 + 10.7 + 10.8), 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWIR:W_1"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIR:W_1"), 0.0, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWIT:W_1"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIT:W_1"), 0.0, 1.0e-10);
+
+        // BHP
+        BOOST_CHECK_CLOSE(rstrt.get("WBHP:W_1"), 0.1, 1.0e-10);  // Bars
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("WWCT:W_1"), 10.0 / (10.0 + 10.1), 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("WGOR:W_1"), 10.2 / 10.1, 1.0e-10);
+    }
+
+    // W_2 (Producer)
+    {
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWPR:W_2"), 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPR:W_2"), 20.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPR:W_2"), 20.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPR:W_2"), 20.6 + 20.7 + 20.8, 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWPT:W_2"), 2 * 1.0 * 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPT:W_2"), 2 * 1.0 * 20.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPT:W_2"), 2 * 1.0 * 20.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPT:W_2"), 2 * 1.0 * (20.6 + 20.7 + 20.8), 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWIR:W_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIR:W_2"), 0.0, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWIT:W_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIT:W_2"), 0.0, 1.0e-10);
+
+        // BHP
+        BOOST_CHECK_CLOSE(rstrt.get("WBHP:W_2"), 1.1, 1.0e-10);  // Bars
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("WWCT:W_2"), 20.0 / (20.0 + 20.1), 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("WGOR:W_2"), 20.2 / 20.1, 1.0e-10);
+    }
+
+    // W_3 (Injector)
+    {
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWPR:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPR:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPR:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPR:W_3"), 0.0, 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWPT:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPT:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPT:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPT:W_3"), 0.0, 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWIR:W_3"), 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIR:W_3"), 30.2, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWIT:W_3"), 2 * 1.0 * 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIT:W_3"), 2 * 1.0 * 30.2, 1.0e-10);
+
+        // BHP
+        BOOST_CHECK_CLOSE(rstrt.get("WBHP:W_3"), 2.1, 1.0e-10);  // Bars
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("WWCT:W_3"), 0.0, 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("WGOR:W_3"), 0.0, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(Group_Vectors_Present)
+{
+    const auto& rstrt = calculateRestartVectors();
+
+    for (const auto& vector : restartVectors()) {
+        for (const auto& g : activeGroups()) {
+            BOOST_CHECK( rstrt.has("G" + vector + ':' + g));
+            BOOST_CHECK(!rstrt.has("G" + vector));
+        }
+    }
+}
+
+// --------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(Group_Vectors_Correct)
+{
+    const auto rstrt = calculateRestartVectors();
+
+    // G_1 (Producer, W_1 + W_2)
+    {
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWPR:G_1"), 10.0 + 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPR:G_1"), 10.1 + 20.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPR:G_1"), 10.2 + 20.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPR:G_1"),
+                          (10.6 + 10.7 + 10.8) +
+                          (20.6 + 20.7 + 20.8), 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWPT:G_1"), 2 * 1.0 * (10.0 + 20.0), 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPT:G_1"), 2 * 1.0 * (10.1 + 20.1), 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPT:G_1"), 2 * 1.0 * (10.2 + 20.2), 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPT:G_1"),
+                          2 * 1.0 *
+                          ((10.6 + 10.7 + 10.8) +
+                           (20.6 + 20.7 + 20.8)), 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWIR:G_1"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIR:G_1"), 0.0, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWIT:G_1"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIT:G_1"), 0.0, 1.0e-10);
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("GWCT:G_1"),
+                          (10.0 + 20.0) / ((10.0 + 10.1) + (20.0 + 20.1)), 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("GGOR:G_1"),
+                          (10.2 + 20.2) / (10.1 + 20.1), 1.0e-10);
+    }
+
+    // G_2 (Injector, W_3)
+    {
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWPR:G_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPR:G_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPR:G_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPR:G_2"), 0.0, 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWPT:G_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPT:G_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPT:G_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPT:G_2"), 0.0, 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWIR:G_2"), 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIR:G_2"), 30.2, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWIT:G_2"), 2 * 1.0 * 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIT:G_2"), 2 * 1.0 * 30.2, 1.0e-10);
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("GWCT:G_2"), 0.0, 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("GGOR:G_2"), 0.0, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(Field_Vectors_Present)
+{
+    const auto& rstrt = calculateRestartVectors();
+
+    for (const auto& vector : restartVectors()) {
+        BOOST_CHECK( rstrt.has("F" + vector));
+        BOOST_CHECK(!rstrt.has("F" + vector + ":FIELD"));
+    }
+}
+
+// --------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(Field_Vectors_Correct)
+{
+    const auto rstrt = calculateRestartVectors();
+
+    // Production rates (F = G_1 = W_1 + W_2)
+    BOOST_CHECK_CLOSE(rstrt.get("FWPR"), 10.0 + 20.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FOPR"), 10.1 + 20.1, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FGPR"), 10.2 + 20.2, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FVPR"),
+                      (10.6 + 10.7 + 10.8) +
+                      (20.6 + 20.7 + 20.8), 1.0e-10);
+
+    // Production cumulative totals (F = G_1 = W_1 + W_2)
+    BOOST_CHECK_CLOSE(rstrt.get("FWPT"), 2 * 1.0 * (10.0 + 20.0), 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FOPT"), 2 * 1.0 * (10.1 + 20.1), 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FGPT"), 2 * 1.0 * (10.2 + 20.2), 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FVPT"),
+                      2 * 1.0 *
+                      ((10.6 + 10.7 + 10.8) +
+                       (20.6 + 20.7 + 20.8)), 1.0e-10);
+
+    // Injection rates (F = G_2 = W_3)
+    BOOST_CHECK_CLOSE(rstrt.get("FWIR"), 30.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FGIR"), 30.2, 1.0e-10);
+
+    // Injection totals (F = G_2 = W_3)
+    BOOST_CHECK_CLOSE(rstrt.get("FWIT"), 2 * 1.0 * 30.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FGIT"), 2 * 1.0 * 30.2, 1.0e-10);
+
+    // Water cut (F = G_1 = W_1 + W_2)
+    BOOST_CHECK_CLOSE(rstrt.get("FWCT"),
+                      (10.0 + 20.0) / ((10.0 + 10.1) + (20.0 + 20.1)), 1.0e-10);
+
+    // Producing gas/oil ratio (F = G_1 = W_1 + W_2)
+    BOOST_CHECK_CLOSE(rstrt.get("FGOR"),
+                      (10.2 + 20.2) / (10.1 + 20.1), 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// ####################################################################
+
+BOOST_AUTO_TEST_SUITE(Restart_EffFac)
+
+BOOST_AUTO_TEST_CASE(Well_Vectors_Correct)
+{
+    const auto rstrt = calculateRestartVectorsEffFac();
+
+    // W_1 (Producer, efficiency factor = 1--no difference)
+    {
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWPR:W_1"), 10.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPR:W_1"), 10.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPR:W_1"), 10.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPR:W_1"), 10.6 + 10.7 + 10.8, 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWPT:W_1"), 2 * 1.0 * 10.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPT:W_1"), 2 * 1.0 * 10.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPT:W_1"), 2 * 1.0 * 10.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPT:W_1"), 2 * 1.0 * (10.6 + 10.7 + 10.8), 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWIR:W_1"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIR:W_1"), 0.0, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWIT:W_1"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIT:W_1"), 0.0, 1.0e-10);
+
+        // BHP
+        BOOST_CHECK_CLOSE(rstrt.get("WBHP:W_1"), 0.1, 1.0e-10);  // Bars
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("WWCT:W_1"), 10.0 / (10.0 + 10.1), 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("WGOR:W_1"), 10.2 / 10.1, 1.0e-10);
+    }
+
+    // W_2 (Producer, efficiency factor = 0.2)
+    {
+        const auto wefac = 0.2;
+        const auto gefac = 0.01;
+
+        // Production rates (unaffected by WEFAC)
+        BOOST_CHECK_CLOSE(rstrt.get("WWPR:W_2"), 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPR:W_2"), 20.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPR:W_2"), 20.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPR:W_2"), (20.6 + 20.7 + 20.8), 1.0e-10);
+
+        // Production cumulative totals (affected by WEFAC and containing GEFAC)
+        BOOST_CHECK_CLOSE(rstrt.get("WWPT:W_2"), 2 * 1.0 * wefac * gefac * 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPT:W_2"), 2 * 1.0 * wefac * gefac * 20.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPT:W_2"), 2 * 1.0 * wefac * gefac * 20.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPT:W_2"), 2 * 1.0 * wefac * gefac * (20.6 + 20.7 + 20.8), 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWIR:W_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIR:W_2"), 0.0, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWIT:W_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIT:W_2"), 0.0, 1.0e-10);
+
+        // BHP
+        BOOST_CHECK_CLOSE(rstrt.get("WBHP:W_2"), 1.1, 1.0e-10);  // Bars
+
+        // Water cut (unaffected by WEFAC)
+        BOOST_CHECK_CLOSE(rstrt.get("WWCT:W_2"), 20.0 / (20.0 + 20.1), 1.0e-10);
+
+        // Producing gas/oil ratio (unaffected by WEFAC)
+        BOOST_CHECK_CLOSE(rstrt.get("WGOR:W_2"), 20.2 / 20.1, 1.0e-10);
+    }
+
+    // W_3 (Injector, efficiency factor = 0.3)
+    {
+        const auto wefac = 0.3;
+        const auto gefac = 0.02; // G_3
+
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("WWPR:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPR:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPR:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPR:W_3"), 0.0, 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("WWPT:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WOPT:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGPT:W_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WVPT:W_3"), 0.0, 1.0e-10);
+
+        // Injection rates (unaffected by WEFAC)
+        BOOST_CHECK_CLOSE(rstrt.get("WWIR:W_3"), 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("WGIR:W_3"), 30.2, 1.0e-10);
+
+        // Injection totals (affected by WEFAC and containing GEFAC)
+        //    GEFAC(G_4) = 0.03 at sim_step = 1
+        //    GEFAC(G_4) = 0.04 at sim_step = 2
+        BOOST_CHECK_CLOSE(rstrt.get("WWIT:W_3"),
+                          30.0 * wefac * gefac *
+                          ((1.0 * 0.03) + (1.0 * 0.04)), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(rstrt.get("WGIT:W_3"),
+                          30.2 * wefac * gefac *
+                          ((1.0 * 0.03) + (1.0 * 0.04)), 1.0e-10);
+
+        // BHP
+        BOOST_CHECK_CLOSE(rstrt.get("WBHP:W_3"), 2.1, 1.0e-10);  // Bars
+
+        // Water cut (zero for injectors)
+        BOOST_CHECK_CLOSE(rstrt.get("WWCT:W_3"), 0.0, 1.0e-10);
+
+        // Producing gas/oil ratio (zero for injectors)
+        BOOST_CHECK_CLOSE(rstrt.get("WGOR:W_3"), 0.0, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(Group_Vectors_Present)
+{
+    const auto& rstrt = calculateRestartVectorsEffFac();
+
+    for (const auto& vector : restartVectors()) {
+        for (const auto& g : activeGroupsEffFac()) {
+            BOOST_CHECK( rstrt.has("G" + vector + ':' + g));
+            BOOST_CHECK(!rstrt.has("G" + vector));
+        }
+    }
+}
+
+// --------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(Group_Vectors_Correct)
+{
+    const auto rstrt = calculateRestartVectorsEffFac();
+
+    // G_1 (Producer, W_1, GEFAC = 1--no change)
+    {
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWPR:G_1"), 10.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPR:G_1"), 10.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPR:G_1"), 10.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPR:G_1"), (10.6 + 10.7 + 10.8), 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWPT:G_1"), 2 * 1.0 * 10.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPT:G_1"), 2 * 1.0 * 10.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPT:G_1"), 2 * 1.0 * 10.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPT:G_1"),
+                          2 * 1.0 * (10.6 + 10.7 + 10.8), 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWIR:G_1"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIR:G_1"), 0.0, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWIT:G_1"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIT:G_1"), 0.0, 1.0e-10);
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("GWCT:G_1"),
+                          10.0 / (10.0 + 10.1), 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("GGOR:G_1"),
+                          10.2 / 10.1, 1.0e-10);
+    }
+
+    // G_2 (Producer, W_2, GEFAC = 0.01)
+    {
+        const auto wefac = 0.2;
+        const auto gefac = 0.01;
+
+        // Production rates (affected by WEFAC)
+        BOOST_CHECK_CLOSE(rstrt.get("GWPR:G_2"), wefac * 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPR:G_2"), wefac * 20.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPR:G_2"), wefac * 20.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPR:G_2"), wefac * (20.6 + 20.7 + 20.8), 1.0e-10);
+
+        // Production cumulative totals (affected by both WEFAC and GEFAC)
+        BOOST_CHECK_CLOSE(rstrt.get("GWPT:G_2"), 2 * 1.0 * gefac * wefac * 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPT:G_2"), 2 * 1.0 * gefac * wefac * 20.1, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPT:G_2"), 2 * 1.0 * gefac * wefac * 20.2, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPT:G_2"), 2 * 1.0 * gefac * wefac * (20.6 + 20.7 + 20.8), 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWIR:G_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIR:G_2"), 0.0, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWIT:G_2"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIT:G_2"), 0.0, 1.0e-10);
+
+        // Water cut (unaffected by WEFAC or GEFAC since G_2 = W_2)
+        BOOST_CHECK_CLOSE(rstrt.get("GWCT:G_2"), 20.0 / (20.0 + 20.1), 1.0e-10);
+
+        // Producing gas/oil ratio (unaffected by WEFAC or GEFAC since G_2 = W_2)
+        BOOST_CHECK_CLOSE(rstrt.get("GGOR:G_2"), 20.2 / 20.1, 1.0e-10);
+    }
+
+    // G (Producer, G_1 + G_2)
+    {
+        const auto gwefac = 0.01 * 0.2;
+
+        BOOST_CHECK_CLOSE(rstrt.get("GWPR:G"), 10.0 + (gwefac * 20.0), 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPR:G"), 10.1 + (gwefac * 20.1), 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPR:G"), 10.2 + (gwefac * 20.2), 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPR:G"),
+                                    (10.6 + 10.7 + 10.8) +
+                          (gwefac * (20.6 + 20.7 + 20.8)), 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWPT:G"),
+                          2 * 1.0 * (10.0 + (gwefac * 20.0)), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(rstrt.get("GOPT:G"),
+                          2 * 1.0 * (10.1 + (gwefac * 20.1)), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(rstrt.get("GGPT:G"),
+                          2 * 1.0 * (10.2 + (gwefac * 20.2)), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(rstrt.get("GVPT:G"),
+                          2 * 1.0 *
+                         (          (10.6 + 10.7 + 10.8) +
+                          (gwefac * (20.6 + 20.7 + 20.8))), 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWIR:G"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIR:G"), 0.0, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWIT:G"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIT:G"), 0.0, 1.0e-10);
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("GWCT:G"),
+                          (10.0 +        (gwefac *  20.0)) /
+                          (10.0 + 10.1 + (gwefac * (20.0 + 20.1))), 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("GGOR:G"),
+                          (10.2 + (gwefac * 20.2)) /
+                          (10.1 + (gwefac * 20.1)), 1.0e-10);
+    }
+
+    // G_3 (Injector, W_3)
+    {
+        const auto wefac   = 0.3;
+        const auto gefac_3 = 0.02;
+
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWPR:G_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPR:G_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPR:G_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPR:G_3"), 0.0, 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWPT:G_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPT:G_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPT:G_3"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPT:G_3"), 0.0, 1.0e-10);
+
+        // Injection rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWIR:G_3"), wefac * 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIR:G_3"), wefac * 30.2, 1.0e-10);
+
+        // Injection totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWIT:G_3"),
+                          30.0 * gefac_3 * wefac *
+                          ((1.0 * 0.03) + (1.0 * 0.04)), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(rstrt.get("GGIT:G_3"),
+                          30.2 * gefac_3 * wefac *
+                          ((1.0 * 0.03) + (1.0 * 0.04)), 1.0e-10);
+
+        // Water cut (zero for injectors)
+        BOOST_CHECK_CLOSE(rstrt.get("GWCT:G_3"), 0.0, 1.0e-10);
+
+        // Producing gas/oil ratio (zero for injectors)
+        BOOST_CHECK_CLOSE(rstrt.get("GGOR:G_3"), 0.0, 1.0e-10);
+    }
+
+    // G_4 (Injector, G_3, GEFAC = 0.03 and 0.04)
+    {
+        // Production rates
+        BOOST_CHECK_CLOSE(rstrt.get("GWPR:G_4"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPR:G_4"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPR:G_4"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPR:G_4"), 0.0, 1.0e-10);
+
+        // Production cumulative totals
+        BOOST_CHECK_CLOSE(rstrt.get("GWPT:G_4"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GOPT:G_4"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGPT:G_4"), 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GVPT:G_4"), 0.0, 1.0e-10);
+
+        // Injection rates (at sim_step = 2)
+        BOOST_CHECK_CLOSE(rstrt.get("GWIR:G_4"), 0.02 * 0.3 * 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(rstrt.get("GGIR:G_4"), 0.02 * 0.3 * 30.2, 1.0e-10);
+
+        // Injection totals (GEFAC(G_4) = 0.03 at sim_step = 1,
+        //                   GEFAC(G_4) = 0.04 at sim_step = 2)
+        BOOST_CHECK_CLOSE(rstrt.get("GWIT:G_4"),
+                          30.0 * 0.3 * 0.02 *
+                          ((0.03 * 1.0) + (0.04 * 1.0)), 1.0e-10);
+
+        BOOST_CHECK_CLOSE(rstrt.get("GGIT:G_4"),
+                          30.2 * 0.3 * 0.02 *
+                          ((0.03 * 1.0) + (0.04 * 1.0)), 1.0e-10);
+
+        // Water cut
+        BOOST_CHECK_CLOSE(rstrt.get("GWCT:G_4"), 0.0, 1.0e-10);
+
+        // Producing gas/oil ratio
+        BOOST_CHECK_CLOSE(rstrt.get("GGOR:G_4"), 0.0, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(Field_Vectors_Correct)
+{
+    const auto rstrt = calculateRestartVectorsEffFac();
+
+    // Field = G + G_4
+    const auto efac_G = 0.01 * 0.2;
+
+    BOOST_CHECK_CLOSE(rstrt.get("FWPR"), 10.0 + (efac_G * 20.0), 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FOPR"), 10.1 + (efac_G * 20.1), 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FGPR"), 10.2 + (efac_G * 20.2), 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FVPR"),
+                                (10.6 + 10.7 + 10.8) +
+                      (efac_G * (20.6 + 20.7 + 20.8)), 1.0e-10);
+
+    // Production cumulative totals
+    BOOST_CHECK_CLOSE(rstrt.get("FWPT"),
+                      2 * 1.0 * (10.0 + (efac_G * 20.0)), 1.0e-10);
+
+    BOOST_CHECK_CLOSE(rstrt.get("FOPT"),
+                      2 * 1.0 * (10.1 + (efac_G * 20.1)), 1.0e-10);
+
+    BOOST_CHECK_CLOSE(rstrt.get("FGPT"),
+                      2 * 1.0 * (10.2 + (efac_G * 20.2)), 1.0e-10);
+
+    BOOST_CHECK_CLOSE(rstrt.get("FVPT"),
+                      2 * 1.0 *
+                      (          (10.6 + 10.7 + 10.8) +
+                       (efac_G * (20.6 + 20.7 + 20.8))), 1.0e-10);
+
+    // Injection rates (at sim_step = 2, GEFAC(G_4) = 0.04)
+    BOOST_CHECK_CLOSE(rstrt.get("FWIR"), 0.02 * 0.04 * 0.3 * 30.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(rstrt.get("FGIR"), 0.02 * 0.04 * 0.3 * 30.2, 1.0e-10);
+
+    // Injection totals (GEFAC(G_4) = 0.03 at sim_step = 1,
+    //                   GEFAC(G_4) = 0.04 at sim_step = 2)
+    BOOST_CHECK_CLOSE(rstrt.get("FWIT"),
+                      30.0 * 0.3 * 0.02 *
+                      ((0.03 * 1.0) + (0.04 * 1.0)), 1.0e-10);
+
+    BOOST_CHECK_CLOSE(rstrt.get("FGIT"),
+                      30.2 * 0.3 * 0.02 *
+                      ((0.03 * 1.0) + (0.04 * 1.0)), 1.0e-10);
+
+    // Water cut
+    BOOST_CHECK_CLOSE(rstrt.get("FWCT"),
+                      (10.0 +        (efac_G *  20.0)) /
+                      (10.0 + 10.1 + (efac_G * (20.0 + 20.1))), 1.0e-10);
+
+    // Producing gas/oil ratio
+    BOOST_CHECK_CLOSE(rstrt.get("FGOR"),
+                      (10.2 + (efac_G * 20.2)) /
+                      (10.1 + (efac_G * 20.1)), 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
