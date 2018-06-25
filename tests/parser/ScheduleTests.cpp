@@ -1860,6 +1860,16 @@ BOOST_AUTO_TEST_CASE( complump ) {
 
     const auto completions = well.getCompletions(1);
     BOOST_CHECK_EQUAL(completions.size(), 4);
+
+    const auto& c1 = completions.at(1);
+    BOOST_CHECK_EQUAL(c1.size(), 3);
+
+    for (const auto& pair : completions) {
+        if (pair.first > 0)
+            BOOST_CHECK(pair.second.size() > 1);
+        else
+            BOOST_CHECK_EQUAL(pair.second.size(), 1);
+    }
 }
 
 
