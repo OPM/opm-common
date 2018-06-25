@@ -62,6 +62,8 @@ class Summary {
 
         ~Summary();
 
+        const SummaryState& get_restart_vectors() const;
+
     private:
         class keyword_handlers;
 
