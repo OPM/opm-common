@@ -1329,14 +1329,9 @@ namespace Opm {
 
 
     void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
-        WellSegments newSegmentset;
-        newSegmentset.segmentsFromWELSEGSKeyword(keyword);
-
-        const std::string& well_name = newSegmentset.wellName();
-        auto& well = this->m_wells.get( well_name );
-
-        // update multi-segment related information for the well
-        well.addWellSegments(currentStep, newSegmentset);
+        const auto& record1 = keyword.getRecord(0);
+        auto& well = this->m_wells.get(record1.getItem("WELL").getTrimmedString(0));
+        well.handleWELSEGS(keyword, currentStep);WellSegments newSegmentset;
     }
 
     void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep) {

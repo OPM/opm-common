@@ -170,6 +170,7 @@ namespace Opm {
         void handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step);
         void handleWELOPEN(const DeckRecord& record, size_t time_step, WellCompletion::StateEnum status);
         void handleWPIMULT(const DeckRecord& record, size_t time_step);
+        void handleWELSEGS(const DeckKeyword& keyword, size_t time_step);
 
 
         /*

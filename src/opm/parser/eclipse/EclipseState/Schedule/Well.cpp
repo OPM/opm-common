@@ -725,8 +725,12 @@ namespace Opm {
         this->updateWellConnections(time_step, new_connections);
     }
 
-
-
+    void Well::handleWELSEGS(const DeckKeyword& keyword, size_t time_step) {
+        WellSegments newSegmentset;
+        newSegmentset.loadWELSEGS(keyword);
+        // update multi-segment related information for the well
+        this->addWellSegments(time_step, newSegmentset);
+    }
 
 
 }
