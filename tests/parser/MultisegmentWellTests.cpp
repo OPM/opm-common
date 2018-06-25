@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
-    const Opm::WellConnections * new_connection_set = Opm::updatingConnectionsWithSegments(compsegs, connection_set, segment_set);
+    const Opm::WellConnections * new_connection_set = Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set);
 
     BOOST_CHECK_EQUAL(7U, new_connection_set->size());
 

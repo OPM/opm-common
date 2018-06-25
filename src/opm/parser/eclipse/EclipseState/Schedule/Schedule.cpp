@@ -1455,12 +1455,7 @@ namespace Opm {
         const auto& record1 = keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         auto& well = this->m_wells.get( well_name );
-
-        const auto& segment_set = well.getWellSegments(currentStep);
-        const auto& completion_set = well.getConnections( currentStep );
-        WellConnections * new_completion_set = updatingConnectionsWithSegments(keyword, completion_set, segment_set);
-
-        well.updateWellConnections(currentStep, new_completion_set);
+        well.handleCOMPSEGS(keyword, currentStep);
     }
 
     void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {

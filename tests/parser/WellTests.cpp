@@ -337,41 +337,6 @@ BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
     BOOST_CHECK_EQUAL( 0U , well.getConnections( 0 ).size() );
 }
 
-
-BOOST_AUTO_TEST_CASE(UpdateCompletions) {
-    auto timeMap = createXDaysTimeMap(10);
-
-    Opm::Well well("WELL1" , 0, 0, 0.0, Opm::Phase::OIL, timeMap , 0);
-    const auto& completions = well.getConnections( 0 );
-    BOOST_CHECK_EQUAL( 0U , completions.size());
-
-    Opm::Connection comp1( 10 , 10 , 10 , 1, 10, Opm::WellCompletion::AUTO , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection comp2( 10 , 10 , 11 , 1, 11, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection comp3( 10 , 10 , 12 , 1, 12, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection comp4( 10 , 10 , 12 , 1, 12, Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection comp5( 10 , 10 , 13 , 1, 13, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-
-    //std::vector<Opm::CompletionConstPtr> newCompletions2{ comp4 , comp5}; Newer c++
-
-    std::vector< Opm::Connection > newCompletions, newCompletions2;
-    newCompletions.push_back( comp1 );
-    newCompletions.push_back( comp2 );
-    newCompletions.push_back( comp3 );
-
-    newCompletions2.push_back( comp4 );
-    newCompletions2.push_back( comp5 );
-
-    BOOST_CHECK_EQUAL( 3U , newCompletions.size());
-    well.addConnections( 5 , newCompletions );
-    BOOST_CHECK_EQUAL( 3U , well.getConnections( 5 ).size());
-    BOOST_CHECK_EQUAL( comp3 , well.getConnections( 5 ).get(2));
-
-    well.addConnections( 6 , newCompletions2 );
-
-    BOOST_CHECK_EQUAL( 4U , well.getConnections( 6 ).size());
-    BOOST_CHECK_EQUAL( comp4 , well.getConnections( 6 ).get(2));
-}
-
 // Helper function for CompletionOrder test.
 inline Opm::Connection connection( int i, int j, int k, int complnum = 1 ) {
     return Opm::Connection { i, j, k,

@@ -122,20 +122,6 @@ BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
 
 
 
-BOOST_AUTO_TEST_CASE(AddCompletionSameCellUpdates) {
-    Opm::WellConnections completionSet;
-    Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection completion2( 10,10,10, 1, 0.0,Opm::WellCompletion::SHUT , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-
-
-    completionSet.add( completion1 );
-    BOOST_CHECK_EQUAL( 1U , completionSet.size() );
-
-    completionSet.add( completion2 );
-    BOOST_CHECK_EQUAL( 1U , completionSet.size() );
-}
-
-
 
 BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
     Opm::WellConnections completionSet;

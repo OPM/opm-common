@@ -80,6 +80,10 @@ namespace Opm {
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
+      // related segment number
+      // -1 means the completion is not related to segment
+      int m_segment_number = -1;
+      double m_center_depth;
 
     private:
         int m_i, m_j, m_k;
@@ -93,10 +97,6 @@ namespace Opm {
         WellCompletion::DirectionEnum m_direction;
         Value<double> getDiameterAsValueObject() const;
         Value<double> getSkinFactorAsValueObject() const;
-        // related segment number
-        // -1 means the completion is not related to segment
-        int m_segment_number = -1;
-        double m_center_depth;
     };
 }
 

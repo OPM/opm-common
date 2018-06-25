@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
@@ -596,6 +597,14 @@ namespace Opm {
         WellConnections * connections = new WellConnections(this->getConnections(time_step));
         connections->loadCOMPDAT(record, grid, eclipseProperties);
         this->updateWellConnections(time_step, connections);
+    }
+
+
+    void Well::handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step) {
+        const auto& segment_set = this->getWellSegments(time_step);
+        const auto& completion_set = this->getConnections( time_step );
+        WellConnections * new_connection_set = newConnectionsWithSegments(keyword, completion_set, segment_set);
+        this->updateWellConnections(time_step, new_connection_set);
     }
 
 }

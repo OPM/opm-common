@@ -131,14 +131,37 @@ namespace Opm {
             if (defaultSatTable)
                 satTableId = satnum.iget(grid.getGlobalIndex(I,J,k));
 
-            this->addConnection(I,J,k,
-                                grid.getCellDepth( I,J,k ),
-                                state,
-                                connectionTransmissibilityFactor,
-                                diameter,
-                                skinFactor,
-                                satTableId,
-                                direction );
+            auto same_ijk = [&]( const Connection& c ) {
+                return c.sameCoordinate( I,J,k );
+            };
+
+            auto prev = std::find_if( this->m_connections.begin(),
+                                      this->m_connections.end(),
+                                      same_ijk );
+
+            if (prev == this->m_connections.end()) {
+                this->addConnection(I,J,k,
+                                    grid.getCellDepth( I,J,k ),
+                                    state,
+                                    connectionTransmissibilityFactor,
+                                    diameter,
+                                    skinFactor,
+                                    satTableId,
+                                    direction );
+            } else {
+                // The complnum value carries over; the rest of the state is fully specified by
+                // the current COMPDAT keyword.
+                int complnum = prev->complnum();
+                *prev = Connection(I,J,k,
+                                   complnum,
+                                   grid.getCellDepth(I,J,k),
+                                   state,
+                                   connectionTransmissibilityFactor,
+                                   diameter,
+                                   skinFactor,
+                                   satTableId,
+                                   direction );
+            }
         }
     }
 
@@ -174,21 +197,21 @@ namespace Opm {
 
 
     void WellConnections::add( Connection connection ) {
-        auto same = [&]( const Connection& c ) {
-            return c.sameCoordinate( connection );
-        };
+      //auto same = [&]( const Connection& c ) {
+      //    return c.sameCoordinate( connection );
+      //};
 
-        auto prev = std::find_if( this->m_connections.begin(),
-                                  this->m_connections.end(),
-                                  same );
+      //auto prev = std::find_if( this->m_connections.begin(),
+      //                          this->m_connections.end(),
+      //                          same );
 
-        if( prev != this->m_connections.end() ) {
-            // update the completion, but preserve it's number
-            *prev = Connection( connection, prev->complnum() );
-            return;
-        }
+      //if( prev != this->m_connections.end() ) {
+      //    // update the completion, but preserve it's number
+      //    *prev = Connection( connection, prev->complnum() );
+      //    return;
+      //}
 
-        m_connections.emplace_back( connection );
+      m_connections.emplace_back( connection );
     }
 
     bool WellConnections::allConnectionsShut( ) const {

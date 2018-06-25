@@ -443,13 +443,8 @@ BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
 BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     const Parser parser;
     const std::string deckFile(pathprefix() + "SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
-    const auto deck =  parser.parseFile(deckFile, ParseContext());
     const ParseContext parseContext;
-    const EclipseState state(deck, parseContext);
-    const auto& grid = state.getInputGrid();
-    const TableManager table ( deck );
-    const Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    const Schedule sched(deck, grid, eclipseProperties, Phases(true, true, true), parseContext );
+    const auto deck =  parser.parseFile(deckFile, parseContext);
 
     // for WELSEGS keyword
     const auto& kw = deck.getKeyword("WELSEGS");
@@ -568,6 +563,11 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL(  3237.5, distance_end );
     }
 
+    const EclipseState state(deck, parseContext);
+    const auto& grid = state.getInputGrid();
+    const TableManager table ( deck );
+    const Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    const Schedule sched(deck, grid, eclipseProperties, Phases(true, true, true), parseContext );
     // checking the relation between segments and completions
     // and also the depth of completions
     {
