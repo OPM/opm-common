@@ -590,4 +590,12 @@ namespace Opm {
         for (auto& completions : m_completions)
             completions->filter(grid);
     }
+
+
+    void Well::handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
+        WellConnections * connections = new WellConnections(this->getConnections(time_step));
+        connections->loadCOMPDAT(record, grid, eclipseProperties);
+        this->updateWellConnections(time_step, connections);
+    }
+
 }

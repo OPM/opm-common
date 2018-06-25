@@ -22,6 +22,7 @@
 #include <limits>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
@@ -83,6 +84,64 @@ namespace Opm {
                             satTableId,
                             direction);
     }
+
+    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
+        const auto& itemI = record.getItem( "I" );
+        const auto defaulted_I = itemI.defaultApplied( 0 ) || itemI.get< int >( 0 ) == 0;
+        const int I = !defaulted_I ? itemI.get< int >( 0 ) - 1 : this->headI;
+
+        const auto& itemJ = record.getItem( "J" );
+        const auto defaulted_J = itemJ.defaultApplied( 0 ) || itemJ.get< int >( 0 ) == 0;
+        const int J = !defaulted_J ? itemJ.get< int >( 0 ) - 1 : this->headJ;
+
+        int K1 = record.getItem("K1").get< int >(0) - 1;
+        int K2 = record.getItem("K2").get< int >(0) - 1;
+        WellCompletion::StateEnum state = WellCompletion::StateEnumFromString( record.getItem("STATE").getTrimmedString(0) );
+        Value<double> connectionTransmissibilityFactor("CompletionTransmissibilityFactor");
+        Value<double> diameter("Diameter");
+        Value<double> skinFactor("SkinFactor");
+        const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
+        int satTableId;
+        bool defaultSatTable = true;
+        {
+            const auto& connectionTransmissibilityFactorItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
+            const auto& diameterItem = record.getItem("DIAMETER");
+            const auto& skinFactorItem = record.getItem("SKIN");
+            const auto& satTableIdItem = record.getItem("SAT_TABLE");
+
+            if (connectionTransmissibilityFactorItem.hasValue(0) && connectionTransmissibilityFactorItem.getSIDouble(0) > 0)
+                connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem.getSIDouble(0));
+
+            if (diameterItem.hasValue(0))
+                diameter.setValue( diameterItem.getSIDouble(0));
+
+            if (skinFactorItem.hasValue(0))
+                skinFactor.setValue( skinFactorItem.get< double >(0));
+
+            if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
+            {
+                satTableId = satTableIdItem.get< int >(0);
+                defaultSatTable = false;
+            }
+        }
+
+        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(record.getItem("DIR").getTrimmedString(0));
+
+        for (int k = K1; k <= K2; k++) {
+            if (defaultSatTable)
+                satTableId = satnum.iget(grid.getGlobalIndex(I,J,k));
+
+            this->addConnection(I,J,k,
+                                grid.getCellDepth( I,J,k ),
+                                state,
+                                connectionTransmissibilityFactor,
+                                diameter,
+                                skinFactor,
+                                satTableId,
+                                direction );
+        }
+    }
+
 
 
 

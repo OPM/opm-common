@@ -78,14 +78,6 @@ namespace Opm {
 
         WellCompletion::DirectionEnum getDirection() const;
 
-        static std::map< std::string, std::vector< Connection > >
-        fromCOMPDAT( const EclipseGrid& grid,
-                     const Eclipse3DProperties& eclipseProperties,
-                     const DeckKeyword& compdatKeyword,
-                     const std::vector< const Well* >&,
-                     const ParseContext&,
-                     const Schedule&);
-
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
 

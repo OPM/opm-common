@@ -1415,24 +1415,30 @@ namespace Opm {
     }
 
 
-
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext) {
-        const auto wells = this->getWells( currentStep );
-        auto completions = Connection::fromCOMPDAT( grid, eclipseProperties, keyword, wells, parseContext, *this );
+        for (const auto& record : keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            auto wells = getWells(wellNamePattern);
+            if (wells.empty())
+                invalidNamePattern(wellNamePattern, parseContext, keyword);
 
-        for( const auto pair : completions ) {
-            auto& well = this->m_wells.get( pair.first );
-            well.addConnections( currentStep, pair.second );
-            if (well.getConnections( currentStep ).allConnectionsShut()) {
-                std::string msg =
-                        "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
+            for (auto* well : wells) {
+                well->handleCOMPDAT(currentStep, record, grid, eclipseProperties);
+
+                if (well->getConnections( currentStep ).allConnectionsShut()) {
+                    std::string msg =
+                        "All completions in well " + well->name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
                         "The well is therefore also shut.";
-                OpmLog::note(msg);
-                updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT);
+                    OpmLog::note(msg);
+                    updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT);
+                }
             }
         }
         m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
     }
+
+
+
 
     void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
         WellSegments newSegmentset;
