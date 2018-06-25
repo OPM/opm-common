@@ -50,7 +50,7 @@ namespace Opm {
 
         void addSegment(Segment new_segment);
 
-        void segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword);
+        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
         const Segment& getFromSegmentNumber(const int segment_number) const;
 

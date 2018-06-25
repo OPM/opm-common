@@ -120,6 +120,7 @@ namespace Opm {
                 // will decide the segment number based on the distance in a process later.
             }
 
+            printf("Adding segment:%d\n", segment_number);
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
                 compsegs.emplace_back( I, J, K,
                                        branch,
@@ -231,19 +232,20 @@ namespace Opm {
     }
 
     void Compsegs::updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
-                                                WellConnections& connection_set) {
+                                                WellConnections& connections) {
 
         for( const auto& compseg : compsegs ) {
             const int i = compseg.m_i;
             const int j = compseg.m_j;
             const int k = compseg.m_k;
 
-            const Connection& connection = connection_set.getFromIJK( i, j, k );
-            connection_set.add(Connection(connection, compseg.m_segment_number, compseg.m_center_depth) );
+            Connection& connection = connections.getFromIJK( i, j, k );
+            connection.segment_number = compseg.m_segment_number;
+            connection.center_depth = compseg.m_center_depth;
         }
 
-        for (size_t ic = 0; ic < connection_set.size(); ++ic) {
-            if ( !(connection_set.get(ic).attachedToSegment()) ) {
+        for (size_t ic = 0; ic < connections.size(); ++ic) {
+            if ( !(connections.get(ic).attachedToSegment()) ) {
                 throw std::runtime_error("Not all the connections are attached with a segment. "
                                          "The information from COMPSEGS is not complete");
             }

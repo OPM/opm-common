@@ -93,9 +93,13 @@ namespace Opm {
         bool isProducer(size_t timeStep) const;
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(const DeckRecord& deckRecord);
+        void handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step);
+        void handleCOMPDAT(const DeckRecord& record, size_t time_step, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
+        void handleCOMPLUMP(const DeckRecord& record, size_t time_step);
+        void handleWPIMULT(const DeckRecord& record, size_t time_step);
+        void handleWELOPEN(const DeckRecord& record, size_t time_step, WellCompletion::StateEnum status);
+        void handleWELSEGS(const DeckKeyword& keyword, size_t time_step);
 
-        void addConnections(size_t time_step, const std::vector< Connection >& );
-        void addWellConnections(size_t time_step, WellConnections );
         const WellConnections& getConnections(size_t timeStep) const;
         const WellConnections& getConnections() const;
         WellConnections getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
@@ -183,7 +187,7 @@ namespace Opm {
         DynamicState< double > m_efficiencyFactors;
 
         DynamicState< int > m_isProducer;
-        DynamicState< WellConnections > m_completions;
+        DynamicState< std::shared_ptr<WellConnections>> connections;
         DynamicState< WellProductionProperties > m_productionProperties;
         DynamicState< WellInjectionProperties > m_injectionProperties;
         DynamicState< WellPolymerProperties > m_polymerProperties;
@@ -206,6 +210,9 @@ namespace Opm {
         DynamicState< WellSegments > m_segmentset;
         size_t timesteps;
         Events events;
+
+        void updateWellConnections(size_t time_step, WellConnections * );
+        WellConnections * newWellConnections(size_t time_step);
     };
 }
 

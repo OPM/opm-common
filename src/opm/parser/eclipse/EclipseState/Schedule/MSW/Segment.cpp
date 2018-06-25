@@ -50,6 +50,7 @@ namespace Opm {
       m_volume(volume_in),
       m_data_ready(data_ready_in)
     {
+      printf("Creating segment with number: %d\n", segment_number_in);
     }
 
     int Segment::segmentNumber() const {

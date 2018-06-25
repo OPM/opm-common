@@ -194,7 +194,7 @@ data::Wells restore_wells( const ecl_kw_type * opm_xwel,
 
         for( const auto& sc : sched_well->getConnections( sim_step ) ) {
             const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
-            if( !grid.cellActive( i, j, k ) || sc.getState() == WellCompletion::SHUT ) {
+            if( !grid.cellActive( i, j, k ) || sc.state == WellCompletion::SHUT ) {
                 opm_xwel_data += data::Connection::restart_size + phases.size();
                 continue;
             }
@@ -301,7 +301,7 @@ std::vector<int> serialize_ICON( int sim_step,
             data[ offset + ICON_DIRECTION_INDEX ] = connection.getDirection();
             {
                 const auto open = WellCompletion::StateEnum::OPEN;
-                data[ offset + ICON_STATUS_INDEX ] = connection.getState() == open
+                data[ offset + ICON_STATUS_INDEX ] = connection.state == open
                     ? 1
                     : 0;
             }
@@ -396,7 +396,7 @@ std::vector< double > serialize_OPM_XWEL( const data::Wells& wells,
             const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
 
             const auto rs_size = phases.size() + data::Connection::restart_size;
-            if( !grid.cellActive( i, j, k ) || sc.getState() == WellCompletion::SHUT ) {
+            if( !grid.cellActive( i, j, k ) || sc.state  == WellCompletion::SHUT ) {
                 xwel.insert( xwel.end(), rs_size, 0.0 );
                 continue;
             }
