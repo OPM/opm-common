@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(testGetFunctions) {
     BOOST_CHECK_EQUAL( 11 , completion.getJ() );
     BOOST_CHECK_EQUAL( 12 , completion.getK() );
 
-    BOOST_CHECK_EQUAL( Opm::WellCompletion::OPEN , completion.getState());
+    BOOST_CHECK_EQUAL( Opm::WellCompletion::OPEN , completion.state);
     BOOST_CHECK_EQUAL( 99.88 , completion.getConnectionTransmissibilityFactor());
     BOOST_CHECK_EQUAL( 22.33 , completion.getDiameter());
     BOOST_CHECK_EQUAL( 33.22 , completion.getSkinFactor());

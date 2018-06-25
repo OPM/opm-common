@@ -216,7 +216,7 @@ namespace Opm {
 
     bool WellConnections::allConnectionsShut( ) const {
         auto shut = []( const Connection& c ) {
-            return c.getState() == WellCompletion::StateEnum::SHUT;
+            return c.state == WellCompletion::StateEnum::SHUT;
         };
 
         return std::all_of( this->m_connections.begin(),

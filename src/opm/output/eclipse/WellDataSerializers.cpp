@@ -100,7 +100,7 @@ serialize_ICON(int lookup_step,
             data[ offset + ICON_K_INDEX ] = connection.getK() + 1;
             data[ offset + ICON_DIRECTION_INDEX ] = connection.getDirection();
             data[ offset + ICON_STATUS_INDEX ] =
-                (connection.getState() == WellCompletion::StateEnum::OPEN) ?
+                (connection.state == WellCompletion::StateEnum::OPEN) ?
                 1 : -1000;
             data[ offset + ICON_SEGMENT_INDEX ] =
                 connection.attachedToSegment() ?

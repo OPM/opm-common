@@ -168,6 +168,7 @@ namespace Opm {
         void handleCOMPLUMP(const DeckRecord& record, size_t time_step);
         void handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
         void handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step);
+        void handleWELOPEN(const DeckRecord& record, size_t time_step, WellCompletion::StateEnum status);
 
         /*
           Will remove all completions which are attached to inactive cells. Will

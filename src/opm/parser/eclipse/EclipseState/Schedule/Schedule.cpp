@@ -956,10 +956,9 @@ namespace Opm {
              * well status is updated
              */
             if( all_defaulted( record ) ) {
-                const auto status = WellCommon::StatusFromString( status_str );
-
+                const auto well_status = WellCommon::StatusFromString( status_str );
                 for( auto* well : wells ) {
-                    if( status == open && !well->canOpen(currentStep) ) {
+                    if( well_status == open && !well->canOpen(currentStep) ) {
                         auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
                         std::string msg = "Well " + well->name()
                             + " where crossflow is banned has zero total rate."
@@ -967,53 +966,16 @@ namespace Opm {
                             + std::to_string( days ) + " days";
                         OpmLog::note(msg);
                     } else {
-                        this->updateWellStatus( *well, currentStep, status );
+                        this->updateWellStatus( *well, currentStep, well_status );
                     }
                 }
 
                 continue;
             }
 
-            const int I  = maybe( record, "I" );
-            const int J  = maybe( record, "J" );
-            const int K  = maybe( record, "K" );
-            const int C1 = maybe( record, "C1" );
-            const int C2 = maybe( record, "C2" );
-
-            const auto status = WellCompletion::StateEnumFromString( status_str );
-
-            /*
-             * Construct the updated completion with the possible status change
-             * applied. Status is changed when a completion matches all the IJK
-             * criteria *and* the completion number. A defaulted field always
-             * matches the property in question.
-             */
-            auto new_completion = [=]( const Connection& completion ) -> Connection {
-                if( !defaulted( I ) && completion.getI() != I ) return completion;
-                if( !defaulted( J ) && completion.getJ() != J ) return completion;
-                if( !defaulted( K ) && completion.getK() != K ) return completion;
-
-                // assuming CM can be defaulted, even in the presence of
-                // CN, e.g. it's a match for c >= C1 when C2 is defaulted
-                // and vice versa.
-                // complnum starts at 1, but we temp. adjust it for zero to
-                // generalise the negative default value
-                const auto complnum = completion.complnum - 1;
-                if( !defaulted( C1 ) && complnum < C1 ) return completion;
-                if( !defaulted( C2 ) && complnum > C2 ) return completion;
-                if( !defaulted( C1 ) && !defaulted( C2 )
-                    && ( C1 > complnum || complnum > C2 ) ) return completion;
-
-                // completion matched - update it's status
-                return { completion, status };
-            };
-
             for( auto* well : wells ) {
-                WellConnections * new_completions = well->newWellConnections(currentStep);
-                for( const auto& c : well->getConnections( currentStep ) )
-                    new_completions->add( new_completion( c ) );
-
-                well->updateWellConnections( currentStep, new_completions );
+                const auto comp_status = WellCompletion::StateEnumFromString( status_str );
+                well->handleWELOPEN(record, currentStep, comp_status);
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
             }
         }

@@ -659,6 +659,32 @@ namespace Opm {
         this->updateWellConnections(time_step, new_connections);
     }
 
+    void Well::handleWELOPEN(const DeckRecord& record, size_t time_step, WellCompletion::StateEnum status) {
+
+        auto match = [=]( const Connection &c) -> bool {
+            if (!match_eq(c.getI(), record, "I" , -1)) return false;
+            if (!match_eq(c.getJ(), record, "J" , -1)) return false;
+            if (!match_eq(c.getK(), record, "K", -1))  return false;
+            if (!match_ge(c.complnum, record, "C1"))     return false;
+            if (!match_le(c.complnum, record, "C2"))     return false;
+
+            return true;
+        };
+
+        WellConnections * new_connections = this->newWellConnections(time_step);
+
+        for (auto c : this->getConnections(time_step)) {
+            if (match(c))
+                c.state = status;
+
+            new_connections->add(c);
+        }
+
+        this->updateWellConnections(time_step, new_connections);
+    }
+
+
+
     void Well::handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
         WellConnections * connections = new WellConnections(this->getConnections(time_step));
         connections->loadCOMPDAT(record, grid, eclipseProperties);

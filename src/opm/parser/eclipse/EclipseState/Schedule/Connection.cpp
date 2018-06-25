@@ -52,7 +52,7 @@ namespace Opm {
           m_wellPi(1.0),
           m_skinFactor(skinFactor),
           m_satTableId(satTableId),
-          m_state(state),
+          state(state),
           m_direction(direction),
           m_center_depth( depth )
     {}
@@ -60,7 +60,7 @@ namespace Opm {
     Connection::Connection(const Connection& oldConnection, WellCompletion::StateEnum newStatus ) :
         Connection( oldConnection )
     {
-        this->m_state = newStatus;
+        this->state = newStatus;
     }
 
     Connection::Connection(const Connection& oldConnection, double wellPi) :
@@ -130,10 +130,6 @@ namespace Opm {
     }
 
 
-    WellCompletion::StateEnum Connection::getState() const {
-        return m_state;
-    }
-
     double Connection::getConnectionTransmissibilityFactor() const {
         return m_connectionTransmissibilityFactor.getValue();
     }
@@ -196,7 +192,7 @@ namespace Opm {
             && this->m_wellPi == rhs.m_wellPi
             && this->m_skinFactor == rhs.m_skinFactor
             && this->m_satTableId == rhs.m_satTableId
-            && this->m_state == rhs.m_state
+            && this->state == rhs.state
             && this->m_direction == rhs.m_direction
             && this->m_segment_number == rhs.m_segment_number
             && this->m_center_depth == rhs.m_center_depth;

@@ -349,13 +349,13 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
         const auto& connections = well1->getConnections(3);
         BOOST_CHECK_EQUAL(4U, connections.size());
 
-        BOOST_CHECK_EQUAL(WellCompletion::OPEN, connections.get(3).getState());
+        BOOST_CHECK_EQUAL(WellCompletion::OPEN, connections.get(3).state);
         BOOST_CHECK_EQUAL(2.2836805555555556e-12 , connections.get(3).getConnectionTransmissibilityFactor());
         BOOST_CHECK_EQUAL(0.311/Metric::Length, connections.get(3).getDiameter());
         BOOST_CHECK_EQUAL(3.3, connections.get(3).getSkinFactor());
 
         BOOST_CHECK_EQUAL(4U, well1->getConnections( 7 ).size() );
-        BOOST_CHECK_EQUAL(WellCompletion::SHUT, well1->getConnections( 7 ).get( 3 ).getState() );
+        BOOST_CHECK_EQUAL(WellCompletion::SHUT, well1->getConnections( 7 ).get( 3 ).state );
     }
 }
 

@@ -654,25 +654,25 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
     constexpr auto open = WellCompletion::StateEnum::OPEN;
 
     BOOST_CHECK_EQUAL( 7U, cs.size() );
-    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 6, 2 ).getState());
-    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 6, 3 ).getState());
-    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 6, 4 ).getState());
-    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 7, 2 ).getState());
+    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 6, 2 ).state);
+    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 6, 3 ).state);
+    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 6, 4 ).state);
+    BOOST_CHECK_EQUAL(open, cs.getFromIJK( 7, 7, 2 ).state);
 
     const auto& cs2 = well->getConnections( 4 );
-    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 2 ).getState());
-    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 3 ).getState());
-    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 4 ).getState());
-    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 7, 2 ).getState());
+    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 2 ).state);
+    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 3 ).state);
+    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 6, 4 ).state);
+    BOOST_CHECK_EQUAL(open, cs2.getFromIJK( 7, 7, 2 ).state);
 
     well = schedule.getWell("OP_3");
     const auto& cs3 = well->getConnections( 3 );
 
-    BOOST_CHECK_EQUAL(shut, cs3.get( 0 ).getState());
+    BOOST_CHECK_EQUAL(shut, cs3.get( 0 ).state);
 
     const auto& cs4 = well->getConnections( 4 );
 
-    BOOST_CHECK_EQUAL(open, cs4.get( 0 ).getState());
+    BOOST_CHECK_EQUAL(open, cs4.get( 0 ).state);
 
     well = schedule.getWell("OP_1");
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 3 ));
@@ -1848,15 +1848,15 @@ BOOST_AUTO_TEST_CASE( complump ) {
     //BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 2 ).complnum );
     //BOOST_CHECK_EQUAL( 4, sc0.getFromIJK( 2, 2, 3 ).complnum );
 
-    //BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 0 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 1 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 2 ).getState() );
+    //BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 0 ).state );
+    //BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 1 ).state );
+    //BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 2 ).state );
 
     //const auto& sc1  = well.getConnections( 1 );
-    //BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 0 ).getState() );
-    //BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 1 ).getState() );
-    //BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 2 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, sc1.getFromIJK( 2, 2, 3 ).getState() );
+    //BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 0 ).state );
+    //BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 1 ).state );
+    //BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 2 ).state );
+    //BOOST_CHECK_EQUAL( shut, sc1.getFromIJK( 2, 2, 3 ).state );
 }
 
 BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
@@ -1918,25 +1918,25 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     const auto& cs2 = well.getConnections( 2 );
 
     BOOST_CHECK_EQUAL( 9U, cs1.size() );
-    //BOOST_CHECK_EQUAL( open, cs1.getFromIJK( 0, 0, 0 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 0, 0, 1 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 0 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 1 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 2 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 0 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 3 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 4 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 5 ).getState() );
+    //BOOST_CHECK_EQUAL( open, cs1.getFromIJK( 0, 0, 0 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 0, 0, 1 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 0 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 1 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 2 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 0 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 3 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 4 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 5 ).state );
 
-    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 0, 0, 0 ).getState() );
-    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 0, 0, 1 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs2.getFromIJK( 2, 2, 0 ).getState() );
-    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 2, 2, 1 ).getState() );
-    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 2, 2, 2 ).getState() );
-    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 0 ).getState() );
-    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 3 ).getState() );
-    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 4 ).getState() );
-    //BOOST_CHECK_EQUAL( shut, cs2.getFromIJK( 1, 1, 5 ).getState() );
+    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 0, 0, 0 ).state );
+    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 0, 0, 1 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs2.getFromIJK( 2, 2, 0 ).state );
+    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 2, 2, 1 ).state );
+    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 2, 2, 2 ).state );
+    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 0 ).state );
+    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 3 ).state );
+    //BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 4 ).state );
+    //BOOST_CHECK_EQUAL( shut, cs2.getFromIJK( 1, 1, 5 ).state );
 }
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnum2String) {
