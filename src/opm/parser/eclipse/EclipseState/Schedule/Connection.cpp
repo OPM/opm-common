@@ -46,7 +46,7 @@ namespace Opm {
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction)
         : m_i(i), m_j(j), m_k(k),
-          m_complnum( compnum ),
+          complnum( compnum ),
           m_diameter(diameter),
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
           m_wellPi(1.0),
@@ -76,7 +76,7 @@ namespace Opm {
     Connection::Connection( const Connection& c, int num ) :
         Connection( c )
     {
-        this->m_complnum = num;
+        this->complnum = num;
     }
 
     Connection::Connection(const Connection& connection_initial, int segment_number, double center_depth)
@@ -114,7 +114,7 @@ namespace Opm {
     }
 
     void Connection::shift_complnum( int shift ) {
-        this->m_complnum += shift;
+        this->complnum += shift;
     }
 
     int Connection::getI() const {
@@ -129,9 +129,6 @@ namespace Opm {
         return m_k;
     }
 
-    int Connection::complnum() const {
-        return this->m_complnum;
-    }
 
     WellCompletion::StateEnum Connection::getState() const {
         return m_state;
@@ -192,7 +189,7 @@ namespace Opm {
         return this->m_i == rhs.m_i
             && this->m_j == rhs.m_j
             && this->m_k == rhs.m_k
-            && this->m_complnum == rhs.m_complnum
+            && this->complnum == rhs.complnum
             && this->m_diameter == rhs.m_diameter
             && this->m_connectionTransmissibilityFactor
                == rhs.m_connectionTransmissibilityFactor

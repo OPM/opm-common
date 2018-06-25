@@ -920,37 +920,14 @@ namespace Opm {
         }
     }
 
+
     void Schedule::handleCOMPLUMP( const DeckKeyword& keyword,
                                    size_t timestep ) {
 
         for( const auto& record : keyword ) {
-            const int N  = maybe( record, "N" ) + 1;
-            if( N < 1 ) throw std::invalid_argument(
-                "Completion number in COMPLUMP can not be defaulted."
-            );
-
-            const auto& wellname = record.getItem( "WELL" ).getTrimmedString(0);
-            const int I  = maybe( record, "I" );
-            const int J  = maybe( record, "J" );
-            const int K1 = maybe( record, "K1" );
-            const int K2 = maybe( record, "K2" );
-
-            auto new_completion = [=]( const Connection& c ) -> Connection {
-                if( !defaulted( I ) && c.getI() != I )  return c;
-                if( !defaulted( J ) && c.getJ() != J )  return c;
-                if( !defaulted( K1 ) && c.getK() < K1 ) return c;
-                if( !defaulted( K2 ) && c.getK() > K2 ) return c;
-
-                return { c, N };
-            };
-
-            for( auto& well : this->getWells( wellname ) ) {
-                WellConnections * new_completions = well->newWellConnections(timestep);
-                for( const auto& completion : well->getConnections( timestep ) )
-                    new_completions->add( new_completion( completion ) );
-
-                well->updateWellConnections( timestep, new_completions );
-            }
+            const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
+            auto& well = this->m_wells.get(well_name);
+            well.handleCOMPLUMP(record, timestep);
         }
     }
 
@@ -1021,7 +998,7 @@ namespace Opm {
                 // and vice versa.
                 // complnum starts at 1, but we temp. adjust it for zero to
                 // generalise the negative default value
-                const auto complnum = completion.complnum() - 1;
+                const auto complnum = completion.complnum - 1;
                 if( !defaulted( C1 ) && complnum < C1 ) return completion;
                 if( !defaulted( C2 ) && complnum > C2 ) return completion;
                 if( !defaulted( C1 ) && !defaulted( C2 )

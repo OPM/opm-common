@@ -151,7 +151,7 @@ namespace Opm {
             } else {
                 // The complnum value carries over; the rest of the state is fully specified by
                 // the current COMPDAT keyword.
-                int complnum = prev->complnum();
+                int complnum = prev->complnum;
                 *prev = Connection(I,J,k,
                                    complnum,
                                    grid.getCellDepth(I,J,k),
@@ -207,7 +207,7 @@ namespace Opm {
 
       //if( prev != this->m_connections.end() ) {
       //    // update the completion, but preserve it's number
-      //    *prev = Connection( connection, prev->complnum() );
+      //    *prev = Connection( connection, prev->complnum );
       //    return;
       //}
 

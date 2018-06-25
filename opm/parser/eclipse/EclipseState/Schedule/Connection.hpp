@@ -62,7 +62,6 @@ namespace Opm {
         int getI() const;
         int getJ() const;
         int getK() const;
-        int complnum() const;
         WellCompletion::StateEnum getState() const;
         double getConnectionTransmissibilityFactor() const;
         double getWellPi() const;
@@ -84,10 +83,10 @@ namespace Opm {
       // -1 means the completion is not related to segment
       int m_segment_number = -1;
       double m_center_depth;
+      int complnum;
 
     private:
         int m_i, m_j, m_k;
-        int m_complnum;
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
         double m_wellPi;

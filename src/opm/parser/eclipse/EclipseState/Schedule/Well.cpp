@@ -592,6 +592,72 @@ namespace Opm {
             completions->filter(grid);
     }
 
+    namespace {
+
+        bool defaulted(const DeckRecord& rec, const std::string& s) {
+            const auto& item = rec.getItem( s );
+            if (item.defaultApplied(0))
+                return true;
+
+            if (item.get<int>(0) == 0)
+                return true;
+
+            return false;
+        }
+
+
+        int limit(const DeckRecord& rec, const std::string&s , int shift) {
+            const auto& item = rec.getItem( s );
+            return shift + item.get<int>(0);
+        }
+
+        bool match_le(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
+            if (defaulted(rec,s))
+                return true;
+
+            return (value <= limit(rec,s,shift));
+        }
+
+        bool match_ge(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
+            if (defaulted(rec,s))
+                return true;
+
+            return (value >= limit(rec,s,shift));
+        }
+
+
+        bool match_eq(int value, const DeckRecord& rec, const std::string& s, int shift = 0) {
+            if (defaulted(rec,s))
+                return true;
+
+            return (limit(rec,s,shift) == value);
+}}
+
+
+    void Well::handleCOMPLUMP(const DeckRecord& record, size_t time_step)  {
+
+        auto match = [=]( const Connection& c ) -> bool {
+            if (!match_eq(c.getI(), record, "I" , -1))  return false;
+            if (!match_eq(c.getJ(), record, "J" , -1))  return false;
+            if (!match_ge(c.getK(), record, "K1", -1)) return false;
+            if (!match_le(c.getK(), record, "K2", -1)) return false;
+
+            return true;
+        };
+
+        WellConnections * new_connections = this->newWellConnections(time_step);
+        const int complnum = record.getItem("N").get<int>(0);
+        if (complnum <= 0)
+            throw std::invalid_argument("Completion number must be >= 1. COMPLNUM=" + std::to_string(complnum) + "is invalid");
+
+        for (auto c : this->getConnections(time_step)) {
+            if (match(c))
+                c.complnum = complnum;
+
+            new_connections->add(c);
+        }
+        this->updateWellConnections(time_step, new_connections);
+    }
 
     void Well::handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
         WellConnections * connections = new WellConnections(this->getConnections(time_step));
@@ -606,5 +672,8 @@ namespace Opm {
         WellConnections * new_connection_set = newConnectionsWithSegments(keyword, completion_set, segment_set);
         this->updateWellConnections(time_step, new_connection_set);
     }
+
+
+
 
 }

@@ -165,6 +165,7 @@ namespace Opm {
         const Events& getEvents() const;
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
         bool hasEvent(uint64_t eventMask, size_t reportStep) const;
+        void handleCOMPLUMP(const DeckRecord& record, size_t time_step);
         void handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
         void handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step);
 

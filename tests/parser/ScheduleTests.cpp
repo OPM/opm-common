@@ -1673,16 +1673,16 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
 
     const auto& cs1 = schedule.getWell( "W1" )->getConnections( 1 );
-    BOOST_CHECK_EQUAL( -1, cs1.get( 0 ).complnum() );
-    BOOST_CHECK_EQUAL( -2, cs1.get( 1 ).complnum() );
-    BOOST_CHECK_EQUAL( -3, cs1.get( 2 ).complnum() );
-    BOOST_CHECK_EQUAL( -4, cs1.get( 3 ).complnum() );
+    BOOST_CHECK_EQUAL( -1, cs1.get( 0 ).complnum );
+    BOOST_CHECK_EQUAL( -2, cs1.get( 1 ).complnum );
+    BOOST_CHECK_EQUAL( -3, cs1.get( 2 ).complnum );
+    BOOST_CHECK_EQUAL( -4, cs1.get( 3 ).complnum );
 
     const auto& cs2 = schedule.getWell( "W1" )->getConnections( 2 );
-    BOOST_CHECK_EQUAL( -1, cs2.get( 0 ).complnum() );
-    BOOST_CHECK_EQUAL( -2, cs2.get( 1 ).complnum() );
-    BOOST_CHECK_EQUAL( -3, cs2.get( 2 ).complnum() );
-    BOOST_CHECK_EQUAL( -4, cs2.get( 3 ).complnum() );
+    BOOST_CHECK_EQUAL( -1, cs2.get( 0 ).complnum );
+    BOOST_CHECK_EQUAL( -2, cs2.get( 1 ).complnum );
+    BOOST_CHECK_EQUAL( -3, cs2.get( 2 ).complnum );
+    BOOST_CHECK_EQUAL( -4, cs2.get( 3 ).complnum );
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
@@ -1717,20 +1717,20 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     Schedule schedule( deck, grid, eclipseProperties, Phases( true, true, true )  ,ctx);
 
     const auto& w1cs = schedule.getWell( "W1" )->getConnections();
-    BOOST_CHECK_EQUAL( -1, w1cs.get( 0 ).complnum() );
-    BOOST_CHECK_EQUAL( -2, w1cs.get( 1 ).complnum() );
-    BOOST_CHECK_EQUAL( -3, w1cs.get( 2 ).complnum() );
-    BOOST_CHECK_EQUAL( -4, w1cs.get( 3 ).complnum() );
-    BOOST_CHECK_EQUAL( -5, w1cs.get( 4 ).complnum() );
+    BOOST_CHECK_EQUAL( -1, w1cs.get( 0 ).complnum );
+    BOOST_CHECK_EQUAL( -2, w1cs.get( 1 ).complnum );
+    BOOST_CHECK_EQUAL( -3, w1cs.get( 2 ).complnum );
+    BOOST_CHECK_EQUAL( -4, w1cs.get( 3 ).complnum );
+    BOOST_CHECK_EQUAL( -5, w1cs.get( 4 ).complnum );
 
     const auto& w2cs = schedule.getWell( "W2" )->getConnections();
-    BOOST_CHECK_EQUAL( -1, w2cs.getFromIJK( 4, 4, 2 ).complnum() );
-    BOOST_CHECK_EQUAL( -2, w2cs.getFromIJK( 4, 4, 0 ).complnum() );
-    BOOST_CHECK_EQUAL( -3, w2cs.getFromIJK( 4, 4, 1 ).complnum() );
-    BOOST_CHECK_EQUAL( -4, w2cs.getFromIJK( 4, 4, 3 ).complnum() );
-    BOOST_CHECK_EQUAL( -5, w2cs.getFromIJK( 4, 4, 4 ).complnum() );
+    BOOST_CHECK_EQUAL( -1, w2cs.getFromIJK( 4, 4, 2 ).complnum );
+    BOOST_CHECK_EQUAL( -2, w2cs.getFromIJK( 4, 4, 0 ).complnum );
+    BOOST_CHECK_EQUAL( -3, w2cs.getFromIJK( 4, 4, 1 ).complnum );
+    BOOST_CHECK_EQUAL( -4, w2cs.getFromIJK( 4, 4, 3 ).complnum );
+    BOOST_CHECK_EQUAL( -5, w2cs.getFromIJK( 4, 4, 4 ).complnum );
 
-    BOOST_CHECK_THROW( w2cs.get( 5 ).complnum(), std::out_of_range );
+    BOOST_CHECK_THROW( w2cs.get( 5 ).complnum, std::out_of_range );
 }
 
 BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
@@ -1762,9 +1762,9 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
 
     const auto& cs = schedule.getWell( "W1" )->getConnections();
     BOOST_CHECK_EQUAL( 3U, cs.size() );
-    BOOST_CHECK_EQUAL( -1, cs.get( 0 ).complnum() );
-    BOOST_CHECK_EQUAL( -2, cs.get( 1 ).complnum() );
-    BOOST_CHECK_EQUAL( -3, cs.get( 2 ).complnum() );
+    BOOST_CHECK_EQUAL( -1, cs.get( 0 ).complnum );
+    BOOST_CHECK_EQUAL( -2, cs.get( 1 ).complnum );
+    BOOST_CHECK_EQUAL( -3, cs.get( 2 ).complnum );
 }
 
 BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
@@ -1843,10 +1843,10 @@ BOOST_AUTO_TEST_CASE( complump ) {
     const auto& sc0  = well.getConnections( 0 );
 
     /* complnum should be modified by COMPLNUM */
-    //BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 0 ).complnum() );
-    //BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 1 ).complnum() );
-    //BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 2 ).complnum() );
-    //BOOST_CHECK_EQUAL( 4, sc0.getFromIJK( 2, 2, 3 ).complnum() );
+    //BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 0 ).complnum );
+    //BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 1 ).complnum );
+    //BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 2 ).complnum );
+    //BOOST_CHECK_EQUAL( 4, sc0.getFromIJK( 2, 2, 3 ).complnum );
 
     //BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 0 ).getState() );
     //BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 1 ).getState() );

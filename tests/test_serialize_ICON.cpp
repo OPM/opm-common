@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
                 const size_t offset = w_offset + c_offset;
 
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_IC_INDEX],
-                                  c.complnum());
+                                  c.complnum);
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_I_INDEX],
                                   c.getI() + 1);
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_J_INDEX],
