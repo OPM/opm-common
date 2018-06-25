@@ -1857,7 +1857,12 @@ BOOST_AUTO_TEST_CASE( complump ) {
     BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 1 ).state );
     BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 2 ).state );
     BOOST_CHECK_EQUAL( shut, sc1.getFromIJK( 2, 2, 3 ).state );
+
+    const auto completions = well.getCompletions(1);
+    BOOST_CHECK_EQUAL(completions.size(), 4);
 }
+
+
 
 BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     std::string input = R"(

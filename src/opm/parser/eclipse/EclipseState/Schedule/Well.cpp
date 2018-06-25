@@ -352,6 +352,24 @@ namespace Opm {
         return *m_completions.get( timeStep );
     }
 
+
+    std::map<int, std::vector<Connection>> Well::getCompletions(size_t time_step) const {
+        std::map<int, std::vector<Connection>> completions;
+
+        const auto& connections = this->getConnections(time_step);
+        for (const auto& conn : connections) {
+            auto pair = completions.find( conn.complnum );
+            if (pair == completions.end())
+                completions[conn.complnum] = {};
+
+            pair = completions.find(conn.complnum);
+            pair->second.push_back(conn);
+        }
+
+        return completions;
+    }
+
+
     WellConnections Well::getActiveConnections(size_t timeStep, const EclipseGrid& grid) const {
         return WellConnections(this->getConnections(timeStep), grid);
     }

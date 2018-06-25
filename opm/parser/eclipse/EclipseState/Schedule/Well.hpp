@@ -95,6 +95,7 @@ namespace Opm {
         void addWELSPECS(const DeckRecord& deckRecord);
 
         void addConnections(size_t time_step, const std::vector< Connection >& );
+        std::map<int, std::vector<Connection>> getCompletions(size_t time_step) const;
         const WellConnections& getConnections(size_t timeStep) const;
         const WellConnections& getConnections() const;
         WellConnections getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
