@@ -86,35 +86,35 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
-    const Opm::WellConnections new_connection_set = Opm::updatingConnectionsWithSegments(compsegs, connection_set, segment_set);
+    const Opm::WellConnections * new_connection_set = Opm::updatingConnectionsWithSegments(compsegs, connection_set, segment_set);
 
-    BOOST_CHECK_EQUAL(7U, new_connection_set.size());
+    BOOST_CHECK_EQUAL(7U, new_connection_set->size());
 
-    const Opm::Connection& connection1 = new_connection_set.get(0);
+    const Opm::Connection& connection1 = new_connection_set->get(0);
     const int segment_number_connection1 = connection1.getSegmentNumber();
     const double center_depth_connection1 = connection1.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_connection1, 1);
     BOOST_CHECK_EQUAL(center_depth_connection1, 2512.5);
 
-    const Opm::Connection& connection3 = new_connection_set.get(2);
+    const Opm::Connection& connection3 = new_connection_set->get(2);
     const int segment_number_connection3 = connection3.getSegmentNumber();
     const double center_depth_connection3 = connection3.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_connection3, 3);
     BOOST_CHECK_EQUAL(center_depth_connection3, 2562.5);
 
-    const Opm::Connection& connection5 = new_connection_set.get(4);
+    const Opm::Connection& connection5 = new_connection_set->get(4);
     const int segment_number_connection5 = connection5.getSegmentNumber();
     const double center_depth_connection5 = connection5.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_connection5, 6);
     BOOST_CHECK_CLOSE(center_depth_connection5, 2538.83, 0.001);
 
-    const Opm::Connection& connection6 = new_connection_set.get(5);
+    const Opm::Connection& connection6 = new_connection_set->get(5);
     const int segment_number_connection6 = connection6.getSegmentNumber();
     const double center_depth_connection6 = connection6.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_connection6, 6);
     BOOST_CHECK_CLOSE(center_depth_connection6,  2537.83, 0.001);
 
-    const Opm::Connection& connection7 = new_connection_set.get(6);
+    const Opm::Connection& connection7 = new_connection_set->get(6);
     const int segment_number_connection7 = connection7.getSegmentNumber();
     const double center_depth_connection7 = connection7.getCenterDepth();
     BOOST_CHECK_EQUAL(segment_number_connection7, 7);

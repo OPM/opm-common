@@ -48,7 +48,7 @@ namespace Opm {
           m_guideRateScalingFactor( timeMap, 1.0 ),
           m_efficiencyFactors (timeMap, 1.0 ),
           m_isProducer( timeMap, true ) ,
-          m_completions( timeMap, WellConnections{} ),
+          m_completions( timeMap, std::make_shared<WellConnections>(headI, headJ) ),
           m_productionProperties( timeMap, WellProductionProperties() ),
           m_injectionProperties( timeMap, WellInjectionProperties() ),
           m_polymerProperties( timeMap, WellPolymerProperties() ),
@@ -348,7 +348,7 @@ namespace Opm {
     }
 
     const WellConnections& Well::getConnections(size_t timeStep) const {
-        return m_completions.get( timeStep );
+        return *m_completions.get( timeStep );
     }
 
     WellConnections Well::getActiveConnections(size_t timeStep, const EclipseGrid& grid) const {
@@ -356,23 +356,23 @@ namespace Opm {
     }
 
     const WellConnections& Well::getConnections() const {
-        return m_completions.back();
+        return *m_completions.back();
     }
 
     void Well::addConnections(size_t time_step, const std::vector< Connection >& newConnections ) {
-        auto new_set = this->getConnections( time_step );
-        int complnum_shift = new_set.size();
+        WellConnections * new_set = new WellConnections( this->getConnections(time_step));
+        int complnum_shift = new_set->size();
 
         const auto headI = this->m_headI[ time_step ];
         const auto headJ = this->m_headJ[ time_step ];
 
-        auto prev_size = new_set.size();
+        auto prev_size = new_set->size();
         for( auto completion : newConnections ) {
             completion.fixDefaultIJ( headI , headJ );
             completion.shift_complnum( complnum_shift );
 
-            new_set.add( completion );
-            const auto new_size = new_set.size();
+            new_set->add( completion );
+            const auto new_size = new_set->size();
 
             /* Connections can be "re-added", i.e. same coordinates but with a
              * different set of properties. In this case they also inherit the
@@ -383,18 +383,7 @@ namespace Opm {
             else ++prev_size;
         }
 
-        this->addWellConnections( time_step, new_set );
-    }
-
-    void Well::addWellConnections(size_t time_step, WellConnections new_set ){
-        if( getWellConnectionOrdering() == WellCompletion::TRACK) {
-            const auto headI = this->m_headI[ time_step ];
-            const auto headJ = this->m_headJ[ time_step ];
-            new_set.orderConnections( headI, headJ );
-        }
-
-        m_completions.update( time_step, std::move( new_set ) );
-        addEvent( ScheduleEvents::COMPLETION_CHANGE , time_step );
+        this->updateWellConnections( time_step, new_set );
     }
 
     const std::string Well::getGroupName(size_t time_step) const {
@@ -567,7 +556,20 @@ namespace Opm {
         m_segmentset.update(time_step, new_segmentset);
     }
 
+    WellConnections * Well::newWellConnections(size_t time_step) {
+        return new WellConnections( this->m_headI[time_step], this->m_headJ[time_step]);
+    }
 
+    void Well::updateWellConnections(size_t time_step, WellConnections * new_set ){
+        if( getWellConnectionOrdering() == WellCompletion::TRACK) {
+            const auto headI = this->m_headI[ time_step ];
+            const auto headJ = this->m_headJ[ time_step ];
+            new_set->orderConnections( headI, headJ );
+        }
+
+        m_completions.update( time_step, std::shared_ptr<WellConnections>( new_set ));
+        addEvent( ScheduleEvents::COMPLETION_CHANGE , time_step );
+    }
 
 
     void Well::addEvent(ScheduleEvents::Events event, size_t reportStep) {
@@ -586,6 +588,6 @@ namespace Opm {
           instance, hence this for loop is over all timesteps.
         */
         for (auto& completions : m_completions)
-            completions.filter(grid);
+            completions->filter(grid);
     }
 }

@@ -95,10 +95,11 @@ namespace Opm {
         void addWELSPECS(const DeckRecord& deckRecord);
 
         void addConnections(size_t time_step, const std::vector< Connection >& );
-        void addWellConnections(size_t time_step, WellConnections );
         const WellConnections& getConnections(size_t timeStep) const;
         const WellConnections& getConnections() const;
         WellConnections getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
+        WellConnections * newWellConnections(size_t time_step);
+        void updateWellConnections(size_t time_step, WellConnections * new_set );
 
         /* The rate of a given phase under the following assumptions:
          * * Returns zero if production is requested for an injector (and vice
@@ -183,7 +184,7 @@ namespace Opm {
         DynamicState< double > m_efficiencyFactors;
 
         DynamicState< int > m_isProducer;
-        DynamicState< WellConnections > m_completions;
+        DynamicState< std::shared_ptr<WellConnections> > m_completions;
         DynamicState< WellProductionProperties > m_productionProperties;
         DynamicState< WellInjectionProperties > m_injectionProperties;
         DynamicState< WellPolymerProperties > m_polymerProperties;

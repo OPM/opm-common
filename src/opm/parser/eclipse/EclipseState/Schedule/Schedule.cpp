@@ -561,7 +561,7 @@ namespace Opm {
             for( auto* well : getWells( wellNamePattern ) ) {
                 const auto& currentWellConnections = well->getConnections(currentStep);
 
-                WellConnections newWellConnections;
+                WellConnections * newWellConnections = well->newWellConnections(currentStep);
 
                 Opm::Value<int> I  = getValueItem(record.getItem("I"));
                 Opm::Value<int> J  = getValueItem(record.getItem("J"));
@@ -576,13 +576,13 @@ namespace Opm {
 
                     if (FIRST.hasValue()) {
                         if (i < (size_t) FIRST.getValue()) {
-                            newWellConnections.add(currentConnection);
+                            newWellConnections->add(currentConnection);
                             continue;
                         }
                     }
                     if (LAST.hasValue()) {
                         if (i > (size_t) LAST.getValue()) {
-                            newWellConnections.add(currentConnection);
+                            newWellConnections->add(currentConnection);
                             continue;
                         }
                     }
@@ -592,24 +592,24 @@ namespace Opm {
                     int ck = currentConnection.getK();
 
                     if (I.hasValue() && (!(I.getValue() == ci) )) {
-                        newWellConnections.add(currentConnection);
+                        newWellConnections->add(currentConnection);
                         continue;
                     }
 
                     if (J.hasValue() && (!(J.getValue() == cj) )) {
-                        newWellConnections.add(currentConnection);
+                        newWellConnections->add(currentConnection);
                         continue;
                     }
 
                     if (K.hasValue() && (!(K.getValue() == ck) )) {
-                        newWellConnections.add(currentConnection);
+                        newWellConnections->add(currentConnection);
                         continue;
                     }
 
-                    newWellConnections.add( Connection{ currentConnection, wellPi } );
+                    newWellConnections->add( Connection{ currentConnection, wellPi } );
                 }
 
-                well->addWellConnections(currentStep, newWellConnections);
+                well->updateWellConnections(currentStep, newWellConnections);
             }
         }
     }
@@ -945,11 +945,11 @@ namespace Opm {
             };
 
             for( auto& well : this->getWells( wellname ) ) {
-                WellConnections new_completions;
+                WellConnections * new_completions = well->newWellConnections(timestep);
                 for( const auto& completion : well->getConnections( timestep ) )
-                    new_completions.add( new_completion( completion ) );
+                    new_completions->add( new_completion( completion ) );
 
-                well->addWellConnections( timestep, new_completions );
+                well->updateWellConnections( timestep, new_completions );
             }
         }
     }
@@ -1032,11 +1032,11 @@ namespace Opm {
             };
 
             for( auto* well : wells ) {
-                WellConnections new_completions;
+                WellConnections * new_completions = well->newWellConnections(currentStep);
                 for( const auto& c : well->getConnections( currentStep ) )
-                    new_completions.add( new_completion( c ) );
+                    new_completions->add( new_completion( c ) );
 
-                well->addWellConnections( currentStep, new_completions );
+                well->updateWellConnections( currentStep, new_completions );
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
             }
         }
@@ -1452,9 +1452,9 @@ namespace Opm {
 
         const auto& segment_set = well.getWellSegments(currentStep);
         const auto& completion_set = well.getConnections( currentStep );
-        const WellConnections new_completion_set = updatingConnectionsWithSegments(keyword, completion_set, segment_set);
+        WellConnections * new_completion_set = updatingConnectionsWithSegments(keyword, completion_set, segment_set);
 
-        well.addWellConnections(currentStep, new_completion_set);
+        well.updateWellConnections(currentStep, new_completion_set);
     }
 
     void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {
