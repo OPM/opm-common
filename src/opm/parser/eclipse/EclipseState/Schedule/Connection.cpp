@@ -83,9 +83,6 @@ namespace Opm {
             m_j = wellHeadJ;
     }
 
-    void Connection::shift_complnum( int shift ) {
-        this->complnum += shift;
-    }
 
     int Connection::getI() const {
         return m_i;

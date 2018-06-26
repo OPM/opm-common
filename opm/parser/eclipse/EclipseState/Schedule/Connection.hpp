@@ -60,7 +60,6 @@ namespace Opm {
         double getSkinFactor() const;
         int getSatTableId() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
-        void   shift_complnum( int );
         bool attachedToSegment() const;
 
         WellCompletion::DirectionEnum getDirection() const;
