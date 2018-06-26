@@ -34,10 +34,6 @@ namespace Opm {
 
     class DeckKeyword;
     class DeckRecord;
-    class Well;
-    class EclipseGrid;
-    class Eclipse3DProperties;
-    class Schedule;
 
     class Connection {
     public:

@@ -25,7 +25,7 @@
 
 namespace Opm {
     class EclipseGrid;
-
+    class Eclipse3DProperties;
     class WellConnections {
     public:
         WellConnections() = default;
