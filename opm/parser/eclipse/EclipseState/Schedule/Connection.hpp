@@ -77,8 +77,6 @@ namespace Opm {
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
         Value<double> m_skinFactor;
-        Value<double> getDiameterAsValueObject() const;
-        Value<double> getSkinFactorAsValueObject() const;
     };
 }
 

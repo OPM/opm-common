@@ -96,19 +96,6 @@ namespace Opm {
     const Value<double>& Connection::getConnectionTransmissibilityFactorAsValueObject() const {
         return m_connectionTransmissibilityFactor;
     }
-
-    Value<double> Connection::getDiameterAsValueObject() const {
-        return m_diameter;
-    }
-
-    Value<double> Connection::getSkinFactorAsValueObject() const {
-        return m_skinFactor;
-    }
-
-
-
-
-
     bool Connection::attachedToSegment() const {
         return (segment_number > 0);
     }
