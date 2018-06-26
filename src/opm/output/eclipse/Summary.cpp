@@ -324,7 +324,7 @@ inline quantity flowing( const fn_args& args ) {
              measure::identity };
 }
 
-template< rt phase, bool injection = true >
+template< rt phase, bool injection = true, bool polymer = false >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
     // The args.num value is the literal value which will go to the
@@ -334,24 +334,29 @@ inline quantity crate( const fn_args& args ) {
     const size_t global_index = args.num - 1;
     if( args.schedule_wells.empty() ) return zero;
 
-    const auto& name = args.schedule_wells.front()->name();
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well->name();
     if( args.wells.count( name ) == 0 ) return zero;
 
-    const auto& well = args.wells.at( name );
-    const auto& completion = std::find_if( well.connections.begin(),
-                                           well.connections.end(),
+    const auto& well_data = args.wells.at( name );
+    const auto& completion = std::find_if( well_data.connections.begin(),
+                                           well_data.connections.end(),
                                            [=]( const data::Connection& c ) {
                                                 return c.index == global_index;
                                            } );
 
-    if( completion == well.connections.end() ) return zero;
+    if( completion == well_data.connections.end() ) return zero;
 
     double eff_fac = efac( args.eff_factors, name );
+    double concentration = polymer
+                           ? well->getPolymerProperties( args.sim_step ).m_polymerConcentration
+                           : 1;
 
-    const auto v = completion->rates.get( phase, 0.0 ) * eff_fac;
+    auto v = completion->rates.get( phase, 0.0 ) * eff_fac * concentration;
     if( ( v > 0 ) != injection ) return zero;
+    if( !injection ) v *= -1;
 
-    if( !injection ) return { -v, rate_unit< phase >() };
+    if( polymer ) return { v, measure::mass_rate };
     return { v, rate_unit< phase >() };
 }
 
@@ -687,6 +692,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },
+    { "CCIR", crate< rt::wat, injector, polymer > },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
     { "CGIT", mul( crate< rt::gas, injector >, duration ) },
     { "CNIT", mul( crate< rt::solvent, injector >, duration ) },
@@ -700,6 +706,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "COPT", mul( crate< rt::oil, producer >, duration ) },
     { "CGPT", mul( crate< rt::gas, producer >, duration ) },
     { "CNPT", mul( crate< rt::solvent, producer >, duration ) },
+    { "CCIT", mul( crate< rt::wat, injector, polymer >, duration ) },
 
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
