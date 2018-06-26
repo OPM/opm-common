@@ -84,6 +84,7 @@ FWIRH
 FGIR
 FNIR -- solvent
 FGIRH
+FCIR
 -- Production Cummulatives
 FVPT
 FWPT
@@ -109,6 +110,7 @@ FWITH
 FGIT
 FNIT
 FGITH
+FCIT
 -- In place
 FWIP
 FOIP
