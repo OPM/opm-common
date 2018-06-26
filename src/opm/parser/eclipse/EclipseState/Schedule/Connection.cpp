@@ -57,36 +57,6 @@ namespace Opm {
           m_center_depth( depth )
     {}
 
-    Connection::Connection(const Connection& oldConnection, WellCompletion::StateEnum newStatus ) :
-        Connection( oldConnection )
-    {
-        this->state = newStatus;
-    }
-
-    Connection::Connection(const Connection& oldConnection, double wellPi) :
-        Connection( oldConnection )
-    {
-        if( this->wellPi != 0 ) {
-            this->wellPi *= wellPi;
-        } else {
-            this->wellPi = wellPi;
-        }
-    }
-
-    Connection::Connection( const Connection& c, int num ) :
-        Connection( c )
-    {
-        this->complnum = num;
-    }
-
-    Connection::Connection(const Connection& connection_initial, int segment_number, double center_depth)
-      : Connection(connection_initial)
-    {
-        assert(segment_number > 0);
-        this->m_segment_number = segment_number;
-        this->m_center_depth = center_depth;
-    }
-
     bool Connection::sameCoordinate(const Connection& other) const {
         if ((m_i == other.m_i) &&
             (m_j == other.m_j) &&

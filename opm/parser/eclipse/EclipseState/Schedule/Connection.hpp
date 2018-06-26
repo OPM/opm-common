@@ -51,10 +51,6 @@ namespace Opm {
                    const int satTableId,
                    const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
-        Connection(const Connection&, WellCompletion::StateEnum newStatus);
-        Connection(const Connection&, double wellPi);
-        Connection(const Connection&, int complnum );
-        Connection(const Connection& connection_initial, int segment_number, double center_depth);
 
         bool sameCoordinate(const Connection& other) const;
         bool sameCoordinate(const int i, const int j, const int k) const;
