@@ -45,38 +45,39 @@ namespace Opm {
                    const Value<double>& diameter,
                    const Value<double>& skinFactor,
                    const int satTableId,
-                   const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
+                   const WellCompletion::DirectionEnum direction);
 
 
         bool sameCoordinate(const int i, const int j, const int k) const;
-
         int getI() const;
         int getJ() const;
         int getK() const;
         double getConnectionTransmissibilityFactor() const;
-        const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
         double getDiameter() const;
         double getSkinFactor() const;
         bool attachedToSegment() const;
+        const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
 
-        // related segment number
-        // -1 means the completion is not related to segment
-        int segment_number = -1;
         WellCompletion::DirectionEnum dir;
         double center_depth;
-        int complnum;
         WellCompletion::StateEnum state;
-        double wellPi = 1.0;
         int sat_tableId;
+        int complnum;
 
     private:
-        int m_i, m_j, m_k;
+        std::array<int,3> ijk;
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
         Value<double> m_skinFactor;
+
+    public:
+        // related segment number
+        // -1 means the completion is not related to segment
+        int segment_number = -1;
+        double wellPi = 1.0;
     };
 }
 

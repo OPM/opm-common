@@ -45,20 +45,19 @@ namespace Opm {
                            const Value<double>& skinFactor,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction)
-        : m_i(i), m_j(j), m_k(k),
+        : dir(direction),
+          center_depth(depth),
+          state(state),
+          sat_tableId(satTableId),
           complnum( compnum ),
+          ijk({i,j,k}),
           m_diameter(diameter),
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
-          wellPi(1.0),
-          m_skinFactor(skinFactor),
-          sat_tableId(satTableId),
-          state(state),
-          dir(direction),
-          center_depth( depth )
+          m_skinFactor(skinFactor)
     {}
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
-        if ((m_i == i) && (m_j == j) && (m_k == k)) {
+        if ((ijk[0] == i) && (ijk[1] == j) && (ijk[2] == k)) {
             return true;
         } else {
             return false;
@@ -68,15 +67,15 @@ namespace Opm {
 
 
     int Connection::getI() const {
-        return m_i;
+        return ijk[0];
     }
 
     int Connection::getJ() const {
-        return m_j;
+        return ijk[1];
     }
 
     int Connection::getK() const {
-        return m_k;
+        return ijk[2];
     }
 
 
@@ -101,13 +100,10 @@ namespace Opm {
     }
 
     bool Connection::operator==( const Connection& rhs ) const {
-        return this->m_i == rhs.m_i
-            && this->m_j == rhs.m_j
-            && this->m_k == rhs.m_k
+        return this->ijk == rhs.ijk
             && this->complnum == rhs.complnum
             && this->m_diameter == rhs.m_diameter
-            && this->m_connectionTransmissibilityFactor
-                            == rhs.m_connectionTransmissibilityFactor
+            && this->m_connectionTransmissibilityFactor == rhs.m_connectionTransmissibilityFactor
             && this->wellPi == rhs.wellPi
             && this->m_skinFactor == rhs.m_skinFactor
             && this->sat_tableId == rhs.sat_tableId
