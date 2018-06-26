@@ -72,18 +72,6 @@ BOOST_AUTO_TEST_CASE(testGetFunctions) {
 }
 
 
-BOOST_AUTO_TEST_CASE(CompletionTestssameCoordinate) {
-    Opm::Connection completion1(10,10,10, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection completion2(10,10,10, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection completion3(11,10,10, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection completion4(10,11,10, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-    Opm::Connection completion5(10,10,11, 1, 0.0, Opm::WellCompletion::OPEN, Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-
-    BOOST_CHECK( completion1.sameCoordinate( completion2 ));
-    BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion3 ));
-    BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion4 ));
-    BOOST_CHECK_EQUAL( false , completion1.sameCoordinate( completion5 ));
-}
 
 BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
     Opm::WellConnections completionSet;

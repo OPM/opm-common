@@ -197,21 +197,7 @@ namespace Opm {
 
 
     void WellConnections::add( Connection connection ) {
-      //auto same = [&]( const Connection& c ) {
-      //    return c.sameCoordinate( connection );
-      //};
-
-      //auto prev = std::find_if( this->m_connections.begin(),
-      //                          this->m_connections.end(),
-      //                          same );
-
-      //if( prev != this->m_connections.end() ) {
-      //    // update the completion, but preserve it's number
-      //    *prev = Connection( connection, prev->complnum );
-      //    return;
-      //}
-
-      m_connections.emplace_back( connection );
+        m_connections.emplace_back( connection );
     }
 
     bool WellConnections::allConnectionsShut( ) const {

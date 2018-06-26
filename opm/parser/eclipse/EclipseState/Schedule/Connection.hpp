@@ -48,7 +48,6 @@ namespace Opm {
                    const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
 
-        bool sameCoordinate(const Connection& other) const;
         bool sameCoordinate(const int i, const int j, const int k) const;
 
         int getI() const;
