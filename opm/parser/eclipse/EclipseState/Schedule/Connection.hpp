@@ -59,7 +59,6 @@ namespace Opm {
         double getDiameter() const;
         double getSkinFactor() const;
         int getSatTableId() const;
-        void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
         bool attachedToSegment() const;
 
         WellCompletion::DirectionEnum getDirection() const;

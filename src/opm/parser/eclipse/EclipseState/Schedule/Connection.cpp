@@ -75,14 +75,6 @@ namespace Opm {
     }
 
 
-    void Connection::fixDefaultIJ(int wellHeadI , int wellHeadJ) {
-        if (m_i < 0)
-            m_i = wellHeadI;
-
-        if (m_j < 0)
-            m_j = wellHeadJ;
-    }
-
 
     int Connection::getI() const {
         return m_i;
