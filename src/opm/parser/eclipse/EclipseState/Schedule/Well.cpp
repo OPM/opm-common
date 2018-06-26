@@ -337,7 +337,7 @@ namespace Opm {
                                          + ". Can not infer reference depth" );
         }
 
-        return completions.get( 0 ).getCenterDepth();
+        return completions.get( 0 ).center_depth;
     }
 
     void Well::setRefDepth( size_t timestep, double depth ) {

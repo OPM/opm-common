@@ -61,21 +61,21 @@ namespace Opm {
         int getSatTableId() const;
         void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
         void   shift_complnum( int );
-        int getSegmentNumber() const;
-        double getCenterDepth() const;
         bool attachedToSegment() const;
 
         WellCompletion::DirectionEnum getDirection() const;
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
-      // related segment number
-      // -1 means the completion is not related to segment
-      int m_segment_number = -1;
-      double m_center_depth;
-      int complnum;
-      WellCompletion::StateEnum state;
-      double wellPi = 1.0;
+
+        // related segment number
+        // -1 means the completion is not related to segment
+        int segment_number = -1;
+
+        double center_depth;
+        int complnum;
+        WellCompletion::StateEnum state;
+        double wellPi = 1.0;
 
     private:
         int m_i, m_j, m_k;

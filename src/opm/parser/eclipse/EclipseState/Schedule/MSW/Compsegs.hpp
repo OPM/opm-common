@@ -44,10 +44,10 @@ namespace Opm {
         double m_distance_end;
 
         WellCompletion::DirectionEnum m_dir;
-        double m_center_depth;
+        double center_depth;
         // we do not handle thermal length for the moment
         // double m_thermal_length;
-        int m_segment_number;
+        int segment_number;
 
         Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
                  WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in);

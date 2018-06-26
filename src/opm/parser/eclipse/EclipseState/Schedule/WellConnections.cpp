@@ -247,7 +247,7 @@ namespace Opm {
 
         for (size_t pos = 1; pos < m_connections.size() - 1; ++pos) {
             const auto& prev = m_connections[pos - 1];
-            const double prevz = prev.getCenterDepth();
+            const double prevz = prev.center_depth;
             size_t next_index = findClosestConnection(prev.getI(), prev.getJ(), prevz, pos);
             std::swap(m_connections[next_index], m_connections[pos]);
         }
@@ -263,7 +263,7 @@ namespace Opm {
         for (size_t pos = start_pos; pos < m_connections.size(); ++pos) {
             const auto& connection = m_connections[ pos ];
 
-            const double depth = connection.getCenterDepth();
+            const double depth = connection.center_depth;
             const int ci = connection.getI();
             const int cj = connection.getJ();
             // Using square of distance to avoid non-integer arithmetics.

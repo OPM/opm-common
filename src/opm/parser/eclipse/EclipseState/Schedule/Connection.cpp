@@ -54,7 +54,7 @@ namespace Opm {
           m_satTableId(satTableId),
           state(state),
           m_direction(direction),
-          m_center_depth( depth )
+          center_depth( depth )
     {}
 
     bool Connection::sameCoordinate(const Connection& other) const {
@@ -133,19 +133,10 @@ namespace Opm {
     }
 
 
-    int Connection::getSegmentNumber() const {
-        if (!attachedToSegment()) {
-            throw std::runtime_error(" the completion is not attached to a segment!\n ");
-        }
-        return m_segment_number;
-    }
 
-    double Connection::getCenterDepth() const {
-        return m_center_depth;
-    }
 
     bool Connection::attachedToSegment() const {
-        return (m_segment_number > 0);
+        return (segment_number > 0);
     }
 
     bool Connection::operator==( const Connection& rhs ) const {
@@ -161,8 +152,8 @@ namespace Opm {
             && this->m_satTableId == rhs.m_satTableId
             && this->state == rhs.state
             && this->m_direction == rhs.m_direction
-            && this->m_segment_number == rhs.m_segment_number
-            && this->m_center_depth == rhs.m_center_depth;
+            && this->segment_number == rhs.segment_number
+            && this->center_depth == rhs.center_depth;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {

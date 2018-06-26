@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
 
                 if (c.attachedToSegment())
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_SEGMENT_INDEX],
-                                      c.getSegmentNumber());
+                                      c.segment_number);
                 else
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_SEGMENT_INDEX],
                                       0);

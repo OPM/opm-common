@@ -104,7 +104,7 @@ serialize_ICON(int lookup_step,
                 1 : -1000;
             data[ offset + ICON_SEGMENT_INDEX ] =
                 connection.attachedToSegment() ?
-                connection.getSegmentNumber() : 0;
+                connection.segment_number : 0;
             connection_offset += niconz;
         }
 

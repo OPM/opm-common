@@ -76,8 +76,8 @@ namespace Opm {
     }
 
     int WellSegments::segmentNumberToIndex(const int segment_number) const {
-        const auto it = m_segment_number_to_index.find(segment_number);
-        if (it != m_segment_number_to_index.end()) {
+        const auto it = segment_number_to_index.find(segment_number);
+        if (it != segment_number_to_index.end()) {
             return it->second;
         } else {
             return -1;
@@ -91,7 +91,7 @@ namespace Opm {
        const int segment_index = segmentNumberToIndex(segment_number);
 
        if (segment_index < 0) { // it is a new segment
-           m_segment_number_to_index[segment_number] = size();
+           segment_number_to_index[segment_number] = size();
            m_segments.push_back(new_segment);
        } else { // the segment already exists
            m_segments[segment_index] = new_segment;
@@ -203,7 +203,7 @@ namespace Opm {
             if (index >= 0) { // found in the existing m_segments already
                 throw std::logic_error("Segments with same segment number are found!\n");
             }
-            m_segment_number_to_index[segment_number] = i_segment;
+            segment_number_to_index[segment_number] = i_segment;
         }
 
         for (size_t i_segment = 0; i_segment < m_segments.size(); ++i_segment) {
@@ -212,7 +212,7 @@ namespace Opm {
             if (outlet_segment <= 0) { // no outlet segment
                 continue;
             }
-            const int outlet_segment_index = m_segment_number_to_index[outlet_segment];
+            const int outlet_segment_index = segment_number_to_index[outlet_segment];
             m_segments[outlet_segment_index].addInletSegment(segment_number);
         }
 
@@ -350,9 +350,9 @@ namespace Opm {
         int current_index= 1;
 
         // clear the mapping from segment number to store index
-        m_segment_number_to_index.clear();
+        segment_number_to_index.clear();
         // for the top segment
-        m_segment_number_to_index[1] = 0;
+        segment_number_to_index[1] = 0;
 
         while (current_index< size()) {
             // the branch number of the last segment that is done re-ordering
@@ -390,7 +390,7 @@ namespace Opm {
                 std::swap(m_segments[current_index], m_segments[target_segment_index]);
             }
             const int segment_number = m_segments[current_index].segmentNumber();
-            m_segment_number_to_index[segment_number] = current_index;
+            segment_number_to_index[segment_number] = current_index;
             current_index++;
         }
     }
@@ -405,13 +405,13 @@ namespace Opm {
             && this->m_comp_pressure_drop == rhs.m_comp_pressure_drop
             && this->m_multiphase_model == rhs.m_multiphase_model
             && this->m_segments.size() == rhs.m_segments.size()
-            && this->m_segment_number_to_index.size() == rhs.m_segment_number_to_index.size()
+            && this->segment_number_to_index.size() == rhs.segment_number_to_index.size()
             && std::equal( this->m_segments.begin(),
                            this->m_segments.end(),
                            rhs.m_segments.begin() )
-            && std::equal( this->m_segment_number_to_index.begin(),
-                           this->m_segment_number_to_index.end(),
-                           rhs.m_segment_number_to_index.begin() );
+            && std::equal( this->segment_number_to_index.begin(),
+                           this->segment_number_to_index.end(),
+                           rhs.segment_number_to_index.begin() );
     }
 
     bool WellSegments::operator!=( const WellSegments& rhs ) const {
