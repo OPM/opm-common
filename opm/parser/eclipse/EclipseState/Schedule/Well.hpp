@@ -94,6 +94,23 @@ namespace Opm {
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(const DeckRecord& deckRecord);
 
+        /*
+          The getCompletions() function will return a map:
+
+          {
+              1 : [Connection, Connection],
+              2 : [Connection, Connection, Connecton],
+             -3 : [Connection]
+             -7 : [Connection]
+          }
+
+          The integer ID's correspond to the COMPLETION id given by the COMPLUMP
+          keyword. All positive id values come from COMPLUMP, whereas the
+          negative values are arbitrary negative id values for connections which
+          have not been lumped together in a completion. In the case of negative
+          id values the list of connections always has exactly one element.
+         */
+
         std::map<int, std::vector<Connection>> getCompletions(size_t time_step) const;
         const WellConnections& getConnections(size_t timeStep) const;
         const WellConnections& getConnections() const;

@@ -101,7 +101,7 @@ namespace Opm {
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
         const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
-        int satTableId;
+        int satTableId = -1;
         bool defaultSatTable = true;
         {
             const auto& connectionTransmissibilityFactorItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
