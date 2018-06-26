@@ -532,23 +532,6 @@ BOOST_AUTO_TEST_CASE(InjectorType) {
 
 
 
-BOOST_AUTO_TEST_CASE(WellStatus) {
-    auto timeMap = createXDaysTimeMap(10);
-
-    Opm::Well well("WELL1" ,  0, 0, 0.0, Opm::Phase::OIL, timeMap , 0);
-
-    std::vector<Opm::Connection> newCompletions;
-    Opm::Connection comp1(10 , 10 , 10 , 1, 0.25 , Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor",99.88), Opm::Value<double>("D",22.33), Opm::Value<double>("SKIN",33.22), 0);
-
-    newCompletions.push_back( comp1 );
-
-    well.addConnections( 2 , newCompletions );
-
-    well.setStatus( 3 , Opm::WellCommon::OPEN );
-    BOOST_CHECK_EQUAL( Opm::WellCommon::OPEN , well.getStatus( 5 ));
-}
-
-
 
 /*****************************************************************/
 

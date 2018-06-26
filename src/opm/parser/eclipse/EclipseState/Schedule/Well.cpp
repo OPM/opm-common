@@ -378,33 +378,6 @@ namespace Opm {
         return *m_completions.back();
     }
 
-    void Well::addConnections(size_t time_step, const std::vector< Connection >& newConnections ) {
-        WellConnections * new_set = new WellConnections( this->getConnections(time_step));
-        int complnum_shift = new_set->size();
-
-        const auto headI = this->m_headI[ time_step ];
-        const auto headJ = this->m_headJ[ time_step ];
-
-        auto prev_size = new_set->size();
-        for( auto completion : newConnections ) {
-            completion.fixDefaultIJ( headI , headJ );
-            completion.shift_complnum( complnum_shift );
-
-            new_set->add( completion );
-            const auto new_size = new_set->size();
-
-            /* Connections can be "re-added", i.e. same coordinates but with a
-             * different set of properties. In this case they also inherit the
-             * completion number (which must otherwise be shifted because
-             * every COMPDAT keyword thinks it's the only one.
-             */
-            if( new_size == prev_size ) --complnum_shift;
-            else ++prev_size;
-        }
-
-        this->updateWellConnections( time_step, new_set );
-    }
-
     const std::string Well::getGroupName(size_t time_step) const {
         return m_groupName.get(time_step);
     }
