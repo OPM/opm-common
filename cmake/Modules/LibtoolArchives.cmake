@@ -123,7 +123,7 @@ function (configure_la name target)
 	mark_as_advanced (libtool_MAIN)
 	# notify the user if it not found after we explicitly searched
 	if (NOT libtool_MAIN)
-	  message (STATUS "Libtool not found!")	  
+	  message (STATUS "Not generating libtool archive (.la) since libtool was not found")
 	endif (NOT libtool_MAIN)
   endif (NOT libtool_MAIN)
   if (libtool_MAIN)
