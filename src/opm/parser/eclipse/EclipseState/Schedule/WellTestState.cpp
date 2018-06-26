@@ -101,7 +101,7 @@ namespace Opm {
     }
 
 
-    bool WellTestState::hasCompletion(const std::string well_name, const size_t completionIdx) const {
+    bool WellTestState::hasCompletion(const std::string& well_name, const size_t completionIdx) const {
         const auto completion_iter = std::find_if(completions.begin(),
                                             completions.end(),
                                             [&well_name, &completionIdx](const ClosedCompletion& completion)
