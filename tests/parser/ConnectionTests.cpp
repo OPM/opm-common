@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(testGetFunctions) {
     BOOST_CHECK_EQUAL( 99.88 , completion.getConnectionTransmissibilityFactor());
     BOOST_CHECK_EQUAL( 22.33 , completion.getDiameter());
     BOOST_CHECK_EQUAL( 33.22 , completion.getSkinFactor());
-    BOOST_CHECK_EQUAL( 0 , completion.getSatTableId());
+    BOOST_CHECK_EQUAL( 0 , completion.sat_tableId);
 }
 
 

@@ -51,7 +51,7 @@ namespace Opm {
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
           wellPi(1.0),
           m_skinFactor(skinFactor),
-          m_satTableId(satTableId),
+          sat_tableId(satTableId),
           state(state),
           m_direction(direction),
           center_depth( depth )
@@ -92,9 +92,6 @@ namespace Opm {
         return m_skinFactor.getValue();
     }
 
-    int Connection::getSatTableId() const {
-        return m_satTableId;
-    }
 
     const Value<double>& Connection::getConnectionTransmissibilityFactorAsValueObject() const {
         return m_connectionTransmissibilityFactor;
@@ -129,7 +126,7 @@ namespace Opm {
                             == rhs.m_connectionTransmissibilityFactor
             && this->wellPi == rhs.wellPi
             && this->m_skinFactor == rhs.m_skinFactor
-            && this->m_satTableId == rhs.m_satTableId
+            && this->sat_tableId == rhs.sat_tableId
             && this->state == rhs.state
             && this->m_direction == rhs.m_direction
             && this->segment_number == rhs.segment_number
