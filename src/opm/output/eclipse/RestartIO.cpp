@@ -24,6 +24,7 @@
 #include <opm/output/eclipse/RestartIO.hpp>
 
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
@@ -608,6 +609,25 @@ writeHeader(::Opm::RestartIO::ecl_rst_file_type* rst_file,
 }
 
 
+void writeMSWData(::Opm::RestartIO::ecl_rst_file_type * rst_file,
+		 int                 sim_step,
+		 double              simTime,
+		 int                 ert_phase_mask,
+		 const UnitSystem&   units,
+		 const Schedule&     schedule,
+		 const EclipseGrid&  grid,
+		 const EclipseState& es,
+		 const SummaryState& sumState,
+		 const std::vector<int>& ih
+		)
+{
+    // write ISEG, RSEG, ILBS and ILBR to restart file
+    const size_t simStep = static_cast<size_t> (sim_step);
+    auto  MSWData = Helpers::AggregateMSWData(ih);
+    MSWData.captureDeclaredMSWData(schedule, simStep, ih);
+    write_kw(rst_file, EclKW<int>("ISEG", MSWData.getISeg()));
+}
+
 void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
 		 int                      sim_step,
 		 double                   simTime,
@@ -616,20 +636,24 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
 		 const Schedule&          schedule,
 		 const EclipseGrid&       grid,
 		 const EclipseState&      es,
-		 const std::vector<int>&  ih,
-		 const Opm::SummaryState& sumState)
+		 const Opm::SummaryState& sumState,
+		 const std::vector<int>&  ih)
 {
     // write IGRP to restart file
     //std::cout << "writeGroup before initializing groupData" << std::endl;
     const size_t simStep = static_cast<size_t> (sim_step);
+
     auto  groupData = Helpers::AggregateGroupData(ih);
+
     auto & rst_g_keys = groupData.restart_group_keys;
     auto & rst_f_keys = groupData.restart_field_keys;
     auto & grpKeyToInd = groupData.groupKeyToIndex;
     auto & fldKeyToInd = groupData.fieldKeyToIndex;
+
     groupData.captureDeclaredGroupData(schedule, rst_g_keys, rst_f_keys, grpKeyToInd, fldKeyToInd, simStep, sumState, ih);
-    write_kw(rst_file, EclKW<int>  ("IGRP", groupData.getIGroup()));
-    write_kw(rst_file, EclKW<float>("SGRP", groupData.getSGroup()));
+
+    write_kw(rst_file, EclKW<int>   ("IGRP", groupData.getIGroup()));
+    write_kw(rst_file, EclKW<float> ("SGRP", groupData.getSGroup()));
     write_kw(rst_file, EclKW<double>("XGRP", groupData.getXGroup()));
 }
 

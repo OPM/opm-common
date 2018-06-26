@@ -56,6 +56,15 @@ namespace Opm {
           ijk({i,j,k})
     {}
 
+    bool Connection::sameCoordinate(const Connection& other) const {
+        if ((m_i == other.m_i) &&
+            (m_j == other.m_j) &&
+            (m_k == other.m_k))
+            return true;
+        else
+            return false;
+    }
+
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
         if ((ijk[0] == i) && (ijk[1] == j) && (ijk[2] == k)) {
             return true;
@@ -122,9 +131,12 @@ namespace Opm {
         this->open_state = state;
     }
 
-    void Connection::updateSegment(int segment_number, double center_depth) {
+  void Connection::updateSegment(int segment_number, double center_depth, std::size_t seqIndex, double compSegStartLength, double compSegEndLength) {
         this->segment_number = segment_number;
         this->center_depth = center_depth;
+        this->seqIndex = seqIndex;
+        this->compSegStartLength = compSegStartLength;
+	this->compSegEndLength = compSegEndLength;
     }
 
     int Connection::segment() const {
@@ -150,12 +162,13 @@ namespace Opm {
             && this->open_state == rhs.open_state
             && this->direction == rhs.direction
             && this->segment_number == rhs.segment_number
-            && this->center_depth == rhs.center_depth;
+            && this->center_depth == rhs.center_depth
+            && this->seqIndex == rhs.seqIndex
+            && this->compSegStartLength == rhs.compSegStartLength
+            && this->compSegEndLength == rhs.compSegEndLength;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {
         return !( *this == rhs );
     }
 }
-
-

@@ -688,7 +688,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 	    it++;
 	}
 
-    for (const auto* grp : curGroups)
+    /*for (const auto* grp : curGroups)
     {
 	if (grp != nullptr)
 	{
@@ -696,7 +696,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 	    const auto itr = nameIndexMap.find(gname);
 	    const int ind = itr->second;
 	}
-    }
+    }  */
 
     {
 	groupLoop(curGroups, [sched, simStep, inteHead, this]

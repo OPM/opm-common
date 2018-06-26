@@ -22,14 +22,15 @@
 #define COMPLETION_HPP_
 
 #include <array>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
-
 
 namespace Opm {
 
@@ -68,7 +69,7 @@ namespace Opm {
         void setState(WellCompletion::StateEnum state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
-        void updateSegment(int segment_number, double center_depth);
+        void updateSegment(int segment_number, double center_depth, std::size_t seqIndex, double compSegStartLength, double compSegEndLength);
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
@@ -88,10 +89,12 @@ namespace Opm {
         // -1 means the completion is not related to segment
         int segment_number = -1;
         double wPi = 1.0;
+
+        std::size_t seqIndex;
+        double compSegStartLength;
+        double compSegEndLength;
     };
 }
-
-
 
 #endif /* COMPLETION_HPP_ */
 

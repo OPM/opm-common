@@ -33,7 +33,7 @@ namespace Opm {
 
 
     Compsegs::Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
-                       WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in)
+                       WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in, size_t seqIndex_in)
     : m_i(i_in),
       m_j(j_in),
       m_k(k_in),
@@ -41,8 +41,9 @@ namespace Opm {
       m_distance_start(distance_start_in),
       m_distance_end(distance_end_in),
       m_dir(dir_in),
-      center_depth(center_depth_in),
-      segment_number(segment_number_in)
+      m_center_depth(center_depth_in),
+      m_segment_number(segment_number_in),
+      m_seqIndex(seqIndex_in)
     {
     }
 
@@ -121,12 +122,15 @@ namespace Opm {
             }
 
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
+		size_t seqIndex = compsegs.size();
                 compsegs.emplace_back( I, J, K,
                                        branch,
                                        distance_start, distance_end,
                                        direction,
                                        center_depth,
-                                       segment_number );
+                                       segment_number,
+				       seqIndex
+ 				    );
             } else { // a range is defined. genrate a range of Compsegs
                 throw std::runtime_error("entering COMPSEGS entries with a range is not supported yet!");
             }
@@ -239,7 +243,7 @@ namespace Opm {
             const int k = compseg.m_k;
 
             Connection& connection = connection_set.getFromIJK( i, j, k );
-            connection.updateSegment(compseg.segment_number, compseg.center_depth);
+            connection.updateSegment(compseg.segment_number, compseg.center_depth,compseg.m_seqIndex, compseg.m_distance_start,  compseg.m_distance_end);
         }
 
         for (size_t ic = 0; ic < connection_set.size(); ++ic) {
