@@ -99,7 +99,7 @@ public:
     bool hasWell(const std::string& well_name, WellTestConfig::Reason reason) const;
     void openWell(const std::string& well_name);
 
-    bool hasCompletion(const std::string well_name, const size_t completionIdx) const;
+    bool hasCompletion(const std::string& well_name, const size_t completionIdx) const;
 
     size_t sizeWells() const;
     size_t sizeCompletions() const;
