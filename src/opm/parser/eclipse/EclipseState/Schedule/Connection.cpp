@@ -53,7 +53,7 @@ namespace Opm {
           m_skinFactor(skinFactor),
           sat_tableId(satTableId),
           state(state),
-          m_direction(direction),
+          dir(direction),
           center_depth( depth )
     {}
 
@@ -105,9 +105,6 @@ namespace Opm {
         return m_skinFactor;
     }
 
-    WellCompletion::DirectionEnum Connection::getDirection() const {
-        return m_direction;
-    }
 
 
 
@@ -128,7 +125,7 @@ namespace Opm {
             && this->m_skinFactor == rhs.m_skinFactor
             && this->sat_tableId == rhs.sat_tableId
             && this->state == rhs.state
-            && this->m_direction == rhs.m_direction
+            && this->dir == rhs.dir
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth;
     }

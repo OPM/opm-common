@@ -298,7 +298,7 @@ std::vector<int> serialize_ICON( int sim_step,
             data[ offset + ICON_I_INDEX ] = connection.getI() + 1;
             data[ offset + ICON_J_INDEX ] = connection.getJ() + 1;
             data[ offset + ICON_K_INDEX ] = connection.getK() + 1;
-            data[ offset + ICON_DIRECTION_INDEX ] = connection.getDirection();
+            data[ offset + ICON_DIRECTION_INDEX ] = connection.dir;
             {
                 const auto open = WellCompletion::StateEnum::OPEN;
                 data[ offset + ICON_STATUS_INDEX ] = connection.state == open

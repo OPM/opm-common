@@ -59,26 +59,24 @@ namespace Opm {
         double getSkinFactor() const;
         bool attachedToSegment() const;
 
-        WellCompletion::DirectionEnum getDirection() const;
-
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
 
         // related segment number
         // -1 means the completion is not related to segment
         int segment_number = -1;
-
+        WellCompletion::DirectionEnum dir;
         double center_depth;
         int complnum;
         WellCompletion::StateEnum state;
         double wellPi = 1.0;
         int sat_tableId;
+
     private:
         int m_i, m_j, m_k;
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
         Value<double> m_skinFactor;
-        WellCompletion::DirectionEnum m_direction;
         Value<double> getDiameterAsValueObject() const;
         Value<double> getSkinFactorAsValueObject() const;
     };

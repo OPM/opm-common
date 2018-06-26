@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_K_INDEX],
                                   c.getK() + 1);
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_DIRECTION_INDEX],
-                                  c.getDirection());
+                                  c.dir);
 
                 if (c.state == Opm::WellCompletion::StateEnum::OPEN)
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_STATUS_INDEX],
