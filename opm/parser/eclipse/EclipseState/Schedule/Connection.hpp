@@ -69,7 +69,7 @@ namespace Opm {
         void setState(WellCompletion::StateEnum state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
-        void updateSegment(int segment_number, double center_depth, std::size_t seqIndex, double compSegStartLength, double compSegEndLength);
+        void updateSegment(int segment_number, double center_depth, std::size_t seqIndex);
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
@@ -91,8 +91,6 @@ namespace Opm {
         double wPi = 1.0;
 
         std::size_t seqIndex;
-        double compSegStartLength;
-        double compSegEndLength;
     };
 }
 

@@ -626,6 +626,9 @@ void writeMSWData(::Opm::RestartIO::ecl_rst_file_type * rst_file,
     auto  MSWData = Helpers::AggregateMSWData(ih);
     MSWData.captureDeclaredMSWData(schedule, simStep, ih);
     write_kw(rst_file, EclKW<int>("ISEG", MSWData.getISeg()));
+    write_kw(rst_file, EclKW<double>("RSEG", MSWData.getRSeg()));
+    write_kw(rst_file, EclKW<int>("ILBS", MSWData.getILBs()));
+    write_kw(rst_file, EclKW<int>("ILBR", MSWData.getILBr()));
 }
 
 void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,

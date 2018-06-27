@@ -131,12 +131,10 @@ namespace Opm {
         this->open_state = state;
     }
 
-  void Connection::updateSegment(int segment_number, double center_depth, std::size_t seqIndex, double compSegStartLength, double compSegEndLength) {
+  void Connection::updateSegment(int segment_number, double center_depth, std::size_t seqIndex) {
         this->segment_number = segment_number;
         this->center_depth = center_depth;
         this->seqIndex = seqIndex;
-        this->compSegStartLength = compSegStartLength;
-	this->compSegEndLength = compSegEndLength;
     }
 
     int Connection::segment() const {
@@ -163,9 +161,7 @@ namespace Opm {
             && this->direction == rhs.direction
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
-            && this->seqIndex == rhs.seqIndex
-            && this->compSegStartLength == rhs.compSegStartLength
-            && this->compSegEndLength == rhs.compSegEndLength;
+            && this->seqIndex == rhs.seqIndex;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {

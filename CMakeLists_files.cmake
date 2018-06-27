@@ -135,9 +135,13 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES
-          src/opm/output/eclipse/AggregateWellData.cpp
-          src/opm/output/eclipse/AggregateMSWData.cpp
+          src/opm/test_util/summaryIntegrationTest.cpp
+          src/opm/test_util/summaryRegressionTest.cpp
+          src/opm/test_util/summaryComparator.cpp
+          src/opm/test_util/EclFilesComparator.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
+          src/opm/output/eclipse/AggregateMSWData.cpp
+          src/opm/output/eclipse/AggregateWellData.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
           src/opm/output/eclipse/CreateLogiHead.cpp
@@ -486,13 +490,11 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Wells.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
         opm/output/eclipse/VectorItems/well.hpp
+        opm/output/eclipse/AggregateGroupData.hpp
+        opm/output/eclipse/AggregateMSWData.hpp
         opm/output/eclipse/AggregateWellData.hpp
         opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/DoubHEAD.hpp
-        opm/output/eclipse/AggregateWellData.hpp
-        opm/output/eclipse/AggregateMSWData.hpp
-        opm/output/eclipse/AggregateGroupData.hpp
-        opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
         opm/output/eclipse/EclipseIOUtil.hpp

@@ -34,6 +34,14 @@ namespace Opm {
 
 namespace Opm { namespace RestartIO { namespace Helpers {
 
+    struct BranchSegmentPar {
+      int outletS;
+      int noSegInBranch;
+      int firstSeg;
+      int lastSeg;
+      int branch;
+    };
+
     class AggregateMSWData
     {
     public:
