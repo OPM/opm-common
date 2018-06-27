@@ -405,7 +405,7 @@ void RegressionTest::deviationsForCell(double val1, double val2, const std::stri
 
 
 
-void RegressionTest::gridCompare() const {
+void RegressionTest::gridCompare(const bool volumecheck) const {
     double absTolerance = getAbsTolerance();
     double relTolerance = getRelTolerance();
     const unsigned int globalGridCount1 = ecl_grid_get_global_size(ecl_grid1);
@@ -416,15 +416,32 @@ void RegressionTest::gridCompare() const {
         OPM_THROW(std::runtime_error, "In grid file:"
                 << "\nCells in first file: "  << globalGridCount1
                 << "\nCells in second file: " << globalGridCount2
-                << "\nThe number of cells differ.");
+                << "\nThe number of global cells differ.");
     }
     if (activeGridCount1 != activeGridCount2) {
         OPM_THROW(std::runtime_error, "In grid file:"
                 << "\nCells in first file: "  << activeGridCount1
                 << "\nCells in second file: " << activeGridCount2
-                << "\nThe number of cells differ.");
+                << "\nThe number of active cells differ.");
     }
+
+    if (!volumecheck) {
+        return;
+    }
+
     for (unsigned int cell = 0; cell < globalGridCount1; ++cell) {
+        const bool active1 = ecl_grid_cell_active1(ecl_grid1, cell);
+        const bool active2 = ecl_grid_cell_active1(ecl_grid2, cell);
+        if (active1 != active2) {
+            int i, j, k;
+            ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
+            // Coordinates from this function are zero-based, hence incrementing
+            i++, j++, k++;
+            HANDLE_ERROR(std::runtime_error, "Grid cell with one-based indices ( "
+                         << i << ", " << j << ", " << k << " ) is "
+                         << (active1 ? "active" : "inactive") << " in first grid, but "
+                         << (active2 ? "active" : "inactive") << " in second grid.");
+        }
         const double cellVolume1 = ecl_grid_get_cell_volume1(ecl_grid1, cell);
         const double cellVolume2 = ecl_grid_get_cell_volume1(ecl_grid2, cell);
         Deviation dev = calculateDeviations(cellVolume1, cellVolume2);
@@ -434,11 +451,13 @@ void RegressionTest::gridCompare() const {
             // Coordinates from this function are zero-based, hence incrementing
             i++, j++, k++;
             HANDLE_ERROR(std::runtime_error, "In grid file: Deviations of cell volume exceed tolerances. "
-                    << "\nFor cell with coordinate (" << i << ", " << j << ", " << k << "):"
+                    << "\nFor cell with one-based indices (" << i << ", " << j << ", " << k << "):"
                     << "\nCell volume in first file: "  << cellVolume1
                     << "\nCell volume in second file: " << cellVolume2
                     << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
-                    << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
+                    << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << "."
+                    << "\nCell 1 active: " << active1
+                    << "\nCell 2 active: " << active2);
         }
     }
 }
