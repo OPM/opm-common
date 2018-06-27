@@ -23,7 +23,20 @@
 #include <iostream>
 #include <errno.h>  // For errno
 #include <stdio.h>  // For fileno() and stdout
+
+#if defined(_MSC_VER)
+// MS put some POSIX-like functions in io.h, but prefix them with underscore
+// since they are considered "vendor" and not standard functions.
+#define _CRT_NONSTDC_NO_DEPRECATE
+#include <io.h>
+#define isatty _isatty
+#elif defined(__MINGW32__)
+// MinGW also has the isatty function in io.h instead of unistd.h, but without
+// the underscore.
+#include <io.h>
+#else
 #include <unistd.h> // For isatty()
+#endif
 
 namespace Opm {
 
