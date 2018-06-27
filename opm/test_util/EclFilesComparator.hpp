@@ -175,8 +175,8 @@ class RegressionTest: public ECLFilesComparator {
         void setOnlyLastOccurrence(bool onlyLastOccurrenceArg) {this->onlyLastOccurrence = onlyLastOccurrenceArg;}
 
         //! \brief Compares grid properties of the two cases.
-        // gridCompare() checks if both the number of active and global cells in the two cases are the same. If they are, all cells are looped over to calculate the cell volume deviation for the two cases. If the both the relative and absolute deviation exceeds the tolerances, an exception is thrown.
-        void gridCompare() const;
+        // gridCompare() checks if both the number of active and global cells in the two cases are the same. If they are, and volumecheck is true, all cells are looped over to calculate the cell volume deviation for the two cases. If the both the relative and absolute deviation exceeds the tolerances, an exception is thrown.
+        void gridCompare(const bool volumecheck) const;
         //! \brief Calculates deviations for all keywords.
         // This function checks if the number of keywords of the two cases are equal, and if it is, resultsForKeyword() is called for every keyword. If not, an exception is thrown.
         void results();

@@ -114,11 +114,12 @@ int main(int argc, char** argv) {
     bool specificKeyword         = false;
     bool specificFileType        = false;
     bool throwOnError            = true;
+    bool volumecheck             = true;
     char* keyword                = nullptr;
     char* fileTypeCstr           = nullptr;
     int c                        = 0;
 
-    while ((c = getopt(argc, argv, "hiIk:lnpPt:")) != -1) {
+    while ((c = getopt(argc, argv, "hiIk:lnpPt:V")) != -1) {
         switch (c) {
             case 'h':
                 printHelp();
@@ -149,6 +150,9 @@ int main(int argc, char** argv) {
             case 't':
                 specificFileType = true;
                 fileTypeCstr = optarg;
+                break;
+            case 'V':
+                volumecheck = false;
                 break;
             case '?':
                 if (optopt == 'k') {
@@ -254,11 +258,11 @@ int main(int argc, char** argv) {
                 comparator.setOnlyLastOccurrence(true);
             }
             if (specificKeyword) {
-                comparator.gridCompare();
+                comparator.gridCompare(volumecheck);
                 comparator.resultsForKeyword(keyword);
             }
             else {
-                comparator.gridCompare();
+                comparator.gridCompare(volumecheck);
                 comparator.results();
             }
             if (comparator.getNoErrors() > 0)
