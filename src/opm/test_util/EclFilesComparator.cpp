@@ -424,23 +424,6 @@ void RegressionTest::gridCompare() const {
                 << "\nCells in second file: " << activeGridCount2
                 << "\nThe number of cells differ.");
     }
-    for (unsigned int cell = 0; cell < globalGridCount1; ++cell) {
-        const double cellVolume1 = ecl_grid_get_cell_volume1(ecl_grid1, cell);
-        const double cellVolume2 = ecl_grid_get_cell_volume1(ecl_grid2, cell);
-        Deviation dev = calculateDeviations(cellVolume1, cellVolume2);
-        if (dev.abs > absTolerance && dev.rel > relTolerance) {
-            int i, j, k;
-            ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
-            // Coordinates from this function are zero-based, hence incrementing
-            i++, j++, k++;
-            HANDLE_ERROR(std::runtime_error, "In grid file: Deviations of cell volume exceed tolerances. "
-                    << "\nFor cell with coordinate (" << i << ", " << j << ", " << k << "):"
-                    << "\nCell volume in first file: "  << cellVolume1
-                    << "\nCell volume in second file: " << cellVolume2
-                    << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
-                    << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
-        }
-    }
 }
 
 
