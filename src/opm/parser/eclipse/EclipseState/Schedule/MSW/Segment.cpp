@@ -22,7 +22,7 @@
 namespace Opm {
 
     Segment::Segment()
-    : segment_number(-1),
+    : m_segment_number(-1),
       m_branch(-1),
       m_outlet_segment(-1),
       m_total_length(invalid_value),
@@ -39,7 +39,7 @@ namespace Opm {
     Segment::Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                      double internal_diameter_in, double roughness_in, double cross_area_in,
                      double volume_in, bool data_ready_in)
-    : segment_number(segment_number_in),
+    : m_segment_number(segment_number_in),
       m_branch(branch_in),
       m_outlet_segment(outlet_segment_in),
       m_total_length(length_in),
@@ -53,7 +53,7 @@ namespace Opm {
     }
 
     int Segment::segmentNumber() const {
-        return segment_number;
+        return m_segment_number;
     }
 
 
@@ -113,8 +113,8 @@ namespace Opm {
         return m_inlet_segments;
     }
 
-    void Segment::addInletSegment(const int segment_number) {
-        m_inlet_segments.push_back(segment_number);
+    void Segment::addInletSegment(const int segment_number_in) {
+        m_inlet_segments.push_back(segment_number_in);
     }
 
     double Segment::invalidValue() {
@@ -122,7 +122,7 @@ namespace Opm {
     }
 
     bool Segment::operator==( const Segment& rhs ) const {
-        return this->segment_number    == rhs.segment_number
+        return this->m_segment_number    == rhs.m_segment_number
             && this->m_branch            == rhs.m_branch
             && this->m_outlet_segment    == rhs.m_outlet_segment
             && this->m_total_length      == rhs.m_total_length
@@ -135,15 +135,6 @@ namespace Opm {
     }
 
     bool Segment::operator!=( const Segment& rhs ) const {
-        return this->segment_number    == rhs.segment_number
-            && this->m_branch            == rhs.m_branch
-            && this->m_outlet_segment    == rhs.m_outlet_segment
-            && this->m_total_length      == rhs.m_total_length
-            && this->m_depth             == rhs.m_depth
-            && this->m_internal_diameter == rhs.m_internal_diameter
-            && this->m_roughness         == rhs.m_roughness
-            && this->m_cross_area        == rhs.m_cross_area
-            && this->m_volume            == rhs.m_volume
-            && this->m_data_ready        == rhs.m_data_ready;
+        return !this->operator==(rhs);
     }
 }
