@@ -39,7 +39,7 @@ namespace Opm {
     Connection::Connection(int i, int j , int k ,
                            int compnum,
                            double depth,
-                           WellCompletion::StateEnum state ,
+                           WellCompletion::StateEnum stateArg ,
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
@@ -47,7 +47,7 @@ namespace Opm {
                            const WellCompletion::DirectionEnum direction)
         : dir(direction),
           center_depth(depth),
-          state(state),
+          state(stateArg),
           sat_tableId(satTableId),
           complnum( compnum ),
           ijk({i,j,k}),

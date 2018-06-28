@@ -284,7 +284,7 @@ namespace {
 std::vector<int> serialize_ICON( int sim_step,
                                  int ncwmax,
                                  const std::vector<const Well*>& sched_wells,
-                                 const EclipseGrid& grid) {
+                                 const EclipseGrid& /*grid*/) {
 
     size_t well_offset = 0;
     std::vector<int> data( sched_wells.size() * ncwmax * NICONZ , 0 );

@@ -541,17 +541,6 @@ namespace Opm {
         handleWCONProducer( keyword, currentStep, true, parseContext);
     }
 
-    static Opm::Value<int> getValueItem( const DeckItem& item ){
-        Opm::Value<int> data(item.name());
-        if(item.hasValue(0)) {
-            int tempValue = item.get< int >(0);
-            if( tempValue >0){
-                data.setValue(tempValue-1);
-            }
-        }
-        return data;
-    }
-
     void Schedule::handleWPIMULT( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -859,16 +848,6 @@ namespace Opm {
             }
         }
     }
-
-    namespace {
-
-        bool defaulted( int x ) { return x < 0; }
-        int maybe( const DeckRecord& rec, const std::string& s ) {
-            const auto& item = rec.getItem( s );
-            return item.defaultApplied( 0 ) ? -1 : item.get< int >( 0 ) - 1;
-        }
-    }
-
 
     void Schedule::handleCOMPLUMP( const DeckKeyword& keyword,
                                    size_t timestep ) {
