@@ -21,6 +21,7 @@
 #ifndef COMPLETION_HPP_
 #define COMPLETION_HPP_
 
+#include <array>
 #include <map>
 #include <memory>
 #include <string>
