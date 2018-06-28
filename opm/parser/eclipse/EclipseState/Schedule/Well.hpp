@@ -94,11 +94,29 @@ namespace Opm {
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(const DeckRecord& deckRecord);
 
-        void addConnections(size_t time_step, const std::vector< Connection >& );
-        void addWellConnections(size_t time_step, WellConnections );
+        /*
+          The getCompletions() function will return a map:
+
+          {
+              1 : [Connection, Connection],
+              2 : [Connection, Connection, Connecton],
+             -3 : [Connection]
+             -7 : [Connection]
+          }
+
+          The integer ID's correspond to the COMPLETION id given by the COMPLUMP
+          keyword. All positive id values come from COMPLUMP, whereas the
+          negative values are arbitrary negative id values for connections which
+          have not been lumped together in a completion. In the case of negative
+          id values the list of connections always has exactly one element.
+         */
+
+        std::map<int, std::vector<Connection>> getCompletions(size_t time_step) const;
         const WellConnections& getConnections(size_t timeStep) const;
         const WellConnections& getConnections() const;
         WellConnections getActiveConnections(size_t timeStep, const EclipseGrid& grid) const;
+        WellConnections * newWellConnections(size_t time_step);
+        void updateWellConnections(size_t time_step, WellConnections * new_set );
 
         /* The rate of a given phase under the following assumptions:
          * * Returns zero if production is requested for an injector (and vice
@@ -164,6 +182,13 @@ namespace Opm {
         const Events& getEvents() const;
         void addEvent(ScheduleEvents::Events event, size_t reportStep);
         bool hasEvent(uint64_t eventMask, size_t reportStep) const;
+        void handleCOMPLUMP(const DeckRecord& record, size_t time_step);
+        void handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
+        void handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step);
+        void handleWELOPEN(const DeckRecord& record, size_t time_step, WellCompletion::StateEnum status);
+        void handleWPIMULT(const DeckRecord& record, size_t time_step);
+        void handleWELSEGS(const DeckKeyword& keyword, size_t time_step);
+
 
         /*
           Will remove all completions which are attached to inactive cells. Will
@@ -183,7 +208,7 @@ namespace Opm {
         DynamicState< double > m_efficiencyFactors;
 
         DynamicState< int > m_isProducer;
-        DynamicState< WellConnections > m_completions;
+        DynamicState< std::shared_ptr<WellConnections> > m_completions;
         DynamicState< WellProductionProperties > m_productionProperties;
         DynamicState< WellInjectionProperties > m_injectionProperties;
         DynamicState< WellPolymerProperties > m_polymerProperties;

@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
                 const size_t offset = w_offset + c_offset;
 
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_IC_INDEX],
-                                  c.complnum());
+                                  c.complnum);
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_I_INDEX],
                                   c.getI() + 1);
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_J_INDEX],
@@ -64,9 +64,9 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_K_INDEX],
                                   c.getK() + 1);
                 BOOST_CHECK_EQUAL(icondata[offset + ICON_DIRECTION_INDEX],
-                                  c.getDirection());
+                                  c.dir);
 
-                if (c.getState() == Opm::WellCompletion::StateEnum::OPEN)
+                if (c.state == Opm::WellCompletion::StateEnum::OPEN)
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_STATUS_INDEX],
                                       1);
                 else
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
 
                 if (c.attachedToSegment())
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_SEGMENT_INDEX],
-                                      c.getSegmentNumber());
+                                      c.segment_number);
                 else
                     BOOST_CHECK_EQUAL(icondata[offset + ICON_SEGMENT_INDEX],
                                       0);

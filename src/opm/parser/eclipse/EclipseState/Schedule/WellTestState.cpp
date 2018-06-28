@@ -85,29 +85,29 @@ namespace Opm {
 
 
 
-    void WellTestState::addClosedCompletion(const std::string& well_name, size_t completionIdx, double sim_time) {
-        if (this->hasCompletion(well_name, completionIdx))
+    void WellTestState::addClosedCompletion(const std::string& well_name, int complnum, double sim_time) {
+        if (this->hasCompletion(well_name, complnum))
             return;
 
-        this->completions.push_back({well_name, completionIdx, sim_time, 0});
+        this->completions.push_back( {well_name, complnum, sim_time, 0} );
     }
 
 
-    void WellTestState::dropCompletion(const std::string& well_name, size_t completionIdx) {
+    void WellTestState::dropCompletion(const std::string& well_name, int complnum) {
         completions.erase(std::remove_if(completions.begin(),
-                                   completions.end(),
-                                   [&well_name, completionIdx](const ClosedCompletion& completion) { return (completion.wellName == well_name && completion.completion == completionIdx); }),
-                    completions.end());
+                                         completions.end(),
+                                         [&well_name, complnum](const ClosedCompletion& completion) { return (completion.wellName == well_name && completion.complnum == complnum); }),
+                          completions.end());
     }
 
 
-    bool WellTestState::hasCompletion(const std::string& well_name, const size_t completionIdx) const {
+    bool WellTestState::hasCompletion(const std::string& well_name, const int complnum) const {
         const auto completion_iter = std::find_if(completions.begin(),
-                                            completions.end(),
-                                            [&well_name, &completionIdx](const ClosedCompletion& completion)
-                                             {
-                                                return (completionIdx == completion.completion && completion.wellName == well_name);
-                                            });
+                                                  completions.end(),
+                                                  [&well_name, &complnum](const ClosedCompletion& completion)
+                                                  {
+                                                    return (complnum == completion.complnum && completion.wellName == well_name);
+                                                  });
         return (completion_iter != completions.end());
     }
 
@@ -115,8 +115,8 @@ namespace Opm {
         return this->completions.size();
     }
 
-    std::vector<std::pair<std::string, size_t>> WellTestState::updateCompletion(const WellTestConfig& config, double sim_time) {
-        std::vector<std::pair<std::string, size_t>> output;
+    std::vector<std::pair<std::string, int>> WellTestState::updateCompletion(const WellTestConfig& config, double sim_time) {
+        std::vector<std::pair<std::string, int>> output;
         for (auto& closed_completion : this->completions) {
             if (config.has(closed_completion.wellName, WellTestConfig::Reason::COMPLETION)) {
                 const auto& well_config = config.get(closed_completion.wellName, WellTestConfig::Reason::COMPLETION);
@@ -126,7 +126,7 @@ namespace Opm {
                     if (well_config.num_test == 0 || (closed_completion.num_attempt < well_config.num_test)) {
                         closed_completion.last_test = sim_time;
                         closed_completion.num_attempt += 1;
-                        output.push_back(std::make_pair(closed_completion.wellName, closed_completion.completion));
+                        output.push_back(std::make_pair(closed_completion.wellName, closed_completion.complnum));
                     }
             }
         }

@@ -443,13 +443,8 @@ BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
 BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     const Parser parser;
     const std::string deckFile(pathprefix() + "SCHEDULE/SCHEDULE_MULTISEGMENT_WELL");
-    const auto deck =  parser.parseFile(deckFile, ParseContext());
     const ParseContext parseContext;
-    const EclipseState state(deck, parseContext);
-    const auto& grid = state.getInputGrid();
-    const TableManager table ( deck );
-    const Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    const Schedule sched(deck, grid, eclipseProperties, Phases(true, true, true), parseContext );
+    const auto deck =  parser.parseFile(deckFile, parseContext);
 
     // for WELSEGS keyword
     const auto& kw = deck.getKeyword("WELSEGS");
@@ -568,6 +563,11 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL(  3237.5, distance_end );
     }
 
+    const EclipseState state(deck, parseContext);
+    const auto& grid = state.getInputGrid();
+    const TableManager table ( deck );
+    const Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    const Schedule sched(deck, grid, eclipseProperties, Phases(true, true, true), parseContext );
     // checking the relation between segments and completions
     // and also the depth of completions
     {
@@ -577,26 +577,26 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         BOOST_CHECK_EQUAL(7U, connections.size());
 
         const Connection& connection5 = connections.get(4);
-        const int seg_number_connection5 = connection5.getSegmentNumber();
-        const double connection5_depth = connection5.getCenterDepth();
+        const int seg_number_connection5 = connection5.segment_number;
+        const double connection5_depth = connection5.center_depth;
         BOOST_CHECK_EQUAL(seg_number_connection5, 6);
         BOOST_CHECK_CLOSE(connection5_depth, 2538.83, 0.001);
 
         const Connection& connection6 = connections.get(5);
-        const int seg_number_connection6 = connection6.getSegmentNumber();
-        const double connection6_depth = connection6.getCenterDepth();
+        const int seg_number_connection6 = connection6.segment_number;
+        const double connection6_depth = connection6.center_depth;
         BOOST_CHECK_EQUAL(seg_number_connection6, 6);
         BOOST_CHECK_CLOSE(connection6_depth, 2537.83, 0.001);
 
         const Connection& connection1 = connections.get(0);
-        const int seg_number_connection1 = connection1.getSegmentNumber();
-        const double connection1_depth = connection1.getCenterDepth();
+        const int seg_number_connection1 = connection1.segment_number;
+        const double connection1_depth = connection1.center_depth;
         BOOST_CHECK_EQUAL(seg_number_connection1, 1);
         BOOST_CHECK_EQUAL(connection1_depth, 2512.5);
 
         const Connection& connection3 = connections.get(2);
-        const int seg_number_connection3 = connection3.getSegmentNumber();
-        const double connection3_depth = connection3.getCenterDepth();
+        const int seg_number_connection3 = connection3.segment_number;
+        const double connection3_depth = connection3.center_depth;
         BOOST_CHECK_EQUAL(seg_number_connection3, 3);
         BOOST_CHECK_EQUAL(connection3_depth, 2562.5);
     }

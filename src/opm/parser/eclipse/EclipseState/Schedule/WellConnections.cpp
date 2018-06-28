@@ -22,15 +22,19 @@
 #include <limits>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 
 namespace Opm {
 
-    WellConnections::WellConnections( std::initializer_list< Connection > cs ) {
-        for( auto&& c : cs ) this->add( c );
+    WellConnections::WellConnections(int headI, int headJ) :
+        headI(headI),
+        headJ(headJ)
+    {
     }
+
 
 
     WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) {
@@ -39,6 +43,130 @@ namespace Opm {
                 this->add(c);
         }
     }
+
+    void WellConnections::addConnection(int i, int j , int k ,
+                                        int complnum,
+                                        double depth,
+                                        WellCompletion::StateEnum state ,
+                                        const Value<double>& connectionTransmissibilityFactor,
+                                        const Value<double>& diameter,
+                                        const Value<double>& skinFactor,
+                                        const int satTableId,
+                                        const WellCompletion::DirectionEnum direction)
+    {
+        int conn_i = (i < 0) ? this->headI : i;
+        int conn_j = (j < 0) ? this->headJ : j;
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, connectionTransmissibilityFactor, diameter, skinFactor, satTableId, direction);
+        this->add(conn);
+    }
+
+
+
+    void WellConnections::addConnection(int i, int j , int k ,
+                                        double depth,
+                                        WellCompletion::StateEnum state ,
+                                        const Value<double>& connectionTransmissibilityFactor,
+                                        const Value<double>& diameter,
+                                        const Value<double>& skinFactor,
+                                        const int satTableId,
+                                        const WellCompletion::DirectionEnum direction)
+    {
+        int complnum = -(this->m_connections.size() + 1);
+        this->addConnection(i,
+                            j,
+                            k,
+                            complnum,
+                            depth,
+                            state,
+                            connectionTransmissibilityFactor,
+                            diameter,
+                            skinFactor,
+                            satTableId,
+                            direction);
+    }
+
+    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
+        const auto& itemI = record.getItem( "I" );
+        const auto defaulted_I = itemI.defaultApplied( 0 ) || itemI.get< int >( 0 ) == 0;
+        const int I = !defaulted_I ? itemI.get< int >( 0 ) - 1 : this->headI;
+
+        const auto& itemJ = record.getItem( "J" );
+        const auto defaulted_J = itemJ.defaultApplied( 0 ) || itemJ.get< int >( 0 ) == 0;
+        const int J = !defaulted_J ? itemJ.get< int >( 0 ) - 1 : this->headJ;
+
+        int K1 = record.getItem("K1").get< int >(0) - 1;
+        int K2 = record.getItem("K2").get< int >(0) - 1;
+        WellCompletion::StateEnum state = WellCompletion::StateEnumFromString( record.getItem("STATE").getTrimmedString(0) );
+        Value<double> connectionTransmissibilityFactor("CompletionTransmissibilityFactor");
+        Value<double> diameter("Diameter");
+        Value<double> skinFactor("SkinFactor");
+        const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
+        int satTableId = -1;
+        bool defaultSatTable = true;
+        {
+            const auto& connectionTransmissibilityFactorItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
+            const auto& diameterItem = record.getItem("DIAMETER");
+            const auto& skinFactorItem = record.getItem("SKIN");
+            const auto& satTableIdItem = record.getItem("SAT_TABLE");
+
+            if (connectionTransmissibilityFactorItem.hasValue(0) && connectionTransmissibilityFactorItem.getSIDouble(0) > 0)
+                connectionTransmissibilityFactor.setValue(connectionTransmissibilityFactorItem.getSIDouble(0));
+
+            if (diameterItem.hasValue(0))
+                diameter.setValue( diameterItem.getSIDouble(0));
+
+            if (skinFactorItem.hasValue(0))
+                skinFactor.setValue( skinFactorItem.get< double >(0));
+
+            if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
+            {
+                satTableId = satTableIdItem.get< int >(0);
+                defaultSatTable = false;
+            }
+        }
+
+        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(record.getItem("DIR").getTrimmedString(0));
+
+        for (int k = K1; k <= K2; k++) {
+            if (defaultSatTable)
+                satTableId = satnum.iget(grid.getGlobalIndex(I,J,k));
+
+            auto same_ijk = [&]( const Connection& c ) {
+                return c.sameCoordinate( I,J,k );
+            };
+
+            auto prev = std::find_if( this->m_connections.begin(),
+                                      this->m_connections.end(),
+                                      same_ijk );
+
+            if (prev == this->m_connections.end()) {
+                this->addConnection(I,J,k,
+                                    grid.getCellDepth( I,J,k ),
+                                    state,
+                                    connectionTransmissibilityFactor,
+                                    diameter,
+                                    skinFactor,
+                                    satTableId,
+                                    direction );
+            } else {
+                // The complnum value carries over; the rest of the state is fully specified by
+                // the current COMPDAT keyword.
+                int complnum = prev->complnum;
+                *prev = Connection(I,J,k,
+                                   complnum,
+                                   grid.getCellDepth(I,J,k),
+                                   state,
+                                   connectionTransmissibilityFactor,
+                                   diameter,
+                                   skinFactor,
+                                   satTableId,
+                                   direction );
+            }
+        }
+    }
+
+
+
 
     size_t WellConnections::size() const {
         return m_connections.size();
@@ -58,27 +186,23 @@ namespace Opm {
     }
 
 
-    void WellConnections::add( Connection connection ) {
-        auto same = [&]( const Connection& c ) {
-            return c.sameCoordinate( connection );
-        };
-
-        auto prev = std::find_if( this->m_connections.begin(),
-                                  this->m_connections.end(),
-                                  same );
-
-        if( prev != this->m_connections.end() ) {
-            // update the completion, but preserve it's number
-            *prev = Connection( connection, prev->complnum() );
-            return;
+    Connection& WellConnections::getFromIJK(const int i, const int j, const int k) {
+      for (size_t ic = 0; ic < size(); ++ic) {
+        if (get(ic).sameCoordinate(i, j, k)) {
+          return this->m_connections[ic];
         }
+      }
+      throw std::runtime_error(" the connection is not found! \n ");
+    }
 
+
+    void WellConnections::add( Connection connection ) {
         m_connections.emplace_back( connection );
     }
 
     bool WellConnections::allConnectionsShut( ) const {
         auto shut = []( const Connection& c ) {
-            return c.getState() == WellCompletion::StateEnum::SHUT;
+            return c.state == WellCompletion::StateEnum::SHUT;
         };
 
         return std::all_of( this->m_connections.begin(),
@@ -109,7 +233,7 @@ namespace Opm {
 
         for (size_t pos = 1; pos < m_connections.size() - 1; ++pos) {
             const auto& prev = m_connections[pos - 1];
-            const double prevz = prev.getCenterDepth();
+            const double prevz = prev.center_depth;
             size_t next_index = findClosestConnection(prev.getI(), prev.getJ(), prevz, pos);
             std::swap(m_connections[next_index], m_connections[pos]);
         }
@@ -125,7 +249,7 @@ namespace Opm {
         for (size_t pos = start_pos; pos < m_connections.size(); ++pos) {
             const auto& connection = m_connections[ pos ];
 
-            const double depth = connection.getCenterDepth();
+            const double depth = connection.center_depth;
             const int ci = connection.getI();
             const int cj = connection.getJ();
             // Using square of distance to avoid non-integer arithmetics.

@@ -22,16 +22,15 @@
 
 
 namespace Opm {
-
-    WellConnections updatingConnectionsWithSegments(const DeckKeyword& compsegs,
-                                                  const WellConnections& input_connections,
-                                                  const WellSegments& segment_set)
+    WellConnections * newConnectionsWithSegments(const DeckKeyword& compsegs,
+                                                 const WellConnections& input_connections,
+                                                 const WellSegments& segment_set)
     {
-        WellConnections new_connection_set(input_connections);
+        WellConnections * new_connection_set = new WellConnections(input_connections);
 
         std::vector<Compsegs> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs );
         Compsegs::processCOMPSEGS(compsegs_vector, segment_set);
-        Compsegs::updateConnectionsWithSegment(compsegs_vector, new_connection_set);
+        Compsegs::updateConnectionsWithSegment(compsegs_vector, *new_connection_set);
         return new_connection_set;
     }
 }

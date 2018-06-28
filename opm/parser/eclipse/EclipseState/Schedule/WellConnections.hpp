@@ -25,13 +25,22 @@
 
 namespace Opm {
     class EclipseGrid;
-
+    class Eclipse3DProperties;
     class WellConnections {
     public:
         WellConnections() = default;
+        WellConnections(int headI, int headJ);
         // cppcheck-suppress noExplicitConstructor
-        WellConnections( std::initializer_list< Connection > );
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
+        void addConnection(int i, int j , int k ,
+                           double depth,
+                           WellCompletion::StateEnum state ,
+                           const Value<double>& connectionTransmissibilityFactor,
+                           const Value<double>& diameter,
+                           const Value<double>& skinFactor,
+                           const int satTableId,
+                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
+        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -39,6 +48,7 @@ namespace Opm {
         size_t size() const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
+        Connection& getFromIJK(const int i, const int j, const int k);
 
         const_iterator begin() const { return this->m_connections.begin(); }
         const_iterator end() const { return this->m_connections.end(); }
@@ -62,8 +72,19 @@ namespace Opm {
         bool operator!=( const WellConnections& ) const;
 
     private:
+        void addConnection(int i, int j , int k ,
+                           int complnum,
+                           double depth,
+                           WellCompletion::StateEnum state ,
+                           const Value<double>& connectionTransmissibilityFactor,
+                           const Value<double>& diameter,
+                           const Value<double>& skinFactor,
+                           const int satTableId,
+                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
+
         std::vector< Connection > m_connections;
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
+        int headI, headJ;
     };
 }
 

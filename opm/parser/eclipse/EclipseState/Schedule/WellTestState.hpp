@@ -46,9 +46,10 @@ public:
         int num_attempt;
     };
 
+
     struct ClosedCompletion {
         std::string wellName;
-        size_t completion;
+        int complnum;
         double last_test;
         int num_attempt;
     };
@@ -63,7 +64,7 @@ public:
       The simulator has decided to close a particular completion in a well; we then add it here
       as a closed completions
     */
-    void addClosedCompletion(const std::string& well_name, size_t completionIdx, double sim_time);
+    void addClosedCompletion(const std::string& well_name, int complnum, double sim_time);
 
     /*
       The update will consult the WellTestConfig object and return a list of
@@ -79,7 +80,7 @@ public:
       update method will update the internal state of the object by counting up
       the openiing attempts, and also set the time for the last attempt to open.
     */
-    std::vector<std::pair<std::string, size_t>> updateCompletion(const WellTestConfig& config, double sim_time);
+    std::vector<std::pair<std::string, int>> updateCompletion(const WellTestConfig& config, double sim_time);
 
 
     /*
@@ -94,12 +95,12 @@ public:
       method should be called to indicate that this reason for keeping the well
       closed is no longer active.
     */
-    void dropCompletion(const std::string& well_name, size_t completionIdx);
+    void dropCompletion(const std::string& well_name, int complnum);
 
     bool hasWell(const std::string& well_name, WellTestConfig::Reason reason) const;
     void openWell(const std::string& well_name);
 
-    bool hasCompletion(const std::string& well_name, const size_t completionIdx) const;
+    bool hasCompletion(const std::string& well_name, const int complnum) const;
 
     size_t sizeWells() const;
     size_t sizeCompletions() const;

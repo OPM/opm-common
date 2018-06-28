@@ -41,8 +41,8 @@ namespace Opm {
       m_distance_start(distance_start_in),
       m_distance_end(distance_end_in),
       m_dir(dir_in),
-      m_center_depth(center_depth_in),
-      m_segment_number(segment_number_in)
+      center_depth(center_depth_in),
+      segment_number(segment_number_in)
     {
     }
 
@@ -141,7 +141,7 @@ namespace Opm {
         for( auto& compseg : compsegs ) {
 
             // need to determine the related segment number first
-            if (compseg.m_segment_number != 0) continue;
+            if (compseg.segment_number != 0) continue;
 
             const double center_distance = (compseg.m_distance_start + compseg.m_distance_end) / 2.0;
             const int branch_number = compseg.m_branch_number;
@@ -164,15 +164,15 @@ namespace Opm {
                 throw std::runtime_error("The perforation failed in finding a related segment \n");
             }
 
-            if (compseg.m_center_depth < 0.) {
+            if (compseg.center_depth < 0.) {
                 throw std::runtime_error("Obtaining perforation depth from COMPDAT data is not supported yet");
             }
 
-            compseg.m_segment_number = segment_number;
+            compseg.segment_number = segment_number;
 
             // when depth is default or zero, we obtain the depth of the connection based on the information
             // of the related segments
-            if (compseg.m_center_depth == 0.) {
+            if (compseg.center_depth == 0.) {
                 compseg.calculateCenterDepthWithSegments(segment_set);
             }
         }
@@ -181,13 +181,13 @@ namespace Opm {
     void Compsegs::calculateCenterDepthWithSegments(const WellSegments& segment_set) {
 
         // the depth and distance of the segment to the well head
-        const Segment& segment = segment_set.getFromSegmentNumber(m_segment_number);
+        const Segment& segment = segment_set.getFromSegmentNumber(segment_number);
         const double segment_depth = segment.depth();
         const double segment_distance = segment.totalLength();
 
         // for top segment, no interpolation is needed
-        if (m_segment_number == 1) {
-            m_center_depth = segment_depth;
+        if (segment_number == 1) {
+            center_depth = segment_depth;
             return;
         }
 
@@ -211,7 +211,7 @@ namespace Opm {
 
         if (interpolation_segment_number == 0) {
             throw std::runtime_error("Failed in finding a segment to do the interpolation with segment "
-                                      + std::to_string(m_segment_number));
+                                      + std::to_string(segment_number));
         }
 
         // performing the interpolation
@@ -224,10 +224,10 @@ namespace Opm {
 
         if (segment_length == 0.) {
             throw std::runtime_error("Zero segment length is botained when doing interpolation between segment "
-                                      + std::to_string(m_segment_number) + " and segment " + std::to_string(interpolation_segment_number) );
+                                      + std::to_string(segment_number) + " and segment " + std::to_string(interpolation_segment_number) );
         }
 
-        m_center_depth = segment_depth + (center_distance - segment_distance) / segment_length * depth_change_segment;
+        center_depth = segment_depth + (center_distance - segment_distance) / segment_length * depth_change_segment;
     }
 
     void Compsegs::updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
@@ -238,8 +238,9 @@ namespace Opm {
             const int j = compseg.m_j;
             const int k = compseg.m_k;
 
-            const Connection& connection = connection_set.getFromIJK( i, j, k );
-            connection_set.add(Connection(connection, compseg.m_segment_number, compseg.m_center_depth) );
+            Connection& connection = connection_set.getFromIJK( i, j, k );
+            connection.segment_number = compseg.segment_number;
+            connection.center_depth = compseg.center_depth;
         }
 
         for (size_t ic = 0; ic < connection_set.size(); ++ic) {

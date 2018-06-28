@@ -50,7 +50,7 @@ namespace Opm {
 
         void addSegment(Segment new_segment);
 
-        void segmentsFromWELSEGSKeyword( const DeckKeyword& welsegsKeyword);
+        void loadWELSEGS( const DeckKeyword& welsegsKeyword);
 
         const Segment& getFromSegmentNumber(const int segment_number) const;
 
@@ -91,7 +91,7 @@ namespace Opm {
         std::vector< Segment > m_segments;
         // the mapping from the segment number to the
         // storage index in the vector
-        std::map<int, int> m_segment_number_to_index;
+        std::map<int, int> segment_number_to_index;
     };
 }
 

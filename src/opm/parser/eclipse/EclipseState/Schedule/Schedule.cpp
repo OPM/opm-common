@@ -552,67 +552,16 @@ namespace Opm {
         return data;
     }
 
-
     void Schedule::handleWPIMULT( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            double wellPi = record.getItem("WELLPI").get< double >(0);
 
-            for( auto* well : getWells( wellNamePattern ) ) {
-                const auto& currentWellConnections = well->getConnections(currentStep);
-
-                WellConnections newWellConnections;
-
-                Opm::Value<int> I  = getValueItem(record.getItem("I"));
-                Opm::Value<int> J  = getValueItem(record.getItem("J"));
-                Opm::Value<int> K  = getValueItem(record.getItem("K"));
-                Opm::Value<int> FIRST = getValueItem(record.getItem("FIRST"));
-                Opm::Value<int> LAST = getValueItem(record.getItem("LAST"));
-
-                size_t completionSize = currentWellConnections.size();
-
-                for(size_t i = 0; i < completionSize;i++) {
-                    const auto& currentConnection = currentWellConnections.get(i);
-
-                    if (FIRST.hasValue()) {
-                        if (i < (size_t) FIRST.getValue()) {
-                            newWellConnections.add(currentConnection);
-                            continue;
-                        }
-                    }
-                    if (LAST.hasValue()) {
-                        if (i > (size_t) LAST.getValue()) {
-                            newWellConnections.add(currentConnection);
-                            continue;
-                        }
-                    }
-
-                    int ci = currentConnection.getI();
-                    int cj = currentConnection.getJ();
-                    int ck = currentConnection.getK();
-
-                    if (I.hasValue() && (!(I.getValue() == ci) )) {
-                        newWellConnections.add(currentConnection);
-                        continue;
-                    }
-
-                    if (J.hasValue() && (!(J.getValue() == cj) )) {
-                        newWellConnections.add(currentConnection);
-                        continue;
-                    }
-
-                    if (K.hasValue() && (!(K.getValue() == ck) )) {
-                        newWellConnections.add(currentConnection);
-                        continue;
-                    }
-
-                    newWellConnections.add( Connection{ currentConnection, wellPi } );
-                }
-
-                well->addWellConnections(currentStep, newWellConnections);
-            }
+            for( auto* well : getWells( wellNamePattern ) )
+                well->handleWPIMULT(record, currentStep);
         }
     }
+
+
 
 
     void Schedule::handleWCONINJE( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
@@ -920,37 +869,14 @@ namespace Opm {
         }
     }
 
+
     void Schedule::handleCOMPLUMP( const DeckKeyword& keyword,
                                    size_t timestep ) {
 
         for( const auto& record : keyword ) {
-            const int N  = maybe( record, "N" ) + 1;
-            if( N < 1 ) throw std::invalid_argument(
-                "Completion number in COMPLUMP can not be defaulted."
-            );
-
-            const auto& wellname = record.getItem( "WELL" ).getTrimmedString(0);
-            const int I  = maybe( record, "I" );
-            const int J  = maybe( record, "J" );
-            const int K1 = maybe( record, "K1" );
-            const int K2 = maybe( record, "K2" );
-
-            auto new_completion = [=]( const Connection& c ) -> Connection {
-                if( !defaulted( I ) && c.getI() != I )  return c;
-                if( !defaulted( J ) && c.getJ() != J )  return c;
-                if( !defaulted( K1 ) && c.getK() < K1 ) return c;
-                if( !defaulted( K2 ) && c.getK() > K2 ) return c;
-
-                return { c, N };
-            };
-
-            for( auto& well : this->getWells( wellname ) ) {
-                WellConnections new_completions;
-                for( const auto& completion : well->getConnections( timestep ) )
-                    new_completions.add( new_completion( completion ) );
-
-                well->addWellConnections( timestep, new_completions );
-            }
+            const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
+            auto& well = this->m_wells.get(well_name);
+            well.handleCOMPLUMP(record, timestep);
         }
     }
 
@@ -979,10 +905,9 @@ namespace Opm {
              * well status is updated
              */
             if( all_defaulted( record ) ) {
-                const auto status = WellCommon::StatusFromString( status_str );
-
+                const auto well_status = WellCommon::StatusFromString( status_str );
                 for( auto* well : wells ) {
-                    if( status == open && !well->canOpen(currentStep) ) {
+                    if( well_status == open && !well->canOpen(currentStep) ) {
                         auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
                         std::string msg = "Well " + well->name()
                             + " where crossflow is banned has zero total rate."
@@ -990,53 +915,16 @@ namespace Opm {
                             + std::to_string( days ) + " days";
                         OpmLog::note(msg);
                     } else {
-                        this->updateWellStatus( *well, currentStep, status );
+                        this->updateWellStatus( *well, currentStep, well_status );
                     }
                 }
 
                 continue;
             }
 
-            const int I  = maybe( record, "I" );
-            const int J  = maybe( record, "J" );
-            const int K  = maybe( record, "K" );
-            const int C1 = maybe( record, "C1" );
-            const int C2 = maybe( record, "C2" );
-
-            const auto status = WellCompletion::StateEnumFromString( status_str );
-
-            /*
-             * Construct the updated completion with the possible status change
-             * applied. Status is changed when a completion matches all the IJK
-             * criteria *and* the completion number. A defaulted field always
-             * matches the property in question.
-             */
-            auto new_completion = [=]( const Connection& completion ) -> Connection {
-                if( !defaulted( I ) && completion.getI() != I ) return completion;
-                if( !defaulted( J ) && completion.getJ() != J ) return completion;
-                if( !defaulted( K ) && completion.getK() != K ) return completion;
-
-                // assuming CM can be defaulted, even in the presence of
-                // CN, e.g. it's a match for c >= C1 when C2 is defaulted
-                // and vice versa.
-                // complnum starts at 1, but we temp. adjust it for zero to
-                // generalise the negative default value
-                const auto complnum = completion.complnum() - 1;
-                if( !defaulted( C1 ) && complnum < C1 ) return completion;
-                if( !defaulted( C2 ) && complnum > C2 ) return completion;
-                if( !defaulted( C1 ) && !defaulted( C2 )
-                    && ( C1 > complnum || complnum > C2 ) ) return completion;
-
-                // completion matched - update it's status
-                return { completion, status };
-            };
-
             for( auto* well : wells ) {
-                WellConnections new_completions;
-                for( const auto& c : well->getConnections( currentStep ) )
-                    new_completions.add( new_completion( c ) );
-
-                well->addWellConnections( currentStep, new_completions );
+                const auto comp_status = WellCompletion::StateEnumFromString( status_str );
+                well->handleWELOPEN(record, currentStep, comp_status);
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
             }
         }
@@ -1415,46 +1303,42 @@ namespace Opm {
     }
 
 
-
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext) {
-        const auto wells = this->getWells( currentStep );
-        auto completions = Connection::fromCOMPDAT( grid, eclipseProperties, keyword, wells, parseContext, *this );
+        for (const auto& record : keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            auto wells = getWells(wellNamePattern);
+            if (wells.empty())
+                invalidNamePattern(wellNamePattern, parseContext, keyword);
 
-        for( const auto pair : completions ) {
-            auto& well = this->m_wells.get( pair.first );
-            well.addConnections( currentStep, pair.second );
-            if (well.getConnections( currentStep ).allConnectionsShut()) {
-                std::string msg =
-                        "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
+            for (auto* well : wells) {
+                well->handleCOMPDAT(currentStep, record, grid, eclipseProperties);
+
+                if (well->getConnections( currentStep ).allConnectionsShut()) {
+                    std::string msg =
+                        "All completions in well " + well->name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
                         "The well is therefore also shut.";
-                OpmLog::note(msg);
-                updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT);
+                    OpmLog::note(msg);
+                    updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT);
+                }
             }
         }
         m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
     }
 
+
+
+
     void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
-        WellSegments newSegmentset;
-        newSegmentset.segmentsFromWELSEGSKeyword(keyword);
-
-        const std::string& well_name = newSegmentset.wellName();
-        auto& well = this->m_wells.get( well_name );
-
-        // update multi-segment related information for the well
-        well.addWellSegments(currentStep, newSegmentset);
+        const auto& record1 = keyword.getRecord(0);
+        auto& well = this->m_wells.get(record1.getItem("WELL").getTrimmedString(0));
+        well.handleWELSEGS(keyword, currentStep);WellSegments newSegmentset;
     }
 
     void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep) {
         const auto& record1 = keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         auto& well = this->m_wells.get( well_name );
-
-        const auto& segment_set = well.getWellSegments(currentStep);
-        const auto& completion_set = well.getConnections( currentStep );
-        const WellConnections new_completion_set = updatingConnectionsWithSegments(keyword, completion_set, segment_set);
-
-        well.addWellConnections(currentStep, new_completion_set);
+        well.handleCOMPSEGS(keyword, currentStep);
     }
 
     void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {

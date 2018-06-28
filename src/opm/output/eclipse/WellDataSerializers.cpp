@@ -94,17 +94,17 @@ serialize_ICON(int lookup_step,
         for (const auto& connection : connections) {
             const size_t offset = well_offset + connection_offset;
 
-            data[ offset + ICON_IC_INDEX ] = connection.complnum();
+            data[ offset + ICON_IC_INDEX ] = connection.complnum;
             data[ offset + ICON_I_INDEX ] = connection.getI() + 1;
             data[ offset + ICON_J_INDEX ] = connection.getJ() + 1;
             data[ offset + ICON_K_INDEX ] = connection.getK() + 1;
-            data[ offset + ICON_DIRECTION_INDEX ] = connection.getDirection();
+            data[ offset + ICON_DIRECTION_INDEX ] = connection.dir;
             data[ offset + ICON_STATUS_INDEX ] =
-                (connection.getState() == WellCompletion::StateEnum::OPEN) ?
+                (connection.state == WellCompletion::StateEnum::OPEN) ?
                 1 : -1000;
             data[ offset + ICON_SEGMENT_INDEX ] =
                 connection.attachedToSegment() ?
-                connection.getSegmentNumber() : 0;
+                connection.segment_number : 0;
             connection_offset += niconz;
         }
 

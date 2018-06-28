@@ -34,10 +34,6 @@ namespace Opm {
 
     class DeckKeyword;
     class DeckRecord;
-    class Well;
-    class EclipseGrid;
-    class Eclipse3DProperties;
-    class Schedule;
 
     class Connection {
     public:
@@ -49,62 +45,39 @@ namespace Opm {
                    const Value<double>& diameter,
                    const Value<double>& skinFactor,
                    const int satTableId,
-                   const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
+                   const WellCompletion::DirectionEnum direction);
 
-        Connection(const Connection&, WellCompletion::StateEnum newStatus);
-        Connection(const Connection&, double wellPi);
-        Connection(const Connection&, int complnum );
-        Connection(const Connection& connection_initial, int segment_number, double center_depth);
 
-        bool sameCoordinate(const Connection& other) const;
         bool sameCoordinate(const int i, const int j, const int k) const;
-
         int getI() const;
         int getJ() const;
         int getK() const;
-        int complnum() const;
-        WellCompletion::StateEnum getState() const;
         double getConnectionTransmissibilityFactor() const;
-        double getWellPi() const;
-        const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
         double getDiameter() const;
         double getSkinFactor() const;
-        int getSatTableId() const;
-        void   fixDefaultIJ(int wellHeadI , int wellHeadJ);
-        void   shift_complnum( int );
-        int getSegmentNumber() const;
-        double getCenterDepth() const;
         bool attachedToSegment() const;
-
-        WellCompletion::DirectionEnum getDirection() const;
-
-        static std::map< std::string, std::vector< Connection > >
-        fromCOMPDAT( const EclipseGrid& grid,
-                     const Eclipse3DProperties& eclipseProperties,
-                     const DeckKeyword& compdatKeyword,
-                     const std::vector< const Well* >&,
-                     const ParseContext&,
-                     const Schedule&);
+        const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
 
+        WellCompletion::DirectionEnum dir;
+        double center_depth;
+        WellCompletion::StateEnum state;
+        int sat_tableId;
+        int complnum;
+
     private:
-        int m_i, m_j, m_k;
-        int m_complnum;
+        std::array<int,3> ijk;
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
-        double m_wellPi;
         Value<double> m_skinFactor;
-        int m_satTableId;
-        WellCompletion::StateEnum m_state;
-        WellCompletion::DirectionEnum m_direction;
-        Value<double> getDiameterAsValueObject() const;
-        Value<double> getSkinFactorAsValueObject() const;
+
+    public:
         // related segment number
         // -1 means the completion is not related to segment
-        int m_segment_number = -1;
-        double m_center_depth;
+        int segment_number = -1;
+        double wellPi = 1.0;
     };
 }
 
