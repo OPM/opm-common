@@ -235,19 +235,18 @@ namespace Opm {
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
             const Opm::GridProperty<int>& region = m_e3DProps.getIntGridProperty( (*iter).first );
-            MULTREGTSearchMap map = (*iter).second;
+            const MULTREGTSearchMap& map = (*iter).second;
 
             int regionId1 = region.iget(globalIndex1);
             int regionId2 = region.iget(globalIndex2);
 
-
-            std::pair<int,int> pair{regionId1 , regionId2};
+            std::pair<int,int> pair{ regionId1, regionId2 };
             if (map.count(pair) != 1 || !(map.at(pair)->m_directions & faceDir)) {
                 pair = std::pair<int,int>{regionId2 , regionId1};
                 if (map.count(pair) != 1 || !(map.at(pair)->m_directions & faceDir))
                     continue;
             }
-            const MULTREGTRecord * record = map[pair];
+            const MULTREGTRecord* record = map.at(pair);
 
             bool applyMultiplier = true;
             int i1 = globalIndex1 % region.getNX();
