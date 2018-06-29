@@ -58,7 +58,7 @@ namespace Opm {
     private:
         // segment number
         // it should work as a ID.
-        int segment_number;
+        int m_segment_number;
         // branch number
         // for top segment, it should always be 1
         int m_branch;

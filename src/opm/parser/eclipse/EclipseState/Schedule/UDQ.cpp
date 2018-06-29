@@ -23,7 +23,7 @@
 
 namespace Opm {
 
-    UDQ::UDQ(const UDQConfig& config, const Deck& deck) {
+    UDQ::UDQ(const UDQConfig& /* config */, const Deck& deck) {
         if (deck.hasKeyword("UDQ")) {
             const auto& kw = deck.getKeyword("UDQ");
             for (const auto& record : kw)

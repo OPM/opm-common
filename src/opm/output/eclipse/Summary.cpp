@@ -1017,7 +1017,8 @@ Summary::Summary( const EclipseState& st,
                                     node.num(),  // NUMS value for the summary output.
                                     {},          // Well results - data::Wells
                                     {},          // Region <-> cell mappings.
-                                    this->grid};
+                                    this->grid,
+                                    {}};
 
             const auto val = handle( no_args );
 
@@ -1042,7 +1043,7 @@ Summary::Summary( const EclipseState& st,
     // for simulation restart.
     {
         auto& rvec     = this->handlers->rstvec_backing_store;
-        auto& handlers = this->handlers->handlers;
+        auto& hndlrs   = this->handlers->handlers;
 
         for (const auto& vector : requiredRestartVectors(schedule)) {
             const auto& kw     = vector.first;
@@ -1063,7 +1064,7 @@ Summary::Summary( const EclipseState& st,
             }
 
             rvec.push_back(makeRestartVectorSMSPEC(kw, entity));
-            handlers.emplace_back(rvec.back().get(), func->second);
+            hndlrs.emplace_back(rvec.back().get(), func->second);
         }
     }
 

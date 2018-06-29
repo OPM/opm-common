@@ -176,6 +176,23 @@ BOOST_AUTO_TEST_CASE(CreateFieldSystem) {
 
 
 
+BOOST_AUTO_TEST_CASE(CreateInputSystem) {
+    auto system = UnitSystem::newINPUT();
+    checkSystemHasRequiredDimensions( system );
+
+    BOOST_CHECK_EQUAL( 1.0, system.getDimension("Length").getSIScaling() );
+    BOOST_CHECK_EQUAL( 1.0, system.getDimension("Mass").getSIScaling() );
+    BOOST_CHECK_EQUAL( 1.0, system.getDimension("Time").getSIScaling() );
+    BOOST_CHECK_EQUAL( 1.0, system.getDimension("Permeability").getSIScaling() );
+    BOOST_CHECK_EQUAL( 1.0, system.getDimension("Pressure").getSIScaling() );
+
+    BOOST_CHECK_THROW( system.getEclType( ), std::runtime_error );
+    BOOST_CHECK_EQUAL( static_cast<long int>(system.getType( )) , static_cast<long int>(UnitSystem::UnitType::UNIT_TYPE_INPUT) );
+}
+
+
+
+
 BOOST_AUTO_TEST_CASE(DimensionEqual) {
     Dimension d1("Length" , 1);
     Dimension d2("Length" , 1);

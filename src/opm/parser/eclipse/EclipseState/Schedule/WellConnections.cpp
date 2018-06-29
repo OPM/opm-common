@@ -29,9 +29,9 @@
 
 namespace Opm {
 
-    WellConnections::WellConnections(int headI, int headJ) :
-        headI(headI),
-        headJ(headJ)
+    WellConnections::WellConnections(int headIArg, int headJArg) :
+        headI(headIArg),
+        headJ(headJArg)
     {
     }
 

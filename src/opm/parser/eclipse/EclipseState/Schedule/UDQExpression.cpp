@@ -73,11 +73,11 @@ namespace Opm {
       2. For items like '2*(1+WBHP)' the parsing code will expand the 2*
          operator to the repeated tokens : (1+WBHP), (1+WBHP)
     */
-    UDQExpression::UDQExpression(const std::string& action, const std::string& keyword, const std::vector<std::string>& input_data) {
-        assertKeyword(keyword);
+    UDQExpression::UDQExpression(const std::string& action_in, const std::string& keyword_in, const std::vector<std::string>& input_data) {
+        assertKeyword(keyword_in);
 
-        this->action = actionString2Enum(action);
-        this->keyword = keyword;
+        this->action = actionString2Enum(action_in);
+        this->keyword = keyword_in;
 
         for (const std::string& item : input_data) {
             if (RawConsts::is_quote()(item[0])) {

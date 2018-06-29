@@ -674,8 +674,15 @@ namespace {
                 this->measure_table_to_si_offset = from_pvt_m_offset;
                 this->unit_name_table = pvt_m_names;
                 break;
+            case(UnitType::UNIT_TYPE_INPUT):
+                m_name = "Input";
+                this->measure_table_from_si = to_input;
+                this->measure_table_to_si = from_input;
+                this->measure_table_to_si_offset = from_input_offset;
+                this->unit_name_table = input_names;
+                break;
             default:
-                //do nothing
+                throw std::runtime_error("Tried to construct UnitSystem with unknown unit family.");
                 break;
         };
     }
@@ -742,6 +749,7 @@ namespace {
           case UnitType::UNIT_TYPE_FIELD:  return ECL_FIELD_UNITS;
           case UnitType::UNIT_TYPE_LAB:    return ECL_LAB_UNITS;
           case UnitType::UNIT_TYPE_PVT_M:  return ECL_PVT_M_UNITS;
+          case UnitType::UNIT_TYPE_INPUT:  throw std::runtime_error("UNIT_TYPE_INPUT has no counterpart in the ert_ecl_unit_enum type.");
         default:
             throw std::runtime_error("What has happened here?");
         }
