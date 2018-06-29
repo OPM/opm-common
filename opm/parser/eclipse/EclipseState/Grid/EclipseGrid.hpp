@@ -181,7 +181,7 @@ namespace Opm {
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
-        std::vector<double> volume_cache mutable;
+        mutable std::vector<double> volume_cache;
         mutable std::vector< int > activeMap;
         bool m_circle = false;
         /*
