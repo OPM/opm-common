@@ -742,7 +742,7 @@ namespace Opm {
             std::vector<double> y(8,0);
             std::vector<double> z(8,0);
             for (int i=0; i < 8; i++) {
-                ecl_grid_get_cell_corner_xyz1(c_ptr(), static_cast<int>(globalIndex), i, &x.data()[i], &y.data()[i], &z.data()[i]);
+                ecl_grid_get_cell_corner_xyz1(c_ptr(), static_cast<int>(globalIndex), i, &x[i], &y[i], &z[i]);
             }
             volume_cache[globalIndex] = calculateCellVol(x,y,z);
         }
