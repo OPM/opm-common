@@ -751,6 +751,7 @@ namespace Opm {
 
 
     double EclipseGrid::getCellVolume(size_t i , size_t j , size_t k) const {
+        assertIJK(i,j,k);
         return getCellVolume(getGlobalIndex(i, j, k));
     }
 
