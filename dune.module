@@ -10,4 +10,3 @@ Label: 2018.10-pre
 Maintainer: opm@opm-project.org
 MaintainerName: OPM community
 Url: http://opm-project.org
-Depends: dune-common
