@@ -59,6 +59,7 @@ namespace Opm {
             rate,
             transmissibility,
             mass,
+            mass_rate,
             gas_oil_ratio,
             oil_gas_ratio,
             water_cut,

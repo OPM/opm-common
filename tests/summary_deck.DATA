@@ -84,6 +84,7 @@ FWIRH
 FGIR
 FNIR -- solvent
 FGIRH
+FCIR
 -- Production Cummulatives
 FVPT
 FWPT
@@ -109,6 +110,7 @@ FWITH
 FGIT
 FNIT
 FGITH
+FCIT
 -- In place
 FWIP
 FOIP
@@ -248,6 +250,10 @@ GGORH
 GWIR
 /
 GWIT
+/
+GCIR
+/
+GCIT
 /
 GWIRH
 /
@@ -391,6 +397,12 @@ WGITH
   W_3
 /
 WNIR
+ W_3
+/
+WCIR
+ W_3
+/
+WCIT
  W_3
 /
 WNIT
@@ -544,6 +556,14 @@ CNIT
  '*' /
 /
 
+CCIR
+ '*' /
+/
+
+CCIT
+ '*' /
+/
+
 CWPT
  'W_1' 1 1 1 /
 /
@@ -586,6 +606,10 @@ COMPDAT
     W_3 0 0 1 1 /   -- Active index: 2
 /
 
+WPOLYMER
+'W_3' 1.5 1.0 /
+/
+
 WCONHIST
 -- history rates are set so that W_1 produces 1, W_2 produces 2 etc.
 -- index.offset.
@@ -608,7 +632,14 @@ TSTEP
 -- and 2. Without this, totals/accumulations would fail (segfault) when looking
 -- up historical rates and volumes. These volumes however don't change, i.e.
 -- every time step has the same set of values
-10 10 /
+10 /
+
+WPOLYMER
+'W_3' 2.5 1.0 /
+/
+
+TSTEP
+10 /
 
 -- Register a fourth well with completions later. This ensure we handle when
 -- wells are registered or activated later in a simulation

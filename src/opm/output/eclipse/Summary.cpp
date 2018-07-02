@@ -132,6 +132,7 @@ using rt = data::Rates::opt;
 using measure = UnitSystem::measure;
 constexpr const bool injector = true;
 constexpr const bool producer = false;
+constexpr const bool polymer = true;
 
 /* Some numerical value with its unit tag embedded to enable caller to apply
  * unit conversion. This removes a lot of boilerplate. ad-hoc solution to poor
@@ -158,6 +159,10 @@ measure div_unit( measure denom, measure div ) {
         div   == measure::time )
         return measure::gas_surface_volume;
 
+    if( denom == measure::mass_rate &&
+        div   == measure::time )
+        return measure::mass;
+
     return measure::identity;
 }
 
@@ -175,6 +180,9 @@ measure mul_unit( measure lhs, measure rhs ) {
     if( ( lhs == measure::rate && rhs == measure::time ) ||
         ( rhs == measure::rate && lhs == measure::time ) )
         return measure::volume;
+
+    if(  lhs == measure::mass_rate && rhs == measure::time)
+        return measure::mass;
 
     return lhs;
 }
@@ -273,7 +281,7 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
-template< rt phase, bool injection = true >
+template< rt phase, bool injection = true, bool polymer = false >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
 
@@ -283,13 +291,19 @@ inline quantity rate( const fn_args& args ) {
 
         double eff_fac = efac( args.eff_factors, name );
 
-        const auto v = args.wells.at(name).rates.get(phase, 0.0) * eff_fac;
+        double concentration = polymer
+                             ? sched_well->getPolymerProperties( args.sim_step ).m_polymerConcentration
+                             : 1;
+
+        const auto v = args.wells.at(name).rates.get(phase, 0.0) * eff_fac * concentration;
 
         if( ( v > 0 ) == injection )
             sum += v;
     }
 
     if( !injection ) sum *= -1;
+
+    if( polymer ) return { sum, measure::mass_rate };
     return { sum, rate_unit< phase >() };
 }
 
@@ -310,7 +324,7 @@ inline quantity flowing( const fn_args& args ) {
              measure::identity };
 }
 
-template< rt phase, bool injection = true >
+template< rt phase, bool injection = true, bool polymer = false >
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
     // The args.num value is the literal value which will go to the
@@ -320,24 +334,29 @@ inline quantity crate( const fn_args& args ) {
     const size_t global_index = args.num - 1;
     if( args.schedule_wells.empty() ) return zero;
 
-    const auto& name = args.schedule_wells.front()->name();
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well->name();
     if( args.wells.count( name ) == 0 ) return zero;
 
-    const auto& well = args.wells.at( name );
-    const auto& completion = std::find_if( well.connections.begin(),
-                                           well.connections.end(),
+    const auto& well_data = args.wells.at( name );
+    const auto& completion = std::find_if( well_data.connections.begin(),
+                                           well_data.connections.end(),
                                            [=]( const data::Connection& c ) {
                                                 return c.index == global_index;
                                            } );
 
-    if( completion == well.connections.end() ) return zero;
+    if( completion == well_data.connections.end() ) return zero;
 
     double eff_fac = efac( args.eff_factors, name );
+    double concentration = polymer
+                           ? well->getPolymerProperties( args.sim_step ).m_polymerConcentration
+                           : 1;
 
-    const auto v = completion->rates.get( phase, 0.0 ) * eff_fac;
+    auto v = completion->rates.get( phase, 0.0 ) * eff_fac * concentration;
     if( ( v > 0 ) != injection ) return zero;
+    if( !injection ) v *= -1;
 
-    if( !injection ) return { -v, rate_unit< phase >() };
+    if( polymer ) return { v, measure::mass_rate };
     return { v, rate_unit< phase >() };
 }
 
@@ -503,11 +522,13 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WNIR", rate< rt::solvent, injector > },
+    { "WCIR", rate< rt::wat, injector, polymer > },
 
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
+    { "WCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
     { "WVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -560,12 +581,14 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GOIR", rate< rt::oil, injector > },
     { "GGIR", rate< rt::gas, injector > },
     { "GNIR", rate< rt::solvent, injector > },
+    { "GCIR", rate< rt::wat, injector, polymer > },
     { "GVIR", sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ) },
     { "GWIT", mul( rate< rt::wat, injector >, duration ) },
     { "GOIT", mul( rate< rt::oil, injector >, duration ) },
     { "GGIT", mul( rate< rt::gas, injector >, duration ) },
     { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
+    { "GCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
     { "GVIT", mul( sum( sum( rate< rt::reservoir_water, injector >, rate< rt::reservoir_oil, injector > ),
                         rate< rt::reservoir_gas, injector > ), duration ) },
 
@@ -669,6 +692,7 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },
+    { "CCIR", crate< rt::wat, injector, polymer > },
     { "CWIT", mul( crate< rt::wat, injector >, duration ) },
     { "CGIT", mul( crate< rt::gas, injector >, duration ) },
     { "CNIT", mul( crate< rt::solvent, injector >, duration ) },
@@ -682,6 +706,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "COPT", mul( crate< rt::oil, producer >, duration ) },
     { "CGPT", mul( crate< rt::gas, producer >, duration ) },
     { "CNPT", mul( crate< rt::solvent, producer >, duration ) },
+    { "CCIT", mul( crate< rt::wat, injector, polymer >, duration ) },
 
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
@@ -714,6 +739,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FOIR", rate< rt::oil, injector > },
     { "FGIR", rate< rt::gas, injector > },
     { "FNIR", rate< rt::solvent, injector > },
+    { "FCIR", rate< rt::wat, injector, polymer > },
     { "FVIR", sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>)},
 
@@ -722,6 +748,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FOIT", mul( rate< rt::oil, injector >, duration ) },
     { "FGIT", mul( rate< rt::gas, injector >, duration ) },
     { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
+    { "FCIT", mul( rate< rt::wat, injector, polymer >, duration ) },
     { "FLIT", mul( sum( rate< rt::wat, injector >, rate< rt::oil, injector > ),
                    duration ) },
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
