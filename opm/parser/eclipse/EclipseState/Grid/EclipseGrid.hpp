@@ -181,9 +181,9 @@ namespace Opm {
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
+        mutable std::vector<double> volume_cache;
         mutable std::vector< int > activeMap;
         bool m_circle = false;
-
         /*
           The internal class grid_ptr is a a std::unique_ptr with
           special copy semantics. The purpose of implementing this is

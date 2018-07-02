@@ -25,6 +25,7 @@
 #include <functional>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/utility/numeric/calculateCellVol.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -57,11 +58,13 @@ namespace Opm {
 			     const std::vector<double>& zcorn , 
 			     const int * actnum, 
 			     const double * mapaxes) 
-	: m_minpvValue(0),
+	: GridDims(dims),
+          m_minpvValue(0),
 	  m_minpvMode(MinpvMode::ModeEnum::Inactive),
 	  m_pinch("PINCH"),
 	  m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-	  m_multzMode(PinchMode::ModeEnum::TOP)
+	  m_multzMode(PinchMode::ModeEnum::TOP),
+          volume_cache(dims[0] * dims[1] * dims[2], -1.0)
     {
         initCornerPointGrid( dims, coord , zcorn , actnum , mapaxes );
     }
@@ -89,6 +92,8 @@ namespace Opm {
         m_nx = ecl_grid_get_nx( c_ptr() );
         m_ny = ecl_grid_get_ny( c_ptr() );
         m_nz = ecl_grid_get_nz( c_ptr() );
+
+        volume_cache.resize(m_nx * m_ny * m_nz, -1.0);
     }
 
 
@@ -100,6 +105,7 @@ namespace Opm {
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
           m_multzMode(PinchMode::ModeEnum::TOP),
+          volume_cache(nx * ny * nz, -1.0),
           m_grid( ecl_grid_alloc_rectangular(nx, ny, nz, dx, dy, dz, NULL) )
     {
     }
@@ -110,7 +116,8 @@ namespace Opm {
           m_minpvMode( src.m_minpvMode ),
           m_pinch( src.m_pinch ),
           m_pinchoutMode( src.m_pinchoutMode ),
-          m_multzMode( src.m_multzMode )
+          m_multzMode( src.m_multzMode ),
+          volume_cache(src.volume_cache.size(), -1.0)
     {
         const int * actnum_data = (actnum.empty()) ? nullptr : actnum.data();
         m_grid.reset( ecl_grid_alloc_processed_copy( src.c_ptr(), zcorn , actnum_data ));
@@ -163,7 +170,8 @@ namespace Opm {
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
-          m_multzMode(PinchMode::ModeEnum::TOP)
+          m_multzMode(PinchMode::ModeEnum::TOP),
+          volume_cache(m_nx * m_ny * m_nz, -1.0)
     {
 
         const std::array<int, 3> dims = getNXYZ();
@@ -728,13 +736,23 @@ namespace Opm {
 
     double EclipseGrid::getCellVolume(size_t globalIndex) const {
         assertGlobalIndex( globalIndex );
-        return ecl_grid_get_cell_volume1( c_ptr() , static_cast<int>(globalIndex));
+        if (volume_cache[globalIndex] < 0.0) {
+            // Calculate cell volume and put it in the cache.
+            std::vector<double> x(8,0);
+            std::vector<double> y(8,0);
+            std::vector<double> z(8,0);
+            for (int i=0; i < 8; i++) {
+                ecl_grid_get_cell_corner_xyz1(c_ptr(), static_cast<int>(globalIndex), i, &x[i], &y[i], &z[i]);
+            }
+            volume_cache[globalIndex] = calculateCellVol(x,y,z);
+        }
+        return volume_cache[globalIndex];
     }
 
 
     double EclipseGrid::getCellVolume(size_t i , size_t j , size_t k) const {
         assertIJK(i,j,k);
-        return ecl_grid_get_cell_volume3( c_ptr() , static_cast<int>(i),static_cast<int>(j),static_cast<int>(k));
+        return getCellVolume(getGlobalIndex(i, j, k));
     }
 
     double EclipseGrid::getCellThicknes(size_t i , size_t j , size_t k) const {

@@ -18,6 +18,7 @@
 
 #include <opm/test_util/EclFilesComparator.hpp>
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/common/utility/numeric/calculateCellVol.hpp>
 
 #include <stdio.h>
 
@@ -405,6 +406,20 @@ void RegressionTest::deviationsForCell(double val1, double val2, const std::stri
 
 
 
+namespace {
+    double getCellVolume(const ecl_grid_type* ecl_grid, const int globalIndex) {
+        std::vector<double> x(8, 0.0);
+        std::vector<double> y(8, 0.0);
+        std::vector<double> z(8, 0.0);
+        for (int i = 0; i < 8; i++) {
+            ecl_grid_get_cell_corner_xyz1(ecl_grid, globalIndex, i, &x.data()[i], &y.data()[i], &z.data()[i]);
+        }
+        return calculateCellVol(x,y,z);
+    }
+}
+
+
+
 void RegressionTest::gridCompare(const bool volumecheck) const {
     double absTolerance = getAbsTolerance();
     double relTolerance = getRelTolerance();
@@ -442,8 +457,8 @@ void RegressionTest::gridCompare(const bool volumecheck) const {
                          << (active1 ? "active" : "inactive") << " in first grid, but "
                          << (active2 ? "active" : "inactive") << " in second grid.");
         }
-        const double cellVolume1 = ecl_grid_get_cell_volume1(ecl_grid1, cell);
-        const double cellVolume2 = ecl_grid_get_cell_volume1(ecl_grid2, cell);
+        const double cellVolume1 = getCellVolume(ecl_grid1, cell);
+        const double cellVolume2 = getCellVolume(ecl_grid2, cell);
         Deviation dev = calculateDeviations(cellVolume1, cellVolume2);
         if (dev.abs > absTolerance && dev.rel > relTolerance) {
             int i, j, k;
@@ -580,8 +595,8 @@ void IntegrationTest::setCellVolumes() {
                 << "\nThe number of active cells differ.");
     }
     for (unsigned int cell = 0; cell < globalGridCount1; ++cell) {
-        const double cellVolume1 = ecl_grid_get_cell_volume1(ecl_grid1, cell);
-        const double cellVolume2 = ecl_grid_get_cell_volume1(ecl_grid2, cell);
+        const double cellVolume1 = getCellVolume(ecl_grid1, cell);
+        const double cellVolume2 = getCellVolume(ecl_grid2, cell);
         Deviation dev = calculateDeviations(cellVolume1, cellVolume2);
         if (dev.abs > absTolerance && dev.rel > relTolerance) {
             int i, j, k;
