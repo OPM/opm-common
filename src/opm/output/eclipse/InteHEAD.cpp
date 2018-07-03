@@ -505,9 +505,6 @@ Opm::RestartIO::InteHEAD::calendarDate(const TimePoint& timePoint)
     this->data_[IHOURZ] = timePoint.hour;
     this->data_[IMINTS] = timePoint.minute;
 
-    this->data_[IHOURZ] = timePoint.hour;
-    this->data_[IMINTS] = timePoint.minute;
-
     // Microseonds...
     this->data_[ISECND] =
         ((timePoint.second * 1000) * 1000) + timePoint.microseconds;
