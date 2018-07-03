@@ -76,7 +76,9 @@ namespace {
 
             makeEntities('W', well_name);
 
-            entities.emplace_back("WBHP", well_name);
+            entities.emplace_back("WBHP" , well_name);
+            entities.emplace_back("WGVIR", well_name);
+            entities.emplace_back("WWVIR", well_name);
         }
 
         for (const auto* grp : sched.getGroups()) {

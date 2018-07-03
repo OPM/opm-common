@@ -138,6 +138,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/test_util/summaryRegressionTest.cpp
           src/opm/test_util/summaryComparator.cpp
           src/opm/test_util/EclFilesComparator.cpp
+          src/opm/output/eclipse/AggregateWellData.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
           src/opm/output/eclipse/CreateLogiHead.cpp
@@ -232,6 +233,7 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
+          tests/test_AggregateWellData.cpp
           tests/test_CharArrayNullTerm.cpp
           tests/test_compareSummary.cpp
           tests/test_EclFilesComparator.cpp
@@ -490,6 +492,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
+        opm/output/eclipse/AggregateWellData.hpp
         opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
