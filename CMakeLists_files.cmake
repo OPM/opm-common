@@ -232,6 +232,7 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
+          tests/test_CharArrayNullTerm.cpp
           tests/test_compareSummary.cpp
           tests/test_EclFilesComparator.cpp
           tests/test_EclipseIO.cpp
@@ -246,6 +247,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_Summary.cpp
           tests/test_Tables.cpp
           tests/test_Wells.cpp
+          tests/test_WindowedArray.cpp
           tests/test_writenumwells.cpp
           tests/test_serialize_ICON.cpp
           tests/test_serialize_SCON.cpp
@@ -488,6 +490,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
+        opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
@@ -501,6 +504,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/Summary.hpp
         opm/output/eclipse/SummaryState.hpp
         opm/output/eclipse/Tables.hpp
+        opm/output/eclipse/WindowedArray.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
         opm/output/OutputWriter.hpp
         opm/test_util/EclFilesComparator.hpp
