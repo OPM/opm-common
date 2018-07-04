@@ -92,13 +92,14 @@ namespace {
     void wellLoop(const std::vector<const Opm::Well*>& wells,
                   WellOp&&                             wellOp)
     {
-        auto wellID = std::size_t{0};
-        for (const auto* well : wells) {
-            wellID += 1;
+        for (auto nWell = wells.size(), wellID = 0*nWell;
+             wellID < nWell; ++wellID)
+        {
+            const auto* well = wells[wellID];
 
             if (well == nullptr) { continue; }
 
-            wellOp(*well, wellID - 1);
+            wellOp(*well, wellID);
         }
     }
 
