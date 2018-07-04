@@ -312,7 +312,16 @@ namespace Opm {
     void Schedule::handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword) {
         for( const auto& record : keyword ) {
             const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-            WellProducer::ControlModeEnum controlMode = WellProducer::ControlModeFromString( cmodeString );
+            const WellProducer::ControlModeEnum controlMode = WellProducer::ControlModeFromString( cmodeString );
+
+            if (controlMode != WellProducer::NONE) {
+                if (!WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
+                    std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
+                                    + ", which makes WHISTCTL keyword not affect the simulation at all";
+                    OpmLog::warning(msg);
+                }
+            }
+
             m_controlModeWHISTCTL = controlMode;
             const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
             if (bhp_terminate == "YES") {
@@ -500,17 +509,9 @@ namespace Opm {
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
                 } else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
-                    properties = WellProductionProperties::history(prev_properties, record);
+                    properties = WellProductionProperties::history(prev_properties, record, m_controlModeWHISTCTL);
                 }
 
-                if (status != WellCommon::SHUT) {
-                    if ( m_controlModeWHISTCTL != WellProducer::CMODE_UNDEFINED &&
-                         m_controlModeWHISTCTL != WellProducer::NONE && !isPredictionMode){
-                        if ( !properties.hasProductionControl(m_controlModeWHISTCTL) )
-                            properties.addProductionControl(m_controlModeWHISTCTL);
-                        properties.controlMode = m_controlModeWHISTCTL;
-                    }
-                }
                 updateWellStatus( *well , currentStep , status );
                 if (well->setProductionProperties(currentStep, properties))
                     m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);

@@ -41,7 +41,9 @@ namespace Opm {
     {}
 
 
-    WellProductionProperties WellProductionProperties::history(const WellProductionProperties& prev_properties, const DeckRecord& record)
+    WellProductionProperties WellProductionProperties::history(const WellProductionProperties& prev_properties,
+                                                               const DeckRecord& record,
+                                                               const WellProducer::ControlModeEnum controlModeWHISTCL)
     {
         WellProductionProperties p(record);
         p.predictionMode = false;
@@ -50,9 +52,14 @@ namespace Opm {
         const auto& cmodeItem = record.getItem("CMODE");
         if ( !cmodeItem.defaultApplied(0) ) {
             namespace wp = WellProducer;
-            const auto cmode = wp::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
-            if (cmode == wp::LRAT || cmode == wp::RESV || cmode == wp::ORAT ||
-                cmode == wp::WRAT || cmode == wp::GRAT || cmode == wp::BHP) {
+            auto cmode = wp::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
+
+            // when there is an effective control mode specified by WHISTCL, we always use this control mode
+            if (effectiveHistoryProductionControl(controlModeWHISTCL) ) {
+                cmode = controlModeWHISTCL;
+            }
+
+            if (effectiveHistoryProductionControl(cmode) ) {
                 p.addProductionControl( cmode );
                 p.controlMode = cmode;
             } else {
@@ -183,6 +190,13 @@ namespace Opm {
             << "VFP table: "    << wp.VFPTableNumber    << ", "
             << "ALQ: "          << wp.ALQValue          << ", "
             << "prediction: "   << wp.predictionMode    << " }";
+    }
+
+    bool WellProductionProperties::effectiveHistoryProductionControl(const WellProducer::ControlModeEnum cmode) {
+        // Note, not handling CRAT for now
+        namespace wp = WellProducer;
+        return ( (cmode == wp::LRAT || cmode == wp::RESV || cmode == wp::ORAT ||
+                  cmode == wp::WRAT || cmode == wp::GRAT || cmode == wp::BHP) );
     }
 
 } // namespace Opm

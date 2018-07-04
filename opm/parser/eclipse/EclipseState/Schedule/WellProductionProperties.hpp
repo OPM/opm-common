@@ -55,7 +55,10 @@ namespace Opm {
         bool operator!=(const WellProductionProperties& other) const;
         WellProductionProperties();
 
-        static WellProductionProperties history(const WellProductionProperties& prev_properties, const DeckRecord& record);
+        static WellProductionProperties history(const WellProductionProperties& prevProperties,
+                                                const DeckRecord& record,
+                                                const WellProducer::ControlModeEnum controlModeWHISTCL);
+
         static WellProductionProperties prediction( const DeckRecord& record, bool addGroupProductionControl );
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
@@ -71,6 +74,9 @@ namespace Opm {
             if (! hasProductionControl(controlModeArg))
                 m_productionControls += controlModeArg;
         }
+
+        // this is used to check whether the specified control mode is an effective history matching production mode
+        static bool effectiveHistoryProductionControl(const WellProducer::ControlModeEnum cmode);
 
     private:
         int m_productionControls = 0;
