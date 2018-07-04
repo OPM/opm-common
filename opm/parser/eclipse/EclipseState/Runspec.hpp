@@ -75,7 +75,12 @@ public:
         return this->nGMax;
     }
 
+        int maxWellsInField() const
+    {
+        return this->nWMax;
+    }
 private:
+    int nWMax  { 0 };
     int nCWMax { 0 };
     int nWGMax { 0 };
     int nGMax  { 0 };

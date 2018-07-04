@@ -41,8 +41,8 @@ namespace Opm {
       m_distance_start(distance_start_in),
       m_distance_end(distance_end_in),
       m_dir(dir_in),
-      m_center_depth(center_depth_in),
-      m_segment_number(segment_number_in),
+      center_depth(center_depth_in),
+      segment_number(segment_number_in),
       m_seqIndex(seqIndex_in)
     {
     }

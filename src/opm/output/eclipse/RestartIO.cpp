@@ -376,7 +376,7 @@ RestartValue load( const std::string& filename,
     return rst_value;
 }
 
-//namespace {
+namespace {
 
 std::vector<int> serialize_ICON( int sim_step,
                                  int ncwmax,
@@ -625,10 +625,10 @@ void writeMSWData(::Opm::RestartIO::ecl_rst_file_type * rst_file,
     const size_t simStep = static_cast<size_t> (sim_step);
     auto  MSWData = Helpers::AggregateMSWData(ih);
     MSWData.captureDeclaredMSWData(schedule, simStep, ih);
-    write_kw(rst_file, EclKW<int>("ISEG", MSWData.getISeg()));
+    write_kw(rst_file, EclKW<int>   ("ISEG", MSWData.getISeg()));
+    write_kw(rst_file, EclKW<int>   ("ILBS", MSWData.getILBs()));
+    write_kw(rst_file, EclKW<int>   ("ILBR", MSWData.getILBr()));
     write_kw(rst_file, EclKW<double>("RSEG", MSWData.getRSeg()));
-    write_kw(rst_file, EclKW<int>("ILBS", MSWData.getILBs()));
-    write_kw(rst_file, EclKW<int>("ILBR", MSWData.getILBr()));
 }
 
 void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
@@ -733,6 +733,7 @@ void writeExtraData(::Opm::RestartIO::ecl_rst_file_type* rst_file, const Restart
         }
 
 	  /*const std::string& key = extra_value.first;
+	const std::string& key = extra_value.first.key;
 	const std::vector<double>& data = extra_value.second;
 	{
 	    ::Opm::RestartIO::ecl_kw_type * ecl_kw = ::Opm::RestartIO::ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE , const_cast<double *>(data.data()));
@@ -855,13 +856,13 @@ void save(const std::string&  filename,
 	    units.from_si(restart_key.dim, data);
 	}
 
-	std::vector<int> inteHD = ::Opm::RestartIO::writeHeader(rst_file.get() , sim_step, report_step, seconds_elapsed, ert_phase_mask, units, schedule , grid, es);
-	::Opm::RestartIO::writeGroup(rst_file.get() , sim_step, seconds_elapsed, ert_phase_mask, units, schedule , grid, es, inteHD, smry);
-	::Opm::RestartIO::writeWell( rst_file.get() , sim_step, es , grid, schedule, wells);
-	//::Opm::RestartIO::writeSolution( rst_file.get() , value.solution , write_double );
-	::Opm::RestartIO::writeSolution( rst_file.get() , value , write_double );
+        std::vector<int> inteHD = ::Opm::RestartIO::writeHeader(rst_file.get() , sim_step, report_step, seconds_elapsed, ert_phase_mask, units, schedule , grid, es);
+        ::Opm::RestartIO::writeGroup(rst_file.get() , sim_step, seconds_elapsed, ert_phase_mask, units, schedule, grid, es, sumState, inteHD);
+	::Opm::RestartIO::writeMSWData(rst_file.get() , sim_step, seconds_elapsed, ert_phase_mask, units, schedule, grid, es, sumState, inteHD);
+        ::Opm::RestartIO::writeWell( rst_file.get(), sim_step, es , grid, schedule, value.wells);
+        ::Opm::RestartIO::writeSolution( rst_file.get(), value, write_double );
         if (!ecl_compatible_rst)
-	  ::Opm::RestartIO::writeExtraData( rst_file.get() , value.extra );
+	  ::Opm::RestartIO:: writeExtraData( rst_file.get(), value.extra );
     }
 }
 

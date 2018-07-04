@@ -184,7 +184,6 @@ namespace {
 	return wellIndexMap;
     }
 
-
     const int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t simStep)
     {
 	int level = 0;
@@ -568,7 +567,6 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 	    curGroups[static_cast<int>(it->first)] = it->second;
 	    it++;
 	}
-
     {
 	groupLoop(curGroups, [sched, simStep, inteHead, this]
             (const Group& group, const std::size_t groupID) -> void

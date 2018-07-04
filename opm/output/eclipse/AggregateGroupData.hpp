@@ -26,10 +26,12 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace Opm {
     class Schedule;
     class SummaryState;
+    class Group;
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {
@@ -62,13 +64,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 				      const std::size_t                    simStep,
 				      const Opm::SummaryState&             sumState,
 				      const std::vector<int>&              inteHead);
-
-#if 0
-        void captureDynamicGroupData(const Opm::Phases&          phases,
-                                     const Opm::Schedule&        sched,
-                                     const std::size_t           simStep,
-                                     const Opm::data::WellRates& wRates);
-#endif
 
         /// Retrieve Integer Group Data Array.
         const std::vector<int>& getIGroup() const

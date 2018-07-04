@@ -145,7 +145,8 @@ namespace {
                    const ::Opm::Schedule& sched,
                    const std::size_t      lookup_step)
     {
-        const auto& wsd = rspec.wellSegmentDimensions();
+	const auto& wd = rspec.wellDimensions();
+	const auto& wsd = rspec.wellSegmentDimensions();
 
         const auto& sched_wells = sched.getWells(lookup_step);
 

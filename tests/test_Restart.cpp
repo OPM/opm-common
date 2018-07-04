@@ -547,8 +547,8 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
                                            RestartValue(cells, wells),
                                            setup.es,
                                            setup.grid ,
-					   sumState,
-                                           setup.schedule),
+                                           setup.schedule,
+					   sumState),
                                            std::runtime_error);
     }
     test_work_area_free(test_area);
@@ -592,8 +592,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                             restart_value,
                             setup.es,
                             setup.grid,
-			    sumState,
-                            setup.schedule);
+                            setup.schedule,
+			    sumState);
 
             {
                 ecl_file_type * f = ecl_file_open( "FILE.UNRST" , 0 );
@@ -666,8 +666,8 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                restart_value,
                                                setup.es,
                                                setup.grid,
-					       sumState,
-                                               setup.schedule), std::runtime_error);
+                                               setup.schedule,
+					       sumState), std::runtime_error);
 
             int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
