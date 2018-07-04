@@ -309,7 +309,8 @@ namespace {
 	    //find group level ("FIELD" is level 0) and store the level in
 	    //location nwgmax + 27
 	    const auto grpLevel = currentGroupLevel(sched, group, simStep);
-
+	    iGrp[nwgmax+27] = grpLevel;
+	    
 	    // set values for group probably connected to GCONPROD settings
 	    //
 	    if (group.name() != "FIELD")
