@@ -19,6 +19,8 @@
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
 
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/output/eclipse/SummaryState.hpp>
@@ -38,6 +40,8 @@
 #include <iterator>
 #include <string>
 
+namespace VI = Opm::RestartIO::Helpers::VectorItems;
+
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateWellData
 // ---------------------------------------------------------------------
@@ -45,14 +49,12 @@
 namespace {
     std::size_t numWells(const std::vector<int>& inteHead)
     {
-        // INTEHEAD(17) = NWELLS
-        return inteHead[17 - 1];
+        return inteHead[VI::intehead::NWELLS];
     }
 
     int maxNumGroups(const std::vector<int>& inteHead)
     {
-        // INTEHEAD(21) = NWGMAX
-        return inteHead[21 - 1];
+        return inteHead[VI::intehead::NWGMAX];
     }
 
     std::string trim(const std::string& s)
@@ -103,8 +105,7 @@ namespace {
     namespace IWell {
         std::size_t entriesPerWell(const std::vector<int>& inteHead)
         {
-            // INTEHEAD(25) = NIWELZ
-            return inteHead[25 - 1];
+            return inteHead[VI::intehead::NIWELZ];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<int>
@@ -335,11 +336,10 @@ namespace {
     namespace SWell {
         std::size_t entriesPerWell(const std::vector<int>& inteHead)
         {
-            // INTEHEAD(26) = NSWELZ
-            assert ((inteHead[26 - 1] > 121) &&
+            assert ((inteHead[VI::intehead::NSWELZ] > 121) &&
                     "SWEL must allocate at least 122 elements per well");
 
-            return inteHead[26 - 1];
+            return inteHead[VI::intehead::NSWELZ];
         }
 
         float datumDepth(const Opm::Well&  well,
@@ -486,11 +486,10 @@ namespace {
     namespace XWell {
         std::size_t entriesPerWell(const std::vector<int>& inteHead)
         {
-            // INTEHEAD(27) = NXWELZ
-            assert ((inteHead[27 - 1] > 123) &&
+            assert ((inteHead[VI::intehead::NXWELZ] > 123) &&
                     "XWEL must allocate at least 124 elements per well");
 
-            return inteHead[27 - 1];
+            return inteHead[VI::intehead::NXWELZ];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<double>
@@ -641,11 +640,10 @@ namespace {
     namespace ZWell {
         std::size_t entriesPerWell(const std::vector<int>& inteHead)
         {
-            // INTEHEAD(28) = NZWELZ
-            assert ((inteHead[28 - 1] > 1) &&
+            assert ((inteHead[VI::intehead::NZWELZ] > 1) &&
                     "ZWEL must allocate at least 1 element per well");
 
-            return inteHead[28 - 1];
+            return inteHead[VI::intehead::NZWELZ];
         }
 
         Opm::RestartIO::Helpers::WindowedArray<
