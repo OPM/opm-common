@@ -61,15 +61,12 @@ namespace {
     {
         const auto b = s.find_first_not_of(" \t");
         if (b == std::string::npos) {
-            // No blanks.  Return unchanged.
-            return s;
+            // All blanks.  Return empty.
+            return "";
         }
 
-        auto e = s.find_last_not_of(" \t");
-        if (e == std::string::npos) {
-            // No trailing blanks.  Return [b, end)
-            return s.substr(b, std::string::npos);
-        }
+        const auto e = s.find_last_not_of(" \t");
+        assert ((e != std::string::npos) && "Logic Error");
 
         // Remove leading/trailing blanks.
         return s.substr(b, e - b + 1);
