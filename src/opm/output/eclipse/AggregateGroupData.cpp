@@ -376,7 +376,7 @@ namespace {
 		const auto zero   =  0.0f;
 		const auto one    =  1.0f;
 
-		const auto init = std::vector<float> { // 132 Items (0..131)
+		const auto init = std::vector<float> { // 112 Items (0..111)
 		    // 0     1      2      3      4
 		    infty, infty, dflt , infty,  zero ,     //   0..  4  ( 0)
 		    zero , infty, infty, infty , infty,     //   5..  9  ( 1)

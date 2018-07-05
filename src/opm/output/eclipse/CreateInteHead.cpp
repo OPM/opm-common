@@ -246,13 +246,8 @@ createInteHead(const EclipseState& es,
         .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
-<<<<<<< HEAD
 	.ngroups(getNoGroups(sched, lookup_step))
         .variousParam       (2014, 100)  // Output should be compatible with Eclipse 100, 2014 version.
-=======
-	.ngroups(getNoGroups(sched))
-        .variousParam       (2014, 100) // Output should be compatible with Eclipse 100, 2014 version.
->>>>>>> Initial changes to add group data to restart output plus adding changes to include no of groups in inteHEAD
         ;
 
     return ih.data();
