@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_WINDOWED_VECTOR_HPP
-#define OPM_WINDOWED_VECTOR_HPP
+#ifndef OPM_WINDOWED_ARRAY_HPP
+#define OPM_WINDOWED_ARRAY_HPP
 
 #include <cassert>
 #include <iterator>
@@ -174,4 +174,4 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
 }}} // Opm::RestartIO::Helpers
 
-#endif // OPM_WINDOW_VECTOR_HPP
+#endif // OPM_WINDOW_ARRAY_HPP
