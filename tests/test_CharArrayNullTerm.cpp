@@ -34,14 +34,6 @@ BOOST_AUTO_TEST_CASE (Basic_Operations)
 
     // Move Construction
     {
-        const auto s1 = Opm::RestartIO::Helpers::CharArrayNullTerm<8>{"Inj-1"};
-        const auto s2 = s1;
-
-        BOOST_CHECK_EQUAL(s2.c_str(), std::string{"Inj-1   "});
-    }
-
-    // Move Construction
-    {
         auto s1 = Opm::RestartIO::Helpers::CharArrayNullTerm<8>{"Inj-1"};
         const auto s2 = std::move(s1);
 
