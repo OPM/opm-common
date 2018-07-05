@@ -32,17 +32,14 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     template <typename T>
     class WindowedArray
     {
-    private:
-        using Vector = std::vector<T>;
-
     public:
         using WriteWindow = boost::iterator_range<
-            typename Vector::iterator>;
+            typename std::vector<T>::iterator>;
 
         using ReadWindow = boost::iterator_range<
-            typename Vector::const_iterator>;
+            typename std::vector<T>::const_iterator>;
 
-        using Idx = typename Vector::size_type;
+        using Idx = typename std::vector<T>::size_type;
 
         struct NumWindows { Idx value; };
         struct WindowSize { Idx value; };
@@ -84,12 +81,12 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return { b, e };
         }
 
-        const Vector& data() const
+        const std::vector<T>& data() const
         {
             return this->x_;
         }
 
-        Vector getDataDestructively()
+        std::vector<T> getDataDestructively()
         {
             return std::move(this->x_);
         }
