@@ -65,25 +65,21 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 				      const Opm::SummaryState&             sumState,
 				      const std::vector<int>&              inteHead);
 
-        /// Retrieve Integer Group Data Array.
         const std::vector<int>& getIGroup() const
         {
             return this->iGroup_.data();
         }
 
-        /// Retrieve Floating-Point (Real) Group Data Array.
         const std::vector<float>& getSGroup() const
         {
             return this->sGroup_.data();
         }
 
-        /// Retrieve Floating-Point (Double Precision) Group Data Array.
         const std::vector<double>& getXGroup() const
         {
             return this->xGroup_.data();
         }
 
-        /// Retrieve Character Group Data Array.
         const std::vector<CharArrayNullTerm<8>>& getZGroup() const
         {
             return this->zGroup_.data();

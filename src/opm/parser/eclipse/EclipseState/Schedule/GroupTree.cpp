@@ -75,7 +75,6 @@ void GroupTree::updateSeqIndex( const std::string& name, const std::string& othe
     // add code to set an index that determine the sequence of the groups
     // defined in the group tree
     size_t index = this->m_nameSeqIndMap.size();
-    std::cout << "GroupTree::update - index: " << index << " name: " << name << " other_parent: " << other_parent << std::endl;
     auto name_itr = this->m_nameSeqIndMap.find(name);
     if (name_itr == this->m_nameSeqIndMap.end()) {
 	this->m_nameSeqIndMap.insert(std::make_pair(name, index));
