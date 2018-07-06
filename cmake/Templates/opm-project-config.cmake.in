@@ -73,6 +73,8 @@ if(NOT @opm-project_NAME@_FOUND)
 
   # this is the contents of config.h as far as our probes can tell:
 
-  # extra code
+  # extra code from variable OPM_PROJECT_EXTRA_CODE
   @OPM_PROJECT_EXTRA_CODE@
+  # end extra code
+
 endif()
