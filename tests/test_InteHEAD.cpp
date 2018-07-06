@@ -23,6 +23,8 @@
 
 #include <opm/output/eclipse/InteHEAD.hpp>
 
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -35,6 +37,8 @@
 #include <numeric>              // partial_sum()
 #include <string>
 #include <vector>
+
+namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 namespace {
     std::vector<double> elapsedTime(const Opm::TimeMap& tmap)
@@ -79,21 +83,21 @@ BOOST_AUTO_TEST_CASE(Dimensions_Individual)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[ 9 - 1], 100); // Nx
-    BOOST_CHECK_EQUAL(v[10 - 1],  60); // Ny
-    BOOST_CHECK_EQUAL(v[11 - 1],  15); // Nz
+    BOOST_CHECK_EQUAL(v[VI::intehead::NX], 100);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NY],  60);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NZ],  15);
 }
 
 BOOST_AUTO_TEST_CASE(Dimensions_Array)
 {
     const auto ih = Opm::RestartIO::InteHEAD{}
-        .dimensions({100, 60, 15});
+        .dimensions({ {100, 60, 15} });
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[ 9 - 1], 100); // Nx
-    BOOST_CHECK_EQUAL(v[10 - 1],  60); // Ny
-    BOOST_CHECK_EQUAL(v[11 - 1],  15); // Nz
+    BOOST_CHECK_EQUAL(v[VI::intehead::NX], 100);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NY],  60);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NZ],  15);
 }
 
 BOOST_AUTO_TEST_CASE(NumActive)
@@ -103,7 +107,7 @@ BOOST_AUTO_TEST_CASE(NumActive)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[12 - 1], 72390); // NACTIVE
+    BOOST_CHECK_EQUAL(v[VI::intehead::NACTIV], 72390);
 }
 
 BOOST_AUTO_TEST_CASE(UnitConventions)
@@ -118,7 +122,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[3 - 1], 1); // Unit
+        BOOST_CHECK_EQUAL(v[VI::intehead::UNIT], 1);
     }
 
     // Field
@@ -127,7 +131,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[3 - 1], 2); // Unit
+        BOOST_CHECK_EQUAL(v[VI::intehead::UNIT], 2);
     }
 
     // Lab
@@ -136,7 +140,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[3 - 1], 3); // Unit
+        BOOST_CHECK_EQUAL(v[VI::intehead::UNIT], 3);
     }
 
     // PVT-M
@@ -145,7 +149,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[3 - 1], 4); // Unit
+        BOOST_CHECK_EQUAL(v[VI::intehead::UNIT], 4);
     }
 }
 
@@ -164,10 +168,10 @@ BOOST_AUTO_TEST_CASE(WellTableDimensions)
     const auto& v = ih.data();
     const auto nwgmax = std::max(maxWellInGroup, maxGroupInField);
 
-    BOOST_CHECK_EQUAL(v[17 - 1], numWells);            // NWELLS
-    BOOST_CHECK_EQUAL(v[18 - 1], maxPerf);             // NCWMAX
-    BOOST_CHECK_EQUAL(v[20 - 1], nwgmax);              // NWGMAX
-    BOOST_CHECK_EQUAL(v[21 - 1], maxGroupInField + 1); // NGMAXZ
+    BOOST_CHECK_EQUAL(v[VI::intehead::NWELLS], numWells);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NCWMAX], maxPerf);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NWGMAX], nwgmax);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NGMAXZ], maxGroupInField + 1);
 }
 
 BOOST_AUTO_TEST_CASE(CalendarDate)
@@ -201,7 +205,7 @@ BOOST_AUTO_TEST_CASE(ActivePhases)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[15 - 1], 1);
+        BOOST_CHECK_EQUAL(v[VI::intehead::PHASE], 1);
     }
 
     // Water
@@ -210,7 +214,7 @@ BOOST_AUTO_TEST_CASE(ActivePhases)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[15 - 1], 2);
+        BOOST_CHECK_EQUAL(v[VI::intehead::PHASE], 2);
     }
 
     // Gas
@@ -219,7 +223,7 @@ BOOST_AUTO_TEST_CASE(ActivePhases)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[15 - 1], 4);
+        BOOST_CHECK_EQUAL(v[VI::intehead::PHASE], 4);
     }
 
     // Oil/Water
@@ -228,7 +232,7 @@ BOOST_AUTO_TEST_CASE(ActivePhases)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[15 - 1], 3);
+        BOOST_CHECK_EQUAL(v[VI::intehead::PHASE], 3);
     }
 
     // Oil/Gas
@@ -237,7 +241,7 @@ BOOST_AUTO_TEST_CASE(ActivePhases)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[15 - 1], 5);
+        BOOST_CHECK_EQUAL(v[VI::intehead::PHASE], 5);
     }
 
     // Water/Gas
@@ -246,7 +250,7 @@ BOOST_AUTO_TEST_CASE(ActivePhases)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[15 - 1], 6);
+        BOOST_CHECK_EQUAL(v[VI::intehead::PHASE], 6);
     }
 
     // Oil/Water/Gas
@@ -255,7 +259,7 @@ BOOST_AUTO_TEST_CASE(ActivePhases)
 
         const auto& v = ih.data();
 
-        BOOST_CHECK_EQUAL(v[15 - 1], 7);
+        BOOST_CHECK_EQUAL(v[VI::intehead::PHASE], 7);
     }
 }
 
@@ -266,10 +270,10 @@ BOOST_AUTO_TEST_CASE(NWell_Parameters)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[25 - 1], 27); // NIWELZ
-    BOOST_CHECK_EQUAL(v[26 - 1], 18); // NSWELZ
-    BOOST_CHECK_EQUAL(v[27 - 1], 28); // NXWELZ
-    BOOST_CHECK_EQUAL(v[28 - 1],  1); // NZWELZ
+    BOOST_CHECK_EQUAL(v[VI::intehead::NIWELZ], 27);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSWELZ], 18);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NXWELZ], 28);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NZWELZ],  1);
 }
 
 BOOST_AUTO_TEST_CASE(NConn_Parameters)
@@ -279,22 +283,25 @@ BOOST_AUTO_TEST_CASE(NConn_Parameters)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[33 - 1], 31); // NICONZ
-    BOOST_CHECK_EQUAL(v[34 - 1], 41); // NSCONZ
-    BOOST_CHECK_EQUAL(v[35 - 1], 59); // NXCONZ
+    BOOST_CHECK_EQUAL(v[VI::intehead::NICONZ], 31);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSCONZ], 41);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NXCONZ], 59);
 }
 
 BOOST_AUTO_TEST_CASE(GroupSize_Parameters)
 {
+    // https://oeis.org/A001620
     const auto ih = Opm::RestartIO::InteHEAD{}
-        .params_GRPZ({ 577, 215, 664, 901 }); // https://oeis.org/A001620
+        .params_GRPZ({
+            { 577, 215, 664, 901 }
+        });
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[37 - 1], 577); // NIGRPZ
-    BOOST_CHECK_EQUAL(v[38 - 1], 215); // NSGRPZ
-    BOOST_CHECK_EQUAL(v[39 - 1], 664); // NXGRPZ
-    BOOST_CHECK_EQUAL(v[40 - 1], 901); // NZGRPZ
+    BOOST_CHECK_EQUAL(v[VI::intehead::NIGRPZ], 577);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSGRPZ], 215);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NXGRPZ], 664);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NZGRPZ], 901);
 }
 
 BOOST_AUTO_TEST_CASE(Analytic_Aquifer_Parameters)
@@ -305,13 +312,13 @@ BOOST_AUTO_TEST_CASE(Analytic_Aquifer_Parameters)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[42 - 1], 1);       // NCAMAX
-    BOOST_CHECK_EQUAL(v[43 - 1], 61);      // NIAAQZ
-    BOOST_CHECK_EQUAL(v[44 - 1], 803);     // NSAAQZ
-    BOOST_CHECK_EQUAL(v[45 - 1], 3988);    // NXAAQZ
-    BOOST_CHECK_EQUAL(v[46 - 1], 74989);   // NICAQZ
-    BOOST_CHECK_EQUAL(v[47 - 1], 484820);  // NSCAQZ
-    BOOST_CHECK_EQUAL(v[48 - 1], 4586834); // NACAQZ
+    BOOST_CHECK_EQUAL(v[VI::intehead::NCAMAX], 1);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NIAAQZ], 61);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSAAQZ], 803);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NXAAQZ], 3988);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NICAQZ], 74989);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSCAQZ], 484820);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NACAQZ], 4586834);
 }
 
 BOOST_AUTO_TEST_CASE(Time_and_report_step)
@@ -380,13 +387,13 @@ BOOST_AUTO_TEST_CASE(wellSegDimensions)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[174], nsegwl);
-    BOOST_CHECK_EQUAL(v[175], nswlmx);
-    BOOST_CHECK_EQUAL(v[176], nsegmx);
-    BOOST_CHECK_EQUAL(v[177], nlbrmx);
-    BOOST_CHECK_EQUAL(v[178], nisegz);
-    BOOST_CHECK_EQUAL(v[179], nrsegz);
-    BOOST_CHECK_EQUAL(v[180], nilbrz);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSEGWL], nsegwl);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSWLMX], nswlmx);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NSEGMX], nsegmx);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NLBRMX], nlbrmx);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NISEGZ], nisegz);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NRSEGZ], nrsegz);
+    BOOST_CHECK_EQUAL(v[VI::intehead::NILBRZ], nilbrz);
 }
 
 BOOST_AUTO_TEST_CASE(regionDimensions)

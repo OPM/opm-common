@@ -493,6 +493,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
+        opm/output/eclipse/VectorItems/well.hpp
         opm/output/eclipse/AggregateWellData.hpp
         opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/DoubHEAD.hpp

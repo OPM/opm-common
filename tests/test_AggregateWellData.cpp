@@ -25,6 +25,9 @@
 
 #include <opm/output/eclipse/SummaryState.hpp>
 
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/well.hpp>
+
 #include <opm/output/data/Wells.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -63,11 +66,13 @@ MockIH::MockIH(const int numWells,
                const int zwelPerWell)
     : value(411, 0)
 {
-    this->nwells = this->value[17 - 1] = numWells;
-    this->niwelz = this->value[25 - 1] = iwelPerWell;
-    this->nswelz = this->value[26 - 1] = swelPerWell;
-    this->nxwelz = this->value[27 - 1] = xwelPerWell;
-    this->nzwelz = this->value[28 - 1] = zwelPerWell;
+    using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
+
+    this->nwells = this->value[Ix::NWELLS] = numWells;
+    this->niwelz = this->value[Ix::NIWELZ] = iwelPerWell;
+    this->nswelz = this->value[Ix::NSWELZ] = swelPerWell;
+    this->nxwelz = this->value[Ix::NXWELZ] = xwelPerWell;
+    this->nzwelz = this->value[Ix::NZWELZ] = zwelPerWell;
 }
 
 namespace {
@@ -371,107 +376,123 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
     // IWEL (OP_1)
     {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
         const auto start = 0*ih.niwelz;
 
         const auto& iwell = awd.getIWell();
-        BOOST_CHECK_EQUAL(iwell[start +  0], 9); // OP_1 -> I
-        BOOST_CHECK_EQUAL(iwell[start +  1], 9); // OP_1 -> J
-        BOOST_CHECK_EQUAL(iwell[start +  2], 1); // OP_1/Head -> K
-        BOOST_CHECK_EQUAL(iwell[start +  4], 2); // OP_1 #Compl
-        BOOST_CHECK_EQUAL(iwell[start +  6], 1); // OP_1 -> Producer
-        BOOST_CHECK_EQUAL(iwell[start + 11], 0); // VFP defaulted -> 0
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 9); // OP_1 -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 9); // OP_1 -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // OP_1/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 2); // OP_1 #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // OP_1 -> Producer
+        BOOST_CHECK_EQUAL(iwell[start + Ix::VFPTab], 0); // VFP defaulted -> 0
 
         // Completion order
-        BOOST_CHECK_EQUAL(iwell[start + 98], 0); // Track ordering (default)
+        BOOST_CHECK_EQUAL(iwell[start + Ix::CompOrd], 0); // Track ordering (default)
 
-        BOOST_CHECK_EQUAL(iwell[start + 17], -100); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + 24], -  1); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + 47], -  1); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + 31],    7); // M2 Magic
+        BOOST_CHECK_EQUAL(iwell[start + Ix::item18], -100); // M2 Magic
+        BOOST_CHECK_EQUAL(iwell[start + Ix::item25], -  1); // M2 Magic
+        BOOST_CHECK_EQUAL(iwell[start + Ix::item48], -  1); // M2 Magic
+        BOOST_CHECK_EQUAL(iwell[start + Ix::item32],    7); // M2 Magic
     }
 
     // IWEL (OP_2)
     {
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
         const auto start = 1*ih.niwelz;
 
         const auto& iwell = awd.getIWell();
-        BOOST_CHECK_EQUAL(iwell[start +  0], 9); // OP_2 -> I
-        BOOST_CHECK_EQUAL(iwell[start +  1], 9); // OP_2 -> J
-        BOOST_CHECK_EQUAL(iwell[start +  2], 2); // OP_2/Head -> K
-        BOOST_CHECK_EQUAL(iwell[start +  4], 1); // OP_2 #Compl
-        BOOST_CHECK_EQUAL(iwell[start +  6], 4); // OP_2 -> Gas Inj.
-        BOOST_CHECK_EQUAL(iwell[start + 11], 0); // VFP defaulted -> 0
+        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 9); // OP_2 -> I
+        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 9); // OP_2 -> J
+        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 2); // OP_2/Head -> K
+        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // OP_2 #Compl
+        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 4); // OP_2 -> Gas Inj.
+        BOOST_CHECK_EQUAL(iwell[start + Ix::VFPTab], 0); // VFP defaulted -> 0
 
         // Completion order
-        BOOST_CHECK_EQUAL(iwell[start + 98], 0); // Track ordering (default)
+        BOOST_CHECK_EQUAL(iwell[start + Ix::CompOrd], 0); // Track ordering (default)
 
-        BOOST_CHECK_EQUAL(iwell[start + 17], -100); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + 24], -  1); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + 47], -  1); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + 31],    7); // M2 Magic
+        BOOST_CHECK_EQUAL(iwell[start + Ix::item18], -100); // M2 Magic
+        BOOST_CHECK_EQUAL(iwell[start + Ix::item25], -  1); // M2 Magic
+        BOOST_CHECK_EQUAL(iwell[start + Ix::item48], -  1); // M2 Magic
+        BOOST_CHECK_EQUAL(iwell[start + Ix::item32],    7); // M2 Magic
     }
 
     // SWEL (OP_1)
     {
-        const auto start = 0*ih.nswelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i0 = 0*ih.nswelz;
 
         const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[start + 0], 20.0e3f, 1.0e-7f); // ORAT Target
-        BOOST_CHECK_CLOSE(swell[start + 1], 1.0e20f, 1.0e-7f); // WRAT Limit
-        BOOST_CHECK_CLOSE(swell[start + 2], 1.0e20f, 1.0e-7f); // GRAT Limit
-        BOOST_CHECK_CLOSE(swell[start + 3], 1.0e20f, 1.0e-7f); // LRAT Limit
-        BOOST_CHECK_CLOSE(swell[start + 4], 1.0e20f, 1.0e-7f); // RESV Limit
-        BOOST_CHECK_CLOSE(swell[start + 5], 1.0e20f, 1.0e-7f); // THP Limit
-        BOOST_CHECK_CLOSE(swell[start + 6], 1000.0f, 1.0e-7f); // BHP Limit
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::OilRateTarget] , 20.0e3f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::WatRateTarget] , 1.0e20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::GasRateTarget] , 1.0e20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::LiqRateTarget] , 1.0e20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::ResVRateTarget], 1.0e20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget]     , 1.0e20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::BHPTarget]     , 1000.0f, 1.0e-7f);
 
-        BOOST_CHECK_CLOSE(swell[start + 9], 0.375f, 1.0e-7f); // Datum depth
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth]    , 0.375f, 1.0e-7f);
     }
 
     // SWEL (OP_2)
     {
-        const auto start = 1*ih.nswelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
+
+        const auto i1 = 1*ih.nswelz;
 
         const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[start + 5], 1.0e20f, 1.0e-7f); // THP Limit
-        BOOST_CHECK_CLOSE(swell[start + 6],  400.0f, 1.0e-7f); // BHP Limit
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::THPTarget], 1.0e20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::BHPTarget],  400.0f, 1.0e-7f);
 
-        BOOST_CHECK_CLOSE(swell[start + 9], 0.625f, 1.0e-7f); // Datum depth
+        BOOST_CHECK_CLOSE(swell[i1 + Ix::DatumDepth], 0.625f, 1.0e-7f);
     }
 
     // XWEL (OP_1)
     {
-        const auto start = 0*ih.nxwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+        const auto i0 = 0*ih.nxwelz;
 
         const auto& xwell = awd.getXWell();
 
-        BOOST_CHECK_CLOSE(xwell[start + 41], 1000.0, 1.0e-10); // BHP Limit
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::BHPTarget], 1000.0, 1.0e-10);
     }
 
     // XWEL (OP_2)
     {
-        const auto start = 1*ih.nxwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+        const auto i1 = 1*ih.nxwelz;
 
         const auto& xwell = awd.getXWell();
 
-        BOOST_CHECK_CLOSE(xwell[start + 41], 400.0, 1.0e-10); // BHP Limit
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::BHPTarget], 400.0, 1.0e-10);
     }
 
     // ZWEL (OP_1)
     {
-        const auto start = 0*ih.nzwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
+
+        const auto i0 = 0*ih.nzwelz;
 
         const auto& zwell = awd.getZWell();
 
-        BOOST_CHECK_EQUAL(zwell[start + 0].c_str(), "OP_1    ");
+        BOOST_CHECK_EQUAL(zwell[i0 + Ix::WellName].c_str(), "OP_1    ");
     }
 
     // ZWEL (OP_2)
     {
-        const auto start = 1*ih.nzwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
+
+        const auto i1 = 1*ih.nzwelz;
 
         const auto& zwell = awd.getZWell();
 
-        BOOST_CHECK_EQUAL(zwell[start + 0].c_str(), "OP_2    ");
+        BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "OP_2    ");
     }
 }
 
@@ -496,65 +517,78 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
 
     // IWEL (OP_1)
     {
-        const auto start = 0*ih.niwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto i0 = 0*ih.niwelz;
 
         const auto& iwell = awd.getIWell();
 
-        BOOST_CHECK_EQUAL(iwell[start +  8], iwell[start + 7]); // Control mode
-        BOOST_CHECK_EQUAL(iwell[start + 10], 1); // Well open/shut flag
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9 ], iwell[i0 + Ix::WCtrl]);
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item11], 1);
     }
 
     // IWEL (OP_2)
     {
-        const auto start = 1*ih.niwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto i1 = 1*ih.niwelz;
 
         const auto& iwell = awd.getIWell();
 
-        BOOST_CHECK_EQUAL(iwell[start +  8], -1); // No flowing conns.
-        BOOST_CHECK_EQUAL(iwell[start + 10],  1); // Well open/shut flag
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9 ], -1); // No flowing conns.
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::item11],  1); // Well open/shut flag
     }
 
     // XWEL (OP_1)
     {
-        const auto  start = 0*ih.nxwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+        const auto  i0 = 0*ih.nxwelz;
         const auto& xwell = awd.getXWell();
 
-        BOOST_CHECK_CLOSE(xwell[start + 0], 1.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 1], 2.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 2], 3.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 3], 1.0 + 2.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 4], 4.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::OilPrRate], 1.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrRate], 2.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrRate], 3.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::LiqPrRate], 1.0 + 2.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrRate], 4.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 6], 314.15, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 7], 0.625, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 8], 234.5, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] , 0.625, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 18], 10.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 19], 20.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 20], 30.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 21], 40.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::OilPrTotal], 10.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrTotal], 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrTotal], 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrTotal], 40.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 36], xwell[start + 1], 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 37], xwell[start + 2], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item37], xwell[i0 + Ix::WatPrRate], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item38], xwell[i0 + Ix::GasPrRate], 1.0e-10);
     }
 
     // XWEL (OP_2)
     {
-        const auto  start = 1*ih.nxwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+        const auto  i1 = 1*ih.nxwelz;
         const auto& xwell = awd.getXWell();
 
-        BOOST_CHECK_CLOSE(xwell[start + 2], -200.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 4], -1234.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 6], 400.6, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasPrRate], -200.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidPrRate], -1234.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 24], 2000.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasInjTotal], 2000.0, 1.0e-10);
 
         // Bg = VGIR / GIR = 1234.0 / 200.0
-        BOOST_CHECK_CLOSE(xwell[start + 34], 6.17, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasFVF], 6.17, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 37], xwell[start + 2], 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 82], xwell[start + 24], 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 123], xwell[start + 4], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::item38],
+                          xwell[i1 + Ix::GasPrRate], 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::item83],
+                          xwell[i1 + Ix::GasInjTotal], 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasVoidPrRate],
+                          xwell[i1 + Ix::VoidPrRate], 1.0e-10);
     }
 }
 
@@ -579,97 +613,117 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
 
     // IWEL (OP_1) -- closed producer
     {
-        const auto start = 0*ih.niwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto i0 = 0*ih.niwelz;
 
         const auto& iwell = awd.getIWell();
 
-        BOOST_CHECK_EQUAL(iwell[start +  8], -1000); // Control mode
-        BOOST_CHECK_EQUAL(iwell[start + 10], -1000); // Well open/shut flag
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9] , -1000);
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item11], -1000);
     }
 
     // IWEL (OP_2) -- water injector
     {
-        const auto start = 1*ih.niwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+        const auto i1 = 1*ih.niwelz;
 
         const auto& iwell = awd.getIWell();
 
-        BOOST_CHECK_EQUAL(iwell[start +  8], iwell[start + 7]); // Control mode
-        BOOST_CHECK_EQUAL(iwell[start + 10],  1); // Well open/shut flag
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9],
+                          iwell[i1 + Ix::WCtrl]);
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::item11], 1);
     }
 
     // XWEL (OP_1) -- closed producer
     {
-        const auto  start = 0*ih.nxwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+        const auto  i0 = 0*ih.nxwelz;
         const auto& xwell = awd.getXWell();
 
-        BOOST_CHECK_CLOSE(xwell[start + 0], 1.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 1], 2.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 2], 3.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 3], 1.0 + 2.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 4], 4.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::OilPrRate], 1.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrRate], 2.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrRate], 3.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::LiqPrRate], 1.0 + 2.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrRate], 4.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 6], 314.15, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 7], 0.625, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 8], 234.5, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] , 0.625, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 18], 10.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 19], 20.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 20], 30.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 21], 40.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::OilPrTotal], 10.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrTotal], 20.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrTotal], 30.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrTotal], 40.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 36], xwell[start + 1], 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 37], xwell[start + 2], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item37],
+                          xwell[i0 + Ix::WatPrRate], 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item38],
+                          xwell[i0 + Ix::GasPrRate], 1.0e-10);
     }
 
     // XWEL (OP_2) -- water injector
     {
-        const auto  start = 1*ih.nxwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+        const auto  i1 = 1*ih.nxwelz;
         const auto& xwell = awd.getXWell();
 
-        BOOST_CHECK_CLOSE(xwell[start + 1], -100.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatPrRate], -100.0, 1.0e-10);
 
         // Copy of WWIR
-        BOOST_CHECK_CLOSE(xwell[start + 3], xwell[start + 1], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::LiqPrRate],
+                          xwell[i1 + Ix::WatPrRate], 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 6], 400.6, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 23], 1000.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
 
         // Copy of WWIR
-        BOOST_CHECK_CLOSE(xwell[start + 36], xwell[start + 1], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::item37],
+                          xwell[i1 + Ix::WatPrRate], 1.0e-10);
 
         // Copy of WWIT
-        BOOST_CHECK_CLOSE(xwell[start + 81], xwell[start + 23], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::item82],
+                          xwell[i1 + Ix::WatInjTotal], 1.0e-10);
 
         // WWVIR
-        BOOST_CHECK_CLOSE(xwell[start + 122], -4321.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatVoidPrRate],
+                          -4321.0, 1.0e-10);
     }
 
     // XWEL (OP_3) -- producer
     {
-        const auto  start = 2*ih.nxwelz;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+        const auto  i2 = 2*ih.nxwelz;
         const auto& xwell = awd.getXWell();
 
-        BOOST_CHECK_CLOSE(xwell[start + 0], 11.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 1], 12.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 2], 13.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 3], 11.0 + 12.0, 1.0e-10); // LPR
-        BOOST_CHECK_CLOSE(xwell[start + 4], 14.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::OilPrRate], 11.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatPrRate], 12.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GasPrRate], 13.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::LiqPrRate], 11.0 + 12.0, 1.0e-10); // LPR
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrRate], 14.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 6], 314.15, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 7], 0.0625, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 8], 1234.5, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::FlowBHP], 314.15, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatCut] , 0.0625, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GORatio], 1234.5, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[start + 18], 110.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 19], 120.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 20], 130.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[start + 21], 140.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::OilPrTotal], 110.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatPrTotal], 120.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GasPrTotal], 130.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrTotal], 140.0, 1.0e-10);
 
         // Copy of WWPR
-        BOOST_CHECK_CLOSE(xwell[start + 36], xwell[start + 1], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::item37],
+                          xwell[i2 + Ix::WatPrRate], 1.0e-10);
 
         // Copy of WGPR
-        BOOST_CHECK_CLOSE(xwell[start + 37], xwell[start + 2], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::item38],
+                          xwell[i2 + Ix::GasPrRate], 1.0e-10);
     }
 }
 
