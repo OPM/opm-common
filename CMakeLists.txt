@@ -4,7 +4,7 @@ enable_language( CXX )
 include( CheckCXXSourceCompiles )
 include( CTest )
 
-find_package(opm-parser REQUIRED)
+find_package(opm-common REQUIRED)
 find_package(PythonInterp REQUIRED)
 
 set( warnings "-Wall -Wextra -pedantic -Wpointer-arith" )
