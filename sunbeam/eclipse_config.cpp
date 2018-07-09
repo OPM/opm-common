@@ -28,7 +28,7 @@ void sunbeam::export_EclipseConfig(py::module& module)
         .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile );
 
     py::class_< SimulationConfig >( module, "SimulationConfig")
-        .def("hasThresholdPressure", &SimulationConfig::hasThresholdPressure )
+        .def("hasThresholdPressure", &SimulationConfig::useThresholdPressure )
         .def("useCPR",               &SimulationConfig::useCPR )
         .def("hasDISGAS",            &SimulationConfig::hasDISGAS )
         .def("hasVAPOIL",            &SimulationConfig::hasVAPOIL );

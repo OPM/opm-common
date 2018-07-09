@@ -5,7 +5,7 @@ pybind11_add_module(libsunbeam sunbeam.cpp
                                well.cpp
                                sunbeam_state.cpp
                                schedule.cpp
-                               completion.cpp
+                               connection.cpp
                                eclipse_config.cpp
                                table_manager.cpp
                                eclipse_grid.cpp

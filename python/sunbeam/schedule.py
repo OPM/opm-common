@@ -36,8 +36,8 @@ class Well(object):
     def __repr__(self):
         return 'Well(name = "%s")' % self.name
 
-    def completions(self, timestep):
-        return list(map(Completion, self._completions(timestep)))
+    def connections(self, timestep):
+        return list(map(Connection, self._connections(timestep)))
 
     def __eq__(self,other):
         return self._sun.__equal__(other._sun)
@@ -77,15 +77,15 @@ class Well(object):
         return fn
 
 
-@delegate(lib.Completion)
-class Completion(object):
+@delegate(lib.Connection)
+class Connection(object):
 
     @property
     def pos(self):
         return self.I, self.J, self.K
 
     def __repr__(self):
-        return 'Completion(number = {})'.format(self.number)
+        return 'Connection(number = {})'.format(self.number)
 
     # using the names flowing and closed for functions that test if a well is
     # opened or closed at some point, because we might want to use the more
@@ -93,17 +93,17 @@ class Completion(object):
     # later
     @staticmethod
     def flowing():
-        def fn(completion): return completion.state == 'OPEN'
+        def fn(connection): return connection.state == 'OPEN'
         return fn
 
     @staticmethod
     def closed():
-        def fn(completion): return completion.state == 'SHUT'
+        def fn(connection): return connection.state == 'SHUT'
         return fn
 
     @staticmethod
     def auto():
-        def fn(completion): return completion.state == 'AUTO'
+        def fn(connection): return connection.state == 'AUTO'
         return fn
 
 

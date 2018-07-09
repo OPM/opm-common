@@ -10,7 +10,7 @@ PYBIND11_MODULE(libsunbeam, module) {
     sunbeam::export_Well(module);
     sunbeam::export_Group(module);
     sunbeam::export_GroupTree(module);
-    sunbeam::export_Completion(module);
+    sunbeam::export_Connection(module);
     sunbeam::export_EclipseConfig(module);
     sunbeam::export_Eclipse3DProperties(module);
     sunbeam::export_EclipseState(module);
