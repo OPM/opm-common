@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -479,10 +480,9 @@ namespace {
                         swprop(M::pressure, pp.THPLimit);
                 }
 
-                if (pp.hasProductionControl(PP::BHP)) {
-                    sWell[Ix::BHPTarget] =
-                        swprop(M::pressure, pp.BHPLimit);
-                }
+                sWell[Ix::BHPTarget] = pp.hasProductionControl(PP::BHP)
+                    ? swprop(M::pressure, pp.BHPLimit)
+                    : swprop(M::pressure, 100.0e3*::Opm::unit::psia);
             }
             else if (well.isInjector(sim_step)) {
                 const auto& ip = well.getInjectionProperties(sim_step);
@@ -493,9 +493,9 @@ namespace {
                     sWell[Ix::THPTarget] = swprop(M::pressure, ip.THPLimit);
                 }
 
-                if (ip.hasInjectionControl(IP::BHP)) {
-                    sWell[Ix::BHPTarget] = swprop(M::pressure, ip.BHPLimit);
-                }
+                sWell[Ix::BHPTarget] = ip.hasInjectionControl(IP::BHP)
+                    ? swprop(M::pressure, ip.BHPLimit)
+                    : swprop(M::pressure, 1.0*::Opm::unit::atm);
             }
 
             sWell[Ix::DatumDepth] =
