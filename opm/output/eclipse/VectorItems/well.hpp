@@ -35,8 +35,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WType  =  6, // Well type
             WCtrl  =  7, // Well control
 
-            item9  =  8,
-            item11 = 10,
+            item9  =  8, // Unknown
+            item11 = 10, // Unknown
 
             VFPTab = 11, // ID (one-based) of well's current VFP table
 
@@ -53,7 +53,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
                          //   Value 0 for regular wells
                          //   Value #segments for MS wells
 
-            CompOrd = 98,
+            CompOrd = 98, // Well's completion ordering scheme.
         };
 
         namespace Value {
@@ -141,13 +141,13 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             GasFVF      = 34,  // Well's producing gas formation volume factor.
 
-            item37     = 36,
-            item38     = 37,
+            item37     = 36,   // Unknown
+            item38     = 37,   // Unknown
 
             BHPTarget  = 41, // Well's current BHP Target/Limit
 
-            item82     = 81,
-            item83     = 82,
+            item82     = 81,   // Unknown
+            item83     = 82,   // Unknown
 
             WatVoidPrRate = 122, // Well's voidage production rate
             GasVoidPrRate = 123, // Well's voidage production rate
