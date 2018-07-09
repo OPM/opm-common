@@ -10,6 +10,12 @@
 #include <utility>
 #include <vector>
 
+// Public INTEHEAD items are recorded in the common header file
+//
+//     opm/output/eclipse/VectorItems/intehead.hpp
+//
+// Promote items from 'index' to that list to make them public.
+// The 'index' list always uses public items where available.
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 enum index : std::vector<int>::size_type {

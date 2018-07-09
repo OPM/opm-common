@@ -23,6 +23,9 @@
 #include <vector>
 
 namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems {
+
+    // This is a subset of the items in src/opm/output/eclipse/InteHEAD.cpp .
+    // Promote items from that list to this in order to make them public.
     enum intehead : std::vector<int>::size_type {
         ISNUM   =   0,      //  An encoded integer corresponding to the
                             //  time the file was created.  For files not
