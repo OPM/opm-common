@@ -24,10 +24,12 @@ endmacro (dir_hook)
 
 # We need to define this variable in the installed cmake config file.
 set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
-                                       list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)")
+                                       list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
+                                       include(OpmPackage) #Make macros availabe after find_package(opm-common)")
 
-set(OPM_PROJECT_EXTRA_CODE_INTREE  "set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
-                                    list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)")
+set(OPM_PROJECT_EXTRA_CODE_INTREE "set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
+                                   list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
+                                   include(OpmPackage) #Make macros availabe after find_package(opm-common)")
 if(ENABLE_ECL_OUTPUT)
   set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
                                         set(COMPARE_SUMMARY_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareSummary)
