@@ -469,6 +469,12 @@ namespace {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.LiquidRate);
                 }
+                else if (pp.hasProductionControl(PP::ORAT) &&
+                         pp.hasProductionControl(PP::WRAT))
+                {
+                    sWell[Ix::LiqRateTarget] =
+                        swprop(M::liquid_surface_rate, pp.OilRate + pp.WaterRate);
+                }
 
                 if (pp.hasProductionControl(PP::RESV)) {
                     sWell[Ix::ResVRateTarget] =
