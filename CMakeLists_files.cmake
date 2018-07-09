@@ -139,6 +139,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/test_util/summaryRegressionTest.cpp
           src/opm/test_util/summaryComparator.cpp
           src/opm/test_util/EclFilesComparator.cpp
+          src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
@@ -491,6 +492,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/VectorItems/intehead.hpp
         opm/output/eclipse/VectorItems/well.hpp
         opm/output/eclipse/AggregateGroupData.hpp
+        opm/output/eclipse/AggregateConnectionData.hpp
         opm/output/eclipse/AggregateMSWData.hpp
         opm/output/eclipse/AggregateWellData.hpp
         opm/output/eclipse/CharArrayNullTerm.hpp

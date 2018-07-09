@@ -44,9 +44,10 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     public:
         explicit AggregateWellData(const std::vector<int>& inteHead);
 
-        void captureDeclaredWellData(const Opm::Schedule&   sched,
-                                     const Opm::UnitSystem& units,
-                                     const std::size_t      sim_step);
+	void captureDeclaredWellData(const Schedule&   	sched,
+                        const UnitSystem& 	units,
+                        const std::size_t 	sim_step,
+			const std::vector<int>& inteHead);
 
         void captureDynamicWellData(const Opm::Schedule&        sched,
                                     const std::size_t           sim_step,
@@ -77,6 +78,8 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->zWell_.data();
         }
 
+        
+        
     private:
         /// Aggregate 'IWEL' array (Integer) for all wells.
         WindowedArray<int> iWell_;

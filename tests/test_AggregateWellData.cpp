@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep);
+                                simCase.es.getUnits(), rptStep, ih.value);
 
     // IWEL (OP_1)
     {

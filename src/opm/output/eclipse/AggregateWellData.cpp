@@ -120,7 +120,37 @@ namespace {
             };
         }
 
-        int groupIndex(const std::string&              grpName,
+	std::map <const std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
+	{
+	    const auto& groups = sched.getGroups(simStep);
+	    // make group name to index map for the current time step
+	    std::map <const std::string, size_t> groupIndexMap;
+	    for (const auto* group : groups) {
+		int ind = (group->name() == "FIELD")
+			? inteHead[VI::intehead::NGMAXZ]-1 : group->seqIndex()-1;
+		std::pair<const std::string, size_t> groupPair = std::make_pair(group->name(), ind); 
+		groupIndexMap.insert(groupPair);
+	    }
+	    return groupIndexMap;
+      }
+    
+      int groupIndex(const std::string&              grpName,
+                     const std::map <const std::string, size_t>&  currentGroupMapNameIndex)
+      {
+	    int ind = 0;
+            auto searchGTName = currentGroupMapNameIndex.find(grpName);
+	    if (searchGTName != currentGroupMapNameIndex.end()) 
+	    {
+		ind = searchGTName->second + 1;	
+	    }
+	    else 
+	    {
+		std::cout << "group Name: " << grpName << std::endl;
+		throw std::invalid_argument( "Invalid group name" );
+	    }
+	return ind;
+      }
+        /*int groupIndex(const std::string&              grpName,
                        const std::vector<std::string>& groupNames,
                        const int                       maxGroups)
         {
@@ -142,7 +172,7 @@ namespace {
 
             // One-based indexing.
             return std::distance(b, i) + 1;
-        }
+        }  */
 
         int wellType(const Opm::Well&  well,
                      const std::size_t sim_step)
@@ -265,7 +295,8 @@ namespace {
         template <class IWellArray>
         void staticContrib(const Opm::Well&                well,
                            const std::size_t               msWellID,
-                           const std::vector<std::string>& groupNames,
+                           const std::map <const std::string, size_t>&  GroupMapNameInd,
+			   /*const std::vector<std::string>& groupNames,*/
                            const int                       maxGroups,
                            const std::size_t               sim_step,
                            IWellArray&                     iWell)
@@ -280,16 +311,27 @@ namespace {
                 const auto& conn = well.getConnections(sim_step);
 
                 iWell[Ix::NConn]  = static_cast<int>(conn.size());
-                iWell[Ix::FirstK] = (iWell[Ix::NConn] == 0)
+                // IWEL(5) = Number of active cells connected to well.
+                iWell[5 - 1] = static_cast<int>(conn.size());
+		
+		if (well.isMultiSegment(sim_step))  
+		{
+		    // Set top and bottom connections to zero for multi segment wells
+		  iWell[Ix::FirstK] = 0;
+		  iWell[Ix::LastK] = 0;
+		}
+		else
+		{
+		  iWell[Ix::FirstK] = (iWell[Ix::NConn] == 0)
                     ? 0 : conn.get(0).getK() + 1;
 
-                iWell[Ix::LastK] = (iWell[Ix::NConn] == 0)
-                    ? 0 : conn.get(conn.size() - 1).getK() + 1;
+		  iWell[Ix::LastK] = (iWell[Ix::NConn] == 0)
+		}
             }
 
             iWell[Ix::Group] =
-                groupIndex(trim(well.getGroupName(sim_step)),
-                           groupNames, maxGroups);
+	     groupIndex(trim(well.getGroupName(sim_step)),
+                GroupMapNameInd);
 
             iWell[Ix::WType]  = wellType  (well, sim_step);
             iWell[Ix::WCtrl]  = ctrlMode  (well, sim_step);
@@ -451,43 +493,41 @@ namespace {
 
                 using PP = ::Opm::WellProducer::ControlModeEnum;
 
-                if (pp.hasProductionControl(PP::ORAT)) {
+                if (pp.OilRate != 0.0) {
                     sWell[Ix::OilRateTarget] =
                         swprop(M::liquid_surface_rate, pp.OilRate);
-                }
+		}
 
-                if (pp.hasProductionControl(PP::WRAT)) {
+                if (pp.WaterRate != 0.0) {
                     sWell[Ix::WatRateTarget] =
                         swprop(M::liquid_surface_rate, pp.WaterRate);
                 }
 
-                if (pp.hasProductionControl(PP::GRAT)) {
+                if (pp.GasRate != 0.0) {
                     sWell[Ix::GasRateTarget] =
                         swprop(M::gas_surface_rate, pp.GasRate);
                 }
 
-                if (pp.hasProductionControl(PP::LRAT)) {
+                if (pp.LiquidRate != 0.0) {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.LiquidRate);
                 }
-                else if (pp.hasProductionControl(PP::ORAT) &&
-                         pp.hasProductionControl(PP::WRAT))
-                {
+                else  {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.OilRate + pp.WaterRate);
                 }
 
-                if (pp.hasProductionControl(PP::RESV)) {
+                if (pp.ResVRate != 0.0) {
                     sWell[Ix::ResVRateTarget] =
                         swprop(M::rate, pp.ResVRate);
                 }
 
-                if (pp.hasProductionControl(PP::THP)) {
+                if (pp.THPLimit != 0.0) {
                     sWell[Ix::THPTarget] =
                         swprop(M::pressure, pp.THPLimit);
                 }
-
-                sWell[Ix::BHPTarget] = pp.hasProductionControl(PP::BHP)
+           
+		sWell[Ix::BHPTarget] = pp.BHPLimit != 0.0
                     ? swprop(M::pressure, pp.BHPLimit)
                     : swprop(M::pressure, 100.0e3*::Opm::unit::psia);
             }
@@ -495,6 +535,23 @@ namespace {
                 const auto& ip = well.getInjectionProperties(sim_step);
 
                 using IP = ::Opm::WellInjector::ControlModeEnum;
+		using IT = ::Opm::WellInjector::TypeEnum;
+
+		if (ip.hasInjectionControl(IP::RATE)) {
+		    if (ip.injectorType == IT::OIL) {
+			sWell[Ix::OilRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+		    }
+		    if (ip.injectorType == IT::WATER) {
+			sWell[Ix::WatRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+		    }
+		    if (ip.injectorType == IT::GAS) {
+			sWell[Ix::GasRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+		    }
+                }
+
+		if (ip.hasInjectionControl(IP::RESV)) {
+		    sWell[x::ResVRateTarget] = swprop(M::gas_surface_rate, ip.reservoirInjectionRate);
+                }		
 
                 if (ip.hasInjectionControl(IP::THP)) {
                     sWell[Ix::THPTarget] = swprop(M::pressure, ip.THPLimit);
@@ -727,22 +784,24 @@ void
 Opm::RestartIO::Helpers::AggregateWellData::
 captureDeclaredWellData(const Schedule&   sched,
                         const UnitSystem& units,
-                        const std::size_t sim_step)
+                        const std::size_t sim_step,
+			const std::vector<int>& inteHead)
 {
     const auto& wells = sched.getWells(sim_step);
 
     // Static contributions to IWEL array.
     {
-        const auto grpNames = groupNames(sched.getGroups());
+        //const auto grpNames = groupNames(sched.getGroups());
+	const auto groupMapNameIndex = IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
         auto msWellID       = std::size_t{0};
 
-        wellLoop(wells, [&grpNames, &msWellID, sim_step, this]
+        wellLoop(wells, [&groupMapNameIndex, &msWellID, sim_step, this]
             (const Well& well, const std::size_t wellID) -> void
         {
             msWellID += well.isMultiSegment(sim_step);  // 1-based index.
             auto iw   = this->iWell_[wellID];
 
-            IWell::staticContrib(well, msWellID, grpNames,
+            IWell::staticContrib(well, msWellID, groupMapNameIndex,
                                  this->nWGMax_, sim_step, iw);
         });
     }

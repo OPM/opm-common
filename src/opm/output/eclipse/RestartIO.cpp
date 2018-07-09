@@ -24,6 +24,8 @@
 #include <opm/output/eclipse/RestartIO.hpp>
 
 #include <opm/output/eclipse/AggregateGroupData.hpp>
+#include <opm/output/eclipse/AggregateWellData.hpp>
+#include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
@@ -534,6 +536,17 @@ std::vector<const char*> serialize_ZWEL( const std::vector<const Well *>& wells)
     return data;
 }
 
+std::vector<const char*> serialize_ZWEL( const std::vector<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>& zwel) {
+    std::vector<const char*> data( zwel.size( ), "");
+    size_t it = 0;
+
+    for (const auto& well : zwel) {
+	data[ it ] = well.c_str();
+	it += 1;
+    }
+    return data;
+}
+
 template< typename T >
 void write_kw(::Opm::RestartIO::ecl_rst_file_type * rst_file , Opm::RestartIO::EclKW< T >&& kw) {
   ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file, kw.get() );
@@ -744,17 +757,28 @@ void writeExtraData(::Opm::RestartIO::ecl_rst_file_type* rst_file, const Restart
 }
 
 
-void writeWell(::Opm::RestartIO::ecl_rst_file_type* rst_file, int sim_step, const EclipseState& es , const EclipseGrid& grid, const Schedule& schedule, const data::Wells& wells) {
-    const auto sched_wells  = schedule.getWells(sim_step);
-    const auto& phases = es.runspec().phases();
-    const size_t ncwmax = schedule.getMaxNumConnectionsForWells(sim_step);
+void writeWell(::Opm::RestartIO::ecl_rst_file_type* 	rst_file, 
+	       int 					sim_step, 
+	       const UnitSystem&        		units,
+	       const EclipseState& 			es , 
+	       const EclipseGrid& 			grid, 
+	       const Schedule& 				schedule, 
+	       const data::Wells& 			wells,
+	       const Opm::SummaryState& 		sumState,
+	       const std::vector<int>&  		ih)
+{
+    auto wellData = Helpers::AggregateWellData(ih);
+    wellData.captureDeclaredWellData(schedule, units, sim_step, ih);
+    wellData.captureDynamicWellData(schedule, sim_step, wells, sumState);
 
-    const auto iwel_data = serialize_IWEL(sim_step, sched_wells, grid);
-    const auto icon_data = serialize_ICON(sim_step , ncwmax, sched_wells, grid);
-    const auto zwel_data = serialize_ZWEL( sched_wells );
-
-    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< int >( IWEL_KW, iwel_data) );
-    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< const char* >(ZWEL_KW, zwel_data ) );
+    auto connectionData = Helpers::AggregateConnectionData(ih);
+    connectionData.captureDeclaredConnData(schedule, grid, units, sim_step);
+    
+    std::vector<const char*> zwel_data = serialize_ZWEL( wellData.getZWell() );
+    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< int >	( "IWEL", wellData.getIWell()) );
+    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< float >	( "SWEL", wellData.getSWell() ) );
+    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< double >	( "XWEL", wellData.getXWell() ) );
+    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< const char* >( "ZWEL", zwel_data) );
 
     if (!es.getIOConfig().getEclCompatibleRST()) {
         const auto opm_xwel  = serialize_OPM_XWEL( wells, sim_step, sched_wells, phases, grid );
@@ -763,7 +787,8 @@ void writeWell(::Opm::RestartIO::ecl_rst_file_type* rst_file, int sim_step, cons
 	::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< int >( OPM_IWEL, opm_iwel ) );
     }
 
-    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< int >( ICON_KW, icon_data ) );
+    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< int >	( "ICON", connectionData.getIConn() ) );
+    ::Opm::RestartIO::write_kw( rst_file, ::Opm::RestartIO::EclKW< float >	( "SCON", connectionData.getSConn() ) );
 }
 
 void checkSaveArguments(const EclipseState& es,
