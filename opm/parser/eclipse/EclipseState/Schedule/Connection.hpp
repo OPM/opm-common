@@ -45,6 +45,7 @@ namespace Opm {
                    const Value<double>& connectionTransmissibilityFactor,
                    const Value<double>& diameter,
                    const Value<double>& skinFactor,
+                   const Value<double>& Kh,
                    const int satTableId,
                    const WellCompletion::DirectionEnum direction);
 
@@ -58,6 +59,7 @@ namespace Opm {
         double getSkinFactor() const;
         bool attachedToSegment() const;
         const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
+        const Value<double>& getEffectiveKhAsValueObject() const;
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
@@ -73,6 +75,7 @@ namespace Opm {
         Value<double> m_diameter;
         Value<double> m_connectionTransmissibilityFactor;
         Value<double> m_skinFactor;
+        Value<double> m_Kh;
 
     public:
         // related segment number

@@ -51,12 +51,13 @@ namespace Opm {
                                         const Value<double>& connectionTransmissibilityFactor,
                                         const Value<double>& diameter,
                                         const Value<double>& skinFactor,
+                                        const Value<double>& Kh,
                                         const int satTableId,
                                         const WellCompletion::DirectionEnum direction)
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, connectionTransmissibilityFactor, diameter, skinFactor, satTableId, direction);
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, connectionTransmissibilityFactor, diameter, skinFactor, Kh, satTableId, direction);
         this->add(conn);
     }
 
@@ -68,6 +69,7 @@ namespace Opm {
                                         const Value<double>& connectionTransmissibilityFactor,
                                         const Value<double>& diameter,
                                         const Value<double>& skinFactor,
+                                        const Value<double>& Kh,
                                         const int satTableId,
                                         const WellCompletion::DirectionEnum direction)
     {
@@ -81,6 +83,7 @@ namespace Opm {
                             connectionTransmissibilityFactor,
                             diameter,
                             skinFactor,
+                            Kh,
                             satTableId,
                             direction);
     }
@@ -100,6 +103,7 @@ namespace Opm {
         Value<double> connectionTransmissibilityFactor("CompletionTransmissibilityFactor");
         Value<double> diameter("Diameter");
         Value<double> skinFactor("SkinFactor");
+        Value<double> Kh("Kh");
         const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
         int satTableId = -1;
         bool defaultSatTable = true;
@@ -107,6 +111,7 @@ namespace Opm {
             const auto& connectionTransmissibilityFactorItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
             const auto& diameterItem = record.getItem("DIAMETER");
             const auto& skinFactorItem = record.getItem("SKIN");
+            const auto& KhItem = record.getItem("Kh");
             const auto& satTableIdItem = record.getItem("SAT_TABLE");
 
             if (connectionTransmissibilityFactorItem.hasValue(0) && connectionTransmissibilityFactorItem.getSIDouble(0) > 0)
@@ -117,6 +122,9 @@ namespace Opm {
 
             if (skinFactorItem.hasValue(0))
                 skinFactor.setValue( skinFactorItem.get< double >(0));
+
+            if (KhItem.hasValue(0) && (KhItem.get< double >(0) > 0.0))
+                Kh.setValue( KhItem.getSIDouble(0));
 
             if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
             {
@@ -146,6 +154,7 @@ namespace Opm {
                                     connectionTransmissibilityFactor,
                                     diameter,
                                     skinFactor,
+                                    Kh,
                                     satTableId,
                                     direction );
             } else {
@@ -159,6 +168,7 @@ namespace Opm {
                                    connectionTransmissibilityFactor,
                                    diameter,
                                    skinFactor,
+                                   Kh,
                                    satTableId,
                                    direction );
             }

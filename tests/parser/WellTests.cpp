@@ -346,6 +346,7 @@ inline Opm::Connection connection( int i, int j, int k, int complnum = 1 ) {
                             Opm::Value<double>("ConnectionTransmissibilityFactor",99.88),
                             Opm::Value<double>("D",22.33),
                             Opm::Value<double>("SKIN",33.22),
+                            Opm::Value<double>("Kh",17.29),
                             0,
                             Opm::WellCompletion::DirectionEnum::Z };
 }

@@ -43,6 +43,7 @@ namespace Opm {
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
+                           const Value<double>& Kh,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction)
         : dir(direction),
@@ -53,7 +54,8 @@ namespace Opm {
           ijk({i,j,k}),
           m_diameter(diameter),
           m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
-          m_skinFactor(skinFactor)
+          m_skinFactor(skinFactor),
+          m_Kh(Kh)
     {}
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
@@ -95,6 +97,11 @@ namespace Opm {
     const Value<double>& Connection::getConnectionTransmissibilityFactorAsValueObject() const {
         return m_connectionTransmissibilityFactor;
     }
+
+    const Value<double>& Connection::getEffectiveKhAsValueObject() const {
+        return m_Kh;
+    }
+
     bool Connection::attachedToSegment() const {
         return (segment_number > 0);
     }
