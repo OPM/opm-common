@@ -25,3 +25,5 @@ else()
         "Boost 1.44.0
           COMPONENTS system unit_test_framework REQUIRED")
 endif()
+# We the a defined target for libecl
+find_package_deps(opm-common)
