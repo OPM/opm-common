@@ -44,7 +44,8 @@ namespace Opm {
                            double Kh,
                            double rw,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum direction)
+                           const WellCompletion::DirectionEnum direction,
+			   const std::size_t seqIndex)
         : direction(direction),
           center_depth(depth),
           open_state(stateArg),
@@ -53,7 +54,8 @@ namespace Opm {
           m_CF(CF),
           m_Kh(Kh),
           m_rw(rw),
-          ijk({i,j,k})
+          ijk({i,j,k}),
+          m_seqIndex(seqIndex)
     {}
 
     /*bool Connection::sameCoordinate(const Connection& other) const {
@@ -89,6 +91,14 @@ namespace Opm {
 
     bool Connection::attachedToSegment() const {
         return (segment_number > 0);
+    }
+    
+    const std::size_t& Connection::getSeqIndex() const {
+        return m_seqIndex;
+    }
+    
+    void Connection::setSeqIndex(std::size_t index) {
+        m_seqIndex = index;
     }
 
     WellCompletion::DirectionEnum Connection::dir() const {
@@ -161,7 +171,7 @@ namespace Opm {
             && this->direction == rhs.direction
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
-            && this->seqIndex == rhs.seqIndex;
+            && this->m_seqIndex == rhs.m_seqIndex;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {

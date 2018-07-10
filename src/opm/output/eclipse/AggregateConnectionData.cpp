@@ -97,7 +97,7 @@ namespace {
             using ConnState = ::Opm::WellCompletion::StateEnum;
 
             // Wrong.  Should be connection's order of appearance in COMPDAT.
-            iConn[0] = static_cast<int>(connID) + 1;
+            iConn[0] = conn.getSeqIndex()+1;
 
             iConn[1] = conn.getI() + 1;
             iConn[2] = conn.getJ() + 1;
@@ -191,6 +191,7 @@ captureDeclaredConnData(const Schedule&    sched,
                         const UnitSystem&  units,
                         const std::size_t  sim_step)
 {
+    //const auto& actnum = grid.activeIndex;
     const auto& wells = sched.getWells(sim_step);
 
     connectionLoop(wells, grid, sim_step, [&units, this]

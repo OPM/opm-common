@@ -69,9 +69,9 @@ BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
     Opm::WellConnections completionSet;
-    Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0, dir);
-    Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir);
-completionSet.add( completion1 );
+    Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0, dir,0);
+    Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir,0);
+    completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
     completionSet.add( completion2 );
@@ -83,8 +83,8 @@ completionSet.add( completion1 );
 
 BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
-    Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0, dir);
-    Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir);
+    Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0, dir,0);
+    Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir,0);
     Opm::WellConnections completionSet;
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
@@ -103,9 +103,9 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
     Opm::WellConnections completionSet;
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
 
-    Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0, dir);
-    Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir);
-    Opm::Connection completion3( 10,10,12, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir);
+    Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0, dir,0);
+    Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir,0);
+    Opm::Connection completion3( 10,10,12, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir,0);
 
     completionSet.add( completion1 );
     completionSet.add( completion2 );
@@ -125,9 +125,9 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     Opm::EclipseGrid grid(10,20,20);
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
     Opm::WellConnections completions;
-    Opm::Connection completion1( 0,0,0, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0, dir);
-    Opm::Connection completion2( 0,0,1, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir);
-    Opm::Connection completion3( 0,0,2, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir);
+    Opm::Connection completion1( 0,0,0, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0, dir,0);
+    Opm::Connection completion2( 0,0,1, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir,0);
+    Opm::Connection completion3( 0,0,2, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0, dir,0);
 
     completions.add( completion1 );
     completions.add( completion2 );

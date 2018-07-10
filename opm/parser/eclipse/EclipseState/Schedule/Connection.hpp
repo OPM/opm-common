@@ -47,7 +47,8 @@ namespace Opm {
                    double Kh,
                    double rw,
                    const int satTableId,
-                   const WellCompletion::DirectionEnum direction);
+                   const WellCompletion::DirectionEnum direction,
+		   const std::size_t seqIndex);
 
 
         bool attachedToSegment() const;
@@ -70,6 +71,8 @@ namespace Opm {
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
         void updateSegment(int segment_number, double center_depth, std::size_t seqIndex);
+	const std::size_t& getSeqIndex() const;
+	void setSeqIndex(std::size_t index);
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
@@ -84,13 +87,12 @@ namespace Opm {
         double m_rw;
 
         std::array<int,3> ijk;
+	std::size_t m_seqIndex;
 
         // related segment number
         // -1 means the completion is not related to segment
         int segment_number = -1;
         double wPi = 1.0;
-
-        std::size_t seqIndex;
     };
 }
 

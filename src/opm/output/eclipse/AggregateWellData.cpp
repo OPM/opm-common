@@ -434,7 +434,7 @@ namespace {
             // Initial data by Statoil ASA.
             return { // 122 Items (0..121)
                 // 0     1      2      3      4      5
-                infty, infty, infty, infty, infty, infty,    //   0..  5  ( 0)
+                zero , zero , zero , zero ,infty , zero,    //   0..  5  ( 0)
                 one  , zero , zero , zero , zero , 1.0e-05f, //   6.. 11  ( 1)
                 zero , zero , infty, infty, zero , dflt ,    //  12.. 17  ( 2)
                 infty, infty, infty, infty, infty, zero ,    //  18.. 23  ( 3)
@@ -476,6 +476,7 @@ namespace {
         void staticContrib(const Opm::Well&       well,
                            const Opm::UnitSystem& units,
                            const std::size_t      sim_step,
+			   const ::Opm::SummaryState& smry,
                            SWellArray&            sWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
@@ -486,6 +487,11 @@ namespace {
                 return static_cast<float>(units.from_si(u, x));
             };
 
+	    auto get = [&smry, &well](const std::string& vector)
+            {
+                return smry.get(vector + ':' + well.name());
+            };
+	    
             assignDefaultSWell(sWell);
 
             if (well.isProducer(sim_step)) {
@@ -520,6 +526,10 @@ namespace {
                 if (pp.ResVRate != 0.0) {
                     sWell[Ix::ResVRateTarget] =
                         swprop(M::rate, pp.ResVRate);
+                }
+                //write out summary voidage production rate if target/limit is not set
+		else {
+                    sWell[Ix::ResVRateTarget] = get("WVPR");
                 }
 
                 if (pp.THPLimit != 0.0) {
@@ -785,6 +795,7 @@ Opm::RestartIO::Helpers::AggregateWellData::
 captureDeclaredWellData(const Schedule&   sched,
                         const UnitSystem& units,
                         const std::size_t sim_step,
+			const ::Opm::SummaryState&  smry,
 			const std::vector<int>& inteHead)
 {
     const auto& wells = sched.getWells(sim_step);
@@ -807,12 +818,12 @@ captureDeclaredWellData(const Schedule&   sched,
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, [&units, sim_step, this]
+    wellLoop(wells, [&units, sim_step, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto sw = this->sWell_[wellID];
 
-        SWell::staticContrib(well, units, sim_step, sw);
+        SWell::staticContrib(well, units, sim_step, smry, sw);
     });
 
     // Static contributions to XWEL array.

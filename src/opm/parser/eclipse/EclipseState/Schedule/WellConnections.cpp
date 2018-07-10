@@ -137,11 +137,12 @@ namespace {
                                         double Kh,
                                         double rw,
                                         const int satTableId,
-                                        const WellCompletion::DirectionEnum direction)
+                                        const WellCompletion::DirectionEnum direction,
+				        const std::size_t seqIndex)
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction);
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction, seqIndex);
         this->add(conn);
     }
 
@@ -154,7 +155,8 @@ namespace {
                                         double Kh,
                                         double rw,
                                         const int satTableId,
-                                        const WellCompletion::DirectionEnum direction)
+                                        const WellCompletion::DirectionEnum direction,
+					const std::size_t seqIndex)
     {
         int complnum = -(this->m_connections.size() + 1);
         this->addConnection(i,
@@ -167,7 +169,8 @@ namespace {
                             Kh,
                             rw,
                             satTableId,
-                            direction);
+                            direction,
+			    seqIndex);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
@@ -274,6 +277,7 @@ namespace {
                                       same_ijk );
 
             if (prev == this->m_connections.end()) {
+		std::size_t noConn = this->m_connections.size();
                 this->addConnection(I,J,k,
                                     grid.getCellDepth( I,J,k ),
                                     state,
@@ -281,8 +285,10 @@ namespace {
                                     Kh,
                                     rw,
                                     satTableId,
-                                    direction );
+                                    direction,
+				    noConn );
             } else {
+		std::size_t noConn = prev->getSeqIndex();
                 // The complnum value carries over; the rest of the state is fully specified by
                 // the current COMPDAT keyword.
                 int complnum = prev->complnum();
@@ -294,7 +300,8 @@ namespace {
                                    Kh,
                                    rw,
                                    satTableId,
-                                   direction );
+                                   direction,
+				   noConn );
             }
         }
     }

@@ -370,9 +370,10 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
 
+    const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep, ih.value);
+                                simCase.es.getUnits(), rptStep, smry, ih.value);
 
     // IWEL (OP_1)
     {

@@ -138,7 +138,8 @@ namespace {
 	int firstConnection = std::numeric_limits<int>::max();
 	for (auto it : compSet) {
 	    auto c_Segment  = it.segment_number;
-	    auto c_SeqIndex = it.seqIndex;
+	    //auto c_SeqIndex = it.seqIndex;
+	    auto c_SeqIndex = it.getSeqIndex();
 	    if ((segNumber == c_Segment) && (c_SeqIndex < firstConnection)) {
 		firstConnection = c_SeqIndex;
 	    }

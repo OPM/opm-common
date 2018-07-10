@@ -153,23 +153,6 @@ namespace RestartIO  {
 
     static const std::set<std::string> extra_solution = {"THRESHPR"};
 
-    static const int NIWELZ = 11; //Number of data elements per well in IWEL array in restart file
-    static const int NZWELZ = 3;  //Number of 8-character words per well in ZWEL array restart file
-    static const int NICONZ = 15; //Number of data elements per connection in ICON array restart file
-
-    /**
-     * The constants NIWELZ and NZWELZ referes to the number of
-     * elements per well that we write to the IWEL and ZWEL eclipse
-     * restart file data arrays. The constant NICONZ refers to the
-     * number of elements per connection in the eclipse restart file
-     * ICON data array.These numbers are written to the INTEHEAD
-     * header.
-     *
-     * Observe that all of these values are our "current-best-guess"
-     * for how many numbers are needed; there might very well be third
-     * party applications out there which have a hard expectation for
-     * these values.
-     */
 
 
     inline int to_ert_welltype( const Well& well, size_t timestep ) {
@@ -380,69 +363,6 @@ RestartValue load( const std::string& filename,
 
 namespace {
 
-std::vector<int> serialize_ICON( int sim_step,
-                                 int ncwmax,
-                                 const std::vector<const Well*>& sched_wells,
-                                 const EclipseGrid& /*grid*/) {
-
-    size_t well_offset = 0;
-    std::vector<int> data( sched_wells.size() * ncwmax * NICONZ , 0 );
-    for (const Well* well : sched_wells) {
-	const auto& connections = well->getConnections( sim_step );
-	size_t connection_offset = 0;
-	for( const auto& connection : connections) {
-	    size_t offset = well_offset + connection_offset;
-	    data[ offset + ICON_IC_INDEX ] = 1;
-
-	    data[ offset + ICON_I_INDEX ] = connection.getI() + 1;
-	    data[ offset + ICON_J_INDEX ] = connection.getJ() + 1;
-	    data[ offset + ICON_K_INDEX ] = connection.getK() + 1;
-	    data[ offset + ICON_DIRECTION_INDEX ] = connection.dir;
-	    {
-		const auto open = WellCompletion::StateEnum::OPEN;
-		data[ offset + ICON_STATUS_INDEX ] = connection.state == open
-		    ? 1
-		    : 0;
-	    }
-
-	    connection_offset += NICONZ;
-	}
-	well_offset += ncwmax * NICONZ;
-    }
-    return data;
-}
-
-std::vector<int> serialize_IWEL( size_t step,
-				 const std::vector<const Well *>& wells,
-				 const EclipseGrid& grid) {
-
-    std::vector<int> data( wells.size() * NIWELZ , 0 );
-    size_t offset = 0;
-    for (const auto well : wells) {
-	const auto& connections = well->getActiveConnections( step, grid );
-
-	data[ offset + IWEL_HEADI_INDEX ] = well->getHeadI( step ) + 1;
-	data[ offset + IWEL_HEADJ_INDEX ] = well->getHeadJ( step ) + 1;
-	data[ offset + IWEL_CONNECTIONS_INDEX ] = connections.size();
-	data[ offset + IWEL_GROUP_INDEX ] = 1;
-
-	data[ offset + IWEL_TYPE_INDEX ] = to_ert_welltype( *well, step );
-	data[ offset + IWEL_STATUS_INDEX ] =
-	    well->getStatus( step ) == WellCommon::OPEN ? 1 : 0;
-
-	offset += NIWELZ;
-    }
-    return data;
-}
-
-
-
-
-
-
-
-
-
 
 std::vector< int > serialize_OPM_IWEL( const data::Wells& wells,
 				       const std::vector< const Well* >& sched_wells ) {
@@ -525,17 +445,6 @@ std::vector< double > serialize_OPM_XWEL( const data::Wells& wells,
 }
 
 
-std::vector<const char*> serialize_ZWEL( const std::vector<const Well *>& wells) {
-    std::vector<const char*> data( wells.size( ) * NZWELZ , "");
-    size_t offset = 0;
-
-    for (const auto& well : wells) {
-	data[ offset ] = well->name().c_str();
-	offset += NZWELZ;
-    }
-    return data;
-}
-
 std::vector<const char*> serialize_ZWEL( const std::vector<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>& zwel) {
     std::vector<const char*> data( zwel.size( ), "");
     size_t it = 0;
@@ -551,42 +460,6 @@ template< typename T >
 void write_kw(::Opm::RestartIO::ecl_rst_file_type * rst_file , Opm::RestartIO::EclKW< T >&& kw) {
   ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file, kw.get() );
 }
-/*
-void writeHeader(::Opm::RestartIO::ecl_rst_file_type * rst_file,
-                 int sim_step,
-		 int report_step,
-		 time_t posix_time,
-		 double sim_days,
-		 int ert_phase_mask,
-		 const UnitSystem& units,
-		 const Schedule& schedule,
-		 const EclipseGrid& grid) {
-
-    Opm::RestartIO::ecl_rsthead_type rsthead_data = {};
-
-    rsthead_data.sim_time    = posix_time;
-    rsthead_data.nactive     = grid.getNumActive();
-    rsthead_data.nx          = grid.getNX();
-    rsthead_data.ny          = grid.getNY();
-    rsthead_data.nz          = grid.getNZ();
-    rsthead_data.nwells      = schedule.numWells(sim_step);
-    rsthead_data.niwelz      = NIWELZ;
-    rsthead_data.nzwelz      = NZWELZ;
-    rsthead_data.niconz      = NICONZ;
-    rsthead_data.ncwmax      = schedule.getMaxNumConnectionsForWells(sim_step);
-    rsthead_data.phase_sum   = ert_phase_mask;
-    rsthead_data.sim_days    = sim_days;
-    rsthead_data.unit_system = units.getEclType( );
-
-    // this function should be moved to opm (does not need to be changed)
-    ::Opm::RestartIO::ecl_util_set_date_values( rsthead_data.sim_time,
-			      &rsthead_data.day,
-			      &rsthead_data.month,
-			      &rsthead_data.year );
-
-    ::Opm::RestartIO::ecl_rst_file_fwrite_header( rst_file, report_step , &rsthead_data );
-}
-*/
 
 std::vector<int>
 writeHeader(::Opm::RestartIO::ecl_rst_file_type* rst_file,
@@ -768,7 +641,7 @@ void writeWell(::Opm::RestartIO::ecl_rst_file_type* 	rst_file,
 	       const std::vector<int>&  		ih)
 {
     auto wellData = Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(schedule, units, sim_step, ih);
+    wellData.captureDeclaredWellData(schedule, units, sim_step, sumState, ih);
     wellData.captureDynamicWellData(schedule, sim_step, wells, sumState);
 
     auto connectionData = Helpers::AggregateConnectionData(ih);
