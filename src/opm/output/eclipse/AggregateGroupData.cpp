@@ -174,7 +174,6 @@ namespace {
     const std::map <std::string, size_t>  currentWellIndex(const Opm::Schedule& sched, const size_t simStep)
     {
 	const auto& wells = sched.getWells(simStep);
-	//const std::vector< const Opm::Well* > wells = sched.getWells(simStep);
 	// make group index for current report step
 	std::map <std::string, size_t> wellIndexMap;
 	for (const auto* well : wells) {

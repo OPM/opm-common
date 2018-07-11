@@ -244,6 +244,11 @@ namespace Opm {
 
             Connection& connection = connection_set.getFromIJK( i, j, k );
             connection.updateSegment(compseg.segment_number, compseg.center_depth,compseg.m_seqIndex);
+
+	    //keep connection sequence number from input sequence
+            connection.setCompSegSeqIndex(compseg.m_seqIndex);
+	    connection.setSegDistStart(compseg.m_distance_start);
+	    connection.setSegDistEnd(compseg.m_distance_end);
         }
 
         for (size_t ic = 0; ic < connection_set.size(); ++ic) {

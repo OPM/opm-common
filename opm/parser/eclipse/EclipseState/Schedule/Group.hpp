@@ -24,6 +24,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <stddef.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>

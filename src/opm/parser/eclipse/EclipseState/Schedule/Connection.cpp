@@ -45,7 +45,10 @@ namespace Opm {
                            double rw,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction,
-			   const std::size_t seqIndex)
+			   const std::size_t seqIndex,
+			   const double segDistStart,
+			   const double segDistEnd
+			  )
         : direction(direction),
           center_depth(depth),
           open_state(stateArg),
@@ -55,7 +58,9 @@ namespace Opm {
           m_Kh(Kh),
           m_rw(rw),
           ijk({i,j,k}),
-          m_seqIndex(seqIndex)
+          m_seqIndex(seqIndex),
+          m_segDistStart(segDistStart),
+          m_segDistEnd(segDistEnd)
     {}
 
     /*bool Connection::sameCoordinate(const Connection& other) const {
@@ -97,14 +102,35 @@ namespace Opm {
         return m_seqIndex;
     }
     
-    void Connection::setSeqIndex(std::size_t index) {
-        m_seqIndex = index;
+    const std::size_t& Connection::getCompSegSeqIndex() const {
+        return m_compSeg_seqIndex;
     }
 
     WellCompletion::DirectionEnum Connection::dir() const {
         return this->direction;
     }
 
+    const double& Connection::getSegDistStart() const {
+        return m_segDistStart;
+    }
+
+    const double& Connection::getSegDistEnd() const {
+        return m_segDistEnd;
+    }
+
+    
+    void Connection::setCompSegSeqIndex(std::size_t index) {
+        m_compSeg_seqIndex = index;
+    }
+    
+    void Connection::setSegDistStart(const double& distStart) {
+        m_segDistStart = distStart;
+    }
+
+    void Connection::setSegDistEnd(const double& distEnd) {
+        m_segDistEnd = distEnd;
+    }
+    
     double Connection::depth() const {
         return this->center_depth;
     }

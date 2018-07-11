@@ -138,11 +138,13 @@ namespace {
                                         double rw,
                                         const int satTableId,
                                         const WellCompletion::DirectionEnum direction,
-				        const std::size_t seqIndex)
+				        const std::size_t seqIndex,
+				        const double segDistStart,
+					const double segDistEnd)
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction, seqIndex);
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction, seqIndex, segDistStart, segDistEnd);
         this->add(conn);
     }
 
@@ -156,7 +158,9 @@ namespace {
                                         double rw,
                                         const int satTableId,
                                         const WellCompletion::DirectionEnum direction,
-					const std::size_t seqIndex)
+					const std::size_t seqIndex,
+					const double segDistStart,
+					const double segDistEnd)
     {
         int complnum = -(this->m_connections.size() + 1);
         this->addConnection(i,
@@ -170,7 +174,9 @@ namespace {
                             rw,
                             satTableId,
                             direction,
-			    seqIndex);
+			    seqIndex,
+			    segDistStart,
+			    segDistEnd);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
@@ -286,7 +292,7 @@ namespace {
                                     rw,
                                     satTableId,
                                     direction,
-				    noConn );
+				    noConn, 0., 0. );
             } else {
 		std::size_t noConn = prev->getSeqIndex();
                 // The complnum value carries over; the rest of the state is fully specified by
@@ -301,7 +307,7 @@ namespace {
                                    rw,
                                    satTableId,
                                    direction,
-				   noConn );
+				   noConn, 0., 0. );
             }
         }
     }

@@ -47,6 +47,29 @@ namespace {
     {
         return inteHead[VI::intehead::NCWMAX];
     }
+      
+    std::map <std::size_t, const Opm::Connection*>  mapSeqIndexToConnection(const Opm::WellConnections& conns)
+    {
+	// make seqIndex to Connection map
+	std::map <std::size_t, const Opm::Connection*> seqIndConnMap;
+	for (const auto conn : conns) {
+	    std::size_t sI = conn.getSeqIndex();
+	    seqIndConnMap.insert(std::make_pair(sI, &conn));
+	}
+	return seqIndConnMap;
+    }
+
+    std::map <std::size_t, const Opm::Connection*>  mapCompSegSeqIndexToConnection(const Opm::WellConnections& conns)
+    {
+	// make CompSegSeqIndex to Connection map
+	std::map <std::size_t, const Opm::Connection*> cs_seqIndConnMap;
+	for (const auto conn : conns) {
+	    std::size_t sI = conn.getCompSegSeqIndex();
+	    cs_seqIndConnMap.insert(std::make_pair(sI, &conn));
+	}
+	return cs_seqIndConnMap;
+    }
+
 
     template <class ConnOp>
     void connectionLoop(const std::vector<const Opm::Well*>& wells,
@@ -60,13 +83,33 @@ namespace {
             const auto* well = wells[wellID];
 
             if (well == nullptr) { continue; }
-
+            
             const auto& conns = well->getActiveConnections(sim_step, grid);
+	    std::map <std::size_t, const Opm::Connection*> sIToConn;
 
-            for (auto nConn = conns.size(), connID = 0*nConn;
+	    //Branch according to MSW well or not and 
+	    //sort active connections according to appropriate seqIndex
+	    if (well->isMultiSegment(sim_step)) {
+		//sort connections according to input sequence in COMPSEGS
+		sIToConn = mapCompSegSeqIndexToConnection(conns);
+	    } else 
+	    {
+		//sort connections according to input sequence in COMPDAT
+		sIToConn = mapSeqIndexToConnection(conns);
+	    }
+	    std::vector<const Opm::Connection*> connSI;
+	    int niSI = well->getConnections(sim_step).size();
+	    for (int iSI = 0; iSI < niSI; iSI++) {
+		const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
+		if (searchSI != sIToConn.end()) {
+		  connSI.push_back(searchSI->second);
+		  }
+		}
+
+	    for (auto nConn = connSI.size(), connID = 0*nConn;
                  connID < nConn; ++connID)
             {
-                connOp(*well, wellID, conns.get(connID), connID);
+                connOp(*well, wellID, *connSI[connID], connID);
             }
         }
     }
@@ -169,6 +212,8 @@ namespace {
             // multisegmented well.  That information is impossible to
             // reconstruct here since it is discared in member function
             // ::Opm::Well::handleCOMPSEGS().
+	    sConn[20] = static_cast<float>(conn.getSegDistEnd());
+	    sConn[21] = static_cast<float>(conn.getSegDistStart());
 
             sConn[29] = -1.0e+20f;
             sConn[30] = -1.0e+20f;
