@@ -73,6 +73,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
     src/opm/parser/eclipse/EclipseState/Runspec.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/ActionX.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellConnections.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
@@ -173,6 +174,7 @@ list (APPEND TEST_SOURCE_FILES
 )
 if(ENABLE_ECL_INPUT)
   list(APPEND TEST_SOURCE_FILES
+    tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferCTTests.cpp
     tests/parser/AqudimsTests.cpp
@@ -443,6 +445,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/EclipseConfig.hpp
        opm/parser/eclipse/EclipseState/Aquancon.hpp
        opm/parser/eclipse/EclipseState/AquiferCT.hpp
+       opm/parser/eclipse/EclipseState/Schedule/ActionX.hpp
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp
