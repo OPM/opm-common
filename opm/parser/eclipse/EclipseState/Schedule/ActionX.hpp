@@ -55,6 +55,8 @@ public:
     ActionX(const std::string& name, size_t max_run, double max_wait);
     explicit ActionX(const DeckKeyword& kw);
 
+    void addKeyword(const DeckKeyword& kw);
+
     const std::string& name() const;
 private:
     std::string m_name;

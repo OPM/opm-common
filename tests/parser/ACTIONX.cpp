@@ -26,6 +26,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionX.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -51,4 +53,48 @@ ACTIONX
 
     ActionX action2(kw);
     BOOST_CHECK_EQUAL(action2.name(), "ACTION");
+}
+
+
+BOOST_AUTO_TEST_CASE(SCAN) {
+    const auto MISSING_END= std::string{ R"(
+SCHEDULE
+
+ACTIONX
+   'ACTION' /
+   WWCT OPX  > 0.75 /
+/
+)"};
+
+    const auto WITH_WELSPECS = std::string{ R"(
+SCHEDULE
+
+WELSPECS
+  'W2'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ACTIONX
+   'ACTION' /
+   WWCT OPX  > 0.75 /
+/
+
+WELSPECS
+  'W1'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ENDACTIO
+)"};
+    Opm::Parser parser;
+    auto deck1 = parser.parseString(MISSING_END, Opm::ParseContext());
+    auto deck2 = parser.parseString(WITH_WELSPECS, Opm::ParseContext());
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck1 );
+    Eclipse3DProperties eclipseProperties ( deck1 , table, grid1);
+
+    // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
+    BOOST_CHECK_THROW(Schedule(deck1, grid1, eclipseProperties, Phases(true,true,true), ParseContext()), std::invalid_argument);
+
+    Schedule sched(deck2, grid1, eclipseProperties, Phases(true,true,true), ParseContext());
+    BOOST_CHECK( !sched.hasWell("W1") );
+    BOOST_CHECK( sched.hasWell("W2"));
 }

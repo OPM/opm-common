@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ActionX.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
@@ -117,15 +118,23 @@ namespace Opm {
         return this->m_timeMap.getEndTime();
     }
 
-    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid,
-                                          const Eclipse3DProperties& eclipseProperties) {
-        /*
-          geoModifiers is a list of geo modifiers which can be found in the schedule
-          section. This is only partly supported, support is indicated by the bool
-          value. The keywords which are supported will be assembled in a per-timestep
-          'minideck', whereas ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER will be
-          consulted for the others.
-        */
+
+    void Schedule::handleKeyword(size_t& currentStep,
+                                 const SCHEDULESection& section,
+                                 size_t keywordIdx,
+                                 const DeckKeyword& keyword,
+                                 const ParseContext& parseContext,
+                                 const EclipseGrid& grid,
+                                 const Eclipse3DProperties& eclipseProperties,
+                                 const UnitSystem& unit_system,
+                                 std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties) {
+    /*
+      geoModifiers is a list of geo modifiers which can be found in the schedule
+      section. This is only partly supported, support is indicated by the bool
+      value. The keywords which are supported will be assembled in a per-timestep
+      'minideck', whereas ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER will be
+      consulted for the others.
+    */
 
         const std::map<std::string,bool> geoModifiers = {{"MULTFLT"  , true},
                                                          {"MULTPV"   , false},
@@ -143,144 +152,168 @@ namespace Opm {
                                                          {"MULTTHT"  , false},
                                                          {"MULTTHT-" , false}};
 
-        size_t currentStep = 0;
-        std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
-        const auto& unit_system = section.unitSystem();
+        if (keyword.name() == "DATES") {
+            checkIfAllConnectionsIsShut(currentStep);
+            currentStep += keyword.size();
+        }
 
-        for (size_t keywordIdx = 0; keywordIdx < section.size(); ++keywordIdx) {
-            const auto& keyword = section.getKeyword(keywordIdx);
+        else if (keyword.name() == "TSTEP") {
+            checkIfAllConnectionsIsShut(currentStep);
+            currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
+        }
 
-            if (keyword.name() == "DATES") {
-                checkIfAllConnectionsIsShut(currentStep);
-                currentStep += keyword.size();
-            }
+        else if (keyword.name() == "WELSPECS")
+            handleWELSPECS( section, keywordIdx, currentStep );
 
-            else if (keyword.name() == "TSTEP") {
-                checkIfAllConnectionsIsShut(currentStep);
-                currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
-            }
+        else if (keyword.name() == "WHISTCTL")
+            handleWHISTCTL(parseContext, keyword);
 
-            else if (keyword.name() == "WELSPECS")
-                handleWELSPECS( section, keywordIdx, currentStep );
+        else if (keyword.name() == "WCONHIST")
+            handleWCONHIST(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WHISTCTL")
-                handleWHISTCTL(parseContext, keyword);
+        else if (keyword.name() == "WCONPROD")
+            handleWCONPROD(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WCONHIST")
-                handleWCONHIST(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WCONINJE")
+            handleWCONINJE(section, keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WCONPROD")
-                handleWCONPROD(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WPOLYMER")
+            handleWPOLYMER(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WCONINJE")
-                handleWCONINJE(section, keyword, currentStep, parseContext);
+        else if (keyword.name() == "WSOLVENT")
+            handleWSOLVENT(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WPOLYMER")
-                handleWPOLYMER(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WTEST")
+            handleWTEST(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WSOLVENT")
-                handleWSOLVENT(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WTEMP")
+            handleWTEMP(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WTEST")
-                handleWTEST(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WINJTEMP")
+            handleWINJTEMP(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WTEMP")
-                handleWTEMP(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WCONINJH")
+            handleWCONINJH(section, keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WINJTEMP")
-                handleWINJTEMP(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WGRUPCON")
+            handleWGRUPCON(keyword, currentStep);
 
-            else if (keyword.name() == "WCONINJH")
-                handleWCONINJH(section, keyword, currentStep, parseContext);
+        else if (keyword.name() == "COMPDAT")
+            handleCOMPDAT(keyword, currentStep, grid, eclipseProperties, parseContext);
 
-            else if (keyword.name() == "WGRUPCON")
-                handleWGRUPCON(keyword, currentStep);
+        else if (keyword.name() == "WELSEGS")
+            handleWELSEGS(keyword, currentStep);
 
-            else if (keyword.name() == "COMPDAT")
-                handleCOMPDAT(keyword, currentStep, grid, eclipseProperties, parseContext);
+        else if (keyword.name() == "COMPSEGS")
+            handleCOMPSEGS(keyword, currentStep);
 
-            else if (keyword.name() == "WELSEGS")
-                handleWELSEGS(keyword, currentStep);
+        else if (keyword.name() == "WELOPEN")
+            handleWELOPEN(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "COMPSEGS")
-                handleCOMPSEGS(keyword, currentStep);
+        else if (keyword.name() == "WELTARG")
+            handleWELTARG(section, keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "WELOPEN")
-                handleWELOPEN(keyword, currentStep, parseContext);
+        else if (keyword.name() == "GRUPTREE")
+            handleGRUPTREE(keyword, currentStep);
 
-            else if (keyword.name() == "WELTARG")
-                handleWELTARG(section, keyword, currentStep, parseContext);
+        else if (keyword.name() == "GRUPNET")
+            handleGRUPNET(keyword, currentStep);
 
-            else if (keyword.name() == "GRUPTREE")
-                handleGRUPTREE(keyword, currentStep);
+        else if (keyword.name() == "GCONINJE")
+            handleGCONINJE(section, keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "GRUPNET")
-                handleGRUPNET(keyword, currentStep);
+        else if (keyword.name() == "GCONPROD")
+            handleGCONPROD(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "GCONINJE")
-                handleGCONINJE(section, keyword, currentStep, parseContext);
+        else if (keyword.name() == "GEFAC")
+            handleGEFAC(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "GCONPROD")
-                handleGCONPROD(keyword, currentStep, parseContext);
+        else if (keyword.name() == "TUNING")
+            handleTUNING(keyword, currentStep);
 
-            else if (keyword.name() == "GEFAC")
-                handleGEFAC(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WRFT")
+            rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
-            else if (keyword.name() == "TUNING")
-                handleTUNING(keyword, currentStep);
+        else if (keyword.name() == "WRFTPLT")
+            rftProperties.push_back( std::make_pair( &keyword , currentStep ));
 
-            else if (keyword.name() == "WRFT")
-                rftProperties.push_back( std::make_pair( &keyword , currentStep ));
+        else if (keyword.name() == "WPIMULT")
+            handleWPIMULT(keyword, currentStep);
 
-            else if (keyword.name() == "WRFTPLT")
-                rftProperties.push_back( std::make_pair( &keyword , currentStep ));
+        else if (keyword.name() == "COMPORD")
+            handleCOMPORD(parseContext , keyword, currentStep);
 
-            else if (keyword.name() == "WPIMULT")
-                handleWPIMULT(keyword, currentStep);
+        else if (keyword.name() == "COMPLUMP")
+            handleCOMPLUMP(keyword, currentStep);
 
-            else if (keyword.name() == "COMPORD")
-                handleCOMPORD(parseContext , keyword, currentStep);
+        else if (keyword.name() == "DRSDT")
+            handleDRSDT(keyword, currentStep);
 
-            else if (keyword.name() == "COMPLUMP")
-                handleCOMPLUMP(keyword, currentStep);
+        else if (keyword.name() == "DRVDT")
+            handleDRVDT(keyword, currentStep);
 
-            else if (keyword.name() == "DRSDT")
-                handleDRSDT(keyword, currentStep);
+        else if (keyword.name() == "VAPPARS")
+            handleVAPPARS(keyword, currentStep);
 
-            else if (keyword.name() == "DRVDT")
-                handleDRVDT(keyword, currentStep);
+        else if (keyword.name() == "WECON")
+            handleWECON(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "VAPPARS")
-                handleVAPPARS(keyword, currentStep);
+        else if (keyword.name() == "MESSAGES")
+            handleMESSAGES(keyword, currentStep);
 
-            else if (keyword.name() == "WECON")
-                handleWECON(keyword, currentStep, parseContext);
+        else if (keyword.name() == "WEFAC")
+            handleWEFAC(keyword, currentStep, parseContext);
 
-            else if (keyword.name() == "MESSAGES")
-                handleMESSAGES(keyword, currentStep);
+        else if (keyword.name() == "VFPINJ")
+            handleVFPINJ(keyword, unit_system, currentStep);
 
-            else if (keyword.name() == "WEFAC")
-                handleWEFAC(keyword, currentStep, parseContext);
+        else if (keyword.name() == "VFPPROD")
+            handleVFPPROD(keyword, unit_system, currentStep);
 
-            else if (keyword.name() == "VFPINJ")
-                handleVFPINJ(keyword, unit_system, currentStep);
-
-            else if (keyword.name() == "VFPPROD")
-                handleVFPPROD(keyword, unit_system, currentStep);
-
-            else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
-                bool supported = geoModifiers.at( keyword.name() );
-                if (supported) {
-                    this->m_modifierDeck[ currentStep ].addKeyword( keyword );
-                    m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
-                } else {
-                    std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
-                    parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
-                }
+        else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
+            bool supported = geoModifiers.at( keyword.name() );
+            if (supported) {
+                this->m_modifierDeck[ currentStep ].addKeyword( keyword );
+                m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
+            } else {
+                std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
+                parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
             }
         }
-        checkIfAllConnectionsIsShut(currentStep);
+    }
 
+
+    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid,
+                                          const Eclipse3DProperties& eclipseProperties) {
+        size_t currentStep = 0;
+        const auto& unit_system = section.unitSystem();
+        std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
+        size_t keywordIdx = 0;
+
+        while (true) {
+            const auto& keyword = section.getKeyword(keywordIdx);
+            if (keyword.name() == "ACTIONX") {
+                ActionX action(keyword);
+                while (true) {
+                    keywordIdx++;
+                    if (keywordIdx == section.size())
+                        throw std::invalid_argument("Invalid ACTIONX section - missing ENDACTIO");
+
+                    const auto& action_keyword = section.getKeyword(keywordIdx);
+                    if (action_keyword.name() == "ENDACTIO")
+                        break;
+
+                    action.addKeyword(action_keyword);
+                }
+            } else
+                this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, grid, eclipseProperties, unit_system, rftProperties);
+
+            keywordIdx++;
+            if (keywordIdx == section.size())
+                break;
+        }
+
+        checkIfAllConnectionsIsShut(currentStep);
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
             const DeckKeyword& keyword = *rftPair->first;
@@ -296,6 +329,7 @@ namespace Opm {
 
         checkUnhandledKeywords(section);
     }
+
 
     void Schedule::checkUnhandledKeywords(const SCHEDULESection& /*section*/) const
     {

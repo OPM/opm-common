@@ -42,7 +42,6 @@ void ActionX::addKeyword(const DeckKeyword& kw) {
     this->keywords.push_back(kw);
 }
 
-
 const std::string& ActionX::name() const {
     return this->m_name;
 }
