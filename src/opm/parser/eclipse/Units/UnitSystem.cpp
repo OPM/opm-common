@@ -594,10 +594,12 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
         0.0
     };
 
     static const double to_input[] = {
+        1,
         1,
         1,
         1,
@@ -656,6 +658,7 @@ namespace {
         1,
         1,
         1,
+        1,
         1
     };
 
@@ -676,6 +679,7 @@ namespace {
         "SM3/DAY",
         "RM3/DAY",
         "CPR3/DAY/BARS",
+        "MDM",
         "KG",
         "KG/DAY",
         "SM3/SM3",
