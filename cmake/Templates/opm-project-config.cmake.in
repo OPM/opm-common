@@ -21,8 +21,6 @@
 
 # Prevent multiple inclusions
 if(NOT @opm-project_NAME@_FOUND)
-  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" @PREREQ_LOCATION@)
-  include(@opm-project_NAME@-prereqs)
   # propagate these properties from one build system to the other
   set (@opm-project_NAME@_PREFIX "@DUNE_PREFIX@")
   set (@opm-project_NAME@_VERSION "@opm-project_VERSION@")
@@ -77,4 +75,8 @@ if(NOT @opm-project_NAME@_FOUND)
   @OPM_PROJECT_EXTRA_CODE@
   # end extra code
 
+  # This call is at the bottom as we need to include
+  # the OpmPackage Macros.
+  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" @PREREQ_LOCATION@)
+  include(@opm-project_NAME@-prereqs)
 endif()
