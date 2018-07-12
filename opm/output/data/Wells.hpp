@@ -112,6 +112,7 @@ namespace Opm {
         double cell_pressure;
         double cell_saturation_water;
         double cell_saturation_gas;
+        double effective_Kh;
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
@@ -296,6 +297,7 @@ namespace Opm {
             buffer.write(this->cell_pressure);
             buffer.write(this->cell_saturation_water);
             buffer.write(this->cell_saturation_gas);
+            buffer.write(this->effective_Kh);
     }
 
     template <class MessageBufferType>
@@ -336,6 +338,7 @@ namespace Opm {
             buffer.read(this->cell_pressure);
             buffer.read(this->cell_saturation_water);
             buffer.read(this->cell_saturation_gas);
+            buffer.read(this->effective_Kh);
    }
 
     template <class MessageBufferType>

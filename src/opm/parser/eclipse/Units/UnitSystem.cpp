@@ -38,6 +38,10 @@ namespace {
      * metric and field arrays. C++ does not support designated initializers, so
      * this cannot be done in a declaration-order independent matter.
      */
+
+    // =================================================================
+    // METRIC Unit Conventions
+
     static const double from_metric_offset[] = {
         0.0,
         0.0,
@@ -46,6 +50,7 @@ namespace {
         0.0,
         0.0,
         Metric::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -86,6 +91,7 @@ namespace {
         1 / ( Metric::GasSurfaceVolume / Metric::Time ),
         1 / ( Metric::ReservoirVolume / Metric::Time ),
         1 / Metric::Transmissibility,
+        1 / (Metric::Permeability * Metric::Length),
         1 / Metric::Mass,
         1 / ( Metric::Mass / Metric::Time ),
         1, /* gas-oil ratio */
@@ -117,6 +123,7 @@ namespace {
         Metric::GasSurfaceVolume / Metric::Time,
         Metric::ReservoirVolume / Metric::Time,
         Metric::Transmissibility,
+        Metric::Permeability * Metric::Length,
         Metric::Mass,
         Metric::Mass / Metric::Time,
         1, /* gas-oil ratio */
@@ -148,6 +155,7 @@ namespace {
         "SM3/DAY",
         "RM3/DAY",
         "CPR3/DAY/BARS",
+        "MDM",
         "KG",
         "KG/DAY",
         "SM3/SM3",
@@ -162,6 +170,9 @@ namespace {
         "KJ", /* energy */
     };
 
+    // =================================================================
+    // FIELD Unit Conventions
+
     static const double from_field_offset[] = {
         0.0,
         0.0,
@@ -170,6 +181,7 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -210,6 +222,7 @@ namespace {
         1 / ( Field::GasSurfaceVolume / Field::Time ),
         1 / ( Field::ReservoirVolume / Field::Time ),
         1 / Field::Transmissibility,
+        1 / (Field::Permeability * Field::Length),
         1 / Field::Mass,
         1 / ( Field::Mass / Field::Time ),
         1 / ( Field::GasSurfaceVolume / Field::LiquidSurfaceVolume ), /* gas-oil ratio */
@@ -241,6 +254,7 @@ namespace {
          Field::GasSurfaceVolume / Field::Time,
          Field::ReservoirVolume / Field::Time,
          Field::Transmissibility,
+         Field::Permeability * Field::Length,
          Field::Mass,
          Field::Mass / Field::Time,
          Field::GasSurfaceVolume / Field::LiquidSurfaceVolume, /* gas-oil ratio */
@@ -272,6 +286,7 @@ namespace {
         "MSCF/DAY",
         "RB/DAY",
         "CPRB/DAY/PSI",
+        "MDFT",
         "LB",
         "LB/DAY"
         "MSCF/STB",
@@ -286,6 +301,9 @@ namespace {
         "BTU", /* energy */
     };
 
+    // =================================================================
+    // LAB Unit Conventions
+
     static const double from_lab_offset[] = {
         0.0,
         0.0,
@@ -294,6 +312,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -334,6 +353,7 @@ namespace {
         1 / ( Lab::GasSurfaceVolume / Lab::Time ),
         1 / ( Lab::ReservoirVolume / Lab::Time ),
         1 / Lab::Transmissibility,
+        1 / (Lab::Permeability * Lab::Length),
         1 / Lab::Mass,
         1 / ( Lab::Mass / Lab::Time ),
         1 / Lab::GasDissolutionFactor, /* gas-oil ratio */
@@ -365,6 +385,7 @@ namespace {
         Lab::GasSurfaceVolume / Lab::Time,
         Lab::ReservoirVolume / Lab::Time,
         Lab::Transmissibility,
+        Lab::Permeability * Lab::Length,
         Lab::Mass,
         Lab::Mass / Lab::Time,
         Lab::GasDissolutionFactor,  /* gas-oil ratio */
@@ -396,6 +417,7 @@ namespace {
         "SCC/HR",
         "RCC/HR",
         "CPRCC/HR/ATM",
+        "MDCC",
         "G",
         "G/HR",
         "SCC/SCC",
@@ -410,6 +432,9 @@ namespace {
         "J", /* energy */
     };
 
+    // =================================================================
+    // PVT-M Unit Conventions
+
     static const double from_pvt_m_offset[] = {
         0.0,
         0.0,
@@ -418,6 +443,7 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -458,6 +484,7 @@ namespace {
         1 / ( PVT_M::GasSurfaceVolume / PVT_M::Time ),
         1 / ( PVT_M::ReservoirVolume / PVT_M::Time ),
         1 / PVT_M::Transmissibility,
+        1 / (PVT_M::Permeability * PVT_M::Length),
         1 / PVT_M::Mass,
         1 / ( PVT_M::Mass / PVT_M::Time ),
         1 / (PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume), // Rs
@@ -489,6 +516,7 @@ namespace {
         PVT_M::GasSurfaceVolume / PVT_M::Time,
         PVT_M::ReservoirVolume / PVT_M::Time,
         PVT_M::Transmissibility,
+        PVT_M::Permeability * PVT_M::Length,
         PVT_M::Mass,
         PVT_M::Mass / PVT_M::Time,
         PVT_M::GasSurfaceVolume / PVT_M::LiquidSurfaceVolume, // Rs
@@ -520,6 +548,7 @@ namespace {
         "SM3/DAY",
         "RM3/DAY",
         "CPR3/DAY/ATM",
+        "MDM",
         "KG",
         "KG/DAY",
         "SM3/SM3",
@@ -534,8 +563,11 @@ namespace {
         "KJ" /* energy */
     };
 
+    // =================================================================
+    // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -594,10 +626,12 @@ namespace {
         1,
         1,
         1,
+        1,
         1
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -645,6 +679,7 @@ namespace {
         "SM3/DAY",
         "RM3/DAY",
         "CPR3/DAY/BARS",
+        "MDM",
         "KG",
         "KG/DAY",
         "SM3/SM3",
@@ -659,8 +694,7 @@ namespace {
         "KJ", /* energy */
     };
 
-
-}
+} // namespace Anonymous
 
     UnitSystem::UnitSystem(const UnitType unit) :
         m_unittype( unit )

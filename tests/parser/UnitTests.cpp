@@ -300,6 +300,215 @@ BOOST_AUTO_TEST_CASE ( UnitConstants ) {
     BOOST_REQUIRE_CLOSE (flux_m3py, 1e4, 0.01);
 }
 
+BOOST_AUTO_TEST_CASE(METRIC_UNITS)
+{
+    using Meas = UnitSystem::measure;
+
+    auto metric = UnitSystem::newMETRIC();
+
+    BOOST_CHECK( metric.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    BOOST_CHECK( metric.getEclType() == ECL_METRIC_UNITS );
+
+    // ----------------------------------------------------------------
+    // METRIC -> SI
+
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::length , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::time , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::density , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::pressure , 1.0 ) , 100.0e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::temperature_absolute , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::temperature , 1.0 ) , 274.15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::viscosity , 1.0 ) , 1.0e-3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::permeability , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::liquid_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::transmissibility , 1.0 ) , 1.157407407407407e-13 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::water_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+
+    // ----------------------------------------------------------------
+    // SI -> METRIC
+
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::length , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::time , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::density , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::pressure , 1.0 ) , 1.0e-5 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::temperature_absolute , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::temperature , 274.15 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::viscosity , 1.0 ) , 1.0e+3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::permeability , 1.0 ) , 1.01325e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_surface_volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::volume , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::liquid_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::rate , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::transmissibility , 1.0 ) , 8.64e+12 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::water_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+}
+
+BOOST_AUTO_TEST_CASE(FIELD_UNITS)
+{
+    using Meas = UnitSystem::measure;
+
+    auto field = UnitSystem::newFIELD();
+
+    BOOST_CHECK( field.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD );
+    BOOST_CHECK( field.getEclType() == ECL_FIELD_UNITS );
+
+    // ----------------------------------------------------------------
+    // FIELD -> SI
+
+    BOOST_CHECK_CLOSE( field.to_si( Meas::length , 1.0 ) , 0.3048 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::time , 1.0 ) , 86.400e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::density , 1.0 ) , 1.601846337396014e+01, 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::pressure , 1.0 ) , 6.894757293168360e+03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::temperature_absolute , 1.0 ) , 5.0/9.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::temperature , 1.0 ) , 255.9277777777778 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::viscosity , 1.0 ) , 1.0e-3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::permeability , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::liquid_surface_volume , 1.0 ) , 0.1589872949280001 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::gas_surface_volume , 1.0 ) , 28.31684659200000 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::volume , 1.0 ) , 0.1589872949280001 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::liquid_surface_rate , 1.0 ) , 1.840130728333334e-06 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::gas_surface_rate , 1.0 ) , 3.277412800000001e-04 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::rate , 1.0 ) , 1.840130728333334e-06 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::transmissibility , 1.0 ) , 2.668883979653090e-13 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::effective_Kh , 1.0 ) , 3.008142116950407e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::mass , 1.0 ) , 0.45359237 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::gas_oil_ratio , 1.0 ) , 178.1076066790352 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::oil_gas_ratio , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::gas_formation_volume_factor , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::water_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 178.1076066790352 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+
+    // ----------------------------------------------------------------
+    // SI -> FIELD
+
+    BOOST_CHECK_CLOSE( field.from_si( Meas::length , 1.0 ) , 3.280839895013123e+00 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::time , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::density , 1.0 ) , 6.242796057614462e-02 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::pressure , 1.0 ) , 1.450377377302092e-04 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::temperature_absolute , 1.0 ) , 1.8 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::temperature , 255.9277777777778 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::viscosity , 1.0 ) , 1.0e+3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::permeability , 1.0 ) , 1.01325e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::liquid_surface_volume , 1.0 ) , 6.289810770432102e+00 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::gas_surface_volume , 1.0 ) , 3.531466672148859e-02 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::volume , 1.0 ) , 6.289810770432102e+00 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::liquid_surface_rate , 1.0 ) , 5.434396505653337e+05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::gas_surface_rate , 1.0 ) , 3.051187204736614e+03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::rate , 1.0 ) , 5.434396505653337e+05 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::transmissibility , 1.0 ) , 3.746884494132199e+12 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::effective_Kh , 1.0 ) , 3.324311023622047e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::mass , 1.0 ) , 2.204622621848776e+00 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::gas_oil_ratio , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::oil_gas_ratio , 1.0 ) , 178.1076066790352 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::gas_formation_volume_factor , 1.0 ) , 178.1076066790352 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::water_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+}
+
+BOOST_AUTO_TEST_CASE(LAB_UNITS)
+{
+    using Meas = UnitSystem::measure;
+
+    auto lab = UnitSystem::newLAB();
+
+    BOOST_CHECK( lab.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_LAB );
+    BOOST_CHECK( lab.getEclType() == ECL_LAB_UNITS );
+
+    // ----------------------------------------------------------------
+    // LAB -> SI
+
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::length , 1.0 ) , 0.01 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::time , 1.0 ) , 3600.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::density , 1.0 ) , 1.0e3, 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::pressure , 1.0 ) , 101325.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::temperature_absolute , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::temperature , 1.0 ) , 274.15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::viscosity , 1.0 ) , 1.0e-3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::permeability , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::liquid_surface_volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_surface_volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::volume , 1.0 ) , 1.0e-6 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::liquid_surface_rate , 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_surface_rate , 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::rate , 1.0 ) , 2.777777777777778e-10 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::transmissibility , 1.0 ) , 2.741453518655592e-18 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160130e-18 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::mass , 1.0 ) , 1.0e-3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::water_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+
+    // ----------------------------------------------------------------
+    // SI -> LAB
+
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::length , 1.0 ) , 100.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::time , 1.0 ) , 2.777777777777778e-04 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::density , 1.0 ) , 1.0e-3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::pressure , 1.0 ) , 9.869232667160129e-06 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::temperature_absolute , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::temperature , 274.15 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::viscosity , 1.0 ) , 1.0e+3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::permeability , 1.0 ) , 1.01325e+15 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::liquid_surface_volume , 1.0 ) , 1.0e6 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_surface_volume , 1.0 ) , 1.0e6 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::volume , 1.0 ) , 1.0e6 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::liquid_surface_rate , 1.0 ) , 3.6e9 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_surface_rate , 1.0 ) , 3.6e9 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::rate , 1.0 ) , 3.6e9 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::transmissibility , 1.0 ) , 3.647699999999999e+17 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+17 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::mass , 1.0 ) , 1.0e3 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::water_cut , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::oil_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::water_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+}
 
 BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
 {
@@ -328,6 +537,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_surface_rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::rate , 1.0 ) , 1.1574074074074073e-05 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::transmissibility , 1.0 ) , 1.142272299439830e-13 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::effective_Kh , 1.0 ) , 9.869232667160129e-16 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );
@@ -357,6 +567,7 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_surface_rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::rate , 1.0 ) , 86.400e3 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::transmissibility , 1.0 ) , 8.75448e+12 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::effective_Kh , 1.0 ) , 1.01325e+15 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::mass , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_oil_ratio , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::oil_gas_ratio , 1.0 ) , 1.0 , 1.0e-10 );

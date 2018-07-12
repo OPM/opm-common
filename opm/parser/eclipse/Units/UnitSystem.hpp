@@ -58,6 +58,7 @@ namespace Opm {
             gas_surface_rate,
             rate,
             transmissibility,
+            effective_Kh,
             mass,
             mass_rate,
             gas_oil_ratio,

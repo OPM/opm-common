@@ -38,6 +38,7 @@ namespace Opm {
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
+                           const Value<double>& Kh,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
         void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
@@ -79,6 +80,7 @@ namespace Opm {
                            const Value<double>& connectionTransmissibilityFactor,
                            const Value<double>& diameter,
                            const Value<double>& skinFactor,
+                           const Value<double>& Kh,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 
