@@ -1,5 +1,7 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -8,55 +10,63 @@
 #include <utility>
 #include <vector>
 
+// Public INTEHEAD items are recorded in the common header file
+//
+//     opm/output/eclipse/VectorItems/intehead.hpp
+//
+// Promote items from 'index' to that list to make them public.
+// The 'index' list always uses public items where available.
+namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+
 enum index : std::vector<int>::size_type {
-  ISNUM		=	0	,		//	0	0		An encoded integer corresponding to the time the file was created. For files not originating from ECLIPSE, this value may be set to zero.
-  VERSION	=	1	,		//	0	0
-  UNIT		=	2	,		//	(1,2,3)	1		units type: 1 - METRIC, 2 - FIELD, 3 - LAB
+  ISNUM		=	VI::intehead::ISNUM	,		//	0	0		An encoded integer corresponding to the time the file was created. For files not originating from ECLIPSE, this value may be set to zero.
+  VERSION	=	VI::intehead::VERSION	,		//	0	0
+  UNIT		=	VI::intehead::UNIT	,		//	(1,2,3)	1		units type: 1 - METRIC, 2 - FIELD, 3 - LAB
   ih_003	=	3	,		//	0	0
   ih_004	=	4	,		//	0	0
   ih_005	=	5	,		//	0	0
   ih_006	=	6	,		//	0	0
   ih_007	=	7	,		//	0	0
-  NX		=	8	,		//	NX	137		Grid x-direction dimension, NX
-  NY		=	9	,		//	NY	236		Grid x-direction dimension, NY
-  NZ		=	10	,		//	NZ	58		Grid x-direction dimension, NZ
-  NACTIV	=	11	,		//	NACTIV?	89022		NACTIV = number of active cells
+  NX		=	VI::intehead::NX	,		//	NX	137		Grid x-direction dimension, NX
+  NY		=	VI::intehead::NY	,		//	NY	236		Grid x-direction dimension, NY
+  NZ		=	VI::intehead::NZ	,		//	NZ	58		Grid x-direction dimension, NZ
+  NACTIV	=	VI::intehead::NACTIV	,		//	NACTIV?	89022		NACTIV = number of active cells
   ih_012	=	12	,		//	0	0
   ih_013	=	13	,		//	0	0
-  PHASE		=	14	,		//	IPHS	7		IPHS = phase indicator: 1 - oil, 2 - water, 3 - oil/water, 4 - gas, 5 – oil/gas, 6 - gas/water, 7 - oil/water/gas (ECLIPSE output only)
+  PHASE		=	VI::intehead::PHASE	,		//	IPHS	7		IPHS = phase indicator: 1 - oil, 2 - water, 3 - oil/water, 4 - gas, 5 – oil/gas, 6 - gas/water, 7 - oil/water/gas (ECLIPSE output only)
   ih_015	=	15	,		//	0	0
-  NWELLS	=	16	,		//	NWELLS	39		NWELL = number of wells
-  NCWMAX	=	17	,		//	NCWMAX	108	Weldims item2	NCWMAX = maximum number of completions per well
+  NWELLS	=	VI::intehead::NWELLS	,		//	NWELLS	39		NWELL = number of wells
+  NCWMAX	=	VI::intehead::NCWMAX	,		//	NCWMAX	108	Weldims item2	NCWMAX = maximum number of completions per well
   ih_018	=	18	,		//	NGRP?	0	Number of actual groups
-  NWGMAX	=	19	,		//	NWGMAX	0	maximum of weldims item3 or item4	NWGMAX = maximum number of wells in any well group
-  NGMAXZ	=	20	,		//	NGMAXZ	0	weldims item3 + 1	NGMAXZ = maximum number of groups in field
+  NWGMAX	=	VI::intehead::NWGMAX	,		//	NWGMAX	0	maximum of weldims item3 or item4	NWGMAX = maximum number of wells in any well group
+  NGMAXZ	=	VI::intehead::NGMAXZ	,		//	NGMAXZ	0	weldims item3 + 1	NGMAXZ = maximum number of groups in field
   ih_021	=	21	,		//	0	0
   ih_022	=	22	,		//	0	0
   ih_023	=	23	,		//	0	0
-  NIWELZ	=	24	,		//	NIWELZ	155	155	NIWELZ = no of data elements per well in IWEL array (default 97 for ECLIPSE, 94 for ECLIPSE 300)
-  NSWELZ	=	25	,		//	NSWELZ	122	122	NSWELZ = number of daelements per well in SWEL array
-  NXWELZ	=	26	,		//	NXWELZ	130	130	NXWELZ = number of delements per well in XWEL array
-  NZWELZ	=	27	,		//	NZWEL	3	3	NZWEL = no of 8-character words per well in ZWEL array (= 3)
+  NIWELZ	=	VI::intehead::NIWELZ	,		//	NIWELZ	155	155	NIWELZ = no of data elements per well in IWEL array (default 97 for ECLIPSE, 94 for ECLIPSE 300)
+  NSWELZ	=	VI::intehead::NSWELZ	,		//	NSWELZ	122	122	NSWELZ = number of daelements per well in SWEL array
+  NXWELZ	=	VI::intehead::NXWELZ	,		//	NXWELZ	130	130	NXWELZ = number of delements per well in XWEL array
+  NZWELZ	=	VI::intehead::NZWELZ	,		//	NZWEL	3	3	NZWEL = no of 8-character words per well in ZWEL array (= 3)
   ih_028	=	28	,		//	0	0
   ih_029	=	29	,		//	0	0
   ih_030	=	30	,		//	0	0
   ih_031	=	31	,		//	0	0
-  NICONZ	=	32	,		//	25	15	25	NICON = no of data elements per completion in ICON array (default 19)
-  NSCONZ	=	33	,		//	40	0		NSCONZ = number of data elements per completion in SCON array
-  NXCONZ	=	34	,		//	58	0	58	NXCONZ = number of data elements per completion in XCON array
+  NICONZ	=	VI::intehead::NICONZ	,		//	25	15	25	NICON = no of data elements per completion in ICON array (default 19)
+  NSCONZ	=	VI::intehead::NSCONZ	,		//	40	0		NSCONZ = number of data elements per completion in SCON array
+  NXCONZ	=	VI::intehead::NXCONZ	,		//	58	0	58	NXCONZ = number of data elements per completion in XCON array
   ih_035	=	35	,		//	0	0
-  NIGRPZ	=	36	,		//	97+intehead_array[19]	0	97 + intehead[19]	NIGRPZ = no of data elements per group in IGRP array
-  NSGRPZ	=	37	,		//	112	0	112	NSGRPZ = number of data elements per group in SGRP array
-  NXGRPZ	=	38	,		//	180	0	180	NXGRPZ = number of data elements per group in XGRP array
-  NZGRPZ	=	39	,		//	5	0		NZGRPZ = number of data elements per group in ZGRP array
+  NIGRPZ	=	VI::intehead::NIGRPZ	,		//	97+intehead_array[19]	0	97 + intehead[19]	NIGRPZ = no of data elements per group in IGRP array
+  NSGRPZ	=	VI::intehead::NSGRPZ	,		//	112	0	112	NSGRPZ = number of data elements per group in SGRP array
+  NXGRPZ	=	VI::intehead::NXGRPZ	,		//	180	0	180	NXGRPZ = number of data elements per group in XGRP array
+  NZGRPZ	=	VI::intehead::NZGRPZ	,		//	5	0		NZGRPZ = number of data elements per group in ZGRP array
   ih_040	=	40	,		//	0	0
-  NCAMAX	=	41	,		//	1	0		NCAMAX = maximum number of analytic aquifer connections
-  NIAAQZ	=	42	,		//	18	0		NIAAQZ = number of data elements per aquifer in IAAQ array
-  NSAAQZ	=	43	,		//	24	0		NSAAQZ = number of data elements per aquifer in SAAQ array
-  NXAAQZ	=	44	,		//	10	0		NXAAQZ = number of data elements per aquifer in XAAQ array
-  NICAQZ	=	45	,		//	7	0		NSCAQZ= number of data elements per aquifer connection in SCAQ array
-  NSCAQZ	=	46	,		//	2	0
-  NACAQZ	=	47	,		//	4	0
+  NCAMAX	=	VI::intehead::NCAMAX	,		//	1	0		NCAMAX = maximum number of analytic aquifer connections
+  NIAAQZ	=	VI::intehead::NIAAQZ	,		//	18	0		NIAAQZ = number of data elements per aquifer in IAAQ array
+  NSAAQZ	=	VI::intehead::NSAAQZ	,		//	24	0		NSAAQZ = number of data elements per aquifer in SAAQ array
+  NXAAQZ	=	VI::intehead::NXAAQZ	,		//	10	0		NXAAQZ = number of data elements per aquifer in XAAQ array
+  NICAQZ	=	VI::intehead::NICAQZ	,		//	7	0		NSCAQZ= number of data elements per aquifer connection in SCAQ array
+  NSCAQZ	=	VI::intehead::NSCAQZ	,		//	2	0
+  NACAQZ	=	VI::intehead::NACAQZ	,		//	4	0
   ih_048	=	48	,		//	0	0
   ih_049	=	49	,		//	0	0
   ih_050	=	50	,		//	0	0
@@ -183,13 +193,13 @@ enum index : std::vector<int>::size_type {
   ih_171	=	171	,		//	0	0
   ih_172	=	172	,		//	0	0
   ih_173	=	173	,		//	0	0
-  NSEGWL	=	174	,		//	0	0	number of mswm wells defined with WELSEG
-  NSWLMX	=	175	,		//	NSWLMX	0	Item 1 in WSEGDIMS keyword (runspec section)	NSWLMX = maximum number of segmented wells
-  NSEGMX	=	176	,		//	NSEGMX	0	Item 2 in WSEGDIMS keyword (runspec section)	NSEGMX = maximum number of segments per well
-  NLBRMX	=	177	,		//	NLBRMX	0	Item 3 in WSEGDIMS keyword (runspec section)	NLBRMX = maximum number of lateral branches per well
-  NISEGZ	=	178	,		//	22	0	22	NISEGZ = number of entries per segment in ISEG array
-  NRSEGZ	=	179	,		//	140	0	140	NRSEGZ = number of entries per segment in RSEG array
-  NILBRZ	=	180	,		//	10		10	NILBRZ = number of entries per segment in ILBR array
+  NSEGWL	=	VI::intehead::NSEGWL	,		//	0	0	number of mswm wells defined with WELSEG
+  NSWLMX	=	VI::intehead::NSWLMX	,		//	NSWLMX	0	Item 1 in WSEGDIMS keyword (runspec section)	NSWLMX = maximum number of segmented wells
+  NSEGMX	=	VI::intehead::NSEGMX	,		//	NSEGMX	0	Item 2 in WSEGDIMS keyword (runspec section)	NSEGMX = maximum number of segments per well
+  NLBRMX	=	VI::intehead::NLBRMX	,		//	NLBRMX	0	Item 3 in WSEGDIMS keyword (runspec section)	NLBRMX = maximum number of lateral branches per well
+  NISEGZ	=	VI::intehead::NISEGZ	,		//	22	0	22	NISEGZ = number of entries per segment in ISEG array
+  NRSEGZ	=	VI::intehead::NRSEGZ	,		//	140	0	140	NRSEGZ = number of entries per segment in RSEG array
+  NILBRZ	=	VI::intehead::NILBRZ	,		//	10		10	NILBRZ = number of entries per segment in ILBR array
   RSTSIZE	=	181	,		//	0
   ih_182	=	182	,		//	0
   ih_183	=	183	,		//	0
@@ -501,9 +511,6 @@ Opm::RestartIO::InteHEAD::calendarDate(const TimePoint& timePoint)
     this->data_[DAY]   = timePoint.day;
     this->data_[MONTH] = timePoint.month;
     this->data_[YEAR]  = timePoint.year;
-
-    this->data_[IHOURZ] = timePoint.hour;
-    this->data_[IMINTS] = timePoint.minute;
 
     this->data_[IHOURZ] = timePoint.hour;
     this->data_[IMINTS] = timePoint.minute;
