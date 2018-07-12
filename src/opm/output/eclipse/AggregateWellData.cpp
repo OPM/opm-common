@@ -311,8 +311,6 @@ namespace {
                 const auto& conn = well.getConnections(sim_step);
 
                 iWell[Ix::NConn]  = static_cast<int>(conn.size());
-                // IWEL(5) = Number of active cells connected to well.
-                iWell[5 - 1] = static_cast<int>(conn.size());
 		
 		if (well.isMultiSegment(sim_step))  
 		{
@@ -326,6 +324,7 @@ namespace {
                     ? 0 : conn.get(0).getK() + 1;
 
 		  iWell[Ix::LastK] = (iWell[Ix::NConn] == 0)
+		    ? 0 : conn.get(conn.size() - 1).getK() + 1;
 		}
             }
 
@@ -560,7 +559,7 @@ namespace {
                 }
 
 		if (ip.hasInjectionControl(IP::RESV)) {
-		    sWell[x::ResVRateTarget] = swprop(M::gas_surface_rate, ip.reservoirInjectionRate);
+		    sWell[Ix::ResVRateTarget] = swprop(M::gas_surface_rate, ip.reservoirInjectionRate);
                 }		
 
                 if (ip.hasInjectionControl(IP::THP)) {

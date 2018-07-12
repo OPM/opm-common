@@ -596,12 +596,13 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
      void writeSolution(::Opm::RestartIO::ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
     ::Opm::RestartIO::ecl_rst_file_start_solution( rst_file );
     for (const auto& elm: solution) {
+	if (elm.first == "TEMP") continue;
 	if (elm.second.target == data::TargetType::RESTART_SOLUTION)
 	    ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
      }
      ::Opm::RestartIO::ecl_rst_file_end_solution( rst_file );
 
-     for (const auto& elm: solution) {
+     /*for (const auto& elm: solution) {
 	if (elm.second.target == data::TargetType::RESTART_AUXILIARY)
 	    ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
      }*/

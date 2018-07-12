@@ -55,11 +55,8 @@ namespace {
 	// make seqIndex to Connection map
 	std::map <std::size_t, const Opm::Connection*> seqIndConnMap;
 	for (const auto & conn : conns) {
-	//for (auto it = conns.begin(); it < conns.end(); it++) {
 	    std::size_t sI = conn.getSeqIndex();
 	    seqIndConnMap.insert(std::make_pair(sI, &conn));
-	    std::cout << "seqIndex: " << sI << " i: " << conn.getI() << " j: " << conn.getJ() << " i: " << conn.getK() << 
-	    " &conn->getSeqIndex(): " <<  (&conn)->getSeqIndex() << std::endl;
 	}
 	return seqIndConnMap;
     }
@@ -71,8 +68,6 @@ namespace {
 	for (const auto & conn : conns) {
 	    std::size_t sI = conn.getCompSegSeqIndex();
 	    cs_seqIndConnMap.insert(std::make_pair(sI, &conn));
-	    std::cout << "getCompSegSeqIndex: " << sI << " i: " << conn.getI() << " j: " << conn.getJ() << " i: " << conn.getK() << 
-	     " &conn->getCompSegSeqIndex(): " <<  (&conn)->getCompSegSeqIndex() << std::endl;
 	}
 	return cs_seqIndConnMap;
     }
@@ -104,25 +99,14 @@ namespace {
 		//sort connections according to input sequence in COMPDAT
 		sIToConn = mapSeqIndexToConnection(conns);
 	    }
-	    for (auto con : conns) {
-		 std::cout << "loop act conns - seqIndex: " << con.getSeqIndex() << " i: " << con.getI() << " j: " << con.getJ() << " i: " << con.getK() << std::endl;
-	    }
-	    for (auto conp : sIToConn) {
-		 std::cout << "loop sIToConn - seqIndex: " << conp.first << " conp.second->getSeqIndex(): " << conp.second->getSeqIndex() << std::endl;
-	    }
 	    std::vector<const Opm::Connection*> connSI;
 	    int niSI = well->getConnections(sim_step).size();
-	    std::cout << "No of Connections: " << niSI << std::endl;
 	    for (int iSI = 0; iSI < niSI; iSI++) {
 		const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
-		std::cout << "Loop over connections, iSI: " << iSI << " searchSI->first: " <<  searchSI->first 
-		<< " searchSI->second->getSeqIndex(): " <<  searchSI->second->getSeqIndex() << std::endl;
 		if (searchSI != sIToConn.end()) {
 		  connSI.push_back(searchSI->second);
-		  std::cout << "Store connection: " << searchSI->second->getSeqIndex() << " searchSI->first: " <<  searchSI->first << std::endl;  
 		}
 	    }
-	    std::cout << "connSI-size " << connSI.size() << std::endl; 
 	    for (auto nConn = connSI.size(), connID = 0*nConn;
                  connID < nConn; ++connID)
             {
@@ -260,10 +244,8 @@ captureDeclaredConnData(const Schedule&    sched,
         (const Well&    /* well */, const std::size_t wellID,
          const Connection& conn   , const std::size_t connID) -> void
     {
-	std::cout << "Connection loop - wellID: " << wellID << " connID: " << connID << std::endl;
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
-	std::cout << "Conn loop - conn- seqIndex: " << conn.getSeqIndex() << std::endl;  
         IConn::staticContrib(conn, connID, ic);
         SConn::staticContrib(conn, units, sc);
     });
