@@ -29,6 +29,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
 //#include <opm/output/data/Wells.hpp>
 
 #include <algorithm>
@@ -351,9 +353,11 @@ namespace {
         void staticContrib(const Opm::Well&        well,
                            const std::size_t       rptStep,
                            const std::vector<int>& inteHead,
+			   const Opm::UnitSystem& units,
                            RSegArray&              rSeg)
         {
 	    if (well.isMultiSegment(rptStep)) {
+		using M = ::Opm::UnitSystem::measure;
 		//loop over segment set and print out information
 		auto welSegSet = well.getWellSegments(rptStep);
 		auto completionSet = well.getCompletions(rptStep);
@@ -361,9 +365,9 @@ namespace {
 		    //treat the top segment individually
 		    int ind_seg = 1;
 		    auto ind = welSegSet.segmentNumberToIndex(ind_seg);
-		    rSeg[0] = welSegSet.lengthTopSegment();
-		    rSeg[1] = welSegSet.depthTopSegment();
-		    rSeg[5] = welSegSet.volumeTopSegment();
+		    rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
+		    rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
+		    rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
 		    rSeg[6] = rSeg[0];
 		    rSeg[7] = rSeg[1];
 
@@ -387,14 +391,16 @@ namespace {
 		    auto outSeg = welSegSet[ind].outletSegment();
 		    auto ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
 		    auto iS = (ind_seg-1)*noElmSeg;
-		    rSeg[iS +   0] = welSegSet[ind].totalLength() - welSegSet[ind_ofs].totalLength();
-		    rSeg[iS +   1] = welSegSet[ind].depth() - welSegSet[ind_ofs].depth();
-		    rSeg[iS +   2] = welSegSet[ind].internalDiameter();
-		    rSeg[iS +   3] = welSegSet[ind].roughness();
-		    rSeg[iS +   4] = welSegSet[ind].crossArea();
-		    rSeg[iS +   5] = welSegSet[ind].volume();
-		    rSeg[iS +   6] = welSegSet[ind].totalLength();
-		    rSeg[iS +   7] = welSegSet[ind].depth();
+		    rSeg[iS +   0] = units.from_si(M::length, (welSegSet[ind].totalLength() - welSegSet[ind_ofs].totalLength()));
+		    rSeg[iS +   1] = units.from_si(M::length, (welSegSet[ind].depth() - welSegSet[ind_ofs].depth()));
+		    rSeg[iS +   2] = units.from_si(M::length, (welSegSet[ind].internalDiameter()));
+		    rSeg[iS +   3] = units.from_si(M::length, (welSegSet[ind].roughness()));
+		    rSeg[iS +   4] = units.from_si(M::length, (welSegSet[ind].crossArea()));
+		    //repeat unit conversion to convert for area instead of length
+		    rSeg[iS +   4] = units.from_si(M::length, rSeg[iS +   4]);
+		    rSeg[iS +   5] = units.from_si(M::volume, (welSegSet[ind].volume()));
+		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[ind].totalLength()));
+		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[ind].depth()));
 
 		    //  segment pressure (to be added!!)
 		    rSeg[iS +  11] = 0;
@@ -517,6 +523,7 @@ void
 Opm::RestartIO::Helpers::AggregateMSWData::
 captureDeclaredMSWData(const Schedule&         sched,
                        const std::size_t       rptStep,
+		       const Opm::UnitSystem& units,
                        const std::vector<int>& inteHead)
 {
     const auto& wells = sched.getWells(rptStep);
@@ -540,12 +547,12 @@ captureDeclaredMSWData(const Schedule&         sched,
 
     // Extract Contributions to RSeg Array
     {
-        MSWLoop(msw, [rptStep, inteHead, this]
+        MSWLoop(msw, [&units, rptStep, inteHead, this]
             (const Well& well, const std::size_t mswID) -> void
         {
             auto rmsw = this->rSeg_[mswID];
 
-            RSeg::staticContrib(well, rptStep, inteHead, rmsw);
+            RSeg::staticContrib(well, rptStep, inteHead, units, rmsw);
         });
     }
 

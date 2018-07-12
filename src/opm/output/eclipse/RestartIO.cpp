@@ -510,7 +510,7 @@ void writeMSWData(::Opm::RestartIO::ecl_rst_file_type * rst_file,
     // write ISEG, RSEG, ILBS and ILBR to restart file
     const size_t simStep = static_cast<size_t> (sim_step);
     auto  MSWData = Helpers::AggregateMSWData(ih);
-    MSWData.captureDeclaredMSWData(schedule, simStep, ih);
+    MSWData.captureDeclaredMSWData(schedule, simStep, units, ih);
     write_kw(rst_file, EclKW<int>   ("ISEG", MSWData.getISeg()));
     write_kw(rst_file, EclKW<int>   ("ILBS", MSWData.getILBs()));
     write_kw(rst_file, EclKW<int>   ("ILBR", MSWData.getILBr()));
