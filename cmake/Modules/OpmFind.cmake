@@ -147,8 +147,7 @@ macro (find_and_append_package_to prefix name)
     # We even need to repeat the search for opm-common once as this is done
     # in the top most CMakeLists.txt without querying defines, setting dependencies
     # and the likes which is only done via opm_find_package
-    if (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND
-        OR ("${name}" STREQUAL "opm-common" AND NOT _opm_common_deps_processed))
+    if (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND)
       string(REGEX MATCH "(dune|opm)-.*" _is_opm ${name})
       if(NOT _is_opm)
         string(REGEX MATCH "ewoms" _is_opm ${name})
@@ -197,10 +196,6 @@ macro (find_and_append_package_to prefix name)
     if (NOT DEFINED ${NAME}_FOUND)
       set (${NAME}_FOUND "${${name}_FOUND}")
     endif ()
-
-    if("${name}" STREQUAL "opm-common")
-      set(_opm_common_deps_processed ON)
-    endif()
   endif ()
 
   # the variable "NAME" may be replaced during find_package (as this is

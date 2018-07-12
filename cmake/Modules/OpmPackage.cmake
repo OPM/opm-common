@@ -59,11 +59,7 @@ macro (find_opm_package module deps header lib defs prog conf)
   # top most CMakeLists.txt but we still need to search for its
   # dependencies
   if (${MODULE}_FOUND OR ${module}_FOUND)
-    if (${module} STREQUAL "opm-common" AND NOT _opm_common_deps_processed)
-      set(_opm_common_deps_processed ON)
-    else()
       return ()
-    endif()
   endif ()
 
   # variables to pass on to other packages
