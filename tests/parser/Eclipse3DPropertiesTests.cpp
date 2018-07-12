@@ -537,10 +537,22 @@ COPY
   'PERMX' 'PERMY' /
 /
 
+EDIT
+
 MULTIPLY
   'PERMZ' 0.1D0 /
-  'PERMX' 0.1D0 *  *  1  21  *  1 / -- This is a weird way to specify the top layer! 
+  'PERMX' 0.1D0 *  *  1  21  *  1 / -- This is a weird way to specify the top layer!
+  'TRANX' 0.10  /
 /
+
+COPY
+  'TRANX' 'TRANY' /
+/
+
+EQUALS
+  'TRANZ' 0.25 /
+/
+
 )";
 
     Opm::Parser parser;
@@ -555,10 +567,20 @@ BOOST_AUTO_TEST_CASE(DefaultedBox) {
 
   const auto& permx   = s.props.getDoubleGridProperty("PERMX");
   const auto& permz   = s.props.getDoubleGridProperty("PERMZ");
+  const auto& tranx   = s.props.getDoubleGridProperty("TRANX");
+  const auto& trany   = s.props.getDoubleGridProperty("TRANY");
+  const auto& tranz   = s.props.getDoubleGridProperty("TRANZ");
 
   BOOST_CHECK_EQUAL( permx.iget(0,0,0)        , permz.iget(0,0,0));
   BOOST_CHECK_EQUAL( permx.iget(0,0,1) * 0.10 , permz.iget(0,0,1));
+
+  BOOST_CHECK( permx.deckAssigned() );
+  BOOST_CHECK( permz.deckAssigned() );
+  BOOST_CHECK( !tranx.deckAssigned());
+  BOOST_CHECK( !trany.deckAssigned());
+  BOOST_CHECK( tranz.deckAssigned() );
 }
+
 
 static Opm::Deck createMultiplyPorvDeck() {
     const auto* input = R"(

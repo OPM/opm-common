@@ -416,7 +416,7 @@ namespace Opm {
          * these keywords don't seem to require a post-processor
          */
         for( const auto& kw : { "TRANX", "TRANY", "TRANZ" } )
-            supportedDoubleKeywords.emplace_back( kw, nan, "Transmissibility" );
+            supportedDoubleKeywords.emplace_back( kw, 1.0 , "Transmissibility", true );
 
         /* gross-to-net thickness (acts as a multiplier for PORO and the
          * permeabilities in the X-Y plane as well as for the well rates.)

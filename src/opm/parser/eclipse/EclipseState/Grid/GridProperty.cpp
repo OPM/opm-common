@@ -153,6 +153,11 @@ namespace Opm {
     }
 
     template< typename T >
+    bool GridProperty<T>::deckAssigned() const {
+        return this->assigned;
+    }
+
+    template< typename T >
     T GridProperty< T >::iget( size_t index ) const {
         return this->m_data.at( index );
     }
@@ -207,6 +212,7 @@ namespace Opm {
             if (mask[g])
                 m_data[g] = value;
         }
+        this->assigned = true;
     }
 
     template< typename T >
@@ -232,6 +238,7 @@ namespace Opm {
             if (mask[g])
                 m_data[g] = other.m_data[g];
         }
+        this->assigned = other.deckAssigned();
     }
 
     template< typename T >
@@ -253,6 +260,8 @@ namespace Opm {
             if (!deckItem.defaultApplied(dataPointIdx))
                 setDataPoint(dataPointIdx, dataPointIdx, deckItem);
         }
+
+        this->assigned = true;
     }
 
     template< typename T >
@@ -292,6 +301,7 @@ namespace Opm {
                 m_data[targetIndex] = src.m_data[targetIndex];
             }
         }
+        this->assigned = src.deckAssigned();
     }
 
     template< typename T >
@@ -361,6 +371,7 @@ namespace Opm {
                 m_data[targetIndex] = value;
             }
         }
+        this->assigned = true;
     }
 
     template< typename T >
