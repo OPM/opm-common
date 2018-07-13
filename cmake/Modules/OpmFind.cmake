@@ -139,6 +139,12 @@ macro (find_and_append_package_to prefix name)
 	set (${name}_FOUND FALSE)
 	set (${NAME}_FOUND FALSE)
   else ()
+    # List of components might differ for every module. Therefore we will
+    # need to research for a library multiple times. _search_components
+    # will hold the index of the string COMPONENTS in the list
+    set(_ARGN_LIST ${ARGN}) # Create a real list to use with list commands
+    list(FIND _ARGN_LIST "COMPONENTS" _search_components)
+
     # using config mode is better than using module (aka. find) mode
     # because then the package has already done all its probes and
     # stored them in the config file for us
@@ -147,7 +153,8 @@ macro (find_and_append_package_to prefix name)
     # We even need to repeat the search for opm-common once as this is done
     # in the top most CMakeLists.txt without querying defines, setting dependencies
     # and the likes which is only done via opm_find_package
-    if (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND)
+    if ( (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND )
+         OR _search_components GREATER -1)
       string(REGEX MATCH "(dune|opm)-.*" _is_opm ${name})
       if(NOT _is_opm)
         string(REGEX MATCH "ewoms" _is_opm ${name})
