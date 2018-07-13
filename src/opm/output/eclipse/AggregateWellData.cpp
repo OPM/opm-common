@@ -538,7 +538,7 @@ namespace {
            
 		sWell[Ix::BHPTarget] = pp.BHPLimit != 0.0
                     ? swprop(M::pressure, pp.BHPLimit)
-                    : swprop(M::pressure, 100.0e3*::Opm::unit::psia);
+                    : swprop(M::pressure, 14.70*::Opm::unit::psia);
             }
             else if (well.isInjector(sim_step)) {
                 const auto& ip = well.getInjectionProperties(sim_step);
@@ -568,7 +568,7 @@ namespace {
 
                 sWell[Ix::BHPTarget] = ip.hasInjectionControl(IP::BHP)
                     ? swprop(M::pressure, ip.BHPLimit)
-                    : swprop(M::pressure, 1.0*::Opm::unit::atm);
+                    : swprop(M::pressure, 1.0E05*::Opm::unit::psia);
             }
 
             sWell[Ix::DatumDepth] =
