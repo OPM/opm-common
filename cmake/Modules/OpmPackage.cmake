@@ -59,11 +59,7 @@ macro (find_opm_package module deps header lib defs prog conf)
   # top most CMakeLists.txt but we still need to search for its
   # dependencies
   if (${MODULE}_FOUND OR ${module}_FOUND)
-    if (${module} STREQUAL "opm-common" AND NOT _opm_common_deps_processed)
-      set(_opm_common_deps_processed ON)
-    else()
       return ()
-    endif()
   endif ()
 
   # variables to pass on to other packages
@@ -84,31 +80,11 @@ macro (find_opm_package module deps header lib defs prog conf)
   # ${module}_CONFIG_VARS for dune modules.
   find_package(${module} ${_${module}_quiet} ${_${module}_required} CONFIG)
 
-
-  # period because it should be something that evaluates to true
-  # in find_package_handle_standard_args
-  set (${module}_ALL_PREREQS ".")
-  foreach (_dep IN ITEMS ${deps})
-	separate_arguments (_${module}_args UNIX_COMMAND ${_dep})
-	if (_${module}_args)
-	  # keep REQUIRED in the arguments only if we were required ourself
-	  # "required-ness" is not transitive as far as CMake is concerned
-	  # (i.e. if an optional package requests a package to be required,
-	  # the build will fail if it's not found)
-	  string (REPLACE "REQUIRED" "${_${module}_required}" _args_req "${_${module}_args}")
-	  find_and_append_package_to (${module} ${_args_req} ${_${module}_quiet})
-	  list (GET _${module}_args 0 _name_only)
-	  string (TOUPPER "${_name_only}" _NAME_ONLY)
-	  string (REPLACE "-" "_" _NAME_ONLY "${_NAME_ONLY}")
-	  # check manually if it was found if REQUIRED; otherwise poison the
-	  # dependency list which is checked later (so that it will fail)
-	  if (("${_${module}_args}" MATCHES "REQUIRED") AND NOT (${_name_only}_FOUND OR ${_NAME_ONLY}_FOUND))
-		list (APPEND ${module}_ALL_PREREQS "${_name_only}-NOTFOUND")
-	  endif ()
-	else ()
-	  message (WARNING "Empty dependency in find module for ${module} (check for trailing semi-colon)")
-	endif ()
-  endforeach (_dep)
+  if(NOT ${module}_DEPS)
+    # set the dependencies used in find_package_deps
+    set(${module}_DEPS "${deps}")
+  endif()
+  find_package_deps(${module})
 
   # since find_and_append_package_to is a macro, this variable have
   # probably been overwritten (due to its common name); it is now
@@ -181,6 +157,11 @@ macro (find_package_deps module)
   foreach (_dep IN ITEMS ${${module}_DEPS})
 	separate_arguments (_${module}_args UNIX_COMMAND "${_dep}")
 	if (_${module}_args)
+          # keep REQUIRED in the arguments only if we were required ourself
+          # "required-ness" is not transitive as far as CMake is concerned
+          # (i.e. if an optional package requests a package to be required,
+          # the build will fail if it's not found)
+	  string (REPLACE "REQUIRED" "${_${module}_required}" _args_req "${_${module}_args}")
           if(_dep MATCHES "opm-" OR _dep MATCHES "ewoms")
             set(deplist ${_dep})
             string(STRIP "${_dep}" _dep)

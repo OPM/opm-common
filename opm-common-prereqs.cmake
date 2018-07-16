@@ -25,3 +25,7 @@ else()
         "Boost 1.44.0
           COMPONENTS system unit_test_framework REQUIRED")
 endif()
+# We need a defined target for libecl when linking.
+# The definition of the target is done implicitly below when
+# libecl is searched for.
+find_package_deps(opm-common)
