@@ -411,6 +411,7 @@ void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year);
 void util_set_date_values_utc(time_t t , int * mday , int * month , int * year);
 void util_time_utc( time_t * t , struct tm * ts );
 ::Opm::RestartIO::ecl_data_type  ecl_kw_get_data_type(const ::Opm::RestartIO::ecl_kw_type *);
+int 		    ecl_type_get_sizeof_iotype(const ::Opm::RestartIO::ecl_data_type ecl_type); 
 void                ecl_rsthead_fprintf( const ::Opm::RestartIO::ecl_rsthead_type * header , FILE * stream);
 void                ecl_rsthead_fprintf_struct( const ::Opm::RestartIO::ecl_rsthead_type * header , FILE * stream);
 bool                ecl_rsthead_equal( const ::Opm::RestartIO::ecl_rsthead_type * header1 , const Opm::RestartIO::ecl_rsthead_type * header2);
@@ -503,12 +504,10 @@ bool ecl_kw_fwrite(const ::Opm::RestartIO::ecl_kw_type *ecl_kw , fortio_type *fo
 void ecl_kw_resize(::Opm::RestartIO::ecl_kw_type * ecl_kw, int new_size);
 const char  *  ecl_kw_iget_char_ptr( const ::Opm::RestartIO::ecl_kw_type * ecl_kw , int i);
 void * ecl_kw_get_data_ref(const ::Opm::RestartIO::ecl_kw_type *ecl_kw);
-//static void * ecl_kw_get_data_ref(const ::Opm::RestartIO::ecl_kw_type *ecl_kw) {
-//  return ecl_kw->data;
-//}
 
 void ecl_kw_scalar_set_bool( ::Opm::RestartIO::ecl_kw_type * ecl_kw , bool bool_value);
 bool ecl_kw_size_and_type_equal( const ::Opm::RestartIO::ecl_kw_type *ecl_kw1 , const ::Opm::RestartIO::ecl_kw_type * ecl_kw2 );
+
 
 
 ::Opm::RestartIO::ecl_kw_type * ecl_kw_alloc( const char * header , int size , ::Opm::RestartIO::ecl_data_type data_type );

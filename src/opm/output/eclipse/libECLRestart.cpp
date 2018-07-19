@@ -1221,8 +1221,64 @@ void util_fread(void *ptr , size_t element_size , size_t items, FILE * stream , 
 }
 
 
+int ecl_type_get_sizeof_iotype(const ::Opm::RestartIO::ecl_data_type ecl_type) {
+  if (::Opm::RestartIO::ecl_type_is_bool(ecl_type))
+    return sizeof(int);
+
+  if (::Opm::RestartIO::ecl_type_is_char(ecl_type))
+    return ecl_type.element_size -1;
+
+  if (::Opm::RestartIO::ecl_type_is_string(ecl_type))
+    return ecl_type.element_size - 1;
+
+  return ecl_type.element_size;
+}
+
+
+
+static void ecl_kw_load_from_input_buffer(::Opm::RestartIO::ecl_kw_type * ecl_kw, char * buffer) {
+  size_t sizeof_iotype = ::Opm::RestartIO::ecl_type_get_sizeof_iotype(ecl_kw->data_type);
+  size_t sizeof_ctype = ::Opm::RestartIO::ecl_type_get_sizeof_ctype(ecl_kw->data_type);
+  size_t buffer_size = ecl_kw->size * sizeof_iotype;
+  if (ECL_ENDIAN_FLIP) {
+    if (::Opm::RestartIO::ecl_type_is_numeric(ecl_kw->data_type) || ::Opm::RestartIO::ecl_type_is_bool(ecl_kw->data_type))
+      ::Opm::RestartIO::util_endian_flip_vector(buffer, sizeof_iotype, ecl_kw->size);
+  }
+
+  /*
+    Special case bool: Return Eclipse integer representation of bool to native bool.
+  */
+  if (::Opm::RestartIO::ecl_type_is_bool(ecl_kw->data_type)) {
+    int * int_data = (int *) buffer;
+    bool * bool_data = (bool *) ecl_kw->data;
+
+    for (int i=0; i < ecl_kw->size; i++) {
+      if (int_data[i] == ECL_BOOL_TRUE_INT)
+        bool_data[i] = true;
+      else
+        bool_data[i] = false;
+    }
+    return;
+  }
+
+  if (::Opm::RestartIO::ecl_type_is_mess(ecl_kw->data_type))
+    return;
+
+  /*
+    Plain int, double, float data - that can be copied straight over to the ->data field.
+  */
+  memcpy(ecl_kw->data, buffer, buffer_size);
+}
+
+
+static char * ecl_kw_alloc_input_buffer(const ::Opm::RestartIO::ecl_kw_type * ecl_kw) {
+  size_t buffer_size = ecl_kw->size * ::Opm::RestartIO::ecl_type_get_sizeof_iotype(ecl_kw->data_type);
+  char * buffer = (char*)::Opm::RestartIO::util_malloc( buffer_size );
+
+  return buffer;
+}
+
 bool ecl_kw_fread_data(::Opm::RestartIO::ecl_kw_type *ecl_kw, fortio_type *fortio) {
-  const char null_char         = '\0';
   bool fmt_file                = fortio_fmt_file( fortio );
   if (ecl_kw->size > 0) {
     const int blocksize = ::Opm::RestartIO::get_blocksize( ecl_kw->data_type );
@@ -1244,7 +1300,7 @@ bool ecl_kw_fread_data(::Opm::RestartIO::ecl_kw_type *ecl_kw, fortio_type *forti
             ::Opm::RestartIO::ecl_kw_fscanf_qstring(
                     &ecl_kw->data[offset],
                     read_fmt,
-                    ::Opm::RestartIO::ecl_type_get_sizeof_ctype_fortio(::Opm::RestartIO::ecl_kw_get_data_type(ecl_kw)),
+                    ::Opm::RestartIO::ecl_type_get_sizeof_iotype(::Opm::RestartIO::ecl_kw_get_data_type(ecl_kw)),
                     stream
                     );
             break;
@@ -1252,16 +1308,19 @@ bool ecl_kw_fread_data(::Opm::RestartIO::ecl_kw_type *ecl_kw, fortio_type *forti
             {
               int iread = fscanf(stream , read_fmt , (int *) &ecl_kw->data[offset]);
               if (iread != 1)
-                util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ , offset / ::Opm::RestartIO::ecl_kw_get_sizeof_ctype(ecl_kw) , ecl_kw->header8 , fortio_filename_ref(fortio));
+                util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__,
+                                                                                                            offset / ecl_type_get_sizeof_ctype(ecl_kw->data_type),
+                                                                                                            ecl_kw->header8,
+                                                                                                            fortio_filename_ref(fortio));
             }
             break;
           case(ECL_FLOAT_TYPE):
             {
               int iread = fscanf(stream , read_fmt , (float *) &ecl_kw->data[offset]);
               if (iread != 1) {
-                util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__ ,
-                           offset / ::Opm::RestartIO::ecl_kw_get_sizeof_ctype(ecl_kw) ,
-                           ecl_kw->header8 ,
+                util_abort("%s: after reading %d values reading of keyword:%s from:%s failed - aborting \n",__func__,
+                           offset / ::Opm::RestartIO::ecl_type_get_sizeof_ctype(ecl_kw->data_type),
+                           ecl_kw->header8,
                            fortio_filename_ref(fortio));
               }
             }
@@ -1290,9 +1349,9 @@ bool ecl_kw_fread_data(::Opm::RestartIO::ecl_kw_type *ecl_kw, fortio_type *forti
             ::Opm::RestartIO::ecl_kw_fscanf_qstring(&ecl_kw->data[offset] , read_fmt , 8 , stream);
             break;
           default:
-            util_abort("%s: Internal error: internal eclipse_type: %d not recognized - aborting \n",__func__ , ::Opm::RestartIO::ecl_kw_get_type(ecl_kw));
+            util_abort("%s: Internal error: internal eclipse_type: %d not recognized - aborting \n",__func__ , ecl_kw_get_type(ecl_kw));
           }
-          offset += ::Opm::RestartIO::ecl_kw_get_sizeof_ctype(ecl_kw);
+          offset += ::Opm::RestartIO::ecl_type_get_sizeof_ctype(ecl_kw->data_type);
           index++;
         }
       }
@@ -1302,52 +1361,21 @@ bool ecl_kw_fread_data(::Opm::RestartIO::ecl_kw_type *ecl_kw, fortio_type *forti
       free(read_fmt);
       return true;
     } else {
-      bool read_ok = true;
-      if (::Opm::RestartIO::ecl_type_is_char(ecl_kw->data_type) || ::Opm::RestartIO::ecl_type_is_mess(ecl_kw->data_type) || ::Opm::RestartIO::ecl_type_is_string(ecl_kw->data_type)) {
-        const int blocks = ecl_kw->size / blocksize + (ecl_kw->size % blocksize == 0 ? 0 : 1);
-        int ib = 0;
-        while (true) {
-          /*
-            Due to the necessary terminating \0 characters there is
-            not a continous file/memory mapping.
-          */
-          int  read_elm = ::Opm::RestartIO::util_int_min((ib + 1) * blocksize , ecl_kw->size) - ib * blocksize;
-          FILE * stream = fortio_get_FILE(fortio);
-          int record_size = fortio_init_read(fortio);
-          if (record_size >= 0) {
-            int ir;
-            const int sizeof_ctype        = ::Opm::RestartIO::ecl_type_get_sizeof_ctype(ecl_kw->data_type);
-            const int sizeof_ctype_fortio = ::Opm::RestartIO::ecl_type_get_sizeof_ctype_fortio(ecl_kw->data_type);
-            for (ir = 0; ir < read_elm; ir++) {
-              ::Opm::RestartIO::util_fread( &ecl_kw->data[(ib * blocksize + ir) * sizeof_ctype] , 1 , sizeof_ctype_fortio , stream , __func__);
-              ecl_kw->data[(ib * blocksize + ir) * sizeof_ctype + sizeof_ctype_fortio] = null_char;
-            }
-            read_ok = fortio_complete_read(fortio , record_size);
-          } else
-            read_ok = false;
+      char * buffer = ::Opm::RestartIO::ecl_kw_alloc_input_buffer(ecl_kw);
+      const int sizeof_iotype = ::Opm::RestartIO::ecl_type_get_sizeof_iotype(ecl_kw->data_type);
+      bool read_ok = fortio_fread_buffer(fortio, buffer, ecl_kw->size * sizeof_iotype);
 
-          if (!read_ok)
-            break;
+      if (read_ok)
+        ::Opm::RestartIO::ecl_kw_load_from_input_buffer(ecl_kw, buffer);
 
-          ib++;
-          if (ib == blocks)
-            break;
-        }
-      } else {
-        /**
-           This function handles the fuc***g blocks transparently at a
-           low level.
-        */
-        read_ok = fortio_fread_buffer(fortio , ecl_kw->data , ecl_kw->size * ::Opm::RestartIO::ecl_kw_get_sizeof_ctype(ecl_kw));
-        if (read_ok && ECL_ENDIAN_FLIP)
-          ::Opm::RestartIO::ecl_kw_endian_convert_data(ecl_kw);
-      }
+      free(buffer);
       return read_ok;
     }
   } else
     /* The keyword has zero size - and reading data is trivially OK. */
     return true;
 }
+
 
 
 bool ecl_type_is_int(const ::Opm::RestartIO::ecl_data_type ecl_type) {
