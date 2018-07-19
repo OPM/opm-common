@@ -13,7 +13,6 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -139,7 +138,8 @@ namespace Opm {
         keywordList( std::move( x ) ),
         defaultUnits( UnitSystem::newMETRIC() ),
         activeUnits( UnitSystem::newMETRIC() ),
-        m_dataFile("")
+        m_dataFile(""),
+        input_path("")
     {
         /*
          * If multiple unit systems are requested, metric is preferred over
@@ -169,8 +169,8 @@ namespace Opm {
         keywordList( d.keywordList ),
         defaultUnits( d.defaultUnits ),
         activeUnits( d.activeUnits ),
-        m_dataFile( d.m_dataFile ) {
-
+        m_dataFile( d.m_dataFile ),
+        input_path( d.input_path ) {
         this->reinit(this->keywordList.begin(), this->keywordList.end());
     }
 
@@ -209,12 +209,22 @@ namespace Opm {
         return this->activeUnits;
     }
 
-    const std::string Deck::getDataFile() const {
+    const std::string& Deck::getDataFile() const {
         return m_dataFile;
     }
 
+    const std::string& Deck::getInputPath() const {
+        return this->input_path;
+    }
+
     void Deck::setDataFile(const std::string& dataFile) {
-        m_dataFile = dataFile;
+        this->m_dataFile = dataFile;
+
+        auto slash_pos = dataFile.find_last_of("/\\");
+        if (slash_pos == std::string::npos)
+            this->input_path = "";
+        else
+            this->input_path = dataFile.substr(0, slash_pos);
     }
 
     Deck::iterator Deck::begin() {
