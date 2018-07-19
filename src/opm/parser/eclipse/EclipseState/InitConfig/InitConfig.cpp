@@ -56,10 +56,14 @@ namespace Opm {
                     "only from RESTART files");
         }
 
-        const std::string& root = record.getItem( 0 ).get< std::string >( 0 );
         int step = record.getItem( 1 ).get< int >(0);
+        const std::string& root = record.getItem( 0 ).get< std::string >( 0 );
+        const std::string& input_path = deck.getInputPath();
 
-        this->setRestart( root, step );
+        if (root[0] == '/' || input_path.empty())
+            this->setRestart(root, step);
+        else
+            this->setRestart( input_path + "/" + root, step );
     }
 
     void InitConfig::setRestart( const std::string& root, int step) {

@@ -20,6 +20,8 @@
 
 
 #define BOOST_TEST_MODULE InitConfigTests
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -30,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
+#include <ert/util/test_work_area.hpp>
 
 using namespace Opm;
 
@@ -83,6 +86,18 @@ const std::string& deckStr4 =
     "START             -- 0 \n"
     "19 JUN 2007 / \n"
     "SCHEDULE\n";
+
+const std::string& deckStr5 =
+  "RUNSPEC\n"
+  "DIMENS\n"
+  " 10 10 10 /\n"
+  "SOLUTION\n"
+  "RESTART\n"
+  "'/abs/path/BASE' 5 /\n"
+  "GRID\n"
+  "START             -- 0 \n"
+  "19 JUN 2007 / \n"
+  "SCHEDULE\n";
 
 const std::string& deckWithEquil =
     "RUNSPEC\n"
@@ -172,3 +187,51 @@ BOOST_AUTO_TEST_CASE( EquilOperations ) {
     BOOST_CHECK( !record.wetGasInitConstantRv() );
     BOOST_CHECK_EQUAL( 20, record.initializationTargetAccuracy() );
 }
+
+BOOST_AUTO_TEST_CASE(RestartCWD) {
+    test_work_area_type * work_area = test_work_area_alloc("restart_cwd");
+    mkdir("simulation", 0777);
+    {
+        std::fstream fs;
+        fs.open ("simulation/CASE.DATA", std::fstream::out);
+        fs << deckStr4;
+        fs.close();
+
+        fs.open("simulation/CASE5.DATA", std::fstream::out);
+        fs << deckStr5;
+        fs.close();
+
+        fs.open("CASE5.DATA", std::fstream::out);
+        fs << deckStr5;
+        fs.close();
+
+        fs.open("CWD_CASE.DATA", std::fstream::out);
+        fs << deckStr4;
+        fs.close();
+    }
+    Opm::Parser parser;
+    {
+        Opm::Deck deck = parser.parseFile("simulation/CASE.DATA", Opm::ParseContext());
+        Opm::InitConfig init_config(deck);
+        BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "simulation/BASE");
+    }
+    {
+      Opm::Deck deck = parser.parseFile("simulation/CASE5.DATA", Opm::ParseContext());
+      Opm::InitConfig init_config(deck);
+      BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
+    }
+    {
+        Opm::Deck deck = parser.parseFile("CWD_CASE.DATA", Opm::ParseContext());
+        Opm::InitConfig init_config(deck);
+        BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "BASE");
+    }
+    {
+      Opm::Deck deck = parser.parseFile("CASE5.DATA", Opm::ParseContext());
+      Opm::InitConfig init_config(deck);
+      BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
+    }
+
+    test_work_area_free(work_area);
+}
+
+
