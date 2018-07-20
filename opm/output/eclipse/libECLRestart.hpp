@@ -442,7 +442,7 @@ void      *  util_alloc_copy(const void * , size_t );
 void      *  util_realloc(void *  , size_t  );
 void         util_fread (void *, size_t , size_t , FILE * , const char * );
 int          util_int_min   (int     , int);
-void     util_endian_flip_vector(void * data , int element_size , int elements);
+void     util_endian_flip_vector(void *data, int element_size , int elements);
 void     size_t_vector_append(::Opm::RestartIO::size_t_vector_type *  , size_t);
 void     size_t_vector_iset(::Opm::RestartIO::size_t_vector_type *    , int , size_t);
 void     size_t_vector_permute(::Opm::RestartIO::size_t_vector_type * vector , const ::Opm::RestartIO::perm_vector_type * perm);
