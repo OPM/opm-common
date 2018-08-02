@@ -228,6 +228,13 @@ macro(opm_add_test TestName)
     set(CURTEST_EXE_NAME ${TestName})
   endif()
 
+  # Strip test_ prefix from name
+  if ("${TestName}" MATCHES "^test_([^/]*)$")
+    string (REGEX REPLACE "^test_([^/]*)$" "\\1" _FANCY "${TestName}")
+  else()
+    set(_FANCY ${TestName})
+  endif()
+
   # try to auto-detect the name of the source file if SOURCES are not
   # explicitly specified.
   if (NOT CURTEST_SOURCES)
@@ -331,7 +338,7 @@ macro(opm_add_test TestName)
         endif()
       endif()
 
-      add_test(NAME ${TestName}
+      add_test(NAME ${_FANCY}
                WORKING_DIRECTORY "${CURTEST_WORKING_DIRECTORY}"
                COMMAND ${CURTEST_COMMAND})
 
@@ -359,7 +366,7 @@ macro(opm_add_test TestName)
     # CDash dashboard. it this is removed, the test is just silently
     # ignored.
     if (NOT CURTEST_ONLY_COMPILE AND ADD_DISABLED_CTESTS)
-      add_test(${TestName} skip_test_dummy)
+      add_test(${_FANCY} skip_test_dummy)
     endif()
   endif()
 endmacro()
