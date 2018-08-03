@@ -16,9 +16,14 @@ then
       cp $OPM_TESTS_ROOT_PREDEFINED $WORKSPACE/deps/opm-tests -R
     fi
   else
-    # Specified in trigger, download it
-    source $WORKSPACE/deps/opm-common/jenkins/build-opm-module.sh
-    clone_module opm-tests $OPM_TESTS_REVISION
+    # We need a full repo checkout
+    cp $OPM_TESTS_ROOT_PREDEFINED $WORKSPACE/deps/opm-tests -R
+    pushd $WORKSPACE/deps/opm-tests
+    # Then we fetch the PR branch
+    git remote add PR https://github.com/OPM/opm-tests
+    git fetch --depth 1 PR $OPM_TESTS_REVISION:branch_to_build
+    git checkout branch_to_build
+    popd
   fi
 else
   if ! test -d $WORKSPACE/deps/opm-tests
