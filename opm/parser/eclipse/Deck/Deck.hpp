@@ -131,6 +131,9 @@ namespace Opm {
 
             Deck( const Deck& );
 
+            //! \brief Deleted assignment operator.
+            Deck& operator=(const Deck& rhs) = delete;
+
             void addKeyword( DeckKeyword&& keyword );
             void addKeyword( const DeckKeyword& keyword );
 
