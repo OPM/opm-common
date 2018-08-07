@@ -237,7 +237,7 @@ namespace Opm {
     }
 
     std::ostream& operator<<(std::ostream& os, const Deck& deck) {
-        DeckOutput out( os );
+        DeckOutput out( os, 10 );
         deck.write( out );
         return os;
     }

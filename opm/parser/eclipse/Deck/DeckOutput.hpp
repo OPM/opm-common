@@ -28,7 +28,8 @@ namespace Opm {
 
     class DeckOutput {
     public:
-        explicit DeckOutput(std::ostream& s);
+        explicit DeckOutput(std::ostream& s, int precision = 10);
+        ~DeckOutput();
         void stash_default( );
 
         void start_record( );
@@ -51,9 +52,11 @@ namespace Opm {
         size_t default_count;
         size_t row_count;
         bool record_on;
+        int org_precision;
 
         template <typename T> void write_value(const T& value);
         void write_sep( );
+        void set_precision(int precision);
     };
 }
 

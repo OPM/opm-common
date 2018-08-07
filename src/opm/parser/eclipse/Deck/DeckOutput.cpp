@@ -24,12 +24,24 @@
 
 namespace Opm {
 
-    DeckOutput::DeckOutput( std::ostream& s) :
+    DeckOutput::DeckOutput( std::ostream& s, int precision) :
         os( s ),
         default_count( 0 ),
         row_count( 0 ),
-        record_on( false )
+        record_on( false ),
+        org_precision( os.precision(precision) )
     {}
+
+
+    DeckOutput::~DeckOutput() {
+        this->set_precision(this->org_precision);
+    }
+
+
+    void DeckOutput::set_precision(int precision) {
+        this->os.precision(precision);
+    }
+
 
     void DeckOutput::endl() {
         this->os << std::endl;
