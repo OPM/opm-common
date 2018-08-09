@@ -13,7 +13,7 @@ const py::return_value_policy move         = py::return_value_policy::move;
 
 namespace sunbeam {
 
-  void export_Completion(py::module& module);
+  void export_Connection(py::module& module);
   void export_Deck(py::module& module);
   void export_DeckKeyword(py::module& module);
   void export_Eclipse3DProperties(py::module& module);

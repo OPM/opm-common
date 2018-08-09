@@ -90,7 +90,7 @@ class TestWells(unittest.TestCase):
 
     def testCompletions(self):
         w0 = self.wells[0]
-        c0,c1 = w0.completions(len(self.timesteps) - 1)
+        c0,c1 = w0.connections(len(self.timesteps) - 1)
         self.assertEqual((6,6,2), c0.pos)
         self.assertEqual((6,6,3), c1.pos)
 

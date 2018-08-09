@@ -9,6 +9,6 @@ configure_file(data/schedule/fragment_dates.sch data/schedule/fragment_dates.sch
 configure_file(data/schedule/TEMPLATE.SCH data/schedule/TEMPLATE.SCH COPYONLY)
 configure_file(utils.py utils.py COPYONLY)
 
-foreach(prog time_vector completions deck group_tree grupnet parse_deck parse state props schedule wells)
+foreach(prog time_vector connection deck group_tree grupnet parse_deck parse state props schedule wells)
     add_python_test(${prog} ${prog}.py)
 endforeach()

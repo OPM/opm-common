@@ -5,9 +5,9 @@
 
 namespace {
 
-    std::vector<Completion> completions( const Well& w, size_t timestep ) {
-        const auto& well_completions = w.getCompletions( timestep );
-        return std::vector<Completion>(well_completions.begin(), well_completions.end());
+    std::vector<Connection> connections( const Well& w, size_t timestep ) {
+        const auto& well_connections = w.getConnections( timestep );
+        return std::vector<Connection>(well_connections.begin(), well_connections.end());
     }
 
     std::string status( const Well& w, size_t timestep )  {
@@ -52,6 +52,6 @@ void sunbeam::export_Well(py::module& module) {
         .def( "guide_rate",      &Well::getGuideRate )
         .def( "available_gctrl", &Well::isAvailableForGroupControl )
         .def( "__equal__",       &Well::operator== )
-        .def( "_completions",    &completions );
+        .def( "_connections",    &connections );
 
 }

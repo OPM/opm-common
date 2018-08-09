@@ -33,15 +33,15 @@ matrix:
 install:
   - pushd ..
   - git clone https://github.com/Statoil/libecl.git
-  - git clone https://github.com/OPM/opm-parser.git
+  - git clone https://github.com/OPM/opm-common.git
   - mkdir libecl/build
   - pushd libecl/build
   - cmake -DENABLE_PYTHON=OFF -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
   - make install
   - popd
-  - mkdir opm-parser/build
-  - pushd opm-parser/build
-  - git checkout 2018.01 
+  - mkdir opm-common/build
+  - pushd opm-common/build
+  - git checkout release/sunbeam/2018.07
   - cmake .. -DCMAKE_PREFIX_PATH=$INSTALL_ROOT
              -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT
              -DBUILD_TESTING=OFF
