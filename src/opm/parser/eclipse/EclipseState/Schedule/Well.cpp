@@ -30,8 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
-#include <ert/ecl/ecl_grid.h>
-
 
 namespace Opm {
 

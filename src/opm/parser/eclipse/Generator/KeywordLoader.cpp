@@ -67,43 +67,6 @@ namespace Opm {
     }
 
 
-    size_t KeywordLoader::loadKeywordDirectory(boost::filesystem::path& path) {
-        size_t loadCount = 0;
-        if (boost::filesystem::is_directory( path )) {
-            boost::filesystem::directory_iterator end_iterator;
-
-            for (boost::filesystem::directory_iterator iter(path); iter != end_iterator; ++iter) {
-                boost::filesystem::path iter_path = iter->path();
-
-                if (boost::filesystem::is_directory( iter_path )) {
-                    loadCount += loadKeywordDirectory( iter_path );
-                } else {
-                    std::string internalName = iter_path.filename().string();
-                    if (ParserKeyword::validInternalName(internalName)) {
-                        if (m_verbose)
-                            std::cout << "Loading keyword " << internalName << " from file: " << iter_path << "....";
-                        loadKeyword( iter_path );
-                        if (m_verbose)
-                            std::cout << std::endl;
-                        loadCount += 1;
-                    } else {
-                        if (m_verbose)
-                            std::cout << "Ignoring file " << iter_path << "  - incorrectly formatted name." << std::endl;
-                    }
-                }
-            }
-
-        } else
-            throw std::invalid_argument("Input does not correspond to existing directory\n");
-
-        return loadCount;
-    }
-
-    size_t KeywordLoader::loadKeywordDirectory(const std::string& directory) {
-        boost::filesystem::path path( directory );
-        return loadKeywordDirectory( path );
-    }
-
     void KeywordLoader::loadKeyword(boost::filesystem::path& path) {
         std::shared_ptr<Json::JsonObject> jsonConfig = std::make_shared<Json::JsonObject>( path );
         std::shared_ptr<ParserKeyword> parserKeyword = std::make_shared<ParserKeyword>(*jsonConfig);
@@ -114,19 +77,10 @@ namespace Opm {
     }
 
 
-    size_t KeywordLoader::loadMultipleKeywordDirectories(const std::string& directory) {
-        std::vector<std::string> directories = sortSubdirectories( directory );
-
-        size_t load_count = 0;
-        for (auto iter = directories.begin(); iter != directories.end(); ++iter)
-            load_count += loadKeywordDirectory(*iter);
-
-        return load_count;
-    }
-
-
     void KeywordLoader::loadKeyword(const std::string& filename) {
         boost::filesystem::path path( filename );
+        if (m_verbose)
+            std::cout << "Loading keyword from file: " << filename << std::endl;
         return loadKeyword( path );
     }
 
@@ -144,22 +98,6 @@ namespace Opm {
     }
 
 
-    std::vector<std::string> KeywordLoader::sortSubdirectories( const std::string& root_path) {
-        boost::filesystem::path root(root_path);
-        if (boost::filesystem::is_directory( root )) {
-            std::vector<std::string> paths_in_root;
-            boost::filesystem::directory_iterator end_iterator;
-
-            for (boost::filesystem::directory_iterator iter(root); iter != end_iterator; ++iter) {
-                if (boost::filesystem::is_directory( iter->path() ))
-                    paths_in_root.push_back(iter->path().string());
-            }
-
-            std::sort(paths_in_root.begin(), paths_in_root.end());
-            return paths_in_root;
-        } else
-            throw std::invalid_argument("Input argument is not a directory");
-    }
 
     std::map<std::string , std::shared_ptr<ParserKeyword> >::const_iterator KeywordLoader::keyword_begin( ) const {
         return m_keywords.begin( );

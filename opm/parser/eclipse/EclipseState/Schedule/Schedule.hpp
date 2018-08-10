@@ -189,6 +189,15 @@ namespace Opm
         void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(size_t currentStep);
+        void handleKeyword(size_t& currentStep,
+                           const SCHEDULESection& section,
+                           size_t keywordIdx,
+                           const DeckKeyword& keyword,
+                           const ParseContext& parseContext,
+                           const EclipseGrid& grid,
+                           const Eclipse3DProperties& eclipseProperties,
+                           const UnitSystem& unit_system,
+                           std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
 
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
         static double convertInjectionRateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem &unitSystem);

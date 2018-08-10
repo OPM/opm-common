@@ -40,13 +40,8 @@ namespace Opm {
         bool hasKeyword(const std::string& keyword) const;
         std::shared_ptr<const ParserKeyword> getKeyword(const std::string& keyword) const;
         std::string getJsonFile(const std::string& keyword) const;
-        size_t loadKeywordDirectory(const std::string& pathname);
-        size_t loadKeywordDirectory(boost::filesystem::path& path);
         void loadKeyword(const std::string& filename);
         void loadKeyword(boost::filesystem::path& path);
-
-        static std::vector<std::string> sortSubdirectories( const std::string& directory );
-        size_t loadMultipleKeywordDirectories(const std::string& directory);
 
         std::map<std::string , std::shared_ptr<ParserKeyword> >::const_iterator keyword_begin( ) const;
         std::map<std::string , std::shared_ptr<ParserKeyword> >::const_iterator keyword_end( ) const;
