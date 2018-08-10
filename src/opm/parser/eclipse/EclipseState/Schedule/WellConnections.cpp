@@ -29,6 +29,90 @@
 
 namespace Opm {
 
+namespace {
+
+    // Compute direction permutation corresponding to completion's
+    // direction.  First two elements of return value are directions
+    // perpendicular to completion while last element is direction
+    // along completion.
+    inline std::array< size_t, 3> directionIndices(const Opm::WellCompletion::DirectionEnum direction)
+    {
+        switch (direction) {
+        case Opm::WellCompletion::DirectionEnum::X:
+            return {{ 1,2,0 }};
+
+        case Opm::WellCompletion::DirectionEnum::Y:
+            return {{ 2,0,1}};
+
+        case Opm::WellCompletion::DirectionEnum::Z:
+            return {{ 0,1,2 }};
+        }
+        // All enum values should be handled above. Therefore
+        // we should never reach this one. Anyway for the sake
+        // of reduced warnings we throw an exception.
+        throw std::invalid_argument("unhandled enum value");
+
+    }
+
+    // Permute (diagonal) permeability components according to
+    // completion's direction.
+    inline std::array<double,3>
+    permComponents(const Opm::WellCompletion::DirectionEnum direction,
+                   const std::array<double,3> perm)
+    {
+        const auto p = directionIndices(direction);
+
+        return {{ perm[ p[0] ],
+                  perm[ p[1] ],
+                  perm[ p[2] ] }};
+    }
+
+    // Permute cell's geometric extent according to completion's
+    // direction.  Honour net-to-gross ratio.
+    //
+    // Note: 'extent' is intentionally accepted by modifiable value
+    // rather than reference-to-const to support NTG manipulation.
+    inline std::array<double,3>
+    effectiveExtent(const Opm::WellCompletion::DirectionEnum direction,
+                    const double                                  ntg,
+                    std::array<double,3>                          extent)
+    {
+        // Vertical extent affected by net-to-gross ratio.
+        extent[2] *= ntg;
+
+        const auto p = directionIndices(direction);
+
+        std::array<double,3>
+            D = {{ extent[ p[0] ] ,
+                   extent[ p[1] ] ,
+                   extent[ p[2] ] }};
+
+        return D;
+    }
+
+    // Compute Peaceman's effective radius of single completion.
+    inline double
+    effectiveRadius(const std::array<double,3>& K,
+                    const std::array<double,3>& D)
+    {
+        const double K01   = K[0] / K[1];
+        const double K10   = K[1] / K[0];
+
+        const double D0_sq = D[0] * D[0];
+        const double D1_sq = D[1] * D[1];
+
+        const double num = std::sqrt((std::sqrt(K10) * D0_sq) +
+                                     (std::sqrt(K01) * D1_sq));
+        const double den = std::pow(K01, 0.25) + std::pow(K10, 0.25);
+
+        // Note: Analytic constant 0.28 derived for infintely sized
+        // formation with repeating well placement.
+        return 0.28 * (num / den);
+    }
+
+
+} // anonymous namespace
+
     WellConnections::WellConnections(int headIArg, int headJArg) :
         headI(headIArg),
         headJ(headJArg)
