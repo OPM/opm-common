@@ -166,9 +166,15 @@ BOOST_AUTO_TEST_CASE(keywordList_getbyindex_correctkeywordreturned) {
 BOOST_AUTO_TEST_CASE(set_and_get_data_file) {
     Deck deck;
     BOOST_CHECK_EQUAL("", deck.getDataFile());
+    BOOST_CHECK_EQUAL("", deck.getInputPath());
     std::string file("/path/to/file.DATA");
     deck.setDataFile( file );
     BOOST_CHECK_EQUAL(file, deck.getDataFile());
+    BOOST_CHECK_EQUAL("/path/to", deck.getInputPath());
+
+    deck.setDataFile("FILE");
+    BOOST_CHECK_EQUAL("FILE", deck.getDataFile());
+    BOOST_CHECK_EQUAL("", deck.getInputPath());
 }
 
 BOOST_AUTO_TEST_CASE(DummyDefaultsString) {

@@ -144,7 +144,8 @@ namespace Opm {
             UnitSystem& getActiveUnitSystem();
             UnitSystem& getDefaultUnitSystem();
 
-            const std::string getDataFile() const;
+            const std::string& getInputPath() const;
+            const std::string& getDataFile() const;
             void setDataFile(const std::string& dataFile);
 
             iterator begin();
@@ -159,6 +160,7 @@ namespace Opm {
             UnitSystem activeUnits;
 
             std::string m_dataFile;
+            std::string input_path;
     };
 }
 #endif  /* DECK_HPP */

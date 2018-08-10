@@ -474,11 +474,6 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
 }
 
 BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
-    // This test leads to a segmentation violation on travis, disable until
-    // the cause has been found and fixed.
-    if (std::getenv("TRAVIS_CI"))
-        return;
-
     Setup setup("FIRST_SIM.DATA");
     {
         ERT::TestArea testArea("test_Restart");
