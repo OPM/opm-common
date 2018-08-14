@@ -72,6 +72,30 @@ void RegressionTest::getRegressionTest(){
         }
         ivar++;
     }
+    if (analysis) {
+        std::cout << deviations.size() << " summary keyword"
+                  << (deviations.size() > 1 ? "s":"") << " exhibit failures" << std::endl;
+        size_t len = ecl_sum_get_data_length(ecl_sum1);
+        for (const auto& iter : deviations) {
+            std::cout << "\t" << iter.first << std::endl;
+            std::cout << "\t\tFails for " << iter.second.size() << " / " << len << " steps." << std::endl;
+            std::cout.precision(7);
+            double absErr = std::max_element(iter.second.begin(), iter.second.end(),
+                                          [](const Deviation& a, const Deviation& b)
+                                          {
+                                            return a.abs < b.abs;
+                                          })->abs;
+            double relErr = std::max_element(iter.second.begin(), iter.second.end(),
+                                          [](const Deviation& a, const Deviation& b)
+                                          {
+                                            return a.rel < b.rel;
+                                          })->rel;
+            std::cout << "\t\tLargest absolute error: "
+                      <<  std::scientific << absErr << std::endl;
+            std::cout << "\t\tLargest relative error: "
+                      <<  std::scientific << relErr << std::endl;
+        }
+    }
     if (throwAtEnd)
       OPM_THROW(std::runtime_error, "Regression test failed.");
     else
@@ -107,13 +131,17 @@ bool RegressionTest::checkDeviation(Deviation deviation, const char* keyword, in
     double relTol = getRelTolerance();
 
     if (deviation.rel > relTol && deviation.abs > absTol){
-        std::cout << "For keyword " << keyword  << std::endl;
-        std::cout << "(days, reference value) and (days, check value) = (" << (*referenceVec)[refIndex] << ", " << (*referenceDataVec)[refIndex]
-            << ") and (" << (*checkVec)[checkIndex-1] << ", " << (*checkDataVec)[checkIndex-1] << ")\n";
-        // -1 in [checkIndex -1] because checkIndex is updated after leaving getDeviation function
-        std::cout << "The absolute deviation is " << deviation.abs << ". The tolerance limit is " << absTol << std::endl;
-        std::cout << "The relative deviation is " << deviation.rel << ". The tolerance limit is " << relTol << std::endl;
-        HANDLE_ERROR(std::runtime_error, "Deviation exceed the limit.");
+        if (analysis) {
+            deviations[keyword].push_back(deviation);
+        } else {
+            std::cout << "For keyword " << keyword  << std::endl;
+            std::cout << "(days, reference value) and (days, check value) = (" << (*referenceVec)[refIndex] << ", " << (*referenceDataVec)[refIndex]
+              << ") and (" << (*checkVec)[checkIndex-1] << ", " << (*checkDataVec)[checkIndex-1] << ")\n";
+            // -1 in [checkIndex -1] because checkIndex is updated after leaving getDeviation function
+            std::cout << "The absolute deviation is " << deviation.abs << ". The tolerance limit is " << absTol << std::endl;
+            std::cout << "The relative deviation is " << deviation.rel << ". The tolerance limit is " << relTol << std::endl;
+            HANDLE_ERROR(std::runtime_error, "Deviation exceed the limit.");
+        }
         return false;
     }
     return true;

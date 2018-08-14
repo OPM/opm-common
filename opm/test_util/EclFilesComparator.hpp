@@ -20,6 +20,7 @@
 #ifndef ECLFILESCOMPARATOR_HPP
 #define ECLFILESCOMPARATOR_HPP
 
+#include <map>
 #include <vector>
 #include <string>
 
@@ -61,6 +62,8 @@ class ECLFilesComparator {
         ecl_grid_type* ecl_grid2 = nullptr;
         std::vector<std::string> keywords1, keywords2;
         bool throwOnError = true; //!< Throw on first error
+        bool analysis = false; //!< Perform full error analysis
+        std::map<std::string, std::vector<Deviation>> deviations;
         mutable size_t num_errors = 0;
 
         //! \brief Checks if the keyword exists in both cases.
@@ -98,6 +101,9 @@ class ECLFilesComparator {
 
         //! \brief Set whether to throw on errors or not.
         void throwOnErrors(bool dothrow) { throwOnError = dothrow; }
+
+        //! \brief Set whether to perform a full error analysis.
+        void doAnalysis(bool analize) { analysis = analize; }
 
         //! \brief Returns the number of errors encountered in the performed comparisons.
         size_t getNoErrors() const { return num_errors; }

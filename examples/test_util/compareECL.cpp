@@ -36,6 +36,7 @@ static void printHelp() {
         << "3. Absolute tolerance\n"
         << "4. Relative tolerance (between 0 and 1)\n\n"
         << "In addition, the program takes these options (which must be given before the arguments):\n\n"
+        << "-a Run a full analysis of errors.\n"
         << "-h Print help and exit.\n"
         << "-i Execute integration test (regression test is default).\n"
         << "   The integration test compares SGAS, SWAT and PRESSURE in unified restart files, so this option can not be used in combination with -t.\n"
@@ -114,13 +115,17 @@ int main(int argc, char** argv) {
     bool specificKeyword         = false;
     bool specificFileType        = false;
     bool throwOnError            = true;
+    bool analysis                = false;
     bool volumecheck             = true;
     char* keyword                = nullptr;
     char* fileTypeCstr           = nullptr;
     int c                        = 0;
 
-    while ((c = getopt(argc, argv, "hiIk:lnpPt:V")) != -1) {
+    while ((c = getopt(argc, argv, "hiIk:alnpPt:V")) != -1) {
         switch (c) {
+            case 'a':
+              analysis = true;
+              break;
             case 'h':
                 printHelp();
                 return 0;
@@ -246,6 +251,7 @@ int main(int argc, char** argv) {
         else {
             RegressionTest comparator(file_type, basename1, basename2, absTolerance, relTolerance);
             comparator.throwOnErrors(throwOnError);
+            comparator.doAnalysis(analysis);
             if (printKeywords) {
                 comparator.printKeywords();
                 return 0;

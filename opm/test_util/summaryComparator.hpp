@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <map>
 #include <vector>
 #include <algorithm>
 #include <string>
@@ -48,8 +49,8 @@ typedef struct ecl_sum_struct ecl_sum_type;
 
 //! \brief Struct for storing the deviation between two values.
 struct Deviation {
-    double abs = 0;//!< The absolute deviation
-    double rel = 0; //!< The relative deviation
+    double abs = 0;     //!< The absolute deviation
+    double rel = 0;     //!< The relative deviation
 };
 
 
@@ -73,6 +74,8 @@ class SummaryComparator {
         bool printKeyword = false; //!< Boolean value for choosing whether to print the keywords or not
         bool printSpecificKeyword = false; //!< Boolean value for choosing whether to print the vectors of a keyword or not
         bool throwOnError = true; //!< Throw on first error
+        bool analysis = false; //!< Perform error analysis
+        std::map<std::string, std::vector<Deviation>> deviations;
 
         //! \brief Calculate deviation between two data values and stores it in a Deviation struct.
         //! \param[in] refIndex Index in reference data
@@ -175,6 +178,9 @@ class SummaryComparator {
 
         //! \brief Set whether to throw on errors or not.
         void throwOnErrors(bool dothrow) { throwOnError = dothrow; }
+
+        //! \brief Set whether or not to perform error analysis.
+        void doAnalysis(bool analyse) { analysis = analyse; }
 };
 
 #endif

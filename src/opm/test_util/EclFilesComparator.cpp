@@ -391,10 +391,14 @@ void RegressionTest::deviationsForCell(double val1, double val2, const std::stri
     }
     Deviation dev = calculateDeviations(val1, val2);
     if (dev.abs > absTolerance && dev.rel > relTolerance) {
-        printValuesForCell(keyword, occurrence1, occurrence2, kw_size, cell, val1, val2);
-        HANDLE_ERROR(std::runtime_error, "Deviations exceed tolerances."
-                << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
-                << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
+        if (analysis) {
+          deviations[keyword].push_back(dev);
+        } else {
+            printValuesForCell(keyword, occurrence1, occurrence2, kw_size, cell, val1, val2);
+            HANDLE_ERROR(std::runtime_error, "Deviations exceed tolerances."
+                    << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
+                    << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
+        }
     }
     if (dev.abs != -1) {
         absDeviation.push_back(dev.abs);
@@ -496,6 +500,30 @@ void RegressionTest::results() {
     }
     for (const auto& it : keywords1)
         resultsForKeyword(it);
+
+    if (analysis) {
+        std::cout << deviations.size() << " keyword"
+                  << (deviations.size() > 1 ? "s":"") << " exhibit failures" << std::endl;
+        for (const auto& iter : deviations) {
+            std::cout << "\t" << iter.first << std::endl;
+            std::cout << "\t\tFails for " << iter.second.size() << " entries" << std::endl;
+            std::cout.precision(7);
+            double absErr = std::max_element(iter.second.begin(), iter.second.end(),
+                                          [](const Deviation& a, const Deviation& b)
+                                          {
+                                            return a.abs < b.abs;
+                                          })->abs;
+            double relErr = std::max_element(iter.second.begin(), iter.second.end(),
+                                          [](const Deviation& a, const Deviation& b)
+                                          {
+                                            return a.rel < b.rel;
+                                          })->rel;
+            std::cout << "\t\tLargest absolute error: "
+                      <<  std::scientific << absErr << std::endl;
+            std::cout << "\t\tLargest relative error: "
+                      <<  std::scientific << relErr << std::endl;
+        }
+    }
 }
 
 
