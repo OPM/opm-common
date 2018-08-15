@@ -37,6 +37,7 @@ void printHelp(){
     std::cout << "The program is capable of performing both a regression test and an integration test, \nhowever only one type of test at a time. ";
     std::cout << "By default the program will run a regression test."<< std::endl;
     std::cout << "\nThe program have command line options:" << std::endl;
+    std::cout << "-a \tRun a full analysis of errors." << std::endl;
     std::cout << "-h \t\tPrint help message." << std::endl << std::endl;
     std::cout << "For the regression test: " << std::endl;
     std::cout << "-r \t\tChoosing regression test (this is default)."<< std::endl;
@@ -80,6 +81,7 @@ int main (int argc, char ** argv){
     bool throwExceptionForTooGreatErrorRatio = true;
     bool isRestartFile = false;
     bool throwOnError = true;
+    bool analysis = false;
     const char* keyword  = nullptr;
     const char* mainVariable = nullptr;
     int c = 0;
@@ -88,8 +90,11 @@ int main (int argc, char ** argv){
 
     //------------------------------------------------
     //For setting the options selected
-    while ((c = getopt(argc, argv, "dghik:Km:npP:rRs:vV:")) != -1) {
+    while ((c = getopt(argc, argv, "dghik:Km:napP:rRs:vV:")) != -1) {
         switch (c) {
+            case 'a':
+                analysis = true;
+                break;
             case 'd':
                 throwExceptionForTooGreatErrorRatio = false;
                 break;
@@ -177,6 +182,7 @@ int main (int argc, char ** argv){
         if(regressionTest){
             RegressionTest compare(basename1,basename2, absoluteTolerance, relativeTolerance);
             compare.throwOnErrors(throwOnError);
+            compare.doAnalysis(analysis);
             if(printKeywords){compare.setPrintKeywords(true);}
             if(isRestartFile){compare.setIsRestartFile(true);}
             if(specificKeyword){
