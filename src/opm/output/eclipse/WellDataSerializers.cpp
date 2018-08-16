@@ -42,29 +42,8 @@ serialize_SCON(int lookup_step,
         bool explicit_ctf_not_found = false;
         for (const auto& connection : connections) {
             const size_t offset = well_offset + connection_offset;
-            const auto& ctf = connection.getConnectionTransmissibilityFactorAsValueObject();
-            if (ctf.hasValue()) {
-                // CTF explicitly set in deck, overrides calculation
-                // from Peaceman model.  We should also give the Kh
-                // factor, we output an explicitly invalid value
-                // instead. This is acceptable since it will not be
-                // used (the explicit CTF factor is used instead).
-                const double ctf_SI = ctf.getValue();
-                const double ctf_output = units.from_si(UnitSystem::measure::transmissibility, ctf_SI);
-                data[ offset + SCON_CF_INDEX ] = ctf_output;
-                data[ offset + SCON_KH_INDEX ] = UNIMPLEMENTED_VALUE;
-            } else {
-                // CTF not set in deck, Peaceman formula used to
-                // compute it.  Here we should store the data for the
-                // connection required to recalculate the CTF (the Kh
-                // factor), as well as the actual CTF used by the
-                // simulator, but that requires access to more data
-                // from the simulator. As an interim measure we write
-                // invalid values and give a warning.
-                data[ offset + SCON_CF_INDEX ] = UNIMPLEMENTED_VALUE;
-                data[ offset + SCON_KH_INDEX ] = UNIMPLEMENTED_VALUE;
-                explicit_ctf_not_found = true;
-            }
+            data[ offset + SCON_CF_INDEX ] = units.from_si(Opm::UnitSystem::measure::transmissibility,connection.CF());
+            data[ offset + SCON_KH_INDEX ] = units.from_si(Opm::UnitSystem::measure::effective_Kh, connection.Kh());
             connection_offset += nsconz;
         }
         if (explicit_ctf_not_found) {
@@ -73,7 +52,7 @@ serialize_SCON(int lookup_step,
         }
         well_offset += well_field_size;
     }
-    return data; 
+    return data;
 }
 
 // ----------------------------------------------------------------------------
@@ -83,7 +62,7 @@ serialize_ICON(int lookup_step,
                int ncwmax,
                int niconz,
                const std::vector<const Opm::Well*>& sched_wells)
-// ----------------------------------------------------------------------------  
+// ----------------------------------------------------------------------------
 {
     const size_t well_field_size = ncwmax * niconz;
     std::vector<int> data(sched_wells.size() * well_field_size, 0);
@@ -94,17 +73,17 @@ serialize_ICON(int lookup_step,
         for (const auto& connection : connections) {
             const size_t offset = well_offset + connection_offset;
 
-            data[ offset + ICON_IC_INDEX ] = connection.complnum;
+            data[ offset + ICON_IC_INDEX ] = connection.complnum();
             data[ offset + ICON_I_INDEX ] = connection.getI() + 1;
             data[ offset + ICON_J_INDEX ] = connection.getJ() + 1;
             data[ offset + ICON_K_INDEX ] = connection.getK() + 1;
-            data[ offset + ICON_DIRECTION_INDEX ] = connection.dir;
+            data[ offset + ICON_DIRECTION_INDEX ] = connection.dir();
             data[ offset + ICON_STATUS_INDEX ] =
-                (connection.state == WellCompletion::StateEnum::OPEN) ?
+                (connection.state() == WellCompletion::StateEnum::OPEN) ?
                 1 : -1000;
             data[ offset + ICON_SEGMENT_INDEX ] =
                 connection.attachedToSegment() ?
-                connection.segment_number : 0;
+                connection.segment() : 0;
             connection_offset += niconz;
         }
 

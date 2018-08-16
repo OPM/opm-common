@@ -20,7 +20,6 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
-#include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -36,26 +35,25 @@
 
 namespace Opm {
 
+
     Connection::Connection(int i, int j , int k ,
                            int compnum,
                            double depth,
                            WellCompletion::StateEnum stateArg ,
-                           const Value<double>& connectionTransmissibilityFactor,
-                           const Value<double>& diameter,
-                           const Value<double>& skinFactor,
-                           const Value<double>& Kh,
+                           double CF,
+                           double Kh,
+                           double rw,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction)
-        : dir(direction),
+        : direction(direction),
           center_depth(depth),
-          state(stateArg),
+          open_state(stateArg),
           sat_tableId(satTableId),
-          complnum( compnum ),
-          ijk({i,j,k}),
-          m_diameter(diameter),
-          m_connectionTransmissibilityFactor(connectionTransmissibilityFactor),
-          m_skinFactor(skinFactor),
-          m_Kh(Kh)
+          m_complnum( compnum ),
+          m_CF(CF),
+          m_Kh(Kh),
+          m_rw(rw),
+          ijk({i,j,k})
     {}
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
@@ -80,42 +78,77 @@ namespace Opm {
         return ijk[2];
     }
 
-
-    double Connection::getConnectionTransmissibilityFactor() const {
-        return m_connectionTransmissibilityFactor.getValue();
-    }
-
-    double Connection::getDiameter() const {
-        return m_diameter.getValue();
-    }
-
-    double Connection::getSkinFactor() const {
-        return m_skinFactor.getValue();
-    }
-
-
-    const Value<double>& Connection::getConnectionTransmissibilityFactorAsValueObject() const {
-        return m_connectionTransmissibilityFactor;
-    }
-
-    const Value<double>& Connection::getEffectiveKhAsValueObject() const {
-        return m_Kh;
-    }
-
     bool Connection::attachedToSegment() const {
         return (segment_number > 0);
     }
 
+    WellCompletion::DirectionEnum Connection::dir() const {
+        return this->direction;
+    }
+
+    double Connection::depth() const {
+        return this->center_depth;
+    }
+
+    WellCompletion::StateEnum Connection::state() const {
+        return this->open_state;
+    }
+
+    int Connection::satTableId() const {
+        return this->sat_tableId;
+    }
+
+    int Connection::complnum() const {
+        return this->m_complnum;
+    }
+
+    void Connection::setComplnum(int complnum) {
+        this->m_complnum = complnum;
+    }
+
+    double Connection::CF() const {
+        return this->m_CF;
+    }
+
+    double Connection::Kh() const {
+        return this->m_Kh;
+    }
+
+    double Connection::rw() const {
+        return this->m_rw;
+    }
+
+    void Connection::setState(WellCompletion::StateEnum state) {
+        this->open_state = state;
+    }
+
+    void Connection::updateSegment(int segment_number, double center_depth) {
+        this->segment_number = segment_number;
+        this->center_depth = center_depth;
+    }
+
+    int Connection::segment() const {
+        return this->segment_number;
+    }
+
+    void Connection::scaleWellPi(double wellPi) {
+        this->wPi *= wellPi;
+    }
+
+    double Connection::wellPi() const {
+        return this->wPi;
+    }
+
     bool Connection::operator==( const Connection& rhs ) const {
         return this->ijk == rhs.ijk
-            && this->complnum == rhs.complnum
-            && this->m_diameter == rhs.m_diameter
-            && this->m_connectionTransmissibilityFactor == rhs.m_connectionTransmissibilityFactor
-            && this->wellPi == rhs.wellPi
-            && this->m_skinFactor == rhs.m_skinFactor
+            && this->m_complnum == rhs.m_complnum
+            && this->m_CF == rhs.m_CF
+            && this->m_rw == rhs.m_rw
+            && this->wPi == rhs.wPi
+            && this->m_Kh == rhs.m_Kh
             && this->sat_tableId == rhs.sat_tableId
-            && this->state == rhs.state
-            && this->dir == rhs.dir
+            && this->open_state == rhs.open_state
+            && this->direction == rhs.direction
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth;
     }

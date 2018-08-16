@@ -43,15 +43,15 @@
 
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
-Opm::WellConnections connection_set;
- connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.5), Opm::Value<double>("SKIN", 0.), Opm::Value<double>("Kh", 17.29), 0, dir) );
- connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.5), Opm::Value<double>("SKIN", 0.), Opm::Value<double>("Kh", 17.29), 0, dir) );
- connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), Opm::Value<double>("Kh", 17.29), 0, dir) );
+    Opm::WellConnections connection_set;
+    connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0, dir) );
+    connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0, dir) );
+    connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0, dir) );
 
-    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), Opm::Value<double>("Kh", 17.29), 0,  Opm::WellCompletion::DirectionEnum::X) );
-    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), Opm::Value<double>("Kh", 17.29), 0,  Opm::WellCompletion::DirectionEnum::X) );
-    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), Opm::Value<double>("Kh", 17.29), 0,  Opm::WellCompletion::DirectionEnum::X) );
-    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , Opm::Value<double>("ConnectionTransmissibilityFactor", 200.), Opm::Value<double>("D", 0.4), Opm::Value<double>("SKIN", 0.), Opm::Value<double>("Kh", 17.29), 0,  Opm::WellCompletion::DirectionEnum::X) );
+    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0,  Opm::WellCompletion::DirectionEnum::X) );
+    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0,  Opm::WellCompletion::DirectionEnum::X) );
+    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0,  Opm::WellCompletion::DirectionEnum::X) );
+    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0,  Opm::WellCompletion::DirectionEnum::X) );
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -93,32 +93,32 @@ Opm::WellConnections connection_set;
     BOOST_CHECK_EQUAL(7U, new_connection_set->size());
 
     const Opm::Connection& connection1 = new_connection_set->get(0);
-    const int segment_number_connection1 = connection1.segment_number;
-    const double center_depth_connection1 = connection1.center_depth;
+    const int segment_number_connection1 = connection1.segment();
+    const double center_depth_connection1 = connection1.depth();
     BOOST_CHECK_EQUAL(segment_number_connection1, 1);
     BOOST_CHECK_EQUAL(center_depth_connection1, 2512.5);
 
     const Opm::Connection& connection3 = new_connection_set->get(2);
-    const int segment_number_connection3 = connection3.segment_number;
-    const double center_depth_connection3 = connection3.center_depth;
+    const int segment_number_connection3 = connection3.segment();
+    const double center_depth_connection3 = connection3.depth();
     BOOST_CHECK_EQUAL(segment_number_connection3, 3);
     BOOST_CHECK_EQUAL(center_depth_connection3, 2562.5);
 
     const Opm::Connection& connection5 = new_connection_set->get(4);
-    const int segment_number_connection5 = connection5.segment_number;
-    const double center_depth_connection5 = connection5.center_depth;
+    const int segment_number_connection5 = connection5.segment();
+    const double center_depth_connection5 = connection5.depth();
     BOOST_CHECK_EQUAL(segment_number_connection5, 6);
     BOOST_CHECK_CLOSE(center_depth_connection5, 2538.83, 0.001);
 
     const Opm::Connection& connection6 = new_connection_set->get(5);
-    const int segment_number_connection6 = connection6.segment_number;
-    const double center_depth_connection6 = connection6.center_depth;
+    const int segment_number_connection6 = connection6.segment();
+    const double center_depth_connection6 = connection6.depth();
     BOOST_CHECK_EQUAL(segment_number_connection6, 6);
     BOOST_CHECK_CLOSE(center_depth_connection6,  2537.83, 0.001);
 
     const Opm::Connection& connection7 = new_connection_set->get(6);
-    const int segment_number_connection7 = connection7.segment_number;
-    const double center_depth_connection7 = connection7.center_depth;
+    const int segment_number_connection7 = connection7.segment();
+    const double center_depth_connection7 = connection7.depth();
     BOOST_CHECK_EQUAL(segment_number_connection7, 7);
     BOOST_CHECK_EQUAL(center_depth_connection7, 2534.5);
 }

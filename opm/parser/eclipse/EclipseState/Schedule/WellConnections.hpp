@@ -35,10 +35,9 @@ namespace Opm {
         void addConnection(int i, int j , int k ,
                            double depth,
                            WellCompletion::StateEnum state ,
-                           const Value<double>& connectionTransmissibilityFactor,
-                           const Value<double>& diameter,
-                           const Value<double>& skinFactor,
-                           const Value<double>& Kh,
+                           double CF,
+                           double Kh,
+                           double rw,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
         void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
@@ -47,6 +46,7 @@ namespace Opm {
 
         void add( Connection );
         size_t size() const;
+        const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
         Connection& getFromIJK(const int i, const int j, const int k);
@@ -77,10 +77,9 @@ namespace Opm {
                            int complnum,
                            double depth,
                            WellCompletion::StateEnum state ,
-                           const Value<double>& connectionTransmissibilityFactor,
-                           const Value<double>& diameter,
-                           const Value<double>& skinFactor,
-                           const Value<double>& Kh,
+                           double CF,
+                           double Kh,
+                           double rw,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
 

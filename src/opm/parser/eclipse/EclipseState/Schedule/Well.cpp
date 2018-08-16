@@ -335,7 +335,7 @@ namespace Opm {
                                          + ". Can not infer reference depth" );
         }
 
-        return completions.get( 0 ).center_depth;
+        return completions.get( 0 ).depth();
     }
 
     void Well::setRefDepth( size_t timestep, double depth ) {
@@ -356,11 +356,11 @@ namespace Opm {
 
         const auto& connections = this->getConnections(time_step);
         for (const auto& conn : connections) {
-            auto pair = completions.find( conn.complnum );
+            auto pair = completions.find( conn.complnum() );
             if (pair == completions.end())
-                completions[conn.complnum] = {};
+                completions[conn.complnum()] = {};
 
-            pair = completions.find(conn.complnum);
+            pair = completions.find(conn.complnum());
             pair->second.push_back(conn);
         }
 
@@ -641,7 +641,7 @@ namespace Opm {
 
         for (auto c : this->getConnections(time_step)) {
             if (match(c))
-                c.complnum = complnum;
+                c.setComplnum( complnum );
 
             new_connections->add(c);
         }
@@ -654,8 +654,8 @@ namespace Opm {
             if (!match_eq(c.getI(), record, "I" , -1)) return false;
             if (!match_eq(c.getJ(), record, "J" , -1)) return false;
             if (!match_eq(c.getK(), record, "K", -1))  return false;
-            if (!match_ge(c.complnum, record, "C1"))     return false;
-            if (!match_le(c.complnum, record, "C2"))     return false;
+            if (!match_ge(c.complnum(), record, "C1"))     return false;
+            if (!match_le(c.complnum(), record, "C2"))     return false;
 
             return true;
         };
@@ -664,7 +664,7 @@ namespace Opm {
 
         for (auto c : this->getConnections(time_step)) {
             if (match(c))
-                c.state = status;
+                c.setState( status );
 
             new_connections->add(c);
         }
@@ -692,8 +692,8 @@ namespace Opm {
     void Well::handleWPIMULT(const DeckRecord& record, size_t time_step) {
 
         auto match = [=]( const Connection &c) -> bool {
-            if (!match_ge(c.complnum, record, "FIRST")) return false;
-            if (!match_le(c.complnum, record, "LAST"))  return false;
+            if (!match_ge(c.complnum(), record, "FIRST")) return false;
+            if (!match_le(c.complnum(), record, "LAST"))  return false;
             if (!match_eq(c.getI()  , record, "I", -1)) return false;
             if (!match_eq(c.getJ()  , record, "J", -1)) return false;
             if (!match_eq(c.getK()  , record, "K", -1)) return false;
@@ -706,7 +706,7 @@ namespace Opm {
 
         for (auto c : this->getConnections(time_step)) {
             if (match(c))
-                c.wellPi *= wellPi;
+                c.scaleWellPi( wellPi );
 
             new_connections->add(c);
         }

@@ -239,8 +239,7 @@ namespace Opm {
             const int k = compseg.m_k;
 
             Connection& connection = connection_set.getFromIJK( i, j, k );
-            connection.segment_number = compseg.segment_number;
-            connection.center_depth = compseg.center_depth;
+            connection.updateSegment(compseg.segment_number, compseg.center_depth);
         }
 
         for (size_t ic = 0; ic < connection_set.size(); ++ic) {
