@@ -47,7 +47,7 @@ macro (opm_defaults opm)
   endif(NOT PRECOMPILE_HEADERS)
 
   # Use of OpenMP is considered experimental
-  set (USE_OPENMP_DEFAULT OFF)
+  set (USE_OPENMP_DEFAULT ON)
 
   # if we are on a system where CMake 2.6 is the default (Hi RHEL 6!),
   # the configuration files for Boost will trip up the library paths
