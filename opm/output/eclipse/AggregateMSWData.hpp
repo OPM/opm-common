@@ -30,6 +30,7 @@
 namespace Opm {
     class Phases;
     class Schedule;
+    class EclipseGrid;
     class UnitSystem;
 } // Opm
 
@@ -51,7 +52,8 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         void captureDeclaredMSWData(const Opm::Schedule& sched,
                                      const std::size_t    rptStep,
 				     const Opm::UnitSystem& units,
-				     const std::vector<int>& inteHead);
+				     const std::vector<int>& inteHead,
+				     const Opm::EclipseGrid&  grid);
 
         /// Retrieve Integer Multisegment well data Array.
         const std::vector<int>& getISeg() const

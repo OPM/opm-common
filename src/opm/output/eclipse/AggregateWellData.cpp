@@ -433,7 +433,7 @@ namespace {
             // Initial data by Statoil ASA.
             return { // 122 Items (0..121)
                 // 0     1      2      3      4      5
-                zero , zero , zero , zero ,infty , zero,    //   0..  5  ( 0)
+                infty , infty , infty , infty ,infty , infty,    //   0..  5  ( 0)
                 one  , zero , zero , zero , zero , 1.0e-05f, //   6.. 11  ( 1)
                 zero , zero , infty, infty, zero , dflt ,    //  12.. 17  ( 2)
                 infty, infty, infty, infty, infty, zero ,    //  18.. 23  ( 3)

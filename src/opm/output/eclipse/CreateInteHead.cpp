@@ -161,7 +161,7 @@ namespace {
         const auto nsegmx = wsd.maxSegmentsPerWell();
         const auto nlbrmx = wsd.maxLateralBranchesPerWell();
         const auto nisegz = 22;  // Number of entries per segment in ISEG.
-        const auto nrsegz = 140; // Number of entries per segment in RSEG array.
+        const auto nrsegz = 146; // Number of entries per segment in RSEG array.  (Eclipse v.2017)
         const auto nilbrz = 10;  // Number of entries per segment in ILBR array.
 
         return {

@@ -198,7 +198,7 @@ enum index : std::vector<int>::size_type {
   NSEGMX	=	VI::intehead::NSEGMX	,		//	NSEGMX	0	Item 2 in WSEGDIMS keyword (runspec section)	NSEGMX = maximum number of segments per well
   NLBRMX	=	VI::intehead::NLBRMX	,		//	NLBRMX	0	Item 3 in WSEGDIMS keyword (runspec section)	NLBRMX = maximum number of lateral branches per well
   NISEGZ	=	VI::intehead::NISEGZ	,		//	22	0	22	NISEGZ = number of entries per segment in ISEG array
-  NRSEGZ	=	VI::intehead::NRSEGZ	,		//	140	0	140	NRSEGZ = number of entries per segment in RSEG array
+  NRSEGZ	=	VI::intehead::NRSEGZ	,		//	146	0	140	NRSEGZ = number of entries per segment in RSEG array
   NILBRZ	=	VI::intehead::NILBRZ	,		//	10		10	NILBRZ = number of entries per segment in ILBR array
   RSTSIZE	=	181	,		//	0
   ih_182	=	182	,		//	0

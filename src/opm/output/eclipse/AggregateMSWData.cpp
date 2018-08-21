@@ -134,15 +134,19 @@ namespace {
 
     int firstConnectionInSegment(const Opm::WellConnections& compSet,
                                  const Opm::WellSegments&    segSet,
-                                 const size_t              segIndex)
+                                 const size_t              segIndex,
+				 const Opm::EclipseGrid&  grid)
     {
 	auto segNumber  = segSet[segIndex].segmentNumber();
 	int firstConnection = std::numeric_limits<int>::max();
 	for (auto it : compSet) {
 	    auto c_Segment  = it.segment_number;
-	    //auto c_SeqIndex = it.seqIndex;
 	    auto c_SeqIndex = it.getSeqIndex();
-	    if ((segNumber == c_Segment) && (c_SeqIndex < firstConnection)) {
+	    const auto ci = it.getI();
+	    const auto cj = it.getJ();
+	    const auto ck = it.getK();
+	    const auto c_active = grid.cellActive(ci, cj, ck);
+	    if ((segNumber == c_Segment) && (c_SeqIndex < firstConnection) && c_active) {
 		firstConnection = c_SeqIndex;
 	    }
 	}
@@ -303,7 +307,9 @@ namespace {
         void staticContrib(const Opm::Well&        well,
                            const std::size_t       rptStep,
                            const std::vector<int>& inteHead,
-                           ISegArray&              iSeg)
+			   const Opm::EclipseGrid&  grid,
+                           ISegArray&              iSeg
+			  )
         {
             if (well.isMultiSegment(rptStep)) {
 		//loop over segment set and print out information
@@ -320,7 +326,7 @@ namespace {
 		    iSeg[iS + 4] = noInFlowBranches(welSegSet, ind);
 		    iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
 		    iSeg[iS + 6] = noConnectionsSegment(completionSet, welSegSet, ind);
-		    iSeg[iS + 7] = firstConnectionInSegment(completionSet, welSegSet, ind);
+		    iSeg[iS + 7] = firstConnectionInSegment(completionSet, welSegSet, ind, grid);
 		    iSeg[iS + 8] = iSeg[iS+0];
 		}
 	    }
@@ -524,7 +530,8 @@ Opm::RestartIO::Helpers::AggregateMSWData::
 captureDeclaredMSWData(const Schedule&         sched,
                        const std::size_t       rptStep,
 		       const Opm::UnitSystem& units,
-                       const std::vector<int>& inteHead)
+                       const std::vector<int>& inteHead,
+		       const Opm::EclipseGrid&  grid)
 {
     const auto& wells = sched.getWells(rptStep);
     auto msw = std::vector<const Opm::Well*>{};
@@ -536,12 +543,12 @@ captureDeclaredMSWData(const Schedule&         sched,
 
     // Extract Contributions to ISeg Array
     {
-        MSWLoop(msw, [rptStep, inteHead, this]
+        MSWLoop(msw, [rptStep, inteHead, grid, this]
             (const Well& well, const std::size_t mswID) -> void
         {
             auto imsw = this->iSeg_[mswID];
 
-            ISeg::staticContrib(well, rptStep, inteHead, imsw);
+            ISeg::staticContrib(well, rptStep, inteHead, grid, imsw);
         });
     }
 
