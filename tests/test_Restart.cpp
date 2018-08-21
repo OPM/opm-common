@@ -346,6 +346,66 @@ data::Solution mkSolution( int numCells ) {
     return sol;
 }
 
+Opm::SummaryState sim_state()
+{
+    auto state = Opm::SummaryState{};
+
+    state.add("WOPR:OP_1" ,    1.0);
+    state.add("WWPR:OP_1" ,    2.0);
+    state.add("WGPR:OP_1" ,    3.0);
+    state.add("WVPR:OP_1" ,    4.0);
+    state.add("WOPT:OP_1" ,   10.0);
+    state.add("WWPT:OP_1" ,   20.0);
+    state.add("WGPT:OP_1" ,   30.0);
+    state.add("WVPT:OP_1" ,   40.0);
+    state.add("WWIR:OP_1" ,    0.0);
+    state.add("WGIR:OP_1" ,    0.0);
+    state.add("WWIT:OP_1" ,    0.0);
+    state.add("WGIT:OP_1" ,    0.0);
+    state.add("WWCT:OP_1" ,    0.625);
+    state.add("WGOR:OP_1" ,  234.5);
+    state.add("WBHP:OP_1" ,  314.15);
+    state.add("WGVIR:OP_1",    0.0);
+    state.add("WWVIR:OP_1",    0.0);
+
+    state.add("WOPR:OP_2" ,    0.0);
+    state.add("WWPR:OP_2" ,    0.0);
+    state.add("WGPR:OP_2" ,    0.0);
+    state.add("WVPR:OP_2" ,    0.0);
+    state.add("WOPT:OP_2" ,    0.0);
+    state.add("WWPT:OP_2" ,    0.0);
+    state.add("WGPT:OP_2" ,    0.0);
+    state.add("WVPT:OP_2" ,    0.0);
+    state.add("WWIR:OP_2" ,  100.0);
+    state.add("WGIR:OP_2" ,  200.0);
+    state.add("WWIT:OP_2" , 1000.0);
+    state.add("WGIT:OP_2" , 2000.0);
+    state.add("WWCT:OP_2" ,    0.0);
+    state.add("WGOR:OP_2" ,    0.0);
+    state.add("WBHP:OP_2" ,  400.6);
+    state.add("WGVIR:OP_2", 1234.0);
+    state.add("WWVIR:OP_2", 4321.0);
+
+    state.add("WOPR:OP_3" ,   11.0);
+    state.add("WWPR:OP_3" ,   12.0);
+    state.add("WGPR:OP_3" ,   13.0);
+    state.add("WVPR:OP_3" ,   14.0);
+    state.add("WOPT:OP_3" ,  110.0);
+    state.add("WWPT:OP_3" ,  120.0);
+    state.add("WGPT:OP_3" ,  130.0);
+    state.add("WVPT:OP_3" ,  140.0);
+    state.add("WWIR:OP_3" ,    0.0);
+    state.add("WGIR:OP_3" ,    0.0);
+    state.add("WWIT:OP_3" ,    0.0);
+    state.add("WGIT:OP_3" ,    0.0);
+    state.add("WWCT:OP_3" ,    0.0625);
+    state.add("WGOR:OP_3" , 1234.5);
+    state.add("WBHP:OP_3" ,  314.15);
+    state.add("WGVIR:OP_3",    0.0);
+    state.add("WWVIR:OP_3",   43.21);
+
+    return state;
+}
 
 RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_double) {
     const auto& grid = es.getInputGrid();
@@ -585,15 +645,17 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
         const auto& units = setup.es.getUnits();
         {
             RestartValue restart_value(cells, wells);
-	    Opm::SummaryState sumState;
+            const auto sumState = sim_state();
+
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
+
             RestartIO::save("FILE.UNRST", 1 ,
                             100,
                             restart_value,
                             setup.es,
                             setup.grid,
                             setup.schedule,
-			    sumState);
+                            sumState);
 
             {
                 ecl_file_type * f = ecl_file_open( "FILE.UNRST" , 0 );
@@ -603,8 +665,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                     BOOST_CHECK_EQUAL( ecl_kw_get_header( ex) , "EXTRA" );
                     BOOST_CHECK_EQUAL(  4 , ecl_kw_get_size( ex ));
 
-                    BOOST_CHECK_CLOSE( 10 ,                                                units.to_si( UnitSystem::measure::pressure, ecl_kw_iget_double( ex, 0 )), 0.00001);
-                    BOOST_CHECK_CLOSE( units.from_si( UnitSystem::measure::pressure, 3)  , ecl_kw_iget_double( ex, 3 ),                                              0.00001);
+                    BOOST_CHECK_CLOSE( 10 , units.to_si( UnitSystem::measure::pressure, ecl_kw_iget_double( ex, 0 )), 0.00001);
+                    BOOST_CHECK_CLOSE( units.from_si( UnitSystem::measure::pressure, 3), ecl_kw_iget_double( ex, 3 ), 0.00001);
                 }
                 ecl_file_close( f );
             }
@@ -612,11 +674,17 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
             BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, setup.es, setup.grid , setup.schedule,
                                                 {{"NOT-THIS", UnitSystem::measure::identity, true}}) , std::runtime_error );
             {
-              const auto rst_value = RestartIO::load( "FILE.UNRST" , 1 , { RestartKey("SWAT", UnitSystem::measure::identity),
-                                                                           RestartKey("NO", UnitSystem::measure::identity, false)},
-                setup.es, setup.grid , setup.schedule,
-                {{"EXTRA", UnitSystem::measure::pressure, true},
-                 {"EXTRA2", UnitSystem::measure::identity, false}});
+                const auto rst_value = RestartIO::load(
+                    "FILE.UNRST" , 1 ,
+                    /* solution_keys = */ {
+                        RestartKey("SWAT", UnitSystem::measure::identity),
+                        RestartKey("NO"  , UnitSystem::measure::identity, false)
+                    },
+                    setup.es, setup.grid , setup.schedule,
+                    /* extra_keys = */ {
+                        {"EXTRA" , UnitSystem::measure::pressure, true}  ,
+                        {"EXTRA2", UnitSystem::measure::identity, false}
+                    });
 
                 BOOST_CHECK(!rst_value.hasExtra("EXTRA2"));
                 BOOST_CHECK( rst_value.hasExtra("EXTRA"));
@@ -659,7 +727,8 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
             */
 
             restart_value.addExtra("THRESHPR", UnitSystem::measure::pressure, {0,1});
-	    Opm::SummaryState sumState;
+            const auto sumState = sim_state();
+
             /* THPRES data has wrong size in extra container. */
             BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                                100,
@@ -667,7 +736,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                setup.es,
                                                setup.grid,
                                                setup.schedule,
-					       sumState), std::runtime_error);
+                                               sumState), std::runtime_error);
 
             int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
