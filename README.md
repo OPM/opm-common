@@ -4,37 +4,24 @@
 # Prerequisites:
 
 Clone and build `ecl` from [Statoil/libecl](https://github.com/Statoil/libecl)
-and `opm-parser` from [OPM/opm-parser](https://github.com/OPM/opm-parser).
+and `opm-commonr` from [OPM/opm-common](https://github.com/OPM/opm-common).
 
 ```
 git clone https://github.com/Statoil/libecl
 git clone https://github.com/OPM/opm-parser
 mkdir libecl/build
-mkdir opm-parser/build
+mkdir opm-common/build
 pushd libecl/build
 cmake ..
 make install
 popd
-pushd opm-parser/build
+pushd opm-common/build
 cmake ..
 make install
 ```
 
-# Use the correct version of OPM-Parser:
-
-As of October 2017 the master branch of opm-parser is not compatible with
-sunbeam. To build sunbeam you should check out and build the branch
-`sunbeam-2017.10` of opm-parser:
-```
-git clone git@github.com:OPM/opm-parser
-git checkout sunbeam-2017.10
-...
-...
-```
-
-
 # Quick start (WIP)
-Assumes you have built (and maybe installed) opm-parser
+Assumes you have built (and maybe installed) opm-common
 
 ```bash
 git clone --recursive https://github.com/Statoil/sunbeam
