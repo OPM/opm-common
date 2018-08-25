@@ -20,6 +20,8 @@
 #ifndef OPM_INIT_CONFIG_HPP
 #define OPM_INIT_CONFIG_HPP
 
+#include <string>
+
 #include <opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp>
 
 namespace Opm {
