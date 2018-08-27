@@ -42,7 +42,8 @@ namespace Opm {
                            const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z,
 			   const std::size_t seqIndex = 0,
 			   const double segDistStart= 0.0,
-			   const double segDistEnd= 0.0);
+			   const double segDistEnd= 0.0,
+			   const bool defaultSatTabId = true);
         void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
 
         using const_iterator = std::vector< Connection >::const_iterator;
@@ -87,7 +88,8 @@ namespace Opm {
                            const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z,
 			   const std::size_t seqIndex = 0,
 			   const double segDistStart= 0.0,
-			   const double segDistEnd= 0.0);
+			   const double segDistEnd= 0.0,
+			   const bool defaultSatTabId = true);
 
         std::vector< Connection > m_connections;
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);

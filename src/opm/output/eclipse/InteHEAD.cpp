@@ -68,8 +68,8 @@ enum index : std::vector<int>::size_type {
   NSCAQZ	=	VI::intehead::NSCAQZ	,		//	2	0
   NACAQZ	=	VI::intehead::NACAQZ	,		//	4	0
   ih_048	=	48	,		//	0	0
-  ih_049	=	49	,		//	0	0
-  ih_050	=	50	,		//	0	0
+  ih_049	=	49	,		//	1	// has been determined by testing
+  ih_050	=	50	,		//	1	// has been determined by testing
   ih_051	=	51	,		//	0	0
   ih_052	=	52	,		//	0	0
   ih_053	=	53	,		//	0	0
@@ -622,6 +622,10 @@ Opm::RestartIO::InteHEAD::variousParam(const int version,
 {
     this->data_[VERSION] = version;
     this->data_[IPROG]   = iprog;
+    // ih_049: Usage unknown, value fixed across reference cases
+    this->data_[ih_049]  = 1;
+    // ih_050: Usage unknown, value fixed across reference cases
+    this->data_[ih_050]  = 1;
     // ih_076: Usage unknown, experiments fails (zero determinant in well message) with too low numbers. 5 is highest observed across reference cases.
     this->data_[ih_076]  = 2;
     // ih_101: Usage unknown, value fixed across reference cases.

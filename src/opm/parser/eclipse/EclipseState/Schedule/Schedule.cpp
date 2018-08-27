@@ -209,7 +209,7 @@ namespace Opm {
             handleWELSEGS(keyword, currentStep);
 
         else if (keyword.name() == "COMPSEGS")
-            handleCOMPSEGS(keyword, currentStep);
+            handleCOMPSEGS(keyword, currentStep, grid);
 
         else if (keyword.name() == "WELOPEN")
             handleWELOPEN(keyword, currentStep, parseContext);
@@ -1352,11 +1352,11 @@ namespace Opm {
         well.handleWELSEGS(keyword, currentStep);WellSegments newSegmentset;
     }
 
-    void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid) {
         const auto& record1 = keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         auto& well = this->m_wells.get( well_name );
-        well.handleCOMPSEGS(keyword, currentStep);
+        well.handleCOMPSEGS(keyword, grid, currentStep);
     }
 
     void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {

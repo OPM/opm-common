@@ -686,10 +686,10 @@ namespace Opm {
     }
 
 
-    void Well::handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step) {
+    void Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, size_t time_step) {
         const auto& segment_set = this->getWellSegments(time_step);
         const auto& completion_set = this->getConnections( time_step );
-        WellConnections * new_connection_set = newConnectionsWithSegments(keyword, completion_set, segment_set);
+        WellConnections * new_connection_set = newConnectionsWithSegments(keyword, completion_set, segment_set, grid);
         this->updateWellConnections(time_step, new_connection_set);
     }
 

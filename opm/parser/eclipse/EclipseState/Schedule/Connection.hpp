@@ -50,7 +50,8 @@ namespace Opm {
                    const WellCompletion::DirectionEnum direction,
 		   const std::size_t seqIndex,
 		   const double segDistStart,
-		   const double segDistEnd
+		   const double segDistEnd,
+		   const bool defaultSatTabId
 		  );
 
 
@@ -75,8 +76,10 @@ namespace Opm {
         void scaleWellPi(double wellPi);
         void updateSegment(int segment_number, double center_depth, std::size_t seqIndex);
 	const std::size_t& getSeqIndex() const;
+	const bool& getDefaultSatTabId() const;
 	const std::size_t& getCompSegSeqIndex() const;
 	void setCompSegSeqIndex(std::size_t index);
+	void setDefaultSatTabId(bool id);
 	const double& getSegDistStart() const;
 	const double& getSegDistEnd() const;
 	void setSegDistStart(const double& distStart);
@@ -98,6 +101,7 @@ namespace Opm {
 	std::size_t m_seqIndex;
 	double m_segDistStart;
 	double m_segDistEnd;
+	bool m_defaultSatTabId;
 	std::size_t m_compSeg_seqIndex=0;
 
         // related segment number

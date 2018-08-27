@@ -149,11 +149,11 @@ namespace {
             iConn[5] = (conn.state == ConnState::OPEN)
                 ? 1 : -1000;
 
-            iConn[6] = conn.sat_tableId;
+            iConn[6] = conn.getDefaultSatTabId() ? 0 : conn.sat_tableId;
 
             // Don't support differing sat-func tables for
             // draining and imbibition curves at connections.
-            iConn[9] = conn.sat_tableId;
+            iConn[9] = iConn[6];
 
             iConn[12] = std::abs(conn.complnum);
             iConn[13] = conn.dir;

@@ -235,20 +235,22 @@ namespace Opm {
     }
 
     void Compsegs::updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
+						const EclipseGrid& grid,
                                                 WellConnections& connection_set) {
 
         for( const auto& compseg : compsegs ) {
             const int i = compseg.m_i;
             const int j = compseg.m_j;
             const int k = compseg.m_k;
+	    if (grid.cellActive(i, j, k)) {
+		Connection& connection = connection_set.getFromIJK( i, j, k );
+		connection.updateSegment(compseg.segment_number, compseg.center_depth,compseg.m_seqIndex);
 
-            Connection& connection = connection_set.getFromIJK( i, j, k );
-            connection.updateSegment(compseg.segment_number, compseg.center_depth,compseg.m_seqIndex);
-
-	    //keep connection sequence number from input sequence
-            connection.setCompSegSeqIndex(compseg.m_seqIndex);
-	    connection.setSegDistStart(compseg.m_distance_start);
-	    connection.setSegDistEnd(compseg.m_distance_end);
+		//keep connection sequence number from input sequence
+		connection.setCompSegSeqIndex(compseg.m_seqIndex);
+		connection.setSegDistStart(compseg.m_distance_start);
+		connection.setSegDistEnd(compseg.m_distance_end);
+	    }
         }
 
         for (size_t ic = 0; ic < connection_set.size(); ++ic) {

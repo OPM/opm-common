@@ -164,7 +164,7 @@ namespace Opm
         void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);
+        void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);

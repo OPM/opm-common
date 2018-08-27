@@ -47,7 +47,8 @@ namespace Opm {
                            const WellCompletion::DirectionEnum direction,
 			   const std::size_t seqIndex,
 			   const double segDistStart,
-			   const double segDistEnd
+			   const double segDistEnd,
+			   const bool defaultSatTabId
 			  )
         : direction(direction),
           center_depth(depth),
@@ -60,7 +61,8 @@ namespace Opm {
           ijk({i,j,k}),
           m_seqIndex(seqIndex),
           m_segDistStart(segDistStart),
-          m_segDistEnd(segDistEnd)
+          m_segDistEnd(segDistEnd),
+          m_defaultSatTabId(defaultSatTabId)
     {}
 
     /*bool Connection::sameCoordinate(const Connection& other) const {
@@ -102,6 +104,10 @@ namespace Opm {
         return m_seqIndex;
     }
     
+    const bool& Connection::getDefaultSatTabId() const {
+        return m_defaultSatTabId;
+    }
+    
     const std::size_t& Connection::getCompSegSeqIndex() const {
         return m_compSeg_seqIndex;
     }
@@ -121,6 +127,10 @@ namespace Opm {
     
     void Connection::setCompSegSeqIndex(std::size_t index) {
         m_compSeg_seqIndex = index;
+    }
+    
+    void Connection::setDefaultSatTabId(bool id) {
+        m_defaultSatTabId = id;
     }
     
     void Connection::setSegDistStart(const double& distStart) {

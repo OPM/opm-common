@@ -140,11 +140,12 @@ namespace {
                                         const WellCompletion::DirectionEnum direction,
 				        const std::size_t seqIndex,
 				        const double segDistStart,
-					const double segDistEnd)
+					const double segDistEnd,
+					const bool defaultSatTabId)
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction, seqIndex, segDistStart, segDistEnd);
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction, seqIndex, segDistStart, segDistEnd, defaultSatTabId);
         this->add(conn);
     }
 
@@ -160,7 +161,8 @@ namespace {
                                         const WellCompletion::DirectionEnum direction,
 					const std::size_t seqIndex,
 					const double segDistStart,
-					const double segDistEnd)
+					const double segDistEnd,
+					const bool defaultSatTabId)
     {
         int complnum = -(this->m_connections.size() + 1);
         this->addConnection(i,
@@ -176,7 +178,8 @@ namespace {
                             direction,
 			    seqIndex,
 			    segDistStart,
-			    segDistEnd);
+			    segDistEnd,
+			    defaultSatTabId);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
@@ -281,8 +284,9 @@ namespace {
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
                                       same_ijk );
-
+	    // Only add connection for active grid cells
             if (prev == this->m_connections.end()) {
+		if (grid.cellActive(I, J, k)) {
 		std::size_t noConn = this->m_connections.size();
                 this->addConnection(I,J,k,
                                     grid.getCellDepth( I,J,k ),
@@ -292,7 +296,8 @@ namespace {
                                     rw,
                                     satTableId,
                                     direction,
-				    noConn, 0., 0. );
+				    noConn, 0., 0., defaultSatTable);
+		}
             } else {
 		std::size_t noConn = prev->getSeqIndex();
                 // The complnum value carries over; the rest of the state is fully specified by
@@ -307,7 +312,7 @@ namespace {
                                    rw,
                                    satTableId,
                                    direction,
-				   noConn, 0., 0. );
+				   noConn, 0., 0., defaultSatTable);
             }
         }
     }

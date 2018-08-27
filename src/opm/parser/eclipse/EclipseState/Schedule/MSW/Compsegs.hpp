@@ -25,12 +25,15 @@
 #include <string>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
 
     class WellConnections;
     class DeckKeyword;
     class WellSegments;
+    class EclipseGrid;
 
     struct Compsegs {
         int m_i;
@@ -62,6 +65,7 @@ namespace Opm {
 
         // update the segment related information for Connections
         static void updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
+						 const EclipseGrid& grid,
                                                  WellConnections& connection_set);
 
     };

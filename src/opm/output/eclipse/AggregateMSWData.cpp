@@ -132,28 +132,7 @@ namespace {
 	return firstSegNo;
     }
 
-    int firstConnectionInSegment(const Opm::WellConnections& compSet,
-                                 const Opm::WellSegments&    segSet,
-                                 const size_t              segIndex,
-				 const Opm::EclipseGrid&  grid)
-    {
-	auto segNumber  = segSet[segIndex].segmentNumber();
-	int firstConnection = std::numeric_limits<int>::max();
-	for (auto it : compSet) {
-	    auto c_Segment  = it.segment_number;
-	    auto c_SeqIndex = it.getSeqIndex();
-	    const auto ci = it.getI();
-	    const auto cj = it.getJ();
-	    const auto ck = it.getK();
-	    const auto c_active = grid.cellActive(ci, cj, ck);
-	    if ((segNumber == c_Segment) && (c_SeqIndex < firstConnection) && c_active) {
-		firstConnection = c_SeqIndex;
-	    }
-	}
-	return (firstConnection == std::numeric_limits<int>::max()) ? 0: firstConnection+1;
-    }
-
-    int noConnectionsSegment(const Opm::WellConnections& compSet,
+     int noConnectionsSegment(const Opm::WellConnections& compSet,
                              const Opm::WellSegments&    segSet,
                              const size_t              segIndex)
     {
@@ -168,6 +147,46 @@ namespace {
 
 	return noConnections;
     }
+    
+    int sumConnectionsSegment(const Opm::WellConnections& compSet,
+                                 const Opm::WellSegments&    segSet,
+                                 const size_t              segIndex)
+    {
+      // This function returns (for a given segment) the sum of number of connections for each segment
+      // with lower segment index than the currnet segment
+      // If the segment contains no connections, the number returned is zero.
+	int sumConn = 0;
+	if (noConnectionsSegment(compSet, segSet, segIndex) > 0) {
+	// add up the number of connections for å segments with lower segment index than current segment
+	    auto segNumber  = segSet[segIndex].segmentNumber();
+	    for (std::size_t i_seg = 1; i_seg <= segNumber; i_seg++) {
+		auto  ind = segSet.segmentNumberToIndex(i_seg);
+		sumConn += noConnectionsSegment(compSet, segSet, ind);
+	    }
+	}
+	return sumConn;
+    }
+
+    
+    /*int firstConnectionInSegment(const Opm::WellConnections& compSet,
+                                 const Opm::WellSegments&    segSet,
+                                 const size_t              segIndex,
+				 const Opm::EclipseGrid&  grid)
+    {
+	auto segNumber  = segSet[segIndex].segmentNumber();
+	int firstConnection = std::numeric_limits<int>::max();
+	for (auto it : compSet) {
+	    auto c_Segment  = it.segment_number;
+	    auto c_SeqIndex = it.getSeqIndex();
+	    const auto c_active = grid.cellActive(it.getI(), it.getJ(), it.getK());
+	    if ((segNumber == c_Segment) && (c_SeqIndex < firstConnection) && c_active) {
+		firstConnection = c_SeqIndex;
+	    }
+	}
+	return (firstConnection == std::numeric_limits<int>::max()) ? 0: firstConnection+1;
+    }*/
+
+
 
     std::vector<size_t>
     inflowSegmentsIndex(const Opm::WellSegments& segSet, size_t segIndex) {
@@ -195,8 +214,28 @@ namespace {
 	}
 	return noIFBr;
     }
-
+    //find the number of inflow branches (different from the current branch)
     int sumNoInFlowBranches(const Opm::WellSegments& segSet, size_t segIndex) {
+	int sumIFB = 0;
+	auto segBranch     = segSet[segIndex].branchNumber();
+	const auto iSInd = inflowSegmentsIndex(segSet, segIndex);
+	for (auto ind : iSInd) {
+	    auto inflowBranch = segSet[ind].branchNumber();
+	    // if inflow segment belongs to different branch add contribution
+	    if (segBranch != inflowBranch) {
+		sumIFB+=1;
+		// search recursively down this branch to find more inflow branches
+		sumIFB += sumNoInFlowBranches(segSet, ind);
+	    }
+	    /*else {
+		// search down the branch to find more inflow branches
+		sumIFB += sumNoInFlowBranches(segSet, ind);
+	    }*/
+	}
+	return sumIFB;
+    }
+    
+    /*int sumNoInFlowBranches(const Opm::WellSegments& segSet, size_t segIndex) {
 	int sumIFB = 0;
 	size_t indS = segIndex;
 	bool nonSeg = false;
@@ -209,9 +248,79 @@ namespace {
 	    nonSeg = (segNumber == 1) ? true : false;
 	}
 	return sumIFB;
+    }*/
+
+     std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet, const std::size_t segIndex) {
+	//auto branches =  SegmentSetBranches(segSet);
+	//std::size_t noBranches = branches.size();
+	//std::size_t noSegments = segSet.size();
+	//std::cout << "segmentOrder - noBranches: " << noBranches << std::endl;
+	//std::cout << "segmentOrder - noSegments: " << noSegments << std::endl;
+	std::vector<size_t> ordSegNumber;
+	std::vector<size_t> tempOrdVect;
+	std::vector<size_t> segIndCB;
+	// Store "heel" segment since that will not always be at the end of the list
+	segIndCB.push_back(segIndex);
+	std::size_t sInd = segIndex;
+	std::size_t newSInd = segIndex;
+	auto origBranchNo = segSet[segIndex].branchNumber();
+	// loop down branch to find all segments in branch and number from "toe" to "heel"
+	std::cout << "segmentOrder - segIndex: " << segIndex  << std::endl;
+	while (newSInd < segSet.size()) {
+	    //if (segSet[newSInd].branchNumber() == origBranchNo) {
+		const auto iSInd = inflowSegmentsIndex(segSet, newSInd);
+		if (iSInd.size() > 0) {
+		    for (auto ind : iSInd) {
+			auto inflowBranch = segSet[ind].branchNumber();
+			if (origBranchNo == inflowBranch) {
+			    // if inflow segment belongs to same branch add contribution
+			    segIndCB.insert(segIndCB.begin(), ind);
+			    // search recursively down this branch to find more inflow branches
+			    newSInd = ind;
+			    std::cout << "segmentOrder - origBranch - inflowBranch: " << inflowBranch << "  ind: " << ind  << std::endl;
+			}
+			else {
+			    // if inflow segment belongs to different branch, start new search
+			    std::cout << "segmentOrder - newBranch - inflowBranch: " << inflowBranch << std::endl;
+			    auto nSOrd = segmentOrder(segSet, ind);
+			    // copy the segments already found and indexed into the total ordered segment vector
+			    ordSegNumber.resize(nSOrd.size(),0);
+			    for (std::size_t indOS = 0; indOS < nSOrd.size(); indOS++) {
+				ordSegNumber[indOS] = nSOrd[indOS];
+				std::cout << "segmentOrder - newBranch - ordSegNumber[indOS] " << indOS << "  nSOrd: " <<  nSOrd[indOS] << std::endl;
+			    }
+			    // increment the local branch sequence number counter
+			}
+		    }
+		}
+		else {
+		    // have come to toe of current branch - store segment indicies of current branch
+		    std::cout << "segmentOrder -  store segments origBranchNo " <<  origBranchNo << std::endl;
+		    for (std::size_t indOS = 0; indOS < segIndCB.size(); indOS++) {
+			ordSegNumber.push_back(segIndCB[indOS]);
+			std::cout << "segmentOrder - origBranchNo- indOS " << indOS << "  segIndCB: " <<  segIndCB[indOS] << std::endl;
+		    }
+		    // set new index to exit while loop
+		    newSInd = segSet.size();
+		}
+	    //}
+	}
+
+	std::cout << "end section segmentOrder - origBranchNo: " << origBranchNo << std::endl;
+	if (origBranchNo == 1) {
+	    // make the vector of ordered segments
+	    tempOrdVect.resize(ordSegNumber.size());
+	    for (std::size_t ov_ind = 0; ov_ind < ordSegNumber.size(); ov_ind++) {
+		tempOrdVect[ordSegNumber[ov_ind]] = ov_ind+1;
+		std::cout << "segmentOrder - Reorder segments - ov_ind " << ov_ind << "  tempOrdVect[ordSegNumber[ov_ind]] " <<  tempOrdVect[ordSegNumber[ov_ind]] << std::endl;
+	    }
+	    return tempOrdVect;
+	} else {
+	    return ordSegNumber;
+	}
     }
 
-    int noUpstreamSeg(const Opm::WellSegments& segSet, size_t segIndex) {
+        /*int noUpstreamSeg(const Opm::WellSegments& segSet, size_t segIndex) {
 	auto branch = segSet[segIndex].branchNumber();
 	int noUpstrSeg  = 1;
 	size_t ind = segIndex;
@@ -243,8 +352,10 @@ namespace {
 	ind = indMainBranch;
 	}
 	return noUpstrSeg;
-    }
-
+    }*/
+    
+    
+    
     int inflowSegmentCurBranch(const Opm::WellSegments& segSet, size_t segIndex) {
 	auto branch = segSet[segIndex].branchNumber();
 	auto segNumber  = segSet[segIndex].segmentNumber();
@@ -316,17 +427,23 @@ namespace {
 		auto welSegSet = well.getWellSegments(rptStep);
 		auto completionSet = well.getConnections(rptStep);
 		auto noElmSeg = nisegz(inteHead);
+		std::size_t segmentInd = 0;
+		auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
+		std::cout << "Ordered segment index: " << std::endl;
+		for (std::size_t loopInd = 0; loopInd < orderedSegmentNo.size(); loopInd++) {
+		    std::cout << "loopInd: " << loopInd << "  ordSegNo: " << orderedSegmentNo[loopInd] << std::endl;
+		}
 		for (size_t ind_seg = 1; ind_seg <= welSegSet.size(); ind_seg++) {
 		    auto ind = welSegSet.segmentNumberToIndex(ind_seg);
 		    auto iS = (ind_seg-1)*noElmSeg;
-		    iSeg[iS + 0] = noUpstreamSeg(welSegSet, ind);
+		    iSeg[iS + 0] = orderedSegmentNo[ind];
 		    iSeg[iS + 1] = welSegSet[ind].outletSegment();
 		    iSeg[iS + 2] = inflowSegmentCurBranch(welSegSet, ind);
 		    iSeg[iS + 3] = welSegSet[ind].branchNumber();
 		    iSeg[iS + 4] = noInFlowBranches(welSegSet, ind);
 		    iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
 		    iSeg[iS + 6] = noConnectionsSegment(completionSet, welSegSet, ind);
-		    iSeg[iS + 7] = firstConnectionInSegment(completionSet, welSegSet, ind, grid);
+		    iSeg[iS + 7] = sumConnectionsSegment(completionSet, welSegSet, ind);
 		    iSeg[iS + 8] = iSeg[iS+0];
 		}
 	    }

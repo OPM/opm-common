@@ -247,7 +247,7 @@ createInteHead(const EclipseState& es,
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
 	.ngroups(getNoGroups(sched, lookup_step))
-        .variousParam       (2017, 100)  // Output should be compatible with Eclipse 100, 2017 version.
+        .variousParam       (201702, 100)  // Output should be compatible with Eclipse 100, 2017.02 version.
         ;
 
     return ih.data();

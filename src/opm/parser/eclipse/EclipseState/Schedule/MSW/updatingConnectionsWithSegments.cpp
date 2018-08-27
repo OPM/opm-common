@@ -18,19 +18,21 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include "Compsegs.hpp"
 
 
 namespace Opm {
     WellConnections * newConnectionsWithSegments(const DeckKeyword& compsegs,
                                                  const WellConnections& input_connections,
-                                                 const WellSegments& segment_set)
+                                                 const WellSegments& segment_set,
+						 const EclipseGrid& grid)
     {
         WellConnections * new_connection_set = new WellConnections(input_connections);
 
         std::vector<Compsegs> compsegs_vector = Compsegs::compsegsFromCOMPSEGSKeyword( compsegs );
         Compsegs::processCOMPSEGS(compsegs_vector, segment_set);
-        Compsegs::updateConnectionsWithSegment(compsegs_vector, *new_connection_set);
+        Compsegs::updateConnectionsWithSegment(compsegs_vector, grid, *new_connection_set);
         return new_connection_set;
     }
 }
