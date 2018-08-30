@@ -47,6 +47,7 @@ namespace Opm {
                 std::vector<std::shared_ptr<double>> influx_coeff; // Size = size(global_index)
                 std::vector<double> influx_multiplier; // Size = size(global_index)
                 std::vector<int> reservoir_face_dir; // Size = size(global_index)
+                std::vector<int> record_index;
             };
 
             Aquancon(const EclipseGrid& grid, const Deck& deck);
@@ -55,7 +56,7 @@ namespace Opm {
     
         private:
 
-            void logic_application(std::vector<Aquancon::AquanconOutput>& output_vector);
+            std::vector<Aquancon::AquanconOutput> logic_application(const std::vector<Aquancon::AquanconOutput> original_vector);
 
             void collate_function(std::vector<Aquancon::AquanconOutput>& output_vector, 
                                   std::vector<Opm::AquanconRecord>& m_aqurecord, 

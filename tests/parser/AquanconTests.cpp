@@ -50,6 +50,10 @@ inline Deck createAQUANCONDeck() {
         "\n"
         "AQUANCON\n"
         "   1      1  1  1    1   1  1  J-  1.0 1.0 NO /\n"
+        "   1      1  3  1    3   3  3  I+  0.5 1.0 NO /\n"
+        "   1      1  3  1    3   3  3  J+  0.75 1.0 NO /\n"
+        "   1      1  3  1    3   3  3  J-  2.75 1.0 NO /\n"
+        "   1      2  3  2    3   1  1  I+  2.75 1.0 NO /\n"
         "/ \n";
 
     Parser parser;
@@ -65,13 +69,31 @@ inline std::vector<Aquancon::AquanconOutput> init_aquancon(){
     return aquifers;
 }
 
+inline std::vector<Aquancon::AquanconOutput> fill_result(){
+    auto deck = createAQUANCONDeck();
+    EclipseState eclState( deck );
+    Aquancon aqucon( eclState.getInputGrid(), deck);
+    std::vector<Aquancon::AquanconOutput> aquifers = aqucon.getAquOutput();
+
+    return aquifers;
+}
+
 BOOST_AUTO_TEST_CASE(AquanconTest){
     std::vector< Aquancon::AquanconOutput > aquifers = init_aquancon();
-    for (const auto& it : aquifers){
-        for (size_t i = 0; i < it.global_index.size(); ++i){
-            BOOST_CHECK_EQUAL(it.aquiferID , 1);
-            BOOST_CHECK_EQUAL(it.global_index.at(i) , 0);
-            BOOST_CHECK_EQUAL(it.reservoir_face_dir.at(i) , 8);
-        }
-    }    
+    std::vector< Aquancon::AquanconOutput > expected_output = fill_result();
+
+    BOOST_CHECK_EQUAL(aquifers.size(), expected_output.size());
+    for (size_t i = 0; i < aquifers.size(); ++i)
+    {
+        BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).global_index.begin(), aquifers.at(i).global_index.end(),
+                                   expected_output.at(i).global_index.begin(), expected_output.at(i).global_index.end() );
+        BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).influx_coeff.begin(), aquifers.at(i).influx_coeff.end(),
+                                   expected_output.at(i).influx_coeff.begin(), expected_output.at(i).influx_coeff.end() );
+        BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).influx_multiplier.begin(), aquifers.at(i).influx_multiplier.end(),
+                                   expected_output.at(i).influx_multiplier.begin(), expected_output.at(i).influx_multiplier.end() );
+        BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).reservoir_face_dir.begin(), aquifers.at(i).reservoir_face_dir.end(),
+                                   expected_output.at(i).reservoir_face_dir.begin(), expected_output.at(i).reservoir_face_dir.end() );
+        BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).record_index.begin(), aquifers.at(i).record_index.end(),
+                                   expected_output.at(i).record_index.begin(), expected_output.at(i).record_index.end() );
+    }
 }    
