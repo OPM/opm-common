@@ -54,9 +54,11 @@ namespace {
     {
 	// make seqIndex to Connection map
 	std::map <std::size_t, const Opm::Connection*> seqIndConnMap;
+	std::cout << "mapSeqIndexToConnection(" << std::endl;
 	for (const auto & conn : conns) {
 	    std::size_t sI = conn.getSeqIndex();
 	    seqIndConnMap.insert(std::make_pair(sI, &conn));
+	    std::cout << "mCSSITC sI: " << sI  << " conn.getI,J,K" << conn.getI() << " , " << conn.getJ() << " , " << conn.getK() << std::endl;
 	}
 	return seqIndConnMap;
     }
@@ -65,9 +67,11 @@ namespace {
     {
 	// make CompSegSeqIndex to Connection map
 	std::map <std::size_t, const Opm::Connection*> cs_seqIndConnMap;
+	std::cout << "mapCompSegSeqIndexToConnection" << std::endl;
 	for (const auto & conn : conns) {
 	    std::size_t sI = conn.getCompSegSeqIndex();
 	    cs_seqIndConnMap.insert(std::make_pair(sI, &conn));
+	    std::cout << "mCSSITC sI: " << sI  << " conn.getI,J,K" << conn.getI() << " , " << conn.getJ() << " , " << conn.getK() << std::endl;
 	}
 	return cs_seqIndConnMap;
     }
@@ -101,10 +105,12 @@ namespace {
 	    }
 	    std::vector<const Opm::Connection*> connSI;
 	    int niSI = well->getConnections(sim_step).size();
+	    std::cout << "ConnOP - well" << well->name() << " niSI: " << niSI << std::endl;
 	    for (int iSI = 0; iSI < niSI; iSI++) {
 		const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
-		if (searchSI != sIToConn.end()) {
+		if (searchSI != sIToConn.end()) {		  
 		  connSI.push_back(searchSI->second);
+		  std::cout << "ConnOP - iSI " << iSI  << " searchSI->second.getI,J,K" << searchSI->second->getI() << " , " << searchSI->second->getJ() << " , " << searchSI->second->getK() << std::endl;
 		}
 	    }
 	    for (auto nConn = connSI.size(), connID = 0*nConn;

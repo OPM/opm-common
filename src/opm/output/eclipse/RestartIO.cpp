@@ -594,18 +594,28 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
       //  temporarily comment out jals original version
       /*void writeSolution(::Opm::RestartIO::ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
      void writeSolution(::Opm::RestartIO::ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
+    void writeSolution(::Opm::RestartIO::ecl_rst_file_type* rst_file, const data::Solution& solution, const RestartValue::ExtraVector& extra_data, bool write_double) {
     ::Opm::RestartIO::ecl_rst_file_start_solution( rst_file );
     for (const auto& elm: solution) {
 	if (elm.first == "TEMP") continue;
 	if (elm.second.target == data::TargetType::RESTART_SOLUTION)
 	    ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
      }
+     
+     for (const auto& extra_value : extra_data) {
+	const std::string& key = extra_value.first.key;
+	const std::vector<double>& data = extra_value.second;
+	if ( key == "THPRES") 
+	{
+	     ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw(key, data, write_double).get());
+	}
+     }	
      ::Opm::RestartIO::ecl_rst_file_end_solution( rst_file );
 
-     /*for (const auto& elm: solution) {
+     for (const auto& elm: solution) {
 	if (elm.second.target == data::TargetType::RESTART_AUXILIARY)
 	    ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
-     }*/
+     }
   }
 
 
@@ -622,6 +632,7 @@ void writeExtraData(::Opm::RestartIO::ecl_rst_file_type* rst_file, const Restart
 	  /*const std::string& key = extra_value.first;
 	const std::string& key = extra_value.first.key;
 	const std::vector<double>& data = extra_value.second;
+	if (key != "THPRES")
 	{
 	    ::Opm::RestartIO::ecl_kw_type * ecl_kw = ::Opm::RestartIO::ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE , const_cast<double *>(data.data()));
 	    ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw);

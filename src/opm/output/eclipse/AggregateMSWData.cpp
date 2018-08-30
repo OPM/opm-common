@@ -158,10 +158,18 @@ namespace {
 	int sumConn = 0;
 	if (noConnectionsSegment(compSet, segSet, segIndex) > 0) {
 	// add up the number of connections for å segments with lower segment index than current segment
+	    if (segIndex <= 3) {
+	     std::cout << "sumConn... - segIndex, noConnectionsSegment: " << segIndex << " , " << noConnectionsSegment(compSet, segSet, segIndex) << std::endl;
+	    }
 	    auto segNumber  = segSet[segIndex].segmentNumber();
 	    for (std::size_t i_seg = 1; i_seg <= segNumber; i_seg++) {
 		auto  ind = segSet.segmentNumberToIndex(i_seg);
-		sumConn += noConnectionsSegment(compSet, segSet, ind);
+		int addCon = (ind == static_cast<int>(segIndex)) ? 1 : noConnectionsSegment(compSet, segSet, ind);
+		sumConn += addCon;
+		    if (segIndex <= 3) {
+			std::cout << "sumConn... - i_seg, noConnectionsSegment, sumConn: " << i_seg << " , " << noConnectionsSegment(compSet, segSet, ind) << " , " << sumConn << std::endl;
+		    }
+
 	    }
 	}
 	return sumConn;
@@ -284,9 +292,10 @@ namespace {
 			    std::cout << "segmentOrder - newBranch - inflowBranch: " << inflowBranch << std::endl;
 			    auto nSOrd = segmentOrder(segSet, ind);
 			    // copy the segments already found and indexed into the total ordered segment vector
-			    ordSegNumber.resize(nSOrd.size(),0);
+			    //ordSegNumber.resize(nSOrd.size(),0);
 			    for (std::size_t indOS = 0; indOS < nSOrd.size(); indOS++) {
-				ordSegNumber[indOS] = nSOrd[indOS];
+				//ordSegNumber[indOS] = nSOrd[indOS];
+				ordSegNumber.push_back(nSOrd[indOS]);
 				std::cout << "segmentOrder - newBranch - ordSegNumber[indOS] " << indOS << "  nSOrd: " <<  nSOrd[indOS] << std::endl;
 			    }
 			    // increment the local branch sequence number counter
