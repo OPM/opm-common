@@ -30,8 +30,8 @@ namespace Opm {
             std::vector<size_t> global_index_per_record;
 
             // Variables constants
-            std::vector<double>  influx_coeff_per_record,  //Aquifer influx coefficient
-                                 influx_mult_per_record;   //Aquifer influx coefficient Multiplier       
+            std::vector<std::shared_ptr<double>>  influx_coeff_per_record;  //Aquifer influx coefficient
+            std::vector<double>  influx_mult_per_record;   //Aquifer influx coefficient Multiplier       
             // Cell face to connect aquifer to        
             std::vector<int> face_per_record;           
         };
@@ -68,8 +68,6 @@ namespace Opm {
             m_aquiferID_per_record.at(aquanconRecordIdx) = aquanconRecord.getItem("AQUIFER_ID").template get<int>(0);
             m_maxAquID = (m_maxAquID < m_aquiferID_per_record.at(aquanconRecordIdx) )?
                             m_aquiferID_per_record.at(aquanconRecordIdx) : m_maxAquID;
-              
-            double influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);
 
             double influx_mult = aquanconRecord.getItem("INFLUX_MULT").getSIDouble(0);
 
@@ -84,7 +82,20 @@ namespace Opm {
                                                             );
             }
             size_t global_index_per_record_size = m_aqurecord.at(aquanconRecordIdx).global_index_per_record.size();
-            m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.resize(global_index_per_record_size,influx_coeff);
+
+            m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.resize(global_index_per_record_size,nullptr);
+
+            if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
+            {
+                double* influx_coeff = new double( aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0) );
+                std::for_each(
+                                m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.begin(),
+                                m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.end(),
+                                [influx_coeff](std::shared_ptr<double>& i){ i.reset(influx_coeff); }
+                             );
+            }
+
+
             m_aqurecord.at(aquanconRecordIdx).influx_mult_per_record.resize(global_index_per_record_size,influx_mult);
             m_aqurecord.at(aquanconRecordIdx).face_per_record.resize(global_index_per_record_size,faceDir);
         }

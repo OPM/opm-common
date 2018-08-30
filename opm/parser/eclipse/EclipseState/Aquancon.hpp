@@ -44,7 +44,7 @@ namespace Opm {
             struct AquanconOutput{
                 int aquiferID;
                 std::vector<size_t> global_index;
-                std::vector<double> influx_coeff; // Size = size(global_index)
+                std::vector<std::shared_ptr<double>> influx_coeff; // Size = size(global_index)
                 std::vector<double> influx_multiplier; // Size = size(global_index)
                 std::vector<int> reservoir_face_dir; // Size = size(global_index)
             };

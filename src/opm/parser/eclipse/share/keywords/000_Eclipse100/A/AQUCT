@@ -2,7 +2,7 @@
  "items" : [
  {"name" : "AQUIFER_ID" , "value_type" : "INT"},
  {"name" : "DAT_DEPTH"  , "value_type" : "DOUBLE", "dimension" : "Length"},
- {"name" : "P_INI"      , "value_type" : "DOUBLE", "dimension" : "Pressure", "default" : 0.0},
+ {"name" : "P_INI"      , "value_type" : "DOUBLE", "dimension" : "Pressure"},
  {"name" : "PERM_AQ"    , "value_type" : "DOUBLE", "dimension" : "Permeability"},
  {"name" : "PORO_AQ"    , "value_type" : "DOUBLE", "dimension" : "1" , "default" : 1.0},
  {"name" : "C_T"        , "value_type" : "DOUBLE", "dimension" : "1/Pressure"},
