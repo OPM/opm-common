@@ -68,34 +68,14 @@ namespace Opm {
     }
 
 
-
-
-    MULTREGTRecord::MULTREGTRecord( const DeckRecord& deckRecord, const std::string& defaultRegion) :
-        m_srcRegion("SRC_REGION"),
-        m_targetRegion("TARGET_REGION"),
-        m_region("REGION" , defaultRegion)
-    {
-        const auto& srcItem = deckRecord.getItem("SRC_REGION");
-        const auto& targetItem = deckRecord.getItem("TARGET_REGION");
-        const auto& tranItem = deckRecord.getItem("TRAN_MULT");
-        const auto& dirItem = deckRecord.getItem("DIRECTIONS");
-        const auto& nncItem = deckRecord.getItem("NNC_MULT");
-        const auto& defItem = deckRecord.getItem("REGION_DEF");
-
-
-        if (!srcItem.defaultApplied(0))
-            m_srcRegion.setValue( srcItem.get< int >(0) );
-
-        if (!targetItem.defaultApplied(0))
-            m_targetRegion.setValue( targetItem.get< int >(0) );
-
-        m_transMultiplier = tranItem.get< double >(0);
-        m_directions = FaceDir::FromMULTREGTString( dirItem.get< std::string >(0) );
-        m_nncBehaviour = MULTREGT::NNCBehaviourFromString( nncItem.get< std::string >(0));
-
-        if (!defItem.defaultApplied(0))
-            m_region.setValue( MULTREGT::RegionNameFromDeckValue ( defItem.get< std::string >(0) ));
-    }
+    MULTREGTRecord::MULTREGTRecord(int src, int target, double trans_mult, int directions, MULTREGT::NNCBehaviourEnum nnc_behaviour, const std::string& region_name) :
+        src_value(src),
+        target_value(target),
+        directions(directions),
+        trans_mult(trans_mult),
+        nnc_behaviour(nnc_behaviour),
+        region_name(region_name)
+    {}
 
 
     /*****************************************************************/
@@ -136,27 +116,25 @@ namespace Opm {
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
-            if (e3DProps.hasDeckIntGridProperty( record->m_region.getValue())) {
-                if (record->m_srcRegion.hasValue() && record->m_targetRegion.hasValue()) {
-                    int srcRegion    = record->m_srcRegion.getValue();
-                    int targetRegion = record->m_targetRegion.getValue();
-                    if (srcRegion != targetRegion) {
-                        std::pair<int,int> pair{ srcRegion, targetRegion };
-                        searchPairs[pair] = &(*record);
-                    }
+            if (e3DProps.hasDeckIntGridProperty( record->region_name)) {
+                int srcRegion    = record->src_value;
+                int targetRegion = record->target_value;
+                if (srcRegion != targetRegion) {
+                    std::pair<int,int> pair{ srcRegion, targetRegion };
+                    searchPairs[pair] = &(*record);
                 }
             }
             else
                 throw std::logic_error(
                                 "MULTREGT record is based on region: "
-                              +  record->m_region.getValue()
-                              + " which is not in the deck");
+                                +  record->region_name
+                                + " which is not in the deck");
         }
 
         for (auto iter = searchPairs.begin(); iter != searchPairs.end(); ++iter) {
             const MULTREGTRecord * record = (*iter).second;
             std::pair<int,int> pair = (*iter).first;
-            const std::string& keyword = record->m_region.getValue();
+            const std::string& keyword = record->region_name;
             if (m_searchMap.count(keyword) == 0)
                 m_searchMap[keyword] = MULTREGTSearchMap();
 
@@ -166,22 +144,25 @@ namespace Opm {
 
 
     void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword, const std::string& defaultRegion) {
-        for (auto iter = deckKeyword.begin(); iter != deckKeyword.end(); ++iter) {
-            MULTREGTRecord record( *iter , defaultRegion);
+        for (const auto& deckRecord : deckKeyword) {
+            const auto& srcItem = deckRecord.getItem("SRC_REGION");
+            const auto& targetItem = deckRecord.getItem("TARGET_REGION");
+            auto nnc_behaviour = MULTREGT::NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
 
-            if (record.m_nncBehaviour == MULTREGT::NOAQUNNC)
-                throw std::invalid_argument("Sorry - currently we do not support \'NOAQUNNC\' for MULTREGT.");
-
-            if (!record.m_srcRegion.hasValue())
+            if (srcItem.defaultApplied(0))
                 throw std::invalid_argument("Sorry - currently it is not supported with a defaulted source region value.");
 
-            if (!record.m_targetRegion.hasValue())
+            if (targetItem.defaultApplied(0))
                 throw std::invalid_argument("Sorry - currently it is not supported with a defaulted target region value.");
 
-            if (record.m_srcRegion.getValue() == record.m_targetRegion.getValue())
-                throw std::invalid_argument("Sorry - multregt applied internally to a region is not yet supported");
+            if (!srcItem.defaultApplied(0) && !targetItem.defaultApplied(0))
+                if (srcItem.get<int>(0) == targetItem.get<int>(0))
+                    throw std::invalid_argument("Sorry - MULTREGT applied internally to a region is not yet supported");
 
-        }
+            if (nnc_behaviour == MULTREGT::NOAQUNNC)
+                throw std::invalid_argument("Sorry - currently we do not support \'NOAQUNNC\' for MULTREGT.");
+
+         }
     }
 
 
@@ -189,21 +170,35 @@ namespace Opm {
     void MULTREGTScanner::addKeyword( const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
         assertKeywordSupported( deckKeyword , defaultRegion );
 
-        for (auto iter = deckKeyword.begin(); iter != deckKeyword.end(); ++iter) {
-            MULTREGTRecord record( *iter , defaultRegion );
-            /*
-              The default value for the region item is to use the
-              region item on the previous record, or alternatively
-              'MULTNUM' for the first record.
-            */
-            if (!record.m_region.hasValue()) {
-                if (m_records.size() > 0) {
-                    auto previousRecord = m_records.back();
-                    record.m_region.setValue( previousRecord.m_region.getValue() );
-                } else
-                    record.m_region.setValue( "MULTNUM" );
+        for (const auto& deckRecord : deckKeyword) {
+            std::vector<int> src_regions;
+            std::vector<int> target_regions;
+            std::string region_name = defaultRegion;
+
+            const auto& srcItem = deckRecord.getItem("SRC_REGION");
+            const auto& targetItem = deckRecord.getItem("TARGET_REGION");
+            const auto& regionItem = deckRecord.getItem("REGION_DEF");
+
+            double trans_mult = deckRecord.getItem("TRAN_MULT").get<double>(0);
+            auto directions = FaceDir::FromMULTREGTString( deckRecord.getItem("DIRECTIONS").get<std::string>(0));
+            auto nnc_behaviour = MULTREGT::NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
+
+            if (!srcItem.defaultApplied(0))
+                src_regions.push_back(srcItem.get<int>(0));
+
+            if (!targetItem.defaultApplied(0))
+                target_regions.push_back(targetItem.get<int>(0));
+
+            if (regionItem.defaultApplied(0)) {
+                if (!m_records.empty())
+                    region_name = m_records.back().region_name;
+            } else
+                region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
+
+            for (int src_region : src_regions) {
+                for (int target_region : target_regions)
+                    m_records.emplace_back(src_region, target_region, trans_mult, directions, nnc_behaviour, region_name);
             }
-            m_records.push_back( record );
         }
 
     }
@@ -241,9 +236,9 @@ namespace Opm {
             int regionId2 = region.iget(globalIndex2);
 
             std::pair<int,int> pair{ regionId1, regionId2 };
-            if (map.count(pair) != 1 || !(map.at(pair)->m_directions & faceDir)) {
+            if (map.count(pair) != 1 || !(map.at(pair)->directions & faceDir)) {
                 pair = std::pair<int,int>{regionId2 , regionId1};
-                if (map.count(pair) != 1 || !(map.at(pair)->m_directions & faceDir))
+                if (map.count(pair) != 1 || !(map.at(pair)->directions & faceDir))
                     continue;
             }
             const MULTREGTRecord* record = map.at(pair);
@@ -254,20 +249,19 @@ namespace Opm {
             int j1 = globalIndex1 / region.getNX() % region.getNY();
             int j2 = globalIndex2 / region.getNX() % region.getNY();
 
-            if (record->m_nncBehaviour == MULTREGT::NNC){
+            if (record->nnc_behaviour == MULTREGT::NNC){
                 applyMultiplier = true;
                 if ((std::abs(i1-i2) == 0 && std::abs(j1-j2) == 1) || (std::abs(i1-i2) == 1 && std::abs(j1-j2) == 0))
                     applyMultiplier = false;
             }
-            else if (record->m_nncBehaviour == MULTREGT::NONNC){
+            else if (record->nnc_behaviour == MULTREGT::NONNC){
                 applyMultiplier = false;
                 if ((std::abs(i1-i2) == 0 && std::abs(j1-j2) == 1) || (std::abs(i1-i2) == 1 && std::abs(j1-j2) == 0))
                     applyMultiplier = true;
             }
 
-            if (applyMultiplier) {
-                return record->m_transMultiplier;
-            }
+            if (applyMultiplier)
+                return record->trans_mult;
 
         }
         return 1;
