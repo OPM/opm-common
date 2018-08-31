@@ -16,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include <stdexcept>
 #include <map>
 #include <set>
@@ -112,7 +111,7 @@ namespace Opm {
                 m_e3DProps(e3DProps) {
 
         for (size_t idx = 0; idx < keywords.size(); idx++)
-            this->addKeyword(*keywords[idx] , e3DProps.getDefaultRegionKeyword());
+            this->addKeyword(e3DProps, *keywords[idx] , e3DProps.getDefaultRegionKeyword());
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
@@ -149,12 +148,6 @@ namespace Opm {
             const auto& targetItem = deckRecord.getItem("TARGET_REGION");
             auto nnc_behaviour = MULTREGT::NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
 
-            if (srcItem.defaultApplied(0))
-                throw std::invalid_argument("Sorry - currently it is not supported with a defaulted source region value.");
-
-            if (targetItem.defaultApplied(0))
-                throw std::invalid_argument("Sorry - currently it is not supported with a defaulted target region value.");
-
             if (!srcItem.defaultApplied(0) && !targetItem.defaultApplied(0))
                 if (srcItem.get<int>(0) == targetItem.get<int>(0))
                     throw std::invalid_argument("Sorry - MULTREGT applied internally to a region is not yet supported");
@@ -167,7 +160,7 @@ namespace Opm {
 
 
 
-    void MULTREGTScanner::addKeyword( const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
+    void MULTREGTScanner::addKeyword( const Eclipse3DProperties& props, const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
         assertKeywordSupported( deckKeyword , defaultRegion );
 
         for (const auto& deckRecord : deckKeyword) {
@@ -183,17 +176,21 @@ namespace Opm {
             auto directions = FaceDir::FromMULTREGTString( deckRecord.getItem("DIRECTIONS").get<std::string>(0));
             auto nnc_behaviour = MULTREGT::NNCBehaviourFromString(deckRecord.getItem("NNC_MULT").get<std::string>(0));
 
-            if (!srcItem.defaultApplied(0))
-                src_regions.push_back(srcItem.get<int>(0));
-
-            if (!targetItem.defaultApplied(0))
-                target_regions.push_back(targetItem.get<int>(0));
-
             if (regionItem.defaultApplied(0)) {
                 if (!m_records.empty())
                     region_name = m_records.back().region_name;
             } else
                 region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
+
+            if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0)
+                src_regions = props.getRegions( region_name );
+            else
+                src_regions.push_back(srcItem.get<int>(0));
+
+            if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0)
+                target_regions = props.getRegions(region_name);
+            else
+                target_regions.push_back(targetItem.get<int>(0));
 
             for (int src_region : src_regions) {
                 for (int target_region : target_regions)
