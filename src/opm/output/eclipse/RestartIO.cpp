@@ -605,7 +605,7 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
      for (const auto& extra_value : extra_data) {
 	const std::string& key = extra_value.first.key;
 	const std::vector<double>& data = extra_value.second;
-	if ( key == "THPRES") 
+	if ( key == "THRESHPR") 
 	{
 	     ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw(key, data, write_double).get());
 	}
@@ -632,7 +632,7 @@ void writeExtraData(::Opm::RestartIO::ecl_rst_file_type* rst_file, const Restart
 	  /*const std::string& key = extra_value.first;
 	const std::string& key = extra_value.first.key;
 	const std::vector<double>& data = extra_value.second;
-	if (key != "THPRES")
+	if (key != "THRESHPR")
 	{
 	    ::Opm::RestartIO::ecl_kw_type * ecl_kw = ::Opm::RestartIO::ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE , const_cast<double *>(data.data()));
 	    ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw);
