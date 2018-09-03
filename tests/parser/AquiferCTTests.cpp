@@ -46,8 +46,8 @@ inline Deck createAquiferCTDeck() {
         "\n"
         "PROPS\n"
         "AQUTAB\n"
-        " 0.01 0.112 \n" 
-        " 0.05 0.229 /\n" 
+        " 0.01 0.112 \n"
+        " 0.05 0.229 /\n"
         "SOLUTION\n"
         "\n"
         "AQUCT\n"
@@ -73,6 +73,6 @@ BOOST_AUTO_TEST_CASE(AquiferCTTest){
         BOOST_CHECK_EQUAL(it.aquiferID , 1);
         BOOST_CHECK_EQUAL(it.phi_aq , 0.3);
         BOOST_CHECK_EQUAL(it.inftableID , 2);
-        
-    }    
-}    
+
+    }
+}
