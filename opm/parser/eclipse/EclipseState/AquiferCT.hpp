@@ -58,10 +58,10 @@ namespace Opm {
                             k_a , //aquifer permeability
                             c1, // 0.008527 (METRIC, PVT-M); 0.006328 (FIELD); 3.6 (LAB)
                             h , //aquifer thickness
-                            p0, //Initial aquifer pressure at datum depth, d0
                             theta , //angle subtended by the aquifer boundary
                             c2 ; //6.283 (METRIC, PVT-M); 1.1191 (FIELD); 6.283 (LAB).
 
+                    std::shared_ptr<double> p0; // Initial aquifer pressure at datum detpt d0 - nullptr if the pressure has been defaulted.
                     std::vector<double> td, pi;
             };
 
