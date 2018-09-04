@@ -559,13 +559,13 @@ void checkSaveArguments(const EclipseState& es,
       // If the the THPRES option is active the restart_value should have a
       // THPRES field. This is not enforced here because not all the opm
       // simulators have been updated to include the THPRES values.
-      if (!restart_value.hasExtra("THPRES")) {
+      if (!restart_value.hasExtra("THPRESPR")) {
           OpmLog::warning("This model has THPRES active - should have THPRES as part of restart data.");
           return;
       }
 
       size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
-      const auto& thpres = restart_value.getExtra("THPRES");
+      const auto& thpres = restart_value.getExtra("THPRESPR");
       if (thpres.size() != num_regions * num_regions)
           throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
   }

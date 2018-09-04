@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                setup.schedule), std::runtime_error);
             */
 
-            restart_value.addExtra("THPRES", UnitSystem::measure::pressure, {0,1});
+            restart_value.addExtra("THPRESPR", UnitSystem::measure::pressure, {0,1});
             /* THPRES data has wrong size in extra container. */
             BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                                100,
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
 
             int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
-            restart_value2.addExtra("THPRES", UnitSystem::measure::pressure, thpres);
+            restart_value2.addExtra("THPRESPR", UnitSystem::measure::pressure, thpres);
         }
     }
 }
