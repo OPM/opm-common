@@ -605,6 +605,31 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
             int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
             restart_value2.addExtra("THPRESPR", UnitSystem::measure::pressure, thpres);
+            restart_value2.addExtra("EXTRA", UnitSystem::measure::pressure, thpres);
+
+            RestartIO::save("FILE2.UNRST", 1,
+                            100,
+                            restart_value2,
+                            setup.es,
+                            setup.grid,
+                            setup.schedule);
+
+            {
+                ecl_file_type * rst_file = ecl_file_open("FILE2.UNRST", 0);
+                std::map<std::string,int> kw_pos;
+                for (int i=0; i < ecl_file_get_size(rst_file); i++)
+                    kw_pos[ ecl_file_iget_header(rst_file, i ) ] = i;
+
+                BOOST_CHECK( kw_pos["STARTSOL"] < kw_pos["THPRESPR"] );
+                BOOST_CHECK( kw_pos["THPRESPR"] < kw_pos["ENDSOL"] );
+                BOOST_CHECK( kw_pos["ENDSOL"] < kw_pos["EXTRA"] );
+
+                BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst_file, "THPRESPR"), 1);
+                BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst_file, "EXTRA"), 1);
+                BOOST_CHECK_EQUAL( ecl_kw_get_type(ecl_file_iget_named_kw(rst_file, "THPRESPR", 0)), ECL_DOUBLE_TYPE);
+                ecl_file_close(rst_file);
+            }
+
         }
     }
 }
