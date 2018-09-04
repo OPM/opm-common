@@ -52,14 +52,14 @@ namespace Opm {
 
     class MULTREGTRecord {
     public:
-        MULTREGTRecord(const DeckRecord& deckRecord , const std::string& defaultRegion);
+        MULTREGTRecord(int src, int target, double trans_mult, int directions, MULTREGT::NNCBehaviourEnum nnc_behaviour, const std::string& region_name);
 
-        Value<int> m_srcRegion;
-        Value<int> m_targetRegion;
-        double m_transMultiplier;
-        int m_directions;
-        MULTREGT::NNCBehaviourEnum m_nncBehaviour;
-        Value<std::string>  m_region;
+        int src_value;
+        int target_value;
+        int directions;
+        double trans_mult;
+        MULTREGT::NNCBehaviourEnum nnc_behaviour;
+        std::string region_name;
     };
 
     typedef std::map< std::pair<int , int> , const MULTREGTRecord * >  MULTREGTSearchMap;
@@ -75,7 +75,7 @@ namespace Opm {
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 
     private:
-        void addKeyword( const DeckKeyword& deckKeyword, const std::string& defaultRegion);
+        void addKeyword( const Eclipse3DProperties& props, const DeckKeyword& deckKeyword, const std::string& defaultRegion);
         void assertKeywordSupported(const DeckKeyword& deckKeyword, const std::string& defaultRegion);
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
