@@ -679,7 +679,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                             restart_value2,
                             setup.es,
                             setup.grid,
-                            setup.schedule);
+                            setup.schedule, sumState);
 
             {
                 ecl_file_type * rst_file = ecl_file_open("FILE2.UNRST", 0);

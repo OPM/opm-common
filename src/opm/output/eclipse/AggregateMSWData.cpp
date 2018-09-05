@@ -495,6 +495,8 @@ namespace {
 		    rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
 		    rSeg[6] = rSeg[0];
 		    rSeg[7] = rSeg[1];
+		    // set item ind + 10 to 0.5 based on tests on E100
+		    rSeg[10] = 0.5;
 
 		    //  segment pressure (to be added!!)
 		    rSeg[ 39] = 0;
@@ -527,6 +529,8 @@ namespace {
 		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[ind].totalLength()));
 		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[ind].depth()));
 
+		    // set item ind + 10 to 0.5 based on tests on E100
+		    rSeg[10] = 0.5;
 		    //  segment pressure (to be added!!)
 		    rSeg[iS +  11] = 0;
 

@@ -591,6 +591,9 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
           if (elm.second.target == data::TargetType::RESTART_AUXILIARY)
               ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
       }
+  }
+      
+      
       //  temporarily comment out jals original version
       /*void writeSolution(::Opm::RestartIO::ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
      void writeSolution(::Opm::RestartIO::ecl_rst_file_type* rst_file, const data::Solution& solution, bool write_double) {
@@ -616,10 +619,10 @@ void writeGroup(::Opm::RestartIO::ecl_rst_file_type * rst_file,
 	if (elm.second.target == data::TargetType::RESTART_AUXILIARY)
 	    ::Opm::RestartIO::ecl_rst_file_add_kw( rst_file , ecl_kw(elm.first, elm.second.data, write_double).get());
      }
-  }
+  } */
 
 
-void writeExtraData(::Opm::RestartIO::ecl_rst_file_type* rst_file, const RestartValue::ExtraVector& extra_data) {
+  void writeExtraData(::Opm::RestartIO::ecl_rst_file_type* rst_file, const RestartValue::ExtraVector& extra_data) {
     for (const auto& extra_value : extra_data) {
         const std::string& key = extra_value.first.key;
         const std::vector<double>& data = extra_value.second;
@@ -699,32 +702,6 @@ void checkSaveArguments(const EclipseState& es,
       if (thpres.size() != num_regions * num_regions)
           throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
 
-		const RestartValue& restart_value,
-			const EclipseGrid& grid) {
-
-    for (const auto& elm: restart_value.solution)
-	if (elm.second.data.size() != grid.getNumActive())
-	    throw std::runtime_error("Wrong size on solution vector: " + elm.first);
-
-
-	    /*if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
-	// If the the THPRES option is active the restart_value should have a
-	// THPRES field. This is not enforced here because not all the opm
-	// simulators have been updated to include the THPRES values.
-	if (!restart_value.hasExtra("THPRES")) {
-	    OpmLog::warning("This model has THPRES active - should have THPRES as part of restart data.");
-	    return;
-	}
-
-	size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
-	const auto& thpres = restart_value.getExtra("THPRES");
-	if (thpres.size() != num_regions * num_regions)
-	    throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
-
-      size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
-      const auto& thpres = restart_value.getExtra("THPRES");
-      if (thpres.size() != num_regions * num_regions)
-          throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");*/
   }
 }
 } // Anonymous namespace
@@ -769,10 +746,10 @@ void save(const std::string&  filename,
         std::vector<int> inteHD = ::Opm::RestartIO::writeHeader(rst_file.get() , sim_step, report_step, seconds_elapsed, ert_phase_mask, units, schedule , grid, es);
         ::Opm::RestartIO::writeGroup(rst_file.get() , sim_step, seconds_elapsed, ert_phase_mask, units, schedule, grid, es, sumState, inteHD);
 	::Opm::RestartIO::writeMSWData(rst_file.get() , sim_step, seconds_elapsed, ert_phase_mask, units, schedule, grid, es, sumState, inteHD);
-        ::Opm::RestartIO::writeWell( rst_file.get(), sim_step, es , grid, schedule, value.wells);
+	::Opm::RestartIO::writeWell( rst_file.get(), sim_step, units, es , grid, schedule, value.wells, sumState, inteHD);
         ::Opm::RestartIO::writeSolution( rst_file.get(), value, write_double );
         if (!ecl_compatible_rst)
-	  ::Opm::RestartIO:: writeExtraData( rst_file.get(), value.extra );
+	  ::Opm::RestartIO::writeExtraData( rst_file.get(), value.extra );
     }
 }
 
