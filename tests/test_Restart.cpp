@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                setup.schedule), std::runtime_error);
             */
 
-            restart_value.addExtra("THPRESPR", UnitSystem::measure::pressure, {0,1});
+            restart_value.addExtra("THRESHPR", UnitSystem::measure::pressure, {0,1});
             /* THPRES data has wrong size in extra container. */
             BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
                                                100,
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
 
             int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
-            restart_value2.addExtra("THPRESPR", UnitSystem::measure::pressure, thpres);
+            restart_value2.addExtra("THRESHPR", UnitSystem::measure::pressure, thpres);
             restart_value2.addExtra("EXTRA", UnitSystem::measure::pressure, thpres);
 
             RestartIO::save("FILE2.UNRST", 1,
@@ -620,13 +620,13 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                 for (int i=0; i < ecl_file_get_size(rst_file); i++)
                     kw_pos[ ecl_file_iget_header(rst_file, i ) ] = i;
 
-                BOOST_CHECK( kw_pos["STARTSOL"] < kw_pos["THPRESPR"] );
-                BOOST_CHECK( kw_pos["THPRESPR"] < kw_pos["ENDSOL"] );
+                BOOST_CHECK( kw_pos["STARTSOL"] < kw_pos["THRESHPR"] );
+                BOOST_CHECK( kw_pos["THRESHPR"] < kw_pos["ENDSOL"] );
                 BOOST_CHECK( kw_pos["ENDSOL"] < kw_pos["EXTRA"] );
 
-                BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst_file, "THPRESPR"), 1);
+                BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst_file, "THRESHPR"), 1);
                 BOOST_CHECK_EQUAL( ecl_file_get_num_named_kw(rst_file, "EXTRA"), 1);
-                BOOST_CHECK_EQUAL( ecl_kw_get_type(ecl_file_iget_named_kw(rst_file, "THPRESPR", 0)), ECL_DOUBLE_TYPE);
+                BOOST_CHECK_EQUAL( ecl_kw_get_type(ecl_file_iget_named_kw(rst_file, "THRESHPR", 0)), ECL_DOUBLE_TYPE);
                 ecl_file_close(rst_file);
             }
 
