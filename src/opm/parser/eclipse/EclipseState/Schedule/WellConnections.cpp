@@ -285,10 +285,11 @@ namespace {
                                       this->m_connections.end(),
                                       same_ijk );
 	    // Only add connection for active grid cells
-            if (prev == this->m_connections.end()) {
-		if (grid.cellActive(I, J, k)) {
-		std::size_t noConn = this->m_connections.size();
-                this->addConnection(I,J,k,
+            if (grid.cellActive(I, J, k)) {
+		if (prev == this->m_connections.end()) {
+		    std::size_t noConn = this->m_connections.size();
+		    std::cout << "WellConnections - WC - prev-end, I: " << I << " J: " << J << " k: " << k << " noConn: " << noConn << std::endl;
+		    this->addConnection(I,J,k,
                                     grid.getCellDepth( I,J,k ),
                                     state,
                                     CF,
@@ -297,13 +298,14 @@ namespace {
                                     satTableId,
                                     direction,
 				    noConn, 0., 0., defaultSatTable);
-		}
-            } else {
-		std::size_t noConn = prev->getSeqIndex();
-                // The complnum value carries over; the rest of the state is fully specified by
-                // the current COMPDAT keyword.
-                int complnum = prev->complnum();
-                *prev = Connection(I,J,k,
+		} 
+		else {
+		    std::size_t noConn = prev->getSeqIndex();
+		    std::cout << "WellConnections - WC - prev-exist, I: " << I << " J: " << J << " k: " << k << " noConn: " << noConn << std::endl;
+		    // The complnum value carries over; the rest of the state is fully specified by
+		    // the current COMPDAT keyword.
+		    int complnum = prev->complnum;
+		    *prev = Connection(I,J,k,
                                    complnum,
                                    grid.getCellDepth(I,J,k),
                                    state,
@@ -313,10 +315,10 @@ namespace {
                                    satTableId,
                                    direction,
 				   noConn, 0., 0., defaultSatTable);
-            }
-        }
+		}
+	    }
+	}
     }
-
 
 
 
