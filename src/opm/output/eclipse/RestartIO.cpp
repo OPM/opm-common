@@ -58,12 +58,12 @@ namespace {
       The RestartValue structure has an 'extra' container which can be used to
       add extra fields to the restart file. The extra field is used both to add
       OPM specific fields like 'OPMEXTRA', and eclipse standard fields like
-      THPRESPR. In the case of e.g. THPRESPR this should - if present - be added
+      THRESHPR. In the case of e.g. THRESHPR this should - if present - be added
       in the SOLUTION section of the restart file. The std::set extra_solution
       just enumerates the keys which should be in the solution section.
     */
 
-    static const std::set<std::string> extra_solution = {"THPRESPR"};
+    static const std::set<std::string> extra_solution = {"THRESHPR"};
 
 
 
@@ -580,13 +580,13 @@ void checkSaveArguments(const EclipseState& es,
       // If the the THPRES option is active the restart_value should have a
       // THPRES field. This is not enforced here because not all the opm
       // simulators have been updated to include the THPRES values.
-      if (!restart_value.hasExtra("THPRESPR")) {
+      if (!restart_value.hasExtra("THRESHPR")) {
           OpmLog::warning("This model has THPRES active - should have THPRES as part of restart data.");
           return;
       }
 
       size_t num_regions = es.getTableManager().getEqldims().getNumEquilRegions();
-      const auto& thpres = restart_value.getExtra("THPRESPR");
+      const auto& thpres = restart_value.getExtra("THRESHPR");
       if (thpres.size() != num_regions * num_regions)
           throw std::runtime_error("THPRES vector has invalid size - should have num_region * num_regions.");
   }
