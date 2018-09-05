@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <iostream>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>

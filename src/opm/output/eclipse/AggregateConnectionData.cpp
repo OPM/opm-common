@@ -91,6 +91,7 @@ namespace {
             if (well == nullptr) { continue; }
             
             const auto& conns = well->getActiveConnections(sim_step, grid);
+	    int niSI = conns.size();
 	    std::map <std::size_t, const Opm::Connection*> sIToConn;
 
 	    //Branch according to MSW well or not and 
@@ -104,7 +105,6 @@ namespace {
 		sIToConn = mapSeqIndexToConnection(conns);
 	    }
 	    std::vector<const Opm::Connection*> connSI;
-	    int niSI = well->getActiveConnections(sim_step).size();
 	    std::cout << "ConnOP - well" << well->name() << " niSI: " << niSI << std::endl;
 	    for (int iSI = 0; iSI < niSI; iSI++) {
 		const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
