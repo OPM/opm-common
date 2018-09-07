@@ -41,6 +41,7 @@
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
+#include <ert/ecl/smspec_node.h>
 #include <ert/ecl/ecl_smspec.h>
 #include <ert/ecl/ecl_kw_magic.h>
 
@@ -971,7 +972,7 @@ Summary::Summary( const EclipseState& st,
     std::set< std::string > unsupported_keywords;
 
     for( const auto& node : sum ) {
-        const auto* keyword = node.keyword();
+        const auto* keyword = smspec_node_get_keyword(node.get());
 
         const auto single_value_pair = single_values_units.find( keyword );
         const auto funs_pair = funs.find( keyword );
@@ -985,15 +986,15 @@ Summary::Summary( const EclipseState& st,
       add_timestep.
     */
         if (single_value_pair != single_values_units.end()) {
-
-            if ((node.type() != ECL_SMSPEC_FIELD_VAR) && (node.type() != ECL_SMSPEC_MISC_VAR)) {
+            auto node_type = smspec_node_get_var_type(node.get());
+            if ((node_type != ECL_SMSPEC_FIELD_VAR) && (node_type != ECL_SMSPEC_MISC_VAR)) {
                 continue;
             }
 
             auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
                                              keyword,
-                                             node.wgname(),
-                                             node.num(),
+                                             smspec_node_get_wgname(node.get()),
+                                             smspec_node_get_num(node.get()),
                                              st.getUnits().name( single_value_pair->second ),
                                              0 );
 
@@ -1002,36 +1003,37 @@ Summary::Summary( const EclipseState& st,
 
             auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
                                              keyword,
-                                             node.wgname(),
-                                             node.num(),
+                                             smspec_node_get_wgname(node.get()),
+                                             smspec_node_get_num(node.get()),
                                              st.getUnits().name( region_pair->second ),
                                              0 );
 
-            this->handlers->region_nodes.emplace( std::make_pair(keyword, node.num()), nodeptr );
+            this->handlers->region_nodes.emplace( std::make_pair(keyword, smspec_node_get_num(node.get())), nodeptr );
 
         } else if (block_pair != block_units.end()) {
-            if (node.type() != ECL_SMSPEC_BLOCK_VAR)
+            if (smspec_node_get_var_type(node.get()) != ECL_SMSPEC_BLOCK_VAR)
                 continue;
 
-            int global_index = node.num() - 1;
+            int global_index = smspec_node_get_num(node.get()) - 1;
             if (!this->grid.cellActive(global_index))
                 continue;
 
             auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
                                              keyword,
-                                             node.wgname(),
-                                             node.num(),
+                                             smspec_node_get_wgname(node.get()),
+                                             smspec_node_get_num(node.get()),
                                              st.getUnits().name( block_pair->second ),
                                              0 );
 
-            this->handlers->block_nodes.emplace( std::make_pair(keyword, node.num()), nodeptr );
+            this->handlers->block_nodes.emplace( std::make_pair(keyword, smspec_node_get_num(node.get())), nodeptr );
 
 
 
         } else if (funs_pair != funs.end()) {
+            auto node_type = smspec_node_get_var_type(node.get());
 
-            if ((node.type() == ECL_SMSPEC_COMPLETION_VAR) || (node.type() == ECL_SMSPEC_BLOCK_VAR)) {
-                int global_index = node.num() - 1;
+            if ((node_type == ECL_SMSPEC_COMPLETION_VAR) || (node_type == ECL_SMSPEC_BLOCK_VAR)) {
+                int global_index = smspec_node_get_num(node.get()) - 1;
                 if (!this->grid.cellActive(global_index))
                     continue;
             }
@@ -1043,7 +1045,7 @@ Summary::Summary( const EclipseState& st,
             const fn_args no_args { dummy_wells, // Wells from Schedule object
                                     0,           // Duration of time step
                                     0,           // Simulation step
-                                    node.num(),  // NUMS value for the summary output.
+                                    smspec_node_get_num(node.get()),  // NUMS value for the summary output.
                                     {},          // Well results - data::Wells
                                     {},          // Region <-> cell mappings.
                                     this->grid,
@@ -1053,8 +1055,8 @@ Summary::Summary( const EclipseState& st,
 
             auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
                                              keyword,
-                                             node.wgname(),
-                                             node.num(),
+                                             smspec_node_get_wgname(node.get()),
+                                             smspec_node_get_num(node.get()),
                                              st.getUnits().name( val.unit ),
                                              0 );
 
