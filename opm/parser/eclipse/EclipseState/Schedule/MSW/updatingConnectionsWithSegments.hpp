@@ -27,7 +27,8 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
-    WellConnections * newConnectionsWithSegments(const DeckKeyword& compsegs, const WellConnections& input_connections, const WellSegments& segments, const EclipseGrid& grid);
+    WellConnections * newConnectionsWithSegments(const DeckKeyword& compsegs, const WellConnections& input_connections, 
+						 const WellSegments& segments, const EclipseGrid& grid, std::size_t& totNC);
 }
 
 #endif

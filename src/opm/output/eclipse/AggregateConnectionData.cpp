@@ -54,11 +54,9 @@ namespace {
     {
 	// make seqIndex to Connection map
 	std::map <std::size_t, const Opm::Connection*> seqIndConnMap;
-	std::cout << "mapSeqIndexToConnection(" << std::endl;
 	for (const auto & conn : conns) {
 	    std::size_t sI = conn.getSeqIndex();
 	    seqIndConnMap.insert(std::make_pair(sI, &conn));
-	    std::cout << "mCSSITC sI: " << sI  << " conn.getI,J,K" << conn.getI() << " , " << conn.getJ() << " , " << conn.getK() << std::endl;
 	}
 	return seqIndConnMap;
     }
@@ -67,11 +65,9 @@ namespace {
     {
 	// make CompSegSeqIndex to Connection map
 	std::map <std::size_t, const Opm::Connection*> cs_seqIndConnMap;
-	std::cout << "mapCompSegSeqIndexToConnection" << std::endl;
 	for (const auto & conn : conns) {
 	    std::size_t sI = conn.getCompSegSeqIndex();
 	    cs_seqIndConnMap.insert(std::make_pair(sI, &conn));
-	    std::cout << "mCSSITC sI: " << sI  << " conn.getI,J,K" << conn.getI() << " , " << conn.getJ() << " , " << conn.getK() << std::endl;
 	}
 	return cs_seqIndConnMap;
     }
@@ -91,7 +87,7 @@ namespace {
             if (well == nullptr) { continue; }
             
             const auto& conns = well->getActiveConnections(sim_step, grid);
-	    int niSI = conns.size();
+	    const int niSI = static_cast<int>(well->getTotNoConn());
 	    std::map <std::size_t, const Opm::Connection*> sIToConn;
 
 	    //Branch according to MSW well or not and 
@@ -105,12 +101,10 @@ namespace {
 		sIToConn = mapSeqIndexToConnection(conns);
 	    }
 	    std::vector<const Opm::Connection*> connSI;
-	    std::cout << "ConnOP - well" << well->name() << " niSI: " << niSI << std::endl;
 	    for (int iSI = 0; iSI < niSI; iSI++) {
 		const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
 		if (searchSI != sIToConn.end()) {		  
 		  connSI.push_back(searchSI->second);
-		  std::cout << "ConnOP - iSI " << iSI  << " searchSI->second.getI,J,K" << searchSI->second->getI() << " , " << searchSI->second->getJ() << " , " << searchSI->second->getK() << std::endl;
 		}
 	    }
 	    for (auto nConn = connSI.size(), connID = 0*nConn;
@@ -147,8 +141,8 @@ namespace {
             using ConnState = ::Opm::WellCompletion::StateEnum;
 
             // Wrong.  Should be connection's order of appearance in COMPDAT.
-            iConn[0] = conn.getSeqIndex()+1;
-
+            //iConn[0] = conn.getSeqIndex()+1;
+	    iConn[0] = connID+1;
             iConn[1] = conn.getI() + 1;
             iConn[2] = conn.getJ() + 1;
             iConn[3] = conn.getK() + 1;
@@ -161,8 +155,9 @@ namespace {
             // draining and imbibition curves at connections.
             iConn[9] = iConn[6];
 
-            iConn[12] = std::abs(conn.complnum);
-            iConn[13] = conn.dir;
+            //iConn[12] = std::abs(conn.complnum);
+            iConn[12] =  iConn[0];
+	    iConn[13] = conn.dir;
             iConn[14] = conn.attachedToSegment()
                 ? conn.segment_number : 0;
         }

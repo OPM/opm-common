@@ -47,7 +47,7 @@ namespace Opm {
     {
     }
 
-    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword, const EclipseGrid& grid ) {
+    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword, const EclipseGrid& grid, std::size_t& totNC ) {
 
         // only handle the second record here
         // The first record here only contains the well name
@@ -124,7 +124,8 @@ namespace Opm {
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
 		
 		if (grid.cellActive(I, J, K)) {
-		    size_t seqIndex = compsegs.size();
+		    std::size_t seqIndex = compsegs.size();
+		    totNC = seqIndex;
 		    compsegs.emplace_back( I, J, K,
 					  branch,
 					  distance_start, distance_end,
