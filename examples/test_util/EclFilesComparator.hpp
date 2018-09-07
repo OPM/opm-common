@@ -129,6 +129,8 @@ class ECLFilesComparator {
         //! \brief Calculate average of a vector.
         //! \details Returning the average of the input vector, i.e. the sum of all values divided by the number of elements.
         static double average(const std::vector<double>& vec);
+         //! \brief Obtain the volume of a cell.
+        static double getCellVolume(const ecl_grid_type* ecl_grid, const int globalIndex);
 };
 
 

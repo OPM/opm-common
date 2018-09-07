@@ -288,6 +288,19 @@ double ECLFilesComparator::average(const std::vector<double>& vec) {
 
 
 
+double ECLFilesComparator::getCellVolume(const ecl_grid_type* ecl_grid,
+                                         const int globalIndex) {
+    std::vector<double> x(8, 0.0);
+    std::vector<double> y(8, 0.0);
+    std::vector<double> z(8, 0.0);
+    for (int i = 0; i < 8; i++) {
+        ecl_grid_get_cell_corner_xyz1(ecl_grid, globalIndex, i, &x.data()[i], &y.data()[i], &z.data()[i]);
+    }
+    return calculateCellVol(x,y,z);
+}
+
+
+
 void ECLRegressionTest::printResultsForKeyword(const std::string& keyword) const {
     std::cout << "Deviation results for keyword " << keyword << " of type "
         << ecl_type_get_name(ecl_file_iget_named_data_type(ecl_file1, keyword.c_str(), 0))
@@ -412,20 +425,6 @@ void ECLRegressionTest::deviationsForCell(double val1, double val2,
     }
     if (dev.rel != -1) {
         relDeviation.push_back(dev.rel);
-    }
-}
-
-
-
-namespace {
-    double getCellVolume(const ecl_grid_type* ecl_grid, const int globalIndex) {
-        std::vector<double> x(8, 0.0);
-        std::vector<double> y(8, 0.0);
-        std::vector<double> z(8, 0.0);
-        for (int i = 0; i < 8; i++) {
-            ecl_grid_get_cell_corner_xyz1(ecl_grid, globalIndex, i, &x.data()[i], &y.data()[i], &z.data()[i]);
-        }
-        return calculateCellVol(x,y,z);
     }
 }
 
