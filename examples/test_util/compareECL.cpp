@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
     std::cout << "Comparing '" << basename1 << "' to '" << basename2 << "'." << std::endl;
     try {
         if (integrationTest) {
-            IntegrationTest comparator(basename1, basename2, absTolerance, relTolerance);
+            ECLIntegrationTest comparator(basename1, basename2, absTolerance, relTolerance);
             if (printKeywords) {
                 comparator.printKeywords();
                 return 0;
@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
             }
         }
         else {
-            RegressionTest comparator(file_type, basename1, basename2, absTolerance, relTolerance);
+            ECLRegressionTest comparator(file_type, basename1, basename2, absTolerance, relTolerance);
             comparator.throwOnErrors(throwOnError);
             comparator.doAnalysis(analysis);
             if (printKeywords) {

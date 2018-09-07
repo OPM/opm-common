@@ -288,7 +288,7 @@ double ECLFilesComparator::average(const std::vector<double>& vec) {
 
 
 
-void RegressionTest::printResultsForKeyword(const std::string& keyword) const {
+void ECLRegressionTest::printResultsForKeyword(const std::string& keyword) const {
     std::cout << "Deviation results for keyword " << keyword << " of type "
         << ecl_type_get_name(ecl_file_iget_named_data_type(ecl_file1, keyword.c_str(), 0))
         << ":\n";
@@ -302,8 +302,8 @@ void RegressionTest::printResultsForKeyword(const std::string& keyword) const {
 
 
 
-void RegressionTest::boolComparisonForOccurrence(const std::string& keyword,
-                                                 int occurrence1, int occurrence2) const {
+void ECLRegressionTest::boolComparisonForOccurrence(const std::string& keyword,
+                                                    int occurrence1, int occurrence2) const {
     ecl_kw_type* ecl_kw1 = nullptr;
     ecl_kw_type* ecl_kw2 = nullptr;
     const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence1, occurrence2);
@@ -319,7 +319,8 @@ void RegressionTest::boolComparisonForOccurrence(const std::string& keyword,
 
 
 
-void RegressionTest::charComparisonForOccurrence(const std::string& keyword, int occurrence1, int occurrence2) const {
+void ECLRegressionTest::charComparisonForOccurrence(const std::string& keyword,
+                                                    int occurrence1, int occurrence2) const {
     ecl_kw_type* ecl_kw1 = nullptr;
     ecl_kw_type* ecl_kw2 = nullptr;
     const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence1, occurrence2);
@@ -335,7 +336,8 @@ void RegressionTest::charComparisonForOccurrence(const std::string& keyword, int
 
 
 
-void RegressionTest::intComparisonForOccurrence(const std::string& keyword, int occurrence1, int occurrence2) const {
+void ECLRegressionTest::intComparisonForOccurrence(const std::string& keyword,
+                                                   int occurrence1, int occurrence2) const {
     ecl_kw_type* ecl_kw1 = nullptr;
     ecl_kw_type* ecl_kw2 = nullptr;
     const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence1, occurrence2);
@@ -352,7 +354,8 @@ void RegressionTest::intComparisonForOccurrence(const std::string& keyword, int 
 
 
 
-void RegressionTest::doubleComparisonForOccurrence(const std::string& keyword, int occurrence1, int occurrence2) {
+void ECLRegressionTest::doubleComparisonForOccurrence(const std::string& keyword,
+                                                      int occurrence1, int occurrence2) {
     ecl_kw_type* ecl_kw1 = nullptr;
     ecl_kw_type* ecl_kw2 = nullptr;
     const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence1, occurrence2);
@@ -368,7 +371,11 @@ void RegressionTest::doubleComparisonForOccurrence(const std::string& keyword, i
 
 
 
-void RegressionTest::deviationsForCell(double val1, double val2, const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, bool allowNegativeValues) {
+void ECLRegressionTest::deviationsForCell(double val1, double val2,
+                                          const std::string& keyword,
+                                          int occurrence1, int occurrence2,
+                                          size_t kw_size, size_t cell,
+                                          bool allowNegativeValues) {
     double absTolerance = getAbsTolerance();
     double relTolerance = getRelTolerance();
     if (!allowNegativeValues) {
@@ -424,7 +431,7 @@ namespace {
 
 
 
-void RegressionTest::gridCompare(const bool volumecheck) const {
+void ECLRegressionTest::gridCompare(const bool volumecheck) const {
     double absTolerance = getAbsTolerance();
     double relTolerance = getRelTolerance();
     const unsigned int globalGridCount1 = ecl_grid_get_global_size(ecl_grid1);
@@ -483,7 +490,7 @@ void RegressionTest::gridCompare(const bool volumecheck) const {
 
 
 
-void RegressionTest::results() {
+void ECLRegressionTest::results() {
     if (keywords1.size() != keywords2.size()) {
         std::set<std::string> keys(keywords1.begin() , keywords1.end());
         for (const auto& key2: keywords2)
@@ -528,7 +535,7 @@ void RegressionTest::results() {
 
 
 
-void RegressionTest::resultsForKeyword(const std::string& keyword) {
+void ECLRegressionTest::resultsForKeyword(const std::string& keyword) {
     keywordValidForComparing(keyword);
     const unsigned int occurrences1 = ecl_file_get_num_named_kw(ecl_file1, keyword.c_str());
     const unsigned int occurrences2 = ecl_file_get_num_named_kw(ecl_file2, keyword.c_str());
@@ -603,7 +610,7 @@ void RegressionTest::resultsForKeyword(const std::string& keyword) {
 
 
 
-void IntegrationTest::setCellVolumes() {
+void ECLIntegrationTest::setCellVolumes() {
     double absTolerance = getAbsTolerance();
     double relTolerance = getRelTolerance();
     const unsigned int globalGridCount1 = ecl_grid_get_global_size(ecl_grid1);
@@ -644,7 +651,7 @@ void IntegrationTest::setCellVolumes() {
 
 
 
-void IntegrationTest::initialOccurrenceCompare(const std::string& keyword) {
+void ECLIntegrationTest::initialOccurrenceCompare(const std::string& keyword) {
     ecl_kw_type* ecl_kw1 = nullptr;
     ecl_kw_type* ecl_kw2 = nullptr;
     const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, 0, 0);
@@ -675,7 +682,7 @@ void IntegrationTest::initialOccurrenceCompare(const std::string& keyword) {
 
 
 
-void IntegrationTest::occurrenceCompare(const std::string& keyword, int occurrence) const {
+void ECLIntegrationTest::occurrenceCompare(const std::string& keyword, int occurrence) const {
     ecl_kw_type* ecl_kw1 = nullptr;
     ecl_kw_type* ecl_kw2 = nullptr;
     const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence, occurrence);
@@ -706,7 +713,9 @@ void IntegrationTest::occurrenceCompare(const std::string& keyword, int occurren
 
 
 
-IntegrationTest::IntegrationTest(const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance):
+ECLIntegrationTest::ECLIntegrationTest(const std::string& basename1,
+                                       const std::string& basename2,
+                                       double absTolerance, double relTolerance) :
     ECLFilesComparator(ECL_UNIFIED_RESTART_FILE, basename1, basename2, absTolerance, relTolerance) {
     std::cout << "\nUsing cell volumes and keyword values from case " << basename2
               << " as reference." << std::endl << std::endl;
@@ -715,14 +724,14 @@ IntegrationTest::IntegrationTest(const std::string& basename1, const std::string
 
 
 
-bool IntegrationTest::elementInWhitelist(const std::string& keyword) const {
+bool ECLIntegrationTest::elementInWhitelist(const std::string& keyword) const {
     auto it = std::find(keywordWhitelist.begin(), keywordWhitelist.end(), keyword);
     return it != keywordWhitelist.end();
 }
 
 
 
-void IntegrationTest::equalNumKeywords() const {
+void ECLIntegrationTest::equalNumKeywords() const {
     if (keywords1.size() != keywords2.size()) {
         OPM_THROW(std::runtime_error, "\nKeywords in first file: " << keywords1.size()
                 << "\nKeywords in second file: " << keywords2.size()
@@ -732,14 +741,14 @@ void IntegrationTest::equalNumKeywords() const {
 
 
 
-void IntegrationTest::results() {
+void ECLIntegrationTest::results() {
     for (const auto& it : keywordWhitelist)
         resultsForKeyword(it);
 }
 
 
 
-void IntegrationTest::resultsForKeyword(const std::string& keyword) {
+void ECLIntegrationTest::resultsForKeyword(const std::string& keyword) {
     std::cout << "Comparing " << keyword << "...";
     keywordValidForComparing(keyword);
     const unsigned int occurrences1 = ecl_file_get_num_named_kw(ecl_file1, keyword.c_str());

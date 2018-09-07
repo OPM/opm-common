@@ -141,7 +141,7 @@ class ECLFilesComparator {
              or keyworddata for all keywords or a given keyword (resultsForKeyword()).
  */
 
-class RegressionTest: public ECLFilesComparator {
+class ECLRegressionTest: public ECLFilesComparator {
     private:
         // These vectors store absolute and relative deviations, respecively. Note that they are whiped clean for every new keyword comparison.
         std::vector<double> absDeviation, relDeviation;
@@ -174,7 +174,7 @@ class RegressionTest: public ECLFilesComparator {
         //! \param[in] absTolerance Tolerance for absolute deviation.
         //! \param[in] relTolerance Tolerance for relative deviation.
         //! \details This constructor only calls the constructor of the superclass, see the docs for ECLFilesComparator for more information.
-        RegressionTest(int file_type, const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance):
+        ECLRegressionTest(int file_type, const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance):
             ECLFilesComparator(file_type, basename1, basename2, absTolerance, relTolerance) {}
 
         //! \brief Option to only compare last occurrence
@@ -202,7 +202,7 @@ class RegressionTest: public ECLFilesComparator {
              to compare griddata or keyworddata for all keywords or a given
              keyword (resultsForKeyword()).
  */
-class IntegrationTest: public ECLFilesComparator {
+class ECLIntegrationTest: public ECLFilesComparator {
     private:
         std::vector<double> cellVolumes; //!< Vector of cell volumes in second input case (indexed by global index)
         std::vector<double> initialCellValues; //!< Keyword values for all cells at first occurrence (index by global index)
@@ -220,7 +220,7 @@ class IntegrationTest: public ECLFilesComparator {
         //! \param[in] absTolerance Tolerance for absolute deviation.
         //! \param[in] relTolerance Tolerance for relative deviation.
         //! \details This constructor calls the constructor of the superclass, with input filetype unified restart. See the docs for ECLFilesComparator for more information.
-        IntegrationTest(const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance);
+        ECLIntegrationTest(const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance);
 
         //! \brief Checks if a keyword is supported for comparison.
         //! \param[in] keyword Keyword to check.
