@@ -62,6 +62,22 @@ namespace Opm {
         return m_nz;
     }
 
+    size_t GridDims::operator[](int dim) const {
+        switch (dim) {
+        case 0:
+            return this->m_nx;
+            break;
+        case 1:
+            return this->m_ny;
+            break;
+        case 2:
+            return this->m_nz;
+            break;
+        default:
+            throw std::invalid_argument("Invalid argument dim:" + std::to_string(dim));
+        }
+    }
+
     const std::array<int, 3> GridDims::getNXYZ() const {
         return std::array<int, 3> {{int( m_nx ), int( m_ny ), int( m_nz )}};
     }
@@ -116,4 +132,5 @@ namespace Opm {
         m_ny = dims[1];
         m_nz = dims[2];
     }
+
 }
