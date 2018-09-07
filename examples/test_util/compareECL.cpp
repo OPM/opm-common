@@ -16,7 +16,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include <opm/test_util/EclFilesComparator.hpp>
+#include "EclFilesComparator.hpp"
 #include <opm/common/ErrorMacros.hpp>
 
 #include <ert/util/util.h>

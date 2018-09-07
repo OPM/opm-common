@@ -132,5 +132,34 @@ endmacro (install_hook)
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
 
+# Build the compare utilities
+if(ENABLE_ECL_INPUT)
+  add_library(testutil STATIC
+              examples/test_util/EclFilesComparator.cpp
+              examples/test_util/summaryComparator.cpp
+              examples/test_util/summaryIntegrationTest.cpp
+              examples/test_util/summaryRegressionTest.cpp)
+  target_link_libraries(testutil ecl)
+  foreach(app compareECL compareSummary)
+    add_executable(${app} examples/test_util/${app}.cpp)
+    target_link_libraries(${app} testutil opmcommon)
+  endforeach()
+
+  # Add the tests
+  set(_libs testutil opmcommon
+            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+  opm_add_test(test_compareSummary CONDITION ENABLE_ECL_INPUT
+                                   LIBRARIES ${_libs})
+  opm_add_test(test_EclFilesComparator CONDITION ENABLE_ECL_INPUT
+                                       LIBRARIES ${_libs})
+  if(HAVE_DYNAMIC_BOOST_TEST AND NOT BUILD_SHARED_LIBS)
+    set_target_properties(test_compareSummary PROPERTIES
+                          COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
+    set_target_properties(test_EclFilesComparator PROPERTIES
+                          COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
+  endif()
+  install(TARGETS compareECL compareSummary DESTINATION bin)
+endif()
+
 # Install build system files
 install(DIRECTORY cmake DESTINATION share/opm)
