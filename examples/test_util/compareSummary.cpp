@@ -18,8 +18,8 @@
    */
 
 
-#include <opm/test_util/summaryRegressionTest.hpp>
-#include <opm/test_util/summaryIntegrationTest.hpp>
+#include "summaryRegressionTest.hpp"
+#include "summaryIntegrationTest.hpp"
 #include <string>
 #include <algorithm>
 #include <stdexcept>

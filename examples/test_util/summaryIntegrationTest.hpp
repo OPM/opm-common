@@ -17,7 +17,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include <opm/test_util/summaryComparator.hpp>
+#include "summaryComparator.hpp"
 
 //! \brief Struct for storing the total area under a graph.
 //! \details Used when plotting summary vector against time. In most cases this represents a volume.

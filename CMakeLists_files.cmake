@@ -135,10 +135,6 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES
-          src/opm/test_util/summaryIntegrationTest.cpp
-          src/opm/test_util/summaryRegressionTest.cpp
-          src/opm/test_util/summaryComparator.cpp
-          src/opm/test_util/EclFilesComparator.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
@@ -237,8 +233,6 @@ if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
           tests/test_AggregateWellData.cpp
           tests/test_CharArrayNullTerm.cpp
-          tests/test_compareSummary.cpp
-          tests/test_EclFilesComparator.cpp
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
           tests/test_InteHEAD.cpp
@@ -283,12 +277,6 @@ if(ENABLE_ECL_INPUT)
     examples/opmpack.cpp
   )
 endif()
-if(ENABLE_ECL_OUTPUT)
-  list(APPEND EXAMPLE_SOURCE_FILES
-          examples/test_util/compareECL.cpp
-          examples/test_util/compareSummary.cpp
-      )
-endif()
 
 # programs listed here will not only be compiled, but also marked for
 # installation
@@ -299,12 +287,6 @@ if(ENABLE_ECL_INPUT)
     examples/opmi.cpp
     examples/opmpack.cpp
   )
-endif()
-if(ENABLE_ECL_OUTPUT)
-  list(APPEND PROGRAM_SOURCE_FILES
-          examples/test_util/compareECL.cpp
-          examples/test_util/compareSummary.cpp
-      )
 endif()
 
 list( APPEND PUBLIC_HEADER_FILES
@@ -517,9 +499,5 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/WindowedArray.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
         opm/output/OutputWriter.hpp
-        opm/test_util/EclFilesComparator.hpp
-        opm/test_util/summaryComparator.hpp
-        opm/test_util/summaryIntegrationTest.hpp
-        opm/test_util/summaryRegressionTest.hpp
         )
 endif()

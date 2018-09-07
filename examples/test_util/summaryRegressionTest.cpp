@@ -16,7 +16,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include <opm/test_util/summaryRegressionTest.hpp>
+#include "summaryRegressionTest.hpp"
 #include <opm/common/ErrorMacros.hpp>
 #include <ert/ecl/ecl_sum.h>
 #include <ert/util/stringlist.h>
