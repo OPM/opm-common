@@ -55,8 +55,8 @@ class SummaryRegressionTest: public SummaryComparator {
         //! \param[in] relativeTol The relative tolerance which is to be used in the test.
         //! \param[in] absoluteTol The absolute tolerance which is to be used in the test.
         //! \details The constructor calls the constructor of the super class.
-        SummaryRegressionTest(const char* basename1,
-                              const char* basename2,
+        SummaryRegressionTest(const std::string& basename1,
+                              const std::string& basename2,
                               double relativeTol, double absoluteTol) :
             SummaryComparator(basename1, basename2, relativeTol, absoluteTol) {}
 

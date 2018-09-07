@@ -25,9 +25,11 @@
 #include <cmath>
 #include <numeric>
 
-SummaryComparator::SummaryComparator(const char* basename1, const char* basename2, double absoluteTol, double relativeTol){
-    ecl_sum1 = ecl_sum_fread_alloc_case(basename1, ":");
-    ecl_sum2 = ecl_sum_fread_alloc_case(basename2, ":");
+SummaryComparator::SummaryComparator(const std::string& basename1,
+                                     const std::string& basename2,
+                                     double absoluteTol, double relativeTol){
+    ecl_sum1 = ecl_sum_fread_alloc_case(basename1.c_str(), ":");
+    ecl_sum2 = ecl_sum_fread_alloc_case(basename2.c_str(), ":");
     if (ecl_sum1 == nullptr || ecl_sum2 == nullptr) {
         OPM_THROW(std::runtime_error, "Not able to open files");
     }

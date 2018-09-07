@@ -145,7 +145,9 @@ class SummaryComparator {
         //! \param[in] absoluteTolerance The absolute tolerance which is to be used in the test.
         //! \param[in] relativeTolerance The relative tolerance which is to be used in the test.
         //! \details The constructor creates an object of the class, and openes the files, an exception is thrown if the opening of the files fails. \n It creates stringlists, in which keywords are to be stored, and figures out which keylist that contains the more/less keywords. \n Also the private member variables aboluteTolerance and relativeTolerance are set.
-        SummaryComparator(const char* basename1, const char* basename2, double absoluteTolerance, double relativeTolerance);
+        SummaryComparator(const std::string& basename1,
+                          const std::string& basename2,
+                          double absoluteTolerance, double relativeTolerance);
 
         //! \brief Destructor
         //! \details The destructor takes care of the allocated memory in which data has been stored.

@@ -124,7 +124,8 @@ class SummaryIntegrationTest: public SummaryComparator {
         //! \param[in] atol The absolute tolerance which is to be used in the test.
         //! \param[in] rtol The relative tolerance which is to be used in the test.
         //! \details The constructor calls the constructor of the super class.
-        SummaryIntegrationTest(const char* basename1, const char* basename2,
+        SummaryIntegrationTest(const std::string& basename1,
+                               const std::string& basename2,
                                double atol, double rtol) :
             SummaryComparator(basename1, basename2,  atol, rtol) {}
 
