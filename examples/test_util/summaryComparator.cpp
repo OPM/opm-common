@@ -16,7 +16,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include <opm/test_util/summaryComparator.hpp>
+#include "summaryComparator.hpp"
 #include <ert/ecl/ecl_sum.h>
 #include <ert/util/stringlist.h>
 #include <ert/util/int_vector.h>

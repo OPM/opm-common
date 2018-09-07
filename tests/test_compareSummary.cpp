@@ -18,8 +18,8 @@
 
 
 #include "config.h"
-#include <opm/test_util/summaryComparator.hpp>
-#include <opm/test_util/summaryIntegrationTest.hpp>
+#include <examples/test_util/summaryComparator.hpp>
+#include <examples/test_util/summaryIntegrationTest.hpp>
 
 
 #define BOOST_TEST_MODULE CalculationTest

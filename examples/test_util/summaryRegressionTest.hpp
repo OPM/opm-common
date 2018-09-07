@@ -20,7 +20,7 @@
 #ifndef SUMMARYREGRESSIONTEST_HPP
 #define SUMMARYREGRESSIONTEST_HPP
 
-#include <opm/test_util/summaryComparator.hpp>
+#include "summaryComparator.hpp"
 
 //! \details  The class inherits from the SummaryComparator class, which takes care of all file reading. \n The RegressionTest class compares the values from the two different files and throws exceptions when the deviation is unsatisfying.
 class RegressionTest: public SummaryComparator {

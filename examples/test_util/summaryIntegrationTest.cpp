@@ -17,7 +17,7 @@
    */
 
 
-#include <opm/test_util/summaryIntegrationTest.hpp>
+#include "summaryIntegrationTest.hpp"
 #include <opm/common/ErrorMacros.hpp>
 #include <ert/ecl/ecl_sum.h>
 #include <ert/util/stringlist.h>
