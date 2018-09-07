@@ -136,6 +136,8 @@ include (OpmLibMain)
 if(ENABLE_ECL_INPUT)
   add_library(testutil STATIC
               examples/test_util/EclFilesComparator.cpp
+              examples/test_util/EclIntegrationTest.cpp
+              examples/test_util/EclRegressionTest.cpp
               examples/test_util/summaryComparator.cpp
               examples/test_util/summaryIntegrationTest.cpp
               examples/test_util/summaryRegressionTest.cpp)
