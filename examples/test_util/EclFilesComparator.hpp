@@ -20,6 +20,7 @@
 #ifndef ECLFILESCOMPARATOR_HPP
 #define ECLFILESCOMPARATOR_HPP
 
+#include "Deviation.hpp"
 #include <map>
 #include <vector>
 #include <string>
@@ -31,16 +32,6 @@ struct ecl_grid_struct; //!< Prototype for eclipse grid struct, from ERT library
 typedef struct ecl_grid_struct ecl_grid_type;
 struct ecl_kw_struct; //!< Prototype for eclipse keyword struct, from ERT library.
 typedef struct ecl_kw_struct ecl_kw_type;
-
-
-/*! \brief Deviation struct.
-    \details The member variables are default initialized to -1,
-             which is an invalid deviation value.
- */
-struct Deviation {
-    double abs = -1; //!< Absolute deviation
-    double rel = -1; //!< Relative deviation
-};
 
 
 /*! \brief A class for comparing ECLIPSE files.

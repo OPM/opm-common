@@ -20,6 +20,7 @@
 #ifndef SUMMARYCOMPARATOR_HPP
 #define SUMMARYCOMPARATOR_HPP
 
+#include "Deviation.hpp"
 #include <iostream>
 #include <iomanip>
 #include <map>
@@ -45,13 +46,6 @@ typedef struct stringlist_struct stringlist_type;
 //! \brief Prototyping struct, encapsuling the ert libraries.
 struct ecl_sum_struct;
 typedef struct ecl_sum_struct ecl_sum_type;
-
-
-//! \brief Struct for storing the deviation between two values.
-struct Deviation {
-    double abs = 0;     //!< The absolute deviation
-    double rel = 0;     //!< The relative deviation
-};
 
 
 class SummaryComparator {
