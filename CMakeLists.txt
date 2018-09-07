@@ -36,12 +36,10 @@ set(OPM_PROJECT_EXTRA_CODE_INTREE "#ENABLE_ECL_INPUT is needed by opm-common-pre
                                    include(OpmPackage) #Make macros availabe after find_package(opm-common)")
 if(ENABLE_ECL_OUTPUT)
   set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                        set(COMPARE_SUMMARY_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareSummary)
                                         set(COMPARE_ECL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareECL)
                                         set(OPM_PACK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/opmpack)")
 
   set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                     set(COMPARE_SUMMARY_COMMAND ${PROJECT_BINARY_DIR}/bin/compareSummary)
                                      set(COMPARE_ECL_COMMAND ${PROJECT_BINARY_DIR}/bin/compareECL)
                                      set(OPM_PACK_COMMAND ${PROJECT_BINARY_DIR}/bin/opmpack)")
 endif()
@@ -142,10 +140,8 @@ if(ENABLE_ECL_INPUT)
               examples/test_util/summaryIntegrationTest.cpp
               examples/test_util/summaryRegressionTest.cpp)
   target_link_libraries(testutil ecl)
-  foreach(app compareECL compareSummary)
-    add_executable(${app} examples/test_util/${app}.cpp)
-    target_link_libraries(${app} testutil opmcommon)
-  endforeach()
+  add_executable(compareECL examples/test_util/compareECL.cpp)
+  target_link_libraries(compareECL testutil opmcommon)
 
   # Add the tests
   set(_libs testutil opmcommon
@@ -160,7 +156,7 @@ if(ENABLE_ECL_INPUT)
     set_target_properties(test_EclFilesComparator PROPERTIES
                           COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
   endif()
-  install(TARGETS compareECL compareSummary DESTINATION bin)
+  install(TARGETS compareECL DESTINATION bin)
 endif()
 
 # Install build system files

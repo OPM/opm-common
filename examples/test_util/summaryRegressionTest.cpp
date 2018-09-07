@@ -98,7 +98,7 @@ void SummaryRegressionTest::getRegressionTest(){
     }
     if (throwAtEnd)
       OPM_THROW(std::runtime_error, "Regression test failed.");
-    else
+    else if (deviations.empty())
       std::cout << "Regression test succeeded." << std::endl;
 }
 
