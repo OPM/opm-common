@@ -180,7 +180,7 @@ int main (int argc, char ** argv){
 
     try {
         if(regressionTest){
-            RegressionTest compare(basename1,basename2, absoluteTolerance, relativeTolerance);
+            SummaryRegressionTest compare(basename1,basename2, absoluteTolerance, relativeTolerance);
             compare.throwOnErrors(throwOnError);
             compare.doAnalysis(analysis);
             if(printKeywords){compare.setPrintKeywords(true);}
@@ -194,7 +194,7 @@ int main (int argc, char ** argv){
             }
         }
         if(integrationTest){
-            IntegrationTest compare(basename1,basename2, absoluteTolerance, relativeTolerance);
+            SummaryIntegrationTest compare(basename1,basename2, absoluteTolerance, relativeTolerance);
             compare.throwOnErrors(throwOnError);
             if(findVectorWithGreatestErrorRatio){compare.setFindVectorWithGreatestErrorRatio(true);}
             if(allowSpikes){compare.setAllowSpikes(true);}

@@ -35,7 +35,7 @@ struct WellProductionVolume{
 };
 
 //! \details The class inherits from the SummaryComparator class, which takes care of all file reading. \n The IntegrationTest class compares values from the two different files and throws exceptions when the deviation is unsatisfying.
-class IntegrationTest: public SummaryComparator {
+class SummaryIntegrationTest: public SummaryComparator {
     private:
         bool allowSpikes = false; //!< Boolean value, when true checkForSpikes is included as a sub test in the integration test. By default: false.
         bool findVolumeError = false; //!< Boolean value, when true volumeErrorCheck() is included as a sub test in the integration test. By default: false.
@@ -124,8 +124,8 @@ class IntegrationTest: public SummaryComparator {
         //! \param[in] atol The absolute tolerance which is to be used in the test.
         //! \param[in] rtol The relative tolerance which is to be used in the test.
         //! \details The constructor calls the constructor of the super class.
-        IntegrationTest(const char* basename1, const char* basename2,
-                        double atol, double rtol) :
+        SummaryIntegrationTest(const char* basename1, const char* basename2,
+                               double atol, double rtol) :
             SummaryComparator(basename1, basename2,  atol, rtol) {}
 
         //! \brief This function sets the private member variable allowSpikes.
