@@ -132,6 +132,7 @@ int main(int argc, char** argv) {
     bool allowSpikes             = false;
     bool throwOnError            = true;
     bool throwTooGreatErrorRatio = true;
+    bool acceptExtraKeywords     = false;
     bool analysis                = false;
     bool volumecheck             = true;
     char* keyword                = nullptr;
@@ -140,7 +141,7 @@ int main(int argc, char** argv) {
     int c                        = 0;
     int spikeLimit               = -1;
 
-    while ((c = getopt(argc, argv, "hiIk:alnpPt:VRgs:m:vK")) != -1) {
+    while ((c = getopt(argc, argv, "hiIk:alnpPt:VRgs:m:vKx")) != -1) {
         switch (c) {
             case 'a':
               analysis = true;
@@ -197,6 +198,9 @@ int main(int argc, char** argv) {
                 break;
             case 'V':
                 volumecheck = false;
+                break;
+            case 'x':
+                acceptExtraKeywords = true;
                 break;
             case '?':
                 if (optopt == 'k' || optopt == 'm' || optopt == 's') {
@@ -344,6 +348,7 @@ int main(int argc, char** argv) {
             ECLRegressionTest comparator(file_type, basename1, basename2, absTolerance, relTolerance);
             comparator.throwOnErrors(throwOnError);
             comparator.doAnalysis(analysis);
+            comparator.setAcceptExtraKeywords(acceptExtraKeywords);
             if (printKeywords) {
                 comparator.printKeywords();
                 return 0;
