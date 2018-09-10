@@ -28,7 +28,7 @@
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/smspec_node.h>
 #include <ert/util/util.h>
-#include <ert/util/TestArea.hpp>
+#include <ert/util/test_work_area.h>
 
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/Summary.hpp>
@@ -181,7 +181,7 @@ struct setup {
     SummaryConfig config;
     data::Wells wells;
     std::string name;
-    ERT::TestArea ta;
+    test_work_area_type * ta;
 
     /*-----------------------------------------------------------------*/
 
@@ -193,8 +193,12 @@ struct setup {
         config( deck, schedule, es.getTableManager(), parseContext ),
         wells( result_wells() ),
         name( fname ),
-        ta( ERT::TestArea("test_summary") )
+        ta( test_work_area_alloc("summary_test"))
     {
+    }
+
+    ~setup() {
+        test_work_area_free(this->ta);
     }
 
 };

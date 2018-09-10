@@ -38,7 +38,7 @@
 #include <ert/ecl/ecl_util.h>
 #include <ert/util/test_work_area.h>
 #include <ert/util/util.h>
-#include <ert/util/TestArea.hpp>
+#include <ert/util/test_work_area.h>
 
 #include <vector>
 
@@ -104,8 +104,8 @@ data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
 BOOST_AUTO_TEST_CASE(test_RFT) {
     ParseContext parse_context;
     std::string eclipse_data_filename    = "testrft.DATA";
-    ERT::TestArea test_area("test_RFT");
-    test_area.copyFile( eclipse_data_filename );
+    test_work_area_type * test_area = test_work_area_alloc("test_RFT");
+    test_work_area_copy_file( test_area, eclipse_data_filename.c_str() );
 
     auto deck = Parser().parseFile( eclipse_data_filename, parse_context );
     auto eclipseState = Parser::parse( deck );
@@ -162,6 +162,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
     }
 
     verifyRFTFile("TESTRFT.RFT");
+    test_work_area_free( test_area );
 }
 
 namespace {
@@ -191,8 +192,8 @@ void verifyRFTFile2(const std::string& rft_filename) {
 BOOST_AUTO_TEST_CASE(test_RFT2) {
     ParseContext parse_context;
     std::string eclipse_data_filename    = "testrft.DATA";
-    ERT::TestArea test_area("test_RFT");
-    test_area.copyFile( eclipse_data_filename );
+    test_work_area_type * test_area = test_work_area_alloc("test_RFT");
+    test_work_area_copy_file( test_area, eclipse_data_filename.c_str());
 
     auto deck = Parser().parseFile( eclipse_data_filename, parse_context );
     auto eclipseState = Parser::parse( deck );
@@ -253,4 +254,5 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
             verifyRFTFile2("TESTRFT.RFT");
         }
     }
+    test_work_area_free( test_area );
 }

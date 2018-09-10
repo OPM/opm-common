@@ -46,7 +46,7 @@
 #include <ert/ecl/ecl_kw_magic.h>
 #include <ert/ecl_well/well_info.h>
 #include <ert/ecl_well/well_state.h>
-#include <ert/util/TestArea.hpp>
+#include <ert/util/test_work_area.h>
 
 using namespace Opm;
 
@@ -418,8 +418,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
                                   {"SWAT" , UnitSystem::measure::identity},
                                   {"SGAS" , UnitSystem::measure::identity},
                                   {"TEMP" , UnitSystem::measure::temperature}};
-    ERT::TestArea testArea("test_Restart");
-    testArea.copyFile( "FIRST_SIM.DATA" );
+    test_work_area_type * test_area = test_work_area_alloc("test_restart");
+    test_work_area_copy_file( test_area, "FIRST_SIM.DATA");
 
     Setup setup("FIRST_SIM.DATA");
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
@@ -429,6 +429,7 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
 
     BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL", UnitSystem::measure::pressure}} ) , std::runtime_error );
     BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
+    test_work_area_free( test_area );
 }
 
 
@@ -462,21 +463,22 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     std::vector<RestartKey> solution_keys {RestartKey("SWAT", UnitSystem::measure::identity),
                                            RestartKey("SGAS", UnitSystem::measure::identity)};
 
-    ERT::TestArea testArea("test_Restart");
-    testArea.copyFile( "FIRST_SIM.DATA" );
-
+    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
+    test_work_area_copy_file( test_area, "FIRST_SIM.DATA");
     Setup setup("FIRST_SIM.DATA");
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
 
     auto state1 = first_sim( setup.es , eclWriter , true);
     auto state2 = second_sim( eclWriter , solution_keys );
     compare_equal( state1 , state2 , solution_keys);
+    test_work_area_free( test_area );
 }
+
 
 BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
     Setup setup("FIRST_SIM.DATA");
+    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
     {
-        ERT::TestArea testArea("test_Restart");
         auto num_cells = setup.grid.getNumActive( ) + 1;
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
@@ -489,6 +491,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
                                            setup.schedule),
                                            std::runtime_error);
     }
+    test_work_area_free(test_area);
 }
 
 
@@ -514,8 +517,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
 
 BOOST_AUTO_TEST_CASE(ExtraData_content) {
     Setup setup("FIRST_SIM.DATA");
+    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
     {
-        ERT::TestArea testArea("test_Restart");
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
@@ -566,13 +569,14 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
             }
         }
     }
+    test_work_area_free(test_area);
 }
 
 
 BOOST_AUTO_TEST_CASE(STORE_THPRES) {
     Setup setup("FIRST_SIM_THPRES.DATA");
+    test_work_area_type * test_area = test_work_area_alloc("test_Restart_THPRES");
     {
-        ERT::TestArea testArea("test_Restart_THPRES");
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
@@ -632,6 +636,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
 
         }
     }
+    test_work_area_free(test_area);
 }
 
 
