@@ -36,7 +36,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
-#include <ert/ecl/Smspec.hpp>
 #include <ert/ecl/ecl_smspec.h>
 
 #include <iostream>
@@ -141,15 +140,15 @@ void handleMissingGroup( const ParseContext& parseContext , const std::string& k
     parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg );
 }
 
-inline void keywordW( std::vector< ERT::smspec_node >& list,
+  inline void keywordW( SummaryConfig::keyword_list& list,
                       const ParseContext& parseContext,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
 
-    const auto type = ECL_SMSPEC_WELL_VAR;
     const auto hasValue = []( const DeckKeyword& kw ) {
         return kw.getDataRecord().getDataItem().hasValue( 0 );
     };
+    const std::array<int,3> dummy_dims = {1,1,1};
 
     if (keyword.size() && hasValue(keyword)) {
         for( const std::string& pattern : keyword.getStringData()) {
@@ -159,20 +158,32 @@ inline void keywordW( std::vector< ERT::smspec_node >& list,
                 handleMissingWell( parseContext, keyword.name(), pattern );
 
             for( const auto* well : wells )
-                list.emplace_back( type, well->name(), keyword.name() );
+                list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_WELL_VAR,
+                                                                                well->name().c_str(),
+                                                                                keyword.name().c_str(),
+                                                                                "",
+                                                                                ":",
+                                                                                dummy_dims.data(),
+                                                                                0,0,0)));
         }
     } else
         for (const auto* well : schedule.getWells())
-            list.emplace_back(type, well->name(), keyword.name());
-}
+            list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_WELL_VAR,
+                                                                            well->name().c_str(),
+                                                                            keyword.name().c_str(),
+                                                                            "",
+                                                                            ":",
+                                                                            dummy_dims.data(),
+                                                                            0,0,0)));
+  }
 
-inline void keywordG( std::vector< ERT::smspec_node >& list,
+
+inline void keywordG( SummaryConfig::keyword_list& list,
                       const ParseContext& parseContext,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
 
-    const auto type = ECL_SMSPEC_GROUP_VAR;
-
+    const std::array<int,3> dummy_dims = {1,1,1};
     if( keyword.name() == "GMWSET" ) return;
 
     if( keyword.size() == 0 ||
@@ -180,9 +191,14 @@ inline void keywordG( std::vector< ERT::smspec_node >& list,
 
         for( const auto& group : schedule.getGroups() ) {
             if( group->name() == "FIELD" ) continue;
-            list.emplace_back( type, group->name(), keyword.name() );
+            list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_GROUP_VAR,
+                                                                            group->name().c_str(),
+                                                                            keyword.name().c_str(),
+                                                                            "",
+                                                                            ":",
+                                                                            dummy_dims.data(),
+                                                                            0, 0, 0)));
         }
-
         return;
     }
 
@@ -190,17 +206,33 @@ inline void keywordG( std::vector< ERT::smspec_node >& list,
 
     for( const std::string& group : item.getData< std::string >() ) {
         if( schedule.hasGroup( group ) )
-            list.emplace_back( ECL_SMSPEC_GROUP_VAR, group, keyword.name() );
+            list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_GROUP_VAR,
+                                                                            group.c_str(),
+                                                                            keyword.name().c_str(),
+                                                                            "",
+                                                                            ":",
+                                                                            dummy_dims.data(),
+                                                                            0, 0, 0)));
+
+
         else
             handleMissingGroup( parseContext, keyword.name(), group );
     }
 }
 
-inline void keywordF( std::vector< ERT::smspec_node >& list,
-                      const DeckKeyword& keyword ) {
-    if( keyword.name() == "FMWSET" ) return;
-    list.emplace_back( keyword.name() );
-}
+  inline void keywordF( SummaryConfig::keyword_list& list,
+                        const DeckKeyword& keyword ) {
+      const std::array<int,3> dummy_dims = {1,1,1};
+      if( keyword.name() == "FMWSET" ) return;
+      list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_FIELD_VAR,
+                                                                      NULL,
+                                                                      keyword.name().c_str(),
+                                                                      "",
+                                                                      ":",
+                                                                      dummy_dims.data(),
+                                                                      0, 0, 0)));
+
+  }
 
 inline std::array< int, 3 > getijk( const DeckRecord& record,
                                     int offset = 0 ) {
@@ -212,19 +244,27 @@ inline std::array< int, 3 > getijk( const DeckRecord& record,
 }
 
 inline std::array< int, 3 > getijk( const Connection& completion ) {
-    return {{ completion.getI(), completion.getJ(), completion.getK() }};
+    return { { completion.getI(), completion.getJ(), completion.getK() }};
 }
 
-inline void keywordB( std::vector< ERT::smspec_node >& list,
-                      const DeckKeyword& keyword,
-                      const GridDims& dims) {
+  inline void keywordB( SummaryConfig::keyword_list& list,
+                        const DeckKeyword& keyword,
+                        const GridDims& dims) {
     for( const auto& record : keyword ) {
         auto ijk = getijk( record );
-        list.emplace_back( keyword.name(), dims.getNXYZ().data(), ijk.data() );
+        int global_index = 1 + dims.getGlobalIndex(ijk[0], ijk[1], ijk[2]);
+        list.push_back( SummaryConfig::keyword_type( smspec_node_alloc(ECL_SMSPEC_BLOCK_VAR,
+                                                                       NULL,
+                                                                       keyword.name().c_str(),
+                                                                       "",
+                                                                       ":",
+                                                                       dims.getNXYZ().data(),
+                                                                       global_index,0,0)));
+
     }
 }
 
-inline void keywordR( std::vector< ERT::smspec_node >& list,
+  inline void keywordR( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
                       const TableManager& tables,
                       const GridDims& dims) {
@@ -249,26 +289,41 @@ inline void keywordR( std::vector< ERT::smspec_node >& list,
 
     for( const int region : regions ) {
         if (region >= 1 && region <= static_cast<int>(numfip))
-            list.emplace_back( keyword.name(), dims.getNXYZ().data(), region );
+            list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_REGION_VAR,
+                                                                            NULL,
+                                                                            keyword.name().c_str(),
+                                                                            "",
+                                                                            ":",
+                                                                            dims.getNXYZ().data(),
+                                                                            region,
+                                                                            0, 0)));
         else
             throw std::invalid_argument("Illegal region value: " + std::to_string( region ));
     }
 }
 
 
-inline void keywordMISC( std::vector< ERT::smspec_node >& list,
-                         const DeckKeyword& keyword)
+  inline void keywordMISC( SummaryConfig::keyword_list& list,
+                           const DeckKeyword& keyword)
 {
+    const std::array<int,3> dummy_dims = {1,1,1};
     if (meta_keywords.count( keyword.name() ) == 0)
-        list.emplace_back( keyword.name() );
+        list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_MISC_VAR,
+                                                                        NULL,
+                                                                        keyword.name().c_str(),
+                                                                        "",
+                                                                        ":",
+                                                                        dummy_dims.data(),
+                                                                        0,
+                                                                        0, 0)));
 }
 
 
-inline void keywordC( std::vector< ERT::smspec_node >& list,
-                      const ParseContext& parseContext,
-                      const DeckKeyword& keyword,
-                      const Schedule& schedule,
-                      const GridDims& dims) {
+  inline void keywordC( SummaryConfig::keyword_list& list,
+                        const ParseContext& parseContext,
+                        const DeckKeyword& keyword,
+                        const Schedule& schedule,
+                        const GridDims& dims) {
 
     const auto& keywordstring = keyword.name();
     const auto last_timestep = schedule.getTimeMap().last();
@@ -297,25 +352,41 @@ inline void keywordC( std::vector< ERT::smspec_node >& list,
                 auto cijk = getijk( connection );
 
                 if( record.getItem( 1 ).defaultApplied( 0 ) ) {
-                    list.emplace_back( keywordstring, name, dims.getNXYZ().data(), cijk.data() );
-                }
-                else {
+                    int global_index = 1 + dims.getGlobalIndex(cijk[0], cijk[1], cijk[2]);
+                    list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_COMPLETION_VAR,
+                                                                                    name.c_str(),
+                                                                                    keywordstring.c_str(),
+                                                                                    "",
+                                                                                    ":",
+                                                                                    dims.getNXYZ().data(),
+                                                                                    global_index,
+                                                                                    0, 0)));
+                } else {
                     /* block coordinates specified */
                     auto recijk = getijk( record, 1 );
-                    if( std::equal( recijk.begin(), recijk.end(), cijk.begin() ) )
-                        list.emplace_back( keywordstring, name, dims.getNXYZ().data(), cijk.data() );
+                    if( std::equal( recijk.begin(), recijk.end(), cijk.begin() ) ) {
+                        int global_index = 1 + dims.getGlobalIndex(recijk[0], recijk[1], recijk[2]);
+                        list.push_back( SummaryConfig::keyword_type( smspec_node_alloc( ECL_SMSPEC_COMPLETION_VAR,
+                                                                                        name.c_str(),
+                                                                                        keywordstring.c_str(),
+                                                                                        "",
+                                                                                        ":",
+                                                                                        dims.getNXYZ().data(),
+                                                                                        global_index,
+                                                                                        0, 0)));
+                    }
                 }
             }
         }
     }
 }
 
-inline void handleKW( std::vector< ERT::smspec_node >& list,
-                      const DeckKeyword& keyword,
-                      const Schedule& schedule,
-                      const TableManager& tables,
-                      const ParseContext& parseContext,
-                      const GridDims& dims) {
+  inline void handleKW( SummaryConfig::keyword_list& list,
+                        const DeckKeyword& keyword,
+                        const Schedule& schedule,
+                        const TableManager& tables,
+                        const ParseContext& parseContext,
+                        const GridDims& dims) {
     const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
 
     switch( var_type ) {
@@ -331,24 +402,22 @@ inline void handleKW( std::vector< ERT::smspec_node >& list,
     }
 }
 
-inline void uniq( std::vector< ERT::smspec_node >& vec ) {
-    const auto lt = []( const ERT::smspec_node& lhs,
-                        const ERT::smspec_node& rhs ) {
-        return ERT::smspec_node::cmp( lhs, rhs ) < 0;
+  inline void uniq( SummaryConfig::keyword_list& vec ) {
+    const auto lt = []( const SummaryConfig::keyword_type& lhs,
+                        const SummaryConfig::keyword_type& rhs ) {
+        return smspec_node_cmp(lhs.get(), rhs.get()) < 0;
     };
 
-    const auto eq = []( const ERT::smspec_node& lhs,
-                        const ERT::smspec_node& rhs ) {
-        return ERT::smspec_node::cmp( lhs, rhs ) == 0;
+    const auto eq = []( const SummaryConfig::keyword_type& lhs,
+                        const SummaryConfig::keyword_type& rhs ) {
+        return smspec_node_equal(lhs.get(), rhs.get());
     };
 
     std::sort( vec.begin(), vec.end(), lt );
     auto logical_end = std::unique( vec.begin(), vec.end(), eq );
     vec.erase( logical_end, vec.end() );
+  }
 }
-
-}
-
 
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
@@ -373,8 +442,8 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 
     uniq( this->keywords );
     for (const auto& kw: this->keywords) {
-        this->short_keywords.insert( kw.keyword() );
-        this->summary_keywords.insert( kw.key1() );
+        this->short_keywords.insert( smspec_node_get_keyword( kw.get() ));
+        this->summary_keywords.insert( smspec_node_get_gen_key1( kw.get() ));
     }
 
 }

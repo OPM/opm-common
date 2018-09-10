@@ -127,6 +127,11 @@ BOOST_AUTO_TEST_CASE(CreateGridNoCells) {
     BOOST_CHECK_EQUAL( 10 , grid.getNX());
     BOOST_CHECK_EQUAL( 10 , grid.getNY());
     BOOST_CHECK_EQUAL( 10 , grid.getNZ());
+
+    BOOST_CHECK_EQUAL(10, grid[0]);
+    BOOST_CHECK_EQUAL(10, grid[2]);
+    BOOST_CHECK_THROW( grid[10], std::invalid_argument);
+
     BOOST_CHECK_EQUAL( 1000 , grid.getCartesianSize());
 }
 

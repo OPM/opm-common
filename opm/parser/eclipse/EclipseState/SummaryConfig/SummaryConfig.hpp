@@ -24,9 +24,58 @@
 #include <vector>
 #include <set>
 
-#include <ert/ecl/Smspec.hpp>
+#include <ert/ecl/smspec_node.h>
 
 namespace Opm {
+
+    /*
+      Very small utility class to get value semantics on the smspec_node
+      pointers. This should die as soon as the smspec_node class proper gets
+      value semantics.
+    */
+
+    class SummaryNode {
+    public:
+        SummaryNode(smspec_node_type * c_ptr) :
+            ptr(c_ptr)
+        {}
+
+        SummaryNode(const SummaryNode& other) :
+            ptr( smspec_node_alloc_copy(other.get()))
+        {}
+
+        const smspec_node_type * get() const {
+            return this->ptr;
+        }
+
+        std::string wgname() const {
+            return smspec_node_get_wgname(this->ptr);
+        }
+
+        std::string keyword() const {
+            return smspec_node_get_keyword(this->ptr);
+        }
+
+        int num() const {
+            return smspec_node_get_num(this->ptr);
+        }
+
+        ecl_smspec_var_type type() const {
+            return smspec_node_get_var_type(this->ptr);
+        }
+
+        SummaryNode& operator=(const SummaryNode &other) {
+            this->ptr = smspec_node_alloc_copy(other.ptr);
+            return *this;
+        }
+
+        ~SummaryNode() {
+            smspec_node_free(this->ptr);
+        }
+    private:
+        smspec_node_type * ptr;
+    };
+
 
     class Deck;
     class TableManager;
@@ -38,7 +87,9 @@ namespace Opm {
 
     class SummaryConfig {
         public:
-            typedef std::vector< ERT::smspec_node >::const_iterator const_iterator;
+            typedef SummaryNode keyword_type;
+            typedef std::vector< keyword_type > keyword_list;
+            typedef keyword_list::const_iterator const_iterator;
 
             SummaryConfig( const Deck&, const Schedule&,
                            const TableManager&, const ParseContext&);
@@ -80,7 +131,7 @@ namespace Opm {
               part, e.g. "WWCT", and not the qualification with
               well/group name or a numerical value.
             */
-            std::vector< ERT::smspec_node > keywords;
+            keyword_list keywords;
             std::set<std::string> short_keywords;
             std::set<std::string> summary_keywords;
     };
