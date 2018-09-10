@@ -433,7 +433,7 @@ namespace {
             // Initial data by Statoil ASA.
             return { // 122 Items (0..121)
                 // 0     1      2      3      4      5
-                infty , infty , infty , infty ,infty , infty,    //   0..  5  ( 0)
+                infty, infty, infty, infty, infty, infty,    //   0..  5  ( 0)
                 one  , zero , zero , zero , zero , 1.0e-05f, //   6.. 11  ( 1)
                 zero , zero , infty, infty, zero , dflt ,    //  12.. 17  ( 2)
                 infty, infty, infty, infty, infty, zero ,    //  18.. 23  ( 3)
@@ -496,8 +496,6 @@ namespace {
             if (well.isProducer(sim_step)) {
                 const auto& pp = well.getProductionProperties(sim_step);
 
-                using PP = ::Opm::WellProducer::ControlModeEnum;
-
                 if (pp.OilRate != 0.0) {
                     sWell[Ix::OilRateTarget] =
                         swprop(M::liquid_surface_rate, pp.OilRate);
@@ -526,8 +524,9 @@ namespace {
                     sWell[Ix::ResVRateTarget] =
                         swprop(M::rate, pp.ResVRate);
                 }
-                //write out summary voidage production rate if target/limit is not set
 		else {
+                    // Write out summary voidage production rate if
+                    // target/limit is not set
                     sWell[Ix::ResVRateTarget] = get("WVPR");
                 }
 
@@ -538,7 +537,7 @@ namespace {
            
 		sWell[Ix::BHPTarget] = pp.BHPLimit != 0.0
                     ? swprop(M::pressure, pp.BHPLimit)
-                    : swprop(M::pressure, 14.70*::Opm::unit::psia);
+                    : swprop(M::pressure, 1.0*::Opm::unit::atm);
             }
             else if (well.isInjector(sim_step)) {
                 const auto& ip = well.getInjectionProperties(sim_step);
