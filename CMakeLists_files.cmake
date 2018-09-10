@@ -135,10 +135,6 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES
-          src/opm/test_util/summaryIntegrationTest.cpp
-          src/opm/test_util/summaryRegressionTest.cpp
-          src/opm/test_util/summaryComparator.cpp
-          src/opm/test_util/EclFilesComparator.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
