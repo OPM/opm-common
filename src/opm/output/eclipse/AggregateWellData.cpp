@@ -548,10 +548,10 @@ namespace {
 
 		if (ip.hasInjectionControl(IP::RATE)) {
 		    if (ip.injectorType == IT::OIL) {
-			sWell[Ix::OilRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+			sWell[Ix::OilRateTarget] = swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
 		    }
 		    if (ip.injectorType == IT::WATER) {
-			sWell[Ix::WatRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+			sWell[Ix::WatRateTarget] = swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
 		    }
 		    if (ip.injectorType == IT::GAS) {
 			sWell[Ix::GasRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
@@ -559,7 +559,7 @@ namespace {
                 }
 
 		if (ip.hasInjectionControl(IP::RESV)) {
-		    sWell[Ix::ResVRateTarget] = swprop(M::gas_surface_rate, ip.reservoirInjectionRate);
+		    sWell[Ix::ResVRateTarget] = swprop(M::rate, ip.reservoirInjectionRate);
                 }		
 
                 if (ip.hasInjectionControl(IP::THP)) {
