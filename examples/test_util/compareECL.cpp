@@ -16,7 +16,11 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include <opm/test_util/EclFilesComparator.hpp>
+#include "EclIntegrationTest.hpp"
+#include "EclRegressionTest.hpp"
+#include "summaryIntegrationTest.hpp"
+#include "summaryRegressionTest.hpp"
+
 #include <opm/common/ErrorMacros.hpp>
 
 #include <ert/util/util.h>
@@ -29,7 +33,7 @@
 #include <getopt.h>
 
 static void printHelp() {
-    std::cout << "\ncompareECL compares ECLIPSE files (restart (.RST), unified restart (.UNRST), initial (.INIT) or .RFT) and gridsizes (from .EGRID or .GRID file) from two simulations.\n"
+    std::cout << "\ncompareECL compares ECLIPSE files (restart (.RST), unified restart (.UNRST), initial (.INIT), summary (.SMRY), unified summary (.UNSMRY) or .RFT) and gridsizes (from .EGRID or .GRID file) from two simulations.\n"
         << "The program takes four arguments:\n\n"
         << "1. Case number 1 (full path without extension)\n"
         << "2. Case number 2 (full path without extension)\n"
@@ -37,25 +41,32 @@ static void printHelp() {
         << "4. Relative tolerance (between 0 and 1)\n\n"
         << "In addition, the program takes these options (which must be given before the arguments):\n\n"
         << "-a Run a full analysis of errors.\n"
+        << "-g Will print the vector with the greatest error ratio.\n"
         << "-h Print help and exit.\n"
         << "-i Execute integration test (regression test is default).\n"
         << "   The integration test compares SGAS, SWAT and PRESSURE in unified restart files, so this option can not be used in combination with -t.\n"
         << "-I Same as -i, but throws an exception when the number of keywords in the two cases differ. Can not be used in combination with -t.\n"
         << "-k Specify specific keyword to compare (capitalized), for example -k PRESSURE.\n"
+        << "-K Will not allow different amount of keywords in the two files. Throws an exception if the amount are different.\n"
         << "-l Only do comparison for the last occurrence. This option is only for the regression test, and can therefore not be used in combination with -i or -I.\n"
+        << "-m mainVar. Will calculate the error ratio for one main variable. Valid input is WOPR, WWPR, WGPR or WBHP.\n"
         << "-n Do not throw on errors.\n"
         << "-p Print keywords in both cases and exit. Can not be used in combination with -P.\n"
         << "-P Print common and uncommon keywords in both cases and exit. Can not be used in combination with -p.\n"
+        << "-R Will allow comparison between a restarted simulation and a normal simulation for summary regression tests. The files must end at the same time.\n"
+        << "-s int Sets the number of spikes that are allowed for each keyword in summary integration tests.\n"
         << "-t Specify ECLIPSE filetype to compare (unified restart is default). Can not be used in combination with -i or -I. Different possible arguments are:\n"
         << "    -t UNRST \t Compare two unified restart files (.UNRST). This the default value, so it is the same as not passing option -t.\n"
         << "    -t INIT  \t Compare two initial files (.INIT).\n"
         << "    -t RFT   \t Compare two RFT files (.RFT).\n"
         << "    -t RST   \t Compare two cases consisting of restart files (.Xnnnn).\n"
+        << "    -t SMRY  \t Compare two cases consistent of (unified) summary files.\n"
         << "    -t RST1  \t Compare two cases where the first case consists of restart files (.Xnnnn), and the second case consists of a unified restart file (.UNRST).\n"
         << "    -t RST2  \t Compare two cases where the first case consists of a unified restart file (.UNRST), and the second case consists of restart files (.Xnnnn).\n"
         << "   Note that when dealing with restart files (.Xnnnn), the program concatenates all of them into one unified restart file, which is used for comparison and stored in the same directory as the restart files.\n"
         << "   This will overwrite any existing unified restart file in that directory.\n\n"
-        << "Example usage of the program: \n\n"
+        << "-v For the rate keywords WOPR, WGPR, WWPR and WBHP. Calculates the error volume of the two summary files. This is printed to screen.\n"
+        << "\nExample usage of the program: \n\n"
         << "compareECL -k PRESSURE <path to first casefile> <path to second casefile> 1e-3 1e-5\n"
         << "compareECL -t INIT -k PORO <path to first casefile> <path to second casefile> 1e-3 1e-5\n"
         << "compareECL -i <path to first casefile> <path to second casefile> 0.01 1e-6\n\n"
@@ -108,24 +119,36 @@ int main(int argc, char** argv) {
     ecl_file_enum file_type      = ECL_UNIFIED_RESTART_FILE;
     // RegressionTest is default
     bool integrationTest         = false;
+    bool allowDifferentAmount    = true;
     bool checkNumKeywords        = false;
+    bool findGreatestErrorRatio  = false;
+    bool findVolumeError         = false;
     bool onlyLastOccurrence      = false;
     bool printKeywords           = false;
     bool printKeywordsDifference = false;
+    bool restartFile             = false;
     bool specificKeyword         = false;
     bool specificFileType        = false;
+    bool allowSpikes             = false;
     bool throwOnError            = true;
+    bool throwTooGreatErrorRatio = true;
     bool analysis                = false;
     bool volumecheck             = true;
     char* keyword                = nullptr;
     char* fileTypeCstr           = nullptr;
+    const char* mainVariable     = nullptr;
     int c                        = 0;
+    int spikeLimit               = -1;
 
-    while ((c = getopt(argc, argv, "hiIk:alnpPt:V")) != -1) {
+    while ((c = getopt(argc, argv, "hiIk:alnpPt:VRgs:m:vK")) != -1) {
         switch (c) {
             case 'a':
               analysis = true;
               break;
+            case 'g':
+                findGreatestErrorRatio = true;
+                throwTooGreatErrorRatio = false;
+                break;
             case 'h':
                 printHelp();
                 return 0;
@@ -136,15 +159,21 @@ int main(int argc, char** argv) {
                 integrationTest = true;
                 checkNumKeywords = true;
                 break;
-            case 'n':
-                throwOnError = false;
-                break;
             case 'k':
                 specificKeyword = true;
                 keyword = optarg;
                 break;
+            case 'K':
+                allowDifferentAmount = false;
+                break;
             case 'l':
                 onlyLastOccurrence = true;
+                break;
+            case 'm':
+                mainVariable = optarg;
+                break;
+            case 'n':
+                throwOnError = false;
                 break;
             case 'p':
                 printKeywords = true;
@@ -152,16 +181,26 @@ int main(int argc, char** argv) {
             case 'P':
                 printKeywordsDifference = true;
                 break;
+            case 'R':
+                restartFile = true;
+                break;
+            case 's':
+                allowSpikes = true;
+                spikeLimit = atof(optarg);
+                break;
             case 't':
                 specificFileType = true;
                 fileTypeCstr = optarg;
+                break;
+            case 'v':
+                findVolumeError = true;
                 break;
             case 'V':
                 volumecheck = false;
                 break;
             case '?':
-                if (optopt == 'k') {
-                    std::cerr << "Option k requires a keyword as argument, see manual (-h) for more information." << std::endl;
+                if (optopt == 'k' || optopt == 'm' || optopt == 's') {
+                    std::cerr << "Option " << optopt << " requires a keyword as argument, see manual (-h) for more information." << std::endl;
                     return EXIT_FAILURE;
                 }
                 else if (optopt == 't') {
@@ -190,6 +229,7 @@ int main(int argc, char** argv) {
             << "Please run compareECL -h to see manual." << std::endl;
         return EXIT_FAILURE;
     }
+
     std::string basename1 = argv[argOffset];
     std::string basename2 = argv[argOffset + 1];
     double absTolerance   = strtod(argv[argOffset + 2], nullptr);
@@ -215,15 +255,67 @@ int main(int argc, char** argv) {
         else if (fileTypeString == "RFT") {
             file_type = ECL_RFT_FILE;
         }
+        else if (fileTypeString == "SMRY")
+            file_type = ECL_SUMMARY_FILE;
         else {
             std::cerr << "Unknown ECLIPSE filetype specified with option -t. Please run compareECL -h to see manual." << std::endl;
             return EXIT_FAILURE;
         }
     }
+
+    if (restartFile && (file_type != ECL_SUMMARY_FILE || integrationTest)) {
+        std::cerr << "Error: -R can only be used in for summary regression tests." << std::endl;
+        return EXIT_FAILURE;
+    }
+
     std::cout << "Comparing '" << basename1 << "' to '" << basename2 << "'." << std::endl;
     try {
-        if (integrationTest) {
-            IntegrationTest comparator(basename1, basename2, absTolerance, relTolerance);
+        if (file_type == ECL_SUMMARY_FILE) {
+            if(!integrationTest){
+                SummaryRegressionTest compare(basename1,basename2,absTolerance,relTolerance);
+                compare.throwOnErrors(throwOnError);
+                compare.doAnalysis(analysis);
+                compare.setPrintKeywords(printKeywords);
+                compare.setIsRestartFile(restartFile);
+                if(specificKeyword){
+                    compare.getRegressionTest(keyword);
+                }
+                else{
+                    compare.setPrintKeywords(printKeywords);
+                    compare.getRegressionTest();
+                }
+            } else {
+                SummaryIntegrationTest compare(basename1,basename2,absTolerance,relTolerance);
+                compare.throwOnErrors(throwOnError);
+                compare.setFindVectorWithGreatestErrorRatio(findGreatestErrorRatio);
+                compare.setAllowSpikes(allowSpikes);
+                if (mainVariable) {
+                    compare.setOneOfTheMainVariables(true);
+                    std::string str(mainVariable);
+                    std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+                    if(str == "WOPR" ||str=="WWPR" ||str=="WGPR" || str == "WBHP"){
+                        compare.setMainVariable(str);
+                    }else{
+                        throw std::invalid_argument("The input is not a main variable. -m option requires a valid main variable.");
+                    }
+                }
+                compare.setFindVolumeError(findVolumeError);
+                if (spikeLimit != -1) {
+                    compare.setSpikeLimit(spikeLimit);
+                }
+                compare.setAllowDifferentAmountOfKeywords(allowDifferentAmount);
+                compare.setPrintKeywords(printKeywords);
+                compare.setThrowExceptionForTooGreatErrorRatio(throwTooGreatErrorRatio);
+                if(specificKeyword){
+                    compare.setPrintSpecificKeyword(specificKeyword);
+                    compare.getIntegrationTest(keyword);
+                    return 0;
+                }
+                compare.getIntegrationTest();
+            }
+        }
+        else if (integrationTest) {
+            ECLIntegrationTest comparator(basename1, basename2, absTolerance, relTolerance);
             if (printKeywords) {
                 comparator.printKeywords();
                 return 0;
@@ -249,7 +341,7 @@ int main(int argc, char** argv) {
             }
         }
         else {
-            RegressionTest comparator(file_type, basename1, basename2, absTolerance, relTolerance);
+            ECLRegressionTest comparator(file_type, basename1, basename2, absTolerance, relTolerance);
             comparator.throwOnErrors(throwOnError);
             comparator.doAnalysis(analysis);
             if (printKeywords) {

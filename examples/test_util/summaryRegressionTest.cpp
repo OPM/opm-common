@@ -16,13 +16,13 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include <opm/test_util/summaryRegressionTest.hpp>
+#include "summaryRegressionTest.hpp"
 #include <opm/common/ErrorMacros.hpp>
 #include <ert/ecl/ecl_sum.h>
 #include <ert/util/stringlist.h>
 #include <string>
 
-void RegressionTest::getRegressionTest(){
+void SummaryRegressionTest::getRegressionTest(){
     std::vector<double> timeVec1, timeVec2;
     setTimeVecs(timeVec1, timeVec2);  // Sets the time vectors, they are equal for all keywords (WPOR:PROD01 etc)
     setDataSets(timeVec1, timeVec2); //Figures which dataset that contains more/less values pr keyword vector.
@@ -98,13 +98,13 @@ void RegressionTest::getRegressionTest(){
     }
     if (throwAtEnd)
       OPM_THROW(std::runtime_error, "Regression test failed.");
-    else
+    else if (deviations.empty())
       std::cout << "Regression test succeeded." << std::endl;
 }
 
 
 
-void RegressionTest::getRegressionTest(const char* keyword){
+void SummaryRegressionTest::getRegressionTest(const char* keyword){
     std::vector<double> timeVec1, timeVec2;
     setTimeVecs(timeVec1, timeVec2);  // Sets the time vectors, they are equal for all keywords (WPOR:PROD01 etc)
     setDataSets(timeVec1, timeVec2); //Figures which dataset that contains more/less values pr keyword vector.
@@ -126,7 +126,7 @@ void RegressionTest::getRegressionTest(const char* keyword){
 
 
 
-bool RegressionTest::checkDeviation(Deviation deviation, const char* keyword, int refIndex, int checkIndex){
+bool SummaryRegressionTest::checkDeviation(Deviation deviation, const char* keyword, int refIndex, int checkIndex){
     double absTol = getAbsTolerance();
     double relTol = getRelTolerance();
 
@@ -149,7 +149,7 @@ bool RegressionTest::checkDeviation(Deviation deviation, const char* keyword, in
 
 
 
-bool RegressionTest::checkForKeyword(std::vector<double>& timeVec1, std::vector<double>& timeVec2, const char* keyword){
+bool SummaryRegressionTest::checkForKeyword(std::vector<double>& timeVec1, std::vector<double>& timeVec2, const char* keyword){
     std::vector<double> dataVec1, dataVec2;
     getDataVecs(dataVec1,dataVec2,keyword);
     chooseReference(timeVec1, timeVec2,dataVec1,dataVec2);
@@ -158,7 +158,7 @@ bool RegressionTest::checkForKeyword(std::vector<double>& timeVec1, std::vector<
 
 
 
-bool RegressionTest::startTest(const char* keyword){
+bool SummaryRegressionTest::startTest(const char* keyword){
     size_t jvar = 0;
     Deviation deviation;
     bool result = true;

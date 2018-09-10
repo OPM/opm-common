@@ -20,10 +20,10 @@
 #ifndef SUMMARYREGRESSIONTEST_HPP
 #define SUMMARYREGRESSIONTEST_HPP
 
-#include <opm/test_util/summaryComparator.hpp>
+#include "summaryComparator.hpp"
 
 //! \details  The class inherits from the SummaryComparator class, which takes care of all file reading. \n The RegressionTest class compares the values from the two different files and throws exceptions when the deviation is unsatisfying.
-class RegressionTest: public SummaryComparator {
+class SummaryRegressionTest: public SummaryComparator {
     private:
         //! \brief Gathers the correct data for comparison for a specific keyword
         //! \param[in] timeVec1 The time steps of file 1.
@@ -55,7 +55,9 @@ class RegressionTest: public SummaryComparator {
         //! \param[in] relativeTol The relative tolerance which is to be used in the test.
         //! \param[in] absoluteTol The absolute tolerance which is to be used in the test.
         //! \details The constructor calls the constructor of the super class.
-        RegressionTest(const char* basename1, const char* basename2, double relativeTol, double absoluteTol):
+        SummaryRegressionTest(const std::string& basename1,
+                              const std::string& basename2,
+                              double relativeTol, double absoluteTol) :
             SummaryComparator(basename1, basename2, relativeTol, absoluteTol) {}
 
         //! \details The function executes a regression test for all the keywords. If the two files do not match in amount of keywords, an exception is thrown.

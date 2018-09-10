@@ -17,14 +17,14 @@
    */
 
 
-#include <opm/test_util/summaryIntegrationTest.hpp>
+#include "summaryIntegrationTest.hpp"
 #include <opm/common/ErrorMacros.hpp>
 #include <ert/ecl/ecl_sum.h>
 #include <ert/util/stringlist.h>
 #include <cmath>
 
 
-void IntegrationTest::getIntegrationTest(){
+void SummaryIntegrationTest::getIntegrationTest(){
     std::vector<double> timeVec1, timeVec2;
     setTimeVecs(timeVec1, timeVec2);  // Sets the time vectors, they are equal for all keywords (WPOR:PROD01 etc)
     setDataSets(timeVec1, timeVec2);
@@ -89,7 +89,7 @@ void IntegrationTest::getIntegrationTest(){
 }
 
 
-void IntegrationTest::getIntegrationTest(const char* keyword){
+void SummaryIntegrationTest::getIntegrationTest(const char* keyword){
     if(stringlist_contains(keysShort,keyword) && stringlist_contains(keysLong, keyword)){
         std::vector<double> timeVec1, timeVec2;
         setTimeVecs(timeVec1, timeVec2);  // Sets the time vectors, they are equal for all keywords (WPOR:PROD01 etc)
@@ -115,9 +115,9 @@ void IntegrationTest::getIntegrationTest(const char* keyword){
 }
 
 
-void IntegrationTest::checkForKeyword(const std::vector<double>& timeVec1,
-                                      const std::vector<double>& timeVec2,
-                                      const char* keyword){
+void SummaryIntegrationTest::checkForKeyword(const std::vector<double>& timeVec1,
+                                             const std::vector<double>& timeVec2,
+                                             const char* keyword){
     std::vector<double> dataVec1, dataVec2;
     getDataVecs(dataVec1,dataVec2,keyword);
     chooseReference(timeVec1, timeVec2,dataVec1,dataVec2);
@@ -130,7 +130,7 @@ void IntegrationTest::checkForKeyword(const std::vector<double>& timeVec1,
 }
 
 
-int IntegrationTest::checkDeviation(const Deviation& deviation){
+int SummaryIntegrationTest::checkDeviation(const Deviation& deviation){
     double absTol = getAbsTolerance();
     double relTol = getRelTolerance();
     if (deviation.rel> relTol && deviation.abs > absTol){
@@ -140,10 +140,10 @@ int IntegrationTest::checkDeviation(const Deviation& deviation){
 }
 
 
-void IntegrationTest::findGreatestErrorRatio(const WellProductionVolume& volume,
-                                             double &greatestRatio,
-                                             const char* currentKeyword,
-                                             std::string &greatestErrorRatio){
+void SummaryIntegrationTest::findGreatestErrorRatio(const WellProductionVolume& volume,
+                                                    double &greatestRatio,
+                                                    const char* currentKeyword,
+                                                    std::string &greatestErrorRatio){
     if (volume.total != 0 && (volume.total - volume.error > getAbsTolerance()) ){
         if(volume.error/volume.total > greatestRatio){
             greatestRatio = volume.error/volume.total;
@@ -154,7 +154,7 @@ void IntegrationTest::findGreatestErrorRatio(const WellProductionVolume& volume,
 }
 
 
-void IntegrationTest::volumeErrorCheck(const char* keyword){
+void SummaryIntegrationTest::volumeErrorCheck(const char* keyword){
     const smspec_node_type * node = ecl_sum_get_general_var_node (ecl_sum_fileShort ,keyword);//doesn't matter which ecl_sum_file one uses, the kewyord SHOULD be equal in terms of smspec data.
     bool hist = smspec_node_is_historical(node);
     /* returns true if the keyword corresponds to a summary vector "history".
@@ -199,7 +199,7 @@ void IntegrationTest::volumeErrorCheck(const char* keyword){
 }
 
 
-void IntegrationTest::updateVolumeError(const char* keyword){
+void SummaryIntegrationTest::updateVolumeError(const char* keyword){
     std::string keywordString(keyword);
     std::string firstFour = keywordString.substr(0,4);
 
@@ -223,7 +223,7 @@ void IntegrationTest::updateVolumeError(const char* keyword){
 }
 
 
-WellProductionVolume IntegrationTest::getWellProductionVolume(const char * keyword){
+WellProductionVolume SummaryIntegrationTest::getWellProductionVolume(const char * keyword){
     double total = integrate(*referenceVec, *referenceDataVec);
     double error = integrateError(*referenceVec, *referenceDataVec,
                                   *checkVec, *checkDataVec);
@@ -239,7 +239,7 @@ WellProductionVolume IntegrationTest::getWellProductionVolume(const char * keywo
 }
 
 
-void IntegrationTest::evaluateWellProductionVolume(){
+void SummaryIntegrationTest::evaluateWellProductionVolume(){
     if(mainVariable.empty()){
         double ratioWOP, ratioWWP, ratioWGP, ratioWBHP;
         ratioWOP = WOP.error/WOP.total;
@@ -266,7 +266,7 @@ void IntegrationTest::evaluateWellProductionVolume(){
 }
 
 
-void IntegrationTest::checkWithSpikes(const char* keyword){
+void SummaryIntegrationTest::checkWithSpikes(const char* keyword){
     int errorOccurrences = 0;
     size_t jvar = 0 ;
     bool spikeCurrent = false;
@@ -295,9 +295,9 @@ void IntegrationTest::checkWithSpikes(const char* keyword){
 
 
 WellProductionVolume
-IntegrationTest::getSpecificWellVolume(const std::vector<double>& timeVec1,
-                                       const std::vector<double>& timeVec2,
-                                       const char* keyword){
+SummaryIntegrationTest::getSpecificWellVolume(const std::vector<double>& timeVec1,
+                                              const std::vector<double>& timeVec2,
+                                              const char* keyword){
     std::vector<double> dataVec1, dataVec2;
     getDataVecs(dataVec1,dataVec2,keyword);
     chooseReference(timeVec1, timeVec2,dataVec1,dataVec2);
@@ -305,20 +305,8 @@ IntegrationTest::getSpecificWellVolume(const std::vector<double>& timeVec1,
 }
 
 
-#if 0
-bool IntegrationTest::checkUnits(const char * keyword){
-    const smspec_node_type * node1 = ecl_sum_get_general_var_node (ecl_sum_fileShort ,keyword);
-    const smspec_node_type * node2 = ecl_sum_get_general_var_node (ecl_sum_fileLong ,keyword);
-    if(strcmp(smspec_node_get_unit(node1),smspec_node_get_unit(node2)) == 0){
-        return true;
-    }
-    return false;
-}
-#endif
-
-
-double IntegrationTest::integrate(const std::vector<double>& timeVec,
-                                  const std::vector<double>& dataVec){
+double SummaryIntegrationTest::integrate(const std::vector<double>& timeVec,
+                                         const std::vector<double>& dataVec){
     double totalSum = 0;
     if(timeVec.size() != dataVec.size()){
         OPM_THROW(std::runtime_error, "The size of the time vector does not match the size of the data vector.");
@@ -332,10 +320,10 @@ double IntegrationTest::integrate(const std::vector<double>& timeVec,
 }
 
 
-double IntegrationTest::integrateError(const std::vector<double>& timeVec1,
-                                       const std::vector<double>& dataVec1,
-                                       const std::vector<double>& timeVec2,
-                                       const std::vector<double>& dataVec2){
+double SummaryIntegrationTest::integrateError(const std::vector<double>& timeVec1,
+                                              const std::vector<double>& dataVec1,
+                                              const std::vector<double>& timeVec2,
+                                              const std::vector<double>& dataVec2){
     // When the data corresponds to a rate the integration will become a Riemann
     // sum.  This function calculates the Riemann sum of the error.  The reason why
     // a Riemann sum is used is because of the way the data is written to file.

@@ -18,8 +18,8 @@
 
 
 #include "config.h"
-#include <opm/test_util/summaryComparator.hpp>
-#include <opm/test_util/summaryIntegrationTest.hpp>
+#include <examples/test_util/summaryComparator.hpp>
+#include <examples/test_util/summaryIntegrationTest.hpp>
 
 
 #define BOOST_TEST_MODULE CalculationTest
@@ -42,9 +42,9 @@ BOOST_AUTO_TEST_CASE(area) {
     double width2 = 2;
     double width3 = 10;
 
-    double area1 = IntegrationTest::getRectangleArea(1,width2);
-    double area2 = IntegrationTest::getRectangleArea(10,width1);
-    double area3 = IntegrationTest::getRectangleArea(4,width3);
+    double area1 = SummaryIntegrationTest::getRectangleArea(1,width2);
+    double area2 = SummaryIntegrationTest::getRectangleArea(10,width1);
+    double area3 = SummaryIntegrationTest::getRectangleArea(4,width3);
 
     BOOST_CHECK_EQUAL(area1,2);
     BOOST_CHECK_EQUAL(area2,0);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(integration) {
     std::vector<double> data1 = {2,2,2,2,2,2};
     std::vector<double> time1 = {0,1,2,3,4,5};
 
-    double val1 = IntegrationTest::integrate(time1, data1);
+    double val1 = SummaryIntegrationTest::integrate(time1, data1);
 
     std::vector<double> data2 = {3, 3, 4, 3, 2, 1, 0, 4};
     std::vector<double> time2 = {0, 0.5, 1, 2, 3, 3.5, 4.5, 5};
@@ -83,10 +83,10 @@ BOOST_AUTO_TEST_CASE(integration) {
     std::vector<double> data5 = {0, 4,   3, 2,   5, 6, 3,   1, 0,  4, 2,   1};
     std::vector<double> time5 = {0, 0.5, 1, 2.5, 3, 4, 4.5, 6, 7.5,8, 9.5 ,10};
 
-    double val2 = IntegrationTest::integrateError(time1, data1, time2, data2);
-    double val3 = IntegrationTest::integrateError(time1, data1, time2, data3);
-    double val4 = IntegrationTest::integrateError(time1, data1, time1, data1);
-    double val5 = IntegrationTest::integrateError(time4, data4, time5, data5);
+    double val2 = SummaryIntegrationTest::integrateError(time1, data1, time2, data2);
+    double val3 = SummaryIntegrationTest::integrateError(time1, data1, time2, data3);
+    double val4 = SummaryIntegrationTest::integrateError(time1, data1, time1, data1);
+    double val5 = SummaryIntegrationTest::integrateError(time4, data4, time5, data5);
     BOOST_CHECK_EQUAL(val1,10);
     BOOST_CHECK_EQUAL(val2,6);
     BOOST_CHECK_EQUAL(val3,10);
