@@ -328,8 +328,8 @@ BOOST_AUTO_TEST_CASE(Time_and_report_step)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[67], 12); // TSTEP
-    BOOST_CHECK_EQUAL(v[68],  2); // REP_STEP
+    BOOST_CHECK_EQUAL(v[67], 12);    // TSTEP
+    BOOST_CHECK_EQUAL(v[68], 2 + 1); // REP_STEP (= sim_step + 1)
 }
 
 BOOST_AUTO_TEST_CASE(Tuning_param)

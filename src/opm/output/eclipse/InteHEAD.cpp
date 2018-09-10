@@ -596,9 +596,7 @@ Opm::RestartIO::InteHEAD::
 stepParam(const int num_solver_steps, const int sim_step)
 {
     this -> data_[NUM_SOLVER_STEPS] = num_solver_steps;
-    this -> data_[REPORT_STEP] = sim_step+1;
-
-
+    this -> data_[REPORT_STEP]      = sim_step + 1;
 
     return *this;
 }
@@ -622,18 +620,27 @@ Opm::RestartIO::InteHEAD::variousParam(const int version,
 {
     this->data_[VERSION] = version;
     this->data_[IPROG]   = iprog;
+
     // ih_049: Usage unknown, value fixed across reference cases
     this->data_[ih_049]  = 1;
+
     // ih_050: Usage unknown, value fixed across reference cases
     this->data_[ih_050]  = 1;
-    // ih_076: Usage unknown, experiments fails (zero determinant in well message) with too low numbers. 5 is highest observed across reference cases.
-    this->data_[ih_076]  = 2;
+
+    // ih_076: Usage unknown, experiments fails (zero determinant
+    //         in well message) with too low numbers.
+    //         5 is highest observed across reference cases.
+    this->data_[ih_076] = 5;
+
     // ih_101: Usage unknown, value fixed across reference cases.
-    this->data_[ih_101]  = 1;
-    // ih_103: Usage unknown, value not fixed across reference cases, experiments generate warning with 0 but not with 1.
-    this->data_[ih_103]  = 1;
+    this->data_[ih_101] = 1;
+
+    // ih_103: Usage unknown, value not fixed across reference cases,
+    //         experiments generate warning with 0 but not with 1.
+    this->data_[ih_103] = 1;
+
     // ih_200: Usage unknown, value fixed across reference cases.
-    this->data_[ih_200]  = 1;
+    this->data_[ih_200] = 1;
 
     return *this;
 }
