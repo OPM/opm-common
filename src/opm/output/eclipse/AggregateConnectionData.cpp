@@ -19,6 +19,7 @@
 
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 
+#include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -49,7 +50,7 @@ namespace {
     {
         return inteHead[VI::intehead::NCWMAX];
     }
-      
+
     std::map <std::size_t, const Opm::Connection*>  mapSeqIndexToConnection(const Opm::WellConnections& conns)
     {
 	// make seqIndex to Connection map
@@ -139,26 +140,29 @@ namespace {
                            IConnArray&            iConn)
         {
             using ConnState = ::Opm::WellCompletion::StateEnum;
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
 
-            // Wrong.  Should be connection's order of appearance in COMPDAT.
-            //iConn[0] = conn.getSeqIndex()+1;
-	    iConn[0] = connID+1;
-            iConn[1] = conn.getI() + 1;
-            iConn[2] = conn.getJ() + 1;
-            iConn[3] = conn.getK() + 1;
-            iConn[5] = (conn.state == ConnState::OPEN)
+            iConn[Ix::SeqIndex] = connID + 1;
+
+            iConn[Ix::CellI] = conn.getI() + 1;
+            iConn[Ix::CellJ] = conn.getJ() + 1;
+            iConn[Ix::CellK] = conn.getK() + 1;
+
+            iConn[Ix::ConnStat] = (conn.state == ConnState::OPEN)
                 ? 1 : -1000;
 
-            iConn[6] = conn.getDefaultSatTabId() ? 0 : conn.sat_tableId;
+            iConn[Ix::Drainage] = conn.getDefaultSatTabId()
+                ? 0 : conn.sat_tableId;
 
             // Don't support differing sat-func tables for
             // draining and imbibition curves at connections.
-            iConn[9] = iConn[6];
+            iConn[Ix::Imbibition] = iConn[Ix::Drainage];
 
-            //iConn[12] = std::abs(conn.complnum);
-            iConn[12] =  iConn[0];
-	    iConn[13] = conn.dir;
-            iConn[14] = conn.attachedToSegment()
+            //iConn[Ix::ComplNum] = std::abs(conn.complnum);
+            iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
+
+            iConn[Ix::ConnDir] = conn.dir;
+            iConn[Ix::Segment] = conn.attachedToSegment()
                 ? conn.segment_number : 0;
         }
     } // IConn
@@ -186,7 +190,8 @@ namespace {
                            const Opm::UnitSystem& units,
                            SConnArray&            sConn)
         {
-            using M = ::Opm::UnitSystem::measure;
+            using M  = ::Opm::UnitSystem::measure;
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
 
             auto scprop = [&units](const M u, const double x) -> float
             {
@@ -198,37 +203,31 @@ namespace {
                     .getConnectionTransmissibilityFactorAsValueObject();
 
                 if (ctf.hasValue()) {
-                    sConn[0] = scprop(M::transmissibility, ctf.getValue());
+                    sConn[Ix::ConnTrans] =
+                        scprop(M::transmissibility, ctf.getValue());
                 }
             }
 
-            sConn[1] = scprop(M::length, conn.center_depth);
-            sConn[2] = scprop(M::length, conn.getDiameter());
+            sConn[Ix::Depth]    = scprop(M::length, conn.center_depth);
+            sConn[Ix::Diameter] = scprop(M::length, conn.getDiameter());
 
             {
                 const auto& ckh = conn
                     .getEffectiveKhAsValueObject();
 
                 if (ckh.hasValue()) {
-                    auto tkh = scprop(M::permeability, ckh.getValue());
-		    sConn[3] = scprop(M::length, tkh);
+                    sConn[Ix::EffectiveKH] =
+                        scprop(M::effective_Kh, ckh.getValue());
                 }
             }
-	    
-	    
 
-            sConn[11] = sConn[0];
+            sConn[Ix::item12] = sConn[Ix::ConnTrans];
 
-            // sConn[20] and sConn[21] are tubing end/start (yes, 20 is
-            // end, 21 is start) lengths of the current connection in a
-            // multisegmented well.  That information is impossible to
-            // reconstruct here since it is discared in member function
-            // ::Opm::Well::handleCOMPSEGS().
-	    sConn[20] = static_cast<float>(conn.getSegDistEnd());
-	    sConn[21] = static_cast<float>(conn.getSegDistStart());
+            sConn[Ix::SegDistEnd]   = scprop(M::length, conn.getSegDistEnd());
+            sConn[Ix::SegDistStart] = scprop(M::length, conn.getSegDistStart());
 
-            sConn[29] = -1.0e+20f;
-            sConn[30] = -1.0e+20f;
+            sConn[Ix::item30] = -1.0e+20f;
+            sConn[Ix::item31] = -1.0e+20f;
         }
     } // SConn
 } // Anonymous
@@ -248,7 +247,6 @@ captureDeclaredConnData(const Schedule&    sched,
                         const UnitSystem&  units,
                         const std::size_t  sim_step)
 {
-    //const auto& actnum = grid.activeIndex;
     const auto& wells = sched.getWells(sim_step);
 
     connectionLoop(wells, grid, sim_step, [&units, this]
