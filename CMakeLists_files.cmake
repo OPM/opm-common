@@ -149,6 +149,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/InteHEAD.cpp
           src/opm/output/eclipse/libECLRestart.cpp
           src/opm/output/eclipse/LinearisedOutputTable.cpp
+          src/opm/output/eclipse/LoadRestart.cpp
           src/opm/output/eclipse/LogiHEAD.cpp
           src/opm/output/eclipse/RestartIO.cpp
           src/opm/output/eclipse/Summary.cpp
