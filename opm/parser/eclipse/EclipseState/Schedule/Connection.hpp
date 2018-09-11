@@ -41,50 +41,57 @@ namespace Opm {
         Connection(int i, int j , int k ,
                    int complnum,
                    double depth,
-                   WellCompletion::StateEnum state ,
-                   const Value<double>& connectionTransmissibilityFactor,
-                   const Value<double>& diameter,
-                   const Value<double>& skinFactor,
-                   const Value<double>& Kh,
+                   WellCompletion::StateEnum state,
+                   double CF,
+                   double Kh,
+                   double rw,
                    const int satTableId,
                    const WellCompletion::DirectionEnum direction);
 
 
+        bool attachedToSegment() const;
         bool sameCoordinate(const int i, const int j, const int k) const;
         int getI() const;
         int getJ() const;
         int getK() const;
-        double getConnectionTransmissibilityFactor() const;
-        double getDiameter() const;
-        double getSkinFactor() const;
-        bool attachedToSegment() const;
-        const Value<double>& getConnectionTransmissibilityFactorAsValueObject() const;
-        const Value<double>& getEffectiveKhAsValueObject() const;
+        WellCompletion::StateEnum state() const;
+        WellCompletion::DirectionEnum dir() const;
+        double depth() const;
+        int satTableId() const;
+        int complnum() const;
+        int segment() const;
+        double CF() const;
+        double Kh() const;
+        double rw() const;
+        double wellPi() const;
+
+        void setState(WellCompletion::StateEnum state);
+        void setComplnum(int compnum);
+        void scaleWellPi(double wellPi);
+        void updateSegment(int segment_number, double center_depth);
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
-
-        WellCompletion::DirectionEnum dir;
-        double center_depth;
-        WellCompletion::StateEnum state;
-        int sat_tableId;
-        int complnum;
-
     private:
-        std::array<int,3> ijk;
-        Value<double> m_diameter;
-        Value<double> m_connectionTransmissibilityFactor;
-        Value<double> m_skinFactor;
-        Value<double> m_Kh;
+        WellCompletion::DirectionEnum direction;
+        double center_depth;
+        WellCompletion::StateEnum open_state;
+        int sat_tableId;
+        int m_complnum;
+        double m_CF;
+        double m_Kh;
+        double m_rw;
 
-    public:
+        std::array<int,3> ijk;
+
         // related segment number
         // -1 means the completion is not related to segment
         int segment_number = -1;
-        double wellPi = 1.0;
+        double wPi = 1.0;
     };
 }
 
 
 
 #endif /* COMPLETION_HPP_ */
+

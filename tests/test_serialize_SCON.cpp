@@ -56,15 +56,12 @@ BOOST_AUTO_TEST_CASE( serialize_scon_test )
             for (const auto c : w->getConnections(tstep)) {
 
                 const size_t offset = w_offset + c_offset;
-                const auto ctf = c.getConnectionTransmissibilityFactorAsValueObject();
-                const double expected =
-                    ctf.hasValue()
-                    ? units.from_si(Opm::UnitSystem::measure::transmissibility, ctf.getValue())
-                    : Opm::RestartIO::Helpers::UNIMPLEMENTED_VALUE;
+                const double expected_cf = units.from_si(Opm::UnitSystem::measure::transmissibility, c.CF());
+                const double expected_kh = units.from_si(Opm::UnitSystem::measure::effective_Kh, c.Kh());
                 BOOST_CHECK_EQUAL(scondata[offset + SCON_CF_INDEX],
-                                  expected);
+                                  expected_cf);
                 BOOST_CHECK_EQUAL(scondata[offset + SCON_KH_INDEX],
-                                  Opm::RestartIO::Helpers::UNIMPLEMENTED_VALUE);
+                                  expected_kh);
 
                 c_offset += SCONZ;
             }

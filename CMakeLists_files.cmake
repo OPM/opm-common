@@ -266,6 +266,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/table_deck.DATA
           tests/summary_deck_non_constant_porosity.DATA
           tests/SUMMARY_EFF_FAC.DATA
+          tests/SPE1CASE1.DATA
+          tests/SPE9_CP_PACKED.DATA
       )
 endif()
 

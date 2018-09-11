@@ -340,15 +340,14 @@ BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
 // Helper function for CompletionOrder test.
 inline Opm::Connection connection( int i, int j, int k, int complnum = 1 ) {
     return Opm::Connection { i, j, k,
-                            complnum,
-                            k*1.0,
-                            Opm::WellCompletion::AUTO,
-                            Opm::Value<double>("ConnectionTransmissibilityFactor",99.88),
-                            Opm::Value<double>("D",22.33),
-                            Opm::Value<double>("SKIN",33.22),
-                            Opm::Value<double>("Kh",17.29),
-                            0,
-                            Opm::WellCompletion::DirectionEnum::Z };
+            complnum,
+            k*1.0,
+            Opm::WellCompletion::AUTO,
+            99.88,
+            17.29,
+            0.25,
+            0,
+            Opm::WellCompletion::DirectionEnum::Z };
 }
 
 
