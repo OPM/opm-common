@@ -32,6 +32,10 @@ namespace Opm {
     class UnitSystem;
 } // Opm
 
+namespace Opm { namespace data {
+    class WellRates;
+}}
+
 namespace Opm { namespace RestartIO { namespace Helpers {
 
     class AggregateConnectionData
@@ -39,10 +43,11 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     public:
         explicit AggregateConnectionData(const std::vector<int>& inteHead);
 
-        void captureDeclaredConnData(const Opm::Schedule&    sched,
-                                     const Opm::EclipseGrid& grid,
-                                     const Opm::UnitSystem&  units,
-                                     const std::size_t       sim_step);
+        void captureDeclaredConnData(const Opm::Schedule&        sched,
+                                     const Opm::EclipseGrid&     grid,
+                                     const Opm::UnitSystem&      units,
+                                     const Opm::data::WellRates& xw,
+                                     const std::size_t           sim_step);
 
         const std::vector<int>& getIConn() const
         {
@@ -54,9 +59,15 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->sConn_.data();
         }
 
+        const std::vector<double>& getXConn() const
+        {
+            return this->xConn_.data();
+        }
+
     private:
         WindowedMatrix<int> iConn_;
         WindowedMatrix<float> sConn_;
+        WindowedMatrix<double> xConn_;
     };
 
 }}} // Opm::RestartIO::Helpers

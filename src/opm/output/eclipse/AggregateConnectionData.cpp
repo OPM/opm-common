@@ -22,6 +22,8 @@
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 
+#include <opm/output/data/Wells.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -230,32 +232,109 @@ namespace {
             sConn[Ix::item31] = -1.0e+20f;
         }
     } // SConn
+
+    namespace XConn {
+        std::size_t entriesPerConn(const std::vector<int>& inteHead)
+        {
+            return inteHead[VI::intehead::NXCONZ];
+        }
+
+        Opm::RestartIO::Helpers::WindowedMatrix<double>
+        allocate(const std::vector<int>& inteHead)
+        {
+            using WM = Opm::RestartIO::Helpers::WindowedMatrix<double>;
+
+            return WM {
+                WM::NumRows   { numWells(inteHead) },
+                WM::NumCols   { maxNumConn(inteHead) },
+                WM::WindowSize{ entriesPerConn(inteHead) }
+            };
+        }
+
+        template <class XConnArray>
+        void dynamicContrib(const Opm::data::Connection& x,
+                            const Opm::UnitSystem&       units,
+                            XConnArray&                  xConn)
+        {
+            using M  = ::Opm::UnitSystem::measure;
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
+            using R  = ::Opm::data::Rates::opt;
+
+            // Note flow rate sign.  Treat production rates as positive.
+            const auto& Q = x.rates;
+
+            if (Q.has(R::oil)) {
+                xConn[Ix::OilRate] =
+                    - units.from_si(M::liquid_surface_rate, Q.get(R::oil));
+            }
+
+            if (Q.has(R::wat)) {
+                xConn[Ix::WaterRate] =
+                    - units.from_si(M::liquid_surface_rate, Q.get(R::wat));
+            }
+
+            if (Q.has(R::gas)) {
+                xConn[Ix::WaterRate] =
+                    - units.from_si(M::gas_surface_rate, Q.get(R::gas));
+            }
+
+            xConn[Ix::ResVRate] = 0.0;
+
+            if (Q.has(R::reservoir_oil)) {
+                xConn[Ix::ResVRate] -=
+                    units.from_si(M::rate, Q.get(R::reservoir_oil));
+            }
+
+            if (Q.has(R::reservoir_water)) {
+                xConn[Ix::ResVRate] -=
+                    units.from_si(M::rate, Q.get(R::reservoir_water));
+            }
+
+            if (Q.has(R::reservoir_gas)) {
+                xConn[Ix::ResVRate] -=
+                    units.from_si(M::rate, Q.get(R::reservoir_gas));
+            }
+        }
+    } // XConn
 } // Anonymous
 
 Opm::RestartIO::Helpers::AggregateConnectionData::
 AggregateConnectionData(const std::vector<int>& inteHead)
     : iConn_(IConn::allocate(inteHead))
     , sConn_(SConn::allocate(inteHead))
+    , xConn_(XConn::allocate(inteHead))
 {}
 
 // ---------------------------------------------------------------------
 
 void
 Opm::RestartIO::Helpers::AggregateConnectionData::
-captureDeclaredConnData(const Schedule&    sched,
-                        const EclipseGrid& grid,
-                        const UnitSystem&  units,
-                        const std::size_t  sim_step)
+captureDeclaredConnData(const Schedule&        sched,
+                        const EclipseGrid&     grid,
+                        const UnitSystem&      units,
+                        const data::WellRates& xw,
+                        const std::size_t      sim_step)
 {
     const auto& wells = sched.getWells(sim_step);
 
-    connectionLoop(wells, grid, sim_step, [&units, this]
-        (const Well&    /* well */, const std::size_t wellID,
-         const Connection& conn   , const std::size_t connID) -> void
+    connectionLoop(wells, grid, sim_step, [&units, &xw, this]
+        (const Well&       well, const std::size_t wellID,
+         const Connection& conn, const std::size_t connID) -> void
     {
         auto ic = this->iConn_(wellID, connID);
         auto sc = this->sConn_(wellID, connID);
+
         IConn::staticContrib(conn, connID, ic);
         SConn::staticContrib(conn, units, sc);
+
+        auto xi = xw.find(well.name());
+        if ((xi != xw.end()) &&
+            (connID < xi->second.connections.size()))
+        {
+            auto xc = this->xConn_(wellID, connID);
+
+            XConn::dynamicContrib(xi->second.connections[connID],
+                                  units, xc);
+        }
     });
 }
