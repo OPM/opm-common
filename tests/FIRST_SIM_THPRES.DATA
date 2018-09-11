@@ -13,9 +13,17 @@ UNIFIN
 DIMENS
  10 10 10 /
 
+WELLDIMS
+-- Item 1: NWMAX  (Maximum number of wells in model)
+-- Item 2: NCWMAX (Maximum number of connections per well)
+-- Item 3: NGMAX  (Maximum number of groups in model--excluding FIELD)
+-- Item 4: NWGMAX (Maximum number of wells or child groups per group)
+-- NWMAX  NCWMAX  NGMAX  NWGMAX
+   6      3       1      6
+/
+
 EQLDIMS
    10 /
-
 
 GRID
 DXV
