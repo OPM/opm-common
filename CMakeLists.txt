@@ -150,7 +150,7 @@ if(ENABLE_ECL_INPUT)
                                    LIBRARIES ${_libs})
   opm_add_test(test_EclFilesComparator CONDITION ENABLE_ECL_INPUT
                                        LIBRARIES ${_libs})
-  if(HAVE_DYNAMIC_BOOST_TEST AND NOT BUILD_SHARED_LIBS)
+  if(HAVE_DYNAMIC_BOOST_TEST)
     set_target_properties(test_compareSummary PROPERTIES
                           COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
     set_target_properties(test_EclFilesComparator PROPERTIES
