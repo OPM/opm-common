@@ -40,6 +40,10 @@ class ECLRegressionTest: public ECLFilesComparator {
         // Only compare last occurrence
         bool onlyLastOccurrence = false;
 
+        // Accept extra keywords in the restart file of the 'new' simulation.
+        bool acceptExtraKeywords = false;
+
+
         // Prints results stored in absDeviation and relDeviation.
         void printResultsForKeyword(const std::string& keyword) const;
 
@@ -68,6 +72,11 @@ class ECLRegressionTest: public ECLFilesComparator {
 
         //! \brief Option to only compare last occurrence
         void setOnlyLastOccurrence(bool onlyLastOccurrenceArg) {this->onlyLastOccurrence = onlyLastOccurrenceArg;}
+
+        // Accept extra keywords: If this switch is set to true the comparison
+        // of restart files will ignore extra keywords which are only present
+        // in the new simulation.
+        void setAcceptExtraKeywords(bool acceptExtraKeywords) { this->acceptExtraKeywords = acceptExtraKeywords; }
 
         //! \brief Compares grid properties of the two cases.
         // gridCompare() checks if both the number of active and global cells in the two cases are the same. If they are, and volumecheck is true, all cells are looped over to calculate the cell volume deviation for the two cases. If the both the relative and absolute deviation exceeds the tolerances, an exception is thrown.
