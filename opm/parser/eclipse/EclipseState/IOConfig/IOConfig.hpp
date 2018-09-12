@@ -201,7 +201,7 @@ namespace Opm {
         std::string     m_output_dir;
         std::string     m_base_name;
         bool            m_nosim;
-        bool            ecl_compatible_rst = false;
+        bool            ecl_compatible_rst = true;
 
         IOConfig( const GRIDSection&,
                   const RUNSPECSection&,
