@@ -105,6 +105,41 @@ namespace Opm {
       ------ Default ------
       If no keywords for config of writing restart files have been handled; no restart files are written.
 
+
+      ECL compatible restart
+      ======================
+
+      Unfortunately flow & eclipse are not compatible across restarts. The
+      RestartIO implementation can write restart files for flow -> flow restart
+      or alternatively for flow -> eclipse restart. This is regulated by the
+      boolean flag ecl_compatible_restart in the IOConfig class. The difference
+      between the two are as follows:
+
+      ecl_compatible_restart = false:
+
+        1. The 'extra' fields in the RestartValue structure are actually
+           written to disk.
+
+        2. You can optionally ask the RestartIO::save() function to save the
+           solution in double precision.
+
+        3. The RestartIO::save() function will save opm specific vector OPM_IWEL
+           and OPM_XWEL.
+
+      ecl_compatible_restart = true:
+
+        1. The 'extra' fields in the RestartValue are silently ignored.
+
+        2. If request double precision solution data that is silently ignored,
+           it will be float.
+
+        3. The OPM_IWEL and OPM_XWEL vectors will not be written.
+
+      Observe that the solution data in the RestartValue is passed
+      unconditionally to the solution section in the restart file, so if you
+      pass a field in the solution section which Eclipse does not recognize you
+      will end up with a restart file which Eclipse can not read, even if you
+      have set ecl_compatible_restart to true.
     */
 
 
@@ -117,7 +152,8 @@ namespace Opm {
         explicit IOConfig( const Deck& );
         explicit IOConfig( const std::string& input_path );
 
-
+        void setEclCompatibleRST(bool ecl_rst);
+        bool getEclCompatibleRST() const;
         bool getWriteEGRIDFile() const;
         bool getWriteINITFile() const;
         bool getUNIFOUT() const;
@@ -165,6 +201,7 @@ namespace Opm {
         std::string     m_output_dir;
         std::string     m_base_name;
         bool            m_nosim;
+        bool            ecl_compatible_rst = false;
 
         IOConfig( const GRIDSection&,
                   const RUNSPECSection&,

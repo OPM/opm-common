@@ -122,6 +122,14 @@ namespace Opm {
     }
 
 
+    bool IOConfig::getEclCompatibleRST() const {
+        return this->ecl_compatible_rst;
+    }
+
+
+    void IOConfig::setEclCompatibleRST(bool ecl_rst) {
+        this->ecl_compatible_rst = ecl_rst;
+    }
 
 
     void IOConfig::overrideNOSIM(bool nosim) {

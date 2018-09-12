@@ -407,6 +407,8 @@ struct Setup {
         schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), parseContext),
         summary_config( deck, schedule, es.getTableManager( ), parseContext)
     {
+        auto& io_config = es.getIOConfig();
+        io_config.setEclCompatibleRST(false);
     }
 
 };
@@ -431,6 +433,62 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     BOOST_CHECK_THROW( second_sim( eclWriter, {{"SOIL", UnitSystem::measure::pressure, true}}) , std::runtime_error );
     test_work_area_free( test_area );
 }
+
+
+BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
+    Setup setup("FIRST_SIM.DATA");
+    test_work_area_type * test_area = test_work_area_alloc("test_Restart");
+    auto& io_config = setup.es.getIOConfig();
+    {
+        auto num_cells = setup.grid.getNumActive( );
+        auto cells = mkSolution( num_cells );
+        auto wells = mkWells();
+        {
+            RestartValue restart_value(cells, wells);
+
+            io_config.setEclCompatibleRST( false );
+            restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
+            RestartIO::save("OPM_FILE.UNRST", 1 ,
+                            100,
+                            restart_value,
+                            setup.es,
+                            setup.grid,
+                            setup.schedule,
+                            true);
+
+            {
+                ecl_file_type * rst_file = ecl_file_open( "OPM_FILE.UNRST" , 0 );
+                ecl_kw_type * swat = ecl_file_iget_named_kw(rst_file, "SWAT", 0);
+
+                BOOST_CHECK_EQUAL( ECL_DOUBLE_TYPE, ecl_kw_get_type(swat));
+                BOOST_CHECK( ecl_file_has_kw(rst_file, "EXTRA"));
+                ecl_file_close(rst_file);
+            }
+
+            io_config.setEclCompatibleRST( true );
+            RestartIO::save("ECL_FILE.UNRST", 1 ,
+                            100,
+                            restart_value,
+                            setup.es,
+                            setup.grid,
+                            setup.schedule,
+                            true);
+            {
+                ecl_file_type * rst_file = ecl_file_open( "ECL_FILE.UNRST" , 0 );
+                ecl_kw_type * swat = ecl_file_iget_named_kw(rst_file, "SWAT", 0);
+
+                BOOST_CHECK_EQUAL( ECL_FLOAT_TYPE, ecl_kw_get_type(swat));
+                BOOST_CHECK( !ecl_file_has_kw(rst_file, "EXTRA"));
+                BOOST_CHECK( !ecl_file_has_kw(rst_file, "OPM_XWEL"));
+                BOOST_CHECK( !ecl_file_has_kw(rst_file, "OPM_IWEL"));
+                ecl_file_close(rst_file);
+            }
+        }
+    }
+    test_work_area_free(test_area);
+}
+
+
 
 
 
