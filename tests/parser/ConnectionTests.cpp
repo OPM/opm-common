@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     completions.add( completion2 );
     completions.add( completion3 );
 
-    std::vector<int> actnum(1000,1);
+    std::vector<int> actnum(grid.getCartesianSize(), 1);
     actnum[0] = 0;
     grid.resetACTNUM( actnum.data() );
 
