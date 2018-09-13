@@ -363,6 +363,34 @@ inline quantity crate( const fn_args& args ) {
     return { v, rate_unit< phase >() };
 }
 
+inline quantity trans_factors ( const fn_args& args ) {
+    const quantity zero = { 0, measure::transmissibility };
+
+    if( args.schedule_wells.empty() ) return zero;
+    // Like completion rate we need to look
+    // up a connection with offset 0.
+    const size_t global_index = args.num - 1;
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well->name();
+    if( args.wells.count( name ) == 0 ) return zero;
+
+    const auto& grid = args.grid;
+    const auto& connections = well->getConnections(args.sim_step);
+
+    const auto& connection = std::find_if(
+        connections.begin(),
+        connections.end(),
+        [=]( const Opm::Connection& c ) {
+            return grid.getGlobalIndex(c.getI(), c.getJ(), c.getK()) == global_index;
+        } );
+
+    if( connection == connections.end() ) return zero;
+
+    const auto& v = connection->CF();
+    return { v, measure::transmissibility };
+}
+
 inline quantity bhp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
     if( args.schedule_wells.empty() ) return zero;
@@ -710,6 +738,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CGPT", mul( crate< rt::gas, producer >, duration ) },
     { "CNPT", mul( crate< rt::solvent, producer >, duration ) },
     { "CCIT", mul( crate< rt::wat, injector, polymer >, duration ) },
+    { "CTFAC", trans_factors },
 
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },

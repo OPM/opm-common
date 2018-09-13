@@ -39,6 +39,15 @@ ACTNUM
 PORO
 1000*0.2 /
 
+PERMX
+1000*50 /
+
+PERMY
+1000*50 /
+
+PERMZ
+1000*10 /
+
 REGIONS
 
 FIPNUM
@@ -578,6 +587,12 @@ CGPT
  'W_3' /
 /
 
+CTFAC
+ 'W_1' /
+ 'W_2' /
+ 'W_3' /
+/
+
 ---- Connection production rates
 ----CGFR
 ----'E-4AH' /
@@ -598,12 +613,12 @@ WELSPECS
 
 -- Completion data.
 COMPDAT
--- 'Well' I J K1 K2
 -- Passing 0 to I/J means they'll get the well head I/J
-    W_1 0 0 1 1 /   -- Active index: 0
-    W_2 0 0 1 1 /   -- Active index: 1
-    W_2 0 0 2 2 /   -- Active index: 101
-    W_3 0 0 1 1 /   -- Active index: 2
+-- 'Well' I J K1 K2 STATUS SatTable TransFact Rw Kh   S
+    W_1   0 0  1  1 2*              100       3*        /   -- Active index: 0
+    W_2   0 0  1  1 2*              1*        5  20 0.5 /   -- Active index: 1
+    W_2   0 0  2  2 2*              1*        5  10 0.2 /   -- Active index: 101
+    W_3   0 0  1  1 2*              1*        2*    0.7 /   -- Active index: 2
 /
 
 WPOLYMER
