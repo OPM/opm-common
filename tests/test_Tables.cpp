@@ -37,7 +37,7 @@
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/util/util.h>
-#include <ert/util/TestArea.hpp>
+#include <ert/util/test_work_area.h>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -53,13 +53,17 @@ using namespace Opm;
 struct setup {
     Deck deck;
     EclipseState es;
-    ERT::TestArea ta;
+    test_work_area_type * ta;
 
     setup( const std::string& path , const ParseContext& parseContext = ParseContext( )) :
         deck( Parser().parseFile( path, parseContext ) ),
         es( deck, ParseContext() ),
-        ta( ERT::TestArea("test_tables") )
+        ta( test_work_area_alloc( "test_tables"))
     {
+    }
+
+    ~setup() {
+        test_work_area_free(this->ta);
     }
 
 };

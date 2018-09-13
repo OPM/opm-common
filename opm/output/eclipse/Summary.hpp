@@ -25,7 +25,6 @@
 #include <unordered_map>
 
 #include <ert/ecl/ecl_sum.h>
-#include <ert/ecl/Smspec.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
