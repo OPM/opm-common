@@ -1036,6 +1036,11 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     BOOST_CHECK_CLOSE( 8.0 , units.to_si( UnitSystem::measure::identity , ecl_sum_get_general_var( resp, 1, "BSWAT:1,1,1")) , 1e-5);
     BOOST_CHECK_CLOSE( 9.0 , units.to_si( UnitSystem::measure::identity , ecl_sum_get_general_var( resp, 1, "BSGAS:1,1,1")) , 1e-5);
 
+    BOOST_CHECK_CLOSE( 100                , ecl_sum_get_well_completion_var( resp, 1, "W_1", "CTFAC", 1)   , 1e-5);
+    BOOST_CHECK_CLOSE( 2.1430730819702148 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2)   , 1e-5);
+    BOOST_CHECK_CLOSE( 2.6788413524627686 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 102) , 1e-5);
+    BOOST_CHECK_CLOSE( 2.7855057716369629 , ecl_sum_get_well_completion_var( resp, 1, "W_3", "CTFAC", 3)   , 1e-5);
+
     // Cell is not active
     BOOST_CHECK( !ecl_sum_has_general_var( resp , "BPR:2,1,10"));
 }
