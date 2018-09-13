@@ -439,9 +439,10 @@ void EclipseIO::writeTimeStep(int report_step,
 
 
     /*
-      Summary data is written unconditionally for every timestep.
+      Summary data is written unconditionally for every timestep except for the
+      very intial report_step==0 call, which is only garbage.
     */
-    {
+    if (report_step > 0) {
         this->impl->summary.add_timestep( report_step,
                                           secs_elapsed,
                                           es,
