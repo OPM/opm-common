@@ -38,7 +38,7 @@
 
 // ERT stuff
 #include <ert/util/ert_unique_ptr.hpp>
-#include <ert/util/TestArea.hpp>
+#include <ert/util/test_work_area.h>
 
 #include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_grid.h>
@@ -287,8 +287,6 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         "'PROD' 'G' 3 3 1000 'OIL' /\n"
         "/\n";
 
-    ERT::TestArea ta("test_ecl_writer");
-
     auto write_and_check = [&]( int first = 1, int last = 5 ) {
         ParseContext parse_context;
         auto deck = Parser().parseString( deckString, parse_context );
@@ -376,6 +374,8 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
      * * https://github.com/OPM/opm-simulators/issues/753
      * * https://github.com/OPM/opm-output/pull/61
      */
+
+    test_work_area_type * work_area = test_work_area_alloc("test_ecl_writer");
     const auto file_size = write_and_check();
 
     for( int i = 0; i < 3; ++i )
@@ -395,6 +395,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
      * the file
      */
     BOOST_CHECK_EQUAL( file_size, write_and_check( 3, 5 ) );
+    test_work_area_free(work_area);
 }
 
 BOOST_AUTO_TEST_CASE(OPM_XWEL) {
