@@ -289,6 +289,7 @@ namespace {
 
     void writeGroup(::Opm::RestartIO::ecl_rst_file_type* rst_file,
                     int                                  sim_step,
+		    const bool                           ecl_compatible_rst,
                     const Schedule&                      schedule,
                     const Opm::SummaryState&             sumState,
                     const std::vector<int>&              ih)
@@ -306,6 +307,7 @@ namespace {
         groupData.captureDeclaredGroupData(schedule,
                                            rst_g_keys, rst_f_keys,
                                            grpKeyToInd, fldKeyToInd,
+					   ecl_compatible_rst,
                                            simStep, sumState, ih);
 
         write_kw(rst_file, "IGRP", groupData.getIGroup());
@@ -344,7 +346,7 @@ namespace {
     {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(schedule, units, sim_step, sumState, ih);
-        wellData.captureDynamicWellData(schedule, sim_step, wells, sumState);
+        wellData.captureDynamicWellData(schedule, sim_step, ecl_compatible_rst, wells, sumState);
 
         write_kw(rst_file, "IWEL", wellData.getIWell());
         write_kw(rst_file, "SWEL", wellData.getSWell());
@@ -370,7 +372,7 @@ namespace {
 
         write_kw(rst_file, "ICON", connectionData.getIConn());
         write_kw(rst_file, "SCON", connectionData.getSConn());
-        write_kw(rst_file, "XCON", connectionData.getXConn());
+        //write_kw(rst_file, "XCON", connectionData.getXConn());
     }
 
     void writeSolution(ecl_rst_file_type*  rst_file,
@@ -466,7 +468,7 @@ void save(const std::string&  filename,
     const auto inteHD = writeHeader(rst_file.get(), sim_step, report_step,
                                     seconds_elapsed, schedule, grid, es);
 
-    writeGroup(rst_file.get(), sim_step, schedule, sumState, inteHD);
+    writeGroup(rst_file.get(), sim_step, ecl_compatible_rst, schedule, sumState, inteHD);
 
     writeMSWData(rst_file.get(), sim_step, units, schedule, grid, inteHD);
 

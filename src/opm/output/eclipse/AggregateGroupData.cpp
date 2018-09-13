@@ -430,6 +430,30 @@ namespace {
             };
         }
 
+        std::vector<std::string>
+        filter_cumulative(const bool     ecl_compatible_rst,
+                          const std::vector<std::string>& keys)
+        {
+            if (ecl_compatible_rst) {
+                // User wants ECLIPSE-compatible output.  Write all vectors.
+                return keys;
+            }
+
+            auto ret = std::vector<std::string>{};
+            ret.reserve(keys.size());
+
+            for (const auto& key : keys) {
+                if ((key[3] == 'T') && ((key[2] == 'I') || (key[2] == 'P'))) {
+                    // Don't write cumulative quantities in case of 
+                    continue;
+                }
+
+                ret.push_back(key);
+            }
+
+            return ret;
+        }
+
         // here define the dynamic group quantities to be written to the restart file
         template <class XGrpArray>
         void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
@@ -438,6 +462,7 @@ namespace {
 			    const std::map<std::string, size_t>& fieldKeyToIndex,
 			    const Opm::Group&                    group,
 			    const Opm::SummaryState&             sumState,
+			    const bool                           ecl_compatible_rst,
 			    XGrpArray&                           xGrp)
         {
 	  std::string groupName = group.name();
@@ -446,7 +471,7 @@ namespace {
 	  const std::map<std::string, size_t>& keyToIndex = (groupName == "FIELD")
 	  ? fieldKeyToIndex : groupKeyToIndex;
 
-	  for (const auto key : keys) {
+	  for (const auto key : filter_cumulative(ecl_compatible_rst,keys)) {
 	      std::string compKey = (groupName == "FIELD")
 	      ? key : key + ":" + groupName;
 
@@ -548,6 +573,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 			 const std::vector<std::string>&      restart_field_keys,
 			 const std::map<std::string, size_t>& groupKeyToIndex,
 			 const std::map<std::string, size_t>& fieldKeyToIndex,
+			 const bool                           ecl_compatible_rst,
 			 const std::size_t                    simStep,
 			 const Opm::SummaryState&             sumState,
 			 const std::vector<int>&              inteHead)
@@ -586,11 +612,11 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
     // Define DynamicContributions to XGrp Array.
     groupLoop(curGroups,
-        [restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, sumState, this]
+        [restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, ecl_compatible_rst, sumState, this]
 	(const Group& group, const std::size_t groupID) -> void
     {
         auto xg = this->xGroup_[groupID];
-        XGrp::dynamicContrib( restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, group, sumState, xg);
+        XGrp::dynamicContrib( restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, group, sumState, ecl_compatible_rst, xg);
     });
 
 }

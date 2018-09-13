@@ -180,7 +180,7 @@ namespace Opm {
   void Connection::updateSegment(int segment_number, double center_depth, std::size_t seqIndex) {
         this->segment_number = segment_number;
         this->center_depth = center_depth;
-        this->seqIndex = seqIndex;
+        this->m_seqIndex = seqIndex;
     }
 
     int Connection::segment() const {

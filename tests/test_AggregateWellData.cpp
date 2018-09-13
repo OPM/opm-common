@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
 
-    awd.captureDynamicWellData(simCase.sched, rptStep, xw, smry);
+    awd.captureDynamicWellData(simCase.sched, rptStep, true, xw, smry);
 
     // IWEL (OP_1)
     {
@@ -619,7 +619,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
 
-    awd.captureDynamicWellData(simCase.sched, rptStep, xw, smry);
+    awd.captureDynamicWellData(simCase.sched, rptStep, true, xw, smry);
 
     // IWEL (OP_1) -- closed producer
     {

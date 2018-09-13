@@ -44,6 +44,7 @@
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
     Opm::WellConnections connection_set;
+    Opm::EclipseGrid grid(20,20,20);
     connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0, dir,0, 0., 0., true) );
     connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0, dir,0, 0., 0., true) );
     connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0, dir,0, 0., 0., true) );

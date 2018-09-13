@@ -150,11 +150,11 @@ namespace {
             iConn[Ix::CellJ] = conn.getJ() + 1;
             iConn[Ix::CellK] = conn.getK() + 1;
 
-            iConn[Ix::ConnStat] = (conn.state == ConnState::OPEN)
+            iConn[Ix::ConnStat] = (conn.state() == ConnState::OPEN)
                 ? 1 : -1000;
 
             iConn[Ix::Drainage] = conn.getDefaultSatTabId()
-                ? 0 : conn.sat_tableId;
+                ? 0 : conn.satTableId();
 
             // Don't support differing sat-func tables for
             // draining and imbibition curves at connections.
@@ -163,9 +163,9 @@ namespace {
             //iConn[Ix::ComplNum] = std::abs(conn.complnum);
             iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
 
-            iConn[Ix::ConnDir] = conn.dir;
+            iConn[Ix::ConnDir] = conn.dir();
             iConn[Ix::Segment] = conn.attachedToSegment()
-                ? conn.segment_number : 0;
+                ? conn.segment() : 0;
         }
     } // IConn
 
@@ -200,28 +200,14 @@ namespace {
                 return static_cast<float>(units.from_si(u, x));
             };
 
-            {
-                const auto& ctf = conn
-                    .getConnectionTransmissibilityFactorAsValueObject();
+	    sConn[Ix::ConnTrans] =
+                        scprop(M::transmissibility, conn.CF());
 
-                if (ctf.hasValue()) {
-                    sConn[Ix::ConnTrans] =
-                        scprop(M::transmissibility, ctf.getValue());
-                }
-            }
+            sConn[Ix::Depth]    = scprop(M::length, conn.depth());
+            sConn[Ix::Diameter] = scprop(M::length, 2*conn.rw());
 
-            sConn[Ix::Depth]    = scprop(M::length, conn.center_depth);
-            sConn[Ix::Diameter] = scprop(M::length, conn.getDiameter());
-
-            {
-                const auto& ckh = conn
-                    .getEffectiveKhAsValueObject();
-
-                if (ckh.hasValue()) {
-                    sConn[Ix::EffectiveKH] =
-                        scprop(M::effective_Kh, ckh.getValue());
-                }
-            }
+	    sConn[Ix::EffectiveKH] =
+                        scprop(M::effective_Kh, conn.Kh());
 
             sConn[Ix::item12] = sConn[Ix::ConnTrans];
 

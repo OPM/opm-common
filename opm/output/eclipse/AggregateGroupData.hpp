@@ -61,6 +61,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 				      const std::vector<std::string>&      restart_field_keys,
 				      const std::map<std::string, size_t>& groupKeyToIndex,
 				      const std::map<std::string, size_t>& fieldKeyToIndex,
+				      const bool                           ecl_compatible_rst,
 				      const std::size_t                    simStep,
 				      const Opm::SummaryState&             sumState,
 				      const std::vector<int>&              inteHead);

@@ -139,7 +139,7 @@ namespace {
 	auto segNumber  = segSet[segIndex].segmentNumber();
 	int noConnections = 0;
 	for (auto it : compSet) {
-	    auto cSegment = it.segment_number;
+	    auto cSegment = it.segment();
 	    if (segNumber == cSegment) {
 		noConnections+=1;
 	    }

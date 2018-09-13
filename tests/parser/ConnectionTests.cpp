@@ -151,8 +151,9 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::Eclipse3DProperties props(deck, tables, grid );
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Opm::WellConnections connections;
+    std::size_t totnc = 0;
     for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, grid, props);
+        connections.loadCOMPDAT(rec, grid, props, totnc);
 
     return connections;
 }

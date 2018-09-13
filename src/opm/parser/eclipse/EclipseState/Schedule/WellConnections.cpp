@@ -304,7 +304,7 @@ namespace {
 		    std::size_t noConn = prev->getSeqIndex();
 		    // The complnum value carries over; the rest of the state is fully specified by
 		    // the current COMPDAT keyword.
-		    int complnum = prev->complnum;
+		    int complnum = prev->complnum();
 		    *prev = Connection(I,J,k,
                                    complnum,
                                    grid.getCellDepth(I,J,k),

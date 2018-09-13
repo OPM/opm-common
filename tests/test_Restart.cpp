@@ -503,6 +503,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
+	auto sumState = sim_state();
         {
             RestartValue restart_value(cells, wells);
 
@@ -514,6 +515,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                             setup.es,
                             setup.grid,
                             setup.schedule,
+			    sumState,
                             true);
 
             {
@@ -532,6 +534,7 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
                             setup.es,
                             setup.grid,
                             setup.schedule,
+			    sumState,
                             true);
             {
                 ecl_file_type * rst_file = ecl_file_open( "ECL_FILE.UNRST" , 0 );

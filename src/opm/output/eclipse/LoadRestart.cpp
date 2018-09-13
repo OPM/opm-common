@@ -327,7 +327,7 @@ namespace {
             for (const auto& sc : sched_well->getConnections(rst_view.simStep())) {
                 const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
 
-                if (!grid.cellActive(i, j, k) || sc.state == Opm::WellCompletion::SHUT) {
+                if (!grid.cellActive(i, j, k) || sc.state() == Opm::WellCompletion::SHUT) {
                     opm_xwel_data += Opm::data::Connection::restart_size + phases.size();
                     continue;
                 }
