@@ -897,5 +897,40 @@ BOOST_AUTO_TEST_CASE(RESTART_BASIC_LEQ_2) {
         BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
 }
 
+BOOST_AUTO_TEST_CASE(RESTART_SAVE) {
+    const char* data =  "RUNSPEC\n"
+                        "DIMENS\n"
+                        " 10 10 10 /\n"
+                        "GRID\n"
+                        "START\n"
+                        " 21 MAY 1981 /\n"
+                        "\n"
+                        "SCHEDULE\n"
+                        "DATES\n"
+                        " 22 MAY 1981 /\n"
+                        "/\n"
+                        "DATES\n"
+                        " 23 MAY 1981 /\n"
+                        " 24 MAY 1981 /\n"
+                        " 23 MAY 1982 /\n"
+                        " 24 MAY 1982 /\n"
+                        " 24 MAY 1983 /\n"
+                        " 25 MAY 1984 /\n"
+                        " 26 MAY 1984 /\n"
+                        " 26 MAY 1985 /\n"
+                        " 27 MAY 1985 /\n"
+                        " 1 JAN 1986 /\n"
+                        "/\n"
+                        "SAVE \n"
+                        "TSTEP \n"
+                        " 1 /\n";
 
+    auto deck = Parser().parseString( data, ParseContext() );
+    RestartConfig ioConfig( deck );
+
+    for( size_t ts = 1; ts < 11; ++ts )
+        BOOST_CHECK( !ioConfig.getWriteRestartFile( ts ) );
+    BOOST_CHECK( ioConfig.getWriteRestartFile( 12 ) );
+
+}
 
