@@ -354,7 +354,7 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<st
             const std::string& key = pair.first;
             const std::vector<int>& int_vector = pair.second;
             if (key.size() > ECL_STRING8_LENGTH)
-              throw std::invalid_argument("Keyword is too long.");            
+              throw std::invalid_argument("Keyword is too long.");
 
             writeKeyword( fortio , key , int_vector );
         }
@@ -393,8 +393,8 @@ void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) const {
 
 /*
 int_data: Writes key(string) and integers vector to INIT file as eclipse keywords
-- Key: Max 8 chars.   
-- Wrong input: invalid_argument exception.                                   
+- Key: Max 8 chars.
+- Wrong input: invalid_argument exception.
 */
 void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) {
     if( !this->impl->output_enabled )
@@ -439,9 +439,10 @@ void EclipseIO::writeTimeStep(int report_step,
 
 
     /*
-      Summary data is written unconditionally for every timestep.
+      Summary data is written unconditionally for every timestep except for the
+      very intial report_step==0 call, which is only garbage.
     */
-    {
+    if (report_step > 0) {
         this->impl->summary.add_timestep( report_step,
                                           secs_elapsed,
                                           es,
