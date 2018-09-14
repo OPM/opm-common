@@ -362,6 +362,7 @@ namespace Opm {
 
         DynamicState< RestartSchedule > restart_schedule;
         DynamicState< std::map< std::string, int > > restart_keywords;
+        std::vector< bool > save_keywords;
     };
 } //namespace Opm
 

@@ -345,6 +345,8 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
         else if (234 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2012,1,1)));
         else if (240 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2012,7,1)));
         else if (246 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2013,1,1)));
+        // output when SAVE is in the deck
+        else if (251 == report_step) rptConfig.push_back( std::make_tuple(report_step, true, boost::gregorian::date(2013,5,2)));
         else    rptConfig.push_back( std::make_tuple(report_step, false, boost::gregorian::date(2000,1,1)));
     }
 
