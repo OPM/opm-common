@@ -71,12 +71,12 @@ if(NOT @opm-project_NAME@_FOUND)
 
   # this is the contents of config.h as far as our probes can tell:
 
+  # This is required to include OpmPackage
+  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" @PREREQ_LOCATION@)
+
   # extra code from variable OPM_PROJECT_EXTRA_CODE
   @OPM_PROJECT_EXTRA_CODE@
   # end extra code
 
-  # This call is at the bottom as we need to include
-  # the OpmPackage Macros.
-  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" @PREREQ_LOCATION@)
   include(@opm-project_NAME@-prereqs)
 endif()
