@@ -222,9 +222,20 @@ namespace {
 	std::size_t sInd = segIndex;
 	std::size_t newSInd = segIndex;
 	auto origBranchNo = segSet[segIndex].branchNumber();
+	bool endOrigBranch = true;
+	//std::cout << "SegmentOrder-segIndex:"  << segIndex  << " origBranchno: " <<  origBranchNo  << std::endl;
 	// loop down branch to find all segments in branch and number from "toe" to "heel"
 	while (newSInd < segSet.size()) {
+	       endOrigBranch = true;
 		const auto iSInd = inflowSegmentsIndex(segSet, newSInd);
+		//std::cout << " SO- inflowSegmentsIndex:" <<   std::endl;
+		for (auto isi : iSInd )  {
+			auto inflowBranch = segSet[isi].branchNumber();
+			if (origBranchNo == inflowBranch) {
+			    endOrigBranch = false;
+			}
+			//std::cout << " SO- isi:" <<  isi  << std::endl;
+		}
 		if (iSInd.size() > 0) {
 		    for (auto ind : iSInd) {
 			auto inflowBranch = segSet[ind].branchNumber();
@@ -233,22 +244,30 @@ namespace {
 			    segIndCB.insert(segIndCB.begin(), ind);
 			    // search recursively down this branch to find more inflow branches
 			    newSInd = ind;
+			    //std::cout << "SO-ind-loop: origB=iflowB - ind:" <<  ind  << std::endl;
 			}
 			else {
 			    // if inflow segment belongs to different branch, start new search
+			    //std::cout << "SO-ind-loop: origB!=iflowB - ind:" <<  ind  << std::endl;
 			    auto nSOrd = segmentOrder(segSet, ind);
 			    // copy the segments already found and indexed into the total ordered segment vector
 			    for (std::size_t indOS = 0; indOS < nSOrd.size(); indOS++) {
 				ordSegNumber.push_back(nSOrd[indOS]);
+				//std::cout << "SO-ind-loop: origB!=iflowB - indOS:" <<  indOS  << " nSOrd[indOS] " << nSOrd[indOS]  << std::endl;
+			    }
+			    if (endOrigBranch) {
+			       newSInd = segSet.size();
 			    }
 			    // increment the local branch sequence number counter
 			}
 		    }
 		}
-		else {
+		if (endOrigBranch || (iSInd.size()==0)) {
 		    // have come to toe of current branch - store segment indicies of current branch
+		    //std::cout << "SO-Toe of current branch - newSInd :" <<  newSInd  << std::endl;
 		    for (std::size_t indOS = 0; indOS < segIndCB.size(); indOS++) {
 			ordSegNumber.push_back(segIndCB[indOS]);
+			//std::cout << "SO  end CB - indOS:" <<  indOS  << " segIndCB[indOS] " << segIndCB[indOS]  << std::endl;
 		    }
 		    // set new index to exit while loop
 		    newSInd = segSet.size();
@@ -258,9 +277,11 @@ namespace {
 
 	if (origBranchNo == 1) {
 	    // make the vector of ordered segments
+	    //std::cout << "SO-OrBr=1 -ordSegNumber.size():" <<  ordSegNumber.size()  << std::endl;
 	    tempOrdVect.resize(ordSegNumber.size());
 	    for (std::size_t ov_ind = 0; ov_ind < ordSegNumber.size(); ov_ind++) {
 		tempOrdVect[ordSegNumber[ov_ind]] = ov_ind+1;
+		//std::cout << "SO_OrBr=1- ov_ind:" <<  ov_ind  << " ordSegNumber[ov_ind] " << ordSegNumber[ov_ind]  << std::endl;
 	    }
 	    return tempOrdVect;
 	} else {
