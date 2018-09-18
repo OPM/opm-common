@@ -485,11 +485,6 @@ namespace {
             {
                 return static_cast<float>(units.from_si(u, x));
             };
-
-	    auto get = [&smry, &well](const std::string& vector)
-            {
-                return smry.get(vector + ':' + well.name());
-            };
 	    
             assignDefaultSWell(sWell);
 
@@ -524,10 +519,11 @@ namespace {
                     sWell[Ix::ResVRateTarget] =
                         swprop(M::rate, pp.ResVRate);
                 }
-		else {
+		else if (smry.has("WVPR:" + well.name())) {
                     // Write out summary voidage production rate if
                     // target/limit is not set
-                    sWell[Ix::ResVRateTarget] = get("WVPR");
+                    sWell[Ix::ResVRateTarget] =
+                        static_cast<float>(smry.get("WVPR:" + well.name()));
                 }
 
                 if (pp.THPLimit != 0.0) {
@@ -621,7 +617,9 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get(vector + ':' + well);
+                const auto key = vector + ':' + well;
+
+                return smry.has(key) ? smry.get(key) : 0.0;
             };
 
             xWell[Ix::OilPrRate] = get("WOPR");
@@ -658,7 +656,9 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get(vector + ':' + well);
+                const auto key = vector + ':' + well;
+
+                return smry.has(key) ? smry.get(key) : 0.0;
             };
 
             // Injection rates reported as negative, cumulative
@@ -688,7 +688,9 @@ namespace {
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get(vector + ':' + well);
+                const auto key = vector + ':' + well;
+
+                return smry.has(key) ? smry.get(key) : 0.0;
             };
 
             // Injection rates reported as negative production rates,
@@ -701,9 +703,10 @@ namespace {
 	    if (ecl_compatible_rst) {
 		xWell[Ix::GasInjTotal] = get("WGIT");
 	    }
-	    
-            xWell[Ix::GasFVF] = xWell[Ix::VoidPrRate]
-                              / xWell[Ix::GasPrRate];
+
+            xWell[Ix::GasFVF] = (std::abs(xWell[Ix::GasPrRate]) > 0.0)
+                ? xWell[Ix::VoidPrRate] / xWell[Ix::GasPrRate]
+                : 0.0;
 
             // Not fully characterised.
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
