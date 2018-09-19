@@ -29,11 +29,34 @@ if(NOT @opm-project_NAME@_FOUND)
   set (@opm-project_NAME@_LIBRARY_DIRS "@opm-project_LIBRARY_DIRS@" "@CMAKE_LIBRARY_OUTPUT_DIRECTORY@")
   set (@opm-project_NAME@_LINKER_FLAGS "@opm-project_LINKER_FLAGS@")
   set (@opm-project_NAME@_CONFIG_VARS "@opm-project_CONFIG_VARS@")
-  set (HAVE_@opm-project_NAME_UC@ 1)
 
   # libraries come from the build tree where this file was generated
   set (@opm-project_NAME@_LIBRARY "@opm-project_LIBRARY@")
   set (@opm-project_NAME@_LIBRARIES ${@opm-project_NAME@_LIBRARY} "@opm-project_LIBRARIES@")
+
+  # The purpose of this string replacement operation is to enable use of the
+  # generated opm-project-config.cmake file also in the situation where 'make
+  # install' has been invoked with the DESTDIR option:
+  #
+  # opm-common/build> cmake .. -DCMAKE_INSTALL_PREFIX=/real/prefix
+  # opm-common/budil> make install DESTDIR=/tmp/prefix
+  #
+  # downstream/build> cmake .. -DDEST_PREFIX=/tmp/prefix -DCMAKE_PREFIX_PATH=/tmp/prefix
+  # downstream/build> make install
+  #
+  # That way the downstream dependency can still use find_package( opm-common )
+  # even though the opm-common-config.cmake file is not internally consistent
+  # with it's own location in the filesystem.
+
+  if(DEST_PREFIX)
+    set(DEST_PREFIX "${DEST_PREFIX}${@opm-project_NAME@_PREFIX}")
+    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_INCLUDE_DIRS ${@opm-project_NAME@_INCLUDE_DIRS})
+    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_LIBRARY_DIRS ${@opm-project_NAME@_LIBRARY_DIRS})
+    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_LIBRARY      ${@opm-project_NAME@_LIBRARY})
+  endif()
+
+
+  set (HAVE_@opm-project_NAME_UC@ 1)
   mark_as_advanced (@opm-project_NAME@_LIBRARY)
 
   # not all projects have targets; conditionally add this part
@@ -71,12 +94,17 @@ if(NOT @opm-project_NAME@_FOUND)
 
   # this is the contents of config.h as far as our probes can tell:
 
-  # extra code from variable OPM_PROJECT_EXTRA_CODE
-  @OPM_PROJECT_EXTRA_CODE@
-  # end extra code
 
-  # This call is at the bottom as we need to include
-  # the OpmPackage Macros.
-  set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" @PREREQ_LOCATION@)
-  include(@opm-project_NAME@-prereqs)
+  # The settings in this block do not mix well with the DEST_PREFIX
+  # setting.
+  if (NOT DEST_PREFIX)
+    # This is required to include OpmPackage
+    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" @PREREQ_LOCATION@)
+
+    # extra code from variable OPM_PROJECT_EXTRA_CODE
+    @OPM_PROJECT_EXTRA_CODE@
+    # end extra code
+
+    include(@opm-project_NAME@-prereqs)
+  endif()
 endif()
