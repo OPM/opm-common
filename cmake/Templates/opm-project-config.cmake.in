@@ -50,9 +50,9 @@ if(NOT @opm-project_NAME@_FOUND)
 
   if(DEST_PREFIX)
     set(DEST_PREFIX "${DEST_PREFIX}${@opm-project_NAME@_PREFIX}")
-    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_INCLUDE_DIRS ${@opm-project_NAME@_INCLUDE_DIRS})
-    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_LIBRARY_DIRS ${@opm-project_NAME@_LIBRARY_DIRS})
-    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_LIBRARY      ${@opm-project_NAME@_LIBRARY})
+    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_INCLUDE_DIRS "${@opm-project_NAME@_INCLUDE_DIRS}")
+    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_LIBRARY_DIRS "${@opm-project_NAME@_LIBRARY_DIRS}")
+    string(REPLACE ${@opm-project_NAME@_PREFIX} ${DEST_PREFIX} @opm-project_NAME@_LIBRARY      "${@opm-project_NAME@_LIBRARY}")
   endif()
 
 
