@@ -161,3 +161,6 @@ endif()
 
 # Install build system files
 install(DIRECTORY cmake DESTINATION share/opm)
+
+# Install tab completion skeleton
+install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
