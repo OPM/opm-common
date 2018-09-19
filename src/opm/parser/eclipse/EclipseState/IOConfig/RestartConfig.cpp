@@ -397,14 +397,15 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
             continue;
         }
 
+        if( this->m_timemap.size() <= current_step ) continue;
+
         if (name == "SAVE") {
-            this->save_keywords[current_step] = true;
+            this->save_keywords.at(current_step) = true;
         } else {
-            this->save_keywords[current_step]= false;
+            this->save_keywords.at(current_step) = false;
         }
 
         if( !( name == "RPTRST" || name == "RPTSCHED" ) ) continue;
-        if( this->m_timemap.size() <= current_step ) continue;
 
         const bool is_RPTRST = name == "RPTRST";
         const auto& prev_sched = this->restart_schedule.back();
@@ -483,7 +484,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
         m_first_restart_step( -1 ),
         restart_schedule( m_timemap, { 0, 0, 1 } ),
         restart_keywords( m_timemap, {} ),
-        save_keywords( m_timemap.numTimesteps(), false )
+        save_keywords( m_timemap.size(), false )
     {
         handleSolutionSection( solution );
         handleScheduleSection( schedule );
