@@ -135,6 +135,9 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES
+          src/opm/output/eclipse/AggregateConnectionData.cpp
+          src/opm/output/eclipse/AggregateGroupData.cpp
+          src/opm/output/eclipse/AggregateMSWData.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
@@ -144,7 +147,9 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/EclipseGridInspector.cpp
           src/opm/output/eclipse/EclipseIO.cpp
           src/opm/output/eclipse/InteHEAD.cpp
+          src/opm/output/eclipse/libECLRestart.cpp
           src/opm/output/eclipse/LinearisedOutputTable.cpp
+          src/opm/output/eclipse/LoadRestart.cpp
           src/opm/output/eclipse/LogiHEAD.cpp
           src/opm/output/eclipse/RestartIO.cpp
           src/opm/output/eclipse/Summary.cpp
@@ -481,8 +486,12 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
+        opm/output/eclipse/VectorItems/connection.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
         opm/output/eclipse/VectorItems/well.hpp
+        opm/output/eclipse/AggregateGroupData.hpp
+        opm/output/eclipse/AggregateConnectionData.hpp
+        opm/output/eclipse/AggregateMSWData.hpp
         opm/output/eclipse/AggregateWellData.hpp
         opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/DoubHEAD.hpp
@@ -490,8 +499,9 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/EclipseIO.hpp
         opm/output/eclipse/EclipseIOUtil.hpp
         opm/output/eclipse/InteHEAD.hpp
-        opm/output/eclipse/LogiHEAD.hpp
+        opm/output/eclipse/libECLRestart.hpp
         opm/output/eclipse/LinearisedOutputTable.hpp
+        opm/output/eclipse/LogiHEAD.hpp
         opm/output/eclipse/RegionCache.hpp
         opm/output/eclipse/RestartIO.hpp
         opm/output/eclipse/RestartValue.hpp

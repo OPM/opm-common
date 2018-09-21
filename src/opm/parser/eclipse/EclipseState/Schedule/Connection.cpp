@@ -44,7 +44,12 @@ namespace Opm {
                            double Kh,
                            double rw,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum direction)
+                           const WellCompletion::DirectionEnum direction,
+			   const std::size_t seqIndex,
+			   const double segDistStart,
+			   const double segDistEnd,
+			   const bool defaultSatTabId
+			  )
         : direction(direction),
           center_depth(depth),
           open_state(stateArg),
@@ -53,8 +58,21 @@ namespace Opm {
           m_CF(CF),
           m_Kh(Kh),
           m_rw(rw),
-          ijk({i,j,k})
+          ijk({i,j,k}),
+          m_seqIndex(seqIndex),
+          m_segDistStart(segDistStart),
+          m_segDistEnd(segDistEnd),
+          m_defaultSatTabId(defaultSatTabId)
     {}
+
+    /*bool Connection::sameCoordinate(const Connection& other) const {
+        if ((m_i == other.m_i) &&
+            (m_j == other.m_j) &&
+            (m_k == other.m_k))
+            return true;
+        else
+            return false;
+    }*/
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
         if ((ijk[0] == i) && (ijk[1] == j) && (ijk[2] == k)) {
@@ -81,11 +99,48 @@ namespace Opm {
     bool Connection::attachedToSegment() const {
         return (segment_number > 0);
     }
+    
+    const std::size_t& Connection::getSeqIndex() const {
+        return m_seqIndex;
+    }
+    
+    const bool& Connection::getDefaultSatTabId() const {
+        return m_defaultSatTabId;
+    }
+    
+    const std::size_t& Connection::getCompSegSeqIndex() const {
+        return m_compSeg_seqIndex;
+    }
 
     WellCompletion::DirectionEnum Connection::dir() const {
         return this->direction;
     }
 
+    const double& Connection::getSegDistStart() const {
+        return m_segDistStart;
+    }
+
+    const double& Connection::getSegDistEnd() const {
+        return m_segDistEnd;
+    }
+
+    
+    void Connection::setCompSegSeqIndex(std::size_t index) {
+        m_compSeg_seqIndex = index;
+    }
+    
+    void Connection::setDefaultSatTabId(bool id) {
+        m_defaultSatTabId = id;
+    }
+    
+    void Connection::setSegDistStart(const double& distStart) {
+        m_segDistStart = distStart;
+    }
+
+    void Connection::setSegDistEnd(const double& distEnd) {
+        m_segDistEnd = distEnd;
+    }
+    
     double Connection::depth() const {
         return this->center_depth;
     }
@@ -122,9 +177,10 @@ namespace Opm {
         this->open_state = state;
     }
 
-    void Connection::updateSegment(int segment_number, double center_depth) {
+  void Connection::updateSegment(int segment_number, double center_depth, std::size_t seqIndex) {
         this->segment_number = segment_number;
         this->center_depth = center_depth;
+        this->m_seqIndex = seqIndex;
     }
 
     int Connection::segment() const {
@@ -150,12 +206,11 @@ namespace Opm {
             && this->open_state == rhs.open_state
             && this->direction == rhs.direction
             && this->segment_number == rhs.segment_number
-            && this->center_depth == rhs.center_depth;
+            && this->center_depth == rhs.center_depth
+            && this->m_seqIndex == rhs.m_seqIndex;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {
         return !( *this == rhs );
     }
 }
-
-

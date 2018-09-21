@@ -39,8 +39,12 @@ namespace Opm {
                            double Kh,
                            double rw,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
-        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
+                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z,
+			   const std::size_t seqIndex = 0,
+			   const double segDistStart= 0.0,
+			   const double segDistEnd= 0.0,
+			   const bool defaultSatTabId = true);
+        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, std::size_t& totNC);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -53,6 +57,9 @@ namespace Opm {
 
         const_iterator begin() const { return this->m_connections.begin(); }
         const_iterator end() const { return this->m_connections.end(); }
+        
+        std::size_t totNoConn() const { return this->m_connections.size(); }
+        
         void filter(const EclipseGrid& grid);
         bool allConnectionsShut() const;
         /// Order connections irrespective of input order.
@@ -81,7 +88,11 @@ namespace Opm {
                            double Kh,
                            double rw,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z);
+                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z,
+			   const std::size_t seqIndex = 0,
+			   const double segDistStart= 0.0,
+			   const double segDistEnd= 0.0,
+			   const bool defaultSatTabId = true);
 
         std::vector< Connection > m_connections;
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);

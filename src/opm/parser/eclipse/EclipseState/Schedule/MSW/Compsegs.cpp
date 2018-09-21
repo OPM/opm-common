@@ -33,7 +33,7 @@ namespace Opm {
 
 
     Compsegs::Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
-                       WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in)
+                       WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in, size_t seqIndex_in)
     : m_i(i_in),
       m_j(j_in),
       m_k(k_in),
@@ -42,11 +42,12 @@ namespace Opm {
       m_distance_end(distance_end_in),
       m_dir(dir_in),
       center_depth(center_depth_in),
-      segment_number(segment_number_in)
+      segment_number(segment_number_in),
+      m_seqIndex(seqIndex_in)
     {
     }
 
-    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword ) {
+    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword, const EclipseGrid& grid, std::size_t& totNC ) {
 
         // only handle the second record here
         // The first record here only contains the well name
@@ -121,12 +122,19 @@ namespace Opm {
             }
 
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
-                compsegs.emplace_back( I, J, K,
-                                       branch,
-                                       distance_start, distance_end,
-                                       direction,
-                                       center_depth,
-                                       segment_number );
+		
+		if (grid.cellActive(I, J, K)) {
+		    std::size_t seqIndex = compsegs.size();
+		    totNC = seqIndex;
+		    compsegs.emplace_back( I, J, K,
+					  branch,
+					  distance_start, distance_end,
+					  direction,
+					  center_depth,
+					  segment_number,
+					  seqIndex
+				      );
+		}
             } else { // a range is defined. genrate a range of Compsegs
                 throw std::runtime_error("entering COMPSEGS entries with a range is not supported yet!");
             }
@@ -231,15 +239,22 @@ namespace Opm {
     }
 
     void Compsegs::updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
+						const EclipseGrid& grid,
                                                 WellConnections& connection_set) {
 
         for( const auto& compseg : compsegs ) {
             const int i = compseg.m_i;
             const int j = compseg.m_j;
             const int k = compseg.m_k;
+	    if (grid.cellActive(i, j, k)) {
+		Connection& connection = connection_set.getFromIJK( i, j, k );
+		connection.updateSegment(compseg.segment_number, compseg.center_depth,compseg.m_seqIndex);
 
-            Connection& connection = connection_set.getFromIJK( i, j, k );
-            connection.updateSegment(compseg.segment_number, compseg.center_depth);
+		//keep connection sequence number from input sequence
+		connection.setCompSegSeqIndex(compseg.m_seqIndex);
+		connection.setSegDistStart(compseg.m_distance_start);
+		connection.setSegDistEnd(compseg.m_distance_end);
+	    }
         }
 
         for (size_t ic = 0; ic < connection_set.size(); ++ic) {

@@ -39,18 +39,7 @@ BOOST_AUTO_TEST_CASE(Radial_Settings_and_Init)
     BOOST_CHECK_EQUAL(v[  1], true);  //
     BOOST_CHECK_EQUAL(v[  3], false); // E300 Radial
     BOOST_CHECK_EQUAL(v[  4], true);  // E100 Radial
-    BOOST_CHECK_EQUAL(v[ 16], true); //
-    BOOST_CHECK_EQUAL(v[ 18], true); //
-    BOOST_CHECK_EQUAL(v[ 31], true); //
-    BOOST_CHECK_EQUAL(v[ 44], true); //
-    BOOST_CHECK_EQUAL(v[ 75], true); // MS Well Simulation Case
-    BOOST_CHECK_EQUAL(v[ 76], true); //
-    BOOST_CHECK_EQUAL(v[ 87], true); //
-    BOOST_CHECK_EQUAL(v[ 99], true); //
-    BOOST_CHECK_EQUAL(v[113], true); //
-    BOOST_CHECK_EQUAL(v[114], true); //
-    BOOST_CHECK_EQUAL(v[115], true); //
-    BOOST_CHECK_EQUAL(v[117], true); //
+    BOOST_CHECK_EQUAL(v[ 75], true);  // MS Well Simulation Case
 }
 
 BOOST_AUTO_TEST_SUITE_END()

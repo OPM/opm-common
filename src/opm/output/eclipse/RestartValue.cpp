@@ -81,5 +81,25 @@ namespace Opm {
         this->addExtra(key, UnitSystem::measure::identity, std::move(data));
     }
 
+    void RestartValue::convertFromSI(const UnitSystem& units) {
+        this->solution.convertFromSI(units);
+        for (auto & extra_value : this->extra) {
+            const auto& restart_key = extra_value.first;
+            auto & data = extra_value.second;
+
+            units.from_si(restart_key.dim, data);
+        }
+    }
+
+    void RestartValue::convertToSI(const UnitSystem& units) {
+        this->solution.convertToSI(units);
+        for (auto & extra_value : this->extra) {
+            const auto& restart_key = extra_value.first;
+            auto & data = extra_value.second;
+
+            units.to_si(restart_key.dim, data);
+        }
+    }
+
 
 }

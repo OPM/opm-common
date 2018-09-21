@@ -19,6 +19,10 @@
 
 #include <config.h>
 
+#include <iostream> // @@
+#include <algorithm> // @@
+#include <iterator> // @@ 
+
 #define BOOST_TEST_MODULE serialize_ICON_TEST
 #include <boost/test/unit_test.hpp>
 
@@ -84,6 +88,11 @@ BOOST_AUTO_TEST_CASE( serialize_icon_test )
             }
             w_offset += (ICONZ * ncwmax);
         }
-    }
-};
 
+        std::copy(icondata.begin(),
+                  icondata.end(),
+                  std::ostream_iterator<int>(std::cout, " "));
+        std::cout << std::endl;
+        BOOST_CHECK_EQUAL(1, 1);// @@@
+    }
+}

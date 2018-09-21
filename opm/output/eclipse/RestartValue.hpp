@@ -71,6 +71,9 @@ namespace Opm {
         void addExtra(const std::string& key, UnitSystem::measure dimension, std::vector<double> data);
         void addExtra(const std::string& key, std::vector<double> data);
         const std::vector<double>& getExtra(const std::string& key) const;
+
+        void convertFromSI(const UnitSystem& units);
+        void convertToSI(const UnitSystem& units);
     };
 
 }

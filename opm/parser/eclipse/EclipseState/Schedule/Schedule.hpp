@@ -94,8 +94,11 @@ namespace Opm
 
           is an inefficient way to get all the wells defined at time
           't'.
-        */
+        */ 
+	//std::vector< const Group& > getChildGroups(const std::string& group_name, size_t timeStep) const;
+        std::vector< const Group* > getChildGroups(const std::string& group_name, size_t timeStep) const;
         std::vector< const Well* > getWells(const std::string& group, size_t timeStep) const;
+	std::vector< const Well* > getChildWells(const std::string& group_name, size_t timeStep) const;
         std::vector< const Well* > getWellsMatching( const std::string& ) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
@@ -103,9 +106,11 @@ namespace Opm
 
         const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;
+	size_t numGroups(size_t timeStep) const;
         bool hasGroup(const std::string& groupName) const;
         const Group& getGroup(const std::string& groupName) const;
         std::vector< const Group* > getGroups() const;
+	std::vector< const Group* > getGroups(size_t timeStep) const;
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, const DeckKeyword& keyword) const;
@@ -159,7 +164,7 @@ namespace Opm
         void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep);
+        void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);

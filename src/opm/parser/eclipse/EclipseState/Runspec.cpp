@@ -90,6 +90,7 @@ Welldims::Welldims(const Deck& deck)
         //
         // i.e., the maximum of item 1 and item 4 here.
         this->nGMax = wd.getItem("MAXGROUPS").get<int>(0);
+	this->nWMax = wd.getItem("MAXWELLS").get<int>(0);
     }
 }
 

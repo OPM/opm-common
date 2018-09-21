@@ -145,7 +145,8 @@ namespace {
                    const ::Opm::Schedule& sched,
                    const std::size_t      lookup_step)
     {
-        const auto& wsd = rspec.wellSegmentDimensions();
+	const auto& wd = rspec.wellDimensions();
+	const auto& wsd = rspec.wellSegmentDimensions();
 
         const auto& sched_wells = sched.getWells(lookup_step);
 
@@ -160,7 +161,7 @@ namespace {
         const auto nsegmx = wsd.maxSegmentsPerWell();
         const auto nlbrmx = wsd.maxLateralBranchesPerWell();
         const auto nisegz = 22;  // Number of entries per segment in ISEG.
-        const auto nrsegz = 140; // Number of entries per segment in RSEG array.
+        const auto nrsegz = 146; // Number of entries per segment in RSEG array.  (Eclipse v.2017)
         const auto nilbrz = 10;  // Number of entries per segment in ILBR array.
 
         return {
@@ -192,6 +193,18 @@ namespace {
             static_cast<int>(nplmix),
         };
     }
+    
+    
+    Opm::RestartIO::InteHEAD::Group
+    getNoGroups(const ::Opm::Schedule& sched,
+		const std::size_t      step)
+    {
+        const auto ngroups = sched.numGroups(step)-1;
+
+        return {
+	    ngroups
+	};
+    }
 } // Anonymous
 
 // #####################################################################
@@ -205,8 +218,8 @@ createInteHead(const EclipseState& es,
                const Schedule&     sched,
                const double        simTime,
                const int           num_solver_steps,
-               const int           lookup_step,
-               const int           report_step)
+               const int           lookup_step
+	      )
 {
     const auto& rspec = es.runspec();
     const auto& tdim  = es.getTableManager();
@@ -229,11 +242,12 @@ createInteHead(const EclipseState& es,
              // n{isx}aaqz: number of data elements per aquifer in {ISX}AAQ
              // n{isa}caqz: number of data elements per aquifer connection in {ISA}CAQ
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
-        .stepParam          (num_solver_steps, report_step)
+        .stepParam          (num_solver_steps, lookup_step)
         .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
-        .variousParam       (2014, 100) // Output should be compatible with Eclipse 100, 2014 version.
+	.ngroups(getNoGroups(sched, lookup_step))
+        .variousParam       (201702, 100)  // Output should be compatible with Eclipse 100, 2017.02 version.
         ;
 
     return ih.data();

@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <iostream>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -104,6 +105,9 @@ namespace Opm {
                  es.runspec().phases(),
                  parse_context)
     {}
+
+
+
 
 
     std::time_t Schedule::getStartTime() const {
@@ -205,7 +209,7 @@ namespace Opm {
             handleWELSEGS(keyword, currentStep);
 
         else if (keyword.name() == "COMPSEGS")
-            handleCOMPSEGS(keyword, currentStep);
+            handleCOMPSEGS(keyword, currentStep, grid);
 
         else if (keyword.name() == "WELOPEN")
             handleWELOPEN(keyword, currentStep, parseContext);
@@ -1348,11 +1352,11 @@ namespace Opm {
         well.handleWELSEGS(keyword, currentStep);WellSegments newSegmentset;
     }
 
-    void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid) {
         const auto& record1 = keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         auto& well = this->m_wells.get( well_name );
-        well.handleCOMPSEGS(keyword, currentStep);
+        well.handleCOMPSEGS(keyword, grid, currentStep);
     }
 
     void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {
@@ -1382,6 +1386,7 @@ namespace Opm {
             const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
             const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
             newTree.update(childName, parentName);
+	    newTree.updateSeqIndex(childName, parentName);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep );
@@ -1473,8 +1478,10 @@ namespace Opm {
         if (automaticShutInStr == "STOP") {
             automaticShutIn = false;
         }
-
-        Well well(wellName,
+	
+	const size_t wseqIndex = m_wells.size(); 
+        
+        Well well(wellName, wseqIndex,
                   headI, headJ, refDepth,
                   preferredPhase, m_timeMap,
                   timeStep,
@@ -1530,6 +1537,51 @@ namespace Opm {
         }
     }
 
+    std::vector< const Group* > Schedule::getChildGroups(const std::string& group_name, size_t timeStep) const {
+        if (!hasGroup(group_name))
+            throw std::invalid_argument("No such group: " + group_name);
+        {
+            const auto& group = getGroup( group_name );
+	    std::vector<const Group*> child_groups;
+
+            if (group.hasBeenDefined( timeStep )) {
+                const GroupTree& group_tree = getGroupTree( timeStep );
+                const auto& ch_grps = group_tree.children( group_name );
+		//for (const std::string& group_name : ch_grps) {
+		for ( auto it = ch_grps.begin() ; it != ch_grps.end(); it++) {
+                        child_groups.push_back( &getGroup(*it));
+                    }
+	    }
+	    return child_groups;
+	}
+    }
+
+        std::vector< const Well* > Schedule::getChildWells(const std::string& group_name, size_t timeStep) const {
+        if (!hasGroup(group_name))
+            throw std::invalid_argument("No such group: " + group_name);
+        {
+            const auto& group = getGroup( group_name );
+            std::vector<const Well*> wells;
+
+            if (group.hasBeenDefined( timeStep )) {
+                const GroupTree& group_tree = getGroupTree( timeStep );
+                const auto& child_groups = group_tree.children( group_name );
+
+                if (!child_groups.size()) {
+                    //for (const auto& well_name : group.getWells( timeStep )) {
+		    const auto& ch_wells = group.getWells( timeStep );
+                    for (auto it= ch_wells.begin(); it != ch_wells.end(); it++) {		      
+                        wells.push_back( getWell( *it ));
+                    }
+                }
+            }
+            return wells;
+        }
+    }
+
+    
+    
+    
     std::vector< const Well* > Schedule::getWells(size_t timeStep) const {
         if (timeStep >= m_timeMap.size()) {
             throw std::invalid_argument("Timestep to large");
@@ -1598,12 +1650,16 @@ namespace Opm {
     }
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
-        m_groups.insert( groupName, Group { groupName, m_timeMap, timeStep } );
+	const size_t gseqIndex = m_groups.size(); 
+        m_groups.insert( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } );
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
     size_t Schedule::numGroups() const {
         return m_groups.size();
+    }
+    size_t Schedule::numGroups(size_t timeStep) const {
+        return this->getGroups( timeStep ).size();
     }
 
     bool Schedule::hasGroup(const std::string& groupName) const {
@@ -1645,6 +1701,25 @@ namespace Opm {
         return groups;
     }
 
+    std::vector< const Group* > Schedule::getGroups(size_t timeStep) const {
+      
+	if (timeStep >= m_timeMap.size()) {
+            throw std::invalid_argument("Timestep to large");
+        }
+        
+        auto defined = [=]( const Group& g ) {
+            return g.hasBeenDefined( timeStep );
+        };
+	
+        std::vector< const Group* > groups;
+
+        for( const auto& group : m_groups ) {
+	    if( !defined( group ) ) continue;
+	    groups.push_back( &group );
+	}
+        return groups;
+    }
+	
     void Schedule::addWellToGroup( Group& newGroup, Well& well , size_t timeStep) {
         const std::string currentGroupName = well.getGroupName(timeStep);
         if (currentGroupName != "") {

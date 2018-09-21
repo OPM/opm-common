@@ -35,6 +35,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
 
@@ -49,13 +50,15 @@ namespace Opm {
 
     class Well {
     public:
-        Well(const std::string& name, int headI,
+        Well(const std::string& name, const size_t& seqIndex, int headI,
              int headJ, double refDepth, Phase preferredPhase,
              const TimeMap& timeMap, size_t creationTimeStep,
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
              bool allowCrossFlow = true, bool automaticShutIn = true);
         const std::string& name() const;
-
+	const size_t& seqIndex() const;
+	const std::size_t getTotNoConn() const;
+	void setTotNoConn(std::size_t noConn); 
         bool hasBeenDefined(size_t timeStep) const;
         const std::string getGroupName(size_t timeStep) const;
         void setGroupName(size_t timeStep , const std::string& groupName);
@@ -184,7 +187,7 @@ namespace Opm {
         bool hasEvent(uint64_t eventMask, size_t reportStep) const;
         void handleCOMPLUMP(const DeckRecord& record, size_t time_step);
         void handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
-        void handleCOMPSEGS(const DeckKeyword& keyword, size_t time_step);
+        void handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, size_t time_step);
         void handleWELOPEN(const DeckRecord& record, size_t time_step, WellCompletion::StateEnum status);
         void handleWPIMULT(const DeckRecord& record, size_t time_step);
         void handleWELSEGS(const DeckKeyword& keyword, size_t time_step);
@@ -198,7 +201,9 @@ namespace Opm {
     private:
         size_t m_creationTimeStep;
         std::string m_name;
-
+	std::size_t m_seqIndex;
+	std::size_t m_totNoConn=0;
+	
         DynamicState< WellCommon::StatusEnum > m_status;
 
         DynamicState< int > m_isAvailableForGroupControl;

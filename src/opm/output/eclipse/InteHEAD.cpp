@@ -37,7 +37,7 @@ enum index : std::vector<int>::size_type {
   ih_015	=	15	,		//	0	0
   NWELLS	=	VI::intehead::NWELLS	,		//	NWELLS	39		NWELL = number of wells
   NCWMAX	=	VI::intehead::NCWMAX	,		//	NCWMAX	108	Weldims item2	NCWMAX = maximum number of completions per well
-  ih_018	=	18	,		//	NGRP?	0	Number of actual groups
+  NGRP	=	18	,		//	NGRP?	0	Number of actual groups
   NWGMAX	=	VI::intehead::NWGMAX	,		//	NWGMAX	0	maximum of weldims item3 or item4	NWGMAX = maximum number of wells in any well group
   NGMAXZ	=	VI::intehead::NGMAXZ	,		//	NGMAXZ	0	weldims item3 + 1	NGMAXZ = maximum number of groups in field
   ih_021	=	21	,		//	0	0
@@ -68,8 +68,8 @@ enum index : std::vector<int>::size_type {
   NSCAQZ	=	VI::intehead::NSCAQZ	,		//	2	0
   NACAQZ	=	VI::intehead::NACAQZ	,		//	4	0
   ih_048	=	48	,		//	0	0
-  ih_049	=	49	,		//	0	0
-  ih_050	=	50	,		//	0	0
+  ih_049	=	49	,		//	1	// has been determined by testing
+  ih_050	=	50	,		//	1	// has been determined by testing
   ih_051	=	51	,		//	0	0
   ih_052	=	52	,		//	0	0
   ih_053	=	53	,		//	0	0
@@ -198,7 +198,7 @@ enum index : std::vector<int>::size_type {
   NSEGMX	=	VI::intehead::NSEGMX	,		//	NSEGMX	0	Item 2 in WSEGDIMS keyword (runspec section)	NSEGMX = maximum number of segments per well
   NLBRMX	=	VI::intehead::NLBRMX	,		//	NLBRMX	0	Item 3 in WSEGDIMS keyword (runspec section)	NLBRMX = maximum number of lateral branches per well
   NISEGZ	=	VI::intehead::NISEGZ	,		//	22	0	22	NISEGZ = number of entries per segment in ISEG array
-  NRSEGZ	=	VI::intehead::NRSEGZ	,		//	140	0	140	NRSEGZ = number of entries per segment in RSEG array
+  NRSEGZ	=	VI::intehead::NRSEGZ	,		//	146	0	140	NRSEGZ = number of entries per segment in RSEG array
   NILBRZ	=	VI::intehead::NILBRZ	,		//	10		10	NILBRZ = number of entries per segment in ILBR array
   RSTSIZE	=	181	,		//	0
   ih_182	=	182	,		//	0
@@ -593,12 +593,10 @@ params_NAAQZ(const int ncamax,
 
 Opm::RestartIO::InteHEAD&
 Opm::RestartIO::InteHEAD::
-stepParam(const int num_solver_steps, const int report_step)
+stepParam(const int num_solver_steps, const int sim_step)
 {
     this -> data_[NUM_SOLVER_STEPS] = num_solver_steps;
-    this -> data_[REPORT_STEP] = report_step;
-
-
+    this -> data_[REPORT_STEP]      = sim_step + 1;
 
     return *this;
 }
@@ -622,14 +620,27 @@ Opm::RestartIO::InteHEAD::variousParam(const int version,
 {
     this->data_[VERSION] = version;
     this->data_[IPROG]   = iprog;
-    // ih_076: Usage unknown, experiments fails (zero determinant in well message) with too low numbers. 5 is highest observed across reference cases.
-    this->data_[ih_076]  = 5;
+
+    // ih_049: Usage unknown, value fixed across reference cases
+    this->data_[ih_049]  = 1;
+
+    // ih_050: Usage unknown, value fixed across reference cases
+    this->data_[ih_050]  = 1;
+
+    // ih_076: Usage unknown, experiments fails (zero determinant
+    //         in well message) with too low numbers.
+    //         5 is highest observed across reference cases.
+    this->data_[ih_076] = 5;
+
     // ih_101: Usage unknown, value fixed across reference cases.
-    this->data_[ih_101]  = 1;
-    // ih_103: Usage unknown, value not fixed across reference cases, experiments generate warning with 0 but not with 1.
-    this->data_[ih_103]  = 1;
+    this->data_[ih_101] = 1;
+
+    // ih_103: Usage unknown, value not fixed across reference cases,
+    //         experiments generate warning with 0 but not with 1.
+    this->data_[ih_103] = 1;
+
     // ih_200: Usage unknown, value fixed across reference cases.
-    this->data_[ih_200]  = 1;
+    this->data_[ih_200] = 1;
 
     return *this;
 }
@@ -656,6 +667,16 @@ Opm::RestartIO::InteHEAD::regionDimensions(const RegDims& rdim)
 
     return *this;
 }
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+ngroups(const Group& gr)
+{
+    this -> data_[NGRP] = gr.ngroups;
+
+    return *this;
+}
+
 
 // =====================================================================
 // Free functions (calendar/time utilities)

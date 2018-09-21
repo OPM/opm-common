@@ -35,6 +35,7 @@
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
+#include <opm/output/eclipse/SummaryState.hpp>
 
 namespace Opm {
 
@@ -177,7 +178,7 @@ public:
                         const std::map<std::string, double>& single_summary_values,
                         const std::map<std::string, std::vector<double>>& region_summary_values,
                         const std::map<std::pair<std::string, int>, double>& block_summary_values,
-                        bool write_double = false);
+                        const bool write_double = false);
 
 
     /*

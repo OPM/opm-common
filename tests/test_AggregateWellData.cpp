@@ -370,9 +370,10 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
 
+    const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
     awd.captureDeclaredWellData(simCase.sched,
-                                simCase.es.getUnits(), rptStep);
+                                simCase.es.getUnits(), rptStep, smry, ih.value);
 
     // IWEL (OP_1)
     {
@@ -427,15 +428,24 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         const auto i0 = 0*ih.nswelz;
 
         const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::OilRateTarget] , 20.0e3f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::WatRateTarget] , 1.0e20f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::GasRateTarget] , 1.0e20f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::LiqRateTarget] , 1.0e20f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::ResVRateTarget], 1.0e20f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget]     , 1.0e20f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::BHPTarget]     , 1000.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::OilRateTarget], 20.0e3f, 1.0e-7f);
 
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth]    , 0.375f, 1.0e-7f);
+        // No WRAT limit
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::WatRateTarget], 1.0e20f, 1.0e-7f);
+
+        // No GRAT limit
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::GasRateTarget], 1.0e20f, 1.0e-7f);
+
+        // LRAT limit derived from ORAT + WRAT (= ORAT + 0.0)
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::LiqRateTarget], 20.0e3f, 1.0e-7f);
+
+        // No direct limit, extract value from 'smry' (WVPR:OP_1)
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::ResVRateTarget], 4.0f, 1.0e-7f);
+
+        // No THP limit
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget] , 1.0e20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::BHPTarget] , 1000.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth],  0.375f, 1.0e-7f);
     }
 
     // SWEL (OP_2)
@@ -513,7 +523,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
 
-    awd.captureDynamicWellData(simCase.sched, rptStep, xw, smry);
+    awd.captureDynamicWellData(simCase.sched, rptStep, true, xw, smry);
 
     // IWEL (OP_1)
     {
@@ -609,7 +619,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
     const auto smry = sim_state();
     auto awd = Opm::RestartIO::Helpers::AggregateWellData{ih.value};
 
-    awd.captureDynamicWellData(simCase.sched, rptStep, xw, smry);
+    awd.captureDynamicWellData(simCase.sched, rptStep, true, xw, smry);
 
     // IWEL (OP_1) -- closed producer
     {

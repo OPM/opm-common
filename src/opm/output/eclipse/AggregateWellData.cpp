@@ -31,6 +31,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+//#include <opm/output/data/Wells.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -119,7 +120,37 @@ namespace {
             };
         }
 
-        int groupIndex(const std::string&              grpName,
+	std::map <const std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
+	{
+	    const auto& groups = sched.getGroups(simStep);
+	    // make group name to index map for the current time step
+	    std::map <const std::string, size_t> groupIndexMap;
+	    for (const auto* group : groups) {
+		int ind = (group->name() == "FIELD")
+			? inteHead[VI::intehead::NGMAXZ]-1 : group->seqIndex()-1;
+		std::pair<const std::string, size_t> groupPair = std::make_pair(group->name(), ind); 
+		groupIndexMap.insert(groupPair);
+	    }
+	    return groupIndexMap;
+      }
+    
+      int groupIndex(const std::string&              grpName,
+                     const std::map <const std::string, size_t>&  currentGroupMapNameIndex)
+      {
+	    int ind = 0;
+            auto searchGTName = currentGroupMapNameIndex.find(grpName);
+	    if (searchGTName != currentGroupMapNameIndex.end()) 
+	    {
+		ind = searchGTName->second + 1;	
+	    }
+	    else 
+	    {
+		std::cout << "group Name: " << grpName << std::endl;
+		throw std::invalid_argument( "Invalid group name" );
+	    }
+	return ind;
+      }
+        /*int groupIndex(const std::string&              grpName,
                        const std::vector<std::string>& groupNames,
                        const int                       maxGroups)
         {
@@ -141,7 +172,7 @@ namespace {
 
             // One-based indexing.
             return std::distance(b, i) + 1;
-        }
+        }  */
 
         int wellType(const Opm::Well&  well,
                      const std::size_t sim_step)
@@ -264,7 +295,8 @@ namespace {
         template <class IWellArray>
         void staticContrib(const Opm::Well&                well,
                            const std::size_t               msWellID,
-                           const std::vector<std::string>& groupNames,
+                           const std::map <const std::string, size_t>&  GroupMapNameInd,
+			   /*const std::vector<std::string>& groupNames,*/
                            const int                       maxGroups,
                            const std::size_t               sim_step,
                            IWellArray&                     iWell)
@@ -279,16 +311,26 @@ namespace {
                 const auto& conn = well.getConnections(sim_step);
 
                 iWell[Ix::NConn]  = static_cast<int>(conn.size());
-                iWell[Ix::FirstK] = (iWell[Ix::NConn] == 0)
+		
+		if (well.isMultiSegment(sim_step))  
+		{
+		    // Set top and bottom connections to zero for multi segment wells
+		  iWell[Ix::FirstK] = 0;
+		  iWell[Ix::LastK] = 0;
+		}
+		else
+		{
+		  iWell[Ix::FirstK] = (iWell[Ix::NConn] == 0)
                     ? 0 : conn.get(0).getK() + 1;
 
-                iWell[Ix::LastK] = (iWell[Ix::NConn] == 0)
-                    ? 0 : conn.get(conn.size() - 1).getK() + 1;
+		  iWell[Ix::LastK] = (iWell[Ix::NConn] == 0)
+		    ? 0 : conn.get(conn.size() - 1).getK() + 1;
+		}
             }
 
             iWell[Ix::Group] =
-                groupIndex(trim(well.getGroupName(sim_step)),
-                           groupNames, maxGroups);
+	     groupIndex(trim(well.getGroupName(sim_step)),
+                GroupMapNameInd);
 
             iWell[Ix::WType]  = wellType  (well, sim_step);
             iWell[Ix::WCtrl]  = ctrlMode  (well, sim_step);
@@ -433,6 +475,7 @@ namespace {
         void staticContrib(const Opm::Well&       well,
                            const Opm::UnitSystem& units,
                            const std::size_t      sim_step,
+			   const ::Opm::SummaryState& smry,
                            SWellArray&            sWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
@@ -442,58 +485,77 @@ namespace {
             {
                 return static_cast<float>(units.from_si(u, x));
             };
-
+	    
             assignDefaultSWell(sWell);
 
             if (well.isProducer(sim_step)) {
                 const auto& pp = well.getProductionProperties(sim_step);
 
-                using PP = ::Opm::WellProducer::ControlModeEnum;
-
-                if (pp.hasProductionControl(PP::ORAT)) {
+                if (pp.OilRate != 0.0) {
                     sWell[Ix::OilRateTarget] =
                         swprop(M::liquid_surface_rate, pp.OilRate);
-                }
+		}
 
-                if (pp.hasProductionControl(PP::WRAT)) {
+                if (pp.WaterRate != 0.0) {
                     sWell[Ix::WatRateTarget] =
                         swprop(M::liquid_surface_rate, pp.WaterRate);
                 }
 
-                if (pp.hasProductionControl(PP::GRAT)) {
+                if (pp.GasRate != 0.0) {
                     sWell[Ix::GasRateTarget] =
                         swprop(M::gas_surface_rate, pp.GasRate);
                 }
 
-                if (pp.hasProductionControl(PP::LRAT)) {
+                if (pp.LiquidRate != 0.0) {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.LiquidRate);
                 }
-                else if (pp.hasProductionControl(PP::ORAT) &&
-                         pp.hasProductionControl(PP::WRAT))
-                {
+                else  {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.OilRate + pp.WaterRate);
                 }
 
-                if (pp.hasProductionControl(PP::RESV)) {
+                if (pp.ResVRate != 0.0) {
                     sWell[Ix::ResVRateTarget] =
                         swprop(M::rate, pp.ResVRate);
                 }
+		else if (smry.has("WVPR:" + well.name())) {
+                    // Write out summary voidage production rate if
+                    // target/limit is not set
+                    sWell[Ix::ResVRateTarget] =
+                        static_cast<float>(smry.get("WVPR:" + well.name()));
+                }
 
-                if (pp.hasProductionControl(PP::THP)) {
+                if (pp.THPLimit != 0.0) {
                     sWell[Ix::THPTarget] =
                         swprop(M::pressure, pp.THPLimit);
                 }
-
-                sWell[Ix::BHPTarget] = pp.hasProductionControl(PP::BHP)
+           
+		sWell[Ix::BHPTarget] = pp.BHPLimit != 0.0
                     ? swprop(M::pressure, pp.BHPLimit)
-                    : swprop(M::pressure, 100.0e3*::Opm::unit::psia);
+                    : swprop(M::pressure, 1.0*::Opm::unit::atm);
             }
             else if (well.isInjector(sim_step)) {
                 const auto& ip = well.getInjectionProperties(sim_step);
 
                 using IP = ::Opm::WellInjector::ControlModeEnum;
+		using IT = ::Opm::WellInjector::TypeEnum;
+
+		if (ip.hasInjectionControl(IP::RATE)) {
+		    if (ip.injectorType == IT::OIL) {
+			sWell[Ix::OilRateTarget] = swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
+		    }
+		    if (ip.injectorType == IT::WATER) {
+			sWell[Ix::WatRateTarget] = swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
+		    }
+		    if (ip.injectorType == IT::GAS) {
+			sWell[Ix::GasRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+		    }
+                }
+
+		if (ip.hasInjectionControl(IP::RESV)) {
+		    sWell[Ix::ResVRateTarget] = swprop(M::rate, ip.reservoirInjectionRate);
+                }		
 
                 if (ip.hasInjectionControl(IP::THP)) {
                     sWell[Ix::THPTarget] = swprop(M::pressure, ip.THPLimit);
@@ -501,7 +563,7 @@ namespace {
 
                 sWell[Ix::BHPTarget] = ip.hasInjectionControl(IP::BHP)
                     ? swprop(M::pressure, ip.BHPLimit)
-                    : swprop(M::pressure, 1.0*::Opm::unit::atm);
+                    : swprop(M::pressure, 1.0E05*::Opm::unit::psia);
             }
 
             sWell[Ix::DatumDepth] =
@@ -548,13 +610,16 @@ namespace {
         template <class XWellArray>
         void assignProducer(const std::string&         well,
                             const ::Opm::SummaryState& smry,
+			    const bool  ecl_compatible_rst, 
                             XWellArray&                xWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get(vector + ':' + well);
+                const auto key = vector + ':' + well;
+
+                return smry.has(key) ? smry.get(key) : 0.0;
             };
 
             xWell[Ix::OilPrRate] = get("WOPR");
@@ -570,11 +635,12 @@ namespace {
             xWell[Ix::WatCut]  = get("WWCT");
             xWell[Ix::GORatio] = get("WGOR");
 
-            xWell[Ix::OilPrTotal]  = get("WOPT");
-            xWell[Ix::WatPrTotal]  = get("WWPT");
-            xWell[Ix::GasPrTotal]  = get("WGPT");
-            xWell[Ix::VoidPrTotal] = get("WVPT");
-
+	    if (ecl_compatible_rst) {
+		xWell[Ix::OilPrTotal]  = get("WOPT");
+		xWell[Ix::WatPrTotal]  = get("WWPT");
+		xWell[Ix::GasPrTotal]  = get("WGPT");
+		xWell[Ix::VoidPrTotal] = get("WVPT");
+	    }
             // Not fully characterised.
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
@@ -583,13 +649,16 @@ namespace {
         template <class XWellArray>
         void assignWaterInjector(const std::string&         well,
                                  const ::Opm::SummaryState& smry,
+				 const bool  ecl_compatible_rst, 
                                  XWellArray&                xWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get(vector + ':' + well);
+                const auto key = vector + ':' + well;
+
+                return smry.has(key) ? smry.get(key) : 0.0;
             };
 
             // Injection rates reported as negative, cumulative
@@ -598,8 +667,10 @@ namespace {
             xWell[Ix::LiqPrRate] = xWell[Ix::WatPrRate];
 
             xWell[Ix::FlowBHP] = get("WBHP");
-
-            xWell[Ix::WatInjTotal] = get("WWIT");
+  
+	    if (ecl_compatible_rst) {
+		xWell[Ix::WatInjTotal] = get("WWIT");
+	    }
 
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
             xWell[Ix::item82] = xWell[Ix::WatInjTotal];
@@ -610,13 +681,16 @@ namespace {
         template <class XWellArray>
         void assignGasInjector(const std::string&         well,
                                const ::Opm::SummaryState& smry,
+			       const bool  ecl_compatible_rst, 
                                XWellArray&                xWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
 
             auto get = [&smry, &well](const std::string& vector)
             {
-                return smry.get(vector + ':' + well);
+                const auto key = vector + ':' + well;
+
+                return smry.has(key) ? smry.get(key) : 0.0;
             };
 
             // Injection rates reported as negative production rates,
@@ -626,10 +700,13 @@ namespace {
 
             xWell[Ix::FlowBHP] = get("WBHP");
 
-            xWell[Ix::GasInjTotal] = get("WGIT");
+	    if (ecl_compatible_rst) {
+		xWell[Ix::GasInjTotal] = get("WGIT");
+	    }
 
-            xWell[Ix::GasFVF] = xWell[Ix::VoidPrRate]
-                              / xWell[Ix::GasPrRate];
+            xWell[Ix::GasFVF] = (std::abs(xWell[Ix::GasPrRate]) > 0.0)
+                ? xWell[Ix::VoidPrRate] / xWell[Ix::GasPrRate]
+                : 0.0;
 
             // Not fully characterised.
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
@@ -642,10 +719,11 @@ namespace {
         void dynamicContrib(const ::Opm::Well&         well,
                             const ::Opm::SummaryState& smry,
                             const std::size_t          sim_step,
+			    const bool                 ecl_compatible_rst,
                             XWellArray&                xWell)
         {
             if (well.isProducer(sim_step)) {
-                assignProducer(well.name(), smry, xWell);
+                assignProducer(well.name(), smry, ecl_compatible_rst, xWell);
             }
             else if (well.isInjector(sim_step)) {
                 using IType = ::Opm::WellInjector::TypeEnum;
@@ -659,16 +737,16 @@ namespace {
                     break;
 
                 case IType::WATER:
-                    assignWaterInjector(well.name(), smry, xWell);
+                    assignWaterInjector(well.name(), smry, ecl_compatible_rst, xWell);
                     break;
 
                 case IType::GAS:
-                    assignGasInjector(well.name(), smry, xWell);
+                    assignGasInjector(well.name(), smry, ecl_compatible_rst, xWell);
                     break;
 
                 case IType::MULTI:
-                    assignWaterInjector(well.name(), smry, xWell);
-                    assignGasInjector  (well.name(), smry, xWell);
+                    assignWaterInjector(well.name(), smry, ecl_compatible_rst, xWell);
+                    assignGasInjector  (well.name(), smry, ecl_compatible_rst, xWell);
                     break;
                 }
             }
@@ -726,33 +804,36 @@ void
 Opm::RestartIO::Helpers::AggregateWellData::
 captureDeclaredWellData(const Schedule&   sched,
                         const UnitSystem& units,
-                        const std::size_t sim_step)
+                        const std::size_t sim_step,
+			const ::Opm::SummaryState&  smry,
+			const std::vector<int>& inteHead)
 {
     const auto& wells = sched.getWells(sim_step);
 
     // Static contributions to IWEL array.
     {
-        const auto grpNames = groupNames(sched.getGroups());
+        //const auto grpNames = groupNames(sched.getGroups());
+	const auto groupMapNameIndex = IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
         auto msWellID       = std::size_t{0};
 
-        wellLoop(wells, [&grpNames, &msWellID, sim_step, this]
+        wellLoop(wells, [&groupMapNameIndex, &msWellID, sim_step, this]
             (const Well& well, const std::size_t wellID) -> void
         {
             msWellID += well.isMultiSegment(sim_step);  // 1-based index.
             auto iw   = this->iWell_[wellID];
 
-            IWell::staticContrib(well, msWellID, grpNames,
+            IWell::staticContrib(well, msWellID, groupMapNameIndex,
                                  this->nWGMax_, sim_step, iw);
         });
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, [&units, sim_step, this]
+    wellLoop(wells, [&units, sim_step, &smry, this]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto sw = this->sWell_[wellID];
 
-        SWell::staticContrib(well, units, sim_step, sw);
+        SWell::staticContrib(well, units, sim_step, smry, sw);
     });
 
     // Static contributions to XWEL array.
@@ -780,6 +861,7 @@ void
 Opm::RestartIO::Helpers::AggregateWellData::
 captureDynamicWellData(const Schedule&             sched,
                        const std::size_t           sim_step,
+		       const bool ecl_compatible_rst,
                        const Opm::data::WellRates& xw,
                        const ::Opm::SummaryState&  smry)
 {
@@ -801,11 +883,11 @@ captureDynamicWellData(const Schedule&             sched,
     });
 
     // Dynamic contributions to XWEL array.
-    wellLoop(wells, [this, sim_step, &smry]
+    wellLoop(wells, [this, sim_step, ecl_compatible_rst, &smry]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto xw = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, smry, sim_step, xw);
+        XWell::dynamicContrib(well, smry, sim_step, ecl_compatible_rst, xw);
     });
 }

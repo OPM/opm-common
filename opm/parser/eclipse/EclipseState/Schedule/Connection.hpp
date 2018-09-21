@@ -22,14 +22,15 @@
 #define COMPLETION_HPP_
 
 #include <array>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
-
 
 namespace Opm {
 
@@ -46,7 +47,12 @@ namespace Opm {
                    double Kh,
                    double rw,
                    const int satTableId,
-                   const WellCompletion::DirectionEnum direction);
+                   const WellCompletion::DirectionEnum direction,
+		   const std::size_t seqIndex,
+		   const double segDistStart,
+		   const double segDistEnd,
+		   const bool defaultSatTabId
+		  );
 
 
         bool attachedToSegment() const;
@@ -68,7 +74,16 @@ namespace Opm {
         void setState(WellCompletion::StateEnum state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
-        void updateSegment(int segment_number, double center_depth);
+        void updateSegment(int segment_number, double center_depth, std::size_t seqIndex);
+	const std::size_t& getSeqIndex() const;
+	const bool& getDefaultSatTabId() const;
+	const std::size_t& getCompSegSeqIndex() const;
+	void setCompSegSeqIndex(std::size_t index);
+	void setDefaultSatTabId(bool id);
+	const double& getSegDistStart() const;
+	const double& getSegDistEnd() const;
+	void setSegDistStart(const double& distStart);
+	void setSegDistEnd(const double& distEnd);
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
@@ -83,6 +98,11 @@ namespace Opm {
         double m_rw;
 
         std::array<int,3> ijk;
+	std::size_t m_seqIndex;
+	double m_segDistStart;
+	double m_segDistEnd;
+	bool m_defaultSatTabId;
+	std::size_t m_compSeg_seqIndex=0;
 
         // related segment number
         // -1 means the completion is not related to segment
@@ -90,8 +110,6 @@ namespace Opm {
         double wPi = 1.0;
     };
 }
-
-
 
 #endif /* COMPLETION_HPP_ */
 

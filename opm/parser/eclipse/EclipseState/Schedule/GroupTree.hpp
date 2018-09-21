@@ -22,17 +22,21 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 namespace Opm {
 
 class GroupTree {
     public:
-        void update( const std::string& name );
-        void update( const std::string& name, const std::string& parent );
+        void update( const std::string& name);
+        void update( const std::string& name, const std::string& parent);
+	void updateSeqIndex( const std::string& name, const std::string& other_parent);
         bool exists( const std::string& group ) const;
         const std::string& parent( const std::string& name ) const;
         std::vector< std::string > children( const std::string& parent ) const;
-
+	const std::map<const std::string , size_t>& nameSeqIndMap() const;
+	const std::map<size_t, const std::string >& seqIndNameMap() const;
+	size_t groupTreeSize();
         bool operator==( const GroupTree& ) const;
         bool operator!=( const GroupTree& ) const;
 
@@ -53,6 +57,8 @@ class GroupTree {
         std::vector< group > groups = { group { "FIELD", "" } };
         friend bool operator<( const std::string&, const group& );
         std::vector< group >::iterator find( const std::string& );
+	std::map<const std::string , size_t> m_nameSeqIndMap;
+	std::map<size_t, const std::string > m_seqIndNameMap;
 };
 
 }

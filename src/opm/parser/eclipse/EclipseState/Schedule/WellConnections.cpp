@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <iostream>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -137,11 +138,15 @@ namespace {
                                         double Kh,
                                         double rw,
                                         const int satTableId,
-                                        const WellCompletion::DirectionEnum direction)
+                                        const WellCompletion::DirectionEnum direction,
+				        const std::size_t seqIndex,
+				        const double segDistStart,
+					const double segDistEnd,
+					const bool defaultSatTabId)
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction);
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction, seqIndex, segDistStart, segDistEnd, defaultSatTabId);
         this->add(conn);
     }
 
@@ -154,7 +159,11 @@ namespace {
                                         double Kh,
                                         double rw,
                                         const int satTableId,
-                                        const WellCompletion::DirectionEnum direction)
+                                        const WellCompletion::DirectionEnum direction,
+					const std::size_t seqIndex,
+					const double segDistStart,
+					const double segDistEnd,
+					const bool defaultSatTabId)
     {
         int complnum = -(this->m_connections.size() + 1);
         this->addConnection(i,
@@ -167,10 +176,14 @@ namespace {
                             Kh,
                             rw,
                             satTableId,
-                            direction);
+                            direction,
+			    seqIndex,
+			    segDistStart,
+			    segDistEnd,
+			    defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
+    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, std::size_t& totNC) {
         const auto& permx = eclipseProperties.getDoubleGridProperty("PERMX").getData();
         const auto& permy = eclipseProperties.getDoubleGridProperty("PERMY").getData();
         const auto& permz = eclipseProperties.getDoubleGridProperty("PERMZ").getData();
@@ -272,21 +285,27 @@ namespace {
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
                                       same_ijk );
-
-            if (prev == this->m_connections.end()) {
-                this->addConnection(I,J,k,
+	    // Only add connection for active grid cells
+            if (grid.cellActive(I, J, k)) {
+		if (prev == this->m_connections.end()) {
+		    std::size_t noConn = this->m_connections.size();
+		    totNC = noConn;
+		    this->addConnection(I,J,k,
                                     grid.getCellDepth( I,J,k ),
                                     state,
                                     CF,
                                     Kh,
                                     rw,
                                     satTableId,
-                                    direction );
-            } else {
-                // The complnum value carries over; the rest of the state is fully specified by
-                // the current COMPDAT keyword.
-                int complnum = prev->complnum();
-                *prev = Connection(I,J,k,
+                                    direction,
+				    noConn, 0., 0., defaultSatTable);
+		} 
+		else {
+		    std::size_t noConn = prev->getSeqIndex();
+		    // The complnum value carries over; the rest of the state is fully specified by
+		    // the current COMPDAT keyword.
+		    int complnum = prev->complnum();
+		    *prev = Connection(I,J,k,
                                    complnum,
                                    grid.getCellDepth(I,J,k),
                                    state,
@@ -294,11 +313,12 @@ namespace {
                                    Kh,
                                    rw,
                                    satTableId,
-                                   direction );
-            }
-        }
+                                   direction,
+				   noConn, 0., 0., defaultSatTable);
+		}
+	    }
+	}
     }
-
 
 
 
