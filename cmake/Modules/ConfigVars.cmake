@@ -78,7 +78,17 @@ function (configure_vars obj syntax filename verb)
 	  # write a CMake statements that warns if the value has changed
 	  if ("${syntax}" STREQUAL "CMAKE")
 		set (_db "\${") # to avoid parsing problems
-		file (APPEND "${filename}" "if (DEFINED ${_var} AND NOT \"${_db}${_var}}\" STREQUAL \"${${_var}}\")\n")
+		# special case: if we have a truth variable HAVE_ and this is
+		# either just defined (as is), or set to 1 explicitly, then both
+		# of these count as "true", so put in a check that also accepts
+		# both of these values.
+		if (("${_var}" MATCHES "^HAVE_.*") AND
+			 (("${${_var}}" STREQUAL "") OR ("${${_var}}" STREQUAL "1")))
+		  set (_cond "(\"${_db}${_var}}\" STREQUAL \"\") OR (\"${_db}${_var}}\" STREQUAL \"1\")")
+		else ()
+		  set (_cond "\"${_db}${_var}}\" STREQUAL \"${${_var}}\"")
+		endif ()
+		file (APPEND "${filename}" "if (DEFINED ${_var} AND NOT (${_cond}))\n")
 		file (APPEND "${filename}" "\tmessage (WARNING \"Incompatible value \\\"${_db}${_var}}\\\" of variable \\\"${_var}\\\"\")\n")
 		file (APPEND "${filename}" "endif ()\n")
 	  endif ()
