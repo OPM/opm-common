@@ -4611,7 +4611,7 @@ static size_t get_ecl_string_length(const char * type_name) {
       return ECL_KW_READ_FAIL;
 
     memcpy( header , &buffer[0] , ECL_STRING8_LENGTH);
-    size = * ( (int *) &buffer[ECL_STRING8_LENGTH] );
+    memcpy(&size, buffer+ECL_STRING8_LENGTH, sizeof(size));
     memcpy( ecl_type_str , &buffer[ECL_STRING8_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
 
     if(!fortio_complete_read(fortio , record_size))
