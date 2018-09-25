@@ -43,7 +43,7 @@
 namespace {
 
     // maximum number of groups
-    int ngmaxz(const std::vector<int>& inteHead)
+    std::size_t ngmaxz(const std::vector<int>& inteHead)
     {
         return inteHead[20];
     }

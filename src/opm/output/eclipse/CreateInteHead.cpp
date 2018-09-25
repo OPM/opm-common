@@ -201,7 +201,7 @@ namespace {
         const auto ngroups = sched.numGroups(step)-1;
 
         return {
-	    ngroups
+	    int(ngroups)
 	};
     }
 } // Anonymous
