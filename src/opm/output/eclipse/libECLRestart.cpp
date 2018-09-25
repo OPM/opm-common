@@ -2554,7 +2554,7 @@ static int vector_append_node(::Opm::RestartIO::vector_type * vector , ::Opm::Re
 */
 
 static void vector_iset__(::Opm::RestartIO::vector_type * vector , int index , ::Opm::RestartIO::node_data_type * node) {
-  if (index > vector->size)
+  if (vector->size <= index)
     ::Opm::RestartIO::vector_grow_NULL( vector , index );
 
   if (index == vector->size)
