@@ -139,7 +139,9 @@ namespace {
 		return level;
 	    }
 	    else {
-		throw std::invalid_argument("actual group has not been defined at report time: " + simStep );
+		std::stringstream str;
+		str << "actual group has not been defined at report time: " << simStep;
+		throw std::invalid_argument(str.str());
 	    }
 	}
 	return level;
