@@ -112,6 +112,7 @@ function build_module {
     else
       cmake --build . --target install
     fi
+    test $? -eq 0 || exit 3
   fi
 }
 
