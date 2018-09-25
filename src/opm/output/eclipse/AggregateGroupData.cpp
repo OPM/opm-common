@@ -42,29 +42,8 @@
 
 namespace {
 
-    int nigrpz(const std::vector<int>& inteHead)
-    {
-        // INTEHEAD(36) = NIGRPZ
-        return inteHead[36];
-    }
-
-    int nsgrpz(const std::vector<int>& inteHead)
-    {
-        return inteHead[37];
-    }
-
-    int nxgrpz(const std::vector<int>& inteHead)
-    {
-        return inteHead[38];
-    }
-
-    int nzgrpz(const std::vector<int>& inteHead)
-    {
-        return inteHead[39];
-    }
-
     // maximum number of groups
-    int ngmaxz(const std::vector<int>& inteHead)
+    std::size_t ngmaxz(const std::vector<int>& inteHead)
     {
         return inteHead[20];
     }
@@ -73,37 +52,6 @@ namespace {
     int nwgmax(const std::vector<int>& inteHead)
     {
         return inteHead[19];
-    }
-
-    std::string trim(const std::string& s)
-    {
-        const auto b = s.find_first_not_of(" \t");
-        if (b == std::string::npos) {
-            // No blanks.  Return unchanged.
-            return s;
-        }
-
-        auto e = s.find_last_not_of(" \t");
-        if (e == std::string::npos) {
-            // No trailing blanks.  Return [b, end)
-            return s.substr(b, std::string::npos);
-        }
-
-        // Remove leading/trailing blanks.
-        return s.substr(b, e - b + 1);
-    }
-
-    std::vector<std::string>
-    groupNames(const std::vector<const Opm::Group*>& groups)
-    {
-        auto gnms = std::vector<std::string>{};
-        gnms.reserve(groups.size());
-
-        for (const auto* group : groups) {
-            gnms.push_back(trim(group->name()));
-        }
-
-        return gnms;
     }
 
     const int groupType(const Opm::Schedule& sched,
@@ -171,18 +119,6 @@ namespace {
 	return groupIndexMap;
     }
 
-    const std::map <std::string, size_t>  currentWellIndex(const Opm::Schedule& sched, const size_t simStep)
-    {
-	const auto& wells = sched.getWells(simStep);
-	// make group index for current report step
-	std::map <std::string, size_t> wellIndexMap;
-	for (const auto* well : wells) {
-	    std::pair<std::string, size_t> wellPair = std::make_pair(well->name(), well->seqIndex()); 
-	    wellIndexMap.insert(wellPair);
-	}
-	return wellIndexMap;
-    }
-
     const int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t simStep)
     {
 	int level = 0;
@@ -203,7 +139,9 @@ namespace {
 		return level;
 	    }
 	    else {
-		throw std::invalid_argument("actual group has not been defined at report time: " + simStep );
+		std::stringstream str;
+		str << "actual group has not been defined at report time: " << simStep;
+		throw std::invalid_argument(str.str());
 	    }
 	}
 	return level;
@@ -521,9 +459,7 @@ currentGrpTreeNameSeqIndMap(const Opm::Schedule&                        sched,
                             const std::map<size_t, const Opm::Group*>&  IGMap)
     {
 	const auto& grpTreeNSIMap = (sched.getGroupTree(simStep)).nameSeqIndMap();
-	const auto& grpTreeSINMap = (sched.getGroupTree(simStep)).seqIndNameMap();
 	// make group index for current report step
-	size_t index = 0;
 	for (auto itr = IGMap.begin(); itr != IGMap.end(); itr++) {
 	    auto name = (itr->second)->name();
 	    auto srchGN = grpTreeNSIMap.find(name);
@@ -581,11 +517,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
     const auto indexGroupMap = currentGroupMapIndexGroup(sched, simStep, inteHead);
     const auto nameIndexMap = currentGroupMapNameIndex(sched, simStep, inteHead);
 
-    std::vector<const Opm::Group*> curGroups;
-    curGroups.resize(ngmaxz(inteHead));
-    //
-    //initialize curgroups
-    for (auto* cg : curGroups) cg = nullptr;
+    std::vector<const Opm::Group*> curGroups(ngmaxz(inteHead), nullptr);
 
     auto it = indexGroupMap.begin();
     while (it != indexGroupMap.end())

@@ -1064,12 +1064,6 @@ bool ecl_kw_fread_realloc_data(::Opm::RestartIO::ecl_kw_type *ecl_kw, fortio_typ
 }
 
 
-static void ecl_kw_endian_convert_data(::Opm::RestartIO::ecl_kw_type *ecl_kw) {
-  if (::Opm::RestartIO::ecl_type_is_numeric(ecl_kw->data_type) || ::Opm::RestartIO::ecl_type_is_bool(ecl_kw->data_type))
-    ::Opm::RestartIO::util_endian_flip_vector(ecl_kw->data , ::Opm::RestartIO::ecl_kw_get_sizeof_ctype(ecl_kw) , ecl_kw->size);
-}
-
-
 char * util_alloc_sprintf(const char * fmt , ...) {
   char * s;
   va_list ap;
@@ -1276,7 +1270,6 @@ int ecl_type_get_sizeof_iotype(const ::Opm::RestartIO::ecl_data_type ecl_type) {
 
 static void ecl_kw_load_from_input_buffer(::Opm::RestartIO::ecl_kw_type * ecl_kw, char * buffer) {
   size_t sizeof_iotype = ::Opm::RestartIO::ecl_type_get_sizeof_iotype(ecl_kw->data_type);
-  size_t sizeof_ctype = ::Opm::RestartIO::ecl_type_get_sizeof_ctype(ecl_kw->data_type);
   size_t buffer_size = ecl_kw->size * sizeof_iotype;
   if (ECL_ENDIAN_FLIP) {
     if (::Opm::RestartIO::ecl_type_is_numeric(ecl_kw->data_type) || ::Opm::RestartIO::ecl_type_is_bool(ecl_kw->data_type))
@@ -2561,7 +2554,7 @@ static int vector_append_node(::Opm::RestartIO::vector_type * vector , ::Opm::Re
 */
 
 static void vector_iset__(::Opm::RestartIO::vector_type * vector , int index , ::Opm::RestartIO::node_data_type * node) {
-  if (index > vector->size)
+  if (vector->size <= index)
     ::Opm::RestartIO::vector_grow_NULL( vector , index );
 
   if (index == vector->size)
@@ -2681,35 +2674,6 @@ static time_t timegm(struct tm * a_tm)
     time_t utc = std::mktime(a_tm) - offset * 3600;
     return utc;
 }	
-
-static time_t _mkgmtime(const struct tm *tm) 
-{
-    // Month-to-day offset for non-leap-years.
-    static const int month_day[12] =
-    {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
-
-    // Most of the calculation is easy; leap years are the main difficulty.
-    int month = tm->tm_mon % 12;
-    int year = tm->tm_year + tm->tm_mon / 12;
-    if (month < 0) {   // Negative values % 12 are still negative.
-        month += 12;
-        --year;
-    }
-
-    // This is the number of Februaries since 1900.
-    const int year_for_leap = (month > 1) ? year + 1 : year;
-
-    time_t rt = tm->tm_sec                             // Seconds
-        + 60 * (tm->tm_min                          // Minute = 60 seconds
-        + 60 * (tm->tm_hour                         // Hour = 60 minutes
-        + 24 * (month_day[month] + tm->tm_mday - 1  // Day = 24 hours
-        + 365 * (year - 70)                         // Year = 365 days
-        + (year_for_leap - 69) / 4                  // Every 4 years is     leap...
-        - (year_for_leap - 1) / 100                 // Except centuries...
-        + (year_for_leap + 299) / 400)));           // Except 400s.
-    return rt < 0 ? -1 : rt;
-}
-
 
 static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int month , int year, bool force_set, time_t * t) {
   bool valid = false;
@@ -4647,7 +4611,7 @@ static size_t get_ecl_string_length(const char * type_name) {
       return ECL_KW_READ_FAIL;
 
     memcpy( header , &buffer[0] , ECL_STRING8_LENGTH);
-    size = * ( (int *) &buffer[ECL_STRING8_LENGTH] );
+    memcpy(&size, buffer+ECL_STRING8_LENGTH, sizeof(size));
     memcpy( ecl_type_str , &buffer[ECL_STRING8_LENGTH + sizeof(size)] , ECL_TYPE_LENGTH);
 
     if(!fortio_complete_read(fortio , record_size))
