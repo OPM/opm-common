@@ -515,11 +515,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
     const auto indexGroupMap = currentGroupMapIndexGroup(sched, simStep, inteHead);
     const auto nameIndexMap = currentGroupMapNameIndex(sched, simStep, inteHead);
 
-    std::vector<const Opm::Group*> curGroups;
-    curGroups.resize(ngmaxz(inteHead));
-    //
-    //initialize curgroups
-    for (auto* cg : curGroups) cg = nullptr;
+    std::vector<const Opm::Group*> curGroups(ngmaxz(inteHead), nullptr);
 
     auto it = indexGroupMap.begin();
     while (it != indexGroupMap.end())
