@@ -75,19 +75,6 @@ namespace {
         return s.substr(b, e - b + 1);
     }
 
-    std::vector<std::string>
-    groupNames(const std::vector<const Opm::Group*>& groups)
-    {
-        auto gnms = std::vector<std::string>{};
-        gnms.reserve(groups.size());
-
-        for (const auto* group : groups) {
-            gnms.push_back(trim(group->name()));
-        }
-
-        return gnms;
-    }
-
     template <typename WellOp>
     void wellLoop(const std::vector<const Opm::Well*>& wells,
                   WellOp&&                             wellOp)

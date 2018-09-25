@@ -46,12 +46,6 @@
 
 namespace {
 
-    std::size_t nummsw(const std::vector<int>& inteHead)
-    {
-        // inteHead(174) = NSEGWL
-        return inteHead[174];
-    }
-
     std::size_t nswlmx(const std::vector<int>& inteHead)
     {
         // inteHead(175) = NSWLMX
@@ -416,8 +410,6 @@ namespace {
 		auto completionSet = well.getCompletions(rptStep);
 		auto noElmSeg = nrsegz(inteHead);
 		    //treat the top segment individually
-		    int ind_seg = 1;
-		    auto ind = welSegSet.segmentNumberToIndex(ind_seg);
 		    rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
 		    rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
 		    rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
