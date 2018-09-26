@@ -285,9 +285,11 @@ namespace {
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
                                       same_ijk );
+	    std::cout << "WellConn - loadCOMPDAT I: " << I << "  J: " << J << "  k: " << k << std::endl;
 	    // Only add connection for active grid cells
             if (grid.cellActive(I, J, k)) {
 		if (prev == this->m_connections.end()) {
+		    std::cout << "WellConn -cellAct-new I: " << I << "  J: " << J << "  k: " << k << std::endl;
 		    std::size_t noConn = this->m_connections.size();
 		    totNC = noConn;
 		    this->addConnection(I,J,k,
@@ -301,10 +303,17 @@ namespace {
 				    noConn, 0., 0., defaultSatTable);
 		} 
 		else {
+		    std::cout << "WellConn -cellAct-prev I: " << I << "  J: " << J << "  k: " << k << std::endl;
 		    std::size_t noConn = prev->getSeqIndex();
 		    // The complnum value carries over; the rest of the state is fully specified by
 		    // the current COMPDAT keyword.
 		    int complnum = prev->complnum();
+		    std::size_t css_ind = prev->getCompSegSeqIndex();
+		    int conSegNo = prev->segment(); 
+		    std::size_t con_SIndex = prev->getSeqIndex();
+		    double conCDepth = prev->depth();
+		    double conSDStart = prev->getSegDistStart();
+		    double conSDEnd = prev->getSegDistEnd();
 		    *prev = Connection(I,J,k,
                                    complnum,
                                    grid.getCellDepth(I,J,k),
@@ -315,6 +324,14 @@ namespace {
                                    satTableId,
                                    direction,
 				   noConn, 0., 0., defaultSatTable);
+		      prev->setCompSegSeqIndex(css_ind);
+		      prev->updateSegment(conSegNo, conCDepth, con_SIndex);
+		      prev->setSegDistStart(conSDStart);
+		      prev->setSegDistEnd(conSDEnd);
+		      std::cout << "CSeqIndex: " << prev->getSeqIndex() << "CSSIndex: " << prev->getCompSegSeqIndex() << 
+		      "CSegNo: " << prev->segment() << std::endl;
+		      std::cout << "CSDepth: " << prev->depth() << "conSDStart: " << prev->getSegDistStart() << 
+		      "conSDEnd: " << prev->getSegDistEnd() << std::endl;
 		}
 	    }
 	}

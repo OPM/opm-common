@@ -18,6 +18,7 @@
 */
 
 #include <cmath>
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -120,12 +121,13 @@ namespace Opm {
                 segment_number = 0;
                 // will decide the segment number based on the distance in a process later.
             }
-
+	    std::cout << "COMPSEGS - Read I: " << I << "  J: " << J << "  K: " << K << std::endl;
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
 		
 		if (grid.cellActive(I, J, K)) {
 		    std::size_t seqIndex = compsegs.size();
 		    totNC = seqIndex;
+		    std::cout << "COMPSEGS - before-emplace_back- seqIndex: " << seqIndex << " totNC " << totNC << std::endl;
 		    compsegs.emplace_back( I, J, K,
 					  branch,
 					  distance_start, distance_end,
@@ -134,6 +136,8 @@ namespace Opm {
 					  segment_number,
 					  seqIndex
 				      );
+		    std::cout << "COMPSEGS - after-emplace_back- compsegs.size(): " << compsegs.size()  
+		    << "  compsegs[compsegs.size()-1].m_seqIndex: " << compsegs[compsegs.size()-1].m_seqIndex  << std::endl;
 		}
             } else { // a range is defined. genrate a range of Compsegs
                 throw std::runtime_error("entering COMPSEGS entries with a range is not supported yet!");
@@ -246,7 +250,9 @@ namespace Opm {
             const int i = compseg.m_i;
             const int j = compseg.m_j;
             const int k = compseg.m_k;
+	    std::cout << "COMPSEGS - updCWS i: " << i << "  j: " << j << "  k: " << k << std::endl;
 	    if (grid.cellActive(i, j, k)) {
+		std::cout << "COMPSEGS - updCWS-ActiveCell i: " << i << "  j: " << j << "  k: " << k << std::endl;
 		Connection& connection = connection_set.getFromIJK( i, j, k );
 		connection.updateSegment(compseg.segment_number, compseg.center_depth,compseg.m_seqIndex);
 
@@ -254,6 +260,8 @@ namespace Opm {
 		connection.setCompSegSeqIndex(compseg.m_seqIndex);
 		connection.setSegDistStart(compseg.m_distance_start);
 		connection.setSegDistEnd(compseg.m_distance_end);
+		std::cout << "COMPSEGS - updCWS- compseg.m_seqIndex: " << compseg.m_seqIndex << 
+		" connection.getSegSeqIndex() " << connection.getCompSegSeqIndex() << std::endl;
 	    }
         }
 
