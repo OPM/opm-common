@@ -126,7 +126,7 @@ namespace Opm {
 		
 		if (grid.cellActive(I, J, K)) {
 		    std::size_t seqIndex = compsegs.size();
-		    totNC = seqIndex;
+		    totNC = seqIndex+1;
 		    std::cout << "COMPSEGS - before-emplace_back- seqIndex: " << seqIndex << " totNC " << totNC << std::endl;
 		    compsegs.emplace_back( I, J, K,
 					  branch,

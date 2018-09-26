@@ -291,7 +291,7 @@ namespace {
 		if (prev == this->m_connections.end()) {
 		    std::cout << "WellConn -cellAct-new I: " << I << "  J: " << J << "  k: " << k << std::endl;
 		    std::size_t noConn = this->m_connections.size();
-		    totNC = noConn;
+		    totNC = noConn+1;
 		    this->addConnection(I,J,k,
                                     grid.getCellDepth( I,J,k ),
                                     state,
@@ -323,11 +323,9 @@ namespace {
                                    rw,
                                    satTableId,
                                    direction,
-				   noConn, 0., 0., defaultSatTable);
+				   noConn, conSDStart, conSDEnd, defaultSatTable);
 		      prev->setCompSegSeqIndex(css_ind);
 		      prev->updateSegment(conSegNo, conCDepth, con_SIndex);
-		      prev->setSegDistStart(conSDStart);
-		      prev->setSegDistEnd(conSDEnd);
 		      std::cout << "CSeqIndex: " << prev->getSeqIndex() << "CSSIndex: " << prev->getCompSegSeqIndex() << 
 		      "CSegNo: " << prev->segment() << std::endl;
 		      std::cout << "CSDepth: " << prev->depth() << "conSDStart: " << prev->getSegDistStart() << 

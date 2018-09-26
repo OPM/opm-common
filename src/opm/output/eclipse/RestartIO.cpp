@@ -372,7 +372,7 @@ namespace {
 
         write_kw(rst_file, "ICON", connectionData.getIConn());
         write_kw(rst_file, "SCON", connectionData.getSConn());
-        //write_kw(rst_file, "XCON", connectionData.getXConn());
+        write_kw(rst_file, "XCON", connectionData.getXConn());
     }
 
     void writeSolution(ecl_rst_file_type*  rst_file,
