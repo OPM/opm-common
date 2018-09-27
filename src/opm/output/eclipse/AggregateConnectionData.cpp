@@ -71,8 +71,6 @@ namespace {
 	for (const auto & conn : conns) {
 	    std::size_t sI = conn.getCompSegSeqIndex();
 	    cs_seqIndConnMap.insert(std::make_pair(sI, &conn));
-	    std::cout << "mapCSSITC: connSI sI: " << sI <<  " I: " << conn.getI() << " J: " << conn.getJ()
-		  << " K: " << conn.getK() << std::endl;
 	}
 	return cs_seqIndConnMap;
     }
@@ -90,7 +88,6 @@ namespace {
             const auto* well = wells[wellID];
 
             if (well == nullptr) { continue; }
-            std::cout << "Connloop: well: " << well->name() <<  std::endl; 
             const auto& conns = well->getActiveConnections(sim_step, grid);
 	    const int niSI = static_cast<int>(well->getTotNoConn());
 	    std::map <std::size_t, const Opm::Connection*> sIToConn;
@@ -110,8 +107,6 @@ namespace {
 		const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
 		if (searchSI != sIToConn.end()) {		  
 		  connSI.push_back(searchSI->second);
-		  std::cout << "Connloop: connSI I: " << searchSI->second->getI() << " J: " << searchSI->second->getJ()
-		  << " K: " << searchSI->second->getK() << std::endl;
 		}
 	    }
 	    for (auto nConn = connSI.size(), connID = 0*nConn;
@@ -164,8 +159,8 @@ namespace {
             // draining and imbibition curves at connections.
             iConn[Ix::Imbibition] = iConn[Ix::Drainage];
 
-            //iConn[Ix::ComplNum] = std::abs(conn.complnum);
-            iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
+            iConn[Ix::ComplNum] = std::abs(conn.complnum());
+            //iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
 
             iConn[Ix::ConnDir] = conn.dir();
             iConn[Ix::Segment] = conn.attachedToSegment()

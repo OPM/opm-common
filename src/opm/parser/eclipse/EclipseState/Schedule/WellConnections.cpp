@@ -285,11 +285,9 @@ namespace {
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
                                       same_ijk );
-	    std::cout << "WellConn - loadCOMPDAT I: " << I << "  J: " << J << "  k: " << k << std::endl;
 	    // Only add connection for active grid cells
             if (grid.cellActive(I, J, k)) {
 		if (prev == this->m_connections.end()) {
-		    std::cout << "WellConn -cellAct-new I: " << I << "  J: " << J << "  k: " << k << std::endl;
 		    std::size_t noConn = this->m_connections.size();
 		    totNC = noConn+1;
 		    this->addConnection(I,J,k,
@@ -303,7 +301,6 @@ namespace {
 				    noConn, 0., 0., defaultSatTable);
 		} 
 		else {
-		    std::cout << "WellConn -cellAct-prev I: " << I << "  J: " << J << "  k: " << k << std::endl;
 		    std::size_t noConn = prev->getSeqIndex();
 		    // The complnum value carries over; the rest of the state is fully specified by
 		    // the current COMPDAT keyword.
@@ -326,10 +323,6 @@ namespace {
 				   noConn, conSDStart, conSDEnd, defaultSatTable);
 		      prev->setCompSegSeqIndex(css_ind);
 		      prev->updateSegment(conSegNo, conCDepth, con_SIndex);
-		      std::cout << "CSeqIndex: " << prev->getSeqIndex() << "CSSIndex: " << prev->getCompSegSeqIndex() << 
-		      "CSegNo: " << prev->segment() << std::endl;
-		      std::cout << "CSDepth: " << prev->depth() << "conSDStart: " << prev->getSegDistStart() << 
-		      "conSDEnd: " << prev->getSegDistEnd() << std::endl;
 		}
 	    }
 	}
