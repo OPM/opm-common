@@ -27,7 +27,8 @@ find_opm_package (
   dune-geometry REQUIRED;
   dune-uggrid;
   MPI;
-  UG
+  UG;
+  Alberta
   "
   # header to search for
   "dune/grid/onedgrid.hh"
@@ -55,7 +56,8 @@ int main (void) {
    HAVE_AMIRAMESH;
    HAVE_ALBERTA;
    HAVE_STDINT_H;
-   DUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS
+   DUNE_GRID_EXPERIMENTAL_GRID_EXTENSIONS;
+   DUNE_ALBERTA_VERSION
   ")
 
 #debug_find_vars ("dune-grid")
