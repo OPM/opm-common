@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 
 
@@ -52,7 +53,8 @@ namespace Opm {
         m_ThresholdPressure( restart, deck, eclipseProperties ),
         m_useCPR(false),
         m_DISGAS(false),
-        m_VAPOIL(false)
+        m_VAPOIL(false),
+        m_isThermal(false)
     {
         if (Section::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
@@ -69,6 +71,9 @@ namespace Opm {
             if (runspec.hasKeyword<ParserKeywords::VAPOIL>()) {
                 m_VAPOIL = true;
             }
+
+            this->m_isThermal = runspec.hasKeyword<ParserKeywords::THERMAL>()
+                || runspec.hasKeyword<ParserKeywords::TEMP>();
         }
     }
 
@@ -90,6 +95,10 @@ namespace Opm {
 
     bool SimulationConfig::hasVAPOIL() const {
         return m_VAPOIL;
+    }
+
+    bool SimulationConfig::isThermal() const {
+        return this->m_isThermal;
     }
 
 } //namespace Opm
