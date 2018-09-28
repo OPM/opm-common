@@ -401,24 +401,27 @@ namespace {
 		auto completionSet = well.getCompletions(rptStep);
 		auto noElmSeg = nrsegz(inteHead);
 		auto&  wname = well.name();
+		std::string bhpKey = "WBHP:" + wname;
 		//treat the top segment individually
 		rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
 		rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
 		rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
 		rSeg[6] = rSeg[0];
 		rSeg[7] = rSeg[1];
-		//Item ind+8: should output segment pressure, use well pressure instead
-		std::string bhpKey = "WBHP:" + wname;
-		if (smry.has( bhpKey)) {
-		  rSeg[8] = smry.get(bhpKey);
-		}
+		//Item 8: should be some segment cumulative flow rate, use a constant value for now
+		rSeg[8] = 200.;
 		//Item ind+9: not sure what this parameter is, the current value works well for tests on E100
 		rSeg[9] = 0.01;
 		// set item ind + 10 to 0.5 based on tests on E100
 		rSeg[10] = 0.5;
-
+		//Item 11 should be segment pressure - use flowing bottom hole pressure temporarily
+		//if (smry.has( bhpKey)) {
+		//  rSeg[11] = smry.get(bhpKey);
+		//}
+		// use default value for now
+		rSeg[11] = 0.;
 		//  segment pressure  - set equal to item 8 
-		rSeg[ 39] = rSeg[8];
+		rSeg[ 39] = rSeg[11];
 
 		//Default values
 		//rSeg[ 39] = 1.0;
@@ -447,14 +450,19 @@ namespace {
 		    rSeg[iS +   5] = units.from_si(M::volume, (welSegSet[ind].volume()));
 		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[ind].totalLength()));
 		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[ind].depth()));
+		    
+		    //Item ind+8: should be some segment cumulative flow rate, use a constant value for now
+		    rSeg[iS +  8] = 200.;
+		    //Item ind+9: not sure what this parameter is, the current value works well for tests on E100
+		    rSeg[iS +  9] = 0.01;
 
 		    // set item ind + 10 to 0.5 based on tests on E100
-		    rSeg[10] = 0.5;
+		    rSeg[iS + 10] = 0.5;
 		    //  segment pressure (to be added!!)
-		    rSeg[iS +  11] = 0;
+		    rSeg[iS +  11] = rSeg[11];
 
 		    //Default values
-		    rSeg[iS +  39] = 1.0;
+		    rSeg[iS +  39] = rSeg[iS +  11];
 
 		    rSeg[iS + 105] = 1.0;
 		    rSeg[iS + 106] = 1.0;
