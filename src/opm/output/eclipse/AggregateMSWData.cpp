@@ -401,38 +401,34 @@ namespace {
 		auto completionSet = well.getCompletions(rptStep);
 		auto noElmSeg = nrsegz(inteHead);
 		auto&  wname = well.name();
-		auto get = [&smry, &wname](const std::string& vector)
-		{
-		  const auto key = vector + ':' + wname;
+		//treat the top segment individually
+		rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
+		rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
+		rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
+		rSeg[6] = rSeg[0];
+		rSeg[7] = rSeg[1];
+		//Item ind+8: should output segment pressure, use well pressure instead
+		std::string bhpKey = "WBHP:" + wname;
+		if (smry.has( bhpKey)) {
+		  rSeg[8] = smry.get(bhpKey);
+		}
+		//Item ind+9: not sure what this parameter is, the current value works well for tests on E100
+		rSeg[9] = 0.01;
+		// set item ind + 10 to 0.5 based on tests on E100
+		rSeg[10] = 0.5;
 
-		  return smry.has(key) ? smry.get(key) : 0.0;
-		};
-		
-		    //treat the top segment individually
-		    rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
-		    rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
-		    rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
-		    rSeg[6] = rSeg[0];
-		    rSeg[7] = rSeg[1];
-		    //Item ind+8: should output segment pressure, use well pressure instead
-		    rSeg[8] = get("WBHP");
-		    //Item ind+9: not sure what this parameter is, the current value works well for tests on E100
-		    rSeg[9] = 0.01;
-		    // set item ind + 10 to 0.5 based on tests on E100
-		    rSeg[10] = 0.5;
+		//  segment pressure  - set equal to item 8 
+		rSeg[ 39] = rSeg[8];
 
-		    //  segment pressure  - set equal to item 8 
-		    rSeg[ 39] = rSeg[8];
+		//Default values
+		//rSeg[ 39] = 1.0;
 
-		    //Default values
-		    //rSeg[ 39] = 1.0;
-
-		    rSeg[105] = 1.0;
-		    rSeg[106] = 1.0;
-		    rSeg[107] = 1.0;
-		    rSeg[108] = 1.0;
-		    rSeg[109] = 1.0;
-		    rSeg[110] = 1.0;
+		rSeg[105] = 1.0;
+		rSeg[106] = 1.0;
+		rSeg[107] = 1.0;
+		rSeg[108] = 1.0;
+		rSeg[109] = 1.0;
+		rSeg[110] = 1.0;
 
 		//Treat subsequent segments
 		for (int ind_seg = 2; ind_seg <= welSegSet.size(); ind_seg++) {
