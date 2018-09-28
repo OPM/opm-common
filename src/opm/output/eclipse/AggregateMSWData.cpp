@@ -20,6 +20,7 @@
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/output/eclipse/SummaryState.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -390,6 +391,7 @@ namespace {
                            const std::size_t       rptStep,
                            const std::vector<int>& inteHead,
 			   const Opm::UnitSystem& units,
+			   const ::Opm::SummaryState& smry,
                            RSegArray&              rSeg)
         {
 	    if (well.isMultiSegment(rptStep)) {
@@ -398,17 +400,29 @@ namespace {
 		auto welSegSet = well.getWellSegments(rptStep);
 		auto completionSet = well.getCompletions(rptStep);
 		auto noElmSeg = nrsegz(inteHead);
+		auto&  wname = well.name();
+		auto get = [&smry, &wname](const std::string& vector)
+		{
+		  const auto key = vector + ':' + wname;
+
+		  return smry.has(key) ? smry.get(key) : 0.0;
+		};
+		
 		    //treat the top segment individually
 		    rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
 		    rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
 		    rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
 		    rSeg[6] = rSeg[0];
 		    rSeg[7] = rSeg[1];
+		    //Item ind+8: should output segment pressure, use well pressure instead
+		    rSeg[8] = get("WBHP");
+		    //Item ind+9: not sure what this parameter is, the current value works well for tests on E100
+		    rSeg[9] = 0.01;
 		    // set item ind + 10 to 0.5 based on tests on E100
 		    rSeg[10] = 0.5;
 
-		    //  segment pressure (to be added!!)
-		    rSeg[ 39] = 0;
+		    //  segment pressure  - set equal to item 8 
+		    rSeg[ 39] = rSeg[8];
 
 		    //Default values
 		    rSeg[ 39] = 1.0;
@@ -563,7 +577,9 @@ captureDeclaredMSWData(const Schedule&         sched,
                        const std::size_t       rptStep,
 		       const Opm::UnitSystem& units,
                        const std::vector<int>& inteHead,
-		       const Opm::EclipseGrid&  grid)
+		       const Opm::EclipseGrid&  grid,
+		       const ::Opm::SummaryState& smry
+		      )
 {
     const auto& wells = sched.getWells(rptStep);
     auto msw = std::vector<const Opm::Well*>{};
@@ -586,12 +602,12 @@ captureDeclaredMSWData(const Schedule&         sched,
 
     // Extract Contributions to RSeg Array
     {
-        MSWLoop(msw, [&units, rptStep, inteHead, this]
+        MSWLoop(msw, [&units, rptStep, inteHead, &smry, this]
             (const Well& well, const std::size_t mswID) -> void
         {
             auto rmsw = this->rSeg_[mswID];
 
-            RSeg::staticContrib(well, rptStep, inteHead, units, rmsw);
+            RSeg::staticContrib(well, rptStep, inteHead, units, smry, rmsw);
         });
     }
 
