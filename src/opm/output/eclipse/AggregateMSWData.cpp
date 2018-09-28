@@ -425,7 +425,7 @@ namespace {
 		    rSeg[ 39] = rSeg[8];
 
 		    //Default values
-		    rSeg[ 39] = 1.0;
+		    //rSeg[ 39] = 1.0;
 
 		    rSeg[105] = 1.0;
 		    rSeg[106] = 1.0;
