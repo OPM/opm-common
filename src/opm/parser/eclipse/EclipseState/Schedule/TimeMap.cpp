@@ -85,8 +85,9 @@ namespace Opm {
     {
         if (m_timeList.size() < 2)
             return 0.0;
-        const time_t deltaT = m_timeList.back() - m_timeList.front();
-        return static_cast<double>(deltaT);
+
+        return std::difftime(this->m_timeList.back(),
+                             this->m_timeList.front());
     }
 
     void TimeMap::addTime(std::time_t newTime) {
@@ -196,19 +197,17 @@ namespace Opm {
     double TimeMap::getTimeStepLength(size_t tStepIdx) const
     {
         assert(tStepIdx < numTimesteps());
-        const std::time_t t1 = m_timeList[tStepIdx];
-        const std::time_t t2 = m_timeList[tStepIdx + 1];
-        const std::time_t deltaT = t2 - t1;
-        return static_cast<double>(deltaT);
+
+        return std::difftime(this->m_timeList[tStepIdx + 1],
+                             this->m_timeList[tStepIdx + 0]);
     }
 
     double TimeMap::getTimePassedUntil(size_t tLevelIdx) const
     {
         assert(tLevelIdx < m_timeList.size());
-        const std::time_t t1 = m_timeList.front();
-        const std::time_t t2 = m_timeList[tLevelIdx];
-        const std::time_t deltaT = t2 - t1;
-        return static_cast<double>(deltaT);
+
+        return std::difftime(this->m_timeList[tLevelIdx],
+                             this->m_timeList.front());
     }
 
 
