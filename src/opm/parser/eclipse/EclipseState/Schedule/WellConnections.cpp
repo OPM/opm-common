@@ -123,7 +123,10 @@ namespace {
 
 
 
-    WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) {
+    WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) :
+        headI(src.headI),
+        headJ(src.headJ)
+    {
         for (const auto& c : src) {
             if (grid.cellActive(c.getI(), c.getJ(), c.getK()))
                 this->add(c);
