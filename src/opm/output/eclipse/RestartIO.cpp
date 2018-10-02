@@ -320,12 +320,13 @@ namespace {
                       const UnitSystem&                    units,
                       const Schedule&                      schedule,
                       const EclipseGrid&                   grid,
+		      const Opm::SummaryState&             sumState,
                       const std::vector<int>&              ih)
     {
         // write ISEG, RSEG, ILBS and ILBR to restart file
         const size_t simStep = static_cast<size_t> (sim_step);
         auto  MSWData = Helpers::AggregateMSWData(ih);
-        MSWData.captureDeclaredMSWData(schedule, simStep, units, ih, grid);
+        MSWData.captureDeclaredMSWData(schedule, simStep, units, ih, grid, sumState);
 
         write_kw(rst_file, "ISEG", MSWData.getISeg());
         write_kw(rst_file, "ILBS", MSWData.getILBs());
@@ -372,7 +373,7 @@ namespace {
 
         write_kw(rst_file, "ICON", connectionData.getIConn());
         write_kw(rst_file, "SCON", connectionData.getSConn());
-        //write_kw(rst_file, "XCON", connectionData.getXConn());
+        write_kw(rst_file, "XCON", connectionData.getXConn());
     }
 
     void writeSolution(ecl_rst_file_type*  rst_file,
@@ -470,7 +471,7 @@ void save(const std::string&  filename,
 
     writeGroup(rst_file.get(), sim_step, ecl_compatible_rst, schedule, sumState, inteHD);
 
-    writeMSWData(rst_file.get(), sim_step, units, schedule, grid, inteHD);
+    writeMSWData(rst_file.get(), sim_step, units, schedule, grid, sumState, inteHD);
 
     writeWell(rst_file.get(), sim_step, ecl_compatible_rst, es.runspec().phases(), units,
               grid, schedule, value.wells, sumState, inteHD);

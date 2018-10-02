@@ -467,7 +467,6 @@ void EclipseIO::writeTimeStep(int report_step,
                                                  ioConfig.getUNIFOUT() ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE,
                                                  report_step,
                                                  ioConfig.getFMTOUT() );
-
         RestartIO::save(filename, report_step, secs_elapsed, value, es, grid, schedule,
                         this->impl->summary.get_restart_vectors(), write_double);
     }

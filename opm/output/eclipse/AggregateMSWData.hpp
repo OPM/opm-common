@@ -21,6 +21,8 @@
 #define OPM_AGGREGATE_MSW_DATA_HPP
 
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/eclipse/SummaryState.hpp>
+
 #include <opm/output/eclipse/CharArrayNullTerm.hpp>
 #include <opm/output/eclipse/WindowedArray.hpp>
 
@@ -32,6 +34,7 @@ namespace Opm {
     class Schedule;
     class EclipseGrid;
     class UnitSystem;
+    class SummaryState;
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {
@@ -53,7 +56,9 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                      const std::size_t    rptStep,
 				     const Opm::UnitSystem& units,
 				     const std::vector<int>& inteHead,
-				     const Opm::EclipseGrid&  grid);
+				     const Opm::EclipseGrid&  grid,
+				     const ::Opm::SummaryState& smry
+				   );
 
         /// Retrieve Integer Multisegment well data Array.
         const std::vector<int>& getISeg() const

@@ -20,6 +20,7 @@
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/output/eclipse/SummaryState.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -216,18 +217,15 @@ namespace {
 	int newSInd = segIndex;
 	auto origBranchNo = segSet[segIndex].branchNumber();
 	bool endOrigBranch = true;
-	//std::cout << "SegmentOrder-segIndex:"  << segIndex  << " origBranchno: " <<  origBranchNo  << std::endl;
 	// loop down branch to find all segments in branch and number from "toe" to "heel"
 	while (newSInd < segSet.size()) {
 	       endOrigBranch = true;
 		const auto iSInd = inflowSegmentsIndex(segSet, newSInd);
-		//std::cout << " SO- inflowSegmentsIndex:" <<   std::endl;
 		for (auto isi : iSInd )  {
 			auto inflowBranch = segSet[isi].branchNumber();
 			if (origBranchNo == inflowBranch) {
 			    endOrigBranch = false;
 			}
-			//std::cout << " SO- isi:" <<  isi  << std::endl;
 		}
 		if (iSInd.size() > 0) {
 		    for (auto ind : iSInd) {
@@ -237,16 +235,13 @@ namespace {
 			    segIndCB.insert(segIndCB.begin(), ind);
 			    // search recursively down this branch to find more inflow branches
 			    newSInd = ind;
-			    //std::cout << "SO-ind-loop: origB=iflowB - ind:" <<  ind  << std::endl;
 			}
 			else {
 			    // if inflow segment belongs to different branch, start new search
-			    //std::cout << "SO-ind-loop: origB!=iflowB - ind:" <<  ind  << std::endl;
 			    auto nSOrd = segmentOrder(segSet, ind);
 			    // copy the segments already found and indexed into the total ordered segment vector
 			    for (std::size_t indOS = 0; indOS < nSOrd.size(); indOS++) {
 				ordSegNumber.push_back(nSOrd[indOS]);
-				//std::cout << "SO-ind-loop: origB!=iflowB - indOS:" <<  indOS  << " nSOrd[indOS] " << nSOrd[indOS]  << std::endl;
 			    }
 			    if (endOrigBranch) {
 			       newSInd = segSet.size();
@@ -257,10 +252,8 @@ namespace {
 		}
 		if (endOrigBranch || (iSInd.size()==0)) {
 		    // have come to toe of current branch - store segment indicies of current branch
-		    //std::cout << "SO-Toe of current branch - newSInd :" <<  newSInd  << std::endl;
 		    for (std::size_t indOS = 0; indOS < segIndCB.size(); indOS++) {
 			ordSegNumber.push_back(segIndCB[indOS]);
-			//std::cout << "SO  end CB - indOS:" <<  indOS  << " segIndCB[indOS] " << segIndCB[indOS]  << std::endl;
 		    }
 		    // set new index to exit while loop
 		    newSInd = segSet.size();
@@ -270,11 +263,9 @@ namespace {
 
 	if (origBranchNo == 1) {
 	    // make the vector of ordered segments
-	    //std::cout << "SO-OrBr=1 -ordSegNumber.size():" <<  ordSegNumber.size()  << std::endl;
 	    tempOrdVect.resize(ordSegNumber.size());
 	    for (std::size_t ov_ind = 0; ov_ind < ordSegNumber.size(); ov_ind++) {
 		tempOrdVect[ordSegNumber[ov_ind]] = ov_ind+1;
-		//std::cout << "SO_OrBr=1- ov_ind:" <<  ov_ind  << " ordSegNumber[ov_ind] " << ordSegNumber[ov_ind]  << std::endl;
 	    }
 	    return tempOrdVect;
 	} else {
@@ -400,6 +391,7 @@ namespace {
                            const std::size_t       rptStep,
                            const std::vector<int>& inteHead,
 			   const Opm::UnitSystem& units,
+			   const ::Opm::SummaryState& smry,
                            RSegArray&              rSeg)
         {
 	    if (well.isMultiSegment(rptStep)) {
@@ -408,27 +400,38 @@ namespace {
 		auto welSegSet = well.getWellSegments(rptStep);
 		auto completionSet = well.getCompletions(rptStep);
 		auto noElmSeg = nrsegz(inteHead);
-		    //treat the top segment individually
-		    rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
-		    rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
-		    rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
-		    rSeg[6] = rSeg[0];
-		    rSeg[7] = rSeg[1];
-		    // set item ind + 10 to 0.5 based on tests on E100
-		    rSeg[10] = 0.5;
+		auto&  wname = well.name();
+		std::string bhpKey = "WBHP:" + wname;
+		//treat the top segment individually
+		rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
+		rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
+		rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
+		rSeg[6] = rSeg[0];
+		rSeg[7] = rSeg[1];
+		//Item 8: should be some segment cumulative flow rate, use a constant value for now
+		rSeg[8] = 200.;
+		//Item ind+9: not sure what this parameter is, the current value works well for tests on E100
+		rSeg[9] = 0.01;
+		// set item ind + 10 to 0.5 based on tests on E100
+		rSeg[10] = 0.5;
+		//Item 11 should be segment pressure - use flowing bottom hole pressure temporarily
+		//if (smry.has( bhpKey)) {
+		//  rSeg[11] = smry.get(bhpKey);
+		//}
+		// use default value for now
+		rSeg[11] = 0.;
+		//  segment pressure  - set equal to item 8 
+		rSeg[ 39] = rSeg[11];
 
-		    //  segment pressure (to be added!!)
-		    rSeg[ 39] = 0;
+		//Default values
+		//rSeg[ 39] = 1.0;
 
-		    //Default values
-		    rSeg[ 39] = 1.0;
-
-		    rSeg[105] = 1.0;
-		    rSeg[106] = 1.0;
-		    rSeg[107] = 1.0;
-		    rSeg[108] = 1.0;
-		    rSeg[109] = 1.0;
-		    rSeg[110] = 1.0;
+		rSeg[105] = 1.0;
+		rSeg[106] = 1.0;
+		rSeg[107] = 1.0;
+		rSeg[108] = 1.0;
+		rSeg[109] = 1.0;
+		rSeg[110] = 1.0;
 
 		//Treat subsequent segments
 		for (int ind_seg = 2; ind_seg <= welSegSet.size(); ind_seg++) {
@@ -447,14 +450,19 @@ namespace {
 		    rSeg[iS +   5] = units.from_si(M::volume, (welSegSet[ind].volume()));
 		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[ind].totalLength()));
 		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[ind].depth()));
+		    
+		    //Item ind+8: should be some segment cumulative flow rate, use a constant value for now
+		    rSeg[iS +  8] = 200.;
+		    //Item ind+9: not sure what this parameter is, the current value works well for tests on E100
+		    rSeg[iS +  9] = 0.01;
 
 		    // set item ind + 10 to 0.5 based on tests on E100
-		    rSeg[10] = 0.5;
+		    rSeg[iS + 10] = 0.5;
 		    //  segment pressure (to be added!!)
-		    rSeg[iS +  11] = 0;
+		    rSeg[iS +  11] = rSeg[11];
 
 		    //Default values
-		    rSeg[iS +  39] = 1.0;
+		    rSeg[iS +  39] = rSeg[iS +  11];
 
 		    rSeg[iS + 105] = 1.0;
 		    rSeg[iS + 106] = 1.0;
@@ -573,7 +581,9 @@ captureDeclaredMSWData(const Schedule&         sched,
                        const std::size_t       rptStep,
 		       const Opm::UnitSystem& units,
                        const std::vector<int>& inteHead,
-		       const Opm::EclipseGrid&  grid)
+		       const Opm::EclipseGrid&  grid,
+		       const ::Opm::SummaryState& smry
+		      )
 {
     const auto& wells = sched.getWells(rptStep);
     auto msw = std::vector<const Opm::Well*>{};
@@ -596,12 +606,12 @@ captureDeclaredMSWData(const Schedule&         sched,
 
     // Extract Contributions to RSeg Array
     {
-        MSWLoop(msw, [&units, rptStep, inteHead, this]
+        MSWLoop(msw, [&units, rptStep, inteHead, &smry, this]
             (const Well& well, const std::size_t mswID) -> void
         {
             auto rmsw = this->rSeg_[mswID];
 
-            RSeg::staticContrib(well, rptStep, inteHead, units, rmsw);
+            RSeg::staticContrib(well, rptStep, inteHead, units, smry, rmsw);
         });
     }
 

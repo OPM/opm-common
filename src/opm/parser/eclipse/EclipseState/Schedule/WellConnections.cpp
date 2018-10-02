@@ -289,7 +289,7 @@ namespace {
             if (grid.cellActive(I, J, k)) {
 		if (prev == this->m_connections.end()) {
 		    std::size_t noConn = this->m_connections.size();
-		    totNC = noConn;
+		    totNC = noConn+1;
 		    this->addConnection(I,J,k,
                                     grid.getCellDepth( I,J,k ),
                                     state,
@@ -305,6 +305,12 @@ namespace {
 		    // The complnum value carries over; the rest of the state is fully specified by
 		    // the current COMPDAT keyword.
 		    int complnum = prev->complnum();
+		    std::size_t css_ind = prev->getCompSegSeqIndex();
+		    int conSegNo = prev->segment(); 
+		    std::size_t con_SIndex = prev->getSeqIndex();
+		    double conCDepth = prev->depth();
+		    double conSDStart = prev->getSegDistStart();
+		    double conSDEnd = prev->getSegDistEnd();
 		    *prev = Connection(I,J,k,
                                    complnum,
                                    grid.getCellDepth(I,J,k),
@@ -314,7 +320,9 @@ namespace {
                                    rw,
                                    satTableId,
                                    direction,
-				   noConn, 0., 0., defaultSatTable);
+				   noConn, conSDStart, conSDEnd, defaultSatTable);
+		      prev->setCompSegSeqIndex(css_ind);
+		      prev->updateSegment(conSegNo, conCDepth, con_SIndex);
 		}
 	    }
 	}

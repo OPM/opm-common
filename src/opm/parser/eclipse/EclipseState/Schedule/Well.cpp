@@ -692,7 +692,7 @@ namespace Opm {
 	std::size_t totNC = 0;
         connections->loadCOMPDAT(record, grid, eclipseProperties, totNC);
 	if (totNC > 0) {
-	    this->setTotNoConn(totNC+1);
+	    this->setTotNoConn(totNC);
 	}
         this->updateWellConnections(time_step, connections);
     }
@@ -704,7 +704,7 @@ namespace Opm {
 	std::size_t totNC = 0;
         WellConnections * new_connection_set = newConnectionsWithSegments(keyword, completion_set, segment_set, grid, totNC);
 	if (totNC > 0) {
-	    this->setTotNoConn(totNC+1);
+	    this->setTotNoConn(totNC);
 	}
         this->updateWellConnections(time_step, new_connection_set);
     }

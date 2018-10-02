@@ -694,7 +694,9 @@ namespace {
             xWell[Ix::GasFVF] = (std::abs(xWell[Ix::GasPrRate]) > 0.0)
                 ? xWell[Ix::VoidPrRate] / xWell[Ix::GasPrRate]
                 : 0.0;
-
+	    
+	    if (std::isnan(xWell[Ix::GasFVF])) xWell[Ix::GasFVF] = 0.;
+		
             // Not fully characterised.
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
             xWell[Ix::item83] = xWell[Ix::GasInjTotal];

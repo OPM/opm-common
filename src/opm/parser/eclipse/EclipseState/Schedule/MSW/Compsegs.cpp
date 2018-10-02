@@ -18,6 +18,7 @@
 */
 
 #include <cmath>
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -120,12 +121,11 @@ namespace Opm {
                 segment_number = 0;
                 // will decide the segment number based on the distance in a process later.
             }
-
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
 		
 		if (grid.cellActive(I, J, K)) {
 		    std::size_t seqIndex = compsegs.size();
-		    totNC = seqIndex;
+		    totNC = seqIndex+1;
 		    compsegs.emplace_back( I, J, K,
 					  branch,
 					  distance_start, distance_end,

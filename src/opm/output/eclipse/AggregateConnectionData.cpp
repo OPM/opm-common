@@ -88,7 +88,6 @@ namespace {
             const auto* well = wells[wellID];
 
             if (well == nullptr) { continue; }
-            
             const auto& conns = well->getActiveConnections(sim_step, grid);
 	    const int niSI = static_cast<int>(well->getTotNoConn());
 	    std::map <std::size_t, const Opm::Connection*> sIToConn;
@@ -160,8 +159,8 @@ namespace {
             // draining and imbibition curves at connections.
             iConn[Ix::Imbibition] = iConn[Ix::Drainage];
 
-            //iConn[Ix::ComplNum] = std::abs(conn.complnum);
-            iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
+            iConn[Ix::ComplNum] = std::abs(conn.complnum());
+            //iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
 
             iConn[Ix::ConnDir] = conn.dir();
             iConn[Ix::Segment] = conn.attachedToSegment()
