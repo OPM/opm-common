@@ -94,9 +94,10 @@ namespace Opm {
 			   const double segDistEnd= 0.0,
 			   const bool defaultSatTabId = true);
 
-        std::vector< Connection > m_connections;
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
+
         int headI, headJ;
+        std::vector< Connection > m_connections;
     };
 }
 
