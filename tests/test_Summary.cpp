@@ -23,6 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <exception>
 #include <stdexcept>
 
 #include <ert/ecl/ecl_sum.h>
@@ -42,6 +43,8 @@
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 using namespace Opm;
 using rt = data::Rates::opt;
@@ -141,6 +144,15 @@ static data::Wells result_wells() {
     crates3.set( rt::reservoir_oil, 300.7 / day );
     crates3.set( rt::reservoir_gas, 300.8 / day );
 
+    // Segment vectors
+    const auto sm3_pr_day = unit::cubic(unit::meter) / day;
+    auto segment = ::Opm::data::Segment{};
+    segment.rates.set(rt::wat, 123.45*sm3_pr_day);
+    segment.rates.set(rt::oil, 543.21*sm3_pr_day);
+    segment.rates.set(rt::gas, 1729.496*sm3_pr_day);
+    segment.pressure = 314.159*unit::barsa;
+    segment.segIndex = 1;
+
     /*
       The global index assigned to the completion must be manually
       syncronized with the global index in the COMPDAT keyword in the
@@ -151,10 +163,15 @@ static data::Wells result_wells() {
     data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4, 150.6, 0.001, 0.89, 100.0};
     data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4, 456.78, 0.0, 0.15, 432.1};
 
+
     /*
       The completions
     */
-    data::Well well1 { rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1, { {well1_comp1} } };
+    data::Well well1 {
+        rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
+        { {well1_comp1} },
+        { { segment.segIndex, segment } },
+    };
     data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} } };
     data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} } };
 
@@ -1178,6 +1195,18 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
             BOOST_CHECK_CLOSE( wellRatesCopy.get( "W_1" , rt::wat) , wellRates.get( "W_1" , rt::wat), 1e-16);
             BOOST_CHECK_CLOSE( wellRatesCopy.get( "W_2" , 101 , rt::wat) , wellRates.get( "W_2" , 101 , rt::wat), 1e-16);
 
+            const auto sm3_pr_day = unit::cubic(unit::meter) / day;
+
+            const auto& seg = wellRatesCopy.at("W_1").segments.at(1);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::wat),  123.45*sm3_pr_day, 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::oil),  543.21*sm3_pr_day, 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::gas), 1729.496*sm3_pr_day, 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.pressure, 314.159*unit::barsa, 1.0e-10);
+            BOOST_CHECK_EQUAL(seg.segIndex, 1);
+
+            // No data for segment 10 of well W_2 (or no such segment).
+            const auto& W2 = wellRatesCopy.at("W_2");
+            BOOST_CHECK_THROW(W2.segments.at(10), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(efficiency_factor) {
