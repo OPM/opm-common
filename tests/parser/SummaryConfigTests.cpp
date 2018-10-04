@@ -28,6 +28,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
+#include <algorithm>
+
 using namespace Opm;
 
 static Deck createDeck_no_wells( const std::string& summary ) {
@@ -621,3 +623,31 @@ BOOST_AUTO_TEST_CASE( SUMMARY_MISC) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(Summary_Segment)
+{
+    const auto input = std::string { "SOFR_TEST.DATA" };
+    const auto ctxt  = ParseContext{};
+    const auto deck  = Parser{}.parseFile(input, ctxt);
+    const auto state = EclipseState { deck, ctxt };
+
+    const auto schedule = Schedule { deck, state, ctxt };
+    const auto summary  = SummaryConfig {
+        deck, schedule, state.getTableManager(), ctxt
+    };
+
+    BOOST_CHECK(deck.hasKeyword("SOFR"));
+    BOOST_CHECK(summary.hasKeyword("SOFR"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFR:PROD01:1"));
+
+    auto sofr = std::find_if(summary.begin(), summary.end(),
+        [](const SummaryNode& node)
+    {
+        return node.keyword() == "SOFR";
+    });
+
+    BOOST_REQUIRE(sofr != summary.end());
+
+    BOOST_CHECK_EQUAL(sofr->type(), ecl_smspec_var_type::ECL_SMSPEC_SEGMENT_VAR);
+    BOOST_CHECK_EQUAL(sofr->wgname(), "PROD01");
+    BOOST_CHECK_EQUAL(sofr->num(), 1);
+}

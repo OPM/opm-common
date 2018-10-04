@@ -381,6 +381,85 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
     }
 }
 
+    inline void keywordS(SummaryConfig::keyword_list& list,
+                         const ParseContext&          parseContext,
+                         const DeckKeyword&           keyword,
+                         const Schedule&              schedule)
+    {
+        // Generate SMSPEC nodes for SUMMARY keywords of the form
+        //
+        //   SOFR
+        //     'W1'   1 /
+        //     'W1'  10 /
+        //     'W3'     / -- All segments
+        //   /
+        //
+        //   SPR
+        //     1*   2 / -- Segment 2 in all multi-segmented wells
+        //   /
+
+        if (keyword.name() == "SUMMARY") {
+            // The SUMMARY keyword itself invokes keywordS().  Ignore it.
+            return;
+        }
+
+        // Modifies 'list' in place.
+        auto makeNode = [&list, &keyword]
+            (const std::string& well, const int segNumber) -> void
+        {
+            // Grid dimensions immaterial for segment related vectors.
+            const int dims[] = { 1, 1, 1 };
+
+            list.push_back(SummaryConfig::keyword_type {
+                smspec_node_alloc(ECL_SMSPEC_SEGMENT_VAR, well.c_str(),
+                                  keyword.name().c_str(), "", ":",
+                                  dims, segNumber, 0, 0)
+            });
+        };
+
+        const auto last_timestep = schedule.getTimeMap().last();
+
+        for (const auto& record : keyword) {
+            const auto& wellitem = record.getItem(0);
+            const auto& wells    = wellitem.defaultApplied(0)
+                ? schedule.getWells()
+                : schedule.getWellsMatching(wellitem.getTrimmedString(0));
+
+            if (wells.empty()) {
+                handleMissingWell(parseContext, keyword.name(),
+                                  wellitem.getTrimmedString(0));
+            }
+
+            for (const auto* well : wells) {
+                if (! well->isMultiSegment(last_timestep)) {
+                    // Not an MSW.  Don't create summary vectors for segments.
+                    continue;
+                }
+
+                const auto& wname = well->name();
+                const auto& segID = record.getItem(1);
+
+                if (segID.defaultApplied(0)) {
+                    // Segment number defaulted.  Allocate a summary
+                    // vector for each segment.
+                    const auto nSeg =
+                        well->getWellSegments(last_timestep).size();
+
+                    for (auto segNumber = 0*nSeg;
+                              segNumber <   nSeg; ++segNumber)
+                    {
+                        makeNode(wname, segNumber + 1);  // One-based.
+                    }
+                }
+                else {
+                    // Segment number specified.  Allocate single
+                    // summary vector for that segment number.
+                    makeNode(wname, segID.get<int>(0));
+                }
+            }
+        }
+    }
+
   inline void handleKW( SummaryConfig::keyword_list& list,
                         const DeckKeyword& keyword,
                         const Schedule& schedule,
@@ -396,6 +475,7 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
         case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, dims );
         case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables, dims );
         case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, keyword, schedule, dims);
+        case ECL_SMSPEC_SEGMENT_VAR: return keywordS( list, parseContext, keyword, schedule );
         case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
 
         default: return;
