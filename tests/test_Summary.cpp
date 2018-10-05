@@ -151,7 +151,7 @@ static data::Wells result_wells() {
     segment.rates.set(rt::oil, 543.21*sm3_pr_day);
     segment.rates.set(rt::gas, 1729.496*sm3_pr_day);
     segment.pressure = 314.159*unit::barsa;
-    segment.segIndex = 1;
+    segment.segNumber = 1;
 
     /*
       The global index assigned to the completion must be manually
@@ -170,7 +170,7 @@ static data::Wells result_wells() {
     data::Well well1 {
         rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
         { {well1_comp1} },
-        { { segment.segIndex, segment } },
+        { { segment.segNumber, segment } },
     };
     data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} } };
     data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} } };
@@ -1202,7 +1202,7 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
             BOOST_CHECK_CLOSE(seg.rates.get(rt::oil),  543.21*sm3_pr_day, 1.0e-10);
             BOOST_CHECK_CLOSE(seg.rates.get(rt::gas), 1729.496*sm3_pr_day, 1.0e-10);
             BOOST_CHECK_CLOSE(seg.pressure, 314.159*unit::barsa, 1.0e-10);
-            BOOST_CHECK_EQUAL(seg.segIndex, 1);
+            BOOST_CHECK_EQUAL(seg.segNumber, 1);
 
             // No data for segment 10 of well W_2 (or no such segment).
             const auto& W2 = wellRatesCopy.at("W_2");

@@ -23,6 +23,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <algorithm>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -363,6 +364,39 @@ inline quantity crate( const fn_args& args ) {
     return { v, rate_unit< phase >() };
 }
 
+template< rt phase, bool polymer = false >
+inline quantity srate( const fn_args& args ) {
+    const quantity zero = { 0, rate_unit< phase >() };
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclispe SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a completion with offset 0.
+    const size_t segNumber = args.num;
+    if( args.schedule_wells.empty() ) return zero;
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well->name();
+    if( args.wells.count( name ) == 0 ) return zero;
+
+    const auto& well_data = args.wells.at( name );    
+    
+    const auto& segment = well_data.segments.find(segNumber);
+
+    if( segment == well_data.segments.end() ) return zero;
+
+    double eff_fac = efac( args.eff_factors, name );
+    double concentration = polymer
+                           ? well->getPolymerProperties( args.sim_step ).m_polymerConcentration
+                           : 1;
+
+    auto v = segment->second.rates.get( phase, 0.0 ) * eff_fac * concentration;
+    //switch sign of rate - opposite convention in flow vs eclipse
+    v *= -1;
+
+    if( polymer ) return { v, measure::mass_rate };
+    return { v, rate_unit< phase >() };
+}
+
 inline quantity trans_factors ( const fn_args& args ) {
     const quantity zero = { 0, measure::transmissibility };
 
@@ -390,6 +424,31 @@ inline quantity trans_factors ( const fn_args& args ) {
     const auto& v = connection->CF();
     return { v, measure::transmissibility };
 }
+
+inline quantity spr ( const fn_args& args ) {
+    const quantity zero = { 0, measure::pressure };
+
+    if( args.schedule_wells.empty() ) return zero;
+    // Like completion rate we need to look
+    // up a connection with offset 0.
+    const size_t segNumber = args.num;
+    if( args.schedule_wells.empty() ) return zero;
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well->name();
+    if( args.wells.count( name ) == 0 ) return zero;
+
+    const auto& well_data = args.wells.at( name );
+
+    const auto& segment = well_data.segments.find(segNumber);
+
+    if( segment == well_data.segments.end() ) return zero;
+
+
+    const auto& v = segment->second.pressure;
+    return { v, measure::pressure };
+}
+
 
 inline quantity bhp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
@@ -835,6 +894,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROPT"  , mul( region_rate< rt::oil, producer >, duration ) },
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
+    //Multisegment well segment data
+    { "SOFR", srate< rt::oil > },
+    { "SWFR", srate< rt::wat > },
+    { "SGFR", srate< rt::gas > },
+    { "SPR",  spr }, 
 };
 
 

@@ -125,7 +125,7 @@ namespace Opm {
     struct Segment {
         Rates rates;
         double pressure;
-        std::size_t segIndex;
+        std::size_t segNumber;
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
@@ -317,7 +317,7 @@ namespace Opm {
 
     template <class MessageBufferType>
     void Segment::write(MessageBufferType& buffer) const {
-        buffer.write(this->segIndex);
+        buffer.write(this->segNumber);
         this->rates.write(buffer);
         buffer.write(this->pressure);
     }
@@ -375,7 +375,7 @@ namespace Opm {
 
     template <class MessageBufferType>
     void Segment::read(MessageBufferType& buffer) {
-        buffer.read(this->segIndex);
+        buffer.read(this->segNumber);
         this->rates.read(buffer);
         buffer.read(this->pressure);
     }
@@ -412,9 +412,9 @@ namespace Opm {
 
             seg.read(buffer);
 
-            const auto segIndex = seg.segIndex;
+            const auto segNumber = seg.segNumber;
 
-            this->segments.emplace(segIndex, std::move(seg));
+            this->segments.emplace(segNumber, std::move(seg));
         }
     }
 
