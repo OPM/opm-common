@@ -86,6 +86,26 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
 }
 
 
+BOOST_AUTO_TEST_CASE(TestUnkownKeywordII) {
+    const char * deck1 =
+        "RUNSPEC\n"
+        "DIMENS\n"
+        "  10 10 10 /n"
+        "\n";
+
+
+    ParseContext parseContext;
+    Parser parser(false);
+
+
+    parser.addKeyword<ParserKeywords::DIMENS>();
+    parseContext.update(ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( parser.parseString( deck1 , parseContext ) , std::invalid_argument);
+    parseContext.ignoreKeyword("RUNSPEC");
+    BOOST_CHECK_NO_THROW( parser.parseString( deck1 , parseContext ) );
+}
+
+
 BOOST_AUTO_TEST_CASE(Handle_extra_records) {
     const char * deck_string = 
          "EQLDIMS\n"
