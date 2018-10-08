@@ -409,11 +409,9 @@ namespace Opm {
 
         for (auto segID = 0*nSeg; segID < nSeg; ++segID) {
             auto seg = Segment{};
-
             seg.read(buffer);
 
             const auto segNumber = seg.segNumber;
-
             this->segments.emplace(segNumber, std::move(seg));
         }
     }
