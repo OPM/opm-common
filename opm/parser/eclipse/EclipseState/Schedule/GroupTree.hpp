@@ -34,8 +34,8 @@ class GroupTree {
         bool exists( const std::string& group ) const;
         const std::string& parent( const std::string& name ) const;
         std::vector< std::string > children( const std::string& parent ) const;
-	const std::map<const std::string , size_t>& nameSeqIndMap() const;
-	const std::map<size_t, const std::string >& seqIndNameMap() const;
+	const std::map<std::string , size_t>& nameSeqIndMap() const;
+	const std::map<size_t, std::string >& seqIndNameMap() const;
 	size_t groupTreeSize();
         bool operator==( const GroupTree& ) const;
         bool operator!=( const GroupTree& ) const;
@@ -57,8 +57,8 @@ class GroupTree {
         std::vector< group > groups = { group { "FIELD", "" } };
         friend bool operator<( const std::string&, const group& );
         std::vector< group >::iterator find( const std::string& );
-	std::map<const std::string , size_t> m_nameSeqIndMap;
-	std::map<size_t, const std::string > m_seqIndNameMap;
+	std::map<std::string , size_t> m_nameSeqIndMap;
+	std::map<size_t, std::string > m_seqIndNameMap;
 };
 
 }

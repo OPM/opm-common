@@ -37,11 +37,11 @@ void GroupTree::update( const std::string& name) {
  * and represented elsewhere)
  */
  
-const std::map<const std::string , size_t>& GroupTree::nameSeqIndMap() const {
+const std::map<std::string , size_t>& GroupTree::nameSeqIndMap() const {
   return m_nameSeqIndMap;
 }
 
-const std::map<size_t, const std::string >& GroupTree::seqIndNameMap() const {
+const std::map<size_t, std::string >& GroupTree::seqIndNameMap() const {
   return m_seqIndNameMap;
 }
 
