@@ -347,9 +347,9 @@ namespace {
 		auto noElmSeg = nisegz(inteHead);
 		std::size_t segmentInd = 0;
 		auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
-		for (int ind_seg = 1; ind_seg <= welSegSet.size(); ind_seg++) {
-		    auto ind = welSegSet.segmentNumberToIndex(ind_seg);
-		    auto iS = (ind_seg-1)*noElmSeg;
+		for (int segNumber = 1; segNumber <= welSegSet.size(); segNumber++) {
+		    auto ind = welSegSet.segmentNumberToIndex(segNumber);
+		    auto iS = (segNumber-1)*noElmSeg;
 		    iSeg[iS + 0] = orderedSegmentNo[ind];
 		    iSeg[iS + 1] = welSegSet[ind].outletSegment();
 		    iSeg[iS + 2] = inflowSegmentCurBranch(welSegSet, ind);
@@ -395,36 +395,51 @@ namespace {
                            RSegArray&              rSeg)
         {
 	    if (well.isMultiSegment(rptStep)) {
+		int segNumber = 1;
+		std::string stringSegNum = std::to_string(segNumber);
 		using M = ::Opm::UnitSystem::measure;
+		const auto gfactor =   (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
+		  ? 0.1781076 : 0.001;
+	
 		//loop over segment set and print out information
 		auto welSegSet = well.getWellSegments(rptStep);
 		auto completionSet = well.getCompletions(rptStep);
 		auto noElmSeg = nrsegz(inteHead);
 		auto&  wname = well.name();
 		std::string bhpKey = "WBHP:" + wname;
+		auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
+		{
+		    const auto key = vector + ":" + wname + ":(" + stringSegNum + ")";
+		    return smry.has(key) ? smry.get(key) : 0.0;
+		};
 		//treat the top segment individually
 		rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
 		rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
 		rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
 		rSeg[6] = rSeg[0];
 		rSeg[7] = rSeg[1];
-		//Item 8: should be some segment cumulative flow rate, use a constant value for now
-		rSeg[8] = 200.;
-		//Item ind+9: not sure what this parameter is, the current value works well for tests on E100
-		rSeg[9] = 0.01;
-		// set item ind + 10 to 0.5 based on tests on E100
-		rSeg[10] = 0.5;
-		//Item 11 should be segment pressure - use flowing bottom hole pressure temporarily
-		//if (smry.has( bhpKey)) {
-		//  rSeg[11] = smry.get(bhpKey);
-		//}
-		// use default value for now
-		rSeg[11] = 0.;
-		//  segment pressure  - set equal to item 8 
-		rSeg[ 39] = rSeg[11];
+		//
+		//Field units:
+		//Rseg[8]= 1.0*sofr+0.1*swfr + 0.1781076*sgfr   (= 1.0*sofr+0.1*swfr+0.001*1000*0.1781076*sgfr  )
+		//Rseg[9] = swfr*0.1/ Rseg[8]
+		//Rseg[10]= sgfr*0.1781076*/ Rseg[8]
 
-		//Default values
-		//rSeg[ 39] = 1.0;
+		//Metric units:
+		//Rseg[8]= 1.0*sofr+0.1*swfr + 0.001*sgfr   
+		//Rseg[9] = swfr*0.1/ Rseg[8]
+		//Rseg[10]= sgfr*0.001/ Rseg[8] 
+		auto temp_o = - units.from_si(M::liquid_surface_rate, get("SOFR"));
+		auto temp_w = - units.from_si(M::liquid_surface_rate, get("SWFR"))*0.1;
+		auto temp_g = - units.from_si(M::gas_surface_rate,    get("SGFR"))*gfactor;
+		
+		rSeg[ 8] = temp_o + temp_w + temp_g;
+		rSeg[ 9] = (abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
+		rSeg[10] = (abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
+		
+		//Item 12 Segment pressure
+		rSeg[11] = units.from_si(M::pressure, get("SPR"));
+		//  segment pressure  
+		rSeg[ 39] = rSeg[11];
 
 		rSeg[105] = 1.0;
 		rSeg[106] = 1.0;
@@ -434,12 +449,13 @@ namespace {
 		rSeg[110] = 1.0;
 
 		//Treat subsequent segments
-		for (int ind_seg = 2; ind_seg <= welSegSet.size(); ind_seg++) {
+		for (segNumber = 2; segNumber <= welSegSet.size(); segNumber++) {
+		    stringSegNum = std::to_string(segNumber);
 		    // set the elements of the rSeg array
-		    auto ind = welSegSet.segmentNumberToIndex(ind_seg);
+		    auto ind = welSegSet.segmentNumberToIndex(segNumber);
 		    auto outSeg = welSegSet[ind].outletSegment();
 		    auto ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
-		    auto iS = (ind_seg-1)*noElmSeg;
+		    auto iS = (segNumber-1)*noElmSeg;
 		    rSeg[iS +   0] = units.from_si(M::length, (welSegSet[ind].totalLength() - welSegSet[ind_ofs].totalLength()));
 		    rSeg[iS +   1] = units.from_si(M::length, (welSegSet[ind].depth() - welSegSet[ind_ofs].depth()));
 		    rSeg[iS +   2] = units.from_si(M::length, (welSegSet[ind].internalDiameter()));
@@ -451,17 +467,17 @@ namespace {
 		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[ind].totalLength()));
 		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[ind].depth()));
 		    
-		    //Item ind+8: should be some segment cumulative flow rate, use a constant value for now
-		    rSeg[iS +  8] = 200.;
-		    //Item ind+9: not sure what this parameter is, the current value works well for tests on E100
-		    rSeg[iS +  9] = 0.01;
-
-		    // set item ind + 10 to 0.5 based on tests on E100
-		    rSeg[iS + 10] = 0.5;
-		    //  segment pressure (to be added!!)
-		    rSeg[iS +  11] = rSeg[11];
-
-		    //Default values
+		    //see section above for explanation of values
+		    auto temp_o = - units.from_si(M::liquid_surface_rate, get("SOFR"));
+		    auto temp_w = - units.from_si(M::liquid_surface_rate, get("SWFR"))*0.1;
+		    auto temp_g = - units.from_si(M::gas_surface_rate,    get("SGFR"))*gfactor;
+		    
+		    rSeg[iS +  8] = temp_o + temp_w + temp_g;
+		    rSeg[iS +  9] = (abs(temp_w) > 0) ? temp_w / rSeg[iS + 8] : 0.;
+		    rSeg[iS + 10] = (abs(temp_g) > 0) ? temp_g / rSeg[iS + 8] : 0.;
+		    
+		    //Item 12 Segment pressure
+		    rSeg[iS +11] = units.from_si(M::pressure, get("SPR"));
 		    rSeg[iS +  39] = rSeg[iS +  11];
 
 		    rSeg[iS + 105] = 1.0;
