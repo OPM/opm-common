@@ -46,6 +46,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Deck/DeckOutput.cpp
     src/opm/parser/eclipse/Deck/Section.cpp
     src/opm/parser/eclipse/EclipseState/AquiferCT.cpp
+    src/opm/parser/eclipse/EclipseState/Aquifetp.cpp
     src/opm/parser/eclipse/EclipseState/Aquancon.cpp
     src/opm/parser/eclipse/EclipseState/checkDeck.cpp
     src/opm/parser/eclipse/EclipseState/Eclipse3DProperties.cpp
@@ -178,6 +179,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ACTIONX.cpp
     tests/parser/ADDREGTests.cpp
     tests/parser/AquiferCTTests.cpp
+    tests/parser/AquifetpTests.cpp
     tests/parser/AqudimsTests.cpp
     tests/parser/AquanconTests.cpp
     tests/parser/BoxTests.cpp
@@ -434,6 +436,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/EclipseConfig.hpp
        opm/parser/eclipse/EclipseState/Aquancon.hpp
        opm/parser/eclipse/EclipseState/AquiferCT.hpp
+       opm/parser/eclipse/EclipseState/Aquifetp.hpp
        opm/parser/eclipse/EclipseState/Schedule/ActionX.hpp
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
