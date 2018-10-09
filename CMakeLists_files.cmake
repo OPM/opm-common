@@ -246,6 +246,7 @@ endif()
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
           tests/test_AggregateWellData.cpp
+          tests/test_AggregateMSWData.cpp
           tests/test_CharArrayNullTerm.cpp
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
