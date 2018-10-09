@@ -156,7 +156,7 @@ namespace Opm {
         void initPlymaxTables(const Deck& deck);
         void initPlyrockTables(const Deck& deck);
         void initPlyshlogTables(const Deck& deck);
-        // TODO: maybe the following three tables should go to one function
+
         void initPlymwinjTables(const Deck& deck);
         void initSkprwatTables(const Deck& deck);
         void initSkprpolyTables(const Deck& deck);

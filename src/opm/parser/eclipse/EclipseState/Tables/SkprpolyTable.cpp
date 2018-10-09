@@ -32,7 +32,17 @@ namespace Opm{
 
         const DeckRecord& record0 = table.getRecord(0);
         m_table_number = record0.getItem<SKPRPOLY::TABLE_NUMBER>().get< int >(0);
+        if (m_table_number <= 0) {
+            const std::string msg = "SKPRPOLY table has non-positive table number " + std::to_string(m_table_number);
+            throw std::invalid_argument(msg);
+        }
         m_ref_polymer_concentration = record0.getItem<SKPRPOLY::POLYMERCONCENTRATION>().get< double >(0);
+        if (m_ref_polymer_concentration <= 0.) {
+            const std::string msg = "Non-positive reference polymer concentration is specified for SKPRPOLY table "i
+                                  + std::to_string(m_table_number);
+            throw std::invalid_argument(msg);
+        }
+
         m_x_points = table.getRecord(1).getItem<SKPRPOLY::THROUGHPUT>().getSIDoubleData();
         const size_t num_cols = m_x_points.size();
 

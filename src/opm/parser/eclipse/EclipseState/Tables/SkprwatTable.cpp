@@ -32,6 +32,10 @@ namespace Opm{
 
         const DeckRecord& record0 = table.getRecord(0);
         m_table_number = record0.getItem<SKPRWAT::TABLE_NUMBER>().get< int >(0);
+        if (m_table_number <= 0) {
+            const std::string msg = "SKPRWAT table has non-positive table number " + std::to_string(m_table_number);
+            throw std::invalid_argument(msg);
+        }
         m_x_points = table.getRecord(1).getItem<SKPRWAT::THROUGHPUT>().getSIDoubleData();
         const size_t num_cols = m_x_points.size();
 

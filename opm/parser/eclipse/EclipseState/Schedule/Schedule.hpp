@@ -185,8 +185,6 @@ namespace Opm
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
-
-
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep);

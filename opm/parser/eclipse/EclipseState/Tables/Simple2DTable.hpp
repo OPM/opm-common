@@ -20,9 +20,6 @@
 #ifndef OPM_PARSER_SIMPLE_2D_TABLE_HPP
 #define OPM_PARSER_SIMPLE_2D_TABLE_HPP
 
-// TODO: it is a simple version to begin with, will check whether to introduce
-// the Schemas and TableColumn
-
 #include <vector>
 
 namespace Opm {

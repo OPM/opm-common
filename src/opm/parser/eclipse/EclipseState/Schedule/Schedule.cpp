@@ -779,10 +779,11 @@ namespace Opm {
             }
 
             for (auto* well : wells) {
-                // TODO: it needs to be an injector
+                if (well->isProducer(currentStep) ) {
+                    throw std::logic_error("WPMITAB keyword can not be applied to production well " + well->name() );
+                }
                 WellPolymerProperties properties(well->getPolymerProperties(currentStep));
                 properties.m_plymwinjtable = record.getItem("TABLE_NUMBER").get<int>(0);
-                // TODO: some sanity check about the table number?
                 well->setPolymerProperties(currentStep, properties);
             }
         }
@@ -801,11 +802,12 @@ namespace Opm {
             }
 
             for (auto* well : wells) {
-                // TODO: it needs to be an injector
+                if (well->isProducer(currentStep) ) {
+                    throw std::logic_error("WSKPTAB can not be applied to production well " + well->name() );
+                }
                 WellPolymerProperties properties(well->getPolymerProperties(currentStep));
                 properties.m_skprwattable = record.getItem("TABLE_NUMBER_WATER").get<int>(0);
                 properties.m_skprpolytable = record.getItem("TABLE_NUMBER_POLYMER").get<int>(0);
-                // TODO: some sanity check about the table number?
                 well->setPolymerProperties(currentStep, properties);
             }
         }
