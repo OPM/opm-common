@@ -7,6 +7,7 @@ set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
 
 option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
+option(ENABLE_MOCKSIM "Build the mock simulator for io testing" OFF)
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
@@ -17,6 +18,7 @@ endif()
 if(NOT ENABLE_ECL_INPUT)
   set(ENABLE_ECL_OUTPUT OFF)
 endif()
+
 
 # not the same location as most of the other projects; this hook overrides
 macro (dir_hook)
@@ -129,6 +131,30 @@ endmacro (install_hook)
 
 # all setup common to the OPM library modules is done here
 include (OpmLibMain)
+
+if (ENABLE_MOCKSIM)
+  add_library(mocksim
+              msim/src/msim.cpp)
+  target_link_libraries(mocksim opmcommon)
+  target_include_directories(mocksim PUBLIC msim/include)
+  add_executable(msim examples/msim.cpp)
+  target_link_libraries(msim mocksim)
+
+  set(_libs mocksim opmcommon
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
+  foreach( test test_msim)
+     add_executable(${test} "tests/msim/${test}")
+     target_link_libraries(${test} ${_libs})
+     add_test(NAME ${test} COMMAND ${test})
+     set_tests_properties(${test} PROPERTIES WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
+
+     if(HAVE_DYNAMIC_BOOST_TEST)
+       set_target_properties(${test} PROPERTIES
+                             COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
+     endif()
+  endforeach()
+endif()
 
 # Build the compare utilities
 if(ENABLE_ECL_INPUT)
