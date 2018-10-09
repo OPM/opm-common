@@ -23,6 +23,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <vector>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
@@ -84,12 +85,14 @@ namespace Opm {
         explicit ParseContext(const std::vector<std::pair<std::string , InputError::Action>>& initial);
 
         void handleError( const std::string& errorKey, const std::string& msg ) const;
+        void handleUnknownKeyword(const std::string& keyword) const;
         bool hasKey(const std::string& key) const;
         ParseContext  withKey(const std::string& key, InputError::Action action = InputError::WARN) const;
         ParseContext& withKey(const std::string& key, InputError::Action action = InputError::WARN);
         void updateKey(const std::string& key , InputError::Action action);
         void update(InputError::Action action);
         void update(const std::string& keyString , InputError::Action action);
+        void ignoreKeyword(const std::string& keyword);
         InputError::Action get(const std::string& key) const;
         std::map<std::string,InputError::Action>::const_iterator begin() const;
         std::map<std::string,InputError::Action>::const_iterator end() const;
@@ -256,6 +259,7 @@ namespace Opm {
         void envUpdate( const std::string& envVariable , InputError::Action action );
         void patternUpdate( const std::string& pattern , InputError::Action action);
         std::map<std::string , InputError::Action> m_errorContexts;
+        std::set<std::string> ignore_keywords;
 }; }
 
 

@@ -417,7 +417,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
     if( !parser.isRecognizedKeyword( keywordString ) ) {
         if( ParserKeyword::validDeckName( keywordString ) ) {
             std::string msg = "Keyword " + keywordString + " not recognized.";
-            parserState.parseContext.handleError( ParseContext::PARSE_UNKNOWN_KEYWORD, msg );
+            parserState.parseContext.handleUnknownKeyword( keywordString.string() );
             parserState.unknown_keyword = true;
             return {};
         }
