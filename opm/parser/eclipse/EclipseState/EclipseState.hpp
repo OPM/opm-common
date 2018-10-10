@@ -102,7 +102,13 @@ namespace Opm {
 
         const Runspec& runspec() const;
 
+        static void setTransmissibilityInitializer(const TransmissibilityInitializer* transInit)
+        { m_transInit = transInit; }
+        static TransmissibilityInitializer* transmissibilityInitializer()
+        { return m_transInit; }
+
     private:
+        const TransmissibilityInitializer* m_transInit = nullptr;
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
         void initFaults(const Deck& deck);

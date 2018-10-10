@@ -520,6 +520,21 @@ std::vector< double > temperature_lookup( size_t size,
         return std::vector< double >( size, tables->rtemp( ) );
 }
 
+std::vector< double > trans_lookup( size_t size,
+                                    const TableManager* tables,
+                                    const EclipseGrid* grid,
+                                    const GridProperties<int>* ig_props )
+{
+  const TransmissibilityInitialzer* transIni = EclipseState::transmissibilityInitializer();
+  if (transIni)
+    transIni->setup();
+  //extract();
+  else
+   //useNaN;
+
+
+}
+
 }
 
 template class Opm::GridPropertySupportedKeywordInfo< int >;

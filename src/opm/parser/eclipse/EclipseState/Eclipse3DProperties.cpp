@@ -266,6 +266,7 @@ namespace Opm {
         const auto IKRGRLookup  = std::bind( IKRGREndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
 
         const auto tempLookup = std::bind( temperature_lookup, _1, tableManager, eclipseGrid, intGridProperties );
+        const auto transCalculator = std::bind( trans_calculator, _1, tableManager, eclipseGrid, intGridProperties );
 
         const auto distributeTopLayer = std::bind( &distTopLayer, _1, eclipseGrid );
 
@@ -415,8 +416,8 @@ namespace Opm {
         /* the transmissibility keywords for neighboring connections. note that
          * these keywords don't seem to require a post-processor
          */
-        for( const auto& kw : { "TRANX", "TRANY", "TRANZ" } )
-            supportedDoubleKeywords.emplace_back( kw, nan, "Transmissibility" );
+        for( const auto& kw : { "TRANX", "TRANY", "TRANZ", "TRANNNC" } )
+            supportedDoubleKeywords.emplace_back( kw, transCalculator , "Transmissibility", true );
 
         /* gross-to-net thickness (acts as a multiplier for PORO and the
          * permeabilities in the X-Y plane as well as for the well rates.)

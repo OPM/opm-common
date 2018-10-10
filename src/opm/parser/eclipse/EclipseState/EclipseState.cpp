@@ -182,6 +182,24 @@ namespace Opm {
             m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
     }
 
+    void EclipseState::initTrans() {
+        const auto& p = m_eclipseProperties;
+        if (m_eclipseProperties.hasDeckDoubleGridProperty("TRANX"))
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX"), FaceDir::XPlus);
+        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX-"))
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX-"), FaceDir::XMinus);
+
+        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY"))
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY"), FaceDir::YPlus);
+        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY-"))
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY-"), FaceDir::YMinus);
+
+        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ"))
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ"), FaceDir::ZPlus);
+        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ-"))
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
+    }
+
     void EclipseState::initFaults(const Deck& deck) {
         const GRIDSection gridSection ( deck );
 
