@@ -24,7 +24,6 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
@@ -32,9 +31,8 @@
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
-//#include <opm/output/data/Wells.hpp>
-
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstring>
 #include <string>
@@ -127,9 +125,9 @@ namespace {
 	return firstSegNo;
     }
 
-     int noConnectionsSegment(const Opm::WellConnections& compSet,
+    int noConnectionsSegment(const Opm::WellConnections& compSet,
                              const Opm::WellSegments&    segSet,
-                             const std::size_t              segIndex)
+                             const std::size_t           segIndex)
     {
 	auto segNumber  = segSet[segIndex].segmentNumber();
 	int noConnections = 0;
@@ -142,10 +140,10 @@ namespace {
 
 	return noConnections;
     }
-    
+
     int sumConnectionsSegment(const Opm::WellConnections& compSet,
-                                 const Opm::WellSegments&    segSet,
-                                 const std::size_t              segIndex)
+                              const Opm::WellSegments&    segSet,
+                              const std::size_t           segIndex)
     {
       // This function returns (for a given segment) the sum of number of connections for each segment
       // with lower segment index than the currnet segment
@@ -163,7 +161,6 @@ namespace {
 	return sumConn;
     }
 
-    
     std::vector<std::size_t>
     inflowSegmentsIndex(const Opm::WellSegments& segSet, std::size_t segIndex) {
 	auto segNumber  = segSet[segIndex].segmentNumber();
@@ -190,6 +187,7 @@ namespace {
 	}
 	return noIFBr;
     }
+
     //find the number of inflow branches (different from the current branch)
     int sumNoInFlowBranches(const Opm::WellSegments& segSet, std::size_t segIndex) {
 	int sumIFB = 0;
@@ -206,9 +204,8 @@ namespace {
 	}
 	return sumIFB;
     }
-    
 
-     std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet, const std::size_t segIndex) {
+    std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet, const std::size_t segIndex) {
 	std::vector<std::size_t> ordSegNumber;
 	std::vector<std::size_t> tempOrdVect;
 	std::vector<std::size_t> segIndCB;
@@ -219,7 +216,7 @@ namespace {
 	bool endOrigBranch = true;
 	// loop down branch to find all segments in branch and number from "toe" to "heel"
 	while (newSInd < segSet.size()) {
-	       endOrigBranch = true;
+		endOrigBranch = true;
 		const auto iSInd = inflowSegmentsIndex(segSet, newSInd);
 		for (auto isi : iSInd )  {
 			auto inflowBranch = segSet[isi].branchNumber();
@@ -258,7 +255,6 @@ namespace {
 		    // set new index to exit while loop
 		    newSInd = segSet.size();
 		}
-	    //}
 	}
 
 	if (origBranchNo == 1) {
@@ -273,7 +269,6 @@ namespace {
 	}
     }
 
-    
     int inflowSegmentCurBranch(const Opm::WellSegments& segSet, std::size_t segIndex) {
 	auto branch = segSet[segIndex].branchNumber();
 	auto segNumber  = segSet[segIndex].segmentNumber();
@@ -387,32 +382,33 @@ namespace {
         }
 
         template <class RSegArray>
-        void staticContrib(const Opm::Well&        well,
-                           const std::size_t       rptStep,
-                           const std::vector<int>& inteHead,
-			   const Opm::UnitSystem& units,
+        void staticContrib(const Opm::Well&           well,
+                           const std::size_t          rptStep,
+                           const std::vector<int>&    inteHead,
+			   const Opm::UnitSystem&     units,
 			   const ::Opm::SummaryState& smry,
-                           RSegArray&              rSeg)
+                           RSegArray&                 rSeg)
         {
 	    if (well.isMultiSegment(rptStep)) {
 		int segNumber = 1;
 		std::string stringSegNum = std::to_string(segNumber);
 		using M = ::Opm::UnitSystem::measure;
-		const auto gfactor =   (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
-		  ? 0.1781076 : 0.001;
-	
+		const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
+		    ? 0.1781076 : 0.001;
+
 		//loop over segment set and print out information
 		auto welSegSet = well.getWellSegments(rptStep);
 		auto completionSet = well.getCompletions(rptStep);
 		auto noElmSeg = nrsegz(inteHead);
 		auto&  wname = well.name();
-		std::string bhpKey = "WBHP:" + wname;
+
 		auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
 		{
-		    const auto key = vector + ":" + wname + ":(" + stringSegNum + ")";
+		    const auto key = vector + ':' + wname + ':' + stringSegNum;
 		    return smry.has(key) ? smry.get(key) : 0.0;
 		};
-		//treat the top segment individually
+
+		// Treat the top segment individually
 		rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
 		rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
 		rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
@@ -425,19 +421,22 @@ namespace {
 		//Rseg[10]= sgfr*0.1781076*/ Rseg[8]
 
 		//Metric units:
-		//Rseg[8]= 1.0*sofr+0.1*swfr + 0.001*sgfr   
+		//Rseg[8]= 1.0*sofr+0.1*swfr + 0.001*sgfr
 		//Rseg[9] = swfr*0.1/ Rseg[8]
 		//Rseg[10]= sgfr*0.001/ Rseg[8] 
-		auto temp_o = - units.from_si(M::liquid_surface_rate, get("SOFR"));
-		auto temp_w = - units.from_si(M::liquid_surface_rate, get("SWFR"))*0.1;
-		auto temp_g = - units.from_si(M::gas_surface_rate,    get("SGFR"))*gfactor;
-		
+
+		// Note: Segment flow rates and pressure from 'smry' have correct
+		// output units and sign conventions.
+		auto temp_o = get("SOFR");
+		auto temp_w = get("SWFR")*0.1;
+		auto temp_g = get("SGFR")*gfactor;
+
 		rSeg[ 8] = temp_o + temp_w + temp_g;
-		rSeg[ 9] = (abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
-		rSeg[10] = (abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
-		
+		rSeg[ 9] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
+		rSeg[10] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
+
 		//Item 12 Segment pressure
-		rSeg[11] = units.from_si(M::pressure, get("SPR"));
+		rSeg[11] = get("SPR");
 		//  segment pressure  
 		rSeg[ 39] = rSeg[11];
 
@@ -466,18 +465,18 @@ namespace {
 		    rSeg[iS +   5] = units.from_si(M::volume, (welSegSet[ind].volume()));
 		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[ind].totalLength()));
 		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[ind].depth()));
-		    
+
 		    //see section above for explanation of values
-		    auto temp_o = - units.from_si(M::liquid_surface_rate, get("SOFR"));
-		    auto temp_w = - units.from_si(M::liquid_surface_rate, get("SWFR"))*0.1;
-		    auto temp_g = - units.from_si(M::gas_surface_rate,    get("SGFR"))*gfactor;
-		    
+		    temp_o = get("SOFR");
+		    temp_w = get("SWFR")*0.1;
+		    temp_g = get("SGFR")*gfactor;
+
 		    rSeg[iS +  8] = temp_o + temp_w + temp_g;
-		    rSeg[iS +  9] = (abs(temp_w) > 0) ? temp_w / rSeg[iS + 8] : 0.;
-		    rSeg[iS + 10] = (abs(temp_g) > 0) ? temp_g / rSeg[iS + 8] : 0.;
-		    
+		    rSeg[iS +  9] = (std::abs(temp_w) > 0) ? temp_w / rSeg[iS + 8] : 0.;
+		    rSeg[iS + 10] = (std::abs(temp_g) > 0) ? temp_g / rSeg[iS + 8] : 0.;
+
 		    //Item 12 Segment pressure
-		    rSeg[iS +11] = units.from_si(M::pressure, get("SPR"));
+		    rSeg[iS +  11] = get("SPR");
 		    rSeg[iS +  39] = rSeg[iS +  11];
 
 		    rSeg[iS + 105] = 1.0;
@@ -489,7 +488,7 @@ namespace {
 		}
 	    }
 	    else {
-	      throw std::invalid_argument("No such multisegment well: " + well.name());
+		throw std::invalid_argument("No such multisegment well: " + well.name());
 	    }
         }
     } // RSeg
