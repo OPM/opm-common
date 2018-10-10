@@ -23,8 +23,10 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <cstddef>
 #include <exception>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/smspec_node.h>
@@ -48,6 +50,18 @@
 
 using namespace Opm;
 using rt = data::Rates::opt;
+
+namespace {
+    double sm3_pr_day()
+    {
+       return unit::cubic(unit::meter) / unit::day;
+    }
+} // Anonymous
+
+namespace SegmentResultHelpers {
+    data::Well prod01_results();
+    data::Well inje01_results();
+} // SegmentResultHelpers
 
 /* conversion factor for whenever 'day' is the unit of measure, whereas we
  * expect input in SI units (seconds)
@@ -145,11 +159,10 @@ static data::Wells result_wells() {
     crates3.set( rt::reservoir_gas, 300.8 / day );
 
     // Segment vectors
-    const auto sm3_pr_day = unit::cubic(unit::meter) / day;
     auto segment = ::Opm::data::Segment{};
-    segment.rates.set(rt::wat, 123.45*sm3_pr_day);
-    segment.rates.set(rt::oil, 543.21*sm3_pr_day);
-    segment.rates.set(rt::gas, 1729.496*sm3_pr_day);
+    segment.rates.set(rt::wat,  123.45*sm3_pr_day());
+    segment.rates.set(rt::oil,  543.21*sm3_pr_day());
+    segment.rates.set(rt::gas, 1729.496*sm3_pr_day());
     segment.pressure = 314.159*unit::barsa;
     segment.segNumber = 1;
 
@@ -180,6 +193,9 @@ static data::Wells result_wells() {
     wellrates["W_1"] = well1;
     wellrates["W_2"] = well2;
     wellrates["W_3"] = well3;
+
+    wellrates["INJE01"] = SegmentResultHelpers::inje01_results();
+    wellrates["PROD01"] = SegmentResultHelpers::prod01_results();
 
     return wellrates;
 }
@@ -1195,12 +1211,10 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
             BOOST_CHECK_CLOSE( wellRatesCopy.get( "W_1" , rt::wat) , wellRates.get( "W_1" , rt::wat), 1e-16);
             BOOST_CHECK_CLOSE( wellRatesCopy.get( "W_2" , 101 , rt::wat) , wellRates.get( "W_2" , 101 , rt::wat), 1e-16);
 
-            const auto sm3_pr_day = unit::cubic(unit::meter) / day;
-
             const auto& seg = wellRatesCopy.at("W_1").segments.at(1);
-            BOOST_CHECK_CLOSE(seg.rates.get(rt::wat),  123.45*sm3_pr_day, 1.0e-10);
-            BOOST_CHECK_CLOSE(seg.rates.get(rt::oil),  543.21*sm3_pr_day, 1.0e-10);
-            BOOST_CHECK_CLOSE(seg.rates.get(rt::gas), 1729.496*sm3_pr_day, 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::wat),  123.45*sm3_pr_day(), 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::oil),  543.21*sm3_pr_day(), 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::gas), 1729.496*sm3_pr_day(), 1.0e-10);
             BOOST_CHECK_CLOSE(seg.pressure, 314.159*unit::barsa, 1.0e-10);
             BOOST_CHECK_EQUAL(seg.segNumber, 1);
 
@@ -1320,6 +1334,15 @@ namespace {
     {
         return calculateRestartVectors({
             "test.Restart.EffFac", "SUMMARY_EFF_FAC.DATA"
+        });
+    }
+
+    auto calculateRestartVectorsSegment()
+        -> decltype(calculateRestartVectors({"test.Restart.Segment",
+                                             "SOFR_TEST.DATA"}))
+    {
+        return calculateRestartVectors({
+            "test.Restart.Segment", "SOFR_TEST.DATA"
         });
     }
 
@@ -1987,6 +2010,270 @@ BOOST_AUTO_TEST_CASE(Field_Vectors_Correct)
     BOOST_CHECK_CLOSE(rstrt.get("FGOR"),
                       (10.2 + (efac_G * 20.2)) /
                       (10.1 + (efac_G * 20.1)), 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// ####################################################################
+
+namespace {
+    void fill_surface_rates(const std::size_t id,
+                            const double      sign,
+                            data::Rates&      rates)
+    {
+        const auto topRate = id * 1000*sm3_pr_day();
+
+        rates.set(data::Rates::opt::wat, sign * (topRate + 100*sm3_pr_day()));
+        rates.set(data::Rates::opt::oil, sign * (topRate + 200*sm3_pr_day()));
+        rates.set(data::Rates::opt::gas, sign * (topRate + 400*sm3_pr_day()));
+    }
+
+    std::size_t numSegProd01()
+    {
+        return 26;
+    }
+
+    data::Connection conn_results(const std::size_t connID,
+                                  const std::size_t cellID,
+                                  const double      sign)
+    {
+        auto res = data::Connection{};
+
+        res.index = cellID;
+
+        fill_surface_rates(connID, sign, res.rates);
+
+        // Not meant to be realistic, other than possibly order of magnitude.
+        res.pressure       = (200.0 + connID)*unit::barsa;
+        res.reservoir_rate = (125.0 + connID)*sm3_pr_day();
+        res.cell_pressure  = (250.0 + cellID)*unit::barsa;
+
+        return res;
+    }
+
+    data::Segment seg_results(const std::size_t segID, const double sign)
+    {
+        auto res = data::Segment{};
+
+        fill_surface_rates(segID, sign, res.rates);
+
+        res.pressure = (100.0 + segID)*unit::barsa;
+
+        res.segNumber = segID;
+
+        return res;
+    }
+
+    std::unordered_map<std::size_t, data::Segment> prod01_seg_results()
+    {
+        auto res = std::unordered_map<std::size_t, data::Segment>{};
+
+        // Flow's producer rates are negative (positive fluxes well -> reservoir).
+        const auto sign = -1.0;
+
+        for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+             segID < nSeg; ++segID)
+        {
+            res[segID + 1] = seg_results(segID + 1, sign);
+        }
+
+        return res;
+    }
+
+    std::vector<data::Connection> prod01_conn_results()
+    {
+        auto res = std::vector<data::Connection>{};
+        res.reserve(26);
+
+        const auto cellID = std::vector<std::size_t> {
+             99, // IJK = (10, 10,  1)
+            199, // IJK = (10, 10,  2)
+            299, // IJK = (10, 10,  3)
+            399, // IJK = (10, 10,  4)
+            499, // IJK = (10, 10,  5)
+            599, // IJK = (10, 10,  6)
+
+            198, // IJK = ( 9, 10,  2)
+            197, // IJK = ( 8, 10,  2)
+            196, // IJK = ( 7, 10,  2)
+            195, // IJK = ( 6, 10,  2)
+            194, // IJK = ( 5, 10,  2)
+
+            289, // IJK = (10,  9,  3)
+            279, // IJK = (10,  8,  3)
+            269, // IJK = (10,  7,  3)
+            259, // IJK = (10,  6,  3)
+            249, // IJK = (10,  5,  3)
+
+            498, // IJK = ( 9, 10,  5)
+            497, // IJK = ( 8, 10,  5)
+            496, // IJK = ( 7, 10,  5)
+            495, // IJK = ( 6, 10,  5)
+            494, // IJK = ( 5, 10,  5)
+
+            589, // IJK = (10,  9,  6)
+            579, // IJK = (10,  8,  6)
+            569, // IJK = (10,  7,  6)
+            559, // IJK = (10,  6,  6)
+            549, // IJK = (10,  5,  6)
+        };
+
+        // Flow's producer rates are negative (positive fluxes well -> reservoir).
+        const auto sign = -1.0;
+
+        for (auto nConn = cellID.size(), connID = 0*nConn;
+             connID < nConn; ++connID)
+        {
+            res.push_back(conn_results(connID, cellID[connID], sign));
+        }
+
+        return res;
+    }
+
+    std::vector<data::Connection> inje01_conn_results()
+    {
+        auto res = std::vector<data::Connection>{};
+        res.reserve(3);
+
+        const auto cellID = std::vector<std::size_t> {
+            600, // IJK = ( 1,  1,  7)
+            700, // IJK = ( 1,  1,  8)
+            800, // IJK = ( 1,  1,  9)
+        };
+
+        // Flow's injection rates are positive (positive fluxes well -> reservoir).
+        const auto sign = +1.0;
+
+        for (auto nConn = cellID.size(), connID = 0*nConn;
+             connID < nConn; ++connID)
+        {
+            res.push_back(conn_results(connID, cellID[connID], sign));
+        }
+
+        return res;
+    }
+
+    std::string genKeyPROD01(const std::string& vector,
+                             const std::size_t  segID)
+    {
+        return vector + ":PROD01:" + std::to_string(segID);
+    }
+} // Anonymous
+
+data::Well SegmentResultHelpers::prod01_results()
+{
+    auto res = data::Well{};
+
+    fill_surface_rates(0, -1.0, res.rates);
+
+    res.bhp         = 123.45*unit::barsa;
+    res.thp         = 60.221409*unit::barsa;
+    res.temperature = 298.15;
+    res.control     = 0;
+
+    res.connections = prod01_conn_results();
+    res.segments    = prod01_seg_results();
+
+    return res;
+}
+
+data::Well SegmentResultHelpers::inje01_results()
+{
+    auto res = data::Well{};
+
+    fill_surface_rates(0, 1.0, res.rates);
+
+    res.bhp         = 543.21*unit::barsa;
+    res.thp         = 256.821*unit::barsa;
+    res.temperature = 298.15;
+    res.control     = 0;
+
+    res.connections = inje01_conn_results();
+
+    return res;
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_SUITE(Restart_Segment)
+
+BOOST_AUTO_TEST_CASE(Vectors_Present)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+
+    for (const auto* vector : { "SGFR", "SGFR", "SPR", "SWFR"}) {
+        for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+             segID < nSeg; ++segID)
+        {
+            BOOST_CHECK(rstrt.has(genKeyPROD01(vector, segID + 1)));
+        }
+
+        BOOST_CHECK(!rstrt.has(genKeyPROD01(vector, 27)));
+        BOOST_CHECK(!rstrt.has(vector + std::string{":INJE01:1"}));
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(Pressure_Correct)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+    for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+         segID < nSeg; ++segID)
+    {
+        const auto& key = genKeyPROD01("SPR", segID + 1);
+
+        // Pressure value converted to METRIC output units (bars).
+        BOOST_CHECK_CLOSE(rstrt.get(key), 100.0 + (segID + 1), 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(OilRate_Correct)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+    for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+         segID < nSeg; ++segID)
+    {
+        const auto& key = genKeyPROD01("SOFR", segID + 1);
+
+        // Producer rates positive in 'rstrt', converted to METRIC
+        // output units (SM3/day).
+        BOOST_CHECK_CLOSE(rstrt.get(key), 1000.0*(segID + 1) + 200, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(GasRate_Correct)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+    for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+         segID < nSeg; ++segID)
+    {
+        const auto& key = genKeyPROD01("SGFR", segID + 1);
+
+        // Producer rates positive in 'rstrt', converted to METRIC
+        // output units (SM3/day).
+        BOOST_CHECK_CLOSE(rstrt.get(key), 1000.0*(segID + 1) + 400, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(WaterRate_Correct)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+    for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+         segID < nSeg; ++segID)
+    {
+        const auto& key = genKeyPROD01("SWFR", segID + 1);
+
+        // Producer rates positive in 'rstrt', converted to METRIC
+        // output units (SM3/day).
+        BOOST_CHECK_CLOSE(rstrt.get(key), 1000.0*(segID + 1) + 100, 1.0e-10);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

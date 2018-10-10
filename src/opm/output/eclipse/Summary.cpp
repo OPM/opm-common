@@ -1019,7 +1019,10 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     const auto* name = smspec_node_get_wgname( node );
     const auto type = smspec_node_get_var_type( node );
 
-    if( type == ECL_SMSPEC_WELL_VAR || type == ECL_SMSPEC_COMPLETION_VAR ) {
+    if ((type == ECL_SMSPEC_WELL_VAR) ||
+        (type == ECL_SMSPEC_COMPLETION_VAR) ||
+        (type == ECL_SMSPEC_SEGMENT_VAR))
+    {
         const auto* well = schedule.getWell( name );
         if( !well ) return {};
         return { well };
