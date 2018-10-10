@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
@@ -520,20 +521,53 @@ std::vector< double > temperature_lookup( size_t size,
         return std::vector< double >( size, tables->rtemp( ) );
 }
 
-std::vector< double > trans_lookup( size_t size,
-                                    const TableManager* tables,
-                                    const EclipseGrid* grid,
-                                    const GridProperties<int>* ig_props )
+
+std::vector< double > transX_lookup( size_t size,
+                                     const Deck* deck,
+                                     const EclipseState* state)
 {
-  const TransmissibilityInitialzer* transIni = EclipseState::transmissibilityInitializer();
-  if (transIni)
-    transIni->setup();
-  //extract();
-  else
-   //useNaN;
-
-
+    TransmissibilityInitializer* transIni = EclipseState::transmissibilityInitializer();
+    if (transIni) {
+        transIni->setup(*deck, *state);
+        return transIni->tranx();
+    }
+    std::vector<double> def(size, std::numeric_limits<double>::quiet_NaN());
+    return def;
 }
+std::vector< double > transY_lookup( size_t size,
+                                    const Deck* deck,
+                                     const EclipseState* state)
+{
+    TransmissibilityInitializer* transIni = EclipseState::transmissibilityInitializer();
+    if (transIni) {
+        transIni->setup(*deck, *state);
+        return transIni->trany();
+    }
+    std::vector<double> def(size, std::numeric_limits<double>::quiet_NaN());
+    return def;
+}
+std::vector< double > transZ_lookup( size_t size,
+                                     const Deck* deck,
+                                     const EclipseState* state) {
+    TransmissibilityInitializer* transIni = EclipseState::transmissibilityInitializer();
+    if (transIni) {
+        transIni->setup(*deck, *state);
+        return transIni->tranz();
+    }
+    std::vector<double> def(size, std::numeric_limits<double>::quiet_NaN());
+    return def;
+}
+
+//std::vector< double > transNnc_lookup( size_t size,
+//                                       const EclipseState* state) {
+//    TransmissibilityInitializer* transIni = EclipseState::transmissibilityInitializer();
+//    if (transIni) {
+//        transIni->setup(*state);
+//        return transIni->trannnc();
+//    }
+//    std::vector<double> def(size, std::numeric_limits<double>::quiet_NaN());
+//    return def;
+//}
 
 }
 

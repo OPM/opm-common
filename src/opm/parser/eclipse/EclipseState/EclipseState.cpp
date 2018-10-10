@@ -48,8 +48,9 @@
 
 
 namespace Opm {
+    TransmissibilityInitializer* EclipseState::m_transInit;
 
-    EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
+    EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :        
         m_parseContext(      parseContext ),
         m_tables(            deck ),
         m_runspec(           deck ),
@@ -57,7 +58,7 @@ namespace Opm {
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_inputNnc(          deck ),
         m_inputGrid(         deck, nullptr ),
-        m_eclipseProperties( deck, m_tables, m_inputGrid ),
+        m_eclipseProperties( m_tables, m_inputGrid, deck, *this ),
         m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, m_eclipseProperties ),
         m_transMult(         GridDims(deck), deck, m_eclipseProperties )
     {
@@ -167,24 +168,6 @@ namespace Opm {
     void EclipseState::initTransMult() {
         const auto& p = m_eclipseProperties;
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX"), FaceDir::XPlus);
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX-"), FaceDir::XMinus);
-
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY"), FaceDir::YPlus);
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY-"), FaceDir::YMinus);
-
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ"), FaceDir::ZPlus);
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
-    }
-
-    void EclipseState::initTrans() {
-        const auto& p = m_eclipseProperties;
-        if (m_eclipseProperties.hasDeckDoubleGridProperty("TRANX"))
             m_transMult.applyMULT(p.getDoubleGridProperty("MULTX"), FaceDir::XPlus);
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX-"))
             m_transMult.applyMULT(p.getDoubleGridProperty("MULTX-"), FaceDir::XMinus);

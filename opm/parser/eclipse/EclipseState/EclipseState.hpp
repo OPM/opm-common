@@ -46,6 +46,7 @@ namespace Opm {
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
+    class EclipseState;
     class InitConfig;
     class IOConfig;
     class ParseContext;
@@ -54,6 +55,17 @@ namespace Opm {
     class SimulationConfig;
     class TableManager;
     class UnitSystem;
+
+    class TransmissibilityInitializer {
+    public:
+        TransmissibilityInitializer() {}
+        virtual ~ TransmissibilityInitializer() {}
+        virtual void setup(const Deck& deck, const EclipseState& eclState) = 0;
+        virtual const std::vector<double>& tranx() = 0;
+        virtual const std::vector<double>& trany() = 0;
+        virtual const std::vector<double>& tranz() = 0;
+        virtual const std::map<std::pair<int,int>, double>& trannnc() = 0;
+    };
 
     class EclipseState {
     public:
@@ -102,13 +114,13 @@ namespace Opm {
 
         const Runspec& runspec() const;
 
-        static void setTransmissibilityInitializer(const TransmissibilityInitializer* transInit)
+        static void setTransmissibilityInitializer(TransmissibilityInitializer* transInit)
         { m_transInit = transInit; }
         static TransmissibilityInitializer* transmissibilityInitializer()
         { return m_transInit; }
 
     private:
-        const TransmissibilityInitializer* m_transInit = nullptr;
+        static TransmissibilityInitializer* m_transInit;
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
         void initFaults(const Deck& deck);

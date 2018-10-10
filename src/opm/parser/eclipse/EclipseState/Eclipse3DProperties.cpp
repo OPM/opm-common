@@ -225,6 +225,8 @@ namespace Opm {
     static std::vector< GridProperties< double >::SupportedKeywordInfo >
     makeSupportedDoubleKeywords(const TableManager*        tableManager,
                                 const EclipseGrid*         eclipseGrid,
+                                const Deck*                deck,
+                                const EclipseState*        eclipseState,
                                 GridProperties<int>* intGridProperties)
     {
         using std::placeholders::_1;
@@ -266,7 +268,11 @@ namespace Opm {
         const auto IKRGRLookup  = std::bind( IKRGREndpoint,  _1, tableManager, eclipseGrid, intGridProperties );
 
         const auto tempLookup = std::bind( temperature_lookup, _1, tableManager, eclipseGrid, intGridProperties );
-        const auto transCalculator = std::bind( trans_calculator, _1, tableManager, eclipseGrid, intGridProperties );
+        const auto transXCalculator = std::bind( transX_lookup, _1, deck, eclipseState);
+        const auto transYCalculator = std::bind( transY_lookup, _1, deck, eclipseState);
+        const auto transZCalculator = std::bind( transZ_lookup, _1, deck, eclipseState);
+        //const auto transNncCalculator = std::bind( transNnc_lookup, _1, eclipseState);
+
 
         const auto distributeTopLayer = std::bind( &distTopLayer, _1, eclipseGrid );
 
@@ -413,12 +419,6 @@ namespace Opm {
         /* A pure OPM keyword */
         supportedDoubleKeywords.emplace_back( "RHO", nan, "Density" );
 
-        /* the transmissibility keywords for neighboring connections. note that
-         * these keywords don't seem to require a post-processor
-         */
-        for( const auto& kw : { "TRANX", "TRANY", "TRANZ", "TRANNNC" } )
-            supportedDoubleKeywords.emplace_back( kw, transCalculator , "Transmissibility", true );
-
         /* gross-to-net thickness (acts as a multiplier for PORO and the
          * permeabilities in the X-Y plane as well as for the well rates.)
          */
@@ -427,6 +427,15 @@ namespace Opm {
         // transmissibility multipliers
         for( const auto& kw : { "MULTX", "MULTY", "MULTZ", "MULTX-", "MULTY-", "MULTZ-" } )
             supportedDoubleKeywords.emplace_back( kw, 1.0, "1", true );
+
+        /* the transmissibility keywords for neighboring connections. note that
+         * these keywords don't seem to require a post-processor
+         */
+        supportedDoubleKeywords.emplace_back( "TRANX", transXCalculator , "Transmissibility", true );
+        supportedDoubleKeywords.emplace_back( "TRANY", transYCalculator , "Transmissibility", true );
+        supportedDoubleKeywords.emplace_back( "TRANZ", transZCalculator , "Transmissibility", true );
+        //supportedDoubleKeywords.emplace_back( "TRANNNC", transNncCalculator , "Transmissibility", true );
+
 
         // initialisation
         supportedDoubleKeywords.emplace_back( "SWATINIT", 0.0, "1", true );
@@ -446,7 +455,9 @@ namespace Opm {
 
     Eclipse3DProperties::Eclipse3DProperties( UnitSystem unit_system,
                                               const TableManager& tableManager,
-                                              const EclipseGrid& eclipseGrid):
+                                              const EclipseGrid& eclipseGrid,
+                                              const Deck &deck,
+                                              const EclipseState& eclipseState):
         m_defaultRegion("FLUXNUM"),
         m_deckUnitSystem(unit_system),
         // Note that the variants of grid keywords for radial grids are not
@@ -454,13 +465,14 @@ namespace Opm {
         // register the grid properties
         m_intGridProperties(eclipseGrid, makeSupportedIntKeywords()),
         m_doubleGridProperties(eclipseGrid, &unit_system,
-                               makeSupportedDoubleKeywords(&tableManager, &eclipseGrid, &m_intGridProperties))
+                               makeSupportedDoubleKeywords(&tableManager, &eclipseGrid, &deck, &eclipseState, &m_intGridProperties))
     {
     }
 
-    Eclipse3DProperties::Eclipse3DProperties( const Deck&         deck,
-                                              const TableManager& tableManager,
-                                              const EclipseGrid&  eclipseGrid)
+    Eclipse3DProperties::Eclipse3DProperties( const TableManager& tableManager,
+                                              const EclipseGrid&  eclipseGrid,
+                                              const Deck &deck,
+                                              const EclipseState& eclipseState)
         :
 
           m_defaultRegion("FLUXNUM"),
@@ -470,7 +482,7 @@ namespace Opm {
           // register the grid properties
           m_intGridProperties(eclipseGrid, makeSupportedIntKeywords()),
           m_doubleGridProperties(eclipseGrid, &m_deckUnitSystem,
-                                 makeSupportedDoubleKeywords(&tableManager, &eclipseGrid, &m_intGridProperties))
+                                 makeSupportedDoubleKeywords(&tableManager, &eclipseGrid, &deck, &eclipseState, &m_intGridProperties))
     {
         /*
          * The EQUALREG, MULTREG, COPYREG, ... keywords are used to manipulate

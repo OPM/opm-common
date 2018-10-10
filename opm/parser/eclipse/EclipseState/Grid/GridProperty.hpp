@@ -36,6 +36,8 @@ namespace Opm {
     class DeckKeyword;
     class EclipseGrid;
     class TableManager;
+    class Deck;
+    class EclipseState;
     template< typename > class GridProperties;
 
 template< typename T >
@@ -200,6 +202,21 @@ std::vector< double > temperature_lookup( size_t,
                                           const TableManager*,
                                           const EclipseGrid*,
                                           const GridProperties<int>* );
+
+std::vector< double > transX_lookup(size_t,
+                                    const Deck *deck,
+                                   const EclipseState *state);
+std::vector< double > transY_lookup(size_t,
+                                    const Deck *deck,
+                                    const EclipseState *state);
+std::vector< double > transZ_lookup(size_t,
+                                    const Deck *deck,
+                                   const EclipseState *state);
+//std::vector< double > transNnc_lookup(size_t,
+//                                   const EclipseState *state);
+
 }
+
+
 
 #endif
