@@ -147,8 +147,10 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::EclipseGrid grid(10,10,10);
     Opm::TableManager tables;
     Opm::Parser parser;
-    const auto deck = parser.parseString(compdat_keyword, Opm::ParseContext());
-    Opm::Eclipse3DProperties props(deck, tables, grid );
+    const auto deck = parser.parseString(compdat_keyword, Opm::ParseContext());   
+    Opm::EclipseState state(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties props(tables, grid, deck, state);
+
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Opm::WellConnections connections;
     std::size_t totnc = 0;

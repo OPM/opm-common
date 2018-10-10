@@ -210,6 +210,7 @@ struct Setup
     Deck deck;
     TableManager tablemanager;
     EclipseGrid grid;
+    EclipseState eclipseState;
     Eclipse3DProperties props;
     InitConfig initConfig;
     ThresholdPressure threshPres;
@@ -219,7 +220,8 @@ struct Setup
             deck(createDeck(parseContext, input)),
             tablemanager(deck),
             grid(10, 3, 4),
-            props(deck, tablemanager, grid),
+            eclipseState(deck, Opm::ParseContext()),
+            props(tablemanager, grid, deck, eclipseState),
             initConfig(deck),
             threshPres(initConfig.restartRequested(), deck, props)
     {
@@ -229,7 +231,8 @@ struct Setup
             deck(createDeck(parseContextArg, input)),
             tablemanager(deck),
             grid(10, 3, 4),
-            props(deck, tablemanager, grid),
+            eclipseState(deck, Opm::ParseContext()),
+            props(tablemanager, grid, deck, eclipseState),
             initConfig(deck),
             threshPres(initConfig.restartRequested(), deck, props)
     {

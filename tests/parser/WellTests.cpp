@@ -227,7 +227,8 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     auto deck = parser.parseString(input, parseContext);
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    EclipseState eclipseState(deck, ParseContext());
+    Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
     Opm::Schedule schedule(deck, grid , eclipseProperties, Opm::Phases(true, true, true) , Opm::ParseContext());
     auto* op_1 = schedule.getWell("OP_1");
 
@@ -268,7 +269,8 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     auto deck = parser.parseString(input, parseContext);
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    EclipseState eclipseState(deck, ParseContext());
+    Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
     Opm::Schedule schedule(deck, grid , eclipseProperties, Opm::Phases(true, true, true) , Opm::ParseContext());
     auto* op_1 = schedule.getWell("OP_1");
 
@@ -311,7 +313,8 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     auto deck = parser.parseString(input, parseContext);
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    EclipseState eclipseState(deck, ParseContext());
+    Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
     Opm::Schedule schedule(deck, grid , eclipseProperties, Opm::Phases(true, true, true) , Opm::ParseContext());
     auto* op_1 = schedule.getWell("OP_1");
 

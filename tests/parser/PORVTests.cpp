@@ -256,10 +256,11 @@ BOOST_AUTO_TEST_CASE(PORV_cartesianDeck) {
     Opm::Deck deck = createCARTDeck();
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
-    Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& poro = props.getDoubleGridProperty("PORO");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, grid, deck, eclipseState);
+    const auto& poro = eclipseProperties.getDoubleGridProperty("PORO");
     BOOST_CHECK(poro.containsNaN());
-    BOOST_CHECK_THROW(props.getDoubleGridProperty("PORV"), std::logic_error);
+    BOOST_CHECK_THROW(eclipseProperties.getDoubleGridProperty("PORV"), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(PORV_initFromPoro) {
@@ -267,11 +268,12 @@ BOOST_AUTO_TEST_CASE(PORV_initFromPoro) {
     Opm::Deck deck = createDeckWithPORO();
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
-    Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& poro = props.getDoubleGridProperty("PORO");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, grid, deck, eclipseState);
+    const auto& poro = eclipseProperties.getDoubleGridProperty("PORO");
     BOOST_CHECK( !poro.containsNaN() );
 
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    const auto& porv = eclipseProperties.getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
 
     BOOST_CHECK_CLOSE( cell_volume * 0.10 , porv.iget(0,0,0) , 0.001);
@@ -289,8 +291,9 @@ BOOST_AUTO_TEST_CASE(PORV_initFromPoroWithCellVolume) {
     Opm::Deck deck = createDeckWithPORVPORO();
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
-    Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, grid, deck, eclipseState);
+    const auto& porv = eclipseProperties.getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
 
     BOOST_CHECK_CLOSE( 77.0 , porv.iget(0,0,0) , 0.001);
@@ -308,8 +311,9 @@ BOOST_AUTO_TEST_CASE(PORV_multpv) {
     Opm::Deck deck = createDeckWithMULTPV();
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
-    Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, grid, deck, eclipseState);
+    const auto& porv = eclipseProperties.getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
 
     BOOST_CHECK_CLOSE( 770.0 , porv.iget(0,0,0) , 0.001);
@@ -331,8 +335,9 @@ BOOST_AUTO_TEST_CASE(PORV_mutipleBoxAndMultpv) {
     Opm::Deck deck = createDeckWithBOXPORV();
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
-    Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, grid, deck, eclipseState);
+    const auto& porv = eclipseProperties.getDoubleGridProperty("PORV");
 
     BOOST_CHECK_CLOSE( 1234.56 , porv.iget(0,0,0) , 0.001);
     BOOST_CHECK_CLOSE( 1234.56 , porv.iget(9,9,9) , 0.001);
@@ -347,8 +352,9 @@ BOOST_AUTO_TEST_CASE(PORV_multpvAndNtg) {
     Opm::Deck deck = createDeckWithNTG();
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
-    Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, grid, deck, eclipseState);
+    const auto& porv = eclipseProperties.getDoubleGridProperty("PORV");
     double cell_volume = 0.25 * 0.25 * 0.25;
     double poro = 0.20;
     double multpv = 10;
@@ -363,8 +369,9 @@ BOOST_AUTO_TEST_CASE(PORV_multregp) {
     Opm::Deck deck = createDeckWithMULTREGP();
     Opm::TableManager tm( deck );
     Opm::EclipseGrid grid( deck );
-    Opm::Eclipse3DProperties props( deck, tm, grid );
-    const auto& porv = props.getDoubleGridProperty("PORV");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, grid, deck, eclipseState);
+    const auto& porv = eclipseProperties.getDoubleGridProperty("PORV");
     const auto& porvData = porv.getData();
     double basePorv = 77.0;
 

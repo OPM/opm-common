@@ -267,8 +267,9 @@ BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
     Opm::Deck deck = createValidIntDeck();
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
-    Opm::Eclipse3DProperties props(deck, tm, eg);
-    const auto& property = props.getIntGridProperty("SATNUM");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, eg, deck, eclipseState);
+    const auto& property = eclipseProperties.getIntGridProperty("SATNUM");
 
     for (size_t j = 0; j < 5; j++)
         for (size_t i = 0; i < 5; i++) {
@@ -285,8 +286,9 @@ BOOST_AUTO_TEST_CASE(UnitAppliedCorrectly) {
     Opm::Deck deck = createValidPERMXDeck();
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
-    Opm::Eclipse3DProperties props(deck, tm, eg);
-    const auto& permx = props.getDoubleGridProperty("PERMX");
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, eg, deck, eclipseState);
+    const auto& permx = eclipseProperties.getDoubleGridProperty("PERMX");
 
     for (size_t j=0; j< 5; j++)
         for (size_t i = 0; i < 5; i++) {

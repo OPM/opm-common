@@ -89,7 +89,8 @@ ENDACTIO
     auto deck2 = parser.parseString(WITH_WELSPECS, Opm::ParseContext());
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck1 );
-    Eclipse3DProperties eclipseProperties ( deck1 , table, grid1);
+    EclipseState state1(deck1, ParseContext());
+    Eclipse3DProperties eclipseProperties(table, grid1, deck1, state1);
 
     // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
     BOOST_CHECK_THROW(Schedule(deck1, grid1, eclipseProperties, Phases(true,true,true), ParseContext()), std::invalid_argument);

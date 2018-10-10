@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     Deck deck1 = parser.parseString(family1Deck, parseContext) ;
     Opm::TableManager tm1( deck1 );
     Opm::EclipseGrid grid1( deck1 );
-    Opm::Eclipse3DProperties prop1( deck1, tm1, grid1 );
-
+    Opm::EclipseState eclState1(deck1, Opm::ParseContext());
+    Opm::Eclipse3DProperties prop1(tm1, grid1, deck1, eclState1);
 
     char family2Deck[700] = " ";
     strcat(family2Deck , deckdefault);
@@ -121,7 +121,8 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     Deck deck2 = parser.parseString(family2Deck, parseContext) ;
     Opm::TableManager tm2( deck2 );
     Opm::EclipseGrid grid2( deck2 );
-    Opm::Eclipse3DProperties prop2( deck2, tm2, grid2 );
+    Opm::EclipseState eclState2(deck2, Opm::ParseContext());
+    Opm::Eclipse3DProperties prop2(tm2, grid2, deck2, eclState2);
 
     check_property(prop1, prop2, "SWL");
     check_property(prop1, prop2, "SWU");
@@ -149,6 +150,7 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     Deck deckMix = parser.parseString(familyMixDeck, parseContext) ;
     Opm::TableManager tmMix( deckMix );
     Opm::EclipseGrid gridMix( deckMix );
-    Opm::Eclipse3DProperties propMix( deckMix, tmMix, gridMix );
+    Opm::EclipseState eclStateMix(deckMix, Opm::ParseContext());
+    Opm::Eclipse3DProperties propMix(tmMix, gridMix, deckMix, eclStateMix);
     BOOST_CHECK_THROW(propMix.getDoubleGridProperty("SGCR") , std::invalid_argument);
 }

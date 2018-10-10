@@ -72,7 +72,8 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  Eclipse3DProperties eclipseProperties ( deck , table, grid);
+  EclipseState eclipseState(deck, ParseContext());
+  Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
   Schedule schedule( deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
   auto tuning = schedule.getTuning();
   auto event = schedule.getEvents();
@@ -330,7 +331,8 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  Eclipse3DProperties eclipseProperties ( deck , table, grid);
+  EclipseState eclipseState(deck, ParseContext());
+  Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
   Schedule schedule(deck , grid , eclipseProperties, Phases(true, true, true), ParseContext());
   auto tuning = schedule.getTuning();
 
@@ -360,7 +362,8 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  Eclipse3DProperties eclipseProperties ( deck , table, grid);
+  EclipseState eclipseState(deck, ParseContext());
+  Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
   Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true), ParseContext());
   auto tuning = schedule.getTuning();
 

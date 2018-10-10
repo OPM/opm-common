@@ -264,13 +264,15 @@ struct Setup
     Opm::Deck deck;
     Opm::TableManager tablemanager;
     Opm::EclipseGrid grid;
+    Opm::EclipseState eclipseState;
     Opm::Eclipse3DProperties props;
 
     explicit Setup(Opm::Deck&& deckArg) :
             deck(std::move( deckArg ) ),
             tablemanager(deck),
             grid(deck),
-            props(deck, tablemanager, grid)
+            eclipseState(deck, Opm::ParseContext()),
+            props(tablemanager, grid, deck, eclipseState)
     {
     }
 };

@@ -141,7 +141,8 @@ BOOST_AUTO_TEST_CASE(TestNoSolvent) {
     auto deck = createDeckWithOutSolvent();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    EclipseState eclipseState(deck, ParseContext());
+    Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
     Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
     BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
 }
@@ -150,7 +151,8 @@ BOOST_AUTO_TEST_CASE(TestGasInjector) {
     auto deck = createDeckWithGasInjector();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    EclipseState eclipseState(deck, ParseContext());
+    Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
     Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 
@@ -160,7 +162,8 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     auto deck = createDeckWithDynamicWSOLVENT();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    EclipseState eclipseState(deck, ParseContext());
+    Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
     Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
     const auto& keyword = deck.getKeyword("WSOLVENT");
@@ -179,7 +182,8 @@ BOOST_AUTO_TEST_CASE(TestOilInjector) {
     auto deck = createDeckWithOilInjector();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    EclipseState eclipseState(deck, ParseContext());
+    Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);
     BOOST_CHECK_THROW (Schedule(deck , grid , eclipseProperties, Phases(true, true, true) , ParseContext()), std::invalid_argument);
 }
 
@@ -187,6 +191,6 @@ BOOST_AUTO_TEST_CASE(TestWaterInjector) {
     auto deck = createDeckWithWaterInjector();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    BOOST_CHECK_THROW (Schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext()), std::invalid_argument);
+    EclipseState eclipseState(deck, ParseContext());
+    Eclipse3DProperties eclipseProperties ( table, grid, deck, eclipseState);    BOOST_CHECK_THROW (Schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext()), std::invalid_argument);
 }

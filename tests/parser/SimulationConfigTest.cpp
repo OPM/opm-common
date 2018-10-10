@@ -115,7 +115,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigGetThresholdPressureTableTest) {
     auto deck = createDeck(parseContext , inputStr);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
+    EclipseState state(deck, ParseContext());
+    Eclipse3DProperties ep(tm, eg, deck, state);
     BOOST_CHECK_NO_THROW( SimulationConfig(false, deck, ep ) );
 }
 
@@ -125,7 +126,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigNOTHPRES) {
     auto deck = createDeck(parseContext, inputStr_noTHPRES);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
+    EclipseState state(deck, ParseContext());
+    Eclipse3DProperties ep(tm, eg, deck, state);
     SimulationConfig simulationConfig(false, deck, ep);
     BOOST_CHECK( !simulationConfig.useThresholdPressure() );
 }
@@ -135,7 +137,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRNotUsed) {
     auto deck = createDeck(parseContext, inputStr_noTHPRES);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
+    EclipseState state(deck, ParseContext());
+    Eclipse3DProperties ep(tm, eg, deck, state);
     SimulationConfig simulationConfig(false, deck, ep);
     BOOST_CHECK( ! simulationConfig.useCPR());
 }
@@ -145,7 +148,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRUsed) {
     auto deck = createDeck(parseContext, inputStr_cpr);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
+    EclipseState state(deck, ParseContext());
+    Eclipse3DProperties ep(tm, eg, deck, state);
     SUMMARYSection summary(deck);
     SimulationConfig simulationConfig(false, deck, ep);
     BOOST_CHECK(     simulationConfig.useCPR() );
@@ -158,7 +162,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRInSUMMARYSection) {
     auto deck = createDeck(parseContext, inputStr_cpr_in_SUMMARY);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
+    EclipseState state(deck, ParseContext());
+    Eclipse3DProperties ep(tm, eg, deck, state);
     SUMMARYSection summary(deck);
     SimulationConfig simulationConfig(false, deck, ep);
     BOOST_CHECK( ! simulationConfig.useCPR());
@@ -171,7 +176,8 @@ BOOST_AUTO_TEST_CASE(SimulationConfigCPRBoth) {
     auto deck = createDeck(parseContext, inputStr_cpr_BOTH);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
+    EclipseState state(deck, ParseContext());
+    Eclipse3DProperties ep(tm, eg, deck, state);
     SUMMARYSection summary(deck);
     SimulationConfig simulationConfig(false, deck, ep);
     BOOST_CHECK(  simulationConfig.useCPR());
@@ -198,15 +204,16 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
     auto deck = createDeck(parseContext, inputStr);
     TableManager tm(deck);
     EclipseGrid eg(10, 3, 4);
-    Eclipse3DProperties ep(deck, tm, eg);
-    SimulationConfig simulationConfig(false, deck, ep);
+    EclipseState eclipseState(deck, Opm::ParseContext());
+    Eclipse3DProperties ep ( tm, eg, deck, eclipseState);    SimulationConfig simulationConfig(false, deck, ep);
     BOOST_CHECK_EQUAL( false , simulationConfig.hasDISGAS());
     BOOST_CHECK_EQUAL( false , simulationConfig.hasVAPOIL());
 
     auto deck_vd = createDeck(parseContext, inputStr_vap_dis);
     TableManager tm_vd(deck_vd);
     EclipseGrid eg_vd(10, 3, 4);
-    Eclipse3DProperties ep_vd(deck_vd, tm, eg);
+    EclipseState eclipseState_vd(deck_vd, Opm::ParseContext());
+    Eclipse3DProperties ep_vd ( tm, eg, deck_vd, eclipseState_vd);
     SimulationConfig simulationConfig_vd(false, deck_vd, ep_vd);
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());

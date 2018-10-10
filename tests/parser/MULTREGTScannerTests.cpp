@@ -111,26 +111,27 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
     Opm::EclipseGrid grid( deck );
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg( deck );
-    Opm::Eclipse3DProperties props(deck, tm, eg);
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, eg, deck, eclipseState);
 
 
     // Invalid direction
     std::vector<const Opm::DeckKeyword*> keywords0;
     const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
     keywords0.push_back( &multregtKeyword0 );
-    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords0 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( eclipseProperties, keywords0 ); , std::invalid_argument );
 
     // Not supported region
     std::vector<const Opm::DeckKeyword*> keywords1;
     const auto& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
     keywords1.push_back( &multregtKeyword1 );
-    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords1 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( eclipseProperties, keywords1 ); , std::invalid_argument );
 
     // The keyword is ok; but it refers to a region which is not in the deck.
     std::vector<const Opm::DeckKeyword*> keywords2;
     const auto& multregtKeyword2 = deck.getKeyword( "MULTREGT", 2 );
     keywords2.push_back( &multregtKeyword2 );
-    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords2 ); , std::logic_error );
+    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( eclipseProperties, keywords2 ); , std::logic_error );
 }
 
 
@@ -178,20 +179,21 @@ BOOST_AUTO_TEST_CASE(NotSupported) {
     Opm::EclipseGrid grid( deck );
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg( deck );
-    Opm::Eclipse3DProperties props(deck, tm, eg);
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, eg, deck, eclipseState);
 
 
     // Not support NOAQUNNC behaviour
     std::vector<const Opm::DeckKeyword*> keywords0;
     const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
     keywords0.push_back( &multregtKeyword0 );
-    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords0 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( eclipseProperties, keywords0 ); , std::invalid_argument );
 
     // srcValue == targetValue - not supported
     std::vector<const Opm::DeckKeyword*> keywords1;
     const Opm::DeckKeyword& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
     keywords1.push_back( &multregtKeyword1 );
-    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( props, keywords1 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Opm::MULTREGTScanner scanner( eclipseProperties, keywords1 ); , std::invalid_argument );
 }
 
 static Opm::Deck createDefaultedRegions() {
@@ -237,13 +239,14 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   Opm::EclipseGrid grid( deck );
   Opm::TableManager tm(deck);
   Opm::EclipseGrid eg( deck );
-  Opm::Eclipse3DProperties props(deck, tm, eg);
+  Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+  Opm::Eclipse3DProperties eclipseProperties ( tm, eg, deck, eclipseState);
 
 
   std::vector<const Opm::DeckKeyword*> keywords0;
   const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
   keywords0.push_back( &multregtKeyword0 );
-  Opm::MULTREGTScanner scanner0(props, keywords0);
+  Opm::MULTREGTScanner scanner0(eclipseProperties, keywords0);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(0,0,1), grid.getGlobalIndex(1,0,1), Opm::FaceDir::XPlus ), 1.25);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(1,0,0), grid.getGlobalIndex(2,0,0), Opm::FaceDir::XPlus ), 0.50);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(2,0,1), grid.getGlobalIndex(2,0,0), Opm::FaceDir::ZMinus ), 0.50);
@@ -251,7 +254,7 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   std::vector<const Opm::DeckKeyword*> keywords1;
   const Opm::DeckKeyword& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
   keywords1.push_back( &multregtKeyword1 );
-  Opm::MULTREGTScanner scanner1( props, keywords1 );
+  Opm::MULTREGTScanner scanner1( eclipseProperties, keywords1 );
   BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(1,0,0), Opm::FaceDir::XMinus ), 0.75);
   BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,0,1), Opm::FaceDir::ZPlus), 0.75);
 }
@@ -297,12 +300,13 @@ BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Opm::Deck deck = createCopyMULTNUMDeck();
     Opm::TableManager tm(deck);
     Opm::EclipseGrid eg(deck);
-    Opm::Eclipse3DProperties props(deck, tm, eg);
+    Opm::EclipseState eclipseState(deck, Opm::ParseContext());
+    Opm::Eclipse3DProperties eclipseProperties ( tm, eg, deck, eclipseState);
 
-    BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("FLUXNUM"));
-    BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("MULTNUM"));
-    const auto& fdata = props.getIntGridProperty("FLUXNUM").getData();
-    const auto& mdata = props.getIntGridProperty("MULTNUM").getData();
+    BOOST_CHECK_NO_THROW(eclipseProperties.hasDeckIntGridProperty("FLUXNUM"));
+    BOOST_CHECK_NO_THROW(eclipseProperties.hasDeckIntGridProperty("MULTNUM"));
+    const auto& fdata = eclipseProperties.getIntGridProperty("FLUXNUM").getData();
+    const auto& mdata = eclipseProperties.getIntGridProperty("MULTNUM").getData();
     std::vector<int> data = { 1, 2, 1, 2, 3, 4, 3, 4 };
 
     for (auto i = 0; i < 2 * 2 * 2; i++) {
