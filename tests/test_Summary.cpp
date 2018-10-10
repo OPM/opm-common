@@ -2276,4 +2276,519 @@ BOOST_AUTO_TEST_CASE(WaterRate_Correct)
     }
 }
 
+// ====================================================================
+
+namespace {
+    bool hasSegmentVariable_Prod01(const ecl_sum_type* ecl_sum,
+                                   const char*         vector,
+                                   const int           segID)
+    {
+        const auto lookup_kw = genKeyPROD01(vector, segID);
+
+        return ecl_sum_has_general_var(ecl_sum, lookup_kw.c_str());
+    }
+
+    double getSegmentVariable_Prod01(const ecl_sum_type* ecl_sum,
+                                     const int           timeIdx,
+                                     const char*         vector,
+                                     const int           segID)
+    {
+        const auto lookup_kw = genKeyPROD01(vector, segID);
+
+        return ecl_sum_get_general_var(ecl_sum, timeIdx, lookup_kw.c_str());
+    }
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(Write_Read)
+{
+    const setup config{"test.Restart.Segment.RW", "SOFR_TEST.DATA"};
+
+    ::Opm::out::Summary writer {
+        config.es, config.config, config.grid, config.schedule
+    };
+
+    writer.add_timestep(0, 0*day, config.es, config.schedule, config.wells, {});
+    writer.add_timestep(1, 1*day, config.es, config.schedule, config.wells, {});
+    writer.add_timestep(2, 2*day, config.es, config.schedule, config.wells, {});
+    writer.write();
+
+    auto res = readsum("SOFR_TEST");
+    const auto* resp = res.get();
+
+    const int timeIdx = 2;
+
+    // Rate Setup
+    //
+    // const auto topRate = id * 1000*sm3_pr_day();
+    // rates.set(data::Rates::opt::wat, sign * (topRate + 100*sm3_pr_day()));
+    // rates.set(data::Rates::opt::oil, sign * (topRate + 200*sm3_pr_day()));
+    // rates.set(data::Rates::opt::gas, sign * (topRate + 400*sm3_pr_day()));
+    //
+    // Pressure Setup
+    // res.pressure = (100.0 + segID)*unit::barsa;
+
+    // Note: Producer rates reported as positive.
+
+    // SOFR_TEST Summary Section:
+    //
+    //   SUMMARY
+    //
+    //   -- ALL
+    //
+    //   SOFR
+    //     'PROD01'  1 /
+    //     'PROD01'  10 /
+    //     'PROD01'  21 /
+    //   /
+    //
+    //   SGFR
+    //     'PROD01' /
+    //   /
+    //
+    //   SPR
+    //     1*  10 /
+    //   /
+    //
+    //   SWFR
+    //   /
+
+    // Segment 1: SOFR, SGFR, SWFR
+    {
+        const auto segID = 1;
+
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFR", segID),
+                          segID*1000.0 + 200.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 2: SGFR, SWFR
+    {
+        const auto segID = 2;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 3: SGFR, SWFR
+    {
+        const auto segID = 3;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 4: SGFR, SWFR
+    {
+        const auto segID = 4;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 5: SGFR, SWFR
+    {
+        const auto segID = 5;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 6: SGFR, SWFR
+    {
+        const auto segID = 6;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 7: SGFR, SWFR
+    {
+        const auto segID = 7;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 8: SGFR, SWFR
+    {
+        const auto segID = 8;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 9: SGFR, SWFR
+    {
+        const auto segID = 9;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 10: SOFR, SGFR, SWFR, SPR
+    {
+        const auto segID = 10;
+
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SPR", segID),
+                          100.0 + segID, 1.0e-10);
+    }
+
+    // Segment 11: SGFR, SWFR
+    {
+        const auto segID = 11;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 12: SGFR, SWFR
+    {
+        const auto segID = 12;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 13: SGFR, SWFR
+    {
+        const auto segID = 13;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 14: SGFR, SWFR
+    {
+        const auto segID = 14;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 15: SGFR, SWFR
+    {
+        const auto segID = 15;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 16: SGFR, SWFR
+    {
+        const auto segID = 16;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 17: SGFR, SWFR
+    {
+        const auto segID = 17;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 18: SGFR, SWFR
+    {
+        const auto segID = 18;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 19: SGFR, SWFR
+    {
+        const auto segID = 19;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 20: SGFR, SWFR
+    {
+        const auto segID = 20;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 21: SOFR, SGFR, SWFR
+    {
+        const auto segID = 21;
+
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFR", segID),
+                          segID*1000.0 + 200.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 22: SGFR, SWFR
+    {
+        const auto segID = 22;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 23: SGFR, SWFR
+    {
+        const auto segID = 23;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 24: SGFR, SWFR
+    {
+        const auto segID = 24;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 25: SGFR, SWFR
+    {
+        const auto segID = 25;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 26: SGFR, SWFR
+    {
+        const auto segID = 26;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 256: No such segment
+    {
+        const auto segID = 256;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
