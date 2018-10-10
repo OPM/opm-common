@@ -54,9 +54,8 @@ namespace Opm {
 			  rho, // water density in the aquifer
 			  C_t, // total rock compressibility
 			   V0, // initial volume of water in aquifer
-			   p0, // initial pressure of water in aquifer
 			   d0; // aquifer datum depth
-		    
+		    std::shared_ptr<double> p0; //Initial aquifer pressure at datum depth d0 - nullptr if the pressure has been defaulted.
             };
 
             Aquifetp(const Deck& deck);

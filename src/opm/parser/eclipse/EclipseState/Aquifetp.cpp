@@ -33,14 +33,18 @@ namespace Opm {
             Aquifetp::AQUFETP_data data;
      
             data.aquiferID = aqufetpRecord.getItem("AQUIFER_ID").template get<int>(0);
-            data.p0 = aqufetpRecord.getItem("P0").getSIDouble(0);
             data.d0 = aqufetpRecord.getItem("DAT_DEPTH").getSIDouble(0);
             data.C_t = aqufetpRecord.getItem("C_T").getSIDouble(0);
             data.pvttableID = aqufetpRecord.getItem("TABLE_NUM_WATER_PRESS").template get<int>(0);
 	    data.V0 = aqufetpRecord.getItem("V0").getSIDouble(0);
             data.J = aqufetpRecord.getItem("PI").getSIDouble(0);
 
-                m_aqufetp.push_back( std::move(data) );
+            if (aqufetpRecord.getItem("P0").hasValue(0) )
+	    {
+		double * raw_ptr = new double ( aqufetpRecord.getItem("P0").getSIDouble(0));
+		data.p0.reset( raw_ptr );
+	    }
+	    m_aqufetp.push_back( std::move(data) );
             }     
     }
 
