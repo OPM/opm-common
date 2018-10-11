@@ -2201,7 +2201,7 @@ BOOST_AUTO_TEST_CASE(Vectors_Present)
 {
     const auto rstrt = calculateRestartVectorsSegment();
 
-    for (const auto* vector : { "SGFR", "SGFR", "SPR", "SWFR"}) {
+    for (const auto* vector : { "SGFR", "SOFR", "SPR", "SWFR"}) {
         for (auto nSeg = numSegProd01(), segID = 0*nSeg;
              segID < nSeg; ++segID)
         {
