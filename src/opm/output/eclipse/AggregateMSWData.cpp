@@ -337,9 +337,9 @@ namespace {
         {
             if (well.isMultiSegment(rptStep)) {
 		//loop over segment set and print out information
-		auto welSegSet = well.getWellSegments(rptStep);
-		auto completionSet = well.getConnections(rptStep);
-		auto noElmSeg = nisegz(inteHead);
+		const auto& welSegSet     = well.getWellSegments(rptStep);
+		const auto& completionSet = well.getConnections(rptStep);
+		const auto& noElmSeg      = nisegz(inteHead);
 		std::size_t segmentInd = 0;
 		auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
 		for (int segNumber = 1; segNumber <= welSegSet.size(); segNumber++) {
@@ -397,10 +397,10 @@ namespace {
 		    ? 0.1781076 : 0.001;
 
 		//loop over segment set and print out information
-		auto welSegSet = well.getWellSegments(rptStep);
-		auto completionSet = well.getCompletions(rptStep);
-		auto noElmSeg = nrsegz(inteHead);
-		auto&  wname = well.name();
+		const auto  noElmSeg  = nrsegz(inteHead);
+		const auto& welSegSet = well.getWellSegments(rptStep);
+		const auto& wname     = well.name();
+		// const auto completionSet = well.getCompletions(rptStep);
 
 		auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
 		{
