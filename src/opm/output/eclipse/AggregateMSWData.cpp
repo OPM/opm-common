@@ -391,7 +391,10 @@ namespace {
         {
 	    if (well.isMultiSegment(rptStep)) {
 		int segNumber = 1;
+
+		// 'stringSegNum' is one-based (1 .. #segments inclusive)
 		std::string stringSegNum = std::to_string(segNumber);
+
 		using M = ::Opm::UnitSystem::measure;
 		const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
 		    ? 0.1781076 : 0.001;
@@ -404,6 +407,7 @@ namespace {
 
 		auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
 		{
+		    // 'stringSegNum' is one-based (1 .. #segments inclusive)
 		    const auto key = vector + ':' + wname + ':' + stringSegNum;
 		    return smry.has(key) ? smry.get(key) : 0.0;
 		};
@@ -449,7 +453,9 @@ namespace {
 
 		//Treat subsequent segments
 		for (segNumber = 2; segNumber <= welSegSet.size(); segNumber++) {
+		    // 'stringSegNum' is one-based (1 .. #segments inclusive)
 		    stringSegNum = std::to_string(segNumber);
+
 		    // set the elements of the rSeg array
 		    auto ind = welSegSet.segmentNumberToIndex(segNumber);
 		    auto outSeg = welSegSet[ind].outletSegment();
