@@ -381,6 +381,43 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
     }
 }
 
+    bool isMultiSegmentWell(const std::size_t last_timestep,
+                            const Well*       well)
+    {
+        for (auto step  = 0*last_timestep;
+                  step <=   last_timestep; ++step)
+        {
+            if (well->isMultiSegment(step)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    int maxNumWellSegments(const std::size_t last_timestep,
+                           const Well*       well)
+    {
+        auto numSeg = 0;
+
+        for (auto step  = 0*last_timestep;
+                  step <=   last_timestep; ++step)
+        {
+            if (! well->isMultiSegment(step)) {
+                continue;
+            }
+
+            const auto nseg =
+                well->getWellSegments(last_timestep).size();
+
+            if (nseg > numSeg) {
+                numSeg = nseg;
+            }
+        }
+
+        return numSeg;
+    }
+
     void makeSegmentNodes(const std::size_t               last_timestep,
                           const int                       segID,
                           const DeckKeyword&              keyword,
@@ -402,7 +439,7 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
         };
 
         for (const auto* well : wells) {
-            if (! well->isMultiSegment(last_timestep)) {
+            if (! isMultiSegmentWell(last_timestep, well)) {
                 // Not an MSW.  Don't create summary vectors for segments.
                 continue;
             }
@@ -411,8 +448,7 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
             if (segID < 1) {
                 // Segment number defaulted.  Allocate a summary
                 // vector for each segment.
-                const auto nSeg =
-                    well->getWellSegments(last_timestep).size();
+                const auto nSeg = maxNumWellSegments(last_timestep, well);
 
                 for (auto segNumber = 0*nSeg;
                           segNumber <   nSeg; ++segNumber)
