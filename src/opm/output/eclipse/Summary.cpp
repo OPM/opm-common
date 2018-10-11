@@ -17,13 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <exception>
 #include <initializer_list>
 #include <iterator>
 #include <numeric>
 #include <stdexcept>
 #include <string>
-#include <algorithm>
+#include <unordered_map>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 

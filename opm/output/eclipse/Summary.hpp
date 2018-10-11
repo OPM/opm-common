@@ -20,16 +20,17 @@
 #ifndef OPM_OUTPUT_SUMMARY_HPP
 #define OPM_OUTPUT_SUMMARY_HPP
 
+#include <map>
 #include <string>
 #include <vector>
-#include <unordered_map>
 
 #include <ert/ecl/ecl_sum.h>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
-#include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/data/Wells.hpp>
+
+#include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
 namespace Opm {
