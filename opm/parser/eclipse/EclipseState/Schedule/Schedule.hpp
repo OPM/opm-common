@@ -127,7 +127,7 @@ namespace Opm
           active. Will scan through all wells and all timesteps.
         */
         void filterConnections(const EclipseGrid& grid);
-
+        size_t size() const;
     private:
         TimeMap m_timeMap;
         OrderedMap< Well > m_wells;
