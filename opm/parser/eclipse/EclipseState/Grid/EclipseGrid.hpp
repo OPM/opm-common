@@ -77,6 +77,8 @@ namespace Opm {
         /// explicitly.  If a null pointer is passed, every cell is active.
         EclipseGrid(const Deck& deck, const int * actnum = nullptr);
 
+
+        static bool hasGDFILE(const Deck& deck);
         static bool hasCylindricalKeywords(const Deck& deck);
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
@@ -203,6 +205,7 @@ namespace Opm {
                 ert_ptr( ecl_grid_alloc_copy( src.get() ) ) {}
         };
         grid_ptr m_grid;
+        void initBinaryGrid(const Deck& deck);
 
         void initCornerPointGrid(const std::array<int,3>& dims ,
                                  const std::vector<double>& coord ,

@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
@@ -205,6 +206,8 @@ namespace Opm {
                 initCornerPointGrid(dims , deck);
             } else if (hasCartesianKeywords(deck)) {
                 initCartesianGrid(dims , deck);
+            } else if (hasGDFILE(deck)) {
+                initBinaryGrid(deck);
             } else {
                 throw std::invalid_argument("EclipseGrid needs cornerpoint or cartesian keywords.");
             }
@@ -292,6 +295,16 @@ namespace Opm {
         return m_minpvValue;
     }
 
+
+    void EclipseGrid::initBinaryGrid(const Deck& deck) {
+        const auto& gdfile_record = deck.getKeyword<ParserKeywords::GDFILE>().getRecord(0);
+        const std::string& filename = gdfile_record.getItem("filename").get<std::string>(0);
+        ecl_grid_type * grid_ptr = ecl_grid_load_case__( filename.c_str(), false);
+        if (grid_ptr)
+            this->m_grid.reset( grid_ptr );
+        else
+            throw std::invalid_argument("Failed to load grid from: " + filename);
+    }
 
     void EclipseGrid::initCartesianGrid(const std::array<int, 3>& dims , const Deck& deck) {
         if (hasDVDEPTHZKeywords( deck ))
@@ -539,6 +552,9 @@ namespace Opm {
     }
 
 
+    bool EclipseGrid::hasGDFILE(const Deck& deck) {
+        return deck.hasKeyword<ParserKeywords::GDFILE>();
+    }
 
     bool EclipseGrid::hasCartesianKeywords(const Deck& deck) {
         if (hasDVDEPTHZKeywords( deck ))
