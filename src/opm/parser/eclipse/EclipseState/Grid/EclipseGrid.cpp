@@ -59,7 +59,6 @@ namespace Opm {
 			     const int * actnum, 
 			     const double * mapaxes) 
 	: GridDims(dims),
-          m_minpvValue(0),
 	  m_minpvMode(MinpvMode::ModeEnum::Inactive),
 	  m_pinch("PINCH"),
 	  m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
@@ -77,7 +76,6 @@ namespace Opm {
     */
     EclipseGrid::EclipseGrid(const std::string& filename )
         : GridDims(),
-          m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
@@ -100,7 +98,6 @@ namespace Opm {
     EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                              double dx, double dy, double dz)
         : GridDims(nx, ny, nz),
-          m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
@@ -112,7 +109,7 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(const EclipseGrid& src, const double* zcorn , const std::vector<int>& actnum)
         : GridDims(src.getNX(), src.getNY(), src.getNZ()),
-          m_minpvValue( src.m_minpvValue ),
+          m_minpvVector( src.m_minpvVector ),
           m_minpvMode( src.m_minpvMode ),
           m_pinch( src.m_pinch ),
           m_pinchoutMode( src.m_pinchoutMode ),
@@ -166,7 +163,6 @@ namespace Opm {
 
     EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         : GridDims(deck),
-          m_minpvValue(0),
           m_minpvMode(MinpvMode::ModeEnum::Inactive),
           m_pinch("PINCH"),
           m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
@@ -225,10 +221,16 @@ namespace Opm {
             throw std::invalid_argument("Can not have both MINPV and MINPVFIL in deck.");
         }
 
+        m_minpvVector.resize(getCartesianSize(), 0.0);
         if (deck.hasKeyword<ParserKeywords::MINPV>()) {
             const auto& record = deck.getKeyword<ParserKeywords::MINPV>( ).getRecord(0);
             const auto& item = record.getItem<ParserKeywords::MINPV::VALUE>( );
-            m_minpvValue = item.getSIDouble(0);
+            std::fill(m_minpvVector.begin(), m_minpvVector.end(), item.getSIDouble(0));
+            m_minpvMode = MinpvMode::ModeEnum::EclSTD;
+        } else if(deck.hasKeyword<ParserKeywords::MINPVV>()) {
+            // We should use the grid properties to support BOX, but then we need the eclipseState
+            const auto& record = deck.getKeyword<ParserKeywords::MINPVV>( ).getRecord(0);
+            m_minpvVector =record.getItem(0).getSIDoubleData();
             m_minpvMode = MinpvMode::ModeEnum::EclSTD;
         }
 
@@ -236,7 +238,7 @@ namespace Opm {
         if (deck.hasKeyword<ParserKeywords::MINPVFIL>()) {
             const auto& record = deck.getKeyword<ParserKeywords::MINPVFIL>( ).getRecord(0);
             const auto& item = record.getItem<ParserKeywords::MINPVFIL::VALUE>( );
-            m_minpvValue = item.getSIDouble(0);
+            std::fill(m_minpvVector.begin(), m_minpvVector.end(), item.getSIDouble(0));
             m_minpvMode = MinpvMode::ModeEnum::OpmFIL;
         }
     }
@@ -287,8 +289,8 @@ namespace Opm {
         return m_minpvMode;
     }
 
-    double EclipseGrid::getMinpvValue( ) const {
-        return m_minpvValue;
+    const std::vector<double>& EclipseGrid::getMinpvVector( ) const {
+        return m_minpvVector;
     }
 
 
@@ -709,7 +711,7 @@ namespace Opm {
     bool EclipseGrid::equal(const EclipseGrid& other) const {
         bool status = (m_pinch.equal( other.m_pinch ) && (ecl_grid_compare( c_ptr() , other.c_ptr() , true , false , false )) && (m_minpvMode == other.getMinpvMode()));
         if(m_minpvMode!=MinpvMode::ModeEnum::Inactive){
-            status = status && (m_minpvValue == other.getMinpvValue());
+            status = status && (m_minpvVector == other.getMinpvVector());
         }
         return status;
     }

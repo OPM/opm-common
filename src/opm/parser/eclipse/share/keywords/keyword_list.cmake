@@ -152,6 +152,7 @@ set( keywords
      000_Eclipse100/M/MESSAGES
      000_Eclipse100/M/METRIC
      000_Eclipse100/M/MINPV
+     000_Eclipse100/M/MINPVV
      000_Eclipse100/M/MINVALUE
      000_Eclipse100/M/MISC
      000_Eclipse100/M/MISCIBLE
