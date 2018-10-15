@@ -21,6 +21,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <ert/ecl/ecl_grid_dims.hpp>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -46,6 +48,8 @@ namespace Opm {
             init(deck.getKeyword("SPECGRID"));
         else if (deck.hasKeyword("DIMENS"))
             init(deck.getKeyword("DIMENS"));
+        else if (deck.hasKeyword("GDFILE"))
+            binary_init(deck.getKeyword("GDFILE"));
         else
             throw std::invalid_argument("Must have either SPECGRID or DIMENS to indicate grid dimensions");
     }
@@ -131,6 +135,18 @@ namespace Opm {
         m_nx = dims[0];
         m_ny = dims[1];
         m_nz = dims[2];
+    }
+
+    void GridDims::binary_init(const DeckKeyword& gdfile) {
+        const std::string& filename = gdfile.getRecord(0).getItem("filename").get<std::string>(0);
+        ecl_grid_dims_type * grid_dims = ecl_grid_dims_alloc( filename.c_str(), nullptr );
+        if (grid_dims) {
+            const auto& dims = ecl_grid_dims_iget_dims(grid_dims, 0);
+            m_nx = dims->nx;
+            m_ny = dims->ny;
+            m_nz = dims->nz;
+        } else
+            throw std::invalid_argument("Could not determine grid dimensions from " + filename);
     }
 
 }
