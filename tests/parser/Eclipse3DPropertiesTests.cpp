@@ -581,6 +581,74 @@ BOOST_AUTO_TEST_CASE(DefaultedBox) {
   BOOST_CHECK( tranz.deckAssigned() );
 }
 
+static Opm::Deck createAddDeck() {
+  const auto* input = R"(
+RUNSPEC
+
+TITLE
+ 'TITTEL'
+
+DIMENS
+  100 21 20 /
+
+METRIC
+
+OIL
+WATER
+
+TABDIMS
+/
+
+START
+  19 JUN 2017
+/
+
+WELLDIMS
+  3 20 1
+/
+
+EQLDIMS
+    2* 100 2* /
+
+GRID
+
+
+DXV
+  5.0D0 10.0D0 2*20.0D0 45.0D0 95*50.0D0
+/
+
+DYV
+  21*4.285714D0
+/
+
+DZV
+  20*0.5D0
+/
+
+TOPS
+  2100*1000.0D0
+/
+
+EDIT
+
+ADD
+  'TRANX' 0.10  /
+/
+
+)";
+
+  Opm::Parser parser;
+  return parser.parseString(input, Opm::ParseContext() );
+}
+
+BOOST_AUTO_TEST_CASE(TRANXADD) {
+  Opm::Deck deck = createAddDeck();
+  Opm::TableManager tables(deck);
+  Opm::EclipseGrid grid(deck);
+
+  BOOST_CHECK_THROW(Opm::Eclipse3DProperties(deck, tables, grid), std::invalid_argument);
+}
+
 
 static Opm::Deck createMultiplyPorvDeck() {
     const auto* input = R"(
