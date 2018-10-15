@@ -56,10 +56,10 @@ namespace Opm {
 
 
     EclipseGrid::EclipseGrid(std::array<int, 3>& dims ,
-			     const std::vector<double>& coord , 
-			     const std::vector<double>& zcorn , 
-			     const int * actnum, 
-			     const double * mapaxes) 
+			     const std::vector<double>& coord ,
+			     const std::vector<double>& zcorn ,
+			     const int * actnum,
+			     const double * mapaxes)
 	: GridDims(dims),
           m_minpvValue(0),
 	  m_minpvMode(MinpvMode::ModeEnum::Inactive),
