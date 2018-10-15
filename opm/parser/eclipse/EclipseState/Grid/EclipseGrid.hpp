@@ -38,6 +38,7 @@ namespace Opm {
 
     class Deck;
     class ZcornMapper;
+    class NNC;
 
     /**
        About cell information and dimension: The actual grid
@@ -85,6 +86,8 @@ namespace Opm {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
+        void save(const std::string& filename, UnitSystem::UnitType output_units) const;
+        void addNNC(const NNC& nnc);
         /*
           Observe that the there is a getGlobalIndex(i,j,k)
           implementation in the base class. This method - translating

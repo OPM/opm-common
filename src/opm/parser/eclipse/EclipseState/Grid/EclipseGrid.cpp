@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -884,6 +885,20 @@ namespace Opm {
         ecl_grid_init_zcorn_data_double( c_ptr() , zcorn.data() );
 
         return mapper.fixupZCORN( zcorn );
+    }
+
+
+    void EclipseGrid::addNNC(const NNC& nnc) {
+        int idx = 0;
+        auto* ecl_grid = const_cast< ecl_grid_type* >( this->c_ptr() );
+        for (const NNCdata& n : nnc.nncdata())
+            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
+    }
+
+
+    void EclipseGrid::save(const std::string& filename, UnitSystem::UnitType output_units) const {
+        auto* ecl_grid = const_cast< ecl_grid_type* >( this->c_ptr() );
+        ecl_grid_fwrite_EGRID2(ecl_grid, filename.c_str(), UnitSystem::ecl_units(output_units));
     }
 
 
