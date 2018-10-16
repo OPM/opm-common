@@ -45,7 +45,7 @@ struct MockIH
 {
     MockIH(const int numWells,
 	   
-	   const int nsegWell 	 =   1,  // E100
+	   const int nsegWell 	 =   2,  // E100
 	   const int isegPerWell =   3,  // E100
 	   const int rsegPerWell =  22,  // E100
 	   const int ilbsPerWell = 146,  // E100
@@ -81,7 +81,7 @@ MockIH::MockIH(const int numWells,
     
     this->nsegwl = this->value[Ix::NSEGWL] = nsegWell;
     this->nswlmx = this->value[Ix::NSWLMX] = 2;
-    this->nsegmx = this->value[Ix::NSEGMX] = 4;
+    this->nsegmx = this->value[Ix::NSEGMX] = 32;
     this->nisegz = this->value[Ix::NISEGZ] = isegPerWell;
     this->nrsegz = this->value[Ix::NRSEGZ] = rsegPerWell;
     this->nilbrz = this->value[Ix::NILBRZ] = ilbrPerWell;
@@ -94,149 +94,454 @@ namespace {
         const auto input = std::string {
             R"~(
 RUNSPEC
-OIL
-GAS
-WATER
-DISGAS
-VAPOIL
-UNIFOUT
-UNIFIN
+
+TITLE
+ TWO MULTI-LATERAL WELLS; PRODUCER AND INJECTOR - MULTI-SEGMENT BRANCHES
+
 DIMENS
- 10 10 10 /
+ 10  5  10  /
 
-GRID
+
+OIL
+
+WATER
+
+GAS
+
+DISGAS
+
+FIELD
+
+TABDIMS
+ 1  1  15  15  2  15  /
+
+EQLDIMS
+ 2  /
+
+WELLDIMS
+ 3  20  1  3  /
+
+WSEGDIMS
+ 2  32  5  /
+
+UNIFIN
+UNIFOUT
+
+--FMTIN
+--FMTOUT
+
+START
+ 1 'JAN' 2015 /
+
+-- RPTRUNSP
+
+GRID        =========================================================
+
+--NOGGF
+BOX
+ 1 10 1 5 1 1 /
+
+TOPS 
+50*7000 /
+
+BOX 
+1 10  1 5 1 10 /
+
 DXV
-10*0.25 /
+10*100 /
 DYV
-10*0.25 /
+5*100  /
 DZV
-10*0.25 /
-TOPS
-100*0.25 /
+2*20 100 7*20 /
 
-PORO
-1000*0.2 /
+EQUALS
+-- 'DX'     100  /
+-- 'DY'     100  /
+ 'PERMX'  50   /
+ 'PERMZ'  5   /
+-- 'DZ'     20   /
+ 'PORO'   0.2  /
+-- 'TOPS'   7000   1 10  1 5  1 1  /
+-- 'DZ'     100    1 10  1 5  3 3  /
+ 'PORO'   0.0    1 10  1 5  3 3  /
+ /
 
-SOLUTION
-RESTART
-FIRST_SIM 1/
+COPY
+  PERMX PERMY /
+ /
+
+RPTGRID
+  -- Report Levels for Grid Section Data
+  -- 
+ / 
+
+PROPS       ==========================================================
+
+-- WATER RELATIVE PERMEABILITY AND CAPILLARY PRESSURE ARE TABULATED AS
+-- A FUNCTION OF WATER SATURATION.
+--
+--  SWAT   KRW   PCOW
+SWFN
+
+    0.12  0       0
+    1.0   0.00001 0  /
+
+-- SIMILARLY FOR GAS
+--
+--  SGAS   KRG   PCOG
+SGFN
+
+    0     0       0
+    0.02  0       0
+    0.05  0.005   0
+    0.12  0.025   0
+    0.2   0.075   0
+    0.25  0.125   0
+    0.3   0.19    0
+    0.4   0.41    0
+    0.45  0.6     0
+    0.5   0.72    0
+    0.6   0.87    0
+    0.7   0.94    0
+    0.85  0.98    0
+    1.0   1.0     0
+/
+
+-- OIL RELATIVE PERMEABILITY IS TABULATED AGAINST OIL SATURATION
+-- FOR OIL-WATER AND OIL-GAS-CONNATE WATER CASES
+--
+--  SOIL     KROW     KROG
+SOF3
+
+    0        0        0
+    0.18     0        0
+    0.28     0.0001   0.0001
+    0.38     0.001    0.001
+    0.43     0.01     0.01
+    0.48     0.021    0.021
+    0.58     0.09     0.09
+    0.63     0.2      0.2
+    0.68     0.35     0.35
+    0.76     0.7      0.7
+    0.83     0.98     0.98
+    0.86     0.997    0.997
+    0.879    1        1
+    0.88     1        1    /
 
 
-START             -- 0
-1 NOV 1979 /
+-- PVT PROPERTIES OF WATER
+--
+--    REF. PRES. REF. FVF  COMPRESSIBILITY  REF VISCOSITY  VISCOSIBILITY
+PVTW
+       4014.7     1.029        3.13D-6           0.31            0 /
 
-SCHEDULE
-SKIPREST
+-- ROCK COMPRESSIBILITY
+--
+--    REF. PRES   COMPRESSIBILITY
+ROCK
+        14.7          3.0D-6          /
+
+-- SURFACE DENSITIES OF RESERVOIR FLUIDS
+--
+--        OIL   WATER   GAS
+DENSITY
+         49.1   64.79  0.06054  /
+
+-- PVT PROPERTIES OF DRY GAS (NO VAPOURISED OIL)
+-- WE WOULD USE PVTG TO SPECIFY THE PROPERTIES OF WET GAS
+--
+--   PGAS   BGAS   VISGAS
+PVDG
+     14.7 166.666   0.008
+    264.7  12.093   0.0096
+    514.7   6.274   0.0112
+   1014.7   3.197   0.014
+   2014.7   1.614   0.0189
+   2514.7   1.294   0.0208
+   3014.7   1.080   0.0228
+   4014.7   0.811   0.0268
+   5014.7   0.649   0.0309
+   9014.7   0.386   0.047   /
+
+-- PVT PROPERTIES OF LIVE OIL (WITH DISSOLVED GAS)
+-- WE WOULD USE PVDO TO SPECIFY THE PROPERTIES OF DEAD OIL
+--
+-- FOR EACH VALUE OF RS THE SATURATION PRESSURE, FVF AND VISCOSITY
+-- ARE SPECIFIED. FOR RS=1.27 AND 1.618, THE FVF AND VISCOSITY OF
+-- UNDERSATURATED OIL ARE DEFINED AS A FUNCTION OF PRESSURE. DATA
+-- FOR UNDERSATURATED OIL MAY BE SUPPLIED FOR ANY RS, BUT MUST BE
+-- SUPPLIED FOR THE HIGHEST RS (1.618).
+--
+--   RS      POIL  FVFO  VISO
+PVTO
+    0.001    14.7 1.062  1.04    /
+    0.0905  264.7 1.15   0.975   /
+    0.18    514.7 1.207  0.91    /
+    0.371  1014.7 1.295  0.83    /
+    0.636  2014.7 1.435  0.695   /
+    0.775  2514.7 1.5    0.641   /
+    0.93   3014.7 1.565  0.594   /
+    1.270  4014.7 1.695  0.51
+           5014.7 1.671  0.549
+           9014.7 1.579  0.74    /
+    1.618  5014.7 1.827  0.449
+           9014.7 1.726  0.605   /
+/
+
+
+RPTPROPS 
+-- PROPS Reporting Options
+-- 
+/
+
+REGIONS    ===========================================================
+
+
+FIPNUM
+
+  100*1
+  400*2
+/
+
+EQLNUM
+
+  100*1
+  400*2
+/
+
+RPTREGS
+
+    /
+
+SOLUTION    ============================================================
+
+EQUIL
+ 7020.00 2700.00 7990.00  .00000 7020.00  .00000     0      0       5 /
+ 7200.00 3700.00 7300.00  .00000 7000.00  .00000     1      0       5 /
+
+RSVD       2 TABLES    3 NODES IN EACH           FIELD   12:00 17 AUG 83
+   7000.0  1.0000
+   7990.0  1.0000
+/
+   7000.0  1.0000
+   7400.0  1.0000
+/
+
 RPTRST
-BASIC=1
-/
-DATES             -- 1
- 10  OKT 2008 /
-/
+-- Restart File Output Control
+-- 
+'BASIC=2' 'FLOWS' 'POT' 'PRES' /
+ 
+RPTSOL
+-- 
+-- Initialisation Print Output
+-- 
+'PRES' 'SOIL' 'SWAT' 'SGAS' 'RS' 'RESTART=1' 'FIP=2' 'EQUIL' 'RSVD' /
+
+SUMMARY      ===========================================================
+
+FOPR
+
+WOPR
+ 'PROD'
+ /
+
+FGPR
+
+FWPR
+
+FWIR
+
+FWCT
+
+FGOR
+
+--RUNSUM
+
+ALL
+
+MSUMLINS
+
+MSUMNEWT
+
+SEPARATE
+
+SCHEDULE     ===========================================================
+
+DEBUG
+   1 3   /
+
+DRSDT
+   1.0E20  /
+
+RPTSCHED
+  'PRES'  'SWAT'  'SGAS'  'RESTART=1'  'RS'  'WELLS=2'  'SUMMARY=2'
+  'CPU=2' 'WELSPECS'   'NEWTON=2' /
+
+NOECHO
+
+
+ECHO
+
 WELSPECS
-      'OP_1'       'OP'   5   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-      'OP_2'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
+ 'PROD' 'G' 1 5 7030 'OIL' 0.0  'STD'  'STOP'  /
+ 'WINJ' 'G' 10 1 7030 'WAT' 0.0  'STD'  'STOP'   /
+/
+
+COMPDAT
+
+ 'PROD' 1 5 2 2   3*  0.2   3*  'X' /
+ 'PROD' 2 5 2 2   3*  0.2   3*  'X' /
+ 'PROD' 3 5 2 2   3*  0.2   3*  'X' /
+ 'PROD' 4 5 2 2   3*  0.2   3*  'X' /
+ 'PROD' 5 5 2 2   3*  0.2   3*  'X' /
+
+ 'PROD' 1 5 5 5   3*  0.2   3*  'X' /
+ 'PROD' 2 5 5 5   3*  0.2   3*  'X' /
+ 'PROD' 3 5 5 5   3*  0.2   3*  'X' /
+ 'PROD' 4 5 5 5   3*  0.2   3*  'X' /
+ 'PROD' 5 5 5 5   3*  0.2   3*  'X' /
+
+ 'PROD' 1 5 6 6   3*  0.2   3*  'X' /
+ 'PROD' 2 5 6 6   3*  0.2   3*  'X' /
+ 'PROD' 3 5 6 6   3*  0.2   3*  'X' /
+ 'PROD' 4 5 6 6   3*  0.2   3*  'X' /
+ 'PROD' 5 5 6 6   3*  0.2   3*  'X' /
+
+ 'PROD' 1 5 8 8   3*  0.2   3*  'X' /
+ 'PROD' 2 5 8 8   3*  0.2   3*  'X' /
+ 'PROD' 3 5 8 8   3*  0.2   3*  'X' /
+ 'PROD' 4 5 8 8   3*  0.2   3*  'X' /
+ 'PROD' 5 5 8 8   3*  0.2   3*  'X' /
+
+ 'WINJ' 10 1 1 1   3*  0.2   3*  'X' /
+ 'WINJ'   9 1 1 1   3*  0.2   3*  'X' /
+ 'WINJ'   8 1 1 1   3*  0.2   3*  'X' /
+ 'WINJ'   7 1 1 1   3*  0.2   3*  'X' /
+ 'WINJ'   6 1 1 1   3*  0.2   3*  'X' /
+
+ 'WINJ' 10 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ'   9 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ'   8 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ'   7 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ'   6 1  9 9   3*  0.2   3*  'X' /
 /
 
 WELSEGS
-    'OP_1' 20. 0.25 1.0e-5 'ABS' 'HFA' 'HO' /
-     2         2      1      1    20.25 0.5       0.3  0.00010 /
-     3         3      2      1    20.50 0.5       0.3  0.00010 /
-     4         4      2      3    20.75 0.5       0.3  0.00010 /
-     /
-COMPDAT
-      'OP_1'  5  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-      'OP_2'  5  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 /
-      'OP_1'  5  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-      'OP_1'  6  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-      'OP_1'  7  9   3   3 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
+
+-- Name    Dep 1   Tlen 1  Vol 1
+  'PROD'   7010      10    0.31   'INC' /
+
+-- First   Last   Branch   Outlet  Length   Depth  Diam  Ruff  Area  Vol
+-- Seg     Seg    Num      Seg              Chang
+-- Main Stem
+    2       12     1        1         20     20    0.2   1.E-3  1*   1* /
+-- Top Branch
+    13      13     2        2         50      0    0.2   1.E-3  1*   1* /
+    14      17     2        13       100      0    0.2   1.E-3  1*   1* /
+-- Middle Branch
+    18      18     3        9         50      0    0.2   1.E-3  1*   1* /
+    19      22     3        18       100      0    0.2   1.E-3  1*   1* /
+-- Bottom Branch
+    23      23     4        12        50      0    0.2   1.E-3  1*   1* /
+    24      27     4        23       100      0    0.2   1.E-3  1*   1* /
+-- Lower Middle Branch
+    28      28     5        10         50      0    0.2   1.E-3  1*   1* /
+    29      32     5        28       100      0    0.2   1.E-3  1*   1* /
+ /
+
 COMPSEGS
-  'OP_1'/
-     5    9     1     1   20      20.25 /
-     5    9     3     1   20.25   20.5  /
-     6    9     3     2   20.5    20.75 /
-     7    9     3     2   20.75   21.0  /
-/
+
+-- Name
+  'PROD' /
+
+-- I  J  K  Brn  Start   End     Dirn   End
+--          No   Length  Length  Penet  Range
+-- Top Branch
+  1  5  2  2         30      130     'X'    3* /
+  2  5  2  2        130      230     'X'    3* /
+  3  5  2  2        230      330     'X'    3* /
+  4  5  2  2        330      430     'X'    3* /
+  5  5  2  2        430      530     'X'    3* /
+-- Middle Branch
+  1  5  5  3        170      270     'X'    3* /
+  2  5  5  3        270      370     'X'    3* /
+  3  5  5  3        370      470     'X'    3* /
+  4  5  5  3        470      570     'X'    3* /
+  5  5  5  3        570      670     'X'    3* /
+-- Lower Middle Branch
+  1  5  6  5        170      270     'X'    3* /
+  2  5  6  5        270      370     'X'    3* /
+  3  5  6  5        370      470     'X'    3* /
+  4  5  6  5        470      570     'X'    3* /
+  5  5  6  5        570      670     'X'    3* /
+-- Bottom Branch
+  1  5  8  4        230      330     'X'    3* /
+  2  5  8  4        330      430     'X'    3* /
+  3  5  8  4        430      530     'X'    3* /
+  4  5  8  4        530      630     'X'    3* /
+  5  5  8  4        630      730     'X'    3* /
+ /
+WELSEGS
+
+-- Name    Dep 1   Tlen 1  Vol 1
+  'WINJ'   7010      10    0.31   'INC' /
+
+-- First   Last   Branch   Outlet  Length   Depth  Diam  Ruff  Area  Vol
+-- Seg     Seg    Num      Seg              Chang
+-- Main Stem
+    2       14     1        1         20     20    0.2   1.E-3  1*   1* /
+-- Top Branch
+    15      15     2        2         50      0    0.2   1.E-3  1*   1* /
+    16      19     2        15       100      0    0.2   1.E-3  1*   1* /
+-- Bottom Branch
+    20      20     3        14        50      0    0.2   1.E-3  1*   1* /
+    21      24     3        20       100      0    0.2   1.E-3  1*   1* /
+ /
+
+COMPSEGS
+
+-- Name
+  'WINJ' /
+
+-- I  J  K  Brn  Start   End     Dirn   End
+--          No   Length  Length  Penet  Range
+-- Top Branch
+  10  1  1  2         30      130     'X'    3* /
+    9  1  1  2        130      230     'X'    3* /
+    8  1  1  2        230      330     'X'    3* /
+    7  1  1  2        330      430     'X'    3* /
+    6  1  1  2        430      530     'X'    3* /
+-- Bottom Branch
+  10  1  9  3        270      370     'X'    3* /
+    9  1  9  3        370      470     'X'    3* /
+    8  1  9  3        470      570     'X'    3* /
+    7  1  9  3        570      670     'X'    3* /
+    6  1  9  3        670      770     'X'    3* /
+ /
+
+
 WCONPROD
-      'OP_1' 'OPEN' 'ORAT' 20000  4* 1000 /
-/
+ 'PROD' 'OPEN' 'LRAT'  3*  4000  1*  1000  1*  /
+ /
+
 WCONINJE
-      'OP_2' 'GAS' 'OPEN' 'RATE' 100 200 400 /
+ 'WINJ' 'WAT' 'OPEN' 'RESV'  1*  2000  3500  1*  /
+ /
+
+
+TUNING
+ /
+ /
+ /
+
+TSTEP
+ 2 2
 /
 
-DATES             -- 2
- 20  JAN 2011 /
-/
-WELSPECS
-      'OP_3'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
-      'OP_3'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-WCONPROD
-      'OP_3' 'OPEN' 'ORAT' 20000  4* 1000 /
-/
-WCONINJE
-      'OP_2' 'WATER' 'OPEN' 'RATE' 100 200 400 /
-/
 
-DATES             -- 3
- 15  JUN 2013 /
-/
-COMPDAT
-      'OP_2'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-      'OP_1'  5  9   7  7 'SHUT' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
+END
 
-DATES             -- 4
- 22  APR 2014 /
-/
-WELSPECS
-      'OP_4'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
-      'OP_4'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-      'OP_3'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-WCONPROD
-      'OP_4' 'OPEN' 'ORAT' 20000  4* 1000 /
-/
-
-DATES             -- 5
- 30  AUG 2014 /
-/
-WELSPECS
-      'OP_5'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
-      'OP_5'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-WCONPROD
-      'OP_5' 'OPEN' 'ORAT' 20000  4* 1000 /
-/
-
-DATES             -- 6
- 15  SEP 2014 /
-/
-WCONPROD
-      'OP_3' 'SHUT' 'ORAT' 20000  4* 1000 /
-/
-
-DATES             -- 7
- 9  OCT 2014 /
-/
-WELSPECS
-      'OP_6'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  /
-/
-COMPDAT
-      'OP_6'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 /
-/
-WCONPROD
-      'OP_6' 'OPEN' 'ORAT' 20000  4* 1000 /
-/
-TSTEP            -- 8
-10 /
 )~" };
 
         return Opm::Parser{}.parseString(input);
@@ -246,15 +551,15 @@ TSTEP            -- 8
     {
         auto state = Opm::SummaryState{};
 
-	state.add("SPR:OP_1:(1)",   235.);
-	state.add("SPR:OP_1:(2)",   237.);
-	state.add("SPR:OP_1:(3)",   239.);
-	state.add("SPR:OP_1:(4)",   243.);
+	state.add("SPR:PROD:(1)",   235.);
+	state.add("SPR:PROD:(2)",   237.);
+	state.add("SPR:PROD:(3)",   239.);
+	state.add("SPR:PROD:(4)",   243.);
 
-	state.add("SOFR:OP_1:(1)",   35.);
-	state.add("SOFR:OP_1:(2)",   30.);
-	state.add("SOFR:OP_1:(3)",   25.);
-	state.add("SOFR:OP_1:(4)",   20.);
+	state.add("SOFR:PROD:(1)",   35.);
+	state.add("SOFR:PROD:(2)",   30.);
+	state.add("SOFR:PROD:(3)",   25.);
+	state.add("SOFR:PROD:(4)",   20.);
         return state;
     }
 
@@ -267,14 +572,14 @@ TSTEP            -- 8
 
         {
 
-	    auto& s = xw["OP_1"].segments[1];
+	    auto& s = xw["PROD"].segments[1];
 	    s.rates.set(o::wat, 1.0);
 	    s.rates.set(o::oil, 2.0);
 	    s.rates.set(o::gas, 3.0);
 	    s.pressure = 235.;
 		
-	    auto& s2 = xw["OP_1"].segments[2];
-	    //xw["OP_1"].segments.insert(std::make_pair(2, Segment());
+	    auto& s2 = xw["PROD"].segments[2];
+	    //xw["PROD"].segments.insert(std::make_pair(2, Segment());
 	    s2.rates.set(o::wat, 0.5);
 	    s2.rates.set(o::oil, 1.0);
 	    s2.rates.set(o::gas, 2.0);
@@ -329,7 +634,7 @@ BOOST_AUTO_TEST_CASE (Test_of_rseg_data)
     msw.captureDeclaredMSWData(simCase.sched, rptStep, simCase.es.getUnits(),ih.value, 
 			       simCase.es.getInputGrid(), smry);
 
-    // rseg (OP_1) -- producer
+    // rseg (PROD) -- producer
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
 
@@ -423,7 +728,7 @@ BOOST_AUTO_TEST_CASE (Test_of_rseg_data)
                           xwell[i2 + Ix::GasPrRate], 1.0e-10);
     }
     
-        // RSEG (OP_1) -- producer
+        // RSEG (PROD) -- producer
     {
         using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
 
