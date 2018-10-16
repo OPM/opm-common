@@ -111,7 +111,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/SkprwatTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SkprpolyTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SimpleTable.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/Simple2DTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/PolyInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableColumn.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableContainer.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableIndex.cpp
@@ -384,7 +384,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp
        opm/parser/eclipse/EclipseState/EndpointScaling.hpp
        opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp
-       opm/parser/eclipse/EclipseState/Tables/Simple2DTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/PolyInjTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp

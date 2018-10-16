@@ -20,17 +20,19 @@
 #ifndef OPM_PARSER_SKPRPOLY_TABLE_HPP
 #define OPM_PARSER_SKPRPOLY_TABLE_HPP
 
-#include <opm/parser/eclipse/EclipseState/Tables/Simple2DTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PolyInjTable.hpp>
 namespace Opm {
 
     class DeckKeyword;
 
-    class SkprpolyTable : public Simple2DTable {
+    class SkprpolyTable : public PolyInjTable {
     public:
 
         explicit SkprpolyTable(const DeckKeyword& table);
 
         double referenceConcentration() const;
+
+        const std::vector<std::vector<double>>& getSkinPressures() const;
 
     private:
         double m_ref_polymer_concentration;

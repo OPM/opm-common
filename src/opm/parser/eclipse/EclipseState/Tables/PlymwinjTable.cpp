@@ -31,13 +31,15 @@ namespace Opm{
         using namespace ParserKeywords;
 
         const DeckRecord& record0 = table.getRecord(0);
+
         m_table_number = record0.getItem<PLYMWINJ::TABLE_NUMBER>().get< int >(0);
         if (m_table_number <= 0) {
             const std::string msg = "PLYMWINJ table has non-positive table number " + std::to_string(m_table_number);
             throw std::invalid_argument(msg);
         }
-        m_x_points = table.getRecord(1).getItem<PLYMWINJ::THROUGHPUT>().getSIDoubleData();
-        const size_t num_cols = m_x_points.size();
+
+        m_throughputs = table.getRecord(1).getItem<PLYMWINJ::THROUGHPUT>().getSIDoubleData();
+        const size_t num_cols = m_throughputs.size();
 
         if (table.size() != num_cols + 3) {
             const std::string msg = "PLYMWINJ table " + std::to_string(m_table_number)
@@ -45,8 +47,8 @@ namespace Opm{
             throw std::invalid_argument(msg);
         }
 
-        m_y_points = table.getRecord(2).getItem<PLYMWINJ::VELOCITY>().getSIDoubleData();
-        const size_t num_rows = m_y_points.size();
+        m_velocities = table.getRecord(2).getItem<PLYMWINJ::VELOCITY>().getSIDoubleData();
+        const size_t num_rows = m_velocities.size();
 
         for (size_t i = 3; i < table.size(); ++i) {
             const DeckRecord& record_i = table.getRecord(i);
@@ -59,5 +61,11 @@ namespace Opm{
             }
             m_data.push_back(data_i);
         }
+    }
+
+    const std::vector<std::vector<double>>&
+    PlymwinjTable::getMoleWeights() const
+    {
+        return getTableData();
     }
 }

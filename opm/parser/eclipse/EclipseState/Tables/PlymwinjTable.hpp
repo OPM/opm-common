@@ -20,16 +20,17 @@
 #ifndef OPM_PARSER_PLYMWINJ_TABLE_HPP
 #define OPM_PARSER_PLYMWINJ_TABLE_HPP
 
-#include <opm/parser/eclipse/EclipseState/Tables/Simple2DTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PolyInjTable.hpp>
 namespace Opm {
 
     class DeckKeyword;
 
-    class PlymwinjTable : public Simple2DTable {
+    class PlymwinjTable : public PolyInjTable {
     public:
 
         explicit PlymwinjTable(const DeckKeyword& table);
 
+        const std::vector<std::vector<double>>& getMoleWeights() const;
     };
 
 }

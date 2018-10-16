@@ -1226,14 +1226,14 @@ BOOST_AUTO_TEST_CASE( TestPLYMWINJ ) {
         BOOST_CHECK_EQUAL( searchtable2->first, table2.getTableNumber() );
         BOOST_CHECK_EQUAL( table2.getTableNumber(), 2 );
 
-        const std::vector<double>& throughputs = table2.getXSamplingPoints();
+        const std::vector<double>& throughputs = table2.getThroughputs();
         BOOST_CHECK_EQUAL( throughputs.size(), 3 );
         BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
-        const std::vector<double>& velocities = table2.getYSamplingPoints();
+        const std::vector<double>& velocities = table2.getVelocities();
         BOOST_CHECK_EQUAL( velocities.size(), 4 );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
-        const std::vector<std::vector<double>>& mwdata = table2.getTableData();
+        const std::vector<std::vector<double>>& mwdata = table2.getMoleWeights();
 
         BOOST_CHECK_EQUAL( mwdata.size(), throughputs.size() );
         for (const auto& data : mwdata) {
@@ -1250,14 +1250,14 @@ BOOST_AUTO_TEST_CASE( TestPLYMWINJ ) {
         BOOST_CHECK_EQUAL( searchtable3->first, table3.getTableNumber() );
         BOOST_CHECK_EQUAL( table3.getTableNumber(), 3 );
 
-        const std::vector<double>& throughputs = table3.getXSamplingPoints();
+        const std::vector<double>& throughputs = table3.getThroughputs();
         BOOST_CHECK_EQUAL( throughputs.size(), 2 );
         BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
-        const std::vector<double>& velocities = table3.getYSamplingPoints();
+        const std::vector<double>& velocities = table3.getVelocities();
         BOOST_CHECK_EQUAL( velocities.size(), 3 );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
-        const std::vector<std::vector<double>>& mwdata = table3.getTableData();
+        const std::vector<std::vector<double>>& mwdata = table3.getMoleWeights();
 
         BOOST_CHECK_EQUAL( mwdata.size(), throughputs.size() );
         for (const auto& data : mwdata) {
@@ -1304,14 +1304,14 @@ BOOST_AUTO_TEST_CASE( TestSKPRWAT ) {
         BOOST_CHECK_EQUAL( searchtable1->first, table1.getTableNumber() );
         BOOST_CHECK_EQUAL( table1.getTableNumber(), 1 );
 
-        const std::vector<double>& throughputs = table1.getXSamplingPoints();
+        const std::vector<double>& throughputs = table1.getThroughputs();
         BOOST_CHECK_EQUAL( throughputs.size(), 3 );
         BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
-        const std::vector<double>& velocities = table1.getYSamplingPoints();
+        const std::vector<double>& velocities = table1.getVelocities();
         BOOST_CHECK_EQUAL( velocities.size(), 4 );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
-        const std::vector<std::vector<double>>& skindata = table1.getTableData();
+        const std::vector<std::vector<double>>& skindata = table1.getSkinPressures();
 
         BOOST_CHECK_EQUAL( skindata.size(), throughputs.size() );
         for (const auto& data : skindata) {
@@ -1329,14 +1329,14 @@ BOOST_AUTO_TEST_CASE( TestSKPRWAT ) {
         BOOST_CHECK_EQUAL( searchtable2->first, table2.getTableNumber() );
         BOOST_CHECK_EQUAL( table2.getTableNumber(), 2 );
 
-        const std::vector<double>& throughputs = table2.getXSamplingPoints();
+        const std::vector<double>& throughputs = table2.getThroughputs();
         BOOST_CHECK_EQUAL( throughputs.size(), 2 );
         BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
-        const std::vector<double>& velocities = table2.getYSamplingPoints();
+        const std::vector<double>& velocities = table2.getVelocities();
         BOOST_CHECK_EQUAL( velocities.size(), 3 );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
-        const std::vector<std::vector<double>>& skindata = table2.getTableData();
+        const std::vector<std::vector<double>>& skindata = table2.getSkinPressures();
 
         BOOST_CHECK_EQUAL( skindata.size(), throughputs.size() );
         for (const auto& data : skindata) {
@@ -1385,14 +1385,14 @@ BOOST_AUTO_TEST_CASE( TestSKPRPOLY ) {
         BOOST_CHECK_EQUAL( table1.getTableNumber(), 1 );
 
         BOOST_CHECK_EQUAL( table1.referenceConcentration(), 2.0 );
-        const std::vector<double>& throughputs = table1.getXSamplingPoints();
+        const std::vector<double>& throughputs = table1.getThroughputs();
         BOOST_CHECK_EQUAL( throughputs.size(), 3 );
         BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
-        const std::vector<double>& velocities = table1.getYSamplingPoints();
+        const std::vector<double>& velocities = table1.getVelocities();
         BOOST_CHECK_EQUAL( velocities.size(), 4 );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
-        const std::vector<std::vector<double>>& skindata = table1.getTableData();
+        const std::vector<std::vector<double>>& skindata = table1.getSkinPressures();
 
         BOOST_CHECK_EQUAL( skindata.size(), throughputs.size() );
         for (const auto& data : skindata) {
@@ -1411,14 +1411,14 @@ BOOST_AUTO_TEST_CASE( TestSKPRPOLY ) {
         BOOST_CHECK_EQUAL( table2.getTableNumber(), 2 );
 
         BOOST_CHECK_EQUAL( table2.referenceConcentration(), 3.0 );
-        const std::vector<double>& throughputs = table2.getXSamplingPoints();
+        const std::vector<double>& throughputs = table2.getThroughputs();
         BOOST_CHECK_EQUAL( throughputs.size(), 2 );
         BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
-        const std::vector<double>& velocities = table2.getYSamplingPoints();
+        const std::vector<double>& velocities = table2.getVelocities();
         BOOST_CHECK_EQUAL( velocities.size(), 3 );
         constexpr double dayinseconds = 86400.;
         BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
-        const std::vector<std::vector<double>>& skindata = table2.getTableData();
+        const std::vector<std::vector<double>>& skindata = table2.getSkinPressures();
 
         BOOST_CHECK_EQUAL( skindata.size(), throughputs.size() );
         for (const auto& data : skindata) {

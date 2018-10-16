@@ -19,27 +19,27 @@
 
 // TODO: this will go to Tables.cpp later.
 
-#include <opm/parser/eclipse/EclipseState/Tables/Simple2DTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PolyInjTable.hpp>
 
 
 namespace Opm{
 
-    int Simple2DTable::getTableNumber() const
+    int PolyInjTable::getTableNumber() const
     {
         return m_table_number;
     }
 
-    const std::vector<double>& Simple2DTable::getXSamplingPoints() const
+    const std::vector<double>& PolyInjTable::getThroughputs() const
     {
-        return m_x_points;
+        return m_throughputs;
     }
 
-    const std::vector<double>& Simple2DTable::getYSamplingPoints() const
+    const std::vector<double>& PolyInjTable::getVelocities() const
     {
-        return m_y_points;
+        return m_velocities;
     }
 
-    const std::vector<std::vector<double>>& Simple2DTable::getTableData() const
+    const std::vector<std::vector<double>>& PolyInjTable::getTableData() const
     {
         return m_data;
     }

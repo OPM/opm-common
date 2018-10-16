@@ -17,25 +17,42 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_PARSER_SIMPLE_2D_TABLE_HPP
-#define OPM_PARSER_SIMPLE_2D_TABLE_HPP
+#ifndef OPM_PARSER_POLY_INJ_TABLE_HPP
+#define OPM_PARSER_POLY_INJ_TABLE_HPP
+
+
+/* This class is introduced for the following keywords related to polymer injectivity study.
+ * PLYMWINJ, SKPRWAT, SKPRPOLY .
+ * These keywords share very similar structure with small difference.
+ *
+ * KEYWORD
+ *  1 / --table number
+ *  0  20  30 / -- water throughputs
+ *  0 0.1 0.2 0.3 / -- water velocities
+ *  -- the rest is the table data,
+ *  -- each row corresponds to one value in throughputs
+ *  -- each column corresponds to one value in water velocities
+ *  20 19 18 17 /
+ *  20 18 17 16 /
+ *  20 17 16 15 /
+ */
 
 #include <vector>
 
 namespace Opm {
 
-    class Simple2DTable {
+    class PolyInjTable {
     public:
 
         int getTableNumber() const;
 
-        const std::vector<double>& getXSamplingPoints() const;
-        const std::vector<double>& getYSamplingPoints() const;
+        const std::vector<double>& getThroughputs() const;
+        const std::vector<double>& getVelocities() const;
         const std::vector<std::vector<double>>& getTableData() const;
 
     protected:
-        std::vector<double> m_x_points;
-        std::vector<double> m_y_points;
+        std::vector<double> m_throughputs;
+        std::vector<double> m_velocities;
 
         // TODO: maybe not needed, since this is also stored in the std::map
         int m_table_number;
@@ -47,4 +64,4 @@ namespace Opm {
     };
 }
 
-#endif // OPM_PARSER_SIMPLE_2D_TABLE_HPP
+#endif // OPM_PARSER_POLY_INJ_TABLE_HPP

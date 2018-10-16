@@ -20,15 +20,17 @@
 #ifndef OPM_PARSER_SKPRWAT_TABLE_HPP
 #define OPM_PARSER_SKPRWAT_TABLE_HPP
 
-#include <opm/parser/eclipse/EclipseState/Tables/Simple2DTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PolyInjTable.hpp>
 namespace Opm {
 
     class DeckKeyword;
 
-    class SkprwatTable : public Simple2DTable {
+    class SkprwatTable : public PolyInjTable {
     public:
 
         explicit SkprwatTable(const DeckKeyword& table);
+
+        const std::vector<std::vector<double>>& getSkinPressures() const;
 
     };
 
