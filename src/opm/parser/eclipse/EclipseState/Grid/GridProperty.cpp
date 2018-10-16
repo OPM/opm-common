@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/Box.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -281,15 +282,36 @@ namespace Opm {
     }
 
     template< typename T >
-    void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox ) {
-        if (inputBox.isGlobal()) {
-            for (size_t i = 0; i < src.getCartesianSize(); ++i)
-                m_data[i] = src.m_data[i];
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = src.m_data[targetIndex];
+    void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox, const UnitSystem* unitSystem ) {
+        if (unitSystem) {
+            // this deals with assignments of fields that exhibit different units. after the
+            // COPY operation the grid property ought to exhibit the same values in terms of
+            // the unit system used by the deck, which do not necessarily correspond to
+            // identical values in SI units.
+            const auto& srcDim = unitSystem->parse(src.getDimensionString());
+            const auto& dstDim = unitSystem->parse(getDimensionString());
+
+            if (inputBox.isGlobal()) {
+                for (size_t i = 0; i < src.getCartesianSize(); ++i)
+                    m_data[i] = dstDim.convertRawToSi(srcDim.convertSiToRaw(src.m_data[i]));
+            } else {
+                const std::vector<size_t>& indexList = inputBox.getIndexList();
+                for (size_t i = 0; i < indexList.size(); i++) {
+                    size_t targetIndex = indexList[i];
+                    m_data[targetIndex] = dstDim.convertRawToSi(srcDim.convertSiToRaw(src.m_data[targetIndex]));
+                }
+            }
+        }
+        else {
+            if (inputBox.isGlobal()) {
+                for (size_t i = 0; i < src.getCartesianSize(); ++i)
+                    m_data[i] = src.m_data[i];
+            } else {
+                const std::vector<size_t>& indexList = inputBox.getIndexList();
+                for (size_t i = 0; i < indexList.size(); i++) {
+                    size_t targetIndex = indexList[i];
+                    m_data[targetIndex] = src.m_data[targetIndex];
+                }
             }
         }
     }

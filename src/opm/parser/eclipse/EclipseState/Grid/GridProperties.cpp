@@ -230,7 +230,7 @@ namespace Opm {
         const auto& src = this->getKeyword( srcField );
         auto& target    = this->getOrCreateProperty( targetField );
 
-        target.copyFrom( src , inputBox );
+        target.copyFrom( src , inputBox, m_deckUnitSystem );
     }
 
 
