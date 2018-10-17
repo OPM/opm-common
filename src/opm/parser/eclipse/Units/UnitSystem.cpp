@@ -797,16 +797,21 @@ namespace {
     }
 
 
-    ert_ecl_unit_enum UnitSystem::getEclType() const {
-        switch ( m_unittype ) {
-          case UnitType::UNIT_TYPE_METRIC: return ECL_METRIC_UNITS;
-          case UnitType::UNIT_TYPE_FIELD:  return ECL_FIELD_UNITS;
-          case UnitType::UNIT_TYPE_LAB:    return ECL_LAB_UNITS;
-          case UnitType::UNIT_TYPE_PVT_M:  return ECL_PVT_M_UNITS;
-          case UnitType::UNIT_TYPE_INPUT:  throw std::runtime_error("UNIT_TYPE_INPUT has no counterpart in the ert_ecl_unit_enum type.");
+    ert_ecl_unit_enum UnitSystem::ecl_units(UnitSystem::UnitType opm_type) {
+        switch ( opm_type ) {
+        case UnitType::UNIT_TYPE_METRIC: return ECL_METRIC_UNITS;
+        case UnitType::UNIT_TYPE_FIELD:  return ECL_FIELD_UNITS;
+        case UnitType::UNIT_TYPE_LAB:    return ECL_LAB_UNITS;
+        case UnitType::UNIT_TYPE_PVT_M:  return ECL_PVT_M_UNITS;
+        case UnitType::UNIT_TYPE_INPUT:  throw std::runtime_error("UNIT_TYPE_INPUT has no counterpart in the ert_ecl_unit_enum type.");
         default:
             throw std::runtime_error("What has happened here?");
         }
+    }
+
+
+    ert_ecl_unit_enum UnitSystem::getEclType() const {
+        return UnitSystem::ecl_units( this->m_unittype );
     }
 
 

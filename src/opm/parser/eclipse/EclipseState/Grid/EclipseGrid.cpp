@@ -32,12 +32,14 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/I.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
@@ -54,10 +56,10 @@ namespace Opm {
 
 
     EclipseGrid::EclipseGrid(std::array<int, 3>& dims ,
-			     const std::vector<double>& coord , 
-			     const std::vector<double>& zcorn , 
-			     const int * actnum, 
-			     const double * mapaxes) 
+			     const std::vector<double>& coord ,
+			     const std::vector<double>& zcorn ,
+			     const int * actnum,
+			     const double * mapaxes)
 	: GridDims(dims),
           m_minpvValue(0),
 	  m_minpvMode(MinpvMode::ModeEnum::Inactive),
@@ -204,6 +206,8 @@ namespace Opm {
                 initCornerPointGrid(dims , deck);
             } else if (hasCartesianKeywords(deck)) {
                 initCartesianGrid(dims , deck);
+            } else if (hasGDFILE(deck)) {
+                initBinaryGrid(deck);
             } else {
                 throw std::invalid_argument("EclipseGrid needs cornerpoint or cartesian keywords.");
             }
@@ -291,6 +295,16 @@ namespace Opm {
         return m_minpvValue;
     }
 
+
+    void EclipseGrid::initBinaryGrid(const Deck& deck) {
+        const auto& gdfile_record = deck.getKeyword<ParserKeywords::GDFILE>().getRecord(0);
+        const std::string& filename = gdfile_record.getItem("filename").get<std::string>(0);
+        ecl_grid_type * grid_ptr = ecl_grid_load_case__( filename.c_str(), false);
+        if (grid_ptr)
+            this->m_grid.reset( grid_ptr );
+        else
+            throw std::invalid_argument("Failed to load grid from: " + filename);
+    }
 
     void EclipseGrid::initCartesianGrid(const std::array<int, 3>& dims , const Deck& deck) {
         if (hasDVDEPTHZKeywords( deck ))
@@ -538,6 +552,9 @@ namespace Opm {
     }
 
 
+    bool EclipseGrid::hasGDFILE(const Deck& deck) {
+        return deck.hasKeyword<ParserKeywords::GDFILE>();
+    }
 
     bool EclipseGrid::hasCartesianKeywords(const Deck& deck) {
         if (hasDVDEPTHZKeywords( deck ))
@@ -884,6 +901,20 @@ namespace Opm {
         ecl_grid_init_zcorn_data_double( c_ptr() , zcorn.data() );
 
         return mapper.fixupZCORN( zcorn );
+    }
+
+
+    void EclipseGrid::addNNC(const NNC& nnc) {
+        int idx = 0;
+        auto* ecl_grid = const_cast< ecl_grid_type* >( this->c_ptr() );
+        for (const NNCdata& n : nnc.nncdata())
+            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
+    }
+
+
+    void EclipseGrid::save(const std::string& filename, UnitSystem::UnitType output_units) const {
+        auto* ecl_grid = const_cast< ecl_grid_type* >( this->c_ptr() );
+        ecl_grid_fwrite_EGRID2(ecl_grid, filename.c_str(), UnitSystem::ecl_units(output_units));
     }
 
 

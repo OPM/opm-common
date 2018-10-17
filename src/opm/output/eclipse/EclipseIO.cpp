@@ -205,7 +205,7 @@ class EclipseIO::Impl {
     public:
     Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& );
         void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) const;
-        void writeEGRIDFile( const NNC& nnc ) const;
+        void writeEGRIDFile( const NNC& nnc );
 
         const EclipseState& es;
         EclipseGrid grid;
@@ -374,7 +374,7 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<st
 }
 
 
-void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) const {
+void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) {
     const auto& ioConfig = this->es.getIOConfig();
 
     std::string  egridFile( ERT::EclFilename( this->outputDir,
@@ -382,14 +382,8 @@ void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) const {
                                               ECL_EGRID_FILE,
                                               ioConfig.getFMTOUT() ));
 
-    {
-        int idx = 0;
-        auto* ecl_grid = const_cast< ecl_grid_type* >( this->grid.c_ptr() );
-        for (const NNCdata& n : nnc.nncdata())
-            ecl_grid_add_self_nnc( ecl_grid, n.cell1, n.cell2, idx++);
-
-        ecl_grid_fwrite_EGRID2(ecl_grid, egridFile.c_str(), this->es.getDeckUnitSystem().getEclType() );
-    }
+    this->grid.addNNC( nnc );
+    this->grid.save( egridFile, this->es.getDeckUnitSystem().getType());
 }
 
 /*

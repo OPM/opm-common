@@ -65,6 +65,7 @@ namespace Opm {
 
     private:
         void init(const DeckKeyword& keyword);
+        void binary_init(const DeckKeyword& gdfile);
     };
 }
 

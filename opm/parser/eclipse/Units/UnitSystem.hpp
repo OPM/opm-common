@@ -97,6 +97,7 @@ namespace Opm {
         void to_si( measure, std::vector<double>& ) const;
         const char* name( measure ) const;
 
+        static ert_ecl_unit_enum ecl_units(UnitType opm_unit);
         static UnitSystem newMETRIC();
         static UnitSystem newFIELD();
         static UnitSystem newLAB();

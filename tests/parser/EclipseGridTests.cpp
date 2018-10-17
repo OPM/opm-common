@@ -27,6 +27,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <ert/util/test_work_area.h>
+
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -785,7 +788,23 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
     BOOST_CHECK(grid1.equal( grid2 ));
 }
 
+BOOST_AUTO_TEST_CASE(GDFILE) {
+    const char* gdfile_deck =
+        "GRID\n"
+        "GDFILE\n"
+        "CASE.EGRID /\n"
+        "\n";
 
+    Opm::EclipseGrid grid1(createCPDeck());
+    test_work_area_type * work_area = test_work_area_alloc("GDFILE");
+    grid1.save("CASE.EGRID", Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    {
+        Opm::Parser parser;
+        Opm::EclipseGrid grid2(parser.parseString(gdfile_deck, Opm::ParseContext() ));
+        BOOST_CHECK(grid1.equal(grid2));
+    }
+    test_work_area_free( work_area );
+}
 
 BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
     const char* deckData =

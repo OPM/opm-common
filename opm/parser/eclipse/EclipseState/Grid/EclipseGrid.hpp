@@ -38,6 +38,7 @@ namespace Opm {
 
     class Deck;
     class ZcornMapper;
+    class NNC;
 
     /**
        About cell information and dimension: The actual grid
@@ -76,6 +77,8 @@ namespace Opm {
         /// explicitly.  If a null pointer is passed, every cell is active.
         EclipseGrid(const Deck& deck, const int * actnum = nullptr);
 
+
+        static bool hasGDFILE(const Deck& deck);
         static bool hasCylindricalKeywords(const Deck& deck);
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
@@ -85,6 +88,8 @@ namespace Opm {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
+        void save(const std::string& filename, UnitSystem::UnitType output_units) const;
+        void addNNC(const NNC& nnc);
         /*
           Observe that the there is a getGlobalIndex(i,j,k)
           implementation in the base class. This method - translating
@@ -200,6 +205,7 @@ namespace Opm {
                 ert_ptr( ecl_grid_alloc_copy( src.get() ) ) {}
         };
         grid_ptr m_grid;
+        void initBinaryGrid(const Deck& deck);
 
         void initCornerPointGrid(const std::array<int,3>& dims ,
                                  const std::vector<double>& coord ,
