@@ -68,16 +68,16 @@ namespace Opm {
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
                         const Eclipse3DProperties& eclipseProperties,
-                        const Phases &phases,
+                        const Runspec &runspec,
                         const ParseContext& parseContext) :
         m_timeMap( deck ),
         m_rootGroupTree( this->m_timeMap, GroupTree{} ),
-        m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties{} ),
+        m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
         m_modifierDeck( this->m_timeMap, Deck{} ),
         m_tuning( this->m_timeMap ),
         m_messageLimits( this->m_timeMap ),
-        m_phases(phases),
+        m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() )
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
@@ -106,7 +106,7 @@ namespace Opm {
         Schedule(deck,
                  es.getInputGrid(),
                  es.get3DProperties(),
-                 es.runspec().phases(),
+                 es.runspec(),
                  parse_context)
     {}
 
@@ -259,6 +259,12 @@ namespace Opm {
 
         else if (keyword.name() == "DRVDT")
             handleDRVDT(keyword, currentStep);
+
+        else if (keyword.name() == "DRSDTR")
+            handleDRSDTR(keyword, currentStep);
+
+        else if (keyword.name() == "DRVDTR")
+            handleDRVDTR(keyword, currentStep);
 
         else if (keyword.name() == "VAPPARS")
             handleVAPPARS(keyword, currentStep);
@@ -507,32 +513,69 @@ namespace Opm {
     }
 
     void Schedule::handleVAPPARS( const DeckKeyword& keyword, size_t currentStep){
+        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::vector<double> vap(numPvtRegions);
+        std::vector<double> density(numPvtRegions);
         for( const auto& record : keyword ) {
-            double vap = record.getItem("OIL_VAP_PROPENSITY").get< double >(0);
-            double density = record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0);
-            auto vappars = OilVaporizationProperties::createVAPPARS(vap, density);
-            this->m_oilvaporizationproperties.update( currentStep, vappars );
-
+            std::fill(vap.begin(), vap.end(), record.getItem("OIL_VAP_PROPENSITY").get< double >(0));
+            std::fill(density.begin(), density.end(), record.getItem("OIL_DENSITY_PROPENSITY").get< double >(0));
+            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+            OilVaporizationProperties::updateVAPPARS(ovp, vap, density);
+            this->m_oilvaporizationproperties.update( currentStep, ovp );
         }
     }
 
     void Schedule::handleDRVDT( const DeckKeyword& keyword, size_t currentStep){
+        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::vector<double> max(numPvtRegions);
         for( const auto& record : keyword ) {
-            double max = record.getItem("DRVDT_MAX").getSIDouble(0);
-            auto drvdt = OilVaporizationProperties::createDRVDT(max);
-            this->m_oilvaporizationproperties.update( currentStep, drvdt );
-
+            std::fill(max.begin(), max.end(), record.getItem("DRVDT_MAX").getSIDouble(0));
+            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+            OilVaporizationProperties::updateDRVDT(ovp, max);
+            this->m_oilvaporizationproperties.update( currentStep, ovp );
         }
     }
 
 
     void Schedule::handleDRSDT( const DeckKeyword& keyword, size_t currentStep){
+        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::vector<double> max(numPvtRegions);
+        std::vector<std::string> options(numPvtRegions);
         for( const auto& record : keyword ) {
-            double max = record.getItem("DRSDT_MAX").getSIDouble(0);
-            std::string option = record.getItem("Option").get< std::string >(0);
-            auto drsdt = OilVaporizationProperties::createDRSDT(max, option);
-            this->m_oilvaporizationproperties.update( currentStep, drsdt );
+            std::fill(max.begin(), max.end(), record.getItem("DRSDT_MAX").getSIDouble(0));
+            std::fill(options.begin(), options.end(), record.getItem("Option").get< std::string >(0));
+            OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+            OilVaporizationProperties::updateDRSDT(ovp, max, options);
+            this->m_oilvaporizationproperties.update( currentStep, ovp );
         }
+    }
+
+    void Schedule::handleDRSDTR( const DeckKeyword& keyword, size_t currentStep){
+        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        std::vector<double> max(numPvtRegions);
+        std::vector<std::string> options(numPvtRegions);
+        size_t pvtRegionIdx = 0;
+        for( const auto& record : keyword ) {
+            max[pvtRegionIdx] = record.getItem("DRSDT_MAX").getSIDouble(0);
+            options[pvtRegionIdx] = record.getItem("Option").get< std::string >(0);
+            pvtRegionIdx++;
+        }
+        OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+        OilVaporizationProperties::updateDRSDT(ovp, max, options);
+        this->m_oilvaporizationproperties.update( currentStep, ovp );
+    }
+
+    void Schedule::handleDRVDTR( const DeckKeyword& keyword, size_t currentStep){
+        size_t numPvtRegions = m_runspec.tabdims().getNumPVTTables();
+        size_t pvtRegionIdx = 0;
+        std::vector<double> max(numPvtRegions);
+        for( const auto& record : keyword ) {
+            max[pvtRegionIdx] = record.getItem("DRVDT_MAX").getSIDouble(0);
+            pvtRegionIdx++;
+        }
+        OilVaporizationProperties ovp = this->m_oilvaporizationproperties.get(currentStep);
+        OilVaporizationProperties::updateDRVDT(ovp, max);
+        this->m_oilvaporizationproperties.update( currentStep, ovp );
     }
 
     void Schedule::handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode, const ParseContext& parseContext) {
@@ -1328,7 +1371,6 @@ namespace Opm {
             }
         }
     }
-
 
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext) {
         for (const auto& record : keyword) {

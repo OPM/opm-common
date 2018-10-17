@@ -567,7 +567,8 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     const auto& grid = state.getInputGrid();
     const TableManager table ( deck );
     const Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    const Schedule sched(deck, grid, eclipseProperties, Phases(true, true, true), parseContext );
+    Runspec runspec (deck);
+    const Schedule sched(deck, grid, eclipseProperties, runspec, parseContext );
     // checking the relation between segments and completions
     // and also the depth of completions
     {
@@ -1349,8 +1350,8 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-
-    Schedule sched(deck, grid, eclipseProperties, Phases(true, true, true) , ParseContext());
+    Runspec runspec (deck);
+    Schedule sched(deck, grid, eclipseProperties, runspec , ParseContext());
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("INJE1"));
@@ -1387,7 +1388,8 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties( deck , table, grid );
-    Schedule sched( deck, grid, eclipseProperties, Phases(true, true, true) , parseContext);
+    Runspec runspec (deck);
+    Schedule sched( deck, grid, eclipseProperties, runspec , parseContext);
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("PROD1"));

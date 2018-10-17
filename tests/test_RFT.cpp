@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
 
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
-        Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec().phases(), parse_context);
+        Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec(), parse_context);
         SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), parse_context);
         EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
         time_t start_time = schedule.posixStartTime();
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
 
-        Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec().phases(), parse_context);
+        Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec(), parse_context);
         SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), parse_context);
         EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
         time_t start_time = schedule.posixStartTime();

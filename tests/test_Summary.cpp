@@ -222,7 +222,7 @@ struct setup {
         deck( Parser().parseFile( path, parseContext ) ),
         es( deck, ParseContext() ),
         grid( es.getInputGrid() ),
-        schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), parseContext),
+        schedule( deck, grid, es.get3DProperties(), es.runspec(), parseContext),
         config( deck, schedule, es.getTableManager(), parseContext ),
         wells( result_wells() ),
         name( fname ),

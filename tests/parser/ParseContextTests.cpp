@@ -323,14 +323,15 @@ BOOST_AUTO_TEST_CASE( CheckUnsupportedInSCHEDULE ) {
     EclipseGrid grid( deckSupported );
     TableManager table ( deckSupported );
     Eclipse3DProperties eclipseProperties ( deckSupported , table, grid);
+    Runspec runspec(deckSupported);
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
-    BOOST_CHECK_NO_THROW( Schedule( deckSupported  , grid , eclipseProperties, Phases(true, true, true), parseContext  ));
-    BOOST_CHECK_NO_THROW( Schedule( deckUnSupported, grid , eclipseProperties, Phases(true, true, true), parseContext  ));
+    BOOST_CHECK_NO_THROW( Schedule( deckSupported  , grid , eclipseProperties, runspec, parseContext  ));
+    BOOST_CHECK_NO_THROW( Schedule( deckUnSupported, grid , eclipseProperties, runspec, parseContext  ));
 
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , eclipseProperties, Phases(true, true, true) , parseContext), std::invalid_argument );
-    BOOST_CHECK_NO_THROW( Schedule( deckSupported , grid , eclipseProperties, Phases(true, true, true) , parseContext));
+    BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , eclipseProperties, runspec , parseContext), std::invalid_argument );
+    BOOST_CHECK_NO_THROW( Schedule( deckSupported , grid , eclipseProperties, runspec , parseContext));
 }
 
 
@@ -399,12 +400,13 @@ BOOST_AUTO_TEST_CASE(TestCOMPORD) {
     EclipseGrid grid( deck );
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec(deck);
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::IGNORE);
-    BOOST_CHECK_NO_THROW( Schedule( deck , grid , eclipseProperties,  Phases(true, true, true), parseContext ));
+    BOOST_CHECK_NO_THROW( Schedule( deck , grid , eclipseProperties,  runspec, parseContext ));
 
     parseContext.update( ParseContext::UNSUPPORTED_COMPORD_TYPE , InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( Schedule( deck,  grid , eclipseProperties, Phases(true, true, true) , parseContext), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( deck,  grid , eclipseProperties, runspec , parseContext), std::invalid_argument );
 }
 
 
@@ -729,7 +731,8 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
         EclipseGrid grid( deckUnSupported );
         TableManager table ( deckUnSupported );
         Eclipse3DProperties eclipseProperties ( deckUnSupported , table, grid);
+        Runspec runspec( deckUnSupported);
 
-        BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , eclipseProperties, Phases(true, true, true) , parseContext), std::invalid_argument );
+        BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , eclipseProperties, runspec , parseContext), std::invalid_argument );
     }
 }
