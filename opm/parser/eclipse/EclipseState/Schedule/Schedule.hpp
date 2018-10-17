@@ -73,7 +73,7 @@ namespace Opm
         time_t getStartTime() const;
         time_t posixStartTime() const;
         time_t posixEndTime() const;
-
+        double seconds(size_t timeStep) const;
 
         const TimeMap& getTimeMap() const;
 

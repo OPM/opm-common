@@ -44,6 +44,7 @@ namespace Opm {
         size_t last() const;
         size_t numTimesteps() const;
         double getTotalTime() const;
+        double seconds(size_t timeStep) const;
 
         std::time_t operator[] (size_t index) const;
         /// Return the date and time where a given time step starts.

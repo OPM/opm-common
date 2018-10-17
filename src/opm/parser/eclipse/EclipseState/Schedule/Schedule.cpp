@@ -1889,5 +1889,10 @@ namespace Opm {
         return this->m_timeMap.size();
     }
 
+
+    double Schedule::seconds(size_t timeStep) const {
+        return this->m_timeMap.seconds(timeStep);
+    }
+
 }
 
