@@ -81,6 +81,11 @@ namespace Opm {
         return this->operator[]( this->size( ) - 1);
     }
 
+
+    double TimeMap::seconds(size_t timeStep) const {
+        return std::difftime( this->operator[](timeStep), this->operator[](0));
+    }
+
     double TimeMap::getTotalTime() const
     {
         if (m_timeList.size() < 2)

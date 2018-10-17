@@ -1883,5 +1883,20 @@ namespace Opm {
         const auto& ptr = this->wtest_config.get(timeStep);
         return *ptr;
     }
+
+
+    size_t Schedule::size() const {
+        return this->m_timeMap.size();
+    }
+
+
+    double Schedule::seconds(size_t timeStep) const {
+        return this->m_timeMap.seconds(timeStep);
+    }
+
+
+    double Schedule::stepLength(size_t timeStep) const {
+        return this->m_timeMap.getTimeStepLength(timeStep);
+    }
 }
 

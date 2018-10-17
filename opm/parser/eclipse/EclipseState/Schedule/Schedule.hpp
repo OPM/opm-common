@@ -73,7 +73,8 @@ namespace Opm
         time_t getStartTime() const;
         time_t posixStartTime() const;
         time_t posixEndTime() const;
-
+        double seconds(size_t timeStep) const;
+        double stepLength(size_t timeStep) const;
 
         const TimeMap& getTimeMap() const;
 
@@ -127,7 +128,7 @@ namespace Opm
           active. Will scan through all wells and all timesteps.
         */
         void filterConnections(const EclipseGrid& grid);
-
+        size_t size() const;
     private:
         TimeMap m_timeMap;
         OrderedMap< Well > m_wells;
