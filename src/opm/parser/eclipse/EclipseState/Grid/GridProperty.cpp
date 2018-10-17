@@ -283,7 +283,7 @@ namespace Opm {
 
     template< typename T >
     void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox, const UnitSystem* unitSystem ) {
-        if (unitSystem) {
+        if (unitSystem && src.getDimensionString() != getDimensionString()) {
             // this deals with assignments of fields that exhibit different units. after the
             // COPY operation the grid property ought to exhibit the same values in terms of
             // the unit system used by the deck, which do not necessarily correspond to
