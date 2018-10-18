@@ -51,13 +51,15 @@ BOOST_AUTO_TEST_CASE(readDeck)
     const std::vector<NNCdata>& nncdata = nnc.nncdata();
 
     // test the NNCs in nnc.DATA
+    // NNCs are orderd lexicographically
+    // Therefore the two equal NNCs are next to each other
     BOOST_CHECK_EQUAL(nnc.numNNC(), 4);
     BOOST_CHECK_EQUAL(nncdata[0].cell1, 0);
     BOOST_CHECK_EQUAL(nncdata[0].cell2, 1);
     BOOST_CHECK_EQUAL(nncdata[0].trans, 0.5 * Opm::Metric::Transmissibility);
-    BOOST_CHECK_EQUAL(nncdata[1].cell1, 0);
-    BOOST_CHECK_EQUAL(nncdata[1].cell2, 10);
-    BOOST_CHECK_EQUAL(nncdata[1].trans, 1.0 * Opm::Metric::Transmissibility);
+    BOOST_CHECK_EQUAL(nncdata[2].cell1, 0);
+    BOOST_CHECK_EQUAL(nncdata[2].cell2, 10);
+    BOOST_CHECK_EQUAL(nncdata[2].trans, 1.0 * Opm::Metric::Transmissibility);
 
 }
 
@@ -89,3 +91,37 @@ BOOST_AUTO_TEST_CASE(addNNC)
     BOOST_CHECK_EQUAL(nncdata[0].trans, 2.0);
 }
 
+BOOST_AUTO_TEST_CASE(editNNC)
+{
+    
+    auto eclipseState = Parser::parse(pathprefix() + "NNC/EDITNNC.DATA");
+    const auto& nnc = eclipseState.getInputNNC();
+    BOOST_CHECK(nnc.hasNNC());
+    const std::vector<NNCdata>& nncdata = nnc.nncdata();
+
+    // test the NNCs in nnc.DATA
+    // note that these are ordered lexicographically
+    // 0: 1,1,1 ->  2,1,1
+    BOOST_CHECK_EQUAL(nncdata[0].cell1, 0);
+    BOOST_CHECK_EQUAL(nncdata[0].cell2, 1);
+    BOOST_CHECK_EQUAL(nncdata[0].trans, 1.0 * Opm::Metric::Transmissibility);
+    // 1: 1,1,1 ->  2,1,1
+    BOOST_CHECK_EQUAL(nncdata[0].cell1, 0);
+    BOOST_CHECK_EQUAL(nncdata[0].cell2, 1);
+    BOOST_CHECK_EQUAL(nncdata[0].trans, 1.0 * Opm::Metric::Transmissibility);
+    // 2: 1,1,1 -> 1,2,1
+    BOOST_CHECK_EQUAL(nncdata[2].cell1, 0);
+    BOOST_CHECK_EQUAL(nncdata[2].cell2, 10);
+    BOOST_CHECK_EQUAL(nncdata[2].trans, 1.0 * Opm::Metric::Transmissibility);
+    // 3: 1,2,1 -> 1,2,1
+    BOOST_CHECK_EQUAL(nncdata[3].cell1, 10);
+    BOOST_CHECK_EQUAL(nncdata[3].cell2, 10);
+    BOOST_CHECK_EQUAL(nncdata[3].trans, 10.0 * Opm::Metric::Transmissibility);
+    // 4: 2,2,1 -> 2,2,1
+    BOOST_CHECK_EQUAL(nncdata[4].cell1, 11);
+    BOOST_CHECK_EQUAL(nncdata[4].cell2, 11);
+    BOOST_CHECK_EQUAL(nncdata[4].trans, 6.0 * Opm::Metric::Transmissibility);
+    // There should be no entry due EDITNNC for 3,2,1 -> 3,2,1 as there is no nnc
+    BOOST_CHECK_EQUAL(nnc.numNNC(), 5);
+
+}
