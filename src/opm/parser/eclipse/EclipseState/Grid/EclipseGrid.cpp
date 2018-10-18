@@ -297,8 +297,10 @@ namespace Opm {
 
 
     void EclipseGrid::initBinaryGrid(const Deck& deck) {
-        const auto& gdfile_record = deck.getKeyword<ParserKeywords::GDFILE>().getRecord(0);
-        const std::string& filename = gdfile_record.getItem("filename").get<std::string>(0);
+        const DeckKeyword& gdfile_kw = deck.getKeyword("GDFILE");
+        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").get<std::string>(0);
+        std::string filename = deck.makeDeckPath(gdfile_arg);
+
         ecl_grid_type * grid_ptr = ecl_grid_load_case__( filename.c_str(), false);
         if (grid_ptr)
             this->m_grid.reset( grid_ptr );
