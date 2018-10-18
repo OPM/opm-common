@@ -381,6 +381,26 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
     }
 }
 
+    bool isKnownSegmentKeyword(const DeckKeyword& keyword)
+    {
+        const auto& kw = keyword.name();
+
+        if (kw.size() > 4) {
+            // Easy check first--handles SUMMARY and SUMTHIN &c.
+            return false;
+        }
+
+        const auto kw_whitelist = std::vector<const char*> {
+            "SOFR", "SGFR", "SWFR", "SPR",
+        };
+
+        return std::any_of(kw_whitelist.begin(), kw_whitelist.end(),
+                           [&kw](const char* known) -> bool
+                           {
+                               return kw == known;
+                           });
+    }
+
     bool isMultiSegmentWell(const std::size_t last_timestep,
                             const Well*       well)
     {
@@ -546,8 +566,9 @@ inline std::array< int, 3 > getijk( const Connection& completion ) {
         //   SGFR
         //   / -- All segments in all MS wells at all times.
 
-        if (keyword.name() == "SUMMARY") {
-            // The SUMMARY keyword itself invokes keywordS().  Ignore it.
+        if (! isKnownSegmentKeyword(keyword)) {
+            // Ignore keywords that have not been explicitly white-listed
+            // for treatment as segment summary vectors.
             return;
         }
 

@@ -96,6 +96,12 @@ SUMMARY
 
 -- ALL
 
+-- SUMTHIN is here to verify that the explicit keyword white-listing
+-- in SummaryConfig.cpp works correctly.  We should not treat SUMTHIN
+-- as a segment-related summary vector.
+SUMTHIN
+  1 /
+
 SOFR
   'PROD01'  1 /
   'PROD01'  10 /
