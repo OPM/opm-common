@@ -106,12 +106,9 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
     src/opm/parser/eclipse/EclipseState/Tables/ColumnSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/JFunc.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/PlymwinjTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/PvtxTable.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/SkprwatTable.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/SkprpolyTable.cpp
     src/opm/parser/eclipse/EclipseState/Tables/SimpleTable.cpp
-    src/opm/parser/eclipse/EclipseState/Tables/PolyInjTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/PolyInjTables.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableColumn.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableContainer.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableIndex.cpp
