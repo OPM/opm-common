@@ -167,10 +167,15 @@ BOOST_AUTO_TEST_CASE(set_and_get_data_file) {
     Deck deck;
     BOOST_CHECK_EQUAL("", deck.getDataFile());
     BOOST_CHECK_EQUAL("", deck.getInputPath());
+    BOOST_CHECK_EQUAL("some/path", deck.makeDeckPath("some/path"));
+    BOOST_CHECK_EQUAL("/abs/path", deck.makeDeckPath("/abs/path"));
+
     std::string file("/path/to/file.DATA");
     deck.setDataFile( file );
     BOOST_CHECK_EQUAL(file, deck.getDataFile());
     BOOST_CHECK_EQUAL("/path/to", deck.getInputPath());
+    BOOST_CHECK_EQUAL("/path/to/some/path", deck.makeDeckPath("some/path"));
+    BOOST_CHECK_EQUAL("/abs/path", deck.makeDeckPath("/abs/path"));
 
     deck.setDataFile("FILE");
     BOOST_CHECK_EQUAL("FILE", deck.getDataFile());

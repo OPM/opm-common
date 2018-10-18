@@ -147,6 +147,7 @@ namespace Opm {
             const std::string& getInputPath() const;
             const std::string& getDataFile() const;
             void setDataFile(const std::string& dataFile);
+            std::string makeDeckPath(const std::string& path) const;
 
             iterator begin();
             iterator end();
