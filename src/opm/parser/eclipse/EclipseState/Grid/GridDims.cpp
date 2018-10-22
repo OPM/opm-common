@@ -49,7 +49,7 @@ namespace Opm {
         else if (deck.hasKeyword("DIMENS"))
             init(deck.getKeyword("DIMENS"));
         else if (deck.hasKeyword("GDFILE"))
-            binary_init(deck.getKeyword("GDFILE"));
+            binary_init(deck);
         else
             throw std::invalid_argument("Must have either SPECGRID or DIMENS to indicate grid dimensions");
     }
@@ -137,8 +137,10 @@ namespace Opm {
         m_nz = dims[2];
     }
 
-    void GridDims::binary_init(const DeckKeyword& gdfile) {
-        const std::string& filename = gdfile.getRecord(0).getItem("filename").get<std::string>(0);
+    void GridDims::binary_init(const Deck& deck) {
+        const DeckKeyword& gdfile_kw = deck.getKeyword("GDFILE");
+        const std::string& gdfile_arg = gdfile_kw.getRecord(0).getItem("filename").get<std::string>(0);
+        std::string filename = deck.makeDeckPath(gdfile_arg);
         ecl_grid_dims_type * grid_dims = ecl_grid_dims_alloc( filename.c_str(), nullptr );
         if (grid_dims) {
             const auto& dims = ecl_grid_dims_iget_dims(grid_dims, 0);
@@ -146,7 +148,7 @@ namespace Opm {
             m_ny = dims->ny;
             m_nz = dims->nz;
         } else
-            throw std::invalid_argument("Could not determine grid dimensions from " + filename);
+            throw std::invalid_argument("Could not determine grid dimensions from: " + filename);
     }
 
 }

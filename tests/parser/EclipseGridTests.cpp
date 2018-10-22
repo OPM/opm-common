@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <numeric>
 
+
 #define BOOST_TEST_MODULE EclipseGridTests
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -792,15 +793,21 @@ BOOST_AUTO_TEST_CASE(GDFILE) {
     const char* gdfile_deck =
         "GRID\n"
         "GDFILE\n"
-        "CASE.EGRID /\n"
+        "'grid/CASE.EGRID' /\n"
         "\n";
 
     Opm::EclipseGrid grid1(createCPDeck());
     test_work_area_type * work_area = test_work_area_alloc("GDFILE");
-    grid1.save("CASE.EGRID", Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    util_mkdir_p("ecl/grid");
+    grid1.save("ecl/grid/CASE.EGRID", Opm::UnitSystem::UnitType::UNIT_TYPE_METRIC);
+    {
+        FILE * stream = fopen("ecl/DECK.DATA", "w");
+        fputs(gdfile_deck, stream);
+        fclose(stream);
+    }
     {
         Opm::Parser parser;
-        Opm::EclipseGrid grid2(parser.parseString(gdfile_deck, Opm::ParseContext() ));
+        Opm::EclipseGrid grid2(parser.parseFile("ecl/DECK.DATA", Opm::ParseContext() ));
         BOOST_CHECK(grid1.equal(grid2));
     }
     test_work_area_free( work_area );

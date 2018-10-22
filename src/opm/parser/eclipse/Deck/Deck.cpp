@@ -217,6 +217,17 @@ namespace Opm {
         return this->input_path;
     }
 
+    std::string Deck::makeDeckPath(const std::string& path) const {
+        if (path.size() > 0 && path[0] == '/')
+            return path;
+
+        if (this->input_path.size() == 0)
+            return path;
+        else
+            return this->input_path + "/" + path;
+    }
+
+
     void Deck::setDataFile(const std::string& dataFile) {
         this->m_dataFile = dataFile;
 
