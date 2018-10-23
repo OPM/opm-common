@@ -283,6 +283,8 @@ namespace Opm {
 
     template< typename T >
     void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox, const UnitSystem* unitSystem ) {
+        std::function<double(double)> convertFn([](double x) { return x; });
+
         if (unitSystem && src.getDimensionString() != getDimensionString()) {
             // this deals with assignments of fields that exhibit different units. after the
             // COPY operation the grid property ought to exhibit the same values in terms of
@@ -291,27 +293,17 @@ namespace Opm {
             const auto& srcDim = unitSystem->parse(src.getDimensionString());
             const auto& dstDim = unitSystem->parse(getDimensionString());
 
-            if (inputBox.isGlobal()) {
-                for (size_t i = 0; i < src.getCartesianSize(); ++i)
-                    m_data[i] = dstDim.convertRawToSi(srcDim.convertSiToRaw(src.m_data[i]));
-            } else {
-                const std::vector<size_t>& indexList = inputBox.getIndexList();
-                for (size_t i = 0; i < indexList.size(); i++) {
-                    size_t targetIndex = indexList[i];
-                    m_data[targetIndex] = dstDim.convertRawToSi(srcDim.convertSiToRaw(src.m_data[targetIndex]));
-                }
-            }
+            convertFn = [srcDim, dstDim](double x) { return dstDim.convertRawToSi(srcDim.convertSiToRaw(x)); };
         }
-        else {
-            if (inputBox.isGlobal()) {
-                for (size_t i = 0; i < src.getCartesianSize(); ++i)
-                    m_data[i] = src.m_data[i];
-            } else {
-                const std::vector<size_t>& indexList = inputBox.getIndexList();
-                for (size_t i = 0; i < indexList.size(); i++) {
-                    size_t targetIndex = indexList[i];
-                    m_data[targetIndex] = src.m_data[targetIndex];
-                }
+
+        if (inputBox.isGlobal()) {
+            for (size_t i = 0; i < src.getCartesianSize(); ++i)
+                m_data[i] = convertFn(src.m_data[i]);
+        } else {
+            const std::vector<size_t>& indexList = inputBox.getIndexList();
+            for (size_t i = 0; i < indexList.size(); i++) {
+                size_t targetIndex = indexList[i];
+                m_data[targetIndex] = convertFn(src.m_data[targetIndex]);
             }
         }
     }
