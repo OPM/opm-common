@@ -177,12 +177,90 @@ public:
        grid and call the cellsEqual( T , std::vector<int>&) overload,
        otherwise it will return indexEqual( value );
      */
-     std::vector<size_t>  cellsEqual(T value, const EclipseGrid& grid, bool active = true)  const;
-
+     std::vector<size_t>  cellsEqual(T value, const EclipseGrid& grid, bool active = true)  const; 
     /*
       Will return a std::vector<T> of the data in the active cells.
     */
      std::vector<T> compressedCopy( const EclipseGrid& grid) const;
+
+
+    /*
+      The grid properties like PORO and SATNUM can be created in essentially two
+      ways; either they can be explicitly assigned in the deck as:
+
+        PORO
+           1000*0.15 /
+
+      or they can be created indirectly through various mathematical operations
+      like:
+
+         MULTIPLY
+            TRANX 0.20 /
+         /
+
+      The deckAssigned() property is used so that we can differentiate between
+      properties which have been explicitly assigned/loaded from the deck, and
+      those where the default construction has been invoked. This functionality
+      is implemented purely to support the TRAN? keywords. The transmissibility
+      is be default calculated by the simulator code, but the TRAN keywords can
+      be used in the deck to manipulate this calculation in two different ways:
+
+         1. TRAN explicitly assigned in GRID section
+         ===========================================
+         ...
+         TRANX
+            1000*0.026 /
+
+         COPY
+            'TRANX'  'TRANY' /
+         /
+
+         In this case the simulator should detect that the input deck has TRANX
+         specified and just use the input values from the deck. This is the
+         normal handling of keywords, and agrees with e.g. PERMX and PORO. This
+         also applies when the COPY keyword has been used, as in the case of
+         'TRANY' above.
+
+
+         2. TRAN modifier present in EDIT section
+         ========================================
+         The scenario here is that there is no mention of TRANX in the GRID
+         section, however the EDIT section contains modifiers like this:
+
+         MULTIPLY
+             TRANX  0.25 /
+
+         I.e. we request the TRANX values to be reduced with a factor of 0.25. In
+         this case the simulator should still calculate transmissibility according
+         to it's normal algorithm, and then subsequently scale that result with a
+         factor of 0.25.
+
+         In this case the input layer needs to autocreate a TRANX keyword,
+         defaulted to 1.0 and then scale that to 0.25.
+
+
+      Now - the important point is that when doing transmissibility calculations
+      the simulator must be able to distinguish between cases 1 and 2,
+      specifically whether the TRANX keyword should be interpreted as absolute
+      values(case 1) or as a multiplier(case 2). That is the purpose of the
+      deckAssigned() property. Pseudo code for the transmissibility calculations
+      in the simulator could be:
+
+
+          const auto& input_tranx = properties.getKeyword("TRANX");
+          if (input_tranx.deckAssigned()) {
+               // set simulator internal transmissibilities to values from input_tranx
+               tranx = input_tranx;
+          } else {
+               // Calculate transmissibilities according to normal simulator algorithm
+               ...
+               ...
+               // Scale transmissibilities with scale factor from input_tranx
+               tranx *= input_tranx;
+          }
+
+     */
+    bool deckAssigned() const;
 
 private:
     const DeckItem& getDeckItem( const DeckKeyword& );
@@ -192,6 +270,7 @@ private:
     SupportedKeywordInfo m_kwInfo;
     std::vector<T> m_data;
     bool m_hasRunPostProcessor = false;
+    bool assigned = false;
 };
 
 // initialize the TEMPI grid property using the temperature vs depth
