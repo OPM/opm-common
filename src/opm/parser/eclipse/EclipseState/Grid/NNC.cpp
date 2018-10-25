@@ -35,39 +35,59 @@
 namespace Opm
 {
 
-template<typename T, typename F1, typename F2>
-    void processNncs(const T& nncs, const GridDims& gridDims, F1 f1, F2 f2);
+    void readEditNncs(const std::vector< const DeckKeyword* >&, std::vector<NNCdata>&, const GridDims&);
+
+    void applyEditNncs(std::vector<NNCdata>&, std::vector<NNCdata>&);
 
     NNC::NNC(const Deck& deck) {
         GridDims gridDims(deck);
         const auto& nncs = deck.getKeywordList<ParserKeywords::NNC>();
+        for (size_t idx_nnc = 0; idx_nnc<nncs.size(); ++idx_nnc) {
+            const auto& nnc = *nncs[idx_nnc];
+            for (size_t i = 0; i < nnc.size(); ++i) {
+                std::array<size_t, 3> ijk1;
+                ijk1[0] = static_cast<size_t>(nnc.getRecord(i).getItem(0).get< int >(0)-1);
+                ijk1[1] = static_cast<size_t>(nnc.getRecord(i).getItem(1).get< int >(0)-1);
+                ijk1[2] = static_cast<size_t>(nnc.getRecord(i).getItem(2).get< int >(0)-1);
+                size_t global_index1 = gridDims.getGlobalIndex(ijk1[0],ijk1[1],ijk1[2]);
+
+                std::array<size_t, 3> ijk2;
+                ijk2[0] = static_cast<size_t>(nnc.getRecord(i).getItem(3).get< int >(0)-1);
+                ijk2[1] = static_cast<size_t>(nnc.getRecord(i).getItem(4).get< int >(0)-1);
+                ijk2[2] = static_cast<size_t>(nnc.getRecord(i).getItem(5).get< int >(0)-1);
+                size_t global_index2 = gridDims.getGlobalIndex(ijk2[0],ijk2[1],ijk2[2]);
+
+                const double trans = nnc.getRecord(i).getItem(6).getSIDouble(0);
+
+                addNNC(global_index1, global_index2, trans);
+            }
+        }
         const auto& tmpEditNncs = deck.getKeywordList<ParserKeywords::EDITNNC>();
-        std::vector<NNCdata> editNncs;
-        editNncs.reserve(tmpEditNncs.size());
-        processNncs(tmpEditNncs, gridDims,
-                    [&editNncs](size_t i, size_t j, double t) { editNncs.emplace_back(i,j,t); },
-                    [](const DeckItem& i) {return i.get<double>(0); });
+        std::vector<NNCdata> editNncs(tmpEditNncs.size());
+        readEditNncs(tmpEditNncs, editNncs, gridDims);
+        applyEditNncs(m_nnc, editNncs);
+    }
+
+    void applyEditNncs(std::vector<NNCdata>& nncs, std::vector<NNCdata>& editNncs)
+    {
         auto compare = [](const NNCdata& d1, const NNCdata& d2)
             { return d1.cell1 < d2.cell1 ||
               ( d1.cell1 == d2.cell1 && d1.cell2 < d2.cell2 );};
         std::sort(editNncs.begin(), editNncs.end(), compare);
-        processNncs(nncs, gridDims,
-                    [this](size_t i, size_t j, double t) { this->addNNC(i, j, t); },
-                    [](const DeckItem& i) {return i.getSIDouble(0); });
-        std::sort(m_nnc.begin(), m_nnc.end(), compare);
+        std::sort(nncs.begin(), nncs.end(), compare);
 
         std::ostringstream warning;
         warning<<"The following NNC entries in EDITNNC have been ignored: ";
         bool        ignored = false;
         std::size_t counter = 0;
         // Assuming that we edit less nncs than we have
-        auto nncIt = m_nnc.begin();
+        auto nncIt = nncs.begin();
         for( const auto& edit: editNncs )
         {
-            auto candidate = std::lower_bound(nncIt, m_nnc.end(), edit, compare);
+            auto candidate = std::lower_bound(nncIt, nncs.end(), edit, compare);
             bool processed = false;
 
-            for( auto next=candidate; next != m_nnc.end() && 
+            for( auto next=candidate; next != nncs.end() && 
                      ( next->cell1 == edit.cell1 && next->cell2 == edit.cell2 );
                  ++next)
             {
@@ -82,7 +102,7 @@ template<typename T, typename F1, typename F2>
             }
             ++counter;
 
-            if ( candidate != m_nnc.end() )
+            if ( candidate != nncs.end() )
             {
                 // There could be another edit for the same cell, start over.
                 nncIt = candidate;
@@ -107,27 +127,26 @@ template<typename T, typename F1, typename F2>
         }
     }
 
-template<typename T, typename F1, typename F2>
-void processNncs(const T& nncs, const GridDims& gridDims, F1 f1, F2 f2)
+    void readEditNncs(const std::vector< const DeckKeyword* >& editNncsKw, std::vector<NNCdata>& editNncs, const GridDims& gridDims)
     {
-        for (size_t idx_nnc = 0; idx_nnc<nncs.size(); ++idx_nnc) {
-            const auto& nnc = *nncs[idx_nnc];
+        for (size_t idx_nnc = 0; idx_nnc<editNncsKw.size(); ++idx_nnc) {
+            const auto& nnc = *editNncsKw[idx_nnc];
             for (size_t i = 0; i < nnc.size(); ++i) {
                 std::array<size_t, 3> ijk1;
-                ijk1[0] = static_cast<size_t>(nnc.getRecord(i).getItem(0).template get< int >(0)-1);
-                ijk1[1] = static_cast<size_t>(nnc.getRecord(i).getItem(1).template get< int >(0)-1);
-                ijk1[2] = static_cast<size_t>(nnc.getRecord(i).getItem(2).template get< int >(0)-1);
+                ijk1[0] = static_cast<size_t>(nnc.getRecord(i).getItem(0).get< int >(0)-1);
+                ijk1[1] = static_cast<size_t>(nnc.getRecord(i).getItem(1).get< int >(0)-1);
+                ijk1[2] = static_cast<size_t>(nnc.getRecord(i).getItem(2).get< int >(0)-1);
                 size_t global_index1 = gridDims.getGlobalIndex(ijk1[0],ijk1[1],ijk1[2]);
                 
                 std::array<size_t, 3> ijk2;
-                ijk2[0] = static_cast<size_t>(nnc.getRecord(i).getItem(3).template get< int >(0)-1);
-                ijk2[1] = static_cast<size_t>(nnc.getRecord(i).getItem(4).template get< int >(0)-1);
-                ijk2[2] = static_cast<size_t>(nnc.getRecord(i).getItem(5).template get< int >(0)-1);
+                ijk2[0] = static_cast<size_t>(nnc.getRecord(i).getItem(3).get< int >(0)-1);
+                ijk2[1] = static_cast<size_t>(nnc.getRecord(i).getItem(4).get< int >(0)-1);
+                ijk2[2] = static_cast<size_t>(nnc.getRecord(i).getItem(5).get< int >(0)-1);
                 size_t global_index2 = gridDims.getGlobalIndex(ijk2[0],ijk2[1],ijk2[2]);
                 
-                const double trans = f2(nnc.getRecord(i).getItem(6));
+                const double trans = nnc.getRecord(i).getItem(6).get<double>(0);
                 
-                f1(global_index1, global_index2, trans);
+                editNncs.emplace_back(global_index1, global_index2, trans);
             }
         }
     }
