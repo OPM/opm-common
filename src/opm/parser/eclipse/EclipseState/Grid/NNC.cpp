@@ -28,7 +28,9 @@
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/N.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/common/OpmLog/OpmLog.hpp>
 
+#include <sstream>
 
 namespace Opm
 {
@@ -54,17 +56,32 @@ template<typename T, typename F1, typename F2>
                     [](const DeckItem& i) {return i.getSIDouble(0); });
         std::sort(m_nnc.begin(), m_nnc.end(), compare);
 
+        std::ostringstream warning;
+        warning<<"The following NNC entries in EDITNNC have been ignored: ";
+        bool        ignored = false;
+        std::size_t counter = 0;
         // Assuming that we edit less nncs than we have
         auto nncIt = m_nnc.begin();
         for( const auto& edit: editNncs )
         {
             auto candidate = std::lower_bound(nncIt, m_nnc.end(), edit, compare);
+            bool processed = false;
+
             for( auto next=candidate; next != m_nnc.end() && 
                      ( next->cell1 == edit.cell1 && next->cell2 == edit.cell2 );
                  ++next)
             {
                 next->trans *= edit.trans;
+                processed    = true;
             }
+
+            if ( ! processed )
+            {
+                warning << edit.cell1 << "->" << edit.cell2 << " ";
+                ignored = true;
+            }
+            ++counter;
+
             if ( candidate != m_nnc.end() )
             {
                 // There could be another edit for the same cell, start over.
@@ -75,6 +92,18 @@ template<typename T, typename F1, typename F2>
                 // for all other editnnc there will be no nnc.
                 break;
             }
+        }
+        if ( counter < editNncs.size() )
+        {
+            ignored = true;
+            for(auto nnc = editNncs.begin() + counter, end = editNncs.end(); nnc != end; ++nnc)
+            {
+                warning << nnc->cell1 << "->" << nnc->cell2 << " ";
+            }
+        }
+        if ( ignored )
+        {
+            OpmLog::warning(warning.str());
         }
     }
 
