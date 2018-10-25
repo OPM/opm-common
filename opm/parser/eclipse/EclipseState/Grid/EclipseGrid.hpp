@@ -112,7 +112,7 @@ namespace Opm {
         PinchMode::ModeEnum getMultzOption( ) const;
 
         MinpvMode::ModeEnum getMinpvMode() const;
-        double getMinpvValue( ) const;
+        const std::vector<double>& getMinpvVector( ) const;
 
 
         /*
@@ -181,7 +181,7 @@ namespace Opm {
         const ecl_grid_type * c_ptr() const;
 
     private:
-        double m_minpvValue;
+        std::vector<double> m_minpvVector;
         MinpvMode::ModeEnum m_minpvMode;
         Value<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;

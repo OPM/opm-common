@@ -397,6 +397,9 @@ namespace Opm {
         // pore volume multipliers
         supportedDoubleKeywords.emplace_back( "MULTPV", 1.0, "1", true );
 
+        // cell mininum pore volume
+        supportedDoubleKeywords.emplace_back( "MINPVV", 0.000001 , "ReservoirVolume", true );
+
         /* rock heat capacity, E300 only */
         supportedDoubleKeywords.emplace_back("HEATCR", nan, distributeTopLayer, "Energy/AbsoluteTemperature*Length*Length*Length" );
         supportedDoubleKeywords.emplace_back("HEATCRT", 0.0, distributeTopLayer, "Energy/AbsoluteTemperature*AbsoluteTemperature*Length*Length*Length", true );

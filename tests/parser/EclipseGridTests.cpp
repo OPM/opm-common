@@ -868,9 +868,9 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     BOOST_CHECK(!grid1.equal( grid3 ));
     BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Opm::MinpvMode::ModeEnum::Inactive);
     BOOST_CHECK_EQUAL(grid3.getMinpvMode(), Opm::MinpvMode::ModeEnum::EclSTD);
-    BOOST_CHECK_EQUAL(grid3.getMinpvValue(), 10.0);
+    BOOST_CHECK_EQUAL(grid3.getMinpvVector()[0], 10.0);
     BOOST_CHECK_EQUAL(grid4.getMinpvMode(), Opm::MinpvMode::ModeEnum::OpmFIL);
-    BOOST_CHECK_EQUAL(grid4.getMinpvValue(), 20.0);
+    BOOST_CHECK_EQUAL(grid4.getMinpvVector()[0], 20.0);
 }
 
 
