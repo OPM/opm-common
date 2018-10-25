@@ -28,6 +28,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
+#include <algorithm>
+
 using namespace Opm;
 
 static Deck createDeck_no_wells( const std::string& summary ) {
@@ -621,3 +623,155 @@ BOOST_AUTO_TEST_CASE( SUMMARY_MISC) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(Summary_Segment)
+{
+    const auto input = std::string { "SOFR_TEST.DATA" };
+    const auto ctxt  = ParseContext{};
+    const auto deck  = Parser{}.parseFile(input, ctxt);
+    const auto state = EclipseState { deck, ctxt };
+
+    const auto schedule = Schedule { deck, state, ctxt };
+    const auto summary  = SummaryConfig {
+        deck, schedule, state.getTableManager(), ctxt
+    };
+
+    // SOFR PROD01 segments 1, 10, 21.
+    BOOST_CHECK(deck.hasKeyword("SOFR"));
+    BOOST_CHECK(summary.hasKeyword("SOFR"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFR:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFR:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:20"));
+    BOOST_CHECK(summary.hasSummaryKey("SOFR:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:26"));
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:PROD01:27"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SOFR:INJE01:1"));
+
+    {
+        auto sofr = std::find_if(summary.begin(), summary.end(),
+            [](const SummaryNode& node)
+        {
+            return node.keyword() == "SOFR";
+        });
+
+        BOOST_REQUIRE(sofr != summary.end());
+
+        BOOST_CHECK_EQUAL(sofr->type(), ecl_smspec_var_type::ECL_SMSPEC_SEGMENT_VAR);
+        BOOST_CHECK_EQUAL(sofr->wgname(), "PROD01");
+    }
+
+    BOOST_CHECK(deck.hasKeyword("SGFR"));
+    BOOST_CHECK(summary.hasKeyword("SGFR"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:1"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:2"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:3"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:4"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:5"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:6"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:7"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:8"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:10"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:11"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:12"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:13"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:14"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:15"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:16"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:17"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:18"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:19"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:20"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:21"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:22"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:23"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:24"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:25"));
+    BOOST_CHECK(summary.hasSummaryKey("SGFR:PROD01:26"));
+    BOOST_CHECK(!summary.hasSummaryKey("SGFR:PROD01:27"));  // No such segment.
+
+    // SPR PROD01 segment 10 only.
+    BOOST_CHECK(deck.hasKeyword("SPR"));
+    BOOST_CHECK(summary.hasKeyword("SPR"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:1"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:2"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:3"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:4"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:5"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:6"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:7"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:8"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SPR:PROD01:10"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:11"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:12"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:13"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:14"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:15"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:16"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:17"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:18"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:19"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:20"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:21"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:22"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:23"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:24"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:25"));
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:PROD01:26"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SPR:INJE01:10"));
+
+    // SWFR for all segments in all MS wells.
+    BOOST_CHECK(deck.hasKeyword("SWFR"));
+    BOOST_CHECK(summary.hasKeyword("SWFR"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:1"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:2"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:3"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:4"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:5"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:6"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:7"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:8"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:9"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:10"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:11"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:12"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:13"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:14"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:15"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:16"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:17"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:18"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:19"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:20"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:21"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:22"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:23"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:24"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:25"));
+    BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:26"));
+
+    BOOST_CHECK(!summary.hasSummaryKey("SWFR:INJE01:1"));
+}

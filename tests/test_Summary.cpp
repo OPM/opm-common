@@ -23,7 +23,10 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <cstddef>
+#include <exception>
 #include <stdexcept>
+#include <unordered_map>
 
 #include <ert/ecl/ecl_sum.h>
 #include <ert/ecl/smspec_node.h>
@@ -43,8 +46,22 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
+#include <opm/parser/eclipse/Units/Units.hpp>
+
 using namespace Opm;
 using rt = data::Rates::opt;
+
+namespace {
+    double sm3_pr_day()
+    {
+       return unit::cubic(unit::meter) / unit::day;
+    }
+} // Anonymous
+
+namespace SegmentResultHelpers {
+    data::Well prod01_results();
+    data::Well inje01_results();
+} // SegmentResultHelpers
 
 /* conversion factor for whenever 'day' is the unit of measure, whereas we
  * expect input in SI units (seconds)
@@ -141,6 +158,14 @@ static data::Wells result_wells() {
     crates3.set( rt::reservoir_oil, 300.7 / day );
     crates3.set( rt::reservoir_gas, 300.8 / day );
 
+    // Segment vectors
+    auto segment = ::Opm::data::Segment{};
+    segment.rates.set(rt::wat,  123.45*sm3_pr_day());
+    segment.rates.set(rt::oil,  543.21*sm3_pr_day());
+    segment.rates.set(rt::gas, 1729.496*sm3_pr_day());
+    segment.pressure = 314.159*unit::barsa;
+    segment.segNumber = 1;
+
     /*
       The global index assigned to the completion must be manually
       syncronized with the global index in the COMPDAT keyword in the
@@ -151,10 +176,15 @@ static data::Wells result_wells() {
     data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4, 150.6, 0.001, 0.89, 100.0};
     data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4, 456.78, 0.0, 0.15, 432.1};
 
+
     /*
       The completions
     */
-    data::Well well1 { rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1, { {well1_comp1} } };
+    data::Well well1 {
+        rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
+        { {well1_comp1} },
+        { { segment.segNumber, segment } },
+    };
     data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} } };
     data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} } };
 
@@ -163,6 +193,9 @@ static data::Wells result_wells() {
     wellrates["W_1"] = well1;
     wellrates["W_2"] = well2;
     wellrates["W_3"] = well3;
+
+    wellrates["INJE01"] = SegmentResultHelpers::inje01_results();
+    wellrates["PROD01"] = SegmentResultHelpers::prod01_results();
 
     return wellrates;
 }
@@ -1178,6 +1211,16 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
             BOOST_CHECK_CLOSE( wellRatesCopy.get( "W_1" , rt::wat) , wellRates.get( "W_1" , rt::wat), 1e-16);
             BOOST_CHECK_CLOSE( wellRatesCopy.get( "W_2" , 101 , rt::wat) , wellRates.get( "W_2" , 101 , rt::wat), 1e-16);
 
+            const auto& seg = wellRatesCopy.at("W_1").segments.at(1);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::wat),  123.45*sm3_pr_day(), 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::oil),  543.21*sm3_pr_day(), 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.rates.get(rt::gas), 1729.496*sm3_pr_day(), 1.0e-10);
+            BOOST_CHECK_CLOSE(seg.pressure, 314.159*unit::barsa, 1.0e-10);
+            BOOST_CHECK_EQUAL(seg.segNumber, 1);
+
+            // No data for segment 10 of well W_2 (or no such segment).
+            const auto& W2 = wellRatesCopy.at("W_2");
+            BOOST_CHECK_THROW(W2.segments.at(10), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(efficiency_factor) {
@@ -1291,6 +1334,15 @@ namespace {
     {
         return calculateRestartVectors({
             "test.Restart.EffFac", "SUMMARY_EFF_FAC.DATA"
+        });
+    }
+
+    auto calculateRestartVectorsSegment()
+        -> decltype(calculateRestartVectors({"test.Restart.Segment",
+                                             "SOFR_TEST.DATA"}))
+    {
+        return calculateRestartVectors({
+            "test.Restart.Segment", "SOFR_TEST.DATA"
         });
     }
 
@@ -1958,6 +2010,785 @@ BOOST_AUTO_TEST_CASE(Field_Vectors_Correct)
     BOOST_CHECK_CLOSE(rstrt.get("FGOR"),
                       (10.2 + (efac_G * 20.2)) /
                       (10.1 + (efac_G * 20.1)), 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// ####################################################################
+
+namespace {
+    void fill_surface_rates(const std::size_t id,
+                            const double      sign,
+                            data::Rates&      rates)
+    {
+        const auto topRate = id * 1000*sm3_pr_day();
+
+        rates.set(data::Rates::opt::wat, sign * (topRate + 100*sm3_pr_day()));
+        rates.set(data::Rates::opt::oil, sign * (topRate + 200*sm3_pr_day()));
+        rates.set(data::Rates::opt::gas, sign * (topRate + 400*sm3_pr_day()));
+    }
+
+    std::size_t numSegProd01()
+    {
+        return 26;
+    }
+
+    data::Connection conn_results(const std::size_t connID,
+                                  const std::size_t cellID,
+                                  const double      sign)
+    {
+        auto res = data::Connection{};
+
+        res.index = cellID;
+
+        fill_surface_rates(connID, sign, res.rates);
+
+        // Not meant to be realistic, other than possibly order of magnitude.
+        res.pressure       = (200.0 + connID)*unit::barsa;
+        res.reservoir_rate = (125.0 + connID)*sm3_pr_day();
+        res.cell_pressure  = (250.0 + cellID)*unit::barsa;
+
+        return res;
+    }
+
+    data::Segment seg_results(const std::size_t segID, const double sign)
+    {
+        auto res = data::Segment{};
+
+        fill_surface_rates(segID, sign, res.rates);
+
+        res.pressure = (100.0 + segID)*unit::barsa;
+
+        res.segNumber = segID;
+
+        return res;
+    }
+
+    std::unordered_map<std::size_t, data::Segment> prod01_seg_results()
+    {
+        auto res = std::unordered_map<std::size_t, data::Segment>{};
+
+        // Flow's producer rates are negative (positive fluxes well -> reservoir).
+        const auto sign = -1.0;
+
+        for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+             segID < nSeg; ++segID)
+        {
+            res[segID + 1] = seg_results(segID + 1, sign);
+        }
+
+        return res;
+    }
+
+    std::vector<data::Connection> prod01_conn_results()
+    {
+        auto res = std::vector<data::Connection>{};
+        res.reserve(26);
+
+        const auto cellID = std::vector<std::size_t> {
+             99, // IJK = (10, 10,  1)
+            199, // IJK = (10, 10,  2)
+            299, // IJK = (10, 10,  3)
+            399, // IJK = (10, 10,  4)
+            499, // IJK = (10, 10,  5)
+            599, // IJK = (10, 10,  6)
+
+            198, // IJK = ( 9, 10,  2)
+            197, // IJK = ( 8, 10,  2)
+            196, // IJK = ( 7, 10,  2)
+            195, // IJK = ( 6, 10,  2)
+            194, // IJK = ( 5, 10,  2)
+
+            289, // IJK = (10,  9,  3)
+            279, // IJK = (10,  8,  3)
+            269, // IJK = (10,  7,  3)
+            259, // IJK = (10,  6,  3)
+            249, // IJK = (10,  5,  3)
+
+            498, // IJK = ( 9, 10,  5)
+            497, // IJK = ( 8, 10,  5)
+            496, // IJK = ( 7, 10,  5)
+            495, // IJK = ( 6, 10,  5)
+            494, // IJK = ( 5, 10,  5)
+
+            589, // IJK = (10,  9,  6)
+            579, // IJK = (10,  8,  6)
+            569, // IJK = (10,  7,  6)
+            559, // IJK = (10,  6,  6)
+            549, // IJK = (10,  5,  6)
+        };
+
+        // Flow's producer rates are negative (positive fluxes well -> reservoir).
+        const auto sign = -1.0;
+
+        for (auto nConn = cellID.size(), connID = 0*nConn;
+             connID < nConn; ++connID)
+        {
+            res.push_back(conn_results(connID, cellID[connID], sign));
+        }
+
+        return res;
+    }
+
+    std::vector<data::Connection> inje01_conn_results()
+    {
+        auto res = std::vector<data::Connection>{};
+        res.reserve(3);
+
+        const auto cellID = std::vector<std::size_t> {
+            600, // IJK = ( 1,  1,  7)
+            700, // IJK = ( 1,  1,  8)
+            800, // IJK = ( 1,  1,  9)
+        };
+
+        // Flow's injection rates are positive (positive fluxes well -> reservoir).
+        const auto sign = +1.0;
+
+        for (auto nConn = cellID.size(), connID = 0*nConn;
+             connID < nConn; ++connID)
+        {
+            res.push_back(conn_results(connID, cellID[connID], sign));
+        }
+
+        return res;
+    }
+
+    std::string genKeyPROD01(const std::string& vector,
+                             const std::size_t  segID)
+    {
+        return vector + ":PROD01:" + std::to_string(segID);
+    }
+} // Anonymous
+
+data::Well SegmentResultHelpers::prod01_results()
+{
+    auto res = data::Well{};
+
+    fill_surface_rates(0, -1.0, res.rates);
+
+    res.bhp         = 123.45*unit::barsa;
+    res.thp         = 60.221409*unit::barsa;
+    res.temperature = 298.15;
+    res.control     = 0;
+
+    res.connections = prod01_conn_results();
+    res.segments    = prod01_seg_results();
+
+    return res;
+}
+
+data::Well SegmentResultHelpers::inje01_results()
+{
+    auto res = data::Well{};
+
+    fill_surface_rates(0, 1.0, res.rates);
+
+    res.bhp         = 543.21*unit::barsa;
+    res.thp         = 256.821*unit::barsa;
+    res.temperature = 298.15;
+    res.control     = 0;
+
+    res.connections = inje01_conn_results();
+
+    return res;
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_SUITE(Restart_Segment)
+
+BOOST_AUTO_TEST_CASE(Vectors_Present)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+
+    for (const auto* vector : { "SGFR", "SOFR", "SPR", "SWFR"}) {
+        for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+             segID < nSeg; ++segID)
+        {
+            BOOST_CHECK(rstrt.has(genKeyPROD01(vector, segID + 1)));
+        }
+
+        BOOST_CHECK(!rstrt.has(genKeyPROD01(vector, 27)));
+        BOOST_CHECK(!rstrt.has(vector + std::string{":INJE01:1"}));
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(Pressure_Correct)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+    for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+         segID < nSeg; ++segID)
+    {
+        const auto& key = genKeyPROD01("SPR", segID + 1);
+
+        // Pressure value converted to METRIC output units (bars).
+        BOOST_CHECK_CLOSE(rstrt.get(key), 100.0 + (segID + 1), 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(OilRate_Correct)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+    for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+         segID < nSeg; ++segID)
+    {
+        const auto& key = genKeyPROD01("SOFR", segID + 1);
+
+        // Producer rates positive in 'rstrt', converted to METRIC
+        // output units (SM3/day).
+        BOOST_CHECK_CLOSE(rstrt.get(key), 1000.0*(segID + 1) + 200, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(GasRate_Correct)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+    for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+         segID < nSeg; ++segID)
+    {
+        const auto& key = genKeyPROD01("SGFR", segID + 1);
+
+        // Producer rates positive in 'rstrt', converted to METRIC
+        // output units (SM3/day).
+        BOOST_CHECK_CLOSE(rstrt.get(key), 1000.0*(segID + 1) + 400, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+BOOST_AUTO_TEST_CASE(WaterRate_Correct)
+{
+    const auto rstrt = calculateRestartVectorsSegment();
+    for (auto nSeg = numSegProd01(), segID = 0*nSeg;
+         segID < nSeg; ++segID)
+    {
+        const auto& key = genKeyPROD01("SWFR", segID + 1);
+
+        // Producer rates positive in 'rstrt', converted to METRIC
+        // output units (SM3/day).
+        BOOST_CHECK_CLOSE(rstrt.get(key), 1000.0*(segID + 1) + 100, 1.0e-10);
+    }
+}
+
+// ====================================================================
+
+namespace {
+    bool hasSegmentVariable_Prod01(const ecl_sum_type* ecl_sum,
+                                   const char*         vector,
+                                   const int           segID)
+    {
+        const auto lookup_kw = genKeyPROD01(vector, segID);
+
+        return ecl_sum_has_general_var(ecl_sum, lookup_kw.c_str());
+    }
+
+    double getSegmentVariable_Prod01(const ecl_sum_type* ecl_sum,
+                                     const int           timeIdx,
+                                     const char*         vector,
+                                     const int           segID)
+    {
+        const auto lookup_kw = genKeyPROD01(vector, segID);
+
+        return ecl_sum_get_general_var(ecl_sum, timeIdx, lookup_kw.c_str());
+    }
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(Write_Read)
+{
+    const setup config{"test.Restart.Segment.RW", "SOFR_TEST.DATA"};
+
+    ::Opm::out::Summary writer {
+        config.es, config.config, config.grid, config.schedule
+    };
+
+    writer.add_timestep(0, 0*day, config.es, config.schedule, config.wells, {});
+    writer.add_timestep(1, 1*day, config.es, config.schedule, config.wells, {});
+    writer.add_timestep(2, 2*day, config.es, config.schedule, config.wells, {});
+    writer.write();
+
+    auto res = readsum("SOFR_TEST");
+    const auto* resp = res.get();
+
+    const int timeIdx = 2;
+
+    // Rate Setup
+    //
+    // const auto topRate = id * 1000*sm3_pr_day();
+    // rates.set(data::Rates::opt::wat, sign * (topRate + 100*sm3_pr_day()));
+    // rates.set(data::Rates::opt::oil, sign * (topRate + 200*sm3_pr_day()));
+    // rates.set(data::Rates::opt::gas, sign * (topRate + 400*sm3_pr_day()));
+    //
+    // Pressure Setup
+    // res.pressure = (100.0 + segID)*unit::barsa;
+
+    // Note: Producer rates reported as positive.
+
+    // SOFR_TEST Summary Section:
+    //
+    //   SUMMARY
+    //
+    //   -- ALL
+    //
+    //   SOFR
+    //     'PROD01'  1 /
+    //     'PROD01'  10 /
+    //     'PROD01'  21 /
+    //   /
+    //
+    //   SGFR
+    //     'PROD01' /
+    //   /
+    //
+    //   SPR
+    //     1*  10 /
+    //   /
+    //
+    //   SWFR
+    //   /
+
+    // Segment 1: SOFR, SGFR, SWFR
+    {
+        const auto segID = 1;
+
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFR", segID),
+                          segID*1000.0 + 200.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 2: SGFR, SWFR
+    {
+        const auto segID = 2;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 3: SGFR, SWFR
+    {
+        const auto segID = 3;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 4: SGFR, SWFR
+    {
+        const auto segID = 4;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 5: SGFR, SWFR
+    {
+        const auto segID = 5;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 6: SGFR, SWFR
+    {
+        const auto segID = 6;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 7: SGFR, SWFR
+    {
+        const auto segID = 7;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 8: SGFR, SWFR
+    {
+        const auto segID = 8;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 9: SGFR, SWFR
+    {
+        const auto segID = 9;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 10: SOFR, SGFR, SWFR, SPR
+    {
+        const auto segID = 10;
+
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SPR", segID),
+                          100.0 + segID, 1.0e-10);
+    }
+
+    // Segment 11: SGFR, SWFR
+    {
+        const auto segID = 11;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 12: SGFR, SWFR
+    {
+        const auto segID = 12;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 13: SGFR, SWFR
+    {
+        const auto segID = 13;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 14: SGFR, SWFR
+    {
+        const auto segID = 14;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 15: SGFR, SWFR
+    {
+        const auto segID = 15;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 16: SGFR, SWFR
+    {
+        const auto segID = 16;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 17: SGFR, SWFR
+    {
+        const auto segID = 17;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 18: SGFR, SWFR
+    {
+        const auto segID = 18;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 19: SGFR, SWFR
+    {
+        const auto segID = 19;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 20: SGFR, SWFR
+    {
+        const auto segID = 20;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 21: SOFR, SGFR, SWFR
+    {
+        const auto segID = 21;
+
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SOFR", segID),
+                          segID*1000.0 + 200.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 22: SGFR, SWFR
+    {
+        const auto segID = 22;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 23: SGFR, SWFR
+    {
+        const auto segID = 23;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 24: SGFR, SWFR
+    {
+        const auto segID = 24;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 25: SGFR, SWFR
+    {
+        const auto segID = 25;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 26: SGFR, SWFR
+    {
+        const auto segID = 26;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK( hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SGFR", segID),
+                          segID*1000.0 + 400.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(getSegmentVariable_Prod01(resp, timeIdx, "SWFR", segID),
+                          segID*1000.0 + 100.0, 1.0e-10);
+    }
+
+    // Segment 256: No such segment
+    {
+        const auto segID = 256;
+
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SOFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SGFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SWFR", segID));
+        BOOST_CHECK(!hasSegmentVariable_Prod01(resp, "SPR" , segID));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

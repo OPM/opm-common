@@ -275,6 +275,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SUMMARY_EFF_FAC.DATA
           tests/SPE1CASE1.DATA
           tests/SPE9_CP_PACKED.DATA
+          tests/SOFR_TEST.DATA
       )
 endif()
 

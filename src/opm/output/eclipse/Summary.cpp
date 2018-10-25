@@ -17,12 +17,14 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <exception>
 #include <initializer_list>
 #include <iterator>
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 
 #include <opm/common/OpmLog/OpmLog.hpp>
 
@@ -46,6 +48,13 @@
 #include <ert/ecl/ecl_kw_magic.h>
 
 namespace {
+    struct SegmentResultDescriptor
+    {
+        std::string vector;
+        std::string well;
+        std::size_t segNumber;
+    };
+
     std::vector<std::string> requiredRestartVectors()
     {
         return {
@@ -95,12 +104,54 @@ namespace {
         return entities;
     }
 
+    std::vector<SegmentResultDescriptor>
+    requiredSegmentVectors(const ::Opm::Schedule& sched)
+    {
+        using SRD = SegmentResultDescriptor;
+        auto ret  = std::vector<SRD>{};
+
+        auto makeVectors =
+            [&ret](const std::string& well,
+                   const std::size_t  segNumber) -> void
+        {
+            ret.push_back(SRD{"SOFR", well, segNumber});
+            ret.push_back(SRD{"SGFR", well, segNumber});
+            ret.push_back(SRD{"SWFR", well, segNumber});
+            ret.push_back(SRD{"SPR" , well, segNumber});
+        };
+
+        const auto last_timestep = sched.getTimeMap().last();
+
+        for (const auto* well : sched.getWells()) {
+            if (! well->isMultiSegment(last_timestep)) {
+                // Don't allocate MS summary vectors for non-MS wells.
+                continue;
+            }
+
+            const auto& wname = well->name();
+            const auto  nSeg  =
+                well->getWellSegments(last_timestep).size();
+
+            for (auto segID = 0*nSeg; segID < nSeg; ++segID) {
+                makeVectors(wname, segID + 1); // One-based
+            }
+        }
+
+        return ret;
+    }
+
     std::string genKey(const std::string& vector,
                        const std::string& entity)
     {
         return (entity == "FIELD")
              ? vector
              : vector + ':' + entity;
+    }
+
+    std::string genKey(const SegmentResultDescriptor& segRes)
+    {
+        return segRes.vector + ':' + segRes.well +
+            ':' + std::to_string(segRes.segNumber);
     }
 
     ERT::ert_unique_ptr<smspec_node_type, smspec_node_free>
@@ -115,6 +166,20 @@ namespace {
         return ERT::ert_unique_ptr<smspec_node_type, smspec_node_free> {
             smspec_node_alloc(var_type, entity.c_str(), vector.c_str(),
                               "UNIT", ":", dims, 0, 0, 0.0f)
+        };
+    }
+
+    ERT::ert_unique_ptr<smspec_node_type, smspec_node_free>
+    makeRestartVectorSMSPEC(const SegmentResultDescriptor& segRes)
+    {
+        const auto var_type = ECL_SMSPEC_SEGMENT_VAR;
+
+        const int dims[] = { 1, 1, 1 };
+
+        return ERT::ert_unique_ptr<smspec_node_type, smspec_node_free> {
+            smspec_node_alloc(var_type, segRes.well.c_str(), segRes.vector.c_str(),
+                              "UNIT", ":", dims,
+                              static_cast<int>(segRes.segNumber), 0, 0.0f)
         };
     }
 } // namespace Anonymous
@@ -363,6 +428,39 @@ inline quantity crate( const fn_args& args ) {
     return { v, rate_unit< phase >() };
 }
 
+template< rt phase, bool polymer = false >
+inline quantity srate( const fn_args& args ) {
+    const quantity zero = { 0, rate_unit< phase >() };
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclispe SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a completion with offset 0.
+    const size_t segNumber = args.num;
+    if( args.schedule_wells.empty() ) return zero;
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well->name();
+    if( args.wells.count( name ) == 0 ) return zero;
+
+    const auto& well_data = args.wells.at( name );    
+    
+    const auto& segment = well_data.segments.find(segNumber);
+
+    if( segment == well_data.segments.end() ) return zero;
+
+    double eff_fac = efac( args.eff_factors, name );
+    double concentration = polymer
+                           ? well->getPolymerProperties( args.sim_step ).m_polymerConcentration
+                           : 1;
+
+    auto v = segment->second.rates.get( phase, 0.0 ) * eff_fac * concentration;
+    //switch sign of rate - opposite convention in flow vs eclipse
+    v *= -1;
+
+    if( polymer ) return { v, measure::mass_rate };
+    return { v, rate_unit< phase >() };
+}
+
 inline quantity trans_factors ( const fn_args& args ) {
     const quantity zero = { 0, measure::transmissibility };
 
@@ -390,6 +488,31 @@ inline quantity trans_factors ( const fn_args& args ) {
     const auto& v = connection->CF();
     return { v, measure::transmissibility };
 }
+
+inline quantity spr ( const fn_args& args ) {
+    const quantity zero = { 0, measure::pressure };
+
+    if( args.schedule_wells.empty() ) return zero;
+    // Like completion rate we need to look
+    // up a connection with offset 0.
+    const size_t segNumber = args.num;
+    if( args.schedule_wells.empty() ) return zero;
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well->name();
+    if( args.wells.count( name ) == 0 ) return zero;
+
+    const auto& well_data = args.wells.at( name );
+
+    const auto& segment = well_data.segments.find(segNumber);
+
+    if( segment == well_data.segments.end() ) return zero;
+
+
+    const auto& v = segment->second.pressure;
+    return { v, measure::pressure };
+}
+
 
 inline quantity bhp( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
@@ -835,6 +958,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROPT"  , mul( region_rate< rt::oil, producer >, duration ) },
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
+    //Multisegment well segment data
+    { "SOFR", srate< rt::oil > },
+    { "SWFR", srate< rt::wat > },
+    { "SGFR", srate< rt::gas > },
+    { "SPR",  spr }, 
 };
 
 
@@ -892,7 +1020,10 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     const auto* name = smspec_node_get_wgname( node );
     const auto type = smspec_node_get_var_type( node );
 
-    if( type == ECL_SMSPEC_WELL_VAR || type == ECL_SMSPEC_COMPLETION_VAR ) {
+    if ((type == ECL_SMSPEC_WELL_VAR) ||
+        (type == ECL_SMSPEC_COMPLETION_VAR) ||
+        (type == ECL_SMSPEC_SEGMENT_VAR))
+    {
         const auto* well = schedule.getWell( name );
         if( !well ) return {};
         return { well };
@@ -1105,6 +1236,7 @@ Summary::Summary( const EclipseState& st,
         auto& rvec     = this->handlers->rstvec_backing_store;
         auto& hndlrs   = this->handlers->handlers;
 
+        // Required restart vectors for wells, groups, and field.
         for (const auto& vector : requiredRestartVectors(schedule)) {
             const auto& kw     = vector.first;
             const auto& entity = vector.second;
@@ -1124,6 +1256,26 @@ Summary::Summary( const EclipseState& st,
             }
 
             rvec.push_back(makeRestartVectorSMSPEC(kw, entity));
+            hndlrs.emplace_back(rvec.back().get(), func->second);
+        }
+
+        // Required restart vectors for segments (if applicable).
+        for (const auto& segRes : requiredSegmentVectors(schedule)) {
+            const auto key = genKey(segRes);
+            if (ecl_sum_has_key(this->ecl_sum.get(), key.c_str())) {
+                // Segment result already requested in SUMMARY section.
+                // Don't add a second evaluation of this.
+                continue;
+            }
+
+            auto func = funs.find(segRes.vector);
+            if (func == std::end(funs)) {
+                throw std::logic_error {
+                    "Unable to find handler for '" + segRes.vector + "'"
+                };
+            }
+
+            rvec.push_back(makeRestartVectorSMSPEC(segRes));
             hndlrs.emplace_back(rvec.back().get(), func->second);
         }
     }

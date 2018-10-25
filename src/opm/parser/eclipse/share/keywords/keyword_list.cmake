@@ -265,7 +265,7 @@ set( keywords
      000_Eclipse100/R/RPTSMRY
      000_Eclipse100/R/RS
      000_Eclipse100/R/RSCONST
-     000_Eclipse100/R/RSCONSTT     
+     000_Eclipse100/R/RSCONSTT
      000_Eclipse100/R/RSVD
      000_Eclipse100/R/RTEMP
      000_Eclipse100/R/RTEMPA
@@ -280,6 +280,7 @@ set( keywords
      000_Eclipse100/S/SCALECRS
      000_Eclipse100/S/SCHEDULE
      000_Eclipse100/S/SDENSITY
+     000_Eclipse100/S/SEGMENT_PROBE
      000_Eclipse100/S/SEPARATE
      000_Eclipse100/S/SGAS
      000_Eclipse100/S/SGCR

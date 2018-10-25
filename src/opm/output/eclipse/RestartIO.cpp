@@ -37,10 +37,12 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <algorithm>
 #include <cstddef>
+#include <iterator>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -469,12 +471,31 @@ void save(const std::string&  filename,
     const auto inteHD = writeHeader(rst_file.get(), sim_step, report_step,
                                     seconds_elapsed, schedule, grid, es);
 
-    writeGroup(rst_file.get(), sim_step, ecl_compatible_rst, schedule, sumState, inteHD);
+    writeGroup(rst_file.get(), sim_step, ecl_compatible_rst,
+               schedule, sumState, inteHD);
 
-    writeMSWData(rst_file.get(), sim_step, units, schedule, grid, sumState, inteHD);
+    // Write well and MSW data only when applicable (i.e., when present)
+    {
+        const auto& wells = schedule.getWells(sim_step);
 
-    writeWell(rst_file.get(), sim_step, ecl_compatible_rst, es.runspec().phases(), units,
-              grid, schedule, value.wells, sumState, inteHD);
+        if (! wells.empty()) {
+            const auto numMSW =
+                std::count_if(std::begin(wells), std::end(wells),
+                    [sim_step](const Well* well)
+            {
+                return well->isMultiSegment(sim_step);
+            });
+
+            if (numMSW > 0) {
+                writeMSWData(rst_file.get(), sim_step, units,
+                             schedule, grid, sumState, inteHD);
+            }
+
+            writeWell(rst_file.get(), sim_step, ecl_compatible_rst,
+                      es.runspec().phases(), units, grid, schedule,
+                      value.wells, sumState, inteHD);
+        }
+    }
 
     writeSolution(rst_file.get(), value, ecl_compatible_rst, write_double);
 
