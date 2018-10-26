@@ -84,9 +84,28 @@ WELSPECS
 
 ENDACTIO
 )"};
+
+    const auto WITH_GRID = std::string{ R"(
+SCHEDULE
+
+WELSPECS
+  'W2'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ACTIONX
+   'ACTION' /
+   WWCT OPX  > 0.75 /
+/
+
+PORO
+  100*0.78 /
+
+ENDACTIO
+)"};
     Opm::Parser parser;
     auto deck1 = parser.parseString(MISSING_END, Opm::ParseContext());
     auto deck2 = parser.parseString(WITH_WELSPECS, Opm::ParseContext());
+    auto deck3 = parser.parseString(WITH_GRID, Opm::ParseContext());
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck1 );
     Eclipse3DProperties eclipseProperties ( deck1 , table, grid1);
@@ -97,4 +116,9 @@ ENDACTIO
     Schedule sched(deck2, grid1, eclipseProperties, Phases(true,true,true), ParseContext());
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
+
+
+    // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
+    ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
+    BOOST_CHECK_THROW(Schedule(deck3, grid1, eclipseProperties, Phases(true,true,true), parseContext), std::invalid_argument);
 }

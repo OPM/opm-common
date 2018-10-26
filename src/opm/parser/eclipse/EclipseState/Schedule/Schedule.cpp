@@ -21,6 +21,7 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <set>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -60,6 +61,9 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
+
+    static std::set<std::string> actionx_whitelist = {"WELSPECS","WELOPEN"};
+
 
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
@@ -307,7 +311,11 @@ namespace Opm {
                     if (action_keyword.name() == "ENDACTIO")
                         break;
 
-                    action.addKeyword(action_keyword);
+                    if (actionx_whitelist.find(action_keyword.name()) == actionx_whitelist.end()) {
+                        std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
+                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg);
+                    } else
+                        action.addKeyword(action_keyword);
                 }
             } else
                 this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, grid, eclipseProperties, unit_system, rftProperties);

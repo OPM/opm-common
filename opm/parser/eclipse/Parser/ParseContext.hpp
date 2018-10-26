@@ -253,6 +253,15 @@ namespace Opm {
         */
         const static std::string SCHEDULE_INVALID_NAME;
 
+
+        /*
+          Only keywords explicitly white-listed can be included in the ACTIONX
+          block. This error flag controls what should happen when an illegal
+          keyword is encountered in an ACTIONX block.
+         */
+        const static std::string ACTIONX_ILLEGAL_KEYWORD;
+
+
     private:
         void initDefault();
         void initEnv();
