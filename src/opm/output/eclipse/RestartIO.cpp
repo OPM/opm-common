@@ -323,12 +323,13 @@ namespace {
                       const Schedule&                      schedule,
                       const EclipseGrid&                   grid,
 		      const Opm::SummaryState&             sumState,
+		      const Opm::data::Wells&              wells,
                       const std::vector<int>&              ih)
     {
         // write ISEG, RSEG, ILBS and ILBR to restart file
         const size_t simStep = static_cast<size_t> (sim_step);
         auto  MSWData = Helpers::AggregateMSWData(ih);
-        MSWData.captureDeclaredMSWData(schedule, simStep, units, ih, grid, sumState);
+        MSWData.captureDeclaredMSWData(schedule, simStep, units, ih, grid, sumState, wells);
 
         write_kw(rst_file, "ISEG", MSWData.getISeg());
         write_kw(rst_file, "ILBS", MSWData.getILBs());
@@ -488,7 +489,7 @@ void save(const std::string&  filename,
 
             if (numMSW > 0) {
                 writeMSWData(rst_file.get(), sim_step, units,
-                             schedule, grid, sumState, inteHD);
+                             schedule, grid, sumState, value.wells, inteHD);
             }
 
             writeWell(rst_file.get(), sim_step, ecl_compatible_rst,
