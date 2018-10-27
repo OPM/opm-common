@@ -26,27 +26,62 @@ namespace Opm {
 
 
 
-ActionX::ActionX(const std::string& name, size_t max_run, double max_wait) :
+ActionX::ActionX(const std::string& name, size_t max_run, double min_wait, std::time_t start_time) :
     m_name(name),
-    max_run(max_run),
-    max_wait(max_wait)
+    m_max_run(max_run),
+    m_min_wait(min_wait),
+    m_start_time(start_time)
 {}
 
 
-ActionX::ActionX(const DeckKeyword& kw) {
-    const auto& record = kw.getRecord(0);
-    this->m_name = record.getItem("NAME").getTrimmedString(0);
-    this->max_run = record.getItem("NUM").get<int>(0);
-    this->max_wait = record.getItem("MAX_WAIT").getSIDouble(0);
-}
+ActionX::ActionX(const DeckRecord& record, std::time_t start_time) :
+    ActionX( record.getItem("NAME").getTrimmedString(0),
+             record.getItem("NUM").get<int>(0),
+             record.getItem("MIN_WAIT").getSIDouble(0),
+             start_time )
+
+{}
+
+
+ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
+    ActionX(kw.getRecord(0), start_time)
+{}
 
 
 void ActionX::addKeyword(const DeckKeyword& kw) {
     this->keywords.push_back(kw);
 }
 
-const std::string& ActionX::name() const {
-    return this->m_name;
+
+
+bool ActionX::eval(std::time_t sim_time, const ActionContext& context) {
+    if (!this->ready(sim_time))
+        return false;
+    bool result = true;
+
+    if (result) {
+        this->run_count += 1;
+        this->last_run = sim_time;
+    }
+    return result;
 }
+
+
+bool ActionX::ready(std::time_t sim_time) const {
+  if (this->run_count >= this->max_run())
+        return false;
+
+    if (sim_time < this->start_time())
+        return false;
+
+    if (this->run_count == 0)
+        return true;
+
+    if (this->min_wait() <= 0)
+        return true;
+
+    return std::difftime(sim_time, this->last_run) > this->min_wait();
+}
+
 
 }

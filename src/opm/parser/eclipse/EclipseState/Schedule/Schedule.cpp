@@ -301,7 +301,7 @@ namespace Opm {
         while (true) {
             const auto& keyword = section.getKeyword(keywordIdx);
             if (keyword.name() == "ACTIONX") {
-                ActionX action(keyword);
+                ActionX action(keyword, this->m_timeMap.getStartTime(currentStep + 1));
                 while (true) {
                     keywordIdx++;
                     if (keywordIdx == section.size())
@@ -317,6 +317,7 @@ namespace Opm {
                     } else
                         action.addKeyword(action_keyword);
                 }
+                this->actions.add(action);
             } else
                 this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, grid, eclipseProperties, unit_system, rftProperties);
 
@@ -1891,6 +1892,8 @@ namespace Opm {
         const auto& ptr = this->wtest_config.get(timeStep);
         return *ptr;
     }
+
+
 
 
     size_t Schedule::size() const {

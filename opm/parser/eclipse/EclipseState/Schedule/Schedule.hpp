@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Actions.hpp>
 
 namespace Opm
 {
@@ -53,6 +54,7 @@ namespace Opm
     class TimeMap;
     class UnitSystem;
     class EclipseState;
+    class Actions;
 
     class Schedule {
     public:
@@ -104,6 +106,7 @@ namespace Opm
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const WellTestConfig& wtestConfig(size_t timestep) const;
+        const Actions& actionConfig() const;
 
         const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;
@@ -145,6 +148,7 @@ namespace Opm
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
+        Actions actions;
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         std::vector< Group* > getGroups(const std::string& groupNamePattern);
