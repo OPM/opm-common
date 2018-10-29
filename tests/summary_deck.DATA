@@ -675,5 +675,16 @@ COMPDAT
     W_4 1 1 3 3 /
 /
 
+WPIMULT
+W_1 0.5 /
+/
+
 TSTEP
-10 10 /
+10 /
+
+WPIMULT
+W_1 0.5 /
+/
+
+TSTEP
+10 /

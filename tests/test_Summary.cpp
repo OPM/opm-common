@@ -1052,6 +1052,8 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {},{}, block_values);
     writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells ,  {},{}, block_values);
     writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells ,  {},{}, block_values);
+    writer.add_timestep( 3, 2 * day, cfg.es, cfg.schedule, cfg.wells ,  {},{}, block_values);
+    writer.add_timestep( 4, 2 * day, cfg.es, cfg.schedule, cfg.wells ,  {},{}, block_values);
     writer.write();
 
     auto res = readsum( cfg.name );
@@ -1073,6 +1075,9 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     BOOST_CHECK_CLOSE( 2.1430730819702148 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2)   , 1e-5);
     BOOST_CHECK_CLOSE( 2.6788413524627686 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 102) , 1e-5);
     BOOST_CHECK_CLOSE( 2.7855057716369629 , ecl_sum_get_well_completion_var( resp, 1, "W_3", "CTFAC", 3)   , 1e-5);
+
+    BOOST_CHECK_CLOSE( 50                 , ecl_sum_get_well_completion_var( resp, 3, "W_1", "CTFAC", 1)   , 1e-5);
+    BOOST_CHECK_CLOSE( 25                 , ecl_sum_get_well_completion_var( resp, 4, "W_1", "CTFAC", 1)   , 1e-5);
 
     // Cell is not active
     BOOST_CHECK( !ecl_sum_has_general_var( resp , "BPR:2,1,10"));
