@@ -442,8 +442,8 @@ inline quantity srate( const fn_args& args ) {
     const auto& name = well->name();
     if( args.wells.count( name ) == 0 ) return zero;
 
-    const auto& well_data = args.wells.at( name );    
-    
+    const auto& well_data = args.wells.at( name );
+
     const auto& segment = well_data.segments.find(segNumber);
 
     if( segment == well_data.segments.end() ) return zero;
@@ -485,7 +485,7 @@ inline quantity trans_factors ( const fn_args& args ) {
 
     if( connection == connections.end() ) return zero;
 
-    const auto& v = connection->CF();
+    const auto& v = connection->CF() * connection->wellPi();
     return { v, measure::transmissibility };
 }
 
