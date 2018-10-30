@@ -328,6 +328,7 @@ set( keywords
      000_Eclipse100/S/SWOF
      000_Eclipse100/S/SWU
      000_Eclipse100/T/TABDIMS
+     000_Eclipse100/T/TBLK
      000_Eclipse100/T/TEMP
      000_Eclipse100/T/THCONR
      000_Eclipse100/T/THERMAL
