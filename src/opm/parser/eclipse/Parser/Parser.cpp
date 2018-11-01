@@ -581,7 +581,21 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if( parser.isRecognizedKeyword( parserState.rawKeyword->getKeywordName() ) ) {
             const auto& kwname = parserState.rawKeyword->getKeywordName();
             const auto* parserKeyword = parser.getParserKeywordFromDeckName( kwname );
-            parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.rawKeyword ) );
+            try {
+                parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.rawKeyword ) );
+            } catch (const std::exception& exc) {
+                /*
+                  This catch-all of parsing errors is to be able to write a good
+                  error message; the parser is quite confused at this state and
+                  we should not be tempted to continue the parsing.
+                */
+                const auto& rawKeyword = *parserState.rawKeyword;
+                std::string msg = "\nFailed to parse keyword: " + rawKeyword.getKeywordName() + "\n" +
+                                  "Starting at location: " + rawKeyword.getFilename() + "(" +  std::to_string(rawKeyword.getLineNR()) + ")\n\n" +
+                                  "Inner exception: " + exc.what() + "\n";
+
+                throw std::invalid_argument(msg);
+            }
         } else {
             DeckKeyword deckKeyword( parserState.rawKeyword->getKeywordName(), false );
             const std::string msg = "The keyword " + parserState.rawKeyword->getKeywordName() + " is not recognized";
