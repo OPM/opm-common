@@ -412,7 +412,7 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, bool write_
     auto num_cells = grid.getNumActive( );
 
     auto start_time = ecl_util_make_date( 1, 11, 1979 );
-    auto first_step = ecl_util_make_date( 10, 10, 2008 );
+    auto first_step = ecl_util_make_date( 1,  2, 2011 ); // Must be after 2011-01-20
 
     auto sol = mkSolution( num_cells );
     auto wells = mkWells();

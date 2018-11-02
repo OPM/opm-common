@@ -9,6 +9,9 @@ UNIFIN
 DIMENS
  10 10 10 /
 
+START             -- 0
+1 NOV 1979 /
+
 WELLDIMS
 -- Item 1: NWMAX  (Maximum number of wells in model)
 -- Item 2: NCWMAX (Maximum number of connections per well)
@@ -35,9 +38,6 @@ SOLUTION
 RESTART
 FIRST_SIM 1/
 
-
-START             -- 0 
-1 NOV 1979 / 
 
 SCHEDULE
 SKIPREST

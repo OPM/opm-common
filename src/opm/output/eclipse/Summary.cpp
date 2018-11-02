@@ -1113,6 +1113,9 @@ Summary::Summary( const EclipseState& st,
             restart_step = init_config.getRestartStep();
         } else
             OpmLog::warning("Restart case too long - not embedded in SMSPEC file");
+
+        this->prev_time_elapsed =
+            schedule.getTimeMap().getTimePassedUntil(restart_step);
     }
     ecl_sum.reset( ecl_sum_alloc_restart_writer2(basename,
                                                  restart_case,
@@ -1355,6 +1358,21 @@ void Summary::add_timestep( int report_step,
                             const std::map<std::string, double>& single_values,
                             const std::map<std::string, std::vector<double>>& region_values,
                             const std::map<std::pair<std::string, int>, double>& block_values) {
+
+    if (secs_elapsed < this->prev_time_elapsed) {
+        const auto& usys    = es.getUnits();
+        const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
+        const auto  prev_el = usys.from_si(measure::time, this->prev_time_elapsed);
+        const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
+
+        throw std::invalid_argument {
+            "Elapsed time ("
+            + std::to_string(elapsed) + ' ' + unt
+            + ") must not precede previous elapsed time ("
+            + std::to_string(prev_el) + ' ' + unt
+            + "). Incorrect restart time?"
+        };
+    }
 
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
