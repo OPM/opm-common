@@ -27,6 +27,7 @@
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/output/eclipse/VectorItems/connection.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
@@ -37,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
 #include <algorithm>
@@ -880,6 +882,116 @@ namespace {
         }
 
         return soln;
+    }
+
+    void assign_well_cumulatives(const std::string& well,
+                                 const std::size_t  wellID,
+                                 const WellVectors& wellData,
+                                 Opm::SummaryState& smry)
+    {
+        if (! wellData.hasDefinedWellValues()) {
+            // Result set does not provide well information.
+            // No wells?  In any case, nothing to do here.
+            return;
+        }
+
+        auto key = [&well](const std::string& vector) -> std::string
+        {
+            return vector + ':' + well;
+        };
+
+        const auto xwel = wellData.xwel(wellID);
+
+        // No unit conversion here.  Smry expects output units.
+        smry.add(key("WOPT"), xwel[VI::XWell::index::OilPrTotal]);
+        smry.add(key("WWPT"), xwel[VI::XWell::index::WatPrTotal]);
+        smry.add(key("WGPT"), xwel[VI::XWell::index::GasPrTotal]);
+        smry.add(key("WVPT"), xwel[VI::XWell::index::VoidPrTotal]);
+
+        smry.add(key("WWIT"), xwel[VI::XWell::index::WatInjTotal]);
+        smry.add(key("WGIT"), xwel[VI::XWell::index::GasInjTotal]);
+    }
+
+    void assign_group_cumulatives(const std::string&  group,
+                                  const std::size_t   groupID,
+                                  const GroupVectors& groupData,
+                                  Opm::SummaryState&  smry)
+    {
+        if (! groupData.hasDefinedValues()) {
+            // Result set does not provide group information.
+            // No wells?  In any case, nothing to do here.
+            return;
+        }
+
+        auto key = [&group](const std::string& vector) -> std::string
+        {
+            return (group == "FIELD")
+                ?  'F' + vector
+                :  'G' + vector + ':' + group;
+        };
+
+        const auto xgrp = groupData.xgrp(groupID);
+
+        // No unit conversion here.  Smry expects output units.
+        smry.add(key("OPT"), xgrp[VI::XGroup::index::OilPrTotal]);
+        smry.add(key("WPT"), xgrp[VI::XGroup::index::WatPrTotal]);
+        smry.add(key("GPT"), xgrp[VI::XGroup::index::GasPrTotal]);
+        smry.add(key("VPT"), xgrp[VI::XGroup::index::VoidPrTotal]);
+
+        smry.add(key("WIT"), xgrp[VI::XGroup::index::WatInjTotal]);
+        smry.add(key("GIT"), xgrp[VI::XGroup::index::GasInjTotal]);
+    }
+
+    Opm::SummaryState
+    restore_cumulative(const RestartFileView& rst_view,
+                       const ::Opm::Schedule& schedule)
+    {
+        auto smry = Opm::SummaryState{};
+
+        const auto  sim_step = rst_view.simStep();
+        const auto* intehead = rst_view.getKeyword("INTEHEAD");
+
+        if (intehead == nullptr) { return smry; }
+
+        // Well cumulatives
+        {
+            const auto  wellData = WellVectors { rst_view, intehead };
+            const auto& wells    = schedule.getWells(sim_step);
+
+            for (auto nWells = wells.size(), wellID = 0*nWells;
+                 wellID < nWells; ++wellID)
+            {
+                assign_well_cumulatives(wells[wellID]->name(),
+                                        wellID, wellData, smry);
+            }
+        }
+
+        // Group cumulatives, including FIELD.
+        {
+            const auto groupData = GroupVectors { rst_view, intehead };
+
+            for (const auto* group : schedule.getGroups(sim_step)) {
+                const auto& gname = group->name();
+
+                // Note: Order of group values in {I,X}GRP arrays mostly
+                // matches group's order of occurrence in .DATA file.
+                // Values pertaingin to FIELD are stored at zero-based order
+                // index NGMAXZ (maximum number of groups in model).  The
+                // latter value is groupData.maxGroups().
+                //
+                // As a final wrinkle, Flow internally stores FIELD at
+                // seqIndex() == 0, so subtract one to account for this
+                // fact.  Max(seqIndex(), 1) - 1 is just a bit of future
+                // proofing and robustness in case that ever changes.
+                const auto groupOrderIx = (gname == "FIELD")
+                    ? groupData.maxGroups() // NGMAXZ -- Item 3 of WELLDIMS
+                    : std::max(group->seqIndex(), std::size_t{1}) - 1;
+
+                assign_group_cumulatives(gname, groupOrderIx, groupData, smry);
+            }
+        }
+
+        return smry;
     }
 } // Anonymous namespace
 
