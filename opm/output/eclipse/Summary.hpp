@@ -63,6 +63,8 @@ class Summary {
 
         const SummaryState& get_restart_vectors() const;
 
+        void reset_cumulative_quantities(const SummaryState& rstrt);
+
     private:
         class keyword_handlers;
 

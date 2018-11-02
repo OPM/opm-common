@@ -1527,4 +1527,23 @@ const SummaryState& Summary::get_restart_vectors() const
     return this->prev_state;
 }
 
+void Summary::reset_cumulative_quantities(const SummaryState& rstrt)
+{
+    for (const auto& f : this->handlers->handlers) {
+        if (! smspec_node_is_total(f.first)) {
+            // Ignore quantities that are not cumulative ("total").
+            continue;
+        }
+
+        const auto* genkey = smspec_node_get_gen_key1(f.first);
+        if (rstrt.has(genkey)) {
+            // Assume 'rstrt' uses output units.  This is satisfied if rstrt
+            // is constructed from information in a restart file--i.e., from
+            // the double precision restart vectors 'XGRP' and 'XWEL' during
+            // RestartIO::load().
+            this->prev_state.add(genkey, rstrt.get(genkey));
+        }
+    }
+}
+
 }} // namespace Opm::out
