@@ -46,6 +46,8 @@ namespace Opm {
                    double CF,
                    double Kh,
                    double rw,
+                   double r0,
+                   double skin_factor,
                    const int satTableId,
                    const WellCompletion::DirectionEnum direction,
 		   const std::size_t seqIndex,
@@ -69,6 +71,8 @@ namespace Opm {
         double CF() const;
         double Kh() const;
         double rw() const;
+        double r0() const;
+        double skinFactor() const;
         double wellPi() const;
 
         void setState(WellCompletion::StateEnum state);
@@ -96,6 +100,8 @@ namespace Opm {
         double m_CF;
         double m_Kh;
         double m_rw;
+        double m_r0;
+        double m_skin_factor;
 
         std::array<int,3> ijk;
 	std::size_t m_seqIndex;

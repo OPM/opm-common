@@ -43,6 +43,8 @@ namespace Opm {
                            double CF,
                            double Kh,
                            double rw,
+                           double r0,
+                           double skin_factor,
                            const int satTableId,
                            const WellCompletion::DirectionEnum direction,
 			   const std::size_t seqIndex,
@@ -58,6 +60,8 @@ namespace Opm {
           m_CF(CF),
           m_Kh(Kh),
           m_rw(rw),
+          m_r0(r0),
+          m_skin_factor(skin_factor),
           ijk({i,j,k}),
           m_seqIndex(seqIndex),
           m_segDistStart(segDistStart),
@@ -173,6 +177,14 @@ namespace Opm {
         return this->m_rw;
     }
 
+    double Connection::r0() const {
+        return this->m_r0;
+    }
+
+    double Connection::skinFactor() const {
+        return this->m_skin_factor;
+    }
+
     void Connection::setState(WellCompletion::StateEnum state) {
         this->open_state = state;
     }
@@ -200,6 +212,8 @@ namespace Opm {
             && this->m_complnum == rhs.m_complnum
             && this->m_CF == rhs.m_CF
             && this->m_rw == rhs.m_rw
+            && this->m_r0 == rhs.m_r0
+            && this->m_skin_factor == rhs.m_skin_factor
             && this->wPi == rhs.wPi
             && this->m_Kh == rhs.m_Kh
             && this->sat_tableId == rhs.sat_tableId

@@ -485,6 +485,9 @@ namespace Opm {
                             : -1.0;
             currentWell.setRefDepth( currentStep, refDepth );
 
+            double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
+            currentWell.setDrainageRadius( currentStep, drainageRadius );
+
             addWellToGroup( this->m_groups.at( groupName ), this->m_wells.get( wellName ), currentStep);
             if (handleGroupFromWELSPECS(groupName, newTree))
                 needNewTree = true;
@@ -1468,6 +1471,8 @@ namespace Opm {
                         ? refDepthItem.getSIDouble( 0 )
                         : -1.0;
 
+        double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
+
         bool allowCrossFlow = true;
         const std::string& allowCrossFlowStr = record.getItem<ParserKeywords::WELSPECS::CROSSFLOW>().getTrimmedString(0);
         if (allowCrossFlowStr == "NO")
@@ -1482,7 +1487,7 @@ namespace Opm {
 	const size_t wseqIndex = m_wells.size(); 
         
         Well well(wellName, wseqIndex,
-                  headI, headJ, refDepth,
+                  headI, headJ, refDepth, drainageRadius,
                   preferredPhase, m_timeMap,
                   timeStep,
                   wellConnectionOrder, allowCrossFlow, automaticShutIn);

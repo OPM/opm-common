@@ -338,6 +338,8 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::liquid_productivity_index , 1.0 ) , 1.1574074074074073e-10 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_productivity_index , 1.0 ) , 1.1574074074074073e-10 , 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> METRIC
@@ -368,6 +370,8 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::liquid_productivity_index , 1.0 ) , 86.400e8 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_productivity_index , 1.0 ) , 86.400e8 , 1.0e-10 );
 }
 
 BOOST_AUTO_TEST_CASE(FIELD_UNITS)
@@ -408,6 +412,8 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.to_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 178.1076066790352 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::liquid_productivity_index , 1.0 ) , 1.840130728333334e-06 / 6.894757293168360e+03  , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.to_si( Meas::gas_productivity_index , 1.0 ) , 3.277412800000001e-04 / 6.894757293168360e+03 , 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> FIELD
@@ -438,6 +444,8 @@ BOOST_AUTO_TEST_CASE(FIELD_UNITS)
     BOOST_CHECK_CLOSE( field.from_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 5.614583333333335e-03 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( field.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::liquid_productivity_index , 1.0 ) , 5.434396505653337e+05 * 6.894757293168360e+03 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( field.from_si( Meas::gas_productivity_index , 1.0 ) , 3.051187204736614e+03 * 6.894757293168360e+03, 1.0e-10 );
 }
 
 BOOST_AUTO_TEST_CASE(LAB_UNITS)
@@ -478,6 +486,8 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::liquid_productivity_index , 1.0 ) , 2.777777777777778e-10 / 101325.0  , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.to_si( Meas::gas_productivity_index , 1.0 ) , 2.777777777777778e-10 / 101325.0 , 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> LAB
@@ -508,6 +518,8 @@ BOOST_AUTO_TEST_CASE(LAB_UNITS)
     BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( lab.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::liquid_productivity_index , 1.0 ) , 3.6e9 * 101325.0, 1.0e-10 );
+    BOOST_CHECK_CLOSE( lab.from_si( Meas::gas_productivity_index , 1.0 ) , 3.6e9 * 101325.0 , 1.0e-10 );
 }
 
 BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
@@ -548,6 +560,8 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::liquid_productivity_index , 1.0 ) , 1.1574074074074073e-05 /101325.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.to_si( Meas::gas_productivity_index , 1.0 ) , 1.1574074074074073e-05 /101325.0 , 1.0e-10 );
 
     // ----------------------------------------------------------------
     // SI -> PVT-M
@@ -578,6 +592,8 @@ BOOST_AUTO_TEST_CASE(PVT_M_UNITS)
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::oil_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::liquid_productivity_index , 1.0 ) , 86.400e3 * 101325.0 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( pvt_m.from_si( Meas::gas_productivity_index , 1.0 ) , 86.400e3 * 101325.0, 1.0e-10 );
 }
 
 BOOST_AUTO_TEST_CASE(TemperatureConversions)

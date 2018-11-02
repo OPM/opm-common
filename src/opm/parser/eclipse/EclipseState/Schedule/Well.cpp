@@ -34,7 +34,7 @@
 namespace Opm {
 
     Well::Well(const std::string& name_, const size_t& seqIndex_, int headI,
-               int headJ, double refDepth , Phase preferredPhase,
+               int headJ, double refDepth , double drainageRadius, Phase preferredPhase,
                const TimeMap& timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
@@ -60,6 +60,7 @@ namespace Opm {
           m_headI( timeMap, headI ),
           m_headJ( timeMap, headJ ),
           m_refDepth( timeMap, refDepth ),
+          m_drainageRadius (timeMap, drainageRadius),
           m_preferredPhase(preferredPhase),
           m_comporder(completionOrdering),
           m_allowCrossFlow(allowCrossFlow),
@@ -345,6 +346,13 @@ namespace Opm {
 
     void Well::setRefDepth( size_t timestep, double depth ) {
         this->m_refDepth.update( timestep, depth );
+    }
+
+    void Well::setDrainageRadius( size_t timestep, double radius ) {
+        this->m_drainageRadius.update( timestep, radius );
+    }
+    double Well::getDrainageRadius(size_t timestep) const {
+        return m_drainageRadius.get( timestep );
     }
 
     Phase Well::getPreferredPhase() const {
