@@ -22,6 +22,10 @@
 #define ActionX_HPP_
 
 #include <string>
+#include <vector>
+#include <ctime>
+
+#include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 
 namespace Opm {
 /*
@@ -49,21 +53,33 @@ namespace Opm {
 */
 
 class DeckKeyword;
+class ActionContext;
 
 class ActionX {
 public:
-    ActionX(const std::string& name, size_t max_run, double max_wait);
-    explicit ActionX(const DeckKeyword& kw);
+    ActionX(const std::string& name, size_t max_run, double max_wait, std::time_t start_time);
+    ActionX(const DeckKeyword& kw, std::time_t start_time);
+    ActionX(const DeckRecord& record, std::time_t start_time);
 
     void addKeyword(const DeckKeyword& kw);
+    bool ready(std::time_t sim_time) const;
+    bool eval(std::time_t sim_time, const ActionContext& context);
 
-    const std::string& name() const;
+
+    std::string name() const { return this->m_name; }
+    size_t max_run() const { return this->m_max_run; }
+    double min_wait() const { return this->m_min_wait; }
+    std::time_t start_time() const { return this->m_start_time; }
+
 private:
     std::string m_name;
-    size_t max_run;
-    double max_wait;
+    size_t m_max_run;
+    double m_min_wait;
+    std::time_t m_start_time;
 
     std::vector<DeckKeyword> keywords;
+    size_t run_count = 0;
+    std::time_t last_run = 0;
 };
 
 }
