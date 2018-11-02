@@ -997,7 +997,7 @@ namespace {
 
 namespace Opm { namespace RestartIO  {
 
-    RestartValue
+    std::pair<RestartValue, SummaryState>
     load(const std::string&             filename,
          int                            report_step,
          const std::vector<RestartKey>& solution_keys,
@@ -1023,6 +1023,10 @@ namespace Opm { namespace RestartIO  {
             restoreExtra(rst_view, extra_keys, es.getUnits(), rst_value);
         }
 
-        return rst_value;
+        return {
+            std::move(rst_value),
+            restore_cumulative(rst_view, schedule)
+        };
     }
+
 }} // Opm::RestartIO

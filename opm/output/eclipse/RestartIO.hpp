@@ -1,4 +1,5 @@
 /*
+  Copyright (c) 2018 Equinor ASA
   Copyright (c) 2016 Statoil ASA
   Copyright (c) 2013-2015 Andreas Lauser
   Copyright (c) 2013 SINTEF ICT, Applied Mathematics.
@@ -23,9 +24,6 @@
 #ifndef RESTART_IO_HPP
 #define RESTART_IO_HPP
 
-#include <vector>
-#include <map>
-
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
@@ -35,24 +33,29 @@
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+
 #include <ert/ecl/EclKW.hpp>
 #include <ert/ecl/ecl_rsthead.h>
 #include <ert/ecl/ecl_rst_file.h>
 #include <ert/util/util.h>
 
+#include <map>
+#include <utility>
+#include <vector>
+
 namespace Opm {
 
-class EclipseGrid;
-class EclipseState;
-class Phases;
-class Schedule;
-class SummaryState;
+    class EclipseGrid;
+    class EclipseState;
+    class Phases;
+    class Schedule;
 
-namespace RestartIO {
+} // namespace Opm
 
 
 /*
-  The two loose functions RestartIO::save() and RestartIO::load() can
+  The two free functions RestartIO::save() and RestartIO::load() can
   be used to save and load reservoir and well state from restart
   files. Observe that these functions 'just do it', i.e. the checking
   of which report step to load from, if output is enabled at all and
@@ -69,39 +72,30 @@ namespace RestartIO {
      load("CASE.X0010" , 99 , ...)
      save("CASE.X0010" , 99 , ...)
 
-   will read and write to the file "CASE.X0010" - completely ignoring
+   will read from and write to the file "CASE.X0010" - completely ignoring
    the report step argument '99'.
 */
+namespace Opm { namespace RestartIO {
 
-/*void save(const std::string& filename,
-          int report_step,
-          double seconds_elapsed,
-          data::Solution cells,
-          data::Wells wells,
-          const EclipseState& es,
-          const EclipseGrid& grid,
-          const Schedule& schedule,
-          std::map<std::string, std::vector<double>> extra_data = {},
-          bool write_double = false);
-*/
-void save(const std::string& filename,
-          int report_step,
-          double seconds_elapsed,
-          RestartValue value,
-          const EclipseState& es,
-          const EclipseGrid& grid,
-          const Schedule& schedule,
-          const SummaryState& sumState,
-          bool write_double = false);
+    void save(const std::string&  filename,
+              int                 report_step,
+              double              seconds_elapsed,
+              RestartValue        value,
+              const EclipseState& es,
+              const EclipseGrid&  grid,
+              const Schedule&     schedule,
+              const SummaryState& sumState,
+              bool                write_double = false);
 
-RestartValue load( const std::string& filename,
-                   int report_step,
-                   const std::vector<RestartKey>& solution_keys,
-                   const EclipseState& es,
-                   const EclipseGrid& grid,
-                   const Schedule& schedule,
-                   const std::vector<RestartKey>& extra_keys = {});
+    std::pair<RestartValue, SummaryState>
+    load(const std::string&             filename,
+         int                            report_step,
+         const std::vector<RestartKey>& solution_keys,
+         const EclipseState&            es,
+         const EclipseGrid&             grid,
+         const Schedule&                schedule,
+         const std::vector<RestartKey>& extra_keys = {});
 
-}
-}
-#endif
+}} // namespace Opm::RestartIO
+
+#endif  // RESTART_IO_HPP
