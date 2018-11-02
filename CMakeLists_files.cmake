@@ -528,7 +528,9 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp
         opm/output/eclipse/VectorItems/connection.hpp
+        opm/output/eclipse/VectorItems/group.hpp
         opm/output/eclipse/VectorItems/intehead.hpp
+        opm/output/eclipse/VectorItems/msw.hpp
         opm/output/eclipse/VectorItems/well.hpp
         opm/output/eclipse/AggregateGroupData.hpp
         opm/output/eclipse/AggregateConnectionData.hpp
