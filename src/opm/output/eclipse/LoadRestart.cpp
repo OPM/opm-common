@@ -1,4 +1,5 @@
 /*
+  Copyright (c) 2018 Equinor ASA
   Copyright (c) 2016 Statoil ASA
   Copyright (c) 2013-2015 Andreas Lauser
   Copyright (c) 2013 SINTEF ICT, Applied Mathematics.
@@ -143,6 +144,227 @@ RestartFileView& RestartFileView::operator=(RestartFileView&& rhs)
     this->step_view_ = rhs.step_view_;           // Pointer copy
 
     return *this;
+}
+
+// ---------------------------------------------------------------------
+
+namespace {
+    template <typename T>
+    const T* getPtr(const ::Opm::RestartIO::ecl_kw_type* kw)
+    {
+        return (kw == nullptr) ? nullptr
+            : static_cast<const T*>(ecl_kw_iget_ptr(kw /* <- ADL */, 0));
+    }
+
+    template <typename T>
+    boost::iterator_range<const T*>
+    getDataWindow(const T*          arr,
+                  const std::size_t windowSize,
+                  const std::size_t entity,
+                  const std::size_t subEntity               = 0,
+                  const std::size_t maxSubEntitiesPerEntity = 1)
+    {
+        const auto off =
+            windowSize * (subEntity + maxSubEntitiesPerEntity*entity);
+
+        const auto* begin = arr   + off;
+        const auto* end   = begin + windowSize;
+
+        return { begin, end };
+    }
+
+    int getInteHeadElem(const ::Opm::RestartIO::ecl_kw_type* intehead,
+                        const std::vector<int>::size_type    i)
+    {
+        return getPtr<int>(intehead)[i];
+    }
+}
+
+// ---------------------------------------------------------------------
+
+class WellVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<const T*>;
+
+    explicit WellVectors(const RestartFileView&               rst_view,
+                         const ::Opm::RestartIO::ecl_kw_type* intehead);
+
+    bool hasDefinedWellValues() const;
+    bool hasDefinedConnectionValues() const;
+
+    Window<int>    iwel(const std::size_t wellID) const;
+    Window<double> xwel(const std::size_t wellID) const;
+
+    Window<int>
+    icon(const std::size_t wellID, const std::size_t connID) const;
+
+    Window<double>
+    xcon(const std::size_t wellID, const std::size_t connID) const;
+
+private:
+    std::size_t maxConnPerWell_;
+    std::size_t numIWelElem_;
+    std::size_t numXWelElem_;
+    std::size_t numIConElem_;
+    std::size_t numXConElem_;
+
+    const ::Opm::RestartIO::ecl_kw_type* iwel_;
+    const ::Opm::RestartIO::ecl_kw_type* xwel_;
+
+    const ::Opm::RestartIO::ecl_kw_type* icon_;
+    const ::Opm::RestartIO::ecl_kw_type* xcon_;
+};
+
+WellVectors::WellVectors(const RestartFileView&               rst_view,
+                         const ::Opm::RestartIO::ecl_kw_type* intehead)
+    : maxConnPerWell_(getInteHeadElem(intehead, VI::intehead::NCWMAX))
+    , numIWelElem_   (getInteHeadElem(intehead, VI::intehead::NIWELZ))
+    , numXWelElem_   (getInteHeadElem(intehead, VI::intehead::NXWELZ))
+    , numIConElem_   (getInteHeadElem(intehead, VI::intehead::NICONZ))
+    , numXConElem_   (getInteHeadElem(intehead, VI::intehead::NXCONZ))
+    , iwel_          (rst_view.getKeyword("IWEL"))
+    , xwel_          (rst_view.getKeyword("XWEL"))
+    , icon_          (rst_view.getKeyword("ICON"))
+    , xcon_          (rst_view.getKeyword("XCON"))
+{}
+
+bool WellVectors::hasDefinedWellValues() const
+{
+    return ! ((this->iwel_ == nullptr) ||
+              (this->xwel_ == nullptr));
+}
+
+bool WellVectors::hasDefinedConnectionValues() const
+{
+    return ! ((this->icon_ == nullptr) ||
+              (this->xcon_ == nullptr));
+}
+
+WellVectors::Window<int>
+WellVectors::iwel(const std::size_t wellID) const
+{
+    if (! this->hasDefinedWellValues()) {
+        throw std::logic_error {
+            "Cannot Request IWEL Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<int>(this->iwel_),
+                         this->numIWelElem_, wellID);
+}
+
+WellVectors::Window<double>
+WellVectors::xwel(const std::size_t wellID) const
+{
+    if (! this->hasDefinedWellValues()) {
+        throw std::logic_error {
+            "Cannot Request XWEL Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<double>(this->xwel_),
+                         this->numXWelElem_, wellID);
+}
+
+WellVectors::Window<int>
+WellVectors::icon(const std::size_t wellID, const std::size_t connID) const
+{
+    if (! this->hasDefinedConnectionValues()) {
+        throw std::logic_error {
+            "Cannot Request ICON Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<int>(this->icon_), this->numIConElem_,
+                         wellID, connID, this->maxConnPerWell_);
+}
+
+WellVectors::Window<double>
+WellVectors::xcon(const std::size_t wellID, const std::size_t connID) const
+{
+    if (! this->hasDefinedConnectionValues()) {
+        throw std::logic_error {
+            "Cannot Request XCON Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<double>(this->xcon_), this->numXConElem_,
+                         wellID, connID, this->maxConnPerWell_);
+}
+
+// ---------------------------------------------------------------------
+
+class GroupVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<const T*>;
+
+    explicit GroupVectors(const RestartFileView&               rst_view,
+                          const ::Opm::RestartIO::ecl_kw_type* intehead);
+
+    bool hasDefinedValues() const;
+
+    std::size_t maxGroups() const;
+
+    Window<int>    igrp(const std::size_t groupID) const;
+    Window<double> xgrp(const std::size_t groupID) const;
+
+private:
+    std::size_t maxNumGroups_;
+    std::size_t numIGrpElem_;
+    std::size_t numXGrpElem_;
+
+    const ::Opm::RestartIO::ecl_kw_type* igrp_;
+    const ::Opm::RestartIO::ecl_kw_type* xgrp_;
+};
+
+GroupVectors::GroupVectors(const RestartFileView&               rst_view,
+                           const ::Opm::RestartIO::ecl_kw_type* intehead)
+    : maxNumGroups_(getInteHeadElem(intehead, VI::intehead::NGMAXZ) - 1) // -FIELD
+    , numIGrpElem_ (getInteHeadElem(intehead, VI::intehead::NIGRPZ))
+    , numXGrpElem_ (getInteHeadElem(intehead, VI::intehead::NXGRPZ))
+    , igrp_        (rst_view.getKeyword("IGRP"))
+    , xgrp_        (rst_view.getKeyword("XGRP"))
+{}
+
+bool GroupVectors::hasDefinedValues() const
+{
+    return ! ((this->igrp_ == nullptr) ||
+              (this->xgrp_ == nullptr));
+}
+
+std::size_t GroupVectors::maxGroups() const
+{
+    return this->maxNumGroups_;
+}
+
+GroupVectors::Window<int>
+GroupVectors::igrp(const std::size_t groupID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request IWEL Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<int>(this->igrp_),
+                         this->numIGrpElem_, groupID);
+}
+
+GroupVectors::Window<double>
+GroupVectors::xgrp(const std::size_t groupID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request XGRP Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<double>(this->xgrp_),
+                         this->numXGrpElem_, groupID);
 }
 
 namespace {
@@ -348,101 +570,16 @@ namespace {
         return wells;
     }
 
-    template <typename T>
-    const T* getPtr(const ::Opm::RestartIO::ecl_kw_type* kw)
-    {
-        return (kw == nullptr) ? nullptr
-            : static_cast<const T*>(ecl_kw_iget_ptr(kw /* <- ADL */, 0));
-    }
-
-    int getInteHeadElem(const ::Opm::RestartIO::ecl_kw_type* intehead,
-                        const std::vector<int>::size_type    i)
-    {
-        return getPtr<int>(intehead)[i];
-    }
-
-    struct WellArrayDim
-    {
-        explicit WellArrayDim(const ::Opm::RestartIO::ecl_kw_type* intehead);
-
-        std::size_t maxConnPerWell;
-        std::size_t numIWelElem;
-        std::size_t numXWelElem;
-        std::size_t numIConElm;
-        std::size_t numXConElm;
-    };
-
-    WellArrayDim::WellArrayDim(const ::Opm::RestartIO::ecl_kw_type* intehead)
-        : maxConnPerWell(getInteHeadElem(intehead, VI::intehead::NCWMAX))
-        , numIWelElem   (getInteHeadElem(intehead, VI::intehead::NIWELZ))
-        , numXWelElem   (getInteHeadElem(intehead, VI::intehead::NXWELZ))
-        , numIConElm    (getInteHeadElem(intehead, VI::intehead::NICONZ))
-        , numXConElm    (getInteHeadElem(intehead, VI::intehead::NXCONZ))
-    {}
-
-    template <typename T>
-    boost::iterator_range<const T*>
-    getDataWindow(const T*          arr,
-                  const std::size_t windowSize,
-                  const std::size_t well,
-                  const std::size_t conn           = 0,
-                  const std::size_t maxConnPerWell = 1)
-    {
-        const auto  off   = windowSize * (conn + maxConnPerWell*well);
-        const auto* begin = arr   + off;
-        const auto* end   = begin + windowSize;
-
-        return { begin, end };
-    }
-
-    boost::iterator_range<const int*>
-    getIWelWindow(const int*          iwel,
-                  const WellArrayDim& wdim,
-                  const std::size_t   well)
-    {
-        return getDataWindow(iwel, wdim.numIWelElem, well);
-    }
-
-    boost::iterator_range<const double*>
-    getXWelWindow(const double*       xwel,
-                  const WellArrayDim& wdim,
-                  const std::size_t   well)
-    {
-        return getDataWindow(xwel, wdim.numXWelElem, well);
-    }
-
-    boost::iterator_range<const int*>
-    getIConWindow(const int*          icon,
-                  const WellArrayDim& wdim,
-                  const std::size_t   well,
-                  const std::size_t   conn)
-    {
-        return getDataWindow(icon, wdim.numIConElm, well,
-                             conn, wdim.maxConnPerWell);
-    }
-
-    boost::iterator_range<const double*>
-    getXConWindow(const double*       xcon,
-                  const WellArrayDim& wdim,
-                  const std::size_t   well,
-                  const std::size_t   conn)
-    {
-        return getDataWindow(xcon, wdim.numXConElm, well,
-                             conn, wdim.maxConnPerWell);
-    }
-
     std::unordered_map<std::size_t, boost::iterator_range<const double*>::size_type>
-    seqID_to_resID(const WellArrayDim& wdim,
-                   const std::size_t   wellID,
+    seqID_to_resID(const std::size_t   wellID,
                    const std::size_t   nConn,
-                   const int*          icon_full)
+                   const WellVectors&  wellData)
     {
         using SizeT    = boost::iterator_range<const double*>::size_type;
         auto  seqToRes = std::unordered_map<std::size_t, SizeT>{};
 
         for (auto connID = 0*nConn; connID < nConn; ++connID) {
-            const auto icon =
-                getIConWindow(icon_full, wdim, wellID, connID);
+            const auto icon = wellData.icon(wellID, connID);
 
             seqToRes.emplace(icon[VI::IConn::index::SeqIndex] - 1, connID);
         }
@@ -454,23 +591,20 @@ namespace {
                           const std::size_t       wellID,
                           const std::size_t       sim_step,
                           const Opm::EclipseGrid& grid,
-                          const WellArrayDim&     wdim,
                           const Opm::UnitSystem&  usys,
                           const Opm::Phases&      phases,
-                          const int*              iwel_full,
-                          const int*              icon_full,
-                          const double*           xcon_full,
+                          const WellVectors&      wellData,
                           Opm::data::Well&        xw)
     {
         using M = ::Opm::UnitSystem::measure;
 
-        const auto iwel  = getIWelWindow(iwel_full, wdim, wellID);
+        const auto iwel  = wellData.iwel(wellID);
         const auto nConn = static_cast<std::size_t>(
             iwel[VI::IWell::index::NConn]);
 
         xw.connections.resize(nConn, Opm::data::Connection{});
 
-        if ((icon_full == nullptr) || (xcon_full == nullptr)) {
+        if (! wellData.hasDefinedConnectionValues()) {
             // Result set does not provide certain pieces of
             // information which are needed to reconstruct
             // connection flow rates.  Nothing to do here.
@@ -482,14 +616,12 @@ namespace {
         const auto wat = phases.active(Opm::Phase::WATER);
 
         const auto conns      = well.getActiveConnections(sim_step, grid);
-        const auto seq_to_res =
-            seqID_to_resID(wdim, wellID, nConn, icon_full);
+        const auto seq_to_res = seqID_to_resID(wellID, nConn, wellData);
 
         auto linConnID = std::size_t{0};
         for (const auto& conn : conns) {
             const auto connID = seq_to_res.at(conn.getSeqIndex());
-            const auto xcon   =
-                getXConWindow(xcon_full, wdim, wellID, connID);
+            const auto xcon   = wellData.xcon(wellID, connID);
 
             auto& xc = xw.connections[linConnID++];
 
@@ -518,15 +650,11 @@ namespace {
                  const std::size_t       wellID,
                  const std::size_t       sim_step,
                  const Opm::EclipseGrid& grid,
-                 const WellArrayDim&     wdim,
                  const Opm::UnitSystem&  usys,
                  const Opm::Phases&      phases,
-                 const int*              iwel_full,
-                 const double*           xwel_full,
-                 const int*              icon_full,
-                 const double*           xcon_full)
+                 const WellVectors&      wellData)
     {
-        if ((iwel_full == nullptr) || (xwel_full == nullptr)) {
+        if (! wellData.hasDefinedWellValues()) {
             // Result set does not provide well information.
             // No wells?  In any case, nothing to do here.
             return {};
@@ -534,7 +662,7 @@ namespace {
 
         using M = ::Opm::UnitSystem::measure;
 
-        const auto xwel = getXWelWindow(xwel_full, wdim, wellID);
+        const auto xwel = wellData.xwel(wellID);
 
         const auto oil = phases.active(Opm::Phase::OIL);
         const auto gas = phases.active(Opm::Phase::GAS);
@@ -566,8 +694,8 @@ namespace {
         xw.thp = xw.temperature = 0.0;
 
         // 3) Restore connection flow rates (xw.connections[i].rates)
-        restoreConnRates(well, wellID, sim_step, grid, wdim, usys, phases,
-                         iwel_full, icon_full, xcon_full, xw);
+        restoreConnRates(well, wellID, sim_step,
+                         grid, usys, phases, wellData, xw);
 
         return xw;
     }
@@ -588,14 +716,10 @@ namespace {
             return soln;
         }
 
-        const auto  wdim   = WellArrayDim{ intehead };
+        const auto wellData = WellVectors{ rst_view, intehead };
+
         const auto& units  = es.getUnits();
         const auto& phases = es.runspec().phases();
-
-        const auto* iwel_full = getPtr<int>   (rst_view.getKeyword("IWEL"));
-        const auto* xwel_full = getPtr<double>(rst_view.getKeyword("XWEL"));
-        const auto* icon_full = getPtr<int>   (rst_view.getKeyword("ICON"));
-        const auto* xcon_full = getPtr<double>(rst_view.getKeyword("XCON"));
 
         const auto  sim_step = rst_view.simStep();
         const auto& wells    = schedule.getWells(sim_step);
@@ -605,8 +729,8 @@ namespace {
             const auto* well = wells[wellID];
 
             soln[well->name()] =
-                restore_well(*well, wellID, sim_step, grid, wdim, units, phases,
-                             iwel_full, xwel_full, icon_full, xcon_full);
+                restore_well(*well, wellID, sim_step, grid,
+                             units, phases, wellData);
         }
 
         return soln;
