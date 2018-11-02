@@ -28,6 +28,7 @@
 
 #include <opm/output/eclipse/VectorItems/connection.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/output/eclipse/libECLRestart.hpp>
@@ -367,6 +368,77 @@ GroupVectors::xgrp(const std::size_t groupID) const
                          this->numXGrpElem_, groupID);
 }
 
+// ---------------------------------------------------------------------
+
+class SegmentVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<const T*>;
+
+    explicit SegmentVectors(const RestartFileView&               rst_view,
+                            const ::Opm::RestartIO::ecl_kw_type* intehead);
+
+    bool hasDefinedValues() const;
+
+    Window<int>
+    iseg(const std::size_t mswID, const std::size_t segID) const;
+
+    Window<double>
+    rseg(const std::size_t mswID, const std::size_t segID) const;
+
+private:
+    std::size_t maxSegPerWell_;
+    std::size_t numISegElm_;
+    std::size_t numRSegElm_;
+
+    const ::Opm::RestartIO::ecl_kw_type* iseg_;
+    const ::Opm::RestartIO::ecl_kw_type* rseg_;
+};
+
+SegmentVectors::SegmentVectors(const RestartFileView&               rst_view,
+                               const ::Opm::RestartIO::ecl_kw_type* intehead)
+    : maxSegPerWell_(getInteHeadElem(intehead, VI::intehead::NSEGMX))
+    , numISegElm_   (getInteHeadElem(intehead, VI::intehead::NISEGZ))
+    , numRSegElm_   (getInteHeadElem(intehead, VI::intehead::NRSEGZ))
+    , iseg_         (rst_view.getKeyword("ISEG"))
+    , rseg_         (rst_view.getKeyword("RSEG"))
+{}
+
+bool SegmentVectors::hasDefinedValues() const
+{
+    return ! ((this->iseg_ == nullptr) ||
+              (this->rseg_ == nullptr));
+}
+
+SegmentVectors::Window<int>
+SegmentVectors::iseg(const std::size_t mswID, const std::size_t segID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request ISEG Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<int>(this->iseg_), this->numISegElm_,
+                         mswID, segID, this->maxSegPerWell_);
+}
+
+SegmentVectors::Window<double>
+SegmentVectors::rseg(const std::size_t mswID, const std::size_t segID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request RSEG Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<double>(this->rseg_), this->numRSegElm_,
+                         mswID, segID, this->maxSegPerWell_);
+}
+
+// ---------------------------------------------------------------------
+
 namespace {
     void throwIfMissingRequired(const Opm::RestartKey& rst_key)
     {
@@ -645,6 +717,64 @@ namespace {
         }
     }
 
+    void restoreSegmentQuantities(const std::size_t      mswID,
+                                  const std::size_t      numSeg,
+                                  const Opm::UnitSystem& usys,
+                                  const Opm::Phases&     phases,
+                                  const SegmentVectors&  segData,
+                                  Opm::data::Well&       xw)
+    {
+        // Note sign of flow rates.  RSEG stores flow rates as positive from
+        // reservoir to well--i.e., towards the producer/platform.  The Flow
+        // simulator uses the opposite sign convention.
+
+        using M = ::Opm::UnitSystem::measure;
+
+        const auto oil = phases.active(Opm::Phase::OIL);
+        const auto gas = phases.active(Opm::Phase::GAS);
+        const auto wat = phases.active(Opm::Phase::WATER);
+
+        // Renormalisation constant for gas okay in non-field unit systems.
+        // A bit more questionable for field units.
+        const auto watRenormalisation =   10.0;
+        const auto gasRenormalisation = 1000.0;
+
+        for (auto segID = 0*numSeg; segID < numSeg; ++segID) {
+            const auto iseg = segData.iseg(mswID, segID);
+            const auto rseg = segData.rseg(mswID, segID);
+
+            const auto segNumber = iseg[VI::ISeg::index::SegNo]; // One-based
+
+            auto& segment = xw.segments[segNumber];
+
+            segment.segNumber = segNumber;
+            segment.pressure  =
+                usys.to_si(M::pressure, rseg[VI::RSeg::index::Pressure]);
+
+            const auto totFlow     = rseg[VI::RSeg::index::TotFlowRate];
+            const auto watFraction = rseg[VI::RSeg::index::WatFlowFract];
+            const auto gasFraction = rseg[VI::RSeg::index::GasFlowFract];
+
+            if (wat) {
+                const auto qW = totFlow * watFraction * watRenormalisation;
+                segment.rates.set(Opm::data::Rates::opt::wat,
+                                  - usys.to_si(M::liquid_surface_rate, qW));
+            }
+
+            if (oil) {
+                const auto qO = totFlow * (1.0 - (watFraction + gasFraction));
+                segment.rates.set(Opm::data::Rates::opt::oil,
+                                  - usys.to_si(M::liquid_surface_rate, qO));
+            }
+
+            if (gas) {
+                const auto qG = totFlow * gasFraction * gasRenormalisation;
+                segment.rates.set(Opm::data::Rates::opt::gas,
+                                  - usys.to_si(M::gas_surface_rate, qG));
+            }
+        }
+    }
+
     Opm::data::Well
     restore_well(const Opm::Well&        well,
                  const std::size_t       wellID,
@@ -652,7 +782,8 @@ namespace {
                  const Opm::EclipseGrid& grid,
                  const Opm::UnitSystem&  usys,
                  const Opm::Phases&      phases,
-                 const WellVectors&      wellData)
+                 const WellVectors&      wellData,
+                 const SegmentVectors&   segData)
     {
         if (! wellData.hasDefinedWellValues()) {
             // Result set does not provide well information.
@@ -697,6 +828,20 @@ namespace {
         restoreConnRates(well, wellID, sim_step,
                          grid, usys, phases, wellData, xw);
 
+        // 4) Restore segment quantities if applicable.
+        if (well.isMultiSegment(sim_step) &&
+            segData.hasDefinedValues())
+        {
+            const auto iwel   = wellData.iwel(wellID);
+            const auto mswID  = iwel[VI::IWell::index::MsWID]; // One-based
+            const auto numSeg = iwel[VI::IWell::index::NWseg];
+
+            if ((mswID > 0) && (numSeg > 0)) {
+                restoreSegmentQuantities(mswID - 1, numSeg, usys,
+                                         phases, segData, xw);
+            }
+        }
+
         return xw;
     }
 
@@ -716,7 +861,8 @@ namespace {
             return soln;
         }
 
-        const auto wellData = WellVectors{ rst_view, intehead };
+        const auto wellData = WellVectors   { rst_view, intehead };
+        const auto segData  = SegmentVectors{ rst_view, intehead };
 
         const auto& units  = es.getUnits();
         const auto& phases = es.runspec().phases();
@@ -730,7 +876,7 @@ namespace {
 
             soln[well->name()] =
                 restore_well(*well, wellID, sim_step, grid,
-                             units, phases, wellData);
+                             units, phases, wellData, segData);
         }
 
         return soln;
