@@ -40,12 +40,14 @@ namespace Opm {
         bool useCPR() const;
         bool hasDISGAS() const;
         bool hasVAPOIL() const;
+        bool isThermal() const;
 
     private:
         ThresholdPressure m_ThresholdPressure;
         bool m_useCPR;
         bool m_DISGAS;
         bool m_VAPOIL;
+        bool m_isThermal;
     };
 
 } //namespace Opm

@@ -326,6 +326,7 @@ set( keywords
      000_Eclipse100/T/TABDIMS
      000_Eclipse100/T/TEMP
      000_Eclipse100/T/THCONR
+     000_Eclipse100/T/THERMAL
      000_Eclipse100/T/THPRES
      000_Eclipse100/T/TITLE
      000_Eclipse100/T/TLMIXPAR

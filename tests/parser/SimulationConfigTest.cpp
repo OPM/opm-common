@@ -104,6 +104,32 @@ const std::string& inputStr_vap_dis = "RUNSPEC\n"
                                       "REGIONS\n"
                                       "\n";
 
+namespace {
+    std::string simDeckStringTEMP()
+    {
+        return R"(
+RUNSPEC
+
+TEMP
+
+DIMENS
+  10 3 4 /
+)";
+    }
+
+    std::string simDeckStringTHERMAL()
+    {
+        return R"(
+RUNSPEC
+
+THERMAL
+
+DIMENS
+  10 3 4 /
+)";
+    }
+}
+
 static Deck createDeck(const ParseContext& parseContext , const std::string& input) {
     Opm::Parser parser;
     return parser.parseString(input, parseContext);
@@ -210,4 +236,40 @@ BOOST_AUTO_TEST_CASE(SimulationConfig_VAPOIL_DISGAS) {
     SimulationConfig simulationConfig_vd(false, deck_vd, ep_vd);
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasDISGAS());
     BOOST_CHECK_EQUAL( true , simulationConfig_vd.hasVAPOIL());
+}
+
+
+BOOST_AUTO_TEST_CASE(SimulationConfig_TEMP_THERMAL)
+{
+    const auto parseContext = Opm::ParseContext {};
+
+    {
+        const auto deck = createDeck(parseContext, inputStr);
+        const auto tm = Opm::TableManager(deck);
+        const auto eg = Opm::EclipseGrid(10, 3, 4);
+        const auto ep = Opm::Eclipse3DProperties(deck, tm, eg);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, ep);
+
+        BOOST_CHECK(! simulationConfig.isThermal());
+    }
+
+    {
+        const auto deck = createDeck(parseContext, simDeckStringTEMP());
+        const auto tm = Opm::TableManager(deck);
+        const auto eg = Opm::EclipseGrid(10, 3, 4);
+        const auto ep = Opm::Eclipse3DProperties(deck, tm, eg);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, ep);
+
+        BOOST_CHECK(simulationConfig.isThermal());
+    }
+
+    {
+        const auto deck = createDeck(parseContext, simDeckStringTHERMAL());
+        const auto tm = Opm::TableManager(deck);
+        const auto eg = Opm::EclipseGrid(10, 3, 4);
+        const auto ep = Opm::Eclipse3DProperties(deck, tm, eg);
+        const auto simulationConfig = Opm::SimulationConfig(false, deck, ep);
+
+        BOOST_CHECK(simulationConfig.isThermal());
+    }
 }
