@@ -209,11 +209,11 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
 
         Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec().phases(), parse_context);
         SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), parse_context);
-        EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
         time_t start_time = schedule.posixStartTime();
         const auto& time_map = schedule.getTimeMap( );
 
         for (int counter = 0; counter < 2; counter++) {
+            EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
             for (size_t step = 0; step < time_map.size(); step++) {
                 time_t step_time = time_map[step];
 
