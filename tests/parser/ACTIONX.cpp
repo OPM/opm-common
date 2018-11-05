@@ -133,7 +133,7 @@ TSTEP
 
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
-    BOOST_CHECK_THROW(Schedule(deck3, grid1, eclipseProperties, Phases(true,true,true), parseContext), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck3, grid1, eclipseProperties, runspec, parseContext), std::invalid_argument);
 }
 
 
