@@ -549,6 +549,14 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
         auto xg = this->xGroup_[groupID];
         XGrp::dynamicContrib( restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, group, sumState, ecl_compatible_rst, xg);
     });
+    
+    // Define Static Contributions to ZGrp Array.
+    groupLoop(curGroups,
+        [this](const Group& group, const std::size_t groupID) -> void
+    {
+        auto zw = this->zGroup_[groupID];
+        zw[0] = group.name();
+    });
 
 }
 

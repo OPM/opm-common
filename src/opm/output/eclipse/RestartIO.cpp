@@ -311,10 +311,10 @@ namespace {
                                            grpKeyToInd, fldKeyToInd,
 					   ecl_compatible_rst,
                                            simStep, sumState, ih);
-
         write_kw(rst_file, "IGRP", groupData.getIGroup());
         write_kw(rst_file, "SGRP", groupData.getSGroup());
         write_kw(rst_file, "XGRP", groupData.getXGroup());
+	write_kw(rst_file, "ZGRP", serialize_ZWEL(groupData.getZGroup()));
     }
 
     void writeMSWData(::Opm::RestartIO::ecl_rst_file_type* rst_file,
