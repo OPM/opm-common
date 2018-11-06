@@ -29,6 +29,26 @@
 
 
 namespace Opm {
+
+namespace {
+    const std::map<std::string, int> month_indices = {{"JAN", 1},
+                                                      {"FEB", 2},
+                                                      {"MAR", 3},
+                                                      {"APR", 4},
+                                                      {"MAI", 5},
+                                                      {"MAY", 5},
+                                                      {"JUN", 6},
+                                                      {"JUL", 7},
+                                                      {"JLY", 7},
+                                                      {"AUG", 8},
+                                                      {"SEP", 9},
+                                                      {"OCT", 10},
+                                                      {"OKT", 10},
+                                                      {"NOV", 11},
+                                                      {"DEC", 12},
+                                                      {"DES", 12}};
+}
+
     TimeMap::TimeMap(std::time_t startTime) {
         m_timeList.push_back(startTime);
     }
@@ -127,28 +147,7 @@ namespace Opm {
     }
 
     const std::map<std::string , int>& TimeMap::eclipseMonthIndices() {
-        static std::map<std::string , int> monthIndices;
-
-        if (monthIndices.size() == 0) {
-            monthIndices.insert( std::make_pair( "JAN" , 1 ));
-            monthIndices.insert( std::make_pair( "FEB" , 2 ));
-            monthIndices.insert( std::make_pair( "MAR" , 3 ));
-            monthIndices.insert( std::make_pair( "APR" , 4 ));
-            monthIndices.insert( std::make_pair( "MAI" , 5 ));
-            monthIndices.insert( std::make_pair( "MAY" , 5 ));
-            monthIndices.insert( std::make_pair( "JUN" , 6 ));
-            monthIndices.insert( std::make_pair( "JUL" , 7 ));
-            monthIndices.insert( std::make_pair( "JLY" , 7 ));
-            monthIndices.insert( std::make_pair( "AUG" , 8 ));
-            monthIndices.insert( std::make_pair( "SEP" , 9 ));
-            monthIndices.insert( std::make_pair( "OCT" , 10 ));
-            monthIndices.insert( std::make_pair( "OKT" , 10 ));
-            monthIndices.insert( std::make_pair( "NOV" , 11 ));
-            monthIndices.insert( std::make_pair( "DEC" , 12 ));
-            monthIndices.insert( std::make_pair( "DES" , 12 ));
-        }
-
-        return monthIndices;
+        return month_indices;
     }
 
 
