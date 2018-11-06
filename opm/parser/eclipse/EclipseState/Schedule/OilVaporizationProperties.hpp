@@ -21,6 +21,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
@@ -28,24 +29,27 @@ namespace Opm
 {
      /*
      * The OilVaporizationProperties class
-     * This classe is used to store the values from {VAPPARS, DRSDT, DRVDT} the behavior of the keywords are mutal exclusive.
-     * Any one of the three keywords {VAPPARS, DRSDT, DRVDT} will cancel previous settings of the other keywords.
+     * This classe is used to store the values from {VAPPARS, DRSDT, DRVDT}
+     * The VAPPARS and {DRSDT, DRVDT} are mutal exclusive and will cancel previous settings of the other keywords.
      * Ask for type first and the ask for the correct values for this type, asking for values not valid for the current type will throw a logic exception.
      */
     class OilVaporizationProperties {
     public:
-        OilVaporizationProperties() = default;
-        static OilVaporizationProperties createDRSDT(double maxDRSDT, const std::string& option);
-        static OilVaporizationProperties createDRVDT(double maxDRVDT);
-        static OilVaporizationProperties createVAPPARS(double vap1, double vap2);
+        OilVaporizationProperties(const size_t numPvtReginIdx);
+        static void updateDRSDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
+        static void updateDRVDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRVDT);
+        static void updateVAPPARS(Opm::OilVaporizationProperties& ovp, const std::vector<double>& vap1, const std::vector<double>& vap2);
 
         Opm::OilVaporizationEnum getType() const;
-        double getVap1() const;
-        double getVap2() const;
-        double getMaxDRSDT() const;
-        double getMaxDRVDT() const;
-        bool getOption() const;
+        double getVap1(const size_t pvtRegionIdx) const;
+        double getVap2(const size_t pvtRegionIdx) const;
+        double getMaxDRSDT(const size_t pvtRegionIdx) const;
+        double getMaxDRVDT(const size_t pvtRegionIdx) const;
+        bool getOption(const size_t pvtRegionIdx) const;
+        bool drsdtActive() const;
+        bool drvdtActive() const;
         bool defined() const;
+        size_t numPvtRegions() const {return m_maxDRSDT.size();}
 
         /*
          * if either argument was default constructed == will always be false
@@ -56,11 +60,11 @@ namespace Opm
 
     private:
         Opm::OilVaporizationEnum m_type = OilVaporizationEnum::UNDEF;
-        double m_vap1;
-        double m_vap2;
-        double m_maxDRSDT;
-        double m_maxDRVDT;
-        bool m_maxDRSDT_allCells;
+        std::vector<double> m_vap1;
+        std::vector<double> m_vap2;
+        std::vector<double> m_maxDRSDT;
+        std::vector<bool> m_maxDRSDT_allCells;
+        std::vector<double> m_maxDRVDT;
     };
 }
 #endif // DRSDT_H

@@ -131,7 +131,7 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     auto deck = createDeck( input );
     EclipseState state( deck, parseContext );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
     return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext );
 }
 
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(wells_missingI) {
     auto deck = createDeck_no_wells( input );
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
     EclipseState state( deck, parseContext );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
     BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext ));
 }
 

@@ -54,6 +54,7 @@ namespace Opm
     class TimeMap;
     class UnitSystem;
     class EclipseState;
+    class Runspec;
     class Actions;
 
     class Schedule {
@@ -61,7 +62,7 @@ namespace Opm
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const Eclipse3DProperties& eclipseProperties,
-                 const Phases &phases,
+                 const Runspec &runspec,
                  const ParseContext& parseContext = ParseContext());
 
         Schedule(const Deck& deck,
@@ -142,7 +143,7 @@ namespace Opm
         DynamicVector< Deck > m_modifierDeck;
         Tuning m_tuning;
         MessageLimits m_messageLimits;
-        Phases m_phases;
+        Runspec m_runspec;
         std::map<int, DynamicState<std::shared_ptr<VFPProdTable>>> vfpprod_tables;
         std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>> vfpinj_tables;
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
@@ -191,6 +192,8 @@ namespace Opm
         void handleWPIMULT( const DeckKeyword& keyword, size_t currentStep);
         void handleDRSDT( const DeckKeyword& keyword, size_t currentStep);
         void handleDRVDT( const DeckKeyword& keyword, size_t currentStep);
+        void handleDRSDTR( const DeckKeyword& keyword, size_t currentStep);
+        void handleDRVDTR( const DeckKeyword& keyword, size_t currentStep);
         void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
         void handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext);
         void handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword);

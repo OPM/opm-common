@@ -32,7 +32,7 @@ inline void loadDeck( const char * deck_file) {
 
     auto deck = parser.parseFile(deck_file, parseContext);
     Opm::EclipseState state( deck, parseContext );
-    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
+    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
     Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext );
     {
         std::stringstream ss;

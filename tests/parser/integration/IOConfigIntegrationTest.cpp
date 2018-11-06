@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     ParseContext ctx;
     auto deck = parser.parseFile( prefix() + "IOConfig/RPTRST_DECK.DATA" , ctx);
     EclipseState state(deck, ctx);
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), ctx);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), ctx);
 
     verifyRestartConfig(schedule.getTimeMap(), state.cfg().restart(), rptConfig);
 }
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     Parser parser;
     auto deck = parser.parseFile(prefix() + "IOConfig/RPT_TEST2.DATA", parseContext);
     EclipseState state( deck , parseContext );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
     const auto& rstConfig = state.cfg().restart();
     verifyRestartConfig(schedule.getTimeMap(), state.cfg().restart(), rptConfig);
 

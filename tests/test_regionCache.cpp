@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(create) {
     Deck deck( parser.parseFile( path, parseContext ));
     EclipseState es(deck , parseContext );
     const EclipseGrid& grid = es.getInputGrid();
-    Schedule schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), ParseContext() );
+    Schedule schedule( deck, grid, es.get3DProperties(), es.runspec(), ParseContext() );
     out::RegionCache rc(es.get3DProperties() , grid, schedule);
 
     {

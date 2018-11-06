@@ -464,7 +464,7 @@ struct Setup {
         deck( Parser().parseFile( path, parseContext ) ),
         es( deck, parseContext ),
         grid( es.getInputGrid( ) ),
-        schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), parseContext),
+        schedule( deck, grid, es.get3DProperties(), es.runspec(), parseContext),
         summary_config( deck, schedule, es.getTableManager( ), parseContext)
     {
         auto& io_config = es.getIOConfig();

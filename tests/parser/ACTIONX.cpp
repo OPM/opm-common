@@ -122,17 +122,18 @@ TSTEP
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck1 );
     Eclipse3DProperties eclipseProperties ( deck1 , table, grid1);
+    Runspec runspec (deck1);
 
     // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
-    BOOST_CHECK_THROW(Schedule(deck1, grid1, eclipseProperties, Phases(true,true,true), ParseContext()), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck1, grid1, eclipseProperties, runspec, ParseContext()), std::invalid_argument);
 
-    Schedule sched(deck2, grid1, eclipseProperties, Phases(true,true,true), ParseContext());
+    Schedule sched(deck2, grid1, eclipseProperties, runspec, ParseContext());
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
 
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
-    BOOST_CHECK_THROW(Schedule(deck3, grid1, eclipseProperties, Phases(true,true,true), parseContext), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck3, grid1, eclipseProperties, runspec, parseContext), std::invalid_argument);
 }
 
 

@@ -36,7 +36,7 @@ inline void loadDeck( const char * deck_file) {
     auto deck = parser.parseFile(deck_file, parseContext);
     std::cout << "parse complete - creating EclipseState .... ";  std::cout.flush();
     Opm::EclipseState state( deck, parseContext );
-    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parseContext);
+    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
     Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext );
     std::cout << "complete." << std::endl;
 

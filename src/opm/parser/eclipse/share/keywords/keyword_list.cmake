@@ -59,8 +59,10 @@ set( keywords
      000_Eclipse100/D/DISGAS
      000_Eclipse100/D/DR
      000_Eclipse100/D/DRSDT
+     000_Eclipse100/D/DRSDTR
      000_Eclipse100/D/DRV
      000_Eclipse100/D/DRVDT
+     000_Eclipse100/D/DRVDTR
      000_Eclipse100/D/DTHETA
      000_Eclipse100/D/DTHETAV
      000_Eclipse100/D/DUMPFLUX

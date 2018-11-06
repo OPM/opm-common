@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         auto deck = Parser().parseString( deckString, parse_context );
         auto es = Parser::parse( deck );
         auto& eclGrid = es.getInputGrid();
-        Schedule schedule(deck, eclGrid, es.get3DProperties(), es.runspec().phases(), parse_context);
+        Schedule schedule(deck, eclGrid, es.get3DProperties(), es.runspec(), parse_context);
         SummaryConfig summary_config( deck, schedule, es.getTableManager( ), parse_context);
         es.getIOConfig().setBaseName( "FOO" );
 

@@ -142,7 +142,8 @@ BOOST_AUTO_TEST_CASE(TestNoSolvent) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
+    Runspec runspec(deck);
+    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
     BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
 }
 
@@ -151,7 +152,8 @@ BOOST_AUTO_TEST_CASE(TestGasInjector) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
+    Runspec runspec(deck);
+    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 
 }
@@ -161,7 +163,8 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Schedule schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext());
+    Runspec runspec(deck);
+    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
     const auto& keyword = deck.getKeyword("WSOLVENT");
     BOOST_CHECK_EQUAL(keyword.size(),1);
@@ -180,7 +183,8 @@ BOOST_AUTO_TEST_CASE(TestOilInjector) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    BOOST_CHECK_THROW (Schedule(deck , grid , eclipseProperties, Phases(true, true, true) , ParseContext()), std::invalid_argument);
+    Runspec runspec(deck);
+    BOOST_CHECK_THROW (Schedule(deck , grid , eclipseProperties, runspec , ParseContext()), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(TestWaterInjector) {
@@ -188,5 +192,6 @@ BOOST_AUTO_TEST_CASE(TestWaterInjector) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    BOOST_CHECK_THROW (Schedule(deck, grid , eclipseProperties, Phases(true, true, true) , ParseContext()), std::invalid_argument);
+    Runspec runspec(deck);
+    BOOST_CHECK_THROW (Schedule(deck, grid , eclipseProperties, runspec , ParseContext()), std::invalid_argument);
 }

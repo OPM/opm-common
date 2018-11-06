@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     Deck deck( parser.parseFile( eclipse_data_filename, parseContext ));
     EclipseState es(deck , parseContext );
     const EclipseGrid& grid = es.getInputGrid();
-    Schedule schedule( deck, grid, es.get3DProperties(), es.runspec().phases(), parseContext);
+    Schedule schedule( deck, grid, es.get3DProperties(), es.runspec(), parseContext);
     SummaryConfig summary_config( deck, schedule, es.getTableManager( ), parseContext);
     const auto num_cells = grid.getCartesianSize();
     EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
