@@ -114,9 +114,10 @@ namespace {
 
         std::vector <std::size_t> segmentNoFromOrderedSegmentNo(const Opm::WellSegments& segSet, const std::vector<std::size_t>& ordSegNo) {
 	std::vector <std::size_t> sNFOSN (segSet.size()+1,0);
-	for (int segNumber = 1; segNumber <= segSet.size(); segNumber++) {	  
-	    sNFOSN[ordSegNo[segNumber]] = segNumber;
+	for (int segNumber = 0; segNumber < segSet.size(); segNumber++) {
+	    sNFOSN[ordSegNo[segNumber]] = segNumber+1;
 	}
+	return sNFOSN;
     }
     std::vector<std::size_t> segmentOrder(const Opm::WellSegments& segSet, const std::size_t segIndex) {
 	std::vector<std::size_t> ordSegNumber;
@@ -193,15 +194,10 @@ namespace {
 	using M  = ::Opm::UnitSystem::measure;
 	using R  = ::Opm::data::Rates::opt;
 	if (welConns.size() != rateConns.size()) {
-	    std::cout <<  "The size of rateConns: " << rateConns.size() << "different from size of welConns: " << welConns.size() << std::endl;
 	    throw std::invalid_argument("Inconsistent number of connections in Opm::Connection and Opm::data:well " + segSet.wellName());
 	}
-	std::cout << "getSegmentSetSSTerms" << std::endl;
 	for (auto nConn = welConns.size(), connID = 0*nConn; connID < nConn; connID++) {
 	    auto segNo = welConns[connID].segment();
-	    std::cout << "getSSSST, segNo: " << segNo ;
-	    std::cout << " qosc: " << qosc[segNo]
-	      << " qwsc: " << qwsc[segNo] << " qosc: " << qwsc[segNo] << std::endl;
 	    const auto& Q = rateConns[connID].rates;
 	    qosc[segNo] += -units.from_si(M::liquid_surface_rate, Q.get(R::oil));
 	    qwsc[segNo] += -units.from_si(M::liquid_surface_rate, Q.get(R::wat));
@@ -223,7 +219,6 @@ namespace {
 	std::vector<double> sofr (segSet.size()+1, 0.);
 	std::vector<double> swfr (segSet.size()+1, 0.);
 	std::vector<double> sgfr (segSet.size()+1, 0.);
-	std::cout << "getSegmentSetFlowRates" << std::endl;
 	//
 	//call function to calculate the individual segment source/sink terms
 	auto sSSST = getSegmentSetSSTerms(segSet, rateConns, welConns, units);
@@ -234,23 +229,21 @@ namespace {
 	auto sNFOSN = segmentNoFromOrderedSegmentNo(segSet, orderedSegmentNo);
 	// loop over segments according to the ordered segments sequence which ensures that the segments alway are traversed in the from 
 	// inflow to outflow direction (a branch toe is the innermost inflow end)
-	for (std::size_t indOSN = 1; indOSN <= sNFOSN.size(); indOSN++) {
+	for (std::size_t indOSN = 1; indOSN < sNFOSN.size(); indOSN++) {
 	    auto segNo = sNFOSN[indOSN];
 	    // the segment flow rates is the sum of the the source/sink terms for each segment plus the flow rates from the inflow segments
 	    // add source sink terms
 	    sofr[segNo] += sSSST.qosc[segNo];
 	    swfr[segNo] += sSSST.qwsc[segNo];
 	    sgfr[segNo] += sSSST.qgsc[segNo];
-	    std::cout << "getSegmentSetFlowRates, SSTerms segNo: " << segNo << " sofr: " << sofr[segNo]
-	      << " swfr: " << swfr[segNo] << " sgfr: " << sgfr[segNo] << std::endl;
 	    // add flow from all inflow segments
 	    for (const auto& ifSeg : segSet[segSet.segmentNumberToIndex(segNo)].inletSegments()) {
 		sofr[segNo] += sofr[ifSeg];
 		swfr[segNo] += swfr[ifSeg];
 		sgfr[segNo] += sgfr[ifSeg];
-		std::cout << "getSSFR, InflowSeg ifSeg: " << ifSeg << " sofr: " << sofr[ifSeg]
-		  << " swfr: " << swfr[ifSeg] << " sgfr: " << sgfr[ifSeg] << std::endl;
 	    }
+	}
+	for (std::size_t sN = 1; sN < sofr.size(); sN++) {
 	}
 	return {
 	    sofr,
@@ -335,22 +328,29 @@ namespace {
 	}
 	return noIFBr;
     }
-
-    //find the number of inflow branches (different from the current branch)
+    //find the number of inflow branch-segments (segments that has a branch) from the
+    // first segment to the current segment for segments that has at least one inflow branch
+    // Segments with no inflow branches get the value zero
     int sumNoInFlowBranches(const Opm::WellSegments& segSet, std::size_t segIndex) {
 	int sumIFB = 0;
 	auto segBranch     = segSet[segIndex].branchNumber();
-	const auto iSInd = inflowSegmentsIndex(segSet, segIndex);
-	for (auto ind : iSInd) {
-	    auto inflowBranch = segSet[ind].branchNumber();
-	    // if inflow segment belongs to different branch add contribution
-	    if (segBranch != inflowBranch) {
-		sumIFB+=1;
-		// search recursively down this branch to find more inflow branches
-		sumIFB += sumNoInFlowBranches(segSet, ind);
+	auto segNo =segSet[segIndex].segmentNumber();
+	while (segNo >=1) {
+	    auto segInd = segSet.segmentNumberToIndex(segNo);
+	    auto curBranch = segSet[segInd].branchNumber();
+	    const auto iSInd = inflowSegmentsIndex(segSet, segInd);
+	    for (auto inFlowInd : iSInd) {
+		auto inFlowBranch = segSet[inFlowInd].branchNumber();
+		// if inflow segment belongs to different branch add contribution
+		if (curBranch != inFlowBranch) {
+		    sumIFB+=1;
+		}
 	    }
+	    segNo-=1;
 	}
-	return sumIFB;
+	// check if the segment has inflow branches - if yes return sumIFB else return zero
+	return  (noInFlowBranches(segSet, segIndex) >= 1)
+		    ? sumIFB : 0;
     }
 
 
@@ -491,8 +491,7 @@ namespace {
 		const auto& welSegSet = well.getWellSegments(rptStep);
 		const auto& welConns = well.getActiveConnections(rptStep, grid);
 		const auto& wname     = well.name();
-		std::string wp = "WBHP"+wname;
-		std::cout << "well name: " << wname << std::endl;
+		const auto wPKey = "WBHP:"  + wname;
 		const auto& wRatesIt =  wr.find(wname);
 		//
 		//Initialize temporary variables
@@ -535,7 +534,7 @@ namespace {
 		    temp_w = sSFR.swfr[segNumber]*0.1;
 		    temp_g = sSFR.sgfr[segNumber]*gfactor;
 		    //Item 12 Segment pressure - use well flow bhp
-		    rSeg[11] = (smry.has(wp)) ? smry.get(wp) :0.0;
+		    rSeg[11] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
 		}
 		else {
 		    // Note: Segment flow rates and pressure from 'smry' have correct
@@ -551,8 +550,8 @@ namespace {
 		rSeg[ 9] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
 		rSeg[10] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
 
-		//  segment pressure  
-		rSeg[ 39] = rSeg[11];
+		//  value is 1. based on tests on several data sets  
+		rSeg[ 39] = 1.;
 
 		rSeg[105] = 1.0;
 		rSeg[106] = 1.0;
@@ -591,7 +590,7 @@ namespace {
 			temp_w = sSFR.swfr[segNumber]*0.1;
 			temp_g = sSFR.sgfr[segNumber]*gfactor;
 			//Item 12 Segment pressure - use well flow bhp
-			rSeg[iS +  11] = (smry.has(wp)) ? smry.get(wp) :0.0;
+			rSeg[iS +  11] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
 		    }
 		    else {
 			// Note: Segment flow rates and pressure from 'smry' have correct
@@ -607,7 +606,7 @@ namespace {
 		    rSeg[iS +  9] = (std::abs(temp_w) > 0) ? temp_w / rSeg[iS + 8] : 0.;
 		    rSeg[iS + 10] = (std::abs(temp_g) > 0) ? temp_g / rSeg[iS + 8] : 0.;
 
-		    rSeg[iS +  39] = rSeg[iS +  11];
+		    rSeg[iS +  39] = 1.;
 
 		    rSeg[iS + 105] = 1.0;
 		    rSeg[iS + 106] = 1.0;
