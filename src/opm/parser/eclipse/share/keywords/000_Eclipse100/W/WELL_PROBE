@@ -241,7 +241,11 @@
         "WTPRALK",
         "WTPTALK",
         "WTIRALK",
-        "WTITALK"
+        "WTITALK",
+        "WPIG",
+        "WPIW",
+        "WPIO",
+        "WPIL"
    ],
    "comment":"Some keywords need to be suffixed by a number, some with the tracer name...",
    "deck_name_regex":"WU.+|(WBHWC|WGFWC|WOFWC|WWFWC)[1-9][0-9]?|WTPR.+|WTPT.+|WTPC.+|WTIR.+|WTIT.+|WTIC.+",

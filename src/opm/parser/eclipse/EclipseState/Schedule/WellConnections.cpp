@@ -140,6 +140,8 @@ namespace {
                                         double CF,
                                         double Kh,
                                         double rw,
+                                        double r0,
+                                        double skin_factor,
                                         const int satTableId,
                                         const WellCompletion::DirectionEnum direction,
 				        const std::size_t seqIndex,
@@ -149,7 +151,7 @@ namespace {
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, satTableId, direction, seqIndex, segDistStart, segDistEnd, defaultSatTabId);
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, r0, skin_factor, satTableId, direction, seqIndex, segDistStart, segDistEnd, defaultSatTabId);
         this->add(conn);
     }
 
@@ -161,6 +163,8 @@ namespace {
                                         double CF,
                                         double Kh,
                                         double rw,
+                                        double r0,
+                                        double skin_factor,
                                         const int satTableId,
                                         const WellCompletion::DirectionEnum direction,
 					const std::size_t seqIndex,
@@ -178,6 +182,8 @@ namespace {
                             CF,
                             Kh,
                             rw,
+                            r0,
+                            skin_factor,
                             satTableId,
                             direction,
 			    seqIndex,
@@ -215,6 +221,8 @@ namespace {
         const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(record.getItem("DIR").getTrimmedString(0));
         double skin_factor = record.getItem("SKIN").getSIDouble(0);
         double rw;
+        double r0;
+
 
         if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
         {
@@ -251,7 +259,6 @@ namespace {
             if (CF > 0 && Kh > 0)
                 goto CF_done;
 
-
             /* We must calculate CF and Kh from the items in the COMPDAT record and cell properties. */
             {
                 // Angle of completion exposed to flow.  We assume centre
@@ -260,7 +267,6 @@ namespace {
                 size_t global_index = grid.getGlobalIndex(I,J,k);
                 std::array<double,3> cell_perm = {{ permx[global_index], permy[global_index], permz[global_index]}};
                 std::array<double,3> cell_size = grid.getCellDims(global_index);
-                double r0;
                 const auto& K = permComponents(direction, cell_perm);
                 const auto& D = effectiveExtent(direction, ntg[global_index], cell_size);
 
@@ -299,6 +305,8 @@ namespace {
                                     CF,
                                     Kh,
                                     rw,
+                                    r0,
+                                    skin_factor,
                                     satTableId,
                                     direction,
 				    noConn, 0., 0., defaultSatTable);
@@ -321,6 +329,8 @@ namespace {
                                    CF,
                                    Kh,
                                    rw,
+                                   r0,
+                                   skin_factor,
                                    satTableId,
                                    direction,
 				   noConn, conSDStart, conSDEnd, defaultSatTable);

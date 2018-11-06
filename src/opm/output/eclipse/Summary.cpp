@@ -340,6 +340,15 @@ measure rate_unit< rt::reservoir_oil >() { return measure::rate; }
 template<> constexpr
 measure rate_unit< rt::reservoir_gas >() { return measure::rate; }
 
+template<> constexpr
+measure rate_unit < rt::productivity_index_water > () { return measure::liquid_productivity_index; }
+
+template<> constexpr
+measure rate_unit < rt::productivity_index_oil > () { return measure::liquid_productivity_index; }
+
+template<> constexpr
+measure rate_unit < rt::productivity_index_gas > () { return measure::gas_productivity_index; }
+
 double efac( const std::vector<std::pair<std::string,double>>& eff_factors, const std::string& name ) {
     auto it = std::find_if( eff_factors.begin(), eff_factors.end(),
                             [&] ( const std::pair< std::string, double > elem )
@@ -653,6 +662,16 @@ quantity region_rate( const fn_args& args ) {
         return { -sum, rate_unit< phase >() };
 }
 
+template < rt phase>
+quantity pi (const fn_args& args  ) {
+    const quantity zero = { 0, rate_unit< phase >() };
+    if( args.schedule_wells.empty() ) return zero;
+
+    const auto p = args.wells.find( args.schedule_wells.front()->name() );
+    if( p == args.wells.end() ) return zero;
+    std::cout << p->second.rates.get(phase) << std::endl;
+    return { p->second.rates.get(phase), rate_unit< phase >() };
+}
 template< typename F, typename G >
 auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
 { return { f, g }; }
@@ -963,6 +982,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "SWFR", srate< rt::wat > },
     { "SGFR", srate< rt::gas > },
     { "SPR",  spr }, 
+    // Well PI
+    { "WPIW", pi< rt::productivity_index_water >},
+    { "WPIO", pi< rt::productivity_index_oil >},
+    { "WPIG", pi< rt::productivity_index_gas >},
+    { "WPIL", sum( pi< rt::productivity_index_water >, pi< rt::productivity_index_oil>)},
 };
 
 

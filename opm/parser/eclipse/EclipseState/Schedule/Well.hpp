@@ -51,7 +51,7 @@ namespace Opm {
     class Well {
     public:
         Well(const std::string& name, const size_t& seqIndex, int headI,
-             int headJ, double refDepth, Phase preferredPhase,
+             int headJ, double refDepth, double drainageRadius, Phase preferredPhase,
              const TimeMap& timeMap, size_t creationTimeStep,
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
              bool allowCrossFlow = true, bool automaticShutIn = true);
@@ -76,6 +76,9 @@ namespace Opm {
         double getRefDepth() const;
         double getRefDepth( size_t timestep ) const;
         void setRefDepth( size_t timestep, double );
+        double getDrainageRadius( size_t timestep ) const;
+        void setDrainageRadius( size_t timestep, double );
+
         Phase getPreferredPhase() const;
 
         bool isAvailableForGroupControl(size_t timeStep) const;
@@ -226,6 +229,7 @@ namespace Opm {
         DynamicState< int > m_headI;
         DynamicState< int > m_headJ;
         DynamicState< double > m_refDepth;
+        DynamicState< double > m_drainageRadius;
         Phase m_preferredPhase;
 
         WellCompletion::CompletionOrderEnum m_comporder;

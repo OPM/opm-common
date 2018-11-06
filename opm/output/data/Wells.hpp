@@ -58,6 +58,9 @@ namespace Opm {
                 reservoir_water   = (1 << 8),
                 reservoir_oil     = (1 << 9),
                 reservoir_gas     = (1 << 10),
+                productivity_index_water = (1 << 11),
+                productivity_index_oil   = (1 << 12),
+                productivity_index_gas   = (1 << 13),
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -101,6 +104,9 @@ namespace Opm {
             double reservoir_water = 0.0;
             double reservoir_oil = 0.0;
             double reservoir_gas = 0.0;
+            double productivity_index_water = 0.0;
+            double productivity_index_oil = 0.0;
+            double productivity_index_gas = 0.0;
     };
 
     struct Connection {
@@ -142,7 +148,6 @@ namespace Opm {
         int control;
         std::vector< Connection > connections;
         std::unordered_map<std::size_t, Segment> segments;
-
         inline bool flowing() const noexcept;
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
@@ -264,6 +269,9 @@ namespace Opm {
             case opt::reservoir_water: return this->reservoir_water;
             case opt::reservoir_oil: return this->reservoir_oil;
             case opt::reservoir_gas: return this->reservoir_gas;
+            case opt::productivity_index_water: return this->productivity_index_water;
+            case opt::productivity_index_oil: return this->productivity_index_oil;
+            case opt::productivity_index_gas: return this->productivity_index_gas;
         }
 
         throw std::invalid_argument(
@@ -301,6 +309,9 @@ namespace Opm {
             buffer.write(this->reservoir_water);
             buffer.write(this->reservoir_oil);
             buffer.write(this->reservoir_gas);
+            buffer.write(this->productivity_index_water);
+            buffer.write(this->productivity_index_oil);
+            buffer.write(this->productivity_index_gas);
     }
 
     template <class MessageBufferType>
@@ -359,6 +370,9 @@ namespace Opm {
             buffer.read(this->reservoir_water);
             buffer.read(this->reservoir_oil);
             buffer.read(this->reservoir_gas);
+            buffer.read(this->productivity_index_water);
+            buffer.read(this->productivity_index_oil);
+            buffer.read(this->productivity_index_gas);
     }
 
   template <class MessageBufferType>

@@ -70,6 +70,8 @@ namespace Opm {
             gas_inverse_formation_volume_factor,
             oil_inverse_formation_volume_factor,
             water_inverse_formation_volume_factor,
+            liquid_productivity_index,
+            gas_productivity_index
         };
 
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);

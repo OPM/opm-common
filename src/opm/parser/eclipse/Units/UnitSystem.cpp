@@ -71,6 +71,8 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
+        0.0,
         0.0
     };
 
@@ -103,7 +105,11 @@ namespace {
         1, /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        1 / (Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure),
+        1 / (Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure),
         1 / Metric::Energy
+
+
     };
 
     static const double from_metric[] = {
@@ -135,7 +141,10 @@ namespace {
         1, /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure,
+        Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure,
         Metric::Energy
+
     };
 
     static constexpr const char* metric_names[] = {
@@ -167,7 +176,10 @@ namespace {
         "SM3/RM3", /* gas inverse formation volume factor */
         "SM3/RM3", /* oil inverse formation volume factor */
         "SM3/RM3", /* water inverse formation volume factor */
+        "SM3/DAY/BARS",
+        "SM3/DAY/BARS",
         "KJ", /* energy */
+
     };
 
     // =================================================================
@@ -181,6 +193,8 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -234,7 +248,10 @@ namespace {
         1 / (Field::GasSurfaceVolume / Field::ReservoirVolume), /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        1 / (Field::LiquidSurfaceVolume / Field::Time / Field::Pressure),
+        1 / (Field::GasSurfaceVolume / Field::Time / Field::Pressure),
         1 / Field::Energy
+
     };
 
     static const double from_field[] = {
@@ -266,7 +283,10 @@ namespace {
          Field::GasSurfaceVolume / Field::ReservoirVolume, /* gas inverse formation volume factor */
          1, /* oil inverse formation volume factor */
          1, /* water inverse formation volume factor */
+         Field::LiquidSurfaceVolume / Field::Time / Field::Pressure,
+         Field::GasSurfaceVolume / Field::Time / Field::Pressure,
          Field::Energy
+
     };
 
     static constexpr const char* field_names[] = {
@@ -298,7 +318,10 @@ namespace {
         "MSCF/RB", /* gas inverse formation volume factor */
         "STB/RB", /* oil inverse formation volume factor */
         "STB/RB", /* water inverse formation volume factor */
+        "STB/DAY/PSIA",
+        "MSCF/DAY/PSIA",
         "BTU", /* energy */
+
     };
 
     // =================================================================
@@ -312,6 +335,8 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -365,7 +390,10 @@ namespace {
         1, /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        1 / (Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure),
+        1 / (Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure),
         1 / Lab::Energy
+
     };
 
     static const double from_lab[] = {
@@ -397,7 +425,10 @@ namespace {
         1, /* gas inverse formation volume factor */
         1, /* oil inverse formation volume factor */
         1, /* water inverse formation volume factor */
+        Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure,
+        Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure,
         Lab::Energy
+
     };
 
     static constexpr const char* lab_names[] = {
@@ -429,7 +460,10 @@ namespace {
         "SCC/RCC", /* gas formation volume factor */
         "SCC/RCC", /* oil inverse formation volume factor */
         "SCC/RCC", /* water inverse formation volume factor */
+        "SCC/HR/ATM",
+        "SCC/HR/ATM",
         "J", /* energy */
+
     };
 
     // =================================================================
@@ -443,6 +477,8 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -496,7 +532,10 @@ namespace {
         1 / (PVT_M::GasSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bg */
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bo */
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bw */
+        1 / (PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
+        1 / (PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
         1 / PVT_M::Energy
+
     };
 
     static const double from_pvt_m[] = {
@@ -528,7 +567,10 @@ namespace {
         PVT_M::GasSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bg */
         PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bo */
         PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bw */
+        PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
+        PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
         PVT_M::Energy
+
     };
 
     static constexpr const char* pvt_m_names[] = {
@@ -560,13 +602,18 @@ namespace {
         "SM3/RM3", /* gas inverse formation volume factor */
         "SM3/RM3", /* oil inverse formation volume factor */
         "SM3/RM3", /* water inverse formation volume factor */
-        "KJ" /* energy */
+        "SM3/DAY/ATM",
+        "SM3/DAY/ATM",
+        "KJ" /* energy */,
+
     };
 
     // =================================================================
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -627,10 +674,14 @@ namespace {
         1,
         1,
         1,
+        1,
+        1,
         1
     };
 
     static const double from_input[] = {
+        1,
+        1,
         1,
         1,
         1,
@@ -691,7 +742,10 @@ namespace {
         "SM3/RM3", /* gas inverse formation volume factor */
         "SM3/RM3", /* oil inverse formation volume factor */
         "SM3/RM3", /* water inverse formation volume factor */
+        "SM3/DAY/BARS",
+        "SM3/DAY/BARS",
         "KJ", /* energy */
+
     };
 
 } // namespace Anonymous
