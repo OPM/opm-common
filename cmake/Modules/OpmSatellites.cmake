@@ -349,12 +349,12 @@ macro(opm_add_test TestName)
 
       # specify the dependencies between the tests
       if (CURTEST_TEST_DEPENDS)
-        set_tests_properties(${TestName} PROPERTIES DEPENDS "${CURTEST_TEST_DEPENDS}")
+        set_tests_properties(${_FANCY} PROPERTIES DEPENDS "${CURTEST_TEST_DEPENDS}")
       endif()
 
       # tell ctest how many cores it should reserve to run the test
       if (CURTEST_PROCESSORS)
-        set_tests_properties(${TestName} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
+        set_tests_properties(${_FANCY} PROPERTIES PROCESSORS "${CURTEST_PROCESSORS}")
       endif()
     endif()
 
