@@ -35,7 +35,7 @@ namespace Opm
      */
     class OilVaporizationProperties {
     public:
-        OilVaporizationProperties(const size_t numPvtReginIdx);
+        explicit OilVaporizationProperties(const size_t numPvtReginIdx);
         static void updateDRSDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
         static void updateDRVDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRVDT);
         static void updateVAPPARS(Opm::OilVaporizationProperties& ovp, const std::vector<double>& vap1, const std::vector<double>& vap2);
