@@ -1232,7 +1232,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
     auto unitSystem =  UnitSystem::newMETRIC();
-    double conversion_factor = 1.0 / (60*60*24);
     for (int i = 0; i < 3; ++i) {
         double value = unitSystem.to_si( UnitSystem::measure::gas_surface_rate, i );
         BOOST_CHECK_EQUAL(value, ovap.getMaxDRSDT(i));
