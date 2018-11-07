@@ -2290,7 +2290,7 @@ void size_t_vector_free_container(::Opm::RestartIO::size_t_vector_type * vector)
 void size_t_vector_free(::Opm::RestartIO::size_t_vector_type * vector) {
   if (vector->data_owner)
     ::Opm::RestartIO::util_safe_free( vector->data );
-    ::Opm::RestartIO::size_t_vector_free_container( vector );
+  ::Opm::RestartIO::size_t_vector_free_container( vector );
 }
 
 void inv_map_free( ::Opm::RestartIO::inv_map_type * map ) {
