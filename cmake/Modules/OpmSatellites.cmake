@@ -65,7 +65,7 @@ macro (opm_compile_satellites opm satellite excl_all test_regexp)
 	set_target_properties (${_sat_NAME} PROPERTIES
 	  LINK_FLAGS "${${opm}_LINKER_FLAGS_STR}"
 	  )
-        if(HAVE_DYNAMIC_BOOST_TEST AND NOT (${opm} STREQUAL "opm-parser" AND NOT BUILD_SHARED_LIBS))
+        if(HAVE_DYNAMIC_BOOST_TEST)
 	  set_target_properties (${_sat_NAME} PROPERTIES
 		  COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
 	  )
@@ -316,6 +316,11 @@ macro(opm_add_test TestName)
         # run-only case occurs if the binary is already compiled by an
         # earlier test.)
         add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
+        if(HAVE_DYNAMIC_BOOST_TEST)
+          set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
+		  COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
+	  )
+	endif()
         target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
 
         if(CURTEST_DEPENDS)
