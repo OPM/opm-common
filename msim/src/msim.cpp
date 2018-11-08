@@ -33,7 +33,7 @@ namespace Opm {
 msim::msim(const std::string& deck_file, const Parser& parser, const ParseContext& parse_context) :
     deck(parser.parseFile(deck_file, parse_context)),
     state(deck, parse_context),
-    schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec().phases(), parse_context),
+    schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parse_context),
     summary_config(deck, schedule, state.getTableManager(), parse_context)
 {
 }

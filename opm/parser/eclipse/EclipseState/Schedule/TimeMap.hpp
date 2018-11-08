@@ -66,8 +66,8 @@ namespace Opm {
         static std::time_t forward(std::time_t t0, int64_t seconds);
         static std::time_t mkdate(int year, int month, int day);
         static std::time_t mkdatetime(int year, int month, int day, int hour, int minute, int second);
-    private:
         static const std::map<std::string, int>& eclipseMonthIndices();
+    private:
 
         std::vector<std::time_t> m_timeList;
 
