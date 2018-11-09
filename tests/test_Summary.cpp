@@ -1306,6 +1306,12 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_THROW(st.get("NO_SUCH_KEY"), std::invalid_argument);
     BOOST_CHECK(st.has("WWCT:OP_2"));
     BOOST_CHECK(!st.has("NO_SUCH_KEY"));
+
+
+    st.add_well_var("OP1", "WWCT", 0.75);
+    BOOST_CHECK( st.has_well_var("OP1", "WWCT"));
+    BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), 0.75);
+    BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), st.get("WWCT:OP1"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

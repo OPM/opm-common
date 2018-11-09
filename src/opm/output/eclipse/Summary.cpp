@@ -1310,7 +1310,7 @@ Summary::Summary( const EclipseState& st,
     for (const auto& pair : this->handlers->handlers) {
         const auto * nodeptr = pair.first;
         if (smspec_node_is_total(nodeptr))
-            this->prev_state.add(smspec_node_get_gen_key1(nodeptr), 0);
+            this->prev_state.add(nodeptr, 0);
     }
 }
 
@@ -1410,7 +1410,6 @@ void Summary::add_timestep( int report_step,
 
     for( auto& f : this->handlers->handlers ) {
         const int num = smspec_node_get_num( f.first );
-        const auto* genkey = smspec_node_get_gen_key1( f.first );
 
         const auto schedule_wells = find_wells( schedule, f.first, sim_step, this->regionCache );
         auto eff_factors = well_efficiency_factors( f.first, schedule, schedule_wells, sim_step );
@@ -1425,22 +1424,22 @@ void Summary::add_timestep( int report_step,
                                      eff_factors});
 
         double unit_applied_val = es.getUnits().from_si( val.unit, val.value );
-        if (smspec_node_is_total(f.first))
+        if (smspec_node_is_total(f.first)) {
+            const auto* genkey = smspec_node_get_gen_key1( f.first );
             unit_applied_val += this->prev_state.get(genkey);
+        }
 
-        st.add(genkey, unit_applied_val);
+        st.add(f.first, unit_applied_val);
     }
 
     for( const auto& value_pair : single_values ) {
         const std::string key = value_pair.first;
         const auto node_pair = this->handlers->single_value_nodes.find( key );
         if (node_pair != this->handlers->single_value_nodes.end()) {
-            const auto * nodeptr = node_pair->second;
-            const auto * genkey = smspec_node_get_gen_key1( nodeptr );
             const auto unit = single_values_units.at( key );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            st.add(genkey, output_value);
+            st.add(node_pair->second, output_value);
         }
     }
 
@@ -1450,13 +1449,12 @@ void Summary::add_timestep( int report_step,
             const auto node_pair = this->handlers->region_nodes.find( std::make_pair(key, reg+1) );
             if (node_pair != this->handlers->region_nodes.end()) {
                 const auto * nodeptr = node_pair->second;
-                const auto* genkey = smspec_node_get_gen_key1( nodeptr );
                 const auto unit = region_units.at( key );
 
                 assert (smspec_node_get_num( nodeptr ) - 1 == static_cast<int>(reg));
                 double si_value = value_pair.second[reg];
                 double output_value = es.getUnits().from_si(unit , si_value );
-                st.add(genkey, output_value);
+                st.add(nodeptr, output_value);
             }
         }
     }
@@ -1466,11 +1464,10 @@ void Summary::add_timestep( int report_step,
         const auto node_pair = this->handlers->block_nodes.find( key );
         if (node_pair != this->handlers->block_nodes.end()) {
             const auto * nodeptr = node_pair->second;
-            const auto * genkey = smspec_node_get_gen_key1( nodeptr );
             const auto unit = block_units.at( key.first );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            st.add(genkey, output_value);
+            st.add(nodeptr, output_value);
         }
     }
 
