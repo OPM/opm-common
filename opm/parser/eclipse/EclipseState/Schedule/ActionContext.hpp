@@ -24,17 +24,21 @@
 #include <string>
 #include <map>
 
-namespace Opm {
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
-/*
-  This class is extremely work in progress, the api is hopefully sane; the
-  implementation complete garbage.
-*/
+namespace Opm {
 
 class ActionContext {
 public:
-    ActionContext();
+    /*
+      Observe that the ActionContext takes a copy of the SummaryState object.
+    */
+    explicit ActionContext(const SummaryState& summary_state);
 
+    /*
+      The get methods will first check the internal storage in the 'values' map
+      and then subsequently query the SummaryState member.
+    */
     double get(const std::string& func, const std::string& arg) const;
     void   add(const std::string& func, const std::string& arg, double value);
 
@@ -42,6 +46,7 @@ public:
     void   add(const std::string& func, double value);
 
 private:
+    SummaryState summary_state;
     std::map<std::string, double> values;
 };
 }

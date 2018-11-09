@@ -19,27 +19,35 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm {
 
-    ActionContext::ActionContext() {
-        for (const auto& pair : TimeMap::eclipseMonthIndices())
-            this->add(pair.first, pair.second);
-    }
-
     void ActionContext::add(const std::string& func, const std::string& arg, double value) {
         this->values[func + ":" + arg] = value;
+    }
+
+    ActionContext::ActionContext(const SummaryState& summary_state) :
+        summary_state(summary_state)
+    {
+        for (const auto& pair : TimeMap::eclipseMonthIndices())
+            this->add(pair.first, pair.second);
     }
 
     void ActionContext::add(const std::string& func, double value) {
         this->values[func] = value;
     }
 
+
     double ActionContext::get(const std::string& func, const std::string& arg) const {
-        return this->values.at( func + ":" + arg );
+        return this->get(func + ":" + arg);
     }
 
-    double ActionContext::get(const std::string& func) const {
-        return this->values.at( func );
+    double ActionContext::get(const std::string& key) const {
+        const auto& iter = this->values.find(key);
+        if (iter != this->values.end())
+            return iter->second;
+
+        return this->summary_state.get(key);
     }
 }
