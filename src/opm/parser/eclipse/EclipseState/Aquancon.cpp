@@ -81,20 +81,22 @@ namespace Opm {
                 for (int j=m_aqurecord.at(aquanconRecordIdx).j1; j <= m_aqurecord.at(aquanconRecordIdx).j2; j++)
                     for (int i=m_aqurecord.at(aquanconRecordIdx).i1; i <= m_aqurecord.at(aquanconRecordIdx).i2; i++)
                         m_aqurecord.at(aquanconRecordIdx).global_index_per_record.push_back
-                                                            (grid.getGlobalIndex(i-1 ,j-1 ,k- 1)
+                                                            (
+                                                                grid.getGlobalIndex(i-1, j-1, k-1)
                                                             );
             }
             size_t global_index_per_record_size = m_aqurecord.at(aquanconRecordIdx).global_index_per_record.size();
 
-            m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.resize(global_index_per_record_size,nullptr);
+            m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.resize(global_index_per_record_size, nullptr);
 
             if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
             {
                 double* influx_coeff = new double( aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0) );
+
                 std::for_each(
                                 m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.begin(),
                                 m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.end(),
-                                [influx_coeff](std::shared_ptr<double>& i){ i.reset(influx_coeff); }
+                                [influx_coeff](std::shared_ptr<double>& i){ i.reset( new double (*influx_coeff)); }
                              );
             }
 
