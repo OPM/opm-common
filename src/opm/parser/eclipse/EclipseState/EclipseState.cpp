@@ -56,6 +56,7 @@ namespace Opm {
         m_eclipseConfig(     deck ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_inputNnc(          deck ),
+        m_inputEditNnc(      deck ),
         m_inputGrid(         deck, nullptr ),
         m_eclipseProperties( deck, m_tables, m_inputGrid ),
         m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, m_eclipseProperties ),
@@ -160,6 +161,13 @@ namespace Opm {
         return m_inputNnc.hasNNC();
     }
 
+    const EDITNNC& EclipseState::getInputEDITNNC() const {
+        return m_inputEditNnc;
+    }
+
+    bool EclipseState::hasInputEDITNNC() const {
+        return !m_inputEditNnc.empty();
+    }
     std::string EclipseState::getTitle() const {
         return m_title;
     }

@@ -28,6 +28,10 @@ namespace Opm
 {
 
 struct NNCdata {
+    NNCdata(size_t c1, size_t c2, double t)
+        : cell1(c1), cell2(c2), trans(t)
+    {}
+    NNCdata() = default;
     size_t cell1;
     size_t cell2;
     double trans;
