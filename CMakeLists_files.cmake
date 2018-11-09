@@ -91,6 +91,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/SummaryState.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well.cpp
@@ -157,7 +158,6 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/LogiHEAD.cpp
           src/opm/output/eclipse/RestartIO.cpp
           src/opm/output/eclipse/Summary.cpp
-          src/opm/output/eclipse/SummaryState.cpp
           src/opm/output/eclipse/Tables.cpp
           src/opm/output/eclipse/RegionCache.cpp
           src/opm/output/eclipse/RestartValue.cpp
@@ -451,6 +451,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp
+       opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp
@@ -516,7 +517,6 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/RestartIO.hpp
         opm/output/eclipse/RestartValue.hpp
         opm/output/eclipse/Summary.hpp
-        opm/output/eclipse/SummaryState.hpp
         opm/output/eclipse/Tables.hpp
         opm/output/eclipse/WindowedArray.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp

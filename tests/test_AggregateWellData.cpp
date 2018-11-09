@@ -23,8 +23,7 @@
 
 #include <opm/output/eclipse/AggregateWellData.hpp>
 
-#include <opm/output/eclipse/SummaryState.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 

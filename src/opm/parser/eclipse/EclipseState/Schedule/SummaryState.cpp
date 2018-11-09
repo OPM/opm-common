@@ -18,7 +18,7 @@
 */
 
 
-#include <opm/output/eclipse/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm{
 

@@ -35,8 +35,8 @@
 
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/Summary.hpp>
-#include <opm/output/eclipse/SummaryState.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>

@@ -39,7 +39,6 @@
 
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/Summary.hpp>
-#include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/eclipse/Tables.hpp>
 
 #include <cstdlib>

@@ -38,8 +38,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
-#include <opm/output/eclipse/SummaryState.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 

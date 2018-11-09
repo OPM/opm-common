@@ -35,7 +35,6 @@
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
-#include <opm/output/eclipse/SummaryState.hpp>
 
 namespace Opm {
 
