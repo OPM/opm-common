@@ -33,8 +33,13 @@ namespace Opm {
 
 class ActionContext {
 public:
+    ActionContext();
+
     double get(const std::string& func, const std::string& arg) const;
     void   add(const std::string& func, const std::string& arg, double value);
+
+    double get(const std::string& func) const;
+    void   add(const std::string& func, double value);
 
 private:
     std::map<std::string, double> values;

@@ -74,6 +74,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
     src/opm/parser/eclipse/EclipseState/Runspec.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/ActionAST.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ActionContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Actions.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ActionX.cpp
@@ -440,6 +441,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Aquancon.hpp
        opm/parser/eclipse/EclipseState/AquiferCT.hpp
        opm/parser/eclipse/EclipseState/Aquifetp.hpp
+       opm/parser/eclipse/EclipseState/Schedule/ActionAST.hpp
        opm/parser/eclipse/EclipseState/Schedule/ActionContext.hpp
        opm/parser/eclipse/EclipseState/Schedule/Actions.hpp
        opm/parser/eclipse/EclipseState/Schedule/ActionX.hpp

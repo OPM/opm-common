@@ -45,7 +45,15 @@ ActionX::ActionX(const DeckRecord& record, std::time_t start_time) :
 
 ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
     ActionX(kw.getRecord(0), start_time)
-{}
+{
+    std::vector<std::string> tokens;
+    for (size_t record_index = 1; record_index < kw.size(); record_index++) {
+        const auto& record = kw.getRecord(record_index);
+        for (const auto& token : record.getItem("CONDITION").getData<std::string>())
+            tokens.push_back(token);
+    }
+    this->ast = ActionAST(tokens);
+}
 
 
 void ActionX::addKeyword(const DeckKeyword& kw) {

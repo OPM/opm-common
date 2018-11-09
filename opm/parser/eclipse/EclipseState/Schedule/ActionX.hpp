@@ -26,6 +26,7 @@
 #include <ctime>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ActionAST.hpp>
 
 namespace Opm {
 /*
@@ -78,6 +79,7 @@ private:
     std::time_t m_start_time;
 
     std::vector<DeckKeyword> keywords;
+    ActionAST ast;
     size_t run_count = 0;
     std::time_t last_run = 0;
 };

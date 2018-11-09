@@ -18,15 +18,28 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 namespace Opm {
+
+    ActionContext::ActionContext() {
+        for (const auto& pair : TimeMap::eclipseMonthIndices())
+            this->add(pair.first, pair.second);
+    }
 
     void ActionContext::add(const std::string& func, const std::string& arg, double value) {
         this->values[func + ":" + arg] = value;
     }
 
+    void ActionContext::add(const std::string& func, double value) {
+        this->values[func] = value;
+    }
 
     double ActionContext::get(const std::string& func, const std::string& arg) const {
         return this->values.at( func + ":" + arg );
+    }
+
+    double ActionContext::get(const std::string& func) const {
+        return this->values.at( func );
     }
 }

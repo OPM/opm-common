@@ -30,6 +30,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Actions.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionX.hpp>
@@ -197,4 +198,252 @@ BOOST_AUTO_TEST_CASE(TestContext) {
 
     context.add("FUNC", "ARG", 100);
     BOOST_CHECK_EQUAL(context.get("FUNC", "ARG"), 100);
+}
+
+
+
+Opm::Schedule make_action(const std::string& action_string) {
+    std::string start = std::string{ R"(
+SCHEDULE
+)"};
+    std::string end = std::string{ R"(
+ENDACTIO
+
+TSTEP
+   10 /
+)"};
+
+    std::string deck_string = start + action_string + end;
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string, Opm::ParseContext());
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Runspec runspec(deck);
+
+    return Schedule(deck, grid1, eclipseProperties, runspec, ParseContext());
+}
+
+
+BOOST_AUTO_TEST_CASE(TestActionAST_BASIC) {
+    // Missing comparator
+    BOOST_REQUIRE_THROW( ActionAST( {"WWCT", "OPX", "0.75"} ), std::invalid_argument);
+
+    // Left hand side must be function expression
+    BOOST_REQUIRE_THROW( ActionAST({"0.75", "<", "1.0"}), std::invalid_argument);
+
+    //Extra data
+    BOOST_REQUIRE_THROW(ActionAST({"0.75", "<", "1.0", "EXTRA"}), std::invalid_argument);
+
+    ActionAST ast1({"WWCT", "OPX", ">", "0.75"});
+    ActionAST ast2({"WWCT", "OPX", "=", "WWCT", "OPX"});
+    ActionAST ast3({"WWCT", "OPY", ">", "0.75"});
+    ActionContext context;
+
+    context.add("WWCT", "OPX", 100);
+    BOOST_CHECK(ast1.eval(context));
+
+    context.add("WWCT", "OPX", -100);
+    BOOST_CHECK(!ast1.eval(context));
+
+    BOOST_CHECK(ast2.eval(context));
+    BOOST_REQUIRE_THROW(ast3.eval(context), std::out_of_range);
+}
+
+BOOST_AUTO_TEST_CASE(TestActionAST_OR_AND) {
+    ActionAST ast_or({"WWCT", "OPX", ">", "0.75", "OR", "WWCT", "OPY", ">", "0.75"});
+    ActionAST ast_and({"WWCT", "OPX", ">", "0.75", "AND", "WWCT", "OPY", ">", "0.75"});
+    ActionAST par({"WWCT", "OPX", ">", "0.75", "AND", "(", "WWCT", "OPY", ">", "0.75", "OR", "WWCT", "OPZ", ">", "0.75", ")"});
+    ActionContext context;
+
+    context.add("WWCT", "OPX", 100);
+    context.add("WWCT", "OPY", -100);
+    context.add("WWCT", "OPZ", 100);
+    BOOST_CHECK( ast_or.eval(context) );
+    BOOST_CHECK( !ast_and.eval(context) );
+    BOOST_CHECK( par.eval(context));
+
+
+    context.add("WWCT", "OPX", -100);
+    context.add("WWCT", "OPY", 100);
+    context.add("WWCT", "OPZ", 100);
+    BOOST_CHECK( ast_or.eval(context) );
+    BOOST_CHECK( !ast_and.eval(context) );
+    BOOST_CHECK( !par.eval(context));
+
+
+    context.add("WWCT", "OPX", 100);
+    context.add("WWCT", "OPY", 100);
+    context.add("WWCT", "OPZ", -100);
+    BOOST_CHECK( ast_or.eval(context) );
+    BOOST_CHECK( ast_and.eval(context) );
+    BOOST_CHECK( par.eval(context));
+
+    context.add("WWCT", "OPX", -100);
+    context.add("WWCT", "OPY", -100);
+    context.add("WWCT", "OPZ", -100);
+    BOOST_CHECK( !ast_or.eval(context) );
+    BOOST_CHECK( !ast_and.eval(context) );
+    BOOST_CHECK( !par.eval(context));
+}
+
+BOOST_AUTO_TEST_CASE(DATE) {
+    ActionAST ast({"MNTH", ">=", "JUN"});
+    ActionContext context;
+    context.add("MNTH", 6);
+    BOOST_CHECK( ast.eval(context) );
+
+    context.add("MNTH", 8);
+    BOOST_CHECK( ast.eval(context) );
+
+    context.add("MNTH", 5);
+    BOOST_CHECK( !ast.eval(context) );
+}
+
+
+BOOST_AUTO_TEST_CASE(MANUAL1) {
+    ActionAST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});
+    ActionContext context;
+
+    context.add("GGPR", "FIELD", 60000 );
+    context.add("WGOR", "PR" , 300 );
+    context.add("GGOR", "FIELD", 200);
+    BOOST_CHECK( ast.eval(context) );
+
+    context.add("GGPR", "FIELD", 0 );
+    context.add("WGOR", "PR" , 300 );
+    context.add("GGOR", "FIELD", 200);
+    BOOST_CHECK( !ast.eval(context) );
+
+    context.add("GGPR", "FIELD", 60000 );
+    context.add("WGOR", "PR" , 100 );
+    context.add("GGOR", "FIELD", 200);
+    BOOST_CHECK( !ast.eval(context) );
+}
+
+BOOST_AUTO_TEST_CASE(MANUAL2) {
+    ActionAST ast({"GWCT", "LIST1", ">", "0.70", "AND", "(", "GWPR", "LIST1", ">", "GWPR", "LIST2", "OR", "GWPR", "LIST1", ">", "GWPR", "LIST3", ")"});
+    ActionContext context;
+
+    context.add("GWCT", "LIST1", 1.0);
+    context.add("GWPR", "LIST1", 1 );
+    context.add("GWPR", "LIST2", 2 );
+    context.add("GWPR", "LIST3", 3 );
+    BOOST_CHECK( !ast.eval(context));
+
+    context.add("GWCT", "LIST1", 1.0);
+    context.add("GWPR", "LIST1", 1 );
+    context.add("GWPR", "LIST2", 2 );
+    context.add("GWPR", "LIST3", 0 );
+    BOOST_CHECK( ast.eval(context));
+
+    context.add("GWCT", "LIST1", 1.0);
+    context.add("GWPR", "LIST1", 1 );
+    context.add("GWPR", "LIST2", 0 );
+    context.add("GWPR", "LIST3", 3 );
+    BOOST_CHECK( ast.eval(context));
+
+    context.add("GWCT", "LIST1", 1.0);
+    context.add("GWPR", "LIST1", 1 );
+    context.add("GWPR", "LIST2", 0 );
+    context.add("GWPR", "LIST3", 0 );
+    BOOST_CHECK( ast.eval(context));
+
+    context.add("GWCT", "LIST1", 0.0);
+    context.add("GWPR", "LIST1", 1 );
+    context.add("GWPR", "LIST2", 0 );
+    context.add("GWPR", "LIST3", 3 );
+    BOOST_CHECK( !ast.eval(context));
+}
+
+BOOST_AUTO_TEST_CASE(MANUAL3) {
+    ActionAST ast({"MNTH", ".GE.", "MAR", "AND", "MNTH", ".LE.", "OCT", "AND", "GMWL", "HIGH", ".GE.", "4"});
+    ActionContext context;
+
+    context.add("MNTH", 4);
+    context.add("GMWL", "HIGH", 4);
+    BOOST_CHECK( ast.eval(context));
+
+    context.add("MNTH", 3);
+    context.add("GMWL", "HIGH", 4);
+    BOOST_CHECK( ast.eval(context));
+
+    context.add("MNTH", 11);
+    context.add("GMWL", "HIGH", 4);
+    BOOST_CHECK( !ast.eval(context));
+
+    context.add("MNTH", 3);
+    context.add("GMWL", "HIGH", 3);
+    BOOST_CHECK( !ast.eval(context));
+}
+
+
+BOOST_AUTO_TEST_CASE(MANUAL4) {
+    ActionAST ast({"GWCT", "FIELD", ">", "0.8", "AND", "DAY", ">", "1", "AND", "MNTH", ">", "JUN", "AND", "YEAR", ">=", "2021"});
+    ActionContext context;
+
+
+    context.add("MNTH", 7);
+    context.add("DAY", 2);
+    context.add("YEAR", 2030);
+    context.add("GWCT", "FIELD", 1.0);
+    BOOST_CHECK( ast.eval(context) );
+
+    context.add("MNTH", 7);
+    context.add("DAY", 2);
+    context.add("YEAR", 2019);
+    context.add("GWCT", "FIELD", 1.0);
+    BOOST_CHECK( !ast.eval(context) );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(MANUAL5) {
+    ActionAST ast({"WCG2", "PROD1", ">", "WCG5", "PROD2", "AND", "GCG3", "G1", ">", "GCG7", "G2", "OR", "FCG1", ">", "FCG7"});
+    ActionContext context;
+
+    context.add("WCG2", "PROD1", 100);
+    context.add("WCG5", "PROD2",  50);
+    context.add("GCG3", "G1", 200);
+    context.add("GCG7", "G2", 100);
+    context.add("FCG1", 100);
+    context.add("FCG7",  50);
+    BOOST_CHECK(ast.eval(context));
+
+    context.add("WCG2", "PROD1", 100);
+    context.add("WCG5", "PROD2",  50);
+    context.add("GCG3", "G1", 200);
+    context.add("GCG7", "G2", 100);
+    context.add("FCG1", 100);
+    context.add("FCG7", 150);
+    BOOST_CHECK(ast.eval(context));
+
+    context.add("WCG2", "PROD1", 100);
+    context.add("WCG5", "PROD2",  50);
+    context.add("GCG3", "G1", 20);
+    context.add("GCG7", "G2", 100);
+    context.add("FCG1", 100);
+    context.add("FCG7", 150);
+    BOOST_CHECK(!ast.eval(context));
+
+    context.add("WCG2", "PROD1", 100);
+    context.add("WCG5", "PROD2",  50);
+    context.add("GCG3", "G1", 20);
+    context.add("GCG7", "G2", 100);
+    context.add("FCG1", 200);
+    context.add("FCG7", 150);
+    BOOST_CHECK(ast.eval(context));
+}
+
+
+
+BOOST_AUTO_TEST_CASE(LGR) {
+    ActionAST ast({"LWCC" , "OPX", "LOCAL", "1", "2", "3", ">", "100"});
+    ActionContext context;
+
+    context.add("LWCC", "OPX:LOCAL:1:2:3", 200);
+    BOOST_CHECK(ast.eval(context));
+
+    context.add("LWCC", "OPX:LOCAL:1:2:3", 20);
+    BOOST_CHECK(!ast.eval(context));
 }
