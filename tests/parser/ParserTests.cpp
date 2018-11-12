@@ -1856,3 +1856,31 @@ UDQ
     BOOST_CHECK_EQUAL_COLLECTIONS( data0.begin(), data0.end(), expected0.begin(), expected0.end());
     BOOST_CHECK_EQUAL_COLLECTIONS( data1.begin(), data1.end(), expected1.begin(), expected1.end());
  }
+
+
+BOOST_AUTO_TEST_CASE(ParseThreePhaseRelpermModels) {
+    {
+        const auto deck_string = std::string{ R"(
+STONE1
+STONE2
+)" };
+
+        const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+
+        BOOST_CHECK( !deck.hasKeyword( "STONE" ) );
+        BOOST_CHECK(  deck.hasKeyword( "STONE1" ) );
+        BOOST_CHECK(  deck.hasKeyword( "STONE2" ) );
+    }
+
+    {
+        const auto deck_string = std::string{ R"(
+STONE
+)" };
+
+        const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+
+        BOOST_CHECK(  deck.hasKeyword( "STONE" ) );
+        BOOST_CHECK( !deck.hasKeyword( "STONE1" ) );
+        BOOST_CHECK( !deck.hasKeyword( "STONE2" ) );
+    }
+}
