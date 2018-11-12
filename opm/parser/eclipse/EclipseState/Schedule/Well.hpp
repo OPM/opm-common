@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellTracerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -150,6 +151,9 @@ namespace Opm {
         WellPolymerProperties          getPolymerPropertiesCopy(size_t timeStep) const;
         const WellPolymerProperties&   getPolymerProperties(size_t timeStep) const;
 
+        bool                           setTracerProperties(size_t timeStep , const WellTracerProperties& properties);
+        const WellTracerProperties&    getTracerProperties(size_t timeStep) const;
+
         bool                           setSolventFraction(size_t timeStep , const double fraction);
         const double&                  getSolventFraction(size_t timeStep) const;
 
@@ -222,6 +226,7 @@ namespace Opm {
         DynamicState< WellPolymerProperties > m_polymerProperties;
         DynamicState< WellEconProductionLimits > m_econproductionlimits;
         DynamicState< double > m_solventFraction;
+        DynamicState< WellTracerProperties > m_tracerProperties;
         DynamicState< std::string > m_groupName;
         DynamicState< int > m_rft;
         DynamicState< int > m_plt;

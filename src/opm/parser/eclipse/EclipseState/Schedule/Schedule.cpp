@@ -191,6 +191,9 @@ namespace Opm {
         else if (keyword.name() == "WSOLVENT")
             handleWSOLVENT(keyword, currentStep, parseContext);
 
+        else if (keyword.name() == "WTRACER")
+            handleWTRACER(keyword, currentStep, parseContext);
+
         else if (keyword.name() == "WTEST")
             handleWTEST(keyword, currentStep, parseContext);
 
@@ -834,6 +837,26 @@ namespace Opm {
                 } else {
                     throw std::invalid_argument("WSOLVENT keyword can only be applied to Gas injectors");
                 }
+            }
+        }
+    }
+    
+    void Schedule::handleWTRACER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto wells = getWells( wellNamePattern );
+
+            if (wells.empty())
+                invalidNamePattern(wellNamePattern, parseContext, keyword);
+
+            for( auto* well : wells) {
+                WellTracerProperties wellTracerProperties = well->getTracerProperties( currentStep );
+                double tracerConcentration = record.getItem("CONCENTRATION").get< double >(0);
+                const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
+                wellTracerProperties.setConcentration(tracerName, tracerConcentration);
+                well->setTracerProperties(currentStep, wellTracerProperties);
+
             }
         }
     }
