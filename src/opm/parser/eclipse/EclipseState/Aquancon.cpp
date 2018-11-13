@@ -91,13 +91,12 @@ namespace Opm {
 
             if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
             {
-                double* influx_coeff = new double( aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0) );
+                const double influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);
 
-                std::for_each(
-                                m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.begin(),
-                                m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.end(),
-                                [influx_coeff](std::shared_ptr<double>& i){ i.reset( new double (*influx_coeff)); }
-                             );
+                for (auto& influx: m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record)
+                {
+                    influx.reset(new double(influx_coeff));
+                }
             }
 
 

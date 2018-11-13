@@ -119,6 +119,6 @@ BOOST_AUTO_TEST_CASE(AquiferCTTest){
         BOOST_CHECK_EQUAL(it.aquiferID , 1);
         BOOST_CHECK_EQUAL(it.phi_aq , 0.3);
         BOOST_CHECK_EQUAL(it.inftableID , 2);
-        BOOST_CHECK(it.p0 == false);
+        BOOST_CHECK(it.p0 == nullptr);
     }
 }    

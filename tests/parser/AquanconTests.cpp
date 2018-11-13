@@ -87,8 +87,6 @@ BOOST_AUTO_TEST_CASE(AquanconTest){
     {
         BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).global_index.begin(), aquifers.at(i).global_index.end(),
                                    expected_output.at(i).global_index.begin(), expected_output.at(i).global_index.end() );
-        BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).influx_coeff.begin(), aquifers.at(i).influx_coeff.end(),
-                                   expected_output.at(i).influx_coeff.begin(), expected_output.at(i).influx_coeff.end() );
         BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).influx_multiplier.begin(), aquifers.at(i).influx_multiplier.end(),
                                    expected_output.at(i).influx_multiplier.begin(), expected_output.at(i).influx_multiplier.end() );
         BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).reservoir_face_dir.begin(), aquifers.at(i).reservoir_face_dir.end(),
