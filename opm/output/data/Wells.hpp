@@ -61,6 +61,9 @@ namespace Opm {
                 productivity_index_water = (1 << 11),
                 productivity_index_oil   = (1 << 12),
                 productivity_index_gas   = (1 << 13),
+                well_potential_water   = (1 << 14),
+                well_potential_oil     = (1 << 15),
+                well_potential_gas     = (1 << 16),
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -107,6 +110,9 @@ namespace Opm {
             double productivity_index_water = 0.0;
             double productivity_index_oil = 0.0;
             double productivity_index_gas = 0.0;
+            double well_potential_water = 0.0;
+            double well_potential_oil = 0.0;
+            double well_potential_gas = 0.0;
     };
 
     struct Connection {
@@ -272,6 +278,9 @@ namespace Opm {
             case opt::productivity_index_water: return this->productivity_index_water;
             case opt::productivity_index_oil: return this->productivity_index_oil;
             case opt::productivity_index_gas: return this->productivity_index_gas;
+            case opt::well_potential_water: return this->well_potential_water;
+            case opt::well_potential_oil: return this->well_potential_oil;
+            case opt::well_potential_gas: return this->well_potential_gas;
         }
 
         throw std::invalid_argument(
@@ -312,6 +321,9 @@ namespace Opm {
             buffer.write(this->productivity_index_water);
             buffer.write(this->productivity_index_oil);
             buffer.write(this->productivity_index_gas);
+            buffer.write(this->well_potential_water);
+            buffer.write(this->well_potential_oil);
+            buffer.write(this->well_potential_gas);
     }
 
     template <class MessageBufferType>
@@ -373,6 +385,9 @@ namespace Opm {
             buffer.read(this->productivity_index_water);
             buffer.read(this->productivity_index_oil);
             buffer.read(this->productivity_index_gas);
+            buffer.read(this->well_potential_water);
+            buffer.read(this->well_potential_oil);
+            buffer.read(this->well_potential_gas);
     }
 
   template <class MessageBufferType>

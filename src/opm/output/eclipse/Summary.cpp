@@ -349,6 +349,15 @@ measure rate_unit < rt::productivity_index_oil > () { return measure::liquid_pro
 template<> constexpr
 measure rate_unit < rt::productivity_index_gas > () { return measure::gas_productivity_index; }
 
+template<> constexpr
+measure rate_unit< rt::well_potential_water >() { return measure::liquid_surface_rate; }
+
+template<> constexpr
+measure rate_unit< rt::well_potential_oil >() { return measure::liquid_surface_rate; }
+
+template<> constexpr
+measure rate_unit< rt::well_potential_gas >() { return measure::gas_surface_rate; }
+
 double efac( const std::vector<std::pair<std::string,double>>& eff_factors, const std::string& name ) {
     auto it = std::find_if( eff_factors.begin(), eff_factors.end(),
                             [&] ( const std::pair< std::string, double > elem )
@@ -662,16 +671,21 @@ quantity region_rate( const fn_args& args ) {
         return { -sum, rate_unit< phase >() };
 }
 
-template < rt phase>
-quantity pi (const fn_args& args  ) {
+template < rt phase, bool outputProducer = true, bool outputInjector = true>
+quantity generic_well_rate (const fn_args& args  ) {
     const quantity zero = { 0, rate_unit< phase >() };
     if( args.schedule_wells.empty() ) return zero;
 
     const auto p = args.wells.find( args.schedule_wells.front()->name() );
     if( p == args.wells.end() ) return zero;
-    std::cout << p->second.rates.get(phase) << std::endl;
+
+    if (args.schedule_wells.front()->isInjector(args.sim_step) && !outputInjector) return zero;
+
+    if (args.schedule_wells.front()->isProducer(args.sim_step) && !outputProducer) return zero;
+
     return { p->second.rates.get(phase), rate_unit< phase >() };
 }
+
 template< typename F, typename G >
 auto mul( F f, G g ) -> bin_op< F, G, std::multiplies< quantity > >
 { return { f, g }; }
@@ -982,11 +996,18 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "SWFR", srate< rt::wat > },
     { "SGFR", srate< rt::gas > },
     { "SPR",  spr }, 
-    // Well PI
-    { "WPIW", pi< rt::productivity_index_water >},
-    { "WPIO", pi< rt::productivity_index_oil >},
-    { "WPIG", pi< rt::productivity_index_gas >},
-    { "WPIL", sum( pi< rt::productivity_index_water >, pi< rt::productivity_index_oil>)},
+    // Well productivity index
+    { "WPIW", generic_well_rate< rt::productivity_index_water >},
+    { "WPIO", generic_well_rate< rt::productivity_index_oil >},
+    { "WPIG", generic_well_rate< rt::productivity_index_gas >},
+    { "WPIL", sum( generic_well_rate< rt::productivity_index_water >, generic_well_rate< rt::productivity_index_oil>)},
+    // Well potential
+    { "WWPP", generic_well_rate< rt::well_potential_water , true, false>},
+    { "WOPP", generic_well_rate< rt::well_potential_oil , true, false>},
+    { "WGPP", generic_well_rate< rt::well_potential_gas , true, false>},
+    { "WWPI", generic_well_rate< rt::well_potential_water , false, true>},
+    { "WOPI", generic_well_rate< rt::well_potential_oil , false, true>},
+    { "WGPI", generic_well_rate< rt::well_potential_gas , false, true>},
 };
 
 

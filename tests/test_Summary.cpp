@@ -100,6 +100,12 @@ static data::Wells result_wells() {
     rates1.set( rt::reservoir_water, -10.6 / day );
     rates1.set( rt::reservoir_oil, -10.7 / day );
     rates1.set( rt::reservoir_gas, -10.8 / day );
+    rates1.set( rt::productivity_index_water, -10.9 / day );
+    rates1.set( rt::productivity_index_oil, -10.11 / day );
+    rates1.set( rt::productivity_index_gas, -10.12 / day );
+    rates1.set( rt::well_potential_water, -10.13 / day );
+    rates1.set( rt::well_potential_oil, -10.14 / day );
+    rates1.set( rt::well_potential_gas, -10.15 / day );
 
     data::Rates rates2;
     rates2.set( rt::wat, -20.0 / day );
@@ -111,6 +117,12 @@ static data::Wells result_wells() {
     rates2.set( rt::reservoir_water, -20.6 / day );
     rates2.set( rt::reservoir_oil, -20.7 / day );
     rates2.set( rt::reservoir_gas, -20.8 / day );
+    rates2.set( rt::productivity_index_water, -20.9 / day );
+    rates2.set( rt::productivity_index_oil, -20.11 / day );
+    rates2.set( rt::productivity_index_gas, -20.12 / day );
+    rates2.set( rt::well_potential_water, -20.13 / day );
+    rates2.set( rt::well_potential_oil, -20.14 / day );
+    rates2.set( rt::well_potential_gas, -20.15 / day );
 
     data::Rates rates3;
     rates3.set( rt::wat, 30.0 / day );
@@ -122,6 +134,12 @@ static data::Wells result_wells() {
     rates3.set( rt::reservoir_water, 30.6 / day );
     rates3.set( rt::reservoir_oil, 30.7 / day );
     rates3.set( rt::reservoir_gas, 30.8 / day );
+    rates3.set( rt::productivity_index_water, -30.9 / day );
+    rates3.set( rt::productivity_index_oil, -30.11 / day );
+    rates3.set( rt::productivity_index_gas, -30.12 / day );
+    rates3.set( rt::well_potential_water, -30.13 / day );
+    rates3.set( rt::well_potential_oil, -30.14 / day );
+    rates3.set( rt::well_potential_gas, -30.15 / day );
 
 
     /* completion rates */
