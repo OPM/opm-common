@@ -114,6 +114,35 @@ class DynamicState {
             this->m_data[index] = value;
         }
 
+
+    /*
+      Will assign all currently equal values starting at index with the new
+      value. Purpose of the method is to support manipulations of an existing
+      Schedule object, if e.g. a well is initially closed in the interval
+      [T1,T2] and then opened at time T1 < Tx < T2 then the open should be
+      applied for all times in the range [Tx,T2].
+    */
+    void update_equal(size_t index, const T& value) {
+        if (this->m_data.size() <= index)
+            throw std::out_of_range("Invalid index for update_equal()");
+
+        const T prev_value = this->m_data[index];
+        if (prev_value == value)
+            return;
+
+        while (true) {
+            if (this->m_data[index] != prev_value)
+                break;
+
+            this->m_data[index] = value;
+
+            index++;
+            if (index == this->m_data.size())
+                break;
+
+        }
+    }
+
         /// Will return the index of the first occurence of @value, or
         /// -1 if @value is not found.
         int find(const T& value) const {
