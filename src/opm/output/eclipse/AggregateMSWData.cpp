@@ -493,6 +493,7 @@ namespace {
 		const auto& wname     = well.name();
 		const auto wPKey = "WBHP:"  + wname;
 		const auto& wRatesIt =  wr.find(wname);
+		bool haveWellRes = wRatesIt != wr.end();
 		//
 		//Initialize temporary variables
 		double temp_o = 0.;
@@ -500,8 +501,12 @@ namespace {
 		double temp_g = 0.;
 
 		// find well connections and calculate segment rates based on well connection production/injection terms
-		const auto& rateConns = wRatesIt->second.connections;
-		auto sSFR = getSegmentSetFlowRates(welSegSet, rateConns, welConns, units);
+		auto sSFR = Opm::RestartIO::Helpers::SegmentSetFlowRates{};
+		if (haveWellRes) {
+		  
+		  sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
+		  
+		  }
 		auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
 		{
 		    // 'stringSegNum' is one-based (1 .. #segments inclusive)
@@ -527,7 +532,9 @@ namespace {
 		//Rseg[10]= sgfr*0.001/ Rseg[8] 
 
 		// branch according to whether multisegment well calculations are switched on or not
-		if (wRatesIt->second.segments.size() < 2) {
+		
+		
+		if (haveWellRes && wRatesIt->second.segments.size() < 2) {
 		    // Note: Segment flow rates and pressure from 'smry' have correct
 		    // output units and sign conventions.
 		    temp_o = sSFR.sofr[segNumber];
@@ -583,7 +590,7 @@ namespace {
 
 		    //see section above for explanation of values
 		    // branch according to whether multisegment well calculations are switched on or not
-		    if (wRatesIt->second.segments.size() < 2) {
+		    if (haveWellRes && wRatesIt->second.segments.size() < 2) {
 			// Note: Segment flow rates and pressure from 'smry' have correct
 			// output units and sign conventions.
 			temp_o = sSFR.sofr[segNumber];

@@ -259,7 +259,7 @@ namespace {
             }
 
             if (Q.has(R::gas)) {
-                xConn[Ix::WaterRate] =
+                xConn[Ix::GasRate] =
                     - units.from_si(M::gas_surface_rate, Q.get(R::gas));
             }
 
