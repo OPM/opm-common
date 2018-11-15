@@ -20,7 +20,7 @@
 #include <iostream>
 
 #include <opm/output/eclipse/EclipseIO.hpp>
-#include <opm/output/eclipse/RestartValue.hpp> 
+#include <opm/output/eclipse/RestartValue.hpp>
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 
@@ -73,7 +73,7 @@ void msim::run_step(data::Solution& sol, data::Wells& well_data, size_t report_s
         if ((seconds_elapsed + time_step) > end_time)
             time_step = end_time - seconds_elapsed;
 
-        // Simulate
+        this->simulate(sol, well_data, report_step, seconds_elapsed, time_step);
 
         seconds_elapsed += time_step;
         this->output(report_step,
@@ -98,4 +98,36 @@ void msim::output(size_t report_step, bool substep, double seconds_elapsed, cons
                      {});
 }
 
+
+void msim::simulate(data::Solution& sol, data::Wells& well_data, size_t report_step, double seconds_elapsed, double time_step) const {
+    for (const auto& sol_pair : this->solutions) {
+        auto func = sol_pair.second;
+        func(this->state, this->schedule, sol, report_step, seconds_elapsed + time_step);
+    }
+
+    for (const auto& well_pair : this->well_rates) {
+        const std::string& well_name = well_pair.first;
+        data::Well& well = well_data[well_name];
+        for (const auto& rate_pair : well_pair.second) {
+            auto rate = rate_pair.first;
+            auto func = rate_pair.second;
+
+            well.rates.set(rate, func(this->state, this->schedule, sol, report_step, seconds_elapsed + time_step));
+        }
+    }
 }
+
+
+void msim::well_rate(const std::string& well, data::Rates::opt rate, std::function<well_rate_function> func) {
+    this->well_rates[well][rate] = func;
+}
+
+
+void msim::solution(const std::string& field, std::function<solution_function> func) {
+    this->solutions[field] = func;
+}
+
+
+}
+
+
