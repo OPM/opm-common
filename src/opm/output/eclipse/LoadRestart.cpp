@@ -45,9 +45,10 @@
 #include <cmath>
 #include <cstddef>
 #include <exception>
+#include <map>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -644,21 +645,66 @@ namespace {
         return wells;
     }
 
-    std::unordered_map<std::size_t, boost::iterator_range<const double*>::size_type>
-    seqID_to_resID(const std::size_t   wellID,
-                   const std::size_t   nConn,
-                   const WellVectors&  wellData)
+    std::map<
+        std::tuple<int, int, int>,
+        boost::iterator_range<const double*>::size_type
+    >
+    ijk_to_resID(const std::size_t  wellID,
+                 const std::size_t  nConn,
+                 const WellVectors& wellData)
     {
         using SizeT    = boost::iterator_range<const double*>::size_type;
-        auto  seqToRes = std::unordered_map<std::size_t, SizeT>{};
+        auto  ijkToRes = std::map<std::tuple<int, int, int>, SizeT>{};
 
         for (auto connID = 0*nConn; connID < nConn; ++connID) {
             const auto icon = wellData.icon(wellID, connID);
 
-            seqToRes.emplace(icon[VI::IConn::index::SeqIndex] - 1, connID);
+            const auto i = icon[VI::IConn::index::CellI] - 1;
+            const auto j = icon[VI::IConn::index::CellJ] - 1;
+            const auto k = icon[VI::IConn::index::CellK] - 1;
+
+            ijkToRes.emplace(std::make_tuple(i, j, k), connID);
         }
 
-        return seqToRes;
+        return ijkToRes;
+    }
+
+    void restoreConnRates(const WellVectors::Window<double>& xcon,
+                          const Opm::UnitSystem&             usys,
+                          const bool                         oil,
+                          const bool                         gas,
+                          const bool                         wat,
+                          Opm::data::Connection&             xc)
+    {
+        using M = ::Opm::UnitSystem::measure;
+
+        if (wat) {
+            xc.rates.set(Opm::data::Rates::opt::wat,
+                         - usys.to_si(M::liquid_surface_rate,
+                                      xcon[VI::XConn::index::WaterRate]));
+        }
+
+        if (oil) {
+            xc.rates.set(Opm::data::Rates::opt::oil,
+                         - usys.to_si(M::liquid_surface_rate,
+                                      xcon[VI::XConn::index::OilRate]));
+        }
+
+        if (gas) {
+            xc.rates.set(Opm::data::Rates::opt::gas,
+                         - usys.to_si(M::gas_surface_rate,
+                                      xcon[VI::XConn::index::GasRate]));
+        }
+    }
+
+    void zeroConnRates(const bool             oil,
+                       const bool             gas,
+                       const bool             wat,
+                       Opm::data::Connection& xc)
+    {
+        if (wat) { xc.rates.set(Opm::data::Rates::opt::wat, 0.0); }
+        if (oil) { xc.rates.set(Opm::data::Rates::opt::oil, 0.0); }
+        if (gas) { xc.rates.set(Opm::data::Rates::opt::gas, 0.0); }
     }
 
     void restoreConnRates(const Opm::Well&        well,
@@ -670,51 +716,46 @@ namespace {
                           const WellVectors&      wellData,
                           Opm::data::Well&        xw)
     {
-        using M = ::Opm::UnitSystem::measure;
-
         const auto iwel  = wellData.iwel(wellID);
         const auto nConn = static_cast<std::size_t>(
             iwel[VI::IWell::index::NConn]);
 
         xw.connections.resize(nConn, Opm::data::Connection{});
 
-        if (! wellData.hasDefinedConnectionValues()) {
-            // Result set does not provide certain pieces of
-            // information which are needed to reconstruct
-            // connection flow rates.  Nothing to do here.
-            return;
-        }
-
         const auto oil = phases.active(Opm::Phase::OIL);
         const auto gas = phases.active(Opm::Phase::GAS);
         const auto wat = phases.active(Opm::Phase::WATER);
 
+        for (auto& xc : xw.connections) {
+            zeroConnRates(oil, gas, wat, xc);
+        }
+
+        if (! wellData.hasDefinedConnectionValues()) {
+            // Result set does not provide certain pieces of information
+            // which are needed to reconstruct connection flow rates.
+            // Nothing to do except to return all zero rates.
+            return;
+        }
+
         const auto conns      = well.getActiveConnections(sim_step, grid);
-        const auto seq_to_res = seqID_to_resID(wellID, nConn, wellData);
+        const auto ijk_to_res = ijk_to_resID(wellID, nConn, wellData);
 
         auto linConnID = std::size_t{0};
         for (const auto& conn : conns) {
-            const auto connID = seq_to_res.at(conn.getSeqIndex());
-            const auto xcon   = wellData.xcon(wellID, connID);
+            if (++linConnID > nConn) { continue; }
 
-            auto& xc = xw.connections[linConnID++];
+            auto& xc = xw.connections[linConnID - 1];
 
-            if (wat) {
-                xc.rates.set(Opm::data::Rates::opt::wat,
-                             - usys.to_si(M::liquid_surface_rate,
-                                          xcon[VI::XConn::index::WaterRate]));
-            }
+            const auto ijk =
+                std::make_tuple(conn.getI(), conn.getJ(), conn.getK());
 
-            if (oil) {
-                xc.rates.set(Opm::data::Rates::opt::oil,
-                             - usys.to_si(M::liquid_surface_rate,
-                                          xcon[VI::XConn::index::OilRate]));
-            }
+            auto resPos = ijk_to_res.find(ijk);
 
-            if (gas) {
-                xc.rates.set(Opm::data::Rates::opt::gas,
-                             - usys.to_si(M::gas_surface_rate,
-                                          xcon[VI::XConn::index::GasRate]));
+            if (resPos != std::end(ijk_to_res)) {
+                const auto connID = resPos->second;
+                const auto xcon   = wellData.xcon(wellID, connID);
+
+                restoreConnRates(xcon, usys, oil, gas, wat, xc);
             }
         }
     }
