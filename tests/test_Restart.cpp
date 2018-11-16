@@ -38,6 +38,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+
 
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>

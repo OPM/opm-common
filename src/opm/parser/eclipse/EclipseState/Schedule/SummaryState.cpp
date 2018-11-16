@@ -18,9 +18,17 @@
 */
 
 
-#include <opm/output/eclipse/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm{
+    void SummaryState::add(const smspec_node_type * node_ptr, double value) {
+        if (smspec_node_get_var_type(node_ptr) == ECL_SMSPEC_WELL_VAR)
+            this->add_well_var(smspec_node_get_wgname(node_ptr),
+                               smspec_node_get_keyword(node_ptr),
+                               value);
+        else
+            this->add(smspec_node_get_gen_key1(node_ptr), value);
+    }
 
     void SummaryState::add(const std::string& key, double value) {
         this->values[key] = value;
@@ -39,6 +47,28 @@ namespace Opm{
 
         return iter->second;
     }
+
+    void SummaryState::add_well_var(const std::string& well, const std::string& var, double value) {
+        this->add(var + ":" + well, value);
+        this->well_values[well][var] = value;
+    }
+
+    bool SummaryState::has_well_var(const std::string& well, const std::string& var) const {
+        const auto& well_iter = this->well_values.find(well);
+        if (well_iter == this->well_values.end())
+            return false;
+
+        const auto& var_iter = well_iter->second.find(var);
+        if (var_iter == well_iter->second.end())
+            return false;
+
+        return true;
+    }
+
+    double SummaryState::get_well_var(const std::string& well, const std::string& var) const {
+        return this->well_values.at(well).at(var);
+    }
+
 
     SummaryState::const_iterator SummaryState::begin() const {
         return this->values.begin();
