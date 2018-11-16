@@ -29,6 +29,7 @@
 #include <ert/util/util.h>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionContext.hpp>
@@ -139,7 +140,8 @@ TSTEP
 
 
 BOOST_AUTO_TEST_CASE(TestActions) {
-    Opm::ActionContext context;
+    Opm::SummaryState st;
+    Opm::ActionContext context(st);
     Opm::Actions config;
     BOOST_CHECK_EQUAL(config.size(), 0);
 
@@ -192,7 +194,8 @@ BOOST_AUTO_TEST_CASE(TestActions) {
 
 
 BOOST_AUTO_TEST_CASE(TestContext) {
-    Opm::ActionContext context;
+    Opm::SummaryState st;
+    Opm::ActionContext context(st);
 
     BOOST_REQUIRE_THROW(context.get("func", "arg"), std::out_of_range);
 
@@ -238,7 +241,8 @@ BOOST_AUTO_TEST_CASE(TestActionAST_BASIC) {
     ActionAST ast1({"WWCT", "OPX", ">", "0.75"});
     ActionAST ast2({"WWCT", "OPX", "=", "WWCT", "OPX"});
     ActionAST ast3({"WWCT", "OPY", ">", "0.75"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
 
     context.add("WWCT", "OPX", 100);
     BOOST_CHECK(ast1.eval(context));
@@ -254,7 +258,8 @@ BOOST_AUTO_TEST_CASE(TestActionAST_OR_AND) {
     ActionAST ast_or({"WWCT", "OPX", ">", "0.75", "OR", "WWCT", "OPY", ">", "0.75"});
     ActionAST ast_and({"WWCT", "OPX", ">", "0.75", "AND", "WWCT", "OPY", ">", "0.75"});
     ActionAST par({"WWCT", "OPX", ">", "0.75", "AND", "(", "WWCT", "OPY", ">", "0.75", "OR", "WWCT", "OPZ", ">", "0.75", ")"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
 
     context.add("WWCT", "OPX", 100);
     context.add("WWCT", "OPY", -100);
@@ -289,7 +294,8 @@ BOOST_AUTO_TEST_CASE(TestActionAST_OR_AND) {
 
 BOOST_AUTO_TEST_CASE(DATE) {
     ActionAST ast({"MNTH", ">=", "JUN"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
     context.add("MNTH", 6);
     BOOST_CHECK( ast.eval(context) );
 
@@ -303,7 +309,8 @@ BOOST_AUTO_TEST_CASE(DATE) {
 
 BOOST_AUTO_TEST_CASE(MANUAL1) {
     ActionAST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
 
     context.add("GGPR", "FIELD", 60000 );
     context.add("WGOR", "PR" , 300 );
@@ -323,7 +330,8 @@ BOOST_AUTO_TEST_CASE(MANUAL1) {
 
 BOOST_AUTO_TEST_CASE(MANUAL2) {
     ActionAST ast({"GWCT", "LIST1", ">", "0.70", "AND", "(", "GWPR", "LIST1", ">", "GWPR", "LIST2", "OR", "GWPR", "LIST1", ">", "GWPR", "LIST3", ")"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
@@ -358,7 +366,8 @@ BOOST_AUTO_TEST_CASE(MANUAL2) {
 
 BOOST_AUTO_TEST_CASE(MANUAL3) {
     ActionAST ast({"MNTH", ".GE.", "MAR", "AND", "MNTH", ".LE.", "OCT", "AND", "GMWL", "HIGH", ".GE.", "4"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
 
     context.add("MNTH", 4);
     context.add("GMWL", "HIGH", 4);
@@ -380,7 +389,8 @@ BOOST_AUTO_TEST_CASE(MANUAL3) {
 
 BOOST_AUTO_TEST_CASE(MANUAL4) {
     ActionAST ast({"GWCT", "FIELD", ">", "0.8", "AND", "DAY", ">", "1", "AND", "MNTH", ">", "JUN", "AND", "YEAR", ">=", "2021"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
 
 
     context.add("MNTH", 7);
@@ -400,7 +410,8 @@ BOOST_AUTO_TEST_CASE(MANUAL4) {
 
 BOOST_AUTO_TEST_CASE(MANUAL5) {
     ActionAST ast({"WCG2", "PROD1", ">", "WCG5", "PROD2", "AND", "GCG3", "G1", ">", "GCG7", "G2", "OR", "FCG1", ">", "FCG7"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -439,11 +450,27 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
 
 BOOST_AUTO_TEST_CASE(LGR) {
     ActionAST ast({"LWCC" , "OPX", "LOCAL", "1", "2", "3", ">", "100"});
-    ActionContext context;
+    SummaryState st;
+    ActionContext context(st);
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 200);
     BOOST_CHECK(ast.eval(context));
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 20);
     BOOST_CHECK(!ast.eval(context));
+}
+
+
+BOOST_AUTO_TEST_CASE(ActionContextTest) {
+    SummaryState st;
+    st.add("WWCT:OP1", 100);
+    ActionContext context(st);
+
+
+    BOOST_CHECK_EQUAL(context.get("WWCT", "OP1"), 100);
+    BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
+    context.add("WWCT", "OP1", 200);
+
+    BOOST_CHECK_EQUAL(context.get("WWCT", "OP1"), 200);
+    BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
 }

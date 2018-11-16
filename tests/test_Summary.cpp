@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     Opm::SummaryState st;
     st.add("WWCT:OP_2", 100);
     BOOST_CHECK_CLOSE(st.get("WWCT:OP_2"), 100, 1e-5);
-    BOOST_CHECK_THROW(st.get("NO_SUCH_KEY"), std::invalid_argument);
+    BOOST_CHECK_THROW(st.get("NO_SUCH_KEY"), std::out_of_range);
     BOOST_CHECK(st.has("WWCT:OP_2"));
     BOOST_CHECK(!st.has("NO_SUCH_KEY"));
 

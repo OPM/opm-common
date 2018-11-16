@@ -43,7 +43,7 @@ namespace Opm{
     double SummaryState::get(const std::string& key) const {
         const auto iter = this->values.find(key);
         if (iter == this->values.end())
-            throw std::invalid_argument("XX No such key: " + key);
+            throw std::out_of_range("No such key: " + key);
 
         return iter->second;
     }
