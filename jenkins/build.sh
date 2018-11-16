@@ -18,6 +18,7 @@ downstreams=(opm-material
              opm-grid
              ewoms
              opm-simulators
+             opm-simulators-legacy
              opm-upscaling
              )
 
@@ -26,6 +27,7 @@ downstreamRev[opm-material]=master
 downstreamRev[opm-grid]=master
 downstreamRev[ewoms]=master
 downstreamRev[opm-simulators]=master
+downstreamRev[opm-simulators-legacy]=master
 downstreamRev[opm-upscaling]=master
 
 parseRevisions
