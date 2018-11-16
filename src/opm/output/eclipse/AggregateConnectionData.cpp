@@ -158,7 +158,8 @@ namespace {
             // Don't support differing sat-func tables for
             // draining and imbibition curves at connections.
             iConn[Ix::Imbibition] = iConn[Ix::Drainage];
-
+	    
+	    //complnum is(1 too large): 1 - based while icon is 0 - based?
             iConn[Ix::ComplNum] = std::abs(conn.complnum());
             //iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
 
