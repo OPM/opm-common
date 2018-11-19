@@ -2737,6 +2737,72 @@ VFPINJ \n                                       \
     }
 }
 
+// tests for the polymer injectivity case
+BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
+    const char *deckData =
+        "START\n"
+        "   8 MAR 2018/\n"
+        "PROPS\n \n"
+        "SCHEDULE\n"
+        "WELSPECS\n"
+        "'INJE01' 'I'    1  1 1* 'WATER'     /\n"
+        "/\n"
+        "TSTEP\n"
+        " 1/\n"
+        "WPOLYMER\n"
+        "    'INJE01' 1.0  0.0 /\n"
+        "/\n"
+        "WPMITAB\n"
+        "   'INJE01' 2 /\n"
+        "/\n"
+        "WSKPTAB\n"
+        "    'INJE01' 1  1 /\n"
+        "/\n"
+        "TSTEP\n"
+        " 2*1/\n"
+        "WPMITAB\n"
+        "   'INJE01' 3 /\n"
+        "/\n"
+        "WSKPTAB\n"
+        "    'INJE01' 2  2 /\n"
+        "/\n"
+        "TSTEP\n"
+        " 1 /\n";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Runspec runspec (deck);
+    Schedule schedule(deck, grid1 , eclipseProperties, runspec , ParseContext() );
+
+    const Opm::Well* well_inj01 = schedule.getWell("INJE01");
+
+    // start
+    {
+        const auto wpolymer = well_inj01->getPolymerProperties(0);
+        BOOST_CHECK_EQUAL(wpolymer.m_plymwinjtable, -1);
+        BOOST_CHECK_EQUAL(wpolymer.m_skprwattable, -1);
+        BOOST_CHECK_EQUAL(wpolymer.m_skprpolytable, -1);
+    }
+
+    // report step 1
+    {
+        const auto wpolymer = well_inj01->getPolymerProperties(1);
+        BOOST_CHECK_EQUAL(wpolymer.m_plymwinjtable, 2);
+        BOOST_CHECK_EQUAL(wpolymer.m_skprwattable, 1);
+        BOOST_CHECK_EQUAL(wpolymer.m_skprpolytable, 1);
+    }
+
+    // report step 3
+    {
+        const auto wpolymer = well_inj01->getPolymerProperties(3);
+        BOOST_CHECK_EQUAL(wpolymer.m_plymwinjtable, 3);
+        BOOST_CHECK_EQUAL(wpolymer.m_skprwattable, 2);
+        BOOST_CHECK_EQUAL(wpolymer.m_skprpolytable, 2);
+    }
+}
 
 
 BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
