@@ -144,11 +144,12 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::ActionContext context(st);
     Opm::Actions config;
     BOOST_CHECK_EQUAL(config.size(), 0);
+    BOOST_CHECK(config.empty());
 
     Opm::ActionX action1("NAME", 10, 100, 0);
     config.add(action1);
     BOOST_CHECK_EQUAL(config.size(), 1);
-
+    BOOST_CHECK(!config.empty());
 
     double min_wait = 86400;
     size_t max_eval = 3;

@@ -27,6 +27,11 @@ size_t Actions::size() const {
 }
 
 
+bool Actions::empty() const {
+    return this->actions.empty();
+}
+
+
 void Actions::add(const ActionX& action) {
     auto iter = this->actions.find(action.name());
     if (iter != this->actions.end())

@@ -45,17 +45,18 @@
 namespace Opm
 {
 
+    class Actions;
     class Deck;
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
     class Eclipse3DProperties;
-    class SCHEDULESection;
-    class TimeMap;
-    class UnitSystem;
     class EclipseState;
     class Runspec;
-    class Actions;
+    class SCHEDULESection;
+    class SummaryState;
+    class TimeMap;
+    class UnitSystem;
 
     class Schedule {
     public:
@@ -108,6 +109,7 @@ namespace Opm
 
         const WellTestConfig& wtestConfig(size_t timestep) const;
         const Actions& actionConfig() const;
+        void evalAction(const SummaryState& summary_state, size_t timeStep);
 
         const GroupTree& getGroupTree(size_t t) const;
         size_t numGroups() const;
