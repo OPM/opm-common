@@ -777,7 +777,6 @@ namespace Opm {
                 else if (deckKeyword.name() == "MINVALUE")
                     handleMINVALUEKeyword(deckKeyword, boxManager);
 
-
                 else if (deckKeyword.name() == "EQUALREG")
                     handleEQUALREGKeyword(deckKeyword);
 
@@ -792,6 +791,9 @@ namespace Opm {
 
                 else if (deckKeyword.name() == "OPERATE")
                     handleOPERATEKeyword( deckKeyword , boxManager);
+
+                else if (deckKeyword.name() == "OPERATER")
+                    handleOPERATERKeyword( deckKeyword );
 
                 boxManager.endKeyword();
             }
@@ -829,6 +831,32 @@ namespace Opm {
                 throw std::invalid_argument("Fatal error processing OPERATE keyword - invalid/undefined keyword: " + targetArray);
         }
     }
+
+    void Eclipse3DProperties::handleOPERATERKeyword(const DeckKeyword& deckKeyword) {
+        for (const auto& record : deckKeyword) {
+            const std::string& target_array = record.getItem("RESULT_ARRAY").get<std::string>(0);
+            std::string region_name = record.getItem("REGION_NAME").get<std::string>(0);
+
+            if (region_name == "M")
+                region_name = "MULTNUM";
+
+            if (region_name == "O")
+                region_name = "OPERNUM";
+
+            if (region_name == "F")
+                region_name = "FLUXNUM";
+
+            const auto& region = this->m_intGridProperties.getKeyword(region_name);
+
+            if (m_intGridProperties.supportsKeyword( target_array ))
+                m_intGridProperties.handleOPERATERRecord( record  , region );
+            else if (m_doubleGridProperties.supportsKeyword( target_array ))
+                m_doubleGridProperties.handleOPERATERRecord( record , region );
+            else
+                throw std::invalid_argument("Fatal error processing OPERATER keyword - invalid/undefined keyword: " + target_array);
+        }
+    }
+
 
     void Eclipse3DProperties::handleEQUALREGKeyword( const DeckKeyword& deckKeyword) {
        for( const auto& record : deckKeyword ) {

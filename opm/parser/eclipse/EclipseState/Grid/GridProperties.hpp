@@ -141,12 +141,13 @@ namespace Opm {
         void handleMULTIPLYRecord( const DeckRecord& record, BoxManager& boxManager);
         void handleCOPYRecord( const DeckRecord& record, BoxManager& boxManager);
         void handleEQUALSRecord( const DeckRecord& record, BoxManager& boxManager);
+        void handleOPERATERecord( const DeckRecord& record , BoxManager& boxManager);
 
         void handleEQUALREGRecord( const DeckRecord& record, const GridProperty<int>& regionProperty );
         void handleADDREGRecord( const DeckRecord& record, const GridProperty<int>& regionProperty );
         void handleMULTIREGRecord( const DeckRecord& record, const GridProperty<int>& regionProperty );
         void handleCOPYREGRecord( const DeckRecord& record, const GridProperty<int>& regionProperty );
-        void handleOPERATERecord( const DeckRecord& record , BoxManager& boxManager);
+        void handleOPERATERRecord( const DeckRecord& record , const GridProperty<int>& regionProperty );
         /*
           Iterators over initialized properties. The overloaded
           operator*() opens the pair which comes natively from the
