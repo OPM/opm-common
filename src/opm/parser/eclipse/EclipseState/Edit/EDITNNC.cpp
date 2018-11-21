@@ -15,6 +15,23 @@
 namespace Opm
 {
 
+bool isNeighbor(const std::array<size_t, 3>& ijk1, const std::array<size_t, 3>& ijk2)
+{
+    if ( (ijk1[0] + 1) == ijk2[0] || (ijk1[0] - 1) == ijk2[0] )
+    {
+        return ijk1[1] == ijk2[1] && ijk1[2] == ijk2[2];
+    }
+    if  ( (ijk1[1] + 1) == ijk2[1] || (ijk1[1] - 1) == ijk2[1] )
+    {
+        return ijk1[0] == ijk2[0] && ijk1[2] == ijk2[2];
+    }
+    if( (ijk1[2] + 1) == ijk2[2] || (ijk1[2] - 1) == ijk2[2] )
+    {
+        return ijk1[1] == ijk2[1] && ijk1[1] == ijk2[1];
+    }
+    return false;
+}
+
 void readEditNncs(const std::vector< const DeckKeyword* >& editNncsKw, std::vector<NNCdata>& editNncs, const GridDims& gridDims)
 {
     for (size_t idx_nnc = 0; idx_nnc<editNncsKw.size(); ++idx_nnc) {
@@ -35,8 +52,7 @@ void readEditNncs(const std::vector< const DeckKeyword* >& editNncsKw, std::vect
                 
             const double trans = nnc.getRecord(i).getItem(6).get<double>(0);
             using std::abs;
-            if ( ( abs(ijk1[0]-ijk2[0]) > 1 ) || ( abs(ijk1[1]-ijk2[1]) > 1 ) ||
-                 ( abs(ijk1[2]-ijk2[2]) > 1 ) )
+            if ( !isNeighbor(ijk1, ijk2) )
             {
                 editNncs.emplace_back(global_index1, global_index2, trans);
             }
