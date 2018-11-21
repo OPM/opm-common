@@ -57,6 +57,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -1948,7 +1949,7 @@ namespace Opm {
     }
 
 
-    double Schedule::seconds(size_t timeStep) const {
+    double  Schedule::seconds(size_t timeStep) const {
         return this->m_timeMap.seconds(timeStep);
     }
 
@@ -1956,5 +1957,12 @@ namespace Opm {
     double Schedule::stepLength(size_t timeStep) const {
         return this->m_timeMap.getTimeStepLength(timeStep);
     }
+
+
+    void Schedule::evalAction(const SummaryState& st, size_t timeStep) {
+        if (this->actions.empty())
+            return;
+    }
+
 }
 
