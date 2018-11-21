@@ -174,7 +174,7 @@ namespace Opm {
         void setOutputDir(const std::string& outputDir);
 
         const std::string& getBaseName() const;
-        void setBaseName(std::string baseName);
+        void setBaseName(const std::string& baseName);
 
         /// Return a string consisting of outputpath and basename;
         /// i.e. /path/to/sim/CASE
@@ -199,8 +199,8 @@ namespace Opm {
         std::string     m_deck_filename;
         bool            m_output_enabled = true;
         std::string     m_output_dir;
-        std::string     m_base_name;
         bool            m_nosim;
+        std::string     m_base_name;
         bool            ecl_compatible_rst = true;
 
         IOConfig( const GRIDSection&,
