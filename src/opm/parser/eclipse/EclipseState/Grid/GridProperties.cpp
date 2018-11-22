@@ -506,11 +506,16 @@ namespace Opm {
         if (!supportsKeyword( targetArray))
             throw std::invalid_argument("Fatal error processing OPERATE record - invalid/undefined keyword: " + targetArray);
 
-        if (!hasKeyword( srcArray ))
-            throw std::invalid_argument("Fatal error processing OPERATE record - invalid/undefined keyword: " + srcArray);
-
         {
-            std::vector<T>& targetData = getOrCreateProperty( targetArray ).getData();
+            auto& result_prop = getKeyword(targetArray);
+            if (srcArray == targetArray)
+                result_prop.runPostProcessor();
+            else {
+                if (operation == "MULTIPLY" || operation == "POLY")
+                    result_prop.runPostProcessor();
+            }
+
+            std::vector<T>& targetData= result_prop.getData();
             const std::vector<T>& srcData = getKeyword( srcArray ).getData();
             operate_fptr func = operations.at( operation );
 
@@ -534,19 +539,12 @@ namespace Opm {
 
         {
             auto& result_prop = getKeyword(result_array);
-            /*
-              This is a hack of epic dimensions; the whole property system with
-              post and pre processer is in dire need for a refactor. Without
-              having really thought it through the PORV calculations should
-              probably be viewed as initialisation and not post processing.
-
-              The same horrendous if test should probably be applied in all the
-              handleXXXX() methods, but since this is *exactly what is required
-              to fix a current bug*; I leave it as is - and put this *really*
-              high up on the refactor list. 2018-11-21.
-            */
-            if (result_array == "PORV")
+            if (parameter_array == result_array)
                 result_prop.runPostProcessor();
+            else {
+                if (operation == "MULTIPLY" || operation == "POLY")
+                    result_prop.runPostProcessor();
+            }
 
             std::vector<T>& result_data = result_prop.getData();
             const std::vector<T>& parameter_data = getKeyword( parameter_array ).getData();
@@ -561,6 +559,18 @@ namespace Opm {
         }
     }
 
+
+    template< typename T >
+    void GridProperties<T>::postAddKeyword(const std::string& name,
+                                           std::function< std::vector<T>(size_t) > initProcessor,
+                                           const std::string& dimString)
+    {
+        m_supportedKeywords.emplace(name,
+                                    SupportedKeywordInfo( name,
+                                                          initProcessor,
+                                                          dimString,
+                                                          true));
+    }
 
 
     template< typename T >
