@@ -194,7 +194,11 @@ namespace {
 	using M  = ::Opm::UnitSystem::measure;
 	using R  = ::Opm::data::Rates::opt;
 	if (welConns.size() != rateConns.size()) {
-	    throw std::invalid_argument("Inconsistent number of connections in Opm::Connection and Opm::data:well " + segSet.wellName());
+	    throw std::invalid_argument {
+		"Inconsistent number of connections I in Opm::WellConnections (" +
+		std::to_string(welConns.size()) + ") and vector<Opm::data::Connection> (" +
+		std::to_string(rateConns.size()) + ") in Well " + segSet.wellName()
+	    };
 	}
 	for (auto nConn = welConns.size(), connID = 0*nConn; connID < nConn; connID++) {
 	    auto segNo = welConns[connID].segment();
