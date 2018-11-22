@@ -1,5 +1,5 @@
 {"name" : "RSCONSTT" , "sections" : ["PROPS"],
  "size": {"keyword": "TABDIMS", "item": "NTPVT"},
  "items" : [
- {"name" : "RS_CONSTT" , "value_type" : "DOUBLE"},
+ {"name" : "RS_CONSTT" , "value_type" : "DOUBLE", "dimension" : "GasDissolutionFactor"},
  {"name" : "PB_CONSTT" , "value_type" : "DOUBLE", "dimension" : "Pressure"}]}

@@ -1884,3 +1884,171 @@ STONE
         BOOST_CHECK( !deck.hasKeyword( "STONE2" ) );
     }
 }
+
+
+BOOST_AUTO_TEST_CASE(ParseRSConst) {
+    // Check that parsing RSCONST does not bleed into next keyword.
+
+    const auto deck_string = std::string { R"(RUNSPEC
+FIELD
+TABDIMS
+  1* 2
+/
+
+PROPS
+RSCONST
+  0.35  932 /
+
+DENSITY
+  50.91  62.4 /
+  51.90  64.2 /
+)" };
+
+    const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+
+    BOOST_CHECK( deck.hasKeyword( "RSCONST" ) );
+
+    const auto& rsconst = deck.getKeyword("RSCONST");
+    BOOST_CHECK_EQUAL( rsconst.size( ), 1 );
+
+    const auto& rec = rsconst.getRecord( 0 );
+    BOOST_CHECK_EQUAL( rec.size( ), 2 );
+
+    const auto& rs   = rec.getItem( 0 );
+    const auto& pbub = rec.getItem( 1 );
+
+    BOOST_CHECK_EQUAL( rs.name( ), "RS" );
+    BOOST_CHECK_EQUAL( pbub.name( ), "PB" );
+
+    BOOST_CHECK_EQUAL( rs.size( ), 1 );
+    BOOST_CHECK_EQUAL( pbub.size( ), 1 );
+
+    BOOST_CHECK( ! rs.defaultApplied( 0 ) );
+    BOOST_CHECK( ! pbub.defaultApplied( 0 ) );
+
+    BOOST_CHECK_CLOSE( rs.get< double >( 0 ), 0.35, 1.0e-10 );
+    BOOST_CHECK_CLOSE( pbub.get< double >( 0 ), 932.0, 1.0e-10 );
+
+    BOOST_CHECK_CLOSE( rs.getSIDouble( 0 ), 62.337662337662323, 1.0e-10 );
+    BOOST_CHECK_CLOSE( pbub.getSIDouble( 0 ), 6.425913797232911e+06, 1.0e-10 );
+}
+
+
+BOOST_AUTO_TEST_CASE(DefaultedRSConst) {
+    // Defaulted RSCONST should *probably* fail at the input stage.
+    // In other words, Parser::parseString() should probably fail here.
+    //
+    // We currently just construct a single record of empty items
+    // for which 'defaultApplied()' returns true.
+
+    const auto deck_string = std::string { R"(RUNSPEC
+FIELD
+TABDIMS
+/
+
+PROPS
+RSCONST
+/
+
+DENSITY
+  50.91  62.4 /
+)" };
+
+    const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+
+    BOOST_CHECK( deck.hasKeyword( "RSCONST" ) );
+
+    const auto& rsconst = deck.getKeyword("RSCONST");
+    BOOST_CHECK_EQUAL( rsconst.size( ), 1 );
+
+    const auto& rec = rsconst.getRecord( 0 );
+    BOOST_CHECK_EQUAL( rec.size( ), 2 );
+
+    const auto& rs   = rec.getItem( 0 );
+    const auto& pbub = rec.getItem( 1 );
+
+    BOOST_CHECK_EQUAL( rs.name( ), "RS" );
+    BOOST_CHECK_EQUAL( pbub.name( ), "PB" );
+
+    BOOST_CHECK_EQUAL( rs.size( ), 0 );
+    BOOST_CHECK_EQUAL( pbub.size( ), 0 );
+
+    BOOST_CHECK( rs.defaultApplied( 0 ) );
+    BOOST_CHECK( pbub.defaultApplied( 0 ) );
+}
+
+
+BOOST_AUTO_TEST_CASE(ParseRSConstT) {
+    // Check that parsing RSCONSTT does not bleed into next keyword.
+
+    const auto deck_string = std::string { R"(RUNSPEC
+FIELD
+TABDIMS
+  1* 2
+/
+
+PROPS
+RSCONSTT
+  0.35  932 /
+  0.40  945 /
+
+DENSITY
+  50.91  62.4 /
+  51.90  64.2 /
+)" };
+
+    const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+
+    BOOST_CHECK( deck.hasKeyword( "RSCONSTT" ) );
+
+    const auto& rsconstt = deck.getKeyword( "RSCONSTT" );
+    BOOST_CHECK_EQUAL( rsconstt.size( ), 2 );
+
+    // First Record (ID = 0)
+    {
+        const auto& rec0 = rsconstt.getRecord( 0 );
+        BOOST_CHECK_EQUAL( rec0.size( ), 2 );
+
+        const auto& rs   = rec0.getItem( 0 );
+        const auto& pbub = rec0.getItem( 1 );
+
+        BOOST_CHECK_EQUAL( rs.name( ), "RS_CONSTT" );
+        BOOST_CHECK_EQUAL( pbub.name( ), "PB_CONSTT" );
+
+        BOOST_CHECK_EQUAL( rs.size( ), 1 );
+        BOOST_CHECK_EQUAL( pbub.size( ), 1 );
+
+        BOOST_CHECK( ! rs.defaultApplied( 0 ) );
+        BOOST_CHECK( ! pbub.defaultApplied( 0 ) );
+
+        BOOST_CHECK_CLOSE( rs.get< double >( 0 ), 0.35, 1.0e-10 );
+        BOOST_CHECK_CLOSE( pbub.get< double >( 0 ), 932.0, 1.0e-10 );
+
+        BOOST_CHECK_CLOSE( rs.getSIDouble( 0 ), 62.337662337662323, 1.0e-10 );
+        BOOST_CHECK_CLOSE( pbub.getSIDouble( 0 ), 6.425913797232911e+06, 1.0e-10 );
+    }
+
+    // Second Record (ID = 1)
+    {
+        const auto& rec1 = rsconstt.getRecord( 1 );
+        BOOST_CHECK_EQUAL( rec1.size( ), 2 );
+
+        const auto& rs   = rec1.getItem( 0 );
+        const auto& pbub = rec1.getItem( 1 );
+
+        BOOST_CHECK_EQUAL( rs.name( ), "RS_CONSTT" );
+        BOOST_CHECK_EQUAL( pbub.name( ), "PB_CONSTT" );
+
+        BOOST_CHECK_EQUAL( rs.size( ), 1 );
+        BOOST_CHECK_EQUAL( pbub.size( ), 1 );
+
+        BOOST_CHECK( ! rs.defaultApplied( 0 ) );
+        BOOST_CHECK( ! pbub.defaultApplied( 0 ) );
+
+        BOOST_CHECK_CLOSE( rs.get< double >( 0 ), 0.40, 1.0e-10 );
+        BOOST_CHECK_CLOSE( pbub.get< double >( 0 ), 945.0, 1.0e-10 );
+
+        BOOST_CHECK_CLOSE( rs.getSIDouble( 0 ), 71.243042671614077, 1.0e-10 );
+        BOOST_CHECK_CLOSE( pbub.getSIDouble( 0 ), 6.515545642044100e+06, 1.0e-10 );
+    }
+}

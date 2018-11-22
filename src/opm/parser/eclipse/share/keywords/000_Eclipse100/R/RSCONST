@@ -1,4 +1,4 @@
-{"name" : "RSCONST" , "sections" : ["PROPS"],
+{"name" : "RSCONST" , "sections" : ["PROPS"], "size" : 1,
  "items" : [
- {"name" : "RS" , "value_type" : "DOUBLE"},
+ {"name" : "RS" , "value_type" : "DOUBLE", "dimension" : "GasDissolutionFactor"},
  {"name" : "PB" , "value_type" : "DOUBLE", "dimension" : "Pressure"}]}
