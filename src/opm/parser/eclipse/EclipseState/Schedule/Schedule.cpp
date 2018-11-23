@@ -198,6 +198,12 @@ namespace Opm {
         else if (keyword.name() == "WTEMP")
             handleWTEMP(keyword, currentStep, parseContext);
 
+        else if (keyword.name() == "WPMITAB")
+            handleWPMITAB(keyword, currentStep, parseContext);
+
+        else if (keyword.name() == "WSKPTAB")
+            handleWSKPTAB(keyword, currentStep, parseContext);
+
         else if (keyword.name() == "WINJTEMP")
             handleWINJTEMP(keyword, currentStep, parseContext);
 
@@ -761,6 +767,52 @@ namespace Opm {
         }
     }
 
+
+    void Schedule::handleWPMITAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext) {
+
+        for (const auto& record : keyword) {
+
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto wells = getWells(wellNamePattern);
+
+            if (wells.empty()) {
+                invalidNamePattern(wellNamePattern, parseContext, keyword);
+            }
+
+            for (auto* well : wells) {
+                if (well->isProducer(currentStep) ) {
+                    throw std::logic_error("WPMITAB keyword can not be applied to production well " + well->name() );
+                }
+                WellPolymerProperties properties(well->getPolymerProperties(currentStep));
+                properties.m_plymwinjtable = record.getItem("TABLE_NUMBER").get<int>(0);
+                well->setPolymerProperties(currentStep, properties);
+            }
+        }
+    }
+
+
+    void Schedule::handleWSKPTAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext) {
+
+
+        for (const auto& record : keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto wells = getWells(wellNamePattern);
+
+            if (wells.empty()) {
+                invalidNamePattern(wellNamePattern, parseContext, keyword);
+            }
+
+            for (auto* well : wells) {
+                if (well->isProducer(currentStep) ) {
+                    throw std::logic_error("WSKPTAB can not be applied to production well " + well->name() );
+                }
+                WellPolymerProperties properties(well->getPolymerProperties(currentStep));
+                properties.m_skprwattable = record.getItem("TABLE_NUMBER_WATER").get<int>(0);
+                properties.m_skprpolytable = record.getItem("TABLE_NUMBER_POLYMER").get<int>(0);
+                well->setPolymerProperties(currentStep, properties);
+            }
+        }
+    }
 
 
     void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {

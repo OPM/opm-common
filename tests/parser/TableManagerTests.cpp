@@ -1190,6 +1190,246 @@ VFPINJ \n\
 }
 
 
+BOOST_AUTO_TEST_CASE( TestPLYMWINJ ) {
+    const char *inputstring =
+        "PLYMWINJ \n"
+        "   2   /    -- table number \n"
+        "   0.0     200.0   800.0   / -- throughput values \n"
+        "   0.0     1.0   2.0  3.0  / -- velocity values \n"
+        "   -- the rest will be the polymer molecular weight \n"
+        "   -- each row corresponds to one sample points in the throughput direction \n"
+        "   20.    19.   18.   16. /\n"
+        "   20.    16.   14.   12. /\n"
+        "   20.    12.   8.    4. /\n"
+        "PLYMWINJ \n"
+        "   3   /    -- table number \n"
+        "   0.0     100.0  / -- throughput values \n"
+        "   0.0     1.0   2.0  / -- velocity values \n"
+        "   -- the rest will be the polymer molecular weight \n"
+        "   -- each row corresponds to one sample points in the throughput direction \n"
+        "   20.    19.   18.   /\n"
+        "   20.    16.   14.   /\n";
+
+    Opm::Parser parser;
+    const Opm::Deck deck = parser.parseString(inputstring, Opm::ParseContext());
+    const Opm::TableManager tables( deck );
+    const auto& plymwinjtables = tables.getPlymwinjTables();
+
+    BOOST_CHECK_EQUAL( plymwinjtables.size(), 2 );
+
+    BOOST_CHECK( plymwinjtables.find(1) == plymwinjtables.end() );
+
+    {
+        const auto searchtable2 = plymwinjtables.find(2);
+        BOOST_CHECK( searchtable2 != plymwinjtables.end() );
+        const auto& table2 = searchtable2->second;
+        BOOST_CHECK_EQUAL( searchtable2->first, table2.getTableNumber() );
+        BOOST_CHECK_EQUAL( table2.getTableNumber(), 2 );
+
+        const std::vector<double>& throughputs = table2.getThroughputs();
+        BOOST_CHECK_EQUAL( throughputs.size(), 3 );
+        BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
+        const std::vector<double>& velocities = table2.getVelocities();
+        BOOST_CHECK_EQUAL( velocities.size(), 4 );
+        constexpr double dayinseconds = 86400.;
+        BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
+        const std::vector<std::vector<double>>& mwdata = table2.getMoleWeights();
+
+        BOOST_CHECK_EQUAL( mwdata.size(), throughputs.size() );
+        for (const auto& data : mwdata) {
+            BOOST_CHECK_EQUAL( data.size(), velocities.size() );
+        }
+        BOOST_CHECK_EQUAL(mwdata[2][3], 4.0);
+        BOOST_CHECK_EQUAL(mwdata[1][1], 16.0);
+    }
+
+    {
+        const auto searchtable3 = plymwinjtables.find(3);
+        BOOST_CHECK( searchtable3 != plymwinjtables.end() );
+        const auto& table3 = searchtable3->second;
+        BOOST_CHECK_EQUAL( searchtable3->first, table3.getTableNumber() );
+        BOOST_CHECK_EQUAL( table3.getTableNumber(), 3 );
+
+        const std::vector<double>& throughputs = table3.getThroughputs();
+        BOOST_CHECK_EQUAL( throughputs.size(), 2 );
+        BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
+        const std::vector<double>& velocities = table3.getVelocities();
+        BOOST_CHECK_EQUAL( velocities.size(), 3 );
+        constexpr double dayinseconds = 86400.;
+        BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
+        const std::vector<std::vector<double>>& mwdata = table3.getMoleWeights();
+
+        BOOST_CHECK_EQUAL( mwdata.size(), throughputs.size() );
+        for (const auto& data : mwdata) {
+            BOOST_CHECK_EQUAL( data.size(), velocities.size() );
+        }
+        BOOST_CHECK_EQUAL(mwdata[1][2], 14.0);
+        BOOST_CHECK_EQUAL(mwdata[0][0], 20.0);
+    }
+}
+
+BOOST_AUTO_TEST_CASE( TestSKPRWAT ) {
+    const char *inputstring =
+        "SKPRWAT \n"
+        "   1   /    -- table number \n"
+        "   0.0     200.0   800.0   / -- throughput values \n"
+        "   0.0     1.0   2.0  3.0  / -- velocity values \n"
+        "   -- the rest will be the skin pressure \n"
+        "   -- each row corresponds to one sample points in the throughput direction \n"
+        "   20.    19.   18.   16. /\n"
+        "   20.    16.   14.   12. /\n"
+        "   20.    12.   8.    4. /\n"
+        "SKPRWAT \n"
+        "   2   /    -- table number \n"
+        "   0.0     100.0  / -- throughput values \n"
+        "   0.0     1.0   2.0  / -- velocity values \n"
+        "   -- the rest will be the skin pressure \n"
+        "   -- each row corresponds to one sample points in the throughput direction \n"
+        "   20.    19.   18.   /\n"
+        "   20.    16.   14.   /\n";
+
+    Opm::Parser parser;
+    const Opm::Deck deck = parser.parseString(inputstring, Opm::ParseContext());
+    const Opm::TableManager tables( deck );
+    const auto& skprwattables = tables.getSkprwatTables();
+
+    BOOST_CHECK_EQUAL( skprwattables.size(), 2 );
+
+    BOOST_CHECK( skprwattables.find(3) == skprwattables.end() );
+
+    {
+        const auto searchtable1 = skprwattables.find(1);
+        BOOST_CHECK( searchtable1 != skprwattables.end() );
+        const auto& table1 = searchtable1->second;
+        BOOST_CHECK_EQUAL( searchtable1->first, table1.getTableNumber() );
+        BOOST_CHECK_EQUAL( table1.getTableNumber(), 1 );
+
+        const std::vector<double>& throughputs = table1.getThroughputs();
+        BOOST_CHECK_EQUAL( throughputs.size(), 3 );
+        BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
+        const std::vector<double>& velocities = table1.getVelocities();
+        BOOST_CHECK_EQUAL( velocities.size(), 4 );
+        constexpr double dayinseconds = 86400.;
+        BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
+        const std::vector<std::vector<double>>& skindata = table1.getSkinPressures();
+
+        BOOST_CHECK_EQUAL( skindata.size(), throughputs.size() );
+        for (const auto& data : skindata) {
+            BOOST_CHECK_EQUAL( data.size(), velocities.size() );
+        }
+        constexpr double barsa = 1.0e5;
+        BOOST_CHECK_EQUAL(skindata[2][3], 4.0 * barsa);
+        BOOST_CHECK_EQUAL(skindata[1][1], 16.0 * barsa);
+    }
+
+    {
+        const auto searchtable2 = skprwattables.find(2);
+        BOOST_CHECK( searchtable2 != skprwattables.end() );
+        const auto& table2 = searchtable2->second;
+        BOOST_CHECK_EQUAL( searchtable2->first, table2.getTableNumber() );
+        BOOST_CHECK_EQUAL( table2.getTableNumber(), 2 );
+
+        const std::vector<double>& throughputs = table2.getThroughputs();
+        BOOST_CHECK_EQUAL( throughputs.size(), 2 );
+        BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
+        const std::vector<double>& velocities = table2.getVelocities();
+        BOOST_CHECK_EQUAL( velocities.size(), 3 );
+        constexpr double dayinseconds = 86400.;
+        BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
+        const std::vector<std::vector<double>>& skindata = table2.getSkinPressures();
+
+        BOOST_CHECK_EQUAL( skindata.size(), throughputs.size() );
+        for (const auto& data : skindata) {
+            BOOST_CHECK_EQUAL( data.size(), velocities.size() );
+        }
+        constexpr double barsa = 1.0e5;
+        BOOST_CHECK_EQUAL(skindata[1][2], 14.0 * barsa);
+        BOOST_CHECK_EQUAL(skindata[0][0], 20.0 * barsa);
+    }
+}
+
+BOOST_AUTO_TEST_CASE( TestSKPRPOLY ) {
+    const char *inputstring =
+        "SKPRPOLY \n"
+        "   1   2.0 /    -- table number & reference concentration \n"
+        "   0.0     200.0   800.0   / -- throughput values \n"
+        "   0.0     1.0   2.0  3.0  / -- velocity values \n"
+        "   -- the rest will be the skin pressure \n"
+        "   -- each row corresponds to one sample points in the throughput direction \n"
+        "   20.    19.   18.   16. /\n"
+        "   20.    16.   14.   12. /\n"
+        "   20.    12.   8.    4. /\n"
+        "SKPRPOLY \n"
+        "   2   3.0 /    -- table number & reference concentration \n"
+        "   0.0     100.0  / -- throughput values \n"
+        "   0.0     1.0   2.0  / -- velocity values \n"
+        "   -- the rest will be the skin pressure \n"
+        "   -- each row corresponds to one sample points in the throughput direction \n"
+        "   20.    19.   18.   /\n"
+        "   20.    16.   14.   /\n";
+
+    Opm::Parser parser;
+    const Opm::Deck deck = parser.parseString(inputstring, Opm::ParseContext());
+    const Opm::TableManager tables( deck );
+    const auto& skprpolytables = tables.getSkprpolyTables();
+
+    BOOST_CHECK_EQUAL( skprpolytables.size(), 2 );
+
+    BOOST_CHECK( skprpolytables.find(4) == skprpolytables.end() );
+
+    {
+        const auto searchtable1 = skprpolytables.find(1);
+        BOOST_CHECK( searchtable1 != skprpolytables.end() );
+        const auto& table1 = searchtable1->second;
+        BOOST_CHECK_EQUAL( searchtable1->first, table1.getTableNumber() );
+        BOOST_CHECK_EQUAL( table1.getTableNumber(), 1 );
+
+        BOOST_CHECK_EQUAL( table1.referenceConcentration(), 2.0 );
+        const std::vector<double>& throughputs = table1.getThroughputs();
+        BOOST_CHECK_EQUAL( throughputs.size(), 3 );
+        BOOST_CHECK_EQUAL( throughputs[1], 200.0 );
+        const std::vector<double>& velocities = table1.getVelocities();
+        BOOST_CHECK_EQUAL( velocities.size(), 4 );
+        constexpr double dayinseconds = 86400.;
+        BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
+        const std::vector<std::vector<double>>& skindata = table1.getSkinPressures();
+
+        BOOST_CHECK_EQUAL( skindata.size(), throughputs.size() );
+        for (const auto& data : skindata) {
+            BOOST_CHECK_EQUAL( data.size(), velocities.size() );
+        }
+        constexpr double barsa = 1.0e5;
+        BOOST_CHECK_EQUAL(skindata[2][3], 4.0 * barsa);
+        BOOST_CHECK_EQUAL(skindata[1][1], 16.0 * barsa);
+    }
+
+    {
+        const auto searchtable2 = skprpolytables.find(2);
+        BOOST_CHECK( searchtable2 != skprpolytables.end() );
+        const auto& table2 = searchtable2->second;
+        BOOST_CHECK_EQUAL( searchtable2->first, table2.getTableNumber() );
+        BOOST_CHECK_EQUAL( table2.getTableNumber(), 2 );
+
+        BOOST_CHECK_EQUAL( table2.referenceConcentration(), 3.0 );
+        const std::vector<double>& throughputs = table2.getThroughputs();
+        BOOST_CHECK_EQUAL( throughputs.size(), 2 );
+        BOOST_CHECK_EQUAL( throughputs[1], 100.0 );
+        const std::vector<double>& velocities = table2.getVelocities();
+        BOOST_CHECK_EQUAL( velocities.size(), 3 );
+        constexpr double dayinseconds = 86400.;
+        BOOST_CHECK_EQUAL( velocities[2], 2.0 / dayinseconds );
+        const std::vector<std::vector<double>>& skindata = table2.getSkinPressures();
+
+        BOOST_CHECK_EQUAL( skindata.size(), throughputs.size() );
+        for (const auto& data : skindata) {
+            BOOST_CHECK_EQUAL( data.size(), velocities.size() );
+        }
+        constexpr double barsa = 1.0e5;
+        BOOST_CHECK_EQUAL(skindata[1][2], 14.0 * barsa);
+        BOOST_CHECK_EQUAL(skindata[0][0], 20.0 * barsa);
+    }
+}
+
 BOOST_AUTO_TEST_CASE( TestPLYROCK ) {
     const char *data =
         "TABDIMS\n"

@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/T.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp> // Phase::PhaseEnum
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
@@ -342,6 +343,9 @@ namespace Opm {
         initRTempTables(deck);
         initRocktabTables(deck);
         initPlyshlogTables(deck);
+        initPlymwinjTables(deck);
+        initSkprpolyTables(deck);
+        initSkprwatTables(deck);
     }
 
 
@@ -417,6 +421,83 @@ namespace Opm {
         }
     }
 
+    void TableManager::initPlymwinjTables(const Deck& deck) {
+        if (!deck.hasKeyword("PLYMWINJ")) {
+            return;
+        }
+
+        const size_t num_tables = deck.count("PLYMWINJ");
+        const auto& keywords = deck.getKeywordList<ParserKeywords::PLYMWINJ>();
+        for (size_t i = 0; i < num_tables; ++i) {
+            const DeckKeyword &keyword = *keywords[i];
+
+            // not const for std::move
+            PlymwinjTable table(keyword);
+
+            // we need to check the value of the table_number against the allowed ones
+            const int table_number = table.getTableNumber();
+            // we should check if the table_number is valid
+            if (m_plymwinjTables.find(table_number) == m_plymwinjTables.end()) {
+                m_plymwinjTables.insert(std::make_pair(table_number, std::move(table)));
+            } else {
+                throw std::invalid_argument("Duplicated table number "
+                                            + std::to_string(table_number)
+                                            + " for keyword PLYMWINJ found");
+            }
+        }
+    }
+
+    void TableManager::initSkprwatTables(const Opm::Deck &deck) {
+        if (!deck.hasKeyword("SKPRWAT")) {
+            return;
+        }
+
+        const size_t num_tables = deck.count("SKPRWAT");
+        const auto& keywords = deck.getKeywordList<ParserKeywords::SKPRWAT>();
+        for (size_t i = 0; i < num_tables; ++i) {
+            const DeckKeyword &keyword = *keywords[i];
+
+            // not const for std::move
+            SkprwatTable table(keyword);
+
+            // we need to check the value of the table_number against the allowed ones
+            const int table_number = table.getTableNumber();
+            // we should check if the table_number is valid
+            if (m_skprwatTables.find(table_number) == m_skprwatTables.end()) {
+                m_skprwatTables.insert(std::make_pair(table_number, std::move(table)));
+            } else {
+                throw std::invalid_argument("Duplicated table number "
+                                            + std::to_string(table_number)
+                                            + " for keyword SKPRWAT found");
+            }
+        }
+    }
+
+    void TableManager::initSkprpolyTables(const Opm::Deck &deck) {
+        if (!deck.hasKeyword("SKPRPOLY")) {
+            return;
+        }
+
+        const size_t num_tables = deck.count("SKPRPOLY");
+        const auto& keywords = deck.getKeywordList<ParserKeywords::SKPRPOLY>();
+        for (size_t i = 0; i < num_tables; ++i) {
+            const DeckKeyword &keyword = *keywords[i];
+
+            // not const for std::move
+            SkprpolyTable table(keyword);
+
+            // we need to check the value of the table_number against the allowed ones
+            const int table_number = table.getTableNumber();
+            // we should check if the table_number is valid
+            if (m_skprpolyTables.find(table_number) == m_skprpolyTables.end()) {
+                m_skprpolyTables.insert(std::make_pair(table_number, std::move(table)));
+            } else {
+                throw std::invalid_argument("Duplicated table number "
+                                            + std::to_string(table_number)
+                                            + " for keyword SKPRPOLY found");
+            }
+        }
+    }
 
     void TableManager::initPlyrockTables(const Deck& deck) {
         size_t numTables = m_tabdims.getNumSatTables();
@@ -722,6 +803,19 @@ namespace Opm {
         if (!jfunc)
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
         return *jfunc;
+    }
+
+
+    const std::map<int, PlymwinjTable>& TableManager::getPlymwinjTables() const {
+        return m_plymwinjTables;
+    }
+
+    const std::map<int, SkprwatTable>& TableManager::getSkprwatTables() const {
+        return m_skprwatTables;
+    }
+
+    const std::map<int, SkprpolyTable>& TableManager::getSkprpolyTables() const {
+        return m_skprpolyTables;
     }
 
     bool TableManager::useImptvd() const {
