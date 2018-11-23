@@ -24,6 +24,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -40,9 +41,31 @@ namespace Opm {
     namespace {
         const char* default_dir = ".";
 
+        bool normalize_case(std::string& s) {
+            int upper_count = 0;
+            int lower_count = 0;
+
+            for (const auto& c : s) {
+                if (std::isupper(c))
+                    upper_count += 1;
+
+                if (std::islower(c))
+                    lower_count += 1;
+            }
+
+            if (upper_count * lower_count == 0)
+                return false;
+
+            for (auto& c : s)
+                c = std::toupper(c);
+            return true;
+        }
+
+
         inline std::string basename( const std::string& path ) {
             return boost::filesystem::path( path ).stem().string();
         }
+
 
         inline std::string outputdir( const std::string& path ) {
             auto dir = boost::filesystem::path( path ).parent_path().string();
@@ -63,9 +86,10 @@ namespace Opm {
 
     IOConfig::IOConfig( const std::string& input_path ) :
         m_deck_filename( input_path ),
-        m_output_dir( outputdir( input_path ) ),
-        m_base_name( basename( input_path ) )
-    {}
+        m_output_dir( outputdir( input_path ) )
+    {
+        this->setBaseName(basename(input_path));
+    }
 
     static inline bool write_egrid_file( const GRIDSection& grid ) {
         if( grid.hasKeyword( "NOGGF" ) ) return false;
@@ -108,9 +132,10 @@ namespace Opm {
         m_FMTOUT( runspec.hasKeyword( "FMTOUT" ) ),
         m_deck_filename( input_path ),
         m_output_dir( outputdir( input_path ) ),
-        m_base_name( basename( input_path ) ),
         m_nosim( nosim  )
-    {}
+    {
+        this->setBaseName(basename(input_path));
+    }
 
 
     bool IOConfig::getWriteEGRIDFile() const {
@@ -184,8 +209,10 @@ namespace Opm {
         return m_base_name;
     }
 
-    void IOConfig::setBaseName(std::string baseName) {
+    void IOConfig::setBaseName(const std::string& baseName) {
         m_base_name = baseName;
+        if (normalize_case(m_base_name))
+            OpmLog::warning("The ALL CAPS case: " + m_base_name + " will be used when writing output files from this simulation.");
     }
 
     std::string IOConfig::fullBasePath( ) const {

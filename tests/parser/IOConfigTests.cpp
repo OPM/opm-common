@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     IOConfig config2( deck2 );
     std::string output_dir2 =  ".";
     BOOST_CHECK_EQUAL( output_dir2,  config2.getOutputDir() );
-    BOOST_CHECK_EQUAL( "testString", config2.getBaseName() );
+    BOOST_CHECK_EQUAL( "TESTSTRING", config2.getBaseName() );
 
     namespace fs = boost::filesystem;
 
@@ -270,8 +270,8 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     IOConfig config3( deck3 );
     std::string output_dir3 =  "/path/to";
     config3.setOutputDir( output_dir3 );
-    auto testpath = fs::path( "/path/to/testString" ).make_preferred().string();
+    auto testpath = fs::path( "/path/to/TESTSTRING" ).make_preferred().string();
     BOOST_CHECK_EQUAL( output_dir3,  config3.getOutputDir() );
-    BOOST_CHECK_EQUAL( "testString", config3.getBaseName() );
+    BOOST_CHECK_EQUAL( "TESTSTRING", config3.getBaseName() );
     BOOST_CHECK_EQUAL( testpath, config3.fullBasePath() );
 }
