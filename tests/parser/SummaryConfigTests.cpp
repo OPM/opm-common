@@ -100,9 +100,9 @@ static Deck createDeck( const std::string& summary ) {
 static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary ) {
-        auto wgname = smspec_node_get_wgname(x.get());
-        if(wgname)
-            ret.push_back( smspec_node_get_wgname(x.get()));
+        auto wgname = x.wgname();
+        if(wgname.size())
+            ret.push_back( wgname );
     }
 
     std::sort( ret.begin(), ret.end() );
@@ -112,7 +112,7 @@ static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
 static std::vector< std::string > sorted_keywords( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary )
-        ret.push_back( smspec_node_get_keyword(x.get()));
+        ret.push_back( x.keyword() );
 
     std::sort( ret.begin(), ret.end() );
     return ret;
@@ -121,7 +121,7 @@ static std::vector< std::string > sorted_keywords( const SummaryConfig& summary 
 static std::vector< std::string > sorted_key_names( const SummaryConfig& summary ) {
     std::vector< std::string > ret;
     for( const auto& x : summary ) {
-        ret.push_back( smspec_node_get_gen_key1(x.get()));
+        ret.push_back( x.gen_key() );
     }
 
     std::sort( ret.begin(), ret.end() );

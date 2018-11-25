@@ -18,7 +18,7 @@
 
 #include "summaryRegressionTest.hpp"
 #include <opm/common/ErrorMacros.hpp>
-#include <ert/ecl/ecl_sum.h>
+#include <ert/ecl/ecl_sum.hpp>
 #include <ert/util/stringlist.h>
 #include <string>
 

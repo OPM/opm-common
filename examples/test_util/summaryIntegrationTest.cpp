@@ -19,8 +19,8 @@
 
 #include "summaryIntegrationTest.hpp"
 #include <opm/common/ErrorMacros.hpp>
-#include <ert/ecl/ecl_sum.h>
-#include <ert/util/stringlist.h>
+#include <ert/ecl/ecl_sum.hpp>
+#include <ert/util/stringlist.hpp>
 #include <cmath>
 
 
@@ -155,13 +155,10 @@ void SummaryIntegrationTest::findGreatestErrorRatio(const WellProductionVolume& 
 
 
 void SummaryIntegrationTest::volumeErrorCheck(const char* keyword){
-    const smspec_node_type * node = ecl_sum_get_general_var_node (ecl_sum_fileShort ,keyword);//doesn't matter which ecl_sum_file one uses, the kewyord SHOULD be equal in terms of smspec data.
-    bool hist = smspec_node_is_historical(node);
-    /* returns true if the keyword corresponds to a summary vector "history".
-       E.g. WOPRH, where the last character, 'H', indicates that it is a HISTORY vector.*/
-    if(hist){
-        return;//To make sure we do not include history vectors.
-    }
+    const ecl::smspec_node * node = ecl_sum_get_general_var_node (ecl_sum_fileShort ,keyword);//doesn't matter which ecl_sum_file one uses, the kewyord SHOULD be equal in terms of smspec data.
+    if (node->is_historical())
+        return;
+
     if (!mainVariable.empty()){
         std::string keywordString(keyword);
         std::string firstFour = keywordString.substr(0,4);

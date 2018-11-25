@@ -43,8 +43,8 @@
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
-#include <ert/ecl/smspec_node.h>
-#include <ert/ecl/ecl_smspec.h>
+#include <ert/ecl/smspec_node.hpp>
+#include <ert/ecl/ecl_smspec.hpp>
 #include <ert/ecl/ecl_kw_magic.h>
 
 namespace {
@@ -154,33 +154,17 @@ namespace {
             ':' + std::to_string(segRes.segNumber);
     }
 
-    ERT::ert_unique_ptr<smspec_node_type, smspec_node_free>
+    std::unique_ptr<ecl::smspec_node>
     makeRestartVectorSMSPEC(const std::string& vector,
                             const std::string& entity)
     {
-        const auto var_type =
-            ecl_smspec_identify_var_type(vector.c_str());
-
-        const int dims[] = { 1, 1, 1 };
-
-        return ERT::ert_unique_ptr<smspec_node_type, smspec_node_free> {
-            smspec_node_alloc(var_type, entity.c_str(), vector.c_str(),
-                              "UNIT", ":", dims, 0, 0, 0.0f)
-        };
+        return std::unique_ptr<ecl::smspec_node>( new ecl::smspec_node(0, vector.c_str(), entity.c_str(), "UNIT", 0.0f, ":"));
     }
 
-    ERT::ert_unique_ptr<smspec_node_type, smspec_node_free>
+    std::unique_ptr<ecl::smspec_node>
     makeRestartVectorSMSPEC(const SegmentResultDescriptor& segRes)
     {
-        const auto var_type = ECL_SMSPEC_SEGMENT_VAR;
-
-        const int dims[] = { 1, 1, 1 };
-
-        return ERT::ert_unique_ptr<smspec_node_type, smspec_node_free> {
-            smspec_node_alloc(var_type, segRes.well.c_str(), segRes.vector.c_str(),
-                              "UNIT", ":", dims,
-                              static_cast<int>(segRes.segNumber), 0, 0.0f)
-        };
+        return std::unique_ptr<ecl::smspec_node>(new ecl::smspec_node(0, segRes.vector.c_str(), segRes.well.c_str(), static_cast<int>(segRes.segNumber), "UNIT", 0.0f, ":"));
     }
 } // namespace Anonymous
 
@@ -1058,7 +1042,7 @@ static const std::unordered_map< std::string, UnitSystem::measure> block_units =
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
-                                              const smspec_node_type* node,
+                                              const ecl::smspec_node* node,
                                               const int sim_step,
                                               const out::RegionCache& regionCache ) {
 
@@ -1112,15 +1096,14 @@ namespace out {
 class Summary::keyword_handlers {
     public:
         using fn = ofun;
-        std::vector< std::pair< smspec_node_type*, fn > > handlers;
-        std::map< std::string, smspec_node_type* > single_value_nodes;
-        std::map< std::pair <std::string, int>, smspec_node_type* > region_nodes;
-        std::map< std::pair <std::string, int>, smspec_node_type* > block_nodes;
+        std::vector< std::pair< const ecl::smspec_node*, fn > > handlers;
+        std::map< std::string, const ecl::smspec_node* > single_value_nodes;
+        std::map< std::pair <std::string, int>, const ecl::smspec_node* > region_nodes;
+        std::map< std::pair <std::string, int>, const ecl::smspec_node* > block_nodes;
 
         // Memory management for restart-related summary vectors
         // that are not requested in SUMMARY section.
-        std::vector<ERT::ert_unique_ptr<smspec_node_type,
-                                        smspec_node_free>> rstvec_backing_store;
+        std::vector<std::unique_ptr<ecl::smspec_node>> rstvec_backing_store;
 };
 
 Summary::Summary( const EclipseState& st,
@@ -1180,7 +1163,8 @@ Summary::Summary( const EclipseState& st,
     std::set< std::string > unsupported_keywords;
 
     for( const auto& node : sum ) {
-        const auto* keyword = smspec_node_get_keyword(node.get());
+        ecl_smspec_type * smspec = ecl_sum_get_smspec(this->ecl_sum.get());
+        std::string keyword = node.keyword();
 
         const auto single_value_pair = single_values_units.find( keyword );
         const auto funs_pair = funs.find( keyword );
@@ -1188,60 +1172,36 @@ Summary::Summary( const EclipseState& st,
         const auto block_pair = block_units.find( keyword );
 
         /*
-      All summary values of the type ECL_SMSPEC_MISC_VAR
-      and ECL_SMSPEC_FIELD_VAR must be passed explicitly
-      in the misc_values map when calling
-      add_timestep.
-    */
+          All summary values of the type ECL_SMSPEC_MISC_VAR
+          and ECL_SMSPEC_FIELD_VAR must be passed explicitly
+          in the misc_values map when calling
+          add_timestep.
+        */
         if (single_value_pair != single_values_units.end()) {
-            auto node_type = smspec_node_get_var_type(node.get());
+            auto node_type = node.type();
             if ((node_type != ECL_SMSPEC_FIELD_VAR) && (node_type != ECL_SMSPEC_MISC_VAR)) {
                 continue;
             }
-
-            auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
-                                             keyword,
-                                             smspec_node_get_wgname(node.get()),
-                                             smspec_node_get_num(node.get()),
-                                             st.getUnits().name( single_value_pair->second ),
-                                             0 );
-
+            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), st.getUnits().name( single_value_pair->second ), 0);
             this->handlers->single_value_nodes.emplace( keyword, nodeptr );
         } else if (region_pair != region_units.end()) {
-
-            auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
-                                             keyword,
-                                             smspec_node_get_wgname(node.get()),
-                                             smspec_node_get_num(node.get()),
-                                             st.getUnits().name( region_pair->second ),
-                                             0 );
-
-            this->handlers->region_nodes.emplace( std::make_pair(keyword, smspec_node_get_num(node.get())), nodeptr );
-
+            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.num(), st.getUnits().name( region_pair->second ), 0);
+            this->handlers->region_nodes.emplace( std::make_pair(keyword, node.num()), nodeptr );
         } else if (block_pair != block_units.end()) {
-            if (smspec_node_get_var_type(node.get()) != ECL_SMSPEC_BLOCK_VAR)
+            if (node.type() != ECL_SMSPEC_BLOCK_VAR)
                 continue;
 
-            int global_index = smspec_node_get_num(node.get()) - 1;
+            int global_index = node.num() - 1;
             if (!this->grid.cellActive(global_index))
                 continue;
 
-            auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
-                                             keyword,
-                                             smspec_node_get_wgname(node.get()),
-                                             smspec_node_get_num(node.get()),
-                                             st.getUnits().name( block_pair->second ),
-                                             0 );
-
-            this->handlers->block_nodes.emplace( std::make_pair(keyword, smspec_node_get_num(node.get())), nodeptr );
-
-
-
+            auto* nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.num(), st.getUnits().name( block_pair->second ), 0 );
+            this->handlers->block_nodes.emplace( std::make_pair(keyword, node.num()), nodeptr );
         } else if (funs_pair != funs.end()) {
-            auto node_type = smspec_node_get_var_type(node.get());
+            auto node_type = node.type();
 
             if ((node_type == ECL_SMSPEC_COMPLETION_VAR) || (node_type == ECL_SMSPEC_BLOCK_VAR)) {
-                int global_index = smspec_node_get_num(node.get()) - 1;
+                int global_index = node.num() - 1;
                 if (!this->grid.cellActive(global_index))
                     continue;
             }
@@ -1253,7 +1213,7 @@ Summary::Summary( const EclipseState& st,
             const fn_args no_args { dummy_wells, // Wells from Schedule object
                                     0,           // Duration of time step
                                     0,           // Simulation step
-                                    smspec_node_get_num(node.get()),  // NUMS value for the summary output.
+                                    node.num(),
                                     {},          // Well results - data::Wells
                                     {},          // Region <-> cell mappings.
                                     this->grid,
@@ -1261,13 +1221,7 @@ Summary::Summary( const EclipseState& st,
 
             const auto val = handle( no_args );
 
-            auto* nodeptr = ecl_sum_add_var( this->ecl_sum.get(),
-                                             keyword,
-                                             smspec_node_get_wgname(node.get()),
-                                             smspec_node_get_num(node.get()),
-                                             st.getUnits().name( val.unit ),
-                                             0 );
-
+            auto * nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.wgname().c_str(), node.num(), st.getUnits().name( val.unit ), 0 );
             this->handlers->handlers.emplace_back( nodeptr, handle );
         } else {
             unsupported_keywords.insert(keyword);
@@ -1330,8 +1284,8 @@ Summary::Summary( const EclipseState& st,
 
     for (const auto& pair : this->handlers->handlers) {
         const auto * nodeptr = pair.first;
-        if (smspec_node_is_total(nodeptr))
-            this->prev_state.add(nodeptr, 0);
+        if (nodeptr->is_total())
+            this->prev_state.add(*nodeptr, 0);
     }
 }
 
@@ -1352,21 +1306,22 @@ Summary::Summary( const EclipseState& st,
  *
  */
 std::vector< std::pair< std::string, double > >
-well_efficiency_factors( const smspec_node_type* type,
-                    const Schedule& schedule,
-                    const std::vector< const Well* >& schedule_wells,
-                    const int sim_step ) {
+well_efficiency_factors( const ecl::smspec_node* node,
+                         const Schedule& schedule,
+                         const std::vector< const Well* >& schedule_wells,
+                         const int sim_step ) {
     std::vector< std::pair< std::string, double > > efac;
 
-    if(    smspec_node_get_var_type(type) != ECL_SMSPEC_GROUP_VAR
-        && smspec_node_get_var_type(type) != ECL_SMSPEC_FIELD_VAR
-        && smspec_node_get_var_type(type) != ECL_SMSPEC_REGION_VAR
-        && !smspec_node_is_total( type ) ) {
+    auto var_type = node->get_var_type();
+    if(    var_type != ECL_SMSPEC_GROUP_VAR
+        && var_type != ECL_SMSPEC_FIELD_VAR
+        && var_type != ECL_SMSPEC_REGION_VAR
+           && !node->is_total()) {
         return efac;
     }
 
-    const bool is_group = smspec_node_get_var_type(type) == ECL_SMSPEC_GROUP_VAR;
-    const bool is_rate = !smspec_node_is_total( type );
+    const bool is_group = (var_type == ECL_SMSPEC_GROUP_VAR);
+    const bool is_rate = !node->is_total();
     const auto &groupTree = schedule.getGroupTree(sim_step);
 
     for( const auto* well : schedule_wells ) {
@@ -1375,19 +1330,19 @@ well_efficiency_factors( const smspec_node_type* type,
         if ( !well->hasBeenDefined( sim_step ) )
             continue;
 
-        const auto* node = &schedule.getGroup(well->getGroupName(sim_step));
+        const auto* group_node = &schedule.getGroup(well->getGroupName(sim_step));
 
         while(true){
             if((   is_group
                 && is_rate
-                && node->name() == smspec_node_get_wgname(type) ))
+                && group_node->name() == node->get_wgname() ))
                 break;
-            eff_factor *= node->getGroupEfficiencyFactor( sim_step );
+            eff_factor *= group_node->getGroupEfficiencyFactor( sim_step );
 
-            const auto& parent = groupTree.parent( node->name() );
+            const auto& parent = groupTree.parent( group_node->name() );
             if( !schedule.hasGroup( parent ) )
                 break;
-            node = &schedule.getGroup( parent );
+            group_node = &schedule.getGroup( parent );
         }
         efac.emplace_back( well->name(), eff_factor );
     }
@@ -1450,7 +1405,7 @@ void Summary::add_timestep( int report_step,
             unit_applied_val += this->prev_state.get(genkey);
         }
 
-        st.add(f.first, unit_applied_val);
+        st.add(*f.first, unit_applied_val);
     }
 
     for( const auto& value_pair : single_values ) {
@@ -1460,7 +1415,7 @@ void Summary::add_timestep( int report_step,
             const auto unit = single_values_units.at( key );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            st.add(node_pair->second, output_value);
+            st.add(*node_pair->second, output_value);
         }
     }
 
@@ -1475,7 +1430,7 @@ void Summary::add_timestep( int report_step,
                 assert (smspec_node_get_num( nodeptr ) - 1 == static_cast<int>(reg));
                 double si_value = value_pair.second[reg];
                 double output_value = es.getUnits().from_si(unit , si_value );
-                st.add(nodeptr, output_value);
+                st.add(*nodeptr, output_value);
             }
         }
     }
@@ -1488,7 +1443,7 @@ void Summary::add_timestep( int report_step,
             const auto unit = block_units.at( key.first );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            st.add(nodeptr, output_value);
+            st.add(*nodeptr, output_value);
         }
     }
 
