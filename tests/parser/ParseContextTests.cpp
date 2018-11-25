@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(TestUnkownKeywordII) {
 
 
 BOOST_AUTO_TEST_CASE(Handle_extra_records) {
-    const char * deck_string = 
+    const char * deck_string =
          "EQLDIMS\n"
          "  2  100  20  1  1  /\n"
          "\n"
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records) {
 
     ParseContext parseContext;
     Parser parser(false);
-    
+
     parser.addKeyword<ParserKeywords::EQLDIMS>();
     parser.addKeyword<ParserKeywords::EQUIL>();
     parser.addKeyword<ParserKeywords::GRID>();
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records) {
 
 
 BOOST_AUTO_TEST_CASE(Handle_extra_records_2) {
-    const char * deck_string = 
+    const char * deck_string =
          "EQLDIMS\n"
          "  2  100  20  1  1  /\n"
          "\n"
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(Handle_extra_records_2) {
 
     ParseContext parseContext;
     Parser parser(false);
-    
+
     parser.addKeyword<ParserKeywords::EQLDIMS>();
     parser.addKeyword<ParserKeywords::EQUIL>();
     parser.addKeyword<ParserKeywords::GRID>();
