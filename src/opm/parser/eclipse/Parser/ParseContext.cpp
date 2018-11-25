@@ -19,6 +19,7 @@
 
 #include <ert/util/util.h>
 #include <cstdlib>
+#include <iostream>
 
 #include <boost/algorithm/string.hpp>
 
@@ -74,7 +75,7 @@ namespace Opm {
         addKey(PARSE_RANDOM_SLASH, InputError::THROW_EXCEPTION);
         addKey(PARSE_MISSING_DIMS_KEYWORD, InputError::THROW_EXCEPTION);
         addKey(PARSE_EXTRA_DATA, InputError::THROW_EXCEPTION);
-        addKey(PARSE_MISSING_INCLUDE, InputError::THROW_EXCEPTION);
+        addKey(PARSE_MISSING_INCLUDE, InputError::EXIT1);
 
         addKey(UNSUPPORTED_SCHEDULE_GEO_MODIFIER, InputError::THROW_EXCEPTION);
         addKey(UNSUPPORTED_COMPORD_TYPE, InputError::THROW_EXCEPTION);
@@ -94,6 +95,8 @@ namespace Opm {
         envUpdate( "OPM_ERRORS_EXCEPTION" , InputError::THROW_EXCEPTION );
         envUpdate( "OPM_ERRORS_WARN" , InputError::WARN );
         envUpdate( "OPM_ERRORS_IGNORE" , InputError::IGNORE );
+        envUpdate( "OPM_ERRORS_EXIT1", InputError::EXIT1);
+        envUpdate( "OPM_ERRORS_EXIT", InputError::EXIT1);
     }
 
 
@@ -116,6 +119,13 @@ namespace Opm {
         else if (action == InputError::THROW_EXCEPTION) {
             OpmLog::error(msg);
             throw std::invalid_argument(errorKey + ": " + msg);
+        }
+
+        else if (action == InputError::EXIT1) {
+            OpmLog::error(msg);
+            std::cerr << "A fatal error has occured and the application will stop." << std::endl;
+            std::cerr << msg << std::endl;
+            std::exit(1);
         }
     }
 
@@ -259,6 +269,7 @@ namespace Opm {
     const std::string ParseContext::PARSE_RANDOM_SLASH = "PARSE_RANDOM_SLASH";
     const std::string ParseContext::PARSE_MISSING_DIMS_KEYWORD = "PARSE_MISSING_DIMS_KEYWORD";
     const std::string ParseContext::PARSE_EXTRA_DATA = "PARSE_EXTRA_DATA";
+    const std::string ParseContext::PARSE_MISSING_SECTIONS = "PARSE_MISSING_SECTIONS";
     const std::string ParseContext::PARSE_MISSING_INCLUDE = "PARSE_MISSING_INCLUDE";
 
     const std::string ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER = "UNSUPPORTED_SCHEDULE_GEO_MODIFIER";
@@ -267,8 +278,6 @@ namespace Opm {
     const std::string ParseContext::UNSUPPORTED_TERMINATE_IF_BHP = "UNSUPPORTED_TERMINATE_IF_BHP";
 
     const std::string ParseContext::INTERNAL_ERROR_UNINITIALIZED_THPRES = "INTERNAL_ERROR_UNINITIALIZED_THPRES";
-
-    const std::string ParseContext::PARSE_MISSING_SECTIONS = "PARSE_MISSING_SECTIONS";
 
     const std::string ParseContext::SUMMARY_UNKNOWN_WELL  = "SUMMARY_UNKNOWN_WELL";
     const std::string ParseContext::SUMMARY_UNKNOWN_GROUP = "SUMMARY_UNKNOWN_GROUP";

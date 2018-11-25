@@ -42,6 +42,9 @@
 using namespace Opm;
 
 
+
+
+
 BOOST_AUTO_TEST_CASE(TestUnkownKeyword) {
     const char * deck1 =
         "RUNSPEC\n"
@@ -735,4 +738,13 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
 
         BOOST_CHECK_THROW( Schedule( deckUnSupported , grid , eclipseProperties, runspec , parseContext), std::invalid_argument );
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(Test_EXIT1) {
+/*
+  The error handler EXIT1 is not tested at all. The reason is that testing that
+  would require the setup of an extra process and then check the exit status of
+  the extra process - that kind of feelt a bit over the top.
+*/
 }
