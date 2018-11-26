@@ -318,9 +318,9 @@ ASTNode ActionAST::parse_or(ActionParser& parser) {
 
 ActionAST::ActionAST(const std::vector<std::string>& tokens) {
     ActionParser parser(tokens);
-    auto current = parser.next();
+    parser.next();
     this->tree = this->parse_or(parser);
-    current = parser.current();
+    auto current = parser.current();
     if (current.type != TokenType::end) {
         size_t index = parser.pos();
         throw std::invalid_argument("Extra unhandled data starting with token[" + std::to_string(index) + "] = " + current.value);
