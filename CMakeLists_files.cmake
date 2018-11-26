@@ -53,6 +53,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/EclipseConfig.cpp
     src/opm/parser/eclipse/EclipseState/EclipseState.cpp
     src/opm/parser/eclipse/EclipseState/EndpointScaling.cpp
+    src/opm/parser/eclipse/EclipseState/Edit/EDITNNC.cpp
     src/opm/parser/eclipse/EclipseState/Grid/Box.cpp
     src/opm/parser/eclipse/EclipseState/Grid/BoxManager.cpp
     src/opm/parser/eclipse/EclipseState/Grid/EclipseGrid.cpp
@@ -364,6 +365,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Util/Value.hpp
        opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp
        opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
+       opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp
        opm/parser/eclipse/EclipseState/Grid/GridDims.hpp
        opm/parser/eclipse/EclipseState/Grid/TransMult.hpp
        opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp

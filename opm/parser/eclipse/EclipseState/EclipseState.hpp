@@ -25,6 +25,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
@@ -85,6 +86,11 @@ namespace Opm {
         const NNC& getInputNNC() const;
         bool hasInputNNC() const;
 
+        /// editing non-neighboring connections
+        /// the non-standard adjacencies as specified in input deck
+        const EDITNNC& getInputEDITNNC() const;
+        bool hasInputEDITNNC() const;
+
         const Eclipse3DProperties& get3DProperties() const;
         const TableManager& getTableManager() const;
         const EclipseConfig& getEclipseConfig() const;
@@ -118,6 +124,7 @@ namespace Opm {
         EclipseConfig m_eclipseConfig;
         UnitSystem m_deckUnitSystem;
         NNC m_inputNnc;
+        EDITNNC m_inputEditNnc;
         EclipseGrid m_inputGrid;
         Eclipse3DProperties m_eclipseProperties;
         const SimulationConfig m_simulationConfig;
