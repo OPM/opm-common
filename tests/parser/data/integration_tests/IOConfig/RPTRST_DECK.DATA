@@ -91,9 +91,6 @@ RPTSCHED
 DATES
  16 'JUL' 1998 /
 /
-WTRACER 
-     'C-1H'       'SEA'      1.000  1* /
-/
 RPTSCHED 
  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
@@ -158,17 +155,11 @@ DATES
 DATES
  21 'JAN' 1999 /
 /
-WTRACER 
-     'C-2H'       'SEA'      1.000  1* /
-/
 DATES
  1 'FEB' 1999 /
 /
 DATES
  24 'FEB' 1999 /
-/
-WTRACER 
-     'C-4H'       'SEA'      1.000  1* /
 /
 DATES
  1 'MAR' 1999 /
@@ -209,9 +200,6 @@ DATES
 DATES
  20 'MAY' 1999 /
 /
-WTRACER 
-     'C-3H'       'SEA'      1.000  1* /
-/
 DATES
  21 'MAY' 1999 /
 /
@@ -245,27 +233,14 @@ DATES
 DATES
  1 'SEP' 1999 /
 /
-WTRACER 
-     'F-1H'       'SEA'      1.000  1* /
-/
 DATES
  3 'SEP' 1999 /
 /
 DATES
  21 'SEP' 1999 /
 /
-WTRACER 
-     'C-1H'       'HTO'   1000.000  1* /
-     'C-3H'       '4FB'   1000.000  1* /
-     'F-1H'       'S36'     98.000  1* /
-/
 DATES
  22 'SEP' 1999 /
-/
-WTRACER 
-     'C-1H'       'HTO'      0.000  1* /
-     'C-3H'       '4FB'      0.000  1* /
-     'F-1H'       'S36'      0.000  1* /
 /
 DATES
  1 'OCT' 1999 /
@@ -284,9 +259,6 @@ DATES
 /
 DATES
  13 'OCT' 1999 /
-/
-WTRACER 
-     'F-2H'       'SEA'      1.000  1* /
 /
 DATES
  16 'OCT' 1999 /
@@ -375,18 +347,8 @@ DATES
 DATES
  26 'AUG' 2000 /
 /
-WTRACER 
-     'C-2H'       'S36'     78.000  1* /
-     'C-4H'       '2FB'   1000.000  1* /
-     'F-2H'       'DFB'   1000.000  1* /
-/
 DATES
  27 'AUG' 2000 /
-/
-WTRACER 
-     'C-2H'       'S36'      0.000  1* /
-     'C-4H'       '2FB'      0.000  1* /
-     'F-2H'       'DFB'      0.000  1* /
 /
 DATES
  1 'SEP' 2000 /
@@ -402,9 +364,6 @@ DATES
 /
 DATES
  22 'SEP' 2000 /
-/
-WTRACER 
-     'F-3H'       'SEA'      1.000  1* /
 /
 DATES
  1 'OCT' 2000 /
@@ -509,9 +468,6 @@ DATES
 DATES
  10 'SEP' 2001 /
 /
-WTRACER 
-     'F-4H'       'SEA'      1.000  1* /
-/
 DATES
  1 'OCT' 2001 /
 /
@@ -545,14 +501,8 @@ RPTSCHED
 DATES
  12 'FEB' 2002 /
 /
-WTRACER 
-     'F-3H'       'TFB'   1000.000  1* /
-/
 DATES
  13 'FEB' 2002 /
-/
-WTRACER 
-     'F-3H'       'TFB'      0.000  1* /
 /
 DATES
  1 'MAR' 2002 /
@@ -770,9 +720,6 @@ RPTSCHED
  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 / 
 DATES
  20 'JAN' 2004 /
-/
-WTRACER 
-    'C-4AH'       'SEA'      1.000  1* /
 /
 DATES
  1 'FEB' 2004 /

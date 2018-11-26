@@ -54,6 +54,7 @@ namespace Opm {
           m_polymerProperties( timeMap, WellPolymerProperties() ),
           m_econproductionlimits( timeMap, WellEconProductionLimits() ),
           m_solventFraction( timeMap, 0.0 ),
+          m_tracerProperties( timeMap, WellTracerProperties() ),
           m_groupName( timeMap, "" ),
           m_rft( timeMap, false ),
           m_plt( timeMap, false ),
@@ -208,6 +209,13 @@ namespace Opm {
         return m_solventFraction.update(timeStep, fraction);
     }
 
+    bool Well::setTracerProperties(size_t timeStep , const WellTracerProperties& newProperties) {
+        if (isProducer(timeStep))
+            throw std::invalid_argument("WTRACER keyword can only be applied to injectors");
+
+        return m_tracerProperties.update(timeStep, newProperties);
+    }
+
     bool Well::setEconProductionLimits(const size_t timeStep, const WellEconProductionLimits& productionlimits) {
         // not sure if this keyword turning a well to be producer.
         // not sure what will happen if we use this keyword to a injector.
@@ -220,6 +228,10 @@ namespace Opm {
 
     const double& Well::getSolventFraction(size_t timeStep) const {
         return m_solventFraction.at(timeStep);
+    }
+
+    const WellTracerProperties& Well::getTracerProperties(size_t timeStep) const {
+        return m_tracerProperties.at(timeStep);
     }
 
 
