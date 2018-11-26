@@ -74,8 +74,8 @@ public:
 
 private:
     std::string m_name;
-    size_t m_max_run;
-    double m_min_wait;
+    size_t m_max_run = 0;
+    double m_min_wait = 0.0;
     std::time_t m_start_time;
 
     std::vector<DeckKeyword> keywords;

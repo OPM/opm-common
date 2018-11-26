@@ -96,7 +96,7 @@ ASTNode(TokenType type, const std::string& func, const std::vector<std::string>&
 private:
     std::string func;
     std::vector<std::string> arg_list;
-    double number;
+    double number = 0.0;
 
     /*
       To have a memmber std::vector<ASTNode> inside the ASTNode class is
