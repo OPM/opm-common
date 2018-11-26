@@ -42,6 +42,7 @@ namespace Opm {
        actions are goverened by the InputError::Action enum:
 
           InputError::THROW_EXCEPTION
+          InputError::EXIT1
           InputError::WARN
           InputError::IGNORE
 

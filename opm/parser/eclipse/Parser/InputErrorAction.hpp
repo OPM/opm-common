@@ -24,10 +24,20 @@ namespace Opm {
 
     namespace InputError {
 
+
+        /*
+          The THROW_EXCEPTION and EXIT1 error handlers are overlapping, the
+          intention os that the EXIT1 handler should be used in situations which
+          are clearly user errors where an exception/traceback is of no use to
+          the developers. The prototype of an error mode which should be handled
+          with EXIT1 is PARSE_MISSING_INCLUDE.
+        */
+
         enum Action {
             THROW_EXCEPTION = 0,
             WARN = 1,
-            IGNORE = 2
+            IGNORE = 2,
+            EXIT1 = 3
         };
     }
 }

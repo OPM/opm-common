@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE( PATHS_has_global_scope ) {
     parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION);
     const auto deck = parser.parseFile( prefix() + "parser/PATHSInInclude.data", parseContext );
     BOOST_CHECK(deck.hasKeyword("OIL"));
-    BOOST_CHECK_THROW( parser.parseFile( prefix() + "parser/PATHSInIncludeInvalid.data", ParseContext() ), std::invalid_argument );
+    BOOST_CHECK_THROW( parser.parseFile( prefix() + "parser/PATHSInIncludeInvalid.data", parseContext ), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE( PATHS_with_backslashes ) {
