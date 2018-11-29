@@ -309,21 +309,26 @@ captureDeclaredConnData(const Schedule&        sched,
     std::map<std::string, std::vector<const Opm::data::Connection*> > allWellConnections;
     for (const auto wl : wells) {
 	const auto& conns = wl->getActiveConnections(sim_step, grid);
-	std::cout << "captureDeclaredConnData- well_name:" << wl->name() << " No conn: " <<
-	conns.size() << std::endl;
-	std::vector<const Opm::data::Connection*> initConn (conns.size(), {});
+	std::vector<const Opm::data::Connection*> initConn (conns.size(), nullptr);
 	allWellConnections.insert(std::make_pair(wl->name(), initConn));
 	const auto it = allWellConnections.find(wl->name());
 	const auto xr = xw.find(wl->name());
 	int rCInd = 0;
 	if ((it != allWellConnections.end()) && (xr != xw.end())) {
 	    for (auto nConn = conns.size(), connID = 0*nConn; connID < nConn; connID++) {
-		std::cout << " connID: " << connID << std::endl;
+		//
+		// WellRates connections are only defined for OPEN connections
 		if ((conns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) && 
 		  (rCInd < xr->second.connections.size())) {
 		    it->second[connID] = &(xr->second.connections[rCInd]);
-		    std::cout << "add xw-conn - glob-no: " << connID << " rate-no: " << rCInd << std::endl;
 		    rCInd+= 1;
+		}
+		else if (rCInd >= xr->second.connections.size()) {
+		    throw std::invalid_argument {
+		"Inconsistent number of open connections I in vector<Opm::data::Connection*> (" +
+		std::to_string(xr->second.connections.size()) + ") in Well " + wl->name()
+	    };
+ 
 		}
 	    }
 	}
