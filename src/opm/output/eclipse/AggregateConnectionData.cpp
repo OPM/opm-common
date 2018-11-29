@@ -150,7 +150,7 @@ namespace {
             iConn[Ix::CellK] = conn.getK() + 1;
 
             iConn[Ix::ConnStat] = (conn.state() == ConnState::OPEN)
-                ? 1 : -1000;
+                ? 1 : 0;
 
             iConn[Ix::Drainage] = conn.getDefaultSatTabId()
                 ? 0 : conn.satTableId();
@@ -302,8 +302,33 @@ captureDeclaredConnData(const Schedule&        sched,
                         const std::size_t      sim_step)
 {
     const auto& wells = sched.getWells(sim_step);
-
-    connectionLoop(wells, grid, sim_step, [&units, &xw, this]
+    //
+    // construct a composite vector of connection objects  holding
+    // rates for all open connectons
+    //
+    std::map<std::string, std::vector<const Opm::data::Connection*> > allWellConnections;
+    for (const auto wl : wells) {
+	const auto& conns = wl->getActiveConnections(sim_step, grid);
+	std::cout << "captureDeclaredConnData- well_name:" << wl->name() << " No conn: " <<
+	conns.size() << std::endl;
+	std::vector<const Opm::data::Connection*> initConn (conns.size(), {});
+	allWellConnections.insert(std::make_pair(wl->name(), initConn));
+	const auto it = allWellConnections.find(wl->name());
+	const auto xr = xw.find(wl->name());
+	int rCInd = 0;
+	if ((it != allWellConnections.end()) && (xr != xw.end())) {
+	    for (auto nConn = conns.size(), connID = 0*nConn; connID < nConn; connID++) {
+		std::cout << " connID: " << connID << std::endl;
+		if ((conns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) && 
+		  (rCInd < xr->second.connections.size())) {
+		    it->second[connID] = &(xr->second.connections[rCInd]);
+		    std::cout << "add xw-conn - glob-no: " << connID << " rate-no: " << rCInd << std::endl;
+		    rCInd+= 1;
+		}
+	    }
+	}
+    }
+    connectionLoop(wells, grid, sim_step, [&units, &allWellConnections, this]
         (const Well&       well, const std::size_t wellID,
          const Connection& conn, const std::size_t connID) -> void
     {
@@ -313,14 +338,15 @@ captureDeclaredConnData(const Schedule&        sched,
         IConn::staticContrib(conn, connID, ic);
         SConn::staticContrib(conn, units, sc);
 
-        auto xi = xw.find(well.name());
-        if ((xi != xw.end()) &&
-            (connID < xi->second.connections.size()))
+        auto xi = allWellConnections.find(well.name());
+        if ((xi != allWellConnections.end()) &&
+            (connID < xi->second.size()))
+	    //(connID < xi->second.connections.size()))
         {
             auto xc = this->xConn_(wellID, connID);
 
-            XConn::dynamicContrib(xi->second.connections[connID],
-                                  units, xc);
+	    //XConn::dynamicContrib(xi->second.connections[connID],
+	    if (xi->second[connID]) XConn::dynamicContrib(*(xi->second[connID]), units, xc);
         }
     });
 }

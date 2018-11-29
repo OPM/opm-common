@@ -512,7 +512,7 @@ namespace {
                         swprop(M::gas_surface_rate, pp.GasRate);
                 }
 
-                if (pp.LiquidRate != 0.0) {
+                if (pp.LiquidRate != 0.0 || (!predMode)) {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.LiquidRate);
                 }

@@ -191,17 +191,21 @@ namespace {
 	std::vector<double> qosc (segSet.size()+1, 0.);
 	std::vector<double> qwsc (segSet.size()+1, 0.);
 	std::vector<double> qgsc (segSet.size()+1, 0.);
+	std::vector<const Opm::Connection* > openConnections;
 	using M  = ::Opm::UnitSystem::measure;
 	using R  = ::Opm::data::Rates::opt;
-	if (welConns.size() != rateConns.size()) {
+	for (auto nConn = welConns.size(), connID = 0*nConn; connID < nConn; connID++) {
+	  if (welConns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) openConnections.push_back(&welConns[connID]);
+	}
+	if (openConnections.size() != rateConns.size()) {
 	    throw std::invalid_argument {
-		"Inconsistent number of connections I in Opm::WellConnections (" +
+		"Inconsistent number of open connections I in Opm::WellConnections (" +
 		std::to_string(welConns.size()) + ") and vector<Opm::data::Connection> (" +
 		std::to_string(rateConns.size()) + ") in Well " + segSet.wellName()
 	    };
 	}
-	for (auto nConn = welConns.size(), connID = 0*nConn; connID < nConn; connID++) {
-	    auto segNo = welConns[connID].segment();
+	for (auto nConn = openConnections.size(), connID = 0*nConn; connID < nConn; connID++) {
+	    auto segNo = openConnections[connID]->segment();
 	    const auto& Q = rateConns[connID].rates;
 	    qosc[segNo] += -units.from_si(M::liquid_surface_rate, Q.get(R::oil));
 	    qwsc[segNo] += -units.from_si(M::liquid_surface_rate, Q.get(R::wat));
@@ -337,7 +341,6 @@ namespace {
     // Segments with no inflow branches get the value zero
     int sumNoInFlowBranches(const Opm::WellSegments& segSet, std::size_t segIndex) {
 	int sumIFB = 0;
-	auto segBranch     = segSet[segIndex].branchNumber();
 	auto segNo =segSet[segIndex].segmentNumber();
 	while (segNo >=1) {
 	    auto segInd = segSet.segmentNumberToIndex(segNo);
