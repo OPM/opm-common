@@ -17,10 +17,10 @@
    */
 
 #include "summaryComparator.hpp"
-#include <ert/ecl/ecl_sum.h>
-#include <ert/util/stringlist.h>
-#include <ert/util/int_vector.h>
-#include <ert/util/bool_vector.h>
+#include <ert/ecl/ecl_sum.hpp>
+#include <ert/util/stringlist.hpp>
+#include <ert/util/int_vector.hpp>
+#include <ert/util/bool_vector.hpp>
 #include <opm/common/ErrorMacros.hpp>
 #include <cmath>
 #include <numeric>

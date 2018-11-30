@@ -21,13 +21,13 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm{
-    void SummaryState::add(const smspec_node_type * node_ptr, double value) {
-        if (smspec_node_get_var_type(node_ptr) == ECL_SMSPEC_WELL_VAR)
-            this->add_well_var(smspec_node_get_wgname(node_ptr),
-                               smspec_node_get_keyword(node_ptr),
+    void SummaryState::add(const ecl::smspec_node& node, double value) {
+        if (node.get_var_type() == ECL_SMSPEC_WELL_VAR)
+            this->add_well_var(node.get_wgname(),
+                               node.get_keyword(),
                                value);
         else
-            this->add(smspec_node_get_gen_key1(node_ptr), value);
+            this->add(node.get_gen_key1(), value);
     }
 
     void SummaryState::add(const std::string& key, double value) {

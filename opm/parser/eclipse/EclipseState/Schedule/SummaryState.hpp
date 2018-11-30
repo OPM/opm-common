@@ -23,7 +23,7 @@
 #include <string>
 #include <unordered_map>
 
-#include <ert/ecl/smspec_node.h>
+#include <ert/ecl/smspec_node.hpp>
 
 namespace Opm{
 
@@ -67,7 +67,7 @@ public:
     double get(const std::string&) const;
     bool has(const std::string& key) const;
     void add(const std::string& key, double value);
-    void add(const smspec_node_type * node_ptr, double value);
+    void add(const ecl::smspec_node& node, double value);
 
     void add_well_var(const std::string& well, const std::string& var, double value);
     bool has_well_var(const std::string& well, const std::string& var) const;

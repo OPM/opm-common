@@ -24,7 +24,7 @@
 #include <vector>
 #include <set>
 
-#include <ert/ecl/smspec_node.h>
+#include <ert/ecl/smspec_node.hpp>
 
 namespace Opm {
 
@@ -36,44 +36,61 @@ namespace Opm {
 
     class SummaryNode {
     public:
-        SummaryNode(smspec_node_type * c_ptr) :
-            ptr(c_ptr)
+        SummaryNode(const std::string& keyword) :
+            ecl_node(0, keyword.c_str(), "UNIT", 0.0)
         {}
 
-        SummaryNode(const SummaryNode& other) :
-            ptr( smspec_node_alloc_copy(other.get()))
+
+        SummaryNode(const std::string& keyword, const std::string& wgname) :
+            ecl_node(0, keyword.c_str(), wgname.c_str(), "UNIT", 0.0, ":")
         {}
 
-        const smspec_node_type * get() const {
-            return this->ptr;
-        }
+        SummaryNode(const std::string& keyword, const std::string& wgname, int num) :
+            ecl_node(0, keyword.c_str(), wgname.c_str(), num, "UNIT", 0.0, ":")
+        {}
+
+        SummaryNode(const std::string& keyword, int num) :
+            ecl_node(0, keyword.c_str(), num, "UNIT", 0, ":")
+        {}
+
+        SummaryNode(const std::string& keyword, int num, const int grid_dims[3]) :
+            ecl_node(0, keyword.c_str(), num, "UNIT", grid_dims, 0, ":")
+        {}
+
+        SummaryNode(const std::string& keyword, const std::string& wgname, int num, const int grid_dims[3]) :
+            ecl_node(0, keyword.c_str(), wgname.c_str(), num, "UNIT", grid_dims, 0, ":")
+        {}
 
         std::string wgname() const {
-            return smspec_node_get_wgname(this->ptr);
+            const char * c_ptr = this->ecl_node.get_wgname();
+            if (c_ptr)
+                return std::string(c_ptr);
+            else
+                return "";
         }
 
         std::string keyword() const {
-            return smspec_node_get_keyword(this->ptr);
+            return this->ecl_node.get_keyword();
+        }
+
+        std::string gen_key() const {
+            return this->ecl_node.get_gen_key1();
         }
 
         int num() const {
-            return smspec_node_get_num(this->ptr);
+            return this->ecl_node.get_num();
         }
 
         ecl_smspec_var_type type() const {
-            return smspec_node_get_var_type(this->ptr);
+            return this->ecl_node.get_var_type();
         }
 
-        SummaryNode& operator=(const SummaryNode &other) {
-            this->ptr = smspec_node_alloc_copy(other.ptr);
-            return *this;
+        int cmp(const SummaryNode& other) const {
+            return this->ecl_node.cmp( other.ecl_node );
         }
 
-        ~SummaryNode() {
-            smspec_node_free(this->ptr);
-        }
     private:
-        smspec_node_type * ptr;
+        ecl::smspec_node ecl_node;
     };
 
 
