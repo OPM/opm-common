@@ -48,6 +48,8 @@ namespace Opm {
         WellProductionProperties p(record);
         p.predictionMode = false;
 
+        // update LiquidRate
+        p.LiquidRate = p.WaterRate + p.OilRate;
 
         const auto& cmodeItem = record.getItem("CMODE");
         if ( !cmodeItem.defaultApplied(0) ) {
