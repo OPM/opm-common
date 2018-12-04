@@ -27,6 +27,7 @@
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/output/eclipse/VectorItems/connection.hpp>
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
 #include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/VectorItems/msw.hpp>
@@ -474,6 +475,25 @@ namespace {
         }
     }
 
+    std::vector<double>
+    getOpmExtraFromDoubHEAD(const RestartFileView& rst_view,
+                            const bool             required,
+                            const Opm::UnitSystem& usys)
+    {
+        using M = Opm::UnitSystem::measure;
+
+        const auto* doubhead =
+            getPtr<double>(rst_view.getKeyword("DOUBHEAD"));
+
+        const auto TsInit = doubhead[VI::doubhead::TsInit];
+
+        if (TsInit < 0.0) {
+            throwIfMissingRequired({ "OPMEXTRA", M::identity, required });
+        }
+
+        return { usys.to_si(M::time, TsInit) };
+    }
+
     Opm::data::Solution
     restoreSOLUTION(const RestartFileView&              rst_view,
                     const std::vector<Opm::RestartKey>& solution_keys,
@@ -518,17 +538,39 @@ namespace {
             const auto& vector = extra.key;
             const auto* kw     = rst_view.getKeyword(vector.c_str());
 
-            if (kw == nullptr) {
-                throwIfMissingRequired(extra);
+            auto kwdata = std::vector<double>{};
 
-                // Requested vector not available, but caller does not
-                // actually require the vector for restart purposes.
-                // Skip this.
-                continue;
+            if (kw == nullptr) {
+                // Requested vector not available in result set.  Take
+                // appropriate action depending on specific vector and
+                // 'extra.required'.
+
+                if (vector != "OPMEXTRA") {
+                    throwIfMissingRequired(extra);
+
+                    // Requested vector not available, but caller does not
+                    // actually require the vector for restart purposes.
+                    // Skip this.
+                    continue;
+                }
+                else {
+                    // Special case handling of OPMEXTRA.  Single item
+                    // possibly stored in TSINIT item of DOUBHEAD.  Try to
+                    // recover this.  Function throws if item is defaulted
+                    // and caller requires that item be present through the
+                    // 'extra.required' mechanism.
+
+                    kwdata = getOpmExtraFromDoubHEAD(rst_view,
+                                                     extra.required,
+                                                     usys);
+                }
+            }
+            else {
+                // Requisite vector available in result set.  Recover data.
+                kwdata = double_vector(kw);
             }
 
-            // Requisite vector available in result set.  Recover data.
-            rst_value.addExtra(vector, extra.dim, double_vector(kw));
+            rst_value.addExtra(vector, extra.dim, std::move(kwdata));
         }
 
         for (auto& extra_value : rst_value.extra) {
