@@ -439,10 +439,10 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
         BOOST_CHECK_CLOSE(swell[i0 + Ix::LiqRateTarget], 20.0e3f, 1.0e-7f);
 
         // No direct limit, extract value from 'smry' (WVPR:OP_1)
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::ResVRateTarget], 4.0f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::ResVRateTarget], 1.0e20f, 1.0e-7f);
 
         // No THP limit
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget] , 1.0e20f, 1.0e-7f);
+        BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget] ,    0.0f, 1.0e-7f);
         BOOST_CHECK_CLOSE(swell[i0 + Ix::BHPTarget] , 1000.0f, 1.0e-7f);
         BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth],  0.375f, 1.0e-7f);
     }
