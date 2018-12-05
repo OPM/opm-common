@@ -1,4 +1,5 @@
 /*
+  Copyright (c) 2018 Equinor ASA
   Copyright (c) 2018 Statoil ASA
 
   This file is part of the Open Porous Media project (OPM).
@@ -24,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
 #include <chrono>
@@ -76,15 +78,23 @@ Opm::RestartIO::Helpers::
 createDoubHead(const EclipseState& es,
                const Schedule&     sched,
                const std::size_t   lookup_step,
-               const double        simTime)
+               const double        simTime,
+               const double        nextTimeStep)
 {
-    const auto& usys = es.getDeckUnitSystem();
-    const auto dh = DoubHEAD{}
-        .tuningParameters(sched.getTuning(), lookup_step, 
-			  getTimeConv(usys))
+    const auto& usys  = es.getDeckUnitSystem();
+    const auto  tconv = getTimeConv(usys);
+
+    auto dh = DoubHEAD{}
+        .tuningParameters(sched.getTuning(), lookup_step, tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
-        .drsdt           (sched, lookup_step, getTimeConv(usys))
+        .drsdt           (sched, lookup_step, tconv)
         ;
+
+    if (nextTimeStep > 0.0) {
+        using M = ::Opm::UnitSystem::measure;
+
+        dh.nextStep(usys.from_si(M::time, nextTimeStep));
+    }
 
     return dh.data();
 }

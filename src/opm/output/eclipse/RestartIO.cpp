@@ -74,6 +74,13 @@ namespace {
         return extra_solution.count(vector) > 0;
     }
 
+    double nextStepSize(const Opm::RestartValue& rst_value)
+    {
+        return rst_value.hasExtra("OPMEXTRA")
+            ? rst_value.getExtra("OPMEXTRA")[0]
+            : 0.0;
+    }
+
     std::vector<int>
     serialize_OPM_IWEL(const data::Wells&              wells,
                        const std::vector<const Well*>& sched_wells)
@@ -262,9 +269,10 @@ namespace {
 
     std::vector<int>
     writeHeader(::Opm::RestartIO::ecl_rst_file_type* rst_file,
-                int                                  sim_step,
-                int                                  report_step,
-                double                               simTime,
+                const int                            sim_step,
+                const int                            report_step,
+                const double                         next_step_size,
+                const double                         simTime,
                 const Schedule&                      schedule,
                 const EclipseGrid&                   grid,
                 const EclipseState&                  es)
@@ -282,7 +290,8 @@ namespace {
         write_kw(rst_file, "LOGIHEAD", lh);
 
         // write DOUBHEAD to restart file
-        const auto dh = Helpers::createDoubHead(es, schedule, sim_step, simTime);
+        const auto dh = Helpers::createDoubHead(es, schedule, sim_step,
+                                                simTime, next_step_size);
         write_kw(rst_file, "DOUBHEAD", dh);
 
         // return the inteHead vector
@@ -469,8 +478,10 @@ void save(const std::string&  filename,
         units.from_si(restart_key.dim, data);
     }
 
-    const auto inteHD = writeHeader(rst_file.get(), sim_step, report_step,
-                                    seconds_elapsed, schedule, grid, es);
+    const auto inteHD =
+        writeHeader(rst_file.get(), sim_step, report_step,
+                    nextStepSize(value), seconds_elapsed,
+                    schedule, grid, es);
 
     writeGroup(rst_file.get(), sim_step, ecl_compatible_rst,
                schedule, sumState, inteHD);
