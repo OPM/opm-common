@@ -786,6 +786,13 @@ static const std::unordered_map< std::string, ofun > funs = {
                    duration ) },
     { "GVPT", mul( sum( sum( rate< rt::reservoir_water, producer >, rate< rt::reservoir_oil, producer > ),
                         rate< rt::reservoir_gas, producer > ), duration ) },
+    // Group potential
+    { "GWPP", generic_well_rate< rt::well_potential_water , true, false>},
+    { "GOPP", generic_well_rate< rt::well_potential_oil , true, false>},
+    { "GGPP", generic_well_rate< rt::well_potential_gas , true, false>},
+    { "GWPI", generic_well_rate< rt::well_potential_water , false, true>},
+    { "GOPI", generic_well_rate< rt::well_potential_oil , false, true>},
+    { "GGPI", generic_well_rate< rt::well_potential_gas , false, true>},
 
     { "WWPRH", production_history< Phase::WATER > },
     { "WOPRH", production_history< Phase::OIL > },
@@ -926,6 +933,14 @@ static const std::unordered_map< std::string, ofun > funs = {
                    duration ) },
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>), duration)},
+    // Field potential
+    { "FWPP", generic_well_rate< rt::well_potential_water , true, false>},
+    { "FOPP", generic_well_rate< rt::well_potential_oil , true, false>},
+    { "FGPP", generic_well_rate< rt::well_potential_gas , true, false>},
+    { "FWPI", generic_well_rate< rt::well_potential_water , false, true>},
+    { "FOPI", generic_well_rate< rt::well_potential_oil , false, true>},
+    { "FGPI", generic_well_rate< rt::well_potential_gas , false, true>},
+
 
     { "FWPRH", production_history< Phase::WATER > },
     { "FOPRH", production_history< Phase::OIL > },
