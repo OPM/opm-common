@@ -245,7 +245,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
             BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate , 0.001);
             BOOST_CHECK_EQUAL( WellProducer::RESV, prop7.controlMode);
         }
-        BOOST_CHECK_EQUAL( 0 , well3->getProductionPropertiesCopy(8).LiquidRate);
+        BOOST_CHECK_CLOSE( 8000./Metric::Time, well3->getProductionPropertiesCopy(3).LiquidRate, 1.e-12);
+        BOOST_CHECK_CLOSE( 18000./Metric::Time, well3->getProductionPropertiesCopy(8).LiquidRate, 1.e-12);
     }
 
     {
