@@ -199,15 +199,15 @@ namespace {
             using WMCtrlVal = ::Opm::RestartIO::Helpers::
                 VectorItems::IWell::Value::WellCtrlMode;
 
-            {
+            /*{
                 const auto stat = well.getStatus(sim_step);
 
                 using WStat = ::Opm::WellCommon::StatusEnum;
 
-                if ((stat == WStat::SHUT) || (stat == WStat::STOP)) {
+                if (stat == WStat::SHUT) {
                     return WMCtrlVal::Shut;
                 }
-            }
+            }*/
 
             if (well.isInjector(sim_step)) {
                 const auto& prop = well
@@ -236,7 +236,16 @@ namespace {
                 case CMode::GRUP: return WMCtrlVal::Group;
 
                 default:
-                    return WMCtrlVal::WMCtlUnk;
+		    {
+		      const auto stat = well.getStatus(sim_step);
+
+		      using WStat = ::Opm::WellCommon::StatusEnum;
+
+		      if (stat == WStat::SHUT) {
+			  return WMCtrlVal::Shut;
+		      }
+		    }
+		    return WMCtrlVal::WMCtlUnk;  
                 }
             }
             else if (well.isProducer(sim_step)) {
@@ -254,9 +263,19 @@ namespace {
                 case CMode::THP:  return WMCtrlVal::THP;
                 case CMode::BHP:  return WMCtrlVal::BHP;
                 case CMode::CRAT: return WMCtrlVal::CombRate;
-                case CMode::GRUP: return WMCtrlVal::Group;
+                case CMode::GRUP: return WMCtrlVal::Group;		
+		
+                default: 
+		    {
+		      const auto stat = well.getStatus(sim_step);
 
-                default: return WMCtrlVal::WMCtlUnk;
+		      using WStat = ::Opm::WellCommon::StatusEnum;
+
+		      if (stat == WStat::SHUT) {
+			  return WMCtrlVal::Shut;
+		      }
+		    }
+		    return WMCtrlVal::WMCtlUnk;
                 }
             }
 
@@ -476,23 +495,24 @@ namespace {
 
             if (well.isProducer(sim_step)) {
                 const auto& pp = well.getProductionProperties(sim_step);
+		const auto& predMode = pp.predictionMode;
 
-                if (pp.OilRate != 0.0) {
+                if ((pp.OilRate != 0.0) || (!predMode)) {
                     sWell[Ix::OilRateTarget] =
                         swprop(M::liquid_surface_rate, pp.OilRate);
 		}
 
-                if (pp.WaterRate != 0.0) {
+                if ((pp.WaterRate != 0.0) || (!predMode)) {
                     sWell[Ix::WatRateTarget] =
                         swprop(M::liquid_surface_rate, pp.WaterRate);
                 }
 
-                if (pp.GasRate != 0.0) {
+                if ((pp.GasRate != 0.0) || (!predMode)) {
                     sWell[Ix::GasRateTarget] =
                         swprop(M::gas_surface_rate, pp.GasRate);
                 }
 
-                if (pp.LiquidRate != 0.0) {
+                if (pp.LiquidRate != 0.0 || (!predMode)) {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.LiquidRate);
                 }
@@ -501,21 +521,20 @@ namespace {
                         swprop(M::liquid_surface_rate, pp.OilRate + pp.WaterRate);
                 }
 
-                if (pp.ResVRate != 0.0) {
+                if (pp.ResVRate != 0.0)  {
                     sWell[Ix::ResVRateTarget] =
                         swprop(M::rate, pp.ResVRate);
                 }
-		else if (smry.has("WVPR:" + well.name())) {
+		else if ((smry.has("WVPR:" + well.name())) && (!predMode)) {
                     // Write out summary voidage production rate if
                     // target/limit is not set
-                    sWell[Ix::ResVRateTarget] =
-                        static_cast<float>(smry.get("WVPR:" + well.name()));
+		  auto vr = static_cast<float>(smry.get("WVPR:" + well.name()));
+                  if (vr != 0.0) sWell[Ix::ResVRateTarget] = vr;
                 }
 
-                if (pp.THPLimit != 0.0) {
-                    sWell[Ix::THPTarget] =
-                        swprop(M::pressure, pp.THPLimit);
-                }
+		sWell[Ix::THPTarget] = pp.THPLimit != 0.0
+                    ? swprop(M::pressure, pp.THPLimit)
+                    : 0.;
            
 		sWell[Ix::BHPTarget] = pp.BHPLimit != 0.0
                     ? swprop(M::pressure, pp.BHPLimit)

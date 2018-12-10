@@ -667,7 +667,8 @@ quantity generic_well_rate (const fn_args& args  ) {
 
     if (args.schedule_wells.front()->isProducer(args.sim_step) && !outputProducer) return zero;
 
-    return { p->second.rates.get(phase), rate_unit< phase >() };
+    return  p->second.rates.has(phase) ? quantity {p->second.rates.get(phase), rate_unit<phase>()} : zero;
+    //return { p->second.rates.get(phase), rate_unit< phase >() };
 }
 
 template< typename F, typename G >
