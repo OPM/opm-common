@@ -21,6 +21,7 @@
 #include <string>
 #include <algorithm>
 #include <cstring>
+#include <cstdlib>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionAST.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ActionContext.hpp>
@@ -75,7 +76,7 @@ TokenType ActionParser::get_type(const std::string& arg) const {
 
     {
         char * end_ptr;
-        strtod(lower_arg.c_str(), &end_ptr);
+        std::strtod(lower_arg.c_str(), &end_ptr);
         if (std::strlen(end_ptr) == 0)
             return TokenType::number;
     }
