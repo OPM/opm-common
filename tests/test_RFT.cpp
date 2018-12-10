@@ -146,8 +146,8 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
 
         Opm::data::Solution solution = createBlackoilState(2, numCells);
         Opm::data::Wells wells;
-        wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, well1_comps };
-        wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, well2_comps };
+        wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, well1_comps, {} };
+        wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, well2_comps, {} };
 
 
         RestartValue restart_value(solution, wells);
@@ -239,8 +239,8 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
 
                 Opm::data::Wells wells;
                 Opm::data::Solution solution = createBlackoilState(2, numCells);
-                wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, well1_comps };
-                wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, well2_comps };
+                wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, well1_comps, {} };
+                wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, well2_comps, {} };
 
                 RestartValue restart_value(solution, wells);
                 eclipseWriter.writeTimeStep( step,
