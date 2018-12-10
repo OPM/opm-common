@@ -58,7 +58,7 @@ namespace Opm {
              bool allowCrossFlow = true, bool automaticShutIn = true);
         const std::string& name() const;
 	const size_t& seqIndex() const;
-	const std::size_t getTotNoConn() const;
+	std::size_t getTotNoConn() const;
 	void setTotNoConn(std::size_t noConn); 
         bool hasBeenDefined(size_t timeStep) const;
         const std::string getGroupName(size_t timeStep) const;
