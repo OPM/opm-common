@@ -47,13 +47,13 @@ enum TokenType {
 };
 
 struct ParseNode {
-    ParseNode(TokenType type, const std::string& value) :
-        type(type),
-        value(value)
+    ParseNode(TokenType type_arg, const std::string& value_arg) :
+        type(type_arg),
+        value(value_arg)
     {}
 
-
-    ParseNode(TokenType type) : ParseNode(type, "")
+    // Implicit converting constructor.
+    ParseNode(TokenType type_arg) : ParseNode(type_arg, "")
     {}
 
 
@@ -70,21 +70,23 @@ ASTNode() :
 {}
 
 
-ASTNode(TokenType type):
-    type(type)
+// Implicit converting constructor.
+ASTNode(TokenType type_arg):
+    type(type_arg)
 {}
 
 
+// Implicit converting constructor.
 ASTNode(double value) :
     type(TokenType::number),
     number(value)
 {}
 
 
-ASTNode(TokenType type, const std::string& func, const std::vector<std::string>& arg_list):
-    type(type),
-    func(func),
-    arg_list(arg_list)
+ASTNode(TokenType type_arg, const std::string& func_arg, const std::vector<std::string>& arg_list_arg):
+    type(type_arg),
+    func(func_arg),
+    arg_list(arg_list_arg)
 {}
 
     bool eval(const ActionContext& context) const;

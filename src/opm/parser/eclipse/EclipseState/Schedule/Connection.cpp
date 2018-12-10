@@ -46,13 +46,13 @@ namespace Opm {
                            double r0,
                            double skin_factor,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum direction,
+                           const WellCompletion::DirectionEnum directionArg,
 			   const std::size_t seqIndex,
 			   const double segDistStart,
 			   const double segDistEnd,
 			   const bool defaultSatTabId
 			  )
-        : direction(direction),
+        : direction(directionArg),
           center_depth(depth),
           open_state(stateArg),
           sat_tableId(satTableId),
@@ -189,9 +189,9 @@ namespace Opm {
         this->open_state = state;
     }
 
-  void Connection::updateSegment(int segment_number, double center_depth, std::size_t seqIndex) {
-        this->segment_number = segment_number;
-        this->center_depth = center_depth;
+    void Connection::updateSegment(int segment_number_arg, double center_depth_arg, std::size_t seqIndex) {
+        this->segment_number = segment_number_arg;
+        this->center_depth = center_depth_arg;
         this->m_seqIndex = seqIndex;
     }
 

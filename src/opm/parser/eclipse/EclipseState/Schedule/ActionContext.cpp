@@ -27,8 +27,8 @@ namespace Opm {
         this->values[func + ":" + arg] = value;
     }
 
-    ActionContext::ActionContext(const SummaryState& summary_state) :
-        summary_state(summary_state)
+    ActionContext::ActionContext(const SummaryState& summary_state_arg) :
+        summary_state(summary_state_arg)
     {
         for (const auto& pair : TimeMap::eclipseMonthIndices())
             this->add(pair.first, pair.second);

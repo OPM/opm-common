@@ -27,8 +27,8 @@
 
 namespace Opm {
 
-ActionParser::ActionParser(const std::vector<std::string>& tokens) :
-    tokens(tokens)
+ActionParser::ActionParser(const std::vector<std::string>& tokens_arg) :
+    tokens(tokens_arg)
 {}
 
 

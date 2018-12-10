@@ -76,7 +76,7 @@ class ECLRegressionTest: public ECLFilesComparator {
         // Accept extra keywords: If this switch is set to true the comparison
         // of restart files will ignore extra keywords which are only present
         // in the new simulation.
-        void setAcceptExtraKeywords(bool acceptExtraKeywords) { this->acceptExtraKeywords = acceptExtraKeywords; }
+        void setAcceptExtraKeywords(bool acceptExtraKeywordsArg) { this->acceptExtraKeywords = acceptExtraKeywordsArg; }
 
         //! \brief Compares grid properties of the two cases.
         // gridCompare() checks if both the number of active and global cells in the two cases are the same. If they are, and volumecheck is true, all cells are looped over to calculate the cell volume deviation for the two cases. If the both the relative and absolute deviation exceeds the tolerances, an exception is thrown.
