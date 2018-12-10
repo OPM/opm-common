@@ -2034,7 +2034,7 @@ namespace Opm {
     }
 
 
-    void Schedule::evalAction(const SummaryState& st, size_t timeStep) {
+    void Schedule::evalAction(const SummaryState& /* st */, size_t /* timeStep */) {
         if (this->actions.empty())
             return;
     }

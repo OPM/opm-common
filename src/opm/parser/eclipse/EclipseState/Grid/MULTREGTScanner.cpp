@@ -133,7 +133,7 @@ namespace Opm {
     }
 
 
-    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword, const std::string& defaultRegion) {
+    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword, const std::string& /* defaultRegion */) {
         for (const auto& deckRecord : deckKeyword) {
             const auto& srcItem = deckRecord.getItem("SRC_REGION");
             const auto& targetItem = deckRecord.getItem("TARGET_REGION");

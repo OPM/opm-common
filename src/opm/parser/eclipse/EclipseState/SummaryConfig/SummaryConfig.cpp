@@ -224,8 +224,7 @@ inline void keywordB( SummaryConfig::keyword_list& list,
 
   inline void keywordR( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
-                      const TableManager& tables,
-                      const GridDims& dims) {
+                      const TableManager& tables) {
 
     /* RUNSUM is not a region keyword but a directive for how to format and
      * print output. Unfortunately its *recognised* as a region keyword
@@ -522,7 +521,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case ECL_SMSPEC_GROUP_VAR: return keywordG( list, parseContext, keyword, schedule );
         case ECL_SMSPEC_FIELD_VAR: return keywordF( list, keyword );
         case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, dims );
-        case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables, dims );
+        case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables );
         case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, keyword, schedule, dims);
         case ECL_SMSPEC_SEGMENT_VAR: return keywordS( list, parseContext, keyword, schedule );
         case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
