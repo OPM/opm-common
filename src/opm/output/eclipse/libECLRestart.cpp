@@ -1570,28 +1570,6 @@ char * util_alloc_string_copy(const char *src ) {
 }
 
 
-
-//namespace {
-
-    static const int NIWELZ = 11; //Number of data elements per well in IWEL array in restart file
-    static const int NZWELZ = 3;  //Number of 8-character words per well in ZWEL array restart file
-    static const int NICONZ = 15; //Number of data elements per completion in ICON array restart file
-
-    /**
-     * The constants NIWELZ and NZWELZ referes to the number of
-     * elements per well that we write to the IWEL and ZWEL eclipse
-     * restart file data arrays. The constant NICONZ refers to the
-     * number of elements per completion in the eclipse restart file
-     * ICON data array.These numbers are written to the INTEHEAD
-     * header.
-     *
-     * Observe that all of these values are our "current-best-guess"
-     * for how many numbers are needed; there might very well be third
-     * party applications out there which have a hard expectation for
-     * these values.
-     */
-
-
 /*
   Calling scope will handle the NULL return value, and (optionally)
   reopen the fortio stream and then call the ecl_file_kw_get_kw()
@@ -1901,11 +1879,11 @@ static void LOCK_INIT( ::Opm::RestartIO::lock_type * rwlock ) {
 
 #else
 
-static void __hash_rdlock(::Opm::RestartIO::hash_type * hash) {}
-static void __hash_wrlock(::Opm::RestartIO::hash_type * hash) {}
-static void __hash_unlock(::Opm::RestartIO::hash_type * hash) {}
-static void LOCK_DESTROY(::Opm::RestartIO::lock_type * rwlock) {}
-static void LOCK_INIT(::Opm::RestartIO::lock_type * rwlock) {}
+static void __hash_rdlock(::Opm::RestartIO::hash_type *) {}
+static void __hash_wrlock(::Opm::RestartIO::hash_type *) {}
+static void __hash_unlock(::Opm::RestartIO::hash_type *) {}
+static void LOCK_DESTROY(::Opm::RestartIO::lock_type *) {}
+static void LOCK_INIT(::Opm::RestartIO::lock_type *) {}
 
 #endif
 
@@ -3367,7 +3345,7 @@ static char ** hash_alloc_keylist__(::Opm::RestartIO::hash_type *hash , bool loc
   if (lock) ::Opm::RestartIO::__hash_rdlock( hash );
   {
     if (hash->elements > 0) {
-      int i = 0;
+      int j = 0;
       ::Opm::RestartIO::hash_node_type *node = NULL;
       keylist = (char**)std::calloc(hash->elements , sizeof *keylist);
       {
@@ -3381,9 +3359,9 @@ static char ** hash_alloc_keylist__(::Opm::RestartIO::hash_type *hash , bool loc
 
       while (node != NULL) {
         const char *key = ::Opm::RestartIO::hash_node_get_key(node);
-        keylist[i] = ::Opm::RestartIO::util_alloc_string_copy(key);
+        keylist[j] = ::Opm::RestartIO::util_alloc_string_copy(key);
         node = hash_internal_iter_next(hash , node);
-        i++;
+        j++;
       }
     } else keylist = NULL;
   }
@@ -4166,7 +4144,7 @@ void ecl_rst_file_fwrite_SEQNUM( Opm::RestartIO::ecl_rst_file_type * rst_file , 
   ::Opm::RestartIO::ecl_kw_free( seqnum_kw );
 }
 
-static ::Opm::RestartIO::ecl_kw_type * ecl_rst_file_alloc_INTEHEAD( ::Opm::RestartIO::ecl_rst_file_type * rst_file,
+    static ::Opm::RestartIO::ecl_kw_type * ecl_rst_file_alloc_INTEHEAD(::Opm::RestartIO::ecl_rst_file_type * /* rst_file */,
                                                   ::Opm::RestartIO::ecl_rsthead_type * rsthead,
                                                   int simulator ) {
   ::Opm::RestartIO::ecl_kw_type * intehead_kw = ::Opm::RestartIO::ecl_kw_alloc( INTEHEAD_KW , INTEHEAD_RESTART_SIZE , ECL_INT_2 );
@@ -4246,7 +4224,7 @@ static ::Opm::RestartIO::ecl_kw_type * ecl_rst_file_alloc_LOGIHEAD( int simulato
   return logihead_kw;
 }
 
-static ::Opm::RestartIO::ecl_kw_type * ecl_rst_file_alloc_DOUBHEAD( ::Opm::RestartIO::ecl_rst_file_type * rst_file , double days) {
+static ::Opm::RestartIO::ecl_kw_type * ecl_rst_file_alloc_DOUBHEAD( ::Opm::RestartIO::ecl_rst_file_type * /* rst_file */, double days) {
   ::Opm::RestartIO::ecl_kw_type * doubhead_kw = ::Opm::RestartIO::ecl_kw_alloc( DOUBHEAD_KW , DOUBHEAD_RESTART_SIZE , ECL_DOUBLE );
   ::Opm::RestartIO::ecl_kw_scalar_set_type( doubhead_kw , ECL_DOUBLE_TYPE, 0);
   ::Opm::RestartIO::ecl_kw_iset_type( doubhead_kw , ECL_DOUBLE_TYPE, DOUBHEAD_DAYS_INDEX , days );
