@@ -77,7 +77,7 @@ namespace Opm {
         return m_name;
     }
 
-        const size_t& Well::seqIndex() const {
+    const size_t& Well::seqIndex() const {
         return m_seqIndex;
     }
 
@@ -401,7 +401,7 @@ namespace Opm {
         return *m_completions.back();
     }
 
-    const std::size_t Well::getTotNoConn() const {
+    std::size_t Well::getTotNoConn() const {
         return this->m_totNoConn;
     }
 

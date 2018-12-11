@@ -62,7 +62,7 @@ void ActionX::addKeyword(const DeckKeyword& kw) {
 
 
 
-bool ActionX::eval(std::time_t sim_time, const ActionContext& context) {
+bool ActionX::eval(std::time_t sim_time, const ActionContext& /* context */) {
     if (!this->ready(sim_time))
         return false;
     bool result = true;

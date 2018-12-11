@@ -50,14 +50,11 @@ namespace Opm {
 
 
 
-    class MULTREGTRecord {
-    public:
-        MULTREGTRecord(int src, int target, double trans_mult, int directions, MULTREGT::NNCBehaviourEnum nnc_behaviour, const std::string& region_name);
-
+    struct MULTREGTRecord {
         int src_value;
         int target_value;
-        int directions;
         double trans_mult;
+        int directions;
         MULTREGT::NNCBehaviourEnum nnc_behaviour;
         std::string region_name;
     };
