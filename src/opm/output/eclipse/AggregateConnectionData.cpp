@@ -323,7 +323,7 @@ captureDeclaredConnData(const Schedule&        sched,
 		    it->second[connID] = &(xr->second.connections[rCInd]);
 		    rCInd+= 1;
 		}
-		else if (rCInd >= xr->second.connections.size()) {
+		else if ((conns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) && (rCInd >= xr->second.connections.size())) {
 		    throw std::invalid_argument {
 		"Inconsistent number of open connections I in vector<Opm::data::Connection*> (" +
 		std::to_string(xr->second.connections.size()) + ") in Well " + wl->name()
