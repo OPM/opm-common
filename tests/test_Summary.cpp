@@ -311,6 +311,14 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( (10.1 - 10.5), ecl_sum_get_well_var( resp, 1, "W_1", "WOPRF" ), 1e-5 );
     BOOST_CHECK_CLOSE( (20.1 - 20.5), ecl_sum_get_well_var( resp, 1, "W_2", "WOPRF" ), 1e-5 );
 
+    BOOST_CHECK_CLOSE( 10.13, ecl_sum_get_well_var( resp, 1, "W_1", "WWPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.14, ecl_sum_get_well_var( resp, 1, "W_1", "WOPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.15, ecl_sum_get_well_var( resp, 1, "W_1", "WGPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.13, ecl_sum_get_well_var( resp, 1, "W_2", "WWPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.14, ecl_sum_get_well_var( resp, 1, "W_2", "WOPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 20.15, ecl_sum_get_well_var( resp, 1, "W_2", "WGPP" ), 1e-5 );
+
+    
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0, ecl_sum_get_well_var( resp, 1, "W_1", "WWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPT" ), 1e-5 );
@@ -490,6 +498,10 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     BOOST_CHECK_CLOSE( 10.6 + 10.7 + 10.8 + 20.6 + 20.7 + 20.8,
                                     ecl_sum_get_group_var( resp, 1, "G_1", "GVPR" ), 1e-5 );
 
+    BOOST_CHECK_CLOSE( 10.13 + 20.13, ecl_sum_get_group_var( resp, 1, "G_1", "GWPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.14 + 20.14, ecl_sum_get_group_var( resp, 1, "G_1", "GOPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.15 + 20.15, ecl_sum_get_group_var( resp, 1, "G_1", "GGPP" ), 1e-5 );
+    
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_group_var( resp, 1, "G_1", "GOPT" ), 1e-5 );
@@ -734,6 +746,10 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_CLOSE( 10.1 - 10.5 + 20.1 - 20.5,
                                     ecl_sum_get_field_var( resp, 1, "FOPRF" ), 1e-5 );
 
+    BOOST_CHECK_CLOSE( 10.13 + 20.13, ecl_sum_get_field_var( resp, 1, "FWPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.14 + 20.14, ecl_sum_get_field_var( resp, 1, "FOPP" ), 1e-5 );
+    BOOST_CHECK_CLOSE( 10.15 + 20.15, ecl_sum_get_field_var( resp, 1, "FGPP" ), 1e-5 );
+    
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_field_var( resp, 1, "FOPT" ), 1e-5 );
