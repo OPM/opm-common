@@ -655,21 +655,6 @@ quantity region_rate( const fn_args& args ) {
         return { -sum, rate_unit< phase >() };
 }
 
-/*template < rt phase, bool outputProducer = true, bool outputInjector = true>
-quantity generic_well_rate (const fn_args& args  ) {
-    const quantity zero = { 0, rate_unit< phase >() };
-    if( args.schedule_wells.empty() ) return zero;
-
-    const auto p = args.wells.find( args.schedule_wells.front()->name() );
-    if( p == args.wells.end() ) return zero;
-
-    if (args.schedule_wells.front()->isInjector(args.sim_step) && !outputInjector) return zero;
-
-    if (args.schedule_wells.front()->isProducer(args.sim_step) && !outputProducer) return zero;
-
-    return  p->second.rates.has(phase) ? quantity {p->second.rates.get(phase), rate_unit<phase>()} : zero;
-    //return { p->second.rates.get(phase), rate_unit< phase >() };
-}*/
 template < rt phase, bool outputProducer = true, bool outputInjector = true>
 inline quantity generic_potential_rate( const fn_args& args ) {
     double sum = 0.0;
