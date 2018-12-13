@@ -281,6 +281,7 @@ int main(int argc, char** argv) {
                 compare.doAnalysis(analysis);
                 compare.setPrintKeywords(printKeywords);
                 compare.setIsRestartFile(restartFile);
+                compare.setAllowDifferentNumberOfKeywords(acceptExtraKeywords);
                 if(specificKeyword){
                     compare.getRegressionTest(keyword);
                 }

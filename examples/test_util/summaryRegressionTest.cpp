@@ -28,7 +28,9 @@ void SummaryRegressionTest::getRegressionTest(){
     setDataSets(timeVec1, timeVec2); //Figures which dataset that contains more/less values pr keyword vector.
     std::cout << "Comparing " << timeVec1.size() << " steps." << std::endl;
     int ivar = 0;
-    if(stringlist_get_size(keysShort) != stringlist_get_size(keysLong)){
+    if((! this->allowDifferentNumberOfKeywords) &&
+        (stringlist_get_size(keysShort) != stringlist_get_size(keysLong)))
+    {
         int missing_count = 0;
         std::cout << "Keywords missing from one case: " << std::endl;
 
@@ -168,4 +170,9 @@ bool SummaryRegressionTest::startTest(const char* keyword){
     }
 
     return result;
+}
+
+void SummaryRegressionTest::setAllowDifferentNumberOfKeywords(const bool allow)
+{
+    this->allowDifferentNumberOfKeywords = allow;
 }
