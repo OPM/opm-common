@@ -48,6 +48,12 @@ class SummaryRegressionTest: public SummaryComparator {
         bool checkDeviation(Deviation deviation, const char* keyword, int refIndex, int checkIndex);
 
         bool isRestartFile = false; //!< Private member variable, when true the files that are being compared is a restart file vs a normal file
+
+        /// Whether or not to require that the two files have the same
+        /// number of keywords.  Throw exception if not.
+        /// Default value: false (don't allow different number of keywords).
+        bool allowDifferentNumberOfKeywords = false;
+
     public:
         //! \brief Constructor, creates an object of RefressionTest class.
         //! \param[in] basename1 Path to file1 without extension.
@@ -69,6 +75,13 @@ class SummaryRegressionTest: public SummaryComparator {
         //! \brief This function sets the private member variable isRestartFiles
         //! \param[in] boolean Boolean value
         void setIsRestartFile(bool boolean){this->isRestartFile = boolean;}
+
+        /// \brief Dynamically control whether or not to require equal
+        ///    number of keywords (vectors) in the two result sets.
+        ///
+        /// \param[in] allow Whether or not to allow different number of
+        ///    summary keywords in the two result sets.
+        void setAllowDifferentNumberOfKeywords(const bool allow);
 };
 
 #endif
