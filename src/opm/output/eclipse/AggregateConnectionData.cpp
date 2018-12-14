@@ -246,6 +246,8 @@ namespace {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
             using R  = ::Opm::data::Rates::opt;
 
+            xConn[Ix::Pressure] = units.from_si(M::pressure, x.pressure);
+
             // Note flow rate sign.  Treat production rates as positive.
             const auto& Q = x.rates;
 

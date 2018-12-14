@@ -749,15 +749,18 @@ namespace {
         if (gas) { xc.rates.set(Opm::data::Rates::opt::gas, 0.0); }
     }
 
-    void restoreConnRates(const Opm::Well&        well,
-                          const std::size_t       wellID,
-                          const std::size_t       sim_step,
-                          const Opm::EclipseGrid& grid,
-                          const Opm::UnitSystem&  usys,
-                          const Opm::Phases&      phases,
-                          const WellVectors&      wellData,
-                          Opm::data::Well&        xw)
+    void restoreConnResults(const Opm::Well&        well,
+                            const std::size_t       wellID,
+                            const std::size_t       sim_step,
+                            const Opm::EclipseGrid& grid,
+                            const Opm::UnitSystem&  usys,
+                            const Opm::Phases&      phases,
+                            const WellVectors&      wellData,
+                            Opm::data::Well&        xw)
     {
+        using M  = ::Opm::UnitSystem::measure;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
+
         const auto iwel  = wellData.iwel(wellID);
         const auto nConn = static_cast<std::size_t>(
             iwel[VI::IWell::index::NConn]);
@@ -798,6 +801,12 @@ namespace {
                 const auto xcon   = wellData.xcon(wellID, connID);
 
                 restoreConnRates(xcon, usys, oil, gas, wat, xc);
+
+                xc.index = grid.getGlobalIndex(std::get<0>(ijk),
+                                               std::get<1>(ijk),
+                                               std::get<2>(ijk));
+
+                xc.pressure = usys.to_si(M::pressure, xcon[Ix::Pressure]);
             }
         }
     }
@@ -910,8 +919,9 @@ namespace {
         xw.thp = xw.temperature = 0.0;
 
         // 3) Restore connection flow rates (xw.connections[i].rates)
-        restoreConnRates(well, wellID, sim_step,
-                         grid, usys, phases, wellData, xw);
+        //    and pressure values (xw.connections[i].pressure).
+        restoreConnResults(well, wellID, sim_step,
+                           grid, usys, phases, wellData, xw);
 
         // 4) Restore segment quantities if applicable.
         if (well.isMultiSegment(sim_step) &&
@@ -1058,7 +1068,7 @@ namespace {
 
                 // Note: Order of group values in {I,X}GRP arrays mostly
                 // matches group's order of occurrence in .DATA file.
-                // Values pertaingin to FIELD are stored at zero-based order
+                // Values pertaining to FIELD are stored at zero-based order
                 // index NGMAXZ (maximum number of groups in model).  The
                 // latter value is groupData.maxGroups().
                 //
