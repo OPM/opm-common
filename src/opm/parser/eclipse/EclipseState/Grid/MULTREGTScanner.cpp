@@ -109,9 +109,14 @@ namespace Opm {
             if (e3DProps.hasDeckIntGridProperty( record->region_name)) {
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
+
+                // the MULTREGT keyword is directional independent
+                // i.e. we add it both ways to the lookup map.
                 if (srcRegion != targetRegion) {
-                    std::pair<int,int> pair{ srcRegion, targetRegion };
-                    searchPairs[pair] = &(*record);
+                    std::pair<int,int> pair1{ srcRegion, targetRegion };
+                    std::pair<int,int> pair2{ targetRegion, srcRegion };
+                    searchPairs[pair1] = &(*record);
+                    searchPairs[pair2] = &(*record);
                 }
             }
             else
