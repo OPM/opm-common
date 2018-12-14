@@ -133,6 +133,19 @@ namespace Opm {
         return output;
     }
 
+    double WellTestState::lastTestTime(const std::string& well_name) const {
+        const auto well_iter = std::find_if(wells.begin(),
+                                            wells.end(),
+                                            [&well_name](const ClosedWell& well)
+                                            {
+                                                return (well.name == well_name);
+                                            });
+        if (well_iter == wells.end()) {
+            throw std::runtime_error("No well named " + well_name + " found in WellTestState.");
+        }
+        return well_iter->last_test;
+    }
+
 }
 
 

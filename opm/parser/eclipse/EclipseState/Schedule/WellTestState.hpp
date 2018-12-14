@@ -105,6 +105,11 @@ public:
     size_t sizeWells() const;
     size_t sizeCompletions() const;
 
+    /*
+      Return the last tested time for the well, or throw if no such well.
+    */
+    double lastTestTime(const std::string& well_name) const;
+
 private:
     std::vector<ClosedWell> wells;
     std::vector<ClosedCompletion> completions;
