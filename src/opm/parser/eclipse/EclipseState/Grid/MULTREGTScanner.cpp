@@ -109,6 +109,9 @@ namespace Opm {
             if (e3DProps.hasDeckIntGridProperty( record->region_name)) {
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
+                if (srcRegion > targetRegion)
+                    std::swap(srcRegion, targetRegion);
+
                 if (srcRegion != targetRegion) {
                     std::pair<int,int> pair{ srcRegion, targetRegion };
                     searchPairs[pair] = &(*record);
