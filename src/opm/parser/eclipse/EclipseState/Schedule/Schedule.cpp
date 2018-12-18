@@ -60,6 +60,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 namespace Opm {
 
@@ -986,19 +987,33 @@ namespace Opm {
 
                 properties.injectorType = injectorType;
 
-                const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-                WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
                 if (!record.getItem("RATE").defaultApplied(0)) {
                     properties.surfaceInjectionRate = injectionRate;
-                    properties.addInjectionControl(controlMode);
-                    properties.controlMode = controlMode;
                 }
-                properties.predictionMode = false;
 
                 if ( record.getItem( "BHP" ).hasValue(0) )
                     properties.BHPH = record.getItem("BHP").getSIDouble(0);
                 if ( record.getItem( "THP" ).hasValue(0) )
                     properties.THPH = record.getItem("THP").getSIDouble(0);
+
+                const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
+                WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
+                if (controlMode == WellInjector::BHP) {
+                    properties.BHPLimit = properties.BHPH;
+                } else {
+                    if (properties.predictionMode || properties.controlMode == WellInjector::RATE) {
+                        // there is no document about what value the default BHP limit should be
+                        // we use the one from WCONINJE for now
+                        properties.BHPLimit = 6895. * unit::barsa;
+                    }
+                    // otherwise, the BHPLimit stays the same
+                }
+                properties.addInjectionControl(WellInjector::BHP);
+
+                properties.addInjectionControl(controlMode);
+                properties.controlMode = controlMode;
+
+                properties.predictionMode = false;
 
                 const int VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
                 if (VFPTableNumber > 0) {

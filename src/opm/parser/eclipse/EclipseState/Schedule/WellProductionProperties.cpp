@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 
 namespace Opm {
@@ -75,11 +76,16 @@ namespace Opm {
             if ( !p.hasProductionControl( wp::BHP ) )
                 p.addProductionControl( wp::BHP );
 
-
-            if (cmode == wp::BHP)
+            if (cmode == wp::BHP) {
                 p.BHPLimit = record.getItem( "BHP" ).getSIDouble( 0 );
-            else
-                p.BHPLimit = prev_properties.BHPLimit;
+            } else {
+                if (!prev_properties.predictionMode) {
+                    p.BHPLimit = prev_properties.BHPLimit;
+                } else {
+                    // by default the BHP limit is 1 atm
+                    p.BHPLimit = 1. * unit::atm;
+                }
+            }
         }
 
         if ( record.getItem( "BHP" ).hasValue(0) )

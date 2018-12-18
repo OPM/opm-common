@@ -850,7 +850,7 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
     BOOST_CHECK_EQUAL(p.ALQValue, 18.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
@@ -868,7 +868,7 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
     BOOST_CHECK_EQUAL(p.ALQValue, 18.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
@@ -886,7 +886,7 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
     BOOST_CHECK_EQUAL(p.ALQValue, 18.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
@@ -904,7 +904,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
     BOOST_CHECK_EQUAL(p.ALQValue, 18.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
@@ -923,7 +923,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
     BOOST_CHECK_EQUAL(p.ALQValue, 18.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
@@ -942,7 +942,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
     BOOST_CHECK_EQUAL(p.ALQValue, 10.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Whistctl)
@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(WCH_Whistctl)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
     BOOST_CHECK_EQUAL(p.ALQValue, 10.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 100.);
+    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
