@@ -998,15 +998,20 @@ namespace Opm {
 
                 const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
                 WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
-                if (controlMode == WellInjector::BHP) {
-                    properties.BHPLimit = properties.BHPH;
-                } else {
-                    if (properties.predictionMode || properties.controlMode == WellInjector::RATE) {
-                        // there is no document about what value the default BHP limit should be
-                        // we use the one from WCONINJE for now
-                        properties.BHPLimit = 6895. * unit::barsa;
+                // if the BHP limit is set by WELTARG keyword, we will not try to change the BHP limit
+                // Otherwise, we need to make a decision
+                // TODO: some tests are required to check how WELTARG interacts with WCONINJH BHP control
+                if (!properties.BHPLimitFromWeltarg) {
+                    if (controlMode == WellInjector::BHP) {
+                        properties.BHPLimit = properties.BHPH;
+                    } else {
+                        if (properties.predictionMode || properties.controlMode == WellInjector::RATE) {
+                            // there is no document about what value the default BHP limit should be
+                            // we use the one from WCONINJE for now
+                            properties.BHPLimit = 6895. * unit::barsa;
+                        }
+                        // otherwise, the BHPLimit stays the same
                     }
-                    // otherwise, the BHPLimit stays the same
                 }
                 properties.addInjectionControl(WellInjector::BHP);
 
@@ -1147,13 +1152,6 @@ namespace Opm {
                     }
                     else if (cMode == "BHP"){
                         prop.BHPLimit = newValue * siFactorP;
-                        /* For wells controlled by WCONHIST the BHP value given by the
-                           WCHONHIST keyword can not be used to control the well - i.e BHP
-                           control is not natively available - however when BHP has been
-                           specified with WELTARG we can enable BHP control.
-                        */
-                        if (prop.predictionMode == false)
-                            prop.addProductionControl(WellProducer::BHP);
                     }
                     else if (cMode == "THP"){
                         prop.THPLimit = newValue * siFactorP;
@@ -1173,13 +1171,7 @@ namespace Opm {
                     WellInjectionProperties prop = well->getInjectionPropertiesCopy(currentStep);
                     if (cMode == "BHP"){
                         prop.BHPLimit = newValue * siFactorP;
-                        /* For wells controlled by WCONINJH the BHP value given by the
-                           WCHONINJH keyword can not be used to control the well - i.e BHP
-                           control is not natively available - however when BHP has been
-                           specified with WELTARG we can enable BHP control.
-                        */
-                        if (prop.predictionMode == false)
-                            prop.addInjectionControl(WellInjector::BHP);
+                        prop.BHPLimitFromWeltarg = true;
                     }
                     else if (cMode == "ORAT"){
                         if(prop.injectorType == WellInjector::TypeEnum::OIL){
