@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
                         "\n"
                         "SCHEDULE\n"
                         "RPTRST\n"
-                        "BASIC=1"
+                        "'BASIC = 1'"
                         "/\n"
                         "DATES\n"
                         " 22 MAY 1981 /\n"
@@ -185,11 +185,12 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
                         " 26 MAY 1984 /\n"
                         " 26 MAY 1985 /\n"
                         " 27 MAY 1985 /\n"
-                        " 1 JAN 1986 /\n" 
+                        " 1 JAN 1986 /\n"
                        "/\n";
 
     auto deck = Parser().parseString( data, ParseContext() );
     IOConfig ioConfig( deck );
+    RestartConfig rstConfig( deck );
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK( ioConfig.getWriteEGRIDFile() );
