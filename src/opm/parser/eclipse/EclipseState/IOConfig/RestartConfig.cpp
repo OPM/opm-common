@@ -316,14 +316,17 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
     std::map< std::string, int > mnemonics;
 
     for( const auto& mnemonic : items ) {
-        const auto pos = mnemonic.find( '=' );
+        const auto sep_pos = mnemonic.find_first_of( "= " );
 
-        std::string base = mnemonic.substr( 0, pos );
+        std::string base = mnemonic.substr( 0, sep_pos );
         if( !is_mnemonic( base ) ) continue;
 
-        const int val = pos != std::string::npos
-                      ? std::stoi( mnemonic.substr( pos + 1 ) )
-                      : 1;
+        int val = 1;
+        if (sep_pos != std::string::npos) {
+            const auto value_pos = mnemonic.find_first_not_of("= ", sep_pos);
+            if (value_pos != std::string::npos)
+                val = std::stoi(mnemonic.substr(value_pos));
+        }
 
         mnemonics.emplace( base, val );
     }
