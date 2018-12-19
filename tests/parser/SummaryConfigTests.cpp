@@ -240,6 +240,33 @@ BOOST_AUTO_TEST_CASE(regions) {
             names.begin(), names.end() );
 }
 
+BOOST_AUTO_TEST_CASE(region2region) {
+  const auto input = "ROFT\n"
+    "1 2/\n"
+    "3 4/\n"
+    "/\n"
+    "RWIP\n"
+    "/\n"
+    "RGFT\n"
+    "5 6/\n"
+    "7 8/\n"
+    "/\n";
+
+
+  ParseContext parseContext;
+  parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
+
+  const auto summary = createSummary( input, parseContext );
+  const auto keywords = { "RWIP", "RWIP", "RWIP" };
+  const auto names = sorted_keywords( summary );
+
+  BOOST_CHECK_EQUAL_COLLECTIONS(keywords.begin(), keywords.end(),
+                                names.begin(), names.end() );
+
+  parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
+  BOOST_CHECK_THROW( createSummary(input, parseContext), std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_CASE(completions) {
     const auto input = "CWIR\n" // all specified
                        "'PRODUCER'  /\n"

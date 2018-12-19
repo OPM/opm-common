@@ -247,6 +247,7 @@ set( keywords
      000_Eclipse100/R/REFINE
      000_Eclipse100/R/REGDIMS
      000_Eclipse100/R/REGION_PROBE
+     000_Eclipse100/R/REGION2REGION_PROBE
      000_Eclipse100/R/REGIONS
      000_Eclipse100/R/RESTART
      000_Eclipse100/R/RKTRMDIR

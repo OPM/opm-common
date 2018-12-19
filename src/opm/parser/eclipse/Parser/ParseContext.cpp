@@ -86,6 +86,7 @@ namespace Opm {
 
         addKey(SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
         addKey(SUMMARY_UNKNOWN_GROUP, InputError::THROW_EXCEPTION);
+        addKey(SUMMARY_UNHANDLED_KEYWORD, InputError::WARN);
         addKey(SCHEDULE_INVALID_NAME, InputError::THROW_EXCEPTION);
 
         addKey(ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION);
@@ -281,6 +282,8 @@ namespace Opm {
 
     const std::string ParseContext::SUMMARY_UNKNOWN_WELL  = "SUMMARY_UNKNOWN_WELL";
     const std::string ParseContext::SUMMARY_UNKNOWN_GROUP = "SUMMARY_UNKNOWN_GROUP";
+    const std::string ParseContext::SUMMARY_UNHANDLED_KEYWORD = "SUMMARY_UNHANDLED_KEYWORD";
+
 
     const std::string ParseContext::SCHEDULE_INVALID_NAME = "SCHEDULE_INVALID_NAME";
     const std::string ParseContext::ACTIONX_ILLEGAL_KEYWORD = "ACTIONX_ILLEGAL_KEYWORD";
