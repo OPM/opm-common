@@ -505,9 +505,11 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
         if (0 == timestep)
             return m_write_initial_RST_file;
 
-        if (save_keywords[timestep] && log) {
-            std::string logstring = "Fast restart using SAVE is not supported. Standard restart file is written instead";
-            Opm::OpmLog::warning("Unhandled output keyword", logstring);
+        if (save_keywords[timestep]) {
+            if ( log ) {
+                std::string logstring = "Fast restart using SAVE is not supported. Standard restart file is written instead";
+                Opm::OpmLog::warning("Unhandled output keyword", logstring);
+            }
             return true;
         }
 
