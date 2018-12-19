@@ -222,6 +222,15 @@ inline void keywordB( SummaryConfig::keyword_list& list,
   }
 }
 
+inline void keywordR2R( SummaryConfig::keyword_list& list,
+                        const ParseContext& parseContext,
+                        const DeckKeyword& keyword)
+{
+    std::string msg = "OPM/flow does not support region to region summary keywords - " + keyword.name() + " is ignored.";
+    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg);
+}
+
+
   inline void keywordR( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
                       const TableManager& tables) {
@@ -522,11 +531,15 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case ECL_SMSPEC_FIELD_VAR: return keywordF( list, keyword );
         case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, dims );
         case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables );
+        case ECL_SMSPEC_REGION_2_REGION_VAR: return keywordR2R(list, parseContext, keyword);
         case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, keyword, schedule, dims);
         case ECL_SMSPEC_SEGMENT_VAR: return keywordS( list, parseContext, keyword, schedule );
         case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
 
-        default: return;
+        default:
+            std::string msg = "Summary keywords of type: " + std::string(ecl_smspec_get_var_type_name( var_type )) + " is not supported. Keyword: " + keyword.name() + " is ignored";
+            parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg);
+            return;
     }
 }
 
