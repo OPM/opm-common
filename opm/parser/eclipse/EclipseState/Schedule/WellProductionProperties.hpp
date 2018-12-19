@@ -57,7 +57,8 @@ namespace Opm {
 
         static WellProductionProperties history(const WellProductionProperties& prevProperties,
                                                 const DeckRecord& record,
-                                                const WellProducer::ControlModeEnum controlModeWHISTCL);
+                                                const WellProducer::ControlModeEnum controlModeWHISTCL,
+                                                const bool switching_from_injector);
 
         static WellProductionProperties prediction( const DeckRecord& record, bool addGroupProductionControl );
 

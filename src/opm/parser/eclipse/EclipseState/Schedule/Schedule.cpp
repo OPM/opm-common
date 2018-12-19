@@ -613,7 +613,8 @@ namespace Opm {
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
                 } else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
-                    properties = WellProductionProperties::history(prev_properties, record, m_controlModeWHISTCTL);
+                    const bool switching_from_injector = !well->isProducer(currentStep);
+                    properties = WellProductionProperties::history(prev_properties, record, m_controlModeWHISTCTL, switching_from_injector);
                 }
 
                 updateWellStatus( *well , currentStep , status );
@@ -998,21 +999,20 @@ namespace Opm {
 
                 const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
                 WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
+
                 // if the BHP limit is set by WELTARG keyword, we will not try to change the BHP limit
                 // Otherwise, we need to make a decision
                 // TODO: some tests are required to check how WELTARG interacts with WCONINJH BHP control
-                if (!properties.BHPLimitFromWeltarg) {
-                    if (controlMode == WellInjector::BHP) {
-                        properties.BHPLimit = properties.BHPH;
-                    } else {
-                        if (properties.predictionMode || properties.controlMode == WellInjector::RATE) {
-                            // there is no document about what value the default BHP limit should be
-                            // we use the one from WCONINJE for now
-                            properties.BHPLimit = 6895. * unit::barsa;
-                        }
-                        // otherwise, the BHPLimit stays the same
-                    }
+                const bool switching_from_producer = well->isProducer(currentStep);
+                if (properties.predictionMode || properties.controlMode == WellInjector::BHP || switching_from_producer) {
+                    // there is no document about what value the default BHP limit should be
+                    // we use the one from WCONINJE for now
+                    properties.BHPLimit = 6895. * unit::barsa;
+                } else if (!properties.BHPLimitFromWeltarg && controlMode == WellInjector::BHP) {
+                    properties.BHPLimit = properties.BHPH;
                 }
+                // otherwise, the BHPLimit stays the same
+
                 properties.addInjectionControl(WellInjector::BHP);
 
                 properties.addInjectionControl(controlMode);

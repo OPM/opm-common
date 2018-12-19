@@ -44,7 +44,8 @@ namespace Opm {
 
     WellProductionProperties WellProductionProperties::history(const WellProductionProperties& prev_properties,
                                                                const DeckRecord& record,
-                                                               const WellProducer::ControlModeEnum controlModeWHISTCL)
+                                                               const WellProducer::ControlModeEnum controlModeWHISTCL,
+                                                               const bool switching_from_injector)
     {
         WellProductionProperties p(record);
         p.predictionMode = false;
@@ -79,7 +80,7 @@ namespace Opm {
             if (cmode == wp::BHP) {
                 p.BHPLimit = record.getItem( "BHP" ).getSIDouble( 0 );
             } else {
-                if (!prev_properties.predictionMode) {
+                if (!prev_properties.predictionMode && !switching_from_injector) {
                     p.BHPLimit = prev_properties.BHPLimit;
                 } else {
                     // by default the BHP limit is 1 atm

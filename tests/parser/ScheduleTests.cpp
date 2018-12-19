@@ -1397,9 +1397,8 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
             "DATES             -- 3\n"
             " 18  OKT 2008 / \n"
             "/\n"
-            "WCONINJH\n"
-            " 'I' 'WATER' 1* 100 250 / \n"
-            "/\n"
+            "WCONHIST\n"
+            "   'I' 'OPEN' 'RESV' 6*  /\n/\n"
             "DATES             -- 4\n"
             " 20  OKT 2008 / \n"
             "/\n"
@@ -1429,11 +1428,15 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     BOOST_CHECK_EQUAL(well_i->getInjectionProperties(2).BHPLimit, 600 * 1e5); // 2
 
     // Check that the BHP limit is reset when changing between injector and producer.
-    BOOST_CHECK_EQUAL(well_i->getInjectionProperties(3).BHPLimit, 600 * 1e5); // 3
-    BOOST_CHECK_EQUAL(well_i->getInjectionProperties(4).BHPLimit, 600 * 1e5); // 4
+    // well_i is a producer for this report step
+    BOOST_CHECK_EQUAL(well_i->getInjectionProperties(3).BHPLimit, 0); // 3
+    // well_i changes from producer to injector
+    BOOST_CHECK_EQUAL(well_i->getInjectionProperties(4).BHPLimit, 6895 * 1e5); // 4
 
-    BOOST_CHECK_EQUAL( true  , well_i->getInjectionProperties(2).hasInjectionControl(Opm::WellInjector::BHP) );
-    BOOST_CHECK_EQUAL( true , well_i->getInjectionProperties(3).hasInjectionControl(Opm::WellInjector::BHP) );
+    BOOST_CHECK_EQUAL( true , well_i->getInjectionProperties(2).hasInjectionControl(Opm::WellInjector::BHP) );
+    // it is a producer
+    BOOST_CHECK_EQUAL( false , well_i->getInjectionProperties(3).hasInjectionControl(Opm::WellInjector::BHP) );
+    BOOST_CHECK_EQUAL( true , well_i->getProductionProperties(3).hasProductionControl(Opm::WellProducer::BHP) );
     BOOST_CHECK_EQUAL( true , well_i->getInjectionProperties(4).hasInjectionControl(Opm::WellInjector::BHP) );
 }
 

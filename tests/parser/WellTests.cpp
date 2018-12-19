@@ -773,7 +773,7 @@ namespace {
                 const std::string& cmode_string = whistctl_record.getItem("CMODE").getTrimmedString(0);
                 whistctl_cmode = Opm::WellProducer::ControlModeFromString(cmode_string);
             }
-            Opm::WellProductionProperties hist = Opm::WellProductionProperties::history(prev_p, record, whistctl_cmode);;
+            Opm::WellProductionProperties hist = Opm::WellProductionProperties::history(prev_p, record, whistctl_cmode, false);;
 
             return hist;
         }
