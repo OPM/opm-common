@@ -264,14 +264,46 @@ namespace Opm {
         const static std::string ACTIONX_ILLEGAL_KEYWORD;
 
 
-    private:
-        void initDefault();
-        void initEnv();
-        void envUpdate( const std::string& envVariable , InputError::Action action );
-        void patternUpdate( const std::string& pattern , InputError::Action action);
+        /*
+          The RPTSCH, RPTSOL and RPTSCHED keywords have two alternative forms,
+          in the old style all the items are set as integers, i.e. the RPTRST
+          keyword can be configured as:
+
+            RPTRST
+               0 0 0 1 0 1 0 2 0 0 0 0 0 1 0 0 2/
+
+          The new way is based on string mneomnics which can optionally have an
+          integer value, i.e something like:
+
+            RPTRST
+              BASIC=2  FLOWS  ALLPROS /
+
+          It is strictly illegal to mix the two ways to configure keywords. A
+          situation with mixed input style is identified if any of the items are
+          integers. To avoid that the values in the assignments like BASIC=2 are
+          interpreted as integers it is essential that there are no spaces
+          around the '=', and that is also documented in the manual. However -
+          it turns out that Eclipse actually handles e.g.
+
+             RPTRST
+                BASIC = 2 /
+
+          So we have introduced a error mode RPT_MIXED_STYLE which tries to
+          handle this situation. Observe that really mixed input style is
+          impossible to handle, and will lead to a hard exception, but with the
+          RPT_MIXED_STYLE error mode it is possible to configure lenient
+          behavior towards interpreting the input as new style string mneomnics.
+        */
+        const static std::string RPT_MIXED_STYLE;
+
+        const static std::string RPT_UNKNOWN_MNEMONIC;
+
+
+    private: void initDefault(); void initEnv(); void envUpdate( const
+        std::string& envVariable , InputError::Action action ); void
+        patternUpdate( const std::string& pattern , InputError::Action action);
         std::map<std::string , InputError::Action> m_errorContexts;
-        std::set<std::string> ignore_keywords;
-}; }
+        std::set<std::string> ignore_keywords; }; }
 
 
 #endif

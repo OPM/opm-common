@@ -90,6 +90,9 @@ namespace Opm {
         addKey(SCHEDULE_INVALID_NAME, InputError::THROW_EXCEPTION);
 
         addKey(ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION);
+
+        addKey(RPT_MIXED_STYLE, InputError::WARN);
+        addKey(RPT_UNKNOWN_MNEMONIC, InputError::WARN);
     }
 
     void ParseContext::initEnv() {
@@ -284,6 +287,8 @@ namespace Opm {
     const std::string ParseContext::SUMMARY_UNKNOWN_GROUP = "SUMMARY_UNKNOWN_GROUP";
     const std::string ParseContext::SUMMARY_UNHANDLED_KEYWORD = "SUMMARY_UNHANDLED_KEYWORD";
 
+    const std::string ParseContext::RPT_MIXED_STYLE = "RPT_MIXED_STYLE";
+    const std::string ParseContext::RPT_UNKNOWN_MNEMONIC = "RPT_UNKNOWN_MNEMONIC";
 
     const std::string ParseContext::SCHEDULE_INVALID_NAME = "SCHEDULE_INVALID_NAME";
     const std::string ParseContext::ACTIONX_ILLEGAL_KEYWORD = "ACTIONX_ILLEGAL_KEYWORD";

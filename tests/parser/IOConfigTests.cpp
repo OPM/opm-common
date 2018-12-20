@@ -188,9 +188,10 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
                         " 1 JAN 1986 /\n"
                        "/\n";
 
-    auto deck = Parser().parseString( data, ParseContext() );
+    ParseContext ctx;
+    auto deck = Parser().parseString( data, ctx );
     IOConfig ioConfig( deck );
-    RestartConfig rstConfig( deck );
+    RestartConfig rstConfig( deck, ctx );
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK( ioConfig.getWriteEGRIDFile() );
