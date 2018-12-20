@@ -53,7 +53,7 @@ namespace Opm {
         m_parseContext(      parseContext ),
         m_tables(            deck ),
         m_runspec(           deck ),
-        m_eclipseConfig(     deck ),
+        m_eclipseConfig(     deck, parseContext ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_inputNnc(          deck ),
         m_inputEditNnc(      deck ),

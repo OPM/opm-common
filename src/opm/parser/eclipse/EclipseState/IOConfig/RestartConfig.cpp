@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -294,6 +295,7 @@ RPTSCHED_integer( const std::vector< int >& ints ) {
 
 template< typename F, typename G >
 inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
+                                         const ParseContext& parseContext,
                                          F is_mnemonic,
                                          G integer_mnemonic ) {
 
@@ -348,8 +350,8 @@ inline void expand_RPTRST_mnemonics(std::map< std::string, int >& mnemonics) {
 
 
 inline std::pair< std::map< std::string, int >, RestartSchedule >
-RPTRST( const DeckKeyword& keyword, RestartSchedule prev, size_t step ) {
-    auto mnemonics = RPT( keyword, is_RPTRST_mnemonic, RPTRST_integer );
+RPTRST( const DeckKeyword& keyword, const ParseContext& parseContext, RestartSchedule prev, size_t step ) {
+    auto mnemonics = RPT( keyword, parseContext, is_RPTRST_mnemonic, RPTRST_integer );
 
     const bool has_freq  = mnemonics.find( "FREQ" )  != mnemonics.end();
     const bool has_basic = mnemonics.find( "BASIC" ) != mnemonics.end();
@@ -365,8 +367,8 @@ RPTRST( const DeckKeyword& keyword, RestartSchedule prev, size_t step ) {
 }
 
 inline std::pair< std::map< std::string, int >, RestartSchedule >
-RPTSCHED( const DeckKeyword& keyword ) {
-    auto mnemonics = RPT( keyword, is_RPTSCHED_mnemonic, RPTSCHED_integer );
+RPTSCHED( const DeckKeyword& keyword, const ParseContext& parseContext ) {
+    auto mnemonics = RPT( keyword, parseContext, is_RPTSCHED_mnemonic, RPTSCHED_integer );
 
     if( mnemonics.count( "NOTHING" ) )
         return { std::move( mnemonics ), { RestartSchedule(0) } };
@@ -379,7 +381,7 @@ RPTSCHED( const DeckKeyword& keyword ) {
 
 
 
-void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
+void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const ParseContext& parseContext) {
     size_t current_step = 1;
     RestartSchedule unset;
 
@@ -413,9 +415,8 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
         const bool is_RPTRST = name == "RPTRST";
         const auto& prev_sched = this->restart_schedule.back();
 
-        auto config = is_RPTRST
-                      ? RPTRST( keyword, prev_sched, current_step )
-                      : RPTSCHED( keyword );
+        auto config = is_RPTRST ? RPTRST( keyword, parseContext, prev_sched, current_step )
+            : RPTSCHED( keyword , parseContext);
 
         /* add the missing entries from the previous step */
         {
@@ -473,15 +474,17 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
 
 
 
-    RestartConfig::RestartConfig( const Deck& deck ) :
+    RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext ) :
         RestartConfig( SCHEDULESection( deck ),
                        SOLUTIONSection( deck ),
+                       parseContext,
                        TimeMap{ deck } )
     {}
 
 
     RestartConfig::RestartConfig( const SCHEDULESection& schedule,
                                   const SOLUTIONSection& solution,
+                                  const ParseContext& parseContext,
                                   TimeMap timemap) :
         m_timemap( std::move( timemap ) ),
         m_first_restart_step( -1 ),
@@ -489,8 +492,8 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
         restart_keywords( m_timemap, {} ),
         save_keywords( m_timemap.size(), false )
     {
-        handleSolutionSection( solution );
-        handleScheduleSection( schedule );
+        handleSolutionSection( solution, parseContext );
+        handleScheduleSection( schedule, parseContext );
 
         initFirstOutput( );
     }
@@ -561,11 +564,11 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule) {
     }
 
 
-    void RestartConfig::handleSolutionSection(const SOLUTIONSection& solutionSection) {
+    void RestartConfig::handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext) {
         if (solutionSection.hasKeyword("RPTRST")) {
             const auto& rptrstkeyword        = solutionSection.getKeyword("RPTRST");
 
-            const auto rptrst = RPTRST( rptrstkeyword, {}, 0 );
+            const auto rptrst = RPTRST( rptrstkeyword, parseContext, {}, 0 );
             this->restart_keywords.updateInitial( rptrst.first );
             this->restart_schedule.updateInitial( rptrst.second );
             setWriteInitialRestartFile(true); // Guessing on eclipse rules for write of initial RESTART file (at time 0):
