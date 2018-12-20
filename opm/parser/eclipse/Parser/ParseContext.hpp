@@ -299,11 +299,16 @@ namespace Opm {
         const static std::string RPT_UNKNOWN_MNEMONIC;
 
 
-    private: void initDefault(); void initEnv(); void envUpdate( const
-        std::string& envVariable , InputError::Action action ); void
-        patternUpdate( const std::string& pattern , InputError::Action action);
+    private:
+        void initDefault();
+        void initEnv();
+        void envUpdate( const std::string& envVariable , InputError::Action action );
+        void patternUpdate( const std::string& pattern , InputError::Action action);
+
         std::map<std::string , InputError::Action> m_errorContexts;
-        std::set<std::string> ignore_keywords; }; }
+        std::set<std::string> ignore_keywords;
+    };
+}
 
 
 #endif
