@@ -256,7 +256,8 @@ BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
 
     ParseContext parseContext;
     auto deck = Parser().parseString( data, parseContext );
-    BOOST_CHECK_THROW( RestartConfig c( deck, parseContext ), std::runtime_error );
+    parseContext.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW( RestartConfig( deck, parseContext ), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST) {
@@ -369,6 +370,155 @@ BOOST_AUTO_TEST_CASE(RPTRST) {
     BOOST_CHECK( !rstConfig3.getWriteRestartFile( 3 ) );
 }
 
+
+
+BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
+
+  const char* deckData0 =
+    "RUNSPEC\n"
+    "DIMENS\n"
+    " 10 10 10 /\n"
+    "GRID\n"
+    "START             -- 0 \n"
+    "19 JUN 2007 / \n"
+    "SOLUTION\n"
+    "RPTRST\n"
+    " ACIP KRG KRO KRW NORST SFREQ=10 ALLPROPS/\n"
+    "SCHEDULE\n"
+    "DATES             -- 1\n"
+    " 10  OKT 2008 / \n"
+    "/\n"
+    "RPTRST\n"
+    "BASIC 1\n"
+    "/\n"
+    "DATES             -- 2\n"
+    " 20  JAN 2010 / \n"
+    "/\n";
+
+    const char* deckData1 =
+                          "RUNSPEC\n"
+                          "DIMENS\n"
+                          " 10 10 10 /\n"
+                          "GRID\n"
+                          "START             -- 0 \n"
+                          "19 JUN 2007 / \n"
+                          "SOLUTION\n"
+                          "RPTRST\n"
+                          " ACIP KRG KRO KRW NORST SFREQ = 10 ALLPROPS/\n"
+                          "SCHEDULE\n"
+                          "DATES             -- 1\n"
+                          " 10  OKT 2008 / \n"
+                          "/\n"
+                          "RPTRST\n"
+                          "BASIC = 1\n"
+                          "/\n"
+                          "DATES             -- 2\n"
+                          " 20  JAN 2010 / \n"
+                          "/\n";
+
+    const char* deckData2 =
+                          "RUNSPEC\n"
+                          "DIMENS\n"
+                          " 10 10 10 /\n"
+                          "GRID\n"
+                          "START             -- 0 \n"
+                          "19 JUN 2007 / \n"
+                          "SCHEDULE\n"
+                          "DATES             -- 1\n"
+                          " 10  OKT 2008 / \n"
+                          "/\n"
+                          "RPTRST\n"
+                          "BASIC = 3 FREQ = 2 FLOWS RUBBISH = 5\n"
+                          "/\n"
+                          "DATES             -- 2\n"
+                          " 20  JAN 2010 / \n"
+                          "/\n"
+                          "DATES             -- 3\n"
+                          " 20  JAN 2011 / \n"
+                          "/\n";
+
+    const char* deckData3 =
+                          "RUNSPEC\n"
+                          "DIMENS\n"
+                          " 10 10 10 /\n"
+                          "GRID\n"
+                          "START             -- 0 \n"
+                          "19 JUN 2007 / \n"
+                          "SCHEDULE\n"
+                          "DATES             -- 1\n"
+                          " 10  OKT 2008 / \n"
+                          "/\n"
+                          "RPTRST\n"
+                          "3 0 0 0 0 2\n"
+                          "/\n"
+                          "DATES             -- 2\n"
+                          " 20  JAN 2010 / \n"
+                          "/\n"
+                          "DATES             -- 3\n"
+                          " 20  JAN 2011 / \n"
+                          "/\n";
+
+    Opm::Parser parser;
+    ParseContext ctx;
+
+    auto deck0 = parser.parseString( deckData0, ctx );
+    auto deck1 = parser.parseString( deckData1, ctx );
+    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
+    ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(RestartConfig(deck1, ctx), std::invalid_argument);
+
+    ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::IGNORE);
+    RestartConfig rstConfig1( deck1, ctx );
+
+
+    // The case "BASIC 1" - i.e. without '=' can not be salvaged; this should
+    // give an exception whatever is the value of ParseContext::RPT_MIXED_STYLE:
+    BOOST_CHECK_THROW(RestartConfig(deck0, ctx), std::invalid_argument);
+
+
+    // Observe that this is true due to some undocumented guessing that
+    // the initial restart file should be written if a RPTRST keyword is
+    // found in the SOLUTION section, irrespective of the content of that
+    // keyword.
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig1.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig1.getWriteRestartFile( 2 ) );
+
+
+    std::vector<std::string> expected = { "ACIP","BASIC", "BG","BO","BW","DEN","KRG", "KRO", "KRW", "NORST", "SFREQ", "VGAS", "VOIL", "VWAT"};
+    const auto kw_list = fun::map( fst, rstConfig1.getRestartKeywords(2) );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected.begin() ,expected.end(),
+                                   kw_list.begin() , kw_list.end() );
+
+    BOOST_CHECK_EQUAL( rstConfig1.getKeyword( "ALLPROPS" , 2 ) , 0);
+
+    auto deck2 = parser.parseString( deckData2, ctx );
+
+    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(RestartConfig(deck2, ctx), std::invalid_argument);
+    ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
+
+    RestartConfig rstConfig2( deck2, ctx );
+
+    const auto expected2 = { "BASIC", "FLOWS", "FREQ" };
+    const auto kw_list2 = fun::map( fst, rstConfig2.getRestartKeywords( 2 ) );
+    BOOST_CHECK_EQUAL_COLLECTIONS( expected2.begin(), expected2.end(),
+                                   kw_list2.begin(), kw_list2.end() );
+
+    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig2.getWriteRestartFile( 2 ) );
+    BOOST_CHECK( !rstConfig2.getWriteRestartFile( 3 ) );
+
+    auto deck3 = parser.parseString( deckData3, ctx );
+    RestartConfig rstConfig3( deck3, ctx );
+
+    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 0 ) );
+    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 1 ) );
+    BOOST_CHECK(  rstConfig3.getWriteRestartFile( 2 ) );
+    BOOST_CHECK( !rstConfig3.getWriteRestartFile( 3 ) );
+}
 
 
 

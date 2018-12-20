@@ -299,29 +299,65 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
                                          F is_mnemonic,
                                          G integer_mnemonic ) {
 
-    const auto& items = keyword.getStringData();
-    const auto ints = std::any_of( items.begin(), items.end(), is_int );
-    const auto strs = !std::all_of( items.begin(), items.end(), is_int );
+    std::vector<std::string> items;
+    const auto& deck_items = keyword.getStringData();
+    const auto ints = std::any_of( deck_items.begin(), deck_items.end(), is_int );
+    const auto strs = !std::all_of( deck_items.begin(), deck_items.end(), is_int );
 
-    /* if any of the values are pure integers we assume this is meant to be
-     * the slash-terminated list of integers way of configuring. If
-     * integers and non-integers are mixed, this is an error.
+    /* if any of the values are pure integers we assume this is meant to be the
+     * slash-terminated list of integers way of configuring. If integers and
+     * non-integers are mixed, this is an error; however if the error mode
+     * RPT_MIXED_STYLE is permissive we try some desperate heuristics to
+     * interpret this as list of mnemonics. See the the documentation of the
+     * RPT_MIXED_STYLE error handler for more details.
      */
-    if( ints && strs ) throw std::runtime_error(
-            "RPTRST does not support mixed mnemonics and integer list."
-            );
-
     auto stoi = []( const std::string& str ) { return std::stoi( str ); };
-    if( ints )
-        return integer_mnemonic( fun::map( stoi, items ) );
+    if( !strs )
+        return integer_mnemonic( fun::map( stoi, deck_items ) );
+
+
+    if (ints && strs) {
+        std::string msg = "Mixed style input is not allowed for keyword: " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
+        parseContext.handleError(ParseContext::RPT_MIXED_STYLE, msg);
+
+        std::vector<std::string> stack;
+        for (size_t index=0; index < deck_items.size(); index++) {
+            if (is_int(deck_items[index])) {
+
+                if (stack.size() < 2) {
+                    std::string msg = "Can not interpret " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
+                    throw std::invalid_argument(msg);
+                }
+
+                if (stack.back() == "=") {
+                    stack.pop_back();
+                    std::string mnemonic = stack.back();
+                    stack.pop_back();
+
+                    items.insert(items.begin(), stack.begin(), stack.end());
+                    stack.clear();
+                    items.push_back( mnemonic + "=" + deck_items[index]);
+                } else {
+                    std::string msg = "Can not interpret " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
+                    throw std::invalid_argument(msg);
+                }
+
+            } else
+                stack.push_back(deck_items[index]);
+        }
+        items.insert(items.begin(), stack.begin(), stack.end());
+    } else
+        items = deck_items;
 
     std::map< std::string, int > mnemonics;
-
     for( const auto& mnemonic : items ) {
         const auto sep_pos = mnemonic.find_first_of( "= " );
 
         std::string base = mnemonic.substr( 0, sep_pos );
-        if( !is_mnemonic( base ) ) continue;
+        if( !is_mnemonic( base ) ) {
+            parseContext.handleError(ParseContext::RPT_UNKNOWN_MNEMONIC, "The mnemonic: " + base + " is not recognized.");
+            continue;
+        }
 
         int val = 1;
         if (sep_pos != std::string::npos) {
