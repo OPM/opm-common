@@ -1591,7 +1591,21 @@ namespace Opm {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
-        Phase preferredPhase = get_phase(record.getItem("PHASE").getTrimmedString(0));
+
+        const std::string phaseStr = record.getItem("PHASE").getTrimmedString(0);
+        Phase preferredPhase;
+        if (phaseStr == "LIQ") {
+            // We need a workaround in case the preferred phase is "LIQ",
+            // which is not proper phase and will cause the get_phase()
+            // function to throw. In that case we choose to treat it as OIL.
+            preferredPhase = Phase::OIL;
+            OpmLog::warning("LIQ_PREFERRED_PHASE",
+                            "LIQ preferred phase not supported for well " + wellName + ", using OIL instead");
+        } else {
+            // Normal case.
+            preferredPhase = get_phase(phaseStr);
+        }
+
         const auto& refDepthItem = record.getItem("REF_DEPTH");
 
         double refDepth = refDepthItem.hasValue( 0 )
