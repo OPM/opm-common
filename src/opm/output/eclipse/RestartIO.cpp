@@ -381,8 +381,8 @@ namespace {
 
     void writeSolution(ecl_rst_file_type*  rst_file,
                        const RestartValue& value,
-                       const bool                ecl_compatible_rst,
-                       const bool                write_double_arg)
+                       const bool          ecl_compatible_rst,
+                       const bool          write_double_arg)
     {
         ecl_rst_file_start_solution(rst_file);
 
@@ -396,8 +396,6 @@ namespace {
         };
 
         for (const auto& elm : value.solution) {
-	  if (ecl_compatible_rst && (elm.first == "TEMP")) continue;
-
             if (elm.second.target == data::TargetType::RESTART_SOLUTION)
             {
                 write(elm.first, elm.second.data, write_double_arg);
@@ -415,7 +413,9 @@ namespace {
 
         ecl_rst_file_end_solution(rst_file);
 
-	if (ecl_compatible_rst) return;
+        if (ecl_compatible_rst) {
+            return;
+        }
 
         for (const auto& elm : value.solution) {
             if (elm.second.target == data::TargetType::RESTART_AUXILIARY) {
