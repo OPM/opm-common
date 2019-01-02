@@ -252,15 +252,16 @@ BOOST_AUTO_TEST_CASE(TestActionAST_BASIC) {
     ActionAST ast3({"WWCT", "OPY", ">", "0.75"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
 
     context.add("WWCT", "OPX", 100);
-    BOOST_CHECK(ast1.eval(context));
+    BOOST_CHECK(ast1.eval(context, matching_wells));
 
     context.add("WWCT", "OPX", -100);
-    BOOST_CHECK(!ast1.eval(context));
+    BOOST_CHECK(!ast1.eval(context, matching_wells));
 
-    BOOST_CHECK(ast2.eval(context));
-    BOOST_REQUIRE_THROW(ast3.eval(context), std::out_of_range);
+    BOOST_CHECK(ast2.eval(context, matching_wells));
+    BOOST_REQUIRE_THROW(ast3.eval(context, matching_wells), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(TestActionAST_OR_AND) {
@@ -269,50 +270,53 @@ BOOST_AUTO_TEST_CASE(TestActionAST_OR_AND) {
     ActionAST par({"WWCT", "OPX", ">", "0.75", "AND", "(", "WWCT", "OPY", ">", "0.75", "OR", "WWCT", "OPZ", ">", "0.75", ")"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
 
     context.add("WWCT", "OPX", 100);
     context.add("WWCT", "OPY", -100);
     context.add("WWCT", "OPZ", 100);
-    BOOST_CHECK( ast_or.eval(context) );
-    BOOST_CHECK( !ast_and.eval(context) );
-    BOOST_CHECK( par.eval(context));
+    BOOST_CHECK( ast_or.eval(context, matching_wells) );
+    BOOST_CHECK( !ast_and.eval(context, matching_wells) );
+    BOOST_CHECK( par.eval(context, matching_wells));
 
 
     context.add("WWCT", "OPX", -100);
     context.add("WWCT", "OPY", 100);
     context.add("WWCT", "OPZ", 100);
-    BOOST_CHECK( ast_or.eval(context) );
-    BOOST_CHECK( !ast_and.eval(context) );
-    BOOST_CHECK( !par.eval(context));
+    BOOST_CHECK( ast_or.eval(context, matching_wells) );
+    BOOST_CHECK( !ast_and.eval(context, matching_wells) );
+    BOOST_CHECK( !par.eval(context, matching_wells));
 
 
     context.add("WWCT", "OPX", 100);
     context.add("WWCT", "OPY", 100);
     context.add("WWCT", "OPZ", -100);
-    BOOST_CHECK( ast_or.eval(context) );
-    BOOST_CHECK( ast_and.eval(context) );
-    BOOST_CHECK( par.eval(context));
+    BOOST_CHECK( ast_or.eval(context, matching_wells) );
+    BOOST_CHECK( ast_and.eval(context, matching_wells) );
+    BOOST_CHECK( par.eval(context, matching_wells));
 
     context.add("WWCT", "OPX", -100);
     context.add("WWCT", "OPY", -100);
     context.add("WWCT", "OPZ", -100);
-    BOOST_CHECK( !ast_or.eval(context) );
-    BOOST_CHECK( !ast_and.eval(context) );
-    BOOST_CHECK( !par.eval(context));
+    BOOST_CHECK( !ast_or.eval(context, matching_wells) );
+    BOOST_CHECK( !ast_and.eval(context, matching_wells) );
+    BOOST_CHECK( !par.eval(context, matching_wells));
 }
 
 BOOST_AUTO_TEST_CASE(DATE) {
     ActionAST ast({"MNTH", ">=", "JUN"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
+
     context.add("MNTH", 6);
-    BOOST_CHECK( ast.eval(context) );
+    BOOST_CHECK( ast.eval(context, matching_wells) );
 
     context.add("MNTH", 8);
-    BOOST_CHECK( ast.eval(context) );
+    BOOST_CHECK( ast.eval(context, matching_wells) );
 
     context.add("MNTH", 5);
-    BOOST_CHECK( !ast.eval(context) );
+    BOOST_CHECK( !ast.eval(context, matching_wells) );
 }
 
 
@@ -320,79 +324,82 @@ BOOST_AUTO_TEST_CASE(MANUAL1) {
     ActionAST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
 
     context.add("GGPR", "FIELD", 60000 );
     context.add("WGOR", "PR" , 300 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( ast.eval(context) );
+    BOOST_CHECK( ast.eval(context, matching_wells) );
 
     context.add("GGPR", "FIELD", 0 );
     context.add("WGOR", "PR" , 300 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( !ast.eval(context) );
+    BOOST_CHECK( !ast.eval(context, matching_wells) );
 
     context.add("GGPR", "FIELD", 60000 );
     context.add("WGOR", "PR" , 100 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( !ast.eval(context) );
+    BOOST_CHECK( !ast.eval(context, matching_wells) );
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL2) {
     ActionAST ast({"GWCT", "LIST1", ">", "0.70", "AND", "(", "GWPR", "LIST1", ">", "GWPR", "LIST2", "OR", "GWPR", "LIST1", ">", "GWPR", "LIST3", ")"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 2 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK( !ast.eval(context, matching_wells));
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 2 );
     context.add("GWPR", "LIST3", 0 );
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK( ast.eval(context, matching_wells));
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK( ast.eval(context, matching_wells));
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 0 );
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK( ast.eval(context, matching_wells));
 
     context.add("GWCT", "LIST1", 0.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK( !ast.eval(context, matching_wells));
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL3) {
     ActionAST ast({"MNTH", ".GE.", "MAR", "AND", "MNTH", ".LE.", "OCT", "AND", "GMWL", "HIGH", ".GE.", "4"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
 
     context.add("MNTH", 4);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK( ast.eval(context, matching_wells));
 
     context.add("MNTH", 3);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( ast.eval(context));
+    BOOST_CHECK( ast.eval(context, matching_wells));
 
     context.add("MNTH", 11);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK( !ast.eval(context, matching_wells));
 
     context.add("MNTH", 3);
     context.add("GMWL", "HIGH", 3);
-    BOOST_CHECK( !ast.eval(context));
+    BOOST_CHECK( !ast.eval(context, matching_wells));
 }
 
 
@@ -400,19 +407,20 @@ BOOST_AUTO_TEST_CASE(MANUAL4) {
     ActionAST ast({"GWCT", "FIELD", ">", "0.8", "AND", "DAY", ">", "1", "AND", "MNTH", ">", "JUN", "AND", "YEAR", ">=", "2021"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
 
 
     context.add("MNTH", 7);
     context.add("DAY", 2);
     context.add("YEAR", 2030);
     context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( ast.eval(context) );
+    BOOST_CHECK( ast.eval(context, matching_wells) );
 
     context.add("MNTH", 7);
     context.add("DAY", 2);
     context.add("YEAR", 2019);
     context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( !ast.eval(context) );
+    BOOST_CHECK( !ast.eval(context, matching_wells) );
 }
 
 
@@ -421,6 +429,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     ActionAST ast({"WCG2", "PROD1", ">", "WCG5", "PROD2", "AND", "GCG3", "G1", ">", "GCG7", "G2", "OR", "FCG1", ">", "FCG7"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -428,7 +437,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7",  50);
-    BOOST_CHECK(ast.eval(context));
+    BOOST_CHECK(ast.eval(context, matching_wells));
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -436,7 +445,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7", 150);
-    BOOST_CHECK(ast.eval(context));
+    BOOST_CHECK(ast.eval(context, matching_wells));
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -444,7 +453,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7", 150);
-    BOOST_CHECK(!ast.eval(context));
+    BOOST_CHECK(!ast.eval(context, matching_wells));
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -452,7 +461,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 200);
     context.add("FCG7", 150);
-    BOOST_CHECK(ast.eval(context));
+    BOOST_CHECK(ast.eval(context, matching_wells));
 }
 
 
@@ -461,12 +470,13 @@ BOOST_AUTO_TEST_CASE(LGR) {
     ActionAST ast({"LWCC" , "OPX", "LOCAL", "1", "2", "3", ">", "100"});
     SummaryState st;
     ActionContext context(st);
+    std::vector<std::string> matching_wells;
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 200);
-    BOOST_CHECK(ast.eval(context));
+    BOOST_CHECK(ast.eval(context, matching_wells));
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 20);
-    BOOST_CHECK(!ast.eval(context));
+    BOOST_CHECK(!ast.eval(context, matching_wells));
 }
 
 
@@ -513,3 +523,19 @@ BOOST_AUTO_TEST_CASE(ActionValueTest) {
 }
 
 
+
+BOOST_AUTO_TEST_CASE(TestMatchingWells) {
+    ActionAST ast({"WOPR", "*", ">", "1.0"});
+    SummaryState st;
+    std::vector<std::string> matching_wells;
+
+    st.add_well_var("OPX", "WOPR", 0);
+    st.add_well_var("OPY", "WOPR", 0.50);
+    st.add_well_var("OPZ", "WOPR", 2.0);
+
+    ActionContext context(st);
+    BOOST_CHECK( ast.eval(context, matching_wells) );
+
+    BOOST_CHECK_EQUAL( matching_wells.size(), 1);
+    BOOST_CHECK_EQUAL( matching_wells[0], "OPZ" );
+}
