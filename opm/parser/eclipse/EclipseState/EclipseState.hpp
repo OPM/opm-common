@@ -65,7 +65,7 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(const Deck& deck , ParseContext parseContext = ParseContext());
+        EclipseState(const Deck& deck , const ParseContext& parseContext = ParseContext());
 
         const IOConfig& getIOConfig() const;
         IOConfig& getIOConfig();

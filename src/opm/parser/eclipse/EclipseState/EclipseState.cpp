@@ -49,7 +49,7 @@
 
 namespace Opm {
 
-    EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
+    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext) :
         m_tables(            deck ),
         m_runspec(           deck ),
         m_eclipseConfig(     deck, parseContext ),
