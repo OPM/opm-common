@@ -23,6 +23,7 @@
 #include <memory>
 #include <vector>
 
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp>
@@ -32,7 +33,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/TransMult.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 
 namespace Opm {
@@ -67,7 +67,6 @@ namespace Opm {
 
         EclipseState(const Deck& deck , ParseContext parseContext = ParseContext());
 
-        const ParseContext& getParseContext() const;
         const IOConfig& getIOConfig() const;
         IOConfig& getIOConfig();
 
@@ -118,7 +117,6 @@ namespace Opm {
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);
 
-        ParseContext m_parseContext;
         const TableManager m_tables;
         Runspec m_runspec;
         EclipseConfig m_eclipseConfig;
