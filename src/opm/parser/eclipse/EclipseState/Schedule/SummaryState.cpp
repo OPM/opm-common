@@ -50,23 +50,23 @@ namespace Opm{
 
     void SummaryState::add_well_var(const std::string& well, const std::string& var, double value) {
         this->add(var + ":" + well, value);
-        this->well_values[well][var] = value;
+        this->well_values[var][well] = value;
     }
 
     bool SummaryState::has_well_var(const std::string& well, const std::string& var) const {
-        const auto& well_iter = this->well_values.find(well);
-        if (well_iter == this->well_values.end())
+        const auto& var_iter = this->well_values.find(var);
+        if (var_iter == this->well_values.end())
             return false;
 
-        const auto& var_iter = well_iter->second.find(var);
-        if (var_iter == well_iter->second.end())
+        const auto& well_iter = var_iter->second.find(well);
+        if (well_iter == var_iter->second.end())
             return false;
 
         return true;
     }
 
     double SummaryState::get_well_var(const std::string& well, const std::string& var) const {
-        return this->well_values.at(well).at(var);
+        return this->well_values.at(var).at(well);
     }
 
 
@@ -77,6 +77,18 @@ namespace Opm{
 
     SummaryState::const_iterator SummaryState::end() const {
         return this->values.end();
+    }
+
+
+    std::vector<std::string> SummaryState::wells(const std::string& var) const {
+        const auto& var_iter = this->well_values.find(var);
+        if (var_iter == this->well_values.end())
+            return {};
+
+        std::vector<std::string> wells;
+        for (const auto& pair : var_iter->second)
+            wells.push_back(pair.first);
+        return wells;
     }
 
 }
