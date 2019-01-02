@@ -45,6 +45,8 @@ public:
     double get(const std::string& func) const;
     void   add(const std::string& func, double value);
 
+    std::vector<std::string> wells(const std::string& func) const;
+
 private:
     SummaryState summary_state;
     std::map<std::string, double> values;

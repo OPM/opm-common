@@ -196,12 +196,20 @@ BOOST_AUTO_TEST_CASE(TestActions) {
 
 BOOST_AUTO_TEST_CASE(TestContext) {
     Opm::SummaryState st;
+    st.add_well_var("OP1", "WOPR", 100);
     Opm::ActionContext context(st);
 
     BOOST_REQUIRE_THROW(context.get("func", "arg"), std::out_of_range);
 
     context.add("FUNC", "ARG", 100);
     BOOST_CHECK_EQUAL(context.get("FUNC", "ARG"), 100);
+
+    const auto& wopr_wells = context.wells("WOPR");
+    BOOST_CHECK_EQUAL(wopr_wells.size(), 1);
+    BOOST_CHECK_EQUAL(wopr_wells[0], "OP1");
+
+    const auto& wwct_wells = context.wells("WWCT");
+    BOOST_CHECK_EQUAL(wwct_wells.size(), 0);
 }
 
 
