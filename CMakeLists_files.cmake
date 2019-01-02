@@ -122,6 +122,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/UDQExpression.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.cpp
+    src/opm/parser/eclipse/Parser/ErrorGuard.cpp
     src/opm/parser/eclipse/Parser/ParseContext.cpp
     src/opm/parser/eclipse/Parser/Parser.cpp
     src/opm/parser/eclipse/Parser/ParserEnums.cpp
@@ -354,6 +355,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Units/UnitSystem.hpp
        opm/parser/eclipse/Units/Units.hpp
        opm/parser/eclipse/Units/Dimension.hpp
+       opm/parser/eclipse/Parser/ErrorGuard.hpp
        opm/parser/eclipse/Parser/ParserItem.hpp
        opm/parser/eclipse/Parser/Parser.hpp
        opm/parser/eclipse/Parser/ParserRecord.hpp

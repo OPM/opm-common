@@ -24,7 +24,7 @@
 #define BOOST_TEST_MODULE ParseContextTests
 #include <boost/test/unit_test.hpp>
 
-
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/D.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
@@ -747,4 +747,26 @@ BOOST_AUTO_TEST_CASE(Test_EXIT1) {
   would require the setup of an extra process and then check the exit status of
   the extra process - that kind of feelt a bit over the top.
 */
+}
+
+
+/*
+  If there are errors the ErrorGuard destructor will print error messages and
+  call std::terminate(); if you do not accept the std::terminate in the
+  destructor you should call the clear() method first.
+*/
+
+
+BOOST_AUTO_TEST_CASE(Test_ERRORGUARD) {
+    ErrorGuard eg;
+
+    BOOST_CHECK(!eg);
+
+    eg.addWarning(ParseContext::SUMMARY_UNKNOWN_WELL, "Unknown well");
+    BOOST_CHECK(!eg);
+
+    eg.addError(ParseContext::SUMMARY_UNKNOWN_GROUP, "Unknwon Group");
+    BOOST_CHECK(eg);
+    eg.clear();
+    BOOST_CHECK(!eg);
 }
