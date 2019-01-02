@@ -62,6 +62,24 @@ struct ParseNode {
 };
 
 
+class ActionValue {
+public:
+    explicit ActionValue(double value);
+    ActionValue() = default;
+
+    bool eval_cmp(TokenType op, const ActionValue& rhs, std::vector<std::string>& matching_wells) const;
+    void add_well(const std::string& well, double value);
+    double scalar() const;
+
+private:
+    bool eval_cmp_wells(TokenType op, double rhs, std::vector<std::string>& matching_wells) const;
+
+    double scalar_value;
+    double is_scalar = false;
+    std::vector<std::pair<std::string, double>> well_values;
+};
+
+
 class ASTNode {
 public:
 
