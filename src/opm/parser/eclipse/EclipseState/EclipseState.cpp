@@ -49,8 +49,7 @@
 
 namespace Opm {
 
-    EclipseState::EclipseState(const Deck& deck, ParseContext parseContext) :
-        m_parseContext(      parseContext ),
+    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext) :
         m_tables(            deck ),
         m_runspec(           deck ),
         m_eclipseConfig(     deck, parseContext ),
@@ -113,9 +112,6 @@ namespace Opm {
         return m_tables;
     }
 
-    const ParseContext& EclipseState::getParseContext() const {
-        return m_parseContext;
-    }
 
     /// [[deprecated]] --- use cfg().io()
     const IOConfig& EclipseState::getIOConfig() const {
