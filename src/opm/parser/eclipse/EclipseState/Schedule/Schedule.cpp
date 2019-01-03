@@ -986,6 +986,9 @@ namespace Opm {
                 updateWellStatus( *well, currentStep, status );
                 WellInjectionProperties properties(well->getInjectionPropertiesCopy(currentStep));
 
+                std::cout << " well " << well->name() << " currentStep " << currentStep << " prev_properties " << std::endl
+                          << properties << std::endl;
+
                 properties.injectorType = injectorType;
 
                 if (!record.getItem("RATE").defaultApplied(0)) {
@@ -1004,6 +1007,8 @@ namespace Opm {
                 // Otherwise, we need to make a decision
                 // TODO: some tests are required to check how WELTARG interacts with WCONINJH BHP control
                 const bool switching_from_producer = well->isProducer(currentStep);
+                std::cout << " well " << well->name() << " switching_from_producer " << switching_from_producer
+                          << " at report step " << currentStep << std::endl;
                 if (properties.predictionMode || properties.controlMode == WellInjector::BHP || switching_from_producer) {
                     // there is no document about what value the default BHP limit should be
                     // we use the one from WCONINJE for now
@@ -1024,6 +1029,9 @@ namespace Opm {
                 if (VFPTableNumber > 0) {
                     properties.VFPTableNumber = VFPTableNumber;
                 }
+
+                std::cout << " well " << well->name() << " currentStep " << currentStep << " new_properties " << std::endl
+                          << properties << std::endl;
 
                 if (well->setInjectionProperties(currentStep, properties))
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
