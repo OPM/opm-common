@@ -59,7 +59,6 @@ namespace Opm {
             p.THPH = record.getItem("THP").getSIDouble(0);
 
         const auto& cmodeItem = record.getItem("CMODE");
-
         if ( cmodeItem.defaultApplied(0) ) {
             const std::string msg = "control mode can not be defaulted for keyword WCONHIST";
             throw std::invalid_argument(msg);

@@ -40,7 +40,6 @@ namespace Opm {
         THPH=0.0;
         VFPTableNumber=0;
         predictionMode=true;
-        BHPLimitFromWeltarg = false;
         injectionControls=0;
     }
 
@@ -55,7 +54,6 @@ namespace Opm {
             (THPH == other.THPH) &&
             (VFPTableNumber == other.VFPTableNumber) &&
             (predictionMode == other.predictionMode) &&
-            (BHPLimitFromWeltarg == other.BHPLimitFromWeltarg) &&
             (injectionControls == other.injectionControls) &&
             (injectorType == other.injectorType) &&
             (controlMode == other.controlMode))
@@ -81,7 +79,6 @@ namespace Opm {
             << "THPH: "             << wp.THPH << ", "
             << "VFP table: "        << wp.VFPTableNumber << ", "
             << "prediction mode: "  << wp.predictionMode << ", "
-            << "BHP limit is from WELTARG: "  << wp.BHPLimitFromWeltarg << ", "
             << "injection ctrl: "   << wp.injectionControls << ", "
             << "injector type: "    << wp.injectorType << ", "
             << "control mode: "     << wp.controlMode << " }";

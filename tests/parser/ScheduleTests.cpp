@@ -1431,7 +1431,7 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     // well_i is a producer for this report step
     BOOST_CHECK_EQUAL(well_i->getInjectionProperties(3).BHPLimit, 0); // 3
     // well_i changes from producer to injector
-    BOOST_CHECK_EQUAL(well_i->getInjectionProperties(4).BHPLimit, 6895 * 1e5); // 4
+    BOOST_CHECK_EQUAL(well_i->getInjectionProperties(4).BHPLimit, 6891.2 * 1e5); // 4
 
     BOOST_CHECK_EQUAL( true , well_i->getInjectionProperties(2).hasInjectionControl(Opm::WellInjector::BHP) );
     // it is a producer

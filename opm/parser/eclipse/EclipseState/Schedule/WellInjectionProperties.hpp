@@ -36,8 +36,6 @@ namespace Opm {
         double  THPH;
         int     VFPTableNumber;
         bool    predictionMode;
-        // whether the BHP limit is obtained through WELTARG
-        bool BHPLimitFromWeltarg;
         int     injectionControls;
         WellInjector::TypeEnum injectorType;
         WellInjector::ControlModeEnum controlMode;
