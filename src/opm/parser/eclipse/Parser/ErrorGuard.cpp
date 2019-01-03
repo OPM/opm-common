@@ -53,11 +53,15 @@ namespace Opm {
         this->error_list.clear();
     }
 
+    void ErrorGuard::terminate() const {
+        this->dump();
+        std::terminate();
+    }
+
+
     ErrorGuard::~ErrorGuard() {
-        if (*this) {
-            this->dump();
-            std::terminate();
-        }
+        if (*this)
+            this->terminate();
     }
 
 }

@@ -70,7 +70,8 @@ namespace Opm {
                         const EclipseGrid& grid,
                         const Eclipse3DProperties& eclipseProperties,
                         const Runspec &runspec,
-                        const ParseContext& parseContext) :
+                        const ParseContext& parseContext,
+                        ErrorGuard& errors) :
         m_timeMap( deck ),
         m_rootGroupTree( this->m_timeMap, GroupTree{} ),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
@@ -99,16 +100,17 @@ namespace Opm {
         }
 
         if (Section::hasSCHEDULE(deck))
-            iterateScheduleSection( parseContext, SCHEDULESection( deck ), grid, eclipseProperties );
+            iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, eclipseProperties );
     }
 
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.get3DProperties(),
                  es.runspec(),
-                 parse_context)
+                 parse_context,
+                 errors)
     {}
 
 
@@ -133,6 +135,7 @@ namespace Opm {
                                  size_t keywordIdx,
                                  const DeckKeyword& keyword,
                                  const ParseContext& parseContext,
+                                 ErrorGuard& errors,
                                  const EclipseGrid& grid,
                                  const Eclipse3DProperties& eclipseProperties,
                                  const UnitSystem& unit_system,
@@ -175,49 +178,49 @@ namespace Opm {
             handleWELSPECS( section, keywordIdx, currentStep );
 
         else if (keyword.name() == "WHISTCTL")
-            handleWHISTCTL(parseContext, keyword);
+            handleWHISTCTL(parseContext, errors, keyword);
 
         else if (keyword.name() == "WCONHIST")
-            handleWCONHIST(keyword, currentStep, parseContext);
+            handleWCONHIST(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WCONPROD")
-            handleWCONPROD(keyword, currentStep, parseContext);
+            handleWCONPROD(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WCONINJE")
-            handleWCONINJE(section, keyword, currentStep, parseContext);
+            handleWCONINJE(section, keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WPOLYMER")
-            handleWPOLYMER(keyword, currentStep, parseContext);
+            handleWPOLYMER(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WSOLVENT")
-            handleWSOLVENT(keyword, currentStep, parseContext);
+            handleWSOLVENT(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WTRACER")
-            handleWTRACER(keyword, currentStep, parseContext);
+            handleWTRACER(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WTEST")
-            handleWTEST(keyword, currentStep, parseContext);
+            handleWTEST(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WTEMP")
-            handleWTEMP(keyword, currentStep, parseContext);
+            handleWTEMP(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WPMITAB")
-            handleWPMITAB(keyword, currentStep, parseContext);
+            handleWPMITAB(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WSKPTAB")
-            handleWSKPTAB(keyword, currentStep, parseContext);
+            handleWSKPTAB(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WINJTEMP")
-            handleWINJTEMP(keyword, currentStep, parseContext);
+            handleWINJTEMP(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WCONINJH")
-            handleWCONINJH(section, keyword, currentStep, parseContext);
+            handleWCONINJH(section, keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WGRUPCON")
             handleWGRUPCON(keyword, currentStep);
 
         else if (keyword.name() == "COMPDAT")
-            handleCOMPDAT(keyword, currentStep, grid, eclipseProperties, parseContext);
+            handleCOMPDAT(keyword, currentStep, grid, eclipseProperties, parseContext, errors);
 
         else if (keyword.name() == "WELSEGS")
             handleWELSEGS(keyword, currentStep);
@@ -226,10 +229,10 @@ namespace Opm {
             handleCOMPSEGS(keyword, currentStep, grid);
 
         else if (keyword.name() == "WELOPEN")
-            handleWELOPEN(keyword, currentStep, parseContext);
+            handleWELOPEN(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WELTARG")
-            handleWELTARG(section, keyword, currentStep, parseContext);
+            handleWELTARG(section, keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "GRUPTREE")
             handleGRUPTREE(keyword, currentStep);
@@ -238,13 +241,13 @@ namespace Opm {
             handleGRUPNET(keyword, currentStep);
 
         else if (keyword.name() == "GCONINJE")
-            handleGCONINJE(section, keyword, currentStep, parseContext);
+            handleGCONINJE(section, keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "GCONPROD")
-            handleGCONPROD(keyword, currentStep, parseContext);
+            handleGCONPROD(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "GEFAC")
-            handleGEFAC(keyword, currentStep, parseContext);
+            handleGEFAC(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "TUNING")
             handleTUNING(keyword, currentStep);
@@ -259,7 +262,7 @@ namespace Opm {
             handleWPIMULT(keyword, currentStep);
 
         else if (keyword.name() == "COMPORD")
-            handleCOMPORD(parseContext , keyword, currentStep);
+            handleCOMPORD(parseContext, errors , keyword, currentStep);
 
         else if (keyword.name() == "COMPLUMP")
             handleCOMPLUMP(keyword, currentStep);
@@ -280,13 +283,13 @@ namespace Opm {
             handleVAPPARS(keyword, currentStep);
 
         else if (keyword.name() == "WECON")
-            handleWECON(keyword, currentStep, parseContext);
+            handleWECON(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "MESSAGES")
             handleMESSAGES(keyword, currentStep);
 
         else if (keyword.name() == "WEFAC")
-            handleWEFAC(keyword, currentStep, parseContext);
+            handleWEFAC(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "VFPINJ")
             handleVFPINJ(keyword, unit_system, currentStep);
@@ -301,13 +304,13 @@ namespace Opm {
                 m_events.addEvent( ScheduleEvents::GEO_MODIFIER , currentStep);
             } else {
                 std::string msg = "OPM does not support grid property modifier " + keyword.name() + " in the Schedule section. Error at report: " + std::to_string( currentStep );
-                parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg );
+                parseContext.handleError( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , msg, errors );
             }
         }
     }
 
 
-    void Schedule::iterateScheduleSection(const ParseContext& parseContext , const SCHEDULESection& section , const EclipseGrid& grid,
+    void Schedule::iterateScheduleSection(const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const Eclipse3DProperties& eclipseProperties) {
         size_t currentStep = 0;
         const auto& unit_system = section.unitSystem();
@@ -329,13 +332,13 @@ namespace Opm {
 
                     if (actionx_whitelist.find(action_keyword.name()) == actionx_whitelist.end()) {
                         std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
-                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg);
+                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, errors);
                     } else
                         action.addKeyword(action_keyword);
                 }
                 this->actions.add(action);
             } else
-                this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, grid, eclipseProperties, unit_system, rftProperties);
+                this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, eclipseProperties, unit_system, rftProperties);
 
             keywordIdx++;
             if (keywordIdx == section.size())
@@ -372,7 +375,7 @@ namespace Opm {
         return true;
     }
 
-    void Schedule::handleWHISTCTL(const ParseContext& parseContext, const DeckKeyword& keyword) {
+    void Schedule::handleWHISTCTL(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) {
         for( const auto& record : keyword ) {
             const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
             const WellProducer::ControlModeEnum controlMode = WellProducer::ControlModeFromString( cmodeString );
@@ -390,20 +393,20 @@ namespace Opm {
             if (bhp_terminate == "YES") {
                 std::string msg = "The WHISTCTL keyword does not handle 'YES'. i.e. to terminate the run";
                 OpmLog::error(msg);
-                parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg );
+                parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg, errors );
             }
 
         }
     }
 
 
-    void Schedule::handleCOMPORD(const ParseContext& parseContext, const DeckKeyword& compordKeyword, size_t /* currentStep */) {
+  void Schedule::handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t /* currentStep */) {
         for (const auto& record : compordKeyword) {
             const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {
                 std::string msg = "The COMPORD keyword only handles 'TRACK' or 'INPUT' order.";
                 OpmLog::error(msg);
-                parseContext.handleError( ParseContext::UNSUPPORTED_COMPORD_TYPE , msg );
+                parseContext.handleError( ParseContext::UNSUPPORTED_COMPORD_TYPE , msg, errors );
             }
         }
     }
@@ -591,7 +594,7 @@ namespace Opm {
         this->m_oilvaporizationproperties.update( currentStep, ovp );
     }
 
-    void Schedule::handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode, const ParseContext& parseContext) {
+    void Schedule::handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
@@ -601,7 +604,7 @@ namespace Opm {
 
             auto wells = getWells(wellNamePattern);
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( auto* well : wells ) {
                 WellProductionProperties properties;
@@ -637,12 +640,12 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
-        handleWCONProducer(keyword, currentStep, false, parseContext);
+    void Schedule::handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        handleWCONProducer(keyword, currentStep, false, parseContext, errors);
     }
 
-    void Schedule::handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
-        handleWCONProducer( keyword, currentStep, true, parseContext);
+    void Schedule::handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        handleWCONProducer( keyword, currentStep, true, parseContext, errors);
     }
 
     void Schedule::handleWPIMULT( const DeckKeyword& keyword, size_t currentStep) {
@@ -657,13 +660,13 @@ namespace Opm {
 
 
 
-    void Schedule::handleWCONINJE( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWCONINJE( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
             auto wells = getWells(wellNamePattern);
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( auto* well : wells) {
                 WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
@@ -741,13 +744,13 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( auto* well : wells) {
                 WellPolymerProperties properties(well->getPolymerPropertiesCopy(currentStep));
@@ -771,7 +774,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWPMITAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWPMITAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
 
         for (const auto& record : keyword) {
 
@@ -779,7 +782,7 @@ namespace Opm {
             const auto wells = getWells(wellNamePattern);
 
             if (wells.empty()) {
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
             }
 
             for (auto* well : wells) {
@@ -794,7 +797,7 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWSKPTAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWSKPTAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
 
 
         for (const auto& record : keyword) {
@@ -802,7 +805,7 @@ namespace Opm {
             const auto wells = getWells(wellNamePattern);
 
             if (wells.empty()) {
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
             }
 
             for (auto* well : wells) {
@@ -818,14 +821,14 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             WellEconProductionLimits econ_production_limits(record);
             const auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( auto* well : wells ) {
                 well->setEconProductionLimits(currentStep, econ_production_limits);
@@ -833,14 +836,14 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELLNAME").getTrimmedString(0);
             const double& efficiencyFactor = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
             const auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( auto* well : wells ) {
                 well->setEfficiencyFactor(currentStep, efficiencyFactor);
@@ -849,14 +852,14 @@ namespace Opm {
     }
 
 
-    void Schedule::handleWTEST(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWTEST(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& current = *this->wtest_config.get(currentStep);
         std::shared_ptr<WellTestConfig> new_config(new WellTestConfig(current));
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto wells = getWells( wellNamePattern );
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             double test_interval = record.getItem("INTERVAL").getSIDouble(0);
             const std::string& reason = record.getItem("REASON").get<std::string>(0);
@@ -873,14 +876,14 @@ namespace Opm {
         this->wtest_config.update(currentStep, new_config);
     }
 
-    void Schedule::handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
 
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( auto* well : wells) {
                 WellInjectionProperties injectionProperties = well->getInjectionProperties( currentStep );
@@ -893,15 +896,15 @@ namespace Opm {
             }
         }
     }
-    
-    void Schedule::handleWTRACER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+
+    void Schedule::handleWTRACER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
 
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( auto* well : wells) {
                 WellTracerProperties wellTracerProperties = well->getTracerProperties( currentStep );
@@ -914,13 +917,13 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern( wellNamePattern, parseContext, keyword);
+                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
             for (auto* well : wells) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -938,7 +941,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         // we do not support the "enthalpy" field yet. how to do this is a more difficult
         // question.
         for( const auto& record : keyword ) {
@@ -946,7 +949,7 @@ namespace Opm {
             auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern( wellNamePattern, parseContext, keyword);
+                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
             for (auto* well : wells) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -964,7 +967,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
@@ -978,7 +981,7 @@ namespace Opm {
             auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern( wellNamePattern, parseContext, keyword);
+                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
             for (auto* well : wells) {
                 updateWellStatus( *well, currentStep, status );
@@ -1029,7 +1032,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext ) {
+    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
 
         auto all_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -1048,7 +1051,7 @@ namespace Opm {
             auto wells = getWells( wellNamePattern );
 
             if (wells.empty())
-                invalidNamePattern( wellNamePattern, parseContext, keyword);
+                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
             /* if all records are defaulted or just the status is set, only
              * well status is updated
@@ -1094,7 +1097,7 @@ namespace Opm {
     void Schedule::handleWELTARG( const SCHEDULESection& section ,
                                   const DeckKeyword& keyword,
                                   size_t currentStep,
-                                  const ParseContext& parseContext) {
+                                  const ParseContext& parseContext, ErrorGuard& errors) {
         Opm::UnitSystem unitSystem = section.unitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
         double siFactorG = unitSystem.parse("GasSurfaceVolume/Time").getSIScaling();
@@ -1109,7 +1112,7 @@ namespace Opm {
             const auto wells = getWells( wellNamePattern );
 
             if( wells.empty() )
-                invalidNamePattern( wellNamePattern, parseContext, keyword);
+                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
             for( auto* well : wells ) {
                 if(well->isProducer(currentStep)){
@@ -1211,13 +1214,13 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             auto groups = getGroups ( groupNamePattern );
 
             if (groups.empty())
-                invalidNamePattern(groupNamePattern, parseContext, keyword);
+                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (auto* group : groups){
                 {
@@ -1246,13 +1249,13 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             auto groups = getGroups ( groupNamePattern );
 
             if (groups.empty())
-                invalidNamePattern(groupNamePattern, parseContext, keyword);
+                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (auto* group : groups){
                 {
@@ -1275,13 +1278,13 @@ namespace Opm {
     }
 
 
-    void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext) {
+    void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             auto groups = getGroups ( groupNamePattern );
 
             if (groups.empty())
-                invalidNamePattern(groupNamePattern, parseContext, keyword);
+                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (auto* group : groups){
                 group->setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
@@ -1451,12 +1454,12 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext) {
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wells = getWells(wellNamePattern);
             if (wells.empty())
-                invalidNamePattern(wellNamePattern, parseContext, keyword);
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for (auto* well : wells) {
                 well->handleCOMPDAT(currentStep, record, grid, eclipseProperties);
@@ -1573,10 +1576,10 @@ namespace Opm {
         }
     }
 
-    void Schedule::invalidNamePattern( const std::string& namePattern,  const ParseContext& parseContext, const DeckKeyword& keyword ) const {
+    void Schedule::invalidNamePattern( const std::string& namePattern,  const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
         std::string msg = "Error when handling " + keyword.name() +". No names match " +
                           namePattern;
-        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg );
+        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg, errors );
     }
 
     const TimeMap& Schedule::getTimeMap() const {

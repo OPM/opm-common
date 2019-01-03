@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -30,16 +31,16 @@
 
 inline void loadDeck( const char * deck_file) {
     Opm::ParseContext parseContext;
+    Opm::ErrorGuard errors;
     Opm::Parser parser;
 
     std::cout << "Loading deck: " << deck_file << " ..... "; std::cout.flush();
-    auto deck = parser.parseFile(deck_file, parseContext);
+    auto deck = parser.parseFile(deck_file, parseContext, errors);
     std::cout << "parse complete - creating EclipseState .... ";  std::cout.flush();
-    Opm::EclipseState state( deck, parseContext );
-    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
-    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext );
+    Opm::EclipseState state( deck, parseContext, errors );
+    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext, errors);
+    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext, errors );
     std::cout << "complete." << std::endl;
-
 }
 
 

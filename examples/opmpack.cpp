@@ -22,6 +22,7 @@
 #include <boost/filesystem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -29,9 +30,10 @@
 
 inline void pack_deck( const char * deck_file, std::ostream& os) {
     Opm::ParseContext parseContext(Opm::InputError::WARN);
+    Opm::ErrorGuard errors;
     Opm::Parser parser;
 
-    auto deck = parser.parseFile(deck_file, parseContext);
+    auto deck = parser.parseFile(deck_file, parseContext, errors);
     os << deck;
 
 }

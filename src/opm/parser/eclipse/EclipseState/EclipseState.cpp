@@ -49,10 +49,10 @@
 
 namespace Opm {
 
-    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext) :
+    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors) :
         m_tables(            deck ),
         m_runspec(           deck ),
-        m_eclipseConfig(     deck, parseContext ),
+        m_eclipseConfig(     deck, parseContext, errors ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_inputNnc(          deck ),
         m_inputEditNnc(      deck ),

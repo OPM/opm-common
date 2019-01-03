@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
@@ -111,7 +112,8 @@ namespace Opm {
 
     void ParseContext::handleError(
             const std::string& errorKey,
-            const std::string& msg ) const {
+            const std::string& msg,
+            ErrorGuard& errors) const {
 
         InputError::Action action = get( errorKey );
 
@@ -133,10 +135,10 @@ namespace Opm {
         }
     }
 
-    void ParseContext::handleUnknownKeyword(const std::string& keyword) const {
+    void ParseContext::handleUnknownKeyword(const std::string& keyword, ErrorGuard& errors) const {
         if (this->ignore_keywords.find(keyword) == this->ignore_keywords.end()) {
             std::string msg = "Unknown keyword: " + keyword;
-            this->handleError(ParseContext::PARSE_UNKNOWN_KEYWORD, msg);
+            this->handleError(ParseContext::PARSE_UNKNOWN_KEYWORD, msg, errors);
         }
     }
 

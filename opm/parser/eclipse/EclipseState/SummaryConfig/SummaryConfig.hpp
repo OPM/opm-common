@@ -99,6 +99,7 @@ namespace Opm {
     class EclipseState;
     class ParserKeyword;
     class Schedule;
+    class ErrorGuard;
     class ParseContext;
     class GridDims;
 
@@ -109,7 +110,7 @@ namespace Opm {
             typedef keyword_list::const_iterator const_iterator;
 
             SummaryConfig( const Deck&, const Schedule&,
-                           const TableManager&, const ParseContext&);
+                           const TableManager&, const ParseContext&, ErrorGuard&);
 
             const_iterator begin() const;
             const_iterator end() const;
@@ -141,6 +142,7 @@ namespace Opm {
                            const Schedule& schedule,
                            const TableManager& tables,
                            const ParseContext& parseContext,
+                           ErrorGuard& errors,
                            const GridDims& dims);
 
             /*

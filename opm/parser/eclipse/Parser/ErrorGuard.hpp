@@ -40,6 +40,7 @@ public:
       stderr and throw std::runtime_error.
     */
     ~ErrorGuard();
+    void terminate() const;
 
 private:
     void dump() const;
