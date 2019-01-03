@@ -603,9 +603,26 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               const ParseContext& parseContext,
                               ErrorGuard& errors) :
     SummaryConfig( deck , schedule, tables, parseContext, errors, GridDims( deck ))
-{
+{ }
 
-}
+
+template <typename T>
+SummaryConfig::SummaryConfig( const Deck& deck,
+                              const Schedule& schedule,
+                              const TableManager& tables,
+                              const ParseContext& parseContext,
+                              T&& errors) :
+    SummaryConfig(deck, schedule, tables, parseContext, errors)
+{}
+
+
+SummaryConfig::SummaryConfig( const Deck& deck,
+               const Schedule& schedule,
+               const TableManager& tables) :
+    SummaryConfig(deck, schedule, tables, ParseContext(), ErrorGuard())
+{}
+
+
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
     return this->keywords.cbegin();

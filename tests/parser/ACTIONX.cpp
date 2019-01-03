@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
 using namespace Opm;
 
@@ -118,24 +119,25 @@ TSTEP
    10 /
 )"};
     Opm::Parser parser;
-    auto deck1 = parser.parseString(MISSING_END, Opm::ParseContext());
-    auto deck2 = parser.parseString(WITH_WELSPECS, Opm::ParseContext());
-    auto deck3 = parser.parseString(WITH_GRID, Opm::ParseContext());
+    auto deck1 = parser.parseString(MISSING_END);
+    auto deck2 = parser.parseString(WITH_WELSPECS);
+    auto deck3 = parser.parseString(WITH_GRID);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck1 );
     Eclipse3DProperties eclipseProperties ( deck1 , table, grid1);
     Runspec runspec (deck1);
 
     // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
-    BOOST_CHECK_THROW(Schedule(deck1, grid1, eclipseProperties, runspec, ParseContext()), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck1, grid1, eclipseProperties, runspec ), std::invalid_argument);
 
-    Schedule sched(deck2, grid1, eclipseProperties, runspec, ParseContext());
+    Schedule sched(deck2, grid1, eclipseProperties, runspec);
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
 
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
-    BOOST_CHECK_THROW(Schedule(deck3, grid1, eclipseProperties, runspec, parseContext), std::invalid_argument);
+    ErrorGuard errors;
+    BOOST_CHECK_THROW(Schedule(deck3, grid1, eclipseProperties, runspec, parseContext, errors), std::invalid_argument);
 }
 
 
@@ -219,13 +221,13 @@ TSTEP
 
     std::string deck_string = start + action_string + end;
     Opm::Parser parser;
-    auto deck = parser.parseString(deck_string, Opm::ParseContext());
+    auto deck = parser.parseString(deck_string);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     Runspec runspec(deck);
 
-    return Schedule(deck, grid1, eclipseProperties, runspec, ParseContext());
+    return Schedule(deck, grid1, eclipseProperties, runspec);
 }
 
 

@@ -33,7 +33,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -79,7 +78,7 @@ static Opm::Deck createDeck() {
             "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext() );
+    return parser.parseString(deckData);
 }
 
 
@@ -118,7 +117,7 @@ static Opm::Deck createValidIntDeck() {
             "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext() );
+    return parser.parseString(deckData);
 }
 
 static Opm::Deck createValidPERMXDeck() {
@@ -164,7 +163,7 @@ static Opm::Deck createValidPERMXDeck() {
             "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext() );
+    return parser.parseString(deckData);
 }
 
 static Opm::Deck createQuarterCircleDeck() {
@@ -253,14 +252,13 @@ MULTIPLY
 )";
 
     Opm::Parser parser;
-    return parser.parseString(input, Opm::ParseContext() );
+    return parser.parseString(input);
 }
 
 
 /// Setup fixture
 struct Setup
 {
-    Opm::ParseContext parseContext;
     Opm::Deck deck;
     Opm::TableManager tablemanager;
     Opm::EclipseGrid grid;
@@ -419,7 +417,7 @@ BOOST_AUTO_TEST_CASE(getRegions) {
             "FIPNUM\n"
             "1 1 2 3 /\n";
 
-    Setup s( Opm::Parser().parseString(input, Opm::ParseContext() ) );
+    Setup s( Opm::Parser().parseString(input) );
 
     std::vector< int > ref = { 1, 2, 3 };
     const auto& regions = s.props.getRegions( "FIPNUM" );
@@ -556,7 +554,7 @@ EQUALS
 )";
 
     Opm::Parser parser;
-    return parser.parseString(input, Opm::ParseContext() );
+    return parser.parseString(input);
 }
 
 
@@ -638,7 +636,7 @@ ADD
 )";
 
   Opm::Parser parser;
-  return parser.parseString(input, Opm::ParseContext() );
+  return parser.parseString(input);
 }
 
 BOOST_AUTO_TEST_CASE(TRANXADD) {
@@ -719,7 +717,7 @@ MULTIPLY
 )";
 
     Opm::Parser parser;
-    return parser.parseString(input, Opm::ParseContext() );
+    return parser.parseString(input);
 }
 
 
@@ -782,7 +780,7 @@ MULTIPLY
 
 )";
     Opm::Parser parser;
-    return parser.parseString(input, Opm::ParseContext() );
+    return parser.parseString(input);
 }
 
 

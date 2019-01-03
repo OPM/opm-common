@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -517,6 +518,15 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
                        parseContext,
                        errors,
                        TimeMap{ deck } )
+    {}
+
+    template<typename T>
+    RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext, T&& errors ) :
+        RestartConfig(deck, parseContext, errors)
+    {}
+
+    RestartConfig::RestartConfig( const Deck& deck) :
+        RestartConfig(deck, ParseContext(), ErrorGuard())
     {}
 
 

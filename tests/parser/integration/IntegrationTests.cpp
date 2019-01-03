@@ -26,7 +26,6 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -75,7 +74,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     auto parser = createWWCTParser();
     BOOST_CHECK( parser.isRecognizedKeyword("WWCT"));
     BOOST_CHECK( parser.isRecognizedKeyword("SUMMARY"));
-    BOOST_CHECK_NO_THROW( parser.parseFile(singleKeywordFile.string(), ParseContext()) );
+    BOOST_CHECK_NO_THROW( parser.parseFile(singleKeywordFile.string()) );
 }
 
 BOOST_AUTO_TEST_CASE(parse_stringWithWWCTKeyword_deckReturned) {
@@ -89,7 +88,7 @@ BOOST_AUTO_TEST_CASE(parse_stringWithWWCTKeyword_deckReturned) {
     auto parser = createWWCTParser();
     BOOST_CHECK( parser.isRecognizedKeyword("WWCT"));
     BOOST_CHECK( parser.isRecognizedKeyword("SUMMARY"));
-    BOOST_CHECK_NO_THROW(parser.parseString(wwctString, ParseContext()));
+    BOOST_CHECK_NO_THROW(parser.parseString(wwctString));
 }
 
 BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
@@ -103,13 +102,13 @@ BOOST_AUTO_TEST_CASE(parse_streamWithWWCTKeyword_deckReturned) {
     auto parser = createWWCTParser();
     BOOST_CHECK( parser.isRecognizedKeyword("WWCT"));
     BOOST_CHECK( parser.isRecognizedKeyword("SUMMARY"));
-    BOOST_CHECK_NO_THROW(parser.parseString( wwctString, ParseContext()));
+    BOOST_CHECK_NO_THROW(parser.parseString( wwctString));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
     boost::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
     auto parser = createWWCTParser();
-    auto deck = parser.parseFile(singleKeywordFile.string(), ParseContext());
+    auto deck = parser.parseFile(singleKeywordFile.string());
     BOOST_CHECK(deck.hasKeyword("SUMMARY"));
     BOOST_CHECK(deck.hasKeyword("WWCT"));
 }
@@ -117,7 +116,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckHasWWCT) {
 BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_dataIsCorrect) {
     boost::filesystem::path singleKeywordFile(pathprefix() + "wwct.data");
     auto parser = createWWCTParser();
-    auto deck = parser.parseFile(singleKeywordFile.string(), ParseContext());
+    auto deck = parser.parseFile(singleKeywordFile.string());
     BOOST_CHECK_EQUAL("WELL-1", deck.getKeyword("WWCT" , 0).getRecord(0).getItem(0).get< std::string >(0));
     BOOST_CHECK_EQUAL("WELL-2", deck.getKeyword("WWCT" , 0).getRecord(0).getItem(0).get< std::string >(1));
 }
@@ -159,14 +158,14 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_deckReturned) {
     boost::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
     auto parser = createBPRParser();
 
-    BOOST_CHECK_NO_THROW(parser.parseFile(singleKeywordFile.string(), ParseContext()));
+    BOOST_CHECK_NO_THROW(parser.parseFile(singleKeywordFile.string()));
 }
 
 BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_DeckhasBRP) {
     boost::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
 
     auto parser = createBPRParser();
-    auto deck =  parser.parseFile(singleKeywordFile.string(), ParseContext());
+    auto deck =  parser.parseFile(singleKeywordFile.string());
 
     BOOST_CHECK_EQUAL(true, deck.hasKeyword("BPR"));
 }
@@ -175,7 +174,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
     boost::filesystem::path singleKeywordFile(pathprefix() + "bpr.data");
 
     auto parser = createBPRParser();
-    auto deck =  parser.parseFile(singleKeywordFile.string(), ParseContext());
+    auto deck =  parser.parseFile(singleKeywordFile.string());
 
     const auto& keyword = deck.getKeyword("BPR" , 0);
     BOOST_CHECK_EQUAL(2U, keyword.size());
@@ -197,7 +196,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithBPRKeyword_dataiscorrect) {
 /***************** Testing non-recognized keywords ********************/
 BOOST_AUTO_TEST_CASE(parse_unknownkeyword_exceptionthrown) {
     Parser parser;
-    BOOST_CHECK_THROW( parser.parseFile(pathprefix() + "someobscureelements.data", ParseContext()), std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseFile(pathprefix() + "someobscureelements.data"), std::invalid_argument);
 }
 
 /*********************Testing truncated (default) records ***************************/
@@ -206,7 +205,7 @@ BOOST_AUTO_TEST_CASE(parse_unknownkeyword_exceptionthrown) {
 // Datafile contains 3 RADFIN4 keywords. One fully specified, one with 2 out of 11 items, and one with no items.
 BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     Parser parser;
-    auto deck =  parser.parseFile(pathprefix() + "truncated_records.data", ParseContext());
+    auto deck =  parser.parseFile(pathprefix() + "truncated_records.data");
     BOOST_CHECK_EQUAL(3U, deck.size());
     const auto& radfin4_0_full= deck.getKeyword("RADFIN4", 0);
     const auto& radfin4_1_partial= deck.getKeyword("RADFIN4", 1);

@@ -109,8 +109,24 @@ namespace Opm {
             typedef std::vector< keyword_type > keyword_list;
             typedef keyword_list::const_iterator const_iterator;
 
-            SummaryConfig( const Deck&, const Schedule&,
-                           const TableManager&, const ParseContext&, ErrorGuard&);
+            SummaryConfig( const Deck&,
+                           const Schedule&,
+                           const TableManager&,
+                           const ParseContext&,
+                           ErrorGuard&);
+
+            template <typename T>
+            SummaryConfig( const Deck&,
+                           const Schedule&,
+                           const TableManager&,
+                           const ParseContext&,
+                           T&&);
+
+            SummaryConfig( const Deck&,
+                           const Schedule&,
+                           const TableManager&);
+
+
 
             const_iterator begin() const;
             const_iterator end() const;

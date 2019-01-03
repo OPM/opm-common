@@ -22,7 +22,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -43,7 +42,7 @@ inline Opm::Deck createSWOFDeck() {
         " 9 10 11 12 /\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext());
+    return parser.parseString(deckData);
 }
 
 BOOST_AUTO_TEST_CASE( CreateContainer ) {

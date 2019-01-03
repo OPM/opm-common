@@ -31,7 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
@@ -305,10 +304,9 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     rptConfig.push_back( std::make_tuple(241 , true , boost::gregorian::date( 2006,10,10)) );
 
     Parser parser;
-    ParseContext ctx;
-    auto deck = parser.parseFile( prefix() + "IOConfig/RPTRST_DECK.DATA" , ctx);
-    EclipseState state(deck, ctx);
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), ctx);
+    auto deck = parser.parseFile( prefix() + "IOConfig/RPTRST_DECK.DATA");
+    EclipseState state(deck);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
 
     verifyRestartConfig(schedule.getTimeMap(), state.cfg().restart(), rptConfig);
 }
@@ -351,11 +349,10 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
     }
 
 
-    ParseContext parseContext;
     Parser parser;
-    auto deck = parser.parseFile(prefix() + "IOConfig/RPT_TEST2.DATA", parseContext);
-    EclipseState state( deck , parseContext );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
+    auto deck = parser.parseFile(prefix() + "IOConfig/RPT_TEST2.DATA");
+    EclipseState state( deck);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
     const auto& rstConfig = state.cfg().restart();
     verifyRestartConfig(schedule.getTimeMap(), state.cfg().restart(), rptConfig);
 
@@ -365,8 +362,7 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
 
 
 BOOST_AUTO_TEST_CASE( SPE9END ) {
-    ParseContext parseContext;
     Parser parser;
-    auto deck = parser.parseFile(prefix() + "IOConfig/SPE9_END.DATA", parseContext);
-    BOOST_CHECK_NO_THROW( EclipseState state( deck , parseContext ) );
+    auto deck = parser.parseFile(prefix() + "IOConfig/SPE9_END.DATA");
+    BOOST_CHECK_NO_THROW( EclipseState state( deck) );
 }

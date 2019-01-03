@@ -20,25 +20,23 @@
 #include <sstream>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 inline void loadDeck( const char * deck_file) {
-    Opm::ParseContext parseContext;
     Opm::Parser parser;
 
-    auto deck = parser.parseFile(deck_file, parseContext);
-    Opm::EclipseState state( deck, parseContext );
-    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
-    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ), parseContext );
+    auto deck = parser.parseFile(deck_file);
+    Opm::EclipseState state( deck);
+    Opm::Schedule schedule( deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
+    Opm::SummaryConfig summary( deck, schedule, state.getTableManager( ));
     {
         std::stringstream ss;
 
         ss << deck;
-        auto deck2 = parser.parseString(ss.str(), parseContext);
+        auto deck2 = parser.parseString(ss.str());
         if (deck.size() != deck2.size()) {
             std::cerr << "Deck size mismatch original:" << deck.size() << " new: " << deck2.size( ) << std::endl;
             std::exit( 1 );

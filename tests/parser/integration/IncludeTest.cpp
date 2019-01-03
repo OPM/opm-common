@@ -27,7 +27,6 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
@@ -150,7 +149,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithWWCTKeyword_deckReturned) {
     path datafile;
     Parser parser;
     createDeckWithInclude (datafile, "");
-    auto deck =  parser.parseFile(datafile.string(), ParseContext());
+    auto deck =  parser.parseFile(datafile.string());
 
     BOOST_CHECK( deck.hasKeyword("START"));
     BOOST_CHECK( deck.hasKeyword("DIMENS"));
@@ -161,7 +160,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithENDINCKeyword_deckReturned) {
     path datafile;
     Parser parser;
     createDeckWithInclude (datafile, "ENDINC");
-    auto deck =  parser.parseFile(datafile.string(), ParseContext());
+    auto deck =  parser.parseFile(datafile.string());
 
     BOOST_CHECK( deck.hasKeyword("START"));
     BOOST_CHECK( !deck.hasKeyword("DIMENS"));
@@ -172,7 +171,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithENDKeyword_deckReturned) {
     path datafile;
     Parser parser;
     createDeckWithInclude (datafile, "END");
-    auto deck =  parser.parseFile(datafile.string(), ParseContext());
+    auto deck =  parser.parseFile(datafile.string());
 
     BOOST_CHECK( deck.hasKeyword("START"));
     BOOST_CHECK( !deck.hasKeyword("DIMENS"));
@@ -183,7 +182,7 @@ BOOST_AUTO_TEST_CASE(parse_fileWithPathsKeyword_IncludeExtendsPath) {
     path datafile;
     Parser parser;
     createDeckWithInclude (datafile, "");
-    auto deck =  parser.parseFile(datafile.string(), ParseContext());
+    auto deck =  parser.parseFile(datafile.string());
 
     BOOST_CHECK( deck.hasKeyword("TITLE"));
     BOOST_CHECK( deck.hasKeyword("BOX"));

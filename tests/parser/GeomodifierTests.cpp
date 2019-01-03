@@ -27,12 +27,13 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/M.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
@@ -69,10 +70,10 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
         "   10 10/\n"
         "\n";
 
-    ParseContext parseContext;
     Parser parser(true);
-
-    auto deck = parser.parseString( deckString , parseContext );
+    ParseContext parseContext;
+    ErrorGuard errors;
+    auto deck = parser.parseString( deckString, parseContext, errors);
     EclipseGrid grid( deck );
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE( CheckUnsoppertedInSCHEDULE ) {
     parseContext.update( ParseContext::UNSUPPORTED_SCHEDULE_GEO_MODIFIER , InputError::IGNORE );
     {
         Runspec runspec ( deck );
-        Schedule schedule( deck, grid , eclipseProperties, runspec , parseContext);
+        Schedule schedule( deck, grid , eclipseProperties, runspec , parseContext, errors);
         auto events = schedule.getEvents( );
         BOOST_CHECK_EQUAL( false , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 1 ));
         BOOST_CHECK_EQUAL( true  , events.hasEvent( ScheduleEvents::GEO_MODIFIER , 2 ));

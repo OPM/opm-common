@@ -55,7 +55,7 @@ inline Deck createAquifetpDeck() {
   "/\n";
 
   Parser parser;
-  return parser.parseString(deckData, ParseContext());
+  return parser.parseString(deckData);
 }
 
 inline Deck createNullAquifetpDeck(){
@@ -89,7 +89,7 @@ inline Deck createNullAquifetpDeck(){
   ;
 
   Parser parser;
-  return parser.parseString(deckData, ParseContext());
+  return parser.parseString(deckData);
 }
 
 inline Deck createAquifetpDeck_defaultPressure(){
@@ -126,7 +126,7 @@ inline Deck createAquifetpDeck_defaultPressure(){
   "/\n";
 
   Parser parser;
-  return parser.parseString(deckData, ParseContext());
+  return parser.parseString(deckData);
 }
 
 inline std::vector<Aquifetp::AQUFETP_data> init_aquifetp(Deck& deck){

@@ -223,13 +223,12 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
                 "/\n";
 
 
-    Opm::ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec , Opm::ParseContext());
+    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec);
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
@@ -265,13 +264,12 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
                 "/\n";
 
 
-    Opm::ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     Opm::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec , Opm::ParseContext());
+    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec);
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
@@ -309,13 +307,13 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
                 "/\n";
 
 
-    Opm::ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     Opm::EclipseGrid grid(10,10,10);
+    Opm::ErrorGuard errors;
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Opm::Runspec runspec (deck);
-    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec , Opm::ParseContext());
+    Opm::Schedule schedule(deck, grid , eclipseProperties, runspec, Opm::ParseContext(), errors);
     auto* op_1 = schedule.getWell("OP_1");
 
     size_t timestep = 2;
@@ -761,7 +759,7 @@ namespace {
         Opm::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
 
-            auto deck = parser.parseString(input, Opm::ParseContext());
+            auto deck = parser.parseString(input);
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
             Opm::WellProductionProperties prev_p;
             prev_p.BHPLimit = 100.;
@@ -823,7 +821,7 @@ namespace {
         {
             Opm::Parser parser;
 
-            auto deck = parser.parseString(input, Opm::ParseContext());
+            auto deck = parser.parseString(input);
             const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
             Opm::WellProductionProperties pred = Opm::WellProductionProperties::prediction( record, false );

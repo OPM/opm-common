@@ -44,7 +44,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 using namespace Opm;
@@ -55,9 +54,9 @@ struct setup {
     EclipseState es;
     test_work_area_type * ta;
 
-    setup( const std::string& path , const ParseContext& parseContext = ParseContext( )) :
-        deck( Parser().parseFile( path, parseContext ) ),
-        es( deck, ParseContext() ),
+    setup( const std::string& path) :
+        deck( Parser().parseFile( path) ),
+        es( deck ),
         ta( test_work_area_alloc( "test_tables"))
     {
     }
@@ -195,10 +194,10 @@ END
 )";
 
                     const auto deck = Opm::Deck{
-                        Opm::Parser{}.parseString(input, Opm::ParseContext{})
+                        Opm::Parser{}.parseString(input)
                     };
 
-                    return {deck, Opm::ParseContext{}};
+                    return {deck};
                 }
 
                 std::vector<double> expect_SGFN()
@@ -347,10 +346,10 @@ END
 )";
 
                     const auto deck = Opm::Deck{
-                        Opm::Parser{}.parseString(input, Opm::ParseContext{})
+                        Opm::Parser{}.parseString(input)
                     };
 
-                    return {deck, Opm::ParseContext{}};
+                    return {deck};
                 }
 
                 std::vector<double> expect_SOFN()
@@ -518,10 +517,10 @@ END
 )";
 
                 const auto deck = Opm::Deck{
-                    Opm::Parser{}.parseString(input, Opm::ParseContext{})
+                    Opm::Parser{}.parseString(input)
                 };
 
-                return {deck, Opm::ParseContext{}};
+                return {deck};
             }
 
             std::vector<double> expect_SGFN()
@@ -675,10 +674,10 @@ END
 )";
 
                     const auto deck = Opm::Deck{
-                        Opm::Parser{}.parseString(input, Opm::ParseContext{})
+                        Opm::Parser{}.parseString(input)
                     };
 
-                    return {deck, Opm::ParseContext{}};
+                    return {deck};
                 }
 
                 std::vector<double> expect_SGFN()
@@ -846,10 +845,10 @@ END
 )";
 
                     const auto deck = Opm::Deck{
-                        Opm::Parser{}.parseString(input, Opm::ParseContext{})
+                        Opm::Parser{}.parseString(input)
                     };
 
-                    return {deck, Opm::ParseContext{}};
+                    return {deck};
                 }
 
                 std::vector<double> expect_SOFN()
@@ -1030,10 +1029,10 @@ END
 )";
 
                 const auto deck = Opm::Deck{
-                    Opm::Parser{}.parseString(input, Opm::ParseContext{})
+                    Opm::Parser{}.parseString(input)
                 };
 
-                return {deck, Opm::ParseContext{}};
+                return {deck};
             }
 
             std::vector<double> expect_SGFN()

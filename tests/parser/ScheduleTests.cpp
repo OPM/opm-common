@@ -41,7 +41,6 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -56,7 +55,7 @@ static Deck createDeck() {
         "SCHEDULE\n"
         "\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithWells() {
@@ -80,7 +79,7 @@ static Deck createDeckWithWells() {
             "     \'W_3\'        \'OP\'   20   51  3.92       \'OIL\'  7* /  \n"
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWTEST() {
@@ -154,7 +153,7 @@ static Deck createDeckWTEST() {
             "/\n";
 
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckForTestingCrossFlow() {
@@ -219,7 +218,7 @@ static Deck createDeckForTestingCrossFlow() {
             "/\n";
 
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithWellsOrdered() {
@@ -234,7 +233,7 @@ static Deck createDeckWithWellsOrdered() {
             "     \'AW_3\'        \'AG\'   20   51  3.92       \'OIL\'  7* /  \n"
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithWellsOrderedGRUPTREE() {
@@ -256,7 +255,7 @@ static Deck createDeckWithWellsOrderedGRUPTREE() {
             "     \'AW_3\'        \'CG2\'   20   51  3.92       \'OIL\'  7* /   \n"
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithWellsAndCompletionData() {
@@ -290,7 +289,7 @@ static Deck createDeckWithWellsAndCompletionData() {
       " 'OP_1'  0  *   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
       "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
@@ -300,7 +299,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec );
     BOOST_CHECK_EQUAL( schedule.getStartTime() , TimeMap::mkdate(1983, 1 , 1));
 }
 
@@ -310,7 +309,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     auto wells = schedule.getWells();
 
     BOOST_CHECK_EQUAL( "CW_1" , wells[0]->name());
@@ -341,7 +340,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     BOOST_CHECK_THROW( schedule.getWells( "NO_SUCH_GROUP" , 1 ), std::invalid_argument);
 
@@ -390,7 +389,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithStart) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
 
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK_EQUAL( schedule.getStartTime() , TimeMap::mkdate(1998, 3  , 8 ));
 }
 
@@ -402,7 +401,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithSCHEDULENoThrow) {
     deck.addKeyword( DeckKeyword( "SCHEDULE" ) );
     Runspec runspec (deck);
 
-    BOOST_CHECK_NO_THROW( Schedule( deck, grid , eclipseProperties, runspec, ParseContext() ));
+    BOOST_CHECK_NO_THROW( Schedule( deck, grid , eclipseProperties, runspec));
 }
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
@@ -411,7 +410,7 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK_EQUAL( 0U , schedule.numWells() );
     BOOST_CHECK_EQUAL( false , schedule.hasWell("WELL1") );
     BOOST_CHECK_THROW( schedule.getWell("WELL2") , std::invalid_argument );
@@ -423,7 +422,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForT
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK(schedule.getGroupTree(0).exists("FIELD"));
 }
 
@@ -451,7 +450,7 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK( schedule.getGroupTree( 0 ).exists( "FIELD" ) );
     BOOST_CHECK( schedule.getGroupTree( 0 ).exists( "FAREN" ) );
     BOOST_CHECK_EQUAL( "FAREN", schedule.getGroupTree( 0 ).parent( "BARNET" ) );
@@ -463,7 +462,7 @@ BOOST_AUTO_TEST_CASE(GetGroups) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck , grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck , grid , eclipseProperties, runspec);
 
     auto groups = schedule.getGroups();
 
@@ -484,7 +483,7 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck , grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck , grid , eclipseProperties, runspec);
 
     BOOST_CHECK_EQUAL( 1U , schedule.numGroups() );
     BOOST_CHECK_EQUAL( true , schedule.hasGroup("FIELD") );
@@ -498,7 +497,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck , grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck , grid , eclipseProperties, runspec);
     size_t timeStep = 0;
     const auto wells_alltimesteps = schedule.getWells();
     BOOST_CHECK_EQUAL(0U, wells_alltimesteps.size());
@@ -514,7 +513,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck , grid , eclipseProperties, runspec , ParseContext( ));
+    Schedule schedule(deck , grid , eclipseProperties, runspec);
     size_t timeStep = 0;
 
     const auto wells_alltimesteps = schedule.getWells();
@@ -531,7 +530,7 @@ BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     std::string wellNamePattern;
 
     wellNamePattern = "*";
@@ -553,7 +552,7 @@ BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     BOOST_CHECK_EQUAL(schedule.numWells(0), 1);
     BOOST_CHECK_EQUAL(schedule.numWells(1), 1);
@@ -567,7 +566,7 @@ BOOST_AUTO_TEST_CASE(ReturnMaxNumCompletionsForWellsInTimestep) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext() );
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     BOOST_CHECK_EQUAL(schedule.getMaxNumConnectionsForWells(1), 7);
     BOOST_CHECK_EQUAL(schedule.getMaxNumConnectionsForWells(3), 9);
@@ -579,7 +578,7 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext() );
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     auto well_ban = schedule.getWell("BAN");
     BOOST_CHECK_EQUAL(well_ban->getAllowCrossFlow(), false);
@@ -653,7 +652,7 @@ static Deck createDeckWithWellsAndConnectionDataWithWELOPEN() {
                     " 'OP_1' SHUT 0 0 0 0 0 / \n "
                     "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
@@ -662,7 +661,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck ,grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck ,grid , eclipseProperties, runspec);
     auto* well = schedule.getWell("OP_1");
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 0 ));
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus( 3 ));
@@ -737,12 +736,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
                   "/\n";
 
   EclipseGrid grid(10,10,10);
-  ParseContext parseContext;
-  auto deck = parser.parseString(input, parseContext);
+  auto deck = parser.parseString(input);
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
   Runspec runspec (deck);
-  Schedule schedule(deck ,  grid , eclipseProperties, runspec , parseContext);
+  Schedule schedule(deck ,  grid , eclipseProperties, runspec);
   auto* well = schedule.getWell("OP_1");
   size_t currentStep = 3;
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(currentStep));
@@ -799,12 +797,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
                   "/\n";
 
   EclipseGrid grid(10,10,10);
-  ParseContext parseContext;
-  auto deck = parser.parseString(input, parseContext);
+  auto deck = parser.parseString(input);
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
   Runspec runspec (deck);
-  Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+  Schedule schedule(deck, grid , eclipseProperties, runspec);
   auto* well = schedule.getWell("OP_1");
   // timestep 3. Close all completions with WELOPEN and immediately open new completions with COMPDAT.
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(3));
@@ -856,12 +853,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
 
 
     EclipseGrid grid(10,10,10);
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     {
         auto* well = schedule.getWell("OP_1");
@@ -920,13 +916,12 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
                     "DATES             -- 5\n"
                     " 10  NOV 2008 / \n"
                     "/\n";
-    ParseContext parseContext;
     EclipseGrid grid(10,10,10);
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     auto* well = schedule.getWell("OP_1");
 
     size_t currentStep = 3;
@@ -970,13 +965,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
             " OP_1     GUID        2300.14 /\n"
             "/\n";
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck,  grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck,  grid , eclipseProperties, runspec);
     auto* well = schedule.getWell("OP_1");
 
     size_t currentStep = 1;
@@ -1011,14 +1005,13 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
             " OP_1     RESV        1801.05 /\n"
             "/\n";
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
 
-    BOOST_CHECK_THROW(Schedule(deck, grid , eclipseProperties, runspec , parseContext),
+    BOOST_CHECK_THROW(Schedule(deck, grid , eclipseProperties, runspec),
                       std::invalid_argument);
 }
 
@@ -1031,13 +1024,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException2) {
             " OP_1     RESV        1801.05 /\n"
             "/\n";
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW(Schedule(deck, grid , eclipseProperties, runspec , parseContext), std::out_of_range);
+    BOOST_CHECK_THROW(Schedule(deck, grid , eclipseProperties, runspec), std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
@@ -1089,13 +1081,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
                     " 'OP_1'  9  9   3  9 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
                     "/\n";
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     auto* well = schedule.getWell("OP_1");
 
     const auto& cs2 = well->getConnections( 2 );
@@ -1151,13 +1142,12 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         /
         )";
 
-        Opm::ParseContext parseContext;
-        auto deck = parser.parseString(input, parseContext);
+        auto deck = parser.parseString(input);
         EclipseGrid grid( deck );
         TableManager table ( deck );
         Eclipse3DProperties eclipseProperties ( deck , table, grid);
         Runspec runspec (deck);
-        Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec , parseContext);
+        Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
 
         Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
@@ -1189,13 +1179,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
             "0.0003\n"
             "/\n";
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
@@ -1223,13 +1212,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
             "1 /\n"
             "2 /\n";
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
@@ -1271,13 +1259,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
             "2 0.100\n"
             "/\n";
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
 
     const OilVaporizationProperties& ovap1 = schedule.getOilVaporizationProperties(1);
@@ -1313,13 +1300,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
             "2 0.100\n"
             "/\n";
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
@@ -1345,13 +1331,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithOutOilVaporizationProperties) {
             "/\n";
 
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), false);
 
@@ -1407,13 +1392,12 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
             "/\n"
             ;
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     auto* well_p = schedule.getWell("P");
 
     BOOST_CHECK_EQUAL(well_p->getProductionProperties(0).BHPLimit, 0); //start
@@ -1497,13 +1481,12 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
             "/\n"
             ;
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     auto* well_p1 = schedule.getWell("P1");
     auto* well_p2 = schedule.getWell("P2");
 
@@ -1564,13 +1547,12 @@ BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
             " * YES / \n"
             ;
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW(Schedule(deck, grid, eclipseProperties, runspec , parseContext), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid, eclipseProperties, runspec), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
@@ -1594,13 +1576,12 @@ BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
             /
     )";
 
-    ParseContext ctx;
-    auto deck = Parser().parseString(input, ctx);
+    auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, eclipseProperties,runspec , ctx);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     const auto& well = *schedule.getWell( "W1" );
     BOOST_CHECK_EQUAL( 3, well.getHeadI() );
@@ -1628,13 +1609,12 @@ BOOST_AUTO_TEST_CASE(change_ref_depth) {
             /
     )";
 
-    ParseContext ctx;
-    auto deck = Parser().parseString(input, ctx);
+    auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, eclipseProperties,runspec  ,ctx);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     const auto& well = *schedule.getWell( "W1" );
     BOOST_CHECK_EQUAL( 12.0, well.getRefDepth() );
@@ -1669,13 +1649,12 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
             /
     )";
 
-        ParseContext ctx;
-        auto deck = Parser().parseString(input, ctx);
+        auto deck = Parser().parseString(input);
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
         Eclipse3DProperties eclipseProperties ( deck , table, grid);
         Runspec runspec (deck);
-        Schedule schedule( deck, grid, eclipseProperties,runspec  ,ctx);
+        Schedule schedule( deck, grid, eclipseProperties,runspec);
 
         // Producerwell - currently setting temperature only acts on injectors.
         const auto& w1 = *schedule.getWell( "W1" );
@@ -1719,13 +1698,12 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
             /
     )";
 
-        ParseContext ctx;
-        auto deck = Parser().parseString(input, ctx);
+        auto deck = Parser().parseString(input);
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
         Eclipse3DProperties eclipseProperties ( deck , table, grid);
         Runspec runspec (deck);
-        Schedule schedule( deck, grid, eclipseProperties,runspec  ,ctx);
+        Schedule schedule( deck, grid, eclipseProperties,runspec);
 
         // Producerwell - currently setting temperature only acts on injectors.
         const auto& w1 = *schedule.getWell( "W1" );
@@ -1768,13 +1746,12 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
         /
     )";
 
-    ParseContext ctx;
-    auto deck = Parser().parseString(input, ctx);
+    auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, eclipseProperties,runspec  ,ctx);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     const auto& cs1 = schedule.getWell( "W1" )->getConnections( 1 );
     BOOST_CHECK_EQUAL( -1, cs1.get( 0 ).complnum() );
@@ -1813,13 +1790,12 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
         /
     )";
 
-    ParseContext ctx;
-    auto deck = Parser().parseString( input, ctx );
+    auto deck = Parser().parseString( input);
     EclipseGrid grid( 10, 10, 10 );
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, eclipseProperties,runspec  ,ctx);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     const auto& w1cs = schedule.getWell( "W1" )->getConnections();
     BOOST_CHECK_EQUAL( -1, w1cs.get( 0 ).complnum() );
@@ -1858,13 +1834,12 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
         /
     )";
 
-    ParseContext ctx;
-    auto deck = Parser().parseString(input, ctx);
+    auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, eclipseProperties,runspec  ,ctx);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     const auto& cs = schedule.getWell( "W1" )->getConnections();
     BOOST_CHECK_EQUAL( 3U, cs.size() );
@@ -1892,13 +1867,12 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
             /
     )";
 
-    ParseContext ctx;
-    auto deck = Parser().parseString( input, ctx );
+    auto deck = Parser().parseString( input);
     EclipseGrid grid( 10, 10, 10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW( Schedule( deck , grid, eclipseProperties, runspec , ctx), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( deck , grid, eclipseProperties, runspec), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE( complump ) {
@@ -1938,13 +1912,12 @@ BOOST_AUTO_TEST_CASE( complump ) {
     constexpr auto open = WellCompletion::StateEnum::OPEN;
     constexpr auto shut = WellCompletion::StateEnum::SHUT;
 
-    ParseContext ctx;
-    auto deck = Parser().parseString(input, ctx);
+    auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, eclipseProperties,runspec  ,ctx);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     const auto& well = *schedule.getWell( "W1" );
     const auto& sc0  = well.getConnections( 0 );
@@ -2025,13 +1998,12 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     constexpr auto open = WellCompletion::StateEnum::OPEN;
     constexpr auto shut = WellCompletion::StateEnum::SHUT;
 
-    ParseContext ctx;
-    auto deck = Parser().parseString( input, ctx );
+    auto deck = Parser().parseString( input);
     EclipseGrid grid( 10, 10, 10 );
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, eclipseProperties,runspec  ,ctx);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     const auto& well = *schedule.getWell( "W1" );
     const auto& cs1 = well.getConnections( 1 );
@@ -2504,13 +2476,12 @@ BOOST_AUTO_TEST_CASE(handleWEFAC) {
             "/\n"
             ;
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     auto* well_p = schedule.getWell("P");
     auto* well_i = schedule.getWell("I");
 
@@ -2557,13 +2528,12 @@ BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
         "/\n"
         ;
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, eclipseProperties,runspec  ,parseContext);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
 
     const auto& prod = schedule.getWell("P")->getProductionProperties(1);
     const auto& pro1 = schedule.getWell("P1")->getProductionProperties(1);
@@ -2595,7 +2565,7 @@ BOOST_AUTO_TEST_CASE(FilterCompletions) {
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid1);
   Runspec runspec (deck);
-  Schedule schedule(deck, grid1 , eclipseProperties, runspec , ParseContext() );
+  Schedule schedule(deck, grid1 , eclipseProperties, runspec);
   const auto& well = schedule.getWell("OP_1");
   const auto& c1_1 = well->getConnections(1);
   const auto& c1_3 = well->getConnections(3);
@@ -2656,12 +2626,12 @@ VFPINJ \n                                       \
 
 
     Opm::Parser parser;
-    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    auto deck = parser.parseString(deckData);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , eclipseProperties, runspec , ParseContext() );
+    Schedule schedule(deck, grid1 , eclipseProperties, runspec);
 
     schedule.evalAction(SummaryState(), 5);
     BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 0));
@@ -2772,12 +2742,12 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
         " 1 /\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    auto deck = parser.parseString(deckData);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , eclipseProperties, runspec , ParseContext() );
+    Schedule schedule(deck, grid1 , eclipseProperties, runspec);
 
     const Opm::Well* well_inj01 = schedule.getWell("INJE01");
 
@@ -2813,7 +2783,7 @@ BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid1);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1 , eclipseProperties, runspec , ParseContext() );
+    Schedule schedule(deck, grid1 , eclipseProperties, runspec);
 
     const auto& wtest_config1 = schedule.wtestConfig(0);
     BOOST_CHECK_EQUAL(wtest_config1.size(), 2);

@@ -25,7 +25,6 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 
 using namespace Opm;
@@ -188,10 +187,9 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
                         " 1 JAN 1986 /\n"
                        "/\n";
 
-    ParseContext ctx;
-    auto deck = Parser().parseString( data, ctx );
+    auto deck = Parser().parseString( data);
     IOConfig ioConfig( deck );
-    RestartConfig rstConfig( deck, ctx );
+    RestartConfig rstConfig( deck);
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK( ioConfig.getWriteEGRIDFile() );
@@ -224,7 +222,7 @@ BOOST_AUTO_TEST_CASE(OutputProperties) {
                         "SCHEDULE\n";
 
 
-    auto deck = Parser().parseString( data, ParseContext() );
+    auto deck = Parser().parseString( data );
     IOConfig ioConfig( deck );
 
     BOOST_CHECK( !ioConfig.getWriteEGRIDFile() );
@@ -246,7 +244,7 @@ BOOST_AUTO_TEST_CASE(NoGRIDFILE) {
                         " 0 0 /\n"
                         "\n";
 
-    auto deck = Parser().parseString( data, ParseContext() );
+    auto deck = Parser().parseString( data );
     IOConfig ioConfig( deck );
 
     /*If GRIDFILE 0 0 is specified, no EGRID file is written */

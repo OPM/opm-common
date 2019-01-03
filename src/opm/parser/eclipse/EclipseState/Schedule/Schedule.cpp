@@ -104,6 +104,25 @@ namespace Opm {
     }
 
 
+    template <typename T>
+    Schedule::Schedule( const Deck& deck,
+                        const EclipseGrid& grid,
+                        const Eclipse3DProperties& eclipseProperties,
+                        const Runspec &runspec,
+                        const ParseContext& parseContext,
+                        T&& errors) :
+        Schedule(deck, grid, eclipseProperties, runspec, parseContext, errors)
+    {}
+
+
+    Schedule::Schedule( const Deck& deck,
+                        const EclipseGrid& grid,
+                        const Eclipse3DProperties& eclipseProperties,
+                        const Runspec &runspec) :
+        Schedule(deck, grid, eclipseProperties, runspec, ParseContext(), ErrorGuard())
+    {}
+
+
     Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors) :
         Schedule(deck,
                  es.getInputGrid(),
@@ -114,6 +133,21 @@ namespace Opm {
     {}
 
 
+
+    template <typename T>
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors) :
+        Schedule(deck,
+                 es.getInputGrid(),
+                 es.get3DProperties(),
+                 es.runspec(),
+                 parse_context,
+                 errors)
+    {}
+
+
+    Schedule::Schedule(const Deck& deck, const EclipseState& es) :
+        Schedule(deck, es, ParseContext(), ErrorGuard())
+    {}
 
 
 

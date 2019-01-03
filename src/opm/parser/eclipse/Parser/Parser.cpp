@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
@@ -691,6 +692,14 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         return std::move( parserState.deck );
     }
 
+    Deck Parser::parseFile(const std::string& dataFileName) {
+        ErrorGuard errors;
+        return this->parseFile(dataFileName, ParseContext(), errors);
+    }
+
+
+
+
     Deck Parser::parseString(const std::string &data, const ParseContext& parseContext, ErrorGuard& errors) const {
         ParserState parserState( parseContext, errors );
         parserState.loadString( data );
@@ -699,6 +708,11 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         applyUnitsToDeck( parserState.deck );
 
         return std::move( parserState.deck );
+    }
+
+    Deck Parser::parseString(const std::string &data) const {
+        ErrorGuard errors;
+        return this->parseString(data, ParseContext(), errors);
     }
 
     size_t Parser::size() const {

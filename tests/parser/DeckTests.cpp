@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
@@ -520,10 +521,11 @@ BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
     ParserRecord record1;
     RawRecord rawRecord( " ' VALUE ' " );
     ParseContext parseContext;
+    ErrorGuard errors;
     record1.addItem( itemString );
 
 
-    const auto deckRecord = record1.parse( parseContext , rawRecord );
+    const auto deckRecord = record1.parse( parseContext, errors , rawRecord );
     BOOST_CHECK_EQUAL(" VALUE " , deckRecord.getItem(0).get< std::string >(0));
 }
 

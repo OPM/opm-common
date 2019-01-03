@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
@@ -42,8 +41,8 @@ inline std::string prefix() {
 BOOST_AUTO_TEST_CASE(CreateCPGrid) {
     Parser parser;
     boost::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT.DATA");
-    auto deck =  parser.parseFile(scheduleFile.string(), ParseContext());
-    EclipseState es(deck, ParseContext());
+    auto deck =  parser.parseFile(scheduleFile.string());
+    EclipseState es(deck);
     const auto& grid = es.getInputGrid();
 
     BOOST_CHECK_EQUAL( 10U  , grid.getNX( ));
@@ -56,8 +55,8 @@ BOOST_AUTO_TEST_CASE(CreateCPGrid) {
 BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
     Parser parser;
     boost::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT_ACTNUM.DATA");
-    auto deck =  parser.parseFile(scheduleFile.string(), ParseContext());
-    EclipseState es(deck, ParseContext());
+    auto deck =  parser.parseFile(scheduleFile.string());
+    EclipseState es(deck);
     const auto& grid = es.getInputGrid();
 
     BOOST_CHECK_EQUAL(  10U , grid.getNX( ));
@@ -70,8 +69,8 @@ BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
 BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
     Parser parser;
     boost::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT.DATA");
-    auto deck =  parser.parseFile(scheduleFile.string(), ParseContext());
-    EclipseState es(deck, ParseContext());
+    auto deck =  parser.parseFile(scheduleFile.string());
+    EclipseState es(deck);
     const auto& grid = es.getInputGrid();
 
     std::vector<int> actnum;
@@ -87,8 +86,8 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
 BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     Parser parser;
     boost::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT_ACTNUM.DATA");
-    auto deck =  parser.parseFile(scheduleFile.string(), ParseContext());
-    EclipseState es(deck, ParseContext());
+    auto deck =  parser.parseFile(scheduleFile.string());
+    EclipseState es(deck);
     auto& grid = es.getInputGrid();
 
     std::vector<double> coord;

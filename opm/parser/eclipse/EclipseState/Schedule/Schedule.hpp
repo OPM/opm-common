@@ -68,10 +68,32 @@ namespace Opm
                  const ParseContext& parseContext,
                  ErrorGuard& errors);
 
+        template<typename T>
+        Schedule(const Deck& deck,
+                 const EclipseGrid& grid,
+                 const Eclipse3DProperties& eclipseProperties,
+                 const Runspec &runspec,
+                 const ParseContext& parseContext,
+                 T&& errors);
+
+        Schedule(const Deck& deck,
+                 const EclipseGrid& grid,
+                 const Eclipse3DProperties& eclipseProperties,
+                 const Runspec &runspec);
+
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  const ParseContext& parseContext,
                  ErrorGuard& errors);
+
+        template <typename T>
+        Schedule(const Deck& deck,
+                 const EclipseState& es,
+                 const ParseContext& parseContext,
+                 T&& errors);
+
+        Schedule(const Deck& deck,
+                 const EclipseState& es);
 
         /*
          * If the input deck does not specify a start time, Eclipse's 1. Jan

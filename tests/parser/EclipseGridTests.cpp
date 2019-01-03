@@ -41,7 +41,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 
@@ -65,7 +64,7 @@ static Opm::Deck createDeckHeaders() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 static Opm::Deck createDeckDIMENS() {
@@ -78,7 +77,7 @@ static Opm::Deck createDeckDIMENS() {
         "EDIT\n"
         "\n";
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 static Opm::Deck createDeckSPECGRID() {
@@ -95,7 +94,7 @@ static Opm::Deck createDeckSPECGRID() {
         "EDIT\n"
         "\n";
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 static Opm::Deck createDeckMissingDIMS() {
@@ -107,7 +106,7 @@ static Opm::Deck createDeckMissingDIMS() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 BOOST_AUTO_TEST_CASE(MissingDimsThrows) {
@@ -184,7 +183,7 @@ static Opm::Deck createCPDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -207,7 +206,7 @@ static Opm::Deck createPinchedCPDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -232,7 +231,7 @@ static Opm::Deck createMinpvDefaultCPDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -255,7 +254,7 @@ static Opm::Deck createMinpvCPDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -279,7 +278,7 @@ static Opm::Deck createMinpvFilCPDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -302,7 +301,7 @@ static Opm::Deck createCARTDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -325,7 +324,7 @@ static Opm::Deck createCARTDeckDEPTHZ() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -346,7 +345,7 @@ static Opm::Deck createCARTInvalidDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 BOOST_AUTO_TEST_CASE(CREATE_SIMPLE) {
@@ -459,7 +458,7 @@ static Opm::Deck createInvalidDXYZCARTDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -489,7 +488,7 @@ static Opm::Deck createInvalidDXYZCARTDeckDEPTHZ() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -519,7 +518,7 @@ static Opm::Deck createOnlyTopDZCartGrid() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -542,7 +541,7 @@ static Opm::Deck createInvalidDEPTHZDeck1 () {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 
@@ -571,7 +570,7 @@ static Opm::Deck createInvalidDEPTHZDeck2 () {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext()) ;
+    return parser.parseString( deckData) ;
 }
 
 BOOST_AUTO_TEST_CASE(CreateCartesianGRIDInvalidDEPTHZ2) {
@@ -621,7 +620,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchCOORD) {
         "\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString( deckData, Opm::ParseContext()) ;
+    auto deck = parser.parseString( deckData) ;
     const auto& zcorn = deck.getKeyword("ZCORN");
     BOOST_CHECK_EQUAL( 8000U , zcorn.getDataSize( ));
 
@@ -646,7 +645,7 @@ BOOST_AUTO_TEST_CASE(CornerPointSizeMismatchZCORN) {
         "\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString( deckData, Opm::ParseContext()) ;
+    auto deck = parser.parseString( deckData) ;
     BOOST_CHECK_THROW(Opm::EclipseGrid{ deck }, std::invalid_argument);
 }
 
@@ -666,7 +665,7 @@ BOOST_AUTO_TEST_CASE(ResetACTNUM) {
         "\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString( deckData, Opm::ParseContext()) ;
+    auto deck = parser.parseString( deckData) ;
 
     Opm::EclipseGrid grid( deck);
     BOOST_CHECK_EQUAL( 1000U , grid.getNumActive());
@@ -743,8 +742,8 @@ BOOST_AUTO_TEST_CASE(ACTNUM_BEST_EFFORT) {
         "\n";
 
     Opm::Parser parser;
-    auto deck1 = parser.parseString( deckData1, Opm::ParseContext()) ;
-    auto deck2 = parser.parseString( deckData2, Opm::ParseContext()) ;
+    auto deck1 = parser.parseString( deckData1) ;
+    auto deck2 = parser.parseString( deckData2) ;
 
     Opm::EclipseGrid grid1(deck1);
     // Actnum vector is too short - ignored
@@ -780,7 +779,7 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC) {
         "\n";
 
     Opm::Parser parser;
-    auto deck1 = parser.parseString( deckData, Opm::ParseContext()) ;
+    auto deck1 = parser.parseString( deckData) ;
     auto deck2 = createCPDeck();
 
     Opm::EclipseGrid grid1(deck1);
@@ -807,7 +806,7 @@ BOOST_AUTO_TEST_CASE(GDFILE) {
     }
     {
         Opm::Parser parser;
-        Opm::EclipseGrid grid2(parser.parseFile("ecl/DECK.DATA", Opm::ParseContext() ));
+        Opm::EclipseGrid grid2(parser.parseFile("ecl/DECK.DATA" ));
         BOOST_CHECK(grid1.equal(grid2));
     }
     test_work_area_free( work_area );
@@ -826,7 +825,7 @@ BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
         "\n";
 
     Opm::Parser parser;
-    auto deck1 = parser.parseString( deckData, Opm::ParseContext()) ;
+    auto deck1 = parser.parseString( deckData) ;
     auto deck2 = createCPDeck();
 
     Opm::EclipseGrid grid1(deck1);
@@ -895,7 +894,7 @@ static Opm::Deck createActnumDeck() {
             "8*0 /\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 
@@ -938,12 +937,12 @@ static Opm::Deck createActnumBoxDeck() {
             "1000*0 /\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 BOOST_AUTO_TEST_CASE(GridBoxActnum) {
     auto deck = createActnumBoxDeck();
-    Opm::EclipseState es( deck, Opm::ParseContext());
+    Opm::EclipseState es( deck);
     auto ep = es.get3DProperties();
     const auto& grid = es.getInputGrid();
 
@@ -994,7 +993,7 @@ BOOST_AUTO_TEST_CASE(GridBoxActnum) {
 BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
     auto deck = createActnumDeck();
 
-    Opm::EclipseState es( deck, Opm::ParseContext());
+    Opm::EclipseState es( deck);
     auto ep = es.get3DProperties();
     const auto& grid = es.getInputGrid();
     Opm::EclipseGrid grid2( grid );
@@ -1010,8 +1009,8 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
 BOOST_AUTO_TEST_CASE(GridActnumViaState) {
     auto deck = createActnumDeck();
 
-    BOOST_CHECK_NO_THROW(Opm::EclipseState( deck, Opm::ParseContext()));
-    Opm::EclipseState es( deck, Opm::ParseContext());
+    BOOST_CHECK_NO_THROW( new Opm::EclipseState( deck));
+    Opm::EclipseState es( deck);
     BOOST_CHECK_EQUAL(es.getInputGrid().getNumActive(), 2 * 2 * 2 - 1);
 }
 
@@ -1144,7 +1143,7 @@ static Opm::Deck radial_missing_INRAD() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 
@@ -1170,7 +1169,7 @@ static Opm::Deck radial_keywords_OK() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 static Opm::Deck radial_keywords_OK_CIRCLE() {
@@ -1195,7 +1194,7 @@ static Opm::Deck radial_keywords_OK_CIRCLE() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 
@@ -1241,7 +1240,7 @@ static Opm::Deck radial_keywords_DRV_size_mismatch() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 
@@ -1266,7 +1265,7 @@ static Opm::Deck radial_keywords_DZV_size_mismatch() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 static Opm::Deck radial_keywords_DTHETAV_size_mismatch() {
@@ -1290,7 +1289,7 @@ static Opm::Deck radial_keywords_DTHETAV_size_mismatch() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 /*
@@ -1319,7 +1318,7 @@ static Opm::Deck radial_keywords_TOPS_size_mismatch() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 
@@ -1344,7 +1343,7 @@ static Opm::Deck radial_keywords_ANGLE_OVERFLOW() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 
@@ -1381,7 +1380,7 @@ static Opm::Deck radial_details() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString( deckData, Opm::ParseContext());
+    return parser.parseString( deckData);
 }
 
 

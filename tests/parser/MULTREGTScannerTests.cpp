@@ -26,7 +26,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -102,7 +101,7 @@ static Opm::Deck createInvalidMULTREGTDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -167,7 +166,7 @@ static Opm::Deck createNotSupportedMULTREGTDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -228,7 +227,7 @@ static Opm::Deck createDefaultedRegions() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -290,7 +289,7 @@ static Opm::Deck createCopyMULTNUMDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {

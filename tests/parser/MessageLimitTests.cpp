@@ -31,7 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 using namespace Opm;
 
@@ -76,13 +75,12 @@ BOOST_AUTO_TEST_CASE(MESSAGES) {
             "  10 /\n"
         ;
 
-    ParseContext parseContext;
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid, eclipseProperties, runspec , parseContext);
+    Schedule schedule(deck, grid, eclipseProperties, runspec);
     const MessageLimits limits = schedule.getMessageLimits();
 
     BOOST_CHECK_EQUAL( limits.getBugPrintLimit( 0 ) , 77 );   // The pre Schedule initialization

@@ -308,19 +308,21 @@ BOOST_AUTO_TEST_CASE( quoted_comments ) {
 BOOST_AUTO_TEST_CASE( PATHS_has_global_scope ) {
     Parser parser;
     ParseContext parseContext;
+    ErrorGuard errors;
 
     parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION);
-    const auto deck = parser.parseFile( prefix() + "parser/PATHSInInclude.data", parseContext );
+    const auto deck = parser.parseFile( prefix() + "parser/PATHSInInclude.data", parseContext, errors );
     BOOST_CHECK(deck.hasKeyword("OIL"));
-    BOOST_CHECK_THROW( parser.parseFile( prefix() + "parser/PATHSInIncludeInvalid.data", parseContext ), std::invalid_argument );
+    BOOST_CHECK_THROW( parser.parseFile( prefix() + "parser/PATHSInIncludeInvalid.data", parseContext, errors ), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE( PATHS_with_backslashes ) {
     Parser parser;
     ParseContext parseContext;
+    ErrorGuard errors;
 
     parseContext.update( ParseContext::PARSE_MISSING_INCLUDE , Opm::InputError::THROW_EXCEPTION);
-    const auto deck = parser.parseFile( prefix() + "parser/PATHSWithBackslashes.data", parseContext );
+    const auto deck = parser.parseFile( prefix() + "parser/PATHSWithBackslashes.data", parseContext, errors );
     BOOST_CHECK(deck.hasKeyword("OIL"));
 }
 
@@ -331,7 +333,7 @@ BOOST_AUTO_TEST_CASE( handle_empty_title ) {
                              "EQLDIMS\n/\n";
 
     Parser parser;
-    const auto deck = parser.parseString( input_deck, ParseContext() );
+    const auto deck = parser.parseString( input_deck);
     BOOST_CHECK_EQUAL( "untitled", deck.getKeyword( "TITLE" ).getStringData().front() );
  }
 
@@ -360,7 +362,7 @@ SWOF
 /
 )";
 
-    BOOST_CHECK_NO_THROW( Parser().parseString( deck, ParseContext() ) );
+    BOOST_CHECK_NO_THROW( Parser().parseString( deck ) );
  }
 
 
@@ -374,9 +376,8 @@ BOOST_AUTO_TEST_CASE(ParseTNUM) {
         " 100*1/\n"
         "\n";
 
-    Opm::ParseContext parseContext;
     Opm::Parser parser;
-    auto deck = parser.parseString( deck1 , parseContext );
+    auto deck = parser.parseString( deck1 );
     BOOST_CHECK( deck.hasKeyword("TNUMFSGS"));
     BOOST_CHECK( deck.hasKeyword("TNUMFXXX"));
 }
@@ -1029,15 +1030,17 @@ static ParserRecord createSimpleParserRecord() {
 BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     auto record = createSimpleParserRecord();
     ParseContext parseContext;
+    ErrorGuard errors;
     RawRecord raw( string_view( "100 443" ) );
-    BOOST_CHECK_NO_THROW(record.parse(parseContext, raw ) );
+    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, raw ) );
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
     auto record = createSimpleParserRecord();
     RawRecord rawRecord( string_view( "100 443" ) );
     ParseContext parseContext;
-    const auto deckRecord = record.parse(parseContext , rawRecord);
+    ErrorGuard errors;
+    const auto deckRecord = record.parse(parseContext , errors, rawRecord);
     BOOST_CHECK_EQUAL(2U, deckRecord.size());
 }
 
@@ -1069,7 +1072,8 @@ BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
     auto record = createMixedParserRecord();
     RawRecord rawRecord( string_view( "1 2 10.0 20.0 4 90.0") );
     ParseContext parseContext;
-    BOOST_CHECK_NO_THROW(record.parse(parseContext , rawRecord));
+    ErrorGuard errors;
+    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, rawRecord));
 }
 
 BOOST_AUTO_TEST_CASE(Equal_Equal_ReturnsTrue) {
@@ -1202,6 +1206,7 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
     ParserItem itemJ( "J", SINGLE, 0 );
     ParserItem itemK( "K", SINGLE, 0 );
     ParseContext parseContext;
+    ErrorGuard errors;
 
     parserRecord.addItem(itemI);
     parserRecord.addItem(itemJ);
@@ -1210,13 +1215,13 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
 
     RawRecord rawRecord(  "3 3 3 " );
 
-    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext , rawRecord));
+    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord));
 
     RawRecord rawRecordOneExtra(  "3 3 3 4 " );
-    BOOST_CHECK_THROW(parserRecord.parse(parseContext , rawRecordOneExtra), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordOneExtra), std::invalid_argument);
 
     RawRecord rawRecordForgotRecordTerminator(  "3 3 3 \n 4 4 4 " );
-    BOOST_CHECK_THROW(parserRecord.parse(parseContext , rawRecordForgotRecordTerminator), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordForgotRecordTerminator), std::invalid_argument);
 
 }
 
@@ -1235,11 +1240,12 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     parserRecord.addItem(itemK);
 
     ParseContext parseContext;
+    ErrorGuard errors;
     RawRecord rawRecord(  "3 3  " );
     // no default specified for the third item, record can be parsed just fine but trying
     // to access the data will raise an exception...;
-    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext , rawRecord));
-    auto record = parserRecord.parse(parseContext , rawRecord);
+    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord));
+    auto record = parserRecord.parse(parseContext, errors , rawRecord);
     BOOST_CHECK_NO_THROW(record.getItem(2));
     BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::out_of_range);
 }
@@ -1618,13 +1624,14 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     item.setType( int() );
     auto rawkeyword = std::make_shared< RawKeyword >( tabdimsKeyword->getName() , "FILE" , 10U , 1 );
     ParseContext parseContext;
+    ErrorGuard errors;
 
     BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword->getSizeType());
     rawkeyword->addRawRecordString("/");
     record.addItem(item);
     tabdimsKeyword->addRecord( record );
 
-    const auto deckKeyword = tabdimsKeyword->parse( parseContext , rawkeyword );
+    const auto deckKeyword = tabdimsKeyword->parse( parseContext, errors, rawkeyword );
     BOOST_REQUIRE_EQUAL( 1U , deckKeyword.size());
 
     const auto& deckRecord = deckKeyword.getRecord(0);
@@ -1807,7 +1814,7 @@ PVT-M
 )";
 
     Parser parser;
-    const auto deck = parser.parseString( deck_string, ParseContext() );
+    const auto deck = parser.parseString( deck_string );
 
     BOOST_CHECK( deck.hasKeyword( "METRIC" ) );
     BOOST_CHECK( deck.hasKeyword( "FIELD" ) );
@@ -1833,7 +1840,7 @@ AQUTAB
 )";
 
   Parser parser;
-  const auto deck = parser.parseString( deck_string, ParseContext());
+  const auto deck = parser.parseString( deck_string);
   const auto& aqutab = deck.getKeyword("AQUTAB");
   BOOST_CHECK_EQUAL( 1, aqutab.size());
 }
@@ -1847,7 +1854,7 @@ UDQ
 /
 )";
     Parser parser;
-    const auto deck = parser.parseString( deck_string, ParseContext());
+    const auto deck = parser.parseString( deck_string);
     const auto& udq = deck.getKeyword("UDQ");
     const auto& data0 = udq.getRecord(0).getItem("DATA").getData<std::string>();
     const auto& data1 = udq.getRecord(1).getItem("DATA").getData<std::string>();
@@ -1865,7 +1872,7 @@ STONE1
 STONE2
 )" };
 
-        const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+        const auto deck = Parser{}.parseString( deck_string);
 
         BOOST_CHECK( !deck.hasKeyword( "STONE" ) );
         BOOST_CHECK(  deck.hasKeyword( "STONE1" ) );
@@ -1877,7 +1884,7 @@ STONE2
 STONE
 )" };
 
-        const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+        const auto deck = Parser{}.parseString( deck_string );
 
         BOOST_CHECK(  deck.hasKeyword( "STONE" ) );
         BOOST_CHECK( !deck.hasKeyword( "STONE1" ) );
@@ -1904,7 +1911,7 @@ DENSITY
   51.90  64.2 /
 )" };
 
-    const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+    const auto deck = Parser{}.parseString( deck_string );
 
     BOOST_CHECK( deck.hasKeyword( "RSCONST" ) );
 
@@ -1954,7 +1961,7 @@ DENSITY
   50.91  62.4 /
 )" };
 
-    const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+    const auto deck = Parser{}.parseString( deck_string);
 
     BOOST_CHECK( deck.hasKeyword( "RSCONST" ) );
 
@@ -1997,7 +2004,7 @@ DENSITY
   51.90  64.2 /
 )" };
 
-    const auto deck = Parser{}.parseString( deck_string, ParseContext() );
+    const auto deck = Parser{}.parseString( deck_string );
 
     BOOST_CHECK( deck.hasKeyword( "RSCONSTT" ) );
 

@@ -318,7 +318,13 @@ namespace Opm {
     public:
 
         RestartConfig();
+
+        template<typename T>
+        RestartConfig( const Deck&, const ParseContext& parseContext, T&& errors );
+
         RestartConfig( const Deck&, const ParseContext& parseContext, ErrorGuard& errors );
+        RestartConfig( const Deck& );
+
         RestartConfig( const SCHEDULESection& schedule,
                        const SOLUTIONSection& solution,
                        const ParseContext& parseContext,

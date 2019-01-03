@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 using namespace Opm;
 
@@ -47,7 +46,7 @@ static Deck createDeckWithOutTracer() {
             "WCONINJE\n"
             "     'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/\n/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 
@@ -83,7 +82,7 @@ static Deck createDeckWithDynamicWTRACER() {
             " 1  SEP 2000 / \n"
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithTracerInProducer() {
@@ -105,7 +104,7 @@ static Deck createDeckWithTracerInProducer() {
             "     'W_1' 'I2'       1 / \n "
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 
@@ -115,7 +114,7 @@ BOOST_AUTO_TEST_CASE(TestNoTracer) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec ( deck );
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK(!deck.hasKeyword("WTRACER"));
 }
 
@@ -126,7 +125,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec ( deck );
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
     const auto& keyword = deck.getKeyword("WTRACER");
     BOOST_CHECK_EQUAL(keyword.size(),1);
@@ -150,6 +149,6 @@ BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec ( deck );
 
-    BOOST_CHECK_THROW(Schedule(deck, grid, eclipseProperties, runspec , ParseContext()), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid, eclipseProperties, runspec), std::invalid_argument);
 }
 

@@ -66,7 +66,10 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
+        template<typename T>
+        EclipseState(const Deck& deck , const ParseContext& parseContext, T&& errors);
         EclipseState(const Deck& deck , const ParseContext& parseContext, ErrorGuard& errors);
+        EclipseState(const Deck& deck);
 
         const IOConfig& getIOConfig() const;
         IOConfig& getIOConfig();

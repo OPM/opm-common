@@ -55,7 +55,7 @@ inline Deck createAquiferCTDeck() {
         "/ \n";
 
     Parser parser;
-    return parser.parseString(deckData, ParseContext());
+    return parser.parseString(deckData);
 }
 
 inline Deck createAquiferCTDeckDefaultP0() {
@@ -92,7 +92,7 @@ inline Deck createAquiferCTDeckDefaultP0() {
         "/ \n";
 
     Parser parser;
-    return parser.parseString(deckData, ParseContext());
+    return parser.parseString(deckData);
 }
 
 inline std::vector<AquiferCT::AQUCT_data> init_aquiferct(Deck& deck){

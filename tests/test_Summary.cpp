@@ -43,7 +43,6 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -239,12 +238,12 @@ struct setup {
 
     /*-----------------------------------------------------------------*/
 
-    setup( const std::string& fname , const char* path = "summary_deck.DATA", const ParseContext& parseContext = ParseContext( )) :
-        deck( Parser().parseFile( path, parseContext ) ),
-        es( deck, ParseContext() ),
+    setup( const std::string& fname , const char* path = "summary_deck.DATA") : 
+        deck( Parser().parseFile( path) ),
+        es( deck ),
         grid( es.getInputGrid() ),
-        schedule( deck, grid, es.get3DProperties(), es.runspec(), parseContext),
-        config( deck, schedule, es.getTableManager(), parseContext ),
+        schedule( deck, grid, es.get3DProperties(), es.runspec()),
+        config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),
         name( fname ),
         ta( test_work_area_alloc("summary_test"))
