@@ -102,6 +102,8 @@ namespace Opm {
         envUpdate( "OPM_ERRORS_IGNORE" , InputError::IGNORE );
         envUpdate( "OPM_ERRORS_EXIT1", InputError::EXIT1);
         envUpdate( "OPM_ERRORS_EXIT", InputError::EXIT1);
+        envUpdate( "OPM_ERRORS_DELAYED_EXIT1", InputError::DELAYED_EXIT1);
+        envUpdate( "OPM_ERRORS_DELAYED_EXIT", InputError::DELAYED_EXIT1);
     }
 
 
@@ -117,21 +119,37 @@ namespace Opm {
 
         InputError::Action action = get( errorKey );
 
-        if (action == InputError::WARN) {
-            OpmLog::warning(msg);
+        if (action == InputError::IGNORE) {
+            errors.addWarning(errorKey, msg);
             return;
         }
 
-        else if (action == InputError::THROW_EXCEPTION) {
+        if (action == InputError::WARN) {
+            OpmLog::warning(msg);
+            errors.addWarning(errorKey, msg);
+            return;
+        }
+
+        if (action == InputError::THROW_EXCEPTION) {
             OpmLog::error(msg);
+            // If we decide to throw immediately - we clear the error stack to
+            // make sure the error object does not terminate the application
+            // when it goes out of scope.
+            errors.clear();
             throw std::invalid_argument(errorKey + ": " + msg);
         }
 
-        else if (action == InputError::EXIT1) {
+        if (action == InputError::EXIT1) {
             OpmLog::error(msg);
             std::cerr << "A fatal error has occured and the application will stop." << std::endl;
             std::cerr << msg << std::endl;
             std::exit(1);
+        }
+
+        if (action == InputError::DELAYED_EXIT1) {
+            OpmLog::error(msg);
+            errors.addError(errorKey, msg);
+            return;
         }
     }
 

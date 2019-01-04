@@ -37,7 +37,8 @@ namespace Opm {
             THROW_EXCEPTION = 0,
             WARN = 1,
             IGNORE = 2,
-            EXIT1 = 3
+            EXIT1 = 3,
+            DELAYED_EXIT1 = 4
         };
     }
 }

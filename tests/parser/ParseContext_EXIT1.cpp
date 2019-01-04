@@ -7,19 +7,19 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 
-void exit1() {
-  const char * deckString =
-    "RUNSPEC\n"
-    "DIMENS\n"
-    "  10 10 10 10 /n"
-    "\n";
+void exit1(Opm::InputError::Action action) {
+    const char * deckString =
+        "RUNSPEC\n"
+        "DIMENS\n"
+        "  10 10 10 10 /n"
+        "\n";
 
-  Opm::ParseContext parseContext;
-  Opm::Parser parser;
-  Opm::ErrorGuard errors;
+    Opm::ParseContext parseContext;
+    Opm::Parser parser;
+    Opm::ErrorGuard errors;
 
-  parseContext.update(Opm::ParseContext::PARSE_EXTRA_DATA , Opm::InputError::EXIT1 );
-  parser.parseString( deckString , parseContext, errors );
+    parseContext.update(Opm::ParseContext::PARSE_EXTRA_DATA , action);
+    parser.parseString( deckString , parseContext, errors );
 }
 
 
@@ -31,21 +31,26 @@ void exit1() {
   this test is implemented without the BOOST testing framework.
 */
 
-int main() {
+void test_exit(Opm::InputError::Action action) {
     pid_t pid = fork();
     if (pid == 0)
-        exit1();
+        exit1(action);
 
     int wait_status;
     waitpid(pid, &wait_status, 0);
 
-    if (WIFEXITED(wait_status))
+    if (WIFEXITED(wait_status)) {
         /*
-          We *want* the child process to terminate with status exit(1), here we
-          capture the exit status of the child process, and then we invert that
-          and return the inverted status as the status of the complete test.
+          We *want* the child process to terminate with status exit(1), i.e. if
+          the exit status is 0 we fail the complete test with exit(1).
         */
-        std::exit( !WEXITSTATUS(wait_status) );
-    else
+        if (WEXITSTATUS(wait_status) == 0)
+            std::exit(EXIT_FAILURE);
+    } else
         std::exit(EXIT_FAILURE);
+}
+
+int main(int argc, char ** argv) {
+    test_exit(Opm::InputError::Action::EXIT1);
+    test_exit(Opm::InputError::Action::DELAYED_EXIT1);
 }

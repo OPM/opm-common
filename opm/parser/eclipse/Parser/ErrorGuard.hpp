@@ -41,9 +41,9 @@ public:
     */
     ~ErrorGuard();
     void terminate() const;
+    void dump() const;
 
 private:
-    void dump() const;
 
     std::vector<std::pair<std::string, std::string>> error_list;
     std::vector<std::pair<std::string, std::string>> warning_list;

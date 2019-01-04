@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(noNNC)
 BOOST_AUTO_TEST_CASE(readDeck)
 {
     Parser parser;
-    auto deck = parser.parseFile(pathprefix() + "NNC/noNNC.DATA");
+    auto deck = parser.parseFile(pathprefix() + "EDITNNC/EDITNNC.DATA");
     EclipseState eclipseState(deck);
     const auto& editnnc = eclipseState.getInputEDITNNC();
     BOOST_CHECK(!editnnc.empty());

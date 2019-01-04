@@ -55,7 +55,7 @@ namespace Opm {
 
     void ErrorGuard::terminate() const {
         this->dump();
-        std::terminate();
+        std::exit(1);
     }
 
 

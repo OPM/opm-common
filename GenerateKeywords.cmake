@@ -7,6 +7,7 @@ set(genkw_SOURCES src/opm/json/JsonObject.cpp
                   src/opm/parser/eclipse/Deck/DeckOutput.cpp
                   src/opm/parser/eclipse/Generator/KeywordGenerator.cpp
                   src/opm/parser/eclipse/Generator/KeywordLoader.cpp
+                  src/opm/parser/eclipse/Parser/ErrorGuard.cpp
                   src/opm/parser/eclipse/Parser/ParseContext.cpp
                   src/opm/parser/eclipse/Parser/ParserEnums.cpp
                   src/opm/parser/eclipse/Parser/ParserItem.cpp
