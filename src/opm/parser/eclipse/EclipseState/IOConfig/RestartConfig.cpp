@@ -327,8 +327,8 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
             if (is_int(deck_items[index])) {
 
                 if (stack.size() < 2) {
-                    std::string msg = "Can not interpret " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
-                    throw std::invalid_argument(msg);
+                    std::string errmsg = "Can not interpret " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
+                    throw std::invalid_argument(errmsg);
                 }
 
                 if (stack.back() == "=") {
@@ -340,8 +340,8 @@ inline std::map< std::string, int > RPT( const DeckKeyword& keyword,
                     stack.clear();
                     items.push_back( mnemonic + "=" + deck_items[index]);
                 } else {
-                    std::string msg = "Can not interpret " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
-                    throw std::invalid_argument(msg);
+                    std::string errmsg = "Can not interpret " + keyword.name() + " at " + keyword.getFileName() + "(" + std::to_string( keyword.getLineNumber() ) + ")";
+                    throw std::invalid_argument(errmsg);
                 }
 
             } else

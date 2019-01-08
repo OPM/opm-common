@@ -189,7 +189,7 @@ namespace { namespace SatFunc {
                     const auto& pc = t.getPcogColumn();
                     std::transform(std::begin(pc), std::end(pc),
                                    linTable.column(tableID, primID, 2),
-                                   [&units, uPress](const double Pc) -> double
+                                   [&units](const double Pc) -> double
                                    {
                                        return units.from_si(uPress, Pc);
                                    });
@@ -264,7 +264,7 @@ namespace { namespace SatFunc {
                     const auto& pc = t.getPcogColumn();
                     std::transform(std::begin(pc), std::end(pc),
                                    linTable.column(tableID, primID, 2),
-                                   [&units, uPress](const double Pc) -> double
+                                   [&units](const double Pc) -> double
                                    {
                                        return units.from_si(uPress, Pc);
                                    });
@@ -916,7 +916,7 @@ namespace { namespace SatFunc {
                     const auto& pc = t.getPcowColumn();
                     std::transform(std::begin(pc), std::end(pc),
                                    linTable.column(tableID, primID, 2),
-                                   [&units, uPress](const double Pc) -> double
+                                   [&units](const double Pc) -> double
                                    {
                                        return units.from_si(uPress, Pc);
                                    });
@@ -991,7 +991,7 @@ namespace { namespace SatFunc {
                     const auto& pc = t.getPcowColumn();
                     std::transform(std::begin(pc), std::end(pc),
                                    linTable.column(tableID, primID, 2),
-                                   [&units, uPress](const double Pc) -> double
+                                   [&units](const double Pc) -> double
                                    {
                                        return units.from_si(uPress, Pc);
                                    });

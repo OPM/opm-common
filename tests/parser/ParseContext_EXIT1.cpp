@@ -50,7 +50,7 @@ void test_exit(Opm::InputError::Action action) {
         std::exit(EXIT_FAILURE);
 }
 
-int main(int argc, char ** argv) {
+int main() {
     test_exit(Opm::InputError::Action::EXIT1);
     test_exit(Opm::InputError::Action::DELAYED_EXIT1);
 }

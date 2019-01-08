@@ -224,7 +224,7 @@ inline void keywordB( SummaryConfig::keyword_list& list,
   }
 }
 
-inline void keywordR2R( SummaryConfig::keyword_list& list,
+inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         const DeckKeyword& keyword)

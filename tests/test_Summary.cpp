@@ -1199,7 +1199,7 @@ struct MessageBuffer
   template <class T>
   void write( const T& value )
   {
-    str_.write( (char *) &value, sizeof(value) );
+    str_.write( (const char *) &value, sizeof(value) );
   }
 
   void write( const std::string& str)
