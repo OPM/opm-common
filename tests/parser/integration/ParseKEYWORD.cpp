@@ -399,10 +399,12 @@ BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
     const auto& transMult = state.getTransMult();
 
     // Test NONNC
-    // cell 0 and 1 are neigbours
-    BOOST_CHECK_EQUAL( 0.10 , transMult.getRegionMultiplier( 0 , 1 , FaceDir::DirEnum::XPlus));
+    // cell 0 and 1 are neigbour
+    // The last occurence of multiplier between region 1 and 2 is 0.2.
+    // Note that MULTREGT is not direction dependent
+    BOOST_CHECK_EQUAL( 0.20 , transMult.getRegionMultiplier( 0 , 1 , FaceDir::DirEnum::XPlus));
     // cell 0 and 3 are not neigbours ==> 1
-    BOOST_CHECK_EQUAL( 1.00 , transMult.getRegionMultiplier( 0 , 3 , FaceDir::DirEnum::XPlus));
+    BOOST_CHECK_EQUAL( 0.20 , transMult.getRegionMultiplier( 0 , 3 , FaceDir::DirEnum::XPlus));
 
     // Test NNC
     // cell 4 and 5 are neigbours ==> 1
@@ -413,7 +415,7 @@ BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
     // Test direction X, returns 1 for directions other than +-X
     BOOST_CHECK_EQUAL( 1.00 , transMult.getRegionMultiplier( 0 , 1 , FaceDir::DirEnum::YPlus));
     BOOST_CHECK_EQUAL( 1.00 , transMult.getRegionMultiplier( 0 , 1 , FaceDir::DirEnum::ZPlus));
-    BOOST_CHECK_EQUAL( 0.10 , transMult.getRegionMultiplier( 0 , 1 , FaceDir::DirEnum::XMinus));
+    BOOST_CHECK_EQUAL( 0.20 , transMult.getRegionMultiplier( 0 , 1 , FaceDir::DirEnum::XMinus));
     BOOST_CHECK_EQUAL( 1.00 , transMult.getRegionMultiplier( 0 , 1 , FaceDir::DirEnum::YMinus));
     BOOST_CHECK_EQUAL( 1.00 , transMult.getRegionMultiplier( 0 , 1 , FaceDir::DirEnum::ZMinus));
     BOOST_CHECK_EQUAL( 0.20 , transMult.getRegionMultiplier( 1 , 0 , FaceDir::DirEnum::XPlus));
@@ -433,9 +435,9 @@ BOOST_AUTO_TEST_CASE( MULTREGT_ECLIPSE_STATE ) {
     BOOST_CHECK_EQUAL( 1.50 , transMult.getRegionMultiplier( 0 , 4 , FaceDir::DirEnum::ZPlus));
     BOOST_CHECK_EQUAL( 1.50 , transMult.getRegionMultiplier( 4 , 0 , FaceDir::DirEnum::XPlus));
 
-    // The first record is overwritten by the second
-    BOOST_CHECK_EQUAL( 2.50 , transMult.getRegionMultiplier( 3 , 7 , FaceDir::DirEnum::XPlus));
-    BOOST_CHECK_EQUAL( 2.50 , transMult.getRegionMultiplier( 3 , 7 , FaceDir::DirEnum::YPlus));
+    // The first record is overwritten by the third since MULTREGT is direction dependent
+    BOOST_CHECK_EQUAL( 0.60 , transMult.getRegionMultiplier( 3 , 7 , FaceDir::DirEnum::XPlus));
+    BOOST_CHECK_EQUAL( 0.60 , transMult.getRegionMultiplier( 3 , 7 , FaceDir::DirEnum::YPlus));
 
     // The 2 4 0.75 Z input is overwritten by 2 4 2.5 XY, ==) that 2 4 Z returns the 4 2 value = 0.6
     BOOST_CHECK_EQUAL( 0.60 , transMult.getRegionMultiplier( 7 , 3 , FaceDir::DirEnum::XPlus));
