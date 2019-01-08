@@ -28,10 +28,10 @@
 
 namespace Opm {
 
-    EclipseConfig::EclipseConfig(const Deck& deck, const ParseContext& parseContext) :
+    EclipseConfig::EclipseConfig(const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors) :
             m_ioConfig(        deck),
             m_initConfig(      deck),
-            m_restartConfig(   deck, parseContext )
+            m_restartConfig(   deck, parseContext, errors )
     {
     }
 

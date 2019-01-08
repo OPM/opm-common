@@ -26,7 +26,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -51,7 +50,7 @@ static Opm::Deck createDeckInvalidArray() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -72,7 +71,7 @@ static Opm::Deck createDeckInvalidRegion() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -93,7 +92,7 @@ static Opm::Deck createDeckInvalidValue() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -114,7 +113,7 @@ static Opm::Deck createDeckMissingVector() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -133,7 +132,7 @@ static Opm::Deck createDeckUnInitialized() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -193,7 +192,7 @@ static Opm::Deck createValidIntDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -203,29 +202,29 @@ static Opm::Deck createValidIntDeck() {
 
 BOOST_AUTO_TEST_CASE(InvalidArrayThrows) {
     Opm::Deck deck = createDeckInvalidArray();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(InvalidRegionThrows) {
     Opm::Deck deck = createDeckInvalidRegion();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
 
 
 BOOST_AUTO_TEST_CASE(ExpectedIntThrows) {
     Opm::Deck deck = createDeckInvalidValue();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(MissingRegionVectorThrows) {
     Opm::Deck deck = createDeckMissingVector();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     Opm::Deck deck = createDeckUnInitialized();
-    BOOST_CHECK_THROW( new Opm::EclipseState( deck, Opm::ParseContext()) , std::invalid_argument );
+    BOOST_CHECK_THROW( new Opm::EclipseState( deck) , std::invalid_argument );
 }
 
 

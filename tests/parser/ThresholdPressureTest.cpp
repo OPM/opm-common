@@ -200,13 +200,13 @@ const std::string& inputStrMissingPressure = "RUNSPEC\n"
 
 static Deck createDeck(const ParseContext& parseContext, const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input, parseContext);
+    ErrorGuard errors;
+    return parser.parseString(input, parseContext, errors);
 }
 
 /// Setup fixture
 struct Setup
 {
-    ParseContext parseContext;
     Deck deck;
     TableManager tablemanager;
     EclipseGrid grid;
@@ -215,8 +215,7 @@ struct Setup
     ThresholdPressure threshPres;
 
     explicit Setup(const std::string& input) :
-            parseContext(),
-            deck(createDeck(parseContext, input)),
+            deck(createDeck(ParseContext(), input)),
             tablemanager(deck),
             grid(10, 3, 4),
             props(deck, tablemanager, grid),
@@ -224,8 +223,8 @@ struct Setup
             threshPres(initConfig.restartRequested(), deck, props)
     {
     }
-    explicit Setup(const std::string& input, ParseContext& parseContextArg) :
-            parseContext(), // not used
+
+    explicit Setup(const std::string& input, const ParseContext& parseContextArg) :
             deck(createDeck(parseContextArg, input)),
             tablemanager(deck),
             grid(10, 3, 4),

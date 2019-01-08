@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
@@ -206,8 +207,8 @@ void InputStack::push( std::string&& input, boost::filesystem::path p ) {
 
 class ParserState {
     public:
-        ParserState( const ParseContext& );
-        ParserState( const ParseContext&, boost::filesystem::path );
+        ParserState( const ParseContext&, ErrorGuard& );
+        ParserState( const ParseContext&, ErrorGuard&, boost::filesystem::path );
 
         void loadString( const std::string& );
         void loadFile( const boost::filesystem::path& );
@@ -234,10 +235,11 @@ class ParserState {
         std::shared_ptr< RawKeyword > rawKeyword;
         ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
         std::string lastKeyWord;
-        
+
         string_view nextKeyword = emptystr;
         Deck deck;
         const ParseContext& parseContext;
+        ErrorGuard& errors;
         bool unknown_keyword = false;
 };
 
@@ -272,14 +274,17 @@ void ParserState::closeFile() {
     this->input_stack.pop();
 }
 
-ParserState::ParserState(const ParseContext& __parseContext) :
-    parseContext( __parseContext )
+ParserState::ParserState(const ParseContext& __parseContext, ErrorGuard& errors) :
+    parseContext( __parseContext ),
+    errors( errors )
 {}
 
 ParserState::ParserState( const ParseContext& context,
+                          ErrorGuard& errors,
                           boost::filesystem::path p ) :
     rootPath( boost::filesystem::canonical( p ).parent_path() ),
-    parseContext( context )
+    parseContext( context ),
+    errors( errors )
 {
     openRootFile( p );
 }
@@ -295,7 +300,7 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
         inputFileCanonical = boost::filesystem::canonical(inputFile);
     } catch (boost::filesystem::filesystem_error fs_error) {
         std::string msg = "Could not open file: " + inputFile.string();
-        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg);
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, errors);
         return;
     }
 
@@ -308,7 +313,8 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
     // make sure the file we'd like to parse is readable
     if( !ufp ) {
         std::string msg = "Could not read from file: " + inputFile.string();
-        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg);
+
+        parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, errors);
         return;
     }
 
@@ -368,7 +374,7 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
             << this->current_path()
             << ":" << this->line();
     }
-    parseContext.handleError( errorKey , msg.str() );
+    parseContext.handleError( errorKey , msg.str(), errors );
 }
 
 void ParserState::openRootFile( const boost::filesystem::path& inputFile) {
@@ -417,7 +423,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
     if( !parser.isRecognizedKeyword( keywordString ) ) {
         if( ParserKeyword::validDeckName( keywordString ) ) {
             std::string msg = "Keyword " + keywordString + " not recognized.";
-            parserState.parseContext.handleUnknownKeyword( keywordString.string() );
+            parserState.parseContext.handleUnknownKeyword( keywordString.string(), parserState.errors );
             parserState.unknown_keyword = true;
             return {};
         }
@@ -467,7 +473,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
 
     std::string msg = "Expected the kewyord: " +keyword_size.keyword 
                     + " to infer the number of records in: " + keywordString;
-    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg );
+    parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg, parserState.errors );
 
     const auto* keyword = parser.getKeyword( keyword_size.keyword );
     const auto& record = keyword->getRecord(0);
@@ -582,7 +588,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             const auto& kwname = parserState.rawKeyword->getKeywordName();
             const auto* parserKeyword = parser.getParserKeywordFromDeckName( kwname );
             try {
-                parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.rawKeyword ) );
+                parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.errors, parserState.rawKeyword ) );
             } catch (const std::exception& exc) {
                 /*
                   This catch-all of parsing errors is to be able to write a good
@@ -639,61 +645,74 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             throw new std::logic_error("Cannot construct a state in partial deck context");
     }
 
-    EclipseState Parser::parse(const std::string &filename, const ParseContext& context) {
+    EclipseState Parser::parse(const std::string &filename, const ParseContext& context, ErrorGuard& errors) {
         assertFullDeck(context);
-        return EclipseState( Parser{}.parseFile( filename, context ), context );
+        return EclipseState( Parser{}.parseFile( filename, context, errors ), context, errors );
     }
 
-    EclipseState Parser::parse(const Deck& deck, const ParseContext& context) {
+    EclipseState Parser::parse(const Deck& deck, const ParseContext& context, ErrorGuard& errors) {
         assertFullDeck(context);
-        return EclipseState(deck, context);
+        return EclipseState(deck, context, errors);
     }
 
-    EclipseState Parser::parseData(const std::string &data, const ParseContext& context) {
+    EclipseState Parser::parseData(const std::string &data, const ParseContext& context, ErrorGuard& errors) {
         assertFullDeck(context);
         Parser p;
-        auto deck = p.parseString(data, context);
-        return parse(deck, context);
+        auto deck = p.parseString(data, context, errors);
+        return parse(deck, context, errors);
     }
 
-    EclipseGrid Parser::parseGrid(const std::string &filename, const ParseContext& context) {
+    EclipseGrid Parser::parseGrid(const std::string &filename, const ParseContext& context, ErrorGuard& errors) {
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
             return EclipseGrid{ filename };
-        return parse(filename, context).getInputGrid();
+        return parse(filename, context, errors).getInputGrid();
     }
 
-    EclipseGrid Parser::parseGrid(const Deck& deck, const ParseContext& context)
+    EclipseGrid Parser::parseGrid(const Deck& deck, const ParseContext& context, ErrorGuard& errors)
     {
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS))
             return EclipseGrid{ deck };
-        return parse(deck, context).getInputGrid();
+        return parse(deck, context, errors).getInputGrid();
     }
 
-    EclipseGrid Parser::parseGridData(const std::string &data, const ParseContext& context) {
+    EclipseGrid Parser::parseGridData(const std::string &data, const ParseContext& context, ErrorGuard& errors) {
         Parser parser;
-        auto deck = parser.parseString(data, context);
+        auto deck = parser.parseString(data, context, errors);
         if (context.hasKey(ParseContext::PARSE_MISSING_SECTIONS)) {
             return EclipseGrid{ deck };
         }
-        return parse(deck, context).getInputGrid();
+        return parse(deck, context, errors).getInputGrid();
     }
 
-    Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext) const {
-        ParserState parserState( parseContext, dataFileName );
+    Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext, ErrorGuard& errors) const {
+        ParserState parserState( parseContext, errors, dataFileName );
         parseState( parserState, *this );
         applyUnitsToDeck( parserState.deck );
 
         return std::move( parserState.deck );
     }
 
-    Deck Parser::parseString(const std::string &data, const ParseContext& parseContext) const {
-        ParserState parserState( parseContext );
+    Deck Parser::parseFile(const std::string& dataFileName) {
+        ErrorGuard errors;
+        return this->parseFile(dataFileName, ParseContext(), errors);
+    }
+
+
+
+
+    Deck Parser::parseString(const std::string &data, const ParseContext& parseContext, ErrorGuard& errors) const {
+        ParserState parserState( parseContext, errors );
         parserState.loadString( data );
 
         parseState( parserState, *this );
         applyUnitsToDeck( parserState.deck );
 
         return std::move( parserState.deck );
+    }
+
+    Deck Parser::parseString(const std::string &data) const {
+        ErrorGuard errors;
+        return this->parseString(data, ParseContext(), errors);
     }
 
     size_t Parser::size() const {

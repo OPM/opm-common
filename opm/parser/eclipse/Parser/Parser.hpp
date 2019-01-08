@@ -39,6 +39,7 @@ namespace Opm {
 
     class Deck;
     class ParseContext;
+    class ErrorGuard;
     class RawKeyword;
 
     /// The hub of the parsing process.
@@ -53,10 +54,17 @@ namespace Opm {
 
         /// The starting point of the parsing process. The supplied file is parsed, and the resulting Deck is returned.
         Deck parseFile(const std::string &dataFile,
-                       const ParseContext& = ParseContext()) const;
+                       const ParseContext&,
+                       ErrorGuard& errors) const;
+
+        Deck parseFile(const std::string& datafile);
+
         Deck parseString(const std::string &data,
-                         const ParseContext& = ParseContext()) const;
-        Deck parseStream(std::unique_ptr<std::istream>&& inputStream , const ParseContext& parseContext) const;
+                         const ParseContext&,
+                         ErrorGuard& errors) const;
+        Deck parseString(const std::string &data) const;
+
+        Deck parseStream(std::unique_ptr<std::istream>&& inputStream , const ParseContext& parseContext, ErrorGuard& errors) const;
 
         /// Method to add ParserKeyword instances, these holding type and size information about the keywords and their data.
         void addParserKeyword(const Json::JsonObject& jsonKeyword);
@@ -90,27 +98,30 @@ namespace Opm {
             addParserKeyword( std::unique_ptr< ParserKeyword >( new T ) );
         }
 
-        static EclipseState parse(const Deck& deck,            const ParseContext& context = ParseContext());
-        static EclipseState parse(const std::string &filename, const ParseContext& context = ParseContext());
-        static EclipseState parseData(const std::string &data, const ParseContext& context = ParseContext());
+        static EclipseState parse(const Deck& deck,            const ParseContext& context, ErrorGuard& errors);
+        static EclipseState parse(const std::string &filename, const ParseContext& context, ErrorGuard& errors);
+        static EclipseState parseData(const std::string &data, const ParseContext& context, ErrorGuard& errors);
 
         /// Parses the deck specified in filename.  If context contains ParseContext::PARSE_PARTIAL_DECK,
         /// we construct only a lean grid, otherwise, we construct a full EclipseState and return the
         /// fully constructed InputGrid
         static EclipseGrid parseGrid(const std::string &filename,
-                const ParseContext& context = ParseContext());
+                                     const ParseContext& context,
+                                     ErrorGuard& errors);
 
         /// Parses the provided deck.  If context contains ParseContext::PARSE_PARTIAL_DECK,
         /// we construct only a lean grid, otherwise, we construct a full EclipseState and return the
         /// fully constructed InputGrid
         static EclipseGrid parseGrid(const Deck& deck,
-                const ParseContext& context = ParseContext());
+                                     const ParseContext& context,
+                                     ErrorGuard& errors);
 
         /// Parses the provided deck string.  If context contains ParseContext::PARSE_PARTIAL_DECK,
         /// we construct only a lean grid, otherwise, we construct a full EclipseState and return the
         /// fully constructed InputGrid
         static EclipseGrid parseGridData(const std::string &data,
-                const ParseContext& context = ParseContext());
+                                         const ParseContext& context,
+                                         ErrorGuard& errors);
 
     private:
         // associative map of the parser internal name and the corresponding ParserKeyword object

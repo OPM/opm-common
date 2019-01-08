@@ -50,9 +50,8 @@ BOOST_AUTO_TEST_CASE(TwoPhase) {
     )";
 
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
@@ -73,9 +72,8 @@ BOOST_AUTO_TEST_CASE(ThreePhase) {
     )";
 
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
@@ -98,9 +96,8 @@ BOOST_AUTO_TEST_CASE(TABDIMS) {
     )";
 
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
 
     Runspec runspec( deck );
     const auto& tabdims = runspec.tabdims();
@@ -117,7 +114,7 @@ BOOST_AUTO_TEST_CASE( EndpointScalingWithoutENDSCALE ) {
     RUNSPEC
     )";
 
-    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    Runspec runspec( Parser{}.parseString( input ) );
     const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( !endscale );
@@ -136,7 +133,7 @@ BOOST_AUTO_TEST_CASE( EndpointScalingDefaulted ) {
         /
     )";
 
-    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    Runspec runspec( Parser{}.parseString( input ) );
     const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( endscale );
@@ -153,7 +150,7 @@ BOOST_AUTO_TEST_CASE( EndpointScalingDIRECT ) {
         DIRECT /
     )";
 
-    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    Runspec runspec( Parser{}.parseString( input ) );
     const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( endscale );
@@ -170,7 +167,7 @@ BOOST_AUTO_TEST_CASE( EndpointScalingDIRECT_IRREVERS ) {
         direct IRREVERS /
     )";
 
-    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    Runspec runspec( Parser{}.parseString( input ) );
     const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( endscale );
@@ -187,7 +184,7 @@ BOOST_AUTO_TEST_CASE( SCALECRS_without_ENDSCALE ) {
         /
     )";
 
-    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    Runspec runspec( Parser{}.parseString( input ) );
     const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( !endscale );
@@ -213,7 +210,7 @@ BOOST_AUTO_TEST_CASE( SCALECRS_N ) {
     )";
 
     for( const auto& input : { N, defaulted } ) {
-        Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+        Runspec runspec( Parser{}.parseString( input ) );
         const auto& endscale = runspec.endpointScaling();
 
         BOOST_CHECK( endscale );
@@ -231,7 +228,7 @@ BOOST_AUTO_TEST_CASE( SCALECRS_Y ) {
         Y /
     )";
 
-    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    Runspec runspec( Parser{}.parseString( input ) );
     const auto& endscale = runspec.endpointScaling();
 
     BOOST_CHECK( endscale );
@@ -267,7 +264,7 @@ BOOST_AUTO_TEST_CASE( endpoint_scaling_throw_invalid_argument ) {
     };
 
     for( auto&& input : inputs ) {
-        auto deck = Parser{}.parseString( input, ParseContext{} );
+        auto deck = Parser{}.parseString( input );
         BOOST_CHECK_THROW( Runspec{ deck }, std::invalid_argument );
     }
 }
@@ -283,7 +280,7 @@ WELLDIMS
 )" };
 
     const auto wd = Welldims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 36);   // WELLDIMS(2)
@@ -302,7 +299,7 @@ WELLDIMS
 )" };
 
     const auto wd = Welldims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 0);   // WELLDIMS(2), defaulted
@@ -321,7 +318,7 @@ WELLDIMS
 )" };
 
     const auto wd = Welldims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 36);  // WELLDIMS(2)
@@ -340,7 +337,7 @@ WELLDIMS
 )" };
 
     const auto wd = Welldims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 0);   // WELLDIMS(2), defaulted
@@ -359,7 +356,7 @@ WELLDIMS
 )" };
 
     const auto wd = Welldims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wd.maxConnPerWell(), 0);    // WELLDIMS(2), defaulted
@@ -375,7 +372,7 @@ RUNSPEC
 )" };
 
     const auto wsd = WellSegmentDims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 0);         // WSEGDIMS1), defaulted
@@ -394,7 +391,7 @@ WSEGDIMS
 )" };
 
     const auto wsd = WellSegmentDims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 0);         // WSEGDIMS1), defaulted
@@ -414,7 +411,7 @@ WSEGDIMS
 )" };
 
     const auto wsd = WellSegmentDims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 11);        // WSEGDIMS(1)
@@ -434,7 +431,7 @@ WSEGDIMS
 )" };
 
     const auto wsd = WellSegmentDims {
-        Parser{}.parseString(input, ParseContext{})
+        Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 0);         // WSEGDIMS(1), defaulted
@@ -454,7 +451,7 @@ WSEGDIMS
 )" };
 
     const auto wsd = WellSegmentDims {
-        Parser{}.parseString(input, ParseContext{})
+      Parser{}.parseString(input)
     };
 
     BOOST_CHECK_EQUAL(wsd.maxSegmentedWells(), 0);          // WSEGDIMS(1), defaulted
@@ -468,7 +465,7 @@ BOOST_AUTO_TEST_CASE( SWATINIT ) {
        1000*0.25 /
     )";
 
-    Runspec runspec( Parser{}.parseString( input, ParseContext{} ) );
+    Runspec runspec( Parser{}.parseString( input ) );
     const auto& endscale = runspec.endpointScaling();
     BOOST_CHECK( endscale );
     BOOST_CHECK( !endscale.directional() );
@@ -489,9 +486,8 @@ BOOST_AUTO_TEST_CASE(Solvent) {
     )";
 
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
@@ -515,9 +511,8 @@ BOOST_AUTO_TEST_CASE(Polymer) {
     )";
 
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();
@@ -541,9 +536,8 @@ BOOST_AUTO_TEST_CASE(PolymerMolecularWeight) {
     )";
 
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
 
     Runspec runspec( deck );
     const auto& phases = runspec.phases();

@@ -20,7 +20,6 @@
 
 #include <opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -38,7 +37,9 @@ inline std::string pathprefix() {
 
 BOOST_AUTO_TEST_CASE(noNNC)
 {
-    auto eclipseState = Parser::parse(pathprefix() + "NNC/noNNC.DATA");
+    Parser parser;
+    auto deck = parser.parseFile(pathprefix() + "NNC/noNNC.DATA");
+    EclipseState eclipseState(deck);
     const auto& editnnc = eclipseState.getInputEDITNNC();
     BOOST_CHECK(!eclipseState.hasInputEDITNNC());
     BOOST_CHECK(editnnc.empty());
@@ -46,7 +47,9 @@ BOOST_AUTO_TEST_CASE(noNNC)
 
 BOOST_AUTO_TEST_CASE(readDeck)
 {
-    auto eclipseState = Parser::parse(pathprefix() + "EDITNNC/EDITNNC.DATA");
+    Parser parser;
+    auto deck = parser.parseFile(pathprefix() + "EDITNNC/EDITNNC.DATA");
+    EclipseState eclipseState(deck);
     const auto& editnnc = eclipseState.getInputEDITNNC();
     BOOST_CHECK(!editnnc.empty());
     const std::vector<NNCdata>& data = editnnc.data();

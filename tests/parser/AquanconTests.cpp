@@ -57,7 +57,7 @@ inline Deck createAQUANCONDeck() {
         "/ \n";
 
     Parser parser;
-    return parser.parseString(deckData, ParseContext());
+    return parser.parseString(deckData);
 }
 
 inline std::vector<Aquancon::AquanconOutput> init_aquancon(){

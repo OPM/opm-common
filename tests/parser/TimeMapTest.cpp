@@ -34,7 +34,6 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 const std::time_t startDateJan1st2010 = Opm::TimeMap::mkdate(2010, 1, 1);
 
@@ -213,7 +212,7 @@ BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
         " 6 7 /\n";
 
     Opm::Parser parser( true );
-    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    auto deck = parser.parseString(deckData);
     Opm::TimeMap tmap(deck);
 
     BOOST_CHECK_EQUAL(tmap.getStartTime(0),Opm::TimeMap::mkdate( 1981 , 5 , 21 ));
@@ -285,7 +284,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsYearsAndMonths) {
         " 6 7 /\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    auto deck = parser.parseString(deckData);
     const Opm::TimeMap tmap(deck);
 
     /*deckData timesteps:
@@ -336,7 +335,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsLongStep) {
         " 25550 /\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    auto deck = parser.parseString(deckData);
     const Opm::TimeMap tmap(deck);
 
     /*deckData timesteps:
@@ -365,7 +364,7 @@ BOOST_AUTO_TEST_CASE(initTimestepsDistantDates) {
         "/\n";
 
     Opm::Parser parser;
-    auto deck = parser.parseString(deckData, Opm::ParseContext());
+    auto deck = parser.parseString(deckData);
     const Opm::TimeMap tmap(deck);
 
     /*deckData timesteps:

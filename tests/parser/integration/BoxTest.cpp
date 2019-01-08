@@ -26,7 +26,6 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -42,8 +41,8 @@ inline std::string prefix() {
 inline EclipseState makeState(const std::string& fileName) {
     Parser parser;
     boost::filesystem::path boxFile(fileName);
-    auto deck =  parser.parseFile(boxFile.string(), ParseContext());
-    return EclipseState( deck, ParseContext() );
+    auto deck =  parser.parseFile(boxFile.string());
+    return EclipseState( deck );
 }
 
 BOOST_AUTO_TEST_CASE( PERMX ) {

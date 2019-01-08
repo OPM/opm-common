@@ -28,7 +28,6 @@
 
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -147,7 +146,7 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Opm::EclipseGrid grid(10,10,10);
     Opm::TableManager tables;
     Opm::Parser parser;
-    const auto deck = parser.parseString(compdat_keyword, Opm::ParseContext());
+    const auto deck = parser.parseString(compdat_keyword);
     Opm::Eclipse3DProperties props(deck, tables, grid );
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Opm::WellConnections connections;
@@ -197,12 +196,11 @@ COMPDAT
 
 
 BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE1) {
-    Opm::ParseContext parseContext;
     Opm::Parser parser;
 
-    const auto deck = parser.parseFile("SPE1CASE1.DATA", parseContext);
-    Opm::EclipseState state(deck, parseContext);
-    Opm::Schedule sched(deck, state, parseContext);
+    const auto deck = parser.parseFile("SPE1CASE1.DATA");
+    Opm::EclipseState state(deck);
+    Opm::Schedule sched(deck, state);
     const auto& units = deck.getActiveUnitSystem();
 
     const auto& prod = sched.getWell("PROD");
@@ -222,12 +220,11 @@ struct exp_conn {
 };
 
 BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE9) {
-    Opm::ParseContext parseContext;
     Opm::Parser parser;
 
-    const auto deck = parser.parseFile("SPE9_CP_PACKED.DATA", parseContext);
-    Opm::EclipseState state(deck, parseContext);
-    Opm::Schedule sched(deck, state, parseContext);
+    const auto deck = parser.parseFile("SPE9_CP_PACKED.DATA");
+    Opm::EclipseState state(deck);
+    Opm::Schedule sched(deck, state);
     const auto& units = deck.getActiveUnitSystem();
 /*
   The list of the expected values come from the PRT file in an ECLIPSE simulation.

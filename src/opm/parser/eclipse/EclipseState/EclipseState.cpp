@@ -49,10 +49,11 @@
 
 namespace Opm {
 
-    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext) :
+
+    EclipseState::EclipseState(const Deck& deck , const ParseContext& parseContext, ErrorGuard& errors) :
         m_tables(            deck ),
         m_runspec(           deck ),
-        m_eclipseConfig(     deck, parseContext ),
+        m_eclipseConfig(     deck, parseContext, errors ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_inputNnc(          deck ),
         m_inputEditNnc(      deck ),
@@ -77,6 +78,18 @@ namespace Opm {
         initTransMult();
         initFaults(deck);
     }
+
+
+    template<typename T>
+    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext, T&& errors) :
+        EclipseState(deck, parseContext, errors)
+    {}
+
+
+    EclipseState::EclipseState(const Deck& deck) :
+        EclipseState(deck, ParseContext(), ErrorGuard())
+    {}
+
 
     const UnitSystem& EclipseState::getDeckUnitSystem() const {
         return m_deckUnitSystem;

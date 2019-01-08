@@ -25,7 +25,6 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 
@@ -39,7 +38,7 @@ inline Deck createCOMPSEGSDeck() {
         "/\n";
 
     Parser parser;
-    return parser.parseString(deckData, ParseContext());
+    return parser.parseString(deckData);
 }
 
 

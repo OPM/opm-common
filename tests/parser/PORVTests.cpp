@@ -27,7 +27,6 @@
 
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
@@ -55,7 +54,7 @@ static Opm::Deck createCARTDeck() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 static Opm::Deck createDeckWithPORO() {
@@ -79,7 +78,7 @@ static Opm::Deck createDeckWithPORO() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 static Opm::Deck createDeckWithPORVPORO() {
@@ -108,7 +107,7 @@ static Opm::Deck createDeckWithPORVPORO() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -148,7 +147,7 @@ static Opm::Deck createDeckWithMULTPV() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -180,7 +179,7 @@ static Opm::Deck createDeckWithBOXPORV() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -215,7 +214,7 @@ static Opm::Deck createDeckWithNTG() {
 
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 static Opm::Deck createDeckWithMULTREGP() {
@@ -248,7 +247,7 @@ static Opm::Deck createDeckWithMULTREGP() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 BOOST_AUTO_TEST_CASE(PORV_cartesianDeck) {
@@ -399,7 +398,7 @@ static Opm::Deck createDeckNakedGRID() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 
@@ -441,13 +440,13 @@ static Opm::Deck createDeckWithPOROZero() {
         "\n";
 
     Opm::Parser parser;
-    return parser.parseString(deckData, Opm::ParseContext()) ;
+    return parser.parseString(deckData) ;
 }
 
 BOOST_AUTO_TEST_CASE(PORO_ZERO_ACTNUM_CORRECT) {
     /* Check that MULTIPLE Boxed PORV and MULTPV statements work and NTG */
     Opm::Deck deck = createDeckWithPOROZero();
-    Opm::EclipseState state( deck , Opm::ParseContext());
+    Opm::EclipseState state( deck);
     const auto& grid = state.getInputGrid( );
 
     /* Top layer is active */

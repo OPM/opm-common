@@ -22,7 +22,6 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
@@ -36,10 +35,10 @@ BOOST_AUTO_TEST_CASE(MULTFLT_IN_SCHEDULE) {
     Parser parser;
     std::string scheduleFile(pathprefix() + "TRANS/Deck1");
     ParseContext parseContext;
-    auto deck = parser.parseFile(scheduleFile, parseContext);
-    EclipseState state(deck, parseContext);
+    auto deck = parser.parseFile(scheduleFile);
+    EclipseState state(deck);
     const auto& trans = state.getTransMult();
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
     const Events& events = schedule.getEvents();
 
     BOOST_CHECK_EQUAL( 0.10 , trans.getMultiplier( 3,2,0,FaceDir::XPlus ));

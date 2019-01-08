@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
@@ -39,6 +40,7 @@ inline std::string pathprefix() {
 BOOST_AUTO_TEST_CASE( test_parse ) {
     Parser parser(false);
     ParseContext parseContext;
+    ErrorGuard errors;
 
     parseContext.update( ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
     parseContext.update( ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
@@ -47,7 +49,7 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
 
-    auto deck = parser.parseFile(pathprefix() + "Resinsight/DECK1.DATA" , parseContext);
+    auto deck = parser.parseFile(pathprefix() + "Resinsight/DECK1.DATA" , parseContext, errors);
 
     BOOST_CHECK( deck.hasKeyword<ParserKeywords::SPECGRID>() );
     BOOST_CHECK( deck.hasKeyword<ParserKeywords::FAULTS>() );
@@ -60,6 +62,8 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
 BOOST_AUTO_TEST_CASE( test_state ) {
     Parser parser(false);
     ParseContext parseContext;
+    ErrorGuard errors;
+
 
     parseContext.update( ParseContext::PARSE_UNKNOWN_KEYWORD , InputError::IGNORE );
     parseContext.update( ParseContext::PARSE_RANDOM_TEXT , InputError::IGNORE );
@@ -68,7 +72,7 @@ BOOST_AUTO_TEST_CASE( test_state ) {
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
     parser.addKeyword<ParserKeywords::GRID>();
-    auto deck = parser.parseFile(pathprefix() + "Resinsight/DECK1.DATA" , parseContext);
+    auto deck = parser.parseFile(pathprefix() + "Resinsight/DECK1.DATA" , parseContext, errors);
 
     GridDims grid(deck);
     GRIDSection gsec(deck);

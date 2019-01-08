@@ -102,13 +102,12 @@ data::Solution createBlackoilState( int timeStepIdx, int numCells ) {
 }
 
 BOOST_AUTO_TEST_CASE(test_RFT) {
-    ParseContext parse_context;
     std::string eclipse_data_filename    = "testrft.DATA";
     test_work_area_type * test_area = test_work_area_alloc("test_RFT");
     test_work_area_copy_file( test_area, eclipse_data_filename.c_str() );
 
-    auto deck = Parser().parseFile( eclipse_data_filename, parse_context );
-    auto eclipseState = Parser::parse( deck );
+    auto deck = Parser().parseFile( eclipse_data_filename );
+    auto eclipseState = EclipseState(deck);
     {
         /* eclipseWriter is scoped here to ensure it is destroyed after the
          * file itself has been written, because we're going to reload it
@@ -118,8 +117,8 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
 
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
-        Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec(), parse_context);
-        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), parse_context);
+        Schedule schedule(deck, eclipseState);
+        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ));
         EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
         time_t start_time = schedule.posixStartTime();
         time_t step_time = ecl_util_make_date(10, 10, 2008 );
@@ -193,13 +192,12 @@ void verifyRFTFile2(const std::string& rft_filename) {
 
 
 BOOST_AUTO_TEST_CASE(test_RFT2) {
-    ParseContext parse_context;
     std::string eclipse_data_filename    = "testrft.DATA";
     test_work_area_type * test_area = test_work_area_alloc("test_RFT");
     test_work_area_copy_file( test_area, eclipse_data_filename.c_str());
 
-    auto deck = Parser().parseFile( eclipse_data_filename, parse_context );
-    auto eclipseState = Parser::parse( deck );
+    auto deck = Parser().parseFile( eclipse_data_filename);
+    auto eclipseState = EclipseState(deck);
     {
         /* eclipseWriter is scoped here to ensure it is destroyed after the
          * file itself has been written, because we're going to reload it
@@ -210,8 +208,8 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
         const auto& grid = eclipseState.getInputGrid();
         const auto numCells = grid.getCartesianSize( );
 
-        Schedule schedule(deck, grid, eclipseState.get3DProperties(), eclipseState.runspec(), parse_context);
-        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), parse_context);
+        Schedule schedule(deck, eclipseState);
+        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ));
         time_t start_time = schedule.posixStartTime();
         const auto& time_map = schedule.getTimeMap( );
 

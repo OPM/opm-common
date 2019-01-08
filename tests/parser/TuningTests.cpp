@@ -24,7 +24,6 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -62,7 +61,7 @@ const std::string& deckStr =  "START\n"
 
 static Deck createDeck(const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 
@@ -74,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
   Runspec runspec (deck);
-  Schedule schedule( deck, grid , eclipseProperties, runspec , ParseContext());
+  Schedule schedule( deck, grid , eclipseProperties, runspec);
   auto tuning = schedule.getTuning();
   auto event = schedule.getEvents();
 
@@ -333,7 +332,7 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
   Runspec runspec (deck);
-  Schedule schedule(deck , grid , eclipseProperties, runspec, ParseContext());
+  Schedule schedule(deck , grid , eclipseProperties, runspec);
   auto tuning = schedule.getTuning();
 
 
@@ -364,7 +363,7 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   TableManager table ( deck );
   Eclipse3DProperties eclipseProperties ( deck , table, grid);
   Runspec runspec (deck);
-  Schedule schedule(deck, grid , eclipseProperties, runspec, ParseContext());
+  Schedule schedule(deck, grid , eclipseProperties, runspec);
   auto tuning = schedule.getTuning();
 
 

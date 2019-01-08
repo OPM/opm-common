@@ -24,7 +24,6 @@
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/data/Cells.hpp>
 
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -288,12 +287,11 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         "/\n";
 
     auto write_and_check = [&]( int first = 1, int last = 5 ) {
-        ParseContext parse_context;
-        auto deck = Parser().parseString( deckString, parse_context );
-        auto es = Parser::parse( deck );
+        auto deck = Parser().parseString( deckString);
+        auto es = EclipseState( deck );
         auto& eclGrid = es.getInputGrid();
-        Schedule schedule(deck, eclGrid, es.get3DProperties(), es.runspec(), parse_context);
-        SummaryConfig summary_config( deck, schedule, es.getTableManager( ), parse_context);
+        Schedule schedule(deck, eclGrid, es.get3DProperties(), es.runspec());
+        SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
         es.getIOConfig().setBaseName( "FOO" );
 
         EclipseIO eclWriter( es, eclGrid , schedule, summary_config);

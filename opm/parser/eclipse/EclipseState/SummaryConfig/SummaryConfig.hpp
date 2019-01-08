@@ -99,6 +99,7 @@ namespace Opm {
     class EclipseState;
     class ParserKeyword;
     class Schedule;
+    class ErrorGuard;
     class ParseContext;
     class GridDims;
 
@@ -108,8 +109,24 @@ namespace Opm {
             typedef std::vector< keyword_type > keyword_list;
             typedef keyword_list::const_iterator const_iterator;
 
-            SummaryConfig( const Deck&, const Schedule&,
-                           const TableManager&, const ParseContext&);
+            SummaryConfig( const Deck&,
+                           const Schedule&,
+                           const TableManager&,
+                           const ParseContext&,
+                           ErrorGuard&);
+
+            template <typename T>
+            SummaryConfig( const Deck&,
+                           const Schedule&,
+                           const TableManager&,
+                           const ParseContext&,
+                           T&&);
+
+            SummaryConfig( const Deck&,
+                           const Schedule&,
+                           const TableManager&);
+
+
 
             const_iterator begin() const;
             const_iterator end() const;
@@ -141,6 +158,7 @@ namespace Opm {
                            const Schedule& schedule,
                            const TableManager& tables,
                            const ParseContext& parseContext,
+                           ErrorGuard& errors,
                            const GridDims& dims);
 
             /*

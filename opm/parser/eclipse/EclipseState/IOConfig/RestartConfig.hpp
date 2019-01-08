@@ -201,6 +201,7 @@ namespace Opm {
     class TimeMap;
     class Schedule;
     class ParseContext;
+    class ErrorGuard;
 
     /*The IOConfig class holds data about input / ouput configurations
 
@@ -317,10 +318,17 @@ namespace Opm {
     public:
 
         RestartConfig();
-        explicit RestartConfig( const Deck&, const ParseContext& parseContext );
+
+        template<typename T>
+        RestartConfig( const Deck&, const ParseContext& parseContext, T&& errors );
+
+        RestartConfig( const Deck&, const ParseContext& parseContext, ErrorGuard& errors );
+        RestartConfig( const Deck& );
+
         RestartConfig( const SCHEDULESection& schedule,
                        const SOLUTIONSection& solution,
                        const ParseContext& parseContext,
+                       ErrorGuard& errors,
                        TimeMap timemap );
 
 
@@ -330,7 +338,7 @@ namespace Opm {
         int getKeyword( const std::string& keyword, size_t timeStep) const;
 
         void overrideRestartWriteInterval(size_t interval);
-        void handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext);
+        void handleSolutionSection(const SOLUTIONSection& solutionSection, const ParseContext& parseContext, ErrorGuard& errors);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
         RestartSchedule getNode( size_t timestep ) const;
@@ -357,7 +365,7 @@ namespace Opm {
         int     m_first_restart_step;
         bool    m_write_initial_RST_file = false;
 
-        void handleScheduleSection( const SCHEDULESection& schedule, const ParseContext& parseContext);
+        void handleScheduleSection( const SCHEDULESection& schedule, const ParseContext& parseContext, ErrorGuard& errors);
         void update( size_t step, const RestartSchedule& rs);
         static RestartSchedule rptsched( const DeckKeyword& );
 

@@ -55,7 +55,7 @@ static Deck createDeck_no_wells( const std::string& summary ) {
             "SUMMARY\n"
             + summary;
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 
@@ -94,7 +94,7 @@ static Deck createDeck( const std::string& summary ) {
             "SUMMARY\n"
             + summary;
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static std::vector< std::string > sorted_names( const SummaryConfig& summary ) {
@@ -129,10 +129,11 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 }
 
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
+    ErrorGuard errors;
     auto deck = createDeck( input );
-    EclipseState state( deck, parseContext );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
-    return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext );
+    EclipseState state( deck, parseContext, errors );
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext, errors);
+    return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
 }
 
 BOOST_AUTO_TEST_CASE(wells_all) {
@@ -149,12 +150,13 @@ BOOST_AUTO_TEST_CASE(wells_all) {
 
 BOOST_AUTO_TEST_CASE(wells_missingI) {
     ParseContext parseContext;
+    ErrorGuard errors;
     const auto input = "WWCT\n/\n";
     auto deck = createDeck_no_wells( input );
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
-    EclipseState state( deck, parseContext );
-    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext);
-    BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext ));
+    EclipseState state( deck, parseContext, errors );
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parseContext, errors);
+    BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors ));
 }
 
 
@@ -653,13 +655,12 @@ BOOST_AUTO_TEST_CASE( SUMMARY_MISC) {
 BOOST_AUTO_TEST_CASE(Summary_Segment)
 {
     const auto input = std::string { "SOFR_TEST.DATA" };
-    const auto ctxt  = ParseContext{};
-    const auto deck  = Parser{}.parseFile(input, ctxt);
-    const auto state = EclipseState { deck, ctxt };
+    const auto deck  = Parser{}.parseFile(input);
+    const auto state = EclipseState { deck };
 
-    const auto schedule = Schedule { deck, state, ctxt };
+    const auto schedule = Schedule { deck, state};
     const auto summary  = SummaryConfig {
-        deck, schedule, state.getTableManager(), ctxt
+        deck, schedule, state.getTableManager()
     };
 
     // SOFR PROD01 segments 1, 10, 21.

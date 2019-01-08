@@ -47,7 +47,7 @@ static Deck createDeckWithOutSolvent() {
             "WCONINJE\n"
             "     'W_1' 'WATER' 'OPEN' 'BHP' 1 2 3/\n/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithGasInjector() {
@@ -66,7 +66,7 @@ static Deck createDeckWithGasInjector() {
             "     'W_1'        1 / \n "
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithDynamicWSOLVENT() {
@@ -97,7 +97,7 @@ static Deck createDeckWithDynamicWSOLVENT() {
             "     'W_1'        0 / \n "
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithOilInjector() {
@@ -116,7 +116,7 @@ static Deck createDeckWithOilInjector() {
             "     'W_1'        1 / \n "
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 
 static Deck createDeckWithWaterInjector() {
@@ -135,7 +135,7 @@ static Deck createDeckWithWaterInjector() {
             "     'W_1'        1 / \n "
             "/\n";
 
-    return parser.parseString(input, ParseContext());
+    return parser.parseString(input);
 }
 BOOST_AUTO_TEST_CASE(TestNoSolvent) {
     auto deck = createDeckWithOutSolvent();
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(TestNoSolvent) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec(deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
 }
 
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(TestGasInjector) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec(deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
 
 }
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec(deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec , ParseContext());
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
     const auto& keyword = deck.getKeyword("WSOLVENT");
     BOOST_CHECK_EQUAL(keyword.size(),1);
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(TestOilInjector) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW (Schedule(deck , grid , eclipseProperties, runspec , ParseContext()), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(deck , grid , eclipseProperties, runspec), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(TestWaterInjector) {
@@ -193,5 +193,5 @@ BOOST_AUTO_TEST_CASE(TestWaterInjector) {
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec(deck);
-    BOOST_CHECK_THROW (Schedule(deck, grid , eclipseProperties, runspec , ParseContext()), std::invalid_argument);
+    BOOST_CHECK_THROW (Schedule(deck, grid , eclipseProperties, runspec), std::invalid_argument);
 }

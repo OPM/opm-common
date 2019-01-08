@@ -123,25 +123,26 @@ namespace {
 
 
 
-void handleMissingWell( const ParseContext& parseContext , const std::string& keyword, const std::string& well) {
+void handleMissingWell( const ParseContext& parseContext, ErrorGuard& errors, const std::string& keyword, const std::string& well) {
     std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
     if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_WELL) == InputError::WARN)
         std::cerr << "ERROR: " << msg << std::endl;
 
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msg );
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msg, errors );
 }
 
 
-void handleMissingGroup( const ParseContext& parseContext , const std::string& keyword, const std::string& group) {
+void handleMissingGroup( const ParseContext& parseContext , ErrorGuard& errors, const std::string& keyword, const std::string& group) {
     std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such group: ") + group;
     if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_GROUP) == InputError::WARN)
         std::cerr << "ERROR: " << msg << std::endl;
 
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg );
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg, errors );
 }
 
-  inline void keywordW( SummaryConfig::keyword_list& list,
+inline void keywordW( SummaryConfig::keyword_list& list,
                       const ParseContext& parseContext,
+                      ErrorGuard& errors,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
 
@@ -154,7 +155,7 @@ void handleMissingGroup( const ParseContext& parseContext , const std::string& k
             auto wells = schedule.getWellsMatching( pattern );
 
             if( wells.empty() )
-                handleMissingWell( parseContext, keyword.name(), pattern );
+                handleMissingWell( parseContext, errors, keyword.name(), pattern );
 
             for( const auto* well : wells )
                 list.push_back( SummaryConfig::keyword_type( keyword.name(), well->name() ));
@@ -167,6 +168,7 @@ void handleMissingGroup( const ParseContext& parseContext , const std::string& k
 
 inline void keywordG( SummaryConfig::keyword_list& list,
                       const ParseContext& parseContext,
+                      ErrorGuard& errors,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
 
@@ -188,7 +190,7 @@ inline void keywordG( SummaryConfig::keyword_list& list,
         if( schedule.hasGroup( group ) )
             list.push_back( SummaryConfig::keyword_type(keyword.name(), group ));
         else
-            handleMissingGroup( parseContext, keyword.name(), group );
+            handleMissingGroup( parseContext, errors, keyword.name(), group );
     }
 }
 
@@ -224,10 +226,11 @@ inline void keywordB( SummaryConfig::keyword_list& list,
 
 inline void keywordR2R( SummaryConfig::keyword_list& list,
                         const ParseContext& parseContext,
+                        ErrorGuard& errors,
                         const DeckKeyword& keyword)
 {
     std::string msg = "OPM/flow does not support region to region summary keywords - " + keyword.name() + " is ignored.";
-    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg);
+    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
 }
 
 
@@ -272,6 +275,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
   inline void keywordC( SummaryConfig::keyword_list& list,
                         const ParseContext& parseContext,
+                        ErrorGuard& errors,
                         const DeckKeyword& keyword,
                         const Schedule& schedule,
                         const GridDims& dims) {
@@ -288,7 +292,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                          : schedule.getWellsMatching( wellitem.getTrimmedString( 0 ) );
 
         if( wells.empty() )
-            handleMissingWell( parseContext, keyword.name(), wellitem.getTrimmedString( 0 ) );
+            handleMissingWell( parseContext, errors, keyword.name(), wellitem.getTrimmedString( 0 ) );
 
         for( const auto* well : wells ) {
             const auto& name = well->name();
@@ -436,6 +440,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
     void keywordSWithRecords(const std::size_t            last_timestep,
                              const ParseContext&          parseContext,
+                             ErrorGuard& errors,
                              const DeckKeyword&           keyword,
                              const Schedule&              schedule,
                              SummaryConfig::keyword_list& list)
@@ -463,7 +468,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                 : schedule.getWellsMatching(wellitem.getTrimmedString(0));
 
             if (wells.empty()) {
-                handleMissingWell(parseContext, keyword.name(),
+                handleMissingWell(parseContext, errors, keyword.name(),
                                   wellitem.getTrimmedString(0));
             }
 
@@ -478,6 +483,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
     inline void keywordS(SummaryConfig::keyword_list& list,
                          const ParseContext&          parseContext,
+                         ErrorGuard& errors,
                          const DeckKeyword&           keyword,
                          const Schedule&              schedule)
     {
@@ -507,7 +513,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         if (keyword.size() > 0) {
             // Keyword with explicit records.
             // Handle as alternatives SOFR and SPR above
-            keywordSWithRecords(last_timestep, parseContext,
+            keywordSWithRecords(last_timestep, parseContext, errors,
                                 keyword, schedule, list);
         }
         else {
@@ -522,23 +528,24 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const Schedule& schedule,
                         const TableManager& tables,
                         const ParseContext& parseContext,
+                        ErrorGuard& errors,
                         const GridDims& dims) {
     const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
 
     switch( var_type ) {
-        case ECL_SMSPEC_WELL_VAR: return keywordW( list, parseContext, keyword, schedule );
-        case ECL_SMSPEC_GROUP_VAR: return keywordG( list, parseContext, keyword, schedule );
+        case ECL_SMSPEC_WELL_VAR: return keywordW( list, parseContext, errors, keyword, schedule );
+        case ECL_SMSPEC_GROUP_VAR: return keywordG( list, parseContext, errors, keyword, schedule );
         case ECL_SMSPEC_FIELD_VAR: return keywordF( list, keyword );
         case ECL_SMSPEC_BLOCK_VAR: return keywordB( list, keyword, dims );
         case ECL_SMSPEC_REGION_VAR: return keywordR( list, keyword, tables );
-        case ECL_SMSPEC_REGION_2_REGION_VAR: return keywordR2R(list, parseContext, keyword);
-        case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, keyword, schedule, dims);
-        case ECL_SMSPEC_SEGMENT_VAR: return keywordS( list, parseContext, keyword, schedule );
+        case ECL_SMSPEC_REGION_2_REGION_VAR: return keywordR2R(list, parseContext, errors, keyword);
+        case ECL_SMSPEC_COMPLETION_VAR: return keywordC( list, parseContext, errors, keyword, schedule, dims);
+        case ECL_SMSPEC_SEGMENT_VAR: return keywordS( list, parseContext, errors, keyword, schedule );
         case ECL_SMSPEC_MISC_VAR: return keywordMISC( list, keyword );
 
         default:
             std::string msg = "Summary keywords of type: " + std::string(ecl_smspec_get_var_type_name( var_type )) + " is not supported. Keyword: " + keyword.name() + " is ignored";
-            parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg);
+            parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
             return;
     }
 }
@@ -564,22 +571,23 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const TableManager& tables,
                               const ParseContext& parseContext,
+                              ErrorGuard& errors,
                               const GridDims& dims) {
     SUMMARYSection section( deck );
     for( auto& x : section )
-        handleKW( this->keywords, x, schedule, tables, parseContext, dims);
+        handleKW( this->keywords, x, schedule, tables, parseContext, errors, dims);
 
     if( section.hasKeyword( "ALL" ) )
-        this->merge( { ALL_keywords, schedule, tables, parseContext, dims} );
+        this->merge( { ALL_keywords, schedule, tables, parseContext, errors, dims} );
 
     if( section.hasKeyword( "GMWSET" ) )
-        this->merge( { GMWSET_keywords, schedule, tables, parseContext, dims} );
+        this->merge( { GMWSET_keywords, schedule, tables, parseContext, errors, dims} );
 
     if( section.hasKeyword( "FMWSET" ) )
-        this->merge( { FMWSET_keywords, schedule, tables, parseContext, dims} );
+        this->merge( { FMWSET_keywords, schedule, tables, parseContext, errors, dims} );
 
     if (section.hasKeyword( "PERFORMA" ) )
-        this->merge( { PERFORMA_keywords, schedule, tables, parseContext, dims} );
+        this->merge( { PERFORMA_keywords, schedule, tables, parseContext, errors, dims} );
 
     uniq( this->keywords );
     for (const auto& kw: this->keywords) {
@@ -592,11 +600,29 @@ SummaryConfig::SummaryConfig( const Deck& deck,
 SummaryConfig::SummaryConfig( const Deck& deck,
                               const Schedule& schedule,
                               const TableManager& tables,
-                              const ParseContext& parseContext) :
-    SummaryConfig( deck , schedule, tables, parseContext, GridDims( deck ))
-{
+                              const ParseContext& parseContext,
+                              ErrorGuard& errors) :
+    SummaryConfig( deck , schedule, tables, parseContext, errors, GridDims( deck ))
+{ }
 
-}
+
+template <typename T>
+SummaryConfig::SummaryConfig( const Deck& deck,
+                              const Schedule& schedule,
+                              const TableManager& tables,
+                              const ParseContext& parseContext,
+                              T&& errors) :
+    SummaryConfig(deck, schedule, tables, parseContext, errors)
+{}
+
+
+SummaryConfig::SummaryConfig( const Deck& deck,
+               const Schedule& schedule,
+               const TableManager& tables) :
+    SummaryConfig(deck, schedule, tables, ParseContext(), ErrorGuard())
+{}
+
+
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
     return this->keywords.cbegin();

@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 using namespace Opm;
 
@@ -103,13 +102,12 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
         " .7  .8  .3\n"
         " .8 1.0  1.0/\n";
 
-    ParseContext parseContext;
     Parser parser;
 
     char family1Deck[500] = " ";
     strcat(family1Deck , deckdefault);
     strcat(family1Deck , family1);
-    Deck deck1 = parser.parseString(family1Deck, parseContext) ;
+    Deck deck1 = parser.parseString(family1Deck) ;
     Opm::TableManager tm1( deck1 );
     Opm::EclipseGrid grid1( deck1 );
     Opm::Eclipse3DProperties prop1( deck1, tm1, grid1 );
@@ -118,7 +116,7 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     char family2Deck[700] = " ";
     strcat(family2Deck , deckdefault);
     strcat(family2Deck , family2);
-    Deck deck2 = parser.parseString(family2Deck, parseContext) ;
+    Deck deck2 = parser.parseString(family2Deck) ;
     Opm::TableManager tm2( deck2 );
     Opm::EclipseGrid grid2( deck2 );
     Opm::Eclipse3DProperties prop2( deck2, tm2, grid2 );
@@ -146,7 +144,7 @@ BOOST_AUTO_TEST_CASE(SaturationFunctionFamilyTests) {
     strcat(familyMixDeck , family1);
     strcat(familyMixDeck , family2);
 
-    Deck deckMix = parser.parseString(familyMixDeck, parseContext) ;
+    Deck deckMix = parser.parseString(familyMixDeck) ;
     Opm::TableManager tmMix( deckMix );
     Opm::EclipseGrid gridMix( deckMix );
     Opm::Eclipse3DProperties propMix( deckMix, tmMix, gridMix );

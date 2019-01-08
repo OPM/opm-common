@@ -23,6 +23,7 @@
 #include <memory>
 #include <vector>
 
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseConfig.hpp>
@@ -65,7 +66,10 @@ namespace Opm {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        EclipseState(const Deck& deck , const ParseContext& parseContext = ParseContext());
+        template<typename T>
+        EclipseState(const Deck& deck , const ParseContext& parseContext, T&& errors);
+        EclipseState(const Deck& deck , const ParseContext& parseContext, ErrorGuard& errors);
+        EclipseState(const Deck& deck);
 
         const IOConfig& getIOConfig() const;
         IOConfig& getIOConfig();

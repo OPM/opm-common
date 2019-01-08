@@ -22,7 +22,6 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
@@ -37,7 +36,7 @@ inline std::string pathprefix() {
 
 BOOST_AUTO_TEST_CASE( parse_polymer_tables ) {
     Parser parser;
-    auto deck = parser.parseFile(pathprefix() + "POLYMER/POLY.inc", ParseContext());
+    auto deck = parser.parseFile(pathprefix() + "POLYMER/POLY.inc");
     Opm::TableManager tables( deck );
     const TableContainer& plymax = tables.getPlymaxTables();
     const TableContainer& plyrock = tables.getPlyrockTables();

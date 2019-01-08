@@ -40,9 +40,8 @@ UDQPARAM
 
 )";
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     auto runspec = Runspec(deck);
     auto udq_config = runspec.udqConfig();
 
@@ -71,9 +70,8 @@ UDQ
 )";
 
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     auto udq_config = UDQConfig(deck);
     auto udq = UDQ(udq_config, deck);
     BOOST_CHECK_EQUAL(3, udq.expressions().size());
@@ -110,9 +108,8 @@ DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
 
 )";
     Parser parser;
-    ParseContext parseContext;
 
-    auto deck = parser.parseString(input, parseContext);
+    auto deck = parser.parseString(input);
     auto udq_config = UDQConfig(deck);
     auto udq = UDQ(udq_config, deck);
     const auto& records = udq.expressions();

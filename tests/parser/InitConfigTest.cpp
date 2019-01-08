@@ -26,7 +26,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
@@ -119,7 +118,7 @@ const std::string& deckWithEquil =
 
 static Deck createDeck(const std::string& input) {
     Opm::Parser parser;
-    return parser.parseString(input, Opm::ParseContext());
+    return parser.parseString(input);
 }
 
 BOOST_AUTO_TEST_CASE(InitConfigTest) {
@@ -211,22 +210,22 @@ BOOST_AUTO_TEST_CASE(RestartCWD) {
     }
     Opm::Parser parser;
     {
-        Opm::Deck deck = parser.parseFile("simulation/CASE.DATA", Opm::ParseContext());
+        Opm::Deck deck = parser.parseFile("simulation/CASE.DATA");
         Opm::InitConfig init_config(deck);
         BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "simulation/BASE");
     }
     {
-      Opm::Deck deck = parser.parseFile("simulation/CASE5.DATA", Opm::ParseContext());
+      Opm::Deck deck = parser.parseFile("simulation/CASE5.DATA");
       Opm::InitConfig init_config(deck);
       BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
     }
     {
-        Opm::Deck deck = parser.parseFile("CWD_CASE.DATA", Opm::ParseContext());
+        Opm::Deck deck = parser.parseFile("CWD_CASE.DATA");
         Opm::InitConfig init_config(deck);
         BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "BASE");
     }
     {
-      Opm::Deck deck = parser.parseFile("CASE5.DATA", Opm::ParseContext());
+      Opm::Deck deck = parser.parseFile("CASE5.DATA");
       Opm::InitConfig init_config(deck);
       BOOST_CHECK_EQUAL(init_config.getRestartRootName(), "/abs/path/BASE");
     }

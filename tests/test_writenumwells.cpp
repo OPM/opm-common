@@ -134,13 +134,12 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     test_work_area_type * test_area = test_work_area_alloc("TEST_EclipseWriteNumWells");
     test_work_area_copy_file(test_area, eclipse_data_filename.c_str());
 
-    ParseContext parseContext;
     Parser parser;
-    Deck deck( parser.parseFile( eclipse_data_filename, parseContext ));
-    EclipseState es(deck , parseContext );
+    Deck deck( parser.parseFile( eclipse_data_filename ));
+    EclipseState es(deck);
     const EclipseGrid& grid = es.getInputGrid();
-    Schedule schedule( deck, grid, es.get3DProperties(), es.runspec(), parseContext);
-    SummaryConfig summary_config( deck, schedule, es.getTableManager( ), parseContext);
+    Schedule schedule( deck, es);
+    SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
     const auto num_cells = grid.getCartesianSize();
     EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
     int countTimeStep = schedule.getTimeMap().numTimesteps();

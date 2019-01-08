@@ -35,7 +35,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -462,12 +461,12 @@ struct Setup {
     Schedule schedule;
     SummaryConfig summary_config;
 
-    Setup( const char* path, const ParseContext& parseContext = ParseContext( )) :
-        deck( Parser().parseFile( path, parseContext ) ),
-        es( deck, parseContext ),
+    Setup( const char* path) :
+        deck( Parser().parseFile( path) ),
+        es( deck),
         grid( es.getInputGrid( ) ),
-        schedule( deck, grid, es.get3DProperties(), es.runspec(), parseContext),
-        summary_config( deck, schedule, es.getTableManager( ), parseContext)
+        schedule( deck, grid, es.get3DProperties(), es.runspec()),
+        summary_config( deck, schedule, es.getTableManager( ))
     {
         auto& io_config = es.getIOConfig();
         io_config.setEclCompatibleRST(false);

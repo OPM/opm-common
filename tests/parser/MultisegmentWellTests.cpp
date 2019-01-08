@@ -37,7 +37,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 
@@ -78,7 +77,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
         "/\n";
 
     Opm::Parser parser;
-    Opm::Deck deck = parser.parseString(compsegs_string, Opm::ParseContext());
+    Opm::Deck deck = parser.parseString(compsegs_string);
 
     const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
