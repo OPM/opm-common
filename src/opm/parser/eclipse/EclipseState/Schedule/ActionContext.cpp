@@ -50,4 +50,10 @@ namespace Opm {
 
         return this->summary_state.get(key);
     }
+
+
+    std::vector<std::string> ActionContext::wells(const std::string& key) const {
+        return this->summary_state.wells(key);
+    }
+
 }

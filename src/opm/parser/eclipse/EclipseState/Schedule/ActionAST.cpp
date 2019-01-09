@@ -107,31 +107,139 @@ size_t ActionParser::pos() const {
     return this->current_pos;
 }
 
+
+/*****************************************************************/
+ActionValue::ActionValue(double value) :
+    scalar_value(value),
+    is_scalar(true)
+{ }
+
+
+double ActionValue::scalar() const {
+    if (!this->is_scalar)
+        throw std::invalid_argument("This value node represents a well list and can not be evaluated in scalar context");
+
+    return this->scalar_value;
+}
+
+
+void ActionValue::add_well(const std::string& well, double value) {
+    if (this->is_scalar)
+        throw std::invalid_argument("This value node has been created as a scalar node - can not add well variables");
+
+    this->well_values.emplace_back(well, value);
+}
+
+
+namespace {
+
+    bool eval_cmp_scalar(double lhs, TokenType op, double rhs) {
+        switch (op) {
+
+        case TokenType::op_eq:
+            return lhs == rhs;
+
+        case TokenType::op_ge:
+            return lhs >= rhs;
+
+        case TokenType::op_le:
+            return lhs <= rhs;
+
+        case TokenType::op_ne:
+            return lhs != rhs;
+
+        case TokenType::op_gt:
+            return lhs > rhs;
+
+        case TokenType::op_lt:
+            return lhs < rhs;
+
+        default:
+            throw std::invalid_argument("Incorrect operator type - expected comparison");
+        }
+
+    }
+}
+
+
+bool ActionValue::eval_cmp_wells(TokenType op, double rhs, std::vector<std::string>& matching_wells) const {
+    bool ret_value = false;
+    for (const auto& pair : this->well_values) {
+        const std::string& well = pair.first;
+        const double value = pair.second;
+        /*
+          It is less than clear how the matching_wells should be treated when
+          multiple conditons are nested; in the current implementation a
+          matching well is quite simply added to the list. This has two
+          consequences which are not-obviously-correct:
+
+          1. The wells might appear multiple times.
+
+          2. If a well matches in *one* conditon, and not in another - it will
+             be in the matching_wells list.
+        */
+
+        if (eval_cmp_scalar(value, op, rhs)) {
+            matching_wells.push_back(well);
+            ret_value = true;
+        }
+    }
+    return ret_value;
+}
+
+
+bool ActionValue::eval_cmp(TokenType op, const ActionValue& rhs, std::vector<std::string>& matching_wells) const {
+    if (op == TokenType::number ||
+        op == TokenType::ecl_expr ||
+        op == TokenType::open_paren ||
+        op == TokenType::close_paren ||
+        op == TokenType::op_and ||
+        op == TokenType::op_or ||
+        op == TokenType::end ||
+        op == TokenType::error)
+        throw std::invalid_argument("Invalid operator");
+
+    if (!rhs.is_scalar)
+        throw std::invalid_argument("The right hand side must be a scalar value");
+
+    if (this->is_scalar)
+        return eval_cmp_scalar(this->scalar(), op, rhs.scalar());
+
+    return this->eval_cmp_wells(op, rhs.scalar(), matching_wells);
+}
+
 /*****************************************************************/
 
 void ASTNode::add_child(const ASTNode& child) {
     this->children.push_back(child);
 }
 
-double ASTNode::value(const ActionContext& context) const {
+ActionValue ASTNode::value(const ActionContext& context) const {
     if (this->children.size() != 0)
         throw std::invalid_argument("value() method should only reach leafnodes");
 
     if (this->type == TokenType::number)
-        return this->number;
+        return ActionValue(this->number);
 
     if (this->arg_list.size() == 0)
-        return context.get(this->func);
+        return ActionValue(context.get(this->func));
     else {
-        std::string arg_key = this->arg_list[0];
-        for (size_t index = 1; index < this->arg_list.size(); index++)
-            arg_key += ":" + this->arg_list[index];
-        return context.get(this->func, arg_key);
+        if (this->arg_list[0] == "*") {
+            ActionValue well_values;
+            for (const auto& well : context.wells(this->func))
+                well_values.add_well(well, context.get(this->func, well));
+            return well_values;
+        } else {
+            std::string arg_key = this->arg_list[0];
+            for (size_t index = 1; index < this->arg_list.size(); index++)
+                arg_key += ":" + this->arg_list[index];
+            return ActionValue(context.get(this->func, arg_key));
+        }
     }
 }
 
 
-bool ASTNode::eval(const ActionContext& context) const {
+bool ASTNode::eval(const ActionContext& context, std::vector<std::string>& matching_wells) const {
     if (this->children.size() == 0)
         throw std::invalid_argument("bool eval should not reach leafnodes");
 
@@ -139,39 +247,16 @@ bool ASTNode::eval(const ActionContext& context) const {
         bool value = (this->type == TokenType::op_and);
         for (const auto& child : this->children) {
             if (this->type == TokenType::op_or)
-                value = value || child.eval(context);
+                value = value || child.eval(context, matching_wells);
             else
-                value = value && child.eval(context);
+                value = value && child.eval(context, matching_wells);
         }
         return value;
     }
 
-    double v1 = this->children[0].value(context);
-    double v2 = this->children[1].value(context);
-
-    switch (this->type) {
-
-    case TokenType::op_eq:
-        return v1 == v2;
-
-    case TokenType::op_ge:
-        return v1 >= v2;
-
-    case TokenType::op_le:
-        return v1 <= v2;
-
-    case TokenType::op_ne:
-        return v1 != v2;
-
-    case TokenType::op_gt:
-        return v1 > v2;
-
-    case TokenType::op_lt:
-        return v1 < v2;
-
-    default:
-        throw std::invalid_argument("Incorrect operator type - expected comparison");
-    }
+    auto v1 = this->children[0].value(context);
+    auto v2 = this->children[1].value(context);
+    return v1.eval_cmp(this->type, v2, matching_wells);
 }
 
 
@@ -331,8 +416,8 @@ ActionAST::ActionAST(const std::vector<std::string>& tokens) {
         throw std::invalid_argument("Failed to parse");
 }
 
-bool ActionAST::eval(const ActionContext& context) const {
-    return this->tree.eval(context);
+bool ActionAST::eval(const ActionContext& context, std::vector<std::string>& matching_wells) const {
+    return this->tree.eval(context, matching_wells);
 }
 
 }

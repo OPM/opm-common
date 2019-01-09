@@ -62,6 +62,24 @@ struct ParseNode {
 };
 
 
+class ActionValue {
+public:
+    explicit ActionValue(double value);
+    ActionValue() = default;
+
+    bool eval_cmp(TokenType op, const ActionValue& rhs, std::vector<std::string>& matching_wells) const;
+    void add_well(const std::string& well, double value);
+    double scalar() const;
+
+private:
+    bool eval_cmp_wells(TokenType op, double rhs, std::vector<std::string>& matching_wells) const;
+
+    double scalar_value;
+    double is_scalar = false;
+    std::vector<std::pair<std::string, double>> well_values;
+};
+
+
 class ASTNode {
 public:
 
@@ -89,8 +107,8 @@ ASTNode(TokenType type_arg, const std::string& func_arg, const std::vector<std::
     arg_list(arg_list_arg)
 {}
 
-    bool eval(const ActionContext& context) const;
-    double value(const ActionContext& context) const;
+    bool eval(const ActionContext& context, std::vector<std::string>& matching_wells) const;
+    ActionValue value(const ActionContext& context) const;
     TokenType type;
     void add_child(const ASTNode& child);
     size_t size() const;
@@ -135,7 +153,7 @@ public:
     ASTNode parse_or(ActionParser& parser);
     ASTNode parse_and(ActionParser& parser);
 
-    bool eval(const ActionContext& context) const;
+    bool eval(const ActionContext& context, std::vector<std::string>& matching_wells) const;
 private:
     ASTNode tree;
 };
