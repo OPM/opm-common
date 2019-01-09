@@ -83,6 +83,16 @@ function build_module {
   test $? -eq 0 || exit 1
   if test $2 -eq 1
   then
+
+    pushd "$CWD"
+    cd "$1"
+    if test -x "./jenkins/pre-build.sh"; then
+        if ! "./jenkins/pre-build.sh"; then
+            exit 1
+        fi
+    fi
+    popd
+
     if [ ! -z $BUILDTHREADS ]
     then
       cmake --build . -- -j$BUILDTHREADS
