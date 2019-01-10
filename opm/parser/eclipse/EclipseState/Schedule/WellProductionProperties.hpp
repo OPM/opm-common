@@ -83,6 +83,12 @@ namespace Opm {
         int m_productionControls = 0;
 
         WellProductionProperties(const DeckRecord& record);
+
+        void resetDefaultBHPLimit();
+
+        void setBHPLimit(const double limit);
+
+        double getBHPLimit() const;
     };
 
     std::ostream& operator<<( std::ostream&, const WellProductionProperties& );

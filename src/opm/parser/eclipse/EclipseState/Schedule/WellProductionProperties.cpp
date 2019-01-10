@@ -87,18 +87,17 @@ namespace Opm {
             p.addProductionControl( wp::BHP );
 
         if (cmode == wp::BHP) {
-            p.BHPLimit = p.BHPH;
+            p.setBHPLimit(p.BHPH);
         } else {
-            // when first time the well is claimed to be history matching producer
+            // when the well is switching to history matching producer from prediction mode
             // or switching from injector to producer
-            // or switching from BHP control to RATE control
+            // or switching from BHP control to RATE control (under history matching mode)
             // we use the defaulted BHP limit, otherwise, we use the previous BHP limit
             if ( prev_properties.predictionMode || switching_from_injector
               || prev_properties.controlMode == wp::BHP ) {
-                // by default the BHP limit is 1 atm
-                p.BHPLimit = 1. * unit::atm;
+                p.resetDefaultBHPLimit();
             } else {
-                p.BHPLimit = prev_properties.BHPLimit;
+                p.setBHPLimit(prev_properties.getBHPLimit());
             }
         }
 
@@ -214,6 +213,18 @@ namespace Opm {
         namespace wp = WellProducer;
         return ( (cmode == wp::LRAT || cmode == wp::RESV || cmode == wp::ORAT ||
                   cmode == wp::WRAT || cmode == wp::GRAT || cmode == wp::BHP) );
+    }
+
+    void WellProductionProperties::resetDefaultBHPLimit() {
+        BHPLimit = 1. * unit::atm;
+    }
+
+    void WellProductionProperties::setBHPLimit(const double limit) {
+        BHPLimit = limit;
+    }
+
+    double WellProductionProperties::getBHPLimit() const {
+        return BHPLimit;
     }
 
 } // namespace Opm

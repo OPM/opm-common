@@ -706,7 +706,7 @@ namespace Opm {
                   current behavoir agrees with the behovir of Eclipse when BHPLimit is not
                   specified while employed during group control.
                 */
-                properties.BHPLimit = record.getItem("BHP").getSIDouble(0);
+                properties.setBHPLimit(record.getItem("BHP").getSIDouble(0));
                 // BHP control should always be there.
                 properties.addInjectionControl(WellInjector::BHP);
 
@@ -1012,22 +1012,20 @@ namespace Opm {
 
                 // when well is under BHP control, we use its historical BHP value as BHP limit
                 if (controlMode == WellInjector::BHP) {
-                    properties.BHPLimit = properties.BHPH;
+                    properties.setBHPLimit(properties.BHPH);
                 } else {
                     const bool switching_from_producer = well->isProducer(currentStep);
                     const bool switching_from_prediction = properties.predictionMode;
-                    const bool switching_from_BHP_control = properties.controlMode == WellInjector::BHP;
+                    const bool switching_from_BHP_control = (properties.controlMode == WellInjector::BHP);
                     if (switching_from_prediction ||
                         switching_from_BHP_control ||
                         switching_from_producer) {
-                        // we use defaulted BHP value, it is from simulation, without finding any related document
-                        properties.BHPLimit = 6891.2 * unit::barsa;
+                        properties.resetDefaultHistoricalBHPLimit();
                     }
                     // otherwise, we keep its previous BHP limit
                 }
 
                 properties.addInjectionControl(WellInjector::BHP);
-
                 properties.addInjectionControl(controlMode);
                 properties.controlMode = controlMode;
 
