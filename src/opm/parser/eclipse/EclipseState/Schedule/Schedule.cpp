@@ -60,6 +60,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 namespace Opm {
 
@@ -649,7 +650,8 @@ namespace Opm {
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
                 } else {
                     const WellProductionProperties& prev_properties = well->getProductionProperties(currentStep);
-                    properties = WellProductionProperties::history(prev_properties, record, m_controlModeWHISTCTL);
+                    const bool switching_from_injector = !well->isProducer(currentStep);
+                    properties = WellProductionProperties::history(prev_properties, record, m_controlModeWHISTCTL, switching_from_injector);
                 }
 
                 updateWellStatus( *well , currentStep , status );
@@ -741,7 +743,7 @@ namespace Opm {
                   current behavoir agrees with the behovir of Eclipse when BHPLimit is not
                   specified while employed during group control.
                 */
-                properties.BHPLimit = record.getItem("BHP").getSIDouble(0);
+                properties.setBHPLimit(record.getItem("BHP").getSIDouble(0));
                 // BHP control should always be there.
                 properties.addInjectionControl(WellInjector::BHP);
 
@@ -1006,7 +1008,12 @@ namespace Opm {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
             // convert injection rates to SI
-            WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0));
+            const auto& typeItem = record.getItem("TYPE");
+            if (typeItem.defaultApplied(0)) {
+                const std::string msg = "Injection type can not be defaulted for keyword WCONINJH";
+                throw std::invalid_argument(msg);
+            }
+            const WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( typeItem.getTrimmedString(0));
             double injectionRate = record.getItem("RATE").get< double >(0);
             injectionRate = convertInjectionRateToSI(injectionRate, injectorType, section.unitSystem());
 
@@ -1023,19 +1030,43 @@ namespace Opm {
 
                 properties.injectorType = injectorType;
 
-                const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-                WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
                 if (!record.getItem("RATE").defaultApplied(0)) {
                     properties.surfaceInjectionRate = injectionRate;
-                    properties.addInjectionControl(controlMode);
-                    properties.controlMode = controlMode;
                 }
-                properties.predictionMode = false;
 
                 if ( record.getItem( "BHP" ).hasValue(0) )
                     properties.BHPH = record.getItem("BHP").getSIDouble(0);
                 if ( record.getItem( "THP" ).hasValue(0) )
                     properties.THPH = record.getItem("THP").getSIDouble(0);
+
+                const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
+                const WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
+
+                if ( !(controlMode == WellInjector::RATE || controlMode == WellInjector::BHP) ) {
+                    const std::string msg = "Only RATE and BHP control are allowed for WCONINJH for well " + well->name();
+                    throw std::invalid_argument(msg);
+                }
+
+                // when well is under BHP control, we use its historical BHP value as BHP limit
+                if (controlMode == WellInjector::BHP) {
+                    properties.setBHPLimit(properties.BHPH);
+                } else {
+                    const bool switching_from_producer = well->isProducer(currentStep);
+                    const bool switching_from_prediction = properties.predictionMode;
+                    const bool switching_from_BHP_control = (properties.controlMode == WellInjector::BHP);
+                    if (switching_from_prediction ||
+                        switching_from_BHP_control ||
+                        switching_from_producer) {
+                        properties.resetDefaultHistoricalBHPLimit();
+                    }
+                    // otherwise, we keep its previous BHP limit
+                }
+
+                properties.addInjectionControl(WellInjector::BHP);
+                properties.addInjectionControl(controlMode);
+                properties.controlMode = controlMode;
+
+                properties.predictionMode = false;
 
                 const int VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
                 if (VFPTableNumber > 0) {
@@ -1169,13 +1200,6 @@ namespace Opm {
                     }
                     else if (cMode == "BHP"){
                         prop.BHPLimit = newValue * siFactorP;
-                        /* For wells controlled by WCONHIST the BHP value given by the
-                           WCHONHIST keyword can not be used to control the well - i.e BHP
-                           control is not natively available - however when BHP has been
-                           specified with WELTARG we can enable BHP control.
-                        */
-                        if (prop.predictionMode == false)
-                            prop.addProductionControl(WellProducer::BHP);
                     }
                     else if (cMode == "THP"){
                         prop.THPLimit = newValue * siFactorP;
@@ -1195,13 +1219,6 @@ namespace Opm {
                     WellInjectionProperties prop = well->getInjectionPropertiesCopy(currentStep);
                     if (cMode == "BHP"){
                         prop.BHPLimit = newValue * siFactorP;
-                        /* For wells controlled by WCONINJH the BHP value given by the
-                           WCHONINJH keyword can not be used to control the well - i.e BHP
-                           control is not natively available - however when BHP has been
-                           specified with WELTARG we can enable BHP control.
-                        */
-                        if (prop.predictionMode == false)
-                            prop.addInjectionControl(WellInjector::BHP);
                     }
                     else if (cMode == "ORAT"){
                         if(prop.injectorType == WellInjector::TypeEnum::OIL){

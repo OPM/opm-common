@@ -60,6 +60,10 @@ namespace Opm {
             if ((injectionControls & controlModeArg) == 0)
                 injectionControls += controlModeArg;
         }
+
+        void resetDefaultHistoricalBHPLimit();
+
+        void setBHPLimit(const double limit);
     };
 
     std::ostream& operator<<( std::ostream&, const WellInjectionProperties& );

@@ -57,7 +57,8 @@ namespace Opm {
 
         static WellProductionProperties history(const WellProductionProperties& prevProperties,
                                                 const DeckRecord& record,
-                                                const WellProducer::ControlModeEnum controlModeWHISTCL);
+                                                const WellProducer::ControlModeEnum controlModeWHISTCL,
+                                                const bool switching_from_injector);
 
         static WellProductionProperties prediction( const DeckRecord& record, bool addGroupProductionControl );
 
@@ -82,6 +83,12 @@ namespace Opm {
         int m_productionControls = 0;
 
         WellProductionProperties(const DeckRecord& record);
+
+        void resetDefaultBHPLimit();
+
+        void setBHPLimit(const double limit);
+
+        double getBHPLimit() const;
     };
 
     std::ostream& operator<<( std::ostream&, const WellProductionProperties& );

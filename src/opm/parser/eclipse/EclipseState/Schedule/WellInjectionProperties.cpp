@@ -66,6 +66,16 @@ namespace Opm {
         return !(*this == other);
     }
 
+    void WellInjectionProperties::resetDefaultHistoricalBHPLimit() {
+        // this default BHP value is from simulation result,
+        // without finding any related document
+        BHPLimit = 6891.2 * unit::barsa;
+    }
+
+    void WellInjectionProperties::setBHPLimit(const double limit) {
+        BHPLimit = limit;
+    }
+
     std::ostream& operator<<( std::ostream& stream,
                               const WellInjectionProperties& wp ) {
         return stream

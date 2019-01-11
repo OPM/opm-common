@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 
 namespace Opm {
@@ -43,7 +44,8 @@ namespace Opm {
 
     WellProductionProperties WellProductionProperties::history(const WellProductionProperties& prev_properties,
                                                                const DeckRecord& record,
-                                                               const WellProducer::ControlModeEnum controlModeWHISTCL)
+                                                               const WellProducer::ControlModeEnum controlModeWHISTCL,
+                                                               const bool switching_from_injector)
     {
         WellProductionProperties p(record);
         p.predictionMode = false;
@@ -51,41 +53,53 @@ namespace Opm {
         // update LiquidRate
         p.LiquidRate = p.WaterRate + p.OilRate;
 
-        const auto& cmodeItem = record.getItem("CMODE");
-        if ( !cmodeItem.defaultApplied(0) ) {
-            namespace wp = WellProducer;
-            auto cmode = wp::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
-
-            // when there is an effective control mode specified by WHISTCL, we always use this control mode
-            if (effectiveHistoryProductionControl(controlModeWHISTCL) ) {
-                cmode = controlModeWHISTCL;
-            }
-
-            if (effectiveHistoryProductionControl(cmode) ) {
-                p.addProductionControl( cmode );
-                p.controlMode = cmode;
-            } else {
-                const std::string cmode_string = cmodeItem.getTrimmedString( 0 );
-                const std::string msg = "unsupported control mode " + cmode_string + " for WCONHIST";
-                throw std::invalid_argument(msg);
-            }
-
-            // always have a BHP control/limit, while the limit value needs to be determined
-            // the control mode added above can be a BHP control or a type of RATE control
-            if ( !p.hasProductionControl( wp::BHP ) )
-                p.addProductionControl( wp::BHP );
-
-
-            if (cmode == wp::BHP)
-                p.BHPLimit = record.getItem( "BHP" ).getSIDouble( 0 );
-            else
-                p.BHPLimit = prev_properties.BHPLimit;
-        }
-
         if ( record.getItem( "BHP" ).hasValue(0) )
             p.BHPH = record.getItem("BHP").getSIDouble(0);
         if ( record.getItem( "THP" ).hasValue(0) )
             p.THPH = record.getItem("THP").getSIDouble(0);
+
+        const auto& cmodeItem = record.getItem("CMODE");
+        if ( cmodeItem.defaultApplied(0) ) {
+            const std::string msg = "control mode can not be defaulted for keyword WCONHIST";
+            throw std::invalid_argument(msg);
+        }
+
+        namespace wp = WellProducer;
+        auto cmode = wp::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
+
+        // when there is an effective control mode specified by WHISTCL, we always use this control mode
+        if (effectiveHistoryProductionControl(controlModeWHISTCL) ) {
+            cmode = controlModeWHISTCL;
+        }
+
+        if (effectiveHistoryProductionControl(cmode) ) {
+            p.addProductionControl( cmode );
+            p.controlMode = cmode;
+        } else {
+            const std::string cmode_string = cmodeItem.getTrimmedString( 0 );
+            const std::string msg = "unsupported control mode " + cmode_string + " for WCONHIST";
+            throw std::invalid_argument(msg);
+        }
+
+        // always have a BHP control/limit, while the limit value needs to be determined
+        // the control mode added above can be a BHP control or a type of RATE control
+        if ( !p.hasProductionControl( wp::BHP ) )
+            p.addProductionControl( wp::BHP );
+
+        if (cmode == wp::BHP) {
+            p.setBHPLimit(p.BHPH);
+        } else {
+            // when the well is switching to history matching producer from prediction mode
+            // or switching from injector to producer
+            // or switching from BHP control to RATE control (under history matching mode)
+            // we use the defaulted BHP limit, otherwise, we use the previous BHP limit
+            if ( prev_properties.predictionMode || switching_from_injector
+              || prev_properties.controlMode == wp::BHP ) {
+                p.resetDefaultBHPLimit();
+            } else {
+                p.setBHPLimit(prev_properties.getBHPLimit());
+            }
+        }
 
         p.VFPTableNumber = record.getItem("VFPTable").get< int >(0);
 
@@ -199,6 +213,18 @@ namespace Opm {
         namespace wp = WellProducer;
         return ( (cmode == wp::LRAT || cmode == wp::RESV || cmode == wp::ORAT ||
                   cmode == wp::WRAT || cmode == wp::GRAT || cmode == wp::BHP) );
+    }
+
+    void WellProductionProperties::resetDefaultBHPLimit() {
+        BHPLimit = 1. * unit::atm;
+    }
+
+    void WellProductionProperties::setBHPLimit(const double limit) {
+        BHPLimit = limit;
+    }
+
+    double WellProductionProperties::getBHPLimit() const {
+        return BHPLimit;
     }
 
 } // namespace Opm
