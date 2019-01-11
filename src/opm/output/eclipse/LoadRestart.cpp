@@ -46,6 +46,7 @@
 #include <cmath>
 #include <cstddef>
 #include <exception>
+#include <initializer_list>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -475,6 +476,102 @@ namespace {
         }
     }
 
+    void insertSolutionVector(const std::vector<double>&           vector,
+                              const Opm::RestartKey&               value,
+                              const std::vector<double>::size_type numcells,
+                              Opm::data::Solution&                 sol)
+    {
+        if (vector.size() != numcells) {
+            throw std::runtime_error {
+                "Restart file: Could not restore '"
+                + value.key
+                + "', mismatched number of cells"
+            };
+        }
+
+        sol.insert(value.key, value.dim, vector,
+                   Opm::data::TargetType::RESTART_SOLUTION);
+    }
+
+    void loadIfAvailable(const RestartFileView&               rst_view,
+                         const Opm::RestartKey&               value,
+                         const std::vector<double>::size_type numcells,
+                         Opm::data::Solution&                 sol)
+    {
+        const auto* kw = rst_view.getKeyword(value.key.c_str());
+
+        if (kw == nullptr) {
+            throwIfMissingRequired(value);
+
+            // If we get here, the requested value was not available in the
+            // result set.  However, the client does not actually require
+            // the value for restart purposes so we can safely skip this.
+            return;
+        }
+
+        insertSolutionVector(double_vector(kw), value, numcells, sol);
+    }
+
+    void loadHysteresisIfAvailable(const RestartFileView&               rst_view,
+                                   const std::string&                   primary,
+                                   const Opm::RestartKey&               fallback_key,
+                                   const std::vector<double>::size_type numcells,
+                                   Opm::data::Solution&                 sol)
+    {
+        const auto* kw = rst_view.getKeyword(primary.c_str());
+
+        if (kw == nullptr) {
+            // Primary key does not exist in rst_view.  Attempt to load
+            // fallback keys directly.
+
+            loadIfAvailable(rst_view, fallback_key, numcells, sol);
+        }
+        else {
+            // Primary exists in rst_view.  Translate to Flow's hysteresis
+            // parameter.
+            auto smax = double_vector(kw);
+
+            std::transform(std::begin(smax), std::end(smax), std::begin(smax),
+                           [](const double s) { return 1.0 - s; });
+
+            insertSolutionVector(smax, fallback_key, numcells, sol);
+        }
+    }
+
+    bool isHysteresis(const std::string& vector)
+    {
+        for (const auto* flow_hyst_key : { "KRNSW_OW", "PCSWM_OW",
+                                           "KRNSW_GO", "PCSWM_GO", })
+        {
+            if (vector == flow_hyst_key) { return true; }
+        }
+
+        return false;
+    }
+
+    void restoreHysteresisVector(const Opm::RestartKey& value,
+                                 const RestartFileView& rst_view,
+                                 const int              numcells,
+                                 Opm::data::Solution&   sol)
+    {
+        const auto& key = value.key;
+
+        if ((key == "KRNSW_OW") || (key == "PCSWM_OW"))
+        {
+            // Attempt to load from SOMAX, fall back to value.key if
+            // unavailable--typically in OPM Extended restart file.
+            loadHysteresisIfAvailable(rst_view, "SOMAX",
+                                      value, numcells, sol);
+        }
+        else if ((key == "KRNSW_GO") || (key == "PCSWM_GO"))
+        {
+            // Attempt to load from SGMAX, fall back to value.key if
+            // unavailable--typically in OPM Extended restart file.
+            loadHysteresisIfAvailable(rst_view, "SGMAX",
+                                      value, numcells, sol);
+        }
+    }
+
     std::vector<double>
     getOpmExtraFromDoubHEAD(const RestartFileView& rst_view,
                             const bool             required,
@@ -502,28 +599,16 @@ namespace {
         Opm::data::Solution sol(/* init_si = */ false);
 
         for (const auto& value : solution_keys) {
-            const auto& vector = value.key;
-            const auto* kw     = rst_view.getKeyword(vector.c_str());
-
-            if (kw == nullptr) {
-                throwIfMissingRequired(value);
-
-                // Requested vector not available, but caller does not
-                // actually require the vector for restart purposes.
-                // Skip this.
+            if (isHysteresis(value.key)) {
+                // Special case handling of hysteresis data.  Possibly needs
+                // translation from ECLIPSE-compatible set to Flow's known
+                // set of hysteresis vectors.
+                restoreHysteresisVector(value, rst_view, numcells, sol);
                 continue;
             }
 
-            if (Opm::RestartIO::ecl_kw_get_size(kw) != numcells) {
-                throw std::runtime_error {
-                    "Restart file: Could not restore "
-                    + std::string(Opm::RestartIO::ecl_kw_get_header(kw))
-                    + ", mismatched number of cells"
-                };
-            }
-
-            sol.insert(vector, value.dim, double_vector(kw),
-                       Opm::data::TargetType::RESTART_SOLUTION);
+            // Load regular (non-hysteresis) vector if available.
+            loadIfAvailable(rst_view, value, numcells, sol);
         }
 
         return sol;

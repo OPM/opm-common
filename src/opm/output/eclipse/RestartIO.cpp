@@ -42,6 +42,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <initializer_list>
 #include <iterator>
 #include <string>
 #include <unordered_set>
@@ -388,6 +389,69 @@ namespace {
         write_kw(rst_file, "XCON", connectionData.getXConn());
     }
 
+    bool haveHysteresis(const RestartValue& value)
+    {
+        for (const auto* key : { "KRNSW_OW", "PCSWM_OW",
+                                 "KRNSW_GO", "PCSWM_GO", })
+        {
+            if (value.solution.has(key)) { return true; }
+        }
+
+        return false;
+    }
+
+    std::vector<double>
+    convertedHysteresisSat(const RestartValue& value,
+                           const std::string&  primary,
+                           const std::string&  fallback)
+    {
+        auto smax = std::vector<double>{};
+
+        if (value.solution.has(primary)) {
+            smax = value.solution.data(primary);
+        }
+        else if (value.solution.has(fallback)) {
+            smax = value.solution.data(fallback);
+        }
+
+        if (! smax.empty()) {
+            std::transform(std::begin(smax), std::end(smax), std::begin(smax),
+                           [](const double s) { return 1.0 - s; });
+        }
+
+        return smax;
+    }
+
+    template <class OutputVector>
+    void writeEclipseCompatHysteresis(const RestartValue& value,
+                                      const bool          write_double,
+                                      OutputVector&&      writeVector)
+    {
+        // Convert Flow-specific vectors {KRNSW,PCSWM}_OW to ECLIPSE's
+        // requisite SOMAX vector.  Only partially characterised.
+        // Sufficient for Norne.
+        {
+            const auto somax =
+                convertedHysteresisSat(value, "KRNSW_OW", "PCSWM_OW");
+
+            if (! somax.empty()) {
+                writeVector("SOMAX", somax, write_double);
+            }
+        }
+
+        // Convert Flow-specific vectors {KRNSW,PCSWM}_GO to ECLIPSE's
+        // requisite SGMAX vector.  Only partially characterised.
+        // Sufficient for Norne.
+        {
+            const auto sgmax =
+                convertedHysteresisSat(value, "KRNSW_GO", "PCSWM_GO");
+
+            if (! sgmax.empty()) {
+                writeVector("SGMAX", sgmax, write_double);
+            }
+        }
+    }
+
     void writeSolution(ecl_rst_file_type*  rst_file,
                        const RestartValue& value,
                        const bool          ecl_compatible_rst,
@@ -418,6 +482,10 @@ namespace {
                 // output as double precision.
                 write(key, elm.second, true);
             }
+        }
+
+        if (ecl_compatible_rst && haveHysteresis(value)) {
+            writeEclipseCompatHysteresis(value, write_double_arg, write);
         }
 
         ecl_rst_file_end_solution(rst_file);
