@@ -656,7 +656,7 @@ quantity region_rate( const fn_args& args ) {
 }
 
 template < rt phase, bool outputProducer = true, bool outputInjector = true>
-inline quantity generic_potential_rate( const fn_args& args ) {
+inline quantity potential_rate( const fn_args& args ) {
     double sum = 0.0;
 
     for( const auto* sched_well : args.schedule_wells ) {
@@ -792,12 +792,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GVPT", mul( sum( sum( rate< rt::reservoir_water, producer >, rate< rt::reservoir_oil, producer > ),
                         rate< rt::reservoir_gas, producer > ), duration ) },
     // Group potential
-    { "GWPP", generic_potential_rate< rt::well_potential_water , true, false>},
-    { "GOPP", generic_potential_rate< rt::well_potential_oil , true, false>},
-    { "GGPP", generic_potential_rate< rt::well_potential_gas , true, false>},
-    { "GWPI", generic_potential_rate< rt::well_potential_water , false, true>},
-    { "GOPI", generic_potential_rate< rt::well_potential_oil , false, true>},
-    { "GGPI", generic_potential_rate< rt::well_potential_gas , false, true>},
+    { "GWPP", potential_rate< rt::well_potential_water , true, false>},
+    { "GOPP", potential_rate< rt::well_potential_oil , true, false>},
+    { "GGPP", potential_rate< rt::well_potential_gas , true, false>},
+    { "GWPI", potential_rate< rt::well_potential_water , false, true>},
+    { "GOPI", potential_rate< rt::well_potential_oil , false, true>},
+    { "GGPI", potential_rate< rt::well_potential_gas , false, true>},
 
     { "WWPRH", production_history< Phase::WATER > },
     { "WOPRH", production_history< Phase::OIL > },
@@ -939,12 +939,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FVIT", mul( sum( sum( rate< rt::reservoir_water, injector>, rate< rt::reservoir_oil, injector >),
                    rate< rt::reservoir_gas, injector>), duration)},
     // Field potential
-    { "FWPP", generic_potential_rate< rt::well_potential_water , true, false>},
-    { "FOPP", generic_potential_rate< rt::well_potential_oil , true, false>},
-    { "FGPP", generic_potential_rate< rt::well_potential_gas , true, false>},
-    { "FWPI", generic_potential_rate< rt::well_potential_water , false, true>},
-    { "FOPI", generic_potential_rate< rt::well_potential_oil , false, true>},
-    { "FGPI", generic_potential_rate< rt::well_potential_gas , false, true>},
+    { "FWPP", potential_rate< rt::well_potential_water , true, false>},
+    { "FOPP", potential_rate< rt::well_potential_oil , true, false>},
+    { "FGPP", potential_rate< rt::well_potential_gas , true, false>},
+    { "FWPI", potential_rate< rt::well_potential_water , false, true>},
+    { "FOPI", potential_rate< rt::well_potential_oil , false, true>},
+    { "FGPI", potential_rate< rt::well_potential_gas , false, true>},
 
 
     { "FWPRH", production_history< Phase::WATER > },
@@ -1002,17 +1002,17 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "SGFR", srate< rt::gas > },
     { "SPR",  spr }, 
     // Well productivity index
-    { "WPIW", generic_potential_rate< rt::productivity_index_water >},
-    { "WPIO", generic_potential_rate< rt::productivity_index_oil >},
-    { "WPIG", generic_potential_rate< rt::productivity_index_gas >},
-    { "WPIL", sum( generic_potential_rate< rt::productivity_index_water >, generic_potential_rate< rt::productivity_index_oil>)},
+    { "WPIW", potential_rate< rt::productivity_index_water >},
+    { "WPIO", potential_rate< rt::productivity_index_oil >},
+    { "WPIG", potential_rate< rt::productivity_index_gas >},
+    { "WPIL", sum( potential_rate< rt::productivity_index_water >, potential_rate< rt::productivity_index_oil>)},
     // Well potential
-    { "WWPP", generic_potential_rate< rt::well_potential_water , true, false>},
-    { "WOPP", generic_potential_rate< rt::well_potential_oil , true, false>},
-    { "WGPP", generic_potential_rate< rt::well_potential_gas , true, false>},
-    { "WWPI", generic_potential_rate< rt::well_potential_water , false, true>},
-    { "WOPI", generic_potential_rate< rt::well_potential_oil , false, true>},
-    { "WGPI", generic_potential_rate< rt::well_potential_gas , false, true>},
+    { "WWPP", potential_rate< rt::well_potential_water , true, false>},
+    { "WOPP", potential_rate< rt::well_potential_oil , true, false>},
+    { "WGPP", potential_rate< rt::well_potential_gas , true, false>},
+    { "WWPI", potential_rate< rt::well_potential_water , false, true>},
+    { "WOPI", potential_rate< rt::well_potential_oil , false, true>},
+    { "WGPI", potential_rate< rt::well_potential_gas , false, true>},
 };
 
 
