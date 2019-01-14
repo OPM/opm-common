@@ -97,6 +97,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WList.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/WListManager.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.cpp
@@ -467,6 +468,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well.hpp
        opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/WList.hpp
+       opm/parser/eclipse/EclipseState/Schedule/WListManager.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp
        opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
