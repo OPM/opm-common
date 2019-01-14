@@ -29,6 +29,7 @@ public:
     std::size_t size() const;
     void add(const std::string& well);
     void del(const std::string& well);
+    bool has(const std::string& well) const;
 
     std::vector<std::string> wells() const;
     storage::const_iterator begin() const;

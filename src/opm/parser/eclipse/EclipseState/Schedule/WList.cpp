@@ -27,6 +27,10 @@ std::size_t WList::size() const {
 }
 
 
+bool WList::has(const std::string& well) const {
+    return (this->well_list.find(well) != this->well_list.end());
+}
+
 void WList::add(const std::string& well) {
     this->well_list.insert(well);
 }

@@ -54,6 +54,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WList.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WListManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp>
@@ -81,7 +83,8 @@ namespace Opm {
         m_tuning( this->m_timeMap ),
         m_messageLimits( this->m_timeMap ),
         m_runspec( runspec ),
-        wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() )
+        wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
+        wlist_manager( this->m_timeMap, std::make_shared<WListManager>())
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
@@ -208,6 +211,9 @@ namespace Opm {
             checkIfAllConnectionsIsShut(currentStep);
             currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
         }
+
+        else if (keyword.name() == "WLIST")
+            handleWLIST( keyword, currentStep );
 
         else if (keyword.name() == "WELSPECS")
             handleWELSPECS( section, keywordIdx, currentStep );
@@ -887,6 +893,50 @@ namespace Opm {
         }
     }
 
+
+    void Schedule::handleWLIST(const DeckKeyword& keyword, size_t currentStep) {
+        const std::string legal_actions = "NEW:ADD:DEL:MOV";
+        const auto& current = *this->wlist_manager.get(currentStep);
+        std::shared_ptr<WListManager> new_wlm(new WListManager(current));
+        for (const auto& record : keyword) {
+            const std::string& name = record.getItem("NAME").getTrimmedString(0);
+            const std::string& action = record.getItem("ACTION").getTrimmedString(0);
+            const std::vector<std::string>& wells = record.getItem("WELLS").getData<std::string>();
+
+            if (legal_actions.find(action) == std::string::npos)
+                throw std::invalid_argument("The action:" + action + " is not recognized.");
+
+            for (const auto& well : wells) {
+                if (!this->hasWell(well))
+                    throw std::invalid_argument("The well: " + well + " has not been defined in the WELSPECS");
+            }
+
+            if (name[0] != '*')
+                throw std::invalid_argument("The list name in WLIST must start with a '*'");
+
+            if (action == "NEW")
+                new_wlm->newList(name);
+
+            if (!new_wlm->hasList(name))
+                throw std::invalid_argument("Invalid well list: " + name);
+
+            auto& wlist = new_wlm->getList(name);
+            if (action == "MOV") {
+                for (const auto& well : wells)
+                    new_wlm->delWell(well);
+            }
+
+            if (action == "DEL") {
+                for (const auto& well : wells)
+                    wlist.del(well);
+            } else {
+                for (const auto& well : wells)
+                    wlist.add(well);
+            }
+
+        }
+        this->wlist_manager.update(currentStep, new_wlm);
+    }
 
     void Schedule::handleWTEST(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& current = *this->wtest_config.get(currentStep);
@@ -2084,7 +2134,10 @@ namespace Opm {
         return *ptr;
     }
 
-
+    const WListManager& Schedule::getWListManager(size_t timeStep) const {
+        const auto& ptr = this->wlist_manager.get(timeStep);
+        return *ptr;
+    }
 
 
     size_t Schedule::size() const {

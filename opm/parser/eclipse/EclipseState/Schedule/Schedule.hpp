@@ -58,6 +58,7 @@ namespace Opm
     class TimeMap;
     class UnitSystem;
     class ErrorGuard;
+    class WListManager;
 
     class Schedule {
     public:
@@ -133,6 +134,7 @@ namespace Opm
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const WellTestConfig& wtestConfig(size_t timestep) const;
+        const WListManager& getWListManager(size_t timeStep) const;
         const Actions& actionConfig() const;
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
@@ -174,6 +176,7 @@ namespace Opm
         std::map<int, DynamicState<std::shared_ptr<VFPProdTable>>> vfpprod_tables;
         std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>> vfpinj_tables;
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
+        DynamicState<std::shared_ptr<WListManager>> wlist_manager;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
         Actions actions;
@@ -188,6 +191,7 @@ namespace Opm
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
+        void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t currentStep);
         void handleWELSPECS( const SCHEDULESection&, size_t, size_t  );
         void handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode,  const ParseContext& parseContext, ErrorGuard& errors);

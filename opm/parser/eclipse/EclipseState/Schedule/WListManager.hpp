@@ -29,6 +29,7 @@ class WListManager {
 public:
     bool hasList(const std::string&) const;
     WList& getList(const std::string& name);
+    const WList& getList(const std::string& name) const;
     WList& newList(const std::string& name);
     void delWell(const std::string& well);
 private:

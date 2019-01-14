@@ -38,6 +38,10 @@ namespace Opm {
         return this->wlists.at(name);
     }
 
+    const WList& WListManager::getList(const std::string& name) const {
+        return this->wlists.at(name);
+    }
+
     void WListManager::delWell(const std::string& well) {
         for (auto& pair: this->wlists) {
             auto& wlist = pair.second;
