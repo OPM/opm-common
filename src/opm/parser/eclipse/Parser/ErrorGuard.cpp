@@ -18,6 +18,8 @@
 */
 
 #include <iostream>
+#include <iomanip>
+
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
 
@@ -34,16 +36,25 @@ namespace Opm {
 
 
     void ErrorGuard::dump() const {
+        std::size_t width = 0;
+        for (const auto& pair : this->warning_list)
+            width = std::max(width, pair.first.size());
+
+        for (const auto& pair : this->error_list)
+            width = std::max(width, pair.first.size());
+
         if (!this->warning_list.empty()) {
             std::cerr << "Warnings:" << std::endl;
             for (const auto& pair : this->warning_list)
-                std::cerr << pair.first << ": " << pair.second << std::endl;
+                std::cerr << "  " << std::setw(width) << pair.first << ": " << pair.second << std::endl;
+            std::cerr << std::endl;
         }
 
         if (!this->error_list.empty()) {
             std::cerr << std::endl << std::endl << "Errors:" << std::endl;
             for (const auto& pair : this->error_list)
-                std::cerr << pair.first << ": " << pair.second << std::endl;
+                std::cerr << "  " << std::setw(width) << pair.first << ": " << pair.second << std::endl;
+            std::cerr << std::endl;
         }
     }
 
