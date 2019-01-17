@@ -31,10 +31,10 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ActionAST.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ActionContext.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Actions.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
@@ -494,34 +494,6 @@ BOOST_AUTO_TEST_CASE(ActionContextTest) {
 
     BOOST_CHECK_EQUAL(context.get("WWCT", "OP1"), 200);
     BOOST_REQUIRE_THROW(context.get("WGOR", "B37"), std::out_of_range);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(ActionValueTest) {
-    ActionValue well_values;
-    ActionValue scalar_value(200);
-    BOOST_REQUIRE_THROW(well_values.scalar(), std::invalid_argument);
-    BOOST_CHECK_EQUAL(scalar_value.scalar(), 200);
-
-    BOOST_REQUIRE_THROW(scalar_value.add_well("A", 100), std::invalid_argument);
-
-    well_values.add_well("A", 100);
-    well_values.add_well("B", 200);
-    well_values.add_well("C", 300);
-
-    WellSet matching_wells;
-    // Invalid operator
-    BOOST_REQUIRE_THROW(well_values.eval_cmp(TokenType::number, scalar_value, matching_wells), std::invalid_argument);
-    // Right hand side is not scalar
-    BOOST_REQUIRE_THROW(well_values.eval_cmp(TokenType::op_eq, well_values, matching_wells), std::invalid_argument);
-
-    BOOST_CHECK( !well_values.eval_cmp(TokenType::op_le, ActionValue(-1), matching_wells) );
-    BOOST_CHECK_EQUAL(0, matching_wells.size());
-
-    BOOST_CHECK( well_values.eval_cmp(TokenType::op_eq, scalar_value, matching_wells) );
-    BOOST_CHECK_EQUAL(1, matching_wells.size());
-    BOOST_CHECK(matching_wells.contains("B"));
 }
 
 
