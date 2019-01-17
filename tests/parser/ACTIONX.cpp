@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(ActionValueTest) {
     well_values.add_well("B", 200);
     well_values.add_well("C", 300);
 
-    std::vector<std::string> matching_wells;
+    WellSet matching_wells;
     // Invalid operator
     BOOST_REQUIRE_THROW(well_values.eval_cmp(TokenType::number, scalar_value, matching_wells), std::invalid_argument);
     // Right hand side is not scalar
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(ActionValueTest) {
 
     BOOST_CHECK( well_values.eval_cmp(TokenType::op_eq, scalar_value, matching_wells) );
     BOOST_CHECK_EQUAL(1, matching_wells.size());
-    BOOST_CHECK_EQUAL("B", matching_wells[0]);
+    BOOST_CHECK(matching_wells.contains("B"));
 }
 
 
@@ -540,4 +540,51 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells) {
 
     BOOST_CHECK_EQUAL( matching_wells.size(), 1);
     BOOST_CHECK_EQUAL( matching_wells[0], "OPZ" );
+}
+
+
+BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
+    ActionAST ast({"WOPR", "*", ">", "1.0", "AND", "WWCT", "*", "<", "0.50"});
+    SummaryState st;
+    std::vector<std::string> matching_wells;
+
+    st.add_well_var("OPX", "WOPR", 0);
+    st.add_well_var("OPY", "WOPR", 0.50);
+    st.add_well_var("OPZ", "WOPR", 2.0);      // The WOPR check matches this well.
+
+    st.add_well_var("OPX", "WWCT", 1.0);
+    st.add_well_var("OPY", "WWCT", 0.0);     // The WWCT check matches this well.
+    st.add_well_var("OPZ", "WWCT", 1.0);
+
+    ActionContext context(st);
+    BOOST_CHECK( ast.eval(context, matching_wells) );
+
+    // Even though condition as a whole matches, there is no finite set of wells
+    // which mathes both conditions when combined with AND - i.e. the matching_wells
+    // variable should be empty.
+    BOOST_CHECK( matching_wells.empty() );
+}
+
+BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
+    ActionAST ast({"WOPR", "*", ">", "1.0", "OR", "WWCT", "*", "<", "0.50"});
+    SummaryState st;
+    std::vector<std::string> matching_wells;
+
+    st.add_well_var("OPX", "WOPR", 0);
+    st.add_well_var("OPY", "WOPR", 0.50);
+    st.add_well_var("OPZ", "WOPR", 2.0);      // The WOPR check matches this well.
+
+    st.add_well_var("OPX", "WWCT", 1.0);
+    st.add_well_var("OPY", "WWCT", 0.0);     // The WWCT check matches this well.
+    st.add_well_var("OPZ", "WWCT", 1.0);
+
+    ActionContext context(st);
+    BOOST_CHECK( ast.eval(context, matching_wells) );
+
+    // The well 'OPZ' matches the first condition and the well 'OPY' matches the
+    // second condition, since the two conditions are combined with || the
+    // resulting mathcing_wells variable should contain both these wells.
+    BOOST_CHECK_EQUAL( matching_wells.size(), 2);
+    BOOST_CHECK( std::find(matching_wells.begin(), matching_wells.end(), "OPZ") != matching_wells.end());
+    BOOST_CHECK( std::find(matching_wells.begin(), matching_wells.end(), "OPY") != matching_wells.end());
 }

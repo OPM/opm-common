@@ -28,6 +28,9 @@
 
 namespace Opm {
 
+
+
+
 ActionParser::ActionParser(const std::vector<std::string>& tokens_arg) :
     tokens(tokens_arg)
 {}
@@ -162,25 +165,14 @@ namespace {
 }
 
 
-bool ActionValue::eval_cmp_wells(TokenType op, double rhs, std::vector<std::string>& matching_wells) const {
+bool ActionValue::eval_cmp_wells(TokenType op, double rhs, WellSet& matching_wells) const {
     bool ret_value = false;
     for (const auto& pair : this->well_values) {
         const std::string& well = pair.first;
         const double value = pair.second;
-        /*
-          It is less than clear how the matching_wells should be treated when
-          multiple conditons are nested; in the current implementation a
-          matching well is quite simply added to the list. This has two
-          consequences which are not-obviously-correct:
-
-          1. The wells might appear multiple times.
-
-          2. If a well matches in *one* conditon, and not in another - it will
-             be in the matching_wells list.
-        */
 
         if (eval_cmp_scalar(value, op, rhs)) {
-            matching_wells.push_back(well);
+            matching_wells.add(well);
             ret_value = true;
         }
     }
@@ -188,7 +180,7 @@ bool ActionValue::eval_cmp_wells(TokenType op, double rhs, std::vector<std::stri
 }
 
 
-bool ActionValue::eval_cmp(TokenType op, const ActionValue& rhs, std::vector<std::string>& matching_wells) const {
+bool ActionValue::eval_cmp(TokenType op, const ActionValue& rhs, WellSet& matching_wells) const {
     if (op == TokenType::number ||
         op == TokenType::ecl_expr ||
         op == TokenType::open_paren ||
@@ -239,17 +231,27 @@ ActionValue ASTNode::value(const ActionContext& context) const {
 }
 
 
-bool ASTNode::eval(const ActionContext& context, std::vector<std::string>& matching_wells) const {
+bool ASTNode::eval(const ActionContext& context, WellSet& matching_wells) const {
     if (this->children.size() == 0)
         throw std::invalid_argument("bool eval should not reach leafnodes");
 
     if (this->type == TokenType::op_or || this->type == TokenType::op_and) {
         bool value = (this->type == TokenType::op_and);
+        WellSet wells;
         for (const auto& child : this->children) {
-            if (this->type == TokenType::op_or)
-                value = value || child.eval(context, matching_wells);
-            else
-                value = value && child.eval(context, matching_wells);
+            /*
+              Observe that we require that the set of matching wells is
+              evaluated for all conditions, to ensure that we must protect
+              against C++ short circuting of the || operator, that is currently
+              achieved by evaluating the child value first.
+            */
+            if (this->type == TokenType::op_or) {
+                value = child.eval(context, wells) || value;
+                matching_wells.add(wells);
+            } else {
+                value = child.eval(context, wells) && value;
+                matching_wells.intersect(wells);
+            }
         }
         return value;
     }
@@ -416,8 +418,12 @@ ActionAST::ActionAST(const std::vector<std::string>& tokens) {
         throw std::invalid_argument("Failed to parse");
 }
 
+
 bool ActionAST::eval(const ActionContext& context, std::vector<std::string>& matching_wells) const {
-    return this->tree.eval(context, matching_wells);
+    WellSet wells;
+    bool eval_result = this->tree.eval(context, wells);
+    matching_wells = wells.wells();
+    return eval_result;
 }
 
 }

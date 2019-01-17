@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 
 namespace Opm {
@@ -62,17 +63,54 @@ struct ParseNode {
 };
 
 
+/*
+  Small utility class to hold information about which wells match the
+  various expressions in the ACTIONX parsing.
+*/
+
+class WellSet {
+public:
+    void add(const std::string& well) { this->well_set.insert(well); }
+    std::size_t size() const { return this->well_set.size(); }
+
+    std::vector<std::string> wells() const {
+        return std::vector<std::string>( this->well_set.begin(), this->well_set.end() );
+    }
+
+    WellSet& intersect(const WellSet& other) {
+        for (auto& well : this->well_set)
+            if (! other.contains(well))
+                this->well_set.erase(well);
+        return *this;
+    }
+
+    WellSet& add(const WellSet& other) {
+        for (auto& well : other.well_set)
+            this->add(well);
+        return *this;
+    }
+
+    bool contains(const std::string& well) const {
+        return (this->well_set.find(well) != this->well_set.end());
+    }
+
+private:
+
+    std::unordered_set<std::string> well_set;
+};
+
+
 class ActionValue {
 public:
     explicit ActionValue(double value);
     ActionValue() = default;
 
-    bool eval_cmp(TokenType op, const ActionValue& rhs, std::vector<std::string>& matching_wells) const;
+    bool eval_cmp(TokenType op, const ActionValue& rhs, WellSet& matching_wells) const;
     void add_well(const std::string& well, double value);
     double scalar() const;
 
 private:
-    bool eval_cmp_wells(TokenType op, double rhs, std::vector<std::string>& matching_wells) const;
+    bool eval_cmp_wells(TokenType op, double rhs, WellSet& matching_wells) const;
 
     double scalar_value;
     double is_scalar = false;
@@ -107,7 +145,7 @@ ASTNode(TokenType type_arg, const std::string& func_arg, const std::vector<std::
     arg_list(arg_list_arg)
 {}
 
-    bool eval(const ActionContext& context, std::vector<std::string>& matching_wells) const;
+    bool eval(const ActionContext& context, WellSet& matching_wells) const;
     ActionValue value(const ActionContext& context) const;
     TokenType type;
     void add_child(const ASTNode& child);
