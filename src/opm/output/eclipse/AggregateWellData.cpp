@@ -340,6 +340,7 @@ namespace {
             iWell[Ix::WType]  = wellType  (well, sim_step);
             iWell[Ix::WCtrl]  = ctrlMode  (well, sim_step);
             iWell[Ix::VFPTab] = wellVFPTab(well, sim_step);
+	    iWell[Ix::XFlow]  = well.getAllowCrossFlow() ? 1 : 0;
 
             // The following items aren't fully characterised yet, but
             // needed for restart of M2.  Will need further refinement.

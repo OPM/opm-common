@@ -111,6 +111,90 @@ WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
     }
 }
 
+EclHysteresisConfig::EclHysteresisConfig() :
+    enableHysteresis_( false ),
+    pcHysteresisModel_( 0 ),
+    krHysteresisModel_( 0 )
+    {}
+
+
+EclHysteresisConfig::EclHysteresisConfig(const Opm::Deck& deck) : EclHysteresisConfig()
+    {
+        enableHysteresis_ = false;
+
+        if (!deck.hasKeyword("SATOPTS"))
+            return;
+
+        const auto& satoptsItem = deck.getKeyword("SATOPTS").getRecord(0).getItem(0);
+        for (unsigned i = 0; i < satoptsItem.size(); ++i) {
+            std::string satoptsValue = satoptsItem.get< std::string >(0);
+            std::transform(satoptsValue.begin(),
+                           satoptsValue.end(),
+                           satoptsValue.begin(),
+                           ::toupper);
+
+            if (satoptsValue == "HYSTER")
+                enableHysteresis_ = true;
+        }
+
+        // check for the (deprecated) HYST keyword
+        if (deck.hasKeyword("HYST"))
+            enableHysteresis_ = true;
+
+        if (!enableHysteresis_)
+            return;
+
+        if (!deck.hasKeyword("EHYSTR"))
+            throw std::runtime_error("Enabling hysteresis via the HYST parameter for SATOPTS requires the "
+                                     "presence of the EHYSTR keyword");
+
+        const auto& ehystrKeyword = deck.getKeyword("EHYSTR");
+        if (deck.hasKeyword("NOHYKR"))
+            krHysteresisModel_ = -1;
+        else {
+            krHysteresisModel_ = ehystrKeyword.getRecord(0).getItem("relative_perm_hyst").get<int>(0);
+
+            if (krHysteresisModel_ != 0 && krHysteresisModel_ != 1)
+                throw std::runtime_error(
+                    "Only the Carlson relative permeability hystersis models (indicated by '0' or "
+                    "'1' for the second item of the 'EHYSTR' keyword) are supported");
+        }
+
+        // this is slightly screwed: it is possible to specify contradicting hysteresis
+        // models with HYPC/NOHYPC and the fifth item of EHYSTR. Let's ignore that for
+        // now.
+        std::string whereFlag =
+            ehystrKeyword.getRecord(0).getItem("limiting_hyst_flag").getTrimmedString(0);
+        if (deck.hasKeyword("NOHYPC") || whereFlag == "KR")
+            pcHysteresisModel_ = -1;
+        else {
+            // if capillary pressure hysteresis is enabled, Eclipse always uses the
+            // Killough model
+            pcHysteresisModel_ = 0;
+
+            throw std::runtime_error("Capillary pressure hysteresis is not supported yet");
+        }
+    }
+    
+void EclHysteresisConfig::setEnableHysteresis(bool yesno)
+    { enableHysteresis_ = yesno; }
+
+const bool EclHysteresisConfig::enableHysteresis() const 
+    { return enableHysteresis_; }
+    
+void EclHysteresisConfig::setPcHysteresisModel(int value)
+    { pcHysteresisModel_ = value; }
+    
+const int EclHysteresisConfig::pcHysteresisModel() const
+    { return pcHysteresisModel_; }
+    
+void EclHysteresisConfig::setKrHysteresisModel(int value)
+    { krHysteresisModel_ = value; }
+    
+const int EclHysteresisConfig::krHysteresisModel() const
+    { return krHysteresisModel_; }
+
+    
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases( deck.hasKeyword( "OIL" ),
                            deck.hasKeyword( "GAS" ),
@@ -123,7 +207,8 @@ Runspec::Runspec( const Deck& deck ) :
     endscale( deck ),
     welldims( deck ),
     wsegdims( deck ),
-    udq_params( deck )
+    udq_params( deck ),
+    hystpar( deck )
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -146,6 +231,11 @@ const Welldims& Runspec::wellDimensions() const noexcept
 const WellSegmentDims& Runspec::wellSegmentDimensions() const noexcept
 {
     return this->wsegdims;
+}
+
+const EclHysteresisConfig& Runspec::hysterPar() const noexcept
+{
+    return this->hystpar;
 }
 
 /*

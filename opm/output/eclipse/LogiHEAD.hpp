@@ -38,7 +38,9 @@ namespace Opm { namespace RestartIO {
 
         LogiHEAD& variousParam(const bool e300_radial,
                                const bool e100_radial,
-                               const int  nswlmx);
+                               const int  nswlmx,
+			       const bool enableHyster
+			      );
 
         const std::vector<bool>& data() const
         {

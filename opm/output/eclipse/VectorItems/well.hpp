@@ -41,6 +41,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             VFPTab = 11, // ID (one-based) of well's current VFP table
 
             item18 = 17, // Unknown
+	    XFlow  = 22,
             item25 = 24, // Unknown
             item32 = 31, // Unknown
             item48 = 47, // Unknown

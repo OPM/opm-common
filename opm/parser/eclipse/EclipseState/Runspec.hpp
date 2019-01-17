@@ -112,6 +112,69 @@ private:
     int nLatBranchMax;
 };
 
+class EclHysteresisConfig
+{
+public:
+      EclHysteresisConfig();
+      explicit EclHysteresisConfig(const Deck& deck);
+
+
+    /*!
+     * \brief Specify whether hysteresis is enabled or not.
+     */
+    void setEnableHysteresis(bool yesno);
+
+    /*!
+     * \brief Returns whether hysteresis is enabled.
+     */
+    const bool enableHysteresis() const;
+
+    /*!
+     * \brief Set the type of the hysteresis model which is used for capillary pressure.
+     *
+     * -1: capillary pressure hysteresis is disabled
+     * 0: use the Killough model for capillary pressure hysteresis
+     */
+    void setPcHysteresisModel(int value);
+
+    /*!
+     * \brief Return the type of the hysteresis model which is used for capillary pressure.
+     *
+     * -1: capillary pressure hysteresis is disabled
+     * 0: use the Killough model for capillary pressure hysteresis
+     */
+    const int pcHysteresisModel() const;
+
+    /*!
+     * \brief Set the type of the hysteresis model which is used for relative permeability.
+     *
+     * -1: relperm hysteresis is disabled
+     * 0: use the Carlson model for relative permeability hysteresis of the non-wetting
+     *    phase and the drainage curve for the relperm of the wetting phase
+     * 1: use the Carlson model for relative permeability hysteresis of the non-wetting
+     *    phase and the imbibition curve for the relperm of the wetting phase
+     */
+    void setKrHysteresisModel(int value);
+
+    /*!
+     * \brief Return the type of the hysteresis model which is used for relative permeability.
+     *
+     * -1: relperm hysteresis is disabled
+     * 0: use the Carlson model for relative permeability hysteresis
+     */
+    const int krHysteresisModel() const;
+
+private:
+    // enable hysteresis at all
+    bool enableHysteresis_;
+
+    // the capillary pressure and the relperm hysteresis models to be used
+    int pcHysteresisModel_;
+    int krHysteresisModel_;
+};
+
+
+
 class Runspec {
    public:
         explicit Runspec( const Deck& );
@@ -123,6 +186,7 @@ class Runspec {
         const Welldims& wellDimensions() const noexcept;
         const WellSegmentDims& wellSegmentDimensions() const noexcept;
         int eclPhaseMask( ) const noexcept;
+	const EclHysteresisConfig& hysterPar() const noexcept;
 
    private:
         Phases active_phases;
@@ -131,7 +195,9 @@ class Runspec {
         Welldims welldims;
         WellSegmentDims wsegdims;
         UDQParams udq_params;
+	EclHysteresisConfig hystpar;
 };
+
 
 }
 

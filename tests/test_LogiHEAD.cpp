@@ -29,9 +29,10 @@ BOOST_AUTO_TEST_CASE(Radial_Settings_and_Init)
 {
     const auto e300_radial = false;
     const auto e100_radial = true;
+    const auto enableHyster = true;
 
     const auto lh = Opm::RestartIO::LogiHEAD{}
-        .variousParam(e300_radial, e100_radial, 4);
+        .variousParam(e300_radial, e100_radial, 4, enableHyster);
 
     const auto& v = lh.data();
 
@@ -39,6 +40,7 @@ BOOST_AUTO_TEST_CASE(Radial_Settings_and_Init)
     BOOST_CHECK_EQUAL(v[  1], true);  //
     BOOST_CHECK_EQUAL(v[  3], false); // E300 Radial
     BOOST_CHECK_EQUAL(v[  4], true);  // E100 Radial
+    BOOST_CHECK_EQUAL(v[  6], true);  // enableHyster
     BOOST_CHECK_EQUAL(v[ 75], true);  // MS Well Simulation Case
 }
 
