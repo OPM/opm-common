@@ -23,7 +23,7 @@ WELLDIMS
 -- Item 3: NGMAX  (Maximum number of groups in model--excluding FIELD)
 -- Item 4: NWGMAX (Maximum number of wells or child groups per group)
 -- NWMAX  NCWMAX  NGMAX  NWGMAX
-   5      2       3      2
+   6      2       3      2
 /
 
 OIL
@@ -145,6 +145,12 @@ FGORH
 FMWPR
 FMWIN
 FOE
+
+FOPP
+FWPP
+FGPP
+FGPI
+FWPI
 
 -- Pressures
 FPR
@@ -337,6 +343,14 @@ GMCTP
 /
 GOPP
 /
+GWPP
+/
+GGPP
+/
+GGPI
+/
+GWPI
+/
 GVIR
 /
 GVIT
@@ -520,6 +534,14 @@ WVPRT
 /
 WOPP
 /
+WWPP
+/
+WGPP
+/
+WGPI
+/
+WWPI
+/
 WVIR
 /
 WVIT
@@ -617,6 +639,7 @@ WELSPECS
      'W_1'        'G_1'   1    1  3.33       'OIL'  7* /
      'W_2'        'G_1'   2    1  3.33       'OIL'  7* /
      'W_3'        'G_2'   3    1  3.92       'WATER'  7* /
+     'W_6'        'G_2'   8    8  3.92       'GAS'  7* /
      'W_5'        'G_3'   4    1  3.92       'OIL'  7* /
 /
 
@@ -628,6 +651,7 @@ COMPDAT
     W_2   0 0  1  1 2*              1*        5  20 0.5 /   -- Active index: 1
     W_2   0 0  2  2 2*              1*        5  10 0.2 /   -- Active index: 101
     W_3   0 0  1  1 2*              1*        2*    0.7 /   -- Active index: 2
+    W_6   0 0  2  2 2*              1*        2*    0.7 /   -- Active index: 2
 /
 
 WPOLYMER
@@ -645,6 +669,11 @@ WCONHIST
 WCONINJH
 -- Injection historical rates (water only, as we only support pure injectors)
     W_3 WATER STOP 30.0 2.1 2.2 /
+/
+
+WCONINJH
+-- Injection historical rates (water only, as we only support pure injectors)
+    W_6 GAS STOP 30000.0  /
 /
 
 WCONPROD
