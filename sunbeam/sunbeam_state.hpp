@@ -17,6 +17,7 @@ public:
     const Opm::SummaryConfig getSummmaryConfig() const;
 
 private:
+    Opm::ErrorGuard guard;
     Opm::Deck deck;
     Opm::EclipseState ecl_state;
     Opm::Schedule schedule;

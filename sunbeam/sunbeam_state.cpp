@@ -2,11 +2,14 @@
 
 
 SunbeamState::SunbeamState(bool file_input, const std::string& deck_input, const Opm::ParseContext& context, const Opm::Parser& parser)
-    : deck(file_input ? parser.parseFile(deck_input, context) : parser.parseString(deck_input, context)),
-      ecl_state(deck, context),
-      schedule(deck, ecl_state, context),
-      summary_config(deck, schedule, ecl_state.getTableManager(), context)
+    : deck(file_input
+          ? parser.parseFile(deck_input, context, guard)
+          : parser.parseString(deck_input, context, guard)),
+      ecl_state(deck, context, guard),
+      schedule(deck, ecl_state, context, guard),
+      summary_config(deck, schedule, ecl_state.getTableManager(), context, guard)
 {
+    guard.clear();
 }
 
 

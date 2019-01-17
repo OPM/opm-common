@@ -12,14 +12,21 @@ namespace {
     Deck create_deck( const std::string& deckStr,
                       const ParseContext& pc,
                       const Parser& parser) {
-        return parser.parseFile( deckStr, pc);
+
+        Opm::ErrorGuard guard;
+        auto p = parser.parseFile( deckStr, pc, guard );
+        guard.clear();
+        return p;
     }
 
 
     Deck create_deck_string( const std::string& deckStr,
                              const ParseContext& pc,
                              const Parser& parser) {
-        return parser.parseString( deckStr, pc);
+        Opm::ErrorGuard guard;
+        auto p = parser.parseString( deckStr, pc, guard );
+        guard.clear();
+        return p;
     }
 
 
