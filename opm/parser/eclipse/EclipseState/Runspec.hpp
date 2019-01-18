@@ -112,11 +112,11 @@ private:
     int nLatBranchMax;
 };
 
-class EclHysteresisConfig
+class EclHysterConfig
 {
 public:
-      EclHysteresisConfig();
-      explicit EclHysteresisConfig(const Deck& deck);
+      EclHysterConfig();
+      explicit EclHysterConfig(const Deck& deck);
 
 
     /*!
@@ -186,7 +186,7 @@ class Runspec {
         const Welldims& wellDimensions() const noexcept;
         const WellSegmentDims& wellSegmentDimensions() const noexcept;
         int eclPhaseMask( ) const noexcept;
-	const EclHysteresisConfig& hysterPar() const noexcept;
+	const EclHysterConfig& hysterPar() const noexcept;
 
    private:
         Phases active_phases;
@@ -195,7 +195,7 @@ class Runspec {
         Welldims welldims;
         WellSegmentDims wsegdims;
         UDQParams udq_params;
-	EclHysteresisConfig hystpar;
+	EclHysterConfig hystpar;
 };
 
 

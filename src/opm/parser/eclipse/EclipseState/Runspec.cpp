@@ -111,14 +111,14 @@ WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
     }
 }
 
-EclHysteresisConfig::EclHysteresisConfig() :
+EclHysterConfig::EclHysterConfig() :
     enableHysteresis_( false ),
     pcHysteresisModel_( 0 ),
     krHysteresisModel_( 0 )
     {}
 
 
-EclHysteresisConfig::EclHysteresisConfig(const Opm::Deck& deck) : EclHysteresisConfig()
+EclHysterConfig::EclHysterConfig(const Opm::Deck& deck) : EclHysterConfig()
     {
         enableHysteresis_ = false;
 
@@ -176,22 +176,22 @@ EclHysteresisConfig::EclHysteresisConfig(const Opm::Deck& deck) : EclHysteresisC
         }
     }
     
-void EclHysteresisConfig::setEnableHysteresis(bool yesno)
+void EclHysterConfig::setEnableHysteresis(bool yesno)
     { enableHysteresis_ = yesno; }
 
-const bool EclHysteresisConfig::enableHysteresis() const 
+const bool EclHysterConfig::enableHysteresis() const 
     { return enableHysteresis_; }
     
-void EclHysteresisConfig::setPcHysteresisModel(int value)
+void EclHysterConfig::setPcHysteresisModel(int value)
     { pcHysteresisModel_ = value; }
     
-const int EclHysteresisConfig::pcHysteresisModel() const
+const int EclHysterConfig::pcHysteresisModel() const
     { return pcHysteresisModel_; }
     
-void EclHysteresisConfig::setKrHysteresisModel(int value)
+void EclHysterConfig::setKrHysteresisModel(int value)
     { krHysteresisModel_ = value; }
     
-const int EclHysteresisConfig::krHysteresisModel() const
+const int EclHysterConfig::krHysteresisModel() const
     { return krHysteresisModel_; }
 
     
@@ -233,7 +233,7 @@ const WellSegmentDims& Runspec::wellSegmentDimensions() const noexcept
     return this->wsegdims;
 }
 
-const EclHysteresisConfig& Runspec::hysterPar() const noexcept
+const EclHysterConfig& Runspec::hysterPar() const noexcept
 {
     return this->hystpar;
 }
