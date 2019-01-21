@@ -221,7 +221,7 @@ namespace {
         const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(record.getItem("DIR").getTrimmedString(0));
         double skin_factor = record.getItem("SKIN").getSIDouble(0);
         double rw;
-        double r0;
+        double r0=0.0;
 
 
         if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
