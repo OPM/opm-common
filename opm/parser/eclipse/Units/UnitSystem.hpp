@@ -29,6 +29,14 @@
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+
+
 namespace Opm {
 
     class UnitSystem {
@@ -115,6 +123,27 @@ namespace Opm {
         const double* measure_table_from_si;
         const double* measure_table_to_si;
         const char* const*  unit_name_table;
+    protected:
+      friend class  boost::serialization::access;
+      template<class Archive>
+      void save(Archive & ar, const unsigned int version) const
+      {
+      	// note, version is always the latest when saving
+      	//ar  & m_name;
+      	ar  & m_unittype;
+      }
+      template<class Archive>
+      void load(Archive & ar, const unsigned int version)
+      {
+      	//ar & m_name;
+      	ar & m_unittype;
+      	//this->UnitSystem(m_unittype);
+      }
+      BOOST_SERIALIZATION_SPLIT_MEMBER()
+      //template<class Archive>
+      //void serialize(Archive & ar, const unsigned int version){
+      //	ar & m_items;
+      //}
     };
 }
 

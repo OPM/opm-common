@@ -43,13 +43,16 @@ inline void pack_deck( const char * deck_file, std::ostream& os) {
       boost::archive::text_oarchive oa(ofs);
       oa << deck;
     }
-    std::cout << "read serialized deck "<< std::endl;
+    std::cout << "Start deserialized deck "<< std::endl;
     Opm::Deck deck_new;
     {  
       std::ifstream ifs("deck_serialized.ser");
       boost::archive::text_iarchive ia(ifs);
       ia >> deck_new;
+      std::cout << "dezerialized deck finnished "<< std::endl;
+      
     }
+    os << "write out dezerialized deck" << std::endl;
     os << deck_new;
 }
 

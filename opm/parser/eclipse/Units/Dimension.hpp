@@ -59,7 +59,7 @@ namespace Opm {
       friend class  boost::serialization::access;
       template<class Archive>
       void serialize(Archive & ar, const unsigned int version){
-	ar & m_name;
+	//ar & m_name;
 	ar & m_SIfactor;
 	ar & m_SIoffset;
       }
