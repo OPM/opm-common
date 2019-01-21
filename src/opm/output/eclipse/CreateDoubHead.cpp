@@ -78,11 +78,11 @@ createDoubHead(const EclipseState& es,
                const std::size_t   lookup_step,
                const double        simTime)
 {
-    const auto cnvT = getTimeConv(es.getDeckUnitSystem());
+    const auto& usys = es.getDeckUnitSystem();
     const auto dh = DoubHEAD{}
-        .tuningParameters(sched.getTuning(), lookup_step, cnvT)
+        .tuningParameters(sched.getTuning(), lookup_step, getTimeConv(usys))
         .timeStamp       (computeTimeStamp(sched, simTime))
-        .drsdt           (sched, lookup_step, cnvT)
+        .drsdt           (sched, lookup_step, getTimeConv(usys))
         ;
 
     return dh.data();
