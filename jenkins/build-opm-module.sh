@@ -79,17 +79,23 @@ function printHeader {
 # $2 = 0 to build and install module, 1 to build and test module
 # $3 = Source root of module to build
 function build_module {
-  cmake $3 -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=$2 -DCMAKE_TOOLCHAIN_FILE=${configurations[$configuration]} $1
+  CMAKE_PARAMS="$1"
+  DO_TEST_FLAG="$2"
+  MOD_SRC_DIR="$3"
+  cmake "$MOD_SRC_DIR" -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=$DO_TEST_FLAG -DCMAKE_TOOLCHAIN_FILE=${configurations[$configuration]} $CMAKE_PARAMS
   test $? -eq 0 || exit 1
-  if test $2 -eq 1
+  if test $DO_TEST_FLAG -eq 1
   then
 
     pushd "$CWD"
-    cd "$1"
+    cd "$MOD_SRC_DIR"
     if test -x "./jenkins/pre-build.sh"; then
+        echo "Running pre-build script"
         if ! "./jenkins/pre-build.sh"; then
             exit 1
         fi
+    else
+        echo "No pre-build script detected"
     fi
     popd
 
