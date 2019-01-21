@@ -31,6 +31,19 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include <boost/archive/tmpdir.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+
+
+
 #ifdef OPM_PARSER_DECK_API_WARNING
 #ifndef OPM_PARSER_DECK_API
 #pragma message "\n\n" \
@@ -162,6 +175,16 @@ namespace Opm {
 
             std::string m_dataFile;
             std::string input_path;
+        protected:
+              friend class  boost::serialization::access;
+              template<class Archive>
+        void serialize(Archive & ar, const unsigned int version){
+	  ar & keywordList;
+	  //ar & defaultUnits;
+	  //ar & activeUnits;
+	  ar & m_dataFile;
+	  ar & input_path;
+	}
     };
 }
 #endif  /* DECK_HPP */

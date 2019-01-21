@@ -33,7 +33,7 @@ namespace Opm {
     class DeckKeyword {
     public:
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
-
+        DeckKeyword(){};
         explicit DeckKeyword(const std::string& keywordName);
         DeckKeyword(const std::string& keywordName, bool knownKeyword);
 
@@ -86,6 +86,19 @@ namespace Opm {
         bool m_knownKeyword;
         bool m_isDataKeyword;
         bool m_slashTerminated;
+    protected:
+      friend class  boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	ar & m_keywordName;
+	ar & m_fileName;
+	ar & m_lineNumber;
+	ar & m_recordList;
+	ar & m_knownKeyword;
+	ar & m_isDataKeyword;
+	ar & m_slashTerminated;
+      }
+
     };
 }
 
