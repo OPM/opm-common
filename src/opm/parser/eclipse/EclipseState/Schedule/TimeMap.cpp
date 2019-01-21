@@ -191,8 +191,7 @@ namespace {
             const auto &item = TSTEPKeyword.getRecord(0).getItem(0);
 
             for (size_t itemIndex = 0; itemIndex < item.size(); itemIndex++) {
-                const double days = item.get<double>(itemIndex);
-                const int64_t seconds = static_cast<int64_t>(days * 24 * 60 * 60);
+                const int64_t seconds = static_cast<int64_t>(item.getSIDouble(itemIndex));
                 addTStep(seconds);
             }
         }
