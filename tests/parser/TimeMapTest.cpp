@@ -353,6 +353,35 @@ BOOST_AUTO_TEST_CASE(initTimestepsLongStep) {
 }
 
 
+BOOST_AUTO_TEST_CASE(TimestepsLabUnit) {
+    const char *deckData =
+        "START\n"
+        " 1 JAN 1983 /\n"
+        "\n"
+        "LAB\n"
+        " \n"
+        "TSTEP\n"
+        " 24*10 /\n";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deckData);
+    const Opm::TimeMap tmap(deck);
+
+    /*deckData timesteps:
+    0   1 jan 1983 START
+    1   11 jan 1983*/
+
+    const std::time_t tEnd = tmap.getEndTime();
+
+    int year, day, month;
+
+    util_set_date_values_utc(tEnd, &day, &month, &year);
+    BOOST_CHECK_EQUAL(year, 1983);
+    BOOST_CHECK_EQUAL(month, 1);
+    BOOST_CHECK_EQUAL(day, 11);
+}
+
+
 BOOST_AUTO_TEST_CASE(initTimestepsDistantDates) {
     const char *deckData =
         "START\n"
