@@ -313,7 +313,7 @@ captureDeclaredConnData(const Schedule&        sched,
 	allWellConnections.insert(std::make_pair(wl->name(), initConn));
 	const auto it = allWellConnections.find(wl->name());
 	const auto xr = xw.find(wl->name());
-	int rCInd = 0;
+	size_t rCInd = 0;
 	if ((it != allWellConnections.end()) && (xr != xw.end())) {
 	    for (auto nConn = conns.size(), connID = 0*nConn; connID < nConn; connID++) {
 		//
