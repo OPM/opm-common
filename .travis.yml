@@ -41,7 +41,6 @@ install:
   - popd
   - mkdir opm-common/build
   - pushd opm-common/build
-  - git checkout release/sunbeam/2018.09
   - cmake .. -DCMAKE_PREFIX_PATH=$INSTALL_ROOT
              -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT
              -DBUILD_TESTING=OFF
