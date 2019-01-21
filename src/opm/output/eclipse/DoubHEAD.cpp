@@ -590,14 +590,15 @@ Opm::RestartIO::DoubHEAD::timeStamp(const TimeStamp& ts)
 
 Opm::RestartIO::DoubHEAD&
 Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
-                                const std::size_t lookup_step)
+                                const std::size_t lookup_step,
+				const double      cnvT)
 {
     const auto& vappar =
         sched.getOilVaporizationProperties(lookup_step);
 
     this->data_[dRsdt] =
         (vappar.getType() == Opm::OilVaporizationEnum::DRDT)
-        ? vappar.getMaxDRSDT(0)
+        ? vappar.getMaxDRSDT(0)*cnvT
         : 1.0e+20;
 
     return *this;

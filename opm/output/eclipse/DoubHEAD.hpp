@@ -55,7 +55,8 @@ namespace Opm { namespace RestartIO {
         DoubHEAD& timeStamp(const TimeStamp& ts);
 
         DoubHEAD& drsdt(const Schedule&   sched,
-                        const std::size_t lookup_step);
+                        const std::size_t lookup_step,
+			const double      cnvT);
 
         const std::vector<double>& data() const
         {
