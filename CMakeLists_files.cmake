@@ -75,10 +75,13 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
     src/opm/parser/eclipse/EclipseState/Runspec.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/ActionAST.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/ActionContext.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Actions.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/ActionX.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/Actions.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionParser.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellConnections.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
@@ -458,10 +461,10 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Aquancon.hpp
        opm/parser/eclipse/EclipseState/AquiferCT.hpp
        opm/parser/eclipse/EclipseState/Aquifetp.hpp
-       opm/parser/eclipse/EclipseState/Schedule/ActionAST.hpp
-       opm/parser/eclipse/EclipseState/Schedule/ActionContext.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Actions.hpp
-       opm/parser/eclipse/EclipseState/Schedule/ActionX.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp

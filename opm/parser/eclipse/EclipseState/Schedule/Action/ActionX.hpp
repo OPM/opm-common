@@ -26,7 +26,7 @@
 #include <ctime>
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ActionAST.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
 
 namespace Opm {
 /*

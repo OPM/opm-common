@@ -40,7 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Actions.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 
 namespace Opm
 {
