@@ -116,10 +116,15 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             BHPTarget      = 6, // Well's bottom hole pressure target
 
             DatumDepth     = 9, // Well's reference depth for BHP
-	    LiqRateTarget_2  = 33, //Well's liquid rate target/limit for a well on WCONINJH control or for a producer
-	    GasRateTarget_2  = 54, //Well's gas rate target/limit for a well on WCONINJH control or for producer
-	    BHPTarget_2	   = 55, //Well's bottom hole pressure target/limit
-	    
+
+            HistLiqRateTarget = 33, // Well's historical/observed liquid
+                                    // rate target/limit
+
+            HistGasRateTarget = 54, // Well's historical/observed gas rate
+                                    // target/limit
+
+            HistBHPTarget     = 55, // Well's historical/observed bottom
+                                    // hole pressure target/limit
         };
     } // SWell
 
@@ -146,13 +151,22 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             GasFVF      = 34,  // Well's producing gas formation volume factor.
 
-            item37     = 36,   // Unknown
-            item38     = 37,   // Unknown
+            item37      = 36,   // Unknown
+            item38      = 37,   // Unknown
 
-            BHPTarget  = 41, // Well's current BHP Target/Limit
+            BHPTarget   = 41,   // Well's current BHP Target/Limit
 
-            item82     = 81,   // Unknown
-            item83     = 82,   // Unknown
+            HistOilPrTotal  = 75, // Well's total cumulative oil production
+                                  // (observed/historical rates)
+            HistWatPrTotal  = 76, // Well's total cumulative water
+                                  // production (observed/historical rates)
+            HistGasPrTotal  = 77, // Well's total cumulative gas production
+                                  // (observed(historical rates)
+
+            HistWatInjTotal = 81, // Well's total cumulative water injection
+                                  // (observed/historical rates)
+            HistGasInjTotal = 82, // Well's total cumulative gas injection
+                                  // (observed/historical rates)
 
             WatVoidPrRate = 122, // Well's voidage production rate
             GasVoidPrRate = 123, // Well's voidage production rate

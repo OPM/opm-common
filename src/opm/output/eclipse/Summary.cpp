@@ -65,6 +65,8 @@ namespace {
             "WIR", "GIR",
             "WIT", "GIT",
             "WCT", "GOR",
+            "OPTH", "WPTH", "GPTH",
+            "WITH", "GITH",
         };
     }
 

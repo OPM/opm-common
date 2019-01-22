@@ -48,6 +48,17 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             OilPrPot = 22, // Group's oil production potential
             WatPrPot = 23, // Group's water production potential
+
+            HistOilPrTotal  = 135, // Group's total cumulative oil
+                                   // production (observed/historical rates)
+            HistWatPrTotal  = 139, // Group's total cumulative water
+                                   // production (observed/historical rates)
+            HistWatInjTotal = 140, // Group's total cumulative water
+                                   // injection (observed/historical rates)
+            HistGasPrTotal  = 143, // Group's total cumulative gas
+                                   // production (observed/historical rates)
+            HistGasInjTotal = 144, // Group's total cumulative gas injection
+                                   // (observed/historical rates)
         };
     } // XGroup
 

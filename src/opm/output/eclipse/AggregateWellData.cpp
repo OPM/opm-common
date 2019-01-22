@@ -30,7 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-//#include <opm/output/data/Wells.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -511,13 +510,13 @@ namespace {
                 if ((pp.GasRate != 0.0) || (!predMode)) {
                     sWell[Ix::GasRateTarget] =
                         swprop(M::gas_surface_rate, pp.GasRate);
-		    sWell[Ix::GasRateTarget_2] = sWell[Ix::GasRateTarget];
+		    sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
                 }
 
                 if (pp.LiquidRate != 0.0 || (!predMode)) {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.LiquidRate);
-		    sWell[Ix::LiqRateTarget_2] = sWell[Ix::LiqRateTarget];
+		    sWell[Ix::HistLiqRateTarget] = sWell[Ix::LiqRateTarget];
                 }
                 else  {
                     sWell[Ix::LiqRateTarget] =
@@ -542,26 +541,29 @@ namespace {
 		sWell[Ix::BHPTarget] = pp.BHPLimit != 0.0
                     ? swprop(M::pressure, pp.BHPLimit)
                     : swprop(M::pressure, 1.0*::Opm::unit::atm);
-		sWell[Ix::BHPTarget_2] = sWell[Ix::BHPTarget];
+		sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
             }
             else if (well.isInjector(sim_step)) {
                 const auto& ip = well.getInjectionProperties(sim_step);
 
                 using IP = ::Opm::WellInjector::ControlModeEnum;
-		using IT = ::Opm::WellInjector::TypeEnum;
+                using IT = ::Opm::WellInjector::TypeEnum;
 
-		if (ip.hasInjectionControl(IP::RATE)) {
-		    if (ip.injectorType == IT::OIL) {
-			sWell[Ix::OilRateTarget] = swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
-		    }
-		    if (ip.injectorType == IT::WATER) {
-			sWell[Ix::WatRateTarget] = swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
-			sWell[Ix::LiqRateTarget_2] = sWell[Ix::WatRateTarget];			    
-			}
-		    if (ip.injectorType == IT::GAS) {
-			sWell[Ix::GasRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
-			sWell[Ix::GasRateTarget_2] = sWell[Ix::GasRateTarget];
-		    }
+                if (ip.hasInjectionControl(IP::RATE)) {
+                    if (ip.injectorType == IT::OIL) {
+                        sWell[Ix::OilRateTarget] =
+                            swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
+                    }
+                    if (ip.injectorType == IT::WATER) {
+                        sWell[Ix::WatRateTarget] =
+                            swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
+			sWell[Ix::HistLiqRateTarget] = sWell[Ix::WatRateTarget];
+                    }
+                    if (ip.injectorType == IT::GAS) {
+                        sWell[Ix::GasRateTarget] =
+                            swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+			sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
+                    }
                 }
 
 		if (ip.hasInjectionControl(IP::RESV)) {
@@ -575,7 +577,7 @@ namespace {
                 sWell[Ix::BHPTarget] = ip.hasInjectionControl(IP::BHP)
                     ? swprop(M::pressure, ip.BHPLimit)
                     : swprop(M::pressure, 1.0E05*::Opm::unit::psia);
-		sWell[Ix::BHPTarget_2] = sWell[Ix::BHPTarget];
+		sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
             }
 
             sWell[Ix::DatumDepth] =
@@ -647,15 +649,41 @@ namespace {
             xWell[Ix::WatCut]  = get("WWCT");
             xWell[Ix::GORatio] = get("WGOR");
 
-	    if (ecl_compatible_rst) {
-		xWell[Ix::OilPrTotal]  = get("WOPT");
-		xWell[Ix::WatPrTotal]  = get("WWPT");
-		xWell[Ix::GasPrTotal]  = get("WGPT");
-		xWell[Ix::VoidPrTotal] = get("WVPT");
-	    }
+            if (ecl_compatible_rst) {
+                xWell[Ix::OilPrTotal]  = get("WOPT");
+                xWell[Ix::WatPrTotal]  = get("WWPT");
+                xWell[Ix::GasPrTotal]  = get("WGPT");
+                xWell[Ix::VoidPrTotal] = get("WVPT");
+            }
+
             // Not fully characterised.
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
+
+            if (ecl_compatible_rst) {
+                xWell[Ix::HistOilPrTotal] = get("WOPTH");
+                xWell[Ix::HistWatPrTotal] = get("WWPTH");
+                xWell[Ix::HistGasPrTotal] = get("WGPTH");
+            }
+        }
+
+        template <class GetSummaryVector, class XWellArray>
+        void assignCommonInjector(GetSummaryVector& get,
+                                  const bool        ecl_compatible_rst,
+                                  XWellArray&       xWell)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+
+            xWell[Ix::FlowBHP] = get("WBHP");
+
+	    if (ecl_compatible_rst) {
+                // Note: Assign both water and gas cumulatives to support
+                // case of well alternating between injecting water and gas.
+                xWell[Ix::WatInjTotal]     = get("WWIT");
+                xWell[Ix::GasInjTotal]     = get("WGIT");
+                xWell[Ix::HistWatInjTotal] = get("WWITH");
+                xWell[Ix::HistGasInjTotal] = get("WGITH");
+	    }
         }
 
         template <class XWellArray>
@@ -673,19 +701,14 @@ namespace {
                 return smry.has(key) ? smry.get(key) : 0.0;
             };
 
-            // Injection rates reported as negative, cumulative
-            // totals as positive.
+            assignCommonInjector(get, ecl_compatible_rst, xWell);
+
+            // Injection rates reported as negative.
             xWell[Ix::WatPrRate] = -get("WWIR");
             xWell[Ix::LiqPrRate] = xWell[Ix::WatPrRate];
 
-            xWell[Ix::FlowBHP] = get("WBHP");
-  
-	    if (ecl_compatible_rst) {
-		xWell[Ix::WatInjTotal] = get("WWIT");
-	    }
-
+            // Not fully characterised.
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
-            xWell[Ix::item82] = xWell[Ix::WatInjTotal];
 
             xWell[Ix::WatVoidPrRate] = -get("WWVIR");
         }
@@ -705,16 +728,11 @@ namespace {
                 return smry.has(key) ? smry.get(key) : 0.0;
             };
 
-            // Injection rates reported as negative production rates,
-            // cumulative injection totals as positive.
+            assignCommonInjector(get, ecl_compatible_rst, xWell);
+
+            // Injection rates reported as negative production rates.
             xWell[Ix::GasPrRate]  = -get("WGIR");
             xWell[Ix::VoidPrRate] = -get("WGVIR");
-
-            xWell[Ix::FlowBHP] = get("WBHP");
-
-	    if (ecl_compatible_rst) {
-		xWell[Ix::GasInjTotal] = get("WGIT");
-	    }
 
             xWell[Ix::GasFVF] = (std::abs(xWell[Ix::GasPrRate]) > 0.0)
                 ? xWell[Ix::VoidPrRate] / xWell[Ix::GasPrRate]
@@ -724,7 +742,6 @@ namespace {
 		
             // Not fully characterised.
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
-            xWell[Ix::item83] = xWell[Ix::GasInjTotal];
 
             xWell[Ix::GasVoidPrRate] = xWell[Ix::VoidPrRate];
         }

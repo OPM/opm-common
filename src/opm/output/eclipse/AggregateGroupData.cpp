@@ -381,7 +381,8 @@ namespace {
 
             for (const auto& key : keys) {
                 if ((key[3] == 'T') && ((key[2] == 'I') || (key[2] == 'P'))) {
-                    // Don't write cumulative quantities in case of 
+                    // Don't write cumulative quantities in case of OPM
+                    // extended restart files.
                     continue;
                 }
 
@@ -424,7 +425,7 @@ namespace {
 	    }*/
 	  }
 	}
-    }
+    } // XGrp
 
     namespace ZGrp {
         std::size_t entriesPerGroup(const std::vector<int>& inteHead)
@@ -447,7 +448,7 @@ namespace {
                 WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
-    }
+    } // ZGrp
 } // Anonymous
 
 void

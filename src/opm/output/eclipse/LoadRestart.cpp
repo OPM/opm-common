@@ -1088,6 +1088,13 @@ namespace {
 
         smry.add(key("WWIT"), xwel[VI::XWell::index::WatInjTotal]);
         smry.add(key("WGIT"), xwel[VI::XWell::index::GasInjTotal]);
+
+        smry.add(key("WOPTH"), xwel[VI::XWell::index::HistOilPrTotal]);
+        smry.add(key("WWPTH"), xwel[VI::XWell::index::HistWatPrTotal]);
+        smry.add(key("WGPTH"), xwel[VI::XWell::index::HistGasPrTotal]);
+
+        smry.add(key("WWITH"), xwel[VI::XWell::index::HistWatInjTotal]);
+        smry.add(key("WGITH"), xwel[VI::XWell::index::HistGasInjTotal]);
     }
 
     void assign_group_cumulatives(const std::string&  group,
@@ -1118,6 +1125,12 @@ namespace {
 
         smry.add(key("WIT"), xgrp[VI::XGroup::index::WatInjTotal]);
         smry.add(key("GIT"), xgrp[VI::XGroup::index::GasInjTotal]);
+
+        smry.add(key("OPTH"), xgrp[VI::XGroup::index::HistOilPrTotal]);
+        smry.add(key("WPTH"), xgrp[VI::XGroup::index::HistWatPrTotal]);
+        smry.add(key("GPTH"), xgrp[VI::XGroup::index::HistGasPrTotal]);
+        smry.add(key("WITH"), xgrp[VI::XGroup::index::HistWatInjTotal]);
+        smry.add(key("GITH"), xgrp[VI::XGroup::index::HistGasInjTotal]);
     }
 
     Opm::SummaryState

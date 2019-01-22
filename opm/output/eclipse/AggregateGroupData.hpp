@@ -89,12 +89,16 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	const std::vector<std::string> restart_group_keys = {"GOPP", "GWPP", "GOPR", "GWPR", "GGPR",
 							     "GVPR", "GWIR", "GGIR", "GWCT", "GGOR",
 							     "GOPT", "GWPT", "GGPT", "GVPT", "GWIT",
-							     "GGIT"};
+							     "GGIT",
+							     "GOPTH", "GWPTH", "GGPTH",
+							     "GWITH", "GGITH"};
 
 	const std::vector<std::string> restart_field_keys = {"FOPP", "FWPP", "FOPR", "FWPR", "FGPR",
 							     "FVPR", "FWIR", "FGIR", "FWCT", "FGOR",
 							     "FOPT", "FWPT", "FGPT", "FVPT", "FWIT",
-							     "FGIT"};
+							     "FGIT",
+							     "FOPTH", "FWPTH", "FGPTH",
+							     "FWITH", "FGITH"};
 
 	const std::map<std::string, size_t> groupKeyToIndex = {
 	  {"GOPR",  0},
@@ -113,6 +117,11 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	  {"GGIT", 16},
 	  {"GOPP", 22},
 	  {"GWPP", 23},
+	  {"GOPTH", 135},
+	  {"GWPTH", 139},
+	  {"GWITH", 140},
+	  {"GGPTH", 143},
+	  {"GGITH", 144},
 	};
 
 	const std::map<std::string, size_t> fieldKeyToIndex = {
@@ -132,6 +141,11 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	  {"FGIT", 16},
 	  {"FOPP", 22},
 	  {"FWPP", 23},
+	  {"FOPTH", 135},
+	  {"FWPTH", 139},
+	  {"FWITH", 140},
+	  {"FGPTH", 143},
+	  {"FGITH", 144},
 	};
 
     private:
