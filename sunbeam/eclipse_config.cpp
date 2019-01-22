@@ -25,7 +25,7 @@ void sunbeam::export_EclipseConfig(py::module& module)
     py::class_< RestartConfig >( module, "RestartConfig")
         .def( "getKeyword",          &RestartConfig::getKeyword )
         .def( "getFirstRestartStep", &RestartConfig::getFirstRestartStep )
-        .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile );
+        .def( "getWriteRestartFile", &RestartConfig::getWriteRestartFile, py::arg("reportStep"), py::arg("log") = true);
 
     py::class_< SimulationConfig >( module, "SimulationConfig")
         .def("hasThresholdPressure", &SimulationConfig::useThresholdPressure )
