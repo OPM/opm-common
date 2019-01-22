@@ -33,6 +33,7 @@
 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/list.hpp>
@@ -121,6 +122,14 @@ namespace Opm {
             const_iterator first;
             const_iterator last;
             std::map< std::string, std::vector< size_t > > keywordMap;
+    protected:
+      friend class  boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	//ar & first;
+	//ar & last;
+	ar & keywordMap; 
+      }
 
     };
 
@@ -179,13 +188,14 @@ namespace Opm {
         protected:
               friend class  boost::serialization::access;
               template<class Archive>
-        void serialize(Archive & ar, const unsigned int version){
-	  ar & keywordList;
-	  //ar & defaultUnits;
-	  //ar & activeUnits;
-	  ar & m_dataFile;
-	  ar & input_path;
-	}
+	      void serialize(Archive & ar, const unsigned int version){
+		ar & boost::serialization::base_object<DeckView>(*this);
+		ar & keywordList;
+		//ar & defaultUnits;
+		//ar & activeUnits;
+		ar & m_dataFile;
+		ar & input_path;
+	      }
     };
 }
 #endif  /* DECK_HPP */

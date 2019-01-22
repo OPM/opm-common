@@ -141,7 +141,7 @@ namespace Opm {
 	ar & sval;
 	ar & item_name;
 	ar & defaulted;
-	ar & dimensions;
+	//ar & dimensions;
 	ar & SIdata;
       }
     };

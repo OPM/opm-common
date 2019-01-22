@@ -33,7 +33,7 @@ namespace Opm {
     class DeckKeyword {
     public:
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
-        DeckKeyword(){};
+        DeckKeyword() = default;
         explicit DeckKeyword(const std::string& keywordName);
         DeckKeyword(const std::string& keywordName, bool knownKeyword);
 
