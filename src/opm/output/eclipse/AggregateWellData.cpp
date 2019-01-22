@@ -337,7 +337,6 @@ namespace {
                 GroupMapNameInd);
 
             iWell[Ix::WType]  = wellType  (well, sim_step);
-            iWell[Ix::WCtrl]  = ctrlMode  (well, sim_step);
             iWell[Ix::VFPTab] = wellVFPTab(well, sim_step);
 	    iWell[Ix::XFlow]  = well.getAllowCrossFlow() ? 1 : 0;
 
@@ -348,7 +347,31 @@ namespace {
             iWell[Ix::item32] =    7;
             iWell[Ix::item48] = -  1;
 
-            iWell[Ix::item50] = iWell[Ix::WCtrl];
+            // Deliberate misrepresentation.  Function 'ctrlMode()' returns
+            // the target control mode requested in the simulation deck.
+            // This item is supposed to be the well's actual, active target
+            // control mode in the simulator.
+            iWell[Ix::ActWCtrl] = ctrlMode(well, sim_step);
+
+            const auto isPred =
+                (well.isProducer(sim_step) &&
+                 well.getProductionProperties(sim_step).predictionMode)
+                ||
+                (well.isInjector(sim_step) &&
+                 well.getInjectionProperties(sim_step).predictionMode);
+
+            if (isPred) {
+                // Well in prediction mode (WCONPROD, WCONINJE).  Assign
+                // requested control mode for prediction.
+                iWell[Ix::PredReqWCtrl] = iWell[Ix::ActWCtrl];
+                iWell[Ix::HistReqWCtrl] = 0;
+            }
+            else {
+                // Well controlled by observed rates/BHP (WCONHIST,
+                // WCONINJH).  Assign requested control mode for history.
+                iWell[Ix::PredReqWCtrl] = 0; // Possibly =1 instead.
+                iWell[Ix::HistReqWCtrl] = iWell[Ix::ActWCtrl];
+            }
 
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
@@ -386,7 +409,7 @@ namespace {
                 });
 
             iWell[Ix::item9] = any_flowing_conn
-                ? iWell[Ix::WCtrl] : -1;
+                ? iWell[Ix::ActWCtrl] : -1;
 
             iWell[Ix::item11] = 1;
         }

@@ -33,19 +33,24 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             NConn  =  4, // Number of active cells connected to well
             Group  =  5, // Index (one-based) of well's current group
             WType  =  6, // Well type
-            WCtrl  =  7, // Well control
+            ActWCtrl =  7, // Well's active target control mode (constraint).
 
             item9  =  8, // Unknown
             item11 = 10, // Unknown
 
             VFPTab = 11, // ID (one-based) of well's current VFP table
 
+            PredReqWCtrl = 15, // Well's requested control mode from
+                               // simulation deck (WCONINJE, WCONPROD).
+
             item18 = 17, // Unknown
 	    XFlow  = 22,
             item25 = 24, // Unknown
             item32 = 31, // Unknown
             item48 = 47, // Unknown
-            item50 = 49, // Unknown
+
+            HistReqWCtrl = 49, // Well's requested control mode from
+                               // simulation deck (WCONHIST, WCONINJH)
 
             MsWID  = 70, // Multisegment well ID
                          //   Value 0 for regular wells

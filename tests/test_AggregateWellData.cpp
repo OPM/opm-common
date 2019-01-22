@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
 
         const auto& iwell = awd.getIWell();
 
-        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9 ], iwell[i0 + Ix::WCtrl]);
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9 ], iwell[i0 + Ix::ActWCtrl]);
         BOOST_CHECK_EQUAL(iwell[i0 + Ix::item11], 1);
     }
 
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         const auto& iwell = awd.getIWell();
 
         BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9],
-                          iwell[i1 + Ix::WCtrl]);
+                          iwell[i1 + Ix::ActWCtrl]);
         BOOST_CHECK_EQUAL(iwell[i1 + Ix::item11], 1);
     }
 
