@@ -17,12 +17,37 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <opm/output/eclipse/EclipseIO.hpp>
+
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
+
 #include <opm/msim/msim.hpp>
 
 
-
 int main(int argc, char** argv) {
-    Opm::msim msim(argv[1]);
-    msim.run();
+    std::string deck_file = argv[1];
+    Opm::Parser parser;
+    Opm::ParseContext parse_context;
+    Opm::ErrorGuard error_guard;
+
+    Opm::Deck deck = parser.parseFile(deck_file, parse_context, error_guard);
+    Opm::EclipseState state(deck, parse_context, error_guard);
+    Opm::Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec(), parse_context, error_guard);
+    Opm::SummaryConfig summary_config(deck, schedule, state.getTableManager(), parse_context, error_guard);
+
+    if (error_guard) {
+        error_guard.dump();
+        error_guard.terminate();
+    }
+
+    Opm::msim msim(state);
+    Opm::EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
+    msim.run(schedule, io);
 }
 

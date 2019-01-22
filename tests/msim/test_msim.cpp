@@ -34,7 +34,12 @@
 
 #include <opm/msim/msim.hpp>
 #include <opm/output/data/Wells.hpp>
+#include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
 using namespace Opm;
 
@@ -56,12 +61,20 @@ void pressure(const EclipseState& es, const Schedule& sched, data::Solution& sol
 
 
 BOOST_AUTO_TEST_CASE(RUN) {
-    msim msim("SPE1CASE1.DATA");
+    Parser parser;
+    Deck deck = parser.parseFile("SPE1CASE1.DATA");
+    EclipseState state(deck);
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
+    SummaryConfig summary_config(deck, schedule, state.getTableManager());
+    msim msim(state);
+
     msim.well_rate("PROD", data::Rates::opt::oil, prod_opr);
     msim.solution("PRESSURE", pressure);
     {
         test_work_area_type * work_area = test_work_area_alloc("test_msim");
-        msim.run();
+        EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
+
+        msim.run(schedule, io);
 
         for (const auto& fname : {"SPE1CASE1.INIT", "SPE1CASE1.UNRST", "SPE1CASE1.EGRID", "SPE1CASE1.SMSPEC", "SPE1CASE1.UNSMRY"})
             BOOST_CHECK( util_is_file( fname ));
