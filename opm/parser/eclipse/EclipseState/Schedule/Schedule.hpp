@@ -103,6 +103,7 @@ namespace Opm
         time_t getStartTime() const;
         time_t posixStartTime() const;
         time_t posixEndTime() const;
+        time_t simTime(size_t timeStep) const;
         double seconds(size_t timeStep) const;
         double stepLength(size_t timeStep) const;
 

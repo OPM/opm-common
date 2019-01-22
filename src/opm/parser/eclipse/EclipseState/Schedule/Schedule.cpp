@@ -2149,6 +2149,9 @@ namespace Opm {
         return this->m_timeMap.seconds(timeStep);
     }
 
+    time_t Schedule::simTime(size_t timeStep) const {
+        return this->m_timeMap[timeStep];
+    }
 
     double Schedule::stepLength(size_t timeStep) const {
         return this->m_timeMap.getTimeStepLength(timeStep);
