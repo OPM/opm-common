@@ -448,6 +448,12 @@ namespace {
                 WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
+
+        template <class ZGroupArray>
+        void staticContrib(const Opm::Group& group, ZGroupArray& zGroup)
+        {
+            zGroup[0] = group.name();
+        }
     } // ZGrp
 } // Anonymous
 
@@ -557,11 +563,11 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
     });
 
     // Define Static Contributions to ZGrp Array.
-    groupLoop(curGroups,
-        [this](const Group& group, const std::size_t groupID) -> void
+    groupLoop(curGroups, [this, &nameIndexMap]
+        (const Group& group, const std::size_t /* groupID */) -> void
     {
-        auto zw = this->zGroup_[groupID];
-        zw[0] = group.name();
-    });
+        auto zg = this->zGroup_[ nameIndexMap.at(group.name()) ];
 
+        ZGrp::staticContrib(group, zg);
+    });
 }
