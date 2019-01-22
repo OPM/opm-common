@@ -35,7 +35,6 @@ before_install:
   - export CXX="g++-4.9" CC="gcc-4.9"
 
 install:
-  - gcc --version
   - pushd ..
   - git clone https://github.com/Statoil/libecl.git
   - git clone https://github.com/OPM/opm-common.git
