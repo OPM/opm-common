@@ -135,29 +135,6 @@ namespace {
 	    }
 	return ind;
       }
-        /*int groupIndex(const std::string&              grpName,
-                       const std::vector<std::string>& groupNames,
-                       const int                       maxGroups)
-        {
-            if (grpName == "FIELD") {
-                // Not really supposed to happen since wells are
-                // not supposed to be parented dirctly to FIELD.
-                return maxGroups + 1;
-            }
-
-            auto b = std::begin(groupNames);
-            auto e = std::end  (groupNames);
-            auto i = std::find(b, e, grpName);
-
-            if (i == e) {
-                // Not really supposed to happen since wells are
-                // not supposed to be parented dirctly to FIELD.
-                return maxGroups + 1;
-            }
-
-            // One-based indexing.
-            return std::distance(b, i) + 1;
-        }  */
 
         int wellType(const Opm::Well&  well,
                      const std::size_t sim_step)
@@ -197,16 +174,6 @@ namespace {
         {
             using WMCtrlVal = ::Opm::RestartIO::Helpers::
                 VectorItems::IWell::Value::WellCtrlMode;
-
-            /*{
-                const auto stat = well.getStatus(sim_step);
-
-                using WStat = ::Opm::WellCommon::StatusEnum;
-
-                if (stat == WStat::SHUT) {
-                    return WMCtrlVal::Shut;
-                }
-            }*/
 
             if (well.isInjector(sim_step)) {
                 const auto& prop = well
