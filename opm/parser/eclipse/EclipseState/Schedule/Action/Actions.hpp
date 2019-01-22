@@ -37,7 +37,7 @@ public:
     void add(const ActionX& action);
     bool ready(std::time_t sim_time) const;
     ActionX& at(const std::string& name);
-    std::vector<ActionX *> pending(std::time_t sim_time);
+    std::vector<const ActionX *> pending(std::time_t sim_time) const;
 
 private:
     std::map<std::string, ActionX> actions;
