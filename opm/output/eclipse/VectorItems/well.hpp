@@ -26,19 +26,18 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
     namespace IWell {
         enum index : std::vector<int>::size_type {
-            IHead  =  0, // I-location (one-based) of well head
-            JHead  =  1, // J-location (one-based) of well head
-            FirstK =  2, // Layer ID (one-based) of top/first connection
-            LastK  =  3, // Layer ID (one-based) of bottom/last connection
-            NConn  =  4, // Number of active cells connected to well
-            Group  =  5, // Index (one-based) of well's current group
-            WType  =  6, // Well type
+            IHead    =  0, // I-location (one-based) of well head
+            JHead    =  1, // J-location (one-based) of well head
+            FirstK   =  2, // Layer ID (one-based) of top/first connection
+            LastK    =  3, // Layer ID (one-based) of bottom/last connection
+            NConn    =  4, // Number of active cells connected to well
+            Group    =  5, // Index (one-based) of well's current group
+            WType    =  6, // Well type (producer vs. injector)
             ActWCtrl =  7, // Well's active target control mode (constraint).
 
-            item9  =  8, // Unknown
-            item11 = 10, // Unknown
-
-            VFPTab = 11, // ID (one-based) of well's current VFP table
+            item9    =  8, // Unknown
+            item11   = 10, // Unknown
+            VFPTab   = 11, // ID (one-based) of well's current VFP table.
 
             PredReqWCtrl = 15, // Well's requested control mode from
                                // simulation deck (WCONINJE, WCONPROD).

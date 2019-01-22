@@ -283,7 +283,8 @@ namespace {
         }
 
         // write INTEHEAD to restart file
-        const auto ih = Helpers::createInteHead(es, grid, schedule, simTime, sim_step, sim_step);
+        const auto ih = Helpers::createInteHead(es, grid, schedule,
+                                                simTime, sim_step, sim_step);
         write_kw(rst_file, "INTEHEAD", ih);
 
         // write LOGIHEAD to restart file
@@ -301,7 +302,7 @@ namespace {
 
     void writeGroup(::Opm::RestartIO::ecl_rst_file_type* rst_file,
                     int                                  sim_step,
-		    const bool                           ecl_compatible_rst,
+                    const bool                           ecl_compatible_rst,
                     const Schedule&                      schedule,
                     const Opm::SummaryState&             sumState,
                     const std::vector<int>&              ih)
@@ -311,15 +312,15 @@ namespace {
 
         auto  groupData = Helpers::AggregateGroupData(ih);
 
-        auto & rst_g_keys = groupData.restart_group_keys;
-        auto & rst_f_keys = groupData.restart_field_keys;
-        auto & grpKeyToInd = groupData.groupKeyToIndex;
-        auto & fldKeyToInd = groupData.fieldKeyToIndex;
+        const auto& rst_g_keys  = groupData.restart_group_keys;
+        const auto& rst_f_keys  = groupData.restart_field_keys;
+        const auto& grpKeyToInd = groupData.groupKeyToIndex;
+        const auto& fldKeyToInd = groupData.fieldKeyToIndex;
 
         groupData.captureDeclaredGroupData(schedule,
                                            rst_g_keys, rst_f_keys,
                                            grpKeyToInd, fldKeyToInd,
-					   ecl_compatible_rst,
+                                           ecl_compatible_rst,
                                            simStep, sumState, ih);
         write_kw(rst_file, "IGRP", groupData.getIGroup());
         write_kw(rst_file, "SGRP", groupData.getSGroup());
@@ -332,14 +333,16 @@ namespace {
                       const UnitSystem&                    units,
                       const Schedule&                      schedule,
                       const EclipseGrid&                   grid,
-		      const Opm::SummaryState&             sumState,
-		      const Opm::data::Wells&              wells,
+                      const Opm::SummaryState&             sumState,
+                      const Opm::data::Wells&              wells,
                       const std::vector<int>&              ih)
     {
         // write ISEG, RSEG, ILBS and ILBR to restart file
-        const size_t simStep = static_cast<size_t> (sim_step);
+        const auto simStep = static_cast<std::size_t> (sim_step);
+
         auto  MSWData = Helpers::AggregateMSWData(ih);
-        MSWData.captureDeclaredMSWData(schedule, simStep, units, ih, grid, sumState, wells);
+        MSWData.captureDeclaredMSWData(schedule, simStep, units,
+                                       ih, grid, sumState, wells);
 
         write_kw(rst_file, "ISEG", MSWData.getISeg());
         write_kw(rst_file, "ILBS", MSWData.getILBs());
@@ -349,7 +352,7 @@ namespace {
 
     void writeWell(::Opm::RestartIO::ecl_rst_file_type* rst_file,
                    int                                  sim_step,
-		   const bool                       ecl_compatible_rst,
+                   const bool                           ecl_compatible_rst,
                    const Phases&                        phases,
                    const UnitSystem&                    units,
                    const EclipseGrid&                   grid,
@@ -360,7 +363,9 @@ namespace {
     {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(schedule, units, sim_step, sumState, ih);
-        wellData.captureDynamicWellData(schedule, sim_step, ecl_compatible_rst, wells, sumState);
+        wellData.captureDynamicWellData(schedule, sim_step,
+                                        ecl_compatible_rst,
+                                        wells, sumState);
 
         write_kw(rst_file, "IWEL", wellData.getIWell());
         write_kw(rst_file, "SWEL", wellData.getSWell());
@@ -368,7 +373,7 @@ namespace {
         write_kw(rst_file, "ZWEL", serialize_ZWEL(wellData.getZWell()));
 
         // Extended set of OPM well vectors
-	if (!ecl_compatible_rst)
+        if (!ecl_compatible_rst)
         {
             const auto sched_wells = schedule.getWells(sim_step);
 
@@ -382,7 +387,8 @@ namespace {
         }
 
         auto connectionData = Helpers::AggregateConnectionData(ih);
-        connectionData.captureDeclaredConnData(schedule, grid, units, wells, sim_step);
+        connectionData.captureDeclaredConnData(schedule, grid, units,
+                                               wells, sim_step);
 
         write_kw(rst_file, "ICON", connectionData.getIConn());
         write_kw(rst_file, "SCON", connectionData.getSConn());
@@ -529,13 +535,16 @@ void save(const std::string&  filename,
           bool                write_double)
 {
     ::Opm::RestartIO::checkSaveArguments(es, value, grid);
-    bool ecl_compatible_rst = es.getIOConfig().getEclCompatibleRST();
+
+    const auto ecl_compatible_rst = es.getIOConfig().getEclCompatibleRST();
+
     const auto  sim_step = std::max(report_step - 1, 0);
     const auto& units    = es.getUnits();
 
     auto rst_file = openRestartFile(filename, report_step);
-    if (ecl_compatible_rst)
-      write_double = false;
+    if (ecl_compatible_rst) {
+        write_double = false;
+    }
 
     // Convert solution fields and extra values from SI to user units.
     value.convertFromSI(units);
@@ -573,8 +582,9 @@ void save(const std::string&  filename,
 
     writeSolution(rst_file.get(), value, ecl_compatible_rst, write_double);
 
-    if (!ecl_compatible_rst)
-      ::Opm::RestartIO::writeExtraData(rst_file.get(), value.extra);
+    if (! ecl_compatible_rst) {
+        writeExtraData(rst_file.get(), value.extra);
+    }
 }
 
 }} // Opm::RestartIO

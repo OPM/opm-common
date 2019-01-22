@@ -521,18 +521,19 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
     auto it = indexGroupMap.begin();
     while (it != indexGroupMap.end())
-	{
-	    curGroups[static_cast<int>(it->first)] = it->second;
-	    it++;
-	}
     {
-	groupLoop(curGroups, [sched, simStep, inteHead, this]
-            (const Group& group, const std::size_t groupID) -> void
-	    {
-		auto ig = this->iGroup_[groupID];
-		IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_, simStep, ig, inteHead);
-	    });
+        curGroups[static_cast<int>(it->first)] = it->second;
+        it++;
     }
+
+    groupLoop(curGroups, [&sched, simStep, &inteHead, this]
+        (const Group& group, const std::size_t groupID) -> void
+    {
+        auto ig = this->iGroup_[groupID];
+
+        IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
+                            simStep, ig, inteHead);
+    });
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
@@ -542,15 +543,19 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
         SGrp::staticContrib(sw);
     });
 
-    // Define DynamicContributions to XGrp Array.
-    groupLoop(curGroups,
-        [restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, ecl_compatible_rst, sumState, this]
+    // Define Dynamic Contributions to XGrp Array.
+    groupLoop(curGroups, [&restart_group_keys, &restart_field_keys,
+                          &groupKeyToIndex, &fieldKeyToIndex,
+                          ecl_compatible_rst, &sumState, this]
 	(const Group& group, const std::size_t groupID) -> void
     {
         auto xg = this->xGroup_[groupID];
-        XGrp::dynamicContrib( restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, group, sumState, ecl_compatible_rst, xg);
+
+        XGrp::dynamicContrib(restart_group_keys, restart_field_keys,
+                             groupKeyToIndex, fieldKeyToIndex, group,
+                             sumState, ecl_compatible_rst, xg);
     });
-    
+
     // Define Static Contributions to ZGrp Array.
     groupLoop(curGroups,
         [this](const Group& group, const std::size_t groupID) -> void
@@ -560,5 +565,3 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
     });
 
 }
-
-// ---------------------------------------------------------------------
