@@ -29,32 +29,101 @@
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <iostream>
+#include <chrono>
+typedef std::chrono::high_resolution_clock Clock;
 
 inline void pack_deck( const char * deck_file, std::ostream& os) {
     Opm::ParseContext parseContext(Opm::InputError::WARN);
     Opm::ErrorGuard errors;
     Opm::Parser parser;
-
+    auto t1 = Clock::now();
+    
     auto deck = parser.parseFile(deck_file, parseContext, errors);
-    os << deck;
-    {  
-      std::ofstream ofs("deck_serialized.ser");
-      boost::archive::text_oarchive oa(ofs);
-      oa << deck;
+    auto t2 = Clock::now();
+    std::cout << "Parsing: "
+	      << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+	      << " milliseconds" << std::endl;
+    bool do_compare = true;
+    if(do_compare){
+      t1 = Clock::now();
+      os << deck;
+      t2 = Clock::now();
+      std::cout << "Stream writing: "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds" << std::endl;   
     }
-    std::cout << "Start deserialized deck "<< std::endl;
-    Opm::Deck deck_new;
-    {  
-      std::ifstream ifs("deck_serialized.ser");
-      boost::archive::text_iarchive ia(ifs);
-      ia >> deck_new;
-      std::cout << "dezerialized deck finnished "<< std::endl;
+
+    ///
+    // {
+    //   t1 = Clock::now();
+    //   {  
+    // 	std::ofstream ofs("deck_serialized.ser");
+    // 	boost::archive::text_oarchive oa(ofs);
+    // 	oa << deck;
+    //   }
+    //   t2 = Clock::now();
+    // }
+    // std::cout << "Boost serializing ascii writing: "
+    // 	      << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+    // 	      << " milliseconds" << std::endl;   
+ 
+    // std::cout << "Start deserialized deck "<< std::endl;
+    // {
+    //   Opm::Deck deck_new;
+    //   t1 = Clock::now();
+    //   {  
+    // 	std::ifstream ifs("deck_serialized.ser");
+    // 	boost::archive::text_iarchive ia(ifs);
+    // 	ia >> deck_new;
+    // 	std::cout << "dezerialized deck finnished "<< std::endl;
+	
+    //   }
+    //   t2 = Clock::now();
+    //   std::cout << "Boost deserialising ascii reading: "
+    // 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+    // 	      << " milliseconds" << std::endl;   
       
+    //   std::cout << "write out dezerialized deck" << std::endl;
+    //   deck_new.fullView();
+    
+    //   std::ofstream file("deck_full_view.txt");
+    //   file << deck_new;
+    // }
+    {
+      t1 = Clock::now();
+      {  
+	std::ofstream ofs("deck_serialized_bin.ser",std::ios::binary);
+	boost::archive::binary_oarchive oa(ofs);
+	oa << deck;
+      }
+      t2 = Clock::now();
+      std::cout << "Boost serializing bin writing: "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds" << std::endl;   
     }
-    os << "write out dezerialized deck" << std::endl;
-    deck_new.fullView();
-    os << deck_new;
+    {
+      Opm::Deck deck_new;
+      t1 = Clock::now();
+      {  
+	std::ifstream ifs("deck_serialized_bin.ser", std::ios::binary);
+	boost::archive::binary_iarchive ia(ifs);
+	ia >> deck_new;
+	std::cout << "dezerialized deck finnished "<< std::endl;     
+      }
+      t2 = Clock::now();
+      std::cout << "Boost deserialising binary reading: "
+		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		<< " milliseconds" << std::endl;
+      if(do_compare){
+	std::ofstream file("deck_full_view_bin.txt");
+	deck_new.fullView();
+	file << deck_new;
+      }
+    }
+ 
 }
 
 
