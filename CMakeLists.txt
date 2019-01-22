@@ -7,7 +7,7 @@ set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
 
 option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
-option(ENABLE_MOCKSIM "Build the mock simulator for io testing" OFF)
+option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
