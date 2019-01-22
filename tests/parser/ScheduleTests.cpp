@@ -26,6 +26,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <ert/util/util.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -1103,6 +1105,21 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     for(size_t i = 0; i < cs4.size(); i++ ) {
       BOOST_CHECK_EQUAL(cs4.get( i ).wellPi(), 1.0);
     }
+
+
+    BOOST_CHECK_THROW(schedule.simTime(10000), std::invalid_argument);
+    auto sim_time1 = schedule.simTime(1);
+    int day, month,year;
+    util_set_date_values_utc(sim_time1, &day, &month, &year);
+    BOOST_CHECK_EQUAL(day, 10);
+    BOOST_CHECK_EQUAL(month, 10);
+    BOOST_CHECK_EQUAL(year, 2008);
+
+    sim_time1 = schedule.simTime(3);
+    util_set_date_values_utc(sim_time1, &day, &month, &year);
+    BOOST_CHECK_EQUAL(day, 20);
+    BOOST_CHECK_EQUAL(month, 1);
+    BOOST_CHECK_EQUAL(year, 2011);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
