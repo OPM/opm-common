@@ -153,7 +153,11 @@ namespace Opm {
             Deck( std::initializer_list< std::string > );
 
             Deck( const Deck& );
-
+            void fullView(){
+	      this->reinit(keywordList.begin(), keywordList.end());
+	      this->activeUnits = UnitSystem::newMETRIC();
+	      this->defaultUnits = UnitSystem::newMETRIC();  	      
+	    }
             //! \brief Deleted assignment operator.
             Deck& operator=(const Deck& rhs) = delete;
 

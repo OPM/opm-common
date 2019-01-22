@@ -53,6 +53,7 @@ inline void pack_deck( const char * deck_file, std::ostream& os) {
       
     }
     os << "write out dezerialized deck" << std::endl;
+    deck_new.fullView();
     os << deck_new;
 }
 
