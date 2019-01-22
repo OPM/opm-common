@@ -538,13 +538,7 @@ void save(const std::string&  filename,
       write_double = false;
 
     // Convert solution fields and extra values from SI to user units.
-    value.solution.convertFromSI(units);
-    for (auto& extra_value : value.extra) {
-        const auto& restart_key = extra_value.first;
-        auto&       data        = extra_value.second;
-
-        units.from_si(restart_key.dim, data);
-    }
+    value.convertFromSI(units);
 
     const auto inteHD =
         writeHeader(rst_file.get(), sim_step, report_step,
@@ -559,14 +553,14 @@ void save(const std::string&  filename,
         const auto& wells = schedule.getWells(sim_step);
 
         if (! wells.empty()) {
-            const auto numMSW =
-                std::count_if(std::begin(wells), std::end(wells),
+            const auto haveMSW =
+                std::any_of(std::begin(wells), std::end(wells),
                     [sim_step](const Well* well)
             {
                 return well->isMultiSegment(sim_step);
             });
 
-            if (numMSW > 0) {
+            if (haveMSW) {
                 writeMSWData(rst_file.get(), sim_step, units,
                              schedule, grid, sumState, value.wells, inteHD);
             }
