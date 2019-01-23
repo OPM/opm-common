@@ -39,7 +39,7 @@ createLogiHead(const EclipseState& es)
     const auto& hystPar = rspec.hysterPar();
 
     const auto lh = LogiHEAD{}
-        .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.enableHysteresis())
+        .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
         ;
 
     return lh.data();

@@ -80,7 +80,8 @@ createDoubHead(const EclipseState& es,
 {
     const auto& usys = es.getDeckUnitSystem();
     const auto dh = DoubHEAD{}
-        .tuningParameters(sched.getTuning(), lookup_step, getTimeConv(usys))
+        .tuningParameters(sched.getTuning(), lookup_step, 
+			  getTimeConv(usys))
         .timeStamp       (computeTimeStamp(sched, simTime))
         .drsdt           (sched, lookup_step, getTimeConv(usys))
         ;

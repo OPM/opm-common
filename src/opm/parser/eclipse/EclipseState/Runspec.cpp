@@ -111,16 +111,8 @@ WellSegmentDims::WellSegmentDims(const Deck& deck) : WellSegmentDims()
     }
 }
 
-EclHysterConfig::EclHysterConfig() :
-    enableHysteresis_( false ),
-    pcHysteresisModel_( 0 ),
-    krHysteresisModel_( 0 )
-    {}
-
-
-EclHysterConfig::EclHysterConfig(const Opm::Deck& deck) : EclHysterConfig()
+EclHysterConfig::EclHysterConfig(const Opm::Deck& deck) 
     {
-        enableHysteresis_ = false;
 
         if (!deck.hasKeyword("SATOPTS"))
             return;
@@ -134,67 +126,72 @@ EclHysterConfig::EclHysterConfig(const Opm::Deck& deck) : EclHysterConfig()
                            ::toupper);
 
             if (satoptsValue == "HYSTER")
-                enableHysteresis_ = true;
+                activeHyst = true;
         }
 
         // check for the (deprecated) HYST keyword
         if (deck.hasKeyword("HYST"))
-            enableHysteresis_ = true;
+            activeHyst = true;
 
-        if (!enableHysteresis_)
-            return;
+        if (!activeHyst)
+	      return;
 
         if (!deck.hasKeyword("EHYSTR"))
             throw std::runtime_error("Enabling hysteresis via the HYST parameter for SATOPTS requires the "
                                      "presence of the EHYSTR keyword");
-
+	    /*!
+	* \brief Set the type of the hysteresis model which is used for relative permeability.
+	*
+	* -1: relperm hysteresis is disabled
+	* 0: use the Carlson model for relative permeability hysteresis of the non-wetting
+	*    phase and the drainage curve for the relperm of the wetting phase
+	* 1: use the Carlson model for relative permeability hysteresis of the non-wetting
+	*    phase and the imbibition curve for the relperm of the wetting phase
+	*/
         const auto& ehystrKeyword = deck.getKeyword("EHYSTR");
         if (deck.hasKeyword("NOHYKR"))
-            krHysteresisModel_ = -1;
+            krHystMod = -1;
         else {
-            krHysteresisModel_ = ehystrKeyword.getRecord(0).getItem("relative_perm_hyst").get<int>(0);
+            krHystMod = ehystrKeyword.getRecord(0).getItem("relative_perm_hyst").get<int>(0);
 
-            if (krHysteresisModel_ != 0 && krHysteresisModel_ != 1)
+            if (krHystMod != 0 && krHystMod != 1)
                 throw std::runtime_error(
-                    "Only the Carlson relative permeability hystersis models (indicated by '0' or "
+                    "Only the Carlson relative permeability hysteresis models (indicated by '0' or "
                     "'1' for the second item of the 'EHYSTR' keyword) are supported");
         }
 
         // this is slightly screwed: it is possible to specify contradicting hysteresis
         // models with HYPC/NOHYPC and the fifth item of EHYSTR. Let's ignore that for
         // now.
+            /*!
+	* \brief Return the type of the hysteresis model which is used for capillary pressure.
+	*
+	* -1: capillary pressure hysteresis is disabled
+	* 0: use the Killough model for capillary pressure hysteresis
+	*/
         std::string whereFlag =
             ehystrKeyword.getRecord(0).getItem("limiting_hyst_flag").getTrimmedString(0);
         if (deck.hasKeyword("NOHYPC") || whereFlag == "KR")
-            pcHysteresisModel_ = -1;
+            pcHystMod = -1;
         else {
             // if capillary pressure hysteresis is enabled, Eclipse always uses the
             // Killough model
-            pcHysteresisModel_ = 0;
+            pcHystMod = 0;
 
             throw std::runtime_error("Capillary pressure hysteresis is not supported yet");
         }
     }
     
-void EclHysterConfig::setEnableHysteresis(bool yesno)
-    { enableHysteresis_ = yesno; }
 
-const bool EclHysterConfig::enableHysteresis() const 
-    { return enableHysteresis_; }
+bool EclHysterConfig::active() const 
+    { return activeHyst; }
     
-void EclHysterConfig::setPcHysteresisModel(int value)
-    { pcHysteresisModel_ = value; }
-    
-const int EclHysterConfig::pcHysteresisModel() const
-    { return pcHysteresisModel_; }
-    
-void EclHysterConfig::setKrHysteresisModel(int value)
-    { krHysteresisModel_ = value; }
-    
-const int EclHysterConfig::krHysteresisModel() const
-    { return krHysteresisModel_; }
+int EclHysterConfig::pcHysteresisModel() const
+    { return pcHystMod; }
+        
+int EclHysterConfig::krHysteresisModel() const
+    { return krHystMod; }
 
-    
 Runspec::Runspec( const Deck& deck ) :
     active_phases( Phases( deck.hasKeyword( "OIL" ),
                            deck.hasKeyword( "GAS" ),

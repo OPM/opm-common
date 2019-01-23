@@ -115,27 +115,18 @@ private:
 class EclHysterConfig
 {
 public:
-      EclHysterConfig();
-      explicit EclHysterConfig(const Deck& deck);
+    explicit EclHysterConfig(const Deck& deck);
 
 
     /*!
      * \brief Specify whether hysteresis is enabled or not.
      */
-    void setEnableHysteresis(bool yesno);
+    //void setActive(bool yesno);
 
     /*!
-     * \brief Returns whether hysteresis is enabled.
+     * \brief Returns whether hysteresis is enabled (active).
      */
-    const bool enableHysteresis() const;
-
-    /*!
-     * \brief Set the type of the hysteresis model which is used for capillary pressure.
-     *
-     * -1: capillary pressure hysteresis is disabled
-     * 0: use the Killough model for capillary pressure hysteresis
-     */
-    void setPcHysteresisModel(int value);
+    bool active() const;
 
     /*!
      * \brief Return the type of the hysteresis model which is used for capillary pressure.
@@ -143,18 +134,7 @@ public:
      * -1: capillary pressure hysteresis is disabled
      * 0: use the Killough model for capillary pressure hysteresis
      */
-    const int pcHysteresisModel() const;
-
-    /*!
-     * \brief Set the type of the hysteresis model which is used for relative permeability.
-     *
-     * -1: relperm hysteresis is disabled
-     * 0: use the Carlson model for relative permeability hysteresis of the non-wetting
-     *    phase and the drainage curve for the relperm of the wetting phase
-     * 1: use the Carlson model for relative permeability hysteresis of the non-wetting
-     *    phase and the imbibition curve for the relperm of the wetting phase
-     */
-    void setKrHysteresisModel(int value);
+    int pcHysteresisModel() const;
 
     /*!
      * \brief Return the type of the hysteresis model which is used for relative permeability.
@@ -162,15 +142,15 @@ public:
      * -1: relperm hysteresis is disabled
      * 0: use the Carlson model for relative permeability hysteresis
      */
-    const int krHysteresisModel() const;
+    int krHysteresisModel() const;
 
 private:
     // enable hysteresis at all
-    bool enableHysteresis_;
+    bool activeHyst  { false };
 
     // the capillary pressure and the relperm hysteresis models to be used
-    int pcHysteresisModel_;
-    int krHysteresisModel_;
+    int pcHystMod { 0 };
+    int krHystMod { 0 };
 };
 
 
