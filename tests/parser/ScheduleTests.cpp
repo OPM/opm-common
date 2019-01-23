@@ -2637,7 +2637,6 @@ VFPINJ \n                                       \
     Runspec runspec (deck);
     Schedule schedule(deck, grid1 , eclipseProperties, runspec);
 
-    schedule.evalAction(SummaryState(), 5);
     BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 0));
     BOOST_CHECK( !schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 1));
     BOOST_CHECK( schedule.getEvents().hasEvent(ScheduleEvents::VFPINJ_UPDATE, 2));

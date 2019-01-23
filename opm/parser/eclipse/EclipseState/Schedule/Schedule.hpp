@@ -103,6 +103,7 @@ namespace Opm
         time_t getStartTime() const;
         time_t posixStartTime() const;
         time_t posixEndTime() const;
+        time_t simTime(size_t timeStep) const;
         double seconds(size_t timeStep) const;
         double stepLength(size_t timeStep) const;
 
@@ -135,7 +136,7 @@ namespace Opm
 
         const WellTestConfig& wtestConfig(size_t timestep) const;
         const WListManager& getWListManager(size_t timeStep) const;
-        const Actions& actionConfig() const;
+        const Actions& actions() const;
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
         const GroupTree& getGroupTree(size_t t) const;
@@ -179,7 +180,7 @@ namespace Opm
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
-        Actions actions;
+        Actions m_actions;
 
         std::vector< Well* > getWells(const std::string& wellNamePattern);
         std::vector< Group* > getGroups(const std::string& groupNamePattern);

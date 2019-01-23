@@ -54,8 +54,8 @@ bool Actions::ready(std::time_t sim_time) const {
 }
 
 
-std::vector<ActionX *> Actions::pending(std::time_t sim_time) {
-    std::vector<ActionX *> action_vector;
+std::vector<const ActionX *> Actions::pending(std::time_t sim_time) const {
+    std::vector<const ActionX *> action_vector;
     for (auto& pair : this->actions) {
         auto& action = pair.second;
         if (action.ready(sim_time))

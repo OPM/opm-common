@@ -377,7 +377,7 @@ namespace Opm {
                     } else
                         action.addKeyword(action_keyword);
                 }
-                this->actions.add(action);
+                this->m_actions.add(action);
             } else
                 this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, eclipseProperties, unit_system, rftProperties);
 
@@ -2149,15 +2149,17 @@ namespace Opm {
         return this->m_timeMap.seconds(timeStep);
     }
 
+    time_t Schedule::simTime(size_t timeStep) const {
+        return this->m_timeMap[timeStep];
+    }
 
     double Schedule::stepLength(size_t timeStep) const {
         return this->m_timeMap.getTimeStepLength(timeStep);
     }
 
 
-    void Schedule::evalAction(const SummaryState& /* st */, size_t /* timeStep */) {
-        if (this->actions.empty())
-            return;
+    const Actions& Schedule::actions() const {
+        return this->m_actions;
     }
 
 }

@@ -64,7 +64,7 @@ public:
 
     void addKeyword(const DeckKeyword& kw);
     bool ready(std::time_t sim_time) const;
-    bool eval(std::time_t sim_time, const ActionContext& context);
+    bool eval(std::time_t sim_time, const ActionContext& context) const;
 
 
     std::string name() const { return this->m_name; }
@@ -80,8 +80,8 @@ private:
 
     std::vector<DeckKeyword> keywords;
     ActionAST ast;
-    size_t run_count = 0;
-    std::time_t last_run = 0;
+    mutable size_t run_count = 0;
+    mutable std::time_t last_run = 0;
 };
 
 }
