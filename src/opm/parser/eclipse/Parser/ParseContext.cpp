@@ -94,6 +94,9 @@ namespace Opm {
 
         addKey(RPT_MIXED_STYLE, InputError::WARN);
         addKey(RPT_UNKNOWN_MNEMONIC, InputError::WARN);
+
+        addKey(SIMULATOR_KEYWORD_NOT_SUPPORTED, InputError::WARN);
+        addKey(SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED, InputError::WARN);
     }
 
     void ParseContext::initEnv() {
@@ -312,6 +315,9 @@ namespace Opm {
 
     const std::string ParseContext::SCHEDULE_INVALID_NAME = "SCHEDULE_INVALID_NAME";
     const std::string ParseContext::ACTIONX_ILLEGAL_KEYWORD = "ACTIONX_ILLEGAL_KEYWORD";
+
+    const std::string ParseContext::SIMULATOR_KEYWORD_NOT_SUPPORTED = "SIMULATOR_KEYWORD_NOT_SUPPORTED";
+    const std::string ParseContext::SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED = "SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED";
 }
 
 

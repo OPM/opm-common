@@ -301,6 +301,15 @@ namespace Opm {
         const static std::string RPT_UNKNOWN_MNEMONIC;
 
 
+        /*
+          The SIMULATOR_KEYWORD_ errormodes are for the situation where the
+          parser recognizes, and correctly parses a keyword, but we know that
+          the simulator does not support the intended use of the keyword. These
+          errormodes are invoked from the simulator.
+        */
+        const static std::string SIMULATOR_KEYWORD_NOT_SUPPORTED;
+        const static std::string SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED;
+
     private:
         void initDefault();
         void initEnv();
