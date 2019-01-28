@@ -71,6 +71,8 @@ public:
     size_t max_run() const { return this->m_max_run; }
     double min_wait() const { return this->m_min_wait; }
     std::time_t start_time() const { return this->m_start_time; }
+    std::vector<DeckKeyword>::const_iterator begin() const;
+    std::vector<DeckKeyword>::const_iterator end() const;
 
 private:
     std::string m_name;

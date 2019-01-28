@@ -92,4 +92,12 @@ bool ActionX::ready(std::time_t sim_time) const {
 }
 
 
+std::vector<DeckKeyword>::const_iterator ActionX::begin() const {
+    return this->keywords.begin();
+}
+
+std::vector<DeckKeyword>::const_iterator ActionX::end() const {
+    return this->keywords.end();
+}
+
 }
