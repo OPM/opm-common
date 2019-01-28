@@ -41,6 +41,7 @@ namespace Opm {
 class EclipseState;
 class SummaryConfig;
 class Schedule;
+class SummaryState;
 
 /*!
  * \brief A class to write the reservoir state and the well state of a
@@ -223,6 +224,8 @@ public:
 
     EclipseIO( const EclipseIO& ) = delete;
     ~EclipseIO();
+
+    const SummaryState& summaryState() const;
 
 private:
     class Impl;
