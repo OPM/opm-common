@@ -32,7 +32,8 @@ public:
 
     void well_rate(const std::string& well, data::Rates::opt rate, std::function<well_rate_function> func);
     void solution(const std::string& field, std::function<solution_function> func);
-    void run(const Schedule& schedule, EclipseIO& io);
+    void run(Schedule& schedule, EclipseIO& io);
+    void post_step(Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const;
 private:
 
     void run_step(const Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const;

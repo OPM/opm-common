@@ -52,7 +52,7 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
         for (const auto& token : record.getItem("CONDITION").getData<std::string>())
             tokens.push_back(token);
     }
-    this->ast = ActionAST(tokens);
+    this->condition = ActionAST(tokens);
 }
 
 
@@ -62,15 +62,17 @@ void ActionX::addKeyword(const DeckKeyword& kw) {
 
 
 
-bool ActionX::eval(std::time_t sim_time, const ActionContext& /* context */) const {
+bool ActionX::eval(std::time_t sim_time, const ActionContext& context, std::vector<std::string>& matching_wells) const {
     if (!this->ready(sim_time))
         return false;
-    bool result = true;
+
+    bool result = this->condition.eval(context, matching_wells);
 
     if (result) {
         this->run_count += 1;
         this->last_run = sim_time;
     }
+
     return result;
 }
 

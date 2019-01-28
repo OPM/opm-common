@@ -44,7 +44,7 @@ private:
       unique_ptr, but that requires writing custom destructors - the use of a
       shared_ptr does not imply any shared ownership.
     */
-    std::shared_ptr<ASTNode> tree;
+    std::shared_ptr<ASTNode> condition;
 };
 }
 #endif

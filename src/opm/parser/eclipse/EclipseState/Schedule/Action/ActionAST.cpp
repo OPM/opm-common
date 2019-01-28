@@ -32,16 +32,21 @@
 namespace Opm {
 
 ActionAST::ActionAST(const std::vector<std::string>& tokens) {
-    auto tree = ActionParser::parse(tokens);
-    this->tree.reset( new ASTNode(tree) );
+    auto condition = ActionParser::parse(tokens);
+    this->condition.reset( new ASTNode(condition) );
 }
 
 
 bool ActionAST::eval(const ActionContext& context, std::vector<std::string>& matching_wells) const {
-    WellSet wells;
-    bool eval_result = this->tree->eval(context, wells);
-    matching_wells = wells.wells();
-    return eval_result;
+    if (this->condition) {
+        WellSet wells;
+        bool eval_result = this->condition->eval(context, wells);
+        matching_wells = wells.wells();
+        return eval_result;
+    } else
+        // In the case of missing condition we always evaluate to false. That
+        // is not crystal clear from the manual.
+        return false;
 }
 
 }

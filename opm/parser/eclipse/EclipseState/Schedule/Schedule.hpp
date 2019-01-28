@@ -163,6 +163,8 @@ namespace Opm
         */
         void filterConnections(const EclipseGrid& grid);
         size_t size() const;
+
+        void applyAction(size_t reportStep, const ActionX& action, const std::vector<std::string>& matching_wells);
     private:
         TimeMap m_timeMap;
         OrderedMap< Well > m_wells;
@@ -182,7 +184,7 @@ namespace Opm
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
         Actions m_actions;
 
-        std::vector< Well* > getWells(const std::string& wellNamePattern);
+        std::vector< Well* > getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells = {});
         std::vector< Group* > getGroups(const std::string& groupNamePattern);
 
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
@@ -212,7 +214,7 @@ namespace Opm
         void handleWSKPTAB( const DeckKeyword& keyword,  const size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWINJTEMP( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONINJH( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors );
+        void handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells = {});
         void handleWELTARG( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
