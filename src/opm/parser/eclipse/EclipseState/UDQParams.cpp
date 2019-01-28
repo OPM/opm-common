@@ -18,7 +18,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/U.hpp>
-#include <opm/parser/eclipse/EclipseState/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/UDQParams.hpp>
 
 namespace Opm {
 
@@ -27,7 +27,7 @@ namespace Opm {
       originate in an ECLIPSE implementation detail. Our implementation does not
       require these max values, we therefor ignore them completely.
     */
-    UDQConfig::UDQConfig() :
+    UDQParams::UDQParams() :
         reseed_rng(false),
         random_seed(ParserKeywords::UDQPARAM::RANDOM_SEED::defaultValue),
         value_range(ParserKeywords::UDQPARAM::RANGE::defaultValue),
@@ -36,8 +36,8 @@ namespace Opm {
     {}
 
 
-    UDQConfig::UDQConfig(const Deck& deck) :
-        UDQConfig()
+    UDQParams::UDQParams(const Deck& deck) :
+        UDQParams()
     {
         if (deck.hasKeyword("UDQDIMS")) {
             const auto& record = deck.getKeyword("UDQDIMS").getRecord(0);
@@ -57,23 +57,23 @@ namespace Opm {
     }
 
 
-    bool UDQConfig::reseedRNG() const noexcept {
+    bool UDQParams::reseedRNG() const noexcept {
         return this->reseed_rng;
     }
 
-    int UDQConfig::randomSeed() const noexcept {
+    int UDQParams::randomSeed() const noexcept {
         return this->random_seed;
     }
 
-    double UDQConfig::range() const noexcept {
+    double UDQParams::range() const noexcept {
         return this->value_range;
     }
 
-    double UDQConfig::undefinedValue() const noexcept {
+    double UDQParams::undefinedValue() const noexcept {
         return this->undefined_value;
     }
 
-    double UDQConfig::cmpEpsilon() const noexcept {
+    double UDQParams::cmpEpsilon() const noexcept {
         return this->cmp_eps;
     }
 }
