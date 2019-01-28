@@ -21,7 +21,6 @@
 #ifndef UDQState_HPP_
 #define UDQState_HPP_
 
-#include <opm/parser/eclipse/EclipseState/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
 
 
@@ -29,7 +28,7 @@ namespace Opm {
 
     class UDQ{
     public:
-        UDQ(const UDQConfig& config, const Deck& deck);
+        explicit UDQ(const Deck& deck);
         const std::vector<UDQExpression>& expressions() const noexcept;
     private:
         std::vector<UDQExpression> m_expressions;

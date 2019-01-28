@@ -17,19 +17,19 @@
  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_UDQ_CONFIG_HPP
-#define OPM_UDQ_CONFIG_HPP
+#ifndef OPM_UDQ_PARAMS_HPP
+#define OPM_UDQ_PARAMS_HPP
 
 
 namespace Opm {
 
     class Deck;
 
-    class UDQConfig
+    class UDQParams
     {
     public:
-        explicit UDQConfig(const Deck& deck);
-        UDQConfig();
+        explicit UDQParams(const Deck& deck);
+        UDQParams();
 
         bool   reseedRNG() const noexcept;
         int    randomSeed() const noexcept;

@@ -123,7 +123,7 @@ Runspec::Runspec( const Deck& deck ) :
     endscale( deck ),
     welldims( deck ),
     wsegdims( deck ),
-    udq_config( deck )
+    udq_params( deck )
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -159,8 +159,8 @@ int Runspec::eclPhaseMask( ) const noexcept {
 }
 
 
-const UDQConfig& Runspec::udqConfig() const noexcept {
-    return this->udq_config;
+const UDQParams& Runspec::udqParams() const noexcept {
+    return this->udq_params;
 }
 
 }

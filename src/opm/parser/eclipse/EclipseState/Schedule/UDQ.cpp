@@ -18,12 +18,11 @@
  */
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp>
 
 namespace Opm {
 
-    UDQ::UDQ(const UDQConfig& /* config */, const Deck& deck) {
+    UDQ::UDQ(const Deck& deck) {
         if (deck.hasKeyword("UDQ")) {
             const auto& kw = deck.getKeyword("UDQ");
             for (const auto& record : kw)
