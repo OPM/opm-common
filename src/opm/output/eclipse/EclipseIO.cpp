@@ -527,6 +527,11 @@ EclipseIO::EclipseIO( const EclipseState& es,
 }
 
 
+const SummaryState& EclipseIO::summaryState() const {
+    return this->impl->summary.get_restart_vectors();
+}
+
+
 EclipseIO::~EclipseIO() {}
 
 } // namespace Opm
