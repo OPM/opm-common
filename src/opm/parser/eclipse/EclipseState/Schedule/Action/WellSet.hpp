@@ -6,6 +6,7 @@
 #ifndef ACTION_WELLSET
 #define ACTION_WELLSET
 
+#include <string>
 #include <unordered_set>
 #include <vector>
 
