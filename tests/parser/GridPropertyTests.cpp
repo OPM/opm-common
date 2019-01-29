@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -258,6 +259,14 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         "\n"
         "GRID\n"
         "\n"
+        "PERMX\n"
+        " 27*1000 /\n"
+        "MAXVALUE\n"
+        "  PERMX 100 4* 1  1/\n"
+        "/\n"
+        "MINVALUE\n"
+        "  PERMX 10000 4* 3  3/\n"
+        "/\n"
         "ACTNUM\n"
         " 0 8*1 0 8*1 0 8*1 /\n"
         "DXV\n"
@@ -440,6 +449,14 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         BOOST_CHECK( !double_props.hasKeyword( "NTG" ));
         double_props.assertKeyword("NTG");
         BOOST_CHECK( double_props.hasKeyword( "NTG" ));
+    }
+    {
+        const auto& double_props = props.getDoubleProperties( );
+        const auto& units = deck.getActiveUnitSystem();
+        const auto& permx = double_props.getKeyword("PERMX");
+        BOOST_CHECK_EQUAL(permx.iget(0,0,0), units.to_si(Opm::UnitSystem::measure::permeability, 100));
+        BOOST_CHECK_EQUAL(permx.iget(0,0,1), units.to_si(Opm::UnitSystem::measure::permeability, 1000));
+        BOOST_CHECK_EQUAL(permx.iget(0,0,2), units.to_si(Opm::UnitSystem::measure::permeability, 10000));
     }
 }
 

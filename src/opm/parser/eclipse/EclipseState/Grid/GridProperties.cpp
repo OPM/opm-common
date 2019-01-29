@@ -278,7 +278,7 @@ namespace Opm {
 
         if (hasKeyword( field )) {
             GridProperty<T>& property = getKeyword( field );
-            T value  = convertInputValue( record.getItem("value").get< double >(0) );
+            T value  = convertInputValue( property, record.getItem("value").get< double >(0) );
             setKeywordBox(record, boxManager);
             property.maxvalue( value , boxManager.getActiveBox() );
         } else
@@ -291,7 +291,7 @@ namespace Opm {
 
         if (hasKeyword( field )) {
             GridProperty<T>& property = getKeyword( field );
-            T value  = convertInputValue( record.getItem("value").get< double >(0) );
+            T value  = convertInputValue( property, record.getItem("value").get< double >(0) );
             setKeywordBox(record, boxManager);
             property.minvalue( value , boxManager.getActiveBox() );
         } else
