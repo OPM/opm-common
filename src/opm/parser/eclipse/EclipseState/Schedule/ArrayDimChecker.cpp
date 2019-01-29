@@ -1,0 +1,177 @@
+/*
+  Copyright (c) 2019 Equinor ASA
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
+
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
+
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <sstream>
+
+namespace {
+    namespace WellDims {
+        void checkNumWells(const Opm::Welldims& wdims,
+                           const Opm::Schedule& sched,
+                           Opm::ErrorGuard&     guard)
+        {
+            const auto nWells = sched.numWells();
+
+            if (nWells > static_cast<decltype(nWells)>(wdims.maxWellsInField()))
+            {
+                std::ostringstream os;
+                os << "Run uses " << nWells << " wells, but allocates at "
+                   << "most " << wdims.maxWellsInField() << " in RUNSPEC "
+                   << "section.  Increase item 1 of WELLDIMS accordingly.";
+
+                guard.addError("RUNSPEC_NUMWELLS_TOO_LARGE", os.str());
+            }
+        }
+
+        void checkConnPerWell(const Opm::Welldims& wdims,
+                              const Opm::Schedule& sched,
+                              Opm::ErrorGuard&     guard)
+        {
+            auto nconn = std::size_t{0};
+            for (const auto* well : sched.getWells()) {
+                nconn = std::max(nconn, well->getConnections().size());
+            }
+
+            if (nconn > static_cast<decltype(nconn)>(wdims.maxConnPerWell()))
+            {
+                std::ostringstream os;
+                os << "Run has well with " << nconn << " reservoir connections, "
+                   << "but allocates at most " << wdims.maxConnPerWell()
+                   << " connections per well in RUNSPEC section.  Increase item "
+                   << "2 of WELLDIMS accordingly.";
+
+                guard.addError("RUNSPEC_CONNS_PER_WELL_TOO_LARGE", os.str());
+            }
+        }
+
+        void checkNumGroups(const Opm::Welldims& wdims,
+                            const Opm::Schedule& sched,
+                            Opm::ErrorGuard&     guard)
+        {
+            const auto nGroups = sched.numGroups();
+
+            // Note: "1 +" to account for FIELD group being in 'sched.numGroups()'
+            //   but excluded from WELLDIMS(3).
+            if (nGroups > 1 + static_cast<decltype(nGroups)>(wdims.maxGroupsInField()))
+            {
+                std::ostringstream os;
+                os << "Run uses " << (nGroups - 1) << " non-FIELD groups, but "
+                   << "allocates at most " << wdims.maxGroupsInField() 
+                   << " in RUNSPEC section.  Increase item 3 of WELLDIMS "
+                   << "accordingly.";
+
+                guard.addError("RUNSPEC_NUMGROUPS_TOO_LARGE", os.str());
+            }
+        }
+
+        std::size_t maxGroupSize(const Opm::Schedule& sched,
+                                 const std::size_t    step)
+        {
+            const auto& gt = sched.getGroupTree(step);
+
+            auto groups = std::vector<std::string>{"FIELD"};
+            auto nwgmax = std::size_t{0};
+
+            auto update_size = [&nwgmax](const std::size_t n) {
+                nwgmax = std::max(nwgmax, n);
+            };
+
+            // Note: We update 'groups' in the body of the loop, so
+            //       groups.size() is potentially increasing as we
+            //       traverse down the group tree to its leaf nodes.
+            for (auto i = 0*groups.size(); i < groups.size(); ++i) {
+                const auto& grp      = groups[i];
+                auto        children = gt.children(grp);
+
+                if (children.empty()) {
+                    // Well group.  Size is number of wells.
+                    update_size(sched.getGroup(grp).numWells(step));
+                }
+                else {
+                    // Node group.  Size is number of child nodes.
+                    update_size(children.size());
+
+                    // Enqueue those children to get their sizes.
+                    groups.insert(groups.end(),
+                                  std::make_move_iterator(children.begin()),
+                                  std::make_move_iterator(children.end()));
+                }
+            }
+
+            return nwgmax;
+        }
+
+        void checkGroupSize(const Opm::Welldims& wdims,
+                            const Opm::Schedule& sched,
+                            Opm::ErrorGuard&     guard)
+        {
+            const auto numSteps = sched.getTimeMap().numTimesteps();
+
+            auto size = std::size_t{0};
+            for (auto step = 0*numSteps; step < numSteps; ++step) {
+                const auto nwgmax = maxGroupSize(sched, step);
+
+                size = std::max(size, nwgmax);
+            }
+
+            if (size >= static_cast<decltype(size)>(wdims.maxWellsPerGroup()))
+            {
+                std::ostringstream os;
+                os << "Run uses maximum group size of " << size << ", but "
+                   << "allocates at most " << wdims.maxWellsPerGroup()
+                   << " in RUNSPEC section.  Increase item 4 of WELLDIMS "
+                   << "accordingly.";
+
+                guard.addError("RUNSPEC_GROUPSIZE_TOO_LARGE", os.str());
+            }
+        }
+    } // WellDims
+
+    void consistentWellDims(const Opm::Welldims& wdims,
+                            const Opm::Schedule& sched,
+                            Opm::ErrorGuard&     guard)
+    {
+        WellDims::checkNumWells   (wdims, sched, guard);
+        WellDims::checkConnPerWell(wdims, sched, guard);
+        WellDims::checkNumGroups  (wdims, sched, guard);
+        WellDims::checkGroupSize  (wdims, sched, guard);
+    }
+} // Anonymous
+
+void
+Opm::checkConsistentArrayDimensions(const EclipseState& es,
+                                    const Schedule&     sched,
+                                    ErrorGuard&         guard)
+{
+    consistentWellDims(es.runspec().wellDimensions(), sched, guard);
+}
