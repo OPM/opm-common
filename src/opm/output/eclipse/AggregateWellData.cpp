@@ -444,11 +444,11 @@ namespace {
                 zero , zero , infty, infty, zero , dflt ,    //  12.. 17  ( 2)
                 infty, infty, infty, infty, infty, zero ,    //  18.. 23  ( 3)
                 one  , zero , zero , zero , zero , zero ,    //  24.. 29  ( 4)
-                zero , one  , zero , infty, zero , zero ,    //  30.. 35  ( 5)
+                zero , one  , zero , zero,  zero , zero ,    //  30.. 35  ( 5)
                 zero , zero , zero , zero , zero , zero ,    //  36.. 41  ( 6)
                 zero , zero , zero , zero , zero , zero ,    //  42.. 47  ( 7)
                 zero , zero , zero , zero , zero , zero ,    //  48.. 53  ( 8)
-                infty, zero , zero , zero , zero , zero ,    //  54.. 59  ( 9)
+                zero,  zero , zero , zero , zero , zero ,    //  54.. 59  ( 9)
                 zero , zero , zero , zero , zero , zero ,    //  60.. 65  (10)
                 zero , zero , zero , zero , zero , zero ,    //  66.. 71  (11)
                 zero , zero , zero , zero , zero , zero ,    //  72.. 77  (12)
@@ -511,11 +511,13 @@ namespace {
                 if ((pp.GasRate != 0.0) || (!predMode)) {
                     sWell[Ix::GasRateTarget] =
                         swprop(M::gas_surface_rate, pp.GasRate);
+		    sWell[Ix::GasRateTarget_2] = sWell[Ix::GasRateTarget];
                 }
 
                 if (pp.LiquidRate != 0.0 || (!predMode)) {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pp.LiquidRate);
+		    sWell[Ix::LiqRateTarget_2] = sWell[Ix::LiqRateTarget];
                 }
                 else  {
                     sWell[Ix::LiqRateTarget] =
@@ -540,6 +542,7 @@ namespace {
 		sWell[Ix::BHPTarget] = pp.BHPLimit != 0.0
                     ? swprop(M::pressure, pp.BHPLimit)
                     : swprop(M::pressure, 1.0*::Opm::unit::atm);
+		sWell[Ix::BHPTarget_2] = sWell[Ix::BHPTarget];
             }
             else if (well.isInjector(sim_step)) {
                 const auto& ip = well.getInjectionProperties(sim_step);
@@ -553,9 +556,11 @@ namespace {
 		    }
 		    if (ip.injectorType == IT::WATER) {
 			sWell[Ix::WatRateTarget] = swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
-		    }
+			sWell[Ix::LiqRateTarget_2] = sWell[Ix::WatRateTarget];			    
+			}
 		    if (ip.injectorType == IT::GAS) {
 			sWell[Ix::GasRateTarget] = swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+			sWell[Ix::GasRateTarget_2] = sWell[Ix::GasRateTarget];
 		    }
                 }
 
@@ -570,6 +575,7 @@ namespace {
                 sWell[Ix::BHPTarget] = ip.hasInjectionControl(IP::BHP)
                     ? swprop(M::pressure, ip.BHPLimit)
                     : swprop(M::pressure, 1.0E05*::Opm::unit::psia);
+		sWell[Ix::BHPTarget_2] = sWell[Ix::BHPTarget];
             }
 
             sWell[Ix::DatumDepth] =
