@@ -53,7 +53,7 @@ namespace Opm {
         if (!this->error_list.empty()) {
             std::cerr << std::endl << std::endl << "Errors:" << std::endl;
             for (const auto& pair : this->error_list)
-                std::cerr << "  " << std::setw(width) << pair.first << ": " << pair.second << std::endl;
+                std::cerr << std::left << "  " << std::setw(width) << pair.first << ": " << pair.second << std::endl;
             std::cerr << std::endl;
         }
     }
