@@ -172,7 +172,7 @@ namespace {
 					const double segDistEnd,
 					const bool defaultSatTabId)
     {
-        int complnum = -(this->m_connections.size() + 1);
+        int complnum = (this->m_connections.size() + 1);
         this->addConnection(i,
                             j,
                             k,
