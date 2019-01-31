@@ -332,12 +332,10 @@ namespace {
                     continue;
                 }
 
-                const auto active_index = grid.activeIndex(i, j, k);
-
                 well.connections.emplace_back();
                 auto& connection = well.connections.back();
 
-                connection.index          = active_index;
+                connection.index          = grid.getGlobalIndex(i, j, k);
                 connection.pressure       = *opm_xwel_data++;
                 connection.reservoir_rate = *opm_xwel_data++;
 
