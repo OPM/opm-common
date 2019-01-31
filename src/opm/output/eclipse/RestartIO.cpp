@@ -136,14 +136,14 @@ namespace {
                     continue;
                 }
 
-                const auto active_index = grid.activeIndex(i, j, k);
+                const auto global_index = grid.getGlobalIndex(i, j, k);
 
                 const auto& connection =
                     std::find_if(well.connections.begin(),
                                  well.connections.end(),
-                        [active_index](const data::Connection& c)
+                        [global_index](const data::Connection& c)
                     {
-                        return c.index == active_index;
+                        return c.index == global_index;
                     });
 
                 if (connection == well.connections.end()) {
