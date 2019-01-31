@@ -74,6 +74,7 @@ UDQ
     auto deck = parser.parseString(input);
     auto udq_params = UDQParams(deck);
     auto udq = UDQ(deck);
+    BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
     BOOST_CHECK_EQUAL(3, udq.expressions().size());
 }
 
@@ -119,6 +120,7 @@ DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
     const std::vector<std::string> exp1 = {"WBHP", "P*1*", "UMAX", "WBHP" , "P*4*"};
     BOOST_CHECK_EQUAL_COLLECTIONS(rec0.tokens().begin(), rec0.tokens().end(), exp0.begin(), exp0.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(rec1.tokens().begin(), rec1.tokens().end(), exp1.begin(), exp1.end());
+    BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
 }
 
 
