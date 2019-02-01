@@ -1468,11 +1468,23 @@ void Summary::add_timestep( int report_step,
         }
     }
 
-    for (const auto& pair: st) {
-        const auto* key = pair.first.c_str();
+    {
+        const ecl_sum_type * ecl_sum = this->ecl_sum.get();
+        const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
+        auto num_nodes = ecl_smspec_num_nodes(smspec);
+        for (int node_index = 0; node_index < num_nodes; node_index++) {
+            const auto& smspec_node = ecl_smspec_iget_node(smspec, node_index);
+            // The TIME node is treated specially, it is created internally in
+            // the ecl_sum instance when the timestep is created - and
+            // furthermore it is not in st SummaryState instance.
+            if (smspec_node.get_params_index() == ecl_smspec_get_time_index(smspec))
+                continue;
 
-        if (ecl_sum_has_key(this->ecl_sum.get(), key)) {
-            ecl_sum_tstep_set_from_key(tstep, key, pair.second);
+            const std::string key = smspec_node.get_gen_key1();
+            if (st.has(key))
+                ecl_sum_tstep_iset(tstep, smspec_node.get_params_index(), st.get(key));
+            else
+                OpmLog::warning("Have configured UDQ variable " + key + " for summary output - but it has not been calculated");
         }
     }
 
