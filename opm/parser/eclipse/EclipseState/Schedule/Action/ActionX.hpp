@@ -73,7 +73,7 @@ public:
     std::time_t start_time() const { return this->m_start_time; }
     std::vector<DeckKeyword>::const_iterator begin() const;
     std::vector<DeckKeyword>::const_iterator end() const;
-
+    static bool valid_keyword(const std::string& keyword);
 private:
     std::string m_name;
     size_t m_max_run = 0;

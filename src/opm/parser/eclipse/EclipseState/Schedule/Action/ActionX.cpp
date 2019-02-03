@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unordered_set>
+
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
@@ -24,6 +26,11 @@
 namespace Opm {
 
 
+
+bool ActionX::valid_keyword(const std::string& keyword) {
+    static std::unordered_set<std::string> actionx_whitelist = {"WELSPECS","WELOPEN"};
+    return (actionx_whitelist.find(keyword) != actionx_whitelist.end());
+}
 
 
 ActionX::ActionX(const std::string& name, size_t max_run, double min_wait, std::time_t start_time) :

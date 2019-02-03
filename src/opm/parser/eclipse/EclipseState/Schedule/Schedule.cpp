@@ -21,7 +21,6 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
-#include <set>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -65,8 +64,6 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 
 namespace Opm {
-
-    static std::set<std::string> actionx_whitelist = {"WELSPECS","WELOPEN"};
 
 
     Schedule::Schedule( const Deck& deck,
@@ -371,11 +368,12 @@ namespace Opm {
                     if (action_keyword.name() == "ENDACTIO")
                         break;
 
-                    if (actionx_whitelist.find(action_keyword.name()) == actionx_whitelist.end()) {
+                    if (ActionX::valid_keyword(action_keyword.name()))
+                        action.addKeyword(action_keyword);
+                    else {
                         std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
                         parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, errors);
-                    } else
-                        action.addKeyword(action_keyword);
+                    }
                 }
                 this->m_actions.add(action);
             } else
@@ -2178,7 +2176,7 @@ namespace Opm {
         ErrorGuard errors;
 
         for (const auto& keyword : action) {
-            if (actionx_whitelist.find(keyword.name()) == actionx_whitelist.end())
+            if (!ActionX::valid_keyword(keyword.name()))
                 throw std::invalid_argument("The keyword: " + keyword.name() + " can not be handled in the ACTION body");
 
             if (keyword.name() == "WELOPEN")
