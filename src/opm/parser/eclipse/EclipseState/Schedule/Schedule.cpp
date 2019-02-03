@@ -21,7 +21,6 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
-#include <set>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -65,8 +64,6 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 
 namespace Opm {
-
-    static std::set<std::string> actionx_whitelist = {"WELSPECS","WELOPEN"};
 
 
     Schedule::Schedule( const Deck& deck,
@@ -371,11 +368,12 @@ namespace Opm {
                     if (action_keyword.name() == "ENDACTIO")
                         break;
 
-                    if (actionx_whitelist.find(action_keyword.name()) == actionx_whitelist.end()) {
+                    if (ActionX::valid_keyword(action_keyword.name()))
+                        action.addKeyword(action_keyword);
+                    else {
                         std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
                         parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, errors);
-                    } else
-                        action.addKeyword(action_keyword);
+                    }
                 }
                 this->m_actions.add(action);
             } else
@@ -1147,7 +1145,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
 
         auto all_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -1163,7 +1161,7 @@ namespace Opm {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
 
-            auto wells = getWells( wellNamePattern );
+            auto wells = getWells( wellNamePattern, matching_wells );
 
             if (wells.empty())
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
@@ -1881,22 +1879,32 @@ namespace Opm {
         return { tmp.begin(), tmp.end() };
     }
 
-    std::vector< Well* > Schedule::getWells(const std::string& wellNamePattern) {
-        size_t wildcard_pos = wellNamePattern.find("*");
+    std::vector< Well* > Schedule::getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells) {
+        // If we arrive here during the handling the body of a ACTIONX keyword
+        // we can arrive with wellname '?' and a set of matching wells.
+        if (wellNamePattern == "?") {
+            std::vector<Well*> wells;
+            for (const auto& well_name : matching_wells)
+                wells.push_back( std::addressof(m_wells.get(well_name) ));
 
-        if( wildcard_pos != wellNamePattern.length()-1 ) {
-            if( !m_wells.hasKey( wellNamePattern ) ) return {};
-            return { std::addressof( m_wells.get( wellNamePattern ) ) };
-        }
+            return wells;
+        } else {
+            auto wildcard_pos = wellNamePattern.find("*");
 
-        std::vector< Well* > wells;
-        for( auto& well : this->m_wells ) {
-            if( Well::wellNameInWellNamePattern( well.name(), wellNamePattern ) ) {
-                wells.push_back( std::addressof( well ) );
+            if( wildcard_pos != wellNamePattern.length()-1 ) {
+                if( !m_wells.hasKey( wellNamePattern ) ) return {};
+                return { std::addressof( m_wells.get( wellNamePattern ) ) };
             }
-        }
 
-        return wells;
+            std::vector< Well* > wells;
+            for( auto& well : this->m_wells ) {
+                if( Well::wellNameInWellNamePattern( well.name(), wellNamePattern ) ) {
+                    wells.push_back( std::addressof( well ) );
+                }
+            }
+
+            return wells;
+        }
     }
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
@@ -2160,6 +2168,21 @@ namespace Opm {
 
     const Actions& Schedule::actions() const {
         return this->m_actions;
+    }
+
+
+    void Schedule::applyAction(size_t reportStep, const ActionX& action, const std::vector<std::string>& matching_wells) {
+        ParseContext parseContext;
+        ErrorGuard errors;
+
+        for (const auto& keyword : action) {
+            if (!ActionX::valid_keyword(keyword.name()))
+                throw std::invalid_argument("The keyword: " + keyword.name() + " can not be handled in the ACTION body");
+
+            if (keyword.name() == "WELOPEN")
+                this->handleWELOPEN(keyword, reportStep, parseContext, errors, matching_wells);
+        }
+
     }
 
 }

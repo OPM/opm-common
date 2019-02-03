@@ -143,7 +143,7 @@ if (ENABLE_MOCKSIM)
   set(_libs mocksim opmcommon
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-  foreach( test test_msim)
+  foreach( test test_msim test_msim_ACTIONX )
      add_executable(${test} "tests/msim/${test}")
      target_link_libraries(${test} ${_libs})
      add_test(NAME ${test} COMMAND ${test})

@@ -24,6 +24,8 @@
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
@@ -35,7 +37,7 @@ msim::msim(const EclipseState& state) :
     state(state)
 {}
 
-void msim::run(const Schedule& schedule, EclipseIO& io) {
+void msim::run(Schedule& schedule, EclipseIO& io) {
     const double week = 7 * 86400;
     data::Solution sol;
     data::Wells well_data;
@@ -44,8 +46,27 @@ void msim::run(const Schedule& schedule, EclipseIO& io) {
     for (size_t report_step = 1; report_step < schedule.size(); report_step++) {
         double time_step = std::min(week, 0.5*schedule.stepLength(report_step - 1));
         run_step(schedule, sol, well_data, report_step, time_step, io);
+        post_step(schedule, sol, well_data, report_step, io);
     }
 }
+
+
+void msim::post_step(Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const {
+    const auto& actions = schedule.actions();
+    if (actions.empty())
+        return;
+
+    const SummaryState& summary_state = io.summaryState();
+    ActionContext context( summary_state );
+    std::vector<std::string> matching_wells;
+
+    auto sim_time = schedule.simTime(report_step);
+    for (const auto& action : actions.pending(sim_time)) {
+        if (action->eval(sim_time, context, matching_wells))
+            schedule.applyAction(report_step, *action, matching_wells);
+    }
+}
+
 
 
 void msim::run_step(const Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const {

@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <unordered_set>
+
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
@@ -24,6 +26,11 @@
 namespace Opm {
 
 
+
+bool ActionX::valid_keyword(const std::string& keyword) {
+    static std::unordered_set<std::string> actionx_whitelist = {"WELSPECS","WELOPEN"};
+    return (actionx_whitelist.find(keyword) != actionx_whitelist.end());
+}
 
 
 ActionX::ActionX(const std::string& name, size_t max_run, double min_wait, std::time_t start_time) :
@@ -52,7 +59,7 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
         for (const auto& token : record.getItem("CONDITION").getData<std::string>())
             tokens.push_back(token);
     }
-    this->ast = ActionAST(tokens);
+    this->condition = ActionAST(tokens);
 }
 
 
@@ -62,15 +69,17 @@ void ActionX::addKeyword(const DeckKeyword& kw) {
 
 
 
-bool ActionX::eval(std::time_t sim_time, const ActionContext& /* context */) const {
+bool ActionX::eval(std::time_t sim_time, const ActionContext& context, std::vector<std::string>& matching_wells) const {
     if (!this->ready(sim_time))
         return false;
-    bool result = true;
+
+    bool result = this->condition.eval(context, matching_wells);
 
     if (result) {
         this->run_count += 1;
         this->last_run = sim_time;
     }
+
     return result;
 }
 
@@ -91,5 +100,13 @@ bool ActionX::ready(std::time_t sim_time) const {
     return std::difftime(sim_time, this->last_run) > this->min_wait();
 }
 
+
+std::vector<DeckKeyword>::const_iterator ActionX::begin() const {
+    return this->keywords.begin();
+}
+
+std::vector<DeckKeyword>::const_iterator ActionX::end() const {
+    return this->keywords.end();
+}
 
 }

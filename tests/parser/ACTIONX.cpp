@@ -145,6 +145,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::SummaryState st;
     Opm::ActionContext context(st);
     Opm::Actions config;
+    std::vector<std::string> matching_wells;
     BOOST_CHECK_EQUAL(config.size(), 0);
     BOOST_CHECK(config.empty());
 
@@ -165,33 +166,19 @@ BOOST_AUTO_TEST_CASE(TestActions) {
         config.add(action3);
     }
     Opm::ActionX& action2 = config.at("NAME");
+    // The action2 instance has an empty condition, so it will never evaluate to true.
     BOOST_CHECK(action2.ready(util_make_date_utc(1,7,2000)));
     BOOST_CHECK(!action2.ready(util_make_date_utc(1,6,2000)));
-    BOOST_CHECK(!action2.eval(util_make_date_utc(1,6,2000), context));
-
-    BOOST_CHECK(action2.eval(util_make_date_utc(1,8,2000), context));
-    BOOST_CHECK(!action2.ready(util_make_date_utc(1,8,2000)));
-    BOOST_CHECK(!action2.eval(util_make_date_utc(1,8,2000), context));
-
-    BOOST_CHECK(action2.ready(util_make_date_utc(3,8,2000)));
-    BOOST_CHECK(config.ready(util_make_date_utc(3,8,2000)));
-    BOOST_CHECK(action2.eval(util_make_date_utc(3,8,2000), context));
-
-    BOOST_CHECK(action2.ready(util_make_date_utc(5,8,2000)));
-    BOOST_CHECK(action2.eval(util_make_date_utc(5,8,2000), context));
-
-    BOOST_CHECK(!action2.ready(util_make_date_utc(7,8,2000)));
-    BOOST_CHECK(!action2.eval(util_make_date_utc(7,8,2000), context));
-    BOOST_CHECK(config.ready(util_make_date_utc(7,8,2000)));
+    BOOST_CHECK(!action2.eval(util_make_date_utc(1,6,2000), context, matching_wells));
 
     auto pending = config.pending( util_make_date_utc(7,8,2000));
-    BOOST_CHECK_EQUAL( pending.size(), 1);
+    BOOST_CHECK_EQUAL( pending.size(), 2);
     for (auto& ptr : pending) {
         BOOST_CHECK( ptr->ready(util_make_date_utc(7,8,2000)));
-        BOOST_CHECK( ptr->eval(util_make_date_utc(7,8,2000), context));
+        BOOST_CHECK( !ptr->eval(util_make_date_utc(7,8,2000), context, matching_wells));
     }
 
-    BOOST_CHECK(!action2.eval(util_make_date_utc(7,8,2000), context ));
+    BOOST_CHECK(!action2.eval(util_make_date_utc(7,8,2000), context, matching_wells ));
 }
 
 
