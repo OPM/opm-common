@@ -33,22 +33,6 @@
 namespace Opm {
 
     namespace {
-        UDQAction actionString2Enum(const std::string& action_string) {
-            if (action_string == "ASSIGN")
-                return UDQAction::ASSIGN;
-
-            if (action_string == "DEFINE")
-                return UDQAction::DEFINE;
-
-            if (action_string == "UNITS")
-                return UDQAction::UNITS;
-
-            if (action_string == "UPDATE")
-                return UDQAction::UPDATE;
-
-            throw std::invalid_argument("Invalid action string " + action_string);
-        }
-
 
         void assertKeyword(const std::string& keyword) {
             const std::string valid_start = "CFGRSWAB";
@@ -76,8 +60,8 @@ namespace Opm {
     UDQExpression::UDQExpression(const std::string& action_in, const std::string& keyword_in, const std::vector<std::string>& input_data) {
         assertKeyword(keyword_in);
 
-        this->action = actionString2Enum(action_in);
-        this->keyword = keyword_in;
+        this->m_action = actionString2Enum(action_in);
+        this->m_keyword = keyword_in;
 
         for (const std::string& item : input_data) {
             if (RawConsts::is_quote()(item[0])) {
@@ -123,4 +107,35 @@ namespace Opm {
     const std::vector<std::string>& UDQExpression::tokens() const {
         return this->data;
     }
+
+
+    UDQAction UDQExpression::action() const {
+        return this->m_action;
+    }
+
+
+    const std::string& UDQExpression::keyword() const {
+        return this->m_keyword;
+    }
+
+
+    UDQAction UDQExpression::actionString2Enum(const std::string& action_string) {
+        if (action_string == "ASSIGN")
+            return UDQAction::ASSIGN;
+
+        if (action_string == "DEFINE")
+            return UDQAction::DEFINE;
+
+        if (action_string == "UNITS")
+            return UDQAction::UNITS;
+
+        if (action_string == "UPDATE")
+            return UDQAction::UPDATE;
+
+        throw std::invalid_argument("Invalid action string " + action_string);
+    }
+
+
+
 }
+

@@ -36,9 +36,12 @@ namespace Opm {
         UDQExpression(const std::string& action, const std::string& keyword, const std::vector<std::string>& data);
         explicit UDQExpression(const DeckRecord& expression);
         const std::vector<std::string>& tokens() const;
+        UDQAction action() const;
+        const std::string& keyword() const;
+        static UDQAction actionString2Enum(const std::string& action_string);
     private:
-        UDQAction action;
-        std::string keyword;
+        UDQAction m_action;
+        std::string m_keyword;
         std::vector<std::string> data;
     };
 }

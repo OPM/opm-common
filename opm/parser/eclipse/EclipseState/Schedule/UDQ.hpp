@@ -21,6 +21,9 @@
 #ifndef UDQState_HPP_
 #define UDQState_HPP_
 
+#include <unordered_map>
+#include <string>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
 
 
@@ -28,10 +31,13 @@ namespace Opm {
 
     class UDQ{
     public:
-        explicit UDQ(const Deck& deck);
+        void add_record(const DeckRecord& record);
         const std::vector<UDQExpression>& expressions() const noexcept;
+        const std::string& unit(const std::string& key) const;
+        void assign_unit(const std::string& keyword, const std::string& unit);
     private:
         std::vector<UDQExpression> m_expressions;
+        std::unordered_map<std::string, std::string> units;
     };
 }
 

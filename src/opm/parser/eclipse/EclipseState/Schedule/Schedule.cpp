@@ -49,6 +49,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -81,7 +82,8 @@ namespace Opm {
         m_messageLimits( this->m_timeMap ),
         m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
-        wlist_manager( this->m_timeMap, std::make_shared<WListManager>())
+        wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
+        udq_config(this->m_timeMap, std::make_shared<UDQ>())
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
@@ -208,6 +210,9 @@ namespace Opm {
             checkIfAllConnectionsIsShut(currentStep);
             currentStep += keyword.getRecord(0).getItem(0).size(); // This is a bit weird API.
         }
+
+        else if (keyword.name() == "UDQ")
+            handleUDQ(keyword, currentStep);
 
         else if (keyword.name() == "WLIST")
             handleWLIST( keyword, currentStep );
@@ -935,6 +940,17 @@ namespace Opm {
         }
         this->wlist_manager.update(currentStep, new_wlm);
     }
+
+    void Schedule::handleUDQ(const DeckKeyword& keyword, size_t currentStep) {
+        const auto& current = *this->udq_config.get(currentStep);
+        std::shared_ptr<UDQ> new_udq = std::make_shared<UDQ>(current);
+
+        for (const auto& record : keyword)
+            new_udq->add_record(record);
+
+        this->udq_config.update(currentStep, new_udq);
+    }
+
 
     void Schedule::handleWTEST(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& current = *this->wtest_config.get(currentStep);
@@ -2144,6 +2160,11 @@ namespace Opm {
 
     const WListManager& Schedule::getWListManager(size_t timeStep) const {
         const auto& ptr = this->wlist_manager.get(timeStep);
+        return *ptr;
+    }
+
+    const UDQ& Schedule::getUDQConfig(size_t timeStep) const {
+        const auto& ptr = this->udq_config.get(timeStep);
         return *ptr;
     }
 

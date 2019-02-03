@@ -59,6 +59,7 @@ namespace Opm
     class UnitSystem;
     class ErrorGuard;
     class WListManager;
+    class UDQ;
 
     class Schedule {
     public:
@@ -136,6 +137,7 @@ namespace Opm
 
         const WellTestConfig& wtestConfig(size_t timestep) const;
         const WListManager& getWListManager(size_t timeStep) const;
+        const UDQ& getUDQConfig(size_t timeStep) const;
         const Actions& actions() const;
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
@@ -180,6 +182,7 @@ namespace Opm
         std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>> vfpinj_tables;
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
+        DynamicState<std::shared_ptr<UDQ>> udq_config;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
         Actions m_actions;
@@ -194,6 +197,7 @@ namespace Opm
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
+        void handleUDQ(const DeckKeyword& keyword, size_t currentStep);
         void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t currentStep);
         void handleWELSPECS( const SCHEDULESection&, size_t, size_t  );

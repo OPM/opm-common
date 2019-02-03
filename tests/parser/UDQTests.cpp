@@ -23,10 +23,24 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
 
 using namespace Opm;
+
+
+Schedule make_schedule(const std::string& input) {
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck);
+    return Schedule(deck, grid , eclipseProperties, runspec);
+}
+
 
 BOOST_AUTO_TEST_CASE(KEYWORDS) {
     const std::string input = R"(
@@ -67,16 +81,62 @@ UDQ
   UNITS  WUBHP 'BARSA' /
   DEFINE FUOPR  AVEG(WOPR) + 1/
 /
+
+DATES
+  10 'JAN' 2010 /
+/
+
+UDQ
+  ASSIGN WUBHP 0.0 /
+  DEFINE FUOPR  AVEG(WOPR) + 1/
+  UNITS  WUBHP 'BARSA' /  -- Repeating the same unit multiple times is superfluous but OK
+/
 )";
 
-    Parser parser;
+    auto schedule = make_schedule(input);
+    const auto& udq = schedule.getUDQConfig(0);
+    BOOST_CHECK_EQUAL(2, udq.expressions().size());
 
-    auto deck = parser.parseString(input);
-    auto udq_params = UDQParams(deck);
-    auto udq = UDQ(deck);
-    BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
-    BOOST_CHECK_EQUAL(3, udq.expressions().size());
+    BOOST_CHECK_THROW( udq.unit("NO_SUCH_KEY"), std::invalid_argument );
+    BOOST_CHECK_EQUAL( udq.unit("WUBHP"), "BARSA");
 }
+
+BOOST_AUTO_TEST_CASE(UDQ_CHANGE_UNITS_ILLEGAL) {
+  const std::string input = R"(
+RUNSPEC
+
+UDQDIMS
+   10* 'Y'/
+
+UDQPARAM
+  3* 0.25 /
+
+SCHEDULE
+
+UDQ
+  ASSIGN WUBHP 0.0 /
+  UNITS  WUBHP 'BARSA' /
+  DEFINE FUOPR  AVEG(WOPR) + 1/
+/
+
+DATES
+  10 'JAN' 2010 /
+/
+
+UDQ
+  ASSIGN WUBHP 0.0 /
+  DEFINE FUOPR  AVEG(WOPR) + 1/
+  UNITS  WUBHP 'HOURS' /  -- Changing unit runtime is *not* supported
+/
+)";
+
+  BOOST_CHECK_THROW( make_schedule(input), std::invalid_argument);
+}
+
+
+
+
+
 
 BOOST_AUTO_TEST_CASE(UDQ_KEYWORD) {
     // Invalid action
@@ -108,11 +168,8 @@ DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
 
 
 )";
-    Parser parser;
-
-    auto deck = parser.parseString(input);
-    auto udq_params = UDQParams(deck);
-    auto udq = UDQ(deck);
+    const auto schedule = make_schedule(input);
+    const auto& udq = schedule.getUDQConfig(0);
     const auto& records = udq.expressions();
     const auto& rec0 = records[0];
     const auto& rec1 = records[1];
@@ -120,7 +177,6 @@ DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
     const std::vector<std::string> exp1 = {"WBHP", "P*1*", "UMAX", "WBHP" , "P*4*"};
     BOOST_CHECK_EQUAL_COLLECTIONS(rec0.tokens().begin(), rec0.tokens().end(), exp0.begin(), exp0.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(rec1.tokens().begin(), rec1.tokens().end(), exp1.begin(), exp1.end());
-    BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
 }
 
 
