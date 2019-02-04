@@ -126,8 +126,6 @@ namespace Opm {
                         const std::string& input_path ) :
         m_write_INIT_file( grid.hasKeyword( "INIT" ) ),
         m_write_EGRID_file( write_egrid_file( grid ) ),
-        m_UNIFIN( runspec.hasKeyword( "UNIFIN" ) ),
-        m_UNIFOUT( runspec.hasKeyword( "UNIFOUT" ) ),
         m_FMTIN( runspec.hasKeyword( "FMTIN" ) ),
         m_FMTOUT( runspec.hasKeyword( "FMTOUT" ) ),
         m_deck_filename( input_path ),
@@ -135,6 +133,16 @@ namespace Opm {
         m_nosim( nosim  )
     {
         this->setBaseName(basename(input_path));
+        for (const auto& kw : runspec) {
+            if (kw.name() == "UNIFOUT")
+                this->m_UNIFOUT = true;
+            else if (kw.name() == "UNIFIN")
+                this->m_UNIFIN = true;
+            else if (kw.name() == "MULTOUT")
+                this->m_UNIFOUT = false;
+            else if (kw.name() == "MULTIN")
+                this->m_UNIFIN = false;
+        }
     }
 
 

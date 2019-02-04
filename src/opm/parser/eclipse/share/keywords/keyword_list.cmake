@@ -164,6 +164,8 @@ set( keywords
      000_Eclipse100/M/MSFN
      000_Eclipse100/M/MSGFILE
      000_Eclipse100/M/MULTFLT
+     000_Eclipse100/M/MULTIN
+     000_Eclipse100/M/MULTOUT
      000_Eclipse100/M/MULTIPLY
      000_Eclipse100/M/MULTIREG
      000_Eclipse100/M/MULTNUM
