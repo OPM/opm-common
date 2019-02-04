@@ -278,7 +278,6 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
     BOOST_CHECK(!parser.isRecognizedKeyword("TVDP*"));
     BOOST_CHECK(!parser.isRecognizedKeyword("TVDP"));
     BOOST_CHECK(parser.isRecognizedKeyword("TVDPXXX"));
-    BOOST_CHECK(!parser.isRecognizedKeyword("TVDPIAMTOOLONG"));
     BOOST_CHECK(!parser.isRecognizedKeyword("TVD"));
 
     BOOST_CHECK(!parser.isRecognizedKeyword("TVDP"));
@@ -1327,7 +1326,6 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_withOtherSize_SizeTypeOTHER) {
 BOOST_AUTO_TEST_CASE(ParserKeyword_validDeckName) {
     BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("SUMMARY"));
     BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("MixeCase"));
-    BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("NAMETOOLONG"));
     BOOST_CHECK_EQUAL( true , ParserKeyword::validDeckName("STRING88"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("88STRING"));
     BOOST_CHECK_EQUAL( false , ParserKeyword::validDeckName("KEY.EXT"));
@@ -1368,7 +1366,6 @@ BOOST_AUTO_TEST_CASE(ParserKeywordMatches) {
     BOOST_CHECK_EQUAL( false , parserKeyword->matches("WORLD"));
     BOOST_CHECK_EQUAL( true , parserKeyword->matches("WORLDABC"));
     BOOST_CHECK_EQUAL( false , parserKeyword->matches("WORLD#BC"));
-    BOOST_CHECK_EQUAL( false , parserKeyword->matches("WORLDIAMTOOLONG"));
 }
 
 BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {

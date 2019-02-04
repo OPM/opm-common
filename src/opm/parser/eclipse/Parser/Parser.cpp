@@ -417,44 +417,26 @@ void ParserState::addPathAlias( const std::string& alias, const std::string& pat
     this->pathMap.emplace( alias, path );
 }
 
-std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserState& parserState, const Parser& parser ) {
-    auto keywordString = ParserKeyword::getDeckName( kw );
 
-    if( !parser.isRecognizedKeyword( keywordString ) ) {
-        if( ParserKeyword::validDeckName( keywordString ) ) {
-            std::string msg = "Keyword " + keywordString + " not recognized.";
-            parserState.parseContext.handleUnknownKeyword( keywordString.string(), parserState.errors );
-            parserState.unknown_keyword = true;
-            return {};
-        }
-
-        if (!parserState.unknown_keyword)
-            parserState.handleRandomText( keywordString );
-
-        return {};
-    }
-    parserState.unknown_keyword = false;
-
-
-    const auto* parserKeyword = parser.getParserKeywordFromDeckName( keywordString );
+std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
 
     if( parserKeyword->getSizeType() == SLASH_TERMINATED || parserKeyword->getSizeType() == UNKNOWN) {
 
         const auto rawSizeType = parserKeyword->getSizeType() == SLASH_TERMINATED
-                                ? Raw::SLASH_TERMINATED
-                                : Raw::UNKNOWN;
+            ? Raw::SLASH_TERMINATED
+            : Raw::UNKNOWN;
 
         return std::make_shared< RawKeyword >( keywordString, rawSizeType,
-                                                parserState.current_path().string(),
-                                                parserState.line() );
+                                               parserState.current_path().string(),
+                                               parserState.line() );
     }
 
     if( parserKeyword->hasFixedSize() ) {
         return std::make_shared< RawKeyword >( keywordString,
-                                                parserState.current_path().string(),
-                                                parserState.line(),
-                                                parserKeyword->getFixedSize(),
-                                                parserKeyword->isTableCollection() );
+                                               parserState.current_path().string(),
+                                               parserState.line(),
+                                               parserKeyword->getFixedSize(),
+                                               parserKeyword->isTableCollection() );
     }
 
     const auto& keyword_size = parserKeyword->getKeywordSize();
@@ -465,14 +447,14 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
         const auto& record = sizeDefinitionKeyword.getRecord(0);
         const auto targetSize = record.getItem( keyword_size.item ).get< int >( 0 ) + keyword_size.shift;
         return std::make_shared< RawKeyword >( keywordString,
-                                                parserState.current_path().string(),
-                                                parserState.line(),
-                                                targetSize,
-                                                parserKeyword->isTableCollection() );
+                                               parserState.current_path().string(),
+                                               parserState.line(),
+                                               targetSize,
+                                               parserKeyword->isTableCollection() );
     }
 
-    std::string msg = "Expected the kewyord: " +keyword_size.keyword 
-                    + " to infer the number of records in: " + keywordString;
+    std::string msg = "Expected the kewyord: " +keyword_size.keyword
+        + " to infer the number of records in: " + keywordString;
     parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg, parserState.errors );
 
     const auto* keyword = parser.getKeyword( keyword_size.keyword );
@@ -481,11 +463,46 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
 
     const auto targetSize = int_item.getDefault< int >( ) + keyword_size.shift;
     return std::make_shared< RawKeyword >( keywordString,
-                                            parserState.current_path().string(),
-                                            parserState.line(),
-                                            targetSize,
-                                            parserKeyword->isTableCollection() );
+                                           parserState.current_path().string(),
+                                           parserState.line(),
+                                           targetSize,
+                                           parserKeyword->isTableCollection() );
 }
+
+
+std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserState& parserState, const Parser& parser ) {
+    auto keywordString = ParserKeyword::getDeckName( kw );
+
+    if (parser.isRecognizedKeyword(keywordString)) {
+        parserState.unknown_keyword = false;
+        const auto* parserKeyword = parser.getParserKeywordFromDeckName( keywordString.string() );
+        return createRawKeyword(parserKeyword, keywordString.string(), parserState, parser);
+    }
+
+    if (keywordString.size() > RawConsts::maxKeywordLength) {
+        const std::string keyword8 = {keywordString.begin() , keywordString.begin() + RawConsts::maxKeywordLength};
+        if (parser.isRecognizedKeyword(keyword8)) {
+            std::string msg = "Keyword: " + keywordString.string() + " too long - only first eight characters recognized";
+            parserState.parseContext.handleError(ParseContext::PARSE_LONG_KEYWORD, msg, parserState.errors);
+
+            parserState.unknown_keyword = false;
+            const auto* parserKeyword = parser.getParserKeywordFromDeckName( keyword8 );
+            return createRawKeyword(parserKeyword, keyword8, parserState, parser);
+        }
+    }
+
+    if( ParserKeyword::validDeckName( keywordString ) ) {
+        parserState.parseContext.handleUnknownKeyword( keywordString.string(), parserState.errors );
+        parserState.unknown_keyword = true;
+        return {};
+    }
+
+    if (!parserState.unknown_keyword)
+        parserState.handleRandomText( keywordString );
+
+    return {};
+}
+
 
 bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
     if (parserState.nextKeyword.length() > 0) {

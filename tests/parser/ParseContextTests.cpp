@@ -769,3 +769,23 @@ BOOST_AUTO_TEST_CASE(Test_ERRORGUARD) {
     eg.clear();
     BOOST_CHECK(!eg);
 }
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(LONG_KEYWORDS) {
+    const std::string deck_string = R"(
+RPTRUNSPEC
+)";
+    Parser parser;
+    ParseContext context;
+    ErrorGuard error;
+
+    context.update(ParseContext::PARSE_LONG_KEYWORD, InputError::IGNORE);
+    auto deck = parser.parseString(deck_string, context, error);
+    BOOST_CHECK( deck.hasKeyword("RPTRUNSP") );
+
+    context.update(ParseContext::PARSE_LONG_KEYWORD, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW( parser.parseString(deck_string, context, error), std::invalid_argument);
+}
