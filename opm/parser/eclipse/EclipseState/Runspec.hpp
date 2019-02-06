@@ -112,6 +112,49 @@ private:
     int nLatBranchMax;
 };
 
+class EclHysterConfig
+{
+public:
+    explicit EclHysterConfig(const Deck& deck);
+
+
+    /*!
+     * \brief Specify whether hysteresis is enabled or not.
+     */
+    //void setActive(bool yesno);
+
+    /*!
+     * \brief Returns whether hysteresis is enabled (active).
+     */
+    bool active() const;
+
+    /*!
+     * \brief Return the type of the hysteresis model which is used for capillary pressure.
+     *
+     * -1: capillary pressure hysteresis is disabled
+     * 0: use the Killough model for capillary pressure hysteresis
+     */
+    int pcHysteresisModel() const;
+
+    /*!
+     * \brief Return the type of the hysteresis model which is used for relative permeability.
+     *
+     * -1: relperm hysteresis is disabled
+     * 0: use the Carlson model for relative permeability hysteresis
+     */
+    int krHysteresisModel() const;
+
+private:
+    // enable hysteresis at all
+    bool activeHyst  { false };
+
+    // the capillary pressure and the relperm hysteresis models to be used
+    int pcHystMod { 0 };
+    int krHystMod { 0 };
+};
+
+
+
 class Runspec {
    public:
         explicit Runspec( const Deck& );
@@ -123,6 +166,7 @@ class Runspec {
         const Welldims& wellDimensions() const noexcept;
         const WellSegmentDims& wellSegmentDimensions() const noexcept;
         int eclPhaseMask( ) const noexcept;
+	const EclHysterConfig& hysterPar() const noexcept;
 
    private:
         Phases active_phases;
@@ -131,7 +175,9 @@ class Runspec {
         Welldims welldims;
         WellSegmentDims wsegdims;
         UDQParams udq_params;
+	EclHysterConfig hystpar;
 };
+
 
 }
 

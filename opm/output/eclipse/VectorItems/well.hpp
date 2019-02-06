@@ -41,6 +41,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             VFPTab = 11, // ID (one-based) of well's current VFP table
 
             item18 = 17, // Unknown
+	    XFlow  = 22,
             item25 = 24, // Unknown
             item32 = 31, // Unknown
             item48 = 47, // Unknown
@@ -115,6 +116,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             BHPTarget      = 6, // Well's bottom hole pressure target
 
             DatumDepth     = 9, // Well's reference depth for BHP
+	    LiqRateTarget_2  = 33, //Well's liquid rate target/limit for a well on WCONINJH control or for a producer
+	    GasRateTarget_2  = 54, //Well's gas rate target/limit for a well on WCONINJH control or for producer
+	    BHPTarget_2	   = 55, //Well's bottom hole pressure target/limit
+	    
         };
     } // SWell
 

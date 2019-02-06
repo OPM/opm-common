@@ -10,7 +10,7 @@ lh_002	=	2	,		//	FALSE
 lh_003	=	3	,		//	FALSE		Flag set to FALSE for a non-radial model, TRUE for a radial model (ECLIPSE 300 and other simulators)
 lh_004	=	4	,		//	FALSE		Flag set to FALSE for a non-radial model, TRUE for a radial model (ECLIPSE 100)
 lh_005	=	5	,		//	FALSE
-lh_006	=	6	,		//	FALSE
+lh_006	=	6	,		//	FALSE 		Flag set to FALSE when no hysteresis, TRUE when hysteresis option is used
 lh_007	=	7	,		//	FALSE
 lh_008	=	8	,		//	FALSE
 lh_009	=	9	,		//	FALSE
@@ -142,12 +142,13 @@ Opm::RestartIO::LogiHEAD::LogiHEAD()
 
 Opm::RestartIO::LogiHEAD&
 Opm::RestartIO::LogiHEAD::
-variousParam(const bool e300_radial, const bool e100_radial, const int nswlmx)
+variousParam(const bool e300_radial, const bool e100_radial, const int nswlmx, const bool enableHyster)
 {
     this -> data_[lh_000] = true;
     this -> data_[lh_001] = true;
     this -> data_[lh_003] = e300_radial;
     this -> data_[lh_004] = e100_radial;
+    this -> data_[lh_006] = enableHyster;
     //this -> data_[lh_016] = true;
     //this -> data_[lh_018] = true;
     //this -> data_[lh_031] = true;
