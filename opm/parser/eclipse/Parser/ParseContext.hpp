@@ -194,6 +194,21 @@ namespace Opm {
         */
         const static std::string PARSE_MISSING_INCLUDE;
 
+        /// Dynamic number of wells exceeds maximum declared in
+        /// RUNSPEC keyword WELLDIMS (item 1).
+        const static std::string RUNSPEC_NUMWELLS_TOO_LARGE;
+
+        /// Dynamic number of connections per well exceeds maximum
+        /// declared in RUNSPEC keyword WELLDIMS (item 2).
+        const static std::string RUNSPEC_CONNS_PER_WELL_TOO_LARGE;
+
+        /// Dynamic number of groups exceeds maximum number declared in
+        /// RUNSPEC keyword WELLDIMS (item 3).
+        const static std::string RUNSPEC_NUMGROUPS_TOO_LARGE;
+
+        /// Dynamic group size exceeds maximum number declared in
+        /// RUNSPEC keyword WELLDIMS (item 4).
+        const static std::string RUNSPEC_GROUPSIZE_TOO_LARGE;
 
         /*
           Should we allow keywords of length more than eight characters? If the
