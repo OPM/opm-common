@@ -36,7 +36,6 @@ class GroupTree {
         std::vector< std::string > children( const std::string& parent ) const;
 	const std::map<std::string , size_t>& nameSeqIndMap() const;
 	const std::map<size_t, std::string >& seqIndNameMap() const;
-	size_t groupTreeSize();
         bool operator==( const GroupTree& ) const;
         bool operator!=( const GroupTree& ) const;
 

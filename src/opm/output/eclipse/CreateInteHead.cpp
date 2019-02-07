@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Regdims.hpp>
@@ -39,8 +40,38 @@
 #include <vector>
 
 namespace {
+    int maxConnPerWell(const Opm::Schedule& sched,
+                       const std::size_t    lookup_step)
+    {
+        auto ncwmax = 0;
+
+        for (const auto* well : sched.getWells(lookup_step)) {
+            const auto ncw = well->getConnections().size();
+
+            ncwmax = std::max(ncwmax, static_cast<int>(ncw));
+        }
+
+        return ncwmax;
+    }
+
+    int numGroupsInField(const Opm::Schedule& sched,
+                         const std::size_t    lookup_step)
+    {
+        const auto ngmax = sched.numGroups(lookup_step);
+
+        if (ngmax < 1) {
+            throw std::invalid_argument {
+                "Simulation run must include at least FIELD group"
+            };
+        }
+
+        // Number of non-FIELD groups.
+        return ngmax - 1;
+    }
+
     Opm::RestartIO::InteHEAD::WellTableDim
-    getWellTableDims(const ::Opm::Runspec&  rspec,
+    getWellTableDims(const int              nwgmax,
+                     const ::Opm::Runspec&  rspec,
                      const ::Opm::Schedule& sched,
                      const std::size_t      lookup_step)
     {
@@ -48,8 +79,13 @@ namespace {
 
         const auto numWells = static_cast<int>(sched.numWells(lookup_step));
 
-        const auto maxPerf         = wd.maxConnPerWell();
-        const auto maxWellInGroup  = wd.maxWellsPerGroup();
+        const auto maxPerf =
+            std::max(wd.maxConnPerWell(),
+                     maxConnPerWell(sched, lookup_step));
+
+        const auto maxWellInGroup =
+            std::max(wd.maxWellsPerGroup(), nwgmax);
+
         const auto maxGroupInField = wd.maxGroupsInField();
 
         return {
@@ -60,22 +96,27 @@ namespace {
         };
     }
 
-    std::array<int, 4> getNGRPZ(const ::Opm::Runspec& rspec)
+    std::array<int, 4>
+    getNGRPZ(const int             grpsz,
+             const int             ngrp,
+             const ::Opm::Runspec& rspec)
     {
         const auto& wd = rspec.wellDimensions();
 
-        const int nigrpz = 97 + std::max(wd.maxWellsPerGroup(),
-                                         wd.maxGroupsInField());
+        const auto nwgmax = std::max(grpsz, wd.maxWellsPerGroup());
+        const auto ngmax  = std::max(ngrp , wd.maxGroupsInField());
+
+        const int nigrpz = 97 + std::max(nwgmax, ngmax);
         const int nsgrpz = 112;
         const int nxgrpz = 180;
         const int nzgrpz = 5;
 
-        return {
+        return {{
             nigrpz,
             nsgrpz,
             nxgrpz,
-            nzgrpz
-        };
+            nzgrpz,
+        }};
     }
 
     Opm::RestartIO::InteHEAD::UnitSystem
@@ -192,18 +233,6 @@ namespace {
             static_cast<int>(nplmix),
         };
     }
-    
-    
-    Opm::RestartIO::InteHEAD::Group
-    getNoGroups(const ::Opm::Schedule& sched,
-		const std::size_t      step)
-    {
-        const auto ngroups = sched.numGroups(step)-1;
-
-        return {
-	    int(ngroups)
-	};
-    }
 } // Anonymous
 
 // #####################################################################
@@ -217,18 +246,19 @@ createInteHead(const EclipseState& es,
                const Schedule&     sched,
                const double        simTime,
                const int           num_solver_steps,
-               const int           lookup_step
-	      )
+               const int           lookup_step)
 {
-    const auto& rspec = es.runspec();
-    const auto& tdim  = es.getTableManager();
-    const auto& rdim  = tdim.getRegdims();
+    const auto  nwgmax = maxGroupSize(sched, lookup_step);
+    const auto  ngmax  = numGroupsInField(sched, lookup_step);
+    const auto& rspec  = es.runspec();
+    const auto& tdim   = es.getTableManager();
+    const auto& rdim   = tdim.getRegdims();
 
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (getUnitConvention(es.getDeckUnitSystem()))
-        .wellTableDimensions(getWellTableDims(rspec, sched, lookup_step))
+        .wellTableDimensions(getWellTableDims(nwgmax, rspec, sched, lookup_step))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
              // The numbers below have been determined experimentally to work
@@ -236,7 +266,7 @@ createInteHead(const EclipseState& es,
              // universally valid.
         .params_NWELZ       (155, 122, 130, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
         .params_NCON        (25, 40, 58)       // n{isx}conz: number of data elements per completion in ICON
-        .params_GRPZ        (getNGRPZ(rspec))
+        .params_GRPZ        (getNGRPZ(nwgmax, ngmax, rspec))
              // ncamax: max number of analytical aquifer connections
              // n{isx}aaqz: number of data elements per aquifer in {ISX}AAQ
              // n{isa}caqz: number of data elements per aquifer connection in {ISA}CAQ
@@ -245,7 +275,7 @@ createInteHead(const EclipseState& es,
         .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
-	.ngroups(getNoGroups(sched, lookup_step))
+        .ngroups            ({ ngmax })
         .variousParam       (201702, 100)  // Output should be compatible with Eclipse 100, 2017.02 version.
         ;
 

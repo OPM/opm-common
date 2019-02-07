@@ -82,6 +82,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionParser.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Connection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/WellConnections.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
@@ -256,6 +257,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateWellData.cpp
           #The unit tests are not finished yet, will be added in a separate pullrequest soon
           #tests/test_AggregateMSWData.cpp
+          tests/test_ArrayDimChecker.cpp
           tests/test_CharArrayNullTerm.cpp
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
@@ -281,6 +283,7 @@ list (APPEND TEST_DATA_FILES
 )
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_DATA_FILES
+          tests/expect-wdims.err.out
           tests/FIRST_SIM.DATA
           tests/FIRST_SIM_THPRES.DATA
           tests/summary_deck.DATA
@@ -465,6 +468,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp
+       opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp
