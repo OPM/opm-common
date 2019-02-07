@@ -1483,8 +1483,10 @@ void Summary::add_timestep( int report_step,
             const std::string key = smspec_node.get_gen_key1();
             if (st.has(key))
                 ecl_sum_tstep_iset(tstep, smspec_node.get_params_index(), st.get(key));
-            else
-                OpmLog::warning("Have configured UDQ variable " + key + " for summary output - but it has not been calculated");
+            /*
+              else
+              OpmLog::warning("Have configured summary variable " + key + " for summary output - but it has not been calculated");
+            */
         }
     }
 
