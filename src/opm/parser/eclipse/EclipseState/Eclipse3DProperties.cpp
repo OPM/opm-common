@@ -443,6 +443,10 @@ namespace Opm {
         supportedDoubleKeywords.emplace_back( "THCGAS", 0.0, "Energy/AbsoluteTemperature*Length*Time", true);
         supportedDoubleKeywords.emplace_back( "THCWATER", 0.0, "Energy/AbsoluteTemperature*Length*Time", true);
 
+        // free flow boundary conditions
+        for( const auto& kw : { "FREEBCX", "FREEBCY", "FREEBCZ", "FREEBCX-", "FREEBCY-", "FREEBCZ-" } )
+            supportedDoubleKeywords.emplace_back( kw, 0.0, "1", true );
+
         return supportedDoubleKeywords;
     }
 
