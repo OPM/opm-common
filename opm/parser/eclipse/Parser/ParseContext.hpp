@@ -196,6 +196,13 @@ namespace Opm {
 
 
         /*
+          Should we allow keywords of length more than eight characters? If the
+          keyword is too long it will be internalized using only the eight first
+          characters.
+        */
+        const static std::string PARSE_LONG_KEYWORD;
+
+        /*
           Some property modfiers can be modified in the Schedule
           section; this effectively means that Eclipse supports time
           dependent geology. This is marked as an exocit special
