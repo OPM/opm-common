@@ -632,7 +632,15 @@ CTFAC
 ----'E-2H' /
 ----/
 
+WUBHP
+/
+
+
 SCHEDULE
+
+UDQ
+  UNITS  WUBHP  'BARSA' /
+/
 
 -- Three wells, two producers (so that we can form a group) and one injector
 WELSPECS

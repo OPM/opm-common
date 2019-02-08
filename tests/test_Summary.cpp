@@ -266,7 +266,7 @@ struct setup {
 
     /*-----------------------------------------------------------------*/
 
-    setup( const std::string& fname , const char* path = "summary_deck.DATA") : 
+    setup( const std::string& fname , const char* path = "summary_deck.DATA") :
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
@@ -499,6 +499,24 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 0.2, ecl_sum_get_well_var( resp, 1, "W_1", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 1, "W_2", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2.2, ecl_sum_get_well_var( resp, 1, "W_3", "WTHPH" ), 1e-5 );
+}
+
+BOOST_AUTO_TEST_CASE(udq_keywords) {
+    setup cfg( "test_summary_udq" );
+
+    out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
+    writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , {});
+    writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , {});
+    writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , {});
+    writer.write();
+
+    auto res = readsum( cfg.name );
+    const auto* resp = res.get();
+
+    const auto& udq_params = cfg.es.runspec().udqParams();
+    BOOST_CHECK_CLOSE( ecl_sum_get_well_var(resp, 1, "W_1", "WUBHP"), udq_params.undefinedValue(), 1e-5 );
+    BOOST_CHECK_CLOSE( ecl_sum_get_well_var(resp, 1, "W_3", "WUBHP"), udq_params.undefinedValue(), 1e-5 );
+    BOOST_CHECK_EQUAL( std::string(ecl_sum_get_unit(resp, "WUBHP:W_1")), "BARSA");
 }
 
 BOOST_AUTO_TEST_CASE(group_keywords) {

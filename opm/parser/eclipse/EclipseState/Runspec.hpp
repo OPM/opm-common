@@ -156,26 +156,26 @@ private:
 
 
 class Runspec {
-   public:
-        explicit Runspec( const Deck& );
+public:
+    explicit Runspec( const Deck& );
 
-        const UDQParams& udqParams() const noexcept;
-        const Phases& phases() const noexcept;
-        const Tabdims&  tabdims() const noexcept;
-        const EndpointScaling& endpointScaling() const noexcept;
-        const Welldims& wellDimensions() const noexcept;
-        const WellSegmentDims& wellSegmentDimensions() const noexcept;
-        int eclPhaseMask( ) const noexcept;
-	const EclHysterConfig& hysterPar() const noexcept;
+    const UDQParams& udqParams() const noexcept;
+    const Phases& phases() const noexcept;
+    const Tabdims&  tabdims() const noexcept;
+    const EndpointScaling& endpointScaling() const noexcept;
+    const Welldims& wellDimensions() const noexcept;
+    const WellSegmentDims& wellSegmentDimensions() const noexcept;
+    int eclPhaseMask( ) const noexcept;
+    const EclHysterConfig& hysterPar() const noexcept;
 
-   private:
-        Phases active_phases;
-        Tabdims m_tabdims;
-        EndpointScaling endscale;
-        Welldims welldims;
-        WellSegmentDims wsegdims;
-        UDQParams udq_params;
-	EclHysterConfig hystpar;
+private:
+    Phases active_phases;
+    Tabdims m_tabdims;
+    EndpointScaling endscale;
+    Welldims welldims;
+    WellSegmentDims wsegdims;
+    UDQParams udq_params;
+    EclHysterConfig hystpar;
 };
 
 

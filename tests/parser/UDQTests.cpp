@@ -26,6 +26,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 using namespace Opm;
 
@@ -99,6 +101,11 @@ UDQ
 
     BOOST_CHECK_THROW( udq.unit("NO_SUCH_KEY"), std::invalid_argument );
     BOOST_CHECK_EQUAL( udq.unit("WUBHP"), "BARSA");
+
+    Parser parser;
+    auto deck = parser.parseString(input);
+    auto udq_params = UDQParams(deck);
+    BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_CHANGE_UNITS_ILLEGAL) {
@@ -180,3 +187,17 @@ DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
 }
 
 
+
+BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
+    SummaryState st;
+    UDQContext ctx(st);
+    BOOST_CHECK_EQUAL(ctx.get("JAN"), 1.0);
+
+    BOOST_REQUIRE_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
+
+    for (std::string& key : std::vector<std::string>({"ELAPSED", "MSUMLINS", "MSUMNEWT", "NEWTON", "TCPU", "TIME", "TIMESTEP"}))
+        BOOST_CHECK_NO_THROW( ctx.get(key) );
+
+    st.add("SUMMARY:KEY", 1.0);
+    BOOST_CHECK_EQUAL(ctx.get("SUMMARY:KEY") , 1.0 );
+}
