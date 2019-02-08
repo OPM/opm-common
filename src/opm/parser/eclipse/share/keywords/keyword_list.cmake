@@ -451,6 +451,7 @@ set( keywords
      001_Eclipse300/Z/ZFACTORS
      002_Frontsim/N/NOGRAV
 
+     900_OPM/F/FREEBC
      900_OPM/G/GCOMPIDX
      900_OPM/G/GRUPRIG
      900_OPM/G/GASDENT
