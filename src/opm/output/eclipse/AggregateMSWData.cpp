@@ -70,16 +70,16 @@ namespace {
     }
 
     std::vector<std::size_t>
-    inflowSegmentsIndex(const Opm::WellSegments& segSet, std::size_t segIndex) {
-	auto segNumber  = segSet[segIndex].segmentNumber();
-	std::vector<std::size_t> inFlowSegNum;
+    inflowSegmentsIndex(const Opm::WellSegments& segSet, const std::size_t& segIndex) {
+	const auto& segNumber  = segSet[segIndex].segmentNumber();
+	std::vector<std::size_t> inFlowSegInd;
 	for (int ind = 0; ind < segSet.size(); ind++) {
-	    auto i_outletSeg = segSet[ind].outletSegment();
+	    const auto& i_outletSeg = segSet[ind].outletSegment();
 	    if (segNumber == i_outletSeg) {
-		inFlowSegNum.push_back(ind);
+		inFlowSegInd.push_back(ind);
 	    }
 	}
-	return inFlowSegNum;
+	return inFlowSegInd;
     }    
     
     Opm::RestartIO::Helpers::BranchSegmentPar
@@ -89,10 +89,10 @@ namespace {
 	int firstSeg = -1;
 	int lastSeg  = -1;
 	int outletS = 0;
-	for (int segNo = 1; segNo <= segSet.size(); segNo++) {
-	    auto segInd = segSet.segmentNumberToIndex(segNo);
-	    auto i_branch = segSet[segInd].branchNumber();
-	    auto i_outS = segSet[segInd].outletSegment();
+	for (int segInd = 0; segInd < segSet.size(); segInd++) {
+	    const auto& segNo = segSet[segInd].segmentNumber();
+	    const auto& i_branch = segSet[segInd].branchNumber();
+	    const auto& i_outS = segSet[segInd].outletSegment();
 	    if (i_branch == branch) {
 		noSegInBranch +=1;
 		if (firstSeg < 0) {
@@ -112,10 +112,10 @@ namespace {
 	};
     }
 
-        std::vector <std::size_t> segmentNoFromOrderedSegmentNo(const Opm::WellSegments& segSet, const std::vector<std::size_t>& ordSegNo) {
-	std::vector <std::size_t> sNFOSN (segSet.size()+1,0);
-	for (int segNumber = 0; segNumber < segSet.size(); segNumber++) {
-	    sNFOSN[ordSegNo[segNumber]] = segNumber+1;
+        std::vector <std::size_t> segmentIndFromOrderedSegmentInd(const Opm::WellSegments& segSet, const std::vector<std::size_t>& ordSegNo) {
+	std::vector <std::size_t> sNFOSN (segSet.size(),0);
+	for (int segInd = 0; segInd < segSet.size(); segInd++) {
+	    sNFOSN[ordSegNo[segInd]] = segInd;
 	}
 	return sNFOSN;
     }
@@ -126,20 +126,20 @@ namespace {
 	// Store "heel" segment since that will not always be at the end of the list
 	segIndCB.push_back(segIndex);
 	int newSInd = segIndex;
-	auto origBranchNo = segSet[segIndex].branchNumber();
+	const auto& origBranchNo = segSet[segIndex].branchNumber();
 	bool endOrigBranch = true;
 	// loop down branch to find all segments in branch and number from "toe" to "heel"
 	while (newSInd < segSet.size()) {
 		endOrigBranch = true;
-		const auto iSInd = inflowSegmentsIndex(segSet, newSInd);
-		for (auto isi : iSInd )  {
-			auto inflowBranch = segSet[isi].branchNumber();
+		const auto& iSInd = inflowSegmentsIndex(segSet, newSInd);
+		for (auto& isi : iSInd )  {
+			const auto& inflowBranch = segSet[isi].branchNumber();
 			if (origBranchNo == inflowBranch) {
 			    endOrigBranch = false;
 			}
 		}
 		if (iSInd.size() > 0) {
-		    for (auto ind : iSInd) {
+		    for (const auto& ind : iSInd) {
 			auto inflowBranch = segSet[ind].branchNumber();
 			if (origBranchNo == inflowBranch) {
 			    // if inflow segment belongs to same branch add contribution
@@ -149,7 +149,7 @@ namespace {
 			}
 			else {
 			    // if inflow segment belongs to different branch, start new search
-			    auto nSOrd = segmentOrder(segSet, ind);
+			    const auto& nSOrd = segmentOrder(segSet, ind);
 			    // copy the segments already found and indexed into the total ordered segment vector
 			    for (std::size_t indOS = 0; indOS < nSOrd.size(); indOS++) {
 				ordSegNumber.push_back(nSOrd[indOS]);
@@ -172,10 +172,10 @@ namespace {
 	}
 
 	if (origBranchNo == 1) {
-	    // make the vector of ordered segments
+	    // make the vector of ordered segments - by segment index (zero-based)
 	    tempOrdVect.resize(ordSegNumber.size());
 	    for (std::size_t ov_ind = 0; ov_ind < ordSegNumber.size(); ov_ind++) {
-		tempOrdVect[ordSegNumber[ov_ind]] = ov_ind+1;
+		tempOrdVect[ordSegNumber[ov_ind]] = ov_ind;
 	    }
 	    return tempOrdVect;
 	} else {
@@ -188,9 +188,9 @@ namespace {
     getSegmentSetSSTerms(const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
       const Opm::WellConnections& welConns, const Opm::UnitSystem& units)
     {
-	std::vector<double> qosc (segSet.size()+1, 0.);
-	std::vector<double> qwsc (segSet.size()+1, 0.);
-	std::vector<double> qgsc (segSet.size()+1, 0.);
+	std::vector<double> qosc (segSet.size(), 0.);
+	std::vector<double> qwsc (segSet.size(), 0.);
+	std::vector<double> qgsc (segSet.size(), 0.);
 	std::vector<const Opm::Connection* > openConnections;
 	using M  = ::Opm::UnitSystem::measure;
 	using R  = ::Opm::data::Rates::opt;
@@ -205,11 +205,12 @@ namespace {
 	    };
 	}
 	for (auto nConn = openConnections.size(), connID = 0*nConn; connID < nConn; connID++) {
-	    auto segNo = openConnections[connID]->segment();
+	    const auto& segNo = openConnections[connID]->segment();
+	    const auto& segInd = segSet.segmentNumberToIndex(segNo);
 	    const auto& Q = rateConns[connID].rates;
-	    qosc[segNo] += -units.from_si(M::liquid_surface_rate, Q.get(R::oil));
-	    qwsc[segNo] += -units.from_si(M::liquid_surface_rate, Q.get(R::wat));
-	    qgsc[segNo] += -units.from_si(M::gas_surface_rate,    Q.get(R::gas));
+	    qosc[segInd] += -units.from_si(M::liquid_surface_rate, Q.get(R::oil));
+	    qwsc[segInd] += -units.from_si(M::liquid_surface_rate, Q.get(R::wat));
+	    qgsc[segInd] += -units.from_si(M::gas_surface_rate,    Q.get(R::gas));
 
 	}
 
@@ -224,34 +225,33 @@ namespace {
     getSegmentSetFlowRates(const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
       const Opm::WellConnections& welConns, const Opm::UnitSystem& units)
     {
-	std::vector<double> sofr (segSet.size()+1, 0.);
-	std::vector<double> swfr (segSet.size()+1, 0.);
-	std::vector<double> sgfr (segSet.size()+1, 0.);
+	std::vector<double> sofr (segSet.size(), 0.);
+	std::vector<double> swfr (segSet.size(), 0.);
+	std::vector<double> sgfr (segSet.size(), 0.);
 	//
 	//call function to calculate the individual segment source/sink terms
 	auto sSSST = getSegmentSetSSTerms(segSet, rateConns, welConns, units);
 	
 	// find an ordered list of segments 
 	std::size_t segmentInd = 0;
-	auto orderedSegmentNo = segmentOrder(segSet, segmentInd);
-	auto sNFOSN = segmentNoFromOrderedSegmentNo(segSet, orderedSegmentNo);
+	auto orderedSegmentInd = segmentOrder(segSet, segmentInd);
+	auto sNFOSN = segmentIndFromOrderedSegmentInd(segSet, orderedSegmentInd);
 	// loop over segments according to the ordered segments sequence which ensures that the segments alway are traversed in the from 
 	// inflow to outflow direction (a branch toe is the innermost inflow end)
-	for (std::size_t indOSN = 1; indOSN < sNFOSN.size(); indOSN++) {
-	    auto segNo = sNFOSN[indOSN];
+	for (std::size_t indOSN = 0; indOSN < sNFOSN.size(); indOSN++) {
+	    const auto& segInd = sNFOSN[indOSN];
 	    // the segment flow rates is the sum of the the source/sink terms for each segment plus the flow rates from the inflow segments
 	    // add source sink terms
-	    sofr[segNo] += sSSST.qosc[segNo];
-	    swfr[segNo] += sSSST.qwsc[segNo];
-	    sgfr[segNo] += sSSST.qgsc[segNo];
+	    sofr[segInd] += sSSST.qosc[segInd];
+	    swfr[segInd] += sSSST.qwsc[segInd];
+	    sgfr[segInd] += sSSST.qgsc[segInd];
 	    // add flow from all inflow segments
-	    for (const auto& ifSeg : segSet[segSet.segmentNumberToIndex(segNo)].inletSegments()) {
-		sofr[segNo] += sofr[ifSeg];
-		swfr[segNo] += swfr[ifSeg];
-		sgfr[segNo] += sgfr[ifSeg];
+	    for (const auto& segNo : segSet[segInd].inletSegments()) {
+		const auto & ifSegInd = segSet.segmentNumberToIndex(segNo);
+		sofr[segInd] += sofr[ifSegInd];
+		swfr[segInd] += swfr[ifSegInd];
+		sgfr[segInd] += sgfr[ifSegInd];
 	    }
-	}
-	for (std::size_t sN = 1; sN < sofr.size(); sN++) {
 	}
 	return {
 	    sofr,
@@ -263,9 +263,8 @@ namespace {
     
     std::vector<std::size_t> SegmentSetBranches(const Opm::WellSegments& segSet) {
 	std::vector<std::size_t> branches;
-	for (int segNo = 1; segNo <= segSet.size(); segNo++) {
-	    auto segInd = segSet.segmentNumberToIndex(segNo);
-	    auto i_branch = segSet[segInd].branchNumber();
+	for (int segInd = 0; segInd < segSet.size(); segInd++) {
+	    const auto& i_branch = segSet[segInd].branchNumber();
 	    if (std::find(branches.begin(), branches.end(), i_branch) == branches.end()) { 
 		branches.push_back(i_branch);
 	    }
@@ -274,26 +273,25 @@ namespace {
     }
 
     int firstSegmentInBranch(const Opm::WellSegments& segSet, const int branch) {
-	int firstSegNo = 0;
-	int segNo = 0;
-	while ((segNo <= segSet.size()) && (firstSegNo == 0)) {
-	    segNo+=1;
-	    auto segInd = segSet.segmentNumberToIndex(segNo);
-	    auto i_branch = segSet[segInd].branchNumber();
+	int firstSegInd = 0;
+	int segInd = 0;
+	while ((segInd < segSet.size()) && (firstSegInd == 0)) {
+	    const auto& i_branch = segSet[segInd].branchNumber();
 	    if (branch == i_branch) {
-		firstSegNo = segNo;
+		firstSegInd = segInd;
 	    }
+	    segInd+=1;
 	}
-	return firstSegNo;
+	return firstSegInd;
     }
 
     int noConnectionsSegment(const Opm::WellConnections& compSet,
                              const Opm::WellSegments&    segSet,
                              const std::size_t           segIndex)
     {
-	auto segNumber  = segSet[segIndex].segmentNumber();
+	const auto& segNumber  = segSet[segIndex].segmentNumber();
 	int noConnections = 0;
-	for (auto it : compSet) {
+	for (const auto& it : compSet) {
 	    auto cSegment = it.segment();
 	    if (segNumber == cSegment) {
 		noConnections+=1;
@@ -313,9 +311,7 @@ namespace {
 	int sumConn = 0;
 	if (noConnectionsSegment(compSet, segSet, segIndex) > 0) {
 	// add up the number of connections for å segments with lower segment index than current segment
-	    	    auto segNumber  = segSet[segIndex].segmentNumber();
-	    for (int i_seg = 1; i_seg <= segNumber; i_seg++) {
-		auto  ind = segSet.segmentNumberToIndex(i_seg);
+	    for (int ind = 0; ind <= segIndex; ind++) {
 		int addCon = (ind == static_cast<int>(segIndex)) ? 1 : noConnectionsSegment(compSet, segSet, ind);
 		sumConn += addCon;
 	    }
@@ -324,12 +320,12 @@ namespace {
     }
 
     int noInFlowBranches(const Opm::WellSegments& segSet, std::size_t segIndex) {
-	auto segNumber  = segSet[segIndex].segmentNumber();
-	auto branch     = segSet[segIndex].branchNumber();
+	const auto& segNumber  = segSet[segIndex].segmentNumber();
+	const auto& branch     = segSet[segIndex].branchNumber();
 	int noIFBr = 0;
 	for (int ind = 0; ind < segSet.size(); ind++) {
-	    auto o_segNum = segSet[ind].outletSegment();
-	    auto i_branch = segSet[ind].branchNumber();
+	    const auto& o_segNum = segSet[ind].outletSegment();
+	    const auto& i_branch = segSet[ind].branchNumber();
 	    if ((segNumber == o_segNum) && (branch != i_branch)){
 		noIFBr+=1;
 	    }
@@ -339,21 +335,19 @@ namespace {
     //find the number of inflow branch-segments (segments that has a branch) from the
     // first segment to the current segment for segments that has at least one inflow branch
     // Segments with no inflow branches get the value zero
-    int sumNoInFlowBranches(const Opm::WellSegments& segSet, std::size_t segIndex) {
+    int sumNoInFlowBranches(const Opm::WellSegments& segSet, const std::size_t& segIndex) {
 	int sumIFB = 0;
-	auto segNo =segSet[segIndex].segmentNumber();
-	while (segNo >=1) {
-	    auto segInd = segSet.segmentNumberToIndex(segNo);
-	    auto curBranch = segSet[segInd].branchNumber();
-	    const auto iSInd = inflowSegmentsIndex(segSet, segInd);
+	//auto segInd = segIndex;
+	for (int segInd = static_cast<int>(segIndex); segInd >= 0; segInd--) {
+	    const auto& curBranch = segSet[segInd].branchNumber();
+	    const auto& iSInd = inflowSegmentsIndex(segSet, segInd);
 	    for (auto inFlowInd : iSInd) {
-		auto inFlowBranch = segSet[inFlowInd].branchNumber();
+		const auto& inFlowBranch = segSet[inFlowInd].branchNumber();
 		// if inflow segment belongs to different branch add contribution
 		if (curBranch != inFlowBranch) {
 		    sumIFB+=1;
 		}
 	    }
-	    segNo-=1;
 	}
 	// check if the segment has inflow branches - if yes return sumIFB else return zero
 	return  (noInFlowBranches(segSet, segIndex) >= 1)
@@ -362,28 +356,28 @@ namespace {
 
 
     int inflowSegmentCurBranch(const Opm::WellSegments& segSet, std::size_t segIndex) {
-	auto branch = segSet[segIndex].branchNumber();
-	auto segNumber  = segSet[segIndex].segmentNumber();
-	int inFlowSegNum = 0;
+	const auto& branch = segSet[segIndex].branchNumber();
+	const auto& segNumber  = segSet[segIndex].segmentNumber();
+	int inFlowSegInd = -1;
 	for (int ind = 0; ind < segSet.size(); ind++) {
-	    auto i_segNum = segSet[ind].segmentNumber();
-	    auto i_branch = segSet[ind].branchNumber();
-	    auto i_outFlowSeg = segSet[ind].outletSegment();
+	    const auto& i_segNum = segSet[ind].segmentNumber();
+	    const auto& i_branch = segSet[ind].branchNumber();
+	    const auto& i_outFlowSeg = segSet[ind].outletSegment();
 	    if ((branch == i_branch) && (segNumber == i_outFlowSeg)) {
-		if (inFlowSegNum == 0) {
-		    inFlowSegNum = i_segNum;
+		if (inFlowSegInd == -1) {
+		    inFlowSegInd = segSet.segmentNumberToIndex(i_segNum);
 		}
 		else {
 		  std::cout << "Non-unique inflow segment in same branch, Well: " << segSet.wellName() << std::endl;
 		  std::cout <<  "Segment number: " << segNumber << std::endl;
 		  std::cout <<  "Branch number: " << branch << std::endl;
-		  std::cout <<  "Inflow segment number 1: " << inFlowSegNum << std::endl;
+		  std::cout <<  "Inflow segment number 1: " << segSet[inFlowSegInd].segmentNumber() << std::endl;
 		  std::cout <<  "Inflow segment number 2: " << segSet[ind].segmentNumber() << std::endl;
 		  throw std::invalid_argument("Non-unique inflow segment in same branch, Well " + segSet.wellName());
 		}
 	    }
 	}
-	return inFlowSegNum;
+	return (inFlowSegInd == -1) ? 0 : inFlowSegInd;
     }
 
     template <typename MSWOp>
@@ -434,12 +428,14 @@ namespace {
 		const auto& noElmSeg      = nisegz(inteHead);
 		std::size_t segmentInd = 0;
 		auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
-		for (int segNumber = 1; segNumber <= welSegSet.size(); segNumber++) {
-		    auto ind = welSegSet.segmentNumberToIndex(segNumber);
+//		for (int segNumber = 1; segNumber <= welSegSet.size(); segNumber++) {
+//		    auto ind = welSegSet.segmentNumberToIndex(segNumber);
+		for (int ind = 0; ind < welSegSet.size(); ind++) {
+		    auto segNumber = welSegSet[ind].segmentNumber();
 		    auto iS = (segNumber-1)*noElmSeg;
-		    iSeg[iS + 0] = orderedSegmentNo[ind];
+		    iSeg[iS + 0] = welSegSet[orderedSegmentNo[ind]].segmentNumber();
 		    iSeg[iS + 1] = welSegSet[ind].outletSegment();
-		    iSeg[iS + 2] = inflowSegmentCurBranch(welSegSet, ind);
+		    iSeg[iS + 2] = (inflowSegmentCurBranch(welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(welSegSet, ind)].segmentNumber();
 		    iSeg[iS + 3] = welSegSet[ind].branchNumber();
 		    iSeg[iS + 4] = noInFlowBranches(welSegSet, ind);
 		    iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
@@ -484,18 +480,20 @@ namespace {
 			   RSegArray&                 		rSeg)
         {
 	    if (well.isMultiSegment(rptStep)) {
-		int segNumber = 1;
-
-		// 'stringSegNum' is one-based (1 .. #segments inclusive)
-		std::string stringSegNum = std::to_string(segNumber);
-
+		// use segment index as counter  - zero-based
+		int segIndex = 0;
 		using M = ::Opm::UnitSystem::measure;
 		const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
 		    ? 0.1781076 : 0.001;
 
 		//loop over segment set and print out information
-		const auto  noElmSeg  = nrsegz(inteHead);
+		const auto&  noElmSeg  = nrsegz(inteHead);
 		const auto& welSegSet = well.getWellSegments(rptStep);
+		const auto& segNumber  = welSegSet[segIndex].segmentNumber();
+
+		// 'stringSegNum' is one-based (1 .. #segments inclusive)
+		std::string stringSegNum = std::to_string(segNumber);
+		
 		const auto& welConns = well.getActiveConnections(rptStep, grid);
 		const auto& wname     = well.name();
 		const auto wPKey = "WBHP:"  + wname;
@@ -510,7 +508,6 @@ namespace {
 		// find well connections and calculate segment rates based on well connection production/injection terms
 		auto sSFR = Opm::RestartIO::Helpers::SegmentSetFlowRates{};
 		if (haveWellRes) {
-		  
 		  sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
 		  
 		  }
@@ -528,25 +525,15 @@ namespace {
 		rSeg[6] = rSeg[0];
 		rSeg[7] = rSeg[1];
 		//
-		//Field units:
-		//Rseg[8]= 1.0*sofr+0.1*swfr + 0.1781076*sgfr   (= 1.0*sofr+0.1*swfr+0.001*1000*0.1781076*sgfr  )
-		//Rseg[9] = swfr*0.1/ Rseg[8]
-		//Rseg[10]= sgfr*0.1781076*/ Rseg[8]
-
-		//Metric units:
-		//Rseg[8]= 1.0*sofr+0.1*swfr + 0.001*sgfr
-		//Rseg[9] = swfr*0.1/ Rseg[8]
-		//Rseg[10]= sgfr*0.001/ Rseg[8] 
-
 		// branch according to whether multisegment well calculations are switched on or not
 		
 		
 		if (haveWellRes && wRatesIt->second.segments.size() < 2) {
 		    // Note: Segment flow rates and pressure from 'smry' have correct
 		    // output units and sign conventions.
-		    temp_o = sSFR.sofr[segNumber];
-		    temp_w = sSFR.swfr[segNumber]*0.1;
-		    temp_g = sSFR.sgfr[segNumber]*gfactor;
+		    temp_o = sSFR.sofr[segIndex];
+		    temp_w = sSFR.swfr[segIndex]*0.1;
+		    temp_g = sSFR.sgfr[segIndex]*gfactor;
 		    //Item 12 Segment pressure - use well flow bhp
 		    rSeg[11] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
 		}
@@ -575,34 +562,35 @@ namespace {
 		rSeg[110] = 1.0;
 
 		//Treat subsequent segments
-		for (segNumber = 2; segNumber <= welSegSet.size(); segNumber++) {
+		for (segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
+		    
+		    const auto& segNumber = welSegSet[segIndex].segmentNumber();
 		    // 'stringSegNum' is one-based (1 .. #segments inclusive)
 		    stringSegNum = std::to_string(segNumber);
 
 		    // set the elements of the rSeg array
-		    auto ind = welSegSet.segmentNumberToIndex(segNumber);
-		    auto outSeg = welSegSet[ind].outletSegment();
-		    auto ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
-		    auto iS = (segNumber-1)*noElmSeg;
-		    rSeg[iS +   0] = units.from_si(M::length, (welSegSet[ind].totalLength() - welSegSet[ind_ofs].totalLength()));
-		    rSeg[iS +   1] = units.from_si(M::length, (welSegSet[ind].depth() - welSegSet[ind_ofs].depth()));
-		    rSeg[iS +   2] = units.from_si(M::length, (welSegSet[ind].internalDiameter()));
-		    rSeg[iS +   3] = units.from_si(M::length, (welSegSet[ind].roughness()));
-		    rSeg[iS +   4] = units.from_si(M::length, (welSegSet[ind].crossArea()));
+		    const auto& outSeg = welSegSet[segIndex].outletSegment();
+		    const auto& ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
+		    const auto iS = segIndex*noElmSeg;
+		    rSeg[iS +   0] = units.from_si(M::length, (welSegSet[segIndex].totalLength() - welSegSet[ind_ofs].totalLength()));
+		    rSeg[iS +   1] = units.from_si(M::length, (welSegSet[segIndex].depth() - welSegSet[ind_ofs].depth()));
+		    rSeg[iS +   2] = units.from_si(M::length, (welSegSet[segIndex].internalDiameter()));
+		    rSeg[iS +   3] = units.from_si(M::length, (welSegSet[segIndex].roughness()));
+		    rSeg[iS +   4] = units.from_si(M::length, (welSegSet[segIndex].crossArea()));
 		    //repeat unit conversion to convert for area instead of length
 		    rSeg[iS +   4] = units.from_si(M::length, rSeg[iS +   4]);
-		    rSeg[iS +   5] = units.from_si(M::volume, (welSegSet[ind].volume()));
-		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[ind].totalLength()));
-		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[ind].depth()));
+		    rSeg[iS +   5] = units.from_si(M::volume, (welSegSet[segIndex].volume()));
+		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[segIndex].totalLength()));
+		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[segIndex].depth()));
 
 		    //see section above for explanation of values
 		    // branch according to whether multisegment well calculations are switched on or not
 		    if (haveWellRes && wRatesIt->second.segments.size() < 2) {
 			// Note: Segment flow rates and pressure from 'smry' have correct
 			// output units and sign conventions.
-			temp_o = sSFR.sofr[segNumber];
-			temp_w = sSFR.swfr[segNumber]*0.1;
-			temp_g = sSFR.sgfr[segNumber]*gfactor;
+			temp_o = sSFR.sofr[segIndex];
+			temp_w = sSFR.swfr[segIndex]*0.1;
+			temp_g = sSFR.sgfr[segIndex]*gfactor;
 			//Item 12 Segment pressure - use well flow bhp
 			rSeg[iS +  11] = (smry.has(wPKey)) ? smry.get(wPKey) :0.0;
 		    }
@@ -662,10 +650,10 @@ namespace {
         {
 	    if (well.isMultiSegment(rptStep)) {
 		//
-		auto welSegSet = well.getWellSegments(rptStep);
-		auto branches = SegmentSetBranches(welSegSet);
+		const auto& welSegSet = well.getWellSegments(rptStep);
+		const auto& branches = SegmentSetBranches(welSegSet);
 		for (auto it = branches.begin()+1; it != branches.end(); it++){
-		    iLBS[*it-2] = firstSegmentInBranch(welSegSet, *it);
+		    iLBS[*it-2] = welSegSet[firstSegmentInBranch(welSegSet, *it)].segmentNumber();
 		}
 	    }
 	    else {
@@ -701,12 +689,12 @@ namespace {
         {
 	    if (well.isMultiSegment(rptStep)) {
 		//
-		auto welSegSet = well.getWellSegments(rptStep);
-		auto branches = SegmentSetBranches(welSegSet);
-		auto noElmBranch = nilbrz(inteHead);
+		const auto& welSegSet = well.getWellSegments(rptStep);
+		const auto& branches = SegmentSetBranches(welSegSet);
+		const auto& noElmBranch = nilbrz(inteHead);
 		for (auto it = branches.begin(); it != branches.end(); it++){
-		    auto iB = (*it-1)*noElmBranch;
-		    auto branchParam = getBranchSegmentParam(welSegSet, *it);
+		    const auto iB = (*it-1)*noElmBranch;
+		    const auto& branchParam = getBranchSegmentParam(welSegSet, *it);
 		    iLBR[iB  ] = branchParam.outletS;
 		    iLBR[iB+1] = branchParam.noSegInBranch;
 		    iLBR[iB+2] = branchParam.firstSeg;
@@ -752,7 +740,6 @@ captureDeclaredMSWData(const Schedule&         sched,
     for (const auto well : wells) {
 	if (well->isMultiSegment(rptStep)) msw.push_back(well);
     }
-
     // Extract Contributions to ISeg Array
     {
         MSWLoop(msw, [rptStep, inteHead, &grid, this]
@@ -763,7 +750,6 @@ captureDeclaredMSWData(const Schedule&         sched,
             ISeg::staticContrib(well, rptStep, inteHead, grid, imsw);
         });
     }
-
     // Extract Contributions to RSeg Array
     {
         MSWLoop(msw, [&units, rptStep, inteHead, &grid, &smry, this, &wr]
@@ -774,7 +760,6 @@ captureDeclaredMSWData(const Schedule&         sched,
 		RSeg::staticContrib_useMSW(well, rptStep, inteHead, grid, units, smry, wr, rmsw);
         });
     }
-
     // Extract Contributions to ILBS Array
     {
         MSWLoop(msw, [rptStep, this]
@@ -785,7 +770,6 @@ captureDeclaredMSWData(const Schedule&         sched,
             ILBS::staticContrib(well, rptStep, ilbs_msw);
         });
     }
-
     // Extract Contributions to ILBR Array
     {
         MSWLoop(msw, [rptStep, inteHead, this]
