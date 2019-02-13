@@ -1,4 +1,5 @@
 /*
+  Copyright (c) 2018 Equinor ASA
   Copyright (c) 2016 Statoil ASA
   Copyright (c) 2013-2015 Andreas Lauser
   Copyright (c) 2013 SINTEF ICT, Applied Mathematics.
@@ -26,7 +27,10 @@
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/output/eclipse/VectorItems/connection.hpp>
+#include <opm/output/eclipse/VectorItems/doubhead.hpp>
+#include <opm/output/eclipse/VectorItems/group.hpp>
 #include <opm/output/eclipse/VectorItems/intehead.hpp>
+#include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
 #include <opm/output/eclipse/libECLRestart.hpp>
@@ -35,15 +39,18 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <exception>
+#include <initializer_list>
+#include <map>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -145,6 +152,298 @@ RestartFileView& RestartFileView::operator=(RestartFileView&& rhs)
     return *this;
 }
 
+// ---------------------------------------------------------------------
+
+namespace {
+    template <typename T>
+    const T* getPtr(const ::Opm::RestartIO::ecl_kw_type* kw)
+    {
+        return (kw == nullptr) ? nullptr
+            : static_cast<const T*>(ecl_kw_iget_ptr(kw /* <- ADL */, 0));
+    }
+
+    template <typename T>
+    boost::iterator_range<const T*>
+    getDataWindow(const T*          arr,
+                  const std::size_t windowSize,
+                  const std::size_t entity,
+                  const std::size_t subEntity               = 0,
+                  const std::size_t maxSubEntitiesPerEntity = 1)
+    {
+        const auto off =
+            windowSize * (subEntity + maxSubEntitiesPerEntity*entity);
+
+        const auto* begin = arr   + off;
+        const auto* end   = begin + windowSize;
+
+        return { begin, end };
+    }
+
+    int getInteHeadElem(const ::Opm::RestartIO::ecl_kw_type* intehead,
+                        const std::vector<int>::size_type    i)
+    {
+        return getPtr<int>(intehead)[i];
+    }
+}
+
+// ---------------------------------------------------------------------
+
+class WellVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<const T*>;
+
+    explicit WellVectors(const RestartFileView&               rst_view,
+                         const ::Opm::RestartIO::ecl_kw_type* intehead);
+
+    bool hasDefinedWellValues() const;
+    bool hasDefinedConnectionValues() const;
+
+    Window<int>    iwel(const std::size_t wellID) const;
+    Window<double> xwel(const std::size_t wellID) const;
+
+    Window<int>
+    icon(const std::size_t wellID, const std::size_t connID) const;
+
+    Window<double>
+    xcon(const std::size_t wellID, const std::size_t connID) const;
+
+private:
+    std::size_t maxConnPerWell_;
+    std::size_t numIWelElem_;
+    std::size_t numXWelElem_;
+    std::size_t numIConElem_;
+    std::size_t numXConElem_;
+
+    const ::Opm::RestartIO::ecl_kw_type* iwel_;
+    const ::Opm::RestartIO::ecl_kw_type* xwel_;
+
+    const ::Opm::RestartIO::ecl_kw_type* icon_;
+    const ::Opm::RestartIO::ecl_kw_type* xcon_;
+};
+
+WellVectors::WellVectors(const RestartFileView&               rst_view,
+                         const ::Opm::RestartIO::ecl_kw_type* intehead)
+    : maxConnPerWell_(getInteHeadElem(intehead, VI::intehead::NCWMAX))
+    , numIWelElem_   (getInteHeadElem(intehead, VI::intehead::NIWELZ))
+    , numXWelElem_   (getInteHeadElem(intehead, VI::intehead::NXWELZ))
+    , numIConElem_   (getInteHeadElem(intehead, VI::intehead::NICONZ))
+    , numXConElem_   (getInteHeadElem(intehead, VI::intehead::NXCONZ))
+    , iwel_          (rst_view.getKeyword("IWEL"))
+    , xwel_          (rst_view.getKeyword("XWEL"))
+    , icon_          (rst_view.getKeyword("ICON"))
+    , xcon_          (rst_view.getKeyword("XCON"))
+{}
+
+bool WellVectors::hasDefinedWellValues() const
+{
+    return ! ((this->iwel_ == nullptr) ||
+              (this->xwel_ == nullptr));
+}
+
+bool WellVectors::hasDefinedConnectionValues() const
+{
+    return ! ((this->icon_ == nullptr) ||
+              (this->xcon_ == nullptr));
+}
+
+WellVectors::Window<int>
+WellVectors::iwel(const std::size_t wellID) const
+{
+    if (! this->hasDefinedWellValues()) {
+        throw std::logic_error {
+            "Cannot Request IWEL Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<int>(this->iwel_),
+                         this->numIWelElem_, wellID);
+}
+
+WellVectors::Window<double>
+WellVectors::xwel(const std::size_t wellID) const
+{
+    if (! this->hasDefinedWellValues()) {
+        throw std::logic_error {
+            "Cannot Request XWEL Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<double>(this->xwel_),
+                         this->numXWelElem_, wellID);
+}
+
+WellVectors::Window<int>
+WellVectors::icon(const std::size_t wellID, const std::size_t connID) const
+{
+    if (! this->hasDefinedConnectionValues()) {
+        throw std::logic_error {
+            "Cannot Request ICON Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<int>(this->icon_), this->numIConElem_,
+                         wellID, connID, this->maxConnPerWell_);
+}
+
+WellVectors::Window<double>
+WellVectors::xcon(const std::size_t wellID, const std::size_t connID) const
+{
+    if (! this->hasDefinedConnectionValues()) {
+        throw std::logic_error {
+            "Cannot Request XCON Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<double>(this->xcon_), this->numXConElem_,
+                         wellID, connID, this->maxConnPerWell_);
+}
+
+// ---------------------------------------------------------------------
+
+class GroupVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<const T*>;
+
+    explicit GroupVectors(const RestartFileView&               rst_view,
+                          const ::Opm::RestartIO::ecl_kw_type* intehead);
+
+    bool hasDefinedValues() const;
+
+    std::size_t maxGroups() const;
+
+    Window<int>    igrp(const std::size_t groupID) const;
+    Window<double> xgrp(const std::size_t groupID) const;
+
+private:
+    std::size_t maxNumGroups_;
+    std::size_t numIGrpElem_;
+    std::size_t numXGrpElem_;
+
+    const ::Opm::RestartIO::ecl_kw_type* igrp_;
+    const ::Opm::RestartIO::ecl_kw_type* xgrp_;
+};
+
+GroupVectors::GroupVectors(const RestartFileView&               rst_view,
+                           const ::Opm::RestartIO::ecl_kw_type* intehead)
+    : maxNumGroups_(getInteHeadElem(intehead, VI::intehead::NGMAXZ) - 1) // -FIELD
+    , numIGrpElem_ (getInteHeadElem(intehead, VI::intehead::NIGRPZ))
+    , numXGrpElem_ (getInteHeadElem(intehead, VI::intehead::NXGRPZ))
+    , igrp_        (rst_view.getKeyword("IGRP"))
+    , xgrp_        (rst_view.getKeyword("XGRP"))
+{}
+
+bool GroupVectors::hasDefinedValues() const
+{
+    return ! ((this->igrp_ == nullptr) ||
+              (this->xgrp_ == nullptr));
+}
+
+std::size_t GroupVectors::maxGroups() const
+{
+    return this->maxNumGroups_;
+}
+
+GroupVectors::Window<int>
+GroupVectors::igrp(const std::size_t groupID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request IWEL Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<int>(this->igrp_),
+                         this->numIGrpElem_, groupID);
+}
+
+GroupVectors::Window<double>
+GroupVectors::xgrp(const std::size_t groupID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request XGRP Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<double>(this->xgrp_),
+                         this->numXGrpElem_, groupID);
+}
+
+// ---------------------------------------------------------------------
+
+class SegmentVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<const T*>;
+
+    explicit SegmentVectors(const RestartFileView&               rst_view,
+                            const ::Opm::RestartIO::ecl_kw_type* intehead);
+
+    bool hasDefinedValues() const;
+
+    Window<int>
+    iseg(const std::size_t mswID, const std::size_t segID) const;
+
+    Window<double>
+    rseg(const std::size_t mswID, const std::size_t segID) const;
+
+private:
+    std::size_t maxSegPerWell_;
+    std::size_t numISegElm_;
+    std::size_t numRSegElm_;
+
+    const ::Opm::RestartIO::ecl_kw_type* iseg_;
+    const ::Opm::RestartIO::ecl_kw_type* rseg_;
+};
+
+SegmentVectors::SegmentVectors(const RestartFileView&               rst_view,
+                               const ::Opm::RestartIO::ecl_kw_type* intehead)
+    : maxSegPerWell_(getInteHeadElem(intehead, VI::intehead::NSEGMX))
+    , numISegElm_   (getInteHeadElem(intehead, VI::intehead::NISEGZ))
+    , numRSegElm_   (getInteHeadElem(intehead, VI::intehead::NRSEGZ))
+    , iseg_         (rst_view.getKeyword("ISEG"))
+    , rseg_         (rst_view.getKeyword("RSEG"))
+{}
+
+bool SegmentVectors::hasDefinedValues() const
+{
+    return ! ((this->iseg_ == nullptr) ||
+              (this->rseg_ == nullptr));
+}
+
+SegmentVectors::Window<int>
+SegmentVectors::iseg(const std::size_t mswID, const std::size_t segID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request ISEG Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<int>(this->iseg_), this->numISegElm_,
+                         mswID, segID, this->maxSegPerWell_);
+}
+
+SegmentVectors::Window<double>
+SegmentVectors::rseg(const std::size_t mswID, const std::size_t segID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request RSEG Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(getPtr<double>(this->rseg_), this->numRSegElm_,
+                         mswID, segID, this->maxSegPerWell_);
+}
+
+// ---------------------------------------------------------------------
+
 namespace {
     void throwIfMissingRequired(const Opm::RestartKey& rst_key)
     {
@@ -177,6 +476,121 @@ namespace {
         }
     }
 
+    void insertSolutionVector(const std::vector<double>&           vector,
+                              const Opm::RestartKey&               value,
+                              const std::vector<double>::size_type numcells,
+                              Opm::data::Solution&                 sol)
+    {
+        if (vector.size() != numcells) {
+            throw std::runtime_error {
+                "Restart file: Could not restore '"
+                + value.key
+                + "', mismatched number of cells"
+            };
+        }
+
+        sol.insert(value.key, value.dim, vector,
+                   Opm::data::TargetType::RESTART_SOLUTION);
+    }
+
+    void loadIfAvailable(const RestartFileView&               rst_view,
+                         const Opm::RestartKey&               value,
+                         const std::vector<double>::size_type numcells,
+                         Opm::data::Solution&                 sol)
+    {
+        const auto* kw = rst_view.getKeyword(value.key.c_str());
+
+        if (kw == nullptr) {
+            throwIfMissingRequired(value);
+
+            // If we get here, the requested value was not available in the
+            // result set.  However, the client does not actually require
+            // the value for restart purposes so we can safely skip this.
+            return;
+        }
+
+        insertSolutionVector(double_vector(kw), value, numcells, sol);
+    }
+
+    void loadHysteresisIfAvailable(const RestartFileView&               rst_view,
+                                   const std::string&                   primary,
+                                   const Opm::RestartKey&               fallback_key,
+                                   const std::vector<double>::size_type numcells,
+                                   Opm::data::Solution&                 sol)
+    {
+        const auto* kw = rst_view.getKeyword(primary.c_str());
+
+        if (kw == nullptr) {
+            // Primary key does not exist in rst_view.  Attempt to load
+            // fallback keys directly.
+
+            loadIfAvailable(rst_view, fallback_key, numcells, sol);
+        }
+        else {
+            // Primary exists in rst_view.  Translate to Flow's hysteresis
+            // parameter.
+            auto smax = double_vector(kw);
+
+            std::transform(std::begin(smax), std::end(smax), std::begin(smax),
+                           [](const double s) { return 1.0 - s; });
+
+            insertSolutionVector(smax, fallback_key, numcells, sol);
+        }
+    }
+
+    bool isHysteresis(const std::string& vector)
+    {
+        for (const auto* flow_hyst_key : { "KRNSW_OW", "PCSWM_OW",
+                                           "KRNSW_GO", "PCSWM_GO", })
+        {
+            if (vector == flow_hyst_key) { return true; }
+        }
+
+        return false;
+    }
+
+    void restoreHysteresisVector(const Opm::RestartKey& value,
+                                 const RestartFileView& rst_view,
+                                 const int              numcells,
+                                 Opm::data::Solution&   sol)
+    {
+        const auto& key = value.key;
+
+        if ((key == "KRNSW_OW") || (key == "PCSWM_OW"))
+        {
+            // Attempt to load from SOMAX, fall back to value.key if
+            // unavailable--typically in OPM Extended restart file.
+            loadHysteresisIfAvailable(rst_view, "SOMAX",
+                                      value, numcells, sol);
+        }
+        else if ((key == "KRNSW_GO") || (key == "PCSWM_GO"))
+        {
+            // Attempt to load from SGMAX, fall back to value.key if
+            // unavailable--typically in OPM Extended restart file.
+            loadHysteresisIfAvailable(rst_view, "SGMAX",
+                                      value, numcells, sol);
+        }
+    }
+
+    std::vector<double>
+    getOpmExtraFromDoubHEAD(const RestartFileView& rst_view,
+                            const bool             required,
+                            const Opm::UnitSystem& usys)
+    {
+        using M = Opm::UnitSystem::measure;
+
+        const auto* doubhead =
+            getPtr<double>(rst_view.getKeyword("DOUBHEAD"));
+
+        const auto TsInit = doubhead[VI::doubhead::TsInit];
+
+        if (TsInit < 0.0) {
+            throwIfMissingRequired({ "OPMEXTRA", M::identity, required });
+        }
+
+        return { usys.to_si(M::time, TsInit) };
+    }
+
     Opm::data::Solution
     restoreSOLUTION(const RestartFileView&              rst_view,
                     const std::vector<Opm::RestartKey>& solution_keys,
@@ -185,28 +599,16 @@ namespace {
         Opm::data::Solution sol(/* init_si = */ false);
 
         for (const auto& value : solution_keys) {
-            const auto& vector = value.key;
-            const auto* kw     = rst_view.getKeyword(vector.c_str());
-
-            if (kw == nullptr) {
-                throwIfMissingRequired(value);
-
-                // Requested vector not available, but caller does not
-                // actually require the vector for restart purposes.
-                // Skip this.
+            if (isHysteresis(value.key)) {
+                // Special case handling of hysteresis data.  Possibly needs
+                // translation from ECLIPSE-compatible set to Flow's known
+                // set of hysteresis vectors.
+                restoreHysteresisVector(value, rst_view, numcells, sol);
                 continue;
             }
 
-            if (Opm::RestartIO::ecl_kw_get_size(kw) != numcells) {
-                throw std::runtime_error {
-                    "Restart file: Could not restore "
-                    + std::string(Opm::RestartIO::ecl_kw_get_header(kw))
-                    + ", mismatched number of cells"
-                };
-            }
-
-            sol.insert(vector, value.dim, double_vector(kw),
-                       Opm::data::TargetType::RESTART_SOLUTION);
+            // Load regular (non-hysteresis) vector if available.
+            loadIfAvailable(rst_view, value, numcells, sol);
         }
 
         return sol;
@@ -221,17 +623,39 @@ namespace {
             const auto& vector = extra.key;
             const auto* kw     = rst_view.getKeyword(vector.c_str());
 
-            if (kw == nullptr) {
-                throwIfMissingRequired(extra);
+            auto kwdata = std::vector<double>{};
 
-                // Requested vector not available, but caller does not
-                // actually require the vector for restart purposes.
-                // Skip this.
-                continue;
+            if (kw == nullptr) {
+                // Requested vector not available in result set.  Take
+                // appropriate action depending on specific vector and
+                // 'extra.required'.
+
+                if (vector != "OPMEXTRA") {
+                    throwIfMissingRequired(extra);
+
+                    // Requested vector not available, but caller does not
+                    // actually require the vector for restart purposes.
+                    // Skip this.
+                    continue;
+                }
+                else {
+                    // Special case handling of OPMEXTRA.  Single item
+                    // possibly stored in TSINIT item of DOUBHEAD.  Try to
+                    // recover this.  Function throws if item is defaulted
+                    // and caller requires that item be present through the
+                    // 'extra.required' mechanism.
+
+                    kwdata = getOpmExtraFromDoubHEAD(rst_view,
+                                                     extra.required,
+                                                     usys);
+                }
+            }
+            else {
+                // Requisite vector available in result set.  Recover data.
+                kwdata = double_vector(kw);
             }
 
-            // Requisite vector available in result set.  Recover data.
-            rst_value.addExtra(vector, extra.dim, double_vector(kw));
+            rst_value.addExtra(vector, extra.dim, std::move(kwdata));
         }
 
         for (auto& extra_value : rst_value.extra) {
@@ -332,12 +756,10 @@ namespace {
                     continue;
                 }
 
-                const auto active_index = grid.activeIndex(i, j, k);
-
                 well.connections.emplace_back();
                 auto& connection = well.connections.back();
 
-                connection.index          = active_index;
+                connection.index          = grid.getGlobalIndex(i, j, k);
                 connection.pressure       = *opm_xwel_data++;
                 connection.reservoir_rate = *opm_xwel_data++;
 
@@ -350,167 +772,184 @@ namespace {
         return wells;
     }
 
-    template <typename T>
-    const T* getPtr(const ::Opm::RestartIO::ecl_kw_type* kw)
-    {
-        return (kw == nullptr) ? nullptr
-            : static_cast<const T*>(ecl_kw_iget_ptr(kw /* <- ADL */, 0));
-    }
-
-    int getInteHeadElem(const ::Opm::RestartIO::ecl_kw_type* intehead,
-                        const std::vector<int>::size_type    i)
-    {
-        return getPtr<int>(intehead)[i];
-    }
-
-    struct WellArrayDim
-    {
-        explicit WellArrayDim(const ::Opm::RestartIO::ecl_kw_type* intehead);
-
-        std::size_t maxConnPerWell;
-        std::size_t numIWelElem;
-        std::size_t numXWelElem;
-        std::size_t numIConElm;
-        std::size_t numXConElm;
-    };
-
-    WellArrayDim::WellArrayDim(const ::Opm::RestartIO::ecl_kw_type* intehead)
-        : maxConnPerWell(getInteHeadElem(intehead, VI::intehead::NCWMAX))
-        , numIWelElem   (getInteHeadElem(intehead, VI::intehead::NIWELZ))
-        , numXWelElem   (getInteHeadElem(intehead, VI::intehead::NXWELZ))
-        , numIConElm    (getInteHeadElem(intehead, VI::intehead::NICONZ))
-        , numXConElm    (getInteHeadElem(intehead, VI::intehead::NXCONZ))
-    {}
-
-    template <typename T>
-    boost::iterator_range<const T*>
-    getDataWindow(const T*          arr,
-                  const std::size_t windowSize,
-                  const std::size_t well,
-                  const std::size_t conn           = 0,
-                  const std::size_t maxConnPerWell = 1)
-    {
-        const auto  off   = windowSize * (conn + maxConnPerWell*well);
-        const auto* begin = arr   + off;
-        const auto* end   = begin + windowSize;
-
-        return { begin, end };
-    }
-
-    boost::iterator_range<const int*>
-    getIWelWindow(const int*          iwel,
-                  const WellArrayDim& wdim,
-                  const std::size_t   well)
-    {
-        return getDataWindow(iwel, wdim.numIWelElem, well);
-    }
-
-    boost::iterator_range<const double*>
-    getXWelWindow(const double*       xwel,
-                  const WellArrayDim& wdim,
-                  const std::size_t   well)
-    {
-        return getDataWindow(xwel, wdim.numXWelElem, well);
-    }
-
-    boost::iterator_range<const int*>
-    getIConWindow(const int*          icon,
-                  const WellArrayDim& wdim,
-                  const std::size_t   well,
-                  const std::size_t   conn)
-    {
-        return getDataWindow(icon, wdim.numIConElm, well,
-                             conn, wdim.maxConnPerWell);
-    }
-
-    boost::iterator_range<const double*>
-    getXConWindow(const double*       xcon,
-                  const WellArrayDim& wdim,
-                  const std::size_t   well,
-                  const std::size_t   conn)
-    {
-        return getDataWindow(xcon, wdim.numXConElm, well,
-                             conn, wdim.maxConnPerWell);
-    }
-
-    std::unordered_map<std::size_t, boost::iterator_range<const double*>::size_type>
-    seqID_to_resID(const WellArrayDim& wdim,
-                   const std::size_t   wellID,
-                   const std::size_t   nConn,
-                   const int*          icon_full)
+    std::map<
+        std::tuple<int, int, int>,
+        boost::iterator_range<const double*>::size_type
+    >
+    ijk_to_resID(const std::size_t  wellID,
+                 const std::size_t  nConn,
+                 const WellVectors& wellData)
     {
         using SizeT    = boost::iterator_range<const double*>::size_type;
-        auto  seqToRes = std::unordered_map<std::size_t, SizeT>{};
+        auto  ijkToRes = std::map<std::tuple<int, int, int>, SizeT>{};
 
         for (auto connID = 0*nConn; connID < nConn; ++connID) {
-            const auto icon =
-                getIConWindow(icon_full, wdim, wellID, connID);
+            const auto icon = wellData.icon(wellID, connID);
 
-            seqToRes.emplace(icon[VI::IConn::index::SeqIndex] - 1, connID);
+            const auto i = icon[VI::IConn::index::CellI] - 1;
+            const auto j = icon[VI::IConn::index::CellJ] - 1;
+            const auto k = icon[VI::IConn::index::CellK] - 1;
+
+            ijkToRes.emplace(std::make_tuple(i, j, k), connID);
         }
 
-        return seqToRes;
+        return ijkToRes;
     }
 
-    void restoreConnRates(const Opm::Well&        well,
-                          const std::size_t       wellID,
-                          const std::size_t       sim_step,
-                          const Opm::EclipseGrid& grid,
-                          const WellArrayDim&     wdim,
-                          const Opm::UnitSystem&  usys,
-                          const Opm::Phases&      phases,
-                          const int*              iwel_full,
-                          const int*              icon_full,
-                          const double*           xcon_full,
-                          Opm::data::Well&        xw)
+    void restoreConnRates(const WellVectors::Window<double>& xcon,
+                          const Opm::UnitSystem&             usys,
+                          const bool                         oil,
+                          const bool                         gas,
+                          const bool                         wat,
+                          Opm::data::Connection&             xc)
     {
         using M = ::Opm::UnitSystem::measure;
 
-        const auto iwel  = getIWelWindow(iwel_full, wdim, wellID);
+        if (wat) {
+            xc.rates.set(Opm::data::Rates::opt::wat,
+                         - usys.to_si(M::liquid_surface_rate,
+                                      xcon[VI::XConn::index::WaterRate]));
+        }
+
+        if (oil) {
+            xc.rates.set(Opm::data::Rates::opt::oil,
+                         - usys.to_si(M::liquid_surface_rate,
+                                      xcon[VI::XConn::index::OilRate]));
+        }
+
+        if (gas) {
+            xc.rates.set(Opm::data::Rates::opt::gas,
+                         - usys.to_si(M::gas_surface_rate,
+                                      xcon[VI::XConn::index::GasRate]));
+        }
+    }
+
+    void zeroConnRates(const bool             oil,
+                       const bool             gas,
+                       const bool             wat,
+                       Opm::data::Connection& xc)
+    {
+        if (wat) { xc.rates.set(Opm::data::Rates::opt::wat, 0.0); }
+        if (oil) { xc.rates.set(Opm::data::Rates::opt::oil, 0.0); }
+        if (gas) { xc.rates.set(Opm::data::Rates::opt::gas, 0.0); }
+    }
+
+    void restoreConnResults(const Opm::Well&        well,
+                            const std::size_t       wellID,
+                            const std::size_t       sim_step,
+                            const Opm::EclipseGrid& grid,
+                            const Opm::UnitSystem&  usys,
+                            const Opm::Phases&      phases,
+                            const WellVectors&      wellData,
+                            Opm::data::Well&        xw)
+    {
+        using M  = ::Opm::UnitSystem::measure;
+        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
+
+        const auto iwel  = wellData.iwel(wellID);
         const auto nConn = static_cast<std::size_t>(
             iwel[VI::IWell::index::NConn]);
 
         xw.connections.resize(nConn, Opm::data::Connection{});
 
-        if ((icon_full == nullptr) || (xcon_full == nullptr)) {
-            // Result set does not provide certain pieces of
-            // information which are needed to reconstruct
-            // connection flow rates.  Nothing to do here.
+        const auto oil = phases.active(Opm::Phase::OIL);
+        const auto gas = phases.active(Opm::Phase::GAS);
+        const auto wat = phases.active(Opm::Phase::WATER);
+
+        for (auto& xc : xw.connections) {
+            zeroConnRates(oil, gas, wat, xc);
+        }
+
+        if (! wellData.hasDefinedConnectionValues()) {
+            // Result set does not provide certain pieces of information
+            // which are needed to reconstruct connection flow rates.
+            // Nothing to do except to return all zero rates.
             return;
         }
+
+        const auto conns      = well.getActiveConnections(sim_step, grid);
+        const auto ijk_to_res = ijk_to_resID(wellID, nConn, wellData);
+
+        auto linConnID = std::size_t{0};
+        for (const auto& conn : conns) {
+            if (++linConnID > nConn) { continue; }
+
+            auto& xc = xw.connections[linConnID - 1];
+
+            const auto ijk =
+                std::make_tuple(conn.getI(), conn.getJ(), conn.getK());
+
+            auto resPos = ijk_to_res.find(ijk);
+
+            if (resPos != std::end(ijk_to_res)) {
+                const auto connID = resPos->second;
+                const auto xcon   = wellData.xcon(wellID, connID);
+
+                restoreConnRates(xcon, usys, oil, gas, wat, xc);
+
+                xc.index = grid.getGlobalIndex(std::get<0>(ijk),
+                                               std::get<1>(ijk),
+                                               std::get<2>(ijk));
+
+                xc.pressure = usys.to_si(M::pressure, xcon[Ix::Pressure]);
+            }
+        }
+    }
+
+    void restoreSegmentQuantities(const std::size_t      mswID,
+                                  const std::size_t      numSeg,
+                                  const Opm::UnitSystem& usys,
+                                  const Opm::Phases&     phases,
+                                  const SegmentVectors&  segData,
+                                  Opm::data::Well&       xw)
+    {
+        // Note sign of flow rates.  RSEG stores flow rates as positive from
+        // reservoir to well--i.e., towards the producer/platform.  The Flow
+        // simulator uses the opposite sign convention.
+
+        using M = ::Opm::UnitSystem::measure;
 
         const auto oil = phases.active(Opm::Phase::OIL);
         const auto gas = phases.active(Opm::Phase::GAS);
         const auto wat = phases.active(Opm::Phase::WATER);
 
-        const auto conns      = well.getActiveConnections(sim_step, grid);
-        const auto seq_to_res =
-            seqID_to_resID(wdim, wellID, nConn, icon_full);
+        // Renormalisation constant for gas okay in non-field unit systems.
+        // A bit more questionable for field units.
+        const auto watRenormalisation =   10.0;
+        const auto gasRenormalisation = 1000.0;
 
-        auto linConnID = std::size_t{0};
-        for (const auto& conn : conns) {
-            const auto connID = seq_to_res.at(conn.getSeqIndex());
-            const auto xcon   =
-                getXConWindow(xcon_full, wdim, wellID, connID);
+        for (auto segID = 0*numSeg; segID < numSeg; ++segID) {
+            const auto iseg = segData.iseg(mswID, segID);
+            const auto rseg = segData.rseg(mswID, segID);
 
-            auto& xc = xw.connections[linConnID++];
+            const auto segNumber = iseg[VI::ISeg::index::SegNo]; // One-based
+
+            auto& segment = xw.segments[segNumber];
+
+            segment.segNumber = segNumber;
+            segment.pressure  =
+                usys.to_si(M::pressure, rseg[VI::RSeg::index::Pressure]);
+
+            const auto totFlow     = rseg[VI::RSeg::index::TotFlowRate];
+            const auto watFraction = rseg[VI::RSeg::index::WatFlowFract];
+            const auto gasFraction = rseg[VI::RSeg::index::GasFlowFract];
 
             if (wat) {
-                xc.rates.set(Opm::data::Rates::opt::wat,
-                             - usys.to_si(M::liquid_surface_rate,
-                                          xcon[VI::XConn::index::WaterRate]));
+                const auto qW = totFlow * watFraction * watRenormalisation;
+                segment.rates.set(Opm::data::Rates::opt::wat,
+                                  - usys.to_si(M::liquid_surface_rate, qW));
             }
 
             if (oil) {
-                xc.rates.set(Opm::data::Rates::opt::oil,
-                             - usys.to_si(M::liquid_surface_rate,
-                                          xcon[VI::XConn::index::OilRate]));
+                const auto qO = totFlow * (1.0 - (watFraction + gasFraction));
+                segment.rates.set(Opm::data::Rates::opt::oil,
+                                  - usys.to_si(M::liquid_surface_rate, qO));
             }
 
             if (gas) {
-                xc.rates.set(Opm::data::Rates::opt::gas,
-                             - usys.to_si(M::gas_surface_rate,
-                                          xcon[VI::XConn::index::GasRate]));
+                const auto qG = totFlow * gasFraction * gasRenormalisation;
+                segment.rates.set(Opm::data::Rates::opt::gas,
+                                  - usys.to_si(M::gas_surface_rate, qG));
             }
         }
     }
@@ -520,15 +959,12 @@ namespace {
                  const std::size_t       wellID,
                  const std::size_t       sim_step,
                  const Opm::EclipseGrid& grid,
-                 const WellArrayDim&     wdim,
                  const Opm::UnitSystem&  usys,
                  const Opm::Phases&      phases,
-                 const int*              iwel_full,
-                 const double*           xwel_full,
-                 const int*              icon_full,
-                 const double*           xcon_full)
+                 const WellVectors&      wellData,
+                 const SegmentVectors&   segData)
     {
-        if ((iwel_full == nullptr) || (xwel_full == nullptr)) {
+        if (! wellData.hasDefinedWellValues()) {
             // Result set does not provide well information.
             // No wells?  In any case, nothing to do here.
             return {};
@@ -536,7 +972,7 @@ namespace {
 
         using M = ::Opm::UnitSystem::measure;
 
-        const auto xwel = getXWelWindow(xwel_full, wdim, wellID);
+        const auto xwel = wellData.xwel(wellID);
 
         const auto oil = phases.active(Opm::Phase::OIL);
         const auto gas = phases.active(Opm::Phase::GAS);
@@ -568,8 +1004,23 @@ namespace {
         xw.thp = xw.temperature = 0.0;
 
         // 3) Restore connection flow rates (xw.connections[i].rates)
-        restoreConnRates(well, wellID, sim_step, grid, wdim, usys, phases,
-                         iwel_full, icon_full, xcon_full, xw);
+        //    and pressure values (xw.connections[i].pressure).
+        restoreConnResults(well, wellID, sim_step,
+                           grid, usys, phases, wellData, xw);
+
+        // 4) Restore segment quantities if applicable.
+        if (well.isMultiSegment(sim_step) &&
+            segData.hasDefinedValues())
+        {
+            const auto iwel   = wellData.iwel(wellID);
+            const auto mswID  = iwel[VI::IWell::index::MsWID]; // One-based
+            const auto numSeg = iwel[VI::IWell::index::NWseg];
+
+            if ((mswID > 0) && (numSeg > 0)) {
+                restoreSegmentQuantities(mswID - 1, numSeg, usys,
+                                         phases, segData, xw);
+            }
+        }
 
         return xw;
     }
@@ -590,14 +1041,11 @@ namespace {
             return soln;
         }
 
-        const auto  wdim   = WellArrayDim{ intehead };
+        const auto wellData = WellVectors   { rst_view, intehead };
+        const auto segData  = SegmentVectors{ rst_view, intehead };
+
         const auto& units  = es.getUnits();
         const auto& phases = es.runspec().phases();
-
-        const auto* iwel_full = getPtr<int>   (rst_view.getKeyword("IWEL"));
-        const auto* xwel_full = getPtr<double>(rst_view.getKeyword("XWEL"));
-        const auto* icon_full = getPtr<int>   (rst_view.getKeyword("ICON"));
-        const auto* xcon_full = getPtr<double>(rst_view.getKeyword("XCON"));
 
         const auto  sim_step = rst_view.simStep();
         const auto& wells    = schedule.getWells(sim_step);
@@ -607,17 +1055,140 @@ namespace {
             const auto* well = wells[wellID];
 
             soln[well->name()] =
-                restore_well(*well, wellID, sim_step, grid, wdim, units, phases,
-                             iwel_full, xwel_full, icon_full, xcon_full);
+                restore_well(*well, wellID, sim_step, grid,
+                             units, phases, wellData, segData);
         }
 
         return soln;
+    }
+
+    void assign_well_cumulatives(const std::string& well,
+                                 const std::size_t  wellID,
+                                 const WellVectors& wellData,
+                                 Opm::SummaryState& smry)
+    {
+        if (! wellData.hasDefinedWellValues()) {
+            // Result set does not provide well information.
+            // No wells?  In any case, nothing to do here.
+            return;
+        }
+
+        auto key = [&well](const std::string& vector) -> std::string
+        {
+            return vector + ':' + well;
+        };
+
+        const auto xwel = wellData.xwel(wellID);
+
+        // No unit conversion here.  Smry expects output units.
+        smry.add(key("WOPT"), xwel[VI::XWell::index::OilPrTotal]);
+        smry.add(key("WWPT"), xwel[VI::XWell::index::WatPrTotal]);
+        smry.add(key("WGPT"), xwel[VI::XWell::index::GasPrTotal]);
+        smry.add(key("WVPT"), xwel[VI::XWell::index::VoidPrTotal]);
+
+        smry.add(key("WWIT"), xwel[VI::XWell::index::WatInjTotal]);
+        smry.add(key("WGIT"), xwel[VI::XWell::index::GasInjTotal]);
+
+        smry.add(key("WOPTH"), xwel[VI::XWell::index::HistOilPrTotal]);
+        smry.add(key("WWPTH"), xwel[VI::XWell::index::HistWatPrTotal]);
+        smry.add(key("WGPTH"), xwel[VI::XWell::index::HistGasPrTotal]);
+
+        smry.add(key("WWITH"), xwel[VI::XWell::index::HistWatInjTotal]);
+        smry.add(key("WGITH"), xwel[VI::XWell::index::HistGasInjTotal]);
+    }
+
+    void assign_group_cumulatives(const std::string&  group,
+                                  const std::size_t   groupID,
+                                  const GroupVectors& groupData,
+                                  Opm::SummaryState&  smry)
+    {
+        if (! groupData.hasDefinedValues()) {
+            // Result set does not provide group information.
+            // No wells?  In any case, nothing to do here.
+            return;
+        }
+
+        auto key = [&group](const std::string& vector) -> std::string
+        {
+            return (group == "FIELD")
+                ?  'F' + vector
+                :  'G' + vector + ':' + group;
+        };
+
+        const auto xgrp = groupData.xgrp(groupID);
+
+        // No unit conversion here.  Smry expects output units.
+        smry.add(key("OPT"), xgrp[VI::XGroup::index::OilPrTotal]);
+        smry.add(key("WPT"), xgrp[VI::XGroup::index::WatPrTotal]);
+        smry.add(key("GPT"), xgrp[VI::XGroup::index::GasPrTotal]);
+        smry.add(key("VPT"), xgrp[VI::XGroup::index::VoidPrTotal]);
+
+        smry.add(key("WIT"), xgrp[VI::XGroup::index::WatInjTotal]);
+        smry.add(key("GIT"), xgrp[VI::XGroup::index::GasInjTotal]);
+
+        smry.add(key("OPTH"), xgrp[VI::XGroup::index::HistOilPrTotal]);
+        smry.add(key("WPTH"), xgrp[VI::XGroup::index::HistWatPrTotal]);
+        smry.add(key("GPTH"), xgrp[VI::XGroup::index::HistGasPrTotal]);
+        smry.add(key("WITH"), xgrp[VI::XGroup::index::HistWatInjTotal]);
+        smry.add(key("GITH"), xgrp[VI::XGroup::index::HistGasInjTotal]);
+    }
+
+    Opm::SummaryState
+    restore_cumulative(const RestartFileView& rst_view,
+                       const ::Opm::Schedule& schedule)
+    {
+        auto smry = Opm::SummaryState{};
+
+        const auto  sim_step = rst_view.simStep();
+        const auto* intehead = rst_view.getKeyword("INTEHEAD");
+
+        if (intehead == nullptr) { return smry; }
+
+        // Well cumulatives
+        {
+            const auto  wellData = WellVectors { rst_view, intehead };
+            const auto& wells    = schedule.getWells(sim_step);
+
+            for (auto nWells = wells.size(), wellID = 0*nWells;
+                 wellID < nWells; ++wellID)
+            {
+                assign_well_cumulatives(wells[wellID]->name(),
+                                        wellID, wellData, smry);
+            }
+        }
+
+        // Group cumulatives, including FIELD.
+        {
+            const auto groupData = GroupVectors { rst_view, intehead };
+
+            for (const auto* group : schedule.getGroups(sim_step)) {
+                const auto& gname = group->name();
+
+                // Note: Order of group values in {I,X}GRP arrays mostly
+                // matches group's order of occurrence in .DATA file.
+                // Values pertaining to FIELD are stored at zero-based order
+                // index NGMAXZ (maximum number of groups in model).  The
+                // latter value is groupData.maxGroups().
+                //
+                // As a final wrinkle, Flow internally stores FIELD at
+                // seqIndex() == 0, so subtract one to account for this
+                // fact.  Max(seqIndex(), 1) - 1 is just a bit of future
+                // proofing and robustness in case that ever changes.
+                const auto groupOrderIx = (gname == "FIELD")
+                    ? groupData.maxGroups() // NGMAXZ -- Item 3 of WELLDIMS
+                    : std::max(group->seqIndex(), std::size_t{1}) - 1;
+
+                assign_group_cumulatives(gname, groupOrderIx, groupData, smry);
+            }
+        }
+
+        return smry;
     }
 } // Anonymous namespace
 
 namespace Opm { namespace RestartIO  {
 
-    RestartValue
+    std::pair<RestartValue, SummaryState>
     load(const std::string&             filename,
          int                            report_step,
          const std::vector<RestartKey>& solution_keys,
@@ -643,6 +1214,10 @@ namespace Opm { namespace RestartIO  {
             restoreExtra(rst_view, extra_keys, es.getUnits(), rst_value);
         }
 
-        return rst_value;
+        return {
+            std::move(rst_value),
+            restore_cumulative(rst_view, schedule)
+        };
     }
+
 }} // Opm::RestartIO

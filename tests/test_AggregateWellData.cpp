@@ -1,4 +1,5 @@
 /*
+  Copyright 2019 Equinor
   Copyright 2018 Statoil ASA
 
   This file is part of the Open Porous Media project (OPM).
@@ -232,6 +233,11 @@ TSTEP            -- 8
         state.add("WWCT:OP_1" ,    0.625);
         state.add("WGOR:OP_1" ,  234.5);
         state.add("WBHP:OP_1" ,  314.15);
+        state.add("WOPTH:OP_1",  345.6);
+        state.add("WWPTH:OP_1",  456.7);
+        state.add("WGPTH:OP_1",  567.8);
+        state.add("WWITH:OP_1",    0.0);
+        state.add("WGITH:OP_1",    0.0);
         state.add("WGVIR:OP_1",    0.0);
         state.add("WWVIR:OP_1",    0.0);
 
@@ -250,6 +256,11 @@ TSTEP            -- 8
         state.add("WWCT:OP_2" ,    0.0);
         state.add("WGOR:OP_2" ,    0.0);
         state.add("WBHP:OP_2" ,  400.6);
+        state.add("WOPTH:OP_2",    0.0);
+        state.add("WWPTH:OP_2",    0.0);
+        state.add("WGPTH:OP_2",    0.0);
+        state.add("WWITH:OP_2", 1515.0);
+        state.add("WGITH:OP_2", 3030.0);
         state.add("WGVIR:OP_2", 1234.0);
         state.add("WWVIR:OP_2", 4321.0);
 
@@ -268,6 +279,11 @@ TSTEP            -- 8
         state.add("WWCT:OP_3" ,    0.0625);
         state.add("WGOR:OP_3" , 1234.5);
         state.add("WBHP:OP_3" ,  314.15);
+        state.add("WOPTH:OP_3", 2345.6);
+        state.add("WWPTH:OP_3", 3456.7);
+        state.add("WGPTH:OP_3", 4567.8);
+        state.add("WWITH:OP_3",    0.0);
+        state.add("WGITH:OP_3",    0.0);
         state.add("WGVIR:OP_3",    0.0);
         state.add("WWVIR:OP_3",   43.21);
 
@@ -532,7 +548,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
 
         const auto& iwell = awd.getIWell();
 
-        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9 ], iwell[i0 + Ix::WCtrl]);
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9 ], iwell[i0 + Ix::ActWCtrl]);
         BOOST_CHECK_EQUAL(iwell[i0 + Ix::item11], 1);
     }
 
@@ -561,17 +577,27 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::LiqPrRate], 1.0 + 2.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrRate], 4.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] , 0.625, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15 , 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] ,   0.625, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5  , 1.0e-10);
 
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::OilPrTotal], 10.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrTotal], 20.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrTotal], 30.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrTotal], 40.0, 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item37], xwell[i0 + Ix::WatPrRate], 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item38], xwell[i0 + Ix::GasPrRate], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item37],
+                          xwell[i0 + Ix::WatPrRate], 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item38],
+                          xwell[i0 + Ix::GasPrRate], 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistOilPrTotal], 345.6, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistWatPrTotal], 456.7, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistGasPrTotal], 567.8, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistWatInjTotal], 0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistGasInjTotal], 0.0, 1.0e-10);
     }
 
     // XWEL (OP_2)
@@ -585,6 +611,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidPrRate], -1234.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasInjTotal], 2000.0, 1.0e-10);
 
         // Bg = VGIR / GIR = 1234.0 / 200.0
@@ -593,11 +620,11 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::item38],
                           xwell[i1 + Ix::GasPrRate], 1.0e-10);
 
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::item83],
-                          xwell[i1 + Ix::GasInjTotal], 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasVoidPrRate],
-                          xwell[i1 + Ix::VoidPrRate], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistOilPrTotal] ,    0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistWatPrTotal] ,    0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistGasPrTotal] ,    0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistWatInjTotal], 1515.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistGasInjTotal], 3030.0, 1.0e-10);
     }
 }
 
@@ -641,7 +668,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         const auto& iwell = awd.getIWell();
 
         BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9],
-                          iwell[i1 + Ix::WCtrl]);
+                          iwell[i1 + Ix::ActWCtrl]);
         BOOST_CHECK_EQUAL(iwell[i1 + Ix::item11], 1);
     }
 
@@ -672,6 +699,10 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
 
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::item38],
                           xwell[i0 + Ix::GasPrRate], 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistOilPrTotal], 345.6, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistWatPrTotal], 456.7, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistGasPrTotal], 567.8, 1.0e-10);
     }
 
     // XWEL (OP_2) -- water injector
@@ -690,14 +721,17 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasInjTotal], 2000.0, 1.0e-10);
 
         // Copy of WWIR
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::item37],
                           xwell[i1 + Ix::WatPrRate], 1.0e-10);
 
-        // Copy of WWIT
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::item82],
-                          xwell[i1 + Ix::WatInjTotal], 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistOilPrTotal] ,    0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistWatPrTotal] ,    0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistGasPrTotal] ,    0.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistWatInjTotal], 1515.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistGasInjTotal], 3030.0, 1.0e-10);
 
         // WWVIR
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatVoidPrRate],
@@ -733,6 +767,10 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         // Copy of WGPR
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::item38],
                           xwell[i2 + Ix::GasPrRate], 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::HistOilPrTotal], 2345.6, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::HistWatPrTotal], 3456.7, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::HistGasPrTotal], 4567.8, 1.0e-10);
     }
 }
 

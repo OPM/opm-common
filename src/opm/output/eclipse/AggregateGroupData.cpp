@@ -381,7 +381,8 @@ namespace {
 
             for (const auto& key : keys) {
                 if ((key[3] == 'T') && ((key[2] == 'I') || (key[2] == 'P'))) {
-                    // Don't write cumulative quantities in case of 
+                    // Don't write cumulative quantities in case of OPM
+                    // extended restart files.
                     continue;
                 }
 
@@ -424,7 +425,7 @@ namespace {
 	    }*/
 	  }
 	}
-    }
+    } // XGrp
 
     namespace ZGrp {
         std::size_t entriesPerGroup(const std::vector<int>& inteHead)
@@ -447,7 +448,13 @@ namespace {
                 WV::WindowSize{ entriesPerGroup(inteHead) }
             };
         }
-    }
+
+        template <class ZGroupArray>
+        void staticContrib(const Opm::Group& group, ZGroupArray& zGroup)
+        {
+            zGroup[0] = group.name();
+        }
+    } // ZGrp
 } // Anonymous
 
 void
@@ -520,18 +527,19 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
     auto it = indexGroupMap.begin();
     while (it != indexGroupMap.end())
-	{
-	    curGroups[static_cast<int>(it->first)] = it->second;
-	    it++;
-	}
     {
-	groupLoop(curGroups, [sched, simStep, inteHead, this]
-            (const Group& group, const std::size_t groupID) -> void
-	    {
-		auto ig = this->iGroup_[groupID];
-		IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_, simStep, ig, inteHead);
-	    });
+        curGroups[static_cast<int>(it->first)] = it->second;
+        it++;
     }
+
+    groupLoop(curGroups, [&sched, simStep, &inteHead, this]
+        (const Group& group, const std::size_t groupID) -> void
+    {
+        auto ig = this->iGroup_[groupID];
+
+        IGrp::staticContrib(sched, group, this->nWGMax_, this->nGMaxz_,
+                            simStep, ig, inteHead);
+    });
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
@@ -541,23 +549,25 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
         SGrp::staticContrib(sw);
     });
 
-    // Define DynamicContributions to XGrp Array.
-    groupLoop(curGroups,
-        [restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, ecl_compatible_rst, sumState, this]
+    // Define Dynamic Contributions to XGrp Array.
+    groupLoop(curGroups, [&restart_group_keys, &restart_field_keys,
+                          &groupKeyToIndex, &fieldKeyToIndex,
+                          ecl_compatible_rst, &sumState, this]
 	(const Group& group, const std::size_t groupID) -> void
     {
         auto xg = this->xGroup_[groupID];
-        XGrp::dynamicContrib( restart_group_keys, restart_field_keys, groupKeyToIndex, fieldKeyToIndex, group, sumState, ecl_compatible_rst, xg);
+
+        XGrp::dynamicContrib(restart_group_keys, restart_field_keys,
+                             groupKeyToIndex, fieldKeyToIndex, group,
+                             sumState, ecl_compatible_rst, xg);
     });
-    
+
     // Define Static Contributions to ZGrp Array.
-    groupLoop(curGroups,
-        [this](const Group& group, const std::size_t groupID) -> void
+    groupLoop(curGroups, [this, &nameIndexMap]
+        (const Group& group, const std::size_t /* groupID */) -> void
     {
-        auto zw = this->zGroup_[groupID];
-        zw[0] = group.name();
+        auto zg = this->zGroup_[ nameIndexMap.at(group.name()) ];
+
+        ZGrp::staticContrib(group, zg);
     });
-
 }
-
-// ---------------------------------------------------------------------

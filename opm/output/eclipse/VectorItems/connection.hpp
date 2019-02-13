@@ -66,6 +66,8 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             WaterRate  =  1,  // Surface flow rate (water)
             GasRate    =  2,  // Surface Flow rate (gas)
 
+            Pressure   = 34,  // Connection pressure value
+
             ResVRate   = 49,  // Reservoir voidage rate
         };
     } // XConn

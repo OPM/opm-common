@@ -500,7 +500,14 @@ RestartValue EclipseIO::loadRestart(const std::vector<RestartKey>& solution_keys
                                                                         report_step,
                                                                         false );
 
-    return RestartIO::load( filename , report_step , solution_keys , es, grid , schedule, extra_keys);
+    auto rst = RestartIO::load(filename, report_step, solution_keys,
+                               es, grid, schedule, extra_keys);
+
+    // Technically a violation of 'const'.  Allowed because 'impl' is
+    // constant pointer to mutable Impl.
+    this->impl->summary.reset_cumulative_quantities(rst.second);
+
+    return std::move(rst.first);
 }
 
 EclipseIO::EclipseIO( const EclipseState& es,

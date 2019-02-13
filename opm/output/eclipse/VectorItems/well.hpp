@@ -26,26 +26,30 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
     namespace IWell {
         enum index : std::vector<int>::size_type {
-            IHead  =  0, // I-location (one-based) of well head
-            JHead  =  1, // J-location (one-based) of well head
-            FirstK =  2, // Layer ID (one-based) of top/first connection
-            LastK  =  3, // Layer ID (one-based) of bottom/last connection
-            NConn  =  4, // Number of active cells connected to well
-            Group  =  5, // Index (one-based) of well's current group
-            WType  =  6, // Well type
-            WCtrl  =  7, // Well control
+            IHead    =  0, // I-location (one-based) of well head
+            JHead    =  1, // J-location (one-based) of well head
+            FirstK   =  2, // Layer ID (one-based) of top/first connection
+            LastK    =  3, // Layer ID (one-based) of bottom/last connection
+            NConn    =  4, // Number of active cells connected to well
+            Group    =  5, // Index (one-based) of well's current group
+            WType    =  6, // Well type (producer vs. injector)
+            ActWCtrl =  7, // Well's active target control mode (constraint).
 
-            item9  =  8, // Unknown
-            item11 = 10, // Unknown
+            item9    =  8, // Unknown
+            item11   = 10, // Unknown
+            VFPTab   = 11, // ID (one-based) of well's current VFP table.
 
-            VFPTab = 11, // ID (one-based) of well's current VFP table
+            PredReqWCtrl = 15, // Well's requested control mode from
+                               // simulation deck (WCONINJE, WCONPROD).
 
             item18 = 17, // Unknown
 	    XFlow  = 22,
             item25 = 24, // Unknown
             item32 = 31, // Unknown
             item48 = 47, // Unknown
-            item50 = 49, // Unknown
+
+            HistReqWCtrl = 49, // Well's requested control mode from
+                               // simulation deck (WCONHIST, WCONINJH)
 
             MsWID  = 70, // Multisegment well ID
                          //   Value 0 for regular wells
@@ -116,10 +120,15 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
             BHPTarget      = 6, // Well's bottom hole pressure target
 
             DatumDepth     = 9, // Well's reference depth for BHP
-	    LiqRateTarget_2  = 33, //Well's liquid rate target/limit for a well on WCONINJH control or for a producer
-	    GasRateTarget_2  = 54, //Well's gas rate target/limit for a well on WCONINJH control or for producer
-	    BHPTarget_2	   = 55, //Well's bottom hole pressure target/limit
-	    
+
+            HistLiqRateTarget = 33, // Well's historical/observed liquid
+                                    // rate target/limit
+
+            HistGasRateTarget = 54, // Well's historical/observed gas rate
+                                    // target/limit
+
+            HistBHPTarget     = 55, // Well's historical/observed bottom
+                                    // hole pressure target/limit
         };
     } // SWell
 
@@ -146,13 +155,22 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             GasFVF      = 34,  // Well's producing gas formation volume factor.
 
-            item37     = 36,   // Unknown
-            item38     = 37,   // Unknown
+            item37      = 36,   // Unknown
+            item38      = 37,   // Unknown
 
-            BHPTarget  = 41, // Well's current BHP Target/Limit
+            BHPTarget   = 41,   // Well's current BHP Target/Limit
 
-            item82     = 81,   // Unknown
-            item83     = 82,   // Unknown
+            HistOilPrTotal  = 75, // Well's total cumulative oil production
+                                  // (observed/historical rates)
+            HistWatPrTotal  = 76, // Well's total cumulative water
+                                  // production (observed/historical rates)
+            HistGasPrTotal  = 77, // Well's total cumulative gas production
+                                  // (observed(historical rates)
+
+            HistWatInjTotal = 81, // Well's total cumulative water injection
+                                  // (observed/historical rates)
+            HistGasInjTotal = 82, // Well's total cumulative gas injection
+                                  // (observed/historical rates)
 
             WatVoidPrRate = 122, // Well's voidage production rate
             GasVoidPrRate = 123, // Well's voidage production rate

@@ -2899,3 +2899,176 @@ BOOST_AUTO_TEST_CASE(Write_Read)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Reset_Cumulative_Vectors)
+
+BOOST_AUTO_TEST_CASE(Reset)
+{
+    const auto config = setup { "test.Reset.Cumulative" };
+    ::Opm::out::Summary smry {
+        config.es, config.config, config.grid,
+        config.schedule, "Ignore.This"
+    };
+
+    auto rstrt = ::Opm::SummaryState{};
+    rstrt.add("WOPT:W_1", 1.0);
+    rstrt.add("WWPT:W_1", 2.0);
+    rstrt.add("WGPT:W_1", 3.0);
+    rstrt.add("WVPT:W_1", 4.0);
+
+    rstrt.add("WWIT:W_1", 5.0);
+    rstrt.add("WGIT:W_1", 6.0);
+
+    rstrt.add("WOPTH:W_1", 0.1);
+    rstrt.add("WWPTH:W_1", 0.2);
+    rstrt.add("WGPTH:W_1", 0.3);
+
+    rstrt.add("WWITH:W_1", 0.5);
+    rstrt.add("WGITH:W_1", 0.6);
+
+    rstrt.add("GOPT:NoSuchGroup", 1.0);
+    rstrt.add("GWPT:NoSuchGroup", 2.0);
+    rstrt.add("GGPT:NoSuchGroup", 3.0);
+    rstrt.add("GVPT:NoSuchGroup", 4.0);
+
+    rstrt.add("GWIT:NoSuchGroup", 5.0);
+    rstrt.add("GGIT:NoSuchGroup", 6.0);
+
+    rstrt.add("FOPT", 10.0);
+    rstrt.add("FWPT", 20.0);
+    rstrt.add("FGPT", 30.0);
+    rstrt.add("FVPT", 40.0);
+
+    rstrt.add("FWIT", 50.0);
+    rstrt.add("FGIT", 60.0);
+
+    rstrt.add("FOPTH", 0.01);
+    rstrt.add("FWPTH", 0.02);
+    rstrt.add("FGPTH", 0.03);
+
+    rstrt.add("FWITH", 0.05);
+    rstrt.add("FGITH", 0.06);
+
+    smry.reset_cumulative_quantities(rstrt);
+
+    const auto& sumstate = smry.get_restart_vectors();
+
+    // Cumulatives don't affect rates, BHP, WCT, or GOR.
+    for (const auto* w : { "W_1", "W_2", "W_3" }) {
+        auto get = [w, &sumstate](const std::string& vector) {
+            return sumstate.get(vector + ':' + std::string(w));
+        };
+
+        BOOST_CHECK_THROW(get("WWPR"), std::out_of_range);
+        BOOST_CHECK_THROW(get("WOPR"), std::out_of_range);
+        BOOST_CHECK_THROW(get("WGPR"), std::out_of_range);
+        BOOST_CHECK_THROW(get("WVPR"), std::out_of_range);
+
+        BOOST_CHECK_THROW(get("WWIR"), std::out_of_range);
+        BOOST_CHECK_THROW(get("WGIR"), std::out_of_range);
+
+        BOOST_CHECK_THROW(get("WBHP"), std::out_of_range);
+        BOOST_CHECK_THROW(get("WWCT"), std::out_of_range);
+        BOOST_CHECK_THROW(get("WGOR"), std::out_of_range);
+    }
+
+    // Cumulatives reset for W_1.
+    BOOST_CHECK_CLOSE(sumstate.get("WOPT:W_1"), 1.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WWPT:W_1"), 2.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGPT:W_1"), 3.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WVPT:W_1"), 4.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WWIT:W_1"), 5.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGIT:W_1"), 6.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WOPTH:W_1"), 0.1, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WWPTH:W_1"), 0.2, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGPTH:W_1"), 0.3, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WWITH:W_1"), 0.5, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGITH:W_1"), 0.6, 1.0e-10);
+
+    // Cumulatives unset for W_2.
+    BOOST_CHECK_CLOSE(sumstate.get("WOPT:W_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WWPT:W_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGPT:W_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WVPT:W_2"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WWIT:W_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGIT:W_2"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WOPTH:W_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WWPTH:W_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGPTH:W_2"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WWITH:W_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGITH:W_2"), 0.0, 1.0e-10);
+
+    // Cumulatives unset for W_3.
+    BOOST_CHECK_CLOSE(sumstate.get("WOPT:W_3"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WWPT:W_3"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGPT:W_3"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WVPT:W_3"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WWIT:W_3"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGIT:W_3"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WOPTH:W_3"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WWPTH:W_3"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGPTH:W_3"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("WWITH:W_3"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("WGITH:W_3"), 0.0, 1.0e-10);
+
+    // Cumulatives unset for G_1.
+    BOOST_CHECK_CLOSE(sumstate.get("GOPT:G_1"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GWPT:G_1"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GGPT:G_1"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GVPT:G_1"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("GWIT:G_1"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GGIT:G_1"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("GOPTH:G_1"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GWPTH:G_1"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GGPTH:G_1"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("GWITH:G_1"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GGITH:G_1"), 0.0, 1.0e-10);
+
+    // Cumulatives unset for G_2.
+    BOOST_CHECK_CLOSE(sumstate.get("GOPT:G_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GWPT:G_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GGPT:G_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GVPT:G_2"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("GWIT:G_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GGIT:G_2"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("GOPTH:G_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GWPTH:G_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GGPTH:G_2"), 0.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("GWITH:G_2"), 0.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("GGITH:G_2"), 0.0, 1.0e-10);
+
+    // Cumulatives reset for FIELD.
+    BOOST_CHECK_CLOSE(sumstate.get("FOPT"), 10.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("FWPT"), 20.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("FGPT"), 30.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("FVPT"), 40.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("FWIT"), 50.0, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("FGIT"), 60.0, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("FOPTH"), 0.01, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("FWPTH"), 0.02, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("FGPTH"), 0.03, 1.0e-10);
+
+    BOOST_CHECK_CLOSE(sumstate.get("FWITH"), 0.05, 1.0e-10);
+    BOOST_CHECK_CLOSE(sumstate.get("FGITH"), 0.06, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
