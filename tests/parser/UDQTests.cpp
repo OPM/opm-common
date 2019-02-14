@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -200,4 +201,72 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
 
     st.add("SUMMARY:KEY", 1.0);
     BOOST_CHECK_EQUAL(ctx.get("SUMMARY:KEY") , 1.0 );
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_SET) {
+    UDQSet s1(5);
+
+    for (const auto& v : s1) {
+        BOOST_CHECK_EQUAL(false, v.defined());
+        BOOST_REQUIRE_THROW( v.value(), std::invalid_argument);
+    }
+    BOOST_CHECK_EQUAL(s1.defined_size(), 0);
+
+    s1.assign(1);
+    for (const auto& v : s1) {
+        BOOST_CHECK_EQUAL(true, v.defined());
+        BOOST_CHECK_EQUAL( v.value(), 1.0);
+    }
+    BOOST_CHECK_EQUAL(s1.defined_size(), s1.size());
+
+    s1.assign(0,0.0);
+    {
+        UDQSet s2(6);
+        BOOST_REQUIRE_THROW(s1 + s2, std::invalid_argument);
+    }
+    {
+        UDQSet s2(5);
+        s2.assign(0, 25);
+        auto s3 = s1 + s2;
+
+        auto v0 = s3[0];
+        BOOST_CHECK_EQUAL(v0.value(), 25);
+
+        auto v4 = s3[4];
+        BOOST_CHECK( !v4.defined() );
+    }
+    s1.assign(0,1.0);
+    {
+        UDQSet s2 = s1 + 1.0;
+        UDQSet s3 = s2 * 2.0;
+        UDQSet s4 = s1 - 1.0;
+        for (const auto& v : s2) {
+            BOOST_CHECK_EQUAL(true, v.defined());
+            BOOST_CHECK_EQUAL( v.value(), 2.0);
+        }
+
+        for (const auto& v : s3) {
+            BOOST_CHECK_EQUAL(true, v.defined());
+            BOOST_CHECK_EQUAL( v.value(), 4.0);
+        }
+
+        for (const auto& v : s4) {
+            BOOST_CHECK_EQUAL(true, v.defined());
+            BOOST_CHECK_EQUAL( v.value(), 0);
+        }
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
+    UDQSet s(5);
+    s.assign(0,1);
+    s.assign(2,2);
+    s.assign(4,5);
+
+    auto result = 10 / s;
+    BOOST_CHECK_EQUAL( result.defined_size(), 3);
+    BOOST_CHECK_EQUAL( result[0].value(), 10);
+    BOOST_CHECK_EQUAL( result[2].value(), 5);
+    BOOST_CHECK_EQUAL( result[4].value(), 2);
 }

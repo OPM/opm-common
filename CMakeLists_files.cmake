@@ -125,6 +125,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/TableSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/Tables.cpp
     src/opm/parser/eclipse/EclipseState/UDQParams.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQSet.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQExpression.cpp
@@ -514,6 +515,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp
        opm/parser/eclipse/EclipseState/UDQParams.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp
        opm/parser/eclipse/Deck/Deck.hpp
