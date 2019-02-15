@@ -33,9 +33,9 @@
 
 BOOST_AUTO_TEST_CASE(TestConstructor){
 
-    EclFile file1("../../tests/NORNE_ATW2013.INIT");
+    EclFile file1("SPE1CASE1.SMSPEC");
     
-    BOOST_CHECK_THROW(EclFile file1("../../../../tests/XXXXX_ATW2013.INIT"), std::runtime_error );
+    BOOST_CHECK_THROW(EclFile file1("XXXX.INIT"), std::runtime_error );
 
 }
 

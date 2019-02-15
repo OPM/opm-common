@@ -293,6 +293,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/summary_deck_non_constant_porosity.DATA
           tests/SUMMARY_EFF_FAC.DATA
           tests/SPE1CASE1.DATA
+          tests/SPE1CASE1.SMSPEC
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
       )
