@@ -144,15 +144,9 @@ if (ENABLE_MOCKSIM)
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
   foreach( test test_msim test_msim_ACTIONX )
-     add_executable(${test} "tests/msim/${test}")
-     target_link_libraries(${test} ${_libs})
-     add_test(NAME ${test} COMMAND ${test})
-     set_tests_properties(${test} PROPERTIES WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
-
-     if(HAVE_DYNAMIC_BOOST_TEST)
-       set_target_properties(${test} PROPERTIES
-                             COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
-     endif()
+    opm_add_test(${test} SOURCES tests/msim/${test}
+                         LIBRARIES ${_libs}
+                         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
   endforeach()
 endif()
 
@@ -172,16 +166,10 @@ if(ENABLE_ECL_INPUT)
   # Add the tests
   set(_libs testutil opmcommon
             ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-  opm_add_test(test_compareSummary CONDITION ENABLE_ECL_INPUT
-                                   LIBRARIES ${_libs})
-  opm_add_test(test_EclFilesComparator CONDITION ENABLE_ECL_INPUT
-                                       LIBRARIES ${_libs})
-  if(HAVE_DYNAMIC_BOOST_TEST)
-    set_target_properties(test_compareSummary PROPERTIES
-                          COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
-    set_target_properties(test_EclFilesComparator PROPERTIES
-                          COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
-  endif()
+  foreach(test test_compareSummary test_EclFilesComparator)
+    opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
+                         LIBRARIES ${_libs})
+  endforeach()
   install(TARGETS compareECL DESTINATION bin)
 endif()
 
