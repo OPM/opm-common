@@ -1200,6 +1200,7 @@ BOOST_AUTO_TEST_CASE( TestPLYMWINJ ) {
         "   20.    19.   18.   16. /\n"
         "   20.    16.   14.   12. /\n"
         "   20.    12.   8.    4. /\n"
+        "/\n"
         "PLYMWINJ \n"
         "   3   /    -- table number \n"
         "   0.0     100.0  / -- throughput values \n"
@@ -1207,7 +1208,8 @@ BOOST_AUTO_TEST_CASE( TestPLYMWINJ ) {
         "   -- the rest will be the polymer molecular weight \n"
         "   -- each row corresponds to one sample points in the throughput direction \n"
         "   20.    19.   18.   /\n"
-        "   20.    16.   14.   /\n";
+        "   20.    16.   14.   /\n"
+        "/\n";
 
     Opm::Parser parser;
     const Opm::Deck deck = parser.parseString(inputstring);
@@ -1278,6 +1280,7 @@ BOOST_AUTO_TEST_CASE( TestSKPRWAT ) {
         "   20.    19.   18.   16. /\n"
         "   20.    16.   14.   12. /\n"
         "   20.    12.   8.    4. /\n"
+        "/\n"
         "SKPRWAT \n"
         "   2   /    -- table number \n"
         "   0.0     100.0  / -- throughput values \n"
@@ -1285,7 +1288,10 @@ BOOST_AUTO_TEST_CASE( TestSKPRWAT ) {
         "   -- the rest will be the skin pressure \n"
         "   -- each row corresponds to one sample points in the throughput direction \n"
         "   20.    19.   18.   /\n"
-        "   20.    16.   14.   /\n";
+        "   20.    16.   14.   /\n"
+        "/\n";
+
+
 
     Opm::Parser parser;
     const Opm::Deck deck = parser.parseString(inputstring);
@@ -1358,6 +1364,7 @@ BOOST_AUTO_TEST_CASE( TestSKPRPOLY ) {
         "   20.    19.   18.   16. /\n"
         "   20.    16.   14.   12. /\n"
         "   20.    12.   8.    4. /\n"
+        "/\n"
         "SKPRPOLY \n"
         "   2   3.0 /    -- table number & reference concentration \n"
         "   0.0     100.0  / -- throughput values \n"
@@ -1365,7 +1372,8 @@ BOOST_AUTO_TEST_CASE( TestSKPRPOLY ) {
         "   -- the rest will be the skin pressure \n"
         "   -- each row corresponds to one sample points in the throughput direction \n"
         "   20.    19.   18.   /\n"
-        "   20.    16.   14.   /\n";
+        "   20.    16.   14.   /\n"
+        "/\n";
 
     Opm::Parser parser;
     const Opm::Deck deck = parser.parseString(inputstring);

@@ -1,4 +1,4 @@
-{"name" : "SKPRWAT" , "sections" : ["PROPS"], "size" : "UNKNOWN",
+{"name" : "SKPRWAT" , "sections" : ["PROPS"],
  "records"  : [
 [{"name" : "TABLE_NUMBER" , "value_type" : "INT"}],
 [{"name" : "THROUGHPUT", "value_type" : "DOUBLE", "dimension" : "Length", "size_type" : "ALL"}],

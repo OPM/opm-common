@@ -1,4 +1,4 @@
-{"name" : "PLYMWINJ" , "sections" : ["PROPS"], "size" : "UNKNOWN",
+{"name" : "PLYMWINJ" , "sections" : ["PROPS"],
  "records"  : [
 [{"name" : "TABLE_NUMBER" , "value_type" : "INT"}],
 [{"name" : "THROUGHPUT", "value_type" : "DOUBLE", "dimension" : "Length", "size_type" : "ALL"}],
