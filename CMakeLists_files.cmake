@@ -321,7 +321,7 @@ endif()
 
 list( APPEND PUBLIC_HEADER_FILES
       examples/test_util/EclFile.hpp
-      examples/test_util/EclIOdata.hpp
+      examples/test_util/data/EclIOdata.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
       opm/common/data/SimulationDataContainer.hpp
