@@ -98,7 +98,7 @@ UDQ
 
     auto schedule = make_schedule(input);
     const auto& udq = schedule.getUDQConfig(0);
-    BOOST_CHECK_EQUAL(2, udq.expressions().size());
+    BOOST_CHECK_EQUAL(1, udq.expressions().size());
 
     BOOST_CHECK_THROW( udq.unit("NO_SUCH_KEY"), std::invalid_argument );
     BOOST_CHECK_EQUAL( udq.unit("WUBHP"), "BARSA");
@@ -148,12 +148,12 @@ UDQ
 
 BOOST_AUTO_TEST_CASE(UDQ_KEYWORD) {
     // Invalid action
-    BOOST_REQUIRE_THROW( UDQExpression("INVALID_ACTION", "WUBHP" , {"DATA1" ,"1"}), std::invalid_argument);
+    BOOST_REQUIRE_THROW( UDQExpression::actionString2Enum("INVALID_ACTION"), std::invalid_argument);
 
     // Invalid keyword
-    BOOST_REQUIRE_THROW( UDQExpression("ASSIGN", "INVALID_KEYWORD", {}), std::invalid_argument);
+    BOOST_REQUIRE_THROW( UDQExpression(UDQAction::ASSIGN, "INVALID_KEYWORD", {}), std::invalid_argument);
 
-    BOOST_CHECK_NO_THROW(UDQExpression("ASSIGN" ,"WUBHP", {"1"}));
+    BOOST_CHECK_NO_THROW(UDQExpression(UDQAction::ASSIGN ,"WUBHP", {"1"}));
 }
 
 
@@ -170,7 +170,7 @@ UDQPARAM
 SCHEDULE
 
 UDQ
-ASSIGN CUMW1 P12 10 12 1 (4.0 + 6*(4 - 2)) /
+DEFINE CUMW1 P12 10 12 1 (4.0 + 6*(4 - 2)) /
 DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
 /
 

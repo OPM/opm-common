@@ -33,7 +33,7 @@ namespace Opm {
 
     class UDQExpression {
     public:
-        UDQExpression(const std::string& action, const std::string& keyword, const std::vector<std::string>& data);
+        UDQExpression(UDQAction action, const std::string& keyword, const std::vector<std::string>& data);
         explicit UDQExpression(const DeckRecord& expression);
         const std::vector<std::string>& tokens() const;
         UDQAction action() const;

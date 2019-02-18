@@ -57,10 +57,10 @@ namespace Opm {
       2. For items like '2*(1+WBHP)' the parsing code will expand the 2*
          operator to the repeated tokens : (1+WBHP), (1+WBHP)
     */
-    UDQExpression::UDQExpression(const std::string& action_in, const std::string& keyword_in, const std::vector<std::string>& input_data) {
+    UDQExpression::UDQExpression(UDQAction action, const std::string& keyword_in, const std::vector<std::string>& input_data) {
         assertKeyword(keyword_in);
 
-        this->m_action = actionString2Enum(action_in);
+        this->m_action = action;
         this->m_keyword = keyword_in;
 
         for (const std::string& item : input_data) {
@@ -96,7 +96,7 @@ namespace Opm {
     }
 
     UDQExpression::UDQExpression(const DeckRecord& record) :
-        UDQExpression(record.getItem("ACTION").get<std::string>(0),
+        UDQExpression(UDQExpression::actionString2Enum(record.getItem("ACTION").get<std::string>(0)),
                       record.getItem("QUANTITY").get<std::string>(0),
                       record.getItem("DATA").getData<std::string>())
 
