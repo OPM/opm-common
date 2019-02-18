@@ -18,7 +18,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/U.hpp>
-#include <opm/parser/eclipse/EclipseState/UDQParams.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 
 namespace Opm {
 

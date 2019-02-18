@@ -24,7 +24,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
-#include <opm/parser/eclipse/EclipseState/UDQParams.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 
 namespace Opm {
 class Deck;
