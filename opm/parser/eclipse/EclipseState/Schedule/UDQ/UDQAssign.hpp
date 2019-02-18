@@ -18,30 +18,28 @@
 */
 
 
-#ifndef UDQState_HPP_
-#define UDQState_HPP_
+#ifndef UDQASSIGN_HPP_
+#define UDQASSIGN_HPP_
 
-#include <unordered_map>
 #include <string>
+#include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
 
 namespace Opm {
 
-    class UDQ{
-    public:
-        void add_record(const DeckRecord& record);
-        const std::vector<UDQExpression>& expressions() const noexcept;
-        const std::string& unit(const std::string& key) const;
-        void assign_unit(const std::string& keyword, const std::string& unit);
-        const std::vector<UDQAssign>& assignments() const;
-    private:
-        std::vector<UDQExpression> m_expressions;
-        std::vector<UDQAssign> m_assignments;
-        std::unordered_map<std::string, std::string> units;
-    };
+class UDQAssign{
+public:
+    UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
+    const std::string& keyword() const;
+    double value() const;
+    const std::vector<std::string>& selector() const;
+    UDQWellSet eval_wells(const std::vector<std::string>& wells) const;
+private:
+    std::string m_keyword;
+    std::vector<std::string> m_selector;
+    double m_value;
+};
 }
 
 

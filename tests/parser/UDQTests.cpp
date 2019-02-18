@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 using namespace Opm;
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(UDQ_KEYWORD) {
 }
 
 
-BOOST_AUTO_TEST_CASE(UDQ_DATA) {
+BOOST_AUTO_TEST_CASE(UDQ_DEFINE_DATA) {
     const std::string input = R"(
 RUNSPEC
 
@@ -187,6 +188,45 @@ DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
     BOOST_CHECK_EQUAL_COLLECTIONS(rec0.tokens().begin(), rec0.tokens().end(), exp0.begin(), exp0.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(rec1.tokens().begin(), rec1.tokens().end(), exp1.begin(), exp1.end());
 }
+
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_DATA) {
+    const std::string input = R"(
+RUNSPEC
+
+UDQDIMS
+   10* 'Y'/
+
+UDQPARAM
+  3* 0.25 /
+
+SCHEDULE
+
+UDQ
+ASSIGN WU1 P12 4.0 /
+ASSIGN WU2 8.0 /
+/
+
+
+)";
+    const auto schedule = make_schedule(input);
+    const auto& udq = schedule.getUDQConfig(0);
+    const auto& assignments = udq.assignments();
+    const auto& ass0 = assignments[0];
+    const auto& ass1 = assignments[1];
+
+
+    BOOST_CHECK_EQUAL(ass0.keyword(), "WU1");
+    BOOST_CHECK_EQUAL(ass1.keyword(), "WU2");
+
+    BOOST_CHECK_EQUAL(ass0.value(), 4.0 );
+    BOOST_CHECK_EQUAL(ass1.value(), 8.0 );
+
+    std::vector<std::string> sel0 = {"P12"};
+    std::vector<std::string> sel1 = {};
+    BOOST_CHECK_EQUAL_COLLECTIONS(ass0.selector().begin(), ass0.selector().end(), sel0.begin(), sel0.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(ass1.selector().begin(), ass1.selector().end(), sel1.begin(), sel1.end());
+}
+
 
 
 
@@ -298,4 +338,29 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     ws.assign("P*", 4.0);
     BOOST_CHECK_EQUAL(ws["P1"].value(), 4.0);
     BOOST_CHECK_EQUAL(ws["P2"].value(), 4.0);
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
+    UDQAssign as1("WUPR", {}, 1.0);
+    UDQAssign as2("WUPR", {"P*"}, 2.0);
+    UDQAssign as3("WUPR", {"P1"}, 4.0);
+    std::vector<std::string> ws1 = {"P1", "P2", "I1", "I2"};
+
+    auto res1 = as1.eval_wells(ws1);
+    BOOST_CHECK_EQUAL(res1.size(), 4);
+    BOOST_CHECK_EQUAL(res1["P1"].value(), 1.0);
+    BOOST_CHECK_EQUAL(res1["I2"].value(), 1.0);
+
+    auto res2 = as2.eval_wells(ws1);
+    BOOST_CHECK_EQUAL(res2["P1"].value(), 2.0);
+    BOOST_CHECK_EQUAL(res2["P2"].value(), 2.0);
+    BOOST_CHECK(!res2["I1"].defined());
+    BOOST_CHECK(!res2["I2"].defined());
+
+    auto res3 = as3.eval_wells(ws1);
+    BOOST_CHECK_EQUAL(res3["P1"].value(), 4.0);
+    BOOST_CHECK(!res3["P2"].defined());
+    BOOST_CHECK(!res3["I1"].defined());
+    BOOST_CHECK(!res3["I2"].defined());
 }

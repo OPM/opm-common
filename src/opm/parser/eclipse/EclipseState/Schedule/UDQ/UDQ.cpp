@@ -40,7 +40,11 @@ namespace Opm {
 
         if (action == UDQAction::UNITS)
             this->assign_unit( quantity, data[0] );
-        else
+        else if (action == UDQAction::ASSIGN) {
+            std::vector<std::string> selector(data.begin(), data.end() - 1);
+            double value = std::stod(data.back());
+            this->m_assignments.emplace_back( quantity, selector, value );
+        } else
             this->m_expressions.emplace_back(action, quantity, data);
     }
 
@@ -48,6 +52,12 @@ namespace Opm {
     const std::vector<UDQExpression>& UDQ::expressions() const noexcept {
         return this->m_expressions;
     }
+
+
+    const std::vector<UDQAssign>& UDQ::assignments() const {
+        return this->m_assignments;
+    }
+
 
     const std::string& UDQ::unit(const std::string& key) const {
         const auto pair_ptr = this->units.find(key);
