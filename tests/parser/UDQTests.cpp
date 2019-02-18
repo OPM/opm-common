@@ -26,6 +26,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQ.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -269,4 +270,32 @@ BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
     BOOST_CHECK_EQUAL( result[0].value(), 10);
     BOOST_CHECK_EQUAL( result[2].value(), 5);
     BOOST_CHECK_EQUAL( result[4].value(), 2);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
+    std::vector<std::string> wells = {"P1", "P2", "I1", "I2"};
+    UDQWellSet ws(wells);
+
+    BOOST_CHECK_EQUAL(4, ws.size());
+    ws.assign("P1", 1.0);
+
+    const auto& value = ws[std::string("P1")];
+    BOOST_CHECK_EQUAL(value.value(), 1.0);
+    BOOST_CHECK_EQUAL(ws["P1"].value(), 1.0);
+
+    BOOST_REQUIRE_THROW(ws.assign("NO_SUCH_WELL", 1.0), std::invalid_argument);
+
+    ws.assign("*", 2.0);
+    for (const auto& w : wells)
+        BOOST_CHECK_EQUAL(ws[w].value(), 2.0);
+
+    ws.assign(3.0);
+    for (const auto& w : wells)
+        BOOST_CHECK_EQUAL(ws[w].value(), 3.0);
+
+    ws.assign("P*", 4.0);
+    BOOST_CHECK_EQUAL(ws["P1"].value(), 4.0);
+    BOOST_CHECK_EQUAL(ws["P2"].value(), 4.0);
 }
