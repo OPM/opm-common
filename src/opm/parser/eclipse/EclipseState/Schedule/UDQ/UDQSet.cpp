@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 
 namespace Opm {
 

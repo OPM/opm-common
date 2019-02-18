@@ -24,7 +24,7 @@
 #include <unordered_map>
 #include <string>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
 
 
 namespace Opm {

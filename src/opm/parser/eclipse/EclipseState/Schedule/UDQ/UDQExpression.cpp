@@ -23,7 +23,7 @@
 
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
 
 
 

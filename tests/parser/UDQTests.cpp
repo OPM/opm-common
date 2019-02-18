@@ -24,10 +24,10 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQExpression.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQContext.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQ.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 using namespace Opm;
