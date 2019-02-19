@@ -165,7 +165,7 @@ EQUALS
  'PORO'   0.2  /
 -- 'TOPS'   7000   1 10  1 5  1 1  /
 -- 'DZ'     100    1 10  1 5  3 3  /
- 'PORO'   0.0    1 10  1 5  3 3  /
+-- 'PORO'   0.0    1 10  1 5  3 3  /
  /
 
 COPY
@@ -334,11 +334,11 @@ RPTRST
 -- 
 'BASIC=2' 'FLOWS' 'POT' 'PRES' /
  
-RPTSOL
+--RPTSOL
 -- 
 -- Initialisation Print Output
 -- 
-'PRES' 'SOIL' 'SWAT' 'SGAS' 'RS' 'RESTART=1' 'FIP=2' 'EQUIL' 'RSVD' /
+--'PRES' 'SOIL' 'SWAT' 'SGAS' 'RS' 'RESTART=1' 'FIP=2' 'EQUIL' 'RSVD' /
 
 SUMMARY      ===========================================================
 
@@ -398,20 +398,7 @@ COMPDAT
  'PROD' 4 5 2 2   3*  0.2   3*  'X' /
  'PROD' 5 5 2 2   3*  0.2   3*  'X' /
 
- 'PROD' 1 5 5 5   3*  0.2   3*  'X' /
- 'PROD' 2 5 5 5   3*  0.2   3*  'X' /
- 'PROD' 3 5 5 5   3*  0.2   3*  'X' /
- 'PROD' 4 5 5 5   3*  0.2   3*  'X' /
- 'PROD' 5 5 5 5   3*  0.2   3*  'X' /
-
-
- 'WINJ' 10 1 1 1   3*  0.2   3*  'X' /
- 'WINJ'   9 1 1 1   3*  0.2   3*  'X' /
- 'WINJ'   8 1 1 1   3*  0.2   3*  'X' /
- 'WINJ'   7 1 1 1   3*  0.2   3*  'X' /
- 'WINJ'   6 1 1 1   3*  0.2   3*  'X' /
-
- 'WINJ' 10 1  9 9   3*  0.2   3*  'X' /
+'WINJ' 10 1  9 9   3*  0.2   3*  'X' /
  'WINJ'   9 1  9 9   3*  0.2   3*  'X' /
  'WINJ'   8 1  9 9   3*  0.2   3*  'X' /
  'WINJ'   7 1  9 9   3*  0.2   3*  'X' /
@@ -428,11 +415,8 @@ WELSEGS
 -- Main Stem
     2       12     1        1         20     20    0.2   1.E-3  1*   1* /
 -- Top Branch
-    13      13     2        2         50      0    0.2   1.E-3  1*   1* /
+    13      13     2        3         50      0    0.2   1.E-3  1*   1* /
     14      17     2        13       100      0    0.2   1.E-3  1*   1* /
--- Lower Middle Branch
-    18      18     5        10         50      0    0.2   1.E-3  1*   1* /
-    19      22     5        28       100      0    0.2   1.E-3  1*   1* /
  /
 
 COMPSEGS
@@ -449,15 +433,8 @@ COMPSEGS
   4  5  2  2        330      430     'X'    3* /
   5  5  2  2        430      530     'X'    3* /
 -- Middle Branch
-
--- Lower Middle Branch
-  1  5  6  5        170      270     'X'    3* /
-  2  5  6  5        270      370     'X'    3* /
-  3  5  6  5        370      470     'X'    3* /
-  4  5  6  5        470      570     'X'    3* /
-  5  5  6  5        570      670     'X'    3* /
-
  /
+
 WELSEGS
 
 -- Name    Dep 1   Tlen 1  Vol 1
@@ -467,12 +444,10 @@ WELSEGS
 -- Seg     Seg    Num      Seg              Chang
 -- Main Stem
     2       14     1        1         20     20    0.2   1.E-3  1*   1* /
--- Top Branch
-    15      15     2        2         50      0    0.2   1.E-3  1*   1* /
-    16      19     2        15       100      0    0.2   1.E-3  1*   1* /
+
 -- Bottom Branch
-    20      20     3        14        50      0    0.2   1.E-3  1*   1* /
-    21      24     3        20       100      0    0.2   1.E-3  1*   1* /
+    15      15     2        14        50      0    0.2   1.E-3  1*   1* /
+    16      19     2        15       100      0    0.2   1.E-3  1*   1* /
  /
 
 COMPSEGS
@@ -482,23 +457,18 @@ COMPSEGS
 
 -- I  J  K  Brn  Start   End     Dirn   End
 --          No   Length  Length  Penet  Range
--- Top Branch
-  10  1  1  2         30      130     'X'    3* /
-    9  1  1  2        130      230     'X'    3* /
-    8  1  1  2        230      330     'X'    3* /
-    7  1  1  2        330      430     'X'    3* /
-    6  1  1  2        430      530     'X'    3* /
+
 -- Bottom Branch
-  10  1  9  3        270      370     'X'    3* /
-    9  1  9  3        370      470     'X'    3* /
-    8  1  9  3        470      570     'X'    3* /
-    7  1  9  3        570      670     'X'    3* /
-    6  1  9  3        670      770     'X'    3* /
+  10  1  9  2        270      370     'X'    3* /
+    9  1  9  2        370      470     'X'    3* /
+    8  1  9  2        470      570     'X'    3* /
+    7  1  9  2        570      670     'X'    3* /
+    6  1  9  2        670      770     'X'    3* /
  /
 
 
 WCONPROD
- 'PROD' 'OPEN' 'LRAT'  3*  4000  1*  1000  1*  /
+ 'PROD' 'OPEN' 'LRAT'  3*  2000  1*  2500  1*  /
  /
 
 WCONINJE
@@ -517,6 +487,7 @@ TSTEP
 
 
 END
+
 
 )~" };
 
@@ -542,48 +513,69 @@ END
 	state.add("SGFR:PROD:3",   15.E3);
 	state.add("SGFR:PROD:4",   10.E3);
 
-	state.add("SWFR:PROD:1",   5.);
-	state.add("SWFR:PROD:2",   3.);
-	state.add("SWFR:PROD:3",   2.);
-	state.add("SWFR:PROD:4",   1.);
+	state.add("SWFR:PROD:1",  11.);
+	state.add("SWFR:PROD:2",  12.);
+	state.add("SWFR:PROD:3",  13.);
+	state.add("SWFR:PROD:4",  14.);
 
+	state.add("SPR:WINJ:1",   310.);
+	state.add("SPR:WINJ:2",   320.);
+	state.add("SPR:WINJ:3",   330.);
+	state.add("SPR:WINJ:4",   340.);
+
+	state.add("SWFR:WINJ:1",  21.);
+	state.add("SWFR:WINJ:2",  22.);
+	state.add("SWFR:WINJ:3",  23.);
+	state.add("SWFR:WINJ:4",  24.);
+	
+	state.add("WBHP:WINJ",  234.);
+	
         return state;
     }
-
-
-    /*Opm::data::WellRates well_rates_1()
+    Opm::data::WellRates wr()
     {
         using o = ::Opm::data::Rates::opt;
 
         auto xw = ::Opm::data::WellRates{};
 
         {
-
-	    auto& s = xw["PROD"].segments[1];
-	    s.rates.set(o::wat, 1.0);
-	    s.rates.set(o::oil, 2.0);
-	    s.rates.set(o::gas, 3.0);
-	    s.pressure = 235.;
+            xw["PROD"].rates
+                .set(o::wat, 1.0)
+                .set(o::oil, 2.0)
+                .set(o::gas, 3.0);
+	    xw["PROD"].bhp = 213.0;
+	    double qo = 5.;
+	    double qw = 4.;
+	    double qg = 50.;
+            for (int i = 0; i < 5; i++) {
+		xw["PROD"].connections.emplace_back();
+		auto& c = xw["PROD"].connections.back();
 		
-	    auto& s2 = xw["PROD"].segments[2];
-	    //xw["PROD"].segments.insert(std::make_pair(2, Segment());
-	    s2.rates.set(o::wat, 0.5);
-	    s2.rates.set(o::oil, 1.0);
-	    s2.rates.set(o::gas, 2.0);
-	    s2.pressure = 225.;
+		c.rates.set(o::wat, qw*(float(i)+1.))
+                   .set(o::oil, qo*(float(i)+1.))
+                   .set(o::gas, qg*(float(i)+1.));
+	    }
+	    auto seg = Opm::data::Segment{};
+	    for (std::size_t i = 1; i < 5; i++) {
+		xw["PROD"].segments.insert(std::pair<std::size_t,Opm::data::Segment>(i,seg));
+	    }
+            xw["WINJ"].bhp = 234.0;
 
+            xw["WINJ"].rates.set(o::wat, 5.0);
+	    xw["WINJ"].rates.set(o::oil, 0.0);
+	    xw["WINJ"].rates.set(o::gas, 0.0);
+	    qw = 7.;
+            for (int i = 0; i < 5; i++) {
+		xw["WINJ"].connections.emplace_back();
+		auto& c = xw["WINJ"].connections.back();
+		
+		c.rates.set(o::wat, qw*(float(i)+1.))
+		       .set(o::oil, 0.)
+		       .set(o::gas, 0.);
+	    }
         }
-
-        {
-            xw["OP_2"].bhp = 234.0;
-
-            xw["OP_2"].rates.set(o::gas, 5.0);
-            xw["OP_2"].connections.emplace_back();
-        }
-
         return xw;
-    }*/
-
+    }
 }
 
 struct SimulationCase
@@ -592,14 +584,12 @@ struct SimulationCase
         : es   { deck }
         , grid{deck}
         , sched{ deck, es }
-        //, wr {deck, es, sched}
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::EclipseGrid grid;
     Opm::Schedule     sched;
-    Opm::data::WellRates wr;
 };
 
 // =====================================================================
@@ -611,17 +601,17 @@ BOOST_AUTO_TEST_SUITE(Aggregate_MSW)
 BOOST_AUTO_TEST_CASE (Constructor)
 {
     const auto ih = MockIH{ 5 };
+   
+    const auto amswd = Opm::RestartIO::Helpers::AggregateMSWData{ ih.value };
 
-    const auto awd = Opm::RestartIO::Helpers::AggregateMSWData{ ih.value };
-
-    BOOST_CHECK_EQUAL(awd.getISeg().size(), ih.isegPerWell);
-    BOOST_CHECK_EQUAL(awd.getRSeg().size(), ih.rsegPerWell);
-    BOOST_CHECK_EQUAL(awd.getILBs().size(), ih.ilbsPerWell);
-    BOOST_CHECK_EQUAL(awd.getILBr().size(), ih.ilbrPerWell);
+    BOOST_CHECK_EQUAL(amswd.getISeg().size(), ih.nswlmx * ih.nsegmx * ih.nisegz);
+    BOOST_CHECK_EQUAL(amswd.getRSeg().size(), ih.nswlmx * ih.nsegmx * ih.nrsegz);
+    BOOST_CHECK_EQUAL(amswd.getILBs().size(), ih.nswlmx * ih.nlbrmx);
+    BOOST_CHECK_EQUAL(amswd.getILBr().size(), ih.nswlmx * ih.nlbrmx * ih.nilbrz);
 }
 
 
-BOOST_AUTO_TEST_CASE (Declared_Well_Data)
+BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 {
     const auto simCase = SimulationCase{first_sim()};
 
@@ -635,321 +625,199 @@ BOOST_AUTO_TEST_CASE (Declared_Well_Data)
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
 
     const auto smry = sim_state();
-    auto awd = Opm::RestartIO::Helpers::AggregateMSWData{ih.value};
-    awd.captureDeclaredMSWData(simCase.sched,
+    const Opm::data::WellRates wrc = wr();
+    auto amswd = Opm::RestartIO::Helpers::AggregateMSWData{ih.value};
+    amswd.captureDeclaredMSWData(simCase.sched,
 			      rptStep,
                               simCase.es.getUnits(), 
 			      ih.value,  
 			      simCase.grid,
 			      smry,
-			      simCase.wr
+			      wrc
 			      );
 
     // ISEG (PROD)
     {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        auto start = 2*ih.nisegz;
 
-        const auto start = 0*ih.niwelz;
+        const auto& iSeg = amswd.getISeg();
+	BOOST_CHECK_EQUAL(iSeg[start + 0] , 15); // PROD-segment 3, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 1] ,  2); // PROD-segment 3, outlet segment
+	BOOST_CHECK_EQUAL(iSeg[start + 2] ,  4); // PROD-segment 3, inflow segment current branch
+	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  1); // PROD-segment 3, branch number
+	BOOST_CHECK_EQUAL(iSeg[start + 4] ,  1); // PROD-segment 3, number of inflow branches
+	BOOST_CHECK_EQUAL(iSeg[start + 5] ,  1); // PROD-segment 3, Sum number of inflow branches from first segment to current segment
+	BOOST_CHECK_EQUAL(iSeg[start + 6] ,  0); // PROD-segment 3, number of connections in segment
+	BOOST_CHECK_EQUAL(iSeg[start + 7] ,  0); // PROD-segment 3, sum of connections with lower segmeent number than current segment
+	BOOST_CHECK_EQUAL(iSeg[start + 8] , 15); // PROD-segment 3, ordered segment 
 
-        const auto& iwell = awd.getIWell();
-        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 9); // OP_1 -> I
-        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 9); // OP_1 -> J
-        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 1); // OP_1/Head -> K
-        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 2); // OP_1 #Compl
-        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 1); // OP_1 -> Producer
-        BOOST_CHECK_EQUAL(iwell[start + Ix::VFPTab], 0); // VFP defaulted -> 0
+	start = 13*ih.nisegz;
 
-        // Completion order
-        BOOST_CHECK_EQUAL(iwell[start + Ix::CompOrd], 0); // Track ordering (default)
+	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  4); // PROD-segment 14, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 1] , 13); // PROD-segment 14, outlet segment
+	BOOST_CHECK_EQUAL(iSeg[start + 2] , 15); // PROD-segment 14, inflow segment current branch
+	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  2); // PROD-segment 14, branch number
+	BOOST_CHECK_EQUAL(iSeg[start + 4] ,  0); // PROD-segment 14, number of inflow branches
+	BOOST_CHECK_EQUAL(iSeg[start + 5] ,  0); // PROD-segment 14, Sum number of inflow branches from first segment to current segment
+	BOOST_CHECK_EQUAL(iSeg[start + 6] ,  1); // PROD-segment 14, number of connections in segment
+	BOOST_CHECK_EQUAL(iSeg[start + 7] ,  2); // PROD-segment 14, sum of connections with lower segmeent number than current segment
+	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  4); // PROD-segment 14, ordered segment 
 
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item18], -100); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item25], -  1); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item48], -  1); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item32],    7); // M2 Magic
     }
 
-    // IWEL (OP_2)
+    // ISEG (WINJ)
     {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+        auto start = ih.nisegz*ih.nsegmx + 13*ih.nisegz;
 
-        const auto start = 1*ih.niwelz;
+        const auto& iSeg = amswd.getISeg();
+	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  6); // WINJ-segment 14, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 1] , 13); // WINJ-segment 14, outlet segment
+	BOOST_CHECK_EQUAL(iSeg[start + 2] ,  0); // WINJ-segment 14, inflow segment current branch
+	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  1); // WINJ-segment 14, branch number
+	BOOST_CHECK_EQUAL(iSeg[start + 4] ,  1); // WINJ-segment 14, number of inflow branches
+	BOOST_CHECK_EQUAL(iSeg[start + 5] ,  1); // WINJ-segment 14, Sum number of inflow branches from first segment to current segment
+	BOOST_CHECK_EQUAL(iSeg[start + 6] ,  0); // WINJ-segment 14, number of connections in segment
+	BOOST_CHECK_EQUAL(iSeg[start + 7] ,  0); // WINJ-segment 14, sum of connections with lower segmeent number than current segment
+	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  6); // WINJ-segment 14, ordered segment 
 
-        const auto& iwell = awd.getIWell();
-        BOOST_CHECK_EQUAL(iwell[start + Ix::IHead] , 9); // OP_2 -> I
-        BOOST_CHECK_EQUAL(iwell[start + Ix::JHead] , 9); // OP_2 -> J
-        BOOST_CHECK_EQUAL(iwell[start + Ix::FirstK], 2); // OP_2/Head -> K
-        BOOST_CHECK_EQUAL(iwell[start + Ix::NConn] , 1); // OP_2 #Compl
-        BOOST_CHECK_EQUAL(iwell[start + Ix::WType] , 4); // OP_2 -> Gas Inj.
-        BOOST_CHECK_EQUAL(iwell[start + Ix::VFPTab], 0); // VFP defaulted -> 0
+	start = ih.nisegz*ih.nsegmx + 16*ih.nisegz;
+	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  3); // WINJ-segment 17, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 1] , 16); // WINJ-segment 17, outlet segment
+ 	BOOST_CHECK_EQUAL(iSeg[start + 2] , 18); // WINJ-segment 17, inflow segment current branch
+	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  2); // WINJ-segment 17, branch number
+	BOOST_CHECK_EQUAL(iSeg[start + 4] ,  0); // WINJ-segment 17, number of inflow branches
+	BOOST_CHECK_EQUAL(iSeg[start + 5] ,  0); // WINJ-segment 17, Sum number of inflow branches from first segment to current segment
+	BOOST_CHECK_EQUAL(iSeg[start + 6] ,  1); // WINJ-segment 17, number of connections in segment
+	BOOST_CHECK_EQUAL(iSeg[start + 7] ,  3); // WINJ-segment 17, sum of connections with lower segmeent number than current segment
+	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  3); // WINJ-segment 17, ordered segment 
 
-        // Completion order
-        BOOST_CHECK_EQUAL(iwell[start + Ix::CompOrd], 0); // Track ordering (default)
-
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item18], -100); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item25], -  1); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item48], -  1); // M2 Magic
-        BOOST_CHECK_EQUAL(iwell[start + Ix::item32],    7); // M2 Magic
-    }
-
-    // SWEL (OP_1)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
-
-        const auto i0 = 0*ih.nswelz;
-
-        const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::OilRateTarget], 20.0e3f, 1.0e-7f);
-
-        // No WRAT limit
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::WatRateTarget], 1.0e20f, 1.0e-7f);
-
-        // No GRAT limit
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::GasRateTarget], 1.0e20f, 1.0e-7f);
-
-        // LRAT limit derived from ORAT + WRAT (= ORAT + 0.0)
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::LiqRateTarget], 20.0e3f, 1.0e-7f);
-
-        // No direct limit, extract value from 'smry' (WVPR:OP_1)
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::ResVRateTarget], 1.0e20f, 1.0e-7f);
-
-        // No THP limit
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::THPTarget] ,    0.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::BHPTarget] , 1000.0f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i0 + Ix::DatumDepth],  0.375f, 1.0e-7f);
-    }
-
-    // SWEL (OP_2)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::SWell::index;
-
-        const auto i1 = 1*ih.nswelz;
-
-        const auto& swell = awd.getSWell();
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::THPTarget], 1.0e20f, 1.0e-7f);
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::BHPTarget],  400.0f, 1.0e-7f);
-
-        BOOST_CHECK_CLOSE(swell[i1 + Ix::DatumDepth], 0.625f, 1.0e-7f);
-    }
-
-    // XWEL (OP_1)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
-
-        const auto i0 = 0*ih.nxwelz;
-
-        const auto& xwell = awd.getXWell();
-
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::BHPTarget], 1000.0, 1.0e-10);
-    }
-
-    // XWEL (OP_2)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
-
-        const auto i1 = 1*ih.nxwelz;
-
-        const auto& xwell = awd.getXWell();
-
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::BHPTarget], 400.0, 1.0e-10);
-    }
-
-    // ZWEL (OP_1)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
-
-        const auto i0 = 0*ih.nzwelz;
-
-        const auto& zwell = awd.getZWell();
-
-        BOOST_CHECK_EQUAL(zwell[i0 + Ix::WellName].c_str(), "OP_1    ");
-    }
-
-    // ZWEL (OP_2)
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::ZWell::index;
-
-        const auto i1 = 1*ih.nzwelz;
-
-        const auto& zwell = awd.getZWell();
-
-        BOOST_CHECK_EQUAL(zwell[i1 + Ix::WellName].c_str(), "OP_2    ");
-    }
-}
-
-
-/*
-BOOST_AUTO_TEST_CASE (Test_of_rseg_data)
-{
-    std::cout << "before construct SimulationCase" << std::endl;
-    const auto simCase = SimulationCase{first_sim()};
-    std::cout << "after construct SimulationCase" << std::endl;
-    // Report Step 2: 2011-01-20 --> 2013-06-15
-    //const auto rptStep = std::size_t {2};
-    const std::size_t rptStep = 1; 
-
-    std::cout << "before getWells" << std::endl;
-    const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
-    };
-    std::cout << "After initialised - nlbrm: " << ih.nlbrmx <<  std::endl;
-    std::cout << "After initialised - nilbrz: " << ih.nilbrz <<  std::endl;
-    const auto nw = simCase.sched.getWells(rptStep).size();
-    std::cout << "nwells =" << nw << std::endl;
-    const auto nw_ih = ih.nwells;
-    std::cout << "nwells_ih =" << nw_ih << std::endl;
-    std::cout << "after getWells" << std::endl;
-    const auto wr = simCase.wr;
-
-    //const auto xw   = well_rates_1();
-    std::cout << "before construct smry" << std::endl;
-    const auto smry = sim_state();
-    std::cout << "after construct smry" << std::endl;
-    std::cout << "before construct AggregateMSWData" << std::endl;
-    auto msw = Opm::RestartIO::Helpers::AggregateMSWData{ih.value};
-    std::cout << "after construct AggregateMSWData" << std::endl;
-    std::cout << "before captureDeclaredMSWData" << std::endl;
-    std::cout << "before cdMSWD - nlbrm: " << ih.nlbrmx <<  std::endl;
-    std::cout << "before cdMSWD - nilbrz: " << ih.nilbrz <<  std::endl;
-    msw.captureDeclaredMSWData(simCase.sched, rptStep, simCase.es.getUnits(),ih.value, 
-			       simCase.es.getInputGrid(), smry, wr);
-     std::cout << "after captureDeclaredMSWData" << std::endl; 
-    // rseg (PROD) -- producer
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
-
-
-        const auto  i0 = 0*ih.nrsegz;
-	const auto  i1 = 1*ih.nrsegz;
-	const auto  i2 = 2*ih.nrsegz;
-	const auto  i3 = 3*ih.nrsegz;
-	std::cout << "before getRSeg" << std::endl;
-        const auto& rseg = msw.getRSeg();
-	std::cout << "after getRSeg" << std::endl;
-
-        BOOST_CHECK_CLOSE(rseg[i0 + 11], 235., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i1 + 11], 237., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i2 + 11], 239., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i3 + 11], 243., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i0 +  8],  35., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i1 +  8],  30., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i2 +  8],  25., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i3 +  8],  20., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i  +  8],  20., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i3 +  8],  20., 1.0e-10);
-	BOOST_CHECK_CLOSE(rseg[i3 +  8],  20., 1.0e-10); 
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrRate], 2.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrRate], 3.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::LiqPrRate], 1.0 + 2.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrRate], 4.0, 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] , 0.625, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5, 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::OilPrTotal], 10.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrTotal], 20.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrTotal], 30.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrTotal], 40.0, 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item37],
-                          xwell[i0 + Ix::WatPrRate], 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i0 + Ix::item38],
-                          xwell[i0 + Ix::GasPrRate], 1.0e-10);
-    }  
-
-    // XWEL (OP_2) -- water injector
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
-
-        const auto  i1 = 1*ih.nxwelz;
-        const auto& xwell = awd.getXWell();
-
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatPrRate], -100.0, 1.0e-10);
-
-        // Copy of WWIR
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::LiqPrRate],
-                          xwell[i1 + Ix::WatPrRate], 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
-
-        // Copy of WWIR
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::item37],
-                          xwell[i1 + Ix::WatPrRate], 1.0e-10);
-
-        // Copy of WWIT
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::item82],
-                          xwell[i1 + Ix::WatInjTotal], 1.0e-10);
-
-        // WWVIR
-        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatVoidPrRate],
-                          -4321.0, 1.0e-10);
-    }
-
-    // XWEL (OP_3) -- producer
-    {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
-
-        const auto  i2 = 2*ih.nxwelz;
-        const auto& xwell = awd.getXWell();
-
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::OilPrRate], 11.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatPrRate], 12.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GasPrRate], 13.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::LiqPrRate], 11.0 + 12.0, 1.0e-10); // LPR
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrRate], 14.0, 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::FlowBHP], 314.15, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatCut] , 0.0625, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GORatio], 1234.5, 1.0e-10);
-
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::OilPrTotal], 110.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatPrTotal], 120.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GasPrTotal], 130.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrTotal], 140.0, 1.0e-10);
-
-        // Copy of WWPR
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::item37],
-                          xwell[i2 + Ix::WatPrRate], 1.0e-10);
-
-        // Copy of WGPR
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::item38],
-                          xwell[i2 + Ix::GasPrRate], 1.0e-10);
     }
     
-        // RSEG (PROD) -- producer
+    // RSEG (PROD)  + (WINJ)
     {
-        using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+	// well no 1 - PROD
+	int welNo = 1;
+	const std::string wname = "PROD";
+	int segNo = 1;
+	// 'stringSegNum' is one-based (1 .. #segments inclusive)
+	std::string stringSegNo = std::to_string(segNo);
 
-        const auto  i2 = 2*ih.nxwelz;
-        const auto& xwell = awd.getXWell();
+        const auto  i0 = (segNo-1)*ih.nrsegz;
+	const auto&  units = simCase.es.getUnits();
+	using M = ::Opm::UnitSystem::measure;
+	const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
+		    ? 0.1781076 : 0.001;
+        const auto& rseg = amswd.getRSeg();
 
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::OilPrRate], 11.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatPrRate], 12.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GasPrRate], 13.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::LiqPrRate], 11.0 + 12.0, 1.0e-10); // LPR
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrRate], 14.0, 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0     ],   10.  , 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  1], 7010.  , 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  5], 0.31   , 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  6],   10.  , 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  7], 7010.  , 1.0e-10);
+	
+	const double temp_o = smry.get("SOFR:PROD:1");
+	const double temp_w = smry.get("SWFR:PROD:1")*0.1;
+	const double temp_g = smry.get("SGFR:PROD:1")*gfactor;
+	
+	auto t0 = temp_o + temp_w + temp_g;
+	double t1 = (std::abs(temp_w) > 0) ? temp_w / t0 : 0.;
+	double t2 = (std::abs(temp_g) > 0) ? temp_g / t0 : 0.;
+	
+	BOOST_CHECK_CLOSE(rseg[i0 +  8],  t0, 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  9],  t1, 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 + 10],  t2, 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 + 11], 235., 1.0e-10);
+    }
+  
+    {
+    // well no 2 - WINJ
+	int welNo = 2;
+	const std::string wname = "WINJ";
+	int segNo = 1;
+	// 'stringSegNum' is one-based (1 .. #segments inclusive)
+	std::string stringSegNo = std::to_string(segNo);
 
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::FlowBHP], 314.15, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatCut] , 0.0625, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GORatio], 1234.5, 1.0e-10);
+        const auto  i0 = ih.nrsegz*ih.nsegmx + (segNo-1)*ih.nrsegz;
+	const auto&  units = simCase.es.getUnits();
+	using M = ::Opm::UnitSystem::measure;
+	const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
+		    ? 0.1781076 : 0.001;
+        const auto& rseg = amswd.getRSeg();
 
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::OilPrTotal], 110.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatPrTotal], 120.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GasPrTotal], 130.0, 1.0e-10);
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrTotal], 140.0, 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0     ],   10.  , 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  1], 7010.  , 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  5], 0.31   , 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  6],   10.  , 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  7], 7010.  , 1.0e-10);
+	
+	const double temp_o = 0.;
+	const double temp_w = -units.from_si(M::liquid_surface_rate,105.)*0.1;
+	const double temp_g = 0.0*gfactor;
+	
+	auto t0 = temp_o + temp_w + temp_g;
+	double t1 = (std::abs(temp_w) > 0) ? temp_w / t0 : 0.;
+	double t2 = (std::abs(temp_g) > 0) ? temp_g / t0 : 0.;
+	
+	BOOST_CHECK_CLOSE(rseg[i0 +  8],  t0, 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 +  9],  t1, 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 + 10],  t2, 1.0e-10);
+	BOOST_CHECK_CLOSE(rseg[i0 + 11], 234., 1.0e-10);
+    
+    }
+    
+    // ILBR 
+    {
+        auto start =  0*ih.nilbrz;
 
-        // Copy of WWPR
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::item37],
-                          xwell[i2 + Ix::WatPrRate], 1.0e-10);
+        const auto& iLBr = amswd.getILBr();
+	//PROD
+	BOOST_CHECK_EQUAL(iLBr[start + 0] ,  0); // PROD-branch   1, outlet segment
+	BOOST_CHECK_EQUAL(iLBr[start + 1] , 12); // PROD-branch   1, No of segments in branch
+	BOOST_CHECK_EQUAL(iLBr[start + 2] ,  1); // PROD-branch   1, first segment
+	BOOST_CHECK_EQUAL(iLBr[start + 3] , 12); // PROD-branch   1, last segment
+	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  0); // PROD-branch   1, branch no - 1 
+	//PROD
+	start =  1*ih.nilbrz;
+	BOOST_CHECK_EQUAL(iLBr[start + 0] ,  3); // PROD-branch   2, outlet segment
+	BOOST_CHECK_EQUAL(iLBr[start + 1] ,  5); // PROD-branch   2, No of segments in branch
+	BOOST_CHECK_EQUAL(iLBr[start + 2] , 13); // PROD-branch   2, first segment
+	BOOST_CHECK_EQUAL(iLBr[start + 3] , 17); // PROD-branch   2, last segment
+	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // PROD-branch   2, branch no - 1 
 
-        // Copy of WGPR
-        BOOST_CHECK_CLOSE(xwell[i2 + Ix::item38],
-                          xwell[i2 + Ix::GasPrRate], 1.0e-10);
+	
+	start = ih.nilbrz*ih.nlbrmx + 0*ih.nilbrz;
+	//WINJ
+	BOOST_CHECK_EQUAL(iLBr[start + 0] ,  0); // WINJ-branch   1, outlet segment
+	BOOST_CHECK_EQUAL(iLBr[start + 1] , 14); // WINJ-branch   1, No of segments in branch
+	BOOST_CHECK_EQUAL(iLBr[start + 2] ,  1); // WINJ-branch   1, first segment
+	BOOST_CHECK_EQUAL(iLBr[start + 3] , 14); // WINJ-branch   1, last segment
+	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  0); // WINJ-branch   1, branch no - 1 
+
+	start = ih.nilbrz*ih.nlbrmx + 1*ih.nilbrz;
+	//WINJ
+	BOOST_CHECK_EQUAL(iLBr[start + 0] , 14); // WINJ-branch   2, outlet segment
+	BOOST_CHECK_EQUAL(iLBr[start + 1] ,  5); // WINJ-branch   2, No of segments in branch
+	BOOST_CHECK_EQUAL(iLBr[start + 2] , 15); // WINJ-branch   2, first segment
+	BOOST_CHECK_EQUAL(iLBr[start + 3] , 19); // WINJ-branch   2, last segment
+	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // WINJ-branch   2, branch no - 1 
+
+
+    }
+    
+       // ILBS
+    {
+        auto start =  0*ih.nlbrmx;
+
+        const auto& iLBs = amswd.getILBs();
+	//PROD
+	BOOST_CHECK_EQUAL(iLBs[start + 0] ,  13); // PROD-branch   2, first segment in branch
+	
+	start = ih.nlbrmx + 0*ih.nlbrmx;
+	//WINJ
+	BOOST_CHECK_EQUAL(iLBs[start + 0] ,  15); // WINJ-branch   2, first segment in branch
+
     }
 }
-*/  
+
 
 BOOST_AUTO_TEST_SUITE_END()

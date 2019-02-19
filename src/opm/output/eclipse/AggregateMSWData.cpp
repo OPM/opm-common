@@ -428,8 +428,6 @@ namespace {
 		const auto& noElmSeg      = nisegz(inteHead);
 		std::size_t segmentInd = 0;
 		auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
-//		for (int segNumber = 1; segNumber <= welSegSet.size(); segNumber++) {
-//		    auto ind = welSegSet.segmentNumberToIndex(segNumber);
 		for (int ind = 0; ind < welSegSet.size(); ind++) {
 		    auto segNumber = welSegSet[ind].segmentNumber();
 		    auto iS = (segNumber-1)*noElmSeg;
@@ -499,6 +497,8 @@ namespace {
 		const auto wPKey = "WBHP:"  + wname;
 		const auto& wRatesIt =  wr.find(wname);
 		bool haveWellRes = wRatesIt != wr.end();
+		const auto volFromLengthUnitConv = units.from_si(M::length, units.from_si(M::length, units.from_si(M::length, 1.)));
+		const auto areaFromLengthUnitConv =  units.from_si(M::length, units.from_si(M::length, 1.));
 		//
 		//Initialize temporary variables
 		double temp_o = 0.;
@@ -521,7 +521,7 @@ namespace {
 		// Treat the top segment individually
 		rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
 		rSeg[1] = units.from_si(M::length, welSegSet.depthTopSegment());
-		rSeg[5] = units.from_si(M::volume, welSegSet.volumeTopSegment());
+		rSeg[5] = volFromLengthUnitConv*welSegSet.volumeTopSegment();
 		rSeg[6] = rSeg[0];
 		rSeg[7] = rSeg[1];
 		//
@@ -576,10 +576,8 @@ namespace {
 		    rSeg[iS +   1] = units.from_si(M::length, (welSegSet[segIndex].depth() - welSegSet[ind_ofs].depth()));
 		    rSeg[iS +   2] = units.from_si(M::length, (welSegSet[segIndex].internalDiameter()));
 		    rSeg[iS +   3] = units.from_si(M::length, (welSegSet[segIndex].roughness()));
-		    rSeg[iS +   4] = units.from_si(M::length, (welSegSet[segIndex].crossArea()));
-		    //repeat unit conversion to convert for area instead of length
-		    rSeg[iS +   4] = units.from_si(M::length, rSeg[iS +   4]);
-		    rSeg[iS +   5] = units.from_si(M::volume, (welSegSet[segIndex].volume()));
+		    rSeg[iS +   4] = areaFromLengthUnitConv *  welSegSet[segIndex].crossArea();
+		    rSeg[iS +   5] = volFromLengthUnitConv  *  welSegSet[segIndex].volume();
 		    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[segIndex].totalLength()));
 		    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[segIndex].depth()));
 
@@ -650,6 +648,8 @@ namespace {
         {
 	    if (well.isMultiSegment(rptStep)) {
 		//
+		// Store the segment number of the first segment in branch for branch number
+		// 2 and upwards
 		const auto& welSegSet = well.getWellSegments(rptStep);
 		const auto& branches = SegmentSetBranches(welSegSet);
 		for (auto it = branches.begin()+1; it != branches.end(); it++){
