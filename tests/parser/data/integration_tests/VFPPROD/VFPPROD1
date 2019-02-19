@@ -2294,6 +2294,10 @@ VFPPROD
              126.75  147.79 
 /
 
+WLIFT                                            FIELD   10:19  5 MAR 90
+'*       ' 2000.00000  'OIL'    0   .50000000     1*    /
+/
+
 
 INCLUDE 
   'VFPPROD2' /

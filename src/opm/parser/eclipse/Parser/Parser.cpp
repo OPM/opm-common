@@ -538,7 +538,24 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
             }
         } else {
             if (parserState.rawKeyword->getSizeType() == Raw::UNKNOWN) {
-                if( parser.isRecognizedKeyword( line ) ) {
+                /*
+                  When we are spinning through a keyword of size type UNKNOWN it
+                  is essential to recognize a string as the next keyword. The
+                  line starting a new keyword can have arbitrary rubbish
+                  following the keyword name - i.e. this is legitimate:
+
+                    PORO  Here comes some random gibberish which should be ignored
+                       10000*0.15 /
+
+                  To ensure the keyword 'PORO' is recognized in the example
+                  above we remove everything following the first space in the
+                  line variable before we check if it is the start of a new
+                  keyword.
+                */
+                const std::string line_string = line.string();
+                auto space_pos = line_string.find(' ');
+                const std::string candidate_name = line_string.substr(0, space_pos);
+                if( parser.isRecognizedKeyword( candidate_name ) ) {
                     parserState.rawKeyword->finalizeUnknownSize();
                     parserState.nextKeyword = line;
                     return true;
