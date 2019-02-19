@@ -26,7 +26,7 @@
  */
 struct Deviation {
     double abs = -1; //!< Absolute deviation
-    double rel = -1; //!< Relative deviation
+    double rel = 1e100; //!< Relative deviation
 };
 
 #endif

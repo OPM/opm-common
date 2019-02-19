@@ -22,12 +22,14 @@
 #include <cmath>
 #include <iostream>
 #include <set>
+#include <iomanip>
+#include <typeinfo>
+#include <type_traits>
+#include <vector>
 
-#include <ert/ecl/ecl_file.h>
-#include <ert/ecl/ecl_grid.h>
-#include <ert/ecl/ecl_type.h>
-
-#include <ert/ecl_well/well_info.h>
+#include <examples/test_util/ERst.hpp>
+#include <examples/test_util/ESmry.hpp>
+#include <examples/test_util/ERft.hpp>
 
 
 // helper macro to handle error throws or not
@@ -42,123 +44,132 @@
   }
 
 
-void ECLRegressionTest::printResultsForKeyword(const std::string& keyword) const {
-    std::cout << "Deviation results for keyword " << keyword << " of type "
-        << ecl_type_get_name(ecl_file_iget_named_data_type(ecl_file1, keyword.c_str(), 0))
-        << ":\n";
-    const double absDeviationAverage = average(absDeviation);
-    const double relDeviationAverage = average(relDeviation);
-    std::cout << "Average absolute deviation = " << absDeviationAverage  << std::endl;
-    std::cout << "Median absolute deviation  = " << median(absDeviation) << std::endl;
-    std::cout << "Average relative deviation = " << relDeviationAverage  << std::endl;
-    std::cout << "Median relative deviation  = " << median(relDeviation) << "\n\n";
+bool fileExists(std::string fileName) {
+    std::ifstream f(fileName.c_str());
+    return f.good();
 }
 
+bool ECLRegressionTest::checkFileName(const std::string &rootName, const std::string &extension, std::string &filename) {
 
-
-void ECLRegressionTest::boolComparisonForOccurrence(const std::string& keyword,
-                                                    int occurrence1, int occurrence2) const {
-    ecl_kw_type* ecl_kw1 = nullptr;
-    ecl_kw_type* ecl_kw2 = nullptr;
-    const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence1, occurrence2);
-    for (size_t cell = 0; cell < numCells; cell++) {
-        bool data1 = ecl_kw_iget_bool(ecl_kw1, cell);
-        bool data2 = ecl_kw_iget_bool(ecl_kw2, cell);
-        if (data1 != data2) {
-            printValuesForCell(keyword, occurrence1, occurrence2, numCells, cell, data1, data2);
-            HANDLE_ERROR(std::runtime_error, "Values of bool type differ.");
-        }
+    if (fileExists(rootName+"." + extension)) {
+        filename=rootName+"." + extension;
+        return true;
+    } else if (fileExists(rootName+".F" + extension)) {
+        filename=rootName+".F" + extension;
+        return true;
+    } else {
+        filename="";
+        return false;
     }
 }
 
 
-
-void ECLRegressionTest::charComparisonForOccurrence(const std::string& keyword,
-                                                    int occurrence1, int occurrence2) const {
-    ecl_kw_type* ecl_kw1 = nullptr;
-    ecl_kw_type* ecl_kw2 = nullptr;
-    const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence1, occurrence2);
-    for (size_t cell = 0; cell < numCells; cell++) {
-        std::string data1(ecl_kw_iget_char_ptr(ecl_kw1, cell));
-        std::string data2(ecl_kw_iget_char_ptr(ecl_kw2, cell));
-        if (data1.compare(data2) != 0) {
-            printValuesForCell(keyword, occurrence1, occurrence2, numCells, cell, data1, data2);
-            HANDLE_ERROR(std::runtime_error, "Values of char type differ.");
-        }
-    }
+template <typename T>
+bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
+{
+    return std::equal(t1.begin(), t1.end(), t2.begin(), t2.end());
 }
 
+template <typename T>
+void ECLRegressionTest::compareFloatingPointVectors(const std::vector<T> & t1, const std::vector<T> & t2, const std::string keyword, const std::string reference) {
 
-
-void ECLRegressionTest::intComparisonForOccurrence(const std::string& keyword,
-                                                   int occurrence1, int occurrence2) const {
-    ecl_kw_type* ecl_kw1 = nullptr;
-    ecl_kw_type* ecl_kw2 = nullptr;
-    const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence1, occurrence2);
-    std::vector<int> values1(numCells), values2(numCells);
-    ecl_kw_get_memcpy_int_data(ecl_kw1, values1.data());
-    ecl_kw_get_memcpy_int_data(ecl_kw2, values2.data());
-    for (size_t cell = 0; cell < values1.size(); cell++) {
-        if (values1[cell] != values2[cell]) {
-            printValuesForCell(keyword, occurrence1, occurrence2, values1.size(), cell, values1[cell], values2[cell]);
-            HANDLE_ERROR(std::runtime_error, "Values of int type differ.");
-        }
+    if ((typeid(T)!=typeid(float)) && (typeid(T)!=typeid(double))) {
+        HANDLE_ERROR(std::runtime_error, "\nMember function compareVectors should not be used with floating point vectors ");
     }
-}
 
-
-
-void ECLRegressionTest::doubleComparisonForOccurrence(const std::string& keyword,
-                                                      int occurrence1, int occurrence2) {
-    ecl_kw_type* ecl_kw1 = nullptr;
-    ecl_kw_type* ecl_kw2 = nullptr;
-    const unsigned int numCells = getEclKeywordData(ecl_kw1, ecl_kw2, keyword, occurrence1, occurrence2);
-    std::vector<double> values1(numCells), values2(numCells);
-    ecl_kw_get_data_as_double(ecl_kw1, values1.data());
-    ecl_kw_get_data_as_double(ecl_kw2, values2.data());
+    if (t1.size()!=t2.size()) {
+        HANDLE_ERROR(std::runtime_error, "\nError trying to compare two vectors with different size " << keyword << " - " << reference
+                     << "\n > size of first vector : " << t1.size() << "\n > size of second vector: " << t2.size());
+    }
 
     auto it = std::find(keywordDisallowNegatives.begin(), keywordDisallowNegatives.end(), keyword);
-    for (size_t cell = 0; cell < values1.size(); cell++) {
-        deviationsForCell(values1[cell], values2[cell], keyword, occurrence1, occurrence2, cell, it == keywordDisallowNegatives.end());
+    bool allowNegatives = it == keywordDisallowNegatives.end() ? true : false;
+
+    it = std::find(keywordsStrictTol.begin(), keywordsStrictTol.end(), keyword);
+    bool strictTol = it != keywordsStrictTol.end() ? true : false;
+
+
+    for (unsigned int i=0; i<t1.size(); i++) {
+        deviationsForCell(static_cast<double>(t1[i]), static_cast<double>(t2[i]), keyword, reference, t1.size(),i, allowNegatives, strictTol);
+    }
+
+}
+
+template <typename T>
+void ECLRegressionTest::compareVectors(const std::vector<T> & t1, const std::vector<T> & t2, const std::string keyword, const std::string reference) {
+
+    bool result;
+    std::string typeStr;
+
+    if (t1.size()!=t2.size()) {
+        HANDLE_ERROR(std::runtime_error, "\nError trying to compare two vectors with different size " << keyword << " - " << reference
+                     << "\n > size of first vector : " << t1.size() << "\n > size of second vector: " << t2.size());
+    }
+
+    if ((typeid(T)==typeid(float)) || (typeid(T)==typeid(double))) {
+        HANDLE_ERROR(std::runtime_error, "\nMember function compareVectors should not be used with floating point vectors ");
+    }
+
+    result = t1==t2 ? true : false ;
+
+    if (result==false) {
+        for (unsigned int i=0; i<t1.size(); i++) {
+            deviationsForNonFloatingPoints(t1[i], t2[i], keyword, reference, t1.size(), i);
+        }
     }
 }
 
 
+template <typename T>
+void ECLRegressionTest::deviationsForNonFloatingPoints(T val1, T val2, const std::string& keyword, const std::string reference, size_t kw_size, size_t cell)
+{
+    if (val1!=val2) {
+        printValuesForCell(keyword, reference, kw_size, cell, grid1, val1, val2);
+        HANDLE_ERROR(std::runtime_error, "Non floating point values not identical ");
+    }
+}
 
-void ECLRegressionTest::deviationsForCell(double val1, double val2,
-                                          const std::string& keyword,
-                                          int occurrence1, int occurrence2,
-                                          size_t kw_size, size_t cell,
-                                          bool allowNegativeValues) {
-    double absTolerance = getAbsTolerance();
-    double relTolerance = getRelTolerance();
+void ECLRegressionTest::deviationsForCell(double val1, double val2, const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, bool allowNegativeValues, bool useStrictTol)
+{
+    double absTolerance = useStrictTol ? strictAbsTol : getAbsTolerance();
+    double relTolerance = useStrictTol ? strictAbsTol : getRelTolerance();
+
     if (!allowNegativeValues) {
         if (val1 < 0) {
             if (std::abs(val1) > absTolerance) {
-                printValuesForCell(keyword, occurrence1, occurrence2, kw_size, cell, val1, val2);
+                printValuesForCell(keyword, reference, kw_size, cell, grid1, val1, val2);
                 HANDLE_ERROR(std::runtime_error, "Negative value in first file, "
-                        << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
+                             << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
             }
             val1 = 0;
         }
         if (val2 < 0) {
             if (std::abs(val2) > absTolerance) {
-                printValuesForCell(keyword, occurrence1, occurrence2, kw_size, cell, val1, val2);
+                printValuesForCell(keyword, reference, kw_size, cell, grid1, val1, val2);
                 HANDLE_ERROR(std::runtime_error, "Negative value in second file, "
-                        << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
+                             << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
             }
             val2 = 0;
         }
     }
+
     Deviation dev = calculateDeviations(val1, val2);
+
+
     if (dev.abs > absTolerance && dev.rel > relTolerance) {
         if (analysis) {
-          deviations[keyword].push_back(dev);
+            std::string keywref=keyword+": "+reference;
+            deviations[keywref].push_back(dev);
         } else {
-            printValuesForCell(keyword, occurrence1, occurrence2, kw_size, cell, val1, val2);
+            printValuesForCell(keyword, reference, kw_size, cell, grid1, val1, val2);
+
+            if (useStrictTol) {
+                std::cout << "Keword: " << keyword << " requires strict tolerances.\n" << std::endl;
+            }
+
             HANDLE_ERROR(std::runtime_error, "Deviations exceed tolerances."
-                    << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
-                    << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
+                         << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
+                         << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
         }
     }
     if (dev.abs != -1) {
@@ -170,104 +181,25 @@ void ECLRegressionTest::deviationsForCell(double val1, double val2,
 }
 
 
-
-void ECLRegressionTest::gridCompare(const bool volumecheck) const {
-    double absTolerance = getAbsTolerance();
-    double relTolerance = getRelTolerance();
-    const unsigned int globalGridCount1 = ecl_grid_get_global_size(ecl_grid1);
-    const unsigned int activeGridCount1 = ecl_grid_get_active_size(ecl_grid1);
-    const unsigned int globalGridCount2 = ecl_grid_get_global_size(ecl_grid2);
-    const unsigned int activeGridCount2 = ecl_grid_get_active_size(ecl_grid2);
-    if (globalGridCount1 != globalGridCount2) {
-        OPM_THROW(std::runtime_error, "In grid file:"
-                << "\nCells in first file: "  << globalGridCount1
-                << "\nCells in second file: " << globalGridCount2
-                << "\nThe number of global cells differ.");
-    }
-    if (activeGridCount1 != activeGridCount2) {
-        OPM_THROW(std::runtime_error, "In grid file:"
-                << "\nCells in first file: "  << activeGridCount1
-                << "\nCells in second file: " << activeGridCount2
-                << "\nThe number of active cells differ.");
-    }
-
-    if (!volumecheck) {
-        return;
-    }
-
-    for (unsigned int cell = 0; cell < globalGridCount1; ++cell) {
-        const bool active1 = ecl_grid_cell_active1(ecl_grid1, cell);
-        const bool active2 = ecl_grid_cell_active1(ecl_grid2, cell);
-        if (active1 != active2) {
-            int i, j, k;
-            ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
-            // Coordinates from this function are zero-based, hence incrementing
-            i++, j++, k++;
-            HANDLE_ERROR(std::runtime_error, "Grid cell with one-based indices ( "
-                         << i << ", " << j << ", " << k << " ) is "
-                         << (active1 ? "active" : "inactive") << " in first grid, but "
-                         << (active2 ? "active" : "inactive") << " in second grid.");
-        }
-        const double cellVolume1 = getCellVolume(ecl_grid1, cell);
-        const double cellVolume2 = getCellVolume(ecl_grid2, cell);
-        Deviation dev = calculateDeviations(cellVolume1, cellVolume2);
-        if (dev.abs > absTolerance && dev.rel > relTolerance) {
-            int i, j, k;
-            ecl_grid_get_ijk1(ecl_grid1, cell, &i, &j, &k);
-            // Coordinates from this function are zero-based, hence incrementing
-            i++, j++, k++;
-            HANDLE_ERROR(std::runtime_error, "In grid file: Deviations of cell volume exceed tolerances. "
-                    << "\nFor cell with one-based indices (" << i << ", " << j << ", " << k << "):"
-                    << "\nCell volume in first file: "  << cellVolume1
-                    << "\nCell volume in second file: " << cellVolume2
-                    << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
-                    << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << "."
-                    << "\nCell 1 active: " << active1
-                    << "\nCell 2 active: " << active2);
-        }
-    }
-}
-
-
-
-void ECLRegressionTest::results() {
-    if (!this->acceptExtraKeywords) {
-        if (keywords1.size() != keywords2.size()) {
-            std::set<std::string> keys(keywords1.begin() , keywords1.end());
-            for (const auto& key2: keywords2)
-                keys.insert( key2 );
-
-            for (const auto& key : keys)
-                fprintf(stderr," %8s:%3d     %8s:%3d \n",key.c_str() , ecl_file_get_num_named_kw( ecl_file1 , key.c_str()),
-                                                         key.c_str() , ecl_file_get_num_named_kw( ecl_file2 , key.c_str()));
-
-
-            OPM_THROW(std::runtime_error, "\nKeywords in first file: " << keywords1.size()
-                      << "\nKeywords in second file: " << keywords2.size()
-                      << "\nThe number of keywords differ.");
-        }
-    }
-
-    for (const auto& it : keywords1)
-        resultsForKeyword(it);
+void ECLRegressionTest::printDeviationReport() {
 
     if (analysis) {
-        std::cout << deviations.size() << " keyword"
+        std::cout << " \n" << deviations.size() << " keyword"
                   << (deviations.size() > 1 ? "s":"") << " exhibit failures" << std::endl;
         for (const auto& iter : deviations) {
             std::cout << "\t" << iter.first << std::endl;
             std::cout << "\t\tFails for " << iter.second.size() << " entries" << std::endl;
             std::cout.precision(7);
             double absErr = std::max_element(iter.second.begin(), iter.second.end(),
-                                          [](const Deviation& a, const Deviation& b)
-                                          {
-                                            return a.abs < b.abs;
-                                          })->abs;
+                                             [](const Deviation& a, const Deviation& b)
+            {
+                return a.abs < b.abs;
+            })->abs;
             double relErr = std::max_element(iter.second.begin(), iter.second.end(),
-                                          [](const Deviation& a, const Deviation& b)
-                                          {
-                                            return a.rel < b.rel;
-                                          })->rel;
+                                             [](const Deviation& a, const Deviation& b)
+            {
+                return a.rel < b.rel;
+            })->rel;
             std::cout << "\t\tLargest absolute error: "
                       <<  std::scientific << absErr << std::endl;
             std::cout << "\t\tLargest relative error: "
@@ -276,77 +208,966 @@ void ECLRegressionTest::results() {
     }
 }
 
+void ECLRegressionTest::compareKeywords(const std::vector<std::string> &keywords1, const std::vector<std::string> &keywords2, const std::string &reference) {
 
+    if (!acceptExtraKeywords) {
+        if (keywords1!=keywords2) {
+            std::cout << "not same keywords in " << reference << std::endl;
 
-void ECLRegressionTest::resultsForKeyword(const std::string& keyword) {
-    keywordValidForComparing(keyword);
-    const unsigned int occurrences1 = ecl_file_get_num_named_kw(ecl_file1, keyword.c_str());
-    const unsigned int occurrences2 = ecl_file_get_num_named_kw(ecl_file2, keyword.c_str());
-    if (!onlyLastOccurrence && occurrences1 != occurrences2) {
-        OPM_THROW(std::runtime_error, "For keyword " << keyword << ":"
-                << "\nKeyword occurrences in first file: "  << occurrences1
-                << "\nKeyword occurrences in second file: " << occurrences2
-                << "\nThe number of occurrences differ.");
+            if (keywords1.size()>50) {
+                printMissingKeywords(keywords1,keywords2);
+            } else {
+                printComparisonForKeywordLists(keywords1,keywords2);
+            }
+            OPM_THROW(std::runtime_error, "\nKeywords not identical in " << reference);
+        }
+    } else {
+        for (unsigned int i=0; i<keywords1.size(); i++) {
+            auto it1 = std::find(keywords2.begin(), keywords2.end(), keywords1[i]);
+
+            if (it1==keywords2.end()) {
+                std::cout << "Keyword " << keywords1[i] << " missing in second file " << std::endl;
+
+                if (keywords1.size()>50) {
+                    printMissingKeywords(keywords1,keywords2);
+                } else {
+                    printComparisonForKeywordLists(keywords1,keywords2);
+                }
+
+                OPM_THROW(std::runtime_error, "\nKeyword " << keywords1[i] << " missing in second file ");
+            }
+        }
+
+        if (keywords2.size()>keywords1.size()) {
+            std::cout << "\nExtra keywords (" << std::to_string(keywords2.size()-keywords1.size()) << ") accepted in second file " << std::endl;
+        }
     }
-    // Assuming keyword type is constant for every occurrence:
-    const ecl_type_enum kw_type = ecl_type_get_type( ecl_file_iget_named_data_type(ecl_file1, keyword.c_str(), 0) );
-    switch(kw_type) {
-        case ECL_DOUBLE_TYPE:
-        case ECL_FLOAT_TYPE:
-            std::cout << "Comparing " << keyword << "...";
-            if (onlyLastOccurrence) {
-                doubleComparisonForOccurrence(keyword, occurrences1 - 1, occurrences2 - 1);
-            }
-            else {
-                for (unsigned int occurrence = 0; occurrence < occurrences1; ++occurrence) {
-                    doubleComparisonForOccurrence(keyword, occurrence, occurrence);
-                }
-            }
-            std::cout << "done." << std::endl;
-            printResultsForKeyword(keyword);
-            absDeviation.clear();
-            relDeviation.clear();
-            return;
-        case ECL_INT_TYPE:
-            std::cout << "Comparing " << keyword << "...";
-            if (onlyLastOccurrence) {
-                intComparisonForOccurrence(keyword, occurrences1 - 1, occurrences2 - 1);
-            }
-            else {
-                for (unsigned int occurrence = 0; occurrence < occurrences1; ++occurrence) {
-                    intComparisonForOccurrence(keyword, occurrence, occurrence);
-                }
-            }
-            break;
-        case ECL_CHAR_TYPE:
-            std::cout << "Comparing " << keyword << "...";
-            if (onlyLastOccurrence) {
-                charComparisonForOccurrence(keyword, occurrences1 - 1, occurrences2 - 1);
-            }
-            else {
-                for (unsigned int occurrence = 0; occurrence < occurrences1; ++occurrence) {
-                    charComparisonForOccurrence(keyword, occurrence, occurrence);
-                }
-            }
-            break;
-        case ECL_BOOL_TYPE:
-            std::cout << "Comparing " << keyword << "...";
-            if (onlyLastOccurrence) {
-                boolComparisonForOccurrence(keyword, occurrences1 - 1, occurrences2 - 1);
-            }
-            else {
-                for (unsigned int occurrence = 0; occurrence < occurrences1; ++occurrence) {
-                    boolComparisonForOccurrence(keyword, occurrence, occurrence);
-                }
-            }
-            break;
-        case ECL_MESS_TYPE:
-            std::cout << "\nKeyword " << keyword << " is of type MESS"
-                << ", which is not supported in regression test." << "\n\n";
-            return;
-        default:
-            std::cout << "\nKeyword " << keyword << "has undefined type." << std::endl;
-            return;
-    }
-    std::cout << "done." << std::endl;
 }
+
+void ECLRegressionTest::checkSpesificKeyword(std::vector<std::string> &keywords1, std::vector<std::string> &keywords2, std::vector<EIOD::eclArrType> &arrayType1, std::vector<EIOD::eclArrType> &arrayType2, const std::string &reference) {
+
+    auto search1 = std::find(keywords1.begin(),keywords1.end(),spesificKeyword);
+    auto search2 = std::find(keywords2.begin(),keywords2.end(),spesificKeyword);
+
+    if ((search1==keywords1.end()) && (search2==keywords2.end())) {
+        std::cout << "Testing spesific kewyword in " << reference << ". Keyword not found in any of the cases ." << std::endl;
+        OPM_THROW(std::runtime_error, "\nTesting spesific kewyword in " << reference << ". Keyword not found in any of the cases .");
+    }
+
+    EIOD::eclArrType arrType;
+
+    if (search1!=keywords1.end()) {
+        int ind=std::distance(keywords1.begin(),search1);
+        arrType = arrayType1[ind];
+
+        if (search2==keywords2.end()) {
+            std::cout << "Testing spesific kewyword in " << reference << ". Keyword found in fist case but not in second case." << std::endl;
+            OPM_THROW(std::runtime_error, "\nTesting spesific kewyword in " << reference << ". Keyword found in fist case but not in second case.");
+        }
+
+        keywords1.clear();
+        arrayType1.clear();
+        keywords1.push_back(spesificKeyword);
+        arrayType1.push_back(arrType);
+
+        keywords2.clear();
+        arrayType2.clear();
+        keywords2.push_back(spesificKeyword);
+        arrayType2.push_back(arrType);
+
+    } else {
+
+        if (search2!=keywords2.end()) {
+            std::cout << "Testing spesific kewyword in " << reference << ". Keyword not found in fist case but found in second case." << std::endl;
+            OPM_THROW(std::runtime_error, "\nTesting spesific kewyword in " << reference << ". Keyword not found in fist case but found in second case.");
+        }
+
+        keywords1.clear();
+        arrayType1.clear();
+
+        keywords2.clear();
+        arrayType2.clear();
+    }
+
+}
+
+void ECLRegressionTest::loadGrids()  {
+
+    bool foundEGrid1, foundEGrid2;
+    std::string fileName1, fileName2;
+
+    foundEGrid1=checkFileName(rootName1,"EGRID",fileName1);
+    foundEGrid2=checkFileName(rootName2,"EGRID",fileName2);
+
+    if ((foundEGrid1) && (foundEGrid2)) {
+        std::cout << "\nLoading EGrid " << fileName1 << "  .... ";
+        grid1=new EGrid(fileName1);
+        std::cout << " done." << std::endl;
+
+        std::cout << "Loading EGrid " << fileName2 << "  .... ";
+        grid2=new EGrid(fileName2);
+        std::cout << " done." << std::endl;
+
+    } else {
+        std::cout << "\nWarning! Both grids could not be loaded. Not possible to reference cell values to grid indices." << std::endl;
+        std::cout << "Grid compare will also fail. SMRY, RFT, UNRST and INIT files can be checked \n" << std::endl;
+    }
+}
+
+void ECLRegressionTest::gridCompare() {
+
+    int nI1,nI2,nJ1,nJ2,nK1,nK2;
+
+    deviations.clear();
+
+    if ((grid1!=nullptr) && (grid2!=nullptr)) {
+
+        grid1->dimension(nI1,nJ1,nK1);
+        grid2->dimension(nI2,nJ2,nK2);
+
+        if (printKeywordOnly) {
+
+            std::vector<std::tuple<std::string, EIOD::eclArrType, int>> arrayList1 = grid1->getList();
+            std::vector<std::tuple<std::string, EIOD::eclArrType, int>> arrayList2 = grid2->getList();
+
+	    std::vector<std::string> keywords1;
+            std::vector<EIOD::eclArrType> arrayType1;
+
+            for (unsigned int i=0; i<arrayList1.size(); i++) {
+                keywords1.push_back(std::get<0>(arrayList1[i]));
+                arrayType1.push_back(std::get<1>(arrayList1[i]));
+            }
+
+            std::vector<std::string> keywords2;
+            std::vector<EIOD::eclArrType> arrayType2;
+
+            for (unsigned int i=0; i<arrayList2.size(); i++) {
+                keywords2.push_back(std::get<0>(arrayList2[i]));
+                arrayType2.push_back(std::get<1>(arrayList2[i]));
+            }
+
+            printComparisonForKeywordLists(keywords1,keywords2,arrayType1,arrayType2);
+            return;
+        }
+
+
+        std::cout << "\nComparing egrid files \n" << std::endl;
+
+        std::cout << "Dimensions             " << " ... ";
+
+        if ((nI1!=nI2) || (nJ1!=nJ2) || (nK1!=nK2)) {
+            OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different dimensions.  "
+                      << "\n grid1 : "  << nI1 << "x" << nJ1 << "x"<< nK1
+                      << "\n grid2 : "  << nI2 << "x" << nJ2 << "x"<< nK2);
+        }
+
+        std::cout << " done." << std::endl;
+
+        std::cout << "Active cells           " << " ... ";
+
+        for (int k=0; k<nK1; k++) {
+            for (int j=0; j<nJ1; j++) {
+                for (int i=0; i<nI1; i++) {
+                    if (grid1->active_index(i,j,k)!=grid2->active_index(i,j,k)) {
+                        OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different definition of active cells. "
+                                  " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
+                    }
+                }
+            }
+        }
+
+        std::cout << " done." << std::endl;
+
+        std::vector<float> coord1 = grid1->get<float>("COORD");
+        std::vector<float> coord2 = grid2->get<float>("COORD");
+
+        std::cout << "COORD                  " << " ... ";
+        compareFloatingPointVectors(coord1,coord2,"COORD", "Grid file");
+        std::cout << " done." << std::endl;
+
+        std::vector<float> zcorn1 = grid1->get<float>("ZCORN");
+        std::vector<float> zcorn2 = grid2->get<float>("ZCORN");
+
+        std::cout << "ZCORN                  " << " ... ";
+        compareFloatingPointVectors(zcorn1,zcorn2,"ZCORN", "Grid file");
+        std::cout << " done." << std::endl;
+
+        /*
+        std::cout << "X, Y and Z coordinates " << " ... ";
+
+        std::vector<double> X1(8,0.0),Y1(8,0.0),Z1(8,0.0);
+        std::vector<double> X2(8,0.0),Y2(8,0.0),Z2(8,0.0);
+
+        for (int k=0; k<nK1; k++) {
+            for (int j=0; j<nJ1; j++) {
+                for (int i=0; i<nI1; i++) {
+                    if (grid1->active_index(i,j,k)>-1) {
+
+                        grid1->getCellCorner(i,j,k, X1, Y1, Z1);
+                        grid2->getCellCorner(i,j,k, X2, Y2, Z2);
+
+                        for (int n=0; n<8; n++) {
+
+                            Deviation devX = calculateDeviations(X1[n], X2[n]);
+                            Deviation devY = calculateDeviations(Y1[n], Y2[n]);
+                            Deviation devZ = calculateDeviations(Z1[n], Z2[n]);
+
+                            if (devX.abs > gridTolerances) {
+                                if (analysis) {
+                                    deviations["xcoordinate"].push_back(devX);
+                                } else {
+                                    OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different X, Y and/or Z coordinates . "
+                                              " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
+                                }
+                            }
+
+                            if (devY.abs > gridTolerances) {
+                                if (analysis) {
+                                    deviations["ycoordinate"].push_back(devY);
+                                } else {
+                                    OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different X, Y and/or Z coordinates . "
+                                              " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
+                                }
+                            }
+
+                            if (devZ.abs > gridTolerances) {
+                                if (analysis) {
+                                    deviations["zcoordinate"].push_back(devZ);
+                                } else {
+                                    OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different X, Y and/or Z coordinates . "
+                                              " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        std::cout << " done." << std::endl;
+        */
+
+        std::cout << "NNC indices            " << " ... ";
+
+        // check / compare NNC definitions
+
+        if (grid1->hasKey("NNC1")) {
+
+            std::vector<int> NNC11 = grid1->get<int>("NNC1");
+            std::vector<int> NNC21 = grid1->get<int>("NNC2");
+
+            if (!grid2->hasKey("NNC1")) {
+                OPM_THROW(std::runtime_error, "\nFirst Grid have NNC1 keyword but not second grid  ");
+            }
+
+            std::vector<int> NNC12 = grid2->get<int>("NNC1");
+            std::vector<int> NNC22 = grid2->get<int>("NNC2");
+
+            if ((NNC11.size()!=NNC12.size()) || (NNC21.size()!=NNC22.size())) {
+                OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different number of NNCs. "
+                          << " \n Grid1:  " << NNC11.size() << ",  Grid2:  " << NNC12.size() );
+            }
+
+            for (unsigned int n=0; n<NNC11.size(); n++) {
+                if ((NNC11[n]!=NNC12[n]) || (NNC21[n]!=NNC22[n])) {
+                    std::cout << "Differences in NNCs. First found for " << NNC11[n] << " -> " <<  NNC21[n];
+                    std::cout << " not same as " << NNC12[n] << " -> " <<  NNC22[n] << std::endl;
+
+                    int i1,j1,k1,i2,j2,k2;
+
+                    grid1->ijk_from_global_index(NNC11[n]-1,i1,j1,k1);
+                    grid1->ijk_from_global_index(NNC21[n]-1,i2,j2,k2);
+
+                    std::cout << "In grid1 " << i1+1 << "," << j1+1 <<"," << k1+1  << " -> " << i2+1 << "," << j2+1 <<"," << k2+1 << std::endl;
+
+                    grid2->ijk_from_global_index(NNC12[n]-1,i1,j1,k1);
+                    grid2->ijk_from_global_index(NNC22[n]-1,i2,j2,k2);
+
+                    std::cout << "In grid2 " << i1+1 << "," << j1+1 <<"," << k1+1  << " -> " << i2+1 << "," << j2+1 <<"," << k2+1 << std::endl;
+
+                    OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different definitions of NNCs. ");
+                }
+            }
+        }
+
+        std::cout << " done." << std::endl;
+
+        if (deviations.size()>0) {
+            printDeviationReport();
+        }
+
+    } else {
+        std::cout << "\n!Warning, grid files not found, hence grids are not compared. \n" << std::endl;
+    }
+}
+
+
+void ECLRegressionTest::results_init() {
+
+    bool foundInit1, foundInit2;
+    std::string fileName1, fileName2;
+
+    foundInit1=checkFileName(rootName1,"INIT",fileName1);
+    foundInit2=checkFileName(rootName2,"INIT",fileName2);
+
+    if ((foundInit1) && (foundInit2)) {
+
+        EclFile init1(fileName1);
+        std::cout << "\nLoading INIT file " << fileName1 << "  .... done" << std::endl;
+
+        EclFile init2(fileName2);
+        std::cout << "Loading INIT file " << fileName2 << "  .... done\n" << std::endl;
+
+        deviations.clear();
+
+        init1.loadData();
+        init2.loadData();
+
+        std::string reference = "Init file";
+
+        const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> arrayList1 = init1.getList();
+        const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> arrayList2 = init2.getList();
+
+        std::vector<std::string> keywords1;
+        std::vector<EIOD::eclArrType> arrayType1;
+
+        for (unsigned int i=0; i<arrayList1.size(); i++) {
+            keywords1.push_back(std::get<0>(arrayList1[i]));
+            arrayType1.push_back(std::get<1>(arrayList1[i]));
+        }
+
+        std::vector<std::string> keywords2;
+        std::vector<EIOD::eclArrType> arrayType2;
+
+        for (unsigned int i=0; i<arrayList2.size(); i++) {
+            keywords2.push_back(std::get<0>(arrayList2[i]));
+            arrayType2.push_back(std::get<1>(arrayList2[i]));
+        }
+
+        if (printKeywordOnly) {
+            printComparisonForKeywordLists(keywords1,keywords2, arrayType1, arrayType2);
+        } else {
+            std::cout << "\nComparing init files \n" << std::endl;
+
+            if (spesificKeyword=="") {
+                compareKeywords(keywords1, keywords2, reference);
+            } else {
+                checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+            }
+
+
+            for (unsigned int i=0; i<keywords1.size(); i++) {
+
+                auto it1 = std::find(keywords2.begin(), keywords2.end(), keywords1[i]);
+                int ind2 = std::distance(keywords2.begin(),it1);
+
+                if ( arrayType1[i]!= arrayType2[ind2]) {
+                    printComparisonForKeywordLists(keywords1,keywords2,arrayType1,arrayType2);
+                    OPM_THROW(std::runtime_error, "\nArray with same name '"<< keywords1[i] << "', but of different type. Init file ");
+                }
+
+                std::cout << "Comparing " << keywords1[i] << " ... ";
+
+                if (arrayType1[i]==EIOD::INTE) {
+                    std::vector<int> vect1=init1.get<int>(keywords1[i]);
+                    std::vector<int> vect2=init2.get<int>(keywords2[ind2]);
+                    compareVectors(vect1, vect2, keywords1[i],reference);
+                } else if (arrayType1[i]==EIOD::REAL) {
+                    std::vector<float> vect1=init1.get<float>(keywords1[i]);
+                    std::vector<float> vect2=init2.get<float>(keywords2[ind2]);
+                    compareFloatingPointVectors(vect1, vect2, keywords1[i],reference);
+                } else if (arrayType1[i]==EIOD::DOUB) {
+                    std::vector<double> vect1=init1.get<double>(keywords1[i]);
+                    std::vector<double> vect2=init2.get<double>(keywords2[ind2]);
+                    compareFloatingPointVectors(vect1, vect2, keywords1[i],reference);
+                } else if (arrayType1[i]==EIOD::LOGI) {
+                    std::vector<bool> vect1=init1.get<bool>(keywords1[i]);
+                    std::vector<bool> vect2=init2.get<bool>(keywords2[ind2]);
+                    compareVectors(vect1, vect2, keywords1[i],reference);
+                } else if (arrayType1[i]==EIOD::CHAR) {
+                    std::vector<std::string> vect1=init1.get<std::string>(keywords1[i]);
+                    std::vector<std::string> vect2=init2.get<std::string>(keywords2[ind2]);
+                    compareVectors(vect1, vect2, keywords1[i],reference);
+                } else if (arrayType1[i]==EIOD::MESS) {
+                    // shold not be any associated data
+                } else {
+                    std::cout << "unknown array type " << std::endl;
+                    exit(1);
+                }
+
+                std::cout << " done." << std::endl;
+            }
+
+            if (deviations.size()>0) {
+                printDeviationReport();
+            }
+        }
+
+    } else {
+        std::cout << "\n!Warning, init files not found, hence init files are not compared. \n" << std::endl;
+    }
+}
+
+
+void ECLRegressionTest::results_rst() {
+
+    bool foundRst1, foundRst2;
+    std::string fileName1, fileName2;
+
+    foundRst1=checkFileName(rootName1,"UNRST",fileName1);
+    foundRst2=checkFileName(rootName2,"UNRST",fileName2);
+
+    if ((foundRst1) && (foundRst2)) {
+
+        ERst rst1(fileName1);
+        std::cout << "\nLoading restart file " << fileName1 << "  .... done" << std::endl;
+
+        ERst rst2(fileName2);
+        std::cout << "Loading restart file " << fileName2 << "  .... done\n" << std::endl;
+
+        std::vector<int> seqnums1 = rst1.listOfReportStepNumbers();
+        std::vector<int> seqnums2 = rst2.listOfReportStepNumbers();
+
+        deviations.clear();
+
+        if (spesificSequence>-1) {
+
+            auto search1 = std::find(seqnums1.begin(),seqnums1.end(),spesificSequence);
+            auto search2 = std::find(seqnums2.begin(),seqnums2.end(),spesificSequence);
+
+            if (search1==seqnums1.end()) {
+                OPM_THROW(std::runtime_error, "\nSpecified sequence " << spesificSequence << " not found in restart files for case 1");
+            }
+
+            if (search2==seqnums2.end()) {
+                OPM_THROW(std::runtime_error, "\nSpecified sequence " << spesificSequence << " not found in restart files for case 2");
+            }
+
+            seqnums1.clear();
+            seqnums1.push_back(spesificSequence);
+
+            seqnums2.clear();
+            seqnums2.push_back(spesificSequence);
+
+
+        } else if (onlyLastSequence) {
+
+            if (seqnums1.back()!=seqnums2.back()) {
+                OPM_THROW(std::runtime_error, "\nLast sequence not same for for case 1 and case 2");
+            }
+
+            seqnums1.clear();
+            seqnums1.push_back(seqnums2.back());
+
+            seqnums2.clear();
+            seqnums2.push_back(seqnums1.back());
+        }
+
+        if (seqnums1!=seqnums2) {
+            std::vector<std::string> seqnStrList1;
+            std::vector<std::string> seqnStrList2;
+
+            for (auto val : seqnums1) {
+                seqnStrList1.push_back(std::to_string(val));
+            }
+
+            for (auto val : seqnums2) {
+                seqnStrList2.push_back(std::to_string(val));
+            }
+            std::cout << "\nrestart sequences " << std::endl;
+
+            printComparisonForKeywordLists(seqnStrList1,seqnStrList2);
+            OPM_THROW(std::runtime_error, "\nRestart files not having the same report steps: ");
+        }
+
+        for (int seqn : seqnums1) {
+            std::cout << "\nUnified restart files, sequence  " << std::to_string(seqn) << "\n" << std::endl;
+
+            std::string reference = "Restart, sequence "+std::to_string(seqn);
+
+            rst1.loadReportStepNumber(seqn);
+            rst2.loadReportStepNumber(seqn);
+
+            std::vector<std::tuple<std::string, EIOD::eclArrType, int>> arrays1 = rst1.listOfRstArrays(seqn);
+            std::vector<std::tuple<std::string, EIOD::eclArrType, int>> arrays2 = rst2.listOfRstArrays(seqn);
+
+            std::vector<std::string> keywords1;
+            std::vector<EIOD::eclArrType> arrayType1;
+
+            for (unsigned int i=0; i<arrays1.size(); i++) {
+                keywords1.push_back(std::get<0>(arrays1[i]));
+                arrayType1.push_back(std::get<1>(arrays1[i]));
+            }
+
+            std::vector<std::string> keywords2;
+            std::vector<EIOD::eclArrType> arrayType2;
+
+            for (unsigned int i=0; i<arrays2.size(); i++) {
+                keywords2.push_back(std::get<0>(arrays2[i]));
+                arrayType2.push_back(std::get<1>(arrays2[i]));
+            }
+
+            if (integrationTest) {
+                std::vector<std::string> keywords;
+
+                for (unsigned int i=0; i<keywords1.size(); i++) {
+                    if ((keywords1[i]=="PRESSURE") || (keywords1[i]=="SWAT")|| (keywords1[i]=="SGAS")) {
+                        auto search2=std::find(keywords2.begin(),keywords2.end(),keywords1[i]);
+                        if (search2!=keywords2.end()) {
+                            keywords.push_back(keywords1[i]);
+                        }
+                    }
+                }
+
+                keywords1=keywords;
+                keywords2=keywords;
+
+                int nKeys =keywords.size();
+                arrayType1.assign(nKeys,EIOD::REAL);
+                arrayType2.assign(nKeys,EIOD::REAL);
+            }
+
+            if (printKeywordOnly) {
+                printComparisonForKeywordLists(keywords1,keywords2, arrayType1, arrayType2);
+                
+                
+            } else {
+
+                if (spesificKeyword=="") {
+                    compareKeywords(keywords1, keywords2, reference);
+                } else {
+                    checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2,reference);
+                }
+
+                for (unsigned int i=0; i<keywords1.size(); i++) {
+
+                    auto it1 = std::find(keywords2.begin(), keywords2.end(), keywords1[i]);
+                    int ind2 = std::distance(keywords2.begin(),it1);
+
+                    if ( arrayType1[i]!= arrayType2[ind2]) {
+                        printComparisonForKeywordLists(keywords1,keywords2,arrayType1,arrayType2);
+                        OPM_THROW(std::runtime_error, "\nArray with same name '"<< keywords1[i] << "', but of different type. Restart file" <<
+                                  " sequenze " << std::to_string(seqn));
+                    }
+
+                    std::cout << "Comparing " << keywords1[i] << " ... ";
+
+                    if (arrayType1[i]==EIOD::INTE) {
+                        std::vector<int> vect1=rst1.getRst<int>(keywords1[i],seqn);
+                        std::vector<int> vect2=rst2.getRst<int>(keywords2[ind2],seqn);
+                        compareVectors(vect1, vect2, keywords1[i],reference);
+                    } else if (arrayType1[i]==EIOD::REAL) {
+                        std::vector<float> vect1=rst1.getRst<float>(keywords1[i],seqn);
+                        std::vector<float> vect2=rst2.getRst<float>(keywords2[ind2],seqn);
+                        compareFloatingPointVectors(vect1, vect2, keywords1[i],reference);
+                    } else if (arrayType1[i]==EIOD::DOUB) {
+                        std::vector<double> vect1=rst1.getRst<double>(keywords1[i],seqn);
+                        std::vector<double> vect2=rst2.getRst<double>(keywords2[ind2],seqn);
+                        compareFloatingPointVectors(vect1, vect2, keywords1[i],reference);
+                    } else if (arrayType1[i]==EIOD::LOGI) {
+                        std::vector<bool> vect1=rst1.getRst<bool>(keywords1[i],seqn);
+                        std::vector<bool> vect2=rst2.getRst<bool>(keywords2[ind2],seqn);
+                        compareVectors(vect1, vect2, keywords1[i],reference);
+                    } else if (arrayType1[i]==EIOD::CHAR) {
+                        std::vector<std::string> vect1=rst1.getRst<std::string>(keywords1[i],seqn);
+                        std::vector<std::string> vect2=rst2.getRst<std::string>(keywords2[ind2],seqn);
+                        //vect1[0] ="INJEX";
+                        compareVectors(vect1, vect2, keywords1[i],reference);
+                    } else if (arrayType1[i]==EIOD::MESS) {
+                        // shold not be any associated data
+                    } else {
+                        std::cout << "unknown array type " << std::endl;
+                        exit(1);
+                    }
+
+                    std::cout << " done." << std::endl;
+                }
+            }
+        }
+
+        if (deviations.size()>0) {
+            printDeviationReport();
+        }
+
+    } else {
+        std::cout << "\n!Warning, restart files not found, hence restart files are not compared. \n" << std::endl;
+    }
+}
+
+void ECLRegressionTest::results_smry() {
+
+    bool foundSmspec1, foundSmspec2;
+    std::string fileName1, fileName2;
+
+    foundSmspec1=checkFileName(rootName1,"SMSPEC",fileName1);
+    foundSmspec2=checkFileName(rootName2,"SMSPEC",fileName2);
+
+    if ((foundSmspec1) && (foundSmspec2)) {
+
+        ESmry smry1(fileName1);
+        std::cout << "\nLoading summary file " << fileName1 << "  .... done" << std::endl;
+
+        ESmry smry2(fileName2);
+        std::cout << "\nLoading summary file " << fileName2 << "  .... done" << std::endl;
+
+        deviations.clear();
+
+        std::string reference = "Summary file";
+
+        std::cout << "\nComparing summary files " << std::endl;
+
+        std::vector<std::string> keywords1 = smry1.keywordList();
+        std::vector<std::string> keywords2 = smry2.keywordList();
+
+        std::vector<EIOD::eclArrType> arrayType1;
+        std::vector<EIOD::eclArrType> arrayType2;
+
+        for (auto vect: keywords1) {
+            arrayType1.push_back(EIOD::REAL);
+            arrayType2.push_back(EIOD::REAL);
+        }
+
+        if (integrationTest) {
+            std::vector<std::string> keywords;
+
+            for (unsigned int i=0; i<keywords1.size(); i++) {
+                if ((keywords1[i].substr(0,5)=="WOPR:") || (keywords1[i].substr(0,5)=="WWPR:") || (keywords1[i].substr(0,5)=="WGPR:") ||(keywords1[i].substr(0,5)=="WBHP:")) {
+                    auto search2=std::find(keywords2.begin(),keywords2.end(),keywords1[i]);
+
+                    if (search2!=keywords2.end()) {
+                        keywords.push_back(keywords1[i]);
+                    }
+                }
+            }
+
+            keywords1=keywords;
+            keywords2=keywords;
+
+            int nKeys =keywords.size();
+
+            arrayType1.assign(nKeys,EIOD::REAL);
+            arrayType2.assign(nKeys,EIOD::REAL);
+        }
+
+        if (printKeywordOnly) {
+            if (keywords1.size()<50){
+                printComparisonForKeywordLists(keywords1,keywords2);
+            } else {
+                printMissingKeywords(keywords1,keywords2);
+            }
+            
+        } else {
+            if (spesificKeyword=="") {
+                compareKeywords(keywords1, keywords2, reference);
+            } else {
+                checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+            }
+
+            std::cout << "\nChecking " << keywords1.size() << "  vectors  ... ";
+
+            for (unsigned int i=0; i<keywords1.size(); i++) {
+                std::vector<float> vect1 = smry1.get( keywords1[i]);
+                std::vector<float> vect2 = smry2.get( keywords1[i]);
+
+                if (vect1.size()!=vect2.size()) {
+                    OPM_THROW(std::runtime_error, "\nKeyword " << keywords1[i] << " summary vector of different length");
+                }
+
+                compareFloatingPointVectors(vect1, vect2, keywords1[i],reference);
+            }
+
+            std::cout << " done." << std::endl;
+
+            if (deviations.size()>0) {
+                printDeviationReport();
+            }
+        }
+
+    } else {
+        std::cout << "\n!Warning, summary files not found, hence summary files are not compared. \n" << std::endl;
+    }
+}
+
+
+void ECLRegressionTest::results_rft() {
+
+    bool foundRft1, foundRft2;
+    std::string fileName1, fileName2;
+
+    foundRft1=checkFileName(rootName1,"RFT",fileName1);
+    foundRft2=checkFileName(rootName2,"RFT",fileName2);
+
+    if ((foundRft1) && (foundRft2)) {
+
+        ERft rft1(fileName1);
+        std::cout << "\nLoading rft file " << fileName1 << "  .... done" << std::endl;
+
+        ERft rft2(fileName2);
+        std::cout << "Loading rft file " << fileName2 << "  .... done\n" << std::endl;
+
+        std::vector<std::pair<std::string, std::tuple<int,int,int>>> rftReportList1 = rft1.listOfRftReports();
+        std::vector<std::pair<std::string, std::tuple<int,int,int>>> rftReportList2 = rft2.listOfRftReports();
+
+        deviations.clear();
+
+        if (rftReportList1!=rftReportList2) {
+
+            std::vector<std::string> rftList1;
+            for (unsigned int i=0; i<rftReportList1.size(); i++) {
+                std::string well =  rftReportList1[i].first;
+                std::tuple<int, int, int> date =  rftReportList1[i].second;
+                std::string str1 = well +" (" + std::to_string(std::get<0>(date)) + "/" + std::to_string(std::get<1>(date)) + "/"  +   std::to_string(std::get<2>(date)) + ")";
+                rftList1.push_back(str1);
+            }
+
+            std::vector<std::string> rftList2;
+            for (unsigned int i=0; i<rftReportList2.size(); i++) {
+                std::string well =  rftReportList2[i].first;
+                std::tuple<int, int, int> date =  rftReportList2[i].second;
+                std::string str2 = well +" (" + std::to_string(std::get<0>(date)) + "/" + std::to_string(std::get<1>(date)) + "/"  +   std::to_string(std::get<2>(date)) + ")";
+                rftList2.push_back(str2);
+            }
+
+            printComparisonForKeywordLists(rftList1,rftList2);
+
+            OPM_THROW(std::runtime_error, "\nNot same RFTs in in RFT file ");
+        }
+
+        for (unsigned int i=0; i<rftReportList1.size(); i++) {
+
+            std::string well =  rftReportList2[i].first;
+            std::tuple<int, int, int> date =  rftReportList2[i].second;
+
+            std::string dateStr=std::to_string(std::get<0>(date)) + "/" + std::to_string(std::get<1>(date)) + "/" + std::to_string(std::get<2>(date));
+
+            std::cout << "Well: " << well << " date: " << dateStr << std::endl;
+
+            std::string reference = "RFT: " + well + ", " + dateStr;
+
+            std::vector<std::tuple<std::string, EIOD::eclArrType, int>> vectList1 = rft1.listOfRftArrays(well, date);
+            std::vector<std::tuple<std::string, EIOD::eclArrType, int>> vectList2 = rft2.listOfRftArrays(well, date);
+
+            std::vector<std::string> keywords1;
+            std::vector<EIOD::eclArrType> arrayType1;
+            for (auto array : vectList1 ) {
+                keywords1.push_back(std::get<0>(array)) ;
+                arrayType1.push_back(std::get<1>(array)) ;
+            }
+
+            std::vector<std::string> keywords2;
+            std::vector<EIOD::eclArrType> arrayType2;
+            for (auto array : vectList2 ) {
+                keywords2.push_back(std::get<0>(array)) ;
+                arrayType2.push_back(std::get<1>(array)) ;
+            }
+
+            if (printKeywordOnly) {
+                printComparisonForKeywordLists(keywords1,keywords2, arrayType1, arrayType2);
+            } else {
+                if (spesificKeyword=="") {
+                    compareKeywords(keywords1, keywords2, reference);
+                } else {
+                    checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
+                }
+
+                for (auto array : vectList1 ) {
+
+                    std::string keywords = std::get<0>(array);
+                    EIOD::eclArrType arrayType = std::get<1>(array);
+
+                    std::cout << "Comparing: " << keywords << " ... ";
+
+                    if (arrayType==EIOD::INTE) {
+                        std::vector<int> vect1=rft1.getRft<int>(keywords,well, date);
+                        std::vector<int> vect2=rft2.getRft<int>(keywords,well, date);
+                        compareVectors(vect1, vect2, keywords,reference);
+                    } else if (arrayType==EIOD::REAL) {
+                        std::vector<float> vect1=rft1.getRft<float>(keywords,well, date);
+                        std::vector<float> vect2=rft2.getRft<float>(keywords,well, date);
+                        compareFloatingPointVectors(vect1, vect2, keywords,reference);
+                    } else if (arrayType==EIOD::DOUB) {
+                        std::vector<double> vect1=rft1.getRft<double>(keywords,well, date);
+                        std::vector<double> vect2=rft2.getRft<double>(keywords,well, date);
+                        compareFloatingPointVectors(vect1, vect2, keywords,reference);
+                    } else if (arrayType==EIOD::LOGI) {
+                        std::vector<bool> vect1=rft1.getRft<bool>(keywords,well, date);
+                        std::vector<bool> vect2=rft2.getRft<bool>(keywords,well, date);
+                        compareVectors(vect1, vect2, keywords,reference);
+                    } else if (arrayType==EIOD::CHAR) {
+                        std::vector<std::string> vect1=rft1.getRft<std::string>(keywords,well, date);
+                        std::vector<std::string> vect2=rft2.getRft<std::string>(keywords,well, date);
+                        //vect1[0] ="INJEX";
+                        compareVectors(vect1, vect2, keywords,reference);
+                    } else if (arrayType==EIOD::MESS) {
+                        // shold not be any associated data
+                    } else {
+                        std::cout << "unknown array type " << std::endl;
+                        exit(1);
+                    }
+
+                    std::cout << " done." << std::endl;
+                }
+            }
+            std::cout << std::endl;
+        }
+
+        if (deviations.size()>0) {
+            printDeviationReport();
+        }
+    } else {
+        std::cout << "\n!Warning, rft files not found, hence rft files are not compared. \n" << std::endl;
+    }
+
+}
+
+void ECLRegressionTest::printComparisonForKeywordLists(const std::vector<std::string> arrayList1, const std::vector<std::string> arrayList2, const std::vector<EIOD::eclArrType> arrayType1, const std::vector<EIOD::eclArrType> arrayType2) const {
+
+    unsigned int maxLen=0;
+    
+    std::vector<std::string> arrTypeStrList = {"INTE", "REAL", "DOUB", "CHAR", "LOGI", "MESS"};
+
+    std::set<std::string> commonList;
+
+    for (auto key: arrayList1) {
+        commonList.insert(key);
+    }
+
+    for (auto key: arrayList2) {
+        commonList.insert(key);
+    }
+
+    for (auto key: commonList) {
+        if (key.size()>maxLen) {
+            maxLen=key.size();
+        }
+    }
+
+    maxLen=maxLen+4;
+    
+    std::cout << std::endl;
+
+    for (auto it = commonList.begin(); it != commonList.end(); it++) {
+
+        auto it1 = std::find(arrayList1.begin(), arrayList1.end(), *it);
+        int ind1= std::distance(arrayList1.begin(),it1);
+
+        auto it2 = std::find(arrayList2.begin(), arrayList2.end(), *it);
+        int ind2= std::distance(arrayList2.begin(),it2);
+
+        if (arrayType1[ind1]!=arrayType2[ind2]) {
+            std::cout << "\033[1;31m";
+        }
+
+        if (std::find(arrayList1.begin(), arrayList1.end(), *it) != arrayList1.end()) {
+            std::cout <<  std::setw(maxLen) << *it << " (" <<  arrTypeStrList[arrayType1[ind1]] << ") | ";
+        } else {
+            std::cout <<  std::setw(maxLen) << "" << "        | ";
+        }
+
+        if (std::find(arrayList2.begin(), arrayList2.end(), *it) != arrayList2.end()) {
+            std::cout <<  std::setw(maxLen) << *it << " (" <<  arrTypeStrList[arrayType2[ind2]] << ") ";
+        } else {
+            std::cout <<  std::setw(maxLen) << "";
+        }
+
+        if (arrayType1[ind1]!=arrayType2[ind2]) {
+            std::cout << " !" << "\033[0m";
+        }
+
+        std::cout << std::endl;
+    }
+
+    std::cout << std::endl << std::endl;
+}
+
+
+void ECLRegressionTest::printMissingKeywords(const std::vector<std::string> arrayList1, const std::vector<std::string> arrayList2) const {
+
+    std::set<std::string> commonList;
+
+    for (auto key: arrayList1) {
+        commonList.insert(key);
+    }
+
+    for (auto key: arrayList2) {
+        commonList.insert(key);
+    }
+
+    std::cout << "\nKeywords found in second case, but missing in first case: \n" << std::endl;
+
+    for (auto it = commonList.begin(); it != commonList.end(); it++) {
+
+        if (std::find(arrayList1.begin(), arrayList1.end(), *it) == arrayList1.end()) {
+            std::cout << "  > '" << *it  << "'" << std::endl;
+        }
+    }
+
+    std::cout << "\nKeywords found in first case, but missing in second case: \n" << std::endl;
+
+    for (auto it = commonList.begin(); it != commonList.end(); it++) {
+
+        if (std::find(arrayList2.begin(), arrayList2.end(), *it) == arrayList2.end()) {
+            std::cout << "  > '" << *it  << "'" << std::endl;
+        }
+    }
+
+}
+
+
+void ECLRegressionTest::printComparisonForKeywordLists(const std::vector<std::string> arrayList1, const std::vector<std::string> arrayList2) const {
+
+    std::set<std::string> commonList;
+    unsigned int maxLen=0;
+
+    for (auto key: arrayList1) {
+        commonList.insert(key);
+    }
+
+    for (auto key: arrayList2) {
+        commonList.insert(key);
+    }
+
+    for (auto key: commonList) {
+        if (key.size()>maxLen) {
+            maxLen=key.size();
+        }
+    }
+
+    maxLen=maxLen+2;
+
+    std::cout << std::endl;
+
+    for (auto it = commonList.begin(); it != commonList.end(); it++) {
+
+        if (std::find(arrayList1.begin(), arrayList1.end(), *it) != arrayList1.end()) {
+            std::cout <<  std::setw(maxLen) << *it  << " | ";
+        } else {
+            std::cout <<  std::setw(maxLen) << "" << " | ";
+        }
+
+        if (std::find(arrayList2.begin(), arrayList2.end(), *it) != arrayList2.end()) {
+            std::cout <<  std::setw(maxLen) << *it << "";
+        } else {
+            std::cout <<  std::setw(maxLen) << "" ;
+        }
+
+        std::cout << std::endl;
+    }
+
+    std::cout << std::endl;
+
+}
+
+
+ECLRegressionTest::~ECLRegressionTest() {
+
+    if (grid1!=nullptr) {
+        delete grid1;
+    }
+
+    if (grid2!=nullptr) {
+        delete grid2;
+    }
+}
+
+

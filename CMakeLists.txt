@@ -158,24 +158,35 @@ endif()
 # Build the compare utilities
 if(ENABLE_ECL_INPUT)
   add_library(testutil STATIC
+              examples/test_util/EclFile.cpp
+              examples/test_util/EclOutput.cpp
+              examples/test_util/ERst.cpp
+              examples/test_util/ESmry.cpp
               examples/test_util/EclFilesComparator.cpp
-              examples/test_util/EclIntegrationTest.cpp
-              examples/test_util/EclRegressionTest.cpp
-              examples/test_util/summaryComparator.cpp
-              examples/test_util/summaryIntegrationTest.cpp
-              examples/test_util/summaryRegressionTest.cpp)
+              examples/test_util/EclRegressionTest.cpp) 
+             # examples/test_util/EclIntegrationTest.cpp
+             # examples/test_util/summaryComparator.cpp
+             # examples/test_util/summaryIntegrationTest.cpp
+             # examples/test_util/summaryRegressionTest.cpp
   target_link_libraries(testutil ecl)
+  add_executable(convertECL examples/test_util/convertECL.cpp)
   add_executable(compareECL examples/test_util/compareECL.cpp)
+  
   target_link_libraries(compareECL testutil opmcommon)
+  target_link_libraries(convertECL testutil opmcommon)
+
 
   # Add the tests
-  set(_libs testutil opmcommon
+   set(_libs testutil opmcommon
             ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-  foreach(test test_compareSummary test_EclFilesComparator)
-    opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
-                         LIBRARIES ${_libs})
-  endforeach()
-  install(TARGETS compareECL DESTINATION bin)
+#   foreach(test test_compareSummary test_EclFilesComparator)
+   foreach(test test_EclFilesComparator)
+     opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
+                          LIBRARIES ${_libs})
+   endforeach()
+
+   install(TARGETS compareECL DESTINATION bin)
+  #install(TARGETS ref_compareECL DESTINATION bin)
 endif()
 
 # Install build system files

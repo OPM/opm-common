@@ -25,103 +25,64 @@
 #include <vector>
 #include <string>
 
-struct ecl_file_struct; //!< Prototype for eclipse file struct, from ERT library.
-typedef struct ecl_file_struct ecl_file_type;
-
-struct ecl_grid_struct; //!< Prototype for eclipse grid struct, from ERT library.
-typedef struct ecl_grid_struct ecl_grid_type;
-struct ecl_kw_struct; //!< Prototype for eclipse keyword struct, from ERT library.
-typedef struct ecl_kw_struct ecl_kw_type;
+#include <examples/test_util/EGrid.hpp>
 
 
-/*! \brief A class for comparing ECLIPSE files.
-    \details ECLFilesComparator opens ECLIPSE files
-             (unified restart, initial and RFT in addition to grid file)
-             from two simulations. This class has only the functions
-             printKeywords() and printKeywordsDifference(), in addition to a
-             couple of get-functions: the comparison logic is implemented in
-             the subclasses RegressionTest and IntegrationTest. */
 class ECLFilesComparator {
-    private:
-        int file_type;
-        double absTolerance      = 0;
-        double relTolerance      = 0;
-    protected:
-        ecl_file_type* ecl_file1 = nullptr;
-        ecl_grid_type* ecl_grid1 = nullptr;
-        ecl_file_type* ecl_file2 = nullptr;
-        ecl_grid_type* ecl_grid2 = nullptr;
-        std::vector<std::string> keywords1, keywords2;
-        bool throwOnError = true; //!< Throw on first error
-        bool analysis = false; //!< Perform full error analysis
-        std::map<std::string, std::vector<Deviation>> deviations;
-        mutable size_t num_errors = 0;
 
-        //! \brief Checks if the keyword exists in both cases.
-        //! \param[in] keyword Keyword to check.
-        //! \details If the keyword does not exist in one of the cases, the function throws an exception.
-        void keywordValidForComparing(const std::string& keyword) const;
-        //! \brief Stores keyword data for a given occurrence
-        //! \param[out] ecl_kw1 Pointer to a ecl_kw_type, which stores keyword data for first case given the occurrence.
-        //! \param[out] ecl_kw2 Pointer to a ecl_kw_type, which stores keyword data for second case given the occurrence.
-        //! \param[in] keyword Which keyword to consider.
-        //! \param[in] occurrence Which keyword occurrence to consider.
-        //! \details This function stores keyword data for the given keyword and occurrence in #ecl_kw1 and #ecl_kw2, and returns the number of cells (for which the keyword has a value at the occurrence). If the number of cells differ for the two cases, an exception is thrown.
-        unsigned int getEclKeywordData(ecl_kw_type*& ecl_kw1, ecl_kw_type*& ecl_kw2, const std::string& keyword, int occurrence1, int occurrence2) const;
-        //! \brief Prints values for a given keyword, occurrence and cell
-        //! \param[in] keyword Which keyword to consider.
-        //! \param[in] occurrence Which keyword occurrence to consider.
-        //! \param[in] cell Which cell occurrence to consider (numbered by global index).
-        //! \param[in] value1 Value for first file, the data type can be bool, int, double or std::string.
-        //! \param[in] value2 Value for second file, the data type can be bool, int, double or std::string.
-        //! \details Templatefunction for printing values when exceptions are thrown. The function is defined for bool, int, double and std::string.
-        template <typename T>
-        void printValuesForCell(const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, const T& value1, const T& value2) const;
+private:
+    double absTolerance      = 0;
+    double relTolerance      = 0;
 
-    public:
-        //! \brief Open ECLIPSE files and set tolerances and keywords.
-        //! \param[in] file_type Specifies which filetype to be compared, possible inputs are UNRSTFILE, INITFILE and RFTFILE.
-        //! \param[in] basename1 Full path without file extension to the first case.
-        //! \param[in] basename2 Full path without file extension to the second case.
-        //! \param[in] absTolerance Tolerance for absolute deviation.
-        //! \param[in] relTolerance Tolerance for relative deviation.
-        //! \details The content of the ECLIPSE files specified in the input is stored in the ecl_file_type and ecl_grid_type member variables. In addition the keywords and absolute and relative tolerances (member variables) are set. If the constructor is unable to open one of the ECLIPSE files, an exception will be thrown.
-        ECLFilesComparator(int file_type, const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance);
-        //! \brief Closing the ECLIPSE files.
-        ~ECLFilesComparator();
+protected:
 
-        //! \brief Set whether to throw on errors or not.
-        void throwOnErrors(bool dothrow) { throwOnError = dothrow; }
+    std::vector<std::string> keywords1, keywords2;
+    bool throwOnError = true; //!< Throw on first error
+    bool analysis = false; //!< Perform full error analysis
+    std::map<std::string, std::vector<Deviation>> deviations;
+    mutable size_t num_errors = 0;
 
-        //! \brief Set whether to perform a full error analysis.
-        void doAnalysis(bool analize) { analysis = analize; }
+    std::string rootName1,rootName2;
 
-        //! \brief Returns the number of errors encountered in the performed comparisons.
-        size_t getNoErrors() const { return num_errors; }
+    template <typename T>
+    void printValuesForCell(const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const T& value1, const T& value2) const;
 
-        //! \brief Returns the ECLIPSE filetype of this
-        int getFileType() const {return file_type;}
-        //! \brief Returns the absolute tolerance stored as a private member variable in the class
-        double getAbsTolerance() const {return absTolerance;}
-        //! \brief Returns the relative tolerance stored as a private member variable in the class
-        double getRelTolerance() const {return relTolerance;}
+public:
 
-        //! \brief Print all keywords and their respective Eclipse type for the two input cases.
-        void printKeywords() const;
-        //! \brief Print common and uncommon keywords for the two input cases.
-        void printKeywordsDifference() const;
+    ECLFilesComparator(const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance);
 
-        //! \brief Calculate deviations for two values.
-        //! \details Using absolute values of the input arguments: If one of the values are non-zero, the Deviation::abs returned is the difference between the two input values. In addition, if both values are non-zero, the Deviation::rel returned is the absolute deviation divided by the largest value.
-        static Deviation calculateDeviations(double val1, double val2);
-        //! \brief Calculate median of a vector.
-        //! \details Returning the median of the input vector, i.e. the middle value of the sorted vector if the number of elements is odd or the mean of the two middle values if the number of elements are even.
-        static double median(std::vector<double> vec);
-        //! \brief Calculate average of a vector.
-        //! \details Returning the average of the input vector, i.e. the sum of all values divided by the number of elements.
-        static double average(const std::vector<double>& vec);
-         //! \brief Obtain the volume of a cell.
-        static double getCellVolume(const ecl_grid_type* ecl_grid, const int globalIndex);
+    void throwOnErrors(bool dothrow) {
+        throwOnError = dothrow;
+    }
+
+    void doAnalysis(bool analize) {
+        analysis = analize;
+    }
+
+    size_t getNoErrors() const {
+        return num_errors;
+    }
+
+    //! \brief Returns the absolute tolerance stored as a private member variable in the class
+    double getAbsTolerance() const {
+        return absTolerance;
+    }
+    //! \brief Returns the relative tolerance stored as a private member variable in the class
+    double getRelTolerance() const {
+        return relTolerance;
+    }
+
+    //! \brief Calculate deviations for two values.
+    //! \details Using absolute values of the input arguments: If one of the values are non-zero, the Deviation::abs returned is the difference between the two input values. In addition, if both values are non-zero, the Deviation::rel returned is the absolute deviation divided by the largest value.
+    static Deviation calculateDeviations(double val1, double val2);
+    //! \brief Calculate median of a vector.
+    //! \details Returning the median of the input vector, i.e. the middle value of the sorted vector if the number of elements is odd or the mean of the two middle values if the number of elements are even.
+    static double median(std::vector<double> vec);
+    //! \brief Calculate average of a vector.
+    //! \details Returning the average of the input vector, i.e. the sum of all values divided by the number of elements.
+    static double average(const std::vector<double>& vec);
+    //! \brief Obtain the volume of a cell.
+    //static double getCellVolume(const ecl_grid_type* ecl_grid, const int globalIndex);
 };
 
 #endif

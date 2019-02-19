@@ -1,0 +1,203 @@
+/*
+   +   Copyright 2019 Equinor ASA.
+   +
+   +   This file is part of the Open Porous Media project (OPM).
+   +
+   +   OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
+   +   the Free Software Foundation, either version 3 of the License, or
+   +   (at your option) any later version.
+   +
+   +   OPM is distributed in the hope that it will be useful,
+   +   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   +   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   +   GNU General Public License for more details.
+   +
+   +   You should have received a copy of the GNU General Public License
+   +   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+   +   */
+
+
+#include "config.h"
+#include <iostream>
+#include <stdio.h>
+#include <iomanip>
+#include <math.h>
+#include <algorithm>
+#include <tuple>
+
+#include <examples/test_util/EclFile.hpp>
+#include <examples/test_util/EGrid.hpp>
+#include <examples/test_util/ERst.hpp>
+#include <examples/test_util/ESmry.hpp>
+#include <examples/test_util/EclOutput.hpp>
+
+// testing
+#include <examples/test_util/EclFilesComparator.hpp>
+
+
+#define BOOST_TEST_MODULE Test EGrid
+#include <boost/test/unit_test.hpp>
+
+template<typename InputIterator1, typename InputIterator2>
+bool
+range_equal(InputIterator1 first1, InputIterator1 last1,
+            InputIterator2 first2, InputIterator2 last2)
+{
+    while(first1 != last1 && first2 != last2)
+    {
+        if(*first1 != *first2) return false;
+        ++first1;
+        ++first2;
+    }
+    return (first1 == last1) && (first2 == last2);
+}
+
+bool compare_files(const std::string& filename1, const std::string& filename2)
+{
+    std::ifstream file1(filename1);
+    std::ifstream file2(filename2);
+
+    std::istreambuf_iterator<char> begin1(file1);
+    std::istreambuf_iterator<char> begin2(file2);
+
+    std::istreambuf_iterator<char> end;
+
+    return range_equal(begin1, end, begin2, end);
+}
+
+
+template <typename T>
+bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
+{
+    return std::equal(t1.begin(), t1.end(), t2.begin(), t2.end());
+}
+
+// test is using SPE1CASE1, with minor modifications in order to test API for EGrid class
+//  -> 6 cells made inactive, box: 5 7  5 6  1 1 
+    
+// first pilar at x=0.0, y=0.0 and z=0.0
+// dx = 1000 ft, dy = 1000 ft. dz = 20 ft for layer 1, 30 ft for layer 2 and 50 ft for layer 3.
+// size of grid is 10x10x3 
+
+    
+BOOST_AUTO_TEST_CASE(DimensAndIndices) {
+    
+    std::string testFile="SPE1CASE1.EGRID";
+
+    EGrid grid1(testFile);
+    
+    int nAct=grid1.activeCells();
+    int nTot=grid1.totalNumberOfCells();
+    
+    BOOST_CHECK_EQUAL(nAct,294);
+    BOOST_CHECK_EQUAL(nTot,300);
+
+    int nI, nJ, nK;
+    grid1.dimension(nI,nJ,nK);
+
+    BOOST_CHECK_EQUAL(nI,10);
+    BOOST_CHECK_EQUAL(nJ,10);
+    BOOST_CHECK_EQUAL(nK,3);
+
+    int globInd=grid1.global_index(3,2,1); 
+
+    BOOST_CHECK_EQUAL(globInd, 123);
+
+    BOOST_CHECK_EQUAL(grid1.global_index(0,0,0), 0);
+    BOOST_CHECK_EQUAL(grid1.global_index(nI-1,nJ-1,nK-1), nTot-1);
+
+    // check global_index valid range
+    BOOST_CHECK_THROW(grid1.global_index(-1,-1,-1),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.global_index(0,-1,0),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.global_index(0,0,-1),std::invalid_argument);
+
+    BOOST_CHECK_THROW(grid1.global_index(nI,0,0),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.global_index(nI,nJ,0),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.global_index(nI,nJ,nK),std::invalid_argument);
+    
+    // 6 inactive cells in first layer, actInd not same as glogInd
+    // actInd and globInd are zero based indices 
+
+    int actInd=grid1.active_index(3,2,1); 
+
+    BOOST_CHECK_EQUAL(actInd, 117);
+    BOOST_CHECK_EQUAL(grid1.active_index(0,0,0), 0);
+    BOOST_CHECK_EQUAL(grid1.active_index(nI-1,nJ-1,nK-1), nAct-1);
+
+    BOOST_CHECK_THROW(grid1.active_index(-1,0,0),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.active_index(-1,-1,0),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.active_index(-1,-1,-1),std::invalid_argument);
+
+    BOOST_CHECK_THROW(grid1.active_index(nI,0,0),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.active_index(nI,nJ,0),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.active_index(nI,nJ,nK),std::invalid_argument);
+    
+    int i,j,k;
+    
+    grid1.ijk_from_active_index(actInd, i, j, k);
+    
+    BOOST_CHECK_EQUAL(i, 3);
+    BOOST_CHECK_EQUAL(j, 2);
+    BOOST_CHECK_EQUAL(k, 1);
+
+    BOOST_CHECK_THROW(grid1.ijk_from_active_index(-1, i, j, k),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.ijk_from_active_index(294, i, j, k),std::invalid_argument);
+    
+    i=0; j=0; k=0; 
+    
+    grid1.ijk_from_global_index(globInd, i, j, k);
+    
+    BOOST_CHECK_EQUAL(i, 3);
+    BOOST_CHECK_EQUAL(j, 2);
+    BOOST_CHECK_EQUAL(k, 1);
+
+    BOOST_CHECK_THROW(grid1.ijk_from_global_index(-1, i, j, k),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.ijk_from_global_index(300, i, j, k),std::invalid_argument);
+
+}
+
+BOOST_AUTO_TEST_CASE(getCellCorners) {
+    
+    std::string testFile="SPE1CASE1.EGRID";
+
+    std::vector<double> ref_X = {3000,4000,3000,4000,3000,4000,3000,4000};
+    std::vector<double> ref_Y = {2000,2000,3000,3000,2000,2000,3000,3000};
+    std::vector<double> ref_Z = {8345,8345,8345,8345,8375,8375,8375,8375};
+
+    EGrid grid1(testFile);
+
+    std::vector<double> X(8,0.0);
+    std::vector<double> Y(8,0.0);
+    std::vector<double> Z(8,0.0);
+    
+    // cell 4,3,2 => zero based 3,2,1
+    grid1.getCellCorner(3,2,1,X,Y,Z);
+
+    BOOST_CHECK_EQUAL(X==ref_X, true);
+    BOOST_CHECK_EQUAL(Y==ref_Y, true);
+    BOOST_CHECK_EQUAL(Z==ref_Z, true);
+
+    X.assign(8,0.0);
+    Y.assign(8,0.0);
+    Z.assign(8,0.0);
+
+    int globInd=grid1.global_index(3,2,1); 
+
+    grid1.getCellCorner(globInd,X,Y,Z);
+
+    BOOST_CHECK_EQUAL(X==ref_X, true);
+    BOOST_CHECK_EQUAL(Y==ref_Y, true);
+    BOOST_CHECK_EQUAL(Z==ref_Z, true);
+}
+
+BOOST_AUTO_TEST_CASE(testing) {
+
+    double a = 1;
+    double b = 3;
+    const double tol = 1.0e-14;
+
+    Deviation dev = ECLFilesComparator::calculateDeviations(a,b);
+
+    BOOST_CHECK_EQUAL(dev.abs, 2.0);
+
+}

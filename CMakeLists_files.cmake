@@ -22,6 +22,13 @@
 
 list (APPEND MAIN_SOURCE_FILES
       examples/test_util/EclFile.cpp
+      examples/test_util/EclFilesComparator.cpp
+      examples/test_util/EclRegressionTest.cpp
+      examples/test_util/ERst.cpp
+      examples/test_util/ERft.cpp
+      examples/test_util/EGrid.cpp
+      examples/test_util/ESmry.cpp
+      examples/test_util/EclOutput.cpp
       src/opm/common/data/SimulationDataContainer.cpp
       src/opm/common/OpmLog/CounterLog.cpp
       src/opm/common/OpmLog/EclipsePRTLog.cpp
@@ -189,7 +196,12 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_EclFile.cpp
+      tests/test_EclIO.cpp
+      tests/test_EclRegressionTest.cpp
+      tests/test_EGrid.cpp
+      tests/test_ERst.cpp
+      tests/test_ESmry.cpp
+      tests/test_ERft.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_cubic.cpp
@@ -309,7 +321,16 @@ if(ENABLE_ECL_OUTPUT)
           tests/summary_deck_non_constant_porosity.DATA
           tests/SUMMARY_EFF_FAC.DATA
           tests/SPE1CASE1.DATA
+          tests/SPE1CASE1.EGRID
+          tests/ECLFILE.INIT
+          tests/ECLFILE.FINIT
           tests/SPE1CASE1.SMSPEC
+          tests/SPE1CASE1.FSMSPEC
+          tests/SPE1CASE1.UNSMRY
+          tests/SPE1CASE1.FUNSMRY
+          tests/SPE1CASE1.RFT
+          tests/SPE1_TESTCASE.UNRST
+          tests/SPE1_TESTCASE.FUNRST
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
       )
@@ -339,6 +360,9 @@ endif()
 
 list( APPEND PUBLIC_HEADER_FILES
       examples/test_util/EclFile.hpp
+      examples/test_util/ERst.hpp
+      examples/test_util/ESmry.hpp
+      examples/test_util/EclOutput.hpp
       examples/test_util/data/EclIOdata.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp

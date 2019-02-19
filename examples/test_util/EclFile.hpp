@@ -16,6 +16,9 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#ifndef ECLFILE_HPP
+#define ECLFILE_HPP
+
 
 //#include "EclIO.hpp"
 #include <iostream>
@@ -24,6 +27,9 @@
 #include <vector>
 #include <ctime>
 #include <map>
+#include <unordered_map>
+#include <stdio.h>
+
 
 #include <examples/test_util/data/EclIOdata.hpp>
 
@@ -34,8 +40,50 @@ class EclFile
 
 public:
     
-    explicit EclFile(const std::string& filename);
+    EclFile(std::string filename);
+    bool formattedInput(){ return formatted;};
+
+    void loadData();                            // load all data
+    void loadData(int arrIndex);                // load data based on array indices in vector arrIndex
+    void loadData(std::vector<int> arrIndex);   // load data based on array indices in vector arrIndex
+    void loadData(std::string arrName);         // load all arrays with array name equal to arrName
     
+    const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> getList() const;
+
+    template <typename T>
+    const std::vector<T> &get(const int &arrIndex) const;
+
+    template <typename T>
+    const std::vector<T> &get(const std::string &name) const;
+   
+    const bool hasKey(const std::string &name) const;
+
+    
+protected:
+    bool formatted;
+    std::string inputFilename;
+
+    std::unordered_map<int, std::vector<int>> inte_array;
+    std::unordered_map<int, std::vector<bool>> logi_array;
+    std::unordered_map<int, std::vector<double>> doub_array;
+    std::unordered_map<int, std::vector<float>> real_array;
+    std::unordered_map<int, std::vector<std::string>> char_array;
+
+    std::vector<std::string> array_name;
+    std::vector<EIOD::eclArrType> array_type;
+    std::vector<int> array_size;
+
+    std::vector<unsigned long int> ifStreamPos;
+
+    std::map<std::string, int> array_index;
+
+private:
+    std::vector<bool> arrayLoaded;
+
+    void checkIfLoaded(const int &arrIndex) const;
+    void loadArray(std::fstream &fileH,int arrIndex);
+
 };  
 
 
+#endif
