@@ -1,0 +1,18 @@
+{
+  "name": "BCRATE",
+  "sections": ["SOLUTION"],
+  "items": [
+  {"name": "I1", "value_type": "INT"},
+  {"name": "I2", "value_type": "INT"},
+  {"name": "J1", "value_type": "INT"},
+  {"name": "J2", "value_type": "INT"},
+  {"name": "K1", "value_type": "INT"},
+  {"name": "K2", "value_type": "INT"},
+  {"name": "DIRECTION", "value_type": "STRING"},
+  {"name": "COMPONENT", "value_type": "STRING"},
+  {"name": "RATE",
+  "value_type": "DOUBLE",
+  "dimension": "Mass/Time*Length*Length",
+  "default": 0.0 }
+  ]
+}
