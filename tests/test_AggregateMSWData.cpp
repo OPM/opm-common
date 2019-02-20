@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define BOOST_TEST_MODULE Aggregate_Well_Data
+#define BOOST_TEST_MODULE Aggregate_MSW_Data
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 
 #include <boost/test/unit_test.hpp>

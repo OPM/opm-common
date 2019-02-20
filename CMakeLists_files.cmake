@@ -264,8 +264,7 @@ endif()
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
           tests/test_AggregateWellData.cpp
-          #The unit tests are not finished yet, will be added in a separate pullrequest soon
-          #tests/test_AggregateMSWData.cpp
+          tests/test_AggregateGroupData.cpp
           tests/test_ArrayDimChecker.cpp
           tests/test_CharArrayNullTerm.cpp
           tests/test_EclipseIO.cpp

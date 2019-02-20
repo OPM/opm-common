@@ -195,6 +195,7 @@ namespace {
 		//group has child groups
 		//The field group always has seqIndex = 0 because it is always defined first
 	        //Hence the all groups except the Field group uses the seqIndex assigned
+		//iGrp contains the child groups in ascending group sequence index
 		std::vector<size_t> childGroupIndex;
 		Opm::RestartIO::Helpers::groupMaps groupMap;
 		groupMap.currentGrpTreeNameSeqIndMap(sched, simStep, groupMapNameIndex,mapIndexGroup);
