@@ -1,4 +1,4 @@
-{"name" : "SKPRPOLY" , "sections" : ["PROPS"], "size" : "UNKNOWN",
+{"name" : "SKPRPOLY" , "sections" : ["PROPS"],
  "records"  : [
 [{"name" : "TABLE_NUMBER" , "value_type" : "INT"},
 {"name" : "POLYMERCONCENTRATION" , "value_type" : "DOUBLE", "dimension" : "PolymerDensity"}],
