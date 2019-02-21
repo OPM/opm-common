@@ -23,8 +23,8 @@
 
 namespace Opm {
 
-UDQWellSet::UDQWellSet(const std::vector<std::string>& wells) :
-    UDQSet(wells.size())
+UDQWellSet::UDQWellSet(const std::string& name, const std::vector<std::string>& wells) :
+    UDQSet(name, wells.size())
 {
     for (std::size_t index = 0; index < wells.size(); index++)
         this->well_index.emplace( std::make_pair(wells[index], index));

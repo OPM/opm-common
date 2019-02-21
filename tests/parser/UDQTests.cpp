@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_SET) {
-    UDQSet s1(5);
+    UDQSet s1("NAME", 5);
 
     for (const auto& v : s1) {
         BOOST_CHECK_EQUAL(false, v.defined());
@@ -302,11 +302,11 @@ BOOST_AUTO_TEST_CASE(UDQ_SET) {
 
     s1.assign(0,0.0);
     {
-        UDQSet s2(6);
+        UDQSet s2("NAME", 6);
         BOOST_REQUIRE_THROW(s1 + s2, std::invalid_argument);
     }
     {
-        UDQSet s2(5);
+        UDQSet s2("NAME", 5);
         s2.assign(0, 25);
         auto s3 = s1 + s2;
 
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
     UDQFunctionTable udqft(params);
     BOOST_CHECK(udqft.has_function("SUM"));
     BOOST_CHECK(!udqft.has_function("NO_SUCH_FUNCTION"));
-    UDQSet arg(5);
+    UDQSet arg("NAME", 5);
     arg.assign(0,1);
     arg.assign(2,2);
     arg.assign(4,4);
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
         BOOST_CHECK_EQUAL(result.value(), 8.0);
     }
     {
-        UDQSet arg2(4);
+        UDQSet arg2("NAME", 4);
         arg2.assign(0,1);
         arg2.assign(2,4);
         arg2.assign(3,4);
@@ -407,9 +407,9 @@ BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
 BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
     UDQParams params;
     UDQFunctionTable udqft(params);
-    UDQSet arg1(5);
-    UDQSet arg2(5);
-    UDQSet arg3(3);
+    UDQSet arg1("NAME", 5);
+    UDQSet arg2("NAME", 5);
+    UDQSet arg3("NAME", 3);
     arg1.assign(1,1);
 
     arg1.assign(0,1);
@@ -460,8 +460,8 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
     }
     {
         const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("^"));
-        UDQSet arg1(4);
-        UDQSet arg2(4);
+        UDQSet arg1("NAME", 4);
+        UDQSet arg2("NAME", 4);
 
         for (std::size_t i=0; i < arg1.size(); i++) {
             arg1.assign(i, i + 1);
@@ -495,21 +495,21 @@ BOOST_AUTO_TEST_CASE(BAD_CAST) {
     UDQParams params;
     UDQFunctionTable udqft(params);
 
-BOOST_CHECK_THROW( dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("==")), std::bad_cast);
+    BOOST_CHECK_THROW( dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("==")), std::bad_cast);
 }
 
 
 BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
     UDQParams params;
     UDQFunctionTable udqft(params);
-    UDQSet arg(5);
+    UDQSet arg("NAME", 5);
     arg.assign(0,1);
     arg.assign(2,2);
     arg.assign(4,4);
 
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("ABS"));
-        UDQSet arg2(5);
+        UDQSet arg2("NAME", 5);
         arg2.assign(0,1);
         arg2.assign(2,-2);
         arg2.assign(4,4);
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("LOG"));
-        UDQSet arg(3);
+        UDQSet arg("NAME", 3);
         arg.assign(0, 10);
         arg.assign(2,1000);
 
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("NINT"));
-        UDQSet arg(3);
+        UDQSet arg("NAME", 3);
         arg.assign(0, 0.75);
         arg.assign(2, 1.25);
 
@@ -572,7 +572,7 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("RANDN"));
-        UDQSet arg(3);
+        UDQSet arg("NAME", 3);
         arg.assign(0, -1.0);
         arg.assign(2, -1.0);
 
@@ -611,8 +611,8 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
 BOOST_AUTO_TEST_CASE(UNION_FUNCTIONS) {
     UDQParams params;
     UDQFunctionTable udqft(params);
-    UDQSet arg1(5);
-    UDQSet arg2(5);
+    UDQSet arg1("NAME", 5);
+    UDQSet arg2("NAME", 5);
 
     arg1.assign(0,1);
     arg1.assign(2,2);
@@ -632,7 +632,7 @@ BOOST_AUTO_TEST_CASE(UNION_FUNCTIONS) {
 
 
 BOOST_AUTO_TEST_CASE(FUNCTIONS_INVALID_ARGUMENT) {
-    UDQSet arg(3);
+    UDQSet arg("NAME",3);
     arg.assign(0, -1);
     BOOST_REQUIRE_THROW( UDQScalarFunction::AVEG(arg), std::invalid_argument);
     BOOST_REQUIRE_THROW( UDQUnaryElementalFunction::LOG(arg), std::invalid_argument);
@@ -640,7 +640,7 @@ BOOST_AUTO_TEST_CASE(FUNCTIONS_INVALID_ARGUMENT) {
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
-    UDQSet s(5);
+    UDQSet s("NAME", 5);
     s.assign(0,1);
     s.assign(2,2);
     s.assign(4,5);
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
 
 BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     std::vector<std::string> wells = {"P1", "P2", "I1", "I2"};
-    UDQWellSet ws(wells);
+    UDQWellSet ws("NAME", wells);
 
     BOOST_CHECK_EQUAL(4, ws.size());
     ws.assign("P1", 1.0);

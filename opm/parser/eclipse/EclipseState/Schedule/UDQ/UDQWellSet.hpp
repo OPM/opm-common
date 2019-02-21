@@ -31,7 +31,7 @@ namespace Opm {
 
 class UDQWellSet : public UDQSet {
 public:
-    explicit UDQWellSet(const std::vector<std::string>& wells);
+    UDQWellSet(const std::string& name, const std::vector<std::string>& wells);
     void assign(const std::string& well, double value);
     void assign(double value);
     const UDQScalar& operator[](const std::string& well) const;
