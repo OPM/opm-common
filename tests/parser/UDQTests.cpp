@@ -31,6 +31,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 using namespace Opm;
@@ -67,7 +69,7 @@ UDQPARAM
 
     BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
 
-    // The reseeed parameter is set to false, so the repeated callls to .reseedRNG() should have
+    // The reseed parameter is set to false, so the repeated calls to reseedRNG() should have
     // no effect.
 
     udq_params.reseedRNG(100);
@@ -336,6 +338,306 @@ BOOST_AUTO_TEST_CASE(UDQ_SET) {
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
+    UDQParams params;
+    UDQFunctionTable udqft(params);
+    BOOST_CHECK(udqft.has_function("SUM"));
+    BOOST_CHECK(!udqft.has_function("NO_SUCH_FUNCTION"));
+    UDQSet arg(5);
+    arg.assign(0,1);
+    arg.assign(2,2);
+    arg.assign(4,4);
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("SUM"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), 7);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORM1"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), 7);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORM2"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), std::sqrt(1 + 4+ 16));
+    }
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORMI"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), 4);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("MIN"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), 1);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("MAX"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), 4);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEA"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), 7.0/3);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEG"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), std::exp((std::log(1) + std::log(2.0) + std::log(4))/3));
+    }
+    {
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("PROD"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL(result.value(), 8.0);
+    }
+    {
+        UDQSet arg2(4);
+        arg2.assign(0,1);
+        arg2.assign(2,4);
+        arg2.assign(3,4);
+        const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEH"));
+        auto result = func.eval(arg2);
+        BOOST_CHECK_EQUAL(result.value(), 2.0);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
+    UDQParams params;
+    UDQFunctionTable udqft(params);
+    UDQSet arg1(5);
+    UDQSet arg2(5);
+    UDQSet arg3(3);
+    arg1.assign(1,1);
+
+    arg1.assign(0,1);
+    arg1.assign(2,2);
+    arg1.assign(4,4);
+
+    arg2.assign(0, 0.9);
+    arg2.assign(2, 2.5);
+    arg2.assign(4, 4.0);
+
+    BOOST_CHECK_THROW(UDQBinaryFunction::EQ(0.25, arg1, arg3), std::invalid_argument);
+
+
+    {
+        auto result = UDQBinaryFunction::EQ(0, arg1, arg2);
+
+        BOOST_CHECK_EQUAL( result.defined_size(), 3 );
+        BOOST_CHECK_EQUAL( result[0].value(), 0);
+        BOOST_CHECK_EQUAL( result[2].value(), 0);
+        BOOST_CHECK_EQUAL( result[4].value(), 1);
+
+        result = UDQBinaryFunction::EQ(0.20, arg1, arg2);
+        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[2].value(), 0);
+        BOOST_CHECK_EQUAL( result[4].value(), 1);
+
+        const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("=="));
+        result = func.eval(arg1, arg2);
+        BOOST_CHECK_EQUAL( result[0].value(), 0);
+        BOOST_CHECK_EQUAL( result[2].value(), 0);
+        BOOST_CHECK_EQUAL( result[4].value(), 1);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("<"));
+        auto result = func.eval(arg1, arg2);
+        BOOST_CHECK_EQUAL( result.defined_size(), 3 );
+        BOOST_CHECK_EQUAL( result[0].value(), 0);
+        BOOST_CHECK_EQUAL( result[2].value(), 1);
+        BOOST_CHECK_EQUAL( result[4].value(), 0);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get(">"));
+        auto result = func.eval(arg1, arg2);
+        BOOST_CHECK_EQUAL( result.defined_size(), 3 );
+        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[2].value(), 0);
+        BOOST_CHECK_EQUAL( result[4].value(), 0);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("^"));
+        UDQSet arg1(4);
+        UDQSet arg2(4);
+
+        for (std::size_t i=0; i < arg1.size(); i++) {
+            arg1.assign(i, i + 1);
+            arg2.assign(i, 2);
+        }
+        auto result = func.eval(arg1, arg2);
+        for (std::size_t i=0; i < arg1.size(); i++)
+            BOOST_CHECK_EQUAL( result[i].value(), (i+1)*(i+1));
+    }
+    {
+        auto result = UDQBinaryFunction::GE(1.0, arg1, arg2);
+        BOOST_CHECK_EQUAL( result[0].value(), 1);
+
+        // This is bisarre - but due to the large epsilon 2 and 2.5 compare as
+        // equal; and then we evaluate 2 >= 2.5 as TRUE!
+        BOOST_CHECK_EQUAL( result[2].value(), 1);
+        BOOST_CHECK_EQUAL( result[4].value(), 1);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("<="));
+        auto result = func.eval(arg1, arg2);
+        BOOST_CHECK_EQUAL( result[0].value(), 0);
+        BOOST_CHECK_EQUAL( result[2].value(), 1);
+        BOOST_CHECK_EQUAL( result[4].value(), 1);
+
+
+    }
+}
+
+BOOST_AUTO_TEST_CASE(BAD_CAST) {
+    UDQParams params;
+    UDQFunctionTable udqft(params);
+
+BOOST_CHECK_THROW( dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("==")), std::bad_cast);
+}
+
+
+BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
+    UDQParams params;
+    UDQFunctionTable udqft(params);
+    UDQSet arg(5);
+    arg.assign(0,1);
+    arg.assign(2,2);
+    arg.assign(4,4);
+
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("ABS"));
+        UDQSet arg2(5);
+        arg2.assign(0,1);
+        arg2.assign(2,-2);
+        arg2.assign(4,4);
+        auto result = func.eval(arg2);
+        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[2].value(), 2);
+        BOOST_CHECK_EQUAL( result[4].value(), 4);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("DEF"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[2].value(), 1);
+        BOOST_CHECK_EQUAL( result[4].value(), 1);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("UNDEF"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL( result[1].value(), 1);
+        BOOST_CHECK_EQUAL( result[3].value(), 1);
+        BOOST_CHECK_EQUAL( result.defined_size(), 2);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("EXP"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL( result[0].value(), std::exp(1));
+        BOOST_CHECK_EQUAL( result[2].value(), std::exp(2));
+        BOOST_CHECK_EQUAL( result[4].value(), std::exp(4));
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("IDV"));
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK_EQUAL( result[1].value(), 0);
+        BOOST_CHECK_EQUAL( result[2].value(), 1);
+        BOOST_CHECK_EQUAL( result[3].value(), 0);
+        BOOST_CHECK_EQUAL( result[4].value(), 1);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("LOG"));
+        UDQSet arg(3);
+        arg.assign(0, 10);
+        arg.assign(2,1000);
+
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK( !result[1] );
+        BOOST_CHECK_EQUAL( result[2].value(), 3);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("NINT"));
+        UDQSet arg(3);
+        arg.assign(0, 0.75);
+        arg.assign(2, 1.25);
+
+        auto result = func.eval(arg);
+        BOOST_CHECK_EQUAL( result[0].value(), 1);
+        BOOST_CHECK( !result[1] );
+        BOOST_CHECK_EQUAL( result[2].value(), 1);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("RANDN"));
+        UDQSet arg(3);
+        arg.assign(0, -1.0);
+        arg.assign(2, -1.0);
+
+        auto result1 = func.eval(arg);
+        auto result2 = func.eval(arg);
+        BOOST_CHECK( result1[0].value() != -1.0);
+        BOOST_CHECK( !result1[1] );
+        BOOST_CHECK( result1[2].value() != -1.0);
+
+        BOOST_CHECK( result1[0].value() != result2[0].value());
+        BOOST_CHECK( result1[2].value() != result2[2].value());
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("SORTA"));
+        auto result = func.eval(arg);
+
+        BOOST_CHECK_EQUAL( result[0].value(), 0);
+        BOOST_CHECK( !result[1] );
+        BOOST_CHECK_EQUAL( result[2].value(), 1);
+        BOOST_CHECK( !result[3] );
+        BOOST_CHECK_EQUAL( result[4].value(), 2);
+    }
+    {
+        const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("SORTD"));
+        auto result = func.eval(arg);
+
+        BOOST_CHECK_EQUAL( result[0].value(), 2);
+        BOOST_CHECK( !result[1] );
+        BOOST_CHECK_EQUAL( result[2].value(), 1);
+        BOOST_CHECK( !result[3] );
+        BOOST_CHECK_EQUAL( result[4].value(), 0);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(UNION_FUNCTIONS) {
+    UDQParams params;
+    UDQFunctionTable udqft(params);
+    UDQSet arg1(5);
+    UDQSet arg2(5);
+
+    arg1.assign(0,1);
+    arg1.assign(2,2);
+
+    arg2.assign(0, 1.0);
+    arg2.assign(3, 3 );
+
+    const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("UADD"));
+    auto result = func.eval(arg1, arg2);
+    BOOST_CHECK_EQUAL( 3, result.defined_size() );
+    BOOST_CHECK_EQUAL( 2, result[0].value() );
+    BOOST_CHECK_EQUAL( 2, result[2].value() );
+    BOOST_CHECK_EQUAL( 3, result[3].value() );
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(FUNCTIONS_INVALID_ARGUMENT) {
+    UDQSet arg(3);
+    arg.assign(0, -1);
+    BOOST_REQUIRE_THROW( UDQScalarFunction::AVEG(arg), std::invalid_argument);
+    BOOST_REQUIRE_THROW( UDQUnaryElementalFunction::LOG(arg), std::invalid_argument);
+    BOOST_REQUIRE_THROW( UDQUnaryElementalFunction::LN(arg), std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
     UDQSet s(5);

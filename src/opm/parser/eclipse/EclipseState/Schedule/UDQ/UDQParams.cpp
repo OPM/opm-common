@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License along with
   OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <chrono>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/U.hpp>
@@ -48,8 +49,8 @@ namespace Opm {
           The random number stream is therefor seeded using time.
         */
         auto now = std::chrono::high_resolution_clock::now();
-        auto ms = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch());
-        this->m_true_rng.seed( ms.count() );
+        auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch());
+        this->m_true_rng.seed( ns.count() );
         this->m_sim_rng.seed( this->random_seed );
     }
 

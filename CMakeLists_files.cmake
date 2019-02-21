@@ -131,6 +131,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.cpp
@@ -522,6 +524,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp
        opm/parser/eclipse/Deck/Deck.hpp
