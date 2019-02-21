@@ -18,8 +18,8 @@
 */
 
 
-#ifndef UDQState_HPP_
-#define UDQState_HPP_
+#ifndef UDQINPUT_HPP_
+#define UDQINPUT_HPP_
 
 #include <unordered_map>
 #include <string>
@@ -30,7 +30,8 @@
 
 namespace Opm {
 
-    class UDQ{
+
+    class UDQInput {
     public:
         void add_record(const DeckRecord& record);
         const std::vector<UDQExpression>& expressions() const noexcept;

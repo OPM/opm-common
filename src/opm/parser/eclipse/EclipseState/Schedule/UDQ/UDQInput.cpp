@@ -18,7 +18,7 @@
  */
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQ.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 
 namespace Opm {
 
@@ -33,7 +33,7 @@ namespace Opm {
     }
 
 
-    void UDQ::add_record(const DeckRecord& record) {
+    void UDQInput::add_record(const DeckRecord& record) {
         auto action = UDQExpression::actionString2Enum(record.getItem("ACTION").get<std::string>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = record.getItem("DATA").getData<std::string>();
@@ -49,17 +49,17 @@ namespace Opm {
     }
 
 
-    const std::vector<UDQExpression>& UDQ::expressions() const noexcept {
+    const std::vector<UDQExpression>& UDQInput::expressions() const noexcept {
         return this->m_expressions;
     }
 
 
-    const std::vector<UDQAssign>& UDQ::assignments() const {
+    const std::vector<UDQAssign>& UDQInput::assignments() const {
         return this->m_assignments;
     }
 
 
-    const std::string& UDQ::unit(const std::string& key) const {
+    const std::string& UDQInput::unit(const std::string& key) const {
         const auto pair_ptr = this->units.find(key);
         if (pair_ptr == this->units.end())
             throw std::invalid_argument("No such UDQ quantity: " + key);
@@ -68,7 +68,7 @@ namespace Opm {
     }
 
 
-    void UDQ::assign_unit(const std::string& keyword, const std::string& quoted_unit) {
+    void UDQInput::assign_unit(const std::string& keyword, const std::string& quoted_unit) {
         const std::string unit = strip_quotes(quoted_unit);
         const auto pair_ptr = this->units.find(keyword);
         if (pair_ptr != this->units.end()) {
