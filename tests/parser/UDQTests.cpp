@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(KEYWORDS) {
 RUNSPEC
 
 UDQDIMS
-   10* 'Y'/
+   10* 'N'/
 
 UDQPARAM
   3* 0.25 /
@@ -64,8 +64,17 @@ UDQPARAM
     auto runspec = Runspec(deck);
     auto udq_params = runspec.udqParams();
 
-    BOOST_CHECK(udq_params.reseedRNG());
     BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
+
+    // The reseeed parameter is set to false, so the repeated callls to .reseedRNG() should have
+    // no effect.
+
+    udq_params.reseedRNG(100);
+    auto r1 = udq_params.true_rng()();
+    udq_params.reseedRNG(100);
+    auto r2 = udq_params.true_rng()();
+
+    BOOST_CHECK( r1 != r2 );
 }
 
 
@@ -107,8 +116,21 @@ UDQ
 
     Parser parser;
     auto deck = parser.parseString(input);
-    auto udq_params = UDQParams(deck);
-    BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
+    auto udq_params1 = UDQParams(deck);
+    BOOST_CHECK_EQUAL(0.25, udq_params1.cmpEpsilon());
+    auto& sim_rng1 = udq_params1.sim_rng();
+    auto& true_rng1 = udq_params1.true_rng();
+
+    auto udq_params2 = UDQParams(deck);
+    auto& sim_rng2 = udq_params2.sim_rng();
+    auto& true_rng2 = udq_params2.true_rng();
+
+    BOOST_CHECK( sim_rng1() == sim_rng2() );
+    BOOST_CHECK( true_rng1() != true_rng2() );
+
+    udq_params1.reseedRNG(100);
+    udq_params2.reseedRNG(100);
+    BOOST_CHECK( true_rng1() == true_rng2() );
 }
 
 BOOST_AUTO_TEST_CASE(UDQ_CHANGE_UNITS_ILLEGAL) {

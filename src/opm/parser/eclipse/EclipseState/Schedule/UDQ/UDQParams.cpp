@@ -33,7 +33,11 @@ namespace Opm {
         value_range(ParserKeywords::UDQPARAM::RANGE::defaultValue),
         undefined_value(ParserKeywords::UDQPARAM::UNDEFINED_VALUE::defaultValue),
         cmp_eps(ParserKeywords::UDQPARAM::CMP_EPSILON::defaultValue)
-    {}
+    {
+        std::random_device r;
+        this->m_sim_rng.seed( this->random_seed );
+        this->m_true_rng.seed( r() );
+    }
 
 
     UDQParams::UDQParams(const Deck& deck) :
@@ -54,16 +58,21 @@ namespace Opm {
             undefined_value = record.getItem("UNDEFINED_VALUE").get<double>(0);
             cmp_eps = record.getItem("CMP_EPSILON").get<double>(0);
         }
+        this->m_sim_rng.seed( this->random_seed );
     }
 
 
-    bool UDQParams::reseedRNG() const noexcept {
-        return this->reseed_rng;
+    /*
+      If the internal flag reseed_rng is set to true, this method will reset the
+      rng true_rng with the seed applied; the purpose of this function is to be
+      able to ensure(?) that a restarted run gets the same sequence of random
+      numbers as the original run.
+    */
+    void UDQParams::reseedRNG(int seed) {
+        if (this->reseed_rng)
+            this->m_true_rng.seed( seed );
     }
 
-    int UDQParams::randomSeed() const noexcept {
-        return this->random_seed;
-    }
 
     double UDQParams::range() const noexcept {
         return this->value_range;
@@ -76,4 +85,13 @@ namespace Opm {
     double UDQParams::cmpEpsilon() const noexcept {
         return this->cmp_eps;
     }
+
+    std::mt19937& UDQParams::sim_rng() {
+        return this->m_sim_rng;
+    }
+
+    std::mt19937& UDQParams::true_rng() {
+        return this->m_true_rng;
+    }
+
 }

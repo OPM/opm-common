@@ -20,6 +20,7 @@
 #ifndef OPM_UDQ_PARAMS_HPP
 #define OPM_UDQ_PARAMS_HPP
 
+#include <random>
 
 namespace Opm {
 
@@ -31,18 +32,22 @@ namespace Opm {
         explicit UDQParams(const Deck& deck);
         UDQParams();
 
-        bool   reseedRNG() const noexcept;
-        int    randomSeed() const noexcept;
+        void   reseedRNG(int seed);
         double range() const noexcept;
         double undefinedValue() const noexcept;
         double cmpEpsilon() const noexcept;
 
+        std::mt19937& sim_rng();
+        std::mt19937& true_rng();
     private:
         bool reseed_rng;
         int random_seed;
         double value_range;
         double undefined_value;
         double cmp_eps;
+
+        std::mt19937 m_sim_rng;  // The sim_rng is seeded deterministiaclly at simulation start.
+        std::mt19937 m_true_rng; // The true_rng is seeded with a "true" random seed; this rng can be reset with reseedRNG()
     };
 }
 
