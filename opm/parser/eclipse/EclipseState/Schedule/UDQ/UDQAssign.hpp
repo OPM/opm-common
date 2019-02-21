@@ -18,32 +18,28 @@
 */
 
 
-#ifndef UDQ_EXPRESSION_HPP_
-#define UDQ_EXPRESSION_HPP_
+#ifndef UDQASSIGN_HPP_
+#define UDQASSIGN_HPP_
 
+#include <string>
 #include <vector>
 
-#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
 
 namespace Opm {
 
-    enum class UDQAction {ASSIGN, DEFINE, UNITS, UPDATE};
-
-
-    class UDQExpression {
-    public:
-        UDQExpression(UDQAction action, const std::string& keyword, const std::vector<std::string>& data);
-        explicit UDQExpression(const DeckRecord& expression);
-        const std::vector<std::string>& tokens() const;
-        UDQAction action() const;
-        const std::string& keyword() const;
-        static UDQAction actionString2Enum(const std::string& action_string);
-    private:
-        UDQAction m_action;
-        std::string m_keyword;
-        std::vector<std::string> data;
-    };
+class UDQAssign{
+public:
+    UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
+    const std::string& keyword() const;
+    double value() const;
+    const std::vector<std::string>& selector() const;
+    UDQWellSet eval_wells(const std::vector<std::string>& wells) const;
+private:
+    std::string m_keyword;
+    std::vector<std::string> m_selector;
+    double m_value;
+};
 }
 
 

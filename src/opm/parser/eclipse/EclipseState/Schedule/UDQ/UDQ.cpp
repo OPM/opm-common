@@ -34,13 +34,17 @@ namespace Opm {
 
 
     void UDQ::add_record(const DeckRecord& record) {
-        const auto& action = record.getItem("ACTION").get<std::string>(0);
+        auto action = UDQExpression::actionString2Enum(record.getItem("ACTION").get<std::string>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = record.getItem("DATA").getData<std::string>();
 
-        if (UDQExpression::actionString2Enum(action) == UDQAction::UNITS)
+        if (action == UDQAction::UNITS)
             this->assign_unit( quantity, data[0] );
-        else
+        else if (action == UDQAction::ASSIGN) {
+            std::vector<std::string> selector(data.begin(), data.end() - 1);
+            double value = std::stod(data.back());
+            this->m_assignments.emplace_back( quantity, selector, value );
+        } else
             this->m_expressions.emplace_back(action, quantity, data);
     }
 
@@ -48,6 +52,12 @@ namespace Opm {
     const std::vector<UDQExpression>& UDQ::expressions() const noexcept {
         return this->m_expressions;
     }
+
+
+    const std::vector<UDQAssign>& UDQ::assignments() const {
+        return this->m_assignments;
+    }
+
 
     const std::string& UDQ::unit(const std::string& key) const {
         const auto pair_ptr = this->units.find(key);
