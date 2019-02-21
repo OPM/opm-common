@@ -18,11 +18,13 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {
 
 UDQAssign::UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value) :
     m_keyword(keyword),
+    m_var_type(UDQ::varType(keyword)),
     m_selector(selector),
     m_value(value)
 {}

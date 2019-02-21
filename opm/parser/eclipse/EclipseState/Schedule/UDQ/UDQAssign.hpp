@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {
 
@@ -37,6 +38,7 @@ public:
     UDQWellSet eval_wells(const std::vector<std::string>& wells) const;
 private:
     std::string m_keyword;
+    UDQVarType m_var_type;
     std::vector<std::string> m_selector;
     double m_value;
 };

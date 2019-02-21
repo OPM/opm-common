@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 
 namespace Opm {
@@ -42,6 +43,7 @@ namespace Opm {
     private:
         UDQAction m_action;
         std::string m_keyword;
+        UDQVarType m_var_type;
         std::vector<std::string> data;
     };
 }
