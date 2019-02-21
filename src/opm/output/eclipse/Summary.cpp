@@ -1119,8 +1119,22 @@ bool is_udq(const std::string& keyword) {
     return (keyword.size() > 1 && keyword[1] == 'U');
 }
 
-void eval_udq(const UDQInput& udq, const UDQContext& context, SummaryState& st)
+void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
 {
+    const UDQInput& udq = schedule.getUDQConfig(sim_step);
+    std::vector<std::string> wells;
+    for (const auto* well : schedule.getWells())
+        wells.push_back(well->name());
+
+
+    for (const auto& assign : udq.assignments(UDQVarType::WELL_VAR)) {
+        auto ws = assign.eval_wells(wells);
+        for (const auto& well : wells) {
+            const auto& udq_value = ws[well];
+            if (udq_value)
+                st.add_well_var(well, ws.name(), udq_value.value());
+        }
+    }
 }
 
 
@@ -1489,8 +1503,7 @@ void Summary::add_timestep( int report_step,
 
     {
         UDQContext udq_context(st);
-        const UDQInput& udq = schedule.getUDQConfig(sim_step);
-        eval_udq(udq, udq_context, st);
+        eval_udq(schedule, sim_step, st);
     }
     {
         const ecl_sum_type * ecl_sum = this->ecl_sum.get();
