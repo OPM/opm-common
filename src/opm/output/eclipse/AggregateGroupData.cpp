@@ -185,7 +185,8 @@ namespace {
 	      throw std::invalid_argument("group has both wells and child groups" + group.name());
             int igrpCount = 0;
 	    if (childWells.size() != 0) {
-		//group has child wells
+		//group has child wells 
+		//store the well number (sequence index) in iGrp according to the sequence they are defined
 		for ( auto it = childWells.begin() ; it != childWells.end(); it++) {
 		    iGrp[igrpCount] = (*it)->seqIndex()+1;
 		    igrpCount+=1;
