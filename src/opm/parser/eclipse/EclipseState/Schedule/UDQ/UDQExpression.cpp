@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 
 
@@ -31,21 +32,6 @@
 
 
 namespace Opm {
-
-    namespace {
-
-        void assertKeyword(const std::string& keyword) {
-            const std::string valid_start = "CFGRSWAB";
-
-            if (valid_start.find(keyword[0]) == std::string::npos)
-                throw std::invalid_argument("Leading character must be in set: " + valid_start);
-
-            if (!(keyword[1] == 'U'))
-                throw std::invalid_argument("Second character in UDQ keyword must be 'U'");
-        }
-    }
-
-
 
     /*
       The tokenizer algorithm has two problems with '*':
@@ -57,12 +43,11 @@ namespace Opm {
       2. For items like '2*(1+WBHP)' the parsing code will expand the 2*
          operator to the repeated tokens : (1+WBHP), (1+WBHP)
     */
-    UDQExpression::UDQExpression(UDQAction action, const std::string& keyword_in, const std::vector<std::string>& input_data) {
-        assertKeyword(keyword_in);
-
-        this->m_action = action;
-        this->m_keyword = keyword_in;
-
+  UDQExpression::UDQExpression(UDQAction action, const std::string& keyword_in, const std::vector<std::string>& input_data) :
+      m_action(action),
+      m_keyword(keyword_in),
+      m_var_type(UDQ::varType(keyword_in))
+  {
         for (const std::string& item : input_data) {
             if (RawConsts::is_quote()(item[0])) {
                 this->data.push_back(item.substr(1, item.size() - 2));

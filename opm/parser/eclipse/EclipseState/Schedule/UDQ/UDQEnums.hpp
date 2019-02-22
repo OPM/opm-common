@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 Statoil ASA.
+  Copyright 2019 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -18,32 +18,28 @@
 */
 
 
-#ifndef UDQASSIGN_HPP_
-#define UDQASSIGN_HPP_
-
-#include <string>
-#include <vector>
-
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#ifndef UDQ_ENUMS_HPP
+#define UDQ_ENUMS_HPP
 
 namespace Opm {
 
-class UDQAssign{
-public:
-    UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
-    const std::string& keyword() const;
-    double value() const;
-    const std::vector<std::string>& selector() const;
-    UDQWellSet eval_wells(const std::vector<std::string>& wells) const;
-private:
-    std::string m_keyword;
-    UDQVarType m_var_type;
-    std::vector<std::string> m_selector;
-    double m_value;
+enum class UDQVarType {
+    WELL_VAR = 1,
+    CONNECTION_VAR= 2,
+    FIELD_VAR = 3,
+    GROUP_VAR = 4,
+    REGION_VAR = 5,
+    SEGMENT_VAR = 6,
+    AQUIFER_VAR = 7,
+    BLOCK_VAR = 8
 };
+
+
+namespace UDQ {
+
+    UDQVarType varType(const std::string& keyword);
+
 }
-
-
+}
 
 #endif

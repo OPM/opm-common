@@ -24,7 +24,8 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQ.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
@@ -67,6 +68,21 @@ UDQPARAM
     BOOST_CHECK(udq_params.reseedRNG());
     BOOST_CHECK_EQUAL(0.25, udq_params.cmpEpsilon());
 }
+
+
+BOOST_AUTO_TEST_CASE(ENUM_CONVERSION) {
+    BOOST_CHECK_THROW(UDQ::varType("WWCT"), std::invalid_argument);
+    BOOST_CHECK_THROW(UDQ::varType("XUCT"), std::invalid_argument);
+
+    BOOST_CHECK(UDQ::varType("WUBHP") == UDQVarType::WELL_VAR);
+    BOOST_CHECK(UDQ::varType("GUBHP") == UDQVarType::GROUP_VAR);
+    BOOST_CHECK(UDQ::varType("CUBHP") == UDQVarType::CONNECTION_VAR);
+    BOOST_CHECK(UDQ::varType("FUBHP") == UDQVarType::FIELD_VAR);
+    BOOST_CHECK(UDQ::varType("RUBHP") == UDQVarType::REGION_VAR);
+    BOOST_CHECK(UDQ::varType("AUBHP") == UDQVarType::AQUIFER_VAR);
+    BOOST_CHECK(UDQ::varType("SUBHP") == UDQVarType::SEGMENT_VAR);
+}
+
 
 
 BOOST_AUTO_TEST_CASE(UDQ_KEWYORDS) {

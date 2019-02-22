@@ -32,7 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQ.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -1119,7 +1119,7 @@ bool is_udq(const std::string& keyword) {
     return (keyword.size() > 1 && keyword[1] == 'U');
 }
 
-void eval_udq(const UDQ& udq, const UDQContext& context, SummaryState& st)
+void eval_udq(const UDQInput& udq, const UDQContext& context, SummaryState& st)
 {
 }
 
@@ -1489,7 +1489,7 @@ void Summary::add_timestep( int report_step,
 
     {
         UDQContext udq_context(st);
-        const UDQ& udq = schedule.getUDQConfig(sim_step);
+        const UDQInput& udq = schedule.getUDQConfig(sim_step);
         eval_udq(udq, udq_context, st);
     }
     {

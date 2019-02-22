@@ -127,8 +127,9 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQ.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.cpp
@@ -515,9 +516,10 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Runspec.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp
-       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQ.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp
-       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQ.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp
