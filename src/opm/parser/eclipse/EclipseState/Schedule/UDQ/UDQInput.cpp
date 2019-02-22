@@ -17,6 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 
@@ -56,6 +58,18 @@ namespace Opm {
 
     const std::vector<UDQAssign>& UDQInput::assignments() const {
         return this->m_assignments;
+    }
+
+
+    std::vector<UDQAssign> UDQInput::assignments(UDQVarType var_type) const {
+        std::vector<UDQAssign> filtered_assignments;
+
+        std::copy_if(this->m_assignments.begin(),
+                     this->m_assignments.end(),
+                     std::back_inserter(filtered_assignments),
+                     [&var_type](const UDQAssign& assignment) { return assignment.var_type() == var_type; });
+
+        return filtered_assignments;
     }
 
 

@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 
 namespace Opm {
@@ -38,6 +39,7 @@ namespace Opm {
         const std::string& unit(const std::string& key) const;
         void assign_unit(const std::string& keyword, const std::string& unit);
         const std::vector<UDQAssign>& assignments() const;
+        std::vector<UDQAssign> assignments(UDQVarType var_type) const;
     private:
         std::vector<UDQExpression> m_expressions;
         std::vector<UDQAssign> m_assignments;
