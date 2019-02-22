@@ -190,7 +190,7 @@ UDQ
 
 BOOST_AUTO_TEST_CASE(UDQ_KEYWORD) {
     // Invalid action
-    BOOST_REQUIRE_THROW( UDQExpression::actionString2Enum("INVALID_ACTION"), std::invalid_argument);
+    BOOST_REQUIRE_THROW( UDQ::actionType("INVALID_ACTION"), std::invalid_argument);
 
     // Invalid keyword
     BOOST_REQUIRE_THROW( UDQExpression(UDQAction::ASSIGN, "INVALID_KEYWORD", {}), std::invalid_argument);

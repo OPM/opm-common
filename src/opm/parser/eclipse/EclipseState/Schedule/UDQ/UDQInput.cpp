@@ -21,6 +21,7 @@
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {
 
@@ -36,7 +37,7 @@ namespace Opm {
 
 
     void UDQInput::add_record(const DeckRecord& record) {
-        auto action = UDQExpression::actionString2Enum(record.getItem("ACTION").get<std::string>(0));
+        auto action = UDQ::actionType(record.getItem("ACTION").get<std::string>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = record.getItem("DATA").getData<std::string>();
 

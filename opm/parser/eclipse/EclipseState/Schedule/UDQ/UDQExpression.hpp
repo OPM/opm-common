@@ -29,8 +29,6 @@
 
 namespace Opm {
 
-    enum class UDQAction {ASSIGN, DEFINE, UNITS, UPDATE};
-
 
     class UDQExpression {
     public:
@@ -39,7 +37,6 @@ namespace Opm {
         const std::vector<std::string>& tokens() const;
         UDQAction action() const;
         const std::string& keyword() const;
-        static UDQAction actionString2Enum(const std::string& action_string);
     private:
         UDQAction m_action;
         std::string m_keyword;
