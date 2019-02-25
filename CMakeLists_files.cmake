@@ -315,6 +315,7 @@ if(ENABLE_ECL_INPUT)
   list (APPEND EXAMPLE_SOURCE_FILES
     examples/opmi.cpp
     examples/opmpack.cpp
+    examples/opmhash.cpp
   )
 endif()
 
@@ -326,6 +327,7 @@ if(ENABLE_ECL_INPUT)
   list (APPEND PROGRAM_SOURCE_FILES
     examples/opmi.cpp
     examples/opmpack.cpp
+    examples/opmhash.cpp
   )
 endif()
 
