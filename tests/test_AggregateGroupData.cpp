@@ -454,7 +454,7 @@ END
 }
 
 struct SimulationCase
-/*{
+{
     explicit SimulationCase(const Opm::Deck& deck)
         : es   ( deck )
         , sched (deck, es )
@@ -463,19 +463,7 @@ struct SimulationCase
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::Schedule     sched;
-}; */
-
-
-{
-    explicit SimulationCase(const Opm::Deck& deck)
-        : es   { deck }
-        , sched{ deck, es }
-    {}
-
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::Schedule     sched;
-};
+}; 
 
 // =====================================================================
 
@@ -582,16 +570,16 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
         auto start = 0*ih.nzgrpz;
 
         const auto& zGrp = agrpd.getZGroup();
-	BOOST_CHECK_EQUAL(zGrp[start + 0] ,  "GRP1"); // Group GRP1 - GOPR
+	BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "GRP1    "); // Group GRP1 - GOPR
 	
 	start = 1*ih.nzgrpz;
-	BOOST_CHECK_EQUAL(zGrp[start + 0] ,  "WGRP1"); // Group WGRP1 - GOPR
+	BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "WGRP1   "); // Group WGRP1 - GOPR
 
 	start = 2*ih.nzgrpz;
-	BOOST_CHECK_EQUAL(zGrp[start + 0] ,  "WGRP2"); // Group WGRP2 - GOPR
+	BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "WGRP2   "); // Group WGRP2 - GOPR
 	
 	start = (ih.ngmaxz-1)*ih.nzgrpz;
-	BOOST_CHECK_EQUAL(zGrp[start + 0] ,  "FIELD"); // Group FIELD - FOPR
+	BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "FIELD   "); // Group FIELD - FOPR
     }
 
     
