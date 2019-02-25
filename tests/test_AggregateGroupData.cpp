@@ -88,7 +88,7 @@ namespace {
     Opm::Deck first_sim()
     {
         // Mostly copy of tests/FIRST_SIM.DATA
-        const auto input = std::string {
+        const std::string input = std::string {
             R"~(
 RUNSPEC
 
@@ -454,6 +454,18 @@ END
 }
 
 struct SimulationCase
+/*{
+    explicit SimulationCase(const Opm::Deck& deck)
+        : es   ( deck )
+        , sched (deck, es )
+    {}
+
+    // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Opm::EclipseState es;
+    Opm::Schedule     sched;
+}; */
+
+
 {
     explicit SimulationCase(const Opm::Deck& deck)
         : es   { deck }
@@ -579,7 +591,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 	BOOST_CHECK_EQUAL(zGrp[start + 0] ,  "WGRP2"); // Group WGRP2 - GOPR
 	
 	start = (ih.ngmaxz-1)*ih.nzgrpz;
-	BOOST_CHECK_EQUAL(xGrp[start + 0] ,  "FIELD"); // Group FIELD - FOPR
+	BOOST_CHECK_EQUAL(zGrp[start + 0] ,  "FIELD"); // Group FIELD - FOPR
     }
 
     
