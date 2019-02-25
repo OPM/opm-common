@@ -60,6 +60,9 @@ WELLDIMS
 
 UNIFOUT
 
+UDQDIMS
+ 50 25 0 50 50 0 0 50 0 20 /
+
 GRID
 
 -- The INIT keyword is used to request an .INIT file. The .INIT file
@@ -347,6 +350,10 @@ WWPR
 /
 WWPT
 /
+WUBHP
+/
+WUOPR
+/
 SCHEDULE
 -- -------------------------------------------------------------------------
 RPTSCHED
@@ -354,6 +361,17 @@ RPTSCHED
 
 RPTRST
 	'BASIC=1' /
+
+UDQ
+  ASSIGN WUBHP 11 /
+  ASSIGN WUOPR 20 /
+  ASSIGN WUBHP P2 12 /
+  ASSIGN WUBHP P3 13 /
+  ASSIGN WUBHP P4 14 /
+  UNITS  WUBHP 'BARSA' /
+  UNITS  WUOPR 'SM3/DAY' /
+/
+
 
 
 -- If no resolution (i.e. case 1), the two following lines must be added:

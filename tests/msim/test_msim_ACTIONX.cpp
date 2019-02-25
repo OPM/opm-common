@@ -25,6 +25,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ert/util/test_work_area.h>
+#include <ert/ecl/ecl_sum.hpp>
+
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -58,8 +60,11 @@ struct test_data {
         schedule( this->deck, this->state.getInputGrid(), this->state.get3DProperties(), this->state.runspec()),
         summary_config( this->deck, this->schedule, this->state.getTableManager())
     {
+        auto& ioconfig = this->state.getIOConfig();
+        ioconfig.setBaseName("MSIM");
     }
 };
+
 
 double prod_opr(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
     const auto& units = es.getUnits();
@@ -148,6 +153,53 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
         }
 
 
+
+        test_work_area_free(work_area);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
+#include "actionx1.include"
+
+    test_data td( actionx1 );
+    msim sim(td.state);
+    {
+        test_work_area_type * work_area = test_work_area_alloc("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
+        sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P4", data::Rates::opt::oil, prod_opr);
+
+        sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+        sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+        sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+        sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+
+        sim.run(td.schedule, io);
+
+        const auto& base_name = td.state.getIOConfig().getBaseName();
+
+        ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
+        BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUBHP:P1") );
+        BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUBHP:P2") );
+        BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUOPR:P3") );
+        BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUOPR:P4") );
+
+        BOOST_CHECK_EQUAL( ecl_sum_get_unit(ecl_sum, "WUBHP:P1"), "BARSA");
+        BOOST_CHECK_EQUAL( ecl_sum_get_unit(ecl_sum, "WUOPR:P1"), "SM3/DAY");
+
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P1"), 11);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P2"), 12);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P3"), 13);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P4"), 14);
+
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P1"), 20);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P2"), 20);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P3"), 20);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P4"), 20);
+        ecl_sum_free( ecl_sum );
 
         test_work_area_free(work_area);
     }

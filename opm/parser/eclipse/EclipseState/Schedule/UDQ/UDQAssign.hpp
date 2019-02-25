@@ -34,6 +34,7 @@ public:
     UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
     const std::string& keyword() const;
     double value() const;
+    UDQVarType var_type() const;
     const std::vector<std::string>& selector() const;
     UDQWellSet eval_wells(const std::vector<std::string>& wells) const;
 private:

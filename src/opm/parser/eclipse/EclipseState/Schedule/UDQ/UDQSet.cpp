@@ -96,7 +96,13 @@ UDQScalar::operator bool() const {
 }
 
 
-UDQSet::UDQSet(std::size_t size) {
+const std::string& UDQSet::name() const {
+    return this->m_name;
+}
+
+UDQSet::UDQSet(const std::string& name, std::size_t size) :
+    m_name(name)
+{
     this->values.resize(size);
 }
 

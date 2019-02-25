@@ -51,7 +51,7 @@ public:
 
 class UDQSet {
 public:
-    explicit UDQSet(std::size_t size);
+    UDQSet(const std::string& name, std::size_t size);
     void assign(double value);
     void assign(std::size_t index, double value);
 
@@ -71,7 +71,9 @@ public:
 
     std::vector<double> defined_values() const;
     std::size_t defined_size() const;
+    const std::string& name() const;
 private:
+    std::string m_name;
     std::vector<UDQScalar> values;
 };
 

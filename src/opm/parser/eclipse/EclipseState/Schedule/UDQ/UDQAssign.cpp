@@ -42,8 +42,12 @@ double UDQAssign::value() const {
     return this->m_value;
 }
 
+UDQVarType UDQAssign::var_type() const {
+    return this->m_var_type;
+}
+
 UDQWellSet UDQAssign::eval_wells(const std::vector<std::string>& wells) const {
-    UDQWellSet ws(wells);
+    UDQWellSet ws(m_keyword, wells);
 
     if (this->m_selector.empty())
         ws.assign(this->m_value);

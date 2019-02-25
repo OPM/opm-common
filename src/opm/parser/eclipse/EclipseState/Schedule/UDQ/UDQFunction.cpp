@@ -153,7 +153,7 @@ UDQSet UDQUnaryElementalFunction::DEF(const UDQSet& arg) {
 
 
 UDQSet UDQUnaryElementalFunction::UNDEF(const UDQSet& arg) {
-    UDQSet result(arg.size());
+    UDQSet result(arg.name(), arg.size());
     for (std::size_t index=0; index < result.size(); index++) {
         auto& udq_value = arg[index];
         if (!udq_value)
@@ -260,7 +260,7 @@ namespace {
         if (arg1.size() != arg2.size())
             throw std::invalid_argument("UDQ sets have incoimpatible size");
 
-        UDQSet result(arg1.size());
+        UDQSet result = arg1;
         for (std::size_t index = 0; index < result.size(); index++) {
             const auto& elm1 = arg1[index];
             const auto& elm2 = arg2[index];
@@ -485,7 +485,7 @@ UDQSet UDQBinaryFunction::DIV(const UDQSet& lhs, const UDQSet& rhs) {
 }
 
 UDQSet UDQBinaryFunction::POW(const UDQSet& lhs, const UDQSet& rhs) {
-    UDQSet result(lhs.size());
+    UDQSet result = lhs;
     for (std::size_t index = 0; index < result.size(); index++) {
         auto& lhs_elm = lhs[index];
         auto& rhs_elm = rhs[index];
