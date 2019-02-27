@@ -82,6 +82,7 @@ std::tuple<const int, const int> block_size_data(EIOD::eclArrType arrType){
         case EIOD::LOGI  : return std::make_tuple(EIOD::sizeOfLogi,EIOD::MaxBlockSizeLogi);   break;
         case EIOD::CHAR  : return std::make_tuple(EIOD::sizeOfChar,EIOD::MaxBlockSizeChar);   break;
         case EIOD::MESS  : throw std::invalid_argument("Type 'MESS' have not assosiated data") ;   break;
+        default          : throw std::invalid_argument("Unknown type"); break;
     }
 }
 
@@ -485,7 +486,7 @@ std::vector<std::string> readBinaryCharArray(std::fstream &fileH, const int size
 
 } // anonymous namespace
 
-EclFile::EclFile(std::string filename){
+EclFile::EclFile(const std::string& filename){
 
     std::fstream fileH;
     
