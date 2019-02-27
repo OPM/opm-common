@@ -34,7 +34,7 @@ class EclFile
 
 public:
     
-    EclFile(std::string filename);
+    explicit EclFile(const std::string& filename);
     
 };  
 
