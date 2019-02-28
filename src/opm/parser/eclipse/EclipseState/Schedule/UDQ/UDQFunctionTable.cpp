@@ -29,27 +29,27 @@ UDQFunctionTable::UDQFunctionTable(UDQParams& params) :
     params(params)
 {
     // SCalar functions
-    this->insert_function( std::make_unique<UDQScalarFunction>("SUM", UDQScalarFunction::SUM) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("AVEA", UDQScalarFunction::AVEA) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("AVEG", UDQScalarFunction::AVEG) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("AVEH", UDQScalarFunction::AVEH) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("MAX", UDQScalarFunction::MAX) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("MIN", UDQScalarFunction::MIN) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("NORM1", UDQScalarFunction::NORM1) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("NORM2", UDQScalarFunction::NORM2) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("NORMI", UDQScalarFunction::NORMI) );
-    this->insert_function( std::make_unique<UDQScalarFunction>("PROD", UDQScalarFunction::PROD) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("SUM", UDQScalarFunction::SUM) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("AVEA", UDQScalarFunction::AVEA) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("AVEG", UDQScalarFunction::AVEG) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("AVEH", UDQScalarFunction::AVEH) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("MAX", UDQScalarFunction::MAX) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("MIN", UDQScalarFunction::MIN) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("NORM1", UDQScalarFunction::NORM1) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("NORM2", UDQScalarFunction::NORM2) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("NORMI", UDQScalarFunction::NORMI) );
+    this->insert_function( std::make_shared<UDQScalarFunction>("PROD", UDQScalarFunction::PROD) );
 
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("ABS", UDQUnaryElementalFunction::ABS) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("DEF", UDQUnaryElementalFunction::DEF) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("EXP", UDQUnaryElementalFunction::EXP) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("IDV", UDQUnaryElementalFunction::IDV) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("LN", UDQUnaryElementalFunction::LN) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("LOG", UDQUnaryElementalFunction::LOG) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("NINT", UDQUnaryElementalFunction::NINT) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("SORTA", UDQUnaryElementalFunction::SORTA) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("SORTD", UDQUnaryElementalFunction::SORTD) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("UNDEF", UDQUnaryElementalFunction::UNDEF) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("ABS", UDQUnaryElementalFunction::ABS) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("DEF", UDQUnaryElementalFunction::DEF) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("EXP", UDQUnaryElementalFunction::EXP) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("IDV", UDQUnaryElementalFunction::IDV) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("LN", UDQUnaryElementalFunction::LN) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("LOG", UDQUnaryElementalFunction::LOG) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("NINT", UDQUnaryElementalFunction::NINT) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("SORTA", UDQUnaryElementalFunction::SORTA) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("SORTD", UDQUnaryElementalFunction::SORTD) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("UNDEF", UDQUnaryElementalFunction::UNDEF) );
 
 
 
@@ -58,37 +58,38 @@ UDQFunctionTable::UDQFunctionTable(UDQParams& params) :
     const auto& true_randn = [ &true_rng = this->params.true_rng() ](const UDQSet& arg) { return UDQUnaryElementalFunction::RANDN(true_rng, arg); };
     const auto& true_randu = [ &true_rng = this->params.true_rng() ](const UDQSet& arg) { return UDQUnaryElementalFunction::RANDU(true_rng, arg); };
 
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("RANDN", randn) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("RANDU", randu) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("RRNDN", true_randn) );
-    this->insert_function( std::make_unique<UDQUnaryElementalFunction>("RRNDU", true_randu) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("RANDN", randn) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("RANDU", randu) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("RRNDN", true_randn) );
+    this->insert_function( std::make_shared<UDQUnaryElementalFunction>("RRNDU", true_randu) );
 
     const auto& eq = [ eps = this->params.cmpEpsilon()](const UDQSet&lhs, const UDQSet&rhs) { return UDQBinaryFunction::EQ(eps, lhs, rhs); };
     const auto& ne = [ eps = this->params.cmpEpsilon()](const UDQSet&lhs, const UDQSet&rhs) { return UDQBinaryFunction::NE(eps, lhs, rhs); };
     const auto& ge = [ eps = this->params.cmpEpsilon()](const UDQSet&lhs, const UDQSet&rhs) { return UDQBinaryFunction::GE(eps, lhs, rhs); };
     const auto& le = [ eps = this->params.cmpEpsilon()](const UDQSet&lhs, const UDQSet&rhs) { return UDQBinaryFunction::LE(eps, lhs, rhs); };
 
-    this->insert_function( std::make_unique<UDQBinaryFunction>("==", eq) );
-    this->insert_function( std::make_unique<UDQBinaryFunction>("!=", ne) );
-    this->insert_function( std::make_unique<UDQBinaryFunction>(">=", ge) );
-    this->insert_function( std::make_unique<UDQBinaryFunction>("<=", le) );
+    this->insert_function( std::make_shared<UDQBinaryFunction>("==", eq) );
+    this->insert_function( std::make_shared<UDQBinaryFunction>("!=", ne) );
+    this->insert_function( std::make_shared<UDQBinaryFunction>(">=", ge) );
+    this->insert_function( std::make_shared<UDQBinaryFunction>("<=", le) );
 
-    this->insert_function( std::make_unique<UDQBinaryFunction>("^", UDQBinaryFunction::POW ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("^", UDQBinaryFunction::POW ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("<", UDQBinaryFunction::LT ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>(">", UDQBinaryFunction::GT ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("+", UDQBinaryFunction::ADD ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("*", UDQBinaryFunction::MUL ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("/", UDQBinaryFunction::DIV ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("-", UDQBinaryFunction::SUB ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("^", UDQBinaryFunction::POW ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("^", UDQBinaryFunction::POW ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("<", UDQBinaryFunction::LT ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>(">", UDQBinaryFunction::GT ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("+", UDQBinaryFunction::ADD ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("*", UDQBinaryFunction::MUL ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("/", UDQBinaryFunction::DIV ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("-", UDQBinaryFunction::SUB ));
 
-    this->insert_function( std::make_unique<UDQBinaryFunction>("UADD", UDQBinaryFunction::UADD ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("UMUL", UDQBinaryFunction::UMUL ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("UMIN", UDQBinaryFunction::UMIN ));
-    this->insert_function( std::make_unique<UDQBinaryFunction>("UMAX", UDQBinaryFunction::UMAX ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("UADD", UDQBinaryFunction::UADD ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("UMUL", UDQBinaryFunction::UMUL ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("UMIN", UDQBinaryFunction::UMIN ));
+    this->insert_function( std::make_shared<UDQBinaryFunction>("UMAX", UDQBinaryFunction::UMAX ));
 }
 
-void UDQFunctionTable::insert_function(std::unique_ptr<const UDQFunction> func) {
+
+void UDQFunctionTable::insert_function(std::shared_ptr<const UDQFunction> func) {
     auto name = func->name();
     this->function_table.emplace( std::move(name), std::move(func) );
 }
