@@ -423,6 +423,8 @@ void set_dimensions( ParserItem& item,
 
     void ParserKeyword::addRecord( ParserRecord record ) {
         m_records.push_back( std::move( record ) );
+        if (!record.slashTerminatedRecords())
+            this->slash_terminated_records = false;
     }
 
 
@@ -517,6 +519,9 @@ void set_dimensions( ParserItem& item,
         return m_keywordSizeType;
     }
 
+    bool ParserKeyword::slashTerminatedRecords() const {
+        return this->slash_terminated_records;
+    }
 
     const KeywordSize& ParserKeyword::getKeywordSize() const {
         return keyword_size;

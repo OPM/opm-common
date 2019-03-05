@@ -72,7 +72,7 @@ namespace Opm {
         iterator end();
 
         bool is_title() const;
-
+        bool slash_terminated_records = true;
     private:
         Raw::KeywordSizeEnum m_sizeType;
         bool m_isFinished = false;

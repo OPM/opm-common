@@ -46,6 +46,10 @@ namespace {
         return m_items.size();
     }
 
+    bool ParserRecord::slashTerminatedRecords() const {
+        return this->slash_terminated_records;
+    }
+
     void ParserRecord::addItem( ParserItem item ) {
         if (m_dataRecord)
             throw std::invalid_argument("Record is already marked as DataRecord - can not add items");
@@ -56,6 +60,9 @@ namespace {
 
         if( itr != this->m_items.end() )
             throw std::invalid_argument("Itemname: " + item.name() + " already exists.");
+
+        if (item.parseRaw())
+            this->slash_terminated_records = false;
 
         this->m_items.push_back( std::move( item ) );
     }
