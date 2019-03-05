@@ -93,7 +93,7 @@ namespace {
     Opm::Deck first_sim()
     {
         // Mostly copy of tests/FIRST_SIM.DATA
-        const auto input = std::string {
+        const std::string input = std::string {
             R"~(
 RUNSPEC
 
@@ -581,9 +581,9 @@ END
 struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
-        : es   { deck }
-        , grid{deck}
-        , sched{ deck, es }
+        : es   ( deck )
+        , grid ( deck )
+        , sched( deck, es )
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
