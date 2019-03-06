@@ -138,11 +138,13 @@ make install-html DESTDIR=${RPM_BUILD_ROOT}
 cd ..
 cd openmpi
 make install DESTDIR=${RPM_BUILD_ROOT}
+mkdir -p ${RPM_BUILD_ROOT}/usr/include/openmpi-x86_64/
 mv ${RPM_BUILD_ROOT}/usr/lib64/openmpi/include/* ${RPM_BUILD_ROOT}/usr/include/openmpi-x86_64/
 cd ..
 
 cd mpich
 make install DESTDIR=${RPM_BUILD_ROOT}
+mkdir -p ${RPM_BUILD_ROOT}/usr/include/mpich-x86_64/
 mv ${RPM_BUILD_ROOT}/usr/lib64/mpich/include/* ${RPM_BUILD_ROOT}/usr/include/mpich-x86_64/
 
 %clean
