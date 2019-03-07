@@ -501,6 +501,33 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells) {
     BOOST_CHECK_EQUAL( matching_wells[0], "OPZ" );
 }
 
+BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
+  ActionAST ast1({"WOPR", "P*", ">", "1.0"});
+  ActionAST ast2({"WOPR", "*", ">", "1.0"});
+  SummaryState st;
+  std::vector<std::string> matching_wells1;
+  std::vector<std::string> matching_wells2;
+
+  st.add_well_var("PX", "WOPR", 0);
+  st.add_well_var("PY", "WOPR", 0.50);
+  st.add_well_var("PZ", "WOPR", 2.0);
+
+  st.add_well_var("IX", "WOPR", 0);
+  st.add_well_var("IY", "WOPR", 0.50);
+  st.add_well_var("IZ", "WOPR", 2.0);
+
+  ActionContext context(st);
+  BOOST_CHECK( ast1.eval(context, matching_wells1) );
+  BOOST_CHECK_EQUAL( matching_wells1.size(), 1);
+  BOOST_CHECK_EQUAL( matching_wells1[0], "PZ" );
+
+  BOOST_CHECK( ast2.eval(context, matching_wells2) );
+  BOOST_CHECK_EQUAL( matching_wells2.size(), 2);
+  BOOST_CHECK_EQUAL( std::count(matching_wells2.begin(), matching_wells2.end(), "PZ") , 1);
+  BOOST_CHECK_EQUAL( std::count(matching_wells2.begin(), matching_wells2.end(), "IZ") , 1);
+}
+
+
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
     ActionAST ast({"WOPR", "*", ">", "1.0", "AND", "WWCT", "*", "<", "0.50"});

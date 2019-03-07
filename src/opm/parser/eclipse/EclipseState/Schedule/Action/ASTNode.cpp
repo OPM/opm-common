@@ -17,13 +17,34 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <fnmatch.h>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp>
 
 #include "ASTNode.hpp"
 #include "ActionValue.hpp"
 
+
+namespace {
+    std::string strip_quotes(const std::string& s) {
+        if (s[0] == '\'')
+            return s.substr(1, s.size() - 2);
+        else
+            return s;
+    }
+
+    std::vector<std::string> strip_quotes(const std::vector<std::string>& quoted_strings) {
+        std::vector<std::string> strings;
+        for (const auto& qs : quoted_strings)
+            strings.push_back(strip_quotes(qs));
+
+        return strings;
+    }
+
+}
+
 namespace Opm {
+
 ASTNode::ASTNode() :
     type(TokenType::error)
 {}
@@ -43,7 +64,7 @@ ASTNode::ASTNode(double value) :
 ASTNode::ASTNode(TokenType type_arg, const std::string& func_arg, const std::vector<std::string>& arg_list_arg):
     type(type_arg),
     func(func_arg),
-    arg_list(arg_list_arg)
+    arg_list(strip_quotes(arg_list_arg))
 {}
 
 size_t ASTNode::size() const {
@@ -65,10 +86,17 @@ ActionValue ASTNode::value(const ActionContext& context) const {
     if (this->arg_list.size() == 0)
         return ActionValue(context.get(this->func));
     else {
-        if (this->arg_list[0] == "*") {
+        /*
+          The matching code is special case to handle one-argument cases with
+          well patterns like 'P*'.
+        */
+        if ((this->arg_list.size() == 1) && (arg_list[0].find("*") != std::string::npos)) {
             ActionValue well_values;
-            for (const auto& well : context.wells(this->func))
-                well_values.add_well(well, context.get(this->func, well));
+            int fnmatch_flags = 0;
+            for (const auto& well : context.wells(this->func)) {
+                if (fnmatch(this->arg_list[0].c_str(), well.c_str(), fnmatch_flags) == 0)
+                    well_values.add_well(well, context.get(this->func, well));
+            }
             return well_values;
         } else {
             std::string arg_key = this->arg_list[0];
