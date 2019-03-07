@@ -74,7 +74,6 @@ UDQFunctionTable::UDQFunctionTable(UDQParams& params) :
     this->insert_function( std::make_shared<UDQBinaryFunction>("<=", le) );
 
     this->insert_function( std::make_shared<UDQBinaryFunction>("^", UDQBinaryFunction::POW ));
-    this->insert_function( std::make_shared<UDQBinaryFunction>("^", UDQBinaryFunction::POW ));
     this->insert_function( std::make_shared<UDQBinaryFunction>("<", UDQBinaryFunction::LT ));
     this->insert_function( std::make_shared<UDQBinaryFunction>(">", UDQBinaryFunction::GT ));
     this->insert_function( std::make_shared<UDQBinaryFunction>("+", UDQBinaryFunction::ADD ));
