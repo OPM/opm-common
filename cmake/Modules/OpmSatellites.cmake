@@ -192,6 +192,7 @@ endmacro (opm_data satellite target dirname files)
 # Parameters:
 #       TestName           Name of test
 #       ONLY_COMPILE       Only build test but do not run it (optional)
+#       DEFAULT_ENABLE_IF  Only enable by default if a given condition is true (optional)
 #       ALWAYS_ENABLE      Force enabling test even if -DBUILD_TESTING=OFF was set (optional)
 #       EXE_NAME           Name of test executable (optional, default: ./bin/${TestName})
 #       CONDITION          Condition to enable test (optional, cmake code)
@@ -218,7 +219,7 @@ macro(opm_add_test TestName)
   cmake_parse_arguments(CURTEST
                         "NO_COMPILE;ONLY_COMPILE;ALWAYS_ENABLE" # flags
                         "EXE_NAME;PROCESSORS;WORKING_DIRECTORY" # one value args
-                        "CONDITION;TEST_DEPENDS;DRIVER;DRIVER_ARGS;DEPENDS;TEST_ARGS;SOURCES;LIBRARIES" # multi-value args
+                        "CONDITION;DEFAULT_ENABLE_IF;TEST_DEPENDS;DRIVER;DRIVER_ARGS;DEPENDS;TEST_ARGS;SOURCES;LIBRARIES" # multi-value args
                         ${ARGN})
 
   set(BUILD_TESTING "${BUILD_TESTING}")
@@ -266,6 +267,11 @@ macro(opm_add_test TestName)
   # case. They can still be build using 'make test-suite' and they can
   # be build and run using 'make check'
   set(CURTEST_EXCLUDE_FROM_ALL "")
+  if (NOT "AND OR ${CURTEST_DEFAULT_ENABLE_IF}" STREQUAL "AND OR ")
+    if (NOT ${CURTEST_DEFAULT_ENABLE_IF})
+      set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
+    endif()
+  endif()
   if (NOT BUILD_TESTING AND NOT CURTEST_ALWAYS_ENABLE)
     set(CURTEST_EXCLUDE_FROM_ALL "EXCLUDE_FROM_ALL")
   endif()
