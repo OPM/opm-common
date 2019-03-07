@@ -229,6 +229,27 @@ DEFINE WUMW1 WBHP 'P*1*' UMAX WBHP 'P*4*' /
     BOOST_CHECK_EQUAL_COLLECTIONS(rec1.tokens().begin(), rec1.tokens().end(), exp1.begin(), exp1.end());
 }
 
+
+BOOST_AUTO_TEST_CASE(UDQ_DEFINE_WITH_SLASH) {
+    const std::string input = R"(
+UDQ
+ DEFINE WUWCT WWPR / ( WWPR + WOPR ) /
+/
+
+
+)";
+    Parser parser;
+    auto deck = parser.parseString(input);
+    const auto& udq = deck.getKeyword("UDQ");
+    const auto& record = udq.getRecord(0);
+    const auto& data_item = record.getItem("DATA");
+    const auto& data = data_item.getData<std::string>();
+    std::vector<std::string> exp = {"WWPR", "/", "(", "WWPR", "+", "WOPR", ")"};
+    BOOST_CHECK_EQUAL_COLLECTIONS(data.begin(), data.end(),
+                                  exp.begin(), exp.end());
+}
+
+
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_DATA) {
     const std::string input = R"(
 RUNSPEC

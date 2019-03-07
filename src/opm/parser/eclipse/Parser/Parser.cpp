@@ -140,6 +140,30 @@ inline string_view strip_slash( string_view view ) {
     return { begin, slash };
 }
 
+inline string_view strip_last_slash( string_view view ) {
+  auto begin = view.begin();
+  auto end = view.end();
+  auto slash = end;
+
+  while (true) {
+      if (slash == begin)
+          break;
+
+      if (*slash == '/')
+          break;
+
+      slash--;
+  }
+  if (slash == begin)
+      slash = end;
+
+  /* we want to preserve terminating slashes */
+  if( slash != end ) ++slash;
+
+  return { begin, slash };
+}
+
+
 inline bool getline( string_view& input, string_view& line ) {
     if( input.empty() ) return false;
 
@@ -168,7 +192,7 @@ inline std::string clean( const std::string& str ) {
     string_view input( str ), line;
     auto dsti = dst.begin();
     while( getline( input, line ) ) {
-        line = trim( strip_slash( strip_comments( line ) ) );
+        line = trim( strip_comments(line));
 
         std::copy( line.begin(), line.end(), dsti );
         dsti += std::distance( line.begin(), line.end() );
@@ -419,6 +443,7 @@ void ParserState::addPathAlias( const std::string& alias, const std::string& pat
 
 
 std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
+    bool slash_terminated_records = parserKeyword->slashTerminatedRecords();
 
     if( parserKeyword->getSizeType() == SLASH_TERMINATED || parserKeyword->getSizeType() == UNKNOWN) {
 
@@ -426,17 +451,21 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword,
             ? Raw::SLASH_TERMINATED
             : Raw::UNKNOWN;
 
-        return std::make_shared< RawKeyword >( keywordString, rawSizeType,
-                                               parserState.current_path().string(),
-                                               parserState.line() );
+        auto raw_keyword = std::make_shared< RawKeyword >( keywordString, rawSizeType,
+                                                           parserState.current_path().string(),
+                                                           parserState.line() );
+        raw_keyword->slash_terminated_records = slash_terminated_records;
+        return raw_keyword;
     }
 
     if( parserKeyword->hasFixedSize() ) {
-        return std::make_shared< RawKeyword >( keywordString,
-                                               parserState.current_path().string(),
-                                               parserState.line(),
-                                               parserKeyword->getFixedSize(),
-                                               parserKeyword->isTableCollection() );
+        auto raw_keyword = std::make_shared< RawKeyword >( keywordString,
+                                                           parserState.current_path().string(),
+                                                           parserState.line(),
+                                                           parserKeyword->getFixedSize(),
+                                                           parserKeyword->isTableCollection() );
+        raw_keyword->slash_terminated_records = slash_terminated_records;
+        return raw_keyword;
     }
 
     const auto& keyword_size = parserKeyword->getKeywordSize();
@@ -446,11 +475,13 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword,
         const auto& sizeDefinitionKeyword = deck.getKeyword(keyword_size.keyword);
         const auto& record = sizeDefinitionKeyword.getRecord(0);
         const auto targetSize = record.getItem( keyword_size.item ).get< int >( 0 ) + keyword_size.shift;
-        return std::make_shared< RawKeyword >( keywordString,
-                                               parserState.current_path().string(),
-                                               parserState.line(),
-                                               targetSize,
-                                               parserKeyword->isTableCollection() );
+        auto raw_keyword = std::make_shared< RawKeyword >( keywordString,
+                                                           parserState.current_path().string(),
+                                                           parserState.line(),
+                                                           targetSize,
+                                                           parserKeyword->isTableCollection() );
+        raw_keyword->slash_terminated_records = slash_terminated_records;
+        return raw_keyword;
     }
 
     std::string msg = "Expected the kewyord: " +keyword_size.keyword
@@ -462,11 +493,13 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword,
     const auto& int_item = record.get( keyword_size.item);
 
     const auto targetSize = int_item.getDefault< int >( ) + keyword_size.shift;
-    return std::make_shared< RawKeyword >( keywordString,
-                                           parserState.current_path().string(),
-                                           parserState.line(),
-                                           targetSize,
-                                           parserKeyword->isTableCollection() );
+    auto raw_keyword = std::make_shared< RawKeyword >( keywordString,
+                                                       parserState.current_path().string(),
+                                                       parserState.line(),
+                                                       targetSize,
+                                                       parserKeyword->isTableCollection() );
+    raw_keyword->slash_terminated_records = slash_terminated_records;
+    return raw_keyword;
 }
 
 
@@ -561,6 +594,12 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
                     return true;
                 }
             }
+
+            if (parserState.rawKeyword->slash_terminated_records)
+                line = strip_slash(line);
+            else
+                line = strip_last_slash(line);
+
             parserState.rawKeyword->addRawRecordString(line);
         }
 

@@ -128,6 +128,7 @@ namespace Opm {
         enum ParserKeywordSizeEnum getSizeType() const;
         const KeywordSize& getKeywordSize() const;
         bool isDataKeyword() const;
+        bool slashTerminatedRecords() const;
 
         std::string createDeclaration(const std::string& indent) const;
         std::string createDecl() const;
@@ -149,6 +150,7 @@ namespace Opm {
         size_t m_fixedSize;
         bool m_isTableCollection;
         std::string m_Description;
+        bool slash_terminated_records = true;
 
         static bool validNameStart(const string_view& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );
