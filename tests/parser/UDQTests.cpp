@@ -339,7 +339,8 @@ ASSIGN WU2 8.0 /
 
 BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     SummaryState st;
-    UDQContext ctx(st);
+    UDQFunctionTable func_table;
+    UDQContext ctx(func_table, st);
     BOOST_CHECK_EQUAL(ctx.get("JAN"), 1.0);
 
     BOOST_REQUIRE_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);

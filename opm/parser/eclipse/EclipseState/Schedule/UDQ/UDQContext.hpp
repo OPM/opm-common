@@ -21,18 +21,25 @@
 #ifndef UDQ_CONTEXT_HPP
 #define UDQ_CONTEXT_HPP
 
+#include <vector>
 #include <string>
 #include <unordered_map>
 
+
 namespace Opm {
     class SummaryState;
+    class UDQFunctionTable;
 
     class UDQContext{
     public:
-        explicit UDQContext(const SummaryState& summary_state);
+        UDQContext(const UDQFunctionTable& udqft, const SummaryState& summary_state);
         double get(const std::string& key) const;
+        double get_well_var(const std::string& well, const std::string& var) const;
         void add(const std::string& key, double value);
+        const UDQFunctionTable& function_table() const;
+        std::vector<std::string> wells() const;
     private:
+        const UDQFunctionTable& udqft;
         const SummaryState& summary_state;
         std::unordered_map<std::string, double> values;
     };
