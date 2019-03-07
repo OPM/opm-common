@@ -11,7 +11,7 @@ _ewoms_parameter_completor()
 
     cmd="${COMP_WORDS[0]}"
     cur="${COMP_WORDS[COMP_CWORD]}"
-    fullcmd="$(which "$cmd")"
+    fullcmd="$(which "$cmd" 2> /dev/null)"
     ALL_OPTS=$("$fullcmd" --help 2> /dev/null | grep '^ *--' | sed 's/ *\(--[a-zA-Z0-9\-]*\)=.*/\1=/')
     ALL_OPTS=$(echo "$ALL_OPTS" | sed 's/^ *--help.*/--help/')
     COMPREPLY=( $(compgen -A file -W "$ALL_OPTS" -- "${cur}") )
@@ -32,7 +32,7 @@ _ewoms_generic_parameter_completor()
     cmd="${COMP_WORDS[0]}"
     cur="${COMP_WORDS[COMP_CWORD]}"
 
-    fullcmd="$(which "$cmd")"
+    fullcmd="$(which "$cmd" 2> /dev/null)"
     if test -z "$fullcmd" || \
        ! test -x "$fullcmd" || \
        (! test -f "$fullcmd" && ! test -h "$fullcmd" ) || \
