@@ -49,6 +49,47 @@ Schedule make_schedule(const std::string& input) {
     return Schedule(deck, grid , eclipseProperties, runspec);
 }
 
+BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
+    std::vector<std::string> wells = {"P1", "P2", "I1", "I2"};
+    UDQWellSet ws("NAME", wells);
+    UDQWellSet ws2("NAME", wells, 100.0);
+
+    BOOST_CHECK_EQUAL(4, ws.size());
+    ws.assign("P1", 1.0);
+
+    const auto& value = ws["P1"];
+    BOOST_CHECK_EQUAL(value.value(), 1.0);
+    BOOST_CHECK_EQUAL(ws["P1"].value(), 1.0);
+
+    BOOST_REQUIRE_THROW(ws.assign("NO_SUCH_WELL", 1.0), std::invalid_argument);
+
+    ws.assign("*", 2.0);
+    for (const auto& w : wells)
+        BOOST_CHECK_EQUAL(ws[w].value(), 2.0);
+
+    ws.assign(3.0);
+    for (const auto& w : wells)
+        BOOST_CHECK_EQUAL(ws[w].value(), 3.0);
+
+    ws.assign("P*", 4.0);
+    BOOST_CHECK_EQUAL(ws["P1"].value(), 4.0);
+    BOOST_CHECK_EQUAL(ws["P2"].value(), 4.0);
+
+    ws.assign("I2", 5.0);
+    BOOST_CHECK_EQUAL(ws["I2"].value(), 5.0);
+
+
+    for (const auto& w : wells)
+        BOOST_CHECK_EQUAL(ws2[w].value(), 100.0);
+
+    UDQSet us("NAME", wells.size());
+    for (std::size_t i=0; i < wells.size(); i++)
+        us.assign(i, 1.0 * i);
+
+    UDQWellSet ws3("name", wells, us);
+    for (std::size_t i=0; i < wells.size(); i++)
+        BOOST_CHECK_EQUAL(ws3[wells[i]].value(), i*1.0);
+}
 
 BOOST_AUTO_TEST_CASE(KEYWORDS) {
     const std::string input = R"(
@@ -674,32 +715,6 @@ BOOST_AUTO_TEST_CASE(UDQ_SET_DIV) {
 }
 
 
-
-BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
-    std::vector<std::string> wells = {"P1", "P2", "I1", "I2"};
-    UDQWellSet ws("NAME", wells);
-
-    BOOST_CHECK_EQUAL(4, ws.size());
-    ws.assign("P1", 1.0);
-
-    const auto& value = ws[std::string("P1")];
-    BOOST_CHECK_EQUAL(value.value(), 1.0);
-    BOOST_CHECK_EQUAL(ws["P1"].value(), 1.0);
-
-    BOOST_REQUIRE_THROW(ws.assign("NO_SUCH_WELL", 1.0), std::invalid_argument);
-
-    ws.assign("*", 2.0);
-    for (const auto& w : wells)
-        BOOST_CHECK_EQUAL(ws[w].value(), 2.0);
-
-    ws.assign(3.0);
-    for (const auto& w : wells)
-        BOOST_CHECK_EQUAL(ws[w].value(), 3.0);
-
-    ws.assign("P*", 4.0);
-    BOOST_CHECK_EQUAL(ws["P1"].value(), 4.0);
-    BOOST_CHECK_EQUAL(ws["P2"].value(), 4.0);
-}
 
 
 BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
