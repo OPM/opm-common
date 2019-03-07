@@ -408,8 +408,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SET) {
 
 
 BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
-    UDQParams params;
-    UDQFunctionTable udqft(params);
+    UDQFunctionTable udqft;
     BOOST_CHECK(udqft.has_function("SUM"));
     BOOST_CHECK(!udqft.has_function("NO_SUCH_FUNCTION"));
     UDQSet arg("NAME", 5);
@@ -473,8 +472,7 @@ BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
 }
 
 BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
-    UDQParams params;
-    UDQFunctionTable udqft(params);
+    UDQFunctionTable udqft;
     UDQSet arg1("NAME", 5);
     UDQSet arg2("NAME", 5);
     UDQSet arg3("NAME", 3);
@@ -560,16 +558,14 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
 }
 
 BOOST_AUTO_TEST_CASE(BAD_CAST) {
-    UDQParams params;
-    UDQFunctionTable udqft(params);
+    UDQFunctionTable udqft;
 
     BOOST_CHECK_THROW( dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("==")), std::bad_cast);
 }
 
 
 BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
-    UDQParams params;
-    UDQFunctionTable udqft(params);
+    UDQFunctionTable udqft;
     UDQSet arg("NAME", 5);
     arg.assign(0,1);
     arg.assign(2,2);
@@ -677,8 +673,7 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
 
 
 BOOST_AUTO_TEST_CASE(UNION_FUNCTIONS) {
-    UDQParams params;
-    UDQFunctionTable udqft(params);
+    UDQFunctionTable udqft;
     UDQSet arg1("NAME", 5);
     UDQSet arg2("NAME", 5);
 

@@ -30,7 +30,8 @@ namespace Opm {
 
 class UDQFunctionTable {
 public:
-    UDQFunctionTable(UDQParams& params);
+    explicit UDQFunctionTable(const UDQParams& params);
+    UDQFunctionTable();
     bool has_function(const std::string& name) const;
     const UDQFunction& get(const std::string& name) const;
 private:

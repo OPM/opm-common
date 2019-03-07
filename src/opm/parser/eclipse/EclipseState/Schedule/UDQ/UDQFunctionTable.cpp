@@ -25,7 +25,11 @@
 
 namespace Opm {
 
-UDQFunctionTable::UDQFunctionTable(UDQParams& params) :
+UDQFunctionTable::UDQFunctionTable() :
+    UDQFunctionTable(UDQParams())
+{}
+
+UDQFunctionTable::UDQFunctionTable(const UDQParams& params) :
     params(params)
 {
     // SCalar functions
