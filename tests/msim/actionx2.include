@@ -1,4 +1,4 @@
-std::string actionx1 = R"(
+std::string actionx = R"(
 -- This reservoir simulation deck is made available under the Open Database
 -- License: http://opendatacommons.org/licenses/odbl/1.0/. Any rights in
 -- individual contents of the database are licensed under the Database Contents
@@ -350,12 +350,6 @@ WWPR
 /
 WWPT
 /
-WUBHP
-/
-WUOPR
-/
-WUWCT
-/
 SCHEDULE
 -- -------------------------------------------------------------------------
 RPTSCHED
@@ -365,16 +359,9 @@ RPTRST
 	'BASIC=1' /
 
 UDQ
-  ASSIGN WUBHP 11 /
-  ASSIGN WUOPR 20 /
-  ASSIGN WUBHP P2 12 /
-  ASSIGN WUBHP P3 13 /
-  ASSIGN WUBHP P4 14 /
-  UNITS  WUBHP 'BARSA' /
-  UNITS  WUOPR 'SM3/DAY' /
-  DEFINE WUWCT WWPR / (WWPR + WOPR) /
-  UNITS  WUWCT '1' /
+   DEFINE WUPR3 SORTA(WOPR 'P*') /
 /
+
 
 
 
@@ -407,18 +394,6 @@ COMPDAT
 -- Coordinates in item 2-5 are retreived from Odeh's figure 1 and 2 
 -- Item 9 is the well bore internal diameter, 
 -- the radius is given to be 0.25ft in Odeh's paper
-
-
-ACTIONX
- 'SHUT_WELL' 100000 /
- WWCT * > 0.50 /
-/
-
-WELOPEN
-  '?' 'SHUT' /
-/
-
-ENDACTIO
 
 
 WCONPROD
@@ -513,6 +488,18 @@ DATES
 DATES
    1 'JUN'  2016 /
 /
+
+ACTIONX
+ 'SHUT_WELL' 100000 /
+  WUPR3 'P*' = 1 /
+/
+
+WELOPEN
+  '?' 'SHUT' /
+/
+
+ENDACTIO
+
 
 DATES
    1 'JUL'  2016 /

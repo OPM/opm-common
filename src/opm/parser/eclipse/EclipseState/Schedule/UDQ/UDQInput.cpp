@@ -35,6 +35,13 @@ namespace Opm {
 
     }
 
+    UDQInput::UDQInput(const Deck& deck) :
+        udq_params(deck),
+        udqft(this->udq_params)
+    {
+    }
+
+
 
     void UDQInput::add_record(const DeckRecord& record) {
         auto action = UDQ::actionType(record.getItem("ACTION").get<std::string>(0));
@@ -48,14 +55,25 @@ namespace Opm {
             double value = std::stod(data.back());
             this->m_assignments.emplace_back( quantity, selector, value );
         } else
-            this->m_expressions.emplace_back(action, quantity, data);
+            this->m_expressions.emplace_back(this->udqft, quantity, data);
 
         this->keywords.insert(quantity);
     }
 
 
-    const std::vector<UDQExpression>& UDQInput::expressions() const noexcept {
-        return this->m_expressions;
+    const std::vector<UDQDefine>& UDQInput::definitions() const {
+        return this->m_definitions;
+    }
+
+    std::vector<UDQDefine> UDQInput::definitions(UDQVarType var_type) const {
+        std::vector<UDQDefine> filtered_defines;
+
+        std::copy_if(this->m_definitions.begin(),
+                     this->m_definitions.end(),
+                     std::back_inserter(filtered_defines),
+                     [&var_type](const UDQDefine& def) { return def.var_type() == var_type; });
+
+        return filtered_defines;
     }
 
 
@@ -105,4 +123,7 @@ namespace Opm {
         return (this->keywords.count(keyword) > 0);
     }
 
+    const UDQFunctionTable& UDQInput::function_table() const {
+        return this->udqft;
+    }
 }

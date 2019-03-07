@@ -72,6 +72,12 @@ double prod_opr(const EclipseState&  es, const Schedule& sched, const data::Solu
     return -units.to_si(UnitSystem::measure::rate, oil_rate);
 }
 
+double prod_opr_low(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
+    const auto& units = es.getUnits();
+    double oil_rate = 0.5;
+    return -units.to_si(UnitSystem::measure::rate, oil_rate);
+}
+
 double prod_wpr_P1(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
@@ -100,6 +106,42 @@ double prod_wpr_P4(const EclipseState&  es, const Schedule& sched, const data::S
         water_rate = 2.0;
 
     return -units.to_si(UnitSystem::measure::rate, water_rate);
+}
+
+/*
+  The deck tested here has a UDQ DEFINE statement which sorts the wells after
+  oil production rate, and then subsequently closes the well with lowest OPR
+  with a ACTIONX keyword.
+*/
+
+BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
+#include "actionx2.include"
+
+    test_data td( actionx );
+    msim sim(td.state);
+    {
+        test_work_area_type * work_area = test_work_area_alloc("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
+        sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P4", data::Rates::opt::oil, prod_opr_low);
+
+        sim.run(td.schedule, io);
+        {
+            const auto& w1 = td.schedule.getWell("P1");
+            const auto& w4 = td.schedule.getWell("P4");
+            std::size_t last_step = td.schedule.size() - 1;
+
+            BOOST_CHECK_EQUAL(w1->getStatus(1), WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w4->getStatus(1), WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w1->getStatus(last_step), WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w4->getStatus(last_step), WellCommon::StatusEnum::SHUT );
+        }
+
+        test_work_area_free(work_area);
+    }
 }
 
 
@@ -200,6 +242,46 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P3"), 20);
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P4"), 20);
         ecl_sum_free( ecl_sum );
+
+        test_work_area_free(work_area);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
+#include "actionx1.include"
+
+    test_data td( actionx1 );
+    msim sim(td.state);
+    {
+        test_work_area_type * work_area = test_work_area_alloc("test_msim");
+        EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
+        sim.well_rate("P1", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P2", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
+        sim.well_rate("P4", data::Rates::opt::oil, prod_opr_low);
+
+        sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+        sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+        sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+        sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+
+        sim.run(td.schedule, io);
+
+        const auto& base_name = td.state.getIOConfig().getBaseName();
+        ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
+        for (const auto& well : {"P1", "P2", "P3", "P4"}) {
+            std::string wwct_key  = std::string("WWCT:") + well;
+            std::string wuwct_key = std::string("WUWCT:") + well;
+
+            BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, wwct_key.c_str()));
+            BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, wuwct_key.c_str()));
+
+            for (int step = 0; step < ecl_sum_get_data_length(ecl_sum); step++)
+                BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, step, wwct_key.c_str()),
+                                   ecl_sum_get_general_var(ecl_sum, step, wuwct_key.c_str()));
+
+        }
 
         test_work_area_free(work_area);
     }

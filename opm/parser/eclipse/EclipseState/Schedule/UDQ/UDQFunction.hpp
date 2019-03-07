@@ -26,17 +26,20 @@
 #include <random>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {
 
 
 class UDQFunction {
 public:
-    explicit UDQFunction(const std::string& name);
+    UDQFunction(const std::string& name);
     virtual ~UDQFunction() = default;
     const std::string& name() const;
+    UDQTokenType type() const;
 private:
     std::string m_name;
+    UDQTokenType func_type;
 };
 
 class UDQScalarFunction : public UDQFunction {

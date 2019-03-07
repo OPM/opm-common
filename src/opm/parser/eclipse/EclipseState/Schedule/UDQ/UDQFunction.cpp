@@ -28,8 +28,13 @@
 namespace Opm {
 
 UDQFunction::UDQFunction(const std::string& name) :
-        m_name(name)
+    m_name(name),
+    func_type(UDQ::funcType(name))
 {
+}
+
+UDQTokenType UDQFunction::type() const {
+    return this->func_type;
 }
 
 const std::string& UDQFunction::name() const {
@@ -279,7 +284,7 @@ namespace {
     UDQSet udq_sort(const UDQSet& arg, std::size_t defined_size, const std::function<bool(int,int)>& cmp) {
         auto result = arg;
         std::vector<int> index(defined_size);
-        std::iota(index.begin(), index.end(), 0);
+        std::iota(index.begin(), index.end(), 1);
         std::sort(index.begin(), index.end(), cmp);
 
         std::size_t output_index = 0;
@@ -297,12 +302,12 @@ namespace {
 
 UDQSet UDQUnaryElementalFunction::SORTA(const UDQSet& arg) {
     auto defined_values = arg.defined_values();
-    return udq_sort(arg, defined_values.size(), [&defined_values](int a, int b){ return defined_values[a] < defined_values[b]; });
+    return udq_sort(arg, defined_values.size(), [&defined_values](int a, int b){ return defined_values[a - 1] < defined_values[b - 1]; });
 }
 
 UDQSet UDQUnaryElementalFunction::SORTD(const UDQSet& arg) {
     auto defined_values = arg.defined_values();
-    return udq_sort(arg, defined_values.size(), [&defined_values](int a, int b){ return defined_values[a] > defined_values[b]; });
+    return udq_sort(arg, defined_values.size(), [&defined_values](int a, int b){ return defined_values[a - 1] > defined_values[b - 1]; });
 }
 
 UDQBinaryFunction::UDQBinaryFunction(const std::string& name, std::function<UDQSet(const UDQSet& lhs, const UDQSet& rhs)> f) :

@@ -124,16 +124,18 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/TableManager.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/Tables.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParser.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.cpp
     src/opm/parser/eclipse/Parser/ErrorGuard.cpp
@@ -519,6 +521,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/checkDeck.hpp
        opm/parser/eclipse/EclipseState/Runspec.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp
@@ -528,7 +531,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp
-       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp
        opm/parser/eclipse/Deck/Deck.hpp
        opm/parser/eclipse/Deck/Section.hpp

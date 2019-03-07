@@ -25,26 +25,38 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 
 
 namespace Opm {
 
+    class DeckRecord;
+    class Deck;
 
     class UDQInput {
     public:
-        void add_record(const DeckRecord& record);
-        const std::vector<UDQExpression>& expressions() const noexcept;
+        explicit UDQInput(const Deck& deck);
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
+        void add_record(const DeckRecord& record);
         void assign_unit(const std::string& keyword, const std::string& unit);
+
+        const std::vector<UDQDefine>& definitions() const;
+        std::vector<UDQDefine> definitions(UDQVarType var_type) const;
+
         const std::vector<UDQAssign>& assignments() const;
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
+
+        const UDQFunctionTable& function_table() const;
     private:
-        std::vector<UDQExpression> m_expressions;
+        UDQParams udq_params;
+        UDQFunctionTable udqft;
+        std::vector<UDQDefine> m_definitions;
         std::vector<UDQAssign> m_assignments;
         std::unordered_map<std::string, std::string> units;
         std::unordered_set<std::string> keywords;
