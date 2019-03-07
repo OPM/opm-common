@@ -1397,6 +1397,7 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
 
     st.add_well_var("OP1", "WWCT", 0.75);
     st.add_well_var("OP2", "WWCT", 0.75);
+    st.add_well_var("OP3", "WOPT", 0.75);
     BOOST_CHECK( st.has_well_var("OP1", "WWCT"));
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), 0.75);
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), st.get("WWCT:OP1"));
@@ -1406,8 +1407,15 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_EQUAL( wopr_wells.size() , 0);
 
     const auto& wwct_wells = st.wells("WWCT");
+    BOOST_CHECK_EQUAL( wwct_wells.size(), 2);
     BOOST_CHECK_EQUAL(std::count(wwct_wells.begin(), wwct_wells.end(), "OP1"), 1);
     BOOST_CHECK_EQUAL(std::count(wwct_wells.begin(), wwct_wells.end(), "OP2"), 1);
+
+    const auto& all_wells = st.wells();
+    BOOST_CHECK_EQUAL( all_wells.size(), 3);
+    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP1"), 1);
+    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP2"), 1);
+    BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP3"), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

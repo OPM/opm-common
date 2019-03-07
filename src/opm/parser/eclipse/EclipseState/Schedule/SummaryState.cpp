@@ -51,6 +51,7 @@ namespace Opm{
     void SummaryState::add_well_var(const std::string& well, const std::string& var, double value) {
         this->add(var + ":" + well, value);
         this->well_values[var][well] = value;
+        this->m_wells.insert(well);
     }
 
     bool SummaryState::has_well_var(const std::string& well, const std::string& var) const {
@@ -90,5 +91,13 @@ namespace Opm{
             wells.push_back(pair.first);
         return wells;
     }
+
+
+    std::vector<std::string> SummaryState::wells() const {
+        return std::vector<std::string>(this->m_wells.begin(), this->m_wells.end());
+    }
+
+
+
 
 }
