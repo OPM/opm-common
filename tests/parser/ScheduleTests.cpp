@@ -2816,3 +2816,18 @@ BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
     BOOST_CHECK(wtest_config2.has("BAN", WellTestConfig::Reason::GROUP));
     BOOST_CHECK(!wtest_config2.has("BAN", WellTestConfig::Reason::PHYSICAL));
 }
+
+BOOST_AUTO_TEST_CASE(NEW_WELL) {
+    auto deck = createDeckWithWells();
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Runspec runspec (deck);
+    Schedule schedule(deck, grid1 , eclipseProperties, runspec);
+
+    BOOST_CHECK_THROW( schedule.getNewWell("NO_SUCH_WELL", 1), std::invalid_argument);
+    BOOST_CHECK_THROW( schedule.getNewWell("W_3", 0), std::invalid_argument);
+
+    const auto& well = schedule.getNewWell("W_3", 3);
+    BOOST_CHECK_EQUAL( well.name(), std::string("W_3"));
+}

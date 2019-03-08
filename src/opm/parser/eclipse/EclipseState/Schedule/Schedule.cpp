@@ -1706,6 +1706,13 @@ namespace Opm {
         return m_rootGroupTree.get(timeStep);
     }
 
+
+    void Schedule::updateWell(std::size_t timeStep, std::shared_ptr<Well> well_ptr) {
+        auto& dynamic_state = this->new_wells.at(well_ptr->name());
+        dynamic_state.update(timeStep, well_ptr);
+    }
+
+
     void Schedule::addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellConnectionOrder) {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
@@ -1770,8 +1777,7 @@ namespace Opm {
                                                    wellConnectionOrder,
                                                    allowCrossFlow,
                                                    automaticShutIn);
-            auto& dynamic_state = this->new_wells.at(wellName);
-            dynamic_state.update(timeStep, well_ptr);
+            this->updateWell(timeStep, well_ptr);
         }
     }
 
@@ -1889,6 +1895,18 @@ namespace Opm {
         return std::addressof( m_wells.get( wellName ) );
     }
 
+
+    const Well& Schedule::getNewWell(const std::string& wellName, std::size_t timeStep) const {
+        if (this->new_wells.count(wellName) == 0)
+            throw std::invalid_argument("No such well: " + wellName);
+
+        const auto& dynamic_map = this->new_wells.at(wellName);
+        const auto& well_ptr = dynamic_map.get( timeStep  );
+        if (!well_ptr)
+            throw std::invalid_argument("The well " + wellName + " is not defined at timestep: " + std::to_string(timeStep));
+
+        return *well_ptr;
+    }
 
     /*
       Observe that this method only returns wells which have state ==

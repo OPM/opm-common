@@ -114,6 +114,7 @@ namespace Opm
         size_t numWells(size_t timestep) const;
         size_t getMaxNumConnectionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
+        const Well& getNewWell(const std::string& wellName, std::size_t timeStep) const;
         const Well* getWell(const std::string& wellName) const;
         std::vector< const Well* > getOpenWells(size_t timeStep) const;
         std::vector< const Well* > getWells() const;
@@ -190,6 +191,7 @@ namespace Opm
 
         std::vector< Well* > getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells = {});
         std::vector< Group* > getGroups(const std::string& groupNamePattern);
+        void updateWell(std::size_t timeStep, std::shared_ptr<Well> well);
 
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
