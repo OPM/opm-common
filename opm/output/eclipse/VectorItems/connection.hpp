@@ -50,7 +50,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
 
             EffectiveKH  =  3, // Effective Kh product of connection
 
-            item12       = 11, // Unknown
+            item12       = 11, // Connection transmissibility factor
 
             SegDistEnd   = 20, // Distance to end of connection in segment
             SegDistStart = 21, // Distance to start of connection in segment
