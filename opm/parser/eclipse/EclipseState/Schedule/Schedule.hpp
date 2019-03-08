@@ -183,6 +183,7 @@ namespace Opm
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQInput>> udq_config;
+        OrderedMap< std::string, DynamicState<std::shared_ptr<Well>>> new_wells;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
         Actions m_actions;

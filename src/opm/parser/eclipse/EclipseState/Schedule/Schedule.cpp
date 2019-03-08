@@ -1754,10 +1754,29 @@ namespace Opm {
 
         m_wells.insert( std::make_pair(wellName, well ));
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
+
+        {
+            this->new_wells.insert( std::make_pair(wellName, DynamicState<std::shared_ptr<Well>>(this->m_timeMap, nullptr)));
+
+            auto well_ptr = std::make_shared<Well>(wellName,
+                                                   wseqIndex,
+                                                   headI,
+                                                   headJ,
+                                                   refDepth,
+                                                   drainageRadius,
+                                                   preferredPhase,
+                                                   m_timeMap,
+                                                   timeStep,
+                                                   wellConnectionOrder,
+                                                   allowCrossFlow,
+                                                   automaticShutIn);
+            auto& dynamic_state = this->new_wells.at(wellName);
+            dynamic_state.update(timeStep, well_ptr);
+        }
     }
 
     size_t Schedule::numWells() const {
-        return m_wells.size();
+        return this->new_wells.size();
     }
 
     size_t Schedule::numWells(size_t timestep) const {
@@ -1765,7 +1784,7 @@ namespace Opm {
     }
 
     bool Schedule::hasWell(const std::string& wellName) const {
-        return m_wells.count( wellName ) > 0;
+        return this->new_wells.count( wellName ) > 0;
     }
 
     std::vector< const Well* > Schedule::getWells() const {

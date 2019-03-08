@@ -51,6 +51,7 @@ namespace Opm {
 
     class Well {
     public:
+        Well() = default;
         Well(const std::string& name, const size_t& seqIndex, int headI,
              int headJ, double refDepth, double drainageRadius, Phase preferredPhase,
              const TimeMap& timeMap, size_t creationTimeStep,
