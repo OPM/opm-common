@@ -265,6 +265,7 @@ if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
           tests/test_AggregateWellData.cpp
           tests/test_AggregateGroupData.cpp
+          tests/test_AggregateMSWData.cpp
           tests/test_ArrayDimChecker.cpp
           tests/test_CharArrayNullTerm.cpp
           tests/test_EclipseIO.cpp
