@@ -1063,7 +1063,7 @@ static const std::unordered_map< std::string, UnitSystem::measure> block_units =
   {"BSWAT"      , UnitSystem::measure::identity},
   {"BWSAT"      , UnitSystem::measure::identity},
   {"BSGAS"      , UnitSystem::measure::identity},
-  {"BGSAS"      , UnitSystem::measure::identity},
+  {"BGSAT"      , UnitSystem::measure::identity},
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
