@@ -169,8 +169,8 @@ namespace Opm
         void applyAction(size_t reportStep, const ActionX& action, const std::vector<std::string>& matching_wells);
     private:
         TimeMap m_timeMap;
-        OrderedMap< Well > m_wells;
-        OrderedMap< Group > m_groups;
+        OrderedMap< std::string, Well > m_wells;
+        OrderedMap< std::string, Group > m_groups;
         DynamicState< GroupTree > m_rootGroupTree;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;

@@ -23,7 +23,7 @@
 namespace Opm {
 
     void TableSchema::addColumn( ColumnSchema column ) {
-        m_columns.insert( column.name(), column );
+        m_columns.insert( std::make_pair( column.name(), column ));
     }
 
     const ColumnSchema& TableSchema::getColumn( const std::string& name ) const {
@@ -31,7 +31,7 @@ namespace Opm {
     }
 
     const ColumnSchema& TableSchema::getColumn( size_t columnIndex ) const {
-        return m_columns.get( columnIndex );
+        return m_columns.iget( columnIndex );
     }
 
     size_t TableSchema::size() const {
@@ -39,7 +39,7 @@ namespace Opm {
     }
 
     bool TableSchema::hasColumn(const std::string& name) const {
-        return m_columns.hasKey( name );
+        return m_columns.count( name ) > 0;
     }
 
 }

@@ -56,7 +56,7 @@ namespace Opm {
         for (size_t colIdx = 0; colIdx < m_schema.size(); ++colIdx) {
             const auto& schemaColumn = m_schema.getColumn( colIdx );
             TableColumn column(schemaColumn); // Some move trickery here ...
-            m_columns.insert( schemaColumn.name() , column );
+            m_columns.insert( std::make_pair( schemaColumn.name() , column ));
         }
     }
 
@@ -115,7 +115,7 @@ namespace Opm {
     }
 
     const TableColumn& SimpleTable::getColumn( size_t columnIndex )  const {
-        return m_columns.get( columnIndex );
+        return m_columns.iget( columnIndex );
     }
 
 
@@ -129,7 +129,7 @@ namespace Opm {
     }
 
     TableColumn& SimpleTable::getColumn( size_t columnIndex ) {
-        return m_columns.get( columnIndex );
+        return m_columns.iget( columnIndex );
     }
 
 

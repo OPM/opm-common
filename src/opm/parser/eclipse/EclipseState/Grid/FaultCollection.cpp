@@ -85,7 +85,7 @@ namespace Opm {
     }
 
     bool FaultCollection::hasFault(const std::string& faultName) const {
-        return m_faults.hasKey( faultName );
+        return m_faults.count( faultName ) > 0;
     }
 
     const Fault& FaultCollection::getFault(const std::string& faultName) const {
@@ -97,16 +97,16 @@ namespace Opm {
     }
 
     Fault& FaultCollection::getFault(size_t faultIndex) {
-        return m_faults.get( faultIndex );
+        return m_faults.iget( faultIndex );
     }
 
     const Fault& FaultCollection::getFault(size_t faultIndex) const {
-        return m_faults.get( faultIndex );
+        return m_faults.iget( faultIndex );
     }
 
     void FaultCollection::addFault(const std::string& faultName) {
         Fault fault(faultName);
-        m_faults.insert(fault.getName() , fault);
+        m_faults.insert(std::make_pair(fault.getName() , fault));
     }
 
     void FaultCollection::setTransMult(const std::string& faultName , double transMult) {

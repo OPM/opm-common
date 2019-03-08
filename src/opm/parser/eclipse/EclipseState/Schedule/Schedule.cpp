@@ -653,7 +653,6 @@ namespace Opm {
             for( auto* well : wells ) {
                 WellProductionProperties properties;
 
-
                 if (isPredictionMode) {
                     auto addGrupProductionControl = well->isAvailableForGroupControl(currentStep);
                     properties = WellProductionProperties::prediction( record, addGrupProductionControl );
@@ -1672,8 +1671,10 @@ namespace Opm {
                 well->updateRFTActive( currentStep, RFTConnections::RFTEnum::YES);
         }
 
-        for( auto& well : this->m_wells )
+        for( auto& well_pair : this->m_wells ) {
+            auto& well = well_pair.second;
             well.setRFTForWellWhenFirstOpen( currentStep );
+        }
     }
 
     void Schedule::handleWRFTPLT( const DeckKeyword& keyword,  size_t currentStep) {
@@ -1751,7 +1752,7 @@ namespace Opm {
                   timeStep,
                   wellConnectionOrder, allowCrossFlow, automaticShutIn);
 
-        m_wells.insert( wellName, well );
+        m_wells.insert( std::make_pair(wellName, well ));
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
     }
 
@@ -1764,7 +1765,7 @@ namespace Opm {
     }
 
     bool Schedule::hasWell(const std::string& wellName) const {
-        return m_wells.hasKey( wellName );
+        return m_wells.count( wellName ) > 0;
     }
 
     std::vector< const Well* > Schedule::getWells() const {
@@ -1833,7 +1834,7 @@ namespace Opm {
 
                 if (!child_groups.size()) {
                     //for (const auto& well_name : group.getWells( timeStep )) {
-		    const auto& ch_wells = group.getWells( timeStep );
+                    const auto& ch_wells = group.getWells( timeStep );
                     for (auto it= ch_wells.begin(); it != ch_wells.end(); it++) {
                         wells.push_back( getWell( *it ));
                     }
@@ -1856,7 +1857,8 @@ namespace Opm {
         };
 
         std::vector< const Well* > wells;
-        for( const auto& well : m_wells ) {
+        for( const auto& well_pair : m_wells ) {
+            const auto& well = well_pair.second;
             if( !defined( well ) ) continue;
             wells.push_back( std::addressof( well ) );
         }
@@ -1882,7 +1884,8 @@ namespace Opm {
         };
 
         std::vector< const Well* > wells;
-        for( const auto& well : m_wells ) {
+        for( const auto& well_pair : m_wells ) {
+            const auto& well = well_pair.second;
             if( !open( well ) ) continue;
             wells.push_back( std::addressof( well ) );
         }
@@ -1908,12 +1911,13 @@ namespace Opm {
             auto wildcard_pos = wellNamePattern.find("*");
 
             if( wildcard_pos != wellNamePattern.length()-1 ) {
-                if( !m_wells.hasKey( wellNamePattern ) ) return {};
+                if( m_wells.count( wellNamePattern ) == 0 ) return {};
                 return { std::addressof( m_wells.get( wellNamePattern ) ) };
             }
 
             std::vector< Well* > wells;
-            for( auto& well : this->m_wells ) {
+            for( auto& well_pair : this->m_wells ) {
+                auto& well = well_pair.second;
                 if( Well::wellNameInWellNamePattern( well.name(), wellNamePattern ) ) {
                     wells.push_back( std::addressof( well ) );
                 }
@@ -1925,7 +1929,7 @@ namespace Opm {
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
 	const size_t gseqIndex = m_groups.size();
-        m_groups.insert( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } );
+  m_groups.insert( std::make_pair( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } ));
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
@@ -1937,7 +1941,7 @@ namespace Opm {
     }
 
     bool Schedule::hasGroup(const std::string& groupName) const {
-        return m_groups.hasKey(groupName);
+        return m_groups.count(groupName) > 0;
     }
 
 
@@ -1952,7 +1956,7 @@ namespace Opm {
         std::vector< const Group* > groups;
 
         for( const auto& group : m_groups )
-            groups.push_back( &group );
+            groups.push_back( std::addressof(group.second) );
 
         return groups;
     }
@@ -1961,12 +1965,13 @@ namespace Opm {
         size_t wildcard_pos = groupNamePattern.find("*");
 
         if( wildcard_pos != groupNamePattern.length()-1 ) {
-            if( !m_groups.hasKey( groupNamePattern ) ) return {};
+            if( m_groups.count( groupNamePattern ) == 0) return {};
             return { std::addressof( m_groups.get( groupNamePattern ) ) };
         }
 
         std::vector< Group* > groups;
-        for( auto& group : this->m_groups ) {
+        for( auto& group_pair : this->m_groups ) {
+            auto& group = group_pair.second;
             if( Group::groupNameInGroupNamePattern( group.name(), groupNamePattern ) ) {
                 groups.push_back( std::addressof( group ) );
             }
@@ -1977,7 +1982,7 @@ namespace Opm {
 
     std::vector< const Group* > Schedule::getGroups(size_t timeStep) const {
 
-	if (timeStep >= m_timeMap.size()) {
+        if (timeStep >= m_timeMap.size()) {
             throw std::invalid_argument("Timestep to large");
         }
 
@@ -1987,10 +1992,11 @@ namespace Opm {
 
         std::vector< const Group* > groups;
 
-        for( const auto& group : m_groups ) {
-	    if( !defined( group ) ) continue;
-	    groups.push_back( &group );
-	}
+        for( const auto& group_pair : m_groups ) {
+            const auto& group = group_pair.second;
+            if( !defined( group) ) continue;
+            groups.push_back( &group );
+        }
         return groups;
     }
 
@@ -2095,7 +2101,8 @@ namespace Opm {
     }
 
     void Schedule::checkIfAllConnectionsIsShut(size_t timestep) {
-        for( auto& well : this->m_wells ) {
+        for( auto& well_pair : this->m_wells ) {
+            auto& well = well_pair.second;
             const auto& completions = well.getConnections(timestep);
             if( completions.allConnectionsShut() )
                 this->updateWellStatus( well, timestep, WellCommon::StatusEnum::SHUT);
@@ -2104,8 +2111,10 @@ namespace Opm {
 
 
     void Schedule::filterConnections(const EclipseGrid& grid) {
-        for (auto& well : this->m_wells)
+        for (auto& well_pair : this->m_wells) {
+            auto well = well_pair.second;
             well.filterConnections(grid);
+        }
     }
 
     const VFPProdTable& Schedule::getVFPProdTable(int table_id, size_t timeStep) const {
