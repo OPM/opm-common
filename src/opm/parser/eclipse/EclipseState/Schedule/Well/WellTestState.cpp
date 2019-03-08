@@ -19,8 +19,8 @@
 #include <stdexcept>
 #include <algorithm>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellTestState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp>
 
 namespace Opm {
 

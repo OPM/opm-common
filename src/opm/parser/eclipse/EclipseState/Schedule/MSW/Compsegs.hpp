@@ -25,7 +25,7 @@
 #include <string>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
@@ -51,8 +51,8 @@ namespace Opm {
         // we do not handle thermal length for the moment
         // double m_thermal_length;
         int segment_number;
-	std::size_t m_seqIndex;
-		
+        std::size_t m_seqIndex;
+
         Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
                  WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in, std::size_t seqIndex_in);
 

@@ -40,7 +40,6 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -54,6 +53,7 @@
 #include <utility>
 #include <vector>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 class RestartFileView

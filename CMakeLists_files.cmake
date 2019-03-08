@@ -84,8 +84,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionValue.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Connection.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WellConnections.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/GroupTree.cpp
@@ -100,16 +98,18 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/SummaryState.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Well.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WList.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WListManager.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WellTracerProperties.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/WellTestState.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/Connection.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/Well.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WList.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.cpp
     src/opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.cpp
     src/opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.cpp
@@ -485,16 +485,21 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Well.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WList.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WListManager.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp
        opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WellPolymerProperties.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WellTracerProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group.hpp
        opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp
@@ -502,15 +507,10 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp
        opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Connection.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WellProductionProperties.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WellTestState.hpp
-       opm/parser/eclipse/EclipseState/Schedule/WellConnections.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/ThresholdPressure.hpp
        opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp
        opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp
