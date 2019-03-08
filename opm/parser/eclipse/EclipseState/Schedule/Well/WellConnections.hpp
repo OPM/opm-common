@@ -21,7 +21,7 @@
 #ifndef CONNECTIONSET_HPP_
 #define CONNECTIONSET_HPP_
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
 namespace Opm {
     class EclipseGrid;

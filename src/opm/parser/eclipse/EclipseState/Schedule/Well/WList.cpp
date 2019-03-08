@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <opm/parser/eclipse/EclipseState/Schedule/WList.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 
 namespace Opm {
 

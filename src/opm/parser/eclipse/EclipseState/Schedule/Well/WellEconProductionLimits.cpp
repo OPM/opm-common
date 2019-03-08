@@ -22,7 +22,8 @@
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellEconProductionLimits.hpp>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
 
 
 namespace Opm {

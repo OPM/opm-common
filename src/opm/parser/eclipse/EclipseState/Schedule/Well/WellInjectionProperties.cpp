@@ -16,13 +16,13 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <opm/parser/eclipse/Units/Units.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/WellInjectionProperties.hpp>
-
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 
 namespace Opm {
 
