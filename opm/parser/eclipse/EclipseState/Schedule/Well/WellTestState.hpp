@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/WellTestConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 
 namespace Opm {
 

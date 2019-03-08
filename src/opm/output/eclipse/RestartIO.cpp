@@ -37,7 +37,6 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <algorithm>
@@ -52,6 +51,7 @@
 #include <ert/ecl/EclFilename.hpp>
 #include <ert/ecl/fortio.h>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 namespace Opm { namespace RestartIO {
 
 namespace {

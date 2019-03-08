@@ -24,17 +24,21 @@
 #include <boost/lexical_cast.hpp>
 
 #include <opm/parser/eclipse/Utility/Functional.hpp>
+
+#include <ert/ecl/ecl_util.h>
+
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
+
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
+
 #include <opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
-#include <ert/ecl/ecl_util.h>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 
 
