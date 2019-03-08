@@ -35,9 +35,14 @@ enum class UDQVarType {
 };
 
 
+enum class UDQAction {ASSIGN, DEFINE, UNITS, UPDATE};
+
+
+
 namespace UDQ {
 
     UDQVarType varType(const std::string& keyword);
+    UDQAction actionType(const std::string& action_string);
 
 }
 }

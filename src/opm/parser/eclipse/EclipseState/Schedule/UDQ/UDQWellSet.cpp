@@ -30,6 +30,29 @@ UDQWellSet::UDQWellSet(const std::string& name, const std::vector<std::string>& 
         this->well_index.emplace( std::make_pair(wells[index], index));
 }
 
+UDQWellSet::UDQWellSet(const std::string& name, const std::vector<std::string>& wells, const UDQSet& values) :
+    UDQWellSet(name, wells)
+{
+    if (wells.size() != values.size())
+        throw std::invalid_argument("Size mismatch");
+
+    for (std::size_t index = 0; index < values.size(); index++) {
+        const auto& value = values[index];
+        if (value)
+            UDQSet::assign(index, values[index].value());
+    }
+}
+
+UDQWellSet::UDQWellSet(const std::string& name, const std::vector<std::string>& wells, double scalar_value) :
+    UDQWellSet(name, wells)
+{
+    if (wells.size() != this->size())
+        throw std::invalid_argument("Size mismatch");
+
+    for (std::size_t index = 0; index < wells.size(); index++)
+        UDQSet::assign(index, scalar_value);
+}
+
 
 void UDQWellSet::assign(const std::string& well, double value) {
     if (well.find('*') == std::string::npos) {

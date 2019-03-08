@@ -81,7 +81,7 @@ namespace Opm {
     }
 
     UDQExpression::UDQExpression(const DeckRecord& record) :
-        UDQExpression(UDQExpression::actionString2Enum(record.getItem("ACTION").get<std::string>(0)),
+        UDQExpression(UDQ::actionType(record.getItem("ACTION").get<std::string>(0)),
                       record.getItem("QUANTITY").get<std::string>(0),
                       record.getItem("DATA").getData<std::string>())
 
@@ -103,22 +103,6 @@ namespace Opm {
         return this->m_keyword;
     }
 
-
-    UDQAction UDQExpression::actionString2Enum(const std::string& action_string) {
-        if (action_string == "ASSIGN")
-            return UDQAction::ASSIGN;
-
-        if (action_string == "DEFINE")
-            return UDQAction::DEFINE;
-
-        if (action_string == "UNITS")
-            return UDQAction::UNITS;
-
-        if (action_string == "UPDATE")
-            return UDQAction::UPDATE;
-
-        throw std::invalid_argument("Invalid action string " + action_string);
-    }
 
 
 

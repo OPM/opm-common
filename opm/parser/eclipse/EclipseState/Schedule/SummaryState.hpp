@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <ert/ecl/smspec_node.hpp>
 
@@ -74,6 +75,7 @@ public:
     bool has_well_var(const std::string& well, const std::string& var) const;
     double get_well_var(const std::string& well, const std::string& var) const;
 
+    std::vector<std::string> wells() const;
     std::vector<std::string> wells(const std::string& var) const;
     const_iterator begin() const;
     const_iterator end() const;
@@ -82,6 +84,7 @@ private:
 
     // The first key is the variable and the second key is the well.
     std::unordered_map<std::string, std::unordered_map<std::string, double>> well_values;
+    std::unordered_set<std::string> m_wells;
 };
 
 }

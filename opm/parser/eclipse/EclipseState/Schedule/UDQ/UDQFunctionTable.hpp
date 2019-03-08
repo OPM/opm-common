@@ -34,9 +34,9 @@ public:
     bool has_function(const std::string& name) const;
     const UDQFunction& get(const std::string& name) const;
 private:
-    void insert_function(std::unique_ptr<const UDQFunction> func);
+    void insert_function(std::shared_ptr<const UDQFunction> func);
     UDQParams params;
-    std::unordered_map<std::string, std::unique_ptr<const UDQFunction>> function_table;
+    std::unordered_map<std::string, std::shared_ptr<const UDQFunction>> function_table;
 };
 }
 #endif
