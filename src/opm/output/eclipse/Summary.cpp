@@ -1274,12 +1274,15 @@ Summary::Summary( const EclipseState& st,
             auto * nodeptr = ecl_smspec_add_node( smspec, keyword.c_str(), node.wgname().c_str(), node.num(), st.getUnits().name( val.unit ), 0 );
             this->handlers->handlers.emplace_back( nodeptr, handle );
         } else if (is_udq(keyword)) {
-            const auto& unit = udq.unit(keyword);
+            std::string udq_unit = "?????";
             const auto& udq_params = st.runspec().udqParams();
-            ecl_smspec_add_node(smspec, keyword.c_str(), node.wgname().c_str(), node.num(), unit.c_str(), udq_params.undefinedValue());
-        } else {
+
+            if (udq.has_unit(keyword))
+                udq_unit = udq.unit(keyword);
+
+            ecl_smspec_add_node(smspec, keyword.c_str(), node.wgname().c_str(), node.num(), udq_unit.c_str(), udq_params.undefinedValue());
+        } else
             unsupported_keywords.insert(keyword);
-        }
     }
     for ( const auto& keyword : unsupported_keywords ) {
         Opm::OpmLog::info("Keyword " + std::string(keyword) + " is unhandled");
