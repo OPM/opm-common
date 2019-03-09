@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridDims.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
@@ -124,6 +125,9 @@ namespace {
          {"SGAS" , {"BSGAS"}}
     };
 
+    bool is_udq(const std::string& keyword) {
+        return (keyword.size() > 1 && keyword[1] == 'U');
+    }
 
 
 void handleMissingWell( const ParseContext& parseContext, ErrorGuard& errors, const std::string& keyword, const std::string& well) {
@@ -534,6 +538,21 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         ErrorGuard& errors,
                         const GridDims& dims) {
     const auto var_type = ecl_smspec_identify_var_type( keyword.name().c_str() );
+    const auto& name = keyword.name();
+    if (is_udq(name)) {
+        const auto& udq = schedule.getUDQConfig(schedule.size() - 1);
+
+        if (!udq.has_keyword(name)) {
+            std::string msg{"Summary output has been requested for UDQ keyword: " + name + " but it has not been configured"};
+            parseContext.handleError(ParseContext::SUMMARY_UNDEFINED_UDQ, msg, errors);
+            return;
+        }
+
+        if (!udq.has_unit(name)) {
+            std::string msg{"Summary output has been requested for UDQ keyword: " + name + " but no unit has not been configured"};
+            parseContext.handleError(ParseContext::SUMMARY_UDQ_MISSING_UNIT, msg, errors);
+        }
+    }
 
     switch( var_type ) {
         case ECL_SMSPEC_WELL_VAR: return keywordW( list, parseContext, errors, keyword, schedule );

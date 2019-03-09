@@ -271,6 +271,8 @@ namespace Opm {
         const static std::string SUMMARY_UNKNOWN_WELL;
         const static std::string SUMMARY_UNKNOWN_GROUP;
         const static std::string SUMMARY_UNHANDLED_KEYWORD;
+        const static std::string SUMMARY_UNDEFINED_UDQ;
+        const static std::string SUMMARY_UDQ_MISSING_UNIT;
 
         /*
           A well must be specified (e.g. WELSPECS) and have completions

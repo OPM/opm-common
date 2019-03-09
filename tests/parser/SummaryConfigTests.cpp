@@ -432,6 +432,19 @@ BOOST_AUTO_TEST_CASE(INVALID_WELL2) {
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
 }
 
+BOOST_AUTO_TEST_CASE(UNDEFINED_UDQ_WELL) {
+    ParseContext parseContext;
+    const auto input = "WUWCT\n"
+        "/\n";
+    parseContext.updateKey( ParseContext::SUMMARY_UNDEFINED_UDQ, InputError::THROW_EXCEPTION );
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+
+    parseContext.updateKey( ParseContext::SUMMARY_UNDEFINED_UDQ, InputError::IGNORE );
+    BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
+}
+
+
+
 
 BOOST_AUTO_TEST_CASE(INVALID_GROUP) {
     ParseContext parseContext;
