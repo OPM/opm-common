@@ -153,6 +153,7 @@ UDQ
   ASSIGN WUBHP 0.0 /
   UNITS  WUBHP 'BARSA' /
   DEFINE FUOPR  AVEG(WOPR) + 1/
+  ASSIGN WUXUNIT 0.0 /
 /
 
 DATES
@@ -172,6 +173,10 @@ UDQ
 
     BOOST_CHECK_THROW( udq.unit("NO_SUCH_KEY"), std::invalid_argument );
     BOOST_CHECK_EQUAL( udq.unit("WUBHP"), "BARSA");
+    BOOST_CHECK( udq.has_keyword("WUBHP") );
+    BOOST_CHECK( !udq.has_keyword("NO_SUCH_KEY") );
+    BOOST_CHECK( !udq.has_unit("WUXUNIT"));
+    BOOST_CHECK( udq.has_unit("WUBHP"));
 
     Parser parser;
     auto deck = parser.parseString(input);

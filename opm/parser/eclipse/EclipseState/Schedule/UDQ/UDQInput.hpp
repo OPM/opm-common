@@ -21,8 +21,9 @@
 #ifndef UDQINPUT_HPP_
 #define UDQINPUT_HPP_
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
@@ -37,6 +38,8 @@ namespace Opm {
         void add_record(const DeckRecord& record);
         const std::vector<UDQExpression>& expressions() const noexcept;
         const std::string& unit(const std::string& key) const;
+        bool has_unit(const std::string& keyword) const;
+        bool has_keyword(const std::string& keyword) const;
         void assign_unit(const std::string& keyword, const std::string& unit);
         const std::vector<UDQAssign>& assignments() const;
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
@@ -44,6 +47,7 @@ namespace Opm {
         std::vector<UDQExpression> m_expressions;
         std::vector<UDQAssign> m_assignments;
         std::unordered_map<std::string, std::string> units;
+        std::unordered_set<std::string> keywords;
     };
 }
 

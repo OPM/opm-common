@@ -49,6 +49,8 @@ namespace Opm {
             this->m_assignments.emplace_back( quantity, selector, value );
         } else
             this->m_expressions.emplace_back(action, quantity, data);
+
+        this->keywords.insert(quantity);
     }
 
 
@@ -94,4 +96,13 @@ namespace Opm {
         }
         this->units[keyword] = unit;
     }
+
+    bool UDQInput::has_unit(const std::string& keyword) const {
+        return (this->units.count(keyword) > 0);
+    }
+
+    bool UDQInput::has_keyword(const std::string& keyword) const {
+        return (this->keywords.count(keyword) > 0);
+    }
+
 }
