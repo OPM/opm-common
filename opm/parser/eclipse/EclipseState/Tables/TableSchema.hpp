@@ -38,7 +38,7 @@ namespace Opm {
         /* Number of columns */
         size_t size() const;
     private:
-        OrderedMap<ColumnSchema> m_columns;
+        OrderedMap<std::string, ColumnSchema> m_columns;
     };
 }
 

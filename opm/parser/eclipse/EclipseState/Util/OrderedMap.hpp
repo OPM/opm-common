@@ -24,127 +24,156 @@
 #include <vector>
 #include <string>
 #include <stdexcept>
-
+#include <iterator>
 
 namespace Opm {
 
-template <typename T>
+template <typename K, typename T>
 class OrderedMap {
+
+using storage_type = typename std::vector<std::pair<K,T>>;
+using index_type = typename std::unordered_map<K,std::size_t>;
+using iter_type = typename storage_type::iterator;
+using const_iter_type = typename storage_type::const_iterator;
+
 private:
-    std::unordered_map<std::string , size_t> m_map;
-    std::vector<T> m_vector;
+    index_type m_map;
+    storage_type m_vector;
 
 public:
-    bool hasKey(const std::string& key) const {
-        auto iter = m_map.find(key);
-        if (iter == m_map.end())
-            return false;
-        else
-            return true;
+
+    std::size_t count(const K& key) const {
+        return this->m_map.count(key);
     }
 
 
-    void insert(std::string key, T value) {
-        if (hasKey(key)) {
-            auto iter = m_map.find( key );
+
+    T& operator[](const K& key) {
+        if (this->count(key) == 0)
+            this->insert( std::make_pair(key, T()));
+
+        return this->at(key);
+    }
+
+
+    std::size_t erase(const K& key) {
+        if (this->count(key) == 0)
+            return 0;
+
+        std::size_t index = this->m_map.at(key);
+        this->m_map.erase(key);
+        this->m_vector.erase(this->m_vector.begin() + index);
+
+        for (const auto& index_pair : this->m_map) {
+            auto target_index = index_pair.second;
+            if (target_index > index)
+                target_index--;
+
+            this->m_map[index_pair.first] = target_index;
+        }
+        return 1;
+    }
+
+
+    void insert(std::pair<K,T> key_value_pair) {
+        if (this->count(key_value_pair.first) > 0) {
+            auto iter = m_map.find( key_value_pair.first );
             size_t index = iter->second;
-            m_vector[index] = value;
+            m_vector[index] = key_value_pair;
         } else {
             size_t index = m_vector.size();
-            m_vector.push_back( std::move( value ) );
-            m_map.insert( std::pair<std::string, size_t>(key , index));
+            this->m_map.emplace(key_value_pair.first, index);
+            this->m_vector.push_back( std::move( key_value_pair ) );
         }
     }
 
 
-    T& get(const std::string& key) {
+    T& get(const K& key) {
         auto iter = m_map.find( key );
         if (iter == m_map.end())
-            throw std::invalid_argument("Key not found:" + key);
+            throw std::invalid_argument("Key not found:");
         else {
             size_t index = iter->second;
-            return get(index);
+            return iget(index);
         }
     }
 
 
-    T& get(size_t index) {
+    T& iget(size_t index) {
         if (index >= m_vector.size())
             throw std::invalid_argument("Invalid index");
-        return m_vector[index];
+        return m_vector[index].second;
     }
 
-    const T& get(const std::string& key) const {
-        auto iter = m_map.find( key );
+    const T& get(const K& key) const {
+        const auto& iter = this->m_map.find( key );
         if (iter == m_map.end())
-            throw std::invalid_argument("Key not found:" + key);
+            throw std::invalid_argument("Key not found: ??");
         else {
             size_t index = iter->second;
-            return get(index);
+            return iget(index);
         }
     }
 
 
-    const T& get(size_t index) const {
+    const T& iget(size_t index) const {
         if (index >= m_vector.size())
             throw std::invalid_argument("Invalid index");
-        return m_vector[index];
+        return m_vector[index].second;
     }
 
     const T& at(size_t index) const {
-        return this->get(index);
+        return this->iget(index);
     }
 
-    const T& at(const std::string &key) const {
+    const T& at(const K& key) const {
         return this->get(key);
     }
 
     T& at(size_t index) {
-        return this->get(index);
+        return this->iget(index);
     }
 
-    T& at(const std::string& key) {
+    T& at(const K& key) {
         return this->get(key);
     }
-
-
-    T* getPtr(const std::string& key) const {
-        auto iter = m_map.find( key );
-        if (iter == m_map.end())
-            throw std::invalid_argument("Key not found:" + key);
-        else {
-            size_t index = iter->second;
-            return getPtr(index);
-        }
-    }
-
-    T* getPtr(size_t index) const {
-        if (index >= m_vector.size())
-            throw std::invalid_argument("Invalid index");
-        return &m_vector[index];
-    }
-
 
     size_t size() const {
         return m_vector.size();
     }
 
 
-    typename std::vector<T>::const_iterator begin() const {
+    const_iter_type begin() const {
         return m_vector.begin();
     }
 
 
-    typename std::vector<T>::const_iterator end() const {
+    const_iter_type end() const {
         return m_vector.end();
     }
 
-    typename std::vector<T>::iterator begin() {
+    iter_type begin() {
         return m_vector.begin();
     }
 
-    typename std::vector<T>::iterator end() {
+    iter_type end() {
         return m_vector.end();
+    }
+
+    iter_type find(const K& key) {
+        const auto map_iter = this->m_map.find(key);
+        if (map_iter == this->m_map.end())
+            return this->m_vector.end();
+
+        return std::next(this->m_vector.begin(), map_iter->second);
+    }
+
+    const_iter_type find(const K& key) const {
+        const auto map_iter = this->m_map.find(key);
+        if (map_iter == this->m_map.end())
+            return this->m_vector.end();
+
+        return std::next(this->m_vector.begin(), map_iter->second);
     }
 };
 }
