@@ -32,9 +32,26 @@
 namespace Opm {
 
 class UDQASTNode;
+class ParseContext;
+class ErrorGuard;
+
 class UDQDefine{
 public:
     UDQDefine(const UDQFunctionTable& udqft, const std::string& keyword, const std::vector<std::string>& deck_data);
+
+    UDQDefine(const UDQFunctionTable& udqft,
+              const std::string& keyword,
+              const std::vector<std::string>& deck_data,
+              const ParseContext& parseContext,
+              ErrorGuard& errors);
+
+    template <typename T>
+    UDQDefine(const UDQFunctionTable& udqft,
+              const std::string& keyword,
+              const std::vector<std::string>& deck_data,
+              const ParseContext& parseContext,
+              T&& errors);
+
 
     UDQWellSet eval_wells(const UDQContext& context) const;
     UDQSet eval(const UDQContext& context) const;

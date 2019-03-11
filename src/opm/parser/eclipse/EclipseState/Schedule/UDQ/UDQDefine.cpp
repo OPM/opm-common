@@ -19,6 +19,10 @@
 #include <iostream>
 #include <cstring>
 
+
+
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
@@ -57,7 +61,28 @@ std::vector<std::string> quote_split(const std::string& item) {
 
 }
 
-UDQDefine::UDQDefine(const UDQFunctionTable& udqft, const std::string& keyword, const std::vector<std::string>& deck_data) :
+template <typename T>
+UDQDefine::UDQDefine(const UDQFunctionTable& udqft,
+                     const std::string& keyword,
+                     const std::vector<std::string>& deck_data,
+                     const ParseContext& parseContext,
+                     T&& errors) :
+    UDQDefine(udqft, keyword, deck_data, parseContext, errors)
+{}
+
+
+UDQDefine::UDQDefine(const UDQFunctionTable& udqft,
+                     const std::string& keyword,
+                     const std::vector<std::string>& deck_data) :
+    UDQDefine(udqft, keyword, deck_data, ParseContext(), ErrorGuard())
+{}
+
+
+UDQDefine::UDQDefine(const UDQFunctionTable& udqft,
+                     const std::string& keyword,
+                     const std::vector<std::string>& deck_data,
+                     const ParseContext& parseContext,
+                     ErrorGuard& errors) :
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword)),
     udqft(udqft)
