@@ -18,6 +18,7 @@
  */
 
 #include <opm/parser/eclipse/EclipseState/AquiferCT.hpp>
+#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 
 namespace Opm {
 
