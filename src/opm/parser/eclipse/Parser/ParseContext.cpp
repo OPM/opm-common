@@ -105,6 +105,8 @@ namespace Opm {
 
         addKey(SIMULATOR_KEYWORD_NOT_SUPPORTED, InputError::WARN);
         addKey(SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED, InputError::WARN);
+
+        addKey(UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
     }
 
     void ParseContext::initEnv() {
@@ -334,4 +336,6 @@ namespace Opm {
 
     const std::string ParseContext::SIMULATOR_KEYWORD_NOT_SUPPORTED = "SIMULATOR_KEYWORD_NOT_SUPPORTED";
     const std::string ParseContext::SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED = "SIMULATOR_KEYWORD_ITEM_NOT_SUPPORTED";
+
+    const std::string ParseContext::UDQ_PARSE_ERROR = "UDQ_PARSE_ERROR";
 }

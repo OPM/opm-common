@@ -36,6 +36,7 @@ public:
     UDQASTNode();
 
     UDQASTNode(UDQTokenType type_arg);
+    UDQASTNode(double scalar_value);
     UDQASTNode(UDQTokenType type_arg, const std::string& string_value, const std::vector<std::string>& selector);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& arg);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& left, const UDQASTNode& right);

@@ -62,30 +62,30 @@ std::vector<std::string> quote_split(const std::string& item) {
 }
 
 template <typename T>
-UDQDefine::UDQDefine(const UDQFunctionTable& udqft,
+UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const std::string& keyword,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      T&& errors) :
-    UDQDefine(udqft, keyword, deck_data, parseContext, errors)
+    UDQDefine(udq_params, keyword, deck_data, parseContext, errors)
 {}
 
 
-UDQDefine::UDQDefine(const UDQFunctionTable& udqft,
+UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const std::string& keyword,
                      const std::vector<std::string>& deck_data) :
-    UDQDefine(udqft, keyword, deck_data, ParseContext(), ErrorGuard())
+    UDQDefine(udq_params, keyword, deck_data, ParseContext(), ErrorGuard())
 {}
 
 
-UDQDefine::UDQDefine(const UDQFunctionTable& udqft,
+UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const std::string& keyword,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      ErrorGuard& errors) :
+    udq_params(udq_params),
     m_keyword(keyword),
-    m_var_type(UDQ::varType(keyword)),
-    udqft(udqft)
+    m_var_type(UDQ::varType(keyword))
 {
     std::vector<std::string> tokens;
     for (const std::string& deck_item : deck_data) {
@@ -121,7 +121,7 @@ UDQDefine::UDQDefine(const UDQFunctionTable& udqft,
 
         }
     }
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udqft, tokens) );
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(this->udq_params, tokens, parseContext, errors) );
     this->tokens = tokens;
 }
 

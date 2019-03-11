@@ -37,16 +37,18 @@ class ErrorGuard;
 
 class UDQDefine{
 public:
-    UDQDefine(const UDQFunctionTable& udqft, const std::string& keyword, const std::vector<std::string>& deck_data);
+    UDQDefine(const UDQParams& udq_params,
+              const std::string& keyword,
+              const std::vector<std::string>& deck_data);
 
-    UDQDefine(const UDQFunctionTable& udqft,
+    UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
               const std::vector<std::string>& deck_data,
               const ParseContext& parseContext,
               ErrorGuard& errors);
 
     template <typename T>
-    UDQDefine(const UDQFunctionTable& udqft,
+    UDQDefine(const UDQParams& udq_params,
               const std::string& keyword,
               const std::vector<std::string>& deck_data,
               const ParseContext& parseContext,
@@ -62,10 +64,10 @@ public:
     std::vector<std::string> tokens;
     UDQVarType  var_type() const;
 private:
+    const UDQParams& udq_params;  // Beacuse of the shared RNG stream this must be a reference.
     std::string m_keyword;
     std::shared_ptr<UDQASTNode> ast;
     UDQVarType m_var_type;
-    UDQFunctionTable udqft;
 };
 }
 

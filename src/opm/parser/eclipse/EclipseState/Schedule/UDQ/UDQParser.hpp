@@ -24,11 +24,15 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 #include "UDQASTNode.hpp"
 
 namespace Opm {
+
+class ParseContext;
+class ErrorGuard;
 
 struct UDQParseNode {
     UDQParseNode(UDQTokenType type_arg, const std::string& value_arg, const std::vector<std::string>& selector) :
@@ -54,11 +58,12 @@ struct UDQParseNode {
 
 class UDQParser {
 public:
-    static UDQASTNode parse(const UDQFunctionTable& udqft, const std::vector<std::string>& tokens);
+    static UDQASTNode parse(const UDQParams& udq_params, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors);
 
 private:
-    UDQParser(const UDQFunctionTable& udqft, const std::vector<std::string>& tokens) :
-        udqft(udqft),
+    UDQParser(const UDQParams& udq_params, const std::vector<std::string>& tokens) :
+        udq_params(udq_params),
+        udqft(UDQFunctionTable(udq_params)),
         tokens(tokens)
     {}
 
@@ -73,7 +78,8 @@ private:
     UDQTokenType get_type(const std::string& arg) const;
     std::size_t current_size() const;
 
-    const UDQFunctionTable& udqft;
+    const UDQParams& udq_params;
+    UDQFunctionTable udqft;
     std::vector<std::string> tokens;
     ssize_t current_pos = -1;
 };

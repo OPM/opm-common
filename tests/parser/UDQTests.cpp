@@ -50,7 +50,8 @@ Schedule make_schedule(const std::string& input) {
 
 BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQFunctionTable udqft;
-    UDQDefine def_add(udqft, "WU", {"WOPR", "+", "1"});
+    UDQParams udqp;
+    UDQDefine def_add(udqp, "WU", {"WOPR", "+", "1"});
     SummaryState st;
     UDQContext context(udqft, st);
 
@@ -62,8 +63,8 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
 
 
 BOOST_AUTO_TEST_CASE(UDQ_TABLE_EXCEPTION) {
-    UDQFunctionTable udqft;
-    BOOST_CHECK_THROW(UDQDefine(udqft, "WU", {"TUPRICE[WOPR]"}), std::invalid_argument);
+    UDQParams udqp;
+    BOOST_CHECK_THROW(UDQDefine(udqp, "WU", {"TUPRICE[WOPR]"}), std::invalid_argument);
 }
 
 
@@ -113,9 +114,10 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
 
 
 BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
-    UDQFunctionTable udqft;
+    UDQParams udqp;
+    UDQFunctionTable udqft(udqp);
     {
-        UDQDefine def(udqft, "WUBHP", {"WBHP"});
+        UDQDefine def(udqp, "WUBHP", {"WBHP"});
         SummaryState st;
         UDQContext context(udqft, st);
 
@@ -129,7 +131,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         BOOST_CHECK_EQUAL( res["W3"].value(), 3 );
     }
     {
-        UDQDefine def(udqft, "WUBHP", {"WBHP" , "'P*'"});
+        UDQDefine def(udqp, "WUBHP", {"WBHP" , "'P*'"});
         SummaryState st;
         UDQContext context(udqft, st);
 
@@ -146,7 +148,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         BOOST_CHECK_EQUAL( res["I1"].defined(), false);
     }
     {
-        UDQDefine def(udqft, "WUBHP", {"WBHP" , "'P1'"});
+        UDQDefine def(udqp, "WUBHP", {"WBHP" , "'P1'"});
         SummaryState st;
         UDQContext context(udqft, st);
 
@@ -156,7 +158,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     }
 
     {
-        UDQDefine def(udqft, "WUBHP", {"NINT" , "(", "WBHP", ")"});
+        UDQDefine def(udqp, "WUBHP", {"NINT" , "(", "WBHP", ")"});
         SummaryState st;
         UDQContext context(udqft, st);
         st.add_well_var("P1", "WBHP", 4);
@@ -175,7 +177,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     // scalar context and that is not appropriate for the WUBHP variable which
     // should evaluate to a full well set.
     {
-        UDQDefine def(udqft, "WUBHP", {"SUM" , "(", "WBHP", ")"});
+        UDQDefine def(udqp, "WUBHP", {"SUM" , "(", "WBHP", ")"});
         SummaryState st;
         UDQContext context(udqft, st);
 
@@ -804,8 +806,9 @@ BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
 
 BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQFunctionTable udqft;
-    UDQDefine def_pow1(udqft, "WU", {"WOPR", "+", "WWPR", "*", "WGOR", "^", "WWIR"});
-    UDQDefine def_pow2(udqft, "WU", {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WOPT", ")"});
+    UDQParams udqp;
+    UDQDefine def_pow1(udqp, "WU", {"WOPR", "+", "WWPR", "*", "WGOR", "^", "WWIR"});
+    UDQDefine def_pow2(udqp, "WU", {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WOPT", ")"});
     SummaryState st;
     UDQContext context(udqft, st);
 
@@ -823,7 +826,8 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
 
 BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     UDQFunctionTable udqft;
-    UDQDefine def_cmp(udqft, "WU", {"WOPR", ">", "WWPR", "+", "WGOR", "*", "WWIR"});
+    UDQParams udqp;
+    UDQDefine def_cmp(udqp, "WU", {"WOPR", ">", "WWPR", "+", "WGOR", "*", "WWIR"});
     SummaryState st;
     UDQContext context(udqft, st);
 
@@ -842,15 +846,22 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     BOOST_CHECK_EQUAL( res_cmp["P2"].value() , 0.0);
 }
 
+/*BOOST_AUTO_TEST_CASE(UDQPARSE_ERROR) {
+    setUDQFunctionTable udqft;
+    UDQDefine def1(udqft, "WUBHP", {"WWCT", "+"});
+}
+*/
+
 
 BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
+    UDQParams udqp;
     UDQFunctionTable udqft;
-    UDQDefine def_add(udqft, "WU2OPR", {"WOPR", "+", "WOPR"});
-    UDQDefine def_sub(udqft, "WU2OPR", {"WOPR", "-", "WOPR"});
-    UDQDefine def_mul(udqft, "WU2OPR", {"WOPR", "*", "WOPR"});
-    UDQDefine def_div(udqft, "WU2OPR", {"WOPR", "/", "WOPR"});
-    UDQDefine def_muladd(udqft , "WUX", {"WOPR", "+", "WOPR", "*", "WOPR"});
-    UDQDefine def_wuwct(udqft , "WUWCT", {"WWPR", "/", "(", "WOPR", "+", "WWPR", ")"});
+    UDQDefine def_add(udqp, "WU2OPR", {"WOPR", "+", "WOPR"});
+    UDQDefine def_sub(udqp, "WU2OPR", {"WOPR", "-", "WOPR"});
+    UDQDefine def_mul(udqp, "WU2OPR", {"WOPR", "*", "WOPR"});
+    UDQDefine def_div(udqp, "WU2OPR", {"WOPR", "/", "WOPR"});
+    UDQDefine def_muladd(udqp , "WUX", {"WOPR", "+", "WOPR", "*", "WOPR"});
+    UDQDefine def_wuwct(udqp , "WUWCT", {"WWPR", "/", "(", "WOPR", "+", "WWPR", ")"});
     SummaryState st;
     UDQContext context(udqft, st);
 
@@ -909,16 +920,37 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
 
 
 BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
-    UDQFunctionTable udqft;
-    UDQDefine def1(udqft, "WUBHP", {"1/(WWCT", "'W1*')"});
+    UDQParams udqp;
+    UDQDefine def1(udqp, "WUBHP", {"1/(WWCT", "'W1*')"});
     std::vector<std::string> tokens1 = {"1", "/", "(", "WWCT", "W1*", ")"};
     BOOST_CHECK_EQUAL_COLLECTIONS(tokens1.begin(), tokens1.end(),
                                   def1.tokens.begin(), def1.tokens.end());
 
 
-    UDQDefine def2(udqft, "WUBHP", {"2*(1",  "+" , "WBHP)"});
+    UDQDefine def2(udqp, "WUBHP", {"2*(1",  "+" , "WBHP)"});
     std::vector<std::string> tokens2 = {"2", "*", "(", "1", "+", "WBHP", ")"};
     BOOST_CHECK_EQUAL_COLLECTIONS(tokens2.begin(), tokens2.end(),
                                   def2.tokens.begin(), def2.tokens.end());
 }
 
+
+BOOST_AUTO_TEST_CASE(UDQPARSE_PARSECONTEXT) {
+    UDQParams udqp;
+    ParseContext parseContext;
+    ErrorGuard errors;
+    std::vector<std::string> tokens = {"WBHP", "+"};
+    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::IGNORE);
+    {
+        UDQDefine def1(udqp, "WUBHP", tokens, parseContext, errors);
+        SummaryState st;
+        UDQContext context(UDQFunctionTable(udqp), st);
+        st.add_well_var("P1", "WOPR", 1);
+        printf("Have returned with def1 \n");
+
+        auto res = def1.eval_wells(context);
+        BOOST_CHECK_EQUAL(res["P1"].value(), udqp.undefinedValue());
+    }
+
+    parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP", tokens, parseContext, errors), std::invalid_argument);
+}

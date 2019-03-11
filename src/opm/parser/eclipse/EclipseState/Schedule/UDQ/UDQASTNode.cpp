@@ -43,6 +43,12 @@ UDQASTNode::UDQASTNode(UDQTokenType type) :
     throw std::invalid_argument("The one argument constructor is only available for error and end");
 }
 
+UDQASTNode::UDQASTNode(double scalar_value) :
+    type(UDQTokenType::number),
+    scalar_value(scalar_value)
+{}
+
+
 
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,

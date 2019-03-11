@@ -20,6 +20,7 @@
 #include <iostream>
 #include <cstring>
 
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include "UDQParser.hpp"
 
 namespace Opm {
@@ -145,6 +146,8 @@ UDQASTNode UDQParser::parse_pow() {
         auto func_node = current;
         this->next();
         auto right = this->parse_mul();
+        if (right.type == UDQTokenType::end)
+            return UDQASTNode(UDQTokenType::error);
 
         return UDQASTNode(current.type, current.value, left, right);
     }
@@ -164,6 +167,8 @@ UDQASTNode UDQParser::parse_mul() {
         auto func_node = current;
         this->next();
         auto right = this->parse_mul();
+        if (right.type == UDQTokenType::end)
+            return UDQASTNode(UDQTokenType::error);
 
         return UDQASTNode(current.type, current.value, left, right);
     }
@@ -180,8 +185,10 @@ UDQASTNode UDQParser::parse_add() {
 
     if (current.type == UDQTokenType::binary_op_add || current.type == UDQTokenType::binary_op_sub) {
         auto func_node = current;
-        this->next();
+        auto next = this->next();
         auto right = this->parse_add();
+        if (right.type == UDQTokenType::end)
+            return UDQASTNode(UDQTokenType::error);
 
         return UDQASTNode(current.type, current.value, left, right);
     }
@@ -195,10 +202,11 @@ UDQASTNode UDQParser::parse_add() {
 
      auto cmp = a + b < c;
 
-  The sum (a+b) is evaluated and then compared with c, that is the the order of
+  The sum (a+b) is evaluated and then compared with c, that is the order of
   presedence implemented here. But reading the eclipse UDQ manual one can get
   the imporession that the relation operators should bind "very strong", i.e.
-  that (b < c) should be evaluated first, and then the result added to a.
+  that (b < c) should be evaluated first, and then the result of the comparison
+  added to a.
 */
 
 UDQASTNode UDQParser::parse_cmp() {
@@ -211,6 +219,8 @@ UDQASTNode UDQParser::parse_cmp() {
         auto func_node = current;
         this->next();
         auto right = this->parse_cmp();
+        if (right.type == UDQTokenType::end)
+            return UDQASTNode(UDQTokenType::error);
 
         return UDQASTNode(current.type, current.value, left, right);
     }
@@ -222,23 +232,29 @@ UDQASTNode UDQParser::parse_cmp() {
 
 
 
-UDQASTNode UDQParser::parse(const UDQFunctionTable& udqft, const std::vector<std::string>& tokens)
+UDQASTNode UDQParser::parse(const UDQParams& udq_params, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
 {
-    UDQParser parser(udqft, tokens);
+    UDQParser parser(udq_params, tokens);
     parser.next();
 
     auto tree = parser.parse_cmp();
     auto current = parser.current();
-    if (current.type != UDQTokenType::end) {
-        size_t index = parser.current_pos;
-        throw std::invalid_argument("Extra unhandled data starting with token[" + std::to_string(index) + "] = " + current.value);
-    }
 
-    if (tree.type == UDQTokenType::error)
-        throw std::invalid_argument("Failed to parse UDQ DEFINE tokens");
+    if (current.type != UDQTokenType::end || tree.type == UDQTokenType::error) {
+        if (current.type != UDQTokenType::end) {
+            size_t index = parser.current_pos;
+            std::string msg = "Extra unhandled data starting with token[" + std::to_string(index) + "] = " + current.value;
+            parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
+        }
+
+        if (tree.type == UDQTokenType::error) {
+            std::string msg = "Failed to parse UDQ expression";
+            parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
+        }
+        return UDQASTNode( udq_params.undefinedValue() );
+    }
 
     return tree;
 }
-
 
 }

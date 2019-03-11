@@ -55,8 +55,7 @@ namespace Opm {
             double value = std::stod(data.back());
             this->m_assignments.emplace_back( quantity, selector, value );
         } else
-            this->m_expressions.emplace_back(this->udqft, quantity, data);
-
+            this->m_definitions.emplace_back(this->udq_params, quantity, data);
         this->keywords.insert(quantity);
     }
 
