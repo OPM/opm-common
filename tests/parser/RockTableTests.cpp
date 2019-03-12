@@ -1,0 +1,102 @@
+/*
+  Copyright (C) 2013 by Andreas Lauser
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#define BOOST_TEST_MODULE RockTableTests
+
+#include <boost/test/unit_test.hpp>
+
+#include <opm/parser/eclipse/Parser/ParserKeywords/P.hpp>
+#include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+// generic table classes
+#include <opm/parser/eclipse/EclipseState/Tables/SimpleTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
+
+// keyword specific table classes
+//#include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/filesystem.hpp>
+
+#include <stdexcept>
+#include <iostream>
+
+using namespace Opm;
+
+BOOST_AUTO_TEST_CASE( Rock2d ) {
+    const char *input =
+            "TABDIMS\n"
+            "1 1 /\n"
+            "\n"
+            "ROCKCOMP\n"
+            " REVERS 2 /\n"
+            "ROCK2D\n"
+            " 0.0     0.01\n"
+            "         0.02\n"
+            "         0.03 / \n"
+            "10.0     0.11 \n"
+            "         0.12 \n"
+            "         0.13/ \n"
+            "20.0     0.21\n"
+            "         0.22\n"
+            "         0.23/\n"
+            " / \n"
+            "0.7      0.04 \n"
+            "         0.05 /\n"
+            "10.0     0.14\n"
+            "         0.15/\n"
+            "20.0     0.24\n"
+            "         0.25/\n"
+            " / \n"
+            "ROCKWNOD\n"
+            "0.0\n"
+            "0.5\n"
+            "1.0 /\n"
+            "0.9\n"
+            "1.0 /\n"
+            "\n";
+
+    auto deck = Parser().parseString( input );
+    TableManager tables( deck );
+
+    const auto& rock2d = tables.getRock2dTables();
+    const auto& rockwnod = tables.getRockwnodTables();
+
+    const auto& rec1 = rock2d[0];
+    const auto& rec2 = rock2d.at(1);
+
+    const RockwnodTable& rockwnodTable = rockwnod.getTable<RockwnodTable>(0);
+
+    BOOST_CHECK_THROW( rock2d.at(2), std::out_of_range );
+    BOOST_REQUIRE_EQUAL(3, rec1.size());
+    BOOST_REQUIRE_EQUAL(3, rec2.size());
+    BOOST_REQUIRE_EQUAL(0.0, rec1.getPressureValue(0));
+    BOOST_REQUIRE_EQUAL(0.13, rec1.getPvmultValue(1,2));
+    BOOST_REQUIRE_EQUAL(0.0, rockwnodTable.getSaturationColumn()[0]);
+
+    //BOOST_CHECK_CLOSE( 2, rec1.size() , 1e-5 );
+}

@@ -254,10 +254,12 @@ set( keywords
      000_Eclipse100/R/RESTART
      000_Eclipse100/R/RKTRMDIR
      000_Eclipse100/R/ROCK
+     000_Eclipse100/R/ROCK2D
      000_Eclipse100/R/ROCKCOMP
      000_Eclipse100/R/ROCKNUM
      000_Eclipse100/R/ROCKOPTS
      000_Eclipse100/R/ROCKTAB
+     000_Eclipse100/R/ROCKWNOD
      000_Eclipse100/R/RPTGRID
      000_Eclipse100/R/RPTONLY
      000_Eclipse100/R/RPTONLYO

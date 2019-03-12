@@ -57,6 +57,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
@@ -132,6 +133,11 @@ namespace Opm {
             m_rtemp = deck.getKeyword("RTEMP").getRecord(0).getItem("TEMP").getSIDouble( 0 );
         else if (deck.hasKeyword( "RTEMPA" ) )
             m_rtemp = deck.getKeyword("RTEMPA").getRecord(0).getItem("TEMP").getSIDouble( 0 );
+
+        if ( deck.hasKeyword( "ROCK2D")) {
+            initRock2dTables(deck);
+        }
+
     }
 
     void TableManager::initDims(const Deck& deck) {
@@ -274,6 +280,7 @@ namespace Opm {
                 numRocktabTables = static_cast<size_t>(record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0));
             }
             addTables( "ROCKTAB", numRocktabTables);
+            addTables( "ROCKWNOD", numRocktabTables);
         }
 
 
@@ -324,6 +331,16 @@ namespace Opm {
             initSimpleTableContainer<PmiscTable>(deck, "PMISC", numMiscibleTables);
             initSimpleTableContainer<TlpmixpaTable>(deck, "TLPMIXPA", numMiscibleTables);
 
+        }
+        {
+            size_t numRocktabTables = ParserKeywords::ROCKCOMP::NTROCC::defaultValue;
+
+            if (deck.hasKeyword<ParserKeywords::ROCKCOMP>()) {
+                const auto& keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+                const auto& record = keyword.getRecord(0);
+                numRocktabTables = static_cast<size_t>(record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0));
+            }
+            initSimpleTableContainer<RockwnodTable>(deck, "ROCKWNOD", numRocktabTables);
         }
 
         initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims.getNumPVTTables());
@@ -574,10 +591,41 @@ namespace Opm {
                 std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption );
                 container.addTable( tableIdx , table );
             }
-        }
+        }        
     }
+    void TableManager::initRock2dTables(const Deck& deck) {
 
+        if (!deck.hasKeyword<ParserKeywords::ROCK2D>())
+            return;
 
+        if (!deck.hasKeyword("ROCKCOMP")) {
+            OpmLog::error("ROCKCOMP must be present if ROCK2D is used");
+        }
+
+        if (!deck.hasKeyword("ROCKWNOD")) {
+            OpmLog::error("ROCKWNOD must be present if ROCK2D is used");
+        }
+
+        const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+        const auto& record = rockcompKeyword.getRecord( 0 );
+        size_t numTables = record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0);
+        m_rock2dTables.resize(numTables);
+
+        const auto& keyword = deck.getKeyword<ParserKeywords::ROCK2D>();
+        size_t numEntries = keyword.size();
+        size_t regionIdx = 0;
+        size_t tableIdx = 0;
+        for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+            if (keyword.getRecord(lineIdx).getItem("PRESSURE").size() > 0) {
+                m_rock2dTables[regionIdx].init(keyword.getRecord(lineIdx), tableIdx);
+                tableIdx++;
+            } else { // next region
+                tableIdx = 0;
+                regionIdx++;
+            }
+        }
+        assert(regionIdx == numTables);
+    }
 
         size_t TableManager::numFIPRegions() const {
         size_t ntfip = m_tabdims.getNumFIPRegions();
@@ -755,6 +803,15 @@ namespace Opm {
     const std::vector<PvtoTable>& TableManager::getPvtoTables() const {
         return m_pvtoTables;
     }
+
+    const std::vector<Rock2dTable>& TableManager::getRock2dTables() const {
+        return m_rock2dTables;
+    }
+
+    const TableContainer& TableManager::getRockwnodTables() const {
+        return getTables("ROCKWNOD");
+    }
+
 
     const PvtwTable& TableManager::getPvtwTable() const {
         return this->m_pvtwTable;

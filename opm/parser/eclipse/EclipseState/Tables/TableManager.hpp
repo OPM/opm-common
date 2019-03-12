@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp> // Phase::PhaseEnum
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
@@ -118,6 +119,9 @@ namespace Opm {
 
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
+        const std::vector<Rock2dTable>& getRock2dTables() const;
+        const TableContainer& getRockwnodTables() const;
+
         const PvtwTable& getPvtwTable() const;
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
@@ -161,6 +165,7 @@ namespace Opm {
         void initSkprwatTables(const Deck& deck);
         void initSkprpolyTables(const Deck& deck);
 
+        void initRock2dTables(const Deck& deck);
 
 
 
@@ -291,6 +296,7 @@ namespace Opm {
         std::map<std::string , TableContainer> m_simpleTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
+        std::vector<Rock2dTable> m_rock2dTables;
         PvtwTable m_pvtwTable;
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;

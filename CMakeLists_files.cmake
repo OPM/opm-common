@@ -124,6 +124,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/TableManager.cpp
     src/opm/parser/eclipse/EclipseState/Tables/TableSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/Tables.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Rock2dTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParser.cpp
@@ -236,6 +237,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/PORVTests.cpp
     tests/parser/RawKeywordTests.cpp
     tests/parser/RestartConfigTests.cpp
+    tests/parser/RockTableTests.cpp
     tests/parser/RunspecTests.cpp
     tests/parser/SatfuncPropertyInitializersTests.cpp
     tests/parser/ScheduleTests.cpp
@@ -467,6 +469,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/SgwfnTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp
        opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp
        opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp
        opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp
@@ -531,6 +535,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQExpression.hpp
        opm/parser/eclipse/Deck/DeckItem.hpp
        opm/parser/eclipse/Deck/Deck.hpp
        opm/parser/eclipse/Deck/Section.hpp
