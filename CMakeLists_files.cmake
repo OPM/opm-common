@@ -125,6 +125,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Tables/TableSchema.cpp
     src/opm/parser/eclipse/EclipseState/Tables/Tables.cpp
     src/opm/parser/eclipse/EclipseState/Tables/Rock2dTable.cpp
+    src/opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParser.cpp
@@ -470,6 +471,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp
        opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp
        opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp
        opm/parser/eclipse/EclipseState/Tables/OverburdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/ColumnSchema.hpp

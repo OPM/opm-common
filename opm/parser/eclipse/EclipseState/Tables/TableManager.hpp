@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
@@ -120,6 +121,7 @@ namespace Opm {
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
         const std::vector<Rock2dTable>& getRock2dTables() const;
+        const std::vector<Rock2dtrTable>& getRock2dtrTables() const;
         const TableContainer& getRockwnodTables() const;
         const TableContainer& getOverburdTables() const;
 
@@ -167,8 +169,7 @@ namespace Opm {
         void initSkprpolyTables(const Deck& deck);
 
         void initRock2dTables(const Deck& deck);
-
-
+        void initRock2dtrTables(const Deck& deck);
 
         /**
          * JFUNC
@@ -298,7 +299,8 @@ namespace Opm {
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
         std::vector<Rock2dTable> m_rock2dTables;
-        PvtwTable m_pvtwTable;
+        std::vector<Rock2dtrTable> m_rock2dtrTables;
+        PvtwTable m_pvtwTable;        
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;
         RockTable m_rockTable;

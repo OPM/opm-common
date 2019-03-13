@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2019 Norce
+  Copyright (C) 2019 by Norce
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -16,21 +16,29 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef OPM_PARSER_ROCKWNOD_TABLE_HPP
-#define OPM_PARSER_ROCKWNOD_TABLE_HPP
+#ifndef OPM_PARSER_ROCK2DTR_TABLE_HPP
+#define	OPM_PARSER_ROCK2DTR_TABLE_HPP
 
-#include "SimpleTable.hpp"
+#include <vector>
 
 namespace Opm {
 
-    class DeckItem;
+    class DeckKeyword;
 
-    class RockwnodTable : public SimpleTable {
+    class Rock2dtrTable {
     public:
-        RockwnodTable( const DeckItem& item );
+        Rock2dtrTable();
+        void init(const Opm::DeckRecord& record, size_t tableIdx);
+        size_t size() const;
+        double getPressureValue(size_t index) const;
+        double getTransMultValue(size_t pressureIndex, size_t saturationIndex ) const;
 
-        const TableColumn& getSaturationColumn() const;
+    protected:
+        std::vector< std::vector <double> > m_transMultValues;
+        std::vector< double > m_pressureValues;
+
     };
+
 }
 
 #endif

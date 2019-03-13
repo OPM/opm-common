@@ -139,6 +139,11 @@ namespace Opm {
             initRock2dTables(deck);
         }
 
+        if ( deck.hasKeyword( "ROCK2DTR")) {
+            initRock2dtrTables(deck);
+        }
+
+
     }
 
     void TableManager::initDims(const Deck& deck) {
@@ -630,6 +635,45 @@ namespace Opm {
         assert(regionIdx == numTables);
     }
 
+    void TableManager::initRock2dtrTables(const Deck& deck) {
+
+        if (!deck.hasKeyword<ParserKeywords::ROCK2DTR>())
+            return;
+
+        if (!deck.hasKeyword("ROCKCOMP")) {
+            OpmLog::error("ROCKCOMP must be present if ROCK2DTR is used");
+        }
+
+        if (!deck.hasKeyword("ROCKWNOD")) {
+            OpmLog::error("ROCKWNOD must be present if ROCK2DTR is used");
+        }
+
+        if (!deck.hasKeyword("ROCK2D")) {
+            OpmLog::error("ROCK2D must be present if ROCK2DTR is used");
+        }
+
+        const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+        const auto& record = rockcompKeyword.getRecord( 0 );
+        size_t numTables = record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0);
+        m_rock2dtrTables.resize(numTables);
+
+        const auto& keyword = deck.getKeyword<ParserKeywords::ROCK2DTR>();
+        size_t numEntries = keyword.size();
+        size_t regionIdx = 0;
+        size_t tableIdx = 0;
+        for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+            if (keyword.getRecord(lineIdx).getItem("PRESSURE").size() > 0) {
+                m_rock2dtrTables[regionIdx].init(keyword.getRecord(lineIdx), tableIdx);
+                tableIdx++;
+            } else { // next region
+                tableIdx = 0;
+                regionIdx++;
+            }
+        }
+        assert(regionIdx == numTables);
+    }
+
+
         size_t TableManager::numFIPRegions() const {
         size_t ntfip = m_tabdims.getNumFIPRegions();
         if (m_regdims->getNTFIP( ) > ntfip)
@@ -809,6 +853,10 @@ namespace Opm {
 
     const std::vector<Rock2dTable>& TableManager::getRock2dTables() const {
         return m_rock2dTables;
+    }
+
+    const std::vector<Rock2dtrTable>& TableManager::getRock2dtrTables() const {
+        return m_rock2dtrTables;
     }
 
     const TableContainer& TableManager::getRockwnodTables() const {

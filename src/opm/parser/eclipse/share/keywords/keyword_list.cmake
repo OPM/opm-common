@@ -256,6 +256,7 @@ set( keywords
      000_Eclipse100/R/RKTRMDIR
      000_Eclipse100/R/ROCK
      000_Eclipse100/R/ROCK2D
+     000_Eclipse100/R/ROCK2DTR
      000_Eclipse100/R/ROCKCOMP
      000_Eclipse100/R/ROCKNUM
      000_Eclipse100/R/ROCKOPTS
