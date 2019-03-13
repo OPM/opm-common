@@ -58,6 +58,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
@@ -281,6 +282,7 @@ namespace Opm {
             }
             addTables( "ROCKTAB", numRocktabTables);
             addTables( "ROCKWNOD", numRocktabTables);
+            addTables( "OVERBURD", numRocktabTables);
         }
 
 
@@ -341,6 +343,7 @@ namespace Opm {
                 numRocktabTables = static_cast<size_t>(record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0));
             }
             initSimpleTableContainer<RockwnodTable>(deck, "ROCKWNOD", numRocktabTables);
+            initSimpleTableContainer<OverburdTable>(deck, "OVERBURD", numRocktabTables);
         }
 
         initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims.getNumPVTTables());
@@ -812,6 +815,9 @@ namespace Opm {
         return getTables("ROCKWNOD");
     }
 
+    const TableContainer& TableManager::getOverburdTables() const {
+        return getTables("OVERBURD");
+    }
 
     const PvtwTable& TableManager::getPvtwTable() const {
         return this->m_pvtwTable;

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 by Andreas Lauser
+  Copyright (C) 2019 by Norce
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -34,6 +34,7 @@
 //#include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SwofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
@@ -54,6 +55,14 @@ BOOST_AUTO_TEST_CASE( Rock2d ) {
             "\n"
             "ROCKCOMP\n"
             " REVERS 2 /\n"
+            "\n"
+            "OVERBURD\n"
+            "1 1.0\n"
+            "10 2.0\n"
+            " / \n"
+            "1 1.0\n"
+            "10 2.0\n"
+            " / \n"
             "ROCK2D\n"
             " 0.0     0.01\n"
             "         0.02\n"
@@ -85,18 +94,21 @@ BOOST_AUTO_TEST_CASE( Rock2d ) {
 
     const auto& rock2d = tables.getRock2dTables();
     const auto& rockwnod = tables.getRockwnodTables();
+    const auto& overburd = tables.getOverburdTables();
 
     const auto& rec1 = rock2d[0];
     const auto& rec2 = rock2d.at(1);
 
     const RockwnodTable& rockwnodTable = rockwnod.getTable<RockwnodTable>(0);
-
+    const OverburdTable& overburdTable = overburd.getTable<OverburdTable>(0);
     BOOST_CHECK_THROW( rock2d.at(2), std::out_of_range );
     BOOST_REQUIRE_EQUAL(3, rec1.size());
     BOOST_REQUIRE_EQUAL(3, rec2.size());
     BOOST_REQUIRE_EQUAL(0.0, rec1.getPressureValue(0));
     BOOST_REQUIRE_EQUAL(0.13, rec1.getPvmultValue(1,2));
     BOOST_REQUIRE_EQUAL(0.0, rockwnodTable.getSaturationColumn()[0]);
+    BOOST_REQUIRE_EQUAL(1, overburdTable.getDepthColumn()[0]);
+    BOOST_REQUIRE_EQUAL(1.0, overburdTable.getOverburdenPressureColumn()[0]);
 
     //BOOST_CHECK_CLOSE( 2, rec1.size() , 1e-5 );
 }

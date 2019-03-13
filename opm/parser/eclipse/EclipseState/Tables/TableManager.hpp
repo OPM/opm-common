@@ -121,6 +121,7 @@ namespace Opm {
         const std::vector<PvtoTable>& getPvtoTables() const;
         const std::vector<Rock2dTable>& getRock2dTables() const;
         const TableContainer& getRockwnodTables() const;
+        const TableContainer& getOverburdTables() const;
 
         const PvtwTable& getPvtwTable() const;
         const PvcdoTable& getPvcdoTable() const;
