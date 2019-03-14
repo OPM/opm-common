@@ -310,8 +310,8 @@ namespace {
 	int sumConn = 0;
 	if (noConnectionsSegment(compSet, segSet, segIndex) > 0) {
 	// add up the number of connections for å segments with lower segment index than current segment
-	    for (int ind = 0; ind <= segIndex; ind++) {
-		int addCon = (ind == static_cast<int>(segIndex)) ? 1 : noConnectionsSegment(compSet, segSet, ind);
+    for (size_t ind = 0; ind <= segIndex; ind++) {
+          size_t addCon = (ind == segIndex) ? 1 : noConnectionsSegment(compSet, segSet, ind);
 		sumConn += addCon;
 	    }
 	}

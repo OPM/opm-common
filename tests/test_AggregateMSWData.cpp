@@ -696,7 +696,6 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
     // RSEG (PROD)  + (WINJ)
     {
 	// well no 1 - PROD
-	int welNo = 1;
 	const std::string wname = "PROD";
 	int segNo = 1;
 	// 'stringSegNum' is one-based (1 .. #segments inclusive)
@@ -704,7 +703,6 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 
         const auto  i0 = (segNo-1)*ih.nrsegz;
 	const auto&  units = simCase.es.getUnits();
-	using M = ::Opm::UnitSystem::measure;
 	const auto gfactor = (units.getType() == Opm::UnitSystem::UnitType::UNIT_TYPE_FIELD)
 		    ? 0.1781076 : 0.001;
         const auto& rseg = amswd.getRSeg();
@@ -731,7 +729,6 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
   
     {
     // well no 2 - WINJ
-	int welNo = 2;
 	const std::string wname = "WINJ";
 	int segNo = 1;
 	// 'stringSegNum' is one-based (1 .. #segments inclusive)
