@@ -46,12 +46,13 @@ namespace Opm {
                            const double segDistStart= 0.0,
                            const double segDistEnd= 0.0,
                            const bool defaultSatTabId = true);
-        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, std::size_t& totNC);
+        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
         void add( Connection );
         size_t size() const;
+        size_t inputSize() const;
         const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
@@ -59,9 +60,6 @@ namespace Opm {
 
         const_iterator begin() const { return this->m_connections.begin(); }
         const_iterator end() const { return this->m_connections.end(); }
-        
-        std::size_t totNoConn() const { return this->m_connections.size(); }
-        
         void filter(const EclipseGrid& grid);
         bool allConnectionsShut() const;
         /// Order connections irrespective of input order.
@@ -101,6 +99,7 @@ namespace Opm {
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
 
         int headI, headJ;
+        size_t num_removed = 0;
         std::vector< Connection > m_connections;
     };
 }

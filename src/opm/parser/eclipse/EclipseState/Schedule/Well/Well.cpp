@@ -402,13 +402,12 @@ namespace Opm {
     }
 
     std::size_t Well::getTotNoConn() const {
-        return this->m_totNoConn;
+        std::size_t time_step = this->timesteps;
+        const auto& connections = this->getConnections(time_step);
+        return connections.inputSize();
     }
 
-    void Well::setTotNoConn(std::size_t noConn)  {
-        m_totNoConn = noConn;
-    }
-    
+
     const std::string Well::getGroupName(size_t time_step) const {
         return m_groupName.get(time_step);
     }
@@ -709,11 +708,7 @@ namespace Opm {
 
     void Well::handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
         WellConnections * connections = new WellConnections(this->getConnections(time_step));
-	std::size_t totNC = 0;
-        connections->loadCOMPDAT(record, grid, eclipseProperties, totNC);
-	if (totNC > 0) {
-	    this->setTotNoConn(totNC);
-	}
+        connections->loadCOMPDAT(record, grid, eclipseProperties);
         this->updateWellConnections(time_step, connections);
     }
 
@@ -721,11 +716,7 @@ namespace Opm {
     void Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, size_t time_step) {
         const auto& segment_set = this->getWellSegments(time_step);
         const auto& completion_set = this->getConnections( time_step );
-	std::size_t totNC = 0;
-        WellConnections * new_connection_set = newConnectionsWithSegments(keyword, completion_set, segment_set, grid, totNC);
-	if (totNC > 0) {
-	    this->setTotNoConn(totNC);
-	}
+        WellConnections * new_connection_set = newConnectionsWithSegments(keyword, completion_set, segment_set, grid);
         this->updateWellConnections(time_step, new_connection_set);
     }
 

@@ -192,7 +192,7 @@ namespace {
 			    defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, std::size_t& totNC) {
+    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
         const auto& permx = eclipseProperties.getDoubleGridProperty("PERMX").getData();
         const auto& permy = eclipseProperties.getDoubleGridProperty("PERMY").getData();
         const auto& permz = eclipseProperties.getDoubleGridProperty("PERMZ").getData();
@@ -298,7 +298,6 @@ namespace {
             if (grid.cellActive(I, J, k)) {
 		if (prev == this->m_connections.end()) {
 		    std::size_t noConn = this->m_connections.size();
-		    totNC = noConn+1;
 		    this->addConnection(I,J,k,
                                     grid.getCellDepth( I,J,k ),
                                     state,
@@ -342,6 +341,10 @@ namespace {
     }
 
 
+
+    size_t WellConnections::inputSize() const {
+        return m_connections.size() + this->num_removed;
+    }
 
     size_t WellConnections::size() const {
         return m_connections.size();
@@ -464,6 +467,7 @@ namespace {
         auto new_end = std::remove_if(m_connections.begin(),
                                       m_connections.end(),
                                       [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
+        this->num_removed += std::distance(new_end, m_connections.end());
         m_connections.erase(new_end, m_connections.end());
     }
 }

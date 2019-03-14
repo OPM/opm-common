@@ -50,7 +50,7 @@ namespace Opm {
     {
     }
 
-    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword, const EclipseGrid& grid, std::size_t& totNC ) {
+    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword, const EclipseGrid& grid) {
 
         // only handle the second record here
         // The first record here only contains the well name
@@ -124,19 +124,17 @@ namespace Opm {
                 // will decide the segment number based on the distance in a process later.
             }
             if (!record.getItem<ParserKeywords::COMPSEGS::END_IJK>().hasValue(0)) { // only one compsegs
-		
-		if (grid.cellActive(I, J, K)) {
-		    std::size_t seqIndex = compsegs.size();
-		    totNC = seqIndex+1;
-		    compsegs.emplace_back( I, J, K,
-					  branch,
-					  distance_start, distance_end,
-					  direction,
-					  center_depth,
-					  segment_number,
-					  seqIndex
-				      );
-		}
+
+              if (grid.cellActive(I, J, K)) {
+                std::size_t seqIndex = compsegs.size();
+                compsegs.emplace_back( I, J, K,
+                                       branch,
+                                       distance_start, distance_end,
+                                       direction,
+                                       center_depth,
+                                       segment_number,
+                                       seqIndex);
+              }
             } else { // a range is defined. genrate a range of Compsegs
                 throw std::runtime_error("entering COMPSEGS entries with a range is not supported yet!");
             }
