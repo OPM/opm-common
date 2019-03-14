@@ -24,7 +24,8 @@
 
 namespace Opm {
 
-    UDQContext::UDQContext(const SummaryState& summary_state) :
+    UDQContext::UDQContext(const UDQFunctionTable& udqft, const SummaryState& summary_state) :
+        udqft(udqft),
         summary_state(summary_state)
     {
         for (const auto& pair : TimeMap::eclipseMonthIndices())
@@ -56,5 +57,18 @@ namespace Opm {
             return this->summary_state.get(key);
 
         return pair_ptr->second;
+    }
+
+    double UDQContext::get_well_var(const std::string& well, const std::string& var) const {
+        return this->summary_state.get_well_var(well, var);
+    }
+
+    std::vector<std::string> UDQContext::wells() const {
+        return this->summary_state.wells();
+    }
+
+
+    const UDQFunctionTable& UDQContext::function_table() const {
+        return this->udqft;
     }
 }

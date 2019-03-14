@@ -83,7 +83,7 @@ namespace Opm {
         m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
-        udq_config(this->m_timeMap, std::make_shared<UDQInput>())
+        udq_config(this->m_timeMap, std::make_shared<UDQInput>(deck))
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
@@ -943,7 +943,6 @@ namespace Opm {
     void Schedule::handleUDQ(const DeckKeyword& keyword, size_t currentStep) {
         const auto& current = *this->udq_config.get(currentStep);
         std::shared_ptr<UDQInput> new_udq = std::make_shared<UDQInput>(current);
-
         for (const auto& record : keyword)
             new_udq->add_record(record);
 

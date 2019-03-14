@@ -47,7 +47,10 @@ UDQVarType UDQAssign::var_type() const {
 }
 
 UDQWellSet UDQAssign::eval_wells(const std::vector<std::string>& wells) const {
-    UDQWellSet ws(m_keyword, wells);
+    if (this->m_var_type != UDQVarType::WELL_VAR)
+        throw std::runtime_error("This is a bug - eval_wells called for UDQ variable which is not a well quantity.");
+
+    UDQWellSet ws(this->m_keyword, wells);
 
     if (this->m_selector.empty())
         ws.assign(this->m_value);

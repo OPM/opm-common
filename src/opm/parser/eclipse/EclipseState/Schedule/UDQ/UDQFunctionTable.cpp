@@ -25,7 +25,11 @@
 
 namespace Opm {
 
-UDQFunctionTable::UDQFunctionTable(UDQParams& params) :
+UDQFunctionTable::UDQFunctionTable() :
+    UDQFunctionTable(UDQParams())
+{}
+
+UDQFunctionTable::UDQFunctionTable(const UDQParams& params) :
     params(params)
 {
     // SCalar functions
@@ -73,7 +77,6 @@ UDQFunctionTable::UDQFunctionTable(UDQParams& params) :
     this->insert_function( std::make_shared<UDQBinaryFunction>(">=", ge) );
     this->insert_function( std::make_shared<UDQBinaryFunction>("<=", le) );
 
-    this->insert_function( std::make_shared<UDQBinaryFunction>("^", UDQBinaryFunction::POW ));
     this->insert_function( std::make_shared<UDQBinaryFunction>("^", UDQBinaryFunction::POW ));
     this->insert_function( std::make_shared<UDQBinaryFunction>("<", UDQBinaryFunction::LT ));
     this->insert_function( std::make_shared<UDQBinaryFunction>(">", UDQBinaryFunction::GT ));
