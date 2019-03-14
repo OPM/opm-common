@@ -1,5 +1,4 @@
-{"name" : "OVERBURD" , "sections" : ["PROPS"], "num_tables" : {"keyword" : "TABDIMS" , "item" : "NTROCC"},
-	"size"     :  "UNKNOWN" ,
+{"name" : "OVERBURD" , "sections" : ["PROPS"], "size" : {"keyword" : "ROCKCOMP" , "item" : "NTROCC"},
         "items" : [
             {"name":"DEPTH", "value_type" : "DOUBLE", "size_type" : "ALL" , "dimension":"Length" },
             {"name":"OVERBURDENPRESSURE", "value_type":"DOUBLE", "size_type" : "ALL" , "dimension" : "Pressure"}

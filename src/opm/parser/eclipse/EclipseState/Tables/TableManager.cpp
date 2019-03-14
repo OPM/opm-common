@@ -632,7 +632,7 @@ namespace Opm {
                 regionIdx++;
             }
         }
-        assert(regionIdx == numTables);
+        assert(regionIdx == numTables - 1 );
     }
 
     void TableManager::initRock2dtrTables(const Deck& deck) {
@@ -670,7 +670,7 @@ namespace Opm {
                 regionIdx++;
             }
         }
-        assert(regionIdx == numTables);
+        assert(regionIdx == numTables - 1 );
     }
 
 
