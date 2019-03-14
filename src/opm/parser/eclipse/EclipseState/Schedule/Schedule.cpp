@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fnmatch.h>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -1896,6 +1897,64 @@ namespace Opm {
         auto tmp = const_cast< Schedule* >( this )->getWells( wellNamePattern );
         return { tmp.begin(), tmp.end() };
     }
+
+
+    /*
+      There are many SCHEDULE keyword which take a wellname as argument. In
+      addition to giving a fully qualified name like 'W1' you can also specify
+      shell wildcard patterns like like 'W*', you can get all the wells in the
+      well-list '*WL'[1] and the wellname '?' is used to get all the wells which
+      already have matched a condition in a ACTIONX keyword. This function
+      should be one-stop function to get all well names according to a input
+      pattern. The timestep argument is used to check that the wells have
+      indeewd been defined at the point in time we are considering.
+
+      [1]: The leading '*' in a WLIST name should not be interpreted as a shell
+           wildcard!
+    */
+
+
+    std::vector<std::string> Schedule::wellNames(const std::string& pattern, size_t timeStep, const std::vector<std::string>& matching_wells) const {
+        std::vector<std::string> names;
+
+        // WLIST
+        if (pattern[0] == '*') {
+            const auto& wlm = this->getWListManager(timeStep);
+            if (wlm.hasList(pattern)) {
+                const auto& wlist = wlm.getList(pattern);
+                return { wlist.begin(), wlist.end() };
+            } else
+                return {};
+        }
+
+        // Normal pattern matching
+        auto star_pos = pattern.find('*');
+        if (star_pos != std::string::npos) {
+            int flags = 0;
+            std::vector<std::string> names;
+            for (const auto& well_pair : this->m_wells) {
+                if (fnmatch(pattern.c_str(), well_pair.first.c_str(), flags) == 0) {
+                    if (well_pair.second.firstTimeStep() <= timeStep)
+                        names.push_back(well_pair.first);
+                }
+            }
+            return names;
+        }
+
+        // ACTIONX handler
+        if (pattern == "?") {
+            return { matching_wells.begin(), matching_wells.end() };
+        }
+
+        // Normal well name without any special characters
+        if (this->hasWell(pattern)) {
+            auto well = this->getWell(pattern);
+            if (well->firstTimeStep() <= timeStep)
+                return { pattern };
+        }
+        return {};
+    }
+
 
     std::vector< Well* > Schedule::getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells) {
         // If we arrive here during the handling the body of a ACTIONX keyword

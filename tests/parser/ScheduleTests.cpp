@@ -94,6 +94,9 @@ static Deck createDeckWTEST() {
             "     \'DEFAULT\'    \'OP\'   30   37  3.33       \'OIL\'  7*/   \n"
             "     \'ALLOW\'      \'OP\'   30   37  3.33       \'OIL\'  3*  YES / \n"
             "     \'BAN\'        \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "     \'W1\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "     \'W2\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "     \'W3\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
             "/\n"
 
             "COMPDAT\n"
@@ -123,6 +126,17 @@ static Deck createDeckWTEST() {
 
             "DATES             -- 2\n"
             " 10  JUL 2007 / \n"
+            "/\n"
+
+            "WELSPECS\n"
+            "     \'I1\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "     \'I2\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "     \'I3\'         \'OP\'   20   51  3.92       \'OIL\'  3*  NO /  \n"
+            "/\n"
+
+            "WLIST\n"
+            "  \'*ILIST\'  \'NEW\'  I1 /\n"
+            "  \'*ILIST\'  \'ADD\'  I2 /\n"
             "/\n"
 
             "WCONPROD\n"
@@ -2815,4 +2829,56 @@ BOOST_AUTO_TEST_CASE(WTEST_CONFIG) {
     BOOST_CHECK(wtest_config2.has("BAN"));
     BOOST_CHECK(wtest_config2.has("BAN", WellTestConfig::Reason::GROUP));
     BOOST_CHECK(!wtest_config2.has("BAN", WellTestConfig::Reason::PHYSICAL));
+}
+
+
+bool has(const std::vector<std::string>& l, const std::string& s) {
+    auto f = std::find(l.begin(), l.end(), s);
+    return (f != l.end());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(WellNames) {
+    auto deck = createDeckWTEST();
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Runspec runspec (deck);
+    Schedule schedule(deck, grid1 , eclipseProperties, runspec);
+
+    auto names = schedule.wellNames("NO_SUCH_WELL", 0);
+    BOOST_CHECK_EQUAL(names.size(), 0);
+
+    auto w1names = schedule.wellNames("W1", 0);
+    BOOST_CHECK_EQUAL(w1names.size(), 1);
+    BOOST_CHECK_EQUAL(w1names[0], "W1");
+
+    auto i1names = schedule.wellNames("11", 0);
+    BOOST_CHECK_EQUAL(i1names.size(), 0);
+
+    auto listnamese = schedule.wellNames("*NO_LIST", 0);
+    BOOST_CHECK_EQUAL( listnamese.size(), 0);
+
+    auto listnames0 = schedule.wellNames("*ILIST", 0);
+    BOOST_CHECK_EQUAL( listnames0.size(), 0);
+
+    auto listnames1 = schedule.wellNames("*ILIST", 2);
+    BOOST_CHECK_EQUAL( listnames1.size(), 2);
+    BOOST_CHECK( has(listnames1, "I1"));
+    BOOST_CHECK( has(listnames1, "I2"));
+
+    auto pnames1 = schedule.wellNames("I*", 0);
+    BOOST_CHECK_EQUAL(pnames1.size(), 0);
+
+    auto pnames2 = schedule.wellNames("W*", 0);
+    BOOST_CHECK_EQUAL(pnames2.size(), 3);
+    BOOST_CHECK( has(pnames2, "W1"));
+    BOOST_CHECK( has(pnames2, "W2"));
+    BOOST_CHECK( has(pnames2, "W3"));
+
+    auto anames = schedule.wellNames("?", 0, {"W1", "W2"});
+    BOOST_CHECK_EQUAL(anames.size(), 2);
+    BOOST_CHECK(has(anames, "W1"));
+    BOOST_CHECK(has(anames, "W2"));
 }
