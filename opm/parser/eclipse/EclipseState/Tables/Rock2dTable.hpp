@@ -30,6 +30,7 @@ namespace Opm {
         Rock2dTable();
         void init(const Opm::DeckRecord& record, size_t tableIdx);
         size_t size() const;
+        size_t sizeMultValues() const;
         double getPressureValue(size_t index) const;
         double getPvmultValue(size_t pressureIndex, size_t saturationIndex ) const;
 

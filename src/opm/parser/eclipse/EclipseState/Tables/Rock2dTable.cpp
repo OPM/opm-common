@@ -40,6 +40,11 @@ namespace Opm {
             return m_pressureValues.size();
         }
 
+        size_t Rock2dTable::sizeMultValues() const
+        {
+            return m_pvmultValues[0].size();
+        }
+
         double Rock2dTable::getPressureValue(size_t index) const
         {
             return m_pressureValues[index];

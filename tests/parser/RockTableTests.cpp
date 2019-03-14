@@ -119,14 +119,18 @@ BOOST_AUTO_TEST_CASE( Rock2d ) {
     const auto& rec2 = rock2d.at(1);
     const auto& rec1tr = rock2dtr[0];
 
-    const RockwnodTable& rockwnodTable = rockwnod.getTable<RockwnodTable>(0);
+    const RockwnodTable& rockwnodTable1 = rockwnod.getTable<RockwnodTable>(0);
+    const RockwnodTable& rockwnodTable2 = rockwnod.getTable<RockwnodTable>(1);
+
     const OverburdTable& overburdTable = overburd.getTable<OverburdTable>(0);
     BOOST_CHECK_THROW( rock2d.at(2), std::out_of_range );
     BOOST_REQUIRE_EQUAL(3, rec1.size());
     BOOST_REQUIRE_EQUAL(3, rec2.size());
     BOOST_REQUIRE_EQUAL(0.0, rec1.getPressureValue(0));
     BOOST_REQUIRE_EQUAL(0.13, rec1.getPvmultValue(1,2));
-    BOOST_REQUIRE_EQUAL(0.0, rockwnodTable.getSaturationColumn()[0]);
+    BOOST_REQUIRE_EQUAL(rec1.sizeMultValues(), rockwnodTable1.getSaturationColumn().size());
+    BOOST_REQUIRE_EQUAL(rec2.sizeMultValues(), rockwnodTable2.getSaturationColumn().size());
+    BOOST_REQUIRE_EQUAL(0.0, rockwnodTable1.getSaturationColumn()[0]);
     BOOST_REQUIRE_EQUAL(1, overburdTable.getDepthColumn()[0]);
     BOOST_REQUIRE_EQUAL(1.0, overburdTable.getOverburdenPressureColumn()[0]);
     BOOST_REQUIRE_EQUAL(0.0, rec1tr.getPressureValue(0));
