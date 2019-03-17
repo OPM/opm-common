@@ -104,6 +104,11 @@ namespace Opm {
 
         if (Section::hasSCHEDULE(deck))
             iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, eclipseProperties );
+
+#ifdef CHECK_WELLS
+        checkWells(parseContext, errors);
+#endif
+
     }
 
 
@@ -2214,5 +2219,10 @@ namespace Opm {
 
     }
 
-}
 
+#ifdef CHECK_WELLS
+    bool checkWells(const ParseContext& parseContext, ErrorGuard& errors) const {
+        return true;
+    }
+#endif
+}
