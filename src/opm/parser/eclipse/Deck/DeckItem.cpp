@@ -23,6 +23,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <algorithm>
+#include <string>
 #include <iostream>
 #include <stdexcept>
 #include <cmath>
@@ -354,6 +356,43 @@ bool DeckItem::operator==(const DeckItem& other) const {
 
 bool DeckItem::operator!=(const DeckItem& other) const {
     return !(*this == other);
+}
+
+
+bool DeckItem::to_bool(std::string string_value) {
+    std::transform(string_value.begin(), string_value.end(), string_value.begin(), toupper);
+
+    if (string_value == "TRUE")
+        return true;
+
+    if (string_value == "YES")
+        return true;
+
+    if (string_value == "T")
+        return true;
+
+    if (string_value == "Y")
+        return true;
+
+    if (string_value == "1")
+        return true;
+
+    if (string_value == "FALSE")
+        return false;
+
+    if (string_value == "NO")
+        return false;
+
+    if (string_value == "F")
+        return false;
+
+    if (string_value == "N")
+        return false;
+
+    if (string_value == "0")
+        return false;
+
+    throw std::invalid_argument("Could not convert string " + string_value + " to bool ");
 }
 
 

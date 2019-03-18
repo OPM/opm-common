@@ -105,7 +105,7 @@ namespace Opm {
         */
         bool operator==(const DeckItem& other) const;
         bool operator!=(const DeckItem& other) const;
-
+        static bool to_bool(std::string string_value);
     private:
         std::vector< double > dval;
         std::vector< int > ival;

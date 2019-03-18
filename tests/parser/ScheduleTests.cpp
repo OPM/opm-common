@@ -1068,17 +1068,6 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
                     "DATES             -- 2\n"
                     " 20  JAN 2010 / \n"
                     "/\n"
-                    "WELTARG\n"
-                    " OP_1     ORAT        1300 /\n"
-                    " OP_1     WRAT        1400 /\n"
-                    " OP_1     GRAT        1500.52 /\n"
-                    " OP_1     LRAT        1600.58 /\n"
-                    " OP_1     RESV        1801.05 /\n"
-                    " OP_1     BHP         1900 /\n"
-                    " OP_1     THP         2000 /\n"
-                    " OP_1     VFP         2100.09 /\n"
-                    " OP_1     GUID        2300.14 /\n"
-                    "/\n"
                     "WPIMULT\n"
                     "OP_1  1.30 /\n"
                     "/\n"
@@ -1758,6 +1747,13 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
+        GRID
+        PERMX
+          1000*0.10/
+        COPY
+          PERMX PERMY /
+          PERMX PERMZ /
+        /
         SCHEDULE
         DATES             -- 1
             10  OKT 2008 /
@@ -1805,6 +1801,13 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
+        GRID
+        PERMX
+          1000*0.10/
+        COPY
+          PERMX PERMY /
+          PERMX PERMZ /
+        /
         SCHEDULE
         DATES             -- 1
             10  OKT 2008 /
@@ -1853,6 +1856,13 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
+        GRID
+        PERMX
+          1000*0.10/
+        COPY
+          PERMX PERMY /
+          PERMX PERMZ /
+        /
         SCHEDULE
         DATES             -- 1
             10  OKT 2008 /
@@ -1887,6 +1897,13 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
     std::string input = R"(
             START             -- 0
             19 JUN 2007 /
+            GRID
+            PERMX
+              1000*0.10/
+            COPY
+              PERMX PERMY /
+              PERMX PERMZ /
+            /
             SCHEDULE
 
             WELSPECS
@@ -1914,6 +1931,13 @@ BOOST_AUTO_TEST_CASE( complump ) {
     std::string input = R"(
             START             -- 0
             19 JUN 2007 /
+            GRID
+            PERMX
+              1000*0.10/
+            COPY
+              PERMX PERMY /
+              PERMX PERMZ /
+            /
             SCHEDULE
 
             WELSPECS
@@ -1992,6 +2016,13 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
+        GRID
+        PERMX
+          1000*0.10/
+        COPY
+          PERMX PERMY /
+          PERMX PERMZ /
+        /
         SCHEDULE
 
         WELSPECS
@@ -2620,6 +2651,13 @@ BOOST_AUTO_TEST_CASE(VFPINJ_TEST) {
 START\n \
 8 MAR 1998 /\n \
 \n \
+GRID \n\
+PERMX \n\
+  1000*0.10/ \n\
+COPY \n\
+  PERMX PERMY / \n\
+  PERMX PERMZ / \n\
+/ \n \
 SCHEDULE \n\
 VFPINJ \n                                       \
 -- Table Depth  Rate   TAB  UNITS  BODY    \n\
@@ -2747,6 +2785,13 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
     const char *deckData =
         "START\n"
         "   8 MAR 2018/\n"
+        "GRID\n"
+        "PERMX\n"
+        "  1000*0.25 /\n"
+        "COPY\n"
+        "  PERMX  PERMY /\n"
+        "  PERMX  PERMZ /\n"
+        "/\n"
         "PROPS\n \n"
         "SCHEDULE\n"
         "WELSPECS\n"
@@ -2881,4 +2926,16 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     BOOST_CHECK_EQUAL(anames.size(), 2);
     BOOST_CHECK(has(anames, "W1"));
     BOOST_CHECK(has(anames, "W2"));
+
+    auto all_names = schedule.wellNames("*", 2);
+    BOOST_CHECK_EQUAL( all_names.size(), 9);
+    BOOST_CHECK( has(all_names, "I1"));
+    BOOST_CHECK( has(all_names, "I2"));
+    BOOST_CHECK( has(all_names, "I3"));
+    BOOST_CHECK( has(all_names, "W1"));
+    BOOST_CHECK( has(all_names, "W2"));
+    BOOST_CHECK( has(all_names, "W3"));
+    BOOST_CHECK( has(all_names, "DEFAULT"));
+    BOOST_CHECK( has(all_names, "ALLOW"));
+    BOOST_CHECK( has(all_names, "BAN"));
 }

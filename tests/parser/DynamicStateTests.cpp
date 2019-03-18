@@ -232,6 +232,8 @@ BOOST_AUTO_TEST_CASE( find ) {
 
     BOOST_CHECK_EQUAL( state.find( 137 ) , 0 );
     BOOST_CHECK_EQUAL( state.find( 200 ) , -1 );
+    BOOST_CHECK_EQUAL( state.find_not(137), -1);
+    BOOST_CHECK_EQUAL( state.find_not(200), 0);
     state.update( 0 , 200 );
     BOOST_CHECK_EQUAL( state.find( 137 ) , -1 );
     BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
@@ -239,6 +241,7 @@ BOOST_AUTO_TEST_CASE( find ) {
     state.update( 2 , 300 );
     BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
     BOOST_CHECK_EQUAL( state.find( 300 ) ,  2 );
+    BOOST_CHECK_EQUAL( state.find_not( 200 ) ,  2 );
 
     state.update( 4 , 400 );
     BOOST_CHECK_EQUAL( state.find( 200 ) ,  0 );
