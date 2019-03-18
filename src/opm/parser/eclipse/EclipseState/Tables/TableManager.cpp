@@ -57,6 +57,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
@@ -132,6 +134,13 @@ namespace Opm {
             m_rtemp = deck.getKeyword("RTEMP").getRecord(0).getItem("TEMP").getSIDouble( 0 );
         else if (deck.hasKeyword( "RTEMPA" ) )
             m_rtemp = deck.getKeyword("RTEMPA").getRecord(0).getItem("TEMP").getSIDouble( 0 );
+
+        if ( deck.hasKeyword( "ROCK2D") )
+            initRockTables(deck, "ROCK2D", m_rock2dTables );
+
+        if ( deck.hasKeyword( "ROCK2DTR") )
+            initRockTables(deck, "ROCK2DTR", m_rock2dtrTables );
+
     }
 
     void TableManager::initDims(const Deck& deck) {
@@ -274,6 +283,8 @@ namespace Opm {
                 numRocktabTables = static_cast<size_t>(record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0));
             }
             addTables( "ROCKTAB", numRocktabTables);
+            addTables( "ROCKWNOD", numRocktabTables);
+            addTables( "OVERBURD", numRocktabTables);
         }
 
 
@@ -324,6 +335,17 @@ namespace Opm {
             initSimpleTableContainer<PmiscTable>(deck, "PMISC", numMiscibleTables);
             initSimpleTableContainer<TlpmixpaTable>(deck, "TLPMIXPA", numMiscibleTables);
 
+        }
+        {
+            size_t numRocktabTables = ParserKeywords::ROCKCOMP::NTROCC::defaultValue;
+
+            if (deck.hasKeyword<ParserKeywords::ROCKCOMP>()) {
+                const auto& keyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
+                const auto& record = keyword.getRecord(0);
+                numRocktabTables = static_cast<size_t>(record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0));
+            }
+            initSimpleTableContainer<RockwnodTable>(deck, "ROCKWNOD", numRocktabTables);
+            initSimpleTableContainer<OverburdTable>(deck, "OVERBURD", numRocktabTables);
         }
 
         initSimpleTableContainer<PvdgTable>(deck, "PVDG", m_tabdims.getNumPVTTables());
@@ -574,10 +596,8 @@ namespace Opm {
                 std::shared_ptr<RocktabTable> table = std::make_shared<RocktabTable>( dataItem , isDirectional, useStressOption );
                 container.addTable( tableIdx , table );
             }
-        }
+        }        
     }
-
-
 
         size_t TableManager::numFIPRegions() const {
         size_t ntfip = m_tabdims.getNumFIPRegions();
@@ -754,6 +774,22 @@ namespace Opm {
 
     const std::vector<PvtoTable>& TableManager::getPvtoTables() const {
         return m_pvtoTables;
+    }
+
+    const std::vector<Rock2dTable>& TableManager::getRock2dTables() const {
+        return m_rock2dTables;
+    }
+
+    const std::vector<Rock2dtrTable>& TableManager::getRock2dtrTables() const {
+        return m_rock2dtrTables;
+    }
+
+    const TableContainer& TableManager::getRockwnodTables() const {
+        return getTables("ROCKWNOD");
+    }
+
+    const TableContainer& TableManager::getOverburdTables() const {
+        return getTables("OVERBURD");
     }
 
     const PvtwTable& TableManager::getPvtwTable() const {

@@ -33,6 +33,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp> // Phase::PhaseEnum
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
@@ -118,6 +120,11 @@ namespace Opm {
 
         const std::vector<PvtgTable>& getPvtgTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
+        const std::vector<Rock2dTable>& getRock2dTables() const;
+        const std::vector<Rock2dtrTable>& getRock2dtrTables() const;
+        const TableContainer& getRockwnodTables() const;
+        const TableContainer& getOverburdTables() const;
+
         const PvtwTable& getPvtwTable() const;
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
@@ -161,7 +168,42 @@ namespace Opm {
         void initSkprwatTables(const Deck& deck);
         void initSkprpolyTables(const Deck& deck);
 
+        //void initRockTables(const Deck& deck, const std::string& keywordName);
 
+        template <class TableType>
+        void initRockTables(const Deck& deck, const std::string& keywordName, std::vector<TableType>& rocktable ) {
+
+            if (!deck.hasKeyword(keywordName))
+                return;
+
+            if (!deck.hasKeyword("ROCKCOMP")) {
+                OpmLog::error("ROCKCOMP must be present if ROCK2DTR is used");
+            }
+
+            if (!deck.hasKeyword("ROCKWNOD")) {
+                OpmLog::error("ROCKWNOD must be present if ROCK2DTR is used");
+            }
+
+            const auto& rockcompKeyword = deck.getKeyword("ROCKCOMP");
+            const auto& record = rockcompKeyword.getRecord( 0 );
+            size_t numTables = record.getItem("NTROCC").get< int >(0);
+            rocktable.resize(numTables);
+
+            const auto& keyword = deck.getKeyword(keywordName);
+            size_t numEntries = keyword.size();
+            size_t regionIdx = 0;
+            size_t tableIdx = 0;
+            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+                if (keyword.getRecord(lineIdx).getItem("PRESSURE").size() > 0) {
+                    rocktable[regionIdx].init(keyword.getRecord(lineIdx), tableIdx);
+                    tableIdx++;
+                } else { // next region
+                    tableIdx = 0;
+                    regionIdx++;
+                }
+            }
+            assert(regionIdx == numTables - 1 );
+        }
 
 
         /**
@@ -291,7 +333,9 @@ namespace Opm {
         std::map<std::string , TableContainer> m_simpleTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtoTable> m_pvtoTables;
-        PvtwTable m_pvtwTable;
+        std::vector<Rock2dTable> m_rock2dTables;
+        std::vector<Rock2dtrTable> m_rock2dtrTables;
+        PvtwTable m_pvtwTable;        
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;
         RockTable m_rockTable;

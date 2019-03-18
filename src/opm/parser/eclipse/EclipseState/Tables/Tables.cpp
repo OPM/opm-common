@@ -52,6 +52,8 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RocktabTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/RockwnodTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/OverburdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RsvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
@@ -1132,6 +1134,29 @@ const TableColumn& MsfnTable::getGasSolventRelpermMultiplierColumn() const {
 
 const TableColumn& MsfnTable::getOilRelpermMultiplierColumn() const {
     return SimpleTable::getColumn(2); 
+}
+
+RockwnodTable::RockwnodTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema( "Saturation" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    SimpleTable::init( item );
+}
+
+const TableColumn& RockwnodTable::getSaturationColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+OverburdTable::OverburdTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema( "Depth" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    m_schema.addColumn( ColumnSchema( "OverburdenPressure" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE) );
+    SimpleTable::init( item );
+}
+
+const TableColumn& OverburdTable::getDepthColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& OverburdTable::getOverburdenPressureColumn() const {
+    return SimpleTable::getColumn(1);
 }
 
 namespace {
