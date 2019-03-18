@@ -1747,6 +1747,13 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
+        GRID
+        PERMX
+          1000*0.10/
+        COPY
+          PERMX PERMY /
+          PERMX PERMZ /
+        /
         SCHEDULE
         DATES             -- 1
             10  OKT 2008 /
@@ -1794,6 +1801,13 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
+        GRID
+        PERMX
+          1000*0.10/
+        COPY
+          PERMX PERMY /
+          PERMX PERMZ /
+        /
         SCHEDULE
         DATES             -- 1
             10  OKT 2008 /
@@ -1842,6 +1856,13 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
+        GRID
+        PERMX
+          1000*0.10/
+        COPY
+          PERMX PERMY /
+          PERMX PERMZ /
+        /
         SCHEDULE
         DATES             -- 1
             10  OKT 2008 /
@@ -1876,6 +1897,13 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
     std::string input = R"(
             START             -- 0
             19 JUN 2007 /
+            GRID
+            PERMX
+              1000*0.10/
+            COPY
+              PERMX PERMY /
+              PERMX PERMZ /
+            /
             SCHEDULE
 
             WELSPECS
@@ -1903,6 +1931,13 @@ BOOST_AUTO_TEST_CASE( complump ) {
     std::string input = R"(
             START             -- 0
             19 JUN 2007 /
+            GRID
+            PERMX
+              1000*0.10/
+            COPY
+              PERMX PERMY /
+              PERMX PERMZ /
+            /
             SCHEDULE
 
             WELSPECS
@@ -1981,6 +2016,13 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     std::string input = R"(
         START             -- 0
         19 JUN 2007 /
+        GRID
+        PERMX
+          1000*0.10/
+        COPY
+          PERMX PERMY /
+          PERMX PERMZ /
+        /
         SCHEDULE
 
         WELSPECS
@@ -2609,6 +2651,13 @@ BOOST_AUTO_TEST_CASE(VFPINJ_TEST) {
 START\n \
 8 MAR 1998 /\n \
 \n \
+GRID \n\
+PERMX \n\
+  1000*0.10/ \n\
+COPY \n\
+  PERMX PERMY / \n\
+  PERMX PERMZ / \n\
+/ \n \
 SCHEDULE \n\
 VFPINJ \n                                       \
 -- Table Depth  Rate   TAB  UNITS  BODY    \n\
@@ -2736,6 +2785,13 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
     const char *deckData =
         "START\n"
         "   8 MAR 2018/\n"
+        "GRID\n"
+        "PERMX\n"
+        "  1000*0.25 /\n"
+        "COPY\n"
+        "  PERMX  PERMY /\n"
+        "  PERMX  PERMZ /\n"
+        "/\n"
         "PROPS\n \n"
         "SCHEDULE\n"
         "WELSPECS\n"
