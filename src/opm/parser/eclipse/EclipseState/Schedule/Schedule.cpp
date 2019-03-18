@@ -1916,9 +1916,11 @@ namespace Opm {
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern, size_t timeStep, const std::vector<std::string>& matching_wells) const {
         std::vector<std::string> names;
+        if (pattern.size() == 0)
+            return {};
 
         // WLIST
-        if (pattern[0] == '*') {
+        if (pattern[0] == '*' && pattern.size() > 1) {
             const auto& wlm = this->getWListManager(timeStep);
             if (wlm.hasList(pattern)) {
                 const auto& wlist = wlm.getList(pattern);
