@@ -135,14 +135,11 @@ namespace Opm {
         else if (deck.hasKeyword( "RTEMPA" ) )
             m_rtemp = deck.getKeyword("RTEMPA").getRecord(0).getItem("TEMP").getSIDouble( 0 );
 
-        if ( deck.hasKeyword( "ROCK2D")) {
-            initRock2dTables(deck);
-        }
+        if ( deck.hasKeyword( "ROCK2D") )
+            initRockTables(deck, "ROCK2D", m_rock2dTables );
 
-        if ( deck.hasKeyword( "ROCK2DTR")) {
-            initRock2dtrTables(deck);
-        }
-
+        if ( deck.hasKeyword( "ROCK2DTR") )
+            initRockTables(deck, "ROCK2DTR", m_rock2dtrTables );
 
     }
 
@@ -601,78 +598,6 @@ namespace Opm {
             }
         }        
     }
-    void TableManager::initRock2dTables(const Deck& deck) {
-
-        if (!deck.hasKeyword<ParserKeywords::ROCK2D>())
-            return;
-
-        if (!deck.hasKeyword("ROCKCOMP")) {
-            OpmLog::error("ROCKCOMP must be present if ROCK2D is used");
-        }
-
-        if (!deck.hasKeyword("ROCKWNOD")) {
-            OpmLog::error("ROCKWNOD must be present if ROCK2D is used");
-        }
-
-        const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
-        const auto& record = rockcompKeyword.getRecord( 0 );
-        size_t numTables = record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0);
-        m_rock2dTables.resize(numTables);
-
-        const auto& keyword = deck.getKeyword<ParserKeywords::ROCK2D>();
-        size_t numEntries = keyword.size();
-        size_t regionIdx = 0;
-        size_t tableIdx = 0;
-        for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
-            if (keyword.getRecord(lineIdx).getItem("PRESSURE").size() > 0) {
-                m_rock2dTables[regionIdx].init(keyword.getRecord(lineIdx), tableIdx);
-                tableIdx++;
-            } else { // next region
-                tableIdx = 0;
-                regionIdx++;
-            }
-        }
-        assert(regionIdx == numTables - 1 );
-    }
-
-    void TableManager::initRock2dtrTables(const Deck& deck) {
-
-        if (!deck.hasKeyword<ParserKeywords::ROCK2DTR>())
-            return;
-
-        if (!deck.hasKeyword("ROCKCOMP")) {
-            OpmLog::error("ROCKCOMP must be present if ROCK2DTR is used");
-        }
-
-        if (!deck.hasKeyword("ROCKWNOD")) {
-            OpmLog::error("ROCKWNOD must be present if ROCK2DTR is used");
-        }
-
-        if (!deck.hasKeyword("ROCK2D")) {
-            OpmLog::error("ROCK2D must be present if ROCK2DTR is used");
-        }
-
-        const auto& rockcompKeyword = deck.getKeyword<ParserKeywords::ROCKCOMP>();
-        const auto& record = rockcompKeyword.getRecord( 0 );
-        size_t numTables = record.getItem<ParserKeywords::ROCKCOMP::NTROCC>().get< int >(0);
-        m_rock2dtrTables.resize(numTables);
-
-        const auto& keyword = deck.getKeyword<ParserKeywords::ROCK2DTR>();
-        size_t numEntries = keyword.size();
-        size_t regionIdx = 0;
-        size_t tableIdx = 0;
-        for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
-            if (keyword.getRecord(lineIdx).getItem("PRESSURE").size() > 0) {
-                m_rock2dtrTables[regionIdx].init(keyword.getRecord(lineIdx), tableIdx);
-                tableIdx++;
-            } else { // next region
-                tableIdx = 0;
-                regionIdx++;
-            }
-        }
-        assert(regionIdx == numTables - 1 );
-    }
-
 
         size_t TableManager::numFIPRegions() const {
         size_t ntfip = m_tabdims.getNumFIPRegions();

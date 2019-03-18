@@ -168,8 +168,43 @@ namespace Opm {
         void initSkprwatTables(const Deck& deck);
         void initSkprpolyTables(const Deck& deck);
 
-        void initRock2dTables(const Deck& deck);
-        void initRock2dtrTables(const Deck& deck);
+        //void initRockTables(const Deck& deck, const std::string& keywordName);
+
+        template <class TableType>
+        void initRockTables(const Deck& deck, const std::string& keywordName, std::vector<TableType>& rocktable ) {
+
+            if (!deck.hasKeyword(keywordName))
+                return;
+
+            if (!deck.hasKeyword("ROCKCOMP")) {
+                OpmLog::error("ROCKCOMP must be present if ROCK2DTR is used");
+            }
+
+            if (!deck.hasKeyword("ROCKWNOD")) {
+                OpmLog::error("ROCKWNOD must be present if ROCK2DTR is used");
+            }
+
+            const auto& rockcompKeyword = deck.getKeyword("ROCKCOMP");
+            const auto& record = rockcompKeyword.getRecord( 0 );
+            size_t numTables = record.getItem("NTROCC").get< int >(0);
+            rocktable.resize(numTables);
+
+            const auto& keyword = deck.getKeyword(keywordName);
+            size_t numEntries = keyword.size();
+            size_t regionIdx = 0;
+            size_t tableIdx = 0;
+            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+                if (keyword.getRecord(lineIdx).getItem("PRESSURE").size() > 0) {
+                    rocktable[regionIdx].init(keyword.getRecord(lineIdx), tableIdx);
+                    tableIdx++;
+                } else { // next region
+                    tableIdx = 0;
+                    regionIdx++;
+                }
+            }
+            assert(regionIdx == numTables - 1 );
+        }
+
 
         /**
          * JFUNC
