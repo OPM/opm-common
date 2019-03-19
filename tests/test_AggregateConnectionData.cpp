@@ -177,6 +177,12 @@ RPTGRID
   -- 
  / 
 
+EDIT
+
+EQUALS
+ 'PORV'   0.0    7 7  1 1  9 9  /
+/
+ 
 PROPS       ==========================================================
 
 -- WATER RELATIVE PERMEABILITY AND CAPILLARY PRESSURE ARE TABULATED AS
@@ -441,7 +447,7 @@ WCONPROD
  /
 
 WCONINJE
- 'WINJ' 'WAT' 'OPEN' 'RESV'  1*  2000  3500  1*  /
+ 'WINJ' 'WAT' 'OPEN' 'BHP'  1*  20000  3500  1*  /
  /
 
 
@@ -614,16 +620,28 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_EQUAL(iConn[start + 14] ,  0); // WINJ-connection 1, Segment ID for direction
 
 	start = ih.ncwmax*ih.niconz + 2*ih.niconz;
-	BOOST_CHECK_EQUAL(iConn[start +  0] ,  3); // WINJ-connection 1, sequence number
-	BOOST_CHECK_EQUAL(iConn[start +  1] ,  8); // WINJ-connection 1, Cell I
-	BOOST_CHECK_EQUAL(iConn[start +  2] ,  1); // WINJ-connection 1, Cell J
-	BOOST_CHECK_EQUAL(iConn[start +  3] ,  9); // WINJ-connection 1, Cell K
-	BOOST_CHECK_EQUAL(iConn[start +  5] ,  1); // WINJ-connection 1, ConnStat
-	BOOST_CHECK_EQUAL(iConn[start +  6] ,  0); // WINJ-connection 1, Drainage saturation table
-	BOOST_CHECK_EQUAL(iConn[start +  9] ,  0); // WINJ-connection 1, Imbibition saturation table
-	BOOST_CHECK_EQUAL(iConn[start + 12] ,  3); // WINJ-connection 1, Complum number
-	BOOST_CHECK_EQUAL(iConn[start + 13] ,  1); // WINJ-connection 1, Connection direction
-	BOOST_CHECK_EQUAL(iConn[start + 14] ,  0); // WINJ-connection 1, Segment ID for direction
+	BOOST_CHECK_EQUAL(iConn[start +  0] ,  3); // WINJ-connection 3, sequence number
+	BOOST_CHECK_EQUAL(iConn[start +  1] ,  8); // WINJ-connection 3, Cell I
+	BOOST_CHECK_EQUAL(iConn[start +  2] ,  1); // WINJ-connection 3, Cell J
+	BOOST_CHECK_EQUAL(iConn[start +  3] ,  9); // WINJ-connection 3, Cell K
+	BOOST_CHECK_EQUAL(iConn[start +  5] ,  1); // WINJ-connection 3, ConnStat
+	BOOST_CHECK_EQUAL(iConn[start +  6] ,  0); // WINJ-connection 3, Drainage saturation table
+	BOOST_CHECK_EQUAL(iConn[start +  9] ,  0); // WINJ-connection 3, Imbibition saturation table
+	BOOST_CHECK_EQUAL(iConn[start + 12] ,  3); // WINJ-connection 3, Complum number
+	BOOST_CHECK_EQUAL(iConn[start + 13] ,  1); // WINJ-connection 3, Connection direction
+	BOOST_CHECK_EQUAL(iConn[start + 14] ,  0); // WINJ-connection 3, Segment ID for direction
+	
+	start = ih.ncwmax*ih.niconz + 3*ih.niconz;
+	BOOST_CHECK_EQUAL(iConn[start +  0] ,  4); // WINJ-connection 4, sequence number
+	BOOST_CHECK_EQUAL(iConn[start +  1] ,  6); // WINJ-connection 4, Cell I
+	BOOST_CHECK_EQUAL(iConn[start +  2] ,  1); // WINJ-connection 4, Cell J
+	BOOST_CHECK_EQUAL(iConn[start +  3] ,  9); // WINJ-connection 4, Cell K
+	BOOST_CHECK_EQUAL(iConn[start +  5] ,  1); // WINJ-connection 4, ConnStat
+	BOOST_CHECK_EQUAL(iConn[start +  6] ,  0); // WINJ-connection 4, Drainage saturation table
+	BOOST_CHECK_EQUAL(iConn[start +  9] ,  0); // WINJ-connection 4, Imbibition saturation table
+	BOOST_CHECK_EQUAL(iConn[start + 12] ,  4); // WINJ-connection 4, Complum number
+	BOOST_CHECK_EQUAL(iConn[start + 13] ,  1); // WINJ-connection 4, Connection direction
+	BOOST_CHECK_EQUAL(iConn[start + 14] ,  0); // WINJ-connection 4, Segment ID for direction
 	
     }
 
@@ -652,6 +670,17 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_CLOSE(sconn[i0 + 20], 	        0.  , 1.0e-5);  // WINJ - conn 3 : Distance to end of connection in segment
 	BOOST_CHECK_CLOSE(sconn[i0 + 21], 	        0.  , 1.0e-5);	// WINJ - conn 3 : Distance to start of connection in segment
 	
+	connNo = 4;
+	i0 = ih.ncwmax*ih.nsconz + (connNo-1)*ih.nsconz;
+	BOOST_CHECK_CLOSE(sconn[i0     ],        2.55826545 , 1.0e-5);  // WINJ - conn 4 : Transmissibility factor
+	BOOST_CHECK_CLOSE(sconn[i0 +  1], 	     7250.  , 1.0e-5);	// WINJ - conn 4 : Centre depth
+	BOOST_CHECK_CLOSE(sconn[i0 +  2],             0.20  , 1.0e-5);  // WINJ - conn 4 : diameter
+	BOOST_CHECK_CLOSE(sconn[i0 +  3],       1581.13879  , 1.0e-5);  // WINJ - conn 4 : effective kh-product
+	BOOST_CHECK_CLOSE(sconn[i0 + 11],       2.55826545  , 1.0e-5);  // WINJ - conn 4 : Transmissibility factor
+	BOOST_CHECK_CLOSE(sconn[i0 + 20], 	        0.  , 1.0e-5);  // WINJ - conn 4 : Distance to end of connection in segment
+	BOOST_CHECK_CLOSE(sconn[i0 + 21], 	        0.  , 1.0e-5);	// WINJ - conn 4 : Distance to start of connection in segment
+
+	
     }
     
     // XCONN (PROD)  + (WINJ)
@@ -676,6 +705,12 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_CLOSE(xconn[i0 + 34],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure 
 	BOOST_CHECK_CLOSE(xconn[i0 + 49],                                                              0.  , 1.0e-5);  // WINJ - conn 3 : Reservoir volume rate
 		
+	connNo = 4;
+	i0 = ih.ncwmax*ih.nxconz + (connNo-1)*ih.nxconz;
+	BOOST_CHECK_CLOSE(xconn[i0 +  1], 	 -units.from_si(M::liquid_surface_rate,7.*(float(connNo))) , 1.0e-5);	// WINJ - conn 3 : Surface water rate
+	BOOST_CHECK_CLOSE(xconn[i0 + 34],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure 
+	BOOST_CHECK_CLOSE(xconn[i0 + 49],                                                              0.  , 1.0e-5);  // WINJ - conn 3 : Reservoir volume rate
+
     }
 }
 
