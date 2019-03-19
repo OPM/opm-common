@@ -57,9 +57,8 @@ namespace Opm {
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
              bool allowCrossFlow = true, bool automaticShutIn = true);
         const std::string& name() const;
-	const size_t& seqIndex() const;
-	std::size_t getTotNoConn() const;
-	void setTotNoConn(std::size_t noConn);
+        const size_t& seqIndex() const;
+        std::size_t getTotNoConn() const;
         bool hasBeenDefined(size_t timeStep) const;
         const std::string getGroupName(size_t timeStep) const;
         void setGroupName(size_t timeStep , const std::string& groupName);
@@ -208,9 +207,8 @@ namespace Opm {
     private:
         size_t m_creationTimeStep;
         std::string m_name;
-	std::size_t m_seqIndex;
-	std::size_t m_totNoConn=0;
-	
+        std::size_t m_seqIndex;
+
         DynamicState< WellCommon::StatusEnum > m_status;
 
         DynamicState< int > m_isAvailableForGroupControl;

@@ -2632,16 +2632,26 @@ BOOST_AUTO_TEST_CASE(FilterCompletions) {
   Runspec runspec (deck);
   Schedule schedule(deck, grid1 , eclipseProperties, runspec);
   const auto& well = schedule.getWell("OP_1");
-  const auto& c1_1 = well->getConnections(1);
-  const auto& c1_3 = well->getConnections(3);
-  BOOST_CHECK_EQUAL(2, c1_1.size());
-  BOOST_CHECK_EQUAL(9, c1_3.size());
+  {
+      const auto& c1_1 = well->getConnections(1);
+      const auto& c1_3 = well->getConnections(3);
+      BOOST_CHECK_EQUAL(2, c1_1.size());
+      BOOST_CHECK_EQUAL(9, c1_3.size());
+  }
   actnum[grid1.getGlobalIndex(8,8,1)] = 0;
   {
       EclipseGrid grid2(grid1, actnum);
       schedule.filterConnections(grid2);
+
+      const auto& c1_1 = well->getConnections(1);
+      const auto& c1_3 = well->getConnections(3);
       BOOST_CHECK_EQUAL(1, c1_1.size());
       BOOST_CHECK_EQUAL(8, c1_3.size());
+
+      BOOST_CHECK_EQUAL(2, c1_1.inputSize());
+      BOOST_CHECK_EQUAL(9, c1_3.inputSize());
+
+      BOOST_CHECK_EQUAL( well->getTotNoConn(), 9);
   }
 }
 
