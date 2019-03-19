@@ -1,5 +1,5 @@
 {
-  "name": "BCRATE",
+  "name": "BC",
   "sections": ["SOLUTION"],
   "items": [
   {"name": "I1", "value_type": "INT"},
@@ -8,8 +8,9 @@
   {"name": "J2", "value_type": "INT"},
   {"name": "K1", "value_type": "INT"},
   {"name": "K2", "value_type": "INT"},
+  {"name": "TYPE", "value_type": "STRING"},
   {"name": "DIRECTION", "value_type": "STRING"},
-  {"name": "COMPONENT", "value_type": "STRING"},
+  {"name": "COMPONENT", "value_type": "STRING", "default":"NONE"},
   {"name": "RATE",
   "value_type": "DOUBLE",
   "dimension": "Mass/Time*Length*Length",
