@@ -258,6 +258,9 @@ namespace Opm
         static double convertInjectionRateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem &unitSystem);
         static bool convertEclipseStringToBool(const std::string& eclipseString);
 
+#ifdef CHECK_WELLS
+        bool checkWells(const ParseContext& parseContext, ErrorGuard& errors) const;
+#endif
     };
 }
 
