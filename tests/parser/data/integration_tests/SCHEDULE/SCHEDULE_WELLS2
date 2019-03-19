@@ -1,3 +1,18 @@
+RUNSPEC
+
+DIMENS
+  40 60 30 /
+
+GRID
+
+PERMX
+  72000*0.25 /
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
 SCHEDULE
 
 -- 0

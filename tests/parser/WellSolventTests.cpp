@@ -37,6 +37,13 @@ using namespace Opm;
 static Deck createDeckWithOutSolvent() {
     Opm::Parser parser;
     std::string input =
+            "GRID\n"
+            "PERMX\n"
+            "   1000*0.25/\n"
+            "COPY\n"
+            "  PERMX PERMY /\n"
+            "  PERMX PERMZ /\n"
+            "/\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     'W_1'        'OP'   2   2  1*       \'OIL\'  7* /   \n"
@@ -53,6 +60,13 @@ static Deck createDeckWithOutSolvent() {
 static Deck createDeckWithGasInjector() {
     Opm::Parser parser;
     std::string input =
+            "GRID\n"
+            "PERMX\n"
+            "   1000*0.25/\n"
+            "COPY\n"
+            "  PERMX PERMY /\n"
+            "  PERMX PERMZ /\n"
+            "/\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     'W_1'        'OP'   1   1  1*       \'GAS\'  7* /   \n"
@@ -74,6 +88,13 @@ static Deck createDeckWithDynamicWSOLVENT() {
     std::string input =
             "START             -- 0 \n"
             "1 JAN 2000 / \n"
+            "GRID\n"
+            "PERMX\n"
+            "   1000*0.25/\n"
+            "COPY\n"
+            "  PERMX PERMY /\n"
+            "  PERMX PERMZ /\n"
+            "/\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     'W_1'        'OP'   1   1  1*       \'GAS\'  7* /   \n"
@@ -103,6 +124,13 @@ static Deck createDeckWithDynamicWSOLVENT() {
 static Deck createDeckWithOilInjector() {
     Opm::Parser parser;
     std::string input =
+            "GRID\n"
+            "PERMX\n"
+            "   1000*0.25/\n"
+            "COPY\n"
+            "  PERMX PERMY /\n"
+            "  PERMX PERMZ /\n"
+            "/\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     'W_1'        'OP'   2   2  1*       \'OIL\'  7* /   \n"
@@ -122,6 +150,13 @@ static Deck createDeckWithOilInjector() {
 static Deck createDeckWithWaterInjector() {
     Opm::Parser parser;
     std::string input =
+            "GRID\n"
+            "PERMX\n"
+            "   1000*0.25/\n"
+            "COPY\n"
+            "  PERMX PERMY /\n"
+            "  PERMX PERMZ /\n"
+            "/\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     'W_1'        'OP'   2   2  1*       \'OIL\'  7* /   \n"

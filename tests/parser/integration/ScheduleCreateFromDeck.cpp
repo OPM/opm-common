@@ -648,6 +648,13 @@ START\n\
 \n\
 10 MAI 2007 /\n\
 \n\
+GRID\n\
+PERMX\n\
+   9000*0.25 /\n\
+COPY \n\
+   PERMX PERMY /\n\
+   PERMX PERMZ /\n\
+/\n\
 SCHEDULE\n\
 WELSPECS \n\
      'W1'        'OP'   11   21  3.33       'OIL'  7* /   \n\

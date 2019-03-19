@@ -36,6 +36,14 @@ DZ
 TOPS
 100*1 /
 
+PERMX
+  1000*0.25/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
 
 PORO
 1000*0.2 /

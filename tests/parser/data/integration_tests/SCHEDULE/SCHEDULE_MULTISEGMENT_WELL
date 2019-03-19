@@ -15,6 +15,14 @@ START
 
 GRID
 
+PERMX
+   100*0.25 /
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
 DX
 100*200 /
 DY
