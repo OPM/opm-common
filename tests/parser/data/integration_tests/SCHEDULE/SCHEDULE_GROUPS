@@ -1,6 +1,20 @@
 START             -- 0
 10 MAI 2007 /
 
+RUNSPEC
+
+DIMENS
+  10 10 3  /
+
+GRID
+
+PERMX
+  300*0.25 /
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
 
 SCHEDULE
 
