@@ -1035,26 +1035,26 @@ static const std::unordered_map< std::string, UnitSystem::measure> single_values
   {"TCPUDAY"  , UnitSystem::measure::time },
   {"STEPTYPE" , UnitSystem::measure::identity },
   {"TELAPLIN" , UnitSystem::measure::time },
-  {"FWIP"     , UnitSystem::measure::volume },
-  {"FOIP"     , UnitSystem::measure::volume },
-  {"FGIP"     , UnitSystem::measure::volume },
-  {"FOIPL"    , UnitSystem::measure::volume },
-  {"FOIPG"    , UnitSystem::measure::volume },
-  {"FGIPL"    , UnitSystem::measure::volume },
-  {"FGIPG"    , UnitSystem::measure::volume },
+  {"FWIP"     , UnitSystem::measure::liquid_surface_volume },
+  {"FOIP"     , UnitSystem::measure::liquid_surface_volume },
+  {"FGIP"     , UnitSystem::measure::gas_surface_volume },
+  {"FOIPL"    , UnitSystem::measure::liquid_surface_volume },
+  {"FOIPG"    , UnitSystem::measure::liquid_surface_volume },
+  {"FGIPL"    , UnitSystem::measure::gas_surface_volume },
+  {"FGIPG"    , UnitSystem::measure::gas_surface_volume },
   {"FPR"      , UnitSystem::measure::pressure },
 
 };
 
 static const std::unordered_map< std::string, UnitSystem::measure> region_units = {
   {"RPR"      , UnitSystem::measure::pressure},
-  {"ROIP"     , UnitSystem::measure::volume },
-  {"ROIPL"    , UnitSystem::measure::volume },
-  {"ROIPG"    , UnitSystem::measure::volume },
-  {"RGIP"     , UnitSystem::measure::volume },
-  {"RGIPL"    , UnitSystem::measure::volume },
-  {"RGIPG"    , UnitSystem::measure::volume },
-  {"RWIP"     , UnitSystem::measure::volume }
+  {"ROIP"     , UnitSystem::measure::liquid_surface_volume },
+  {"ROIPL"    , UnitSystem::measure::liquid_surface_volume },
+  {"ROIPG"    , UnitSystem::measure::liquid_surface_volume },
+  {"RGIP"     , UnitSystem::measure::gas_surface_volume },
+  {"RGIPL"    , UnitSystem::measure::gas_surface_volume },
+  {"RGIPG"    , UnitSystem::measure::gas_surface_volume },
+  {"RWIP"     , UnitSystem::measure::liquid_surface_volume }
 };
 
 static const std::unordered_map< std::string, UnitSystem::measure> block_units = {
