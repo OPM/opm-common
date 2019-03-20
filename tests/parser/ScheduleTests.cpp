@@ -821,11 +821,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
   auto* well = schedule.getWell("OP_1");
   // timestep 3. Close all completions with WELOPEN and immediately open new completions with COMPDAT.
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(3));
-  BOOST_CHECK( !well->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
   // timestep 4. Close all completions with WELOPEN. The well will be shut since no completions
   // are open.
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(4));
-  BOOST_CHECK( well->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
   // timestep 5. Open new completions. But keep the well shut,
   BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well->getStatus(5));
 }
