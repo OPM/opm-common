@@ -93,8 +93,11 @@ UDQParseNode UDQParser::current() const {
         return UDQParseNode(type, arg);
 
     std::size_t selector_size = this->current_size() - 1;
-    const auto * token_ptr = std::addressof(this->tokens[this->current_pos + 1]);
-    std::vector<std::string> selector(token_ptr, token_ptr + selector_size);
+    std::vector<std::string> selector;
+    if (selector_size > 0) {
+        const auto * token_ptr = std::addressof(this->tokens[this->current_pos + 1]);
+        selector.assign( token_ptr, token_ptr + selector_size);
+    }
     return UDQParseNode(type, arg, selector);
 }
 
