@@ -26,9 +26,7 @@
 #include <tuple>
 
 #include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/ERst.hpp>
 #include <examples/test_util/ESmry.hpp>
-#include <examples/test_util/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
@@ -74,8 +72,10 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
     std::vector<std::string> ref_keywords={ "TIME","FGOR","FOPR","WBHP:INJ","WBHP:PROD","WGIR:INJ","WGIR:PROD","WGIT:INJ","WGIT:PROD","WGOR:PROD","WGPR:INJ","WGPR:PROD","WGPT:INJ",
                                "WGPT:PROD","WOIR:INJ","WOIR:PROD","WOIT:INJ","WOIT:PROD","WOPR:INJ","WOPR:PROD","WOPT:INJ","WOPT:PROD","WWIR:INJ","WWIR:PROD","WWIT:INJ",
 			       "WWIT:PROD","WWPR:INJ","WWPR:PROD","WWPT:INJ","WWPT:PROD","BPR:1,1,1","BPR:10,10,3"};
-
-    BOOST_CHECK_THROW(ESmry smry1("NORNE_ATW2013.SMSPEC") , std::runtime_error );
+			       
+    // check that class throws exceptions for non existing file
+    BOOST_CHECK_THROW(ESmry smry1("XXXX_XXXX.SMSPEC") , std::runtime_error );
+    
     ESmry smry1(testFile);
     
     std::vector<std::string> keywords=smry1.keywordList();
@@ -90,6 +90,10 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
     
     // FOPT not present in smspec file, should throw exception when using member function get 
     BOOST_CHECK_THROW(std::vector<float> fopt = smry1.get("FOPT"), std::invalid_argument);
+    
+    // use class EclFile to get array PARAMS for each time step in UNSMRY file1
+    // Make a 2 D vector from these PARAMS arrays (inputData) and check
+    // vectors in inputData with vectors stored in class ESmry onject
     
     EclFile file1("SPE1CASE1.UNSMRY");
     file1.loadData();
@@ -120,6 +124,8 @@ BOOST_AUTO_TEST_CASE(TestESmry_1) {
 
 BOOST_AUTO_TEST_CASE(TestESmry_2) {
 
+   // same as previous test, but this time reading from formatted inputData
+  
     std::string testFile="SPE1CASE1.FSMSPEC";
 
     ESmry smry1(testFile);
@@ -156,7 +162,5 @@ BOOST_AUTO_TEST_CASE(TestESmry_2) {
             BOOST_CHECK_EQUAL(vect[j], inputData[j][i]);
         }
     }
-
-  
 }
 

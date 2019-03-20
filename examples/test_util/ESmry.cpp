@@ -151,8 +151,6 @@ const std::string ESmry::makeKeyString(const std::string &keyword, const std::st
 
 const std::vector<float> &ESmry::get(const std::string &name) const {
 
-    //std::vector<std::string>::iterator it;
-
     auto it=find(keyword.begin(),keyword.end(),name);
 
     if (it==keyword.end()) {

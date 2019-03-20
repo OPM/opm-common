@@ -1,5 +1,5 @@
 /*
-   Copyright 2016 Statoil ASA.
+   Copyright 2019 Equinor ASA.
 
    This file is part of the Open Porous Media project (OPM).
 
@@ -29,87 +29,6 @@
 
 #include <iomanip>
 
-
-void makeTinyMod(const std::string &rootN){
-    
-    std::string gridFile=rootN+".EGRID";
-    std::string initFile=rootN+".INIT";
-
-    std::vector<float> coord = {2000,2000,2000,1999.91,1999.87,2005,2099.98,2000,2001.75,2099.9,1999.87,2006.74,2199.97,2000,2003.49,2199.88,1999.87,2008.49,2000,
-               2099.97,2002.62,1999.91,2099.83,2007.62,2099.98,2099.97,2004.36,2099.9,2099.83,2009.36,2199.97,2099.97,2006.11,2199.88,2099.83,2011.11,2000,2199.93,
-               2005.24,1999.91,2199.8,2010.23,2099.98,2199.93,2006.98,2099.9,2199.8,2011.98,2199.97,2199.93,2008.73,2199.88,2199.8,2013.72,2000,2299.9,2007.85,
-               1999.91,2299.77,2012.85,2099.98,2299.9,2009.6,2099.9,2299.77,2014.6,2199.97,2299.9,2011.34,2199.88,2299.77,2016.34};
-
-    std::vector<float> zcorn={2000,2001.75,2001.75,2003.49,2002.62,2004.36,2004.36,2006.11,2002.62,2004.36,2004.36,2006.11,2005.24,2006.98,2006.98,2008.73,
-               2005.24,2006.98,2006.98,2008.73,2007.85,2009.6,2009.6,2011.34,2005,2006.74,2006.74,2008.49,2007.62,2009.36,2009.36,2011.11,2007.62,2009.36,
-               2009.36,2011.11,2010.23,2011.98,2011.98,2013.72,2010.23,2011.98,2011.98,2013.72,2012.85,2014.6,2014.6,2016.34};
-
-    std::vector<int> gridhead = {1,2,3,1,0,0};
-    std::vector<int> filehead = {3,2017,0,0,0,0,1};
-
-    std::vector<std::string> gridunits= {"METRES", ""};
-    std::vector<std::string> gdorient= {"INC", "INC", "INC", "DOWN", "RIGHT"};
-
-    // ------ init file vectors --
-
-    std::vector<int> intehead= {-957688424,201702,1,-2345,-2345,-2345,-2345,-2345,2,3,2,12,6,0,1,-2345,0,10,0,10,11,0,0,0,155,122,130,3,107,112,1,-2345,25,40,58,
-            -2345,107,112,180,5,0,1,18,24,10,7,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2000,0,0,0,1,0,0,0,0,0,1,10,0,0,12,1,25,1,-2345,-2345,8,8,3,4,2,3,2,1,100};
-
-    std::vector<double> doubhead = {0.0,1,0, 365, 0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
-    std::vector<bool> logihead = {false, false,false,true,false,false,false,false,true,false,false,false,false,false,false};
-    
-    std::vector<float> porv = {1000, 1001, 1002, 1010, 1011, 1012 };
-
-           
-    // -- write grid file ----
-    
-    std::ofstream outFileH;
-    outFileH.open(gridFile, std::ios::out |  std::ios::binary  );
-
-    EclOutput eclgridTest(outFileH);
-
-    eclgridTest.writeBinaryHeader("FILEHEAD",filehead.size(),EIOD::INTE);
-    eclgridTest.writeBinaryArray(filehead);
-
-    eclgridTest.writeBinaryHeader("GRIDUNIT",gridunits.size(),EIOD::CHAR);
-    eclgridTest.writeBinaryCharArray(gridunits);
-
-    eclgridTest.writeBinaryHeader("GRIDHEAD",gridhead.size(),EIOD::INTE);
-    eclgridTest.writeBinaryArray(gridhead);
-
-    eclgridTest.writeBinaryHeader("COORD",coord.size(),EIOD::REAL);
-    eclgridTest.writeBinaryArray(coord);
-
-    eclgridTest.writeBinaryHeader("ZCORN",zcorn.size(),EIOD::REAL);
-    eclgridTest.writeBinaryArray(zcorn);
-
-    outFileH.close();
-
-    
-    // -- write init file ----
-    
-    //std::ofstream outFileH;
-    outFileH.open(initFile, std::ios::out |  std::ios::binary  );
-
-    EclOutput eclInitTest(outFileH);
-
-    eclInitTest.writeBinaryHeader("INTEHEAD",intehead.size(),EIOD::INTE);
-    eclInitTest.writeBinaryArray(intehead);
-
-    eclInitTest.writeBinaryHeader("LOGIHEAD",logihead.size(),EIOD::LOGI);
-    eclInitTest.writeBinaryArray(logihead);
-
-    eclInitTest.writeBinaryHeader("DOUBHEAD",doubhead.size(),EIOD::DOUB);
-    eclInitTest.writeBinaryArray(doubhead);  
-
-    eclInitTest.writeBinaryHeader("PORV",porv.size(),EIOD::REAL);
-    eclInitTest.writeBinaryArray(porv);  
-
-    outFileH.close();
-
-
-    
-}
 
 void makeEgridFile(const std::string &fileName, const std::vector<float> &coord, const std::vector<float> &zcorn, const std::vector<int> &gridhead, 
 		   const std::vector<int> &filehead,const std::vector<std::string> &gridunits, const std::vector<int> actnum, const std::vector<int> &nnc1, const std::vector<int> &nnc2){
@@ -210,12 +129,6 @@ void makeInitFile(const std::string &fileName, std::vector<std::string> floatKey
 }
 
 
-//    std::vector<std::string> solutionNames2;
-//    std::vector<std::vector<std::vector<float>>> solutions2;
-
-//    makeUnrstFile("TMP1.UNRST", seqnum1, dates1, time1, logihead1, doubhead1, zgrp1, iwel1,solutionNames1,solutions1);
-
-
 void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum, std::vector<std::tuple<int,int,int>> dates, std::vector<double> time, 
 		   std::vector<bool> logihead, std::vector<double> doubhead, std::vector<std::string> zgrp, std::vector<int> iwel, 
 		     std::vector<std::string> solutionNames, std::vector<std::vector<std::vector<float>>> solutions ) {
@@ -264,22 +177,14 @@ void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum, std::ve
             eclTest.writeBinaryArray(solutions[n][i]);
 	  
 	}
-        //eclTest.writeBinaryHeader("PRESSURE",pressure[i].size(),EIOD::REAL);
-        //eclTest.writeBinaryArray(pressure[i]);
-
-        //eclTest.writeBinaryHeader("RS",rs[i].size(),EIOD::REAL);
-        //eclTest.writeBinaryArray(rs[i]);
-        
         
         eclTest.writeBinaryHeader("ENDSOL",0,EIOD::MESS);
-        
     }
 
     outFileH.close();
 }
 
 void makeSmryFile(const std::string &fileName, std::vector<std::string> keywords, std::vector<std::string> wgnames, std::vector<int> nums, std::vector<std::string> units, std::vector<std::vector<float>> params) {
-    
                     
     std::vector<int> intehead = {1,100};
     std::vector<std::string> restart = {"","","","","","","","",""};
@@ -407,7 +312,6 @@ void makeRftFile(const std::string &fileName, std::vector<float> time, std::vect
 
 BOOST_AUTO_TEST_CASE(gridCompare) {
     
-    
     std::vector<float> coord = {2000,2000,2000,1999.9127,1999.8691,2009.9951,2099.9849,2000,2001.7452,2099.8975,1999.8691,2011.7404,2199.9695,2000,2003.4905,2199.8823,
            1999.8691,2013.4855,2000,2099.9658,2002.6177,1999.9127,2099.8347,2012.6127,2099.9849,2099.9658,2007.3629,2099.8975,2099.8347,2017.358,2199.9695,2099.9658,
 	   2009.1082,2199.8823,2099.8347,2019.1031,2000,2199.9314,2005.2354,1999.9127,2199.8005,2015.2303,2099.9849,2199.9314,2009.9806,2099.8975,2199.8005,2019.9757,
@@ -491,7 +395,7 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
     test3.gridCompare();
     
     // 2 keywords should exhibit failures (x and y coordinates)
-    BOOST_CHECK_EQUAL(test3.countDev(),1);
+    BOOST_CHECK_EQUAL(test3.countDev(),2);
     //-------------------------------------------------------------
     // test 4: changing two zcorn values, should fail 
 
@@ -510,7 +414,7 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
     test4.doAnalysis(true);
     test4.gridCompare();
 
-    BOOST_CHECK_EQUAL(test4.countDev(),1);
+    BOOST_CHECK_EQUAL(test4.countDev(),3);
 
     //-------------------------------------------------------------
     // test 5: add one nnc for TMP2, should fail 
@@ -551,7 +455,6 @@ BOOST_AUTO_TEST_CASE(gridCompare) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
 }
-
 
 BOOST_AUTO_TEST_CASE(results_init_1) {
 
@@ -1480,3 +1383,4 @@ BOOST_AUTO_TEST_CASE(results_rft_2) {
     }; 
     
 }
+

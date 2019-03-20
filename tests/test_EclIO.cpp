@@ -26,8 +26,6 @@
 #include <tuple>
 
 #include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/ERst.hpp>
-#include <examples/test_util/ESmry.hpp>
 #include <examples/test_util/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
@@ -72,14 +70,15 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
 
     std::string testFile="ECLFILE.INIT";
 
-    // check that exception is thrown when file not exists
+    // check that exception is thrown when input file doesn't exist
 
     BOOST_CHECK_THROW(EclFile file1("DUMMY.DAT") , std::runtime_error );
 
     EclFile file1(testFile);
 
     // check that exception is thrown when vector exists, but data not loaded
-
+    // user of api needs to load data before using get function
+    
     BOOST_CHECK_THROW(std::vector<int> vect1=file1.get<int>(0) , std::runtime_error );
     BOOST_CHECK_THROW(std::vector<int> vect1=file1.get<int>("ICON") , std::runtime_error );
 
@@ -119,7 +118,7 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
     BOOST_CHECK_EQUAL(file1.hasKey("PORV"), true);
     BOOST_CHECK_EQUAL(file1.hasKey("XPORV"), false);
 
-    // test member functon get, check size of loaded vectors
+    // test member functon get, use size of vector to confirm that vectror is ok 
 
     std::vector<int> vect1a=file1.get<int>(0);
     std::vector<int> vect1b=file1.get<int>("ICON");
@@ -150,7 +149,6 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
 
     BOOST_CHECK_EQUAL(vect5a.size(), 312);
     BOOST_CHECK_EQUAL(vect5b.size(), 312);
-
 }
 
 BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
@@ -158,6 +156,9 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
     std::string testFile1="ECLFILE.INIT";
     std::string testFile2="ECLFILE.FINIT";
 
+    // loading data both from binary and formatted file. Check that
+    // date vectors are identical 
+    
     EclFile file1(testFile1);
     file1.loadData();
 
@@ -201,7 +202,8 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_binary) {
     std::string inputFile="ECLFILE.INIT";
     std::string testFile="TEST.DAT";
 
-    // loading vectors from binary file
+    // loading vectors from binary file and write these back to a binary file1
+    // compare input and output file and delete file.
 
     EclFile file1(inputFile);
     file1.loadData();
@@ -243,7 +245,6 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_binary) {
     if (remove(testFile.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
-
 }
 
 BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
@@ -251,7 +252,8 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     std::string inputFile="ECLFILE.FINIT";
     std::string testFile="TEST.FDAT";
 
-    // loading vectors from binary file
+    // loading vectors from formatted input file and write data back to a formatted file1
+    // compare input and output file, and delete file. 
 
     EclFile file1(inputFile);
     file1.loadData();
@@ -293,7 +295,6 @@ BOOST_AUTO_TEST_CASE(TestEcl_Write_formatted) {
     if (remove(testFile.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
-
 }
 
 
@@ -302,6 +303,11 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
     std::string inputFile="ECLFILE.INIT";
     std::string testFile="TEST.DAT";
 
+    // use EclFile to read/open a binary file 
+    // Use API for class EclFile together with class EclOutput to write an
+    // identical eclfile
+    // EclFile::getList(), EclFile::get<T>(int)    
+    
     EclFile file1(inputFile);
     file1.loadData();
 
@@ -354,8 +360,6 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
     if (remove(testFile.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
-
-
 }
 
 

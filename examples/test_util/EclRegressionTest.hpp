@@ -1,5 +1,5 @@
 /*
-   Copyright 2016 Statoil ASA.
+   Copyright 2019 Equinor ASA.
 
    This file is part of the Open Porous Media project (OPM).
 
@@ -117,7 +117,7 @@ public:
         this->onlyLastSequence = onlyLastSequenceArg;
     }
     
-    int countDev() {    return  deviations.size(); }
+    int countDev() { return  deviations.size(); }
 
     // Accept extra keywords: If this switch is set to true the comparison
     // will ignore extra keywords which are only present

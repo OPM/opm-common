@@ -57,7 +57,10 @@ EGrid::EGrid(const std::string &filename) : EclFile(filename)
        }
    }
    
+   coord_array=get<float>("COORD");
+   zcorn_array=get<float>("ZCORN");
 };
+
 
 int EGrid::global_index(const int &i,const int &j,const int &k) const {
     
@@ -122,9 +125,6 @@ void EGrid::getCellCorner(const int &i, const int &j, const int &k, std::vector<
     std::vector<int> zind;
     std::vector<int> pind;
     double xt,xb,yt,yb,zt,zb;
-   
-    const std::vector<float> zcorn=get<float>("ZCORN");
-    const std::vector<float> coord=get<float>("COORD");
     
     if ((X.size()<8) || (Y.size()<8) || (Z.size()<8)){
         throw std::invalid_argument("In routine cellConrner. X, Y and Z should be a vector of size 8");
@@ -153,18 +153,18 @@ void EGrid::getCellCorner(const int &i, const int &j, const int &k, std::vector<
    }
 
    for (int n=0;n<8;n++){
-       Z[n]=double(zcorn[zind[n]]);
+       Z[n]=double(zcorn_array[zind[n]]);
    }
 
    for (int n=0;n<4;n++){
-       xt=static_cast<double>(coord[pind[n]]);
-       yt=static_cast<double>(coord[pind[n]+1]);
-       zt=static_cast<double>(coord[pind[n]+2]);
+       xt=static_cast<double>(coord_array[pind[n]]);
+       yt=static_cast<double>(coord_array[pind[n]+1]);
+       zt=static_cast<double>(coord_array[pind[n]+2]);
 
-       xb=static_cast<double>(coord[pind[n]+3]);
-       yb=static_cast<double>(coord[pind[n]+4]);
-       zb=static_cast<double>(coord[pind[n]+5]);
-
+       xb=static_cast<double>(coord_array[pind[n]+3]);
+       yb=static_cast<double>(coord_array[pind[n]+4]);
+       zb=static_cast<double>(coord_array[pind[n]+5]);
+       
        X[n]=xt+(xb-xt)/(zt-zb)*(zt-Z[n]);
        X[n+4]=xt+(xb-xt)/(zt-zb)*(zt-Z[n+4]);
 

@@ -1,5 +1,5 @@
 /*
-   Copyright 2016 Statoil ASA.
+   Copyright 2019 Equinor ASA.
 
    This file is part of the Open Porous Media project (OPM).
 
@@ -30,6 +30,8 @@
 #include <examples/test_util/ERst.hpp>
 #include <examples/test_util/ESmry.hpp>
 #include <examples/test_util/ERft.hpp>
+
+#include <chrono>
 
 
 // helper macro to handle error throws or not
@@ -369,7 +371,7 @@ void ECLRegressionTest::gridCompare() {
             for (int j=0; j<nJ1; j++) {
                 for (int i=0; i<nI1; i++) {
                     if (grid1->active_index(i,j,k)!=grid2->active_index(i,j,k)) {
-                        OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different definition of active cells. "
+                        OPM_THROW(std::runtime_error, "\nGrid1 and grid2 have different definition of active cells. "
                                   " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
                     }
                 }
@@ -378,22 +380,7 @@ void ECLRegressionTest::gridCompare() {
 
         std::cout << " done." << std::endl;
 
-        std::vector<float> coord1 = grid1->get<float>("COORD");
-        std::vector<float> coord2 = grid2->get<float>("COORD");
-
-        std::cout << "COORD                  " << " ... ";
-        compareFloatingPointVectors(coord1,coord2,"COORD", "Grid file");
-        std::cout << " done." << std::endl;
-
-        std::vector<float> zcorn1 = grid1->get<float>("ZCORN");
-        std::vector<float> zcorn2 = grid2->get<float>("ZCORN");
-
-        std::cout << "ZCORN                  " << " ... ";
-        compareFloatingPointVectors(zcorn1,zcorn2,"ZCORN", "Grid file");
-        std::cout << " done." << std::endl;
-
-        /*
-        std::cout << "X, Y and Z coordinates " << " ... ";
+	std::cout << "X, Y and Z coordinates " << " ... ";
 
         std::vector<double> X1(8,0.0),Y1(8,0.0),Z1(8,0.0);
         std::vector<double> X2(8,0.0),Y2(8,0.0),Z2(8,0.0);
@@ -402,7 +389,7 @@ void ECLRegressionTest::gridCompare() {
             for (int j=0; j<nJ1; j++) {
                 for (int i=0; i<nI1; i++) {
                     if (grid1->active_index(i,j,k)>-1) {
-
+                        
                         grid1->getCellCorner(i,j,k, X1, Y1, Z1);
                         grid2->getCellCorner(i,j,k, X2, Y2, Z2);
 
@@ -411,30 +398,30 @@ void ECLRegressionTest::gridCompare() {
                             Deviation devX = calculateDeviations(X1[n], X2[n]);
                             Deviation devY = calculateDeviations(Y1[n], Y2[n]);
                             Deviation devZ = calculateDeviations(Z1[n], Z2[n]);
-
-                            if (devX.abs > gridTolerances) {
+                            
+                            if (devX.abs > strictAbsTol) {
                                 if (analysis) {
                                     deviations["xcoordinate"].push_back(devX);
                                 } else {
-                                    OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different X, Y and/or Z coordinates . "
+                                    OPM_THROW(std::runtime_error, "\nGrid1 and grid2 have different X, Y and/or Z coordinates . "
                                               " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
                                 }
                             }
 
-                            if (devY.abs > gridTolerances) {
+                            if (devY.abs > strictAbsTol) {
                                 if (analysis) {
                                     deviations["ycoordinate"].push_back(devY);
                                 } else {
-                                    OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different X, Y and/or Z coordinates . "
+                                    OPM_THROW(std::runtime_error, "\nGrid1 and grid2 have different X, Y and/or Z coordinates . "
                                               " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
                                 }
                             }
 
-                            if (devZ.abs > gridTolerances) {
+                            if (devZ.abs > strictAbsTol) {
                                 if (analysis) {
                                     deviations["zcoordinate"].push_back(devZ);
                                 } else {
-                                    OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different X, Y and/or Z coordinates . "
+                                    OPM_THROW(std::runtime_error, "\nGrid1 and grid2 have different X, Y and/or Z coordinates . "
                                               " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
                                 }
                             }
@@ -445,7 +432,6 @@ void ECLRegressionTest::gridCompare() {
         }
 
         std::cout << " done." << std::endl;
-        */
 
         std::cout << "NNC indices            " << " ... ";
 

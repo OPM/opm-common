@@ -25,15 +25,7 @@
 #include <algorithm>
 #include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
 #include <examples/test_util/EGrid.hpp>
-#include <examples/test_util/ERst.hpp>
-#include <examples/test_util/ESmry.hpp>
-#include <examples/test_util/EclOutput.hpp>
-
-// testing
-#include <examples/test_util/EclFilesComparator.hpp>
-
 
 #define BOOST_TEST_MODULE Test EGrid
 #include <boost/test/unit_test.hpp>
@@ -99,14 +91,15 @@ BOOST_AUTO_TEST_CASE(DimensAndIndices) {
     BOOST_CHECK_EQUAL(nJ,10);
     BOOST_CHECK_EQUAL(nK,3);
 
-    int globInd=grid1.global_index(3,2,1); 
+    int globInd=grid1.global_index(3,2,1);  
 
-    BOOST_CHECK_EQUAL(globInd, 123);
+    BOOST_CHECK_EQUAL(globInd, 123);   // 10*10*1 + 10*2 + 3 = 100+20+3 = 123
 
     BOOST_CHECK_EQUAL(grid1.global_index(0,0,0), 0);
     BOOST_CHECK_EQUAL(grid1.global_index(nI-1,nJ-1,nK-1), nTot-1);
 
-    // check global_index valid range
+    // check global_index valid range, should throw exception if outside
+    
     BOOST_CHECK_THROW(grid1.global_index(-1,-1,-1),std::invalid_argument);
     BOOST_CHECK_THROW(grid1.global_index(0,-1,0),std::invalid_argument);
     BOOST_CHECK_THROW(grid1.global_index(0,0,-1),std::invalid_argument);
@@ -120,9 +113,11 @@ BOOST_AUTO_TEST_CASE(DimensAndIndices) {
 
     int actInd=grid1.active_index(3,2,1); 
 
-    BOOST_CHECK_EQUAL(actInd, 117);
+    BOOST_CHECK_EQUAL(actInd, 117);   // global index 123, - 6 inactive
     BOOST_CHECK_EQUAL(grid1.active_index(0,0,0), 0);
     BOOST_CHECK_EQUAL(grid1.active_index(nI-1,nJ-1,nK-1), nAct-1);
+
+    // check active_index valid range, should throw exception if outside
 
     BOOST_CHECK_THROW(grid1.active_index(-1,0,0),std::invalid_argument);
     BOOST_CHECK_THROW(grid1.active_index(-1,-1,0),std::invalid_argument);
@@ -141,7 +136,7 @@ BOOST_AUTO_TEST_CASE(DimensAndIndices) {
     BOOST_CHECK_EQUAL(k, 1);
 
     BOOST_CHECK_THROW(grid1.ijk_from_active_index(-1, i, j, k),std::invalid_argument);
-    BOOST_CHECK_THROW(grid1.ijk_from_active_index(294, i, j, k),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.ijk_from_active_index(nAct, i, j, k),std::invalid_argument);
     
     i=0; j=0; k=0; 
     
@@ -152,7 +147,7 @@ BOOST_AUTO_TEST_CASE(DimensAndIndices) {
     BOOST_CHECK_EQUAL(k, 1);
 
     BOOST_CHECK_THROW(grid1.ijk_from_global_index(-1, i, j, k),std::invalid_argument);
-    BOOST_CHECK_THROW(grid1.ijk_from_global_index(300, i, j, k),std::invalid_argument);
+    BOOST_CHECK_THROW(grid1.ijk_from_global_index(nTot, i, j, k),std::invalid_argument);
 
 }
 
@@ -190,14 +185,3 @@ BOOST_AUTO_TEST_CASE(getCellCorners) {
     BOOST_CHECK_EQUAL(Z==ref_Z, true);
 }
 
-BOOST_AUTO_TEST_CASE(testing) {
-
-    double a = 1;
-    double b = 3;
-    const double tol = 1.0e-14;
-
-    Deviation dev = ECLFilesComparator::calculateDeviations(a,b);
-
-    BOOST_CHECK_EQUAL(dev.abs, 2.0);
-
-}

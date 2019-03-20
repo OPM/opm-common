@@ -34,16 +34,19 @@ class EGrid : public EclFile
 {
 
 private: 
-    std::vector<int> act_index;
-    std::vector<int> glob_index;
     int nI,nJ,nK,nNNC,nactive;    
 
-    
+    std::vector<int> act_index;
+    std::vector<int> glob_index;
+    std::vector<float> coord_array;
+    std::vector<float> zcorn_array;
+
 public:
 
     int global_index(const int &i,const int &j,const int &k) const; 
     int active_index(const int &i,const int &j,const int &k) const;  
-
+    
+    
     void dimension(int &i,int &j,int &k);  
 
     void ijk_from_active_index(int actInd, int &i,int &j,int &k);  

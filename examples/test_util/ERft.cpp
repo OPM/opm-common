@@ -84,7 +84,6 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
 
         rftReportList.push_back(wellDatePair);
     }
-
 };
 
 

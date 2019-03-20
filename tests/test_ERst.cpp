@@ -25,9 +25,7 @@
 #include <algorithm>
 #include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
 #include <examples/test_util/ERst.hpp>
-#include <examples/test_util/ESmry.hpp>
 #include <examples/test_util/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
@@ -71,40 +69,42 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 BOOST_AUTO_TEST_CASE(TestERst_1) {
 
     std::string testFile="SPE1_TESTCASE.UNRST";
-    std::vector<int> refSeqnumList= {1,2,5,10,15,25,50,100,120};
+    std::vector<int> refReportStepNumbers= {1,2,5,10,15,25,50,100,120};
 
     ERst rst1(testFile);
     rst1.loadReportStepNumber(5);
+    
+    std::vector<int> reportStepNumbers = rst1.listOfReportStepNumbers();
 
-    std::vector<int> seqnums = rst1.listOfReportStepNumbers();
-
-    BOOST_CHECK_EQUAL(seqnums==refSeqnumList, true);
+    BOOST_CHECK_EQUAL(reportStepNumbers==refReportStepNumbers, true);
 
     BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(4), false);
     BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(5), true);
 
+    // try loading non-existing report step, should throw exception
     BOOST_CHECK_THROW(rst1.loadReportStepNumber(4) , std::invalid_argument );
 
-    // tskille: should code throw an exception for non existing restart step or return an empty vector ?
 
-    std::vector<std::tuple<std::string, EIOD::eclArrType, int>> rstArrays = rst1.listOfRstArrays(4);
-    BOOST_CHECK_EQUAL(rstArrays.size(), 0);
+    // try to get a list of vectors from non-existing report step, should throw exception
+    std::vector<std::tuple<std::string, EIOD::eclArrType, int>> rstArrays; // = rst1.listOfRstArrays(4);
+    BOOST_CHECK_THROW(rstArrays = rst1.listOfRstArrays(4), std::invalid_argument);
 
-    // non exising sequence
+    // non exising report step number, should throw exception 
+    
     BOOST_CHECK_THROW(std::vector<int> vect1=rst1.getRst<int>("ICON",0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<float> vect2=rst1.getRst<float>("PRESSURE",0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<double> vect3=rst1.getRst<double>("XGRP",0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<std::string> vect4=rst1.getRst<std::string>("ZWEL",0) , std::invalid_argument );
 
-    // sequence exists but data is not loaded
+    // report step number exists, but data is not loaded. Should throw exception
     BOOST_CHECK_THROW(std::vector<int> vect1=rst1.getRst<int>("ICON",10) , std::runtime_error );
     BOOST_CHECK_THROW(std::vector<float> vect2=rst1.getRst<float>("PRESSURE",10) , std::runtime_error );
     BOOST_CHECK_THROW(std::vector<double> vect3=rst1.getRst<double>("XGRP",10) , std::runtime_error );
     BOOST_CHECK_THROW(std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",10) , std::runtime_error );
     BOOST_CHECK_THROW(std::vector<std::string> vect4=rst1.getRst<std::string>("ZWEL",10) , std::runtime_error );
 
-    // check call with wrong type as well
+    // calling getRst<T> member function with wrong type, should throw exception
 
     BOOST_CHECK_THROW(std::vector<float> vect1=rst1.getRst<float>("ICON",5) , std::runtime_error );
     BOOST_CHECK_THROW(std::vector<int> vect2=rst1.getRst<int>("PRESSURE",5), std::runtime_error );
@@ -123,10 +123,13 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
 
 BOOST_AUTO_TEST_CASE(TestERst_2) {
-
+    
     std::string testFile="SPE1_TESTCASE.UNRST";
     std::string outFile="TEST.UNRST";
 
+    // using API for ERst to read all array from a binary unified restart file1
+    // Then write the data back to a new file and check that new file is identical with input file 
+    
     ERst rst1(testFile);
 
     std::ofstream outFileH;
@@ -187,6 +190,9 @@ BOOST_AUTO_TEST_CASE(TestERst_3) {
     std::string testFile="SPE1_TESTCASE.FUNRST";
     std::string outFile="TEST.FUNRST";
 
+    // using API for ERst to read all array from a formatted unified restart file1
+    // Then write the data back to a new file and check that new file is identical with input file 
+
     ERst rst1(testFile);
 
     std::ofstream outFileH;
@@ -240,6 +246,5 @@ BOOST_AUTO_TEST_CASE(TestERst_3) {
     if (remove(outFile.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
-  
 }
 

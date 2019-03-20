@@ -25,10 +25,6 @@
 #include <algorithm>
 #include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/EGrid.hpp>
-#include <examples/test_util/ERst.hpp>
-#include <examples/test_util/ESmry.hpp>
 #include <examples/test_util/ERft.hpp>
 #include <examples/test_util/EclOutput.hpp>
 

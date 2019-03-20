@@ -20,7 +20,6 @@
 #define ECLFILE_HPP
 
 
-//#include "EclIO.hpp"
 #include <iostream>
 #include <string>
 #include <fstream>

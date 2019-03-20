@@ -1,5 +1,5 @@
 /*
-   Copyright 2016 Statoil ASA.
+   Copyright 2019 Equinor ASA.
 
    This file is part of the Open Porous Media project (OPM).
 
@@ -60,19 +60,6 @@ static void printHelp() {
               
 }
 
-    // options removed
-
-             // << "-g Will print the vector with the greatest error ratio.\n"
-             // << "-I Same as -i, but throws an exception when the number of keywords in the two cases differ. Can not be used in combination with -t.\n"
-             // << "-K Will not allow different amount of keywords in the two files. Throws an exception if the amount are different.\n"
-             // << "-m mainVar. Will calculate the error ratio for one main variable. Valid input is WOPR, WWPR, WGPR or WBHP.\n"
-              // ?? << "-P Print common and uncommon keywords in both cases and exit. Can not be used in combination with -p.\n"
-             // << "-R Will allow comparison between a restarted simulation and a normal simulation for summary regression tests. The files must end at the same time.\n"
-            // << "    -t RST   \t Compare two cases consisting of restart files (.Xnnnn).\n"
-             // << "    -t RST1  \t Compare two cases where the first case consists of restart files (.Xnnnn), and the second case consists of a unified restart file (.UNRST).\n"
-             // << "    -t RST2  \t Compare two cases where the first case consists of a unified restart file (.UNRST), and the second case consists of restart files (.Xnnnn).\n"
-             // << "   Note that when dealing with restart files (.Xnnnn), the program concatenates all of them into one unified restart file, which is used for comparison and stored in the same directory as the restart files.\n"
-             // << "   This will overwrite any existing unified restart file in that directory.\n\n"
 
 
 //------------------------------------------------//
@@ -92,7 +79,7 @@ int main(int argc, char** argv) {
     int reportStepNumber           = -1;
     std::string fileTypeString;
 
-    while ((c = getopt(argc, argv, "hiIk:alnpPt:VRgs:m:vKx")) != -1) {
+    while ((c = getopt(argc, argv, "hik:alnpt:r:x")) != -1) {
         switch (c) {
         case 'a':
             analysis = true;
@@ -234,7 +221,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    std::cout << "\nFinished comparing cases \n" << std::endl;
+    std::cout << "\nProgram finished \n" << std::endl;
 
     return 0;
 }

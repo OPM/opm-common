@@ -26,7 +26,7 @@
 namespace EIOD = Opm::ecl;
 
 
-class EclOutput // 
+class EclOutput  
 {
 
 private:
@@ -51,7 +51,6 @@ public:
     EclOutput(std::ofstream &inputFileH);
 
     void writeBinaryHeader(const std::string &arrName,const int &size,const EIOD::eclArrType &arrType);
-   // void writeBinaryHeader(const std::string &arrName,const int &size,const std::string arrType);
 
     template <typename T>
     void writeBinaryArray(const std::vector<T> &data);
@@ -64,5 +63,4 @@ public:
     void writeFormattedArray(const std::vector<T> &data);
 
     void writeFormattedCharArray(const std::vector<std::string> &data);
-    
 };
