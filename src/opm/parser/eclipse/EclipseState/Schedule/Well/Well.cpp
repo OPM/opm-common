@@ -67,10 +67,8 @@ namespace Opm {
           m_allowCrossFlow(allowCrossFlow),
           m_automaticShutIn(automaticShutIn),
           m_segmentset( timeMap, WellSegments{} ),
-          timesteps( timeMap.numTimesteps() ),
-          events( timeMap )
+          timesteps( timeMap.numTimesteps() )
     {
-        addEvent( ScheduleEvents::NEW_WELL , creationTimeStep );
     }
 
     const std::string& Well::name() const {
@@ -152,11 +150,7 @@ namespace Opm {
             switchToProducer( timeStep );
 
         m_isProducer.update(timeStep , true);
-        bool update = m_productionProperties.update(timeStep, newProperties);
-        if (update)
-            addEvent( ScheduleEvents::PRODUCTION_UPDATE, timeStep );
-
-        return update;
+        return m_productionProperties.update(timeStep, newProperties);
     }
 
     WellProductionProperties Well::getProductionPropertiesCopy(size_t timeStep) const {
@@ -172,11 +166,7 @@ namespace Opm {
             switchToInjector( timeStep );
 
         m_isProducer.update(timeStep , false);
-        bool update = m_injectionProperties.update(timeStep, newProperties);
-        if (update)
-            addEvent( ScheduleEvents::INJECTION_UPDATE, timeStep );
-
-        return update;
+        return m_injectionProperties.update(timeStep, newProperties);
     }
 
     WellInjectionProperties Well::getInjectionPropertiesCopy(size_t timeStep) const {
@@ -190,9 +180,6 @@ namespace Opm {
     bool Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties& newProperties) {
         m_isProducer.update(timeStep , false);
         bool update = m_polymerProperties.update(timeStep, newProperties);
-        if (update)
-            addEvent( ScheduleEvents::WELL_POLYMER_UPDATE, timeStep );
-
         return update;
     }
 
@@ -251,13 +238,8 @@ namespace Opm {
         if ((WellCommon::StatusEnum::OPEN == status) && getConnections(timeStep).allConnectionsShut()) {
             OpmLog::note("When handling keyword for well " + name() + ": Cannot open a well where all completions are shut" );
             return false;
-        } else {
-            bool update = m_status.update( timeStep , status );
-            if (update)
-                addEvent( ScheduleEvents::WELL_STATUS_CHANGE , timeStep );
-
-            return update;
-        }
+        } else
+            return m_status.update( timeStep , status );
     }
 
     bool Well::isProducer(size_t timeStep) const {
@@ -590,18 +572,8 @@ namespace Opm {
         }
 
         m_completions.update( time_step, std::shared_ptr<WellConnections>( new_set ));
-        addEvent( ScheduleEvents::COMPLETION_CHANGE , time_step );
     }
 
-
-    void Well::addEvent(ScheduleEvents::Events event, size_t reportStep) {
-        this->events.addEvent( event , reportStep );
-    }
-
-
-    bool Well::hasEvent(uint64_t eventMask, size_t reportStep) const {
-        return this->events.hasEvent( eventMask , reportStep );
-    }
 
 
     void Well::filterConnections(const EclipseGrid& grid) {

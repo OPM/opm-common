@@ -154,6 +154,8 @@ namespace Opm
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
 
         const Events& getEvents() const;
+        const Events& getWellEvents(const std::string& well) const;
+        bool hasWellEvent(const std::string& well, uint64_t event_mask, size_t reportStep) const;
         const Deck& getModifierDeck(size_t timeStep) const;
         bool hasOilVaporizationProperties() const;
         const VFPProdTable& getVFPProdTable(int table_id, size_t timeStep) const;
@@ -190,6 +192,7 @@ namespace Opm
 
         std::vector< Well* > getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells = {});
         std::vector< Group* > getGroups(const std::string& groupNamePattern);
+        std::map<std::string,Events> well_events;
 
         void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
@@ -253,7 +256,7 @@ namespace Opm
                            const Eclipse3DProperties& eclipseProperties,
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
-
+        void addWellEvent(const std::string& well, ScheduleEvents::Events event, size_t reportStep);
         static double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem);
         static double convertInjectionRateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem &unitSystem);
         static bool convertEclipseStringToBool(const std::string& eclipseString);

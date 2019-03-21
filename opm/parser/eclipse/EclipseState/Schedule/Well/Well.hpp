@@ -26,7 +26,6 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
@@ -188,9 +187,6 @@ namespace Opm {
 
         void addWellSegments(size_t time_step, WellSegments new_segmentset);
 
-        const Events& getEvents() const;
-        void addEvent(ScheduleEvents::Events event, size_t reportStep);
-        bool hasEvent(uint64_t eventMask, size_t reportStep) const;
         void handleCOMPLUMP(const DeckRecord& record, size_t time_step);
         void handleCOMPDAT(size_t time_step, const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties);
         void handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, size_t time_step);
@@ -242,7 +238,6 @@ namespace Opm {
         // flag indicating if the well is a multi-segment well
         DynamicState< WellSegments > m_segmentset;
         size_t timesteps;
-        Events events;
     };
 }
 
