@@ -33,8 +33,8 @@
 class EGrid : public EclFile
 {
 
-private: 
-    int nI,nJ,nK,nNNC,nactive;    
+private:
+    int nI,nJ,nK,nNNC,nactive;
 
     std::vector<int> act_index;
     std::vector<int> glob_index;
@@ -43,13 +43,13 @@ private:
 
 public:
 
-    int global_index(const int &i,const int &j,const int &k) const; 
-    int active_index(const int &i,const int &j,const int &k) const;  
-    
-    
-    void dimension(int &i,int &j,int &k);  
+    int global_index(const int &i,const int &j,const int &k) const;
+    int active_index(const int &i,const int &j,const int &k) const;
 
-    void ijk_from_active_index(int actInd, int &i,int &j,int &k);  
+
+    void dimension(int &i,int &j,int &k);
+
+    void ijk_from_active_index(int actInd, int &i,int &j,int &k);
     void ijk_from_global_index(int globInd, int &i,int &j,int &k);
 
     void getCellCorner(const int &globindex,std::vector<double> &X, std::vector<double>& Y, std::vector<double>& Z) const;
@@ -57,10 +57,10 @@ public:
 
     int activeCells() const {return nactive;};
     int totalNumberOfCells() const {return (nI*nJ*nK);};
-    
+
     EGrid(const std::string &filename);
 
-    
-};  
+
+};
 
 #endif

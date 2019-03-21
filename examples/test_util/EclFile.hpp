@@ -34,11 +34,11 @@
 
 namespace EIOD = Opm::ecl;
 
-class EclFile 
+class EclFile
 {
 
 public:
-    
+
     EclFile(std::string filename);
     bool formattedInput(){ return formatted;};
 
@@ -46,7 +46,7 @@ public:
     void loadData(int arrIndex);                // load data based on array indices in vector arrIndex
     void loadData(std::vector<int> arrIndex);   // load data based on array indices in vector arrIndex
     void loadData(std::string arrName);         // load all arrays with array name equal to arrName
-    
+
     const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> getList() const;
 
     template <typename T>
@@ -54,10 +54,10 @@ public:
 
     template <typename T>
     const std::vector<T> &get(const std::string &name) const;
-   
+
     const bool hasKey(const std::string &name) const;
 
-    
+
 protected:
     bool formatted;
     std::string inputFilename;
@@ -82,7 +82,7 @@ private:
     void checkIfLoaded(const int &arrIndex) const;
     void loadArray(std::fstream &fileH,int arrIndex);
 
-};  
+};
 
 
 #endif

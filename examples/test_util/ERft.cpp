@@ -32,38 +32,38 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
     loadData();
     std::vector<int> first;
     std::vector<int> second;
-    
+
     std::vector<std::string> wellName;
     std::vector<std::tuple<int, int, int>> dates;
-    
-    
+
+
     const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> listOfArrays=getList();
 
     for (unsigned int i=0;i<listOfArrays.size();i++){
         std::string name=std::get<0>(listOfArrays[i]);
-        
+
 	if (name=="TIME"){
 	   first.push_back(i);
 	   std::vector<float> vect1= get<float>(i);
 	   timeList.push_back(vect1[0]);
-        } 
+        }
 
         if (name=="DATE"){
 	    std::vector<int> vect1= get<int>(i);
             std::tuple<int, int, int> date(vect1[2],vect1[1],vect1[0]);
             dateList.insert(date);
 	    dates.push_back(date);
-        } 
+        }
 
         if (name=="WELLETC"){
 	    std::vector<std::string> vect1= get<std::string>(i);
             wellList.insert(vect1[1]);
 	    wellName.push_back(vect1[1]);
-        } 
+        }
     }
-   
+
     for (unsigned int i=0;i<first.size();i++){
-        
+
         std::pair<int,int> range;
         range.first=first[i];
 	
@@ -73,7 +73,7 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
 	   range.second=first[i+1];
 	}
 
-        arrIndexRange[i]=range;      
+        arrIndexRange[i]=range;
     }
 
     numReports=first.size();
@@ -90,9 +90,9 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
 bool ERft::hasRft(const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     std::pair<std::string,std::tuple<int,int,int>> wellDatePair(wellName,date);
-    
+
     auto rIndIt = reportIndex.find(wellDatePair);
-    
+
     if (rIndIt==reportIndex.end()){
         return false;
     } else {
@@ -101,12 +101,12 @@ bool ERft::hasRft(const std::string &wellName, const std::tuple<int,int,int> &da
 }
 
 bool ERft::hasRft(const std::string &wellName, const int &year, const int &month, const int &day) const {
-    
+
     std::tuple<int,int,int> date(year, month, day);
     std::pair<std::string,std::tuple<int,int,int>> wellDatePair(wellName,date);
-    
+
     auto rIndIt = reportIndex.find(wellDatePair);
-    
+
     if (rIndIt==reportIndex.end()){
         return false;
     } else {
@@ -117,15 +117,15 @@ bool ERft::hasRft(const std::string &wellName, const int &year, const int &month
 int ERft::getReportIndex(const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     std::pair<std::string,std::tuple<int,int,int>> wellDatePair(wellName,date);
-    
+
     auto rIndIt = reportIndex.find(wellDatePair);
-    
+
     if (rIndIt==reportIndex.end()){
-        
+
         int y=std::get<0>(date);
         int m=std::get<1>(date);
         int d=std::get<2>(date);
-        
+
 	std::string dateStr=std::to_string(y) + "/" + std::to_string(m) + "/" + std::to_string(d);
         std::string message="RFT data not found for well  " + wellName + " at date: " + dateStr;
         throw std::invalid_argument(message);
@@ -135,16 +135,16 @@ int ERft::getReportIndex(const std::string &wellName, const std::tuple<int,int,i
 }
 
 bool ERft::hasArray(const std::string arrayName, const std::string &wellName, const std::tuple<int,int,int> &date) const {
-    
+
     int reportInd=getReportIndex(wellName, date);
 
     auto searchInd = arrIndexRange.find(reportInd);
-    
+
     int fromInd =searchInd->second.first;
     int toInd = searchInd->second.second;
-    
+
     auto it=std::find(array_name.begin()+fromInd,array_name.begin()+toInd,arrayName);
-    
+
     if (it== array_name.begin()+toInd){
         return false;
     } else {
@@ -152,38 +152,38 @@ bool ERft::hasArray(const std::string arrayName, const std::string &wellName, co
     }
 }
 
-    
+
 int ERft::getArrayIndex(const std::string &name, const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     int rInd= getReportIndex(wellName, date);
-    
+
     auto searchInd = arrIndexRange.find(rInd);
-    
+
     int fromInd =searchInd->second.first;
     int toInd = searchInd->second.second;
-    
+
     auto it=std::find(array_name.begin()+fromInd,array_name.begin()+toInd,name);
-    
+
     if (distance(array_name.begin(),it)==toInd) {
 
         int y=std::get<0>(date);
         int m=std::get<1>(date);
         int d=std::get<2>(date);
-        
+
 	std::string dateStr=std::to_string(y) + "/" + std::to_string(m) + "/" + std::to_string(d);
         std::string message="Array " + name + " not found for RFT, well: " + wellName + " date: " + dateStr;
         throw std::invalid_argument(message);
     }
-    
+
     return std::distance(array_name.begin(),it);
 }
 
-  
+
 template<>
 const std::vector<float> &ERft::getRft<float>(const std::string &name, const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     int arrInd= getArrayIndex(name, wellName, date);
-    
+
     if (array_type[arrInd]!=EIOD::REAL){
         std::string message="Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         throw std::runtime_error(message);
@@ -198,7 +198,7 @@ template<>
 const std::vector<double> &ERft::getRft<double>(const std::string &name, const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     int arrInd= getArrayIndex(name, wellName, date);
-    
+
     if (array_type[arrInd]!=EIOD::DOUB){
         std::string message="Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         throw std::runtime_error(message);
@@ -213,7 +213,7 @@ template<>
 const std::vector<int> &ERft::getRft<int>(const std::string &name, const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     int arrInd= getArrayIndex(name, wellName, date);
-    
+
     if (array_type[arrInd]!=EIOD::INTE){
         std::string message="Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         throw std::runtime_error(message);
@@ -229,7 +229,7 @@ template<>
 const std::vector<bool> &ERft::getRft<bool>(const std::string &name, const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     int arrInd= getArrayIndex(name, wellName, date);
-    
+
     if (array_type[arrInd]!=EIOD::LOGI){
         std::string message="Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         throw std::runtime_error(message);
@@ -244,7 +244,7 @@ template<>
 const std::vector<std::string> &ERft::getRft<std::string>(const std::string &name, const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     int arrInd= getArrayIndex(name, wellName, date);
-    
+
     if (array_type[arrInd]!=EIOD::CHAR){
         std::string message="Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         throw std::runtime_error(message);
@@ -295,11 +295,11 @@ const std::vector<bool> &ERft::getRft<bool>(const std::string &name, const std::
 const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> ERft::listOfRftArrays(const std::string &wellName, const std::tuple<int,int,int> &date) const {
 
     std::vector<std::tuple<std::string, EIOD::eclArrType, int>> list;
-    
+
     int rInd= getReportIndex(wellName, date);
-    
+
     auto searchInd = arrIndexRange.find(rInd);
-    
+
     for (int i=searchInd->second.first; i<searchInd->second.second; i++) {
         std::tuple<std::string, EIOD::eclArrType, int> t(array_name[i],array_type[i], array_size[i]);
         list.push_back(t);
@@ -312,11 +312,11 @@ const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> ERft::listOfRf
 
     std::tuple<int,int,int> date(year, month, day);
     std::vector<std::tuple<std::string, EIOD::eclArrType, int>> list;
-    
+
     int rInd= getReportIndex(wellName, date);
-    
+
     auto searchInd = arrIndexRange.find(rInd);
-    
+
     for (int i=searchInd->second.first; i<searchInd->second.second; i++) {
         std::tuple<std::string, EIOD::eclArrType, int> t(array_name[i],array_type[i], array_size[i]);
         list.push_back(t);
@@ -327,24 +327,24 @@ const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> ERft::listOfRf
 
 
 const std::vector<std::string> ERft::listOfWells() const {
-   
+
   std::vector<std::string> resVect;
 
-  for (auto it = wellList.begin(); it != wellList.end(); it++) { 
-      resVect.push_back(*it);  
-  }      
-  
+  for (auto it = wellList.begin(); it != wellList.end(); it++) {
+      resVect.push_back(*it);
+  }
+
   return std::move(resVect);
 }
 
 const std::vector<std::tuple<int, int, int>> ERft::listOfdates() const {
-   
+
   std::vector<std::tuple<int, int, int>> resVect;
 
-  for (auto it = dateList.begin(); it != dateList.end(); it++) { 
-      resVect.push_back(*it);  
-  }      
-  
+  for (auto it = dateList.begin(); it != dateList.end(); it++) {
+      resVect.push_back(*it);
+  }
+
   return std::move(resVect);
 }
 

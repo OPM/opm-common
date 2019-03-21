@@ -105,7 +105,7 @@ const std::vector<std::tuple<std::string, EIOD::eclArrType,int>> ERst::listOfRst
         std::string message="Trying to get list of arrays from non existing report step number  " + std::to_string(reportStepNumber);
         throw std::invalid_argument(message);
     }
-    
+
     for (int i=arrIndexRange[reportStepNumber].first; i<arrIndexRange[reportStepNumber].second; i++) {
         std::tuple<std::string, EIOD::eclArrType, int> t(array_name[i],array_type[i], array_size[i]);
         list.push_back(t);

@@ -34,14 +34,14 @@
 class ERst : public EclFile
 {
 
-private: 
-    int nReports;    
+private:
+    int nReports;
     std::vector<int> seqnum;                           // report step numbers, from SEQNUM array in restart file
     std::unordered_map<int,bool> reportLoaded;
     std::map<int, std::pair<int,int>> arrIndexRange;   // mapping report step number to array indeces (start and end)
-    
+
     const int getArrayIndex(const std::string &name,const int &seqnum) const;
-    
+
 public:
 
     const bool hasReportStepNumber(const int &number) const;
@@ -50,13 +50,13 @@ public:
 
     template <typename T>
     const std::vector<T> &getRst(const std::string &name,const int &reportStepNumber) const;
-    
+
     const std::vector<int> &listOfReportStepNumbers() const {return seqnum;};
 
     const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> listOfRstArrays(const int &reportStepNumber);
-    
+
     ERst(std::string filename);
-};  
+};
 
 #endif
 

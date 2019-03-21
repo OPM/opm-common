@@ -53,9 +53,9 @@ private:
     bool onlyLastSequence = false;
 
     bool integrationTest = false;
-    
+
     bool printKeywordOnly = false;
-    
+
     // spesific keyword to be compared
     std::string spesificKeyword="";
 
@@ -73,7 +73,7 @@ private:
     // Prints results stored in absDeviation and relDeviation.
     void printResultsForKeyword(const std::string& keyword) const;
     void printComparisonForKeywordLists(const std::vector<std::string> arrayList1, const std::vector<std::string> arrayList2) const;
-    
+
     void printComparisonForKeywordLists(const std::vector<std::string> arrayList1, const std::vector<std::string> arrayList2,
                                         const std::vector<EIOD::eclArrType> arrayType1, const std::vector<EIOD::eclArrType> arrayType2) const;
 
@@ -116,7 +116,7 @@ public:
     void setOnlyLastReportNumber(bool onlyLastSequenceArg) {
         this->onlyLastSequence = onlyLastSequenceArg;
     }
-    
+
     int countDev() { return  deviations.size(); }
 
     // Accept extra keywords: If this switch is set to true the comparison
@@ -126,7 +126,7 @@ public:
     void setAcceptExtraKeywords(bool acceptExtraKeywordsArg) {
         this->acceptExtraKeywords = acceptExtraKeywordsArg;
     }
-    
+
     void setIntegrationTest(bool inregrationTestArg) {
         this->integrationTest = inregrationTestArg;
     }
@@ -151,7 +151,7 @@ public:
     void results_init();
     void results_smry();
     void results_rft();
-    
+
     ~ECLRegressionTest();
 };
 

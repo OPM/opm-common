@@ -169,7 +169,7 @@ ESmry::ESmry(const std::string &filename)
     std::string rootN;
     std::vector<int> actInd;
     bool formatted=false;
-    
+
     std::string smspec_filen;
     std::string unsmry_filen;
 
@@ -181,7 +181,7 @@ ESmry::ESmry(const std::string &filename)
     } else {
         rootN=filename;
     }
-    
+
     if (formatted){
         smspec_filen=rootN+".FSMSPEC";
         unsmry_filen=rootN+".FUNSMRY";
@@ -189,9 +189,9 @@ ESmry::ESmry(const std::string &filename)
         smspec_filen=rootN+".SMSPEC";
         unsmry_filen=rootN+".UNSMRY";
     }
-    
+
     EclFile smspec(smspec_filen);
- 
+
     smspec.loadData();   // loading all data
 
     std::vector<int> dimens=smspec.get<int>("DIMENS");
@@ -226,7 +226,7 @@ ESmry::ESmry(const std::string &filename)
     for (int i=0; i<nAct; i++) {
         param.push_back({});
     }
-    
+
     EclFile unsmry(unsmry_filen);
     unsmry.loadData();
 

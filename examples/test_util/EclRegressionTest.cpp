@@ -389,7 +389,7 @@ void ECLRegressionTest::gridCompare() {
             for (int j=0; j<nJ1; j++) {
                 for (int i=0; i<nI1; i++) {
                     if (grid1->active_index(i,j,k)>-1) {
-                        
+
                         grid1->getCellCorner(i,j,k, X1, Y1, Z1);
                         grid2->getCellCorner(i,j,k, X2, Y2, Z2);
 
@@ -398,7 +398,7 @@ void ECLRegressionTest::gridCompare() {
                             Deviation devX = calculateDeviations(X1[n], X2[n]);
                             Deviation devY = calculateDeviations(Y1[n], Y2[n]);
                             Deviation devZ = calculateDeviations(Z1[n], Z2[n]);
-                            
+
                             if (devX.abs > strictAbsTol) {
                                 if (analysis) {
                                     deviations["xcoordinate"].push_back(devX);
@@ -715,8 +715,8 @@ void ECLRegressionTest::results_rst() {
 
             if (printKeywordOnly) {
                 printComparisonForKeywordLists(keywords1,keywords2, arrayType1, arrayType2);
-                
-                
+
+
             } else {
 
                 if (spesificKeyword=="") {
@@ -841,7 +841,7 @@ void ECLRegressionTest::results_smry() {
             } else {
                 printMissingKeywords(keywords1,keywords2);
             }
-            
+
         } else {
             if (spesificKeyword=="") {
                 compareKeywords(keywords1, keywords2, reference);
@@ -1009,7 +1009,7 @@ void ECLRegressionTest::results_rft() {
 void ECLRegressionTest::printComparisonForKeywordLists(const std::vector<std::string> arrayList1, const std::vector<std::string> arrayList2, const std::vector<EIOD::eclArrType> arrayType1, const std::vector<EIOD::eclArrType> arrayType2) const {
 
     unsigned int maxLen=0;
-    
+
     std::vector<std::string> arrTypeStrList = {"INTE", "REAL", "DOUB", "CHAR", "LOGI", "MESS"};
 
     std::set<std::string> commonList;
@@ -1029,7 +1029,7 @@ void ECLRegressionTest::printComparisonForKeywordLists(const std::vector<std::st
     }
 
     maxLen=maxLen+4;
-    
+
     std::cout << std::endl;
 
     for (auto it = commonList.begin(); it != commonList.end(); it++) {

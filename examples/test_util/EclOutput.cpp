@@ -17,6 +17,7 @@
    */
 
 #include "EclOutput.hpp"
+#include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
 #include <iterator>
@@ -71,7 +72,10 @@ std::tuple<const int, const int> EclOutput::block_size_data_binary(EIOD::eclArrT
         return std::make_tuple(EIOD::sizeOfChar,EIOD::MaxBlockSizeChar);
         break;
     case EIOD::MESS  :
-        throw std::invalid_argument("Type 'MESS' have not assosiated data") ;
+        OPM_THROW(std::invalid_argument, "Type 'MESS' have not associated data") ;
+        break;
+    default:
+        OPM_THROW(std::invalid_argument, "Invalid field type") ;
         break;
     }
 }
@@ -95,7 +99,10 @@ std::tuple<const int, const int, const int> EclOutput::block_size_data_formatted
         return std::make_tuple(EIOD::MaxNumBlockChar,EIOD::numColumnsChar, EIOD::columnWidthChar);
         break;
     case EIOD::MESS  :
-        throw std::invalid_argument("Type 'MESS' have not assosiated data") ;
+        OPM_THROW(std::invalid_argument, "Type 'MESS' have no associated data") ;
+        break;
+    default:
+        OPM_THROW(std::invalid_argument, "Invalid field type") ;
         break;
     }
 }
@@ -320,7 +327,7 @@ void EclOutput::writeFormattedHeader(const std::string &arrName,const int &size,
 const std::string EclOutput::make_real_string(const float &value) const {
 
     char buffer [15];
-    int n=sprintf (buffer, "%10.7E", value);
+    sprintf (buffer, "%10.7E", value);
 
     if (value==0.0) {
         std::string tmpstr("0.00000000E+00");
@@ -337,7 +344,7 @@ const std::string EclOutput::make_real_string(const float &value) const {
             tmpstr="0."+tmpstr.substr(0,1)+tmpstr.substr(2,7)+"E";
         }
 
-        n=sprintf (buffer, "%+03i", exp+1);
+        sprintf (buffer, "%+03i", exp+1);
         tmpstr=tmpstr+buffer;
 
         return std::move(tmpstr);
@@ -348,7 +355,7 @@ const std::string EclOutput::make_real_string(const float &value) const {
 const std::string EclOutput::make_doub_string(const double &value) const {
 
     char buffer [20];
-    int n=sprintf (buffer, "%19.13E", value);
+    sprintf (buffer, "%19.13E", value);
 
     if (value==0.0) {
         std::string tmpstr("0.00000000000000D+00");
@@ -375,7 +382,7 @@ const std::string EclOutput::make_doub_string(const double &value) const {
             }
         }
 
-        n=sprintf (buffer, "%+03i", exp+1);
+        sprintf (buffer, "%+03i", exp+1);
         tmpstr=tmpstr+buffer;
 
         return std::move(tmpstr);
@@ -432,6 +439,8 @@ void EclOutput::writeFormattedArray(const std::vector<T> &data) {
             else {
                 *ofileH << "  F";
             }
+            break;
+        default:
             break;
         }
 

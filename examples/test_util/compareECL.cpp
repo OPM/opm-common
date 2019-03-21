@@ -56,8 +56,6 @@ static void printHelp() {
               << "specific keyword. Information about the keyword, keyword occurrence (zero based) and cell "
               << "coordinate is printed when an exception is thrown. For more information about how the cases "
               << "are compared, see the documentation of the EclFilesComparator class.\n\n";
-              
-              
 }
 
 
@@ -162,7 +160,7 @@ int main(int argc, char** argv) {
         if (printKeywords) {
             comparator.setPrintKeywordOnly(printKeywords);
         }
-        
+
         if (onlyLastSequence) {
             comparator.setOnlyLastReportNumber(true);
         }
@@ -199,7 +197,7 @@ int main(int argc, char** argv) {
                 std::cerr << "Unknown ECLIPSE filetype specified with option -t. Please run compareECL -h to see manual." << std::endl;
                 return EXIT_FAILURE;
             }
-            
+
         } else if (integrationTest) {
             comparator.results_rst();
             comparator.results_smry();

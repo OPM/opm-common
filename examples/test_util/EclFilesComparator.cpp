@@ -46,13 +46,13 @@ void ECLFilesComparator::printValuesForCell(const std::string& keyword, const st
 
   int nActive=-1;
   int nTot=-1;
-  
+
   if (grid!=nullptr){
-      nActive=grid->activeCells();  
-      nTot=grid->totalNumberOfCells();  
+      nActive=grid->activeCells();
+      nTot=grid->totalNumberOfCells();
   }
-  
-  if (kw_size == nActive) {
+
+  if (static_cast<int>(kw_size) == nActive) {
 	
 	int i, j, k;
 	grid->ijk_from_active_index(cell, i, j, k);
@@ -67,7 +67,7 @@ void ECLFilesComparator::printValuesForCell(const std::string& keyword, const st
         return;
     }
 
-    if (kw_size == nTot) {
+    if (static_cast<int>(kw_size) == nTot) {
 
 	int i, j, k;
 	grid->ijk_from_global_index(cell, i, j, k);
@@ -107,8 +107,8 @@ ECLFilesComparator::ECLFilesComparator(const std::string& basename1,
 Deviation ECLFilesComparator::calculateDeviations(double val1, double val2) {
     val1 = std::abs(val1);
     val2 = std::abs(val2);
-    
-    
+
+
     Deviation deviation;
     if (val1 != 0 || val2 != 0) {
         deviation.abs = std::fabs(val1 - val2);

@@ -34,18 +34,18 @@
 class ERft : public EclFile
 {
 
-private: 
+private:
 
-    std::map<int, std::pair<int,int>> arrIndexRange;   
-    int numReports;    
+    std::map<int, std::pair<int,int>> arrIndexRange;
+    int numReports;
     std::vector<float> timeList;
 
     std::set<std::string> wellList;
     std::set<std::tuple<int, int, int>> dateList;
     std::vector<std::pair<std::string, std::tuple<int,int,int>>> rftReportList;
-    
+
     std::map<std::pair<std::string,std::tuple<int,int,int>> ,int> reportIndex;  //  mapping report index to wellName and date (tupe)
-    
+
     int getReportIndex(const std::string &wellName, const std::tuple<int,int,int> &date) const;
     int getArrayIndex(const std::string &name, const std::string &wellName, const std::tuple<int,int,int> &date) const;
 
@@ -56,22 +56,22 @@ public:
 
     template <typename T>
     const std::vector<T> &getRft(const std::string &name, const std::string &wellName, const int &year, const int &month, const int &day) const;
-    
+
     const std::vector<std::string> listOfWells() const;
     const std::vector<std::tuple<int, int, int>> listOfdates() const;
     const std::vector<std::pair<std::string,std::tuple<int, int, int>>> &listOfRftReports() const {return rftReportList;};
 
     bool hasRft(const std::string &wellName, const std::tuple<int,int,int> &date) const;
     bool hasRft(const std::string &wellName, const int &year, const int &month, const int &day) const;
-    
+
     const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> listOfRftArrays(const std::string &wellName, const std::tuple<int,int,int> &date) const;
     const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> listOfRftArrays(const std::string &wellName, const int &year, const int &month, const int &day) const;
 
     bool hasArray(const std::string arrayName, const std::string &wellName, const std::tuple<int,int,int> &date) const;
-    
+
     ERft(const std::string &filename);
-    
-};  
+
+};
 
 #endif
 

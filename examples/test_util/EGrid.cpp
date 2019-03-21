@@ -29,15 +29,15 @@
 EGrid::EGrid(const std::string &filename) : EclFile(filename)
 {
    loadData();
-   
-   const std::vector<int> gridhead=get<int>("GRIDHEAD"); 
-   
+
+   const std::vector<int> gridhead=get<int>("GRIDHEAD");
+
    nI=gridhead[1];
    nJ=gridhead[2];
    nK=gridhead[3];
 
    if (hasKey("ACTNUM")){
-       const std::vector<int> actnum=get<int>("ACTNUM"); 
+       const std::vector<int> actnum=get<int>("ACTNUM");
 
        nactive=0;
        for (unsigned int i=0;i<actnum.size();i++){
@@ -47,7 +47,7 @@ EGrid::EGrid(const std::string &filename) : EclFile(filename)
                nactive++;
            } else {
                act_index.push_back(-1);
-           }       
+           }
         }
    } else {
        int nCells=nI*nJ*nK;
@@ -56,20 +56,20 @@ EGrid::EGrid(const std::string &filename) : EclFile(filename)
            glob_index.push_back(i);
        }
    }
-   
+
    coord_array=get<float>("COORD");
    zcorn_array=get<float>("ZCORN");
 };
 
 
 int EGrid::global_index(const int &i,const int &j,const int &k) const {
-    
+
     if ((i < 0) || (i >= nI) || (j < 0) || (j >= nJ) || (k < 0) || (k >= nK)){
         throw std::invalid_argument("i, j or/and k out of range");
     }
-    
-    return i+j*nI+k*nI*nJ; 
-  
+
+    return i+j*nI+k*nI*nJ;
+
 };
 
 int EGrid::active_index(const int &i,const int &j,const int &k) const {
@@ -78,8 +78,8 @@ int EGrid::active_index(const int &i,const int &j,const int &k) const {
 
     if ((i < 0) || (i >= nI) || (j < 0) || (j >= nJ) || (k < 0) || (k >= nK)){
         throw std::invalid_argument("i, j or/and k out of range");
-    }    
-    
+    }
+
     return act_index[n];
 }
 
@@ -90,7 +90,7 @@ void EGrid::dimension(int &i,int &j,int &k){
 
 
 void EGrid::ijk_from_active_index(int actInd, int &i,int &j,int &k){
-  
+
     if ((actInd<0) || (actInd>=nactive)){
         throw std::invalid_argument("active index out of range");
     }
@@ -98,23 +98,23 @@ void EGrid::ijk_from_active_index(int actInd, int &i,int &j,int &k){
     int _glob=glob_index[actInd];
 
     k=_glob / (nI*nJ);
-    
+
     int rest=_glob % (nI*nJ);
-   
+
     j=rest / nI;
     i=rest % nI;
 }
 
 void EGrid::ijk_from_global_index(int globInd, int &i,int &j,int &k){
-  
+
     if ((globInd<0) || (globInd>=(nI*nJ*nK))){
         throw std::invalid_argument("global index out of range");
     }
-  
+
     k=globInd / (nI*nJ);
-    
+
     int rest=globInd % (nI*nJ);
-   
+
     j=rest / nI;
     i=rest % nI;
 }
@@ -125,15 +125,15 @@ void EGrid::getCellCorner(const int &i, const int &j, const int &k, std::vector<
     std::vector<int> zind;
     std::vector<int> pind;
     double xt,xb,yt,yb,zt,zb;
-    
+
     if ((X.size()<8) || (Y.size()<8) || (Z.size()<8)){
         throw std::invalid_argument("In routine cellConrner. X, Y and Z should be a vector of size 8");
     }
 
     if ((i < 0) || (i >= nI) || (j < 0) || (j >= nJ) || (k < 0) || (k >= nK)){
         throw std::invalid_argument("i, j and/or k out of range");
-    }    
-   
+    }
+
    // calculate indices for grid pillars in COORD arrray
 
    pind.push_back(j*(nI+1)*6+i*6);
@@ -164,7 +164,7 @@ void EGrid::getCellCorner(const int &i, const int &j, const int &k, std::vector<
        xb=static_cast<double>(coord_array[pind[n]+3]);
        yb=static_cast<double>(coord_array[pind[n]+4]);
        zb=static_cast<double>(coord_array[pind[n]+5]);
-       
+
        X[n]=xt+(xb-xt)/(zt-zb)*(zt-Z[n]);
        X[n+4]=xt+(xb-xt)/(zt-zb)*(zt-Z[n+4]);
 
@@ -175,16 +175,16 @@ void EGrid::getCellCorner(const int &i, const int &j, const int &k, std::vector<
 
 
 void EGrid::getCellCorner(const int &globindex,std::vector<double> &X, std::vector<double>& Y, std::vector<double>& Z) const {
-   
+
     if ((globindex<0) || (globindex>=(nI*nJ*nK))){
         throw std::invalid_argument("global index out of range");
     }
 
     int k=globindex / (nI*nJ);
     int rest=globindex % (nI*nJ);
-   
+
     int j=rest / nI;
     int i=rest % nI;
-    
+
     getCellCorner(i, j, k, X, Y, Z);
 }

@@ -16,6 +16,8 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#include "EclFile.hpp"
+
 #include <string>
 #include <string.h>
 #include <sstream>
@@ -23,7 +25,7 @@
 #include <iomanip>
 #include <algorithm>
 
-#include "EclFile.hpp"
+#include <opm/common/ErrorMacros.hpp>
 
 
 // anonymous namespace for EclFile
@@ -106,7 +108,10 @@ std::tuple<const int, const int> block_size_data_binary(EIOD::eclArrType arrType
         return std::make_tuple(EIOD::sizeOfChar,EIOD::MaxBlockSizeChar);
         break;
     case EIOD::MESS  :
-        throw std::invalid_argument("Type 'MESS' have not assosiated data") ;
+        OPM_THROW(std::invalid_argument, "Type 'MESS' have no associated data");
+        break;
+    default:
+        OPM_THROW(std::invalid_argument, "Unknown field type");
         break;
     }
 }
@@ -130,7 +135,10 @@ std::tuple<const int, const int, const int> block_size_data_formatted(EIOD::eclA
         return std::make_tuple(EIOD::MaxNumBlockChar,EIOD::numColumnsChar, EIOD::columnWidthChar);
         break;
     case EIOD::MESS  :
-        throw std::invalid_argument("Type 'MESS' have not assosiated data") ;
+        OPM_THROW(std::invalid_argument, "Type 'MESS' have no associated data") ;
+        break;
+    default:
+        OPM_THROW(std::invalid_argument, "Unknown field type");
         break;
     }
 }
@@ -755,8 +763,8 @@ std::vector<float> readFormattedRealArray(std::fstream &fileH,const int size) {
         std::string message="fstream fileH not open for reading";
         throw std::runtime_error(message);
     }
-    
-    
+
+
     while (num<size) {
 
         if (fileH.eof()) {
@@ -768,13 +776,13 @@ std::vector<float> readFormattedRealArray(std::fstream &fileH,const int size) {
         tokens=split_string(line);
 
 	   // tskille: temporary fix, need to be discussed. OPM flow writes numbers
-	   // that are outside valid range for float, and function stof will fail 
+	   // that are outside valid range for float, and function stof will fail
 	   // with runtime error.
 
         for (unsigned int i=0; i<tokens.size(); i++) {
             // value=stof(tokens[i]);
-            
-	    double dtmpv=stod(tokens[i]);	   
+
+	    double dtmpv=stod(tokens[i]);
 	    value=static_cast<float>(dtmpv);
             arr.push_back(value);
         }
@@ -906,7 +914,7 @@ EclFile::EclFile(std::string filename) {
     }
 
     int n=0;
-    
+
     while (!isEOF(&fileH)) {
 
         std::string arrName(8,' ');
@@ -965,6 +973,11 @@ void EclFile::loadArray(std::fstream &fileH,int arrIndex) {
         case EIOD::CHAR  :
             char_array[arrIndex]=readFormattedCharArray(fileH,array_size[arrIndex]);
             break;
+        case EIOD::MESS  :
+            break;
+        default:
+            OPM_THROW(std::runtime_error, "Asked to read unexpected array type");
+            break;
         }
 
     } else {
@@ -983,6 +996,11 @@ void EclFile::loadArray(std::fstream &fileH,int arrIndex) {
             break;
         case EIOD::CHAR  :
             char_array[arrIndex]=readBinaryCharArray(fileH,array_size[arrIndex]);
+            break;
+        case EIOD::MESS  :
+            break;
+        default:
+            OPM_THROW(std::runtime_error, "Asked to read unexpected array type");
             break;
         }
     }
@@ -1004,7 +1022,7 @@ void EclFile::checkIfLoaded(const int &arrIndex) const {
 void EclFile::loadData() {
 
     std::fstream fileH;
-    
+
     if (formatted) {
         fileH.open(inputFilename, std::ios::in);
     } else {
