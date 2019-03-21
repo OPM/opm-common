@@ -45,7 +45,7 @@ namespace Opm
             WELL_WELSPECS_UPDATE = 2,
 
 
-            WELL_POLYMER_UPDATE = 4,
+            //WELL_POLYMER_UPDATE = 4,
             /*
                The NEW_GROUP event is triggered by the WELSPECS and
                GRUPTREE keywords.
@@ -61,7 +61,7 @@ namespace Opm
             */
             PRODUCTION_UPDATE = 16,
             INJECTION_UPDATE = 32,
-            POLYMER_UPDATES = 64,
+            //POLYMER_UPDATES = 64,
 
             /*
               This event is triggered if the well status is changed
