@@ -927,20 +927,19 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     const auto& w2 = sched.getWell( "W_2");
 
 
-    BOOST_CHECK( w1->hasEvent( ScheduleEvents::NEW_WELL , 0 ));
-    BOOST_CHECK( w2->hasEvent( ScheduleEvents::NEW_WELL , 2 ));
-    BOOST_CHECK( !w2->hasEvent( ScheduleEvents::NEW_WELL , 3 ));
-    BOOST_CHECK( w2->hasEvent( ScheduleEvents::WELL_WELSPECS_UPDATE , 3 ));
+    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::NEW_WELL , 0 ));
+    BOOST_CHECK( sched.hasWellEvent( "W_2", ScheduleEvents::NEW_WELL , 2 ));
+    BOOST_CHECK( !sched.hasWellEvent( "W_2", ScheduleEvents::NEW_WELL , 3 ));
+    BOOST_CHECK( sched.hasWellEvent( "W_2", ScheduleEvents::WELL_WELSPECS_UPDATE , 3 ));
 
+    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 0 ));
+    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
+    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
+    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
+    BOOST_CHECK( !sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 5 ));
 
-    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 0 ));
-    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
-    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
-    BOOST_CHECK( w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
-    BOOST_CHECK( !w1->hasEvent( ScheduleEvents::WELL_STATUS_CHANGE , 5 ));
-
-    BOOST_CHECK( w1->hasEvent( ScheduleEvents::COMPLETION_CHANGE , 0 ));
-    BOOST_CHECK( w1->hasEvent( ScheduleEvents::COMPLETION_CHANGE , 5 ));
+    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 0 ));
+    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 5 ));
 
     BOOST_CHECK_EQUAL( w1->firstTimeStep( ) , 0 );
     BOOST_CHECK_EQUAL( w2->firstTimeStep( ) , 2 );

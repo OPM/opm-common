@@ -543,7 +543,7 @@ namespace Opm {
             const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
             const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
             if (!new_well)
-                currentWell.addEvent( ScheduleEvents::WELL_WELSPECS_UPDATE , currentStep );
+                this->addWellEvent(currentWell.name(), ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
 
             if( currentWell.getHeadI() != headI ) {
                 std::string msg = "HEAD_I changed for well " + currentWell.name();
@@ -669,9 +669,10 @@ namespace Opm {
                 }
 
                 updateWellStatus( *well , currentStep , status );
-                if (well->setProductionProperties(currentStep, properties))
+                if (well->setProductionProperties(currentStep, properties)) {
                     m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
-
+                    this->addWellEvent( well->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
+                }
                 if ( !well->getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
 
                     std::string msg =
@@ -685,8 +686,10 @@ namespace Opm {
     }
 
     void Schedule::updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status) {
-        if( well.setStatus( reportStep, status ) )
+        if( well.setStatus( reportStep, status ) ) {
             m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
+            this->addWellEvent( well.name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+        }
     }
 
 
@@ -775,9 +778,10 @@ namespace Opm {
                     }
                 }
 
-                if (well->setInjectionProperties(currentStep, properties))
+                if (well->setInjectionProperties(currentStep, properties)) {
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
-
+                    this->addWellEvent( well->name(), ScheduleEvents::INJECTION_UPDATE, currentStep);
+                }
                 // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
                 // it should be turned off.
                 if ( ! well->getAllowCrossFlow()
@@ -1590,6 +1594,7 @@ namespace Opm {
                     OpmLog::note(msg);
                     updateWellStatus( *well, currentStep, WellCommon::StatusEnum::SHUT);
                 }
+                this->addWellEvent(well->name(), ScheduleEvents::COMPLETION_CHANGE, currentStep);
             }
         }
         m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
@@ -1759,6 +1764,8 @@ namespace Opm {
 
         m_wells.insert( std::make_pair(wellName, well ));
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
+        well_events.insert( std::make_pair(wellName, Events(this->m_timeMap)));
+        this->addWellEvent(wellName, ScheduleEvents::NEW_WELL, timeStep);
     }
 
     size_t Schedule::numWells() const {
@@ -2148,7 +2155,22 @@ namespace Opm {
     }
 
 
+    const Events& Schedule::getWellEvents(const std::string& well) const {
+        if (this->well_events.count(well) > 0)
+            return this->well_events.at(well);
+        else
+            throw std::invalid_argument("No such well " + well);
+    }
 
+    void Schedule::addWellEvent(const std::string& well, ScheduleEvents::Events event, size_t reportStep)  {
+        auto& events = this->well_events.at(well);
+        events.addEvent(event, reportStep);
+    }
+
+    bool Schedule::hasWellEvent(const std::string& well, uint64_t event_mask, size_t reportStep) const {
+        const auto& events = this->getWellEvents(well);
+        return events.hasEvent(event_mask, reportStep);
+    }
 
     const Events& Schedule::getEvents() const {
         return this->m_events;
