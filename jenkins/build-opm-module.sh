@@ -168,7 +168,13 @@ function clone_and_build_module {
   then
     test_build=$5
   fi
-  build_module "$2" $test_build $WORKSPACE/deps/$1
+  CMAKE_ARGS="$2"
+  if test "$1" = "opm-simulators"; then
+      # opm-simulators specific cmake flags: we want to make sure
+      # that all ebos extensions build fine
+      CMAKE_ARGS="$CMAKE_ARGS -DBUILD_EBOS_EXTENSIONS=TRUE -DBUILD_EBOS_DEBUG_EXTENSIONS=TRUE"
+  fi
+  build_module "$CMAKE_ARGS" $test_build $WORKSPACE/deps/$1
   test $? -eq 0 || exit 1
   popd
 }
@@ -232,7 +238,13 @@ function build_module_full {
     mkdir -p $configuration/build-$1
     cd $configuration/build-$1
     echo "Building main module $1=$sha1 configuration=$configuration"
-    build_module "-DENABLE_WELL_TEST=ON -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT" 1 $WORKSPACE
+    CMAKE_ARGS="-DENABLE_WELL_TEST=ON -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT"
+    if test "$1" = "opm-simulators"; then
+        # opm-simulators specific cmake flags: we want to make sure
+        # that all ebos extensions build fine
+        CMAKE_ARGS="$CMAKE_ARGS -DBUILD_EBOS_EXTENSIONS=TRUE -DBUILD_EBOS_DEBUG_EXTENSIONS=TRUE"
+    fi
+    build_module "$CMAKE_ARGS" 1 $WORKSPACE
     test $? -eq 0 || exit 1
     cmake --build . --target install
     test $? -eq 0 || exit 1
