@@ -384,6 +384,10 @@ namespace {
     }
 
     bool WellConnections::allConnectionsShut( ) const {
+        if (this->size() == 0)
+            return false;
+
+
         auto shut = []( const Connection& c ) {
             return c.state() == WellCompletion::StateEnum::SHUT;
         };
