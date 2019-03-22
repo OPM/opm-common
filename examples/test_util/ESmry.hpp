@@ -28,32 +28,26 @@
 
 class ESmry
 {
+public:
+    explicit ESmry(const std::string& filename);   // filename (smspec file) or file root name
+    const int numberOfVectors() const { return nVect; }
+
+    bool hasKey(const std::string& key) const;
+
+    const std::vector<float>& get(const std::string& name) const;
+    const std::vector<std::string>& keywordList() const { return keyword; }
 
 private:
-    int nVect,nI,nJ,nK;
+    int nVect, nI, nJ, nK;
 
-    void ijk_from_global_index(int glob,int &i,int &j,int &k);
-    std::vector<std::vector<float> > param;
+    void ijk_from_global_index(int glob, int &i, int &j, int &k);
+    std::vector<std::vector<float>> param;
     std::vector<std::string> keyword;
 
     std::vector<int> seqIndex;
     std::vector<float> seqTime;
 
-    const std::string makeKeyString(const std::string &keyword, const std::string &wgname, const int &num);
-
-
-public:
-
-    const int numberOfVectors() const { return nVect;};
-
-    const bool hasKey(const std::string &key) const;
-
-    const std::vector<float> &get(const std::string &name) const;
-
-    const std::vector<std::string> keywordList() const {return keyword;};
-
-    ESmry(const std::string &filename);   // filename (smspec file) or file root name
-
+    std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num);
 };
 
 #endif

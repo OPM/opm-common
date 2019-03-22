@@ -48,209 +48,183 @@
  */
 
 
-const bool ESmry::hasKey(const std::string &key) const {
-
-    auto it=std::find(keyword.begin(),keyword.end(),key);
-
-    if (it!=keyword.end()) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void ESmry::ijk_from_global_index(int glob,int &i,int &j,int &k) {
-
-    int tmpGlob=glob-1;
-
-    k=tmpGlob/(nI*nJ)+1;
-    int rest=tmpGlob % (nI*nJ);
-
-    j=rest/(nI)+1;
-    i=rest % (nI)+1;
-}
-
-const std::string ESmry::makeKeyString(const std::string &keyword, const std::string &wgname, const int &num) {
-
-    std::string keyStr;
-    std::vector<std::string> segmExcep= {"STEPTYPE", "SEPARATE", "SUMTHIN"};
-
-    if (keyword.substr(0,1)=="A") {
-        keyStr=keyword+":"+std::to_string(num);
-    } else if (keyword.substr(0,1)=="B") {
-        int _i,_j,_k;
-
-        ijk_from_global_index(num,_i,_j,_k);
-
-        keyStr=keyword+":"+std::to_string(_i)+","+std::to_string(_j)+","+std::to_string(_k);
-
-    } else if (keyword.substr(0,1)=="C") {
-
-        int _i,_j,_k;
-
-        if (num>0) {
-            ijk_from_global_index(num,_i,_j,_k);
-            keyStr=keyword+":"+wgname+":"+std::to_string(_i)+","+std::to_string(_j)+","+std::to_string(_k);
-        } else {
-            keyStr="";
-        }
-
-    } else if (keyword.substr(0,1)=="G") {
-
-        if (wgname!=":+:+:+:+") {
-            keyStr=keyword+":"+wgname;
-        } else {
-            keyStr="";
-        }
-
-    } else if ((keyword.substr(0,1)=="R") && (keyword.substr(2,1)=="F")) {
-
-        // NUMS = R1 + 32768*(R2 + 10)
-
-        int r2=0;
-        int y=32768*(r2+10)-num;
-
-        while (y<0) {
-            r2++;
-            y=32768*(r2+10)-num;
-        }
-
-        r2--;
-        int r1=num-32768*(r2+10);
-
-        keyStr=keyword+":"+std::to_string(r1)+"-"+std::to_string(r2);
-
-    } else if (keyword.substr(0,1)=="R") {
-
-        keyStr=keyword+":"+std::to_string(num);
-
-    } else if (keyword.substr(0,1)=="S") {
-
-        std::vector<std::string>::iterator it = std::find(segmExcep.begin(),segmExcep.end(),keyword);
-
-        if (it!=segmExcep.end()) {
-            keyStr=keyword;
-        } else {
-            keyStr=keyword+":"+wgname+":"+std::to_string(num);
-        }
-
-    } else if (keyword.substr(0,1)=="W") {
-
-        if (wgname!=":+:+:+:+") {
-            keyStr=keyword+":"+wgname;
-        } else {
-            keyStr="";
-        }
-
-    } else {
-        keyStr=keyword;
-    }
-
-    return std::move(keyStr);
-}
-
-const std::vector<float> &ESmry::get(const std::string &name) const {
-
-    auto it=find(keyword.begin(),keyword.end(),name);
-
-    if (it==keyword.end()) {
-        std::string message="keyword " + name + " not found ";
-        throw std::invalid_argument(message);
-    }
-
-    int ind=distance(keyword.begin(),it);
-
-    return param[ind];
-}
-
-
-ESmry::ESmry(const std::string &filename)
+ESmry::ESmry(const std::string& filename)
 {
     std::string rootN;
     std::vector<int> actInd;
-    bool formatted=false;
+    bool formatted = false;
 
     std::string smspec_filen;
     std::string unsmry_filen;
 
-    if (filename.substr(filename.length()-7,7)==".SMSPEC") {
-        rootN=filename.substr(0,filename.length()-7);
-    } else if (filename.substr(filename.length()-8,8)==".FSMSPEC") {
-        rootN=filename.substr(0,filename.length()-8);
+    if (filename.substr(filename.length() - 7, 7)==".SMSPEC") {
+        rootN = filename.substr(0, filename.length() - 7);
+    } else if (filename.substr(filename.length() - 8, 8)==".FSMSPEC") {
+        rootN = filename.substr(0, filename.length() - 8);
         formatted=true;
     } else {
         rootN=filename;
     }
 
-    if (formatted){
-        smspec_filen=rootN+".FSMSPEC";
-        unsmry_filen=rootN+".FUNSMRY";
+    if (formatted) {
+        smspec_filen = rootN + ".FSMSPEC";
+        unsmry_filen = rootN + ".FUNSMRY";
     } else {
-        smspec_filen=rootN+".SMSPEC";
-        unsmry_filen=rootN+".UNSMRY";
+        smspec_filen = rootN + ".SMSPEC";
+        unsmry_filen = rootN + ".UNSMRY";
     }
 
     EclFile smspec(smspec_filen);
 
     smspec.loadData();   // loading all data
 
-    std::vector<int> dimens=smspec.get<int>("DIMENS");
+    auto dimens = smspec.get<int>("DIMENS");
 
-    nVect=dimens[0];
+    nVect = dimens[0];
 
     actInd.reserve(nVect);
     keyword.reserve(nVect);
 
-    nI=dimens[1];
-    nJ=dimens[2];
-    nK=dimens[3];
+    nI = dimens[1];
+    nJ = dimens[2];
+    nK = dimens[3];
 
-    const std::vector<std::string> keywords=smspec.get<std::string>("KEYWORDS");
-    const std::vector<std::string> wgnames=smspec.get<std::string>("WGNAMES");
-    const std::vector<int> nums=smspec.get<int>("NUMS");
-    const std::vector<std::string> units=smspec.get<std::string>("UNITS");
+    auto keywords = smspec.get<std::string>("KEYWORDS");
+    auto wgnames = smspec.get<std::string>("WGNAMES");
+    auto nums = smspec.get<int>("NUMS");
+    auto units = smspec.get<std::string>("UNITS");
 
-    for (int i=0; i<nVect; i++) {
-        std::string keywStr=makeKeyString(keywords[i], wgnames[i] , nums[i]);
+    for (int i = 0; i < nVect; i++) {
+        std::string keywStr = makeKeyString(keywords[i], wgnames[i] , nums[i]);
 
-        if ((keywStr!="") && (hasKey(keywStr)!=true)) {
+        if (!keywStr.empty() && !hasKey(keywStr)) {
             keyword.push_back(keywStr);
             actInd.push_back(i);
         }
     }
 
-    int nAct=actInd.size();
-
-    param.reserve(nAct);
-
-    for (int i=0; i<nAct; i++) {
-        param.push_back({});
-    }
+    int nAct = actInd.size();
+    param.resize(nAct);
 
     EclFile unsmry(unsmry_filen);
     unsmry.loadData();
 
-    std::vector<std::tuple<std::string, EIOD::eclArrType, int >> list1 = unsmry.getList();
-    float time=0.0;
-    int step=0;
+    std::vector<EclFile::EclEntry> list1 = unsmry.getList();
+    float time = 0.0;
+    int step = 0;
 
-    for (unsigned int i=0; i<list1.size(); i++) {
-        std::string name=std::get<0>(list1[i]);
+    for (size_t i = 0; i < list1.size(); i++) {
+        std::string name = std::get<0>(list1[i]);
 
-        if (name=="SEQHDR") {
+        if (name == "SEQHDR") {
             seqTime.push_back(time);
             seqIndex.push_back(step);
-        } else if (name=="PARAMS") {
-            std::vector<float> data=unsmry.get<float>(i);
+        } else if (name == "PARAMS") {
+            auto data = unsmry.get<float>(i);
 
-            for (int j=0; j<nAct; j++) {
+            for (int j = 0;  j < nAct; j++) {
                 param[j].push_back(data[actInd[j]]);
             }
             step++;
         }
     }
-};
+}
 
 
+bool ESmry::hasKey(const std::string &key) const
+{
+    auto it=std::find(keyword.begin(), keyword.end(), key);
+    return it != keyword.end();
+}
 
 
+void ESmry::ijk_from_global_index(int glob,int &i,int &j,int &k)
+{
+    int tmpGlob = glob - 1;
+
+    k = 1 + tmpGlob / (nI * nJ);
+    int rest = tmpGlob % (nI * nJ);
+
+    j = 1 + rest / nI;
+    i = 1 + rest % nI;
+}
+
+
+std::string ESmry::makeKeyString(const std::string &keyword, const std::string &wgname, int num)
+{
+    std::string keyStr;
+    std::vector<std::string> segmExcep= {"STEPTYPE", "SEPARATE", "SUMTHIN"};
+
+    if (keyword.substr(0, 1) == "A") {
+        keyStr = keyword + ":" + std::to_string(num);
+    } else if (keyword.substr(0, 1) == "B") {
+        int _i,_j,_k;
+        ijk_from_global_index(num, _i, _j, _k);
+
+        keyStr = keyword + ":" + std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
+
+    } else if (keyword.substr(0, 1) == "C") {
+        int _i,_j,_k;
+
+        if (num > 0) {
+            ijk_from_global_index(num, _i, _j, _k);
+            keyStr = keyword + ":" + wgname+ ":" + std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
+        } else {
+            keyStr.clear();
+        }
+    } else if (keyword.substr(0, 1) == "G") {
+        if ( wgname != ":+:+:+:+") {
+            keyStr = keyword + ":" + wgname;
+        } else {
+            keyStr.clear();
+        }
+    } else if (keyword.substr(0, 1) == "R" && keyword.substr(2, 1) == "F") {
+        // NUMS = R1 + 32768*(R2 + 10)
+        int r2 = 0;
+        int y = 32768 * (r2 + 10) - num;
+
+        while (y <0 ) {
+            r2++;
+            y = 32768 * (r2 + 10) - num;
+        }
+
+        r2--;
+        int r1 = num - 32768 * (r2 + 10);
+
+        keyStr = keyword + ":" + std::to_string(r1) + "-" + std::to_string(r2);
+    } else if (keyword.substr(0, 1) == "R") {
+        keyStr = keyword + ":" + std::to_string(num);
+    } else if (keyword.substr(0, 1) == "S") {
+        auto it = std::find(segmExcep.begin(), segmExcep.end(), keyword);
+        if (it != segmExcep.end()) {
+            keyStr = keyword;
+        } else {
+            keyStr = keyword + ":" + wgname + ":" + std::to_string(num);
+        }
+    } else if (keyword.substr(0,1) == "W") {
+        if (wgname != ":+:+:+:+") {
+            keyStr = keyword + ":" + wgname;
+        } else {
+            keyStr = "";
+        }
+    } else {
+        keyStr = keyword;
+    }
+
+    return std::move(keyStr);
+}
+
+
+const std::vector<float>& ESmry::get(const std::string& name) const
+{
+    auto it = std::find(keyword.begin(), keyword.end(), name);
+
+    if (it == keyword.end()) {
+        std::string message="keyword " + name + " not found ";
+        OPM_THROW(std::invalid_argument, message);
+    }
+
+    int ind = std::distance(keyword.begin(), it);
+
+    return param[ind];
+}
