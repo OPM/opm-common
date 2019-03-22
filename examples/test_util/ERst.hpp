@@ -17,10 +17,8 @@
    */
 
 #ifndef ERST_HPP
-
-
-
 #define ERST_HPP
+
 
 #include "EclFile.hpp"
 
@@ -31,8 +29,21 @@
 #include <ctime>
 #include <map>
 
+
 class ERst : public EclFile
 {
+public:
+    explicit ERst(const std::string& filename);
+    bool hasReportStepNumber(int number) const;
+
+    void loadReportStepNumber(int number);
+
+    template <typename T>
+    const std::vector<T>& getRst(const std::string& name, int reportStepNumber) const;
+
+    const std::vector<int>& listOfReportStepNumbers() const { return seqnum; }
+
+    std::vector<EclEntry> listOfRstArrays(int reportStepNumber);
 
 private:
     int nReports;
@@ -40,23 +51,7 @@ private:
     std::unordered_map<int,bool> reportLoaded;
     std::map<int, std::pair<int,int>> arrIndexRange;   // mapping report step number to array indeces (start and end)
 
-    const int getArrayIndex(const std::string &name,const int &seqnum) const;
-
-public:
-
-    const bool hasReportStepNumber(const int &number) const;
-
-    void loadReportStepNumber(const int &number);
-
-    template <typename T>
-    const std::vector<T> &getRst(const std::string &name,const int &reportStepNumber) const;
-
-    const std::vector<int> &listOfReportStepNumbers() const {return seqnum;};
-
-    const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> listOfRstArrays(const int &reportStepNumber);
-
-    ERst(std::string filename);
+    int getArrayIndex(const std::string& name, int seqnum) const;
 };
 
 #endif
-

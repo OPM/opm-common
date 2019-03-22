@@ -73,12 +73,6 @@ protected:
 
     std::map<std::string, int> array_index;
 
-private:
-    std::vector<bool> arrayLoaded;
-
-    void checkIfLoaded(int arrIndex) const;
-    void loadArray(std::fstream& fileH, int arrIndex);
-
     template<class T>
     const std::vector<T>& getImpl(int arrIndex, EIOD::eclArrType type,
                                   const std::unordered_map<int, std::vector<T>>& array,
@@ -93,6 +87,12 @@ private:
 
         return array.find(arrIndex)->second;
     }
+
+private:
+    std::vector<bool> arrayLoaded;
+
+    void checkIfLoaded(int arrIndex) const;
+    void loadArray(std::fstream& fileH, int arrIndex);
 };
 
 #endif
