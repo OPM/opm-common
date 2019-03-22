@@ -29,38 +29,32 @@
 #include <map>
 
 
-
 class EGrid : public EclFile
 {
+public:
+    explicit EGrid(const std::string& filename);
+
+    int global_index(int i, int j, int k) const;
+    int active_index(int i, int j, int k) const;
+
+    void dimension(int &i, int &j, int &k) { i = nI; j = nJ; k = nK; }
+
+    void ijk_from_active_index(int actInd,  int& i, int& j, int& k);
+    void ijk_from_global_index(int globInd, int& i, int& j, int& k);
+
+    void getCellCorner(int globindex, std::vector<double>& X, std::vector<double>& Y, std::vector<double>& Z) const;
+    void getCellCorner(int i, int j, int k, std::vector<double>& X, std::vector<double>& Y, std::vector<double>& Z) const;
+
+    int activeCells() const { return nactive; }
+    int totalNumberOfCells() const { return nI * nJ * nK; }
 
 private:
-    int nI,nJ,nK,nNNC,nactive;
+    int nI, nJ, nK, nNNC, nactive;
 
     std::vector<int> act_index;
     std::vector<int> glob_index;
     std::vector<float> coord_array;
     std::vector<float> zcorn_array;
-
-public:
-
-    int global_index(const int &i,const int &j,const int &k) const;
-    int active_index(const int &i,const int &j,const int &k) const;
-
-
-    void dimension(int &i,int &j,int &k);
-
-    void ijk_from_active_index(int actInd, int &i,int &j,int &k);
-    void ijk_from_global_index(int globInd, int &i,int &j,int &k);
-
-    void getCellCorner(const int &globindex,std::vector<double> &X, std::vector<double>& Y, std::vector<double>& Z) const;
-    void getCellCorner(const int &i, const int &j, const int &k, std::vector<double> &X, std::vector<double>& Y, std::vector<double>& Z) const;
-
-    int activeCells() const {return nactive;};
-    int totalNumberOfCells() const {return (nI*nJ*nK);};
-
-    EGrid(const std::string &filename);
-
-
 };
 
 #endif
