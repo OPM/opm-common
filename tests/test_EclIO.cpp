@@ -98,20 +98,20 @@ BOOST_AUTO_TEST_CASE(TestEclFile_BINARY) {
 
     // check that exeption is thrown when member function get is used with wrong type
 
-    BOOST_CHECK_THROW(std::vector<int> vect1=file1.get<int>(2) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<int> vect1=file1.get<int>("PORV") , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<int> vect1=file1.get<int>(2) , std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<int> vect1=file1.get<int>("PORV") , std::runtime_error );
 
-    BOOST_CHECK_THROW(std::vector<float> vect1=file1.get<float>(0) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<float> vect1=file1.get<float>("ICON") , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<float> vect1=file1.get<float>(0) , std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<float> vect1=file1.get<float>("ICON") , std::runtime_error );
 
-    BOOST_CHECK_THROW(std::vector<double> vect1=file1.get<double>(0) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<double> vect1=file1.get<double>("KEYWORDS") , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<double> vect1=file1.get<double>(0) , std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<double> vect1=file1.get<double>("KEYWORDS") , std::runtime_error );
 
-    BOOST_CHECK_THROW(std::vector<bool> vect1=file1.get<bool>(0) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<bool> vect1=file1.get<bool>("XCON") , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<bool> vect1=file1.get<bool>(0) , std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<bool> vect1=file1.get<bool>("XCON") , std::runtime_error );
 
-    BOOST_CHECK_THROW(std::vector<std::string> vect1=file1.get<std::string>(0) , std::invalid_argument );
-    BOOST_CHECK_THROW(std::vector<std::string> vect1=file1.get<std::string>("XCON") , std::invalid_argument );
+    BOOST_CHECK_THROW(std::vector<std::string> vect1=file1.get<std::string>(0) , std::runtime_error );
+    BOOST_CHECK_THROW(std::vector<std::string> vect1=file1.get<std::string>("XCON") , std::runtime_error );
 
     // check member function hasKey
 

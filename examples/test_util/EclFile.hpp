@@ -19,6 +19,8 @@
 #ifndef ECLFILE_HPP
 #define ECLFILE_HPP
 
+#include <opm/common/ErrorMacros.hpp>
+#include <examples/test_util/data/EclIOdata.hpp>
 
 #include <iostream>
 #include <string>
@@ -29,34 +31,29 @@
 #include <unordered_map>
 #include <stdio.h>
 
-
-#include <examples/test_util/data/EclIOdata.hpp>
-
 namespace EIOD = Opm::ecl;
 
 class EclFile
 {
-
 public:
-
-    EclFile(std::string filename);
-    bool formattedInput(){ return formatted;};
+    explicit EclFile(const std::string& filename);
+    bool formattedInput() { return formatted; }
 
     void loadData();                            // load all data
     void loadData(int arrIndex);                // load data based on array indices in vector arrIndex
-    void loadData(std::vector<int> arrIndex);   // load data based on array indices in vector arrIndex
-    void loadData(std::string arrName);         // load all arrays with array name equal to arrName
+    void loadData(const std::vector<int>& arrIndex);   // load data based on array indices in vector arrIndex
+    void loadData(const std::string& arrName);         // load all arrays with array name equal to arrName
 
-    const std::vector<std::tuple<std::string, EIOD::eclArrType, int>> getList() const;
-
-    template <typename T>
-    const std::vector<T> &get(const int &arrIndex) const;
+    using EclEntry = std::tuple<std::string, EIOD::eclArrType, int>;
+    std::vector<EclEntry> getList() const;
 
     template <typename T>
-    const std::vector<T> &get(const std::string &name) const;
+    const std::vector<T>& get(int arrIndex) const;
 
-    const bool hasKey(const std::string &name) const;
+    template <typename T>
+    const std::vector<T>& get(const std::string& name) const;
 
+    bool hasKey(const std::string &name) const;
 
 protected:
     bool formatted;
@@ -79,10 +76,23 @@ protected:
 private:
     std::vector<bool> arrayLoaded;
 
-    void checkIfLoaded(const int &arrIndex) const;
-    void loadArray(std::fstream &fileH,int arrIndex);
+    void checkIfLoaded(int arrIndex) const;
+    void loadArray(std::fstream& fileH, int arrIndex);
 
+    template<class T>
+    const std::vector<T>& getImpl(int arrIndex, EIOD::eclArrType type,
+                                  const std::unordered_map<int, std::vector<T>>& array,
+                                  const std::string& typeStr) const
+    {
+        if (array_type[arrIndex] != type) {
+            std::string message = "Array with index " + std::to_string(arrIndex) + " is not of type " + typeStr;
+            OPM_THROW(std::runtime_error, message);
+        }
+
+        checkIfLoaded(arrIndex);
+
+        return array.find(arrIndex)->second;
+    }
 };
-
 
 #endif
