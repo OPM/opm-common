@@ -40,6 +40,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 
@@ -120,6 +121,9 @@ namespace Opm
         std::vector<std::string> wellNames(size_t timeStep) const;
         std::vector<std::string> wellNames() const;
 
+        void updateWell(std::shared_ptr<Well2> well, size_t reportStep);
+        const Well2& getWell2(const std::string& wellName, size_t timeStep) const;
+        std::vector< const Well2* > getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const;
         const Well* getWell(const std::string& wellName) const;
         std::vector< const Well* > getOpenWells(size_t timeStep) const;
         std::vector< const Well* > getWells() const;
@@ -167,6 +171,7 @@ namespace Opm
         TimeMap m_timeMap;
         OrderedMap< std::string, Well > m_wells;
         OrderedMap< std::string, Group > m_groups;
+        OrderedMap< std::string, DynamicState<std::shared_ptr<Well2>>> wells_static;
         DynamicState< GroupTree > m_rootGroupTree;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
@@ -188,8 +193,8 @@ namespace Opm
         std::vector< Group* > getGroups(const std::string& groupNamePattern);
         std::map<std::string,Events> well_events;
 
-        void updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status);
-        void addWellToGroup( Group& newGroup , Well& well , size_t timeStep);
+        bool updateWellStatus( const std::string& well, size_t reportStep , WellCommon::StatusEnum status);
+        void addWellToGroup( Group& newGroup , const std::string& wellName , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const Eclipse3DProperties& eclipseProperties);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const;
@@ -199,7 +204,6 @@ namespace Opm
         void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t currentStep);
         void handleWELSPECS( const SCHEDULESection&, size_t, size_t  );
-        void handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode,  const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
@@ -251,7 +255,7 @@ namespace Opm
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
         void addWellEvent(const std::string& well, ScheduleEvents::Events event, size_t reportStep);
-#ifdef CHECK_WELLS
+#ifdef WELL_TEST
         bool checkWells(const ParseContext& parseContext, ErrorGuard& errors) const;
 #endif
     };
