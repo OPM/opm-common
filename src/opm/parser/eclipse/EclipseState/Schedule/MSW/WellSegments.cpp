@@ -420,4 +420,13 @@ namespace Opm {
     bool WellSegments::operator!=( const WellSegments& rhs ) const {
         return !( *this == rhs );
     }
+
+    std::ostream& operator<<( std::ostream& stream, const WellSegments& well_segments) {
+        return stream
+            << well_segments.wellName() << " { top: {" <<
+            " L: " << well_segments.lengthTopSegment() <<
+            " D: " << well_segments.depthTopSegment() <<
+            " V: " << well_segments.volumeTopSegment() << " }}";
+    }
+
 }

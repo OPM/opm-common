@@ -23,6 +23,8 @@
 
 namespace Opm {
 
+    class DeckRecord;
+
     struct WellPolymerProperties {
         double m_polymerConcentration;
         double m_saltConcentration;
@@ -33,6 +35,9 @@ namespace Opm {
         bool operator==(const WellPolymerProperties& other) const;
         bool operator!=(const WellPolymerProperties& other) const;
         WellPolymerProperties();
+        void handleWPOLYMER(const DeckRecord& record);
+        void handleWPMITAB(const DeckRecord& record);
+        void handleWSKPTAB(const DeckRecord& record);
     };
 }
 

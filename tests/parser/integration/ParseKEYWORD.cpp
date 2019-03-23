@@ -572,6 +572,7 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     const Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     const Schedule sched(deck, grid, eclipseProperties, runspec);
+
     // checking the relation between segments and completions
     // and also the depth of completions
     {
