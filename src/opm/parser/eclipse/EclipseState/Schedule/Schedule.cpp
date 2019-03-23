@@ -1926,10 +1926,7 @@ namespace Opm {
         return wells;
     }
 
-    std::vector< const Well* > Schedule::getWellsMatching( const std::string& wellNamePattern ) const {
-        auto tmp = const_cast< Schedule* >( this )->getWells( wellNamePattern );
-        return { tmp.begin(), tmp.end() };
-    }
+
 
 
     /*
@@ -2010,34 +2007,6 @@ namespace Opm {
         return names;
     }
 
-    std::vector< Well* > Schedule::getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells) {
-        // If we arrive here during the handling the body of a ACTIONX keyword
-        // we can arrive with wellname '?' and a set of matching wells.
-        if (wellNamePattern == "?") {
-            std::vector<Well*> wells;
-            for (const auto& well_name : matching_wells)
-                wells.push_back( std::addressof(m_wells.get(well_name) ));
-
-            return wells;
-        } else {
-            auto wildcard_pos = wellNamePattern.find("*");
-
-            if( wildcard_pos != wellNamePattern.length()-1 ) {
-                if( m_wells.count( wellNamePattern ) == 0 ) return {};
-                return { std::addressof( m_wells.get( wellNamePattern ) ) };
-            }
-
-            std::vector< Well* > wells;
-            for( auto& well_pair : this->m_wells ) {
-                auto& well = well_pair.second;
-                if( Well::wellNameInWellNamePattern( well.name(), wellNamePattern ) ) {
-                    wells.push_back( std::addressof( well ) );
-                }
-            }
-
-            return wells;
-        }
-    }
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
 	const size_t gseqIndex = m_groups.size();

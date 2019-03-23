@@ -540,27 +540,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     BOOST_CHECK_EQUAL(3U, wells_t3.size());
 }
 
-BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
-    EclipseGrid grid(10,10,10);
-    auto deck = createDeckWithWells();
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec);
-    std::string wellNamePattern;
 
-    wellNamePattern = "*";
-    auto wells = schedule.getWellsMatching(wellNamePattern);
-    BOOST_CHECK_EQUAL(3U, wells.size());
-
-    wellNamePattern = "W_*";
-    wells = schedule.getWellsMatching(wellNamePattern);
-    BOOST_CHECK_EQUAL(2U, wells.size());
-
-    wellNamePattern = "W_3";
-    wells = schedule.getWellsMatching(wellNamePattern);
-    BOOST_CHECK_EQUAL(1U, wells.size());
-}
 
 BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
     EclipseGrid grid(10,10,10);
