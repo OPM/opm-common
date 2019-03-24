@@ -26,6 +26,9 @@
 
 namespace Opm {
 
+    class DeckRecord;
+    class UnitSystem;
+
     struct WellInjectionProperties {
         double  surfaceInjectionRate;
         double  reservoirInjectionRate;
@@ -44,6 +47,8 @@ namespace Opm {
         bool operator!=(const WellInjectionProperties& other) const;
 
         WellInjectionProperties();
+        void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name, const UnitSystem& unit_system);
+        void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name, const UnitSystem& unit_system);
         bool hasInjectionControl(WellInjector::ControlModeEnum controlModeArg) const {
             if (injectionControls & controlModeArg)
                 return true;

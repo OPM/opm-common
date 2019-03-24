@@ -657,7 +657,6 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
-                WellProductionProperties properties;
                 auto& well = this->m_wells.at(well_name);
                 bool addGrupProductionControl = well.isAvailableForGroupControl(currentStep);
                 bool switching_from_injector = !well.isProducer(currentStep);
@@ -669,7 +668,7 @@ namespace Opm {
                     m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                     this->addWellEvent( well.name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                 }
-                if ( !well.getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) = 0 ) {
+                if ( !well.getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
 
                     std::string msg =
                             "Well " + well.name() + " is a history matched well with zero rate where crossflow is banned. " +
@@ -720,68 +719,17 @@ namespace Opm {
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
-            for( const auto& well_name : well_names) {
-                WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
-                WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+            for(const auto& well_name : well_names) {
                 auto& well = this->m_wells.at(well_name);
-
-                updateWellStatus( well , currentStep , status );
                 WellInjectionProperties properties(well.getInjectionPropertiesCopy(currentStep));
+                properties.handleWCONINJE(record, well.isAvailableForGroupControl(currentStep), well.name(), section.unitSystem());
 
-                properties.injectorType = injectorType;
-                properties.predictionMode = true;
-
-                if (!record.getItem("RATE").defaultApplied(0)) {
-                    properties.surfaceInjectionRate = convertInjectionRateToSI(record.getItem("RATE").get< double >(0) , injectorType, section.unitSystem());
-                    properties.addInjectionControl(WellInjector::RATE);
-                } else
-                    properties.dropInjectionControl(WellInjector::RATE);
-
-
-                if (!record.getItem("RESV").defaultApplied(0)) {
-                    properties.reservoirInjectionRate = record.getItem("RESV").getSIDouble(0);
-                    properties.addInjectionControl(WellInjector::RESV);
-                } else
-                    properties.dropInjectionControl(WellInjector::RESV);
-
-
-                if (!record.getItem("THP").defaultApplied(0)) {
-                    properties.THPLimit       = record.getItem("THP").getSIDouble(0);
-                    properties.addInjectionControl(WellInjector::THP);
-                } else
-                    properties.dropInjectionControl(WellInjector::THP);
-
-                properties.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
-
-                /*
-                  There is a sensible default BHP limit defined, so the BHPLimit can be
-                  safely set unconditionally, and we make BHP limit as a constraint based
-                  on that default value. It is not easy to infer from the manual, while the
-                  current behavoir agrees with the behovir of Eclipse when BHPLimit is not
-                  specified while employed during group control.
-                */
-                properties.setBHPLimit(record.getItem("BHP").getSIDouble(0));
-                // BHP control should always be there.
-                properties.addInjectionControl(WellInjector::BHP);
-
-                if (well.isAvailableForGroupControl(currentStep))
-                    properties.addInjectionControl(WellInjector::GRUP);
-                else
-                    properties.dropInjectionControl(WellInjector::GRUP);
-                {
-                    const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-                    WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
-                    if (properties.hasInjectionControl( controlMode))
-                        properties.controlMode = controlMode;
-                    else {
-                        throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + wellNamePattern);
-                    }
-                }
-
+                updateWellStatus( well, currentStep, WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0)));
                 if (well.setInjectionProperties(currentStep, properties)) {
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
                     this->addWellEvent( well.name(), ScheduleEvents::INJECTION_UPDATE, currentStep);
                 }
+
                 // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
                 // it should be turned off.
                 if ( ! well.getAllowCrossFlow()
@@ -1086,19 +1034,7 @@ namespace Opm {
     void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-
-            // convert injection rates to SI
-            const auto& typeItem = record.getItem("TYPE");
-            if (typeItem.defaultApplied(0)) {
-                const std::string msg = "Injection type can not be defaulted for keyword WCONINJH";
-                throw std::invalid_argument(msg);
-            }
-            const WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( typeItem.getTrimmedString(0));
-            double injectionRate = record.getItem("RATE").get< double >(0);
-            injectionRate = convertInjectionRateToSI(injectionRate, injectorType, section.unitSystem());
-
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
-
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
@@ -1107,57 +1043,13 @@ namespace Opm {
             for (const auto& well_name : well_names) {
                 auto& well = this->m_wells.at(well_name);
                 updateWellStatus( well, currentStep, status );
+
                 WellInjectionProperties properties(well.getInjectionPropertiesCopy(currentStep));
-
-                properties.injectorType = injectorType;
-
-                if (!record.getItem("RATE").defaultApplied(0)) {
-                    properties.surfaceInjectionRate = injectionRate;
-                }
-
-                if ( record.getItem( "BHP" ).hasValue(0) )
-                    properties.BHPH = record.getItem("BHP").getSIDouble(0);
-                if ( record.getItem( "THP" ).hasValue(0) )
-                    properties.THPH = record.getItem("THP").getSIDouble(0);
-
-                const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-                const WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
-
-                if ( !(controlMode == WellInjector::RATE || controlMode == WellInjector::BHP) ) {
-                    const std::string msg = "Only RATE and BHP control are allowed for WCONINJH for well " + well.name();
-                    throw std::invalid_argument(msg);
-                }
-
-                // when well is under BHP control, we use its historical BHP value as BHP limit
-                if (controlMode == WellInjector::BHP) {
-                    properties.setBHPLimit(properties.BHPH);
-                } else {
-                    const bool switching_from_producer = well.isProducer(currentStep);
-                    const bool switching_from_prediction = properties.predictionMode;
-                    const bool switching_from_BHP_control = (properties.controlMode == WellInjector::BHP);
-                    if (switching_from_prediction ||
-                        switching_from_BHP_control ||
-                        switching_from_producer) {
-                        properties.resetDefaultHistoricalBHPLimit();
-                    }
-                    // otherwise, we keep its previous BHP limit
-                }
-
-                properties.addInjectionControl(WellInjector::BHP);
-                properties.addInjectionControl(controlMode);
-                properties.controlMode = controlMode;
-
-                properties.predictionMode = false;
-
-                const int VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
-                if (VFPTableNumber > 0) {
-                    properties.VFPTableNumber = VFPTableNumber;
-                }
-
+                properties.handleWCONINJH(record, well.isProducer(currentStep), well.name(), section.unitSystem());
                 if (well.setInjectionProperties(currentStep, properties))
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
 
-                if ( ! well.getAllowCrossFlow() && (injectionRate == 0) ) {
+                if ( ! well.getAllowCrossFlow() && (properties.surfaceInjectionRate == 0)) {
                     std::string msg =
                             "Well " + well.name() + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
