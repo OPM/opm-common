@@ -1969,6 +1969,25 @@ namespace Opm {
         return {};
     }
 
+    std::vector<std::string> Schedule::wellNames(const std::string& pattern) const {
+        return this->wellNames(pattern, this->size() - 1);
+    }
+
+    std::vector<std::string> Schedule::wellNames(std::size_t timeStep) const {
+        std::vector<std::string> names;
+        for (const auto& well_pair : this->m_wells) {
+            if (well_pair.second.firstTimeStep() <= timeStep)
+                names.push_back(well_pair.first);
+        }
+        return names;
+    }
+
+    std::vector<std::string> Schedule::wellNames() const {
+        std::vector<std::string> names;
+        for (const auto& well_pair : this->m_wells)
+            names.push_back(well_pair.first);
+        return names;
+    }
 
     std::vector< Well* > Schedule::getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells) {
         // If we arrive here during the handling the body of a ACTIONX keyword

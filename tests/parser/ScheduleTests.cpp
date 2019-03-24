@@ -2937,6 +2937,14 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     BOOST_CHECK(has(anames, "W1"));
     BOOST_CHECK(has(anames, "W2"));
 
+    auto all_names0 = schedule.wellNames("*", 0);
+    BOOST_CHECK_EQUAL( all_names0.size(), 6);
+    BOOST_CHECK( has(all_names0, "W1"));
+    BOOST_CHECK( has(all_names0, "W2"));
+    BOOST_CHECK( has(all_names0, "W3"));
+    BOOST_CHECK( has(all_names0, "DEFAULT"));
+    BOOST_CHECK( has(all_names0, "ALLOW"));
+
     auto all_names = schedule.wellNames("*", 2);
     BOOST_CHECK_EQUAL( all_names.size(), 9);
     BOOST_CHECK( has(all_names, "I1"));
@@ -2948,4 +2956,7 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     BOOST_CHECK( has(all_names, "DEFAULT"));
     BOOST_CHECK( has(all_names, "ALLOW"));
     BOOST_CHECK( has(all_names, "BAN"));
+
+    auto abs_all = schedule.wellNames();
+    BOOST_CHECK_EQUAL(abs_all.size(), 9);
 }
