@@ -659,22 +659,17 @@ namespace Opm {
             for( const auto& well_name : well_names) {
                 WellProductionProperties properties;
                 auto& well = this->m_wells.at(well_name);
-
-                if (isPredictionMode) {
-                    auto addGrupProductionControl = well.isAvailableForGroupControl(currentStep);
-                    properties = WellProductionProperties::prediction( record, addGrupProductionControl );
-                } else {
-                    const WellProductionProperties& prev_properties = well.getProductionProperties(currentStep);
-                    const bool switching_from_injector = !well.isProducer(currentStep);
-                    properties = WellProductionProperties::history(prev_properties, record, m_controlModeWHISTCTL, switching_from_injector);
-                }
+                bool addGrupProductionControl = well.isAvailableForGroupControl(currentStep);
+                bool switching_from_injector = !well.isProducer(currentStep);
+                const WellProductionProperties& prev_properties = well.getProductionProperties(currentStep);
+                WellProductionProperties properties(record, isPredictionMode, prev_properties, m_controlModeWHISTCTL, switching_from_injector, addGrupProductionControl);
 
                 updateWellStatus( well , currentStep , status );
                 if (well.setProductionProperties(currentStep, properties)) {
                     m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                     this->addWellEvent( well.name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                 }
-                if ( !well.getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
+                if ( !well.getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) = 0 ) {
 
                     std::string msg =
                             "Well " + well.name() + " is a history matched well with zero rate where crossflow is banned. " +
