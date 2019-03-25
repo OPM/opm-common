@@ -272,15 +272,15 @@ namespace Opm {
         std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 
         // keywords to specify the scaled connate gas saturations.
-        for( const auto& kw : { "SGL", "SGLX", "SGLX-", "SGLY", "SGLY-", "SGLZ", "SGLZ-" } )
+        for( const auto& kw : { "SGLPC", "SGL", "SGLX", "SGLX-", "SGLY", "SGLY-", "SGLZ", "SGLZ-" } )
             supportedDoubleKeywords.emplace_back( kw, SGLLookup, "1" );
-        for( const auto& kw : { "ISGL", "ISGLX", "ISGLX-", "ISGLY", "ISGLY-", "ISGLZ", "ISGLZ-" } )
+        for( const auto& kw : { "ISGLPC", "ISGL", "ISGLX", "ISGLX-", "ISGLY", "ISGLY-", "ISGLZ", "ISGLZ-" } )
             supportedDoubleKeywords.emplace_back( kw, ISGLLookup, "1" );
 
         // keywords to specify the connate water saturation.
-        for( const auto& kw : { "SWL", "SWLX", "SWLX-", "SWLY", "SWLY-", "SWLZ", "SWLZ-" } )
+        for( const auto& kw : { "SWLPC", "SWL", "SWLX", "SWLX-", "SWLY", "SWLY-", "SWLZ", "SWLZ-" } )
             supportedDoubleKeywords.emplace_back( kw, SWLLookup, "1" );
-        for( const auto& kw : { "ISWL", "ISWLX", "ISWLX-", "ISWLY", "ISWLY-", "ISWLZ", "ISWLZ-" } )
+        for( const auto& kw : { "ISWLPC", "ISWL", "ISWLX", "ISWLX-", "ISWLY", "ISWLY-", "ISWLZ", "ISWLZ-" } )
             supportedDoubleKeywords.emplace_back( kw, ISWLLookup, "1" );
 
         // keywords to specify the maximum gas saturation.
