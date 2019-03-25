@@ -540,27 +540,7 @@ BOOST_AUTO_TEST_CASE(WellsIterator_HasWells_WellsReturned) {
     BOOST_CHECK_EQUAL(3U, wells_t3.size());
 }
 
-BOOST_AUTO_TEST_CASE(WellsIteratorWithRegex_HasWells_WellsReturned) {
-    EclipseGrid grid(10,10,10);
-    auto deck = createDeckWithWells();
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec);
-    std::string wellNamePattern;
 
-    wellNamePattern = "*";
-    auto wells = schedule.getWellsMatching(wellNamePattern);
-    BOOST_CHECK_EQUAL(3U, wells.size());
-
-    wellNamePattern = "W_*";
-    wells = schedule.getWellsMatching(wellNamePattern);
-    BOOST_CHECK_EQUAL(2U, wells.size());
-
-    wellNamePattern = "W_3";
-    wells = schedule.getWellsMatching(wellNamePattern);
-    BOOST_CHECK_EQUAL(1U, wells.size());
-}
 
 BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
     EclipseGrid grid(10,10,10);
@@ -2937,6 +2917,14 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     BOOST_CHECK(has(anames, "W1"));
     BOOST_CHECK(has(anames, "W2"));
 
+    auto all_names0 = schedule.wellNames("*", 0);
+    BOOST_CHECK_EQUAL( all_names0.size(), 6);
+    BOOST_CHECK( has(all_names0, "W1"));
+    BOOST_CHECK( has(all_names0, "W2"));
+    BOOST_CHECK( has(all_names0, "W3"));
+    BOOST_CHECK( has(all_names0, "DEFAULT"));
+    BOOST_CHECK( has(all_names0, "ALLOW"));
+
     auto all_names = schedule.wellNames("*", 2);
     BOOST_CHECK_EQUAL( all_names.size(), 9);
     BOOST_CHECK( has(all_names, "I1"));
@@ -2948,4 +2936,7 @@ BOOST_AUTO_TEST_CASE(WellNames) {
     BOOST_CHECK( has(all_names, "DEFAULT"));
     BOOST_CHECK( has(all_names, "ALLOW"));
     BOOST_CHECK( has(all_names, "BAN"));
+
+    auto abs_all = schedule.wellNames();
+    BOOST_CHECK_EQUAL(abs_all.size(), 9);
 }

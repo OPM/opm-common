@@ -114,7 +114,12 @@ namespace Opm
         size_t numWells(size_t timestep) const;
         size_t getMaxNumConnectionsForWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
+
         std::vector<std::string> wellNames(const std::string& pattern, size_t timeStep, const std::vector<std::string>& matching_wells = {}) const;
+        std::vector<std::string> wellNames(const std::string& pattern) const;
+        std::vector<std::string> wellNames(size_t timeStep) const;
+        std::vector<std::string> wellNames() const;
+
         const Well* getWell(const std::string& wellName) const;
         std::vector< const Well* > getOpenWells(size_t timeStep) const;
         std::vector< const Well* > getWells() const;
@@ -133,7 +138,6 @@ namespace Opm
         std::vector< const Group* > getChildGroups(const std::string& group_name, size_t timeStep) const;
         std::vector< const Well* > getWells(const std::string& group, size_t timeStep) const;
         std::vector< const Well* > getChildWells(const std::string& group_name, size_t timeStep) const;
-        std::vector< const Well* > getWellsMatching( const std::string& ) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const WellTestConfig& wtestConfig(size_t timestep) const;

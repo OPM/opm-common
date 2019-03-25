@@ -159,13 +159,13 @@ inline void keywordW( SummaryConfig::keyword_list& list,
 
     if (keyword.size() && hasValue(keyword)) {
         for( const std::string& pattern : keyword.getStringData()) {
-            auto wells = schedule.getWellsMatching( pattern );
+          auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );
 
-            if( wells.empty() )
+            if( well_names.empty() )
                 handleMissingWell( parseContext, errors, keyword.name(), pattern );
 
-            for( const auto* well : wells )
-                list.push_back( SummaryConfig::keyword_type( keyword.name(), well->name() ));
+            for( const auto& well_name : well_names)
+                list.push_back( SummaryConfig::keyword_type( keyword.name(), well_name ));
         }
     } else
         for (const auto* well : schedule.getWells())
@@ -294,16 +294,15 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
         const auto& wellitem = record.getItem( 0 );
 
-        const auto wells = wellitem.defaultApplied( 0 )
-                         ? schedule.getWells()
-                         : schedule.getWellsMatching( wellitem.getTrimmedString( 0 ) );
+        const auto well_names = wellitem.defaultApplied( 0 )
+                              ? schedule.wellNames()
+                              : schedule.wellNames( wellitem.getTrimmedString( 0 ) );
 
-        if( wells.empty() )
+        if( well_names.empty() )
             handleMissingWell( parseContext, errors, keyword.name(), wellitem.getTrimmedString( 0 ) );
 
-        for( const auto* well : wells ) {
-            const auto& name = well->name();
-
+        for(const auto& name : well_names) {
+            const auto* well = schedule.getWell(name);
             /*
              * we don't want to add completions that don't exist, so we iterate
              * over a well's completions regardless of the desired block is
@@ -470,19 +469,21 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
         for (const auto& record : keyword) {
             const auto& wellitem = record.getItem(0);
-            const auto& wells    = wellitem.defaultApplied(0)
-                ? schedule.getWells()
-                : schedule.getWellsMatching(wellitem.getTrimmedString(0));
+            const auto& well_names = wellitem.defaultApplied(0)
+                ? schedule.wellNames()
+                : schedule.wellNames(wellitem.getTrimmedString(0));
 
-            if (wells.empty()) {
+            if (well_names.empty())
                 handleMissingWell(parseContext, errors, keyword.name(),
                                   wellitem.getTrimmedString(0));
-            }
 
             // Negative 1 (< 0) if segment ID defaulted.  Defaulted
             // segment number in record implies all segments.
             const auto segID = record.getItem(1).defaultApplied(0)
                 ? -1 : record.getItem(1).get<int>(0);
+            std::vector<const Well*> wells;
+            for (const auto& well_name : well_names)
+                wells.push_back( schedule.getWell(well_name) );
 
             makeSegmentNodes(last_timestep, segID, keyword, wells, list);
         }

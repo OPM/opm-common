@@ -59,8 +59,9 @@ inline std::ostream& operator<<( std::ostream& stream, const WellConnections& cs
 
 
 BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
-    Opm::WellConnections completionSet;
+    Opm::WellConnections completionSet(1,1);
     BOOST_CHECK_EQUAL( 0U , completionSet.size() );
+    BOOST_CHECK(!completionSet.allConnectionsShut());
 }
 
 
