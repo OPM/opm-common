@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
     bool specificReportStepNumber  = false;
     bool specificFileType          = false;
     bool throwOnError              = true;
+    bool restartFile              = false;
     bool acceptExtraKeywords       = false;
     bool analysis                  = false;
     char* keyword                  = nullptr;
@@ -77,7 +78,7 @@ int main(int argc, char** argv) {
     int reportStepNumber           = -1;
     std::string fileTypeString;
 
-    while ((c = getopt(argc, argv, "hik:alnpt:r:x")) != -1) {
+    while ((c = getopt(argc, argv, "hik:alnpt:Rr:x")) != -1) {
         switch (c) {
         case 'a':
             analysis = true;
@@ -104,6 +105,9 @@ int main(int argc, char** argv) {
         case 'r':
             specificReportStepNumber=true;
             reportStepNumber = atoi(optarg);
+            break;
+        case 'R':
+            restartFile = true;
             break;
         case 't':
             specificFileType = true;
@@ -171,6 +175,10 @@ int main(int argc, char** argv) {
 
         if (specificReportStepNumber) {
             comparator.compareSpesificRstReportStepNumber(reportStepNumber);
+        }
+
+        if (restartFile) {
+            comparator.setLoadBaseRunData(true);
         }
 
         comparator.loadGrids();

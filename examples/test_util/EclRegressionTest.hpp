@@ -56,6 +56,8 @@ private:
 
     bool printKeywordOnly = false;
 
+    bool loadBaseRunData = false;
+
     // spesific keyword to be compared
     std::string spesificKeyword="";
 
@@ -140,6 +142,10 @@ public:
     }
     void compareSpesificRstReportStepNumber(int seqn) {
         this->spesificSequence = seqn;
+    }
+
+    void setLoadBaseRunData(bool loadArg) {
+        this->loadBaseRunData = loadArg;
     }
 
     void loadGrids();

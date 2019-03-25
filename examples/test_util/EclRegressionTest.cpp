@@ -53,14 +53,14 @@ bool fileExists(std::string fileName) {
 
 bool ECLRegressionTest::checkFileName(const std::string &rootName, const std::string &extension, std::string &filename) {
 
-    if (fileExists(rootName+"." + extension)) {
-        filename=rootName+"." + extension;
+    if (fileExists(rootName + "." + extension)) {
+        filename=rootName + "." + extension;
         return true;
-    } else if (fileExists(rootName+".F" + extension)) {
-        filename=rootName+".F" + extension;
+    } else if (fileExists(rootName + ".F" + extension)) {
+        filename=rootName + ".F" + extension;
         return true;
     } else {
-        filename="";
+        filename = "";
         return false;
     }
 }
@@ -616,16 +616,16 @@ void ECLRegressionTest::results_rst() {
 
         deviations.clear();
 
-        if (spesificSequence>-1) {
+        if (spesificSequence > -1) {
 
             auto search1 = std::find(seqnums1.begin(),seqnums1.end(),spesificSequence);
             auto search2 = std::find(seqnums2.begin(),seqnums2.end(),spesificSequence);
 
-            if (search1==seqnums1.end()) {
+            if (search1 == seqnums1.end()) {
                 OPM_THROW(std::runtime_error, "\nSpecified sequence " << spesificSequence << " not found in restart files for case 1");
             }
 
-            if (search2==seqnums2.end()) {
+            if (search2 == seqnums2.end()) {
                 OPM_THROW(std::runtime_error, "\nSpecified sequence " << spesificSequence << " not found in restart files for case 2");
             }
 
@@ -638,7 +638,7 @@ void ECLRegressionTest::results_rst() {
 
         } else if (onlyLastSequence) {
 
-            if (seqnums1.back()!=seqnums2.back()) {
+            if (seqnums1.back() != seqnums2.back()) {
                 OPM_THROW(std::runtime_error, "\nLast sequence not same for for case 1 and case 2");
             }
 
@@ -790,10 +790,10 @@ void ECLRegressionTest::results_smry() {
 
     if ((foundSmspec1) && (foundSmspec2)) {
 
-        ESmry smry1(fileName1);
+        ESmry smry1(fileName1, loadBaseRunData);
         std::cout << "\nLoading summary file " << fileName1 << "  .... done" << std::endl;
 
-        ESmry smry2(fileName2);
+        ESmry smry2(fileName2, loadBaseRunData);
         std::cout << "\nLoading summary file " << fileName2 << "  .... done" << std::endl;
 
         deviations.clear();
