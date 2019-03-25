@@ -28,39 +28,26 @@ namespace EIOD = Opm::ecl;
 
 class EclOutput
 {
+public:
+    explicit EclOutput(std::ofstream& inputFileH);
+
+    void writeBinaryHeader(const std::string& arrName, int size, EIOD::eclArrType arrType);
+
+    template <typename T>
+    void writeBinaryArray(const std::vector<T>& data);
+
+    void writeBinaryCharArray(const std::vector<std::string>& data);
+
+    void writeFormattedHeader(const std::string& arrName, int size, EIOD::eclArrType arrType);
+
+    template <typename T>
+    void writeFormattedArray(const std::vector<T>& data);
+
+    void writeFormattedCharArray(const std::vector<std::string>& data);
 
 private:
-
     std::ofstream *ofileH;
 
-    const int flipEndianInt(const int &num) const ;
-    const float flipEndianFloat(const float &num) const;
-    const double flipEndianDouble(const double &num) const;
-
-    const std::string trimr(const std::string &str1) const;
-
-    const std::string make_real_string(const float &value) const;
-    const std::string make_doub_string(const double &value) const;
-
-    std::tuple<const int, const int> block_size_data_binary(Opm::ecl::eclArrType arrType);
-    std::tuple<const int, const int, const int> block_size_data_formatted(EIOD::eclArrType arrType);
-
-
-public:
-
-    EclOutput(std::ofstream &inputFileH);
-
-    void writeBinaryHeader(const std::string &arrName,const int &size,const EIOD::eclArrType &arrType);
-
-    template <typename T>
-    void writeBinaryArray(const std::vector<T> &data);
-
-    void writeBinaryCharArray(const std::vector<std::string> &data);
-
-    void writeFormattedHeader(const std::string &arrName,const int &size,const EIOD::eclArrType &arrType);
-
-    template <typename T>
-    void writeFormattedArray(const std::vector<T> &data);
-
-    void writeFormattedCharArray(const std::vector<std::string> &data);
+    std::string make_real_string(float value) const;
+    std::string make_doub_string(double value) const;
 };

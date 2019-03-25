@@ -17,6 +17,7 @@
    */
 
 #include "EclOutput.hpp"
+#include "EclUtil.hpp"
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
@@ -27,363 +28,271 @@
 #include <sstream>
 #include <stdio.h>
 
-const int EclOutput::flipEndianInt(const int &num) const {
 
-    unsigned int tmp=__builtin_bswap32(num);
-
-    return std::move((int)tmp);
-}
-
-const float EclOutput::flipEndianFloat(const float &num) const {
-
-    float value=num;
-
-    char *floatToConvert = reinterpret_cast<char*>(&value);
-    std::reverse(floatToConvert, floatToConvert+4);
-
-    return std::move(value);
-}
-
-const double EclOutput::flipEndianDouble(const double &num) const {
-    double value=num;
-
-    char *doubleToConvert = reinterpret_cast<char*>(&value);
-    std::reverse(doubleToConvert, doubleToConvert+8);
-
-    return std::move(value);
-}
-
-std::tuple<const int, const int> EclOutput::block_size_data_binary(EIOD::eclArrType arrType) {
-
-    switch(arrType) {
-    case EIOD::INTE  :
-        return std::make_tuple(EIOD::sizeOfInte,EIOD::MaxBlockSizeInte);
-        break;
-    case EIOD::REAL  :
-        return std::make_tuple(EIOD::sizeOfReal,EIOD::MaxBlockSizeReal);
-        break;
-    case EIOD::DOUB  :
-        return std::make_tuple(EIOD::sizeOfDoub,EIOD::MaxBlockSizeDoub);
-        break;
-    case EIOD::LOGI  :
-        return std::make_tuple(EIOD::sizeOfLogi,EIOD::MaxBlockSizeLogi);
-        break;
-    case EIOD::CHAR  :
-        return std::make_tuple(EIOD::sizeOfChar,EIOD::MaxBlockSizeChar);
-        break;
-    case EIOD::MESS  :
-        OPM_THROW(std::invalid_argument, "Type 'MESS' have not associated data") ;
-        break;
-    default:
-        OPM_THROW(std::invalid_argument, "Invalid field type") ;
-        break;
+EclOutput::EclOutput(std::ofstream &inputFileH)
+{
+    if (!inputFileH.is_open()) {
+        OPM_THROW(std::runtime_error, "ofstream inputFileH not open for writing");
     }
-}
 
-std::tuple<const int, const int, const int> EclOutput::block_size_data_formatted(EIOD::eclArrType arrType) {
-
-    switch(arrType) {
-    case EIOD::INTE  :
-        return std::make_tuple(EIOD::MaxNumBlockInte, EIOD::numColumnsInte, EIOD::columnWidthInte);
-        break;
-    case EIOD::REAL  :
-        return std::make_tuple(EIOD::MaxNumBlockReal,EIOD::numColumnsReal, EIOD::columnWidthReal);
-        break;
-    case EIOD::DOUB  :
-        return std::make_tuple(EIOD::MaxNumBlockDoub,EIOD::numColumnsDoub, EIOD::columnWidthDoub);
-        break;
-    case EIOD::LOGI  :
-        return std::make_tuple(EIOD::MaxNumBlockLogi,EIOD::numColumnsLogi, EIOD::columnWidthLogi);
-        break;
-    case EIOD::CHAR  :
-        return std::make_tuple(EIOD::MaxNumBlockChar,EIOD::numColumnsChar, EIOD::columnWidthChar);
-        break;
-    case EIOD::MESS  :
-        OPM_THROW(std::invalid_argument, "Type 'MESS' have no associated data") ;
-        break;
-    default:
-        OPM_THROW(std::invalid_argument, "Invalid field type") ;
-        break;
-    }
+    ofileH = &inputFileH;
 }
 
 
-const std::string trimr(const std::string &str1) {
-
-    if (str1=="        ") {
-        return "";
-    } else {
-        int p=str1.find_last_not_of(" ");
-        return str1.substr(0,p+1);
-    }
-}
-
-
-void EclOutput::writeBinaryHeader(const std::string &arrName,const int &size,const EIOD::eclArrType &arrType)  {
-
-    std::string name=arrName+std::string(8-arrName.size(),' ');
+void EclOutput::writeBinaryHeader(const std::string&arrName, int size, EIOD::eclArrType arrType)
+{
+    std::string name = arrName + std::string(8 - arrName.size(),' ');
 
     if (!ofileH->is_open()) {
-        std::string message="fstream fileH not open for writing";
-        throw std::runtime_error(message);
+        OPM_THROW(std::runtime_error, "fstream fileH not open for writing");
     }
 
-    int flippedSize=flipEndianInt(size);
-    int bhead=flipEndianInt(16);
+    int flippedSize = EIOD::flipEndianInt(size);
+    int bhead = EIOD::flipEndianInt(16);
 
-    ofileH->write((char *)&bhead, sizeof(bhead));
+    ofileH->write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
 
     ofileH->write(name.c_str(), 8);
-    ofileH->write((char *)&flippedSize, sizeof(flippedSize));
+    ofileH->write(reinterpret_cast<char*>(&flippedSize), sizeof(flippedSize));
 
     switch(arrType) {
-    case EIOD::INTE  :
-        ofileH->write("INTE", 4);;
+    case EIOD::INTE:
+        ofileH->write("INTE", 4);
         break;
-    case EIOD::REAL  :
-        ofileH->write("REAL", 4);;
+    case EIOD::REAL:
+        ofileH->write("REAL", 4);
         break;
-    case EIOD::DOUB  :
-        ofileH->write("DOUB", 4);;
+    case EIOD::DOUB:
+        ofileH->write("DOUB", 4);
         break;
-    case EIOD::LOGI  :
-        ofileH->write("LOGI", 4);;
+    case EIOD::LOGI:
+        ofileH->write("LOGI", 4);
         break;
-    case EIOD::CHAR  :
-        ofileH->write("CHAR", 4);;
+    case EIOD::CHAR:
+        ofileH->write("CHAR", 4);
         break;
-    case EIOD::MESS  :
-        ofileH->write("MESS", 4);;
+    case EIOD::MESS:
+        ofileH->write("MESS", 4);
         break;
     }
 
-    ofileH->write((char *)&bhead, sizeof(bhead));
+    ofileH->write(reinterpret_cast<char *>(&bhead), sizeof(bhead));
 }
 
 
 template <typename T>
-void EclOutput::writeBinaryArray(const std::vector<T> &data) {
-
+void EclOutput::writeBinaryArray(const std::vector<T>& data)
+{
     int rest,num,rval;
     int dhead;
     float value_f;
     double value_d;
     int intVal;
 
-    int n=0;
-    int size=data.size();
+    int n = 0;
+    int size = data.size();
 
     EIOD::eclArrType arrType;
 
-    if (typeid(std::vector<T>)==typeid(std::vector<int>)) {
-        arrType=EIOD::INTE;
+    if (typeid(std::vector<T>) == typeid(std::vector<int>)) {
+        arrType = EIOD::INTE;
     } else if (typeid(std::vector<T>) == typeid(std::vector<float>)) {
-        arrType=EIOD::REAL;
-    } else if (typeid(std::vector<T>)== typeid(std::vector<double>)) {
-        arrType=EIOD::DOUB;
-    } else if (typeid(std::vector<T>)== typeid(std::vector<bool>)) {
-        arrType=EIOD::LOGI;
+        arrType = EIOD::REAL;
+    } else if (typeid(std::vector<T>) == typeid(std::vector<double>)) {
+        arrType = EIOD::DOUB;
+    } else if (typeid(std::vector<T>) == typeid(std::vector<bool>)) {
+        arrType = EIOD::LOGI;
     }
 
     auto sizeData = block_size_data_binary(arrType);
 
     int sizeOfElement = std::get<0>(sizeData);
     int maxBlockSize = std::get<1>(sizeData);
-    int maxNumberOfElements=maxBlockSize/sizeOfElement;
+    int maxNumberOfElements = maxBlockSize / sizeOfElement;
 
     if (!ofileH->is_open()) {
-        std::string message="fstream fileH not open for writing";
-        throw std::runtime_error(message);
+        OPM_THROW(std::runtime_error, "fstream fileH not open for writing");
     }
 
-    rest=size*sizeOfElement;
-
-    while (rest>0) {
-
-        if (rest>maxBlockSize) {
-            rest=rest-maxBlockSize;
-            num=maxNumberOfElements;
+    rest = size * sizeOfElement;
+    while (rest > 0) {
+        if (rest > maxBlockSize) {
+            rest -= maxBlockSize;
+            num = maxNumberOfElements;
         } else {
-            num=rest/sizeOfElement;
-            rest=0;
+            num = rest / sizeOfElement;
+            rest = 0;
         }
 
-        dhead=flipEndianInt(num*sizeOfElement);
+        dhead = EIOD::flipEndianInt(num * sizeOfElement);
 
-        ofileH->write((char *)&dhead, sizeof(dhead));
+        ofileH->write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
 
-        for (int i=0; i<num; i++) {
-
-            if (arrType==EIOD::INTE) {
-                rval=flipEndianInt(data[n]);
-                ofileH->write((char *)&rval, sizeof(rval));
-            } else if (arrType==EIOD::REAL) {
-                value_f=flipEndianFloat(data[n]);
-                ofileH->write((char *)&value_f, sizeof(value_f));
-            } else if (arrType==EIOD::DOUB) {
-                value_d=flipEndianDouble(data[n]);
-                ofileH->write((char *)&value_d, sizeof(value_d));
-            } else if (arrType==EIOD::LOGI) {
-                intVal = data[n]==true ? EIOD::true_value : EIOD::false_value;
-                ofileH->write((char *)&intVal, sizeOfElement);
+        for (int i = 0; i < num; i++) {
+            if (arrType == EIOD::INTE) {
+                rval = EIOD::flipEndianInt(data[n]);
+                ofileH->write(reinterpret_cast<char*>(&rval), sizeof(rval));
+            } else if (arrType == EIOD::REAL) {
+                value_f = EIOD::flipEndianFloat(data[n]);
+                ofileH->write(reinterpret_cast<char*>(&value_f), sizeof(value_f));
+            } else if (arrType == EIOD::DOUB) {
+                value_d = EIOD::flipEndianDouble(data[n]);
+                ofileH->write(reinterpret_cast<char*>(&value_d), sizeof(value_d));
+            } else if (arrType == EIOD::LOGI) {
+                intVal = data[n] ? EIOD::true_value : EIOD::false_value;
+                ofileH->write(reinterpret_cast<char*>(&intVal), sizeOfElement);
             } else {
-                std::cout << "type not supported in write binaryarray"<< std::endl;
+                std::cout << "type not supported in write binaryarray" << std::endl;
                 exit(1);
             }
 
             n++;
         }
 
-        ofileH->write((char *)&dhead, sizeof(dhead));
-    };
-
-
+        ofileH->write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+    }
 }
 
-template void EclOutput::writeBinaryArray<int>(const std::vector<int> &data);
-template void EclOutput::writeBinaryArray<float>(const std::vector<float> &data);
-template void EclOutput::writeBinaryArray<double>(const std::vector<double> &data);
-template void EclOutput::writeBinaryArray<bool>(const std::vector<bool> &data);
+
+template void EclOutput::writeBinaryArray<int>(const std::vector<int>& data);
+template void EclOutput::writeBinaryArray<float>(const std::vector<float>& data);
+template void EclOutput::writeBinaryArray<double>(const std::vector<double>& data);
+template void EclOutput::writeBinaryArray<bool>(const std::vector<bool>& data);
 
 
-void EclOutput::writeBinaryCharArray(const std::vector<std::string> &data) {
-
+void EclOutput::writeBinaryCharArray(const std::vector<std::string>& data)
+{
     int num,dhead;
 
-    int n=0;
-    int size=data.size();
+    int n = 0;
+    int size = data.size();
 
-    auto sizeData = block_size_data_binary(EIOD::CHAR);
+    auto sizeData = EIOD::block_size_data_binary(EIOD::CHAR);
 
     int sizeOfElement = std::get<0>(sizeData);
     int maxBlockSize = std::get<1>(sizeData);
-    int maxNumberOfElements=maxBlockSize/sizeOfElement;
+    int maxNumberOfElements = maxBlockSize / sizeOfElement;
 
-    int rest=size*sizeOfElement;
-
+    int rest = size * sizeOfElement;
 
     if (!ofileH->is_open()) {
-        std::string message="fstream fileH not open for writing";
-        throw std::runtime_error(message);
+        OPM_THROW(std::runtime_error,"fstream fileH not open for writing");
     }
 
-    while (rest>0) {
-        if (rest>maxBlockSize) {
-            rest=rest-maxBlockSize;
-            num=maxNumberOfElements;
+    while (rest > 0) {
+        if (rest > maxBlockSize) {
+            rest -= maxBlockSize;
+            num = maxNumberOfElements;
         } else {
-            num=rest/sizeOfElement;
-            rest=0;
+            num = rest / sizeOfElement;
+            rest = 0;
         }
 
-        dhead=flipEndianInt(num*sizeOfElement);
+        dhead = EIOD::flipEndianInt(num * sizeOfElement);
 
-        ofileH->write((char *)&dhead, sizeof(dhead));
+        ofileH->write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
 
-        for (int i=0; i<num; i++) {
-            std::string tmpStr=data[n]+std::string(8-data[n].size(),' ');
+        for (int i = 0; i < num; i++) {
+            std::string tmpStr = data[n] + std::string(8 - data[n].size(),' ');
             ofileH->write(tmpStr.c_str(), sizeOfElement);
             n++;
         }
 
-        ofileH->write((char *)&dhead, sizeof(dhead));
-    };
+        ofileH->write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+    }
 }
 
-void EclOutput::writeFormattedHeader(const std::string &arrName,const int &size,const EIOD::eclArrType &arrType) {
 
+void EclOutput::writeFormattedHeader(const std::string& arrName, int size, EIOD::eclArrType arrType)
+{
     if (!ofileH->is_open()) {
-        std::string message="ofstream fileH not open for writing";
-        throw std::runtime_error(message);
+        OPM_THROW(std::runtime_error, "ofstream fileH not open for writing");
     }
 
-    std::string name=arrName+std::string(8-arrName.size(),' ');
+    std::string name = arrName + std::string(8 - arrName.size(),' ');
 
     *ofileH << " '" << name << "' " << std::setw(11) << size;
 
-    switch(arrType) {
-    case EIOD::INTE  :
+    switch (arrType) {
+    case EIOD::INTE:
         *ofileH << " 'INTE'" <<  std::endl;
         break;
-    case EIOD::REAL  :
+    case EIOD::REAL:
         *ofileH << " 'REAL'" <<  std::endl;
         break;
-    case EIOD::DOUB  :
+    case EIOD::DOUB:
         *ofileH << " 'DOUB'" <<  std::endl;
         break;
-    case EIOD::LOGI  :
+    case EIOD::LOGI:
         *ofileH << " 'LOGI'" <<  std::endl;
         break;
-    case EIOD::CHAR  :
+    case EIOD::CHAR:
         *ofileH << " 'CHAR'" <<  std::endl;
         break;
-    case EIOD::MESS  :
+    case EIOD::MESS:
         *ofileH << " 'MESS'" <<  std::endl;
         break;
     }
-
 }
 
-const std::string EclOutput::make_real_string(const float &value) const {
 
+std::string EclOutput::make_real_string(float value) const
+{
     char buffer [15];
     sprintf (buffer, "%10.7E", value);
 
-    if (value==0.0) {
+    if (value == 0.0) {
         std::string tmpstr("0.00000000E+00");
-
         return std::move(tmpstr);
     } else {
         std::string tmpstr(buffer);
 
-        int exp=  value < 0.0 ? std::stoi(tmpstr.substr(11,3)) :  std::stoi(tmpstr.substr(10,3));
+        int exp =  value < 0.0 ? std::stoi(tmpstr.substr(11, 3)) :  std::stoi(tmpstr.substr(10, 3));
 
-        if (value <0.0) {
-            tmpstr="-0."+tmpstr.substr(1,1)+tmpstr.substr(3,7)+"E";
+        if (value < 0.0) {
+            tmpstr = "-0." + tmpstr.substr(1, 1) + tmpstr.substr(3, 7) + "E";
         } else {
-            tmpstr="0."+tmpstr.substr(0,1)+tmpstr.substr(2,7)+"E";
+            tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 7) +"E";
         }
 
         sprintf (buffer, "%+03i", exp+1);
-        tmpstr=tmpstr+buffer;
+        tmpstr = tmpstr+buffer;
 
         return std::move(tmpstr);
     }
 }
 
 
-const std::string EclOutput::make_doub_string(const double &value) const {
-
+std::string EclOutput::make_doub_string(double value) const
+{
     char buffer [20];
     sprintf (buffer, "%19.13E", value);
 
-    if (value==0.0) {
+    if (value == 0.0) {
         std::string tmpstr("0.00000000000000D+00");
 
         return std::move(tmpstr);
-
     } else {
-
         std::string tmpstr(buffer);
 
-        int exp=  value < 0.0 ? std::stoi(tmpstr.substr(17,4)) :  std::stoi(tmpstr.substr(16,4));
+        int exp =  value < 0.0 ? std::stoi(tmpstr.substr(17, 4)) :  std::stoi(tmpstr.substr(16, 4));
 
-        if (value <0.0) {
-            if (abs(exp)<100) {
-                tmpstr="-0."+tmpstr.substr(1,1)+tmpstr.substr(3,13)+"D";
+        if (value < 0.0) {
+            if (abs(exp) < 100) {
+                tmpstr = "-0." + tmpstr.substr(1, 1) + tmpstr.substr(3, 13) + "D";
             } else {
-                tmpstr="-0."+tmpstr.substr(1,1)+tmpstr.substr(3,13);
+                tmpstr = "-0." + tmpstr.substr(1, 1) + tmpstr.substr(3, 13);
             }
         } else {
-            if (abs(exp)<100) {
-                tmpstr="0."+tmpstr.substr(0,1)+tmpstr.substr(2,13)+"D";
+            if (abs(exp) < 100) {
+                tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 13) + "D";
             } else {
-                tmpstr="0."+tmpstr.substr(0,1)+tmpstr.substr(2,13);
+                tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 13);
             }
         }
 
         sprintf (buffer, "%+03i", exp+1);
-        tmpstr=tmpstr+buffer;
+        tmpstr = tmpstr + buffer;
 
         return std::move(tmpstr);
     }
@@ -391,52 +300,49 @@ const std::string EclOutput::make_doub_string(const double &value) const {
 
 
 template <typename T>
-void EclOutput::writeFormattedArray(const std::vector<T> &data) {
-
+void EclOutput::writeFormattedArray(const std::vector<T>& data)
+{
     if (!ofileH->is_open()) {
-        std::string message="ofstream fileH not open for writing";
-        throw std::runtime_error(message);
+        OPM_THROW(std::runtime_error, "ofstream fileH not open for writing");
     }
 
-    int size=data.size();
-    int n=0;
+    int size = data.size();
+    int n = 0;
 
     EIOD::eclArrType arrType;
-
-    if (typeid(std::vector<T>)==typeid(std::vector<int>)) {
-        arrType=EIOD::INTE;
+    if (typeid(std::vector<T>) == typeid(std::vector<int>)) {
+        arrType = EIOD::INTE;
     } else if (typeid(std::vector<T>) == typeid(std::vector<float>)) {
-        arrType=EIOD::REAL;
-    } else if (typeid(std::vector<T>)== typeid(std::vector<double>)) {
-        arrType=EIOD::DOUB;
-    } else if (typeid(std::vector<T>)== typeid(std::vector<bool>)) {
-        arrType=EIOD::LOGI;
+        arrType = EIOD::REAL;
+    } else if (typeid(std::vector<T>) == typeid(std::vector<double>)) {
+        arrType = EIOD::DOUB;
+    } else if (typeid(std::vector<T>) == typeid(std::vector<bool>)) {
+        arrType = EIOD::LOGI;
     }
 
-    auto sizeData = block_size_data_formatted(arrType);
+    auto sizeData = EIOD::block_size_data_formatted(arrType);
 
-    int maxBlockSize=std::get<0>(sizeData);
-    int nColumns=std::get<1>(sizeData);
-    int columnWidth=std::get<2>(sizeData);
+    int maxBlockSize = std::get<0>(sizeData);
+    int nColumns = std::get<1>(sizeData);
+    int columnWidth = std::get<2>(sizeData);
 
-    for (int i=0; i<size; i++) {
+    for (int i = 0; i < size; i++) {
         n++;
 
-        switch(arrType) {
-        case EIOD::INTE  :
+        switch (arrType) {
+        case EIOD::INTE:
             *ofileH << std::setw(columnWidth) << data[i];
             break;
-        case EIOD::REAL  :
+        case EIOD::REAL:
             *ofileH << std::setw(columnWidth) << make_real_string(data[i]);
             break;
-        case EIOD::DOUB  :
+        case EIOD::DOUB:
             *ofileH << std::setw(columnWidth) << make_doub_string(data[i]);
             break;
-        case EIOD::LOGI  :
-            if (data[i]==true) {
+        case EIOD::LOGI:
+            if (data[i]) {
                 *ofileH << "  T";
-            }
-            else {
+            } else {
                 *ofileH << "  F";
             }
             break;
@@ -444,64 +350,51 @@ void EclOutput::writeFormattedArray(const std::vector<T> &data) {
             break;
         }
 
-        if (((n % nColumns)==0) || ((n % maxBlockSize)==0)) {
+        if ((n % nColumns) == 0 || (n % maxBlockSize) == 0) {
             *ofileH << std::endl;
         }
 
-        if ((n % maxBlockSize)==0) {
+        if ((n % maxBlockSize) == 0) {
             n=0;
         }
     }
 
-    if (((n % nColumns)!=0) && ((n % maxBlockSize)!=0)) {
+    if ((n % nColumns) != 0 && (n % maxBlockSize) != 0) {
         *ofileH << std::endl;
     }
 }
 
-template void EclOutput::writeFormattedArray<int>(const std::vector<int> &data);
-template void EclOutput::writeFormattedArray<float>(const std::vector<float> &data);
-template void EclOutput::writeFormattedArray<double>(const std::vector<double> &data);
-template void EclOutput::writeFormattedArray<bool>(const std::vector<bool> &data);
+
+template void EclOutput::writeFormattedArray<int>(const std::vector<int>& data);
+template void EclOutput::writeFormattedArray<float>(const std::vector<float>& data);
+template void EclOutput::writeFormattedArray<double>(const std::vector<double>& data);
+template void EclOutput::writeFormattedArray<bool>(const std::vector<bool>& data);
 
 
-void EclOutput::writeFormattedCharArray(const std::vector<std::string> &data) {
-
+void EclOutput::writeFormattedCharArray(const std::vector<std::string>& data)
+{
     if (!ofileH->is_open()) {
-        std::string message="ofstream fileH not open for writing";
-        throw std::runtime_error(message);
+        OPM_THROW(std::runtime_error, "ofstream fileH not open for writing");
     }
 
-    auto sizeData = block_size_data_formatted(EIOD::CHAR);
+    auto sizeData = EIOD::block_size_data_formatted(EIOD::CHAR);
 
-    int nColumns=std::get<1>(sizeData);
+    int nColumns = std::get<1>(sizeData);
 
-    int size=data.size();
+    int size = data.size();
 
-    for (int i=0; i<size; i++) {
-
+    for (int i = 0; i < size; i++) {
         std::string str1(8,' ');
-        str1=data[i]+std::string(8-data[i].size(),' ');
+        str1 = data[i] + std::string(8 - data[i].size(),' ');
 
         *ofileH << " '" << str1 << "'";
 
-        if (((i+1) % nColumns)==0) {
+        if ((i+1) % nColumns == 0) {
             *ofileH  << std::endl;
         }
     }
 
-    if ((size % nColumns)!=0) {
+    if ((size % nColumns) != 0) {
         *ofileH  << std::endl;
     }
 }
-
-EclOutput::EclOutput(std::ofstream &inputFileH) {
-
-    if (!inputFileH.is_open()) {
-        std::string message="ofstream inputFileH not open for writing";
-        throw std::runtime_error(message);
-    }
-
-    ofileH=&inputFileH;
-}
-
-
