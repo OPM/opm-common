@@ -17,7 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define BOOST_TEST_MODULE Aggregate_Well_Data
+#define BOOST_TEST_MODULE Aggregate_Connection_Data
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 
@@ -273,12 +273,6 @@ PVDG
 
 -- PVT PROPERTIES OF LIVE OIL (WITH DISSOLVED GAS)
 -- WE WOULD USE PVDO TO SPECIFY THE PROPERTIES OF DEAD OIL
---
--- FOR EACH VALUE OF RS THE SATURATION PRESSURE, FVF AND VISCOSITY
--- ARE SPECIFIED. FOR RS=1.27 AND 1.618, THE FVF AND VISCOSITY OF
--- UNDERSATURATED OIL ARE DEFINED AS A FUNCTION OF PRESSURE. DATA
--- FOR UNDERSATURATED OIL MAY BE SUPPLIED FOR ANY RS, BUT MUST BE
--- SUPPLIED FOR THE HIGHEST RS (1.618).
 --
 --   RS      POIL  FVFO  VISO
 PVTO
