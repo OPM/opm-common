@@ -340,6 +340,7 @@ set( keywords
      000_Eclipse100/T/THCONR
      000_Eclipse100/T/THERMAL
      000_Eclipse100/T/THPRES
+     000_Eclipse100/T/THPRESFT
      000_Eclipse100/T/TITLE
      000_Eclipse100/T/TLMIXPAR
      000_Eclipse100/T/TNUM

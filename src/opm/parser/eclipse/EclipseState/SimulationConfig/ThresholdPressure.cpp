@@ -35,13 +35,15 @@ namespace Opm {
         m_restart(restart)
     {
 
-        if( !Section::hasRUNSPEC( deck ) || !Section::hasSOLUTION( deck ) )
+        if( !Section::hasRUNSPEC( deck ) || (!Section::hasSOLUTION( deck ) && !Section::hasGRID( deck )) )
             return;
 
         RUNSPECSection runspecSection( deck );
         SOLUTIONSection solutionSection( deck );
+        GRIDSection gridSection( deck );
 
         const bool thpresKeyword    = solutionSection.hasKeyword<ParserKeywords::THPRES>();
+        const bool thpresftKeyword  = gridSection.hasKeyword<ParserKeywords::THPRESFT>();
         const bool hasEqlnumKeyword = eclipseProperties.hasDeckIntGridProperty( "EQLNUM" );
         int        maxEqlnum        = 0;
 
@@ -76,11 +78,12 @@ namespace Opm {
           the restart file.
         */
 
-        if( m_active && !thpresKeyword ) {
+        if( m_active && !thpresKeyword && !thpresftKeyword ) {
             if (!m_restart)
-                throw std::runtime_error("Invalid solution section; "
-                                         "the EQLOPTS THPRES option is set in RUNSPEC, "
-                                         "but no THPRES keyword is found in SOLUTION." );
+                throw std::runtime_error("Invalid solution or grid sections: "
+                                         "The EQLOPTS THPRES option is set in RUNSPEC, "
+                                         "but neither the THPRES keyword is found in the SOLUTION "
+                                         "section nor the THPRESFT keyword in the GRID section." );
         }
 
 
