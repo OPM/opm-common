@@ -26,33 +26,9 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 
+#include "../injection.hpp"
+
 namespace Opm {
-
-    namespace {
-
-
-        // THis function is now duplicated in Schedule.cpp - should be extracted to separe compilation unit.
-        double convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) {
-            switch (wellType) {
-            case WellInjector::MULTI:
-                // multi-phase controlled injectors are a really funny
-                // construct in Eclipse: the quantity controlled for is
-                // not physically meaningful, i.e. Eclipse adds up
-                // MCFT/day and STB/day.
-                throw std::logic_error("There is no generic way to handle multi-phase injectors at this level!");
-
-            case WellInjector::OIL:
-            case WellInjector::WATER:
-                return unitSystem.to_si( UnitSystem::measure::liquid_surface_rate, rawRate );
-
-            case WellInjector::GAS:
-                return unitSystem.to_si( UnitSystem::measure::gas_surface_rate, rawRate );
-
-            default:
-                throw std::logic_error("Unknown injector type");
-            }
-        }
-    }
 
     WellInjectionProperties::WellInjectionProperties()
       : injectorType(WellInjector::WATER),
@@ -78,7 +54,7 @@ namespace Opm {
         this->predictionMode = true;
 
         if (!record.getItem("RATE").defaultApplied(0)) {
-            this->surfaceInjectionRate = convertInjectionRateToSI(record.getItem("RATE").get< double >(0) , injectorType, unit_system);
+            this->surfaceInjectionRate = injection::rateToSI(record.getItem("RATE").get< double >(0) , injectorType, unit_system);
             this->addInjectionControl(WellInjector::RATE);
         } else
             this->dropInjectionControl(WellInjector::RATE);
@@ -135,7 +111,7 @@ namespace Opm {
         }
         const WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( typeItem.getTrimmedString(0));
         double injectionRate = record.getItem("RATE").get< double >(0);
-        injectionRate = convertInjectionRateToSI(injectionRate, injectorType, unit_system);
+        injectionRate = injection::rateToSI(injectionRate, injectorType, unit_system);
 
         this->injectorType = injectorType;
 

@@ -65,6 +65,8 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
+#include "injection.hpp"
+
 namespace Opm {
 
 
@@ -1263,7 +1265,7 @@ namespace Opm {
 
                 // calculate SI injection rates for the group
                 double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< double >(0);
-                surfaceInjectionRate = convertInjectionRateToSI(surfaceInjectionRate, wellPhase, section.unitSystem());
+                surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, wellPhase, section.unitSystem());
                 double reservoirInjectionRate = record.getItem("RESV_TARGET").getSIDouble(0);
 
                 group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
@@ -1977,41 +1979,6 @@ namespace Opm {
         newGroup.addWell(timeStep , &well);
     }
 
-
-    double Schedule::convertInjectionRateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) {
-        switch (wellType) {
-        case WellInjector::MULTI:
-            // multi-phase controlled injectors are a really funny
-            // construct in Eclipse: the quantity controlled for is
-            // not physically meaningful, i.e. Eclipse adds up
-            // MCFT/day and STB/day.
-            throw std::logic_error("There is no generic way to handle multi-phase injectors at this level!");
-
-        case WellInjector::OIL:
-        case WellInjector::WATER:
-            return unitSystem.to_si( UnitSystem::measure::liquid_surface_rate, rawRate );
-
-        case WellInjector::GAS:
-            return unitSystem.to_si( UnitSystem::measure::gas_surface_rate, rawRate );
-
-        default:
-            throw std::logic_error("Unknown injector type");
-        }
-    }
-
-    double Schedule::convertInjectionRateToSI(double rawRate, Phase wellPhase, const Opm::UnitSystem& unitSystem) {
-        switch (wellPhase) {
-        case Phase::OIL:
-        case Phase::WATER:
-            return unitSystem.to_si( UnitSystem::measure::liquid_surface_rate, rawRate );
-
-        case Phase::GAS:
-            return unitSystem.to_si( UnitSystem::measure::gas_surface_rate, rawRate );
-
-        default:
-            throw std::logic_error("Unknown injection phase");
-        }
-    }
 
     bool Schedule::convertEclipseStringToBool(const std::string& eclipseString) {
         std::string lowerTrimmed = boost::algorithm::to_lower_copy(eclipseString);
