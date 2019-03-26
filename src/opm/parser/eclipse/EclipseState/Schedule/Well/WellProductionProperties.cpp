@@ -34,29 +34,27 @@ namespace Opm {
     WellProductionProperties() : predictionMode( true )
     {}
 
-    WellProductionProperties::
-    WellProductionProperties( const DeckRecord& record ) :
-        OilRate( record.getItem( "ORAT" ).getSIDouble( 0 ) ),
-        WaterRate( record.getItem( "WRAT" ).getSIDouble( 0 ) ),
-        GasRate( record.getItem( "GRAT" ).getSIDouble( 0 ) )
-    {}
+
+    void WellProductionProperties::init_rates( const DeckRecord& record ) {
+        this->OilRate   = ( record.getItem( "ORAT" ).getSIDouble( 0 ) );
+        this->WaterRate = ( record.getItem( "WRAT" ).getSIDouble( 0 ) );
+        this->GasRate  = ( record.getItem( "GRAT" ).getSIDouble( 0 ) );
+    }
 
 
-    WellProductionProperties WellProductionProperties::history(const WellProductionProperties& prev_properties,
-                                                               const DeckRecord& record,
-                                                               const WellProducer::ControlModeEnum controlModeWHISTCL,
-                                                               const bool switching_from_injector)
+    void WellProductionProperties::init_history(const WellProductionProperties& prev_properties,
+                                                const DeckRecord& record,
+                                                const WellProducer::ControlModeEnum controlModeWHISTCL,
+                                                const bool switching_from_injector)
     {
-        WellProductionProperties p(record);
-        p.predictionMode = false;
-
+        this->predictionMode = false;
         // update LiquidRate
-        p.LiquidRate = p.WaterRate + p.OilRate;
+        this->LiquidRate = this->WaterRate + this->OilRate;
 
         if ( record.getItem( "BHP" ).hasValue(0) )
-            p.BHPH = record.getItem("BHP").getSIDouble(0);
+            this->BHPH = record.getItem("BHP").getSIDouble(0);
         if ( record.getItem( "THP" ).hasValue(0) )
-            p.THPH = record.getItem("THP").getSIDouble(0);
+            this->THPH = record.getItem("THP").getSIDouble(0);
 
         const auto& cmodeItem = record.getItem("CMODE");
         if ( cmodeItem.defaultApplied(0) ) {
@@ -73,8 +71,8 @@ namespace Opm {
         }
 
         if (effectiveHistoryProductionControl(cmode) ) {
-            p.addProductionControl( cmode );
-            p.controlMode = cmode;
+            this->addProductionControl( cmode );
+            this->controlMode = cmode;
         } else {
             const std::string cmode_string = cmodeItem.getTrimmedString( 0 );
             const std::string msg = "unsupported control mode " + cmode_string + " for WCONHIST";
@@ -83,11 +81,11 @@ namespace Opm {
 
         // always have a BHP control/limit, while the limit value needs to be determined
         // the control mode added above can be a BHP control or a type of RATE control
-        if ( !p.hasProductionControl( wp::BHP ) )
-            p.addProductionControl( wp::BHP );
+        if ( !this->hasProductionControl( wp::BHP ) )
+            this->addProductionControl( wp::BHP );
 
         if (cmode == wp::BHP) {
-            p.setBHPLimit(p.BHPH);
+            this->setBHPLimit(this->BHPH);
         } else {
             // when the well is switching to history matching producer from prediction mode
             // or switching from injector to producer
@@ -95,38 +93,35 @@ namespace Opm {
             // we use the defaulted BHP limit, otherwise, we use the previous BHP limit
             if ( prev_properties.predictionMode || switching_from_injector
               || prev_properties.controlMode == wp::BHP ) {
-                p.resetDefaultBHPLimit();
+                this->resetDefaultBHPLimit();
             } else {
-                p.setBHPLimit(prev_properties.getBHPLimit());
+                this->setBHPLimit(prev_properties.getBHPLimit());
             }
         }
 
-        p.VFPTableNumber = record.getItem("VFPTable").get< int >(0);
+        this->VFPTableNumber = record.getItem("VFPTable").get< int >(0);
 
-        if (p.VFPTableNumber == 0)
-            p.VFPTableNumber = prev_properties.VFPTableNumber;
+        if (this->VFPTableNumber == 0)
+            this->VFPTableNumber = prev_properties.VFPTableNumber;
 
-        p.ALQValue       = record.getItem("Lift").get< double >(0); //NOTE: Unit of ALQ is never touched
+        this->ALQValue       = record.getItem("Lift").get< double >(0); //NOTE: Unit of ALQ is never touched
 
-        if (p.ALQValue == 0.)
-            p.ALQValue = prev_properties.ALQValue;
-
-        return p;
+        if (this->ALQValue == 0.)
+            this->ALQValue = prev_properties.ALQValue;
     }
 
 
 
-    WellProductionProperties WellProductionProperties::prediction( const DeckRecord& record, bool addGroupProductionControl)
+    void WellProductionProperties::init_prediction( const DeckRecord& record, bool addGroupProductionControl)
     {
-        WellProductionProperties p(record);
-        p.predictionMode = true;
+        this->predictionMode = true;
 
-        p.LiquidRate     = record.getItem("LRAT"     ).getSIDouble(0);
-        p.ResVRate       = record.getItem("RESV"     ).getSIDouble(0);
-        p.BHPLimit       = record.getItem("BHP"      ).getSIDouble(0);
-        p.THPLimit       = record.getItem("THP"      ).getSIDouble(0);
-        p.ALQValue       = record.getItem("ALQ"      ).get< double >(0); //NOTE: Unit of ALQ is never touched
-        p.VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
+        this->LiquidRate     = record.getItem("LRAT"     ).getSIDouble(0);
+        this->ResVRate       = record.getItem("RESV"     ).getSIDouble(0);
+        this->BHPLimit       = record.getItem("BHP"      ).getSIDouble(0);
+        this->THPLimit       = record.getItem("THP"      ).getSIDouble(0);
+        this->ALQValue       = record.getItem("ALQ"      ).get< double >(0); //NOTE: Unit of ALQ is never touched
+        this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
 
         namespace wp = WellProducer;
         using mode = std::pair< const std::string, wp::ControlModeEnum >;
@@ -139,18 +134,18 @@ namespace Opm {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
 
                 // a zero value THP limit will not be handled as a THP limit
-                if (cmode.first == "THP" && p.THPLimit == 0.)
+                if (cmode.first == "THP" && this->THPLimit == 0.)
                     continue;
 
-                p.addProductionControl( cmode.second );
+                this->addProductionControl( cmode.second );
             }
         }
 
         // There is always a BHP constraint, when not specified, will use the default value
-        p.addProductionControl( wp::BHP );
+        this->addProductionControl( wp::BHP );
 
         if (addGroupProductionControl) {
-            p.addProductionControl(WellProducer::GRUP);
+            this->addProductionControl(WellProducer::GRUP);
         }
 
 
@@ -159,13 +154,26 @@ namespace Opm {
             if (cmodeItem.hasValue(0)) {
                 const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem.getTrimmedString(0) );
 
-                if (p.hasProductionControl( cmode ))
-                    p.controlMode = cmode;
+                if (this->hasProductionControl( cmode ))
+                    this->controlMode = cmode;
                 else
                     throw std::invalid_argument("Setting CMODE to unspecified control");
             }
         }
-        return p;
+    }
+
+    WellProductionProperties::WellProductionProperties(const DeckRecord& record,
+                                                       bool prediction_mode,
+                                                       const WellProductionProperties& prev_properties,
+                                                       WellProducer::ControlModeEnum controlModeWHISTCTL,
+                                                       bool switching_from_injector,
+                                                       bool addGrupProductionControl)
+    {
+        this->init_rates(record);
+        if (prediction_mode)
+            this->init_prediction(record, addGrupProductionControl);
+        else
+            this->init_history(prev_properties, record, controlModeWHISTCTL, switching_from_injector);
     }
 
 

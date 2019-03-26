@@ -87,6 +87,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/GroupTree.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.cpp

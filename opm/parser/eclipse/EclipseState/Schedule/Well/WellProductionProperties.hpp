@@ -54,13 +54,13 @@ namespace Opm {
         bool operator==(const WellProductionProperties& other) const;
         bool operator!=(const WellProductionProperties& other) const;
         WellProductionProperties();
+        WellProductionProperties (const DeckRecord& record,
+                                  bool prediction_mode,
+                                  const WellProductionProperties& prev_properties,
+                                  WellProducer::ControlModeEnum controlModeWHISTCTL,
+                                  bool switching_from_injector,
+                                  bool addGrupProductionControl);
 
-        static WellProductionProperties history(const WellProductionProperties& prevProperties,
-                                                const DeckRecord& record,
-                                                const WellProducer::ControlModeEnum controlModeWHISTCL,
-                                                const bool switching_from_injector);
-
-        static WellProductionProperties prediction( const DeckRecord& record, bool addGroupProductionControl );
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
             return (m_productionControls & controlModeArg) != 0;
@@ -81,7 +81,14 @@ namespace Opm {
 
     private:
         int m_productionControls = 0;
+        void init_rates( const DeckRecord& record );
 
+        void init_history(const WellProductionProperties& prevProperties,
+                          const DeckRecord& record,
+                          const WellProducer::ControlModeEnum controlModeWHISTCL,
+                          const bool switching_from_injector);
+
+        void init_prediction( const DeckRecord& record, bool addGroupProductionControl );
         WellProductionProperties(const DeckRecord& record);
 
         void resetDefaultBHPLimit();

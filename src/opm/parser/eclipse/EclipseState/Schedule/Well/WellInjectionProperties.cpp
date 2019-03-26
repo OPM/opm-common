@@ -21,8 +21,12 @@
 #include <vector>
 
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+#include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
+
+#include "../injection.hpp"
 
 namespace Opm {
 
@@ -43,6 +47,115 @@ namespace Opm {
         injectionControls=0;
     }
 
+
+    void WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name, const UnitSystem& unit_system) {
+        WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
+        this->injectorType = injectorType;
+        this->predictionMode = true;
+
+        if (!record.getItem("RATE").defaultApplied(0)) {
+            this->surfaceInjectionRate = injection::rateToSI(record.getItem("RATE").get< double >(0) , injectorType, unit_system);
+            this->addInjectionControl(WellInjector::RATE);
+        } else
+            this->dropInjectionControl(WellInjector::RATE);
+
+
+        if (!record.getItem("RESV").defaultApplied(0)) {
+            this->reservoirInjectionRate = record.getItem("RESV").getSIDouble(0);
+            this->addInjectionControl(WellInjector::RESV);
+        } else
+            this->dropInjectionControl(WellInjector::RESV);
+
+
+        if (!record.getItem("THP").defaultApplied(0)) {
+            this->THPLimit       = record.getItem("THP").getSIDouble(0);
+            this->addInjectionControl(WellInjector::THP);
+        } else
+            this->dropInjectionControl(WellInjector::THP);
+
+        this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
+
+        /*
+          There is a sensible default BHP limit defined, so the BHPLimit can be
+          safely set unconditionally, and we make BHP limit as a constraint based
+          on that default value. It is not easy to infer from the manual, while the
+          current behavoir agrees with the behovir of Eclipse when BHPLimit is not
+          specified while employed during group control.
+        */
+        this->setBHPLimit(record.getItem("BHP").getSIDouble(0));
+        // BHP control should always be there.
+        this->addInjectionControl(WellInjector::BHP);
+
+        if (availableForGroupControl)
+            this->addInjectionControl(WellInjector::GRUP);
+        else
+            this->dropInjectionControl(WellInjector::GRUP);
+        {
+            const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
+            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
+            if (this->hasInjectionControl( controlMode))
+                this->controlMode = controlMode;
+            else {
+                throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + well_name);
+            }
+        }
+    }
+
+
+    void WellInjectionProperties::handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name, const UnitSystem& unit_system) {
+        // convert injection rates to SI
+        const auto& typeItem = record.getItem("TYPE");
+        if (typeItem.defaultApplied(0)) {
+            const std::string msg = "Injection type can not be defaulted for keyword WCONINJH";
+            throw std::invalid_argument(msg);
+        }
+        const WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( typeItem.getTrimmedString(0));
+        double injectionRate = record.getItem("RATE").get< double >(0);
+        injectionRate = injection::rateToSI(injectionRate, injectorType, unit_system);
+
+        this->injectorType = injectorType;
+
+
+        if (!record.getItem("RATE").defaultApplied(0))
+            this->surfaceInjectionRate = injectionRate;
+        if ( record.getItem( "BHP" ).hasValue(0) )
+            this->BHPH = record.getItem("BHP").getSIDouble(0);
+        if ( record.getItem( "THP" ).hasValue(0) )
+            this->THPH = record.getItem("THP").getSIDouble(0);
+
+        const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
+        const WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
+
+        if ( !(controlMode == WellInjector::RATE || controlMode == WellInjector::BHP) ) {
+            const std::string msg = "Only RATE and BHP control are allowed for WCONINJH for well " + well_name;
+            throw std::invalid_argument(msg);
+        }
+
+        // when well is under BHP control, we use its historical BHP value as BHP limit
+        if (controlMode == WellInjector::BHP) {
+            this->setBHPLimit(this->BHPH);
+        } else {
+            const bool switching_from_producer = is_producer;
+            const bool switching_from_prediction = this->predictionMode;
+            const bool switching_from_BHP_control = (this->controlMode == WellInjector::BHP);
+            if (switching_from_prediction ||
+                switching_from_BHP_control ||
+                switching_from_producer) {
+                this->resetDefaultHistoricalBHPLimit();
+            }
+            // otherwise, we keep its previous BHP limit
+        }
+
+        this->addInjectionControl(WellInjector::BHP);
+        this->addInjectionControl(controlMode);
+        this->controlMode = controlMode;
+        this->predictionMode = false;
+
+        const int VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
+        if (VFPTableNumber > 0) {
+            this->VFPTableNumber = VFPTableNumber;
+        }
+    }
 
     bool WellInjectionProperties::operator==(const WellInjectionProperties& other) const {
         if ((surfaceInjectionRate == other.surfaceInjectionRate) &&
