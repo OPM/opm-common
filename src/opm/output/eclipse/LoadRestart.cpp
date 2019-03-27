@@ -37,6 +37,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -896,12 +897,12 @@ namespace {
         }
     }
 
-    void restoreSegmentQuantities(const std::size_t      mswID,
-                                  const std::size_t      numSeg,
-                                  const Opm::UnitSystem& usys,
-                                  const Opm::Phases&     phases,
-                                  const SegmentVectors&  segData,
-                                  Opm::data::Well&       xw)
+    void restoreSegmentQuantities(const std::size_t        mswID,
+                                  const Opm::WellSegments& segSet,
+                                  const Opm::UnitSystem&   usys,
+                                  const Opm::Phases&       phases,
+                                  const SegmentVectors&    segData,
+                                  Opm::data::Well&         xw)
     {
         // Note sign of flow rates.  RSEG stores flow rates as positive from
         // reservoir to well--i.e., towards the producer/platform.  The Flow
@@ -913,16 +914,16 @@ namespace {
         const auto gas = phases.active(Opm::Phase::GAS);
         const auto wat = phases.active(Opm::Phase::WATER);
 
+        const auto numSeg = static_cast<std::size_t>(segSet.size());
+
         // Renormalisation constant for gas okay in non-field unit systems.
         // A bit more questionable for field units.
         const auto watRenormalisation =   10.0;
         const auto gasRenormalisation = 1000.0;
 
         for (auto segID = 0*numSeg; segID < numSeg; ++segID) {
-            const auto iseg = segData.iseg(mswID, segID);
-            const auto rseg = segData.rseg(mswID, segID);
-
-            const auto segNumber = iseg[VI::ISeg::index::SegNo]; // One-based
+            const auto segNumber = segSet[segID].segmentNumber(); // One-based
+            const auto rseg      = segData.rseg(mswID, segNumber - 1);
 
             auto& segment = xw.segments[segNumber];
 
@@ -1016,8 +1017,12 @@ namespace {
             const auto mswID  = iwel[VI::IWell::index::MsWID]; // One-based
             const auto numSeg = iwel[VI::IWell::index::NWseg];
 
-            if ((mswID > 0) && (numSeg > 0)) {
-                restoreSegmentQuantities(mswID - 1, numSeg, usys,
+            const auto& segSet = well.getWellSegments(sim_step);
+
+            if ((mswID > 0) && (numSeg > 0) &&
+                (segSet.size() == numSeg))
+            {
+                restoreSegmentQuantities(mswID - 1, segSet, usys,
                                          phases, segData, xw);
             }
         }
