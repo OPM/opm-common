@@ -1,4 +1,4 @@
-# sunbeam [![Build Status](https://travis-ci.org/Statoil/sunbeam.svg?branch=master)](https://travis-ci.org/Statoil/sunbeam)
+# sunbeam [![Build Status](https://travis-ci.org/equinor/sunbeam.svg?branch=master)](https://travis-ci.org/equinor/sunbeam)
 
 
 # Prerequisites:
