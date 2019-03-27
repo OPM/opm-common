@@ -570,7 +570,7 @@ namespace {
 		    // set the elements of the rSeg array
 		    const auto& outSeg = welSegSet[segIndex].outletSegment();
 		    const auto& ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
-		    auto iS = (segNumber-1)*noElmSeg;
+		    const auto iS = segIndex*noElmSeg;
 		    rSeg[iS +   0] = units.from_si(M::length, (welSegSet[segIndex].totalLength() - welSegSet[ind_ofs].totalLength()));
 		    rSeg[iS +   1] = units.from_si(M::length, (welSegSet[segIndex].depth() - welSegSet[ind_ofs].depth()));
 		    rSeg[iS +   2] = units.from_si(M::length, (welSegSet[segIndex].internalDiameter()));
