@@ -36,6 +36,13 @@ using namespace Opm;
 
 namespace {
 
+constexpr ParserItem::itype INT = ParserItem::itype::INT;
+constexpr ParserItem::itype STRING= ParserItem::itype::STRING;
+constexpr ParserItem::itype RAW_STRING = ParserItem::itype::RAW_STRING;
+constexpr ParserItem::itype DOUBLE = ParserItem::itype::DOUBLE;
+
+
+
 std::string prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
@@ -382,23 +389,25 @@ BOOST_AUTO_TEST_CASE(ParseTNUM) {
 }
 
 BOOST_AUTO_TEST_CASE(ScalarCheck) {
-    ParserItem item1("ITEM1", ParserItem::item_size::SINGLE );
-    ParserItem item2("ITEM1", ParserItem::item_size::ALL );
+    ParserItem item1("ITEM1", INT);
+    ParserItem item2("ITEM1", INT); item2.setSizeType( ParserItem::item_size::ALL );
+
 
     BOOST_CHECK(  item1.scalar());
     BOOST_CHECK( !item2.scalar());
 }
 
 BOOST_AUTO_TEST_CASE(Initialize_DefaultSizeType) {
-    ParserItem item1(std::string("ITEM1"));
+    ParserItem item1(std::string("ITEM1"), INT);
     BOOST_CHECK_EQUAL( ParserItem::item_size::SINGLE, item1.sizeType());
 }
 
 
 
 BOOST_AUTO_TEST_CASE(Initialize_Default) {
-    ParserItem item1(std::string("ITEM1"));
-    ParserItem item2(std::string("ITEM1"), 88);
+    ParserItem item1(std::string("ITEM1"), INT);
+    ParserItem item2(std::string("ITEM1"), INT); item2.setDefault(88);
+
     BOOST_CHECK(!item1.hasDefault());
     BOOST_CHECK_THROW(item1.getDefault< int >(), std::invalid_argument);
     BOOST_CHECK(item2.hasDefault());
@@ -407,25 +416,23 @@ BOOST_AUTO_TEST_CASE(Initialize_Default) {
 
 
 BOOST_AUTO_TEST_CASE(Initialize_Default_Double) {
-    ParserItem item1(std::string("ITEM1"));
-    ParserItem item2("ITEM1",  88.91);
+    ParserItem item1(std::string("ITEM1"), DOUBLE);
+    ParserItem item2("ITEM1", DOUBLE); item2.setDefault(88.91);
+
     BOOST_CHECK(!item1.hasDefault());
     BOOST_CHECK_THROW( item1.getDefault< double >(), std::invalid_argument );
     BOOST_CHECK_EQUAL( 88.91 , item2.getDefault< double >());
 }
 
 BOOST_AUTO_TEST_CASE(Initialize_Default_String) {
-    ParserItem item1(std::string("ITEM1"));
+    ParserItem item1(std::string("ITEM1"), STRING);
     BOOST_CHECK(!item1.hasDefault());
     BOOST_CHECK_THROW(item1.getDefault< std::string >(), std::invalid_argument);
-
-    ParserItem item2("ITEM1",  "String");
-    BOOST_CHECK(item2.hasDefault());
-    BOOST_CHECK_EQUAL( "String" , item2.getDefault< std::string >());
 }
 
 BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
-    ParserItem itemInt("ITEM2", 123);
+    ParserItem itemInt("ITEM2", INT);
+    itemInt.setDefault(123);
 
     RawRecord rawRecord1( "" );
     const auto defaulted = itemInt.scan(rawRecord1);
@@ -435,7 +442,7 @@ BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
 }
 
 BOOST_AUTO_TEST_CASE(InitializeIntItem_setDescription_canReadBack) {
-    ParserItem itemInt("ITEM1");
+    ParserItem itemInt("ITEM1", INT);
     std::string description("This is the description");
     itemInt.setDescription(description);
 
@@ -514,8 +521,8 @@ BOOST_AUTO_TEST_CASE(InitializeIntItem_WithoutDescription_DescriptionPropertySho
 
 BOOST_AUTO_TEST_CASE(IntItem_Equal_ReturnsTrue) {
     auto sizeType = ParserItem::item_size::ALL;
-    ParserItem item1("ITEM1", sizeType);
-    ParserItem item2("ITEM1", sizeType);
+    ParserItem item1("ITEM1", INT); item1.setSizeType(sizeType);
+    ParserItem item2("ITEM1", INT); item2.setSizeType(sizeType);
     ParserItem item3 = item1;
 
     BOOST_CHECK_EQUAL( item1, item2 );
@@ -524,10 +531,10 @@ BOOST_AUTO_TEST_CASE(IntItem_Equal_ReturnsTrue) {
 
 
 BOOST_AUTO_TEST_CASE(IntItem_Different_ReturnsFalse) {
-    ParserItem item1("ITEM1", ParserItem::item_size::ALL);
-    ParserItem item2("ITEM2", ParserItem::item_size::ALL);
-    ParserItem item3("ITEM1");
-    ParserItem item4("ITEM1" , 42);
+    ParserItem item1("ITEM1", INT); item1.setSizeType(ParserItem::item_size::ALL);
+    ParserItem item2("ITEM2", INT); item2.setSizeType(ParserItem::item_size::ALL);
+    ParserItem item3("ITEM1", INT);
+    ParserItem item4("ITEM1", INT); item4.setDefault(52);
 
     BOOST_CHECK_NE( item1, item2 );
     BOOST_CHECK_NE( item1, item3 );
@@ -537,8 +544,8 @@ BOOST_AUTO_TEST_CASE(IntItem_Different_ReturnsFalse) {
 
 BOOST_AUTO_TEST_CASE(DoubleItem_DimEqual_ReturnsTrue) {
     auto sizeType = ParserItem::item_size::ALL;
-    ParserItem item1("ITEM1", sizeType, 0.0);
-    ParserItem item2("ITEM1", sizeType, 0.0);
+    ParserItem item1("ITEM1", DOUBLE); item1.setSizeType(sizeType);
+    ParserItem item2("ITEM1", DOUBLE); item2.setSizeType(sizeType);
 
     item1.push_backDimension("Length*Length");
     item2.push_backDimension("Length*Length");
@@ -549,10 +556,10 @@ BOOST_AUTO_TEST_CASE(DoubleItem_DimEqual_ReturnsTrue) {
 
 BOOST_AUTO_TEST_CASE(DoubleItem_DimDifferent_ReturnsFalse) {
     auto sizeType = ParserItem::item_size::ALL;
-    ParserItem item1("ITEM1", sizeType, 0.0);    // Dim: []
-    ParserItem item2("ITEM1", sizeType, 0.0);    // Dim: [Length]
-    ParserItem item3("ITEM1", sizeType, 0.0);    // Dim: [Length ,Length]
-    ParserItem item4("ITEM1", sizeType, 0.0);    // Dim: [t]
+    ParserItem item1("ITEM1", DOUBLE); item1.setSizeType(sizeType);    // Dim: []
+    ParserItem item2("ITEM1", DOUBLE); item2.setSizeType(sizeType);    // Dim: [Length]
+    ParserItem item3("ITEM1", DOUBLE); item3.setSizeType(sizeType);    // Dim: [Length ,Length]
+    ParserItem item4("ITEM1", DOUBLE); item4.setSizeType(sizeType);    // Dim: [t]
 
     item2.push_backDimension("Length");
     item3.push_backDimension("Length");
@@ -570,10 +577,10 @@ BOOST_AUTO_TEST_CASE(DoubleItem_DimDifferent_ReturnsFalse) {
 
 
 BOOST_AUTO_TEST_CASE(DoubleItem_Different_ReturnsFalse) {
-    ParserItem item1("ITEM1", ParserItem::item_size::ALL, 0.0);
-    ParserItem item2("ITEM2", ParserItem::item_size::ALL, 0.0);
-    ParserItem item3("ITEM1", 0.0 );
-    ParserItem item4("ITEM1", 42.89);
+    ParserItem item1("ITEM1", DOUBLE); item1.setDefault(0.0); item1.setSizeType(ParserItem::item_size::ALL);
+    ParserItem item2("ITEM2", DOUBLE); item2.setDefault(0.0); item2.setSizeType(ParserItem::item_size::ALL);
+    ParserItem item3("ITEM1", DOUBLE); item3.setDefault(0.0);
+    ParserItem item4("ITEM1", DOUBLE); item4.setDefault(42.89);
 
     BOOST_CHECK_NE( item1, item2 );
     BOOST_CHECK_NE( item1, item3 );
@@ -584,8 +591,8 @@ BOOST_AUTO_TEST_CASE(DoubleItem_Different_ReturnsFalse) {
 
 BOOST_AUTO_TEST_CASE(StringItem_Equal_ReturnsTrue) {
     auto sizeType = ParserItem::item_size::ALL;
-    ParserItem item1("ITEM1", sizeType, "");
-    ParserItem item2("ITEM1", sizeType, "");
+    ParserItem item1("ITEM1", STRING); item1.setSizeType(sizeType);
+    ParserItem item2("ITEM1", STRING); item2.setSizeType(sizeType);
     ParserItem item3 = item1;
 
     BOOST_CHECK_EQUAL( item1, item2 );
@@ -594,10 +601,11 @@ BOOST_AUTO_TEST_CASE(StringItem_Equal_ReturnsTrue) {
 
 
 BOOST_AUTO_TEST_CASE(StringItem_Different_ReturnsFalse) {
-    ParserItem item1("ITEM1", ParserItem::item_size::ALL, "");
-    ParserItem item2("ITEM2", ParserItem::item_size::ALL, "");
-    ParserItem item3("ITEM1", "" );
-    ParserItem item4("ITEM1", "42.89");
+    auto sizeType = ParserItem::item_size::ALL;
+    ParserItem item1("ITEM1", STRING); item1.setDefault( std::string("")); item1.setSizeType(sizeType);
+    ParserItem item2("ITEM2", STRING); item2.setDefault( std::string("")); item2.setSizeType(sizeType);
+    ParserItem item3("ITEM1", STRING); item3.setDefault( std::string(""));
+    ParserItem item4("ITEM1", STRING); item4.setDefault( std::string("42.89"));
 
     BOOST_CHECK_NE( item1, item2 );
     BOOST_CHECK_NE( item1, item3 );
@@ -613,28 +621,28 @@ BOOST_AUTO_TEST_CASE(StringItem_Different_ReturnsFalse) {
 BOOST_AUTO_TEST_CASE(Name_ReturnsCorrectName) {
     auto sizeType = ParserItem::item_size::ALL;
 
-    ParserItem item1("ITEM1", sizeType);
+    ParserItem item1("ITEM1", INT); item1.setSizeType(sizeType);
     BOOST_CHECK_EQUAL("ITEM1", item1.name());
 
-    ParserItem item2("", sizeType);
+    ParserItem item2("", INT); item2.setSizeType(sizeType);
     BOOST_CHECK_EQUAL("", item2.name());
 }
 
 BOOST_AUTO_TEST_CASE(Size_ReturnsCorrectSizeTypeSingle) {
     auto sizeType = ParserItem::item_size::SINGLE;
-    ParserItem item1("ITEM1", sizeType);
+    ParserItem item1("ITEM1", INT);
     BOOST_CHECK_EQUAL(sizeType, item1.sizeType());
 }
 
 BOOST_AUTO_TEST_CASE(Size_ReturnsCorrectSizeTypeAll) {
     auto sizeType = ParserItem::item_size::ALL;
-    ParserItem item1("ITEM1", sizeType);
+    ParserItem item1("ITEM1", INT); item1.setSizeType(sizeType);
     BOOST_CHECK_EQUAL(sizeType, item1.sizeType());
 }
 
 BOOST_AUTO_TEST_CASE(Scan_All_CorrectIntSetInDeckItem) {
     auto sizeType = ParserItem::item_size::ALL;
-    ParserItem itemInt("ITEM", sizeType, 0);
+    ParserItem itemInt("ITEM", INT); itemInt.setSizeType(sizeType);
 
     RawRecord rawRecord( "100 443 10*77 10*1 25" );
     const auto deckIntItem = itemInt.scan(rawRecord);
@@ -646,8 +654,8 @@ BOOST_AUTO_TEST_CASE(Scan_All_CorrectIntSetInDeckItem) {
 
 BOOST_AUTO_TEST_CASE(Scan_All_WithDefaults) {
     auto sizeType = ParserItem::item_size::ALL;
-    ParserItem itemInt("ITEM", sizeType);
-    itemInt.setType( int() );
+    ParserItem itemInt("ITEM", INT); itemInt.setSizeType(sizeType);
+    itemInt.setInputType( ParserItem::itype::INT );
 
     RawRecord rawRecord( "100 10* 10*1 25" );
     const auto deckIntItem = itemInt.scan(rawRecord);
@@ -661,7 +669,7 @@ BOOST_AUTO_TEST_CASE(Scan_All_WithDefaults) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_SINGLE_CorrectIntSetInDeckItem) {
-    ParserItem itemInt(std::string("ITEM2"), 0);
+    ParserItem itemInt(std::string("ITEM2"), INT);
 
     RawRecord rawRecord("100 44.3 'Heisann'" );
     const auto deckIntItem = itemInt.scan(rawRecord);
@@ -669,9 +677,9 @@ BOOST_AUTO_TEST_CASE(Scan_SINGLE_CorrectIntSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
-    ParserItem itemInt1(std::string("ITEM1"), 0);
-    ParserItem itemInt2(std::string("ITEM2"), 0);
-    ParserItem itemInt3(std::string("ITEM3"), 0);
+    ParserItem itemInt1(std::string("ITEM1"), INT);
+    ParserItem itemInt2(std::string("ITEM2"), INT);
+    ParserItem itemInt3(std::string("ITEM3"), INT);
 
     RawRecord rawRecord( "100 443 338932 222.33 'Heisann' " );
     const auto deckIntItem1 = itemInt1.scan(rawRecord);
@@ -689,10 +697,10 @@ BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
 
 
 BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
-    auto sizeType = ParserItem::item_size::ALL;
-    ParserItem itemInt("ITEM2", sizeType, 0);
+    ParserItem itemInt("ITEM2", INT);
 
     RawRecord rawRecord( "3*4 " );
+    itemInt.setSizeType(ParserItem::item_size::ALL);
     const auto deckIntItem = itemInt.scan(rawRecord);
     BOOST_CHECK_EQUAL(4, deckIntItem.get< int >(0));
     BOOST_CHECK_EQUAL(4, deckIntItem.get< int >(1));
@@ -700,16 +708,15 @@ BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_StarNoMultiplier_ExceptionThrown) {
-    auto sizeType = ParserItem::item_size::SINGLE;
-    ParserItem itemInt("ITEM2", sizeType , 100);
+    ParserItem itemInt("ITEM2", INT);
 
     RawRecord rawRecord( "*45 " );
     BOOST_CHECK_THROW(itemInt.scan(rawRecord), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleItems_CorrectIntsSetInDeckItem) {
-    ParserItem itemInt1(std::string("ITEM1"), 0);
-    ParserItem itemInt2(std::string("ITEM2"), 0);
+    ParserItem itemInt1(std::string("ITEM1"), INT);
+    ParserItem itemInt2(std::string("ITEM2"), INT);
 
     RawRecord rawRecord( "10 20" );
     const auto deckIntItem1 = itemInt1.scan(rawRecord);
@@ -720,8 +727,8 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleItems_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleDefault_CorrectIntsSetInDeckItem) {
-    ParserItem itemInt1("ITEM1", 10);
-    ParserItem itemInt2("ITEM2", 20);
+    ParserItem itemInt1("ITEM1", INT); itemInt1.setDefault(10);
+    ParserItem itemInt2("ITEM2", INT); itemInt2.setDefault(20);
 
     RawRecord rawRecord( "* * " );
     const auto deckIntItem1 = itemInt1.scan(rawRecord);
@@ -732,8 +739,8 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleDefault_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplier_CorrectIntsSetInDeckItem) {
-    ParserItem itemInt1("ITEM1", 10);
-    ParserItem itemInt2("ITEM2", 20);
+    ParserItem itemInt1("ITEM1", INT);
+    ParserItem itemInt2("ITEM2", INT);
 
     RawRecord rawRecord( "2*30" );
     const auto deckIntItem1 = itemInt1.scan(rawRecord);
@@ -744,22 +751,22 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplier_CorrectIntsSetInDeckItem) {
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplier_Throw) {
-    ParserItem itemInt1("ITEM1" , 10);
+    ParserItem itemInt1("ITEM1", INT);
 
     RawRecord rawRecord( "2.10*30" );
     BOOST_CHECK_THROW(itemInt1.scan(rawRecord), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplierChar_Throw) {
-    ParserItem itemInt1("ITEM1", 10);
+    ParserItem itemInt1("ITEM1", INT);
 
     RawRecord rawRecord( "210X30" );
     BOOST_CHECK_THROW(itemInt1.scan(rawRecord), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault_CorrectIntsSetInDeckItem) {
-    ParserItem itemInt1("ITEM1", 10);
-    ParserItem itemInt2("ITEM2", 20);
+    ParserItem itemInt1("ITEM1", INT); itemInt1.setDefault(10);
+    ParserItem itemInt2("ITEM2", INT); itemInt2.setDefault(20);
 
     RawRecord rawRecord( "2*" );
     const auto deckIntItem1 = itemInt1.scan(rawRecord);
@@ -770,7 +777,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault_CorrectIntsSetInDeckItem
 }
 
 BOOST_AUTO_TEST_CASE(Scan_RawRecordErrorInRawData_ExceptionThrown) {
-    ParserItem itemInt(std::string("ITEM2"), 0);
+    ParserItem itemInt(std::string("ITEM2"), INT);
 
     // Wrong type
     RawRecord rawRecord2( "333.2 /" );
@@ -808,25 +815,22 @@ BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_withDefaultInvalid_thro
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(init_defaultvalue_defaultset) {
-    ParserItem itemString(std::string("ITEM1") , "DEFAULT");
-    RawRecord rawRecord( "'1*'" );
-    BOOST_CHECK_EQUAL("1*", itemString.scan( rawRecord ).get< std::string >(0) );
+    ParserItem itemString(std::string("ITEM1"), STRING);
+    RawRecord rawRecord0( "'1*'" );
+    itemString.setDefault(std::string("DEFAULT"));
+    BOOST_CHECK_EQUAL("1*", itemString.scan( rawRecord0 ).get< std::string >(0) );
 
     RawRecord rawRecord1( "13*" );
     BOOST_CHECK_EQUAL("DEFAULT" , itemString.scan( rawRecord1 ).get< std::string >(0) );
 
     RawRecord rawRecord2( "*" );
     BOOST_CHECK_EQUAL("DEFAULT", itemString.scan( rawRecord2 ).get< std::string >(0) );
-
-    ParserItem itemStringDefaultChanged("ITEM2", "SPECIAL");
-    RawRecord rawRecord3( "*" );
-    BOOST_CHECK_EQUAL("SPECIAL", itemStringDefaultChanged.scan( rawRecord3 ).get< std::string >(0) );
 }
 
 BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
-    auto sizeType = ParserItem::item_size::ALL;
-    ParserItem itemString("ITEMWITHMANY", sizeType, "");
+    ParserItem itemString("ITEMWITHMANY", STRING);
     RawRecord rawRecord( "'WELL1' FISK BANAN 3*X OPPLEGG_FOR_DATAANALYSE 'Foo$*!% BAR' " );
+    itemString.setSizeType( ParserItem::item_size::ALL );
     const auto deckItem = itemString.scan(rawRecord);
     BOOST_CHECK_EQUAL(8U, deckItem.size());
 
@@ -841,9 +845,10 @@ BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
 }
 
 BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
-    auto sizeType = ParserItem::item_size::ALL;
-    ParserItem itemString("ITEMWITHMANY", sizeType, 0);
+    ParserItem itemString("ITEMWITHMANY", INT);
     RawRecord rawRecord( "10*1 10* 10*2 " );
+    itemString.setDefault(0);
+    itemString.setSizeType( ParserItem::item_size::ALL );
     const auto deckItem = itemString.scan(rawRecord);
 
     BOOST_CHECK_EQUAL(30U, deckItem.size());
@@ -865,7 +870,7 @@ BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
 }
 
 BOOST_AUTO_TEST_CASE(scan_single_dataCorrect) {
-    ParserItem itemString( "ITEM1", "");
+    ParserItem itemString( "ITEM1", STRING);
     RawRecord rawRecord( "'WELL1' 'WELL2'" );
     const auto deckItem = itemString.scan(rawRecord);
     BOOST_CHECK_EQUAL(1U, deckItem.size());
@@ -873,8 +878,8 @@ BOOST_AUTO_TEST_CASE(scan_single_dataCorrect) {
 }
 
 BOOST_AUTO_TEST_CASE(scan_singleWithMixedRecord_dataCorrect) {
-    ParserItem itemString("ITEM1", "");
-    ParserItem itemInt("ITEM1", "");
+    ParserItem itemString("ITEM1", STRING);
+    ParserItem itemInt("ITEM1", INT);
 
     RawRecord rawRecord( "2 'WELL1' /" );
     itemInt.scan(rawRecord);
@@ -886,13 +891,12 @@ BOOST_AUTO_TEST_CASE(scan_singleWithMixedRecord_dataCorrect) {
 BOOST_AUTO_TEST_CASE(scan_intsAndStrings_dataCorrect) {
     RawRecord rawRecord( "'WELL1' 2 2 2*3" );
 
-    auto sizeTypeItemBoxed = ParserItem::item_size::ALL;
-
-    ParserItem itemSingleString(std::string("ITEM1"), "");
+    ParserItem itemSingleString(std::string("ITEM1"), STRING);
     const auto deckItemWell1 = itemSingleString.scan(rawRecord);
     BOOST_CHECK_EQUAL("WELL1", deckItemWell1.get< std::string >(0));
 
-    ParserItem itemSomeInts("SOMEINTS", sizeTypeItemBoxed, 0 );
+    ParserItem itemSomeInts("SOMEINTS", INT);
+    itemSomeInts.setSizeType( ParserItem::item_size::ALL );
     const auto deckItemInts = itemSomeInts.scan(rawRecord);
     BOOST_CHECK_EQUAL(2, deckItemInts.get< int >(0));
     BOOST_CHECK_EQUAL(2, deckItemInts.get< int >(1));
@@ -904,9 +908,9 @@ BOOST_AUTO_TEST_CASE(scan_intsAndStrings_dataCorrect) {
 
 
 BOOST_AUTO_TEST_CASE(ParserDefaultHasDimensionReturnsFalse) {
-    ParserItem intItem(std::string("SOMEINTS"), 0);
-    ParserItem stringItem(std::string("SOMESTRING"), "");
-    ParserItem doubleItem(std::string("SOMEDOUBLE"), 0.0);
+    ParserItem intItem(std::string("SOMEINTS"), INT);
+    ParserItem stringItem(std::string("SOMESTRING"), STRING);
+    ParserItem doubleItem(std::string("SOMEDOUBLE"), DOUBLE);
 
     BOOST_CHECK( !intItem.hasDimension() );
     BOOST_CHECK( !stringItem.hasDimension() );
@@ -914,7 +918,7 @@ BOOST_AUTO_TEST_CASE(ParserDefaultHasDimensionReturnsFalse) {
 }
 
 BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
-    ParserItem intItem(std::string("SOMEINT"));
+    ParserItem intItem(std::string("SOMEINT"), INT);
 
     BOOST_CHECK_THROW( intItem.getDimension(0) , std::invalid_argument );
     BOOST_CHECK_THROW( intItem.push_backDimension("Length") , std::invalid_argument );
@@ -923,7 +927,7 @@ BOOST_AUTO_TEST_CASE(ParserIntItemGetDimensionThrows) {
 
 
 BOOST_AUTO_TEST_CASE(ParserDoubleItemAddMultipleDimensionToSIngleSizeThrows) {
-    ParserItem doubleItem(std::string("SOMEDOUBLE"), 0.0);
+    ParserItem doubleItem(std::string("SOMEDOUBLE"), DOUBLE);
 
     doubleItem.push_backDimension("Length*Length");
     BOOST_CHECK_THROW( doubleItem.push_backDimension("Length*Length"), std::invalid_argument);
@@ -931,7 +935,7 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemAddMultipleDimensionToSIngleSizeThrows) {
 
 
 BOOST_AUTO_TEST_CASE(ParserDoubleItemWithDimensionHasReturnsCorrect) {
-    ParserItem doubleItem("SOMEDOUBLE", 0.0);
+    ParserItem doubleItem("SOMEDOUBLE", DOUBLE);
 
     BOOST_CHECK( !doubleItem.hasDimension() );
     doubleItem.push_backDimension("Length*Length");
@@ -939,7 +943,9 @@ BOOST_AUTO_TEST_CASE(ParserDoubleItemWithDimensionHasReturnsCorrect) {
 }
 
 BOOST_AUTO_TEST_CASE(ParserDoubleItemGetDimension) {
-    ParserItem doubleItem( "SOMEDOUBLE" , ParserItem::item_size::ALL, 0.0 );
+    ParserItem doubleItem( "SOMEDOUBLE", DOUBLE);
+    doubleItem.setSizeType( ParserItem::item_size::ALL );
+    doubleItem.setDefault(0.0);
 
     BOOST_CHECK_THROW( doubleItem.getDimension( 10 ) , std::out_of_range );
     BOOST_CHECK_THROW( doubleItem.getDimension(  0 ) , std::out_of_range );
@@ -967,14 +973,14 @@ BOOST_AUTO_TEST_CASE(Size_NoElements_ReturnsZero) {
 }
 
 BOOST_AUTO_TEST_CASE(Size_OneItem_Return1) {
-    ParserItem itemInt("ITEM1", SINGLE );
+    ParserItem itemInt("ITEM1", INT);
     ParserRecord record;
     record.addItem(itemInt);
     BOOST_CHECK_EQUAL(1U, record.size());
 }
 
 BOOST_AUTO_TEST_CASE(Get_OneItem_Return1) {
-    ParserItem itemInt("ITEM1", SINGLE);
+    ParserItem itemInt("ITEM1", INT);
     ParserRecord record;
     record.addItem(itemInt);
 
@@ -991,14 +997,14 @@ BOOST_AUTO_TEST_CASE(Get_KeyNotFound_Throw) {
 }
 
 BOOST_AUTO_TEST_CASE(Get_KeyFound_OK) {
-    ParserItem itemInt("ITEM1", SINGLE );
+    ParserItem itemInt("ITEM1", INT);
     ParserRecord record;
     record.addItem(itemInt);
     BOOST_CHECK_EQUAL(record.get("ITEM1"), itemInt);
 }
 
 BOOST_AUTO_TEST_CASE(Get_GetByNameAndIndex_OK) {
-    ParserItem itemInt("ITEM1", SINGLE);
+    ParserItem itemInt("ITEM1", INT);
     ParserRecord record;
     record.addItem(itemInt);
 
@@ -1009,16 +1015,16 @@ BOOST_AUTO_TEST_CASE(Get_GetByNameAndIndex_OK) {
 }
 
 BOOST_AUTO_TEST_CASE(addItem_SameName_Throw) {
-    ParserItem itemInt1("ITEM1", SINGLE);
-    ParserItem itemInt2("ITEM1", SINGLE);
+    ParserItem itemInt1("ITEM1", INT);
+    ParserItem itemInt2("ITEM1", INT);
     ParserRecord record;
     record.addItem(itemInt1);
     BOOST_CHECK_THROW(record.addItem(itemInt2), std::invalid_argument);
 }
 
 static ParserRecord createSimpleParserRecord() {
-    ParserItem itemInt1("ITEM1", SINGLE, 0 );
-    ParserItem itemInt2("ITEM2", SINGLE, 0 );
+    ParserItem itemInt1("ITEM1", INT);
+    ParserItem itemInt2("ITEM2", INT);
     ParserRecord record;
 
     record.addItem(itemInt1);
@@ -1047,14 +1053,12 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
 // INT INT DOUBLE DOUBLE INT DOUBLE
 
 static ParserRecord createMixedParserRecord() {
-
-    auto sizeType = SINGLE;
-    ParserItem itemInt1( "INTITEM1", sizeType, 0 );
-    ParserItem itemInt2( "INTITEM2", sizeType, 0 );
-    ParserItem itemInt3( "INTITEM3", sizeType, 0 );
-    ParserItem itemDouble1( "DOUBLEITEM1", sizeType, 0.0 );
-    ParserItem itemDouble2( "DOUBLEITEM2", sizeType, 0.0 );
-    ParserItem itemDouble3( "DOUBLEITEM3", sizeType, 0.0 );
+    ParserItem itemInt1( "INTITEM1", INT);
+    ParserItem itemInt2( "INTITEM2", INT);
+    ParserItem itemInt3( "INTITEM3", INT);
+    ParserItem itemDouble1( "DOUBLEITEM1", DOUBLE);
+    ParserItem itemDouble2( "DOUBLEITEM2", DOUBLE);
+    ParserItem itemDouble3( "DOUBLEITEM3", DOUBLE);
 
     ParserRecord record;
     record.addItem(itemInt1);
@@ -1084,10 +1088,9 @@ BOOST_AUTO_TEST_CASE(Equal_Equal_ReturnsTrue) {
 }
 
 BOOST_AUTO_TEST_CASE(Equal_Different_ReturnsFalse) {
-    auto sizeType = SINGLE;
-    ParserItem    itemInt( "INTITEM1", sizeType, 0 );
-    ParserItem itemDouble( "DOUBLEITEM1", sizeType, 0.0 );
-    ParserItem itemString( "STRINGITEM1", sizeType, "" );
+    ParserItem    itemInt( "INTITEM1", INT);
+    ParserItem itemDouble( "DOUBLEITEM1", DOUBLE);
+    ParserItem itemString( "STRINGITEM1", STRING);
     ParserRecord record1;
     ParserRecord record2;
     ParserRecord record3;
@@ -1108,9 +1111,9 @@ BOOST_AUTO_TEST_CASE(Equal_Different_ReturnsFalse) {
 
 BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     ParserRecord parserRecord;
-    ParserItem itemInt("ITEM1", SINGLE , 100 );
-    ParserItem itemString("ITEM2", SINGLE , "DEFAULT" );
-    ParserItem itemDouble("ITEM3", SINGLE , 3.14 );
+    ParserItem itemInt("ITEM1", INT);    itemInt.setDefault(100);
+    ParserItem itemString("ITEM2", STRING); itemString.setDefault(std::string("DEFAULT"));
+    ParserItem itemDouble("ITEM3", DOUBLE); itemDouble.setDefault(3.14);
 
     parserRecord.addItem(itemInt);
     parserRecord.addItem(itemString);
@@ -1201,9 +1204,9 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 
 BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
     ParserRecord parserRecord;
-    ParserItem itemI( "I", SINGLE, 0 );
-    ParserItem itemJ( "J", SINGLE, 0 );
-    ParserItem itemK( "K", SINGLE, 0 );
+    ParserItem itemI( "I", INT);
+    ParserItem itemJ( "J", INT);
+    ParserItem itemK( "K", INT);
     ParseContext parseContext;
     ErrorGuard errors;
 
@@ -1227,12 +1230,9 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
 
 BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     ParserRecord parserRecord;
-    ParserItem itemI( "I", SINGLE );
-    ParserItem itemJ( "J", SINGLE );
-    ParserItem itemK( "K", SINGLE );
-    itemI.setType( int() );
-    itemJ.setType( int() );
-    itemK.setType( int() );
+    ParserItem itemI( "I" , INT);
+    ParserItem itemJ( "J" , INT);
+    ParserItem itemK( "K" , INT);
 
     parserRecord.addItem(itemI);
     parserRecord.addItem(itemJ);
@@ -1253,14 +1253,14 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
 
 BOOST_AUTO_TEST_CASE(ParseRecordHasDimensionCorrect) {
     ParserRecord parserRecord;
-    ParserItem itemI( "I", SINGLE, 0.0 );
+    ParserItem itemI( "I", INT);
 
     BOOST_CHECK( !parserRecord.hasDimension() );
 
     parserRecord.addItem( itemI );
     BOOST_CHECK( !parserRecord.hasDimension() );
 
-    ParserItem item2( "ID", SINGLE, 0.0 );
+    ParserItem item2( "ID", DOUBLE);
     item2.push_backDimension("Length*Length/Time");
     parserRecord.addItem( item2 );
     BOOST_CHECK( parserRecord.hasDimension() );
@@ -1274,8 +1274,8 @@ BOOST_AUTO_TEST_CASE(DefaultNotDataRecord) {
 
 BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
     ParserRecord record;
-    ParserItem dataItem( "ACTNUM" , ALL );
-    ParserItem item    ( "XXX" , ALL );
+    ParserItem dataItem( "ACTNUM", INT);
+    ParserItem item ( "XXX", INT);
     record.addDataItem( dataItem );
     BOOST_CHECK_THROW( record.addItem( item ) , std::invalid_argument);
     BOOST_CHECK_THROW( record.addItem( dataItem ) , std::invalid_argument);
@@ -1283,8 +1283,8 @@ BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws1) {
 
 BOOST_AUTO_TEST_CASE(MixingDataAndItems_throws2) {
     ParserRecord record;
-    ParserItem dataItem( "ACTNUM" , ALL);
-    ParserItem item    ( "XXX" , ALL);
+    ParserItem dataItem( "ACTNUM", INT);
+    ParserItem item    ( "XXX", INT);
 
     record.addItem( item );
     BOOST_CHECK_THROW( record.addDataItem( dataItem ) , std::invalid_argument);
@@ -1370,7 +1370,7 @@ BOOST_AUTO_TEST_CASE(ParserKeywordMatches) {
 
 BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
     const auto& parserKeyword = createFixedSized("PORO", (size_t) 1);
-    ParserItem item( "ACTNUM" , ParserItem::item_size::ALL, 0 );
+    ParserItem item( "ACTNUM", INT);
     ParserRecord record;
 
     BOOST_CHECK( !parserKeyword->isDataKeyword() );
@@ -1384,7 +1384,7 @@ BOOST_AUTO_TEST_CASE(AddDataKeyword_correctlyConfigured) {
 
 BOOST_AUTO_TEST_CASE(WrongConstructor_addDataItem_throws) {
     const auto& parserKeyword = createDynamicSized("PORO");
-    ParserItem dataItem( "ACTNUM" , ParserItem::item_size::ALL );
+    ParserItem dataItem( "ACTNUM", INT);
     ParserRecord record;
     record.addDataItem( dataItem );
     BOOST_CHECK_THROW( parserKeyword->addDataRecord( record ) , std::invalid_argument);
@@ -1617,8 +1617,7 @@ BOOST_AUTO_TEST_CASE(ConstructorIsTableCollection) {
 BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     const auto& tabdimsKeyword = createFixedSized("TEST" , 1);
     ParserRecord record;
-    ParserItem item("ITEM", ParserItem::item_size::ALL );
-    item.setType( int() );
+    ParserItem item("ITEM", INT);
     auto rawkeyword = std::make_shared< RawKeyword >( tabdimsKeyword->getName() , "FILE" , 10U , 1 );
     ParseContext parseContext;
     ErrorGuard errors;
@@ -1643,8 +1642,8 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
 /* Dimension */
 BOOST_AUTO_TEST_CASE(ParseKeywordHasDimensionCorrect) {
     const auto& parserKeyword = createDynamicSized("JA");
-    ParserItem item1("I", ParserItem::item_size::SINGLE, 0 );
-    ParserItem item2("ID", ParserItem::item_size::SINGLE, 0.0 );
+    ParserItem item1("I",  DOUBLE);
+    ParserItem item2("ID", DOUBLE);
     ParserRecord record;
 
     BOOST_CHECK( !parserKeyword->hasDimension());

@@ -517,7 +517,7 @@ BOOST_AUTO_TEST_CASE(get_byNameNonExisting_throws) {
 }
 
 BOOST_AUTO_TEST_CASE(StringsWithSpaceOK) {
-    ParserItem itemString("STRINGITEM1", "" );
+    ParserItem itemString("STRINGITEM1", ParserItem::itype::STRING);
     ParserRecord record1;
     RawRecord rawRecord( " ' VALUE ' " );
     ParseContext parseContext;

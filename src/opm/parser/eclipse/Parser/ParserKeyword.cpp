@@ -348,11 +348,13 @@ void set_dimensions( ParserItem& item,
         const std::string value_type = dataConfig.get_string("value_type");
         const std::string itemName("data");
         bool hasDefault = dataConfig.has_item("default");
-        ParserItem item( itemName, ParserItem::item_size::ALL );
+        auto input_type = ParserItem::from_string(dataConfig.get_string("value_type"));
+        ParserItem item( itemName, input_type);
         ParserRecord record;
 
-        if (value_type == "INT") {
-            item.setType( int() );
+        item.setSizeType( ParserItem::item_size::ALL );
+
+        if (input_type == ParserItem::itype::INT) {
             if(hasDefault) {
                 int defaultValue = dataConfig.get_int("default");
                 item.setDefault(defaultValue);
@@ -362,13 +364,7 @@ void set_dimensions( ParserItem& item,
             return;
         }
 
-
-        if (value_type == "STRING" || value_type == "RAW_STRING") {
-            if (value_type == "RAW_STRING")
-                item.setType( std::string(), true );
-            else
-                item.setType( std::string() );
-
+        if (input_type == ParserItem::itype::STRING || input_type == ParserItem::itype::RAW_STRING) {
             if (hasDefault) {
                 std::string defaultValue = dataConfig.get_string("default");
                 item.setDefault(defaultValue);
@@ -378,8 +374,7 @@ void set_dimensions( ParserItem& item,
             return;
         }
 
-        if (value_type == "DOUBLE") {
-            item.setType( double() );
+        if (input_type == ParserItem::itype::DOUBLE) {
             if (hasDefault) {
                 double defaultValue = dataConfig.get_double("default");
                 item.setDefault(defaultValue);
@@ -620,10 +615,8 @@ void set_dimensions( ParserItem& item,
                     break;
             }
         }
-        ss << indent << "setDescription(\"" << getDescription() << "\");" << std::endl;
 
         // add the valid sections for the keyword
-        ss << indent << "clearValidSectionNames();\n";
         for (auto sectionNameIt = m_validSectionNames.begin();
              sectionNameIt != m_validSectionNames.end();
              ++sectionNameIt)
@@ -654,8 +647,7 @@ void set_dimensions( ParserItem& item,
                         ss << local_indent << "{" << std::endl;
                         {
                             std::string indent3 = local_indent + "   ";
-                            ss << indent3 << item.createCode() << std::endl
-                               << indent3 << "item.setDescription(\"" << item.getDescription() << "\");" << std::endl;
+                            ss << item.createCode(indent3);
                             for (size_t idim=0; idim < item.numDimensions(); idim++)
                                 ss << indent3 <<"item.push_backDimension(\"" << item.getDimension( idim ) << "\");" << std::endl;
                             {
@@ -709,7 +701,7 @@ void set_dimensions( ParserItem& item,
             || m_keywordSizeType   != rhs.m_keywordSizeType
             || isDataKeyword()     != rhs.isDataKeyword()
             || m_isTableCollection != rhs.m_isTableCollection )
-                return false;
+            return false;
 
         switch( m_keywordSizeType ) {
             case FIXED:
