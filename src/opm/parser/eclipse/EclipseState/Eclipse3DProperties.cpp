@@ -271,13 +271,25 @@ namespace Opm {
 
         std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 
-        // keywords to specify the scaled connate gas saturations.
+        // keywords to specify the scaled connate gas saturations: this is slighly wrong for
+        // SGLPC because it is supposed to default to SGL: If SGL is explicitly
+        // specified, but SGLPC is defaulted for a cell, the value for SGLPC will be the
+        // default value for SGL, not the explicitly specified one. Fixing this would
+        // probably require access to the EclipseState object in the initializer for
+        // SGLPC and would thus lead to a cyclic dependency of the property initializer
+        // and EclipseState. (an analogous statement applies to ISGLPC.)
         for( const auto& kw : { "SGLPC", "SGL", "SGLX", "SGLX-", "SGLY", "SGLY-", "SGLZ", "SGLZ-" } )
             supportedDoubleKeywords.emplace_back( kw, SGLLookup, "1" );
         for( const auto& kw : { "ISGLPC", "ISGL", "ISGLX", "ISGLX-", "ISGLY", "ISGLY-", "ISGLZ", "ISGLZ-" } )
             supportedDoubleKeywords.emplace_back( kw, ISGLLookup, "1" );
 
-        // keywords to specify the connate water saturation.
+        // keywords to specify the connate water saturation: this is slighly wrong for
+        // SWLPC because it is supposed to default to SWL: If SWL is explicitly
+        // specified, but SWLPC is defaulted for a cell, the value for SWLPC will be the
+        // default value for SWL, not the explicitly specified one. Fixing this would
+        // probably require access to the EclipseState object in the initializer for
+        // SWLPC and would thus lead to a cyclic dependency of the property initializer
+        // and EclipseState. (an analogous statement applies to ISWLPC.)
         for( const auto& kw : { "SWLPC", "SWL", "SWLX", "SWLX-", "SWLY", "SWLY-", "SWLZ", "SWLZ-" } )
             supportedDoubleKeywords.emplace_back( kw, SWLLookup, "1" );
         for( const auto& kw : { "ISWLPC", "ISWL", "ISWLX", "ISWLX-", "ISWLY", "ISWLY-", "ISWLZ", "ISWLZ-" } )
