@@ -161,6 +161,7 @@ if(ENABLE_ECL_INPUT)
               examples/test_util/EclFilesComparator.cpp
               examples/test_util/EclIntegrationTest.cpp
               examples/test_util/EclRegressionTest.cpp
+              examples/test_util/EclOutput.cpp
               examples/test_util/EclUtil.cpp
               examples/test_util/summaryComparator.cpp
               examples/test_util/summaryIntegrationTest.cpp
