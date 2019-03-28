@@ -2,6 +2,10 @@
 
 declare -A configurations
 
+declare -A EXTRA_MODULE_FLAGS
+EXTRA_MODULE_FLAGS[opm-common]="-DENABLE_WELL_TEST=ON"
+EXTRA_MODULE_FLAGS[opm-simulators]="-DBUILD_EBOS_EXTENSIONS=ON -DBUILD_EBOS_DEBUG_EXTENSIONS=ON"
+
 # Parse revisions from trigger comment and setup arrays
 # Depends on: 'upstreams', upstreamRev',
 #             'downstreams', 'downstreamRev',
@@ -180,7 +184,7 @@ function build_upstreams {
   do
     echo "Building upstream $upstream=${upstreamRev[$upstream]} configuration=$configuration"
     # Build upstream and execute installation
-    clone_and_build_module $upstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install" ${upstreamRev[$upstream]} $WORKSPACE/$configuration
+    clone_and_build_module $upstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install ${EXTRA_MODULE_FLAGS[$upstream]}" ${upstreamRev[$upstream]} $WORKSPACE/$configuration
     test $? -eq 0 || exit 1
   done
   test $? -eq 0 || exit 1
@@ -195,7 +199,7 @@ function build_downstreams {
   do
     echo "Building downstream $downstream=${downstreamRev[$downstream]} configuration=$configuration"
     # Build downstream and execute installation
-    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT" ${downstreamRev[$downstream]} $WORKSPACE/$configuration 1
+    clone_and_build_module $downstream "-DCMAKE_PREFIX_PATH=$WORKSPACE/$configuration/install -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT ${EXTRA_MODULE_FLAGS[$downstream]}" ${downstreamRev[$downstream]} $WORKSPACE/$configuration 1
     test $? -eq 0 || exit 1
 
     # Installation for downstream
@@ -232,7 +236,7 @@ function build_module_full {
     mkdir -p $configuration/build-$1
     cd $configuration/build-$1
     echo "Building main module $1=$sha1 configuration=$configuration"
-    build_module "-DENABLE_WELL_TEST=ON -DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT" 1 $WORKSPACE
+    build_module "-DCMAKE_INSTALL_PREFIX=$WORKSPACE/$configuration/install -DOPM_TESTS_ROOT=$OPM_TESTS_ROOT ${EXTRA_MODULE_FLAGS[$1]}" 1 $WORKSPACE
     test $? -eq 0 || exit 1
     cmake --build . --target install
     test $? -eq 0 || exit 1
