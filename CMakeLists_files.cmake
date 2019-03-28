@@ -323,6 +323,8 @@ if(ENABLE_ECL_INPUT)
     tests/ECLFILE.FINIT
     tests/SPE1CASE1.EGRID
     tests/SPE1CASE1.RFT
+    tests/SPE1_TESTCASE.UNRST
+    tests/SPE1_TESTCASE.FUNRST
   )
   list (APPEND EXAMPLE_SOURCE_FILES
     examples/opmi.cpp

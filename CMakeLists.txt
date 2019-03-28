@@ -166,6 +166,7 @@ if(ENABLE_ECL_INPUT)
               examples/test_util/EclUtil.cpp
               examples/test_util/EGrid.cpp
               examples/test_util/ERft.cpp
+              examples/test_util/ERst.cpp
               examples/test_util/summaryComparator.cpp
               examples/test_util/summaryIntegrationTest.cpp
               examples/test_util/summaryRegressionTest.cpp)
@@ -177,7 +178,7 @@ if(ENABLE_ECL_INPUT)
   set(_libs testutil opmcommon
             ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
   foreach(test test_compareSummary test_EclFilesComparator test_EclIO
-               test_EGrid test_ERft)
+               test_EGrid test_ERft test_ERst)
     opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
                          LIBRARIES ${_libs}
                          WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
