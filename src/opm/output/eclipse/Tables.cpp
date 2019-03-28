@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO
+#include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
@@ -44,6 +45,7 @@
 #include <array>
 #include <cstddef>
 #include <iterator>
+#include <numeric>
 #include <vector>
 
 namespace {
@@ -1178,6 +1180,128 @@ namespace { namespace PVTFunc {
 
             return lintable.getDataDestructively();
         }
+
+        /// Create linearised and padded 'TAB' vector entries of normalised
+        /// gas tables for all PVT function regions from PVDO (dead oil)
+        /// keyword data.
+        ///
+        /// \param[in] numPressNodes Number of pressure nodes (rows) to
+        ///    allocate in the output vector for each table.  Expected to be
+        ///    equal to the number of declared pressure nodes in the
+        ///    simulation run's TABDIMS keyword (NPPVT, Item 4).
+        ///
+        /// \param[in] units Active unit system.  Needed to convert SI
+        ///    convention pressure values (Pascal), formation volume factors
+        ///    (Rm3/Sm3), and viscosity values (Pa*s) to declared
+        ///    conventions of the run specification.
+        ///
+        /// \param[in] pvdo Collection of PVDO tables for all PVT regions.
+        ///
+        /// \return Linearised and padded 'TAB' vector values for output gas
+        ///    PVT tables.  A unit-converted copy of the input table \p pvdo
+        ///    with added derivatives.
+        std::vector<double>
+        fromPVDO(const std::size_t          numPressNodes,
+                 const Opm::UnitSystem&     units,
+                 const Opm::TableContainer& pvdo)
+        {
+            // Columns [ Po, 1/Bo, 1/(Bo*mu_o), derivatives ]
+            using PVDO = ::Opm::PvdoTable;
+
+            const auto numTab  = pvdo.size();
+            const auto numPrim = std::size_t{1}; // No sub-tables
+            const auto numRows = numPressNodes;  // One row per pressure node.
+            const auto numDep  = std::size_t{2}; // 1/Bo, 1/(Bo*mu_o)
+
+            // PVDO fill value = +2.0e20
+            const auto fillVal = +2.0e20;
+
+            return createPropfuncTable(numTab, numPrim, numRows, numDep, fillVal,
+                [&units, &pvdo](const std::size_t           tableID,
+                                const std::size_t           primID,
+                                Opm::LinearisedOutputTable& linTable)
+                -> std::size_t
+            {
+                const auto& t = pvdo.getTable<PVDO>(tableID);
+
+                auto numActRows = std::size_t{0};
+
+                // Column 0: Po
+                {
+                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+
+                    const auto& Po = t.getPressureColumn();
+
+                    numActRows = Po.size();
+
+                    std::transform(std::begin(Po), std::end(Po),
+                                   linTable.column(tableID, primID, 0),
+                        [&units](const double p) -> double
+                    {
+                        return units.from_si(uPress, p);
+                    });
+                }
+
+                // Column 1: 1/Bo
+                {
+                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                        oil_inverse_formation_volume_factor;
+
+                    const auto& Bo = t.getFormationFactorColumn();
+                    std::transform(std::begin(Bo), std::end(Bo),
+                                   linTable.column(tableID, primID, 1),
+                        [&units](const double B) -> double
+                    {
+                        return units.from_si(uRecipFVF, 1.0 / B);
+                    });
+                }
+
+                // Column 2: 1/(Bo*mu_o)
+                {
+                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                        oil_inverse_formation_volume_factor;
+
+                    const auto uVisc = ::Opm::UnitSystem::measure::viscosity;
+
+                    const auto& Bo   = t.getFormationFactorColumn();
+                    const auto& mu_o = t.getViscosityColumn();
+
+                    std::transform(std::begin(Bo), std::end(Bo),
+                                   std::begin(mu_o),
+                                   linTable.column(tableID, primID, 2),
+                        [&units](const double B, const double mu) -> double
+                    {
+                        return units.from_si(uRecipFVF, 1.0 / B)
+                            /  units.from_si(uVisc    , mu);
+                    });
+                }
+
+                // Inform createPropfuncTable() of number of active rows in
+                // this table.  Needed to compute slopes of piecewise linear
+                // interpolants.
+                return numActRows;
+            });
+        }
+
+        /// Extract maximum effective pressure nodes in PVDO table data
+        ///
+        /// \param[in] pvdo Collection of PVDO tables for all PVT regions.
+        ///
+        /// \return Maximum number of table rows across all tables of \p
+        ///    pvdo.
+        std::size_t maxNumPressNodes(const Opm::TableContainer& pvdo)
+        {
+            using PVDO = ::Opm::PvdoTable;
+            auto tabID = std::vector<std::size_t>(pvdo.size());
+
+            std::iota(tabID.begin(), tabID.end(), std::size_t{0});
+
+            return std::accumulate(tabID.begin(), tabID.end(), std::size_t{0},
+                [&pvdo](const std::size_t n, const std::size_t table)
+            {
+                return std::max(n, pvdo.getTable<PVDO>(table).numRows());
+            });
+        }
     } // Oil
 
     /// Functions to create linearised, padded, and normalised water PVT
@@ -1647,9 +1771,28 @@ namespace Opm {
 
         const auto numPressNodes = tabd.getNumPressureNodes();
 
+        const auto hasPVDO  =  tabMgr.hasTables("PVDO");
         const auto hasPVCDO = !tabMgr.getPvcdoTable().empty();
 
-        if (hasPVCDO) {
+        if (hasPVDO + hasPVCDO != 1) {
+            // Unhandled table specification.  Maybe throw here?
+            return;
+        }
+
+        if (hasPVDO) {
+            // Dead oil, pressure dependent compressibility.
+            const auto& pvdo = tabMgr.getPvdoTables();
+
+            const auto numRows =
+                std::max(numPressNodes, PVTFunc::Oil::maxNumPressNodes(pvdo));
+
+            const auto data = PVTFunc::Oil::fromPVDO(numRows, this->units, pvdo);
+
+            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, data);
+            this->m_tabdims[TABDIMS_NPPVTO_ITEM] = numRows;
+            this->m_tabdims[TABDIMS_NTPVTO_ITEM] = pvdo.size();
+        }
+        else {
             // Dead oil, constant compressibility.
             const auto& pvcdo = tabMgr.getPvcdoTable();
 
