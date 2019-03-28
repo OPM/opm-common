@@ -57,6 +57,7 @@ type_tag get_data_type_json( const std::string& str ) {
     if( str == "DOUBLE" )    return type_tag::fdouble;
     if( str == "STRING" )    return type_tag::string;
     if( str == "RAW_STRING") return type_tag::string;
+    if( str == "UDA")        return type_tag::fdouble;
     throw std::invalid_argument( str + " cannot be converted to enum 'tag'" );
 }
 
@@ -154,21 +155,26 @@ ParserItem::ParserItem( const Json::JsonObject& json ) :
     }
     if( !json.has_item( "default" ) ) return;
 
-    switch( this->data_type ) {
-        case type_tag::integer:
-            this->setDefault( json.get_int( "default" ) );
-            break;
+    switch( this->input_type ) {
+    case itype::INT:
+        this->setDefault( json.get_int( "default" ) );
+        break;
 
-        case type_tag::fdouble:
-            this->setDefault( json.get_double( "default" ) );
-            break;
+    case itype::DOUBLE:
+        this->setDefault( json.get_double( "default" ) );
+        break;
 
-        case type_tag::string:
-            this->setDefault( json.get_string( "default" ) );
-            break;
+    case itype::STRING:
+    case itype::RAW_STRING:
+        this->setDefault( json.get_string( "default" ) );
+        break;
 
-        default:
-            throw std::logic_error( "Item of unknown type." );
+    case itype::UDA:
+        this->setDefault( json.get_double( "default" ) );
+        break;
+
+    default:
+        throw std::logic_error( "Item of unknown type." );
     }
 }
 
@@ -185,17 +191,24 @@ void ParserItem::setDefault( T val ) {
 
 void ParserItem::setInputType(ParserItem::itype input_type) {
     this->input_type = input_type;
+
     if (input_type == itype::INT)
         this->setDataType(int());
 
-    if (input_type == itype::DOUBLE)
+    else if (input_type == itype::DOUBLE)
         this->setDataType(double());
 
-    if (input_type == itype::STRING)
+    else if (input_type == itype::STRING)
         this->setDataType( std::string() );
 
-    if (input_type == itype::RAW_STRING)
+    else if (input_type == itype::RAW_STRING)
         this->setDataType( std::string() );
+
+    else if (input_type == itype::UDA)
+        this->setDataType( double() );
+
+    else
+        throw std::invalid_argument("BUG: input type not recognized in setInputType()");
 }
 
 
@@ -244,7 +257,7 @@ const std::string& ParserItem::getDimension( size_t index ) const {
 }
 
 void ParserItem::push_backDimension( const std::string& dim ) {
-    if( this->data_type != type_tag::fdouble )
+    if (!(this->input_type == ParserItem::itype::DOUBLE || this->input_type == ParserItem::itype::UDA))
         throw std::invalid_argument( "Invalid type, does not have dimension." );
 
     if( this->sizeType() == item_size::SINGLE && this->dimensions.size() > 0 ) {
@@ -352,6 +365,9 @@ std::string ParserItem::type_literal() const {
     if (this->input_type == itype::RAW_STRING)
         return "ParserItem::itype::RAW_STRING";
 
+    if (this->input_type == itype::UDA)
+        return "ParserItem::itype::UDA";
+
     throw std::invalid_argument("Could not resolve type literal");
 }
 
@@ -377,6 +393,7 @@ ParserItem::itype ParserItem::from_string(const std::string& string_value) {
     if( string_value == "DOUBLE" )    return itype::DOUBLE;
     if( string_value == "STRING" )    return itype::STRING;
     if( string_value == "RAW_STRING") return itype::RAW_STRING;
+    if( string_value == "UDA")        return itype::UDA;
     throw std::invalid_argument( string_value + " cannot be converted to ParserInputType" );
 }
 

@@ -65,7 +65,7 @@ namespace Opm {
         static item_size   size_from_string( const std::string& );
         static std::string string_from_size( item_size );
 
-        enum class itype {UNKNOWN, DOUBLE, INT, STRING, RAW_STRING};
+        enum class itype {UNKNOWN, DOUBLE, INT, STRING, RAW_STRING, UDA};
         static itype from_string(const std::string& string_value);
         static std::string to_string(itype input_type);
         std::string type_literal() const;
