@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO
+#include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
@@ -47,6 +48,7 @@
 #include <cstddef>
 #include <iterator>
 #include <numeric>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -1086,6 +1088,132 @@ namespace { namespace SatFunc {
 /// PVT functions.
 namespace { namespace PVTFunc {
 
+    /// Functions to create linearised, padded, and normalised gas PVT
+    /// output tables from various input gas PVT function keywords.
+    namespace Gas {
+        /// Create linearised and padded 'TAB' vector entries of normalised
+        /// gas tables for all PVT function regions from PVDG (dry gas)
+        /// keyword data.
+        ///
+        /// \param[in] numPressNodes Number of pressure nodes (rows) to
+        ///    allocate in the output vector for each table.  Expected to be
+        ///    equal to the number of declared pressure nodes in the
+        ///    simulation run's TABDIMS keyword (NPPVT, Item 4).
+        ///
+        /// \param[in] units Active unit system.  Needed to convert SI
+        ///    convention pressure values (Pascal), formation volume factors
+        ///    (Rm3/Sm3), and viscosity values (Pascal seconds) to declared
+        ///    conventions of the run specification.
+        ///
+        /// \param[in] pvdg Collection of PVDG tables for all PVT regions.
+        ///
+        /// \return Linearised and padded 'TAB' vector values for output gas
+        ///    PVT tables.  A unit-converted copy of the input table \p pvdg
+        ///    with added derivatives.
+        std::vector<double>
+        fromPVDG(const std::size_t          numPressNodes,
+                 const Opm::UnitSystem&     units,
+                 const Opm::TableContainer& pvdg)
+        {
+            // Columns [ Pg, 1/Bg, 1/(Bg*mu_g), derivatives ]
+            using PVDG = ::Opm::PvdgTable;
+
+            const auto numTab  = pvdg.size();
+            const auto numPrim = std::size_t{1}; // No sub-tables
+            const auto numRows = numPressNodes;  // One row per pressure node
+            const auto numDep  = std::size_t{2}; // 1/Bg, 1/(Bg*mu_g)
+
+            // PVDG fill value = +2.0e20
+            const auto fillVal = +2.0e20;
+
+            return createPropfuncTable(numTab, numPrim, numRows, numDep, fillVal,
+                [&units, &pvdg](const std::size_t           tableID,
+                                const std::size_t           primID,
+                                Opm::LinearisedOutputTable& linTable)
+                -> std::size_t
+            {
+                const auto& t = pvdg.getTable<PVDG>(tableID);
+
+                auto numActRows = std::size_t{0};
+
+                // Column 0: Pg
+                {
+                    const auto uPress = ::Opm::UnitSystem::measure::pressure;
+
+                    const auto& Pg = t.getPressureColumn();
+
+                    numActRows = Pg.size();
+
+                    std::transform(std::begin(Pg), std::end(Pg),
+                                   linTable.column(tableID, primID, 0),
+                        [&units](const double p) -> double
+                    {
+                        return units.from_si(uPress, p);
+                    });
+                }
+
+                // Column 1: 1/Bg
+                {
+                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                        gas_inverse_formation_volume_factor;
+
+                    const auto& Bg = t.getFormationFactorColumn();
+                    std::transform(std::begin(Bg), std::end(Bg),
+                                   linTable.column(tableID, primID, 1),
+                        [&units](const double B) -> double
+                    {
+                        return units.from_si(uRecipFVF, 1.0 / B);
+                    });
+                }
+
+                // Column 2: 1/(Bg*mu_g)
+                {
+                    const auto uRecipFVF = ::Opm::UnitSystem::measure::
+                        gas_inverse_formation_volume_factor;
+
+                    const auto uVisc = ::Opm::UnitSystem::measure::viscosity;
+
+                    const auto& Bg   = t.getFormationFactorColumn();
+                    const auto& mu_g = t.getViscosityColumn();
+
+                    std::transform(std::begin(Bg), std::end(Bg),
+                                   std::begin(mu_g),
+                                   linTable.column(tableID, primID, 2),
+                        [&units](const double B, const double mu) -> double
+                    {
+                        return units.from_si(uRecipFVF, 1.0 / B)
+                            /  units.from_si(uVisc    , mu);
+                    });
+                }
+
+                // Inform createPropfuncTable() of number of active rows in
+                // this table.  Needed to compute slopes of piecewise linear
+                // interpolants.
+                return numActRows;
+            });
+        }
+
+        /// Extract maximum effective pressure nodes in PVDG table data
+        ///
+        /// \param[in] pvdg Collection of PVDG tables for all PVT regions.
+        ///
+        /// \return Maximum number of table rows across all tables of \p
+        ///    pvdo.
+        std::size_t maxNumPressNodes(const Opm::TableContainer& pvdg)
+        {
+            using PVDG = ::Opm::PvdgTable;
+            auto tabID = std::vector<std::size_t>(pvdg.size());
+
+            std::iota(tabID.begin(), tabID.end(), std::size_t{0});
+
+            return std::accumulate(tabID.begin(), tabID.end(), std::size_t{0},
+                [&pvdg](const std::size_t n, const std::size_t table)
+            {
+                return std::max(n, pvdg.getTable<PVDG>(table).numRows());
+            });
+        }
+    } // Gas
+
     /// Functions to create linearised, padded, and normalised oil PVT
     /// output tables from various input oil PVT function keywords.
     namespace Oil {
@@ -1810,6 +1938,7 @@ namespace Opm {
     {
         const auto& phases = es.runspec().phases();
 
+        if (phases.active(Phase::GAS))   { this->addGasPVTTables  (es); }
         if (phases.active(Phase::OIL))   { this->addOilPVTTables  (es); }
         if (phases.active(Phase::WATER)) { this->addWaterPVTTables(es); }
     }
@@ -1978,6 +2107,30 @@ namespace Opm {
             this->addData(TABDIMS_IBSWFN_OFFSET_ITEM, swfn);
             this->m_tabdims[TABDIMS_NSSWFN_ITEM] = nssfun;
             this->m_tabdims[TABDIMS_NTSWFN_ITEM] = tables.size();
+        }
+    }
+
+    void Tables::addGasPVTTables(const EclipseState& es)
+    {
+        const auto& tabMgr = es.getTableManager();
+        const auto& tabd   = es.runspec().tabdims();
+
+        const auto numPressNodes = tabd.getNumPressureNodes();
+
+        const auto hasPVDG =  tabMgr.hasTables("PVDG");
+
+        if (hasPVDG) {
+            // Dry gas, pressure dependent compressibility.
+            const auto& pvdg = tabMgr.getPvdgTables();
+
+            const auto numRows =
+                std::max(numPressNodes, PVTFunc::Gas::maxNumPressNodes(pvdg));
+
+            const auto data = PVTFunc::Gas::fromPVDG(numRows, this->units, pvdg);
+
+            this->addData(TABDIMS_IBPVTG_OFFSET_ITEM, data);
+            this->m_tabdims[TABDIMS_NPPVTG_ITEM] = numRows;
+            this->m_tabdims[TABDIMS_NTPVTG_ITEM] = pvdg.size();
         }
     }
 

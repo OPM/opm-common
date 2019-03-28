@@ -113,6 +113,14 @@ namespace Opm {
                                   const bool          oil,
                                   const bool          wat);
 
+        /// Add gas PVT tables (keywords PVDG and PVTG) to the tabular data
+        /// (TABDIMS and TAB vectors).
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate table
+        ///    dimensions ("TABDIMS" keyword) and an initialised \c
+        ///    TableManager sub-object.
+        void addGasPVTTables(const EclipseState& es);
+
         /// Add oil PVT tables (keywords PVCDO, PVDO and PVTO) to the
         /// tabular data (TABDIMS and TAB vectors).
         ///
