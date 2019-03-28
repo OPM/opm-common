@@ -27,7 +27,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW
+#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW, PVCDO
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
@@ -1083,6 +1083,103 @@ namespace { namespace SatFunc {
 /// PVT functions.
 namespace { namespace PVTFunc {
 
+    /// Functions to create linearised, padded, and normalised oil PVT
+    /// output tables from various input oil PVT function keywords.
+    namespace Oil {
+        /// Create linearised and padded 'TAB' vector entries of normalised
+        /// oil tables for all PVT function regions from PVCDO (dead oil
+        /// with constant oil compressibility) keyword data.
+        ///
+        /// \param[in] numPressNodes Number of pressure nodes (rows) to
+        ///    allocate in the output vector for each table.  Expected to be
+        ///    equal to the number of declared pressure nodes in the
+        ///    simulation run's TABDIMS keyword (NPPVT, Item 4).  Note that
+        ///    only the first row of each table contains any actual PVT
+        ///    data.
+        ///
+        /// \param[in] units Active unit system.  Needed to convert SI
+        ///    convention pressure values (Pascal), formation volume factors
+        ///    (Rm3/Sm3), compressibility values (1/Pascal), viscosity
+        ///    values (Pa*s), and viscosibility values (1/Pascal) to
+        ///    declared conventions of the run specification.
+        ///
+        /// \param[in] pvcdo Collection of PVCDO tables for all PVT regions.
+        ///
+        /// \return Linearised and padded 'TAB' vector values for output oil
+        ///    PVT tables.  A unit-converted copy of the input table \p
+        ///    pvcdo.  No derivative information added.
+        std::vector<double>
+        fromPVCDO(const std::size_t      numPressNodes,
+                  const Opm::UnitSystem& units,
+                  const Opm::PvcdoTable& pvcdo)
+        {
+            // Recall: PvcdoTable is essentially vector<PVCDORecord> with
+            //
+            //   struct PVCDORecord {
+            //       double reference_pressure;
+            //       double volume_factor;
+            //       double compressibility;
+            //       double viscosity;
+            //       double viscosibility;
+            //   };
+            //
+            using M = ::Opm::UnitSystem::measure;
+
+            // Columns [ Po, Bo, Co, mu_o, Cv ]
+            //
+            // Single active row per table.  No derivatives.  Can't reuse
+            // createPropfuncTable here, so implement the return value
+            // directly in terms of LinearisedOutputTable.
+
+            const auto numTab  = pvcdo.size();
+            const auto numPrim = std::size_t{1};
+            const auto numCols = std::size_t{5};
+
+            // PVCDO fill value: -1.0e20
+            const auto fillVal = -1.0e20;
+
+            auto lintable = ::Opm::LinearisedOutputTable {
+                numTab, numPrim, numPressNodes, numCols, fillVal
+            };
+
+            // Note unit hack for compressibility and viscosibility.  The
+            // unit of measurement for these quantities is 1/pressure, but
+            // the UnitSystem does not define this unit.  Work around the
+            // missing conversion by using *to_si()* rather than *from_si()*
+            // for those quantities.
+
+            const auto uPress = M::pressure;
+            const auto uBo    = M::oil_formation_volume_factor;
+            const auto uVisc  = M::viscosity;
+
+            // Single primary key, ID = 0.
+            const auto primID = std::size_t{0};
+
+            for (auto tabID = 0*numTab; tabID < numTab; ++tabID) {
+                const auto& t = pvcdo[tabID];
+
+                auto iPo   = lintable.column(tabID, primID, 0);
+                auto iBo   = lintable.column(tabID, primID, 1);
+                auto iCo   = lintable.column(tabID, primID, 2);
+                auto imu_o = lintable.column(tabID, primID, 3);
+                auto iCv   = lintable.column(tabID, primID, 4);
+
+                *iPo = units.from_si(uPress, t.reference_pressure);
+                *iBo = units.from_si(uBo, t.volume_factor);
+
+                // Compressibility unit hack here (*to_si()*)
+                *iCo = units.to_si(uPress, t.compressibility);
+
+                *imu_o = units.from_si(uVisc, t.viscosity);
+
+                // Viscosibility unit hack here (*to_si()*)
+                *iCv = units.to_si(uPress, t.viscosibility);
+            }
+
+            return lintable.getDataDestructively();
+        }
+    } // Oil
+
     /// Functions to create linearised, padded, and normalised water PVT
     /// output tables from input water PVT function keyword.
     namespace Water {
@@ -1372,6 +1469,7 @@ namespace Opm {
     {
         const auto& phases = es.runspec().phases();
 
+        if (phases.active(Phase::OIL))   { this->addOilPVTTables  (es); }
         if (phases.active(Phase::WATER)) { this->addWaterPVTTables(es); }
     }
 
@@ -1539,6 +1637,29 @@ namespace Opm {
             this->addData(TABDIMS_IBSWFN_OFFSET_ITEM, swfn);
             this->m_tabdims[TABDIMS_NSSWFN_ITEM] = nssfun;
             this->m_tabdims[TABDIMS_NTSWFN_ITEM] = tables.size();
+        }
+    }
+
+    void Tables::addOilPVTTables(const EclipseState& es)
+    {
+        const auto& tabMgr = es.getTableManager();
+        const auto& tabd   = es.runspec().tabdims();
+
+        const auto numPressNodes = tabd.getNumPressureNodes();
+
+        const auto hasPVCDO = !tabMgr.getPvcdoTable().empty();
+
+        if (hasPVCDO) {
+            // Dead oil, constant compressibility.
+            const auto& pvcdo = tabMgr.getPvcdoTable();
+
+            const auto numRows = std::max(numPressNodes, pvcdo.size());
+
+            const auto data = PVTFunc::Oil::fromPVCDO(numRows, this->units, pvcdo);
+
+            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, data);
+            this->m_tabdims[TABDIMS_NPPVTO_ITEM] = numRows;
+            this->m_tabdims[TABDIMS_NTPVTO_ITEM] = pvcdo.size();
         }
     }
 
