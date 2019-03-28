@@ -322,6 +322,7 @@ if(ENABLE_ECL_INPUT)
     tests/ECLFILE.INIT
     tests/ECLFILE.FINIT
     tests/SPE1CASE1.EGRID
+    tests/SPE1CASE1.RFT
   )
   list (APPEND EXAMPLE_SOURCE_FILES
     examples/opmi.cpp
