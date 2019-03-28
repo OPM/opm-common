@@ -1,4 +1,5 @@
 /*
+  Copyright 2019 Equinor.
   Copyright 2016 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -1606,5 +1607,113 @@ BOOST_AUTO_TEST_CASE (Serialize_Family_Two)
         check_is_close(swfn, SPE1::ThreePhase::expect_SWFN());
     }
 }
+
+BOOST_AUTO_TEST_SUITE_END ()
+
+// #####################################################################
+
+BOOST_AUTO_TEST_SUITE (PVTTables)
+
+namespace {
+    Opm::EclipseState parse(const std::string& rspec,
+                            const std::string& props)
+    {
+        return {
+            Opm::Parser{}.parseString(rspec + R"(GRID
+INIT
+
+DXV
+  10*200 /
+
+DYV
+  10*200 /
+
+DZV
+  10*25 /
+
+TOPS
+  100*2500 /
+
+PORO
+  1000*0.3 /
+
+PERMX
+  1000*100 /
+
+COPY
+  'PERMX' 'PERMY' /
+  'PERMX' 'PERMZ' /
+/
+
+MULTIPLY
+  'PERMZ' 0.1 /
+/
+
+PROPS
+)" + props + R"(
+END
+)") };
+    }
+}
+
+BOOST_AUTO_TEST_SUITE (Water)
+
+BOOST_AUTO_TEST_CASE (PVTW)
+{
+    const auto rspec = std::string { R"(RUNSPEC
+DIMENS
+  10 10 10 /
+
+TITLE
+  Test PVTW Output
+
+WATER
+
+METRIC
+
+TABDIMS
+-- NTSFUN  NTPVT  NSSFUN  NPPVT  NTFIP  NRPVT
+   1*      2      1*      4      1*     3
+/
+)"  };
+
+    const auto props = std::string { R"(
+PVTW
+-- Pref  Bw(Pref)  Cw        Vw(Pref)  Cv
+   200   1.23      0.321e-4  0.25      0.654e-3 /
+   250   0.987     1.234e-5  0.314     0.9876e-5 /
+)"  };
+
+    const auto es = parse(rspec, props);
+
+    auto tables = ::Opm::Tables(es.getUnits());
+    tables.addPVTTables(es);
+
+    const auto& tabdims = tables.tabdims();
+    const auto& tab     = tables.tab();
+
+    const auto ibpvtw = tabdims[ TABDIMS_IBPVTW_OFFSET_ITEM ] - 1;
+    const auto ntpvtw = tabdims[ TABDIMS_NTPVTW_ITEM ];
+    const auto ncol   = 5;
+
+    BOOST_CHECK_EQUAL(ntpvtw, 2);
+
+    const auto pvtw = std::vector<double> {
+        &tab[ ibpvtw ] + 0,
+        &tab[ ibpvtw ] + ntpvtw*ncol
+    };
+
+    const auto expect_pvtw = makeTable(5, {
+        // Pw                     1/Bw                      Cw                        1/(Bw*mu_w)               Cw - Cv
+        2.000000000000000e+02,    8.130081300813008e-01,    3.210000000000000e-05,    3.252032520325203e+00,   -6.219000000000000e-04,
+        2.500000000000000e+02,    1.013171225937183e+00,    1.234000000000000e-05,    3.226659955213960e+00,    2.464000000000000e-06,
+    });
+
+    check_is_close(pvtw, expect_pvtw);
+}
+
+BOOST_AUTO_TEST_SUITE_END ()
+
+// =====================================================================
 
 BOOST_AUTO_TEST_SUITE_END ()

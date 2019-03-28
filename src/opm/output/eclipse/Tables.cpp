@@ -27,6 +27,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp> // PVTW
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Sof2Table.hpp>
@@ -1078,6 +1079,99 @@ namespace { namespace SatFunc {
     } // Water
 }} // Anonymous::SatFunc
 
+/// Functions to facilitate generating TAB vector entries for tabulated
+/// PVT functions.
+namespace { namespace PVTFunc {
+
+    /// Functions to create linearised, padded, and normalised water PVT
+    /// output tables from input water PVT function keyword.
+    namespace Water {
+        /// Create linearised 'TAB' vector entries of normalised water PVT
+        /// tables for all PVT function regions from PVTW keyword data.
+        ///
+        /// \param[in] units Active unit system.  Needed to convert SI
+        ///    convention pressure values (Pascal), formation volume factors
+        ///    (Rm3/Sm3), compressibility values (1/Pascal), viscosity
+        ///    values (Pa*s), and viscosibility values (1/Pascal) to
+        ///    declared conventions of the run specification.
+        ///
+        /// \param[in] pvtw Collection of PVTW tables for all PVT regions.
+        ///
+        /// \return Linearised 'TAB' vector values for output water PVT
+        ///    tables.  A unit-converted, transformed version of the input
+        ///    table \p pvtw.  No derivative information added.
+        std::vector<double>
+        fromPVTW(const Opm::UnitSystem& units,
+                 const Opm::PvtwTable&  pvtw)
+        {
+            // Recall: PvtwTable is essentially vector<PVTWRecord> in which
+            //
+            //   struct PVTWRecord {
+            //       double reference_pressure;
+            //       double volume_factor;
+            //       double compressibility;
+            //       double viscosity;
+            //       double viscosibility;
+            //   };
+
+            using M = ::Opm::UnitSystem::measure;
+
+            // Columns [ Pw, 1/Bw, Cw, 1/(Bw*mu_w), Cw - Cv ]
+            //
+            // Single row per table.  No derivatives.  Can't reuse
+            // createPropfuncTable here, so implement the return value
+            // directly in terms of LinearisedOutputTable.
+
+            const auto numTab  = pvtw.size();
+            const auto numPrim = std::size_t{1};
+            const auto numRows = std::size_t{1};
+            const auto numCols = std::size_t{5};
+
+            auto lintable = ::Opm::LinearisedOutputTable {
+                numTab, numPrim, numRows, numCols
+            };
+
+            // Note unit hack for compressibility and viscosibility.  The
+            // unit of measurement for these quantities is 1/pressure, but
+            // the UnitSystem does not define this unit.  Work around the
+            // missing conversion by using *to_si()* rather than *from_si()*
+            // for those quantities.
+
+            const auto uPress    = M::pressure;
+            const auto uRecipFVF = M::water_inverse_formation_volume_factor;
+            const auto uVisc     = M::viscosity;
+
+            const auto primID = std::size_t{0};
+            for (auto tabID = 0*numTab; tabID < numTab; ++tabID) {
+                const auto& t = pvtw[tabID];
+
+                auto iPw           = lintable.column(tabID, primID, 0);
+                auto irecipFvf     = lintable.column(tabID, primID, 1);
+                auto iCw           = lintable.column(tabID, primID, 2);
+                auto irecipFvfVisc = lintable.column(tabID, primID, 3);
+                auto idiffCwCv     = lintable.column(tabID, primID, 4);
+
+                *iPw       = units.from_si(uPress   , t.reference_pressure);
+                *irecipFvf = units.from_si(uRecipFVF, 1.0 / t.volume_factor);
+
+                // Compressibility unit hack here (*to_si()*)
+                *iCw = units.to_si(uPress, t.compressibility);
+
+                *irecipFvfVisc =
+                    units.from_si(uRecipFVF, 1.0 / t.volume_factor)
+                    / units.from_si(uVisc, t.viscosity);
+
+                // Viscosibility unit hack here (*to_si()*)
+                *idiffCwCv =
+                    units.to_si(uPress, t.compressibility - t.viscosibility);
+            }
+
+            return lintable.getDataDestructively();
+        }
+    } // Water
+
+}} // Anonymous::PVTFunc
+
 namespace Opm {
 
     Tables::Tables(const UnitSystem& units0)
@@ -1274,6 +1368,13 @@ namespace Opm {
         }
     }
 
+    void Tables::addPVTTables(const EclipseState& es)
+    {
+        const auto& phases = es.runspec().phases();
+
+        if (phases.active(Phase::WATER)) { this->addWaterPVTTables(es); }
+    }
+
     void Tables::addSatFunc(const EclipseState& es)
     {
         const auto& tabMgr = es.getTableManager();
@@ -1439,6 +1540,22 @@ namespace Opm {
             this->m_tabdims[TABDIMS_NSSWFN_ITEM] = nssfun;
             this->m_tabdims[TABDIMS_NTSWFN_ITEM] = tables.size();
         }
+    }
+
+    void Tables::addWaterPVTTables(const EclipseState& es)
+    {
+        const auto& tabMgr = es.getTableManager();
+
+        const auto& pvtw = tabMgr.getPvtwTable();
+
+        if (pvtw.empty()) {
+            return;
+        }
+
+        const auto data = PVTFunc::Water::fromPVTW(this->units, pvtw);
+
+        this->addData(TABDIMS_IBPVTW_OFFSET_ITEM, data);
+        this->m_tabdims[TABDIMS_NTPVTW_ITEM] = pvtw.size();
     }
 
     void fwrite(const Tables& tables,
