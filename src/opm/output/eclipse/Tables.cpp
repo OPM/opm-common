@@ -1,4 +1,6 @@
 /*
+  Copyright 2019 Equinor.
+  Copyright 2017 Statoil ASA.
   Copyright 2016 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -42,6 +44,96 @@
 #include <cstddef>
 #include <iterator>
 #include <vector>
+
+namespace {
+    /// Create linearised, padded TAB vector entries for a collection of
+    /// tabulated saturation functions corresponding to a single input
+    /// keyword.
+    ///
+    /// \tparam BuildDependent Callable entity that extracts the
+    ///    independent and primary dependent variates of a single
+    ///    saturation function table into a linearised output table.
+    ///    Must implement a function call operator of the form
+    ///    \code
+    ///       std::size_t
+    ///       operator()(const std::size_t      tableID,
+    ///                  const std::size_t      primID,
+    ///                  LinearisedOutputTable& table);
+    ///    \endcode
+    ///    that will assign the independent variate of the sub-table
+    ///    primID within the table identified as tableID to column zero
+    ///    of 'table' and all dependent variates to columns one &c of
+    ///    'table'.  The function call operator must return the number
+    ///    of active (used) rows within the sub-table through its return
+    ///    value.
+    ///
+    /// \param[in] numTab Number of tables in this table collection.
+    ///
+    /// \param[in] numPrim Number of primary look-up keys for each table.
+    ///    Mostly relevant (i.e., greater than one) for miscible oil
+    ///    ("PVTO") or miscible gas ("PVTG") tables and typically
+    ///    corresponds to the number of Rs/Rv entries from the TABDIMS
+    ///    keyword.
+    ///
+    /// \param[in] numRows Number of rows to allocate for each padded
+    ///    output table.
+    ///
+    /// \param[in] numDep Number of dependent variates (columns) in each
+    ///    table of this collection of input tables.  Total number of
+    ///    columns in the result vector will be 1 + 2*numDep to account
+    ///    for the independent variate, the dependent variates and the
+    ///    derivatives of the dependent variates with respect to the
+    ///    independent variate.
+    ///
+    /// \param[in] buildDeps Function object that implements the
+    ///    protocol outlined for \code BuildDependent::operator()()
+    ///    \endcode.  Typically a lambda expression.
+    ///
+    /// \return Linearised, padded TAB vector entries for a collection of
+    ///    tabulated property functions (e.g., saturation functions or PVT
+    ///    functions) corresponding to a single input keyword.  Derivatives
+    ///    included as additional columns.
+    template <class BuildDependent>
+    std::vector<double>
+    createPropfuncTable(const std::size_t numTab,
+                        const std::size_t numPrim,
+                        const std::size_t numRows,
+                        const std::size_t numDep,
+                        const double      fillVal,
+                        BuildDependent&&  buildDeps)
+    {
+        const auto numCols = 1 + 2*numDep;
+
+        auto descr = ::Opm::DifferentiateOutputTable::Descriptor{};
+        descr.primID = 0 * numPrim;
+
+        auto linTable = ::Opm::LinearisedOutputTable {
+            numTab, numPrim, numRows, numCols, fillVal
+        };
+
+        for (descr.tableID = 0*numTab;
+             descr.tableID < 1*numTab; ++descr.tableID)
+        {
+            for (descr.primID = 0*numPrim;
+                 descr.primID < 1*numPrim; ++descr.primID)
+            {
+                descr.numActRows =
+                    buildDeps(descr.tableID, descr.primID, linTable);
+
+                // Derivatives.  Use values already stored in linTable to
+                // take advantage of any unit conversion already applied.
+                // We don't have to do anything special for the units here.
+                //
+                // Note: argument 'descr' implies argument-dependent lookup
+                //    whence we unambiguously invoke function calcSlopes()
+                //    from namespace ::Opm::DifferentiateOutputTable.
+                calcSlopes(numDep, descr, linTable);
+            }
+        }
+
+        return linTable.getDataDestructively();
+    }
+} // Anonymous
 
 /// Functions to facilitate generating TAB vector entries for tabulated
 /// saturation functions.
@@ -94,33 +186,13 @@ namespace { namespace SatFunc {
                            const std::size_t numDep,
                            BuildDependent&&  buildDeps)
         {
+            // Saturation functions do not have sub-tables so the number of
+            // primary look-up keys is one.
             const auto numPrim = std::size_t{1};
-            const auto numCols = 1 + 2*numDep;
+            const auto fillVal = 1.0e20;
 
-            auto descr = ::Opm::DifferentiateOutputTable::Descriptor{};
-            descr.primID = 0 * numPrim;
-
-            auto linTable = ::Opm::LinearisedOutputTable {
-                numTab, numPrim, numRows, numCols
-            };
-
-            for (descr.tableID = 0*numTab;
-                 descr.tableID < 1*numTab; ++descr.tableID)
-            {
-                descr.numActRows =
-                    buildDeps(descr.tableID, descr.primID, linTable);
-
-                // Derivatives.  Use values already stored in linTable to
-                // take advantage of any unit conversion already applied.
-                // We don't have to do anything special for the units here.
-                //
-                // Note: argument 'descr' implies argument-dependent lookup
-                //    whence we unambiguously invoke function calcSlopes()
-                //    from namespace ::Opm::DifferentiateOutputTable.
-                calcSlopes(numDep, descr, linTable);
-            }
-
-            return linTable.getDataDestructively();
+            return createPropfuncTable(numTab, numPrim, numRows, numDep, fillVal,
+                                       std::forward<BuildDependent>(buildDeps));
         }
     } // detail
 
