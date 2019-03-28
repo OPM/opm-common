@@ -55,8 +55,12 @@ namespace Opm {
         const TableContainer& sgfnTables = tm->getSgfnTables();
 
 
-        bool family1 = (!sgofTables.empty() || !slgofTables.empty()) && !swofTables.empty();
-        bool family2 = !swfnTables.empty() && !sgfnTables.empty() && !sof3Tables.empty();
+        bool family1 = !sgofTables.empty() || !swofTables.empty() || !slgofTables.empty();
+        bool family2 = !swfnTables.empty() || !sgfnTables.empty() || !sof3Tables.empty();
+
+        if (!swofTables.empty() && !slgofTables.empty()) {
+            throw std::invalid_argument("Both, the SGOF and SLGOF have been specified but they are mutually exclusive!");
+        }
 
         if (family1 && family2) {
             throw std::invalid_argument("Saturation families should not be mixed \n"
