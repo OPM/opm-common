@@ -172,8 +172,11 @@ if(ENABLE_ECL_INPUT)
               examples/test_util/summaryIntegrationTest.cpp
               examples/test_util/summaryRegressionTest.cpp)
   target_link_libraries(testutil ecl)
-  add_executable(compareECL examples/test_util/compareECL.cpp)
-  target_link_libraries(compareECL testutil opmcommon)
+  foreach(target compareECL convertECL)
+    add_executable(${target} examples/test_util/${target}.cpp)
+    target_link_libraries(${target} testutil opmcommon)
+    install(TARGETS ${target} DESTINATION bin)
+  endforeach()
 
   # Add the tests
   set(_libs testutil opmcommon
@@ -184,7 +187,6 @@ if(ENABLE_ECL_INPUT)
                          LIBRARIES ${_libs}
                          WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
   endforeach()
-  install(TARGETS compareECL DESTINATION bin)
 endif()
 
 # Install build system files
