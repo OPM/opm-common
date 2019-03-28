@@ -1,4 +1,5 @@
 /*
+  Copyright 2019 Equinor.
   Copyright 2017 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -35,6 +36,8 @@ namespace Opm {
     public:
         /// Constructor.
         ///
+        /// Padded table entries set to +1.0e+20.
+        ///
         /// \param[in] numTables Number of tables managed by internal
         ///    buffer.  Typically corresponds to maximum value of a region
         ///    ID vector such as SATNUM, IMBNUM, or PVTNUM.
@@ -56,6 +59,33 @@ namespace Opm {
                               const std::size_t numPrimary,
                               const std::size_t numRows,
                               const std::size_t numCols);
+
+        /// Constructor.
+        ///
+        /// \param[in] numTables Number of tables managed by internal
+        ///    buffer.  Typically corresponds to maximum value of a region
+        ///    ID vector such as SATNUM, IMBNUM, or PVTNUM.
+        ///
+        /// \param[in] numPrimary Number of primary look-up keys for the
+        ///    tabular data managed by the internal buffer.  Mostly relevant
+        ///    (i.e., greater than one) for miscible oil ("PVTO") or
+        ///    miscible gas ("PVTG") tables and typically corresponds to the
+        ///    number of Rs/Rv entries from the TABDIMS keyword.
+        ///
+        /// \param[in] numRows Number of rows in each sub-table
+        ///    corresponding to a single primary look-up key.  Typically the
+        ///    number of nodes (e.g., NSSFUN or NPPVT) of the corresponding
+        ///    input keyword.
+        ///
+        /// \param[in] numCols Number of columns in each sub-table (and main
+        ///    table).  Typically 5.
+        ///
+        /// \param[in] fillValue Data element value for padded table entries.
+        LinearisedOutputTable(const std::size_t numTables,
+                              const std::size_t numPrimary,
+                              const std::size_t numRows,
+                              const std::size_t numCols,
+                              const double      fillValue);
 
         /// Retrieve iterator to start of \c numRows (contiguous) column
         /// elements of a particular sub-table of a particular main table.
