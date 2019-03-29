@@ -112,7 +112,6 @@ namespace {
         const auto numCols = 1 + 2*numDep;
 
         auto descr = ::Opm::DifferentiateOutputTable::Descriptor{};
-        descr.primID = 0 * numPrim;
 
         auto linTable = ::Opm::LinearisedOutputTable {
             numTab, numPrim, numRows, numCols, fillVal
@@ -1679,8 +1678,8 @@ namespace { namespace PVTFunc {
                 auto numActRows = std::size_t{0};
 
                 if (primID >= pvto[tableID].size()) {
-                    // Pressure node outside current table's active set.  No
-                    // active rows in this subtable.
+                    // Composition node outside current table's active set.
+                    // No active rows in this sub-table.
                     return numActRows;
                 }
 
@@ -1748,7 +1747,7 @@ namespace { namespace PVTFunc {
         /// composition nodes for all PVT function regions from PVTO (live
         /// oil with dissolved gas) keyword data.
         ///
-        /// \param[in] numCompNodes Number of compositoin nodes to allocate
+        /// \param[in] numCompNodes Number of composition nodes to allocate
         ///    in the output vector for each oil PVT table.  Expected to be
         ///    equal to the number of declared composition nodes in the
         ///    simulation run's TABDIMS keyword (NRPVT, Item 6).
