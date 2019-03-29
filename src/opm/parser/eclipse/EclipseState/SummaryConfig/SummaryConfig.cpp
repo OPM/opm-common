@@ -685,6 +685,10 @@ bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
 }
 
 
+size_t SummaryConfig::size() const {
+    return this->keywords.size();
+}
+
 /*
   Can be used to query if a certain 3D field, e.g. PRESSURE, is
   required to calculate the summary variables.

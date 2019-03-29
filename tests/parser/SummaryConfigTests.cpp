@@ -181,6 +181,8 @@ BOOST_AUTO_TEST_CASE(wells_select) {
     BOOST_CHECK_EQUAL_COLLECTIONS(
             wells.begin(), wells.end(),
             names.begin(), names.end() );
+
+    BOOST_CHECK_EQUAL( summary.size(), 2 );
 }
 
 BOOST_AUTO_TEST_CASE(groups_all) {
