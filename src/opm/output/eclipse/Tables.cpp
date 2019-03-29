@@ -47,32 +47,30 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <iterator>
 #include <numeric>
 #include <utility>
 #include <vector>
 
 namespace {
+    /// Convenience type alias for a callable entity that extracts the
+    /// independent and primary dependent variates of a single property
+    /// function table into a linearised output table.  Calling the function
+    /// will assign the independent variate of the sub-table primID within
+    /// the table identified as tableID to column zero of 'table' and all
+    /// dependent variates to columns one &c of 'table'.  The function call
+    /// must return the number of active (used) rows within the sub-table
+    /// through its return value.
+    using BuildDep = std::function<
+        std::size_t(const std::size_t             tableID,
+                    const std::size_t             primID,
+                    ::Opm::LinearisedOutputTable& table)
+        >;
+
     /// Create linearised, padded TAB vector entries for a collection of
     /// tabulated saturation functions corresponding to a single input
     /// keyword.
-    ///
-    /// \tparam BuildDependent Callable entity that extracts the
-    ///    independent and primary dependent variates of a single
-    ///    saturation function table into a linearised output table.
-    ///    Must implement a function call operator of the form
-    ///    \code
-    ///       std::size_t
-    ///       operator()(const std::size_t      tableID,
-    ///                  const std::size_t      primID,
-    ///                  LinearisedOutputTable& table);
-    ///    \endcode
-    ///    that will assign the independent variate of the sub-table
-    ///    primID within the table identified as tableID to column zero
-    ///    of 'table' and all dependent variates to columns one &c of
-    ///    'table'.  The function call operator must return the number
-    ///    of active (used) rows within the sub-table through its return
-    ///    value.
     ///
     /// \param[in] numTab Number of tables in this table collection.
     ///
@@ -93,21 +91,20 @@ namespace {
     ///    independent variate.
     ///
     /// \param[in] buildDeps Function object that implements the
-    ///    protocol outlined for \code BuildDependent::operator()()
-    ///    \endcode.  Typically a lambda expression.
+    ///    protocol outlined for \code BuildDep::operator()()
+    ///    \endcode.  Typically initialised from a lambda expression.
     ///
     /// \return Linearised, padded TAB vector entries for a collection of
     ///    tabulated property functions (e.g., saturation functions or PVT
     ///    functions) corresponding to a single input keyword.  Derivatives
     ///    included as additional columns.
-    template <class BuildDependent>
     std::vector<double>
     createPropfuncTable(const std::size_t numTab,
                         const std::size_t numPrim,
                         const std::size_t numRows,
                         const std::size_t numDep,
                         const double      fillVal,
-                        BuildDependent&&  buildDeps)
+                        const BuildDep&   buildDeps)
     {
         const auto numCols = 1 + 2*numDep;
 
