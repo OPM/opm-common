@@ -597,8 +597,16 @@ SummaryConfig::SummaryConfig( const Deck& deck,
                               ErrorGuard& errors,
                               const GridDims& dims) {
     SUMMARYSection section( deck );
-    for( auto& x : section )
-        handleKW( this->keywords, x, schedule, tables, parseContext, errors, dims);
+
+    // The kw_iter++ hoops is to skip the initial 'SUMMARY' keyword.
+    auto kw_iter = section.begin();
+    if (kw_iter != section.end())
+        kw_iter++;
+
+    for(; kw_iter != section.end(); ++kw_iter) {
+        const auto& kw = *kw_iter;
+        handleKW( this->keywords, kw, schedule, tables, parseContext, errors, dims);
+    }
 
     if( section.hasKeyword( "ALL" ) )
         this->merge( { ALL_keywords, schedule, tables, parseContext, errors, dims} );
@@ -684,6 +692,10 @@ bool SummaryConfig::hasSummaryKey(const std::string& keyword ) const {
     return (this->summary_keywords.count( keyword ) == 1);
 }
 
+
+size_t SummaryConfig::size() const {
+    return this->keywords.size();
+}
 
 /*
   Can be used to query if a certain 3D field, e.g. PRESSURE, is

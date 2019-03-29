@@ -160,6 +160,14 @@ BOOST_AUTO_TEST_CASE(wells_all) {
             names.begin(), names.end() );
 }
 
+BOOST_AUTO_TEST_CASE(EMPTY) {
+    auto deck = createDeck_no_wells( "" );
+    EclipseState state( deck );
+    Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
+    SummaryConfig conf(deck, schedule, state.getTableManager());
+    BOOST_CHECK_EQUAL( conf.size(), 0 );
+}
+
 BOOST_AUTO_TEST_CASE(wells_missingI) {
     ParseContext parseContext;
     ErrorGuard errors;
@@ -181,6 +189,8 @@ BOOST_AUTO_TEST_CASE(wells_select) {
     BOOST_CHECK_EQUAL_COLLECTIONS(
             wells.begin(), wells.end(),
             names.begin(), names.end() );
+
+    BOOST_CHECK_EQUAL( summary.size(), 2 );
 }
 
 BOOST_AUTO_TEST_CASE(groups_all) {

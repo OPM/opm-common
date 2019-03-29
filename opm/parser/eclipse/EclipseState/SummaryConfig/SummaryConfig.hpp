@@ -130,7 +130,7 @@ namespace Opm {
 
             const_iterator begin() const;
             const_iterator end() const;
-
+            size_t size() const;
             SummaryConfig& merge( const SummaryConfig& );
             SummaryConfig& merge( SummaryConfig&& );
 
