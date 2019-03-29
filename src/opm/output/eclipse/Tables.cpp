@@ -114,6 +114,13 @@ namespace {
             numTab, numPrim, numRows, numCols, fillVal
         };
 
+        // Note unusual loop counters here.  Specifically, we mutate the
+        // members of 'descr' rather than using separate counters, which is
+        // the custom construction.  The reason for this is that these
+        // members are also used in calcSlopes() to indicate which table
+        // subsection to analyse and compute derivatives for.  With separate
+        // loop counters, we would need to form a new table descriptor for
+        // each call to calcSlopes().
         for (descr.tableID = 0*numTab;
              descr.tableID < 1*numTab; ++descr.tableID)
         {
