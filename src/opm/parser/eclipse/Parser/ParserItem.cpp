@@ -19,6 +19,8 @@
 
 #include <ostream>
 #include <sstream>
+#include <iomanip>
+#include <cmath>
 
 #include <boost/lexical_cast.hpp>
 
@@ -50,14 +52,26 @@ template<> const std::string& default_value< std::string >() {
     return value;
 }
 
-type_tag get_type_json( const std::string& str ) {
+type_tag get_data_type_json( const std::string& str ) {
     if( str == "INT" )       return type_tag::integer;
     if( str == "DOUBLE" )    return type_tag::fdouble;
     if( str == "STRING" )    return type_tag::string;
     if( str == "RAW_STRING") return type_tag::string;
+    if( str == "UDA")        return type_tag::fdouble;
     throw std::invalid_argument( str + " cannot be converted to enum 'tag'" );
 }
 
+/*
+  For very small numbers std::to_string() will just return the string "0.000000"
+*/
+std::string as_string(double value) {
+    if (std::fabs(value) < 1e-4) {
+        std::ostringstream ss;
+        ss << std::setprecision(12) << std::fixed << value;
+        return ss.str();
+    } else
+        return std::to_string(value);
+}
 
 }
 
@@ -78,20 +92,21 @@ std::string ParserItem::string_from_size( ParserItem::item_size sz ) {
 }
 
 template<> const int& ParserItem::value_ref< int >() const {
-    if( this->type != get_type< int >() )
-        throw std::invalid_argument( "Wrong type." );
+    if( this->data_type != get_type< int >() )
+        throw std::invalid_argument( "ValueRef<int>: Wrong type." );
     return this->ival;
 }
 
 template<> const double& ParserItem::value_ref< double >() const {
-    if( this->type != get_type< double >() )
-        throw std::invalid_argument( "Wrong type." );
+    if( this->data_type != get_type< double >() )
+        throw std::invalid_argument("ValueRef<double> Wrong type." );
+
     return this->dval;
 }
 
 template<> const std::string& ParserItem::value_ref< std::string >() const {
-    if( this->type != get_type< std::string >() )
-        throw std::invalid_argument( "Wrong type." );
+    if( this->data_type != get_type< std::string >() )
+        throw std::invalid_argument( "ValueRef<String> Wrong type." );
     return this->sval;
 }
 
@@ -102,44 +117,13 @@ T& ParserItem::value_ref() {
             );
 }
 
-ParserItem::ParserItem( const std::string& itemName ) :
-    ParserItem( itemName, ParserItem::item_size::SINGLE )
-{}
 
-ParserItem::ParserItem( const std::string& itemName,
-                        ParserItem::item_size p_sizeType ) :
-    m_name( itemName ),
-    m_sizeType( p_sizeType ),
-    m_defaultSet( false )
-{}
-
-ParserItem::ParserItem( const std::string& itemName, item_size sz, int val ) :
-    ival( val ),
-    m_name( itemName ),
-    m_sizeType( sz ),
-    type( get_type< int >() ),
-    m_defaultSet( true )
-{}
-
-ParserItem::ParserItem( const std::string& itemName,
-                        item_size sz,
-                        double val ) :
-    dval( val ),
-    m_name( itemName ),
-    m_sizeType( sz ),
-    type( get_type< double >() ),
-    m_defaultSet( true )
-{}
-
-ParserItem::ParserItem( const std::string& itemName,
-                        item_size sz,
-                        std::string val ) :
-    sval( std::move( val ) ),
-    m_name( itemName ),
-    m_sizeType( sz ),
-    type( get_type< std::string >() ),
-    m_defaultSet( true )
-{}
+ParserItem::ParserItem( const std::string& itemName, ParserItem::itype input_type) :
+    m_name(itemName),
+    m_defaultSet(false)
+{
+    this->setInputType(input_type);
+}
 
 ParserItem::ParserItem( const Json::JsonObject& json ) :
     m_name( json.get_string( "name" ) ),
@@ -149,7 +133,8 @@ ParserItem::ParserItem( const Json::JsonObject& json ) :
     m_description( json.has_item( "description" )
                  ? json.get_string( "description" )
                  : "" ),
-    type( get_type_json( json.get_string( "value_type" ) ) ),
+    data_type( get_data_type_json( json.get_string( "value_type" ) ) ),
+    input_type( ParserItem::from_string( json.get_string("value_type"))),
     m_defaultSet( false )
 {
     if( json.has_item( "dimension" ) ) {
@@ -168,32 +153,34 @@ ParserItem::ParserItem( const Json::JsonObject& json ) :
             );
         }
     }
-    if (json.get_string("value_type") == "RAW_STRING")
-        this->raw_string = true;
-
     if( !json.has_item( "default" ) ) return;
 
-    switch( this->type ) {
-        case type_tag::integer:
-            this->setDefault( json.get_int( "default" ) );
-            break;
+    switch( this->input_type ) {
+    case itype::INT:
+        this->setDefault( json.get_int( "default" ) );
+        break;
 
-        case type_tag::fdouble:
-            this->setDefault( json.get_double( "default" ) );
-            break;
+    case itype::DOUBLE:
+        this->setDefault( json.get_double( "default" ) );
+        break;
 
-        case type_tag::string:
-            this->setDefault( json.get_string( "default" ) );
-            break;
+    case itype::STRING:
+    case itype::RAW_STRING:
+        this->setDefault( json.get_string( "default" ) );
+        break;
 
-        default:
-            throw std::logic_error( "Item of unknown type." );
+    case itype::UDA:
+        this->setDefault( json.get_double( "default" ) );
+        break;
+
+    default:
+        throw std::logic_error( "Item of unknown type." );
     }
 }
 
 template< typename T >
 void ParserItem::setDefault( T val ) {
-    if( this->type != type_tag::fdouble && this->m_sizeType == item_size::ALL )
+    if( this->data_type != type_tag::fdouble && this->m_sizeType == item_size::ALL )
         throw std::invalid_argument( "The size type ALL can not be combined "
                                      "with an explicit default value." );
 
@@ -201,27 +188,44 @@ void ParserItem::setDefault( T val ) {
     this->m_defaultSet = true;
 }
 
-template< typename T >
-void ParserItem::setType( T) {
-    this->type = get_type< T >();
+
+void ParserItem::setInputType(ParserItem::itype input_type) {
+    this->input_type = input_type;
+
+    if (input_type == itype::INT)
+        this->setDataType(int());
+
+    else if (input_type == itype::DOUBLE)
+        this->setDataType(double());
+
+    else if (input_type == itype::STRING)
+        this->setDataType( std::string() );
+
+    else if (input_type == itype::RAW_STRING)
+        this->setDataType( std::string() );
+
+    else if (input_type == itype::UDA)
+        this->setDataType( double() );
+
+    else
+        throw std::invalid_argument("BUG: input type not recognized in setInputType()");
 }
 
-template< typename T >
-void ParserItem::setType( T, bool raw ) {
-    this->type = get_type< T >();
-    this->raw_string = raw;
-}
 
+template< typename T >
+void ParserItem::setDataType( T) {
+    this->data_type = get_type< T >();
+}
 
 bool ParserItem::hasDefault() const {
     return this->m_defaultSet;
 }
 
 
-template< typename T >
+template< typename T>
 const T& ParserItem::getDefault() const {
-    if( get_type< T >() != this->type )
-        throw std::invalid_argument( "Wrong type." );
+    if( get_type< T >() != this->data_type )
+        throw std::invalid_argument( "getDefault: Wrong type." );
 
     if( !this->hasDefault() && this->m_sizeType == item_size::ALL )
         return default_value< T >();
@@ -234,26 +238,26 @@ const T& ParserItem::getDefault() const {
 }
 
 bool ParserItem::hasDimension() const {
-    if( this->type != type_tag::fdouble )
+    if( this->data_type != type_tag::fdouble )
         return false;
 
     return !this->dimensions.empty();
 }
 
 size_t ParserItem::numDimensions() const {
-    if( this->type != type_tag::fdouble ) return 0;
+    if( this->data_type != type_tag::fdouble ) return 0;
     return this->dimensions.size();
 }
 
 const std::string& ParserItem::getDimension( size_t index ) const {
-    if( this->type != type_tag::fdouble )
+    if( this->data_type != type_tag::fdouble )
         throw std::invalid_argument("Item is not double.");
 
     return this->dimensions.at( index );
 }
 
 void ParserItem::push_backDimension( const std::string& dim ) {
-    if( this->type != type_tag::fdouble )
+    if (!(this->input_type == ParserItem::itype::DOUBLE || this->input_type == ParserItem::itype::UDA))
         throw std::invalid_argument( "Invalid type, does not have dimension." );
 
     if( this->sizeType() == item_size::SINGLE && this->dimensions.size() > 0 ) {
@@ -287,26 +291,38 @@ void ParserItem::push_backDimension( const std::string& dim ) {
         return m_description;
     }
 
-    void ParserItem::setDescription(std::string description) {
+
+    void ParserItem::setSizeType(item_size size_type) {
+        this->m_sizeType = size_type;
+    }
+
+
+    void ParserItem::setDescription(const std::string& description) {
         m_description = description;
     }
 
 bool ParserItem::operator==( const ParserItem& rhs ) const {
-    if( !( this->type           == rhs.type
-        && this->m_name         == rhs.m_name
-        && this->m_description  == rhs.m_description
-        && this->m_sizeType     == rhs.m_sizeType
-        && this->m_defaultSet   == rhs.m_defaultSet ) )
-            return false;
+    if( !( this->data_type      == rhs.data_type
+           && this->m_name         == rhs.m_name
+           && this->m_description  == rhs.m_description
+           && this->input_type     == rhs.input_type
+           && this->m_sizeType     == rhs.m_sizeType
+           && this->m_defaultSet   == rhs.m_defaultSet ) )
+        return false;
 
     if( this->m_defaultSet ) {
-        switch( this->type ) {
+        switch( this->data_type ) {
             case type_tag::integer:
                 if( this->ival != rhs.ival ) return false;
                 break;
 
             case type_tag::fdouble:
-                if( this->dval != rhs.dval ) return false;
+                if( this->dval != rhs.dval ) {
+                    double diff = std::fabs(this->dval - rhs.dval);
+                    double sum = std::fabs(this->dval) + std::fabs(rhs.dval);
+                    if ((diff / sum) > 1e-8)
+                        return false;
+                }
                 break;
 
             case type_tag::string:
@@ -317,9 +333,7 @@ bool ParserItem::operator==( const ParserItem& rhs ) const {
                 throw std::logic_error( "Item of unknown type." );
         }
     }
-
-    if( this->type != type_tag::fdouble ) return true;
-
+    if( this->data_type != type_tag::fdouble ) return true;
     return this->dimensions.size() == rhs.dimensions.size()
         && std::equal( this->dimensions.begin(),
                        this->dimensions.end(),
@@ -330,38 +344,89 @@ bool ParserItem::operator!=( const ParserItem& rhs ) const {
     return !( *this == rhs );
 }
 
-std::string ParserItem::createCode() const {
-    std::stringstream stream;
-    stream << "ParserItem item(\"" << this->name()
-           << "\", ParserItem::item_size::" << this->sizeType();
 
-       if( m_defaultSet ) {
-           stream << ", ";
-           switch( this->type ) {
-               case type_tag::integer:
-                   stream << this->getDefault< int >();
-                   break;
-
-               case type_tag::fdouble:
-                   stream << "double( "
-                          << boost::lexical_cast< std::string >
-                                ( this->getDefault< double >() )
-                          << " )";
-                   break;
-
-               case type_tag::string:
-                   stream << "\"" << this->getDefault< std::string >() << "\"";
-                   break;
-
-               default:
-                   throw std::logic_error( "Item of unknown type." );
-           }
-        }
-
-    if (raw_string)
-        stream << " ); item.setType( " << tag_name( this->type ) << "(), true );"; 
+std::string ParserItem::size_literal() const {
+    if (this->m_sizeType == item_size::ALL)
+        return "ParserItem::item_size::ALL";
     else
-        stream << " ); item.setType( " << tag_name( this->type ) << "() );";
+        return "ParserItem::item_size::SINGLE";
+}
+
+std::string ParserItem::type_literal() const {
+    if (this->input_type == itype::DOUBLE)
+        return "ParserItem::itype::DOUBLE";
+
+    if (this->input_type == itype::INT)
+        return "ParserItem::itype::INT";
+
+    if (this->input_type == itype::STRING)
+        return "ParserItem::itype::STRING";
+
+    if (this->input_type == itype::RAW_STRING)
+        return "ParserItem::itype::RAW_STRING";
+
+    if (this->input_type == itype::UDA)
+        return "ParserItem::itype::UDA";
+
+    throw std::invalid_argument("Could not resolve type literal");
+}
+
+std::string ParserItem::to_string(itype input_type) {
+    if (input_type == itype::RAW_STRING)
+        return "RAW_STRING";
+
+    if (input_type == itype::STRING)
+        return "STRING";
+
+    if (input_type == itype::DOUBLE)
+        return "DOUBLE";
+
+    if (input_type == itype::INT)
+        return "INT";
+
+    throw std::invalid_argument("Can not convert to string");
+}
+
+
+ParserItem::itype ParserItem::from_string(const std::string& string_value) {
+    if( string_value == "INT" )       return itype::INT;
+    if( string_value == "DOUBLE" )    return itype::DOUBLE;
+    if( string_value == "STRING" )    return itype::STRING;
+    if( string_value == "RAW_STRING") return itype::RAW_STRING;
+    if( string_value == "UDA")        return itype::UDA;
+    throw std::invalid_argument( string_value + " cannot be converted to ParserInputType" );
+}
+
+
+std::string ParserItem::createCode(const std::string& indent) const {
+    std::stringstream stream;
+    stream << indent << "ParserItem item(\"" << this->name() <<"\", " << this->type_literal() << ");" << '\n';
+    if (this->m_sizeType != ParserItem::item_size::SINGLE)
+        stream << indent << "item.setSizeType(" << this->size_literal() << ");"  << '\n';
+
+    if( m_defaultSet ) {
+        stream << indent << "item.setDefault( ";
+        switch( this->data_type ) {
+        case type_tag::integer:
+            stream << this->getDefault< int >();
+            break;
+
+        case type_tag::fdouble:
+            stream << "double(" << as_string(this->getDefault<double>()) << ")";
+            break;
+
+        case type_tag::string:
+            stream << "std::string(\"" << this->getDefault< std::string >() << "\")";
+            break;
+
+        default:
+            throw std::logic_error( "Item of unknown type." );
+        }
+        stream << " );" << '\n';
+    }
+
+    if (this->m_description.size() > 0)
+        stream << indent << "item.setDescription(\"" << this->m_description << "\");" << '\n';
 
     return stream.str();
 }
@@ -468,7 +533,7 @@ DeckItem scan_item( const ParserItem& p, RawRecord& record ) {
 /// returns a DeckItem object.
 /// NOTE: data are popped from the records deque!
 DeckItem ParserItem::scan( RawRecord& record ) const {
-    switch( this->type ) {
+    switch( this->data_type ) {
         case type_tag::integer:
             return scan_item< int >( *this, record );
         case type_tag::fdouble:
@@ -483,17 +548,17 @@ DeckItem ParserItem::scan( RawRecord& record ) const {
 std::ostream& ParserItem::inlineClass( std::ostream& stream, const std::string& indent ) const {
     std::string local_indent = indent + "    ";
 
-    stream << indent << "class " << this->className() << " {" << std::endl
-           << indent << "public:" << std::endl
-           << local_indent << "static const std::string itemName;" << std::endl;
+    stream << indent << "class " << this->className() << " {" << '\n'
+           << indent << "public:" << '\n'
+           << local_indent << "static const std::string itemName;" << '\n';
 
     if( this->hasDefault() ) {
         stream << local_indent << "static const "
-               << tag_name( this->type )
-               << " defaultValue;" << std::endl;
+               << tag_name( this->data_type )
+               << " defaultValue;" << '\n';
     }
 
-    return stream << indent << "};" << std::endl;
+    return stream << indent << "};" << '\n';
 }
 
 std::string ParserItem::inlineClassInit(const std::string& parentClass,
@@ -503,14 +568,14 @@ std::string ParserItem::inlineClassInit(const std::string& parentClass,
     ss << "const std::string " << parentClass
        << "::" << this->className()
        << "::itemName = \"" << this->name()
-       << "\";" << std::endl;
+       << "\";" << '\n';
 
     if( !this->hasDefault() ) return ss.str();
 
-    auto typestring = tag_name( this->type );
+    auto typestring = tag_name( this->data_type );
 
     auto defval = [this]() -> std::string {
-        switch( this->type ) {
+        switch( this->data_type ) {
             case type_tag::integer:
                 return std::to_string( this->getDefault< int >() );
             case type_tag::fdouble:
@@ -526,7 +591,7 @@ std::string ParserItem::inlineClassInit(const std::string& parentClass,
     ss << "const " << typestring << " "
         << parentClass << "::" << this->className()
         << "::defaultValue = " << (defaultValue ? *defaultValue : defval() )
-        << ";" << std::endl;
+        << ";" << '\n';
 
     return ss.str();
 }
@@ -545,7 +610,7 @@ std::ostream& operator<<( std::ostream& stream, const ParserItem& item ) {
 
     if( item.hasDefault() ) {
         stream << "default: ";
-        switch( item.type ) {
+        switch( item.data_type ) {
             case type_tag::integer:
                 stream << item.getDefault< int >();
                 break;
@@ -578,17 +643,16 @@ std::ostream& operator<<( std::ostream& stream, const ParserItem& item ) {
 }
 
 bool ParserItem::parseRaw( ) const {
-    return this->raw_string;
+    return (this->input_type == itype::RAW_STRING);
 }
 
 template void ParserItem::setDefault( int );
 template void ParserItem::setDefault( double );
 template void ParserItem::setDefault( std::string );
 
-template void ParserItem::setType( int );
-template void ParserItem::setType( double );
-template void ParserItem::setType( std::string );
-template void ParserItem::setType( std::string , bool);
+template void ParserItem::setDataType( int );
+template void ParserItem::setDataType( double );
+template void ParserItem::setDataType( std::string );
 
 template const int& ParserItem::getDefault() const;
 template const double& ParserItem::getDefault() const;

@@ -196,7 +196,7 @@ namespace Opm {
             stream << "    BOOST_CHECK_EQUAL( jsonKeyword, inlineKeyword );" << std::endl;
             stream << "    if (jsonKeyword.hasDimension()) {" <<std::endl;
             stream << "        const auto& parserRecord = jsonKeyword.getRecord(0);" << std::endl;
-            stream << "        for (size_t i=0; i < parserRecord.size(); i++){ " << std::endl;
+            stream << "        for (size_t i=0; i < parserRecord.size(); i++){" << std::endl;
             stream << "            const auto& item = parserRecord.get( i );" << std::endl;
             stream << "            for (size_t j=0; j < item.numDimensions(); j++) {" << std::endl;
             stream << "                const std::string& dimString = item.getDimension(j);" << std::endl;

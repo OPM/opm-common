@@ -56,7 +56,9 @@ Parser createWWCTParser() {
     auto parserKeyword = createDynamicSized("WWCT");
 
     ParserRecord record;
-    record.addItem( ParserItem("WELL", ParserItem::item_size::ALL, "") );
+    ParserItem item("WELL", ParserItem::itype::STRING);
+    item.setSizeType(ParserItem::item_size::ALL);
+    record.addItem(item);
     parserKeyword->addRecord( record );
 
     auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);
@@ -142,9 +144,9 @@ static Parser createBPRParser() {
     auto parserKeyword = createDynamicSized("BPR");
     {
         ParserRecord bprRecord;
-        bprRecord.addItem( ParserItem("I", ParserItem::item_size::SINGLE, 0) );
-        bprRecord.addItem( ParserItem("J", ParserItem::item_size::SINGLE, 0) );
-        bprRecord.addItem( ParserItem("K", ParserItem::item_size::SINGLE, 0) );
+        bprRecord.addItem( ParserItem("I", ParserItem::itype::INT) );
+        bprRecord.addItem( ParserItem("J", ParserItem::itype::INT) );
+        bprRecord.addItem( ParserItem("K", ParserItem::itype::INT) );
         parserKeyword->addRecord( bprRecord );
     }
     auto summaryKeyword = createFixedSized("SUMMARY" , (size_t) 0);

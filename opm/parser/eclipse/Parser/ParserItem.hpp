@@ -25,6 +25,7 @@
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
+#include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 
 namespace Json {
     class JsonObject;
@@ -34,22 +35,44 @@ namespace Opm {
 
     class RawRecord;
 
+
+    /*
+      The ParserItem class describes one item handled by the parser. A parser
+      item is the schema for parsing values from the deck, when configuring the
+      ParserItem *two* types are in action:
+
+        InputType: These are the types specified when instantiating a
+           ParserItem, the available types are currently: INT, DOUBLE, STRING,
+           RAW_STRING and UDA.
+
+        DataType: This the C++ type of items generated when parsing the deck,
+           currently the available datatypes are int, double and std::string.
+           The mapping from input type to data type is many-to-one, and
+           currently both STRING and RAW_STRING map to std::string and both
+           DOUBLE and UDA map to double.
+
+      Splitting the type treatment in two layers in this way enables
+      properties/transformations to be added to the data before they are
+      internalized as data in a DataType instance; e.g. the difference between
+      STRING and RAW_STRING is that for the latter quotes and '*' tokens are
+      retained.
+    */
+
+
     class ParserItem {
     public:
         enum class item_size { ALL, SINGLE };
         static item_size   size_from_string( const std::string& );
         static std::string string_from_size( item_size );
 
-        explicit ParserItem( const std::string& name );
-        ParserItem( const std::string& name, item_size );
-        template< typename T >
-        ParserItem( const std::string& item_name, T val ) :
-            ParserItem( item_name, item_size::SINGLE, std::move( val ) ) {}
-        ParserItem( const std::string& name, item_size, int defaultValue );
-        ParserItem( const std::string& name, item_size, double defaultValue );
-        ParserItem( const std::string& name, item_size, std::string defaultValue );
+        enum class itype {UNKNOWN, DOUBLE, INT, STRING, RAW_STRING, UDA};
+        static itype from_string(const std::string& string_value);
+        static std::string to_string(itype input_type);
+        std::string type_literal() const;
 
-        explicit ParserItem(const Json::JsonObject& jsonConfig);
+
+        explicit ParserItem( const std::string& name, ParserItem::itype input_type );
+        explicit ParserItem( const Json::JsonObject& jsonConfig );
 
         void push_backDimension( const std::string& );
         const std::string& getDimension(size_t index) const;
@@ -57,14 +80,14 @@ namespace Opm {
         size_t numDimensions() const;
         const std::string& name() const;
         item_size sizeType() const;
+        void setSizeType(item_size size_type);
         std::string getDescription() const;
         bool scalar() const;
-        void setDescription(std::string helpText);
+        void setDescription(const std::string& helpText);
 
         template< typename T > void setDefault( T );
         /* set type without a default value. will reset dimension etc. */
-        template< typename T > void setType( T );
-        template< typename T > void setType( T , bool raw);
+        void setInputType( itype input_type );
         bool parseRaw() const;
         bool hasDefault() const;
         template< typename T > const T& getDefault() const;
@@ -73,8 +96,10 @@ namespace Opm {
         bool operator!=( const ParserItem& ) const;
 
         DeckItem scan( RawRecord& rawRecord ) const;
+
+        std::string size_literal() const;
         const std::string className() const;
-        std::string createCode() const;
+        std::string createCode(const std::string& indent) const;
         std::ostream& inlineClass(std::ostream&, const std::string& indent) const;
         std::string inlineClassInit(const std::string& parentClass,
                                     const std::string* defaultValue = nullptr ) const;
@@ -83,18 +108,19 @@ namespace Opm {
         double dval;
         int ival;
         std::string sval;
-        bool raw_string = false;
         std::vector< std::string > dimensions;
 
         std::string m_name;
-        item_size m_sizeType;
+        item_size m_sizeType = item_size::SINGLE;
         std::string m_description;
 
-        type_tag type = type_tag::unknown;
+        type_tag data_type = type_tag::unknown;
+        itype input_type = itype::UNKNOWN;
         bool m_defaultSet;
 
         template< typename T > T& value_ref();
         template< typename T > const T& value_ref() const;
+        template< typename T > void setDataType( T );
         friend std::ostream& operator<<( std::ostream&, const ParserItem& );
     };
 
