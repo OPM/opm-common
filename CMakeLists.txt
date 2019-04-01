@@ -166,11 +166,7 @@ if(ENABLE_ECL_INPUT)
               examples/test_util/EGrid.cpp
               examples/test_util/ERft.cpp
               examples/test_util/ERst.cpp
-              examples/test_util/ESmry.cpp
-              examples/test_util/summaryComparator.cpp
-              examples/test_util/summaryIntegrationTest.cpp
-              examples/test_util/summaryRegressionTest.cpp)
-  target_link_libraries(testutil ecl)
+              examples/test_util/ESmry.cpp)
   foreach(target compareECL convertECL)
     add_executable(${target} examples/test_util/${target}.cpp)
     target_link_libraries(${target} testutil opmcommon)
@@ -180,8 +176,8 @@ if(ENABLE_ECL_INPUT)
   # Add the tests
   set(_libs testutil opmcommon
             ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-  foreach(test test_compareSummary test_EclFilesComparator test_EclIO
-               test_EclRegressionTest test_EGrid test_ERft test_ERst test_ESmry)
+  foreach(test test_EclFilesComparator test_EclIO test_EclRegressionTest
+               test_EGrid test_ERft test_ERst test_ESmry)
     opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
                          LIBRARIES ${_libs}
                          WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
