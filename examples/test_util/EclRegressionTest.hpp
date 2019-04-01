@@ -1,5 +1,5 @@
 /*
-   Copyright 2016 Statoil ASA.
+   Copyright 2019 Equinor ASA.
 
    This file is part of the Open Porous Media project (OPM).
 
@@ -21,6 +21,11 @@
 #define ECLREGRESSIONTEST_HPP
 
 #include "EclFilesComparator.hpp"
+#include "data/EclIOdata.hpp"
+
+
+namespace EIOD = Opm::ecl;
+
 
 /*! \brief A class for executing a regression test for two ECLIPSE files.
     \details This class inherits from ECLFilesComparator, which opens and
@@ -29,65 +34,146 @@
              resultsForKeyword() can be invoked to compare griddata
              or keyworddata for all keywords or a given keyword (resultsForKeyword()).
  */
-
 class ECLRegressionTest: public ECLFilesComparator {
-    private:
-        // These vectors store absolute and relative deviations, respecively. Note that they are whiped clean for every new keyword comparison.
-        std::vector<double> absDeviation, relDeviation;
-        // Keywords which should not contain negative values, i.e. uses allowNegativeValues = false in deviationsForCell():
-        const std::vector<std::string> keywordDisallowNegatives = {"SGAS", "SWAT", "PRESSURE"};
+public:
+    //! \brief Sets up the regression test.
+    //! \param[in] basename1 Full path without file extension to the first case.
+    //! \param[in] basename2 Full path without file extension to the second case.
+    //! \param[in] absTolerance Tolerance for absolute deviation.
+    //! \param[in] relTolerance Tolerance for relative deviation.
+    //! \details This constructor only calls the constructor of the superclass, see the docs for ECLFilesComparator for more information.
+    ECLRegressionTest(const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance):
+        ECLFilesComparator(basename1, basename2, absTolerance, relTolerance) {}
 
-        // Only compare last occurrence
-        bool onlyLastOccurrence = false;
+    ~ECLRegressionTest();
 
-        // Accept extra keywords in the restart file of the 'new' simulation.
-        bool acceptExtraKeywords = false;
+    //! \brief Option to only compare last occurrence
+    void setOnlyLastReportNumber(bool onlyLastSequenceArg) {
+        this->onlyLastSequence = onlyLastSequenceArg;
+    }
 
+    int countDev() { return  deviations.size(); }
 
-        // Prints results stored in absDeviation and relDeviation.
-        void printResultsForKeyword(const std::string& keyword) const;
+    // Accept extra keywords: If this switch is set to true the comparison
+    // will ignore extra keywords which are only present
+    // in the new simulation.
 
-        // Function which compares data at specific occurrences and for a specific keyword type. The functions takes two occurrence inputs to also be able to
-        // compare keywords which are shifted relative to each other in the two files. This is for instance handy when running flow with restart from different timesteps,
-        // and comparing the last timestep from the two runs.
-        void boolComparisonForOccurrence(const std::string& keyword, int occurrence1, int occurrence2) const;
-        void charComparisonForOccurrence(const std::string& keyword, int occurrence1, int occurrence2) const;
-        void intComparisonForOccurrence(const std::string& keyword, int occurrence1, int occurrence2) const;
-        void doubleComparisonForOccurrence(const std::string& keyword, int occurrence1, int occurrence2);
-        // deviationsForCell throws an exception if both the absolute deviation AND the relative deviation
-        // are larger than absTolerance and relTolerance, respectively. In addition,
-        // if allowNegativeValues is passed as false, an exception will be thrown when the absolute value
-        // of a negative value exceeds absTolerance. If no exceptions are thrown, the absolute and relative deviations are added to absDeviation and relDeviation.
-        void deviationsForCell(double val1, double val2, const std::string& keyword, int occurrence1, int occurrence2, size_t kw_size, size_t cell, bool allowNegativeValues = true);
-    public:
-        //! \brief Sets up the regression test.
-        //! \param[in] file_type Specifies which filetype to be compared, possible inputs are UNRSTFILE, INITFILE and RFTFILE.
-        //! \param[in] basename1 Full path without file extension to the first case.
-        //! \param[in] basename2 Full path without file extension to the second case.
-        //! \param[in] absTolerance Tolerance for absolute deviation.
-        //! \param[in] relTolerance Tolerance for relative deviation.
-        //! \details This constructor only calls the constructor of the superclass, see the docs for ECLFilesComparator for more information.
-        ECLRegressionTest(int file_type, const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance):
-            ECLFilesComparator(file_type, basename1, basename2, absTolerance, relTolerance) {}
+    void setAcceptExtraKeywords(bool acceptExtraKeywordsArg) {
+        this->acceptExtraKeywords = acceptExtraKeywordsArg;
+    }
 
-        //! \brief Option to only compare last occurrence
-        void setOnlyLastOccurrence(bool onlyLastOccurrenceArg) {this->onlyLastOccurrence = onlyLastOccurrenceArg;}
+    void setIntegrationTest(bool inregrationTestArg) {
+        this->integrationTest = inregrationTestArg;
+    }
 
-        // Accept extra keywords: If this switch is set to true the comparison
-        // of restart files will ignore extra keywords which are only present
-        // in the new simulation.
-        void setAcceptExtraKeywords(bool acceptExtraKeywordsArg) { this->acceptExtraKeywords = acceptExtraKeywordsArg; }
+    void setPrintKeywordOnly(bool printArg) {
+        this->printKeywordOnly = printArg;
+    }
 
-        //! \brief Compares grid properties of the two cases.
-        // gridCompare() checks if both the number of active and global cells in the two cases are the same. If they are, and volumecheck is true, all cells are looped over to calculate the cell volume deviation for the two cases. If the both the relative and absolute deviation exceeds the tolerances, an exception is thrown.
-        void gridCompare(const bool volumecheck) const;
-        //! \brief Calculates deviations for all keywords.
-        // This function checks if the number of keywords of the two cases are equal, and if it is, resultsForKeyword() is called for every keyword. If not, an exception is thrown.
-        void results();
-        //! \brief Calculates deviations for a specific keyword.
-        //! \param[in] keyword Keyword which should be compared, if this keyword is absent in one of the cases, an exception will be thrown.
-        //! \details This function loops through every report step and every cell and compares the values for the given keyword from the two input cases. If the absolute or relative deviation between the two values for each step exceeds both the absolute tolerance and the relative tolerance (stored in ECLFilesComparator), an exception is thrown. In addition, some keywords are marked for "disallow negative values" -- these are SGAS, SWAT and PRESSURE. An exception is thrown if a value of one of these keywords is both negative and has an absolute value larger than the absolute tolerance. If no exceptions are thrown, resultsForKeyword() uses the private member funtion printResultsForKeyword to print the average and median deviations.
-        void resultsForKeyword(const std::string& keyword);
+    void compareSpesificKeyword(std::string keyword) {
+        this->spesificKeyword = keyword;
+    }
+    void compareSpesificRstReportStepNumber(int seqn) {
+        this->spesificSequence = seqn;
+    }
+
+    void setLoadBaseRunData(bool loadArg) {
+        this->loadBaseRunData = loadArg;
+    }
+
+    void loadGrids();
+    void printDeviationReport();
+
+    void gridCompare();
+
+    void results_rst();
+    void results_init();
+    void results_smry();
+    void results_rft();
+
+private:
+    bool checkFileName(const std::string& rootName, const std::string& extension, std::string& filename);
+
+    // Prints results stored in absDeviation and relDeviation.
+    void printResultsForKeyword(const std::string& keyword) const;
+    void printComparisonForKeywordLists(const std::vector<std::string>& arrayList1,
+                                        const std::vector<std::string>& arrayList2) const;
+
+    void printComparisonForKeywordLists(const std::vector<std::string>& arrayList1,
+                                        const std::vector<std::string>& arrayList2,
+                                        const std::vector<EIOD::eclArrType>& arrayType1,
+                                        const std::vector<EIOD::eclArrType>& arrayType2) const;
+
+    void printMissingKeywords(const std::vector<std::string>& arrayList1,
+                              const std::vector<std::string>& arrayList2) const;
+
+    void compareKeywords(const std::vector<std::string>& keywords1,
+                         const std::vector<std::string>& keywords2,
+                         const std::string& reference);
+
+    void checkSpesificKeyword(std::vector<std::string>& keywords1,
+                              std::vector<std::string>& keywords2,
+                              std::vector<EIOD::eclArrType>& arrayType1,
+                              std::vector<EIOD::eclArrType>& arrayType2,
+                              const std::string& reference);
+
+    template <typename T>
+    void compareVectors(const std::vector<T>& t1, const std::vector<T>& t2,
+                        const std::string& keyword, const std::string& reference);
+
+    template <typename T>
+    void compareFloatingPointVectors(const std::vector<T>& t1, const std::vector<T> &t2,
+                                     const std::string& keyword, const std::string& reference);
+
+    // deviationsForCell throws an exception if both the absolute deviation AND the relative deviation
+    // are larger than absTolerance and relTolerance, respectively. In addition,
+    // if allowNegativeValues is passed as false, an exception will be thrown when the absolute value
+    // of a negative value exceeds absTolerance. If no exceptions are thrown, the absolute and relative deviations are added to absDeviation and relDeviation.
+    // void deviationsForCell(double val1, double val2, const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, bool allowNegativeValues = true);
+
+    void deviationsForCell(double val1, double val2, const std::string& keyword,
+                           const std::string& reference, size_t kw_size, size_t cell,
+                           bool allowNegativeValues, bool useStrictTol);
+
+    template <typename T>
+    void deviationsForNonFloatingPoints(T val1, T val2, const std::string& keyword,
+                                        const std::string& reference,
+                                        size_t kw_size, size_t cell);
+
+    // These vectors store absolute and relative deviations, respecively. Note that they are whiped clean for every new keyword comparison.
+    std::vector<double> absDeviation, relDeviation;
+
+    // Keywords which should not contain negative values, i.e. uses allowNegativeValues = false in deviationsForCell():
+    const std::vector<std::string> keywordDisallowNegatives = {"SGAS", "SWAT", "PRESSURE"};
+
+    double strictAbsTol = 1e-6;
+    double strictRelTol = 1e-6;
+
+    // keywords that triggers strict tolerances
+    const std::vector<std::string> keywordsStrictTol = {"COORD", "ZCORN", "PORV", "DEPTH", "DX", "DY", "DZ", "PERMX", "PERMY", "PERMZ", "NTG",
+                                                        "TRANX", "TRANY", "TRANZ", "TRANNNC", "SGRP", "SWEL", "SCON", "DOUBHEAD"
+                                                       };
+
+    // Only compare last occurrence
+    bool onlyLastSequence = false;
+
+    bool integrationTest = false;
+
+    bool printKeywordOnly = false;
+
+    bool loadBaseRunData = false;
+
+    // spesific keyword to be compared
+    std::string spesificKeyword;
+
+    // spesific restart sequence to be compared
+    int spesificSequence = -1;
+
+    // Accept extra keywords in the restart file of the 'new' simulation.
+    bool acceptExtraKeywords = false;
+
+    EGrid* grid1 = nullptr;
+    EGrid* grid2 = nullptr;
 };
 
 #endif
