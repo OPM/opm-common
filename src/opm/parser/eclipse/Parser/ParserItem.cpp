@@ -400,9 +400,9 @@ ParserItem::itype ParserItem::from_string(const std::string& string_value) {
 
 std::string ParserItem::createCode(const std::string& indent) const {
     std::stringstream stream;
-    stream << indent << "ParserItem item(\"" << this->name() <<"\", " << this->type_literal() << ");" << std::endl;
+    stream << indent << "ParserItem item(\"" << this->name() <<"\", " << this->type_literal() << ");" << '\n';
     if (this->m_sizeType != ParserItem::item_size::SINGLE)
-        stream << indent << "item.setSizeType(" << this->size_literal() << ");"  << std::endl;
+        stream << indent << "item.setSizeType(" << this->size_literal() << ");"  << '\n';
 
     if( m_defaultSet ) {
         stream << indent << "item.setDefault( ";
@@ -422,11 +422,11 @@ std::string ParserItem::createCode(const std::string& indent) const {
         default:
             throw std::logic_error( "Item of unknown type." );
         }
-        stream << " );" << std::endl;
+        stream << " );" << '\n';
     }
 
     if (this->m_description.size() > 0)
-        stream << indent << "item.setDescription(\"" << this->m_description << "\");" << std::endl;
+        stream << indent << "item.setDescription(\"" << this->m_description << "\");" << '\n';
 
     return stream.str();
 }
@@ -548,17 +548,17 @@ DeckItem ParserItem::scan( RawRecord& record ) const {
 std::ostream& ParserItem::inlineClass( std::ostream& stream, const std::string& indent ) const {
     std::string local_indent = indent + "    ";
 
-    stream << indent << "class " << this->className() << " {" << std::endl
-           << indent << "public:" << std::endl
-           << local_indent << "static const std::string itemName;" << std::endl;
+    stream << indent << "class " << this->className() << " {" << '\n'
+           << indent << "public:" << '\n'
+           << local_indent << "static const std::string itemName;" << '\n';
 
     if( this->hasDefault() ) {
         stream << local_indent << "static const "
                << tag_name( this->data_type )
-               << " defaultValue;" << std::endl;
+               << " defaultValue;" << '\n';
     }
 
-    return stream << indent << "};" << std::endl;
+    return stream << indent << "};" << '\n';
 }
 
 std::string ParserItem::inlineClassInit(const std::string& parentClass,
@@ -568,7 +568,7 @@ std::string ParserItem::inlineClassInit(const std::string& parentClass,
     ss << "const std::string " << parentClass
        << "::" << this->className()
        << "::itemName = \"" << this->name()
-       << "\";" << std::endl;
+       << "\";" << '\n';
 
     if( !this->hasDefault() ) return ss.str();
 
@@ -591,7 +591,7 @@ std::string ParserItem::inlineClassInit(const std::string& parentClass,
     ss << "const " << typestring << " "
         << parentClass << "::" << this->className()
         << "::defaultValue = " << (defaultValue ? *defaultValue : defval() )
-        << ";" << std::endl;
+        << ";" << '\n';
 
     return ss.str();
 }

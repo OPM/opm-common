@@ -563,22 +563,22 @@ void set_dimensions( ParserItem& item,
 
     std::string ParserKeyword::createDeclaration(const std::string& indent) const {
         std::stringstream ss;
-        ss << indent << "class " << className() << " : public ParserKeyword {" << std::endl;
-        ss << indent << "public:" << std::endl;
+        ss << indent << "class " << className() << " : public ParserKeyword {" << '\n';
+        ss << indent << "public:" << '\n';
         {
             std::string local_indent = indent + "    ";
-            ss << local_indent << className() << "();" << std::endl;
-            ss << local_indent << "static const std::string keywordName;" << std::endl;
+            ss << local_indent << className() << "();" << '\n';
+            ss << local_indent << "static const std::string keywordName;" << '\n';
             if (m_records.size() > 0 ) {
                 for( const auto& record : *this ) {
                     for( const auto& item : record ) {
-                        ss << std::endl;
+                        ss << '\n';
                         item.inlineClass(ss , local_indent );
                     }
                 }
             }
         }
-        ss << indent << "};" << std::endl << std::endl << std::endl;
+        ss << indent << "};" << '\n' << '\n' << '\n';
         return ss.str();
     }
 
@@ -593,25 +593,25 @@ void set_dimensions( ParserItem& item,
         const std::string lhs = "keyword";
         const std::string indent = "  ";
 
-        ss << className() << "::" << className() << "( ) : ParserKeyword(\"" << m_name << "\") {" << std::endl;
+        ss << className() << "::" << className() << "( ) : ParserKeyword(\"" << m_name << "\") {" << '\n';
         {
             const std::string sizeString(ParserKeywordSizeEnum2String(m_keywordSizeType));
             ss << indent;
             switch (m_keywordSizeType) {
                 case SLASH_TERMINATED:
-                    ss << "setSizeType(" << sizeString << ");" << std::endl;
+                    ss << "setSizeType(" << sizeString << ");" << '\n';
                     break;
                 case UNKNOWN:
-                    ss << "setSizeType(" << sizeString << ");" << std::endl;
+                    ss << "setSizeType(" << sizeString << ");" << '\n';
                     break;
                 case FIXED:
-                    ss << "setFixedSize( (size_t) " << m_fixedSize << ");" << std::endl;
+                    ss << "setFixedSize( (size_t) " << m_fixedSize << ");" << '\n';
                     break;
                 case OTHER_KEYWORD_IN_DECK:
-                    ss << "setSizeType(" << sizeString << ");" << std::endl;
-                    ss << indent << "initSizeKeyword(\"" << keyword_size.keyword << "\",\"" << keyword_size.item << "\"," << keyword_size.shift << ");" << std::endl;
+                    ss << "setSizeType(" << sizeString << ");" << '\n';
+                    ss << indent << "initSizeKeyword(\"" << keyword_size.keyword << "\",\"" << keyword_size.item << "\"," << keyword_size.shift << ");" << '\n';
                     if (m_isTableCollection)
-                        ss << "setTableCollection( true );" << std::endl;
+                        ss << "setTableCollection( true );" << '\n';
                     break;
             }
         }
@@ -621,7 +621,7 @@ void set_dimensions( ParserItem& item,
              sectionNameIt != m_validSectionNames.end();
              ++sectionNameIt)
         {
-            ss << indent << "addValidSectionName(\"" << *sectionNameIt << "\");" << std::endl;
+            ss << indent << "addValidSectionName(\"" << *sectionNameIt << "\");" << '\n';
         }
 
         // add the deck names
@@ -630,55 +630,55 @@ void set_dimensions( ParserItem& item,
              deckNameIt != m_deckNames.end();
              ++deckNameIt)
         {
-            ss << indent << "addDeckName(\"" << *deckNameIt << "\");" << std::endl;
+            ss << indent << "addDeckName(\"" << *deckNameIt << "\");" << '\n';
         }
 
         // set the deck name match regex
         if (hasMatchRegex())
-            ss << indent << "setMatchRegex(\"" << m_matchRegexString << "\");" << std::endl;
+            ss << indent << "setMatchRegex(\"" << m_matchRegexString << "\");" << '\n';
 
         {
             if (m_records.size() > 0 ) {
                 for( const auto& record : *this ) {
                     const std::string local_indent = indent + "   ";
-                    ss << indent << "{" << std::endl;
-                    ss << local_indent << "ParserRecord record;" << std::endl;
+                    ss << indent << "{" << '\n';
+                    ss << local_indent << "ParserRecord record;" << '\n';
                     for( const auto& item : record ) {
-                        ss << local_indent << "{" << std::endl;
+                        ss << local_indent << "{" << '\n';
                         {
                             std::string indent3 = local_indent + "   ";
                             ss << item.createCode(indent3);
                             for (size_t idim=0; idim < item.numDimensions(); idim++)
-                                ss << indent3 <<"item.push_backDimension(\"" << item.getDimension( idim ) << "\");" << std::endl;
+                                ss << indent3 <<"item.push_backDimension(\"" << item.getDimension( idim ) << "\");" << '\n';
                             {
                                 std::string addItemMethod = "addItem";
                                 if (isDataKeyword())
                                     addItemMethod = "addDataItem";
 
-                                ss << indent3 << "record." << addItemMethod << "(item);" << std::endl;
+                                ss << indent3 << "record." << addItemMethod << "(item);" << '\n';
                             }
                         }
-                        ss << local_indent << "}" << std::endl;
+                        ss << local_indent << "}" << '\n';
                     }
 
                     if (record.isDataRecord())
-                        ss << local_indent << "addDataRecord( record );" << std::endl;
+                        ss << local_indent << "addDataRecord( record );" << '\n';
                     else
-                        ss << local_indent << "addRecord( record );" << std::endl;
+                        ss << local_indent << "addRecord( record );" << '\n';
 
-                    ss << indent << "}" << std::endl;
+                    ss << indent << "}" << '\n';
                 }
             }
         }
-        ss << "}" << std::endl;
+        ss << "}" << '\n';
 
-        ss << "const std::string " << className() << "::keywordName = \"" << getName() << "\";" << std::endl;
+        ss << "const std::string " << className() << "::keywordName = \"" << getName() << "\";" << '\n';
         for( const auto& record : *this ) {
             for( const auto& item : record ) {
                 ss << item.inlineClassInit(className());
             }
         }
-        ss << std::endl;
+        ss << '\n';
         return ss.str();
     }
 
