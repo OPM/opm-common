@@ -248,6 +248,10 @@ BOOST_AUTO_TEST_CASE( find ) {
     BOOST_CHECK_EQUAL( state.find( 300 ) ,  2 );
     BOOST_CHECK_EQUAL( state.find( 400 ) ,  4 );
     BOOST_CHECK_EQUAL( state.find( 500 ) ,  -1 );
+
+
+    auto pred = [] (const int& elm) { return elm == 400 ;};
+    BOOST_CHECK_EQUAL( state.find_if(pred), 4);
 }
 
 
