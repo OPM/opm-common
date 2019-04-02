@@ -1048,8 +1048,10 @@ namespace Opm {
 
                 WellInjectionProperties properties(well.getInjectionPropertiesCopy(currentStep));
                 properties.handleWCONINJH(record, well.isProducer(currentStep), well.name(), section.unitSystem());
-                if (well.setInjectionProperties(currentStep, properties))
+                if (well.setInjectionProperties(currentStep, properties)) {
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                    this->addWellEvent( well.name(), ScheduleEvents::INJECTION_UPDATE, currentStep);
+                }
 
                 if ( ! well.getAllowCrossFlow() && (properties.surfaceInjectionRate == 0)) {
                     std::string msg =
