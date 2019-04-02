@@ -197,3 +197,26 @@ variousParam(const bool e300_radial,
 
     return *this;
 }
+
+Opm::RestartIO::LogiHEAD&
+Opm::RestartIO::LogiHEAD::pvtModel(const PVTModel& pvt)
+{
+    this->data_[IsLiveOil] = pvt.isLiveOil;
+    this->data_[IsWetGas ] = pvt.isWetGas;
+    this->data_[ConstCo  ] = pvt.constComprOil;
+
+    return *this;
+}
+
+Opm::RestartIO::LogiHEAD&
+Opm::RestartIO::LogiHEAD::saturationFunction(const SatfuncFlags& satfunc)
+{
+    this->data_[DirKr]     = satfunc.useDirectionalRelPerm;
+    this->data_[E100RevKr] = satfunc.useReversibleRelPerm;
+    this->data_[EndScale]  = satfunc.useEndScale;
+    this->data_[DirEPS]    = satfunc.useDirectionalEPS;
+    this->data_[RevEPS]    = satfunc.useReversibleEPS;
+    this->data_[AltEPS]    = satfunc.useAlternateEPS;
+
+    return *this;
+}
