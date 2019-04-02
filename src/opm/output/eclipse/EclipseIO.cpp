@@ -50,6 +50,7 @@
 #include <ert/ecl/EclFilename.hpp>
 
 #include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_grid.h>
@@ -92,6 +93,32 @@ void writeKeyword( ERT::FortIO& fortio ,
 
 }
 
+    void writeKeyword(ERT::FortIO&             fortio,
+                      const std::string&       keywordName,
+                      const std::vector<bool>& data)
+    {
+        auto freeKw = [](ecl_kw_type* kw)
+        {
+            if (kw != nullptr) { ecl_kw_free(kw); }
+        };
+
+        using KWPtr =
+            std::unique_ptr<ecl_kw_type, decltype(freeKw)>;
+
+        auto kw = KWPtr {
+            ecl_kw_alloc(keywordName.c_str(), data.size(), ECL_BOOL),
+            freeKw
+        };
+
+        if (kw == nullptr) { return; }
+
+        const auto n = data.size();
+        for (auto i = 0*n; i < n; ++i) {
+            ecl_kw_iset_bool(kw.get(), static_cast<int>(i), data[i]);
+        }
+
+        ecl_kw_fwrite(kw.get(), fortio.get());
+    }
 
 
 
