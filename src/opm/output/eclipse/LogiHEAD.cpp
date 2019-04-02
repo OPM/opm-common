@@ -1,16 +1,39 @@
 #include <opm/output/eclipse/LogiHEAD.hpp>
 
+#include <opm/output/eclipse/VectorItems/logihead.hpp>
+
 #include <utility>
 #include <vector>
 
+namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+
 enum index : std::vector<int>::size_type {
-lh_000	=	0	,		//	TRUE
-lh_001	=	1	,		//	TRUE
-lh_002	=	2	,		//	FALSE
-lh_003	=	3	,		//	FALSE		Flag set to FALSE for a non-radial model, TRUE for a radial model (ECLIPSE 300 and other simulators)
-lh_004	=	4	,		//	FALSE		Flag set to FALSE for a non-radial model, TRUE for a radial model (ECLIPSE 100)
+    // Flag to signify live oil (dissolved gas) PVT
+    IsLiveOil = VI::logihead::IsLiveOil,
+
+    // Flag to signify wet gas (vaporised oil) PVT
+    IsWetGas = VI::logihead::IsWetGas,
+
+    // Flag to signify directional relative permeability.
+    DirKr = VI::logihead::DirKr,
+
+    // ECLIPSE 100 flag for reversible rel.perm.
+    E100RevKr = VI::logihead::E100RevKr,
+
+    // ECLIPSE 100 flag for radial geometry.
+    E100Radial = VI::logihead::E100Radial,
+
+    // ECLIPSE 300 flag for radial geometry.
+    E300Radial = VI::logihead::E300Radial,
+
+    // ECLIPSE 300 flag for reversible rel.perm.
+    E300RevKr = VI::logihead::E300RevKr,
+
 lh_005	=	5	,		//	FALSE
-lh_006	=	6	,		//	FALSE 		Flag set to FALSE when no hysteresis, TRUE when hysteresis option is used
+
+    // Flag to enable hysteresis
+    Hyster = VI::logihead::Hyster,
+
 lh_007	=	7	,		//	FALSE
 lh_008	=	8	,		//	FALSE
 lh_009	=	9	,		//	FALSE
@@ -18,12 +41,24 @@ lh_010	=	10	,		//	FALSE
 lh_011	=	11	,		//	FALSE
 lh_012	=	12	,		//	FALSE
 lh_013	=	13	,		//	FALSE
-lh_014	=	14	,		//	FALSE		Flag for dual porosity model
+
+    // Flag to activate dual porosity.
+    DualPoro = VI::logihead::DualPoro,
+
 lh_015	=	15	,		//	FALSE
-lh_016	=	16	,		//	TRUE
-lh_017	=	17	,		//	FALSE
-lh_018	=	18	,		//	TRUE
-lh_019	=	19	,		//
+
+    // Flag to activate saturation function end-point scaling.
+    EndScale = VI::logihead::EndScale,
+
+    // Flag to activate directional end-point scaling.
+    DirEPS = VI::logihead::DirEPS,
+
+    // Flag to activate reversible end-point scaling.  Typically True.
+    RevEPS = VI::logihead::RevEPS,		//	TRUE
+
+    // Flag to activate alternative end-point scaling (3-pt option)
+    AltEPS = VI::logihead::AltEPS,
+
 lh_020	=	20	,		//	FALSE
 lh_021	=	21	,		//	FALSE
 lh_022	=	22	,		//	FALSE
@@ -42,7 +77,10 @@ lh_034	=	34	,		//	FALSE
 lh_035	=	35	,		//	FALSE
 lh_036	=	36	,		//	FALSE
 lh_037	=	37	,		//
-lh_038	=	38	,		//	FALSE
+
+    // Flag to signify constant oil compressibility
+    ConstCo = VI::logihead::ConstCo,
+
 lh_039	=	39	,		//	FALSE
 lh_040	=	40	,		//	FALSE
 lh_041	=	41	,		//	FALSE
@@ -79,7 +117,10 @@ lh_071	=	71	,		//	FALSE
 lh_072	=	72	,		//	FALSE
 lh_073	=	73	,		//	FALSE
 lh_074	=	74	,		//	FALSE
-lh_075	=	75	,		//	TRUE	If segmented well model is used
+
+    // TRUE if segmented well model is used
+    HasMSWells = VI::logihead::HasMSWells,
+
 lh_076	=	76	,		//	TRUE
 lh_077	=	77	,		//	FALSE
 lh_078	=	78	,		//	FALSE
@@ -126,10 +167,10 @@ lh_118	=	118	,		//	FALSE
 lh_119	=	119	,		//	FALSE
 lh_120	=	120	,		//	FALSE
 
-  // ---------------------------------------------------------------------
-  // ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
 
-  LOGIHEAD_NUMBER_OF_ITEMS        // MUST be last element of enum.
+    LOGIHEAD_NUMBER_OF_ITEMS        // MUST be last element of enum.
 };
 
 // =====================================================================
@@ -142,25 +183,17 @@ Opm::RestartIO::LogiHEAD::LogiHEAD()
 
 Opm::RestartIO::LogiHEAD&
 Opm::RestartIO::LogiHEAD::
-variousParam(const bool e300_radial, const bool e100_radial, const int nswlmx, const bool enableHyster)
+variousParam(const bool e300_radial,
+             const bool e100_radial,
+             const int  nswlmx,
+             const bool enableHyster)
 {
-    this -> data_[lh_000] = true;
-    this -> data_[lh_001] = true;
-    this -> data_[lh_003] = e300_radial;
-    this -> data_[lh_004] = e100_radial;
-    this -> data_[lh_006] = enableHyster;
-    //this -> data_[lh_016] = true;
-    //this -> data_[lh_018] = true;
-    //this -> data_[lh_031] = true;
-    //this -> data_[lh_044] = true;
-    this -> data_[lh_075] = nswlmx >= 1; // True if MS Wells exist.
-    //this -> data_[lh_076] = true;
-    //this -> data_[lh_087] = true;
-    //this -> data_[lh_099] = true;
-    //this -> data_[lh_113] = true;
-    //this -> data_[lh_114] = true;
-    //this -> data_[lh_115] = true;
-    //this -> data_[lh_117] = true;
+    this -> data_[IsLiveOil]  = true;
+    this -> data_[IsWetGas]   = true;
+    this -> data_[E300Radial] = e300_radial;
+    this -> data_[E100Radial] = e100_radial;
+    this -> data_[Hyster]     = enableHyster;
+    this -> data_[HasMSWells] = nswlmx >= 1; // True if MS Wells exist.
 
     return *this;
 }
