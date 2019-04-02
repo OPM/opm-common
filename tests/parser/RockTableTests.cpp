@@ -53,6 +53,8 @@ BOOST_AUTO_TEST_CASE( Rock2d ) {
             "TABDIMS\n"
             "1 1 /\n"
             "\n"
+            "FIELD\n"
+            "\n"
             "ROCKCOMP\n"
             " REVERS 2 /\n"
             "\n"
@@ -60,8 +62,8 @@ BOOST_AUTO_TEST_CASE( Rock2d ) {
             "1 1.0\n"
             "10 2.0\n"
             " / \n"
-            "1 1.0\n"
-            "10 2.0\n"
+            "2 1.1\n"
+            "20 2.1\n"
             " / \n"
             "ROCK2D\n"
             " 0.0     0.01\n"
@@ -131,10 +133,9 @@ BOOST_AUTO_TEST_CASE( Rock2d ) {
     BOOST_REQUIRE_EQUAL(rec1.sizeMultValues(), rockwnodTable1.getSaturationColumn().size());
     BOOST_REQUIRE_EQUAL(rec2.sizeMultValues(), rockwnodTable2.getSaturationColumn().size());
     BOOST_REQUIRE_EQUAL(0.0, rockwnodTable1.getSaturationColumn()[0]);
-    BOOST_REQUIRE_EQUAL(1, overburdTable.getDepthColumn()[0]);
-    BOOST_REQUIRE_EQUAL(1.0, overburdTable.getOverburdenPressureColumn()[0]);
+    // convert from FIELD units to SI units
+    BOOST_CHECK_CLOSE(1.0 / 3.28084, overburdTable.getDepthColumn()[0], 1e-4);
+    BOOST_CHECK_CLOSE(1.0 * 6894.76, overburdTable.getOverburdenPressureColumn()[0], 1e-4);
     BOOST_REQUIRE_EQUAL(0.0, rec1tr.getPressureValue(0));
     BOOST_REQUIRE_EQUAL(0.13, rec1tr.getTransMultValue(1,2));
-
-    //BOOST_CHECK_CLOSE( 2, rec1.size() , 1e-5 );
 }
