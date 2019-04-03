@@ -56,8 +56,6 @@ namespace Opm {
           m_solventFraction( timeMap, 0.0 ),
           m_tracerProperties( timeMap, WellTracerProperties() ),
           m_groupName( timeMap, "" ),
-          m_rft( timeMap, false ),
-          m_plt( timeMap, false ),
           m_headI( timeMap, headI ),
           m_headJ( timeMap, headJ ),
           m_refDepth( timeMap, refDepth ),
@@ -401,96 +399,8 @@ namespace Opm {
 
 
 
-    void Well::updateRFTActive(size_t time_step, RFTConnections::RFTEnum mode) {
-        switch(mode) {
-        case RFTConnections::RFTEnum::YES:
-            m_rft.update_elm(time_step, true);
-            break;
-        case RFTConnections::RFTEnum::TIMESTEP:
-            m_rft.update_elm(time_step, true);
-            break;
-        case RFTConnections::RFTEnum::REPT:
-            m_rft.update(time_step, true);
-            break;
-        case RFTConnections::RFTEnum::FOPN:
-            setRFTForWellWhenFirstOpen(time_step);
-            break;
-        case RFTConnections::RFTEnum::NO:
-            m_rft.update(time_step, false);
-            break;
-        default:
-            break;
-        }
-    }
-
-    void Well::updatePLTActive(size_t time_step, PLTConnections::PLTEnum mode){
-        switch(mode) {
-        case PLTConnections::PLTEnum::YES:
-            m_plt.update_elm(time_step, true);
-            break;
-        case PLTConnections::PLTEnum::REPT:
-            m_plt.update(time_step, true);
-            break;
-        case PLTConnections::PLTEnum::NO:
-            m_plt.update(time_step, false);
-            break;
-        default:
-            break;
-        }
-    }
-
-    bool Well::getRFTActive(size_t time_step) const{
-        return bool( m_rft.get(time_step) );
-    }
-
-    bool Well::getPLTActive(size_t time_step) const{
-     return bool( m_plt.get(time_step) );
-    }
-
-    /*
-      The first report step where *either* RFT or PLT output is active.
-    */
-    int Well::firstRFTOutput( ) const {
-        int rft_output = m_rft.find( true );
-        int plt_output = m_plt.find( true );
-
-        if (rft_output < plt_output) {
-            if (rft_output >= 0)
-                return rft_output;
-            else
-                return plt_output;
-        } else {
-            if (plt_output >= 0)
-                return plt_output;
-            else
-                return rft_output;
-        }
-    }
-
-
     size_t Well::firstTimeStep( ) const {
         return m_creationTimeStep;
-    }
-
-
-    int Well::findWellFirstOpen(int startTimeStep) const{
-        for( size_t i = startTimeStep; i < this->timesteps ;i++){
-            if(getStatus(i)==WellCommon::StatusEnum::OPEN){
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    void Well::setRFTForWellWhenFirstOpen(size_t currentStep){
-        int time;
-        if(getStatus(currentStep)==WellCommon::StatusEnum::OPEN ){
-            time = currentStep;
-        }else {
-            time = findWellFirstOpen(currentStep);
-        }
-        if (time > -1)
-            updateRFTActive(time, RFTConnections::RFTEnum::YES);
     }
 
     WellCompletion::CompletionOrderEnum Well::getWellConnectionOrdering() const {

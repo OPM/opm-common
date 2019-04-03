@@ -86,7 +86,8 @@ namespace Opm {
         m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
-        udq_config(this->m_timeMap, std::make_shared<UDQInput>(deck))
+        udq_config(this->m_timeMap, std::make_shared<UDQInput>(deck)),
+        rft_config(this->m_timeMap)
     {
         m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
@@ -402,13 +403,11 @@ namespace Opm {
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
             const DeckKeyword& keyword = *rftPair->first;
             size_t timeStep = rftPair->second;
-            if (keyword.name() == "WRFT") {
+            if (keyword.name() == "WRFT")
                 handleWRFT(keyword,  timeStep);
-            }
 
-            if (keyword.name() == "WRFTPLT"){
+            if (keyword.name() == "WRFTPLT")
                 handleWRFTPLT(keyword, timeStep);
-            }
         }
 
         checkUnhandledKeywords(section);
@@ -1076,7 +1075,7 @@ namespace Opm {
 
     void Schedule::handleWELOPEN( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
 
-        auto all_defaulted = []( const DeckRecord& rec ) {
+        auto conn_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
                 return item.defaultApplied( 0 );
             };
@@ -1098,7 +1097,7 @@ namespace Opm {
             /* if all records are defaulted or just the status is set, only
              * well status is updated
              */
-            if( all_defaulted( record ) ) {
+            if( conn_defaulted( record ) ) {
                 const auto well_status = WellCommon::StatusFromString( status_str );
                 for(const auto& well_name : well_names) {
                     auto& well = this->m_wells.at(well_name);
@@ -1111,6 +1110,8 @@ namespace Opm {
                         OpmLog::note(msg);
                     } else {
                         this->updateWellStatus( well, currentStep, well_status );
+                        if (well_status == open)
+                            this->rft_config.addWellOpen(well_name, currentStep);
                     }
                 }
 
@@ -1588,14 +1589,11 @@ namespace Opm {
             const auto well_names = wellNames(wellNamePattern, currentStep);
             for(const auto& well_name : well_names) {
                 auto& well = this->m_wells.at(well_name);
-                well.updateRFTActive( currentStep, RFTConnections::RFTEnum::YES);
+                this->rft_config.updateRFT(well_name, currentStep, RFTConnections::RFTEnum::YES);
             }
         }
 
-        for( auto& well_pair : this->m_wells ) {
-            auto& well = well_pair.second;
-            well.setRFTForWellWhenFirstOpen( currentStep );
-        }
+        this->rft_config.setWellOpenRFT(currentStep);
     }
 
     void Schedule::handleWRFTPLT( const DeckKeyword& keyword,  size_t currentStep) {
@@ -1607,11 +1605,14 @@ namespace Opm {
             PLTConnections::PLTEnum PLTKey = PLTConnections::PLTEnumFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
             const auto well_names = wellNames(wellNamePattern, currentStep);
             for(const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                well.updateRFTActive( currentStep, RFTKey );
-                well.updatePLTActive( currentStep, PLTKey );
+                this->rft_config.updateRFT(well_name, currentStep, RFTKey);
+                this->rft_config.updatePLT(well_name, currentStep, PLTKey);
             }
         }
+    }
+
+    const RFTConfig& Schedule::rftConfig() const {
+        return this->rft_config;
     }
 
     void Schedule::invalidNamePattern( const std::string& namePattern,  const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {

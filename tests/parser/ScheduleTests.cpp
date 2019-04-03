@@ -855,19 +855,13 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
+    const auto& rft_config = schedule.rftConfig();
 
-    {
-        auto* well = schedule.getWell("OP_1");
-        BOOST_CHECK_EQUAL(well->getRFTActive(2),true);
-        BOOST_CHECK_EQUAL(2 , well->firstRFTOutput( ));
-    }
-
-    {
-        auto* well = schedule.getWell("OP_2");
-        BOOST_CHECK_EQUAL(well->getRFTActive(3),true);
-        BOOST_CHECK_EQUAL(3 , well->firstRFTOutput( ));
-    }
+    BOOST_CHECK_EQUAL(2 , rft_config.firstRFTOutput());
+    BOOST_CHECK_EQUAL(true, rft_config.rft("OP_1", 2));
+    BOOST_CHECK_EQUAL(true, rft_config.rft("OP_2", 3));
 }
+
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     Opm::Parser parser;
@@ -919,15 +913,17 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
+    const auto& rft_config = schedule.rftConfig();
     auto* well = schedule.getWell("OP_1");
 
     size_t currentStep = 3;
-    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
+    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", currentStep),false);
     currentStep = 4;
-    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),true);
+    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", currentStep),true);
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
+
     currentStep = 5;
-    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
+    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", currentStep),false);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {

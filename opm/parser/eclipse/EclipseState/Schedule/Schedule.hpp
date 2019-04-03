@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -157,6 +158,7 @@ namespace Opm
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
 
+        const RFTConfig& rftConfig() const;
         const Events& getEvents() const;
         const Events& getWellEvents(const std::string& well) const;
         bool hasWellEvent(const std::string& well, uint64_t event_mask, size_t reportStep) const;
@@ -190,6 +192,7 @@ namespace Opm
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQInput>> udq_config;
+        RFTConfig rft_config;
 
         WellProducer::ControlModeEnum m_controlModeWHISTCTL;
         Actions m_actions;
