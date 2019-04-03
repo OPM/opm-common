@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -2939,4 +2940,50 @@ BOOST_AUTO_TEST_CASE(WellNames) {
 
     auto abs_all = schedule.wellNames();
     BOOST_CHECK_EQUAL(abs_all.size(), 9);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
+    TimeMap tm(Opm::TimeMap::mkdate(2010, 1,1));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+
+    RFTConfig conf(tm);
+    BOOST_CHECK_THROW( conf.rft("W1", 100), std::invalid_argument);
+    BOOST_CHECK_THROW( conf.plt("W1", 100), std::invalid_argument);
+
+    BOOST_CHECK(!conf.rft("W1", 2));
+    BOOST_CHECK(!conf.plt("W1", 2));
+
+
+    conf.setWellOpenRFT(2);
+    BOOST_CHECK(!conf.getWellOpenRFT("W1", 0));
+
+
+    conf.updateRFT("W1", 2, RFTConnections::YES);
+    BOOST_CHECK(conf.rft("W1", 2));
+    BOOST_CHECK(!conf.rft("W1", 1));
+    BOOST_CHECK(!conf.rft("W1", 3));
+
+    conf.updateRFT("W2", 2, RFTConnections::REPT);
+    conf.updateRFT("W2", 4, RFTConnections::NO);
+    BOOST_CHECK(!conf.rft("W2", 1));
+    BOOST_CHECK( conf.rft("W2", 2));
+    BOOST_CHECK( conf.rft("W2", 3));
+    BOOST_CHECK(!conf.rft("W2", 4));
+
+
+    conf.setWellOpenRFT("W3");
+    BOOST_CHECK(conf.getWellOpenRFT("W3", 2));
+
+    conf.updateRFT("W4", 2, RFTConnections::FOPN);
+    BOOST_CHECK(conf.getWellOpenRFT("W4", 2));
+
+
+    conf.addWellOpen("W10", 2);
+    conf.addWellOpen("W100", 3);
 }
