@@ -149,7 +149,7 @@ void RFT::writeTimeStep( const Schedule& schedule,
             continue;
 
         auto* well = schedule.getWell(well_name);
-        auto* rft_node = ecl_rft_node_alloc_new( well_name.c_str(), "RFT", current_time, days );
+        rft rft_node(ecl_rft_node_alloc_new( well_name.c_str(), "RFT", current_time, days ));
         const auto& wellData = wellDatas.at(well_name);
 
         if (wellData.connections.empty())
@@ -180,11 +180,10 @@ void RFT::writeTimeStep( const Schedule& schedule,
             auto* cell = ecl_rft_cell_alloc_RFT(
                             i, j, k, depth, press, satwat, satgas );
 
-            ecl_rft_node_append_cell( rft_node, cell );
+            ecl_rft_node_append_cell( rft_node.get(), cell );
         }
 
-        rft ecl_node( rft_node );
-        ecl_rft_node_fwrite( ecl_node.get(), fortio, units.getEclType() );
+        ecl_rft_node_fwrite( rft_node.get(), fortio, units.getEclType() );
     }
 
     fortio_fclose( fortio );
