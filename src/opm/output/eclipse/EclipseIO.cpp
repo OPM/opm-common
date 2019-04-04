@@ -156,6 +156,11 @@ void writeKeyword( ERT::FortIO& fortio ,
             pvt.isWetGas = phases.active(::Opm::Phase::GAS) &&
                 !tabMgr.getPvtgTables().empty();
 
+            pvt.constComprOil = phases.active(::Opm::Phase::OIL) &&
+                !(pvt.isLiveOil ||
+                  tabMgr.hasTables("PVDO") ||
+                  tabMgr.getPvcdoTable().empty());
+
             auto lh = ::Opm::RestartIO::LogiHEAD{}
                  .variousParam(false, false,
                                wsd.maxSegmentedWells(),
