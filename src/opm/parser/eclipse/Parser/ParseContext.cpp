@@ -79,6 +79,8 @@ namespace Opm {
         addKey(PARSE_MISSING_INCLUDE, InputError::EXIT1);
         addKey(PARSE_LONG_KEYWORD, InputError::WARN);
 
+        addKey(UNIT_SYSTEM_MISMATCH, InputError::THROW_EXCEPTION);
+
         this->addKey(RUNSPEC_NUMWELLS_TOO_LARGE, InputError::DELAYED_EXIT1);
         this->addKey(RUNSPEC_CONNS_PER_WELL_TOO_LARGE, InputError::DELAYED_EXIT1);
         this->addKey(RUNSPEC_NUMGROUPS_TOO_LARGE, InputError::DELAYED_EXIT1);
@@ -309,6 +311,8 @@ namespace Opm {
     const std::string ParseContext::PARSE_MISSING_SECTIONS = "PARSE_MISSING_SECTIONS";
     const std::string ParseContext::PARSE_MISSING_INCLUDE = "PARSE_MISSING_INCLUDE";
     const std::string ParseContext::PARSE_LONG_KEYWORD = "PARSE_LONG_KEYWORD";
+
+    const std::string ParseContext::UNIT_SYSTEM_MISMATCH = "UNIT_SYSTEM_MISMATCH";
 
     const std::string ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE = "RUNSPEC_NUMWELLS_TOO_LARGE";
     const std::string ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE = "RUNSPEC_CONNS_PER_WELL_TOO_LARGE";

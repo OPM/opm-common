@@ -218,6 +218,12 @@ namespace Opm {
         const static std::string PARSE_LONG_KEYWORD;
 
         /*
+          The unit system specified via the FILEUNIT keyword is different from the unit
+          system used by the deck.
+        */
+        const static std::string UNIT_SYSTEM_MISMATCH;
+
+        /*
           Some property modfiers can be modified in the Schedule
           section; this effectively means that Eclipse supports time
           dependent geology. This is marked as an exocit special
