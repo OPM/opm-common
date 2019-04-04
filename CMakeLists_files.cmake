@@ -273,6 +273,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateWellData.cpp
           tests/test_AggregateGroupData.cpp
           tests/test_AggregateMSWData.cpp
+          tests/test_AggregateConnectionData.cpp
           tests/test_ArrayDimChecker.cpp
           tests/test_CharArrayNullTerm.cpp
           tests/test_EclipseIO.cpp
