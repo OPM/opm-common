@@ -40,7 +40,7 @@ enum DeckChecks {
 
 // some semantical correctness checks of the deck. this method adds a warning to
 // the deck object if any issue is found ...
-bool checkDeck( Deck& deck, const Parser&, size_t enabledChecks = AllChecks);
+bool checkDeck( const Deck& deck, const Parser&, size_t enabledChecks = AllChecks);
 
 }
 

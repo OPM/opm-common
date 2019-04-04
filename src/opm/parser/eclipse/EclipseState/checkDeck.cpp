@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
 namespace Opm {
-bool checkDeck( Deck& deck, const Parser& parser, size_t enabledChecks) {
+bool checkDeck( const Deck& deck, const Parser& parser, size_t enabledChecks) {
     bool deckValid = true;
 
     // make sure that the deck does not contain unknown keywords
