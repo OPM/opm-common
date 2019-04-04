@@ -102,9 +102,9 @@ class RFT {
          const std::string&  basename,
          bool format );
 
-        void writeTimeStep( std::vector< const Well* >,
+        void writeTimeStep( const Schedule& schedule,
                             const EclipseGrid& grid,
-                            int report_step,
+                            std::size_t report_step,
                             time_t current_time,
                             double days,
                             const UnitSystem& units,
@@ -123,35 +123,34 @@ class RFT {
 {}
 
 
-void RFT::writeTimeStep( std::vector< const Well* > wells,
+void RFT::writeTimeStep( const Schedule& schedule,
                          const EclipseGrid& grid,
-                         int report_step,
+                         std::size_t report_step,
                          time_t current_time,
                          double days,
                          const UnitSystem& units,
                          data::Wells wellDatas) {
     using rft = ERT::ert_unique_ptr< ecl_rft_node_type, ecl_rft_node_free >;
+    const auto& rft_config = schedule.rftConfig();
+    auto well_names = schedule.wellNames(report_step);
+    if (!rft_config.active(report_step))
+        return;
 
     fortio_type * fortio;
-    int first_report_step = report_step;
 
-    for (const auto* well : wells)
-        first_report_step = std::min( first_report_step, well->firstRFTOutput());
-
-    if (report_step > first_report_step)
+    if (report_step > rft_config.firstRFTOutput())
         fortio = fortio_open_append( filename.c_str() , fmt_file , ECL_ENDIAN_FLIP );
     else
         fortio = fortio_open_writer( filename.c_str() , fmt_file , ECL_ENDIAN_FLIP );
 
-    for ( const auto& well : wells ) {
-        if( !( well->getRFTActive( report_step )
-            || well->getPLTActive( report_step ) ) )
+    for ( const auto& well_name : well_names ) {
+
+        if (!(rft_config.rft(well_name, report_step) || rft_config.plt(well_name, report_step)))
             continue;
 
-        auto* rft_node = ecl_rft_node_alloc_new( well->name().c_str(), "RFT",
-                current_time, days );
-
-        const auto& wellData = wellDatas.at(well->name());
+        auto* well = schedule.getWell(well_name);
+        rft rft_node(ecl_rft_node_alloc_new( well_name.c_str(), "RFT", current_time, days ));
+        const auto& wellData = wellDatas.at(well_name);
 
         if (wellData.connections.empty())
             continue;
@@ -181,11 +180,10 @@ void RFT::writeTimeStep( std::vector< const Well* > wells,
             auto* cell = ecl_rft_cell_alloc_RFT(
                             i, j, k, depth, press, satwat, satgas );
 
-            ecl_rft_node_append_cell( rft_node, cell );
+            ecl_rft_node_append_cell( rft_node.get(), cell );
         }
 
-        rft ecl_node( rft_node );
-        ecl_rft_node_fwrite( ecl_node.get(), fortio, units.getEclType() );
+        ecl_rft_node_fwrite( rft_node.get(), fortio, units.getEclType() );
     }
 
     fortio_fclose( fortio );
@@ -471,19 +469,13 @@ void EclipseIO::writeTimeStep(int report_step,
     if( isSubstep )
         return;
 
-    {
-        std::vector<const Well*> sched_wells = this->impl->schedule.getWells( report_step );
-        const auto rft_active = [report_step] (const Well* w) { return w->getRFTActive( report_step ) || w->getPLTActive( report_step ); };
-        if (std::any_of(sched_wells.begin(), sched_wells.end(), rft_active)) {
-            this->impl->rft.writeTimeStep( sched_wells,
-                                           grid,
-                                           report_step,
-                                           secs_elapsed + this->impl->schedule.posixStartTime(),
-                                           units.from_si( UnitSystem::measure::time, secs_elapsed ),
-                                           units,
-                                           value.wells );
-        }
-    }
+    this->impl->rft.writeTimeStep( schedule,
+                                   grid,
+                                   report_step,
+                                   secs_elapsed + this->impl->schedule.posixStartTime(),
+                                   units.from_si( UnitSystem::measure::time, secs_elapsed ),
+                                   units,
+                                   value.wells );
 
  }
 

@@ -158,11 +158,6 @@ namespace Opm {
         bool                            setEconProductionLimits(const size_t timeStep, const WellEconProductionLimits& productionlimits);
         const WellEconProductionLimits& getEconProductionLimits(const size_t timeStep) const;
 
-        int  firstRFTOutput( ) const;
-        bool getRFTActive(size_t time_step) const;
-        void updateRFTActive(size_t time_step, RFTConnections::RFTEnum mode);
-        bool getPLTActive(size_t time_step) const;
-        void updatePLTActive(size_t time_step, PLTConnections::PLTEnum mode);
         int  findWellFirstOpen(int startTimeStep) const;
 
         /*
@@ -170,7 +165,6 @@ namespace Opm {
           WELSPECS, actually opening the well might be later.
         */
         size_t firstTimeStep( ) const;
-        void setRFTForWellWhenFirstOpen(size_t currentStep);
 
         static bool wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern);
 
@@ -193,7 +187,6 @@ namespace Opm {
         void handleWELOPEN(const DeckRecord& record, size_t time_step, WellCompletion::StateEnum status);
         void handleWPIMULT(const DeckRecord& record, size_t time_step);
         void handleWELSEGS(const DeckKeyword& keyword, size_t time_step);
-
 
         /*
           Will remove all completions which are attached to inactive cells. Will
@@ -222,8 +215,6 @@ namespace Opm {
         DynamicState< double > m_solventFraction;
         DynamicState< WellTracerProperties > m_tracerProperties;
         DynamicState< std::string > m_groupName;
-        DynamicState< int > m_rft;
-        DynamicState< int > m_plt;
 
         DynamicState< int > m_headI;
         DynamicState< int > m_headJ;

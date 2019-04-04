@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
@@ -854,19 +855,13 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
+    const auto& rft_config = schedule.rftConfig();
 
-    {
-        auto* well = schedule.getWell("OP_1");
-        BOOST_CHECK_EQUAL(well->getRFTActive(2),true);
-        BOOST_CHECK_EQUAL(2 , well->firstRFTOutput( ));
-    }
-
-    {
-        auto* well = schedule.getWell("OP_2");
-        BOOST_CHECK_EQUAL(well->getRFTActive(3),true);
-        BOOST_CHECK_EQUAL(3 , well->firstRFTOutput( ));
-    }
+    BOOST_CHECK_EQUAL(2 , rft_config.firstRFTOutput());
+    BOOST_CHECK_EQUAL(true, rft_config.rft("OP_1", 2));
+    BOOST_CHECK_EQUAL(true, rft_config.rft("OP_2", 3));
 }
+
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     Opm::Parser parser;
@@ -918,15 +913,17 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
+    const auto& rft_config = schedule.rftConfig();
     auto* well = schedule.getWell("OP_1");
 
     size_t currentStep = 3;
-    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
+    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", currentStep),false);
     currentStep = 4;
-    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),true);
+    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", currentStep),true);
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well->getStatus(currentStep));
+
     currentStep = 5;
-    BOOST_CHECK_EQUAL(well->getRFTActive(currentStep),false);
+    BOOST_CHECK_EQUAL(rft_config.rft("OP_1", currentStep),false);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
@@ -2939,4 +2936,50 @@ BOOST_AUTO_TEST_CASE(WellNames) {
 
     auto abs_all = schedule.wellNames();
     BOOST_CHECK_EQUAL(abs_all.size(), 9);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
+    TimeMap tm(Opm::TimeMap::mkdate(2010, 1,1));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+    tm.addTStep(static_cast<time_t>(24 * 60 * 60));
+
+    RFTConfig conf(tm);
+    BOOST_CHECK_THROW( conf.rft("W1", 100), std::invalid_argument);
+    BOOST_CHECK_THROW( conf.plt("W1", 100), std::invalid_argument);
+
+    BOOST_CHECK(!conf.rft("W1", 2));
+    BOOST_CHECK(!conf.plt("W1", 2));
+
+
+    conf.setWellOpenRFT(2);
+    BOOST_CHECK(!conf.getWellOpenRFT("W1", 0));
+
+
+    conf.updateRFT("W1", 2, RFTConnections::YES);
+    BOOST_CHECK(conf.rft("W1", 2));
+    BOOST_CHECK(!conf.rft("W1", 1));
+    BOOST_CHECK(!conf.rft("W1", 3));
+
+    conf.updateRFT("W2", 2, RFTConnections::REPT);
+    conf.updateRFT("W2", 4, RFTConnections::NO);
+    BOOST_CHECK(!conf.rft("W2", 1));
+    BOOST_CHECK( conf.rft("W2", 2));
+    BOOST_CHECK( conf.rft("W2", 3));
+    BOOST_CHECK(!conf.rft("W2", 4));
+
+
+    conf.setWellOpenRFT("W3");
+    BOOST_CHECK(conf.getWellOpenRFT("W3", 2));
+
+    conf.updateRFT("W4", 2, RFTConnections::FOPN);
+    BOOST_CHECK(conf.getWellOpenRFT("W4", 2));
+
+
+    conf.addWellOpen("W10", 2);
+    conf.addWellOpen("W100", 3);
 }

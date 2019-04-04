@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
+#include <utility>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
@@ -147,6 +148,14 @@ class DynamicState {
     /// -1 if @value is not found.
     int find(const T& value) const {
         auto iter = std::find( m_data.begin() , m_data.end() , value);
+        if( iter == this->m_data.end() ) return -1;
+
+        return std::distance( m_data.begin() , iter );
+    }
+
+    template<typename P>
+    int find_if(P&& pred) const {
+        auto iter = std::find_if(m_data.begin(), m_data.end(), std::forward<P>(pred));
         if( iter == this->m_data.end() ) return -1;
 
         return std::distance( m_data.begin() , iter );
