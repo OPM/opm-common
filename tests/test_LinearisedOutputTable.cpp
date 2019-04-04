@@ -126,6 +126,48 @@ namespace {
 } // Anonymous
 
 // ---------------------------------------------------------------------
+// Constructors
+
+BOOST_AUTO_TEST_SUITE (Basic_Operations)
+
+BOOST_AUTO_TEST_CASE (Construct_Defaulted_FillVal)
+{
+    const auto numTables  = std::size_t{2};
+    const auto numPrimary = std::size_t{3};
+    const auto numRows    = std::size_t{4};
+    const auto numCols    = std::size_t{5};
+
+    auto linTable = ::Opm::LinearisedOutputTable {
+        numTables, numPrimary, numRows, numCols
+    };
+
+    const auto expect_initial = std::vector<double>(
+        numTables * numPrimary * numRows * numCols, 1.0e20);
+
+    check_is_close(linTable.getData(), expect_initial);
+}
+
+BOOST_AUTO_TEST_CASE (Construct_UserDefined_FillVal)
+{
+    const auto numTables  = std::size_t{2};
+    const auto numPrimary = std::size_t{3};
+    const auto numRows    = std::size_t{4};
+    const auto numCols    = std::size_t{5};
+    const auto fillVal    = 1.234e-5;
+
+    auto linTable = ::Opm::LinearisedOutputTable {
+        numTables, numPrimary, numRows, numCols, fillVal
+    };
+
+    const auto expect_initial = std::vector<double>(
+        numTables * numPrimary * numRows * numCols, fillVal);
+
+    check_is_close(linTable.getData(), expect_initial);
+}
+
+BOOST_AUTO_TEST_SUITE_END ()
+
+// ---------------------------------------------------------------------
 // Saturation Functions
 
 BOOST_AUTO_TEST_SUITE (Tabulated_Functions)

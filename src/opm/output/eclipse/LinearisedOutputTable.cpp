@@ -1,3 +1,23 @@
+/*
+  Copyright 2019 Equinor.
+  Copyright 2017 Statoil ASA.
+
+  This file is part of the Open Porous Media project (OPM).
+
+  OPM is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  OPM is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with OPM.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <opm/output/eclipse/LinearisedOutputTable.hpp>
 
 #include <algorithm>
@@ -10,7 +30,17 @@ LinearisedOutputTable(const std::size_t numTables0,
                       const std::size_t numPrimary0,
                       const std::size_t numRows0,
                       const std::size_t numCols0)
-    : data      (numTables0 * numPrimary0 * numRows0 * numCols0, 1.0e20)
+    : LinearisedOutputTable(numTables0, numPrimary0,
+                            numRows0, numCols0, 1.0e20)
+{}
+
+Opm::LinearisedOutputTable::
+LinearisedOutputTable(const std::size_t numTables0,
+                      const std::size_t numPrimary0,
+                      const std::size_t numRows0,
+                      const std::size_t numCols0,
+                      const double      fillValue)
+    : data      (numTables0 * numPrimary0 * numRows0 * numCols0, fillValue)
     , numTables (numTables0)
     , numPrimary(numPrimary0)
     , numRows   (numRows0)

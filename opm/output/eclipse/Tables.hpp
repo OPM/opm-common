@@ -1,4 +1,6 @@
 /*
+  Copyright 2019 Equinor.
+  Copyright 2017 Statoil ASA.
   Copyright 2016 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
@@ -41,6 +43,15 @@ namespace Opm {
         void addPVTG(const std::vector<PvtgTable>& pvtgTables);
         void addPVTW(const PvtwTable& pvtwTable);
         void addDensity(const DensityTable& density);
+
+        /// Add normalised PVT function tables to INIT file's TAB vector.
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate RUNSPEC
+        ///    information on active phases and table dimensions ("TABDIMS").
+        ///
+        /// \param[in] logihead Flag specifications identifying which tables
+        ///    to output.
+        void addPVTTables(const EclipseState& es);
 
         /// Add normalised saturation function tables to INIT file's TAB
         /// vector.
@@ -101,6 +112,30 @@ namespace Opm {
                                   const bool          gas,
                                   const bool          oil,
                                   const bool          wat);
+
+        /// Add gas PVT tables (keywords PVDG and PVTG) to the tabular data
+        /// (TABDIMS and TAB vectors).
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate table
+        ///    dimensions ("TABDIMS" keyword) and an initialised \c
+        ///    TableManager sub-object.
+        void addGasPVTTables(const EclipseState& es);
+
+        /// Add oil PVT tables (keywords PVCDO, PVDO and PVTO) to the
+        /// tabular data (TABDIMS and TAB vectors).
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate table
+        ///    dimensions ("TABDIMS" keyword) and an initialised \c
+        ///    TableManager sub-object.
+        void addOilPVTTables(const EclipseState& es);
+
+        /// Add water PVT tables (keyword PVTW) to the tabular data (TABDIMS
+        /// and TAB vectors).
+        ///
+        /// \param[in] es Valid \c EclipseState object with accurate table
+        ///    dimensions ("TABDIMS" keyword) and an initialised \c
+        ///    TableManager sub-object.
+        void addWaterPVTTables(const EclipseState& es);
     };
 
     /// Emit normalised tabular information (TABDIMS and TAB vectors) to
