@@ -24,9 +24,11 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+#include <opm/parser/eclipse/Parser/ParseContext.hpp>
+#include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 
 namespace Opm {
-bool checkDeck( Deck& deck, const Parser& parser, size_t enabledChecks) {
+bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& parseContext, ErrorGuard& errorGuard, size_t enabledChecks) {
     bool deckValid = true;
 
     // make sure that the deck does not contain unknown keywords
@@ -46,6 +48,21 @@ bool checkDeck( Deck& deck, const Parser& parser, size_t enabledChecks) {
     if (enabledChecks & SectionTopology) {
         bool ensureKeywordSection = enabledChecks & KeywordSection;
         deckValid = deckValid && Section::checkSectionTopology(deck, parser, ensureKeywordSection);
+    }
+
+    const std::string& deckUnitSystem = deck.getActiveUnitSystem().getName();
+    for (const auto& keyword : deck.getKeywordList("FILEUNIT")) {
+        const std::string& fileUnitSystem =
+            keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0);
+        if (fileUnitSystem != deckUnitSystem) {
+            std::string msg =
+                "Unit system " + fileUnitSystem + " specified via the FILEUNIT keyword at "
+                + keyword->getFileName() + ":" + std::to_string(keyword->getLineNumber())
+                + " does not correspond to the unit system used by the deck ("
+                + deckUnitSystem + ")";
+            parseContext.handleError(ParseContext::UNIT_SYSTEM_MISMATCH, msg, errorGuard);
+            deckValid = false;
+        }
     }
 
     return deckValid;

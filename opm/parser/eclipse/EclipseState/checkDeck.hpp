@@ -26,6 +26,8 @@ namespace Opm {
 
     class Deck;
     class Parser;
+    class ParseContext;
+    class ErrorGuard;
 
 enum DeckChecks {
     SectionTopology = 0x0001,
@@ -40,7 +42,7 @@ enum DeckChecks {
 
 // some semantical correctness checks of the deck. this method adds a warning to
 // the deck object if any issue is found ...
-bool checkDeck( Deck& deck, const Parser&, size_t enabledChecks = AllChecks);
+bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& parseContext, ErrorGuard& errorGuard, size_t enabledChecks  = AllChecks);
 
 }
 

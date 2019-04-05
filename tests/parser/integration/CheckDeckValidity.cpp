@@ -28,6 +28,8 @@
 
 BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
     Opm::Parser parser;
+    Opm::ParseContext parseContext;
+    Opm::ErrorGuard errorGuard;
 
     {
         const char *correctDeckString =
@@ -50,7 +52,7 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser.parseString(correctDeckString);
-        BOOST_CHECK(Opm::checkDeck(deck, parser));
+        BOOST_CHECK(Opm::checkDeck(deck, parser, parseContext, errorGuard));
     }
 
     {
@@ -63,8 +65,8 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser.parseString(correctDeckString);
-        BOOST_CHECK(!Opm::checkDeck(deck, parser));
-        BOOST_CHECK(Opm::checkDeck(deck, parser, ~Opm::SectionTopology));
+        BOOST_CHECK(!Opm::checkDeck(deck, parser, parseContext, errorGuard));
+        BOOST_CHECK(Opm::checkDeck(deck, parser, parseContext, errorGuard, ~Opm::SectionTopology));
     }
 
     {
@@ -89,13 +91,13 @@ BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
             "SCHEDULE\n";
 
         auto deck = parser.parseString(incorrectDeckString);
-        BOOST_CHECK(!Opm::checkDeck(deck, parser));
+        BOOST_CHECK(!Opm::checkDeck(deck, parser, parseContext, errorGuard));
 
         // this is supposed to succeed as we don't ensure that all keywords are in the
         // correct section
-        BOOST_CHECK(Opm::checkDeck(deck, parser, Opm::SectionTopology));
+        BOOST_CHECK(Opm::checkDeck(deck, parser, parseContext, errorGuard, Opm::SectionTopology));
 
         // this fails because of the incorrect BOX keyword
-        BOOST_CHECK(!Opm::checkDeck(deck, parser, Opm::SectionTopology | Opm::KeywordSection));
+        BOOST_CHECK(!Opm::checkDeck(deck, parser, parseContext, errorGuard, Opm::SectionTopology | Opm::KeywordSection));
     }
 }

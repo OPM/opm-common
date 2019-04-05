@@ -98,6 +98,7 @@ set( keywords
      000_Eclipse100/F/FAULTS
      000_Eclipse100/F/FIELD
      000_Eclipse100/F/FIELD_PROBE
+     000_Eclipse100/F/FILEUNIT
      000_Eclipse100/F/FILLEPS
      000_Eclipse100/F/FIPOWG
      000_Eclipse100/F/FIP_PROBE
