@@ -89,7 +89,6 @@ namespace Opm {
         udq_config(this->m_timeMap, std::make_shared<UDQInput>(deck)),
         rft_config(this->m_timeMap)
     {
-        m_controlModeWHISTCTL = WellProducer::CMODE_UNDEFINED;
         addGroup( "FIELD", 0 );
 
         /*
@@ -230,7 +229,7 @@ namespace Opm {
             handleWELSPECS( section, keywordIdx, currentStep );
 
         else if (keyword.name() == "WHISTCTL")
-            handleWHISTCTL(parseContext, errors, keyword);
+            handleWHISTCTL(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WCONHIST")
             handleWCONHIST(keyword, currentStep, parseContext, errors);
@@ -426,27 +425,36 @@ namespace Opm {
         return true;
     }
 
-    void Schedule::handleWHISTCTL(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) {
-        for( const auto& record : keyword ) {
-            const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-            const WellProducer::ControlModeEnum controlMode = WellProducer::ControlModeFromString( cmodeString );
 
-            if (controlMode != WellProducer::NONE) {
-                if (!WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
-                    std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
-                                    + ", which makes WHISTCTL keyword not affect the simulation at all";
-                    OpmLog::warning(msg);
-                }
+    void Schedule::handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        const auto& record = keyword.getRecord(0);
+        const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
+        const WellProducer::ControlModeEnum controlMode = WellProducer::ControlModeFromString( cmodeString );
+
+        if (controlMode != WellProducer::NONE) {
+            if (!WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
+                std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
+                    + ", which makes WHISTCTL keyword not affect the simulation at all";
+                OpmLog::warning(msg);
             }
+        }
 
-            m_controlModeWHISTCTL = controlMode;
-            const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
-            if (bhp_terminate == "YES") {
-                std::string msg = "The WHISTCTL keyword does not handle 'YES'. i.e. to terminate the run";
-                OpmLog::error(msg);
-                parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg, errors );
+        const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
+        if (bhp_terminate == "YES") {
+            std::string msg = "The WHISTCTL keyword does not handle 'YES'. i.e. to terminate the run";
+            OpmLog::error(msg);
+            parseContext.handleError( ParseContext::UNSUPPORTED_TERMINATE_IF_BHP , msg, errors );
+        }
+
+
+        for (auto& well_pair : this->m_wells) {
+            auto& well = well_pair.second;
+            const WellProductionProperties& properties(well.getProductionProperties(currentStep));
+            if (properties.whistctl_cmode != controlMode) {
+                WellProductionProperties new_properties( properties );
+                new_properties.whistctl_cmode = controlMode;
+                well.setProductionProperties(currentStep, new_properties);
             }
-
         }
     }
 
@@ -659,23 +667,42 @@ namespace Opm {
 
             for( const auto& well_name : well_names) {
                 auto& well = this->m_wells.at(well_name);
-                bool addGrupProductionControl = well.isAvailableForGroupControl(currentStep);
-                bool switching_from_injector = !well.isProducer(currentStep);
-                const WellProductionProperties& prev_properties = well.getProductionProperties(currentStep);
-                WellProductionProperties properties(record, isPredictionMode, prev_properties, m_controlModeWHISTCTL, switching_from_injector, addGrupProductionControl);
 
                 updateWellStatus( well , currentStep , status );
-                if (well.setProductionProperties(currentStep, properties)) {
-                    m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
-                    this->addWellEvent( well.name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
-                }
-                if ( !well.getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
+                if (isPredictionMode) {
+                    bool addGrupProductionControl = well.isAvailableForGroupControl(currentStep);
+                    WellProductionProperties properties;
 
-                    std::string msg =
+                    if (addGrupProductionControl)
+                        properties.addProductionControl(WellProducer::GRUP);
+
+                    properties.handleWCONPROD(record);
+
+                    if (well.setProductionProperties(currentStep, properties)) {
+                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
+                        this->addWellEvent( well.name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
+                    }
+                } else {
+                    bool switching_from_injector = !well.isProducer(currentStep);
+                    WellProductionProperties properties(well.getProductionProperties(currentStep));
+                    properties.handleWCONHIST(record);
+
+                    if (switching_from_injector)
+                        properties.resetDefaultBHPLimit();
+
+                    if (well.setProductionProperties(currentStep, properties)) {
+                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
+                        this->addWellEvent( well.name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
+                    }
+
+                    if ( !well.getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
+
+                        std::string msg =
                             "Well " + well.name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    OpmLog::note(msg);
-                    updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT );
+                        OpmLog::note(msg);
+                        updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT );
+                    }
                 }
             }
         }

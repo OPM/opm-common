@@ -194,7 +194,6 @@ namespace Opm
         DynamicState<std::shared_ptr<UDQInput>> udq_config;
         RFTConfig rft_config;
 
-        WellProducer::ControlModeEnum m_controlModeWHISTCTL;
         Actions m_actions;
 
         std::vector< Well* > getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells = {});
@@ -248,7 +247,7 @@ namespace Opm
         void handleDRVDTR( const DeckKeyword& keyword, size_t currentStep);
         void handleVAPPARS( const DeckKeyword& keyword, size_t currentStep);
         void handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWHISTCTL(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword);
+        void handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleMESSAGES(const DeckKeyword& keyword, size_t currentStep);
         void handleVFPPROD(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);

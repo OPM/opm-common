@@ -745,33 +745,15 @@ namespace {
             return input;
         }
 
-        std::string whistctl() {
-            const std::string input =
-                "WHISTCTL\n"
-                "ORAT /\n"
-                "WCONHIST\n"
-                "-- 1    2     3    4-6  7  8  9  10\n"
-                "  'P' 'OPEN' 'RESV' 3*  3 10. 1* 500/\n/\n";
-
-            return input;
-        }
 
         Opm::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
 
             auto deck = parser.parseString(input);
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
-            Opm::WellProductionProperties prev_p;
-            prev_p.BHPLimit = 100.;
-            prev_p.VFPTableNumber = 12;
-            prev_p.ALQValue = 18.;
-            Opm::WellProducer::ControlModeEnum whistctl_cmode = Opm::WellProducer::NONE;
-            if (deck.hasKeyword("WHISTCTL") ) {
-                const auto& whistctl_record = deck.getKeyword("WHISTCTL").getRecord(0);
-                const std::string& cmode_string = whistctl_record.getItem("CMODE").getTrimmedString(0);
-                whistctl_cmode = Opm::WellProducer::ControlModeFromString(cmode_string);
-            }
-            Opm::WellProductionProperties hist(record, false, prev_p, whistctl_cmode, false, false);
+            Opm::WellProductionProperties hist;
+            hist.handleWCONHIST(record);
+
 
             return hist;
         }
@@ -823,9 +805,8 @@ namespace {
             auto deck = parser.parseString(input);
             const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
-            Opm::WellProducer::ControlModeEnum whistctl_cmode = Opm::WellProducer::NONE;
-            Opm::WellProductionProperties prev_properties;
-            Opm::WellProductionProperties pred( record, true, prev_properties, whistctl_cmode, false, false );
+            Opm::WellProductionProperties pred;
+            pred.handleWCONPROD(record);
 
             return pred;
         }
@@ -847,8 +828,6 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
-    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
     BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
@@ -865,8 +844,6 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::WRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
-    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
     BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
@@ -883,8 +860,6 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::GRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
-    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
     BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
@@ -901,8 +876,6 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::LRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
-    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
     BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
@@ -920,8 +893,6 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
-    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
     BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
@@ -944,27 +915,6 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
     BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
 }
 
-BOOST_AUTO_TEST_CASE(WCH_Whistctl)
-{
-    const Opm::WellProductionProperties& p =
-        WCONHIST::properties(WCONHIST::whistctl());
-
-    // the original RESV contorl in WCONHIST should be overwritten by
-    // ORAT specified with WHISCTL now.
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
-
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
-
-    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
-    BOOST_CHECK_EQUAL(p.ALQValue, 10.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
-}
-
 BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
 {
     const Opm::WellProductionProperties& p =
@@ -980,15 +930,12 @@ BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
 
-    BOOST_CHECK_EQUAL(p.VFPTableNumber, 12);
-    BOOST_CHECK_EQUAL(p.ALQValue, 18.);
     BOOST_CHECK_EQUAL(p.BHPLimit, 5.e7); // 500 barsa
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
 {
-    const Opm::WellProductionProperties& p =
-        WCONPROD::properties(WCONPROD::orat_CMODE_other_defaulted());
+    const Opm::WellProductionProperties& p = WCONPROD::properties(WCONPROD::orat_CMODE_other_defaulted());
 
     BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::ORAT));
     BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::WRAT));
