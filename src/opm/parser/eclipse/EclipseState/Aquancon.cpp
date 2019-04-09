@@ -223,7 +223,15 @@ namespace Opm {
                                     {
                                         if (element1.global_index == element2.global_index)
                                         {
-                                            *(element1.influx_coeff) += *(element2.influx_coeff);
+                                            if (element1.influx_coeff != nullptr && element2.influx_coeff != nullptr)
+                                                *(element1.influx_coeff) += *(element2.influx_coeff);
+                                            else {
+                                                static bool warningPrinted = false;
+                                                if (!warningPrinted) {
+                                                    std::cerr << "WARNING: there's something fishy with AQCON\n";
+                                                    warningPrinted = true;
+                                                }
+                                            }
                                             return true;
                                         }
 
