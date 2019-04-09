@@ -48,19 +48,12 @@ namespace Opm {
         int     VFPTableNumber = 0;
         double  ALQValue    = 0.0;
         bool    predictionMode = false;
-
         WellProducer::ControlModeEnum controlMode = WellProducer::CMODE_UNDEFINED;
+        WellProducer::ControlModeEnum whistctl_cmode = WellProducer::CMODE_UNDEFINED;
 
         bool operator==(const WellProductionProperties& other) const;
         bool operator!=(const WellProductionProperties& other) const;
         WellProductionProperties();
-        WellProductionProperties (const DeckRecord& record,
-                                  bool prediction_mode,
-                                  const WellProductionProperties& prev_properties,
-                                  WellProducer::ControlModeEnum controlModeWHISTCTL,
-                                  bool switching_from_injector,
-                                  bool addGrupProductionControl);
-
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
             return (m_productionControls & controlModeArg) != 0;
@@ -78,20 +71,17 @@ namespace Opm {
 
         // this is used to check whether the specified control mode is an effective history matching production mode
         static bool effectiveHistoryProductionControl(const WellProducer::ControlModeEnum cmode);
+        void handleWCONPROD( const DeckRecord& record);
+        void handleWCONHIST( const DeckRecord& record);
+        void resetDefaultBHPLimit();
 
     private:
         int m_productionControls = 0;
         void init_rates( const DeckRecord& record );
 
-        void init_history(const WellProductionProperties& prevProperties,
-                          const DeckRecord& record,
-                          const WellProducer::ControlModeEnum controlModeWHISTCL,
-                          const bool switching_from_injector);
+        void init_history(const DeckRecord& record);
 
-        void init_prediction( const DeckRecord& record, bool addGroupProductionControl );
         WellProductionProperties(const DeckRecord& record);
-
-        void resetDefaultBHPLimit();
 
         void setBHPLimit(const double limit);
 
