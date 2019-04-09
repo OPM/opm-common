@@ -1235,7 +1235,7 @@ namespace Opm {
         for( const auto& record : keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const std::string& cMode = record.getItem("CMODE").getTrimmedString(0);
+            const std::string& cmode = WellTarget::ControlModeFromEnum(record.getItem("CMODE").getTrimmedString(0));
             double newValue = record.getItem("NEW_VALUE").get< double >(0);
 
             const auto wells = getWells( wellNamePattern );
@@ -1246,7 +1246,8 @@ namespace Opm {
             for( auto* well : wells ) {
                 if(well->isProducer(currentStep)){
                     WellProductionProperties prop = well->getProductionPropertiesCopy(currentStep);
-
+                    prop.handleWELTARG(record);
+                    /*
                     if (cMode == "ORAT"){
                         prop.OilRate = newValue * siFactorL;
                     }
@@ -1277,6 +1278,9 @@ namespace Opm {
                     else{
                         throw std::invalid_argument("Invalid keyword (MODE) supplied");
                     }
+                    */
+                    if (cMode == "GUID"){
+                        well->setGuideRate(currentStep, newValue);
 
                     well->setProductionProperties(currentStep, prop);
                 }else{

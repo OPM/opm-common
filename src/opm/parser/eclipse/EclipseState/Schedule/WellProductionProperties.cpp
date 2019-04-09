@@ -169,6 +169,41 @@ namespace Opm {
     }
 
 
+
+    void WellProductionProperties::handleWELTARG(const DeckRecord& record) {
+        const std::string& cMode = record.getItem("CMODE").getTrimmedString(0);
+        double newValue = record.getItem("NEW_VALUE").get< double >(0);
+
+        if (cMode == "ORAT"){
+            prop.OilRate = newValue * siFactorL;
+        }
+        else if (cMode == "WRAT"){
+            prop.WaterRate = newValue * siFactorL;
+        }
+        else if (cMode == "GRAT"){
+            prop.GasRate = newValue * siFactorG;
+        }
+        else if (cMode == "LRAT"){
+            prop.LiquidRate = newValue * siFactorL;
+        }
+        else if (cMode == "RESV"){
+            prop.ResVRate = newValue * siFactorL;
+        }
+        else if (cMode == "BHP"){
+            prop.BHPLimit = newValue * siFactorP;
+        }
+        else if (cMode == "THP"){
+            prop.THPLimit = newValue * siFactorP;
+        }
+        else if (cMode == "VFP"){
+            prop.VFPTableNumber = static_cast<int> (newValue);
+        }
+        else if (cMode != "GUID"){
+            throw std::invalid_argument("Invalid keyword (MODE) supplied");
+        }
+    }
+
+
     bool WellProductionProperties::operator==(const WellProductionProperties& other) const {
         return OilRate              == other.OilRate
             && WaterRate            == other.WaterRate
