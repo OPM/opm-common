@@ -122,7 +122,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
         }
     }
     this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(this->udq_params, tokens, parseContext, errors) );
-    this->tokens = tokens;
+    this->input_tokens = tokens;
 }
 
 
@@ -143,6 +143,9 @@ UDQVarType UDQDefine::var_type() const {
     return this->m_var_type;
 }
 
+const std::vector<std::string>& UDQDefine::tokens() const {
+    return this->input_tokens;
+}
 
 const std::string& UDQDefine::keyword() const {
     return this->m_keyword;
