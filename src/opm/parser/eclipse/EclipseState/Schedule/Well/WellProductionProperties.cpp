@@ -167,6 +167,37 @@ namespace Opm {
 
 
 
+  void WellProductionProperties::handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
+        if (cmode == WellTarget::ORAT){
+            this->OilRate = newValue * siFactorL;
+        }
+        else if (cmode == WellTarget::WRAT){
+            this->WaterRate = newValue * siFactorL;
+        }
+        else if (cmode == WellTarget::GRAT){
+            this->GasRate = newValue * siFactorG;
+        }
+        else if (cmode == WellTarget::LRAT){
+            this->LiquidRate = newValue * siFactorL;
+        }
+        else if (cmode == WellTarget::RESV){
+            this->ResVRate = newValue * siFactorL;
+        }
+        else if (cmode == WellTarget::BHP){
+            this->BHPLimit = newValue * siFactorP;
+        }
+        else if (cmode == WellTarget::THP){
+            this->THPLimit = newValue * siFactorP;
+        }
+        else if (cmode == WellTarget::VFP){
+            this->VFPTableNumber = static_cast<int> (newValue);
+        }
+        else if (cmode != WellTarget::GUID){
+            throw std::invalid_argument("Invalid keyword (MODE) supplied");
+        }
+    }
+
+
     bool WellProductionProperties::operator==(const WellProductionProperties& other) const {
         return OilRate              == other.OilRate
             && WaterRate            == other.WaterRate

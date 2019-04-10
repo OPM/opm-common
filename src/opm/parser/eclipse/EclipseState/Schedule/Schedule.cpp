@@ -1178,7 +1178,7 @@ namespace Opm {
         for( const auto& record : keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const std::string& cMode = record.getItem("CMODE").getTrimmedString(0);
+            const auto cmode = WellTarget::ControlModeFromString(record.getItem("CMODE").getTrimmedString(0));
             double newValue = record.getItem("NEW_VALUE").get< double >(0);
 
             const auto well_names = wellNames( wellNamePattern, currentStep );
@@ -1190,85 +1190,19 @@ namespace Opm {
                 auto& well = this->m_wells.at(well_name);
                 if(well.isProducer(currentStep)){
                     WellProductionProperties prop = well.getProductionPropertiesCopy(currentStep);
-
-                    if (cMode == "ORAT"){
-                        prop.OilRate = newValue * siFactorL;
-                    }
-                    else if (cMode == "WRAT"){
-                        prop.WaterRate = newValue * siFactorL;
-                    }
-                    else if (cMode == "GRAT"){
-                        prop.GasRate = newValue * siFactorG;
-                    }
-                    else if (cMode == "LRAT"){
-                        prop.LiquidRate = newValue * siFactorL;
-                    }
-                    else if (cMode == "RESV"){
-                        prop.ResVRate = newValue * siFactorL;
-                    }
-                    else if (cMode == "BHP"){
-                        prop.BHPLimit = newValue * siFactorP;
-                    }
-                    else if (cMode == "THP"){
-                        prop.THPLimit = newValue * siFactorP;
-                    }
-                    else if (cMode == "VFP"){
-                        prop.VFPTableNumber = static_cast<int> (newValue);
-                    }
-                    else if (cMode == "GUID"){
+                    prop.handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                    if (cmode == WellTarget::GUID)
                         well.setGuideRate(currentStep, newValue);
-                    }
-                    else{
-                        throw std::invalid_argument("Invalid keyword (MODE) supplied");
-                    }
 
                     well.setProductionProperties(currentStep, prop);
-                }else{
+                } else {
                     WellInjectionProperties prop = well.getInjectionPropertiesCopy(currentStep);
-                    if (cMode == "BHP"){
-                        prop.BHPLimit = newValue * siFactorP;
-                    }
-                    else if (cMode == "ORAT"){
-                        if(prop.injectorType == WellInjector::TypeEnum::OIL){
-                            prop.surfaceInjectionRate = newValue * siFactorL;
-                        }else{
-                             std::invalid_argument("Well type must be OIL to set the oil rate");
-                        }
-                    }
-                    else if (cMode == "WRAT"){
-                        if(prop.injectorType == WellInjector::TypeEnum::WATER){
-                            prop.surfaceInjectionRate = newValue * siFactorL;
-                        }else{
-                             std::invalid_argument("Well type must be WATER to set the water rate");
-                        }
-                    }
-                    else if (cMode == "GRAT"){
-                        if(prop.injectorType == WellInjector::TypeEnum::GAS){
-                            prop.surfaceInjectionRate = newValue * siFactorG;
-                        }else{
-                            std::invalid_argument("Well type must be GAS to set the gas rate");
-                        }
-                    }
-                    else if (cMode == "THP"){
-                        prop.THPLimit = newValue * siFactorP;
-                    }
-                    else if (cMode == "VFP"){
-                        prop.VFPTableNumber = static_cast<int> (newValue);
-                    }
-                    else if (cMode == "GUID"){
+                    prop.handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                    if (cmode == WellTarget::GUID)
                         well.setGuideRate(currentStep, newValue);
-                    }
-                    else if (cMode == "RESV"){
-                        prop.reservoirInjectionRate = newValue * siFactorL;
-                    }
-                    else{
-                        throw std::invalid_argument("Invalid keyword (MODE) supplied");
-                    }
 
                     well.setInjectionProperties(currentStep, prop);
                 }
-
-
             }
         }
     }
@@ -1614,10 +1548,9 @@ namespace Opm {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, currentStep);
-            for(const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
+            for(const auto& well_name : well_names)
                 this->rft_config.updateRFT(well_name, currentStep, RFTConnections::RFTEnum::YES);
-            }
+
         }
 
         this->rft_config.setWellOpenRFT(currentStep);
