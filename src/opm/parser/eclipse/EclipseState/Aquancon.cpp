@@ -33,90 +33,90 @@ namespace Opm {
 
             // Variables constants
             std::vector<std::shared_ptr<double>>  influx_coeff_per_record;  //Aquifer influx coefficient
-            std::vector<double>  influx_mult_per_record;   //Aquifer influx coefficient Multiplier       
-            // Cell face to connect aquifer to        
+            std::vector<double>  influx_mult_per_record;   //Aquifer influx coefficient Multiplier
+            // Cell face to connect aquifer to
             std::vector<int> face_per_record;
-            std::vector<int> record_index_per_record;         
+            std::vector<int> record_index_per_record;
         };
     }
 
     Aquancon::Aquancon(const EclipseGrid& grid, const Deck& deck)
-    { 
+    {
         if (!deck.hasKeyword("AQUANCON"))
-            return;  
+            return;
 
-        std::vector<Opm::AquanconRecord> m_aqurecord;
+        std::vector<Opm::AquanconRecord> aqurecords;
         // Aquifer ID per record
-        std::vector<int> m_aquiferID_per_record;
+        std::vector<int> aquiferID_per_record;
         int m_maxAquID = 0;
 
         const auto& aquanconKeyword = deck.getKeyword("AQUANCON");
         // Resize the parameter vector container based on row entries in aquancon
-        m_aqurecord.resize(aquanconKeyword.size());
-        m_aquiferID_per_record.resize(aquanconKeyword.size());
+        aqurecords.resize(aquanconKeyword.size());
+        aquiferID_per_record.resize(aquanconKeyword.size());
 
         // We now do a loop over each record entry in aquancon
-        for (size_t aquanconRecordIdx = 0; aquanconRecordIdx < aquanconKeyword.size(); ++aquanconRecordIdx) 
+        for (size_t aquanconRecordIdx = 0; aquanconRecordIdx < aquanconKeyword.size(); ++aquanconRecordIdx)
         {
             const auto& aquanconRecord = aquanconKeyword.getRecord(aquanconRecordIdx);
-            m_aquiferID_per_record.at(aquanconRecordIdx) = aquanconRecord.getItem("AQUIFER_ID").template get<int>(0);
+            aquiferID_per_record.at(aquanconRecordIdx) = aquanconRecord.getItem("AQUIFER_ID").template get<int>(0);
 
-            m_aqurecord.at(aquanconRecordIdx).i1 = aquanconRecord.getItem("I1").template get<int>(0);
-            m_aqurecord.at(aquanconRecordIdx).i2 = aquanconRecord.getItem("I2").template get<int>(0);
-            m_aqurecord.at(aquanconRecordIdx).j1 = aquanconRecord.getItem("J1").template get<int>(0);
-            m_aqurecord.at(aquanconRecordIdx).j2 = aquanconRecord.getItem("J2").template get<int>(0);
-            m_aqurecord.at(aquanconRecordIdx).k1 = aquanconRecord.getItem("K1").template get<int>(0);
-            m_aqurecord.at(aquanconRecordIdx).k2 = aquanconRecord.getItem("K2").template get<int>(0);
+            aqurecords.at(aquanconRecordIdx).i1 = aquanconRecord.getItem("I1").template get<int>(0);
+            aqurecords.at(aquanconRecordIdx).i2 = aquanconRecord.getItem("I2").template get<int>(0);
+            aqurecords.at(aquanconRecordIdx).j1 = aquanconRecord.getItem("J1").template get<int>(0);
+            aqurecords.at(aquanconRecordIdx).j2 = aquanconRecord.getItem("J2").template get<int>(0);
+            aqurecords.at(aquanconRecordIdx).k1 = aquanconRecord.getItem("K1").template get<int>(0);
+            aqurecords.at(aquanconRecordIdx).k2 = aquanconRecord.getItem("K2").template get<int>(0);
 
-            m_aquiferID_per_record.at(aquanconRecordIdx) = aquanconRecord.getItem("AQUIFER_ID").template get<int>(0);
-            m_maxAquID = (m_maxAquID < m_aquiferID_per_record.at(aquanconRecordIdx) )?
-                            m_aquiferID_per_record.at(aquanconRecordIdx) : m_maxAquID;
+            aquiferID_per_record.at(aquanconRecordIdx) = aquanconRecord.getItem("AQUIFER_ID").template get<int>(0);
+            m_maxAquID = (m_maxAquID < aquiferID_per_record.at(aquanconRecordIdx) )?
+                            aquiferID_per_record.at(aquanconRecordIdx) : m_maxAquID;
 
             double influx_mult = aquanconRecord.getItem("INFLUX_MULT").getSIDouble(0);
 
             FaceDir::DirEnum faceDir = FaceDir::FromString(aquanconRecord.getItem("FACE").getTrimmedString(0));
-              
+
             // Loop over the cartesian indices to convert to the global grid index
-            for (int k=m_aqurecord.at(aquanconRecordIdx).k1; k <= m_aqurecord.at(aquanconRecordIdx).k2; k++) {
-                for (int j=m_aqurecord.at(aquanconRecordIdx).j1; j <= m_aqurecord.at(aquanconRecordIdx).j2; j++)
-                    for (int i=m_aqurecord.at(aquanconRecordIdx).i1; i <= m_aqurecord.at(aquanconRecordIdx).i2; i++)
-                        m_aqurecord.at(aquanconRecordIdx).global_index_per_record.push_back
+            for (int k=aqurecords.at(aquanconRecordIdx).k1; k <= aqurecords.at(aquanconRecordIdx).k2; k++) {
+                for (int j=aqurecords.at(aquanconRecordIdx).j1; j <= aqurecords.at(aquanconRecordIdx).j2; j++)
+                    for (int i=aqurecords.at(aquanconRecordIdx).i1; i <= aqurecords.at(aquanconRecordIdx).i2; i++)
+                        aqurecords.at(aquanconRecordIdx).global_index_per_record.push_back
                                                             (
                                                                 grid.getGlobalIndex(i-1, j-1, k-1)
                                                             );
             }
-            size_t global_index_per_record_size = m_aqurecord.at(aquanconRecordIdx).global_index_per_record.size();
+            size_t global_index_per_record_size = aqurecords.at(aquanconRecordIdx).global_index_per_record.size();
 
-            m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record.resize(global_index_per_record_size, nullptr);
+            aqurecords.at(aquanconRecordIdx).influx_coeff_per_record.resize(global_index_per_record_size, nullptr);
 
             if (aquanconRecord.getItem("INFLUX_COEFF").hasValue(0))
             {
                 const double influx_coeff = aquanconRecord.getItem("INFLUX_COEFF").getSIDouble(0);
 
-                for (auto& influx: m_aqurecord.at(aquanconRecordIdx).influx_coeff_per_record)
+                for (auto& influx: aqurecords.at(aquanconRecordIdx).influx_coeff_per_record)
                 {
                     influx.reset(new double(influx_coeff));
                 }
             }
 
 
-            m_aqurecord.at(aquanconRecordIdx).influx_mult_per_record.resize(global_index_per_record_size,influx_mult);
-            m_aqurecord.at(aquanconRecordIdx).face_per_record.resize(global_index_per_record_size,faceDir);
-            m_aqurecord.at(aquanconRecordIdx).record_index_per_record.resize(global_index_per_record_size,aquanconRecordIdx);
+            aqurecords.at(aquanconRecordIdx).influx_mult_per_record.resize(global_index_per_record_size,influx_mult);
+            aqurecords.at(aquanconRecordIdx).face_per_record.resize(global_index_per_record_size,faceDir);
+            aqurecords.at(aquanconRecordIdx).record_index_per_record.resize(global_index_per_record_size,aquanconRecordIdx);
         }
 
         // Collate_function
-        collate_function(m_aquoutput, m_aqurecord, m_aquiferID_per_record, m_maxAquID);
+        collate_function(m_aquoutput, aqurecords, aquiferID_per_record, m_maxAquID);
 
         // Logic for grid connection applied here
         m_aquoutput = logic_application(m_aquoutput);
     }
-                                         
-    
+
+
     // This function is used to convert from a per record vector to a per aquifer ID vector.
-    void Aquancon::collate_function(std::vector<Aquancon::AquanconOutput>& output_vector, 
-                                    std::vector<Opm::AquanconRecord>& m_aqurecord, 
-                                    std::vector<int> m_aquiferID_per_record, int m_maxAquID)
+    void Aquancon::collate_function(std::vector<Aquancon::AquanconOutput>& output_vector,
+                                    std::vector<Opm::AquanconRecord>& aqurecords,
+                                    std::vector<int> aquiferID_per_record, int m_maxAquID)
     {
         output_vector.resize(m_maxAquID);
         // Find record indices at which the aquifer ids are located in
@@ -124,7 +124,7 @@ namespace Opm {
         {
             std::vector<int> result_id;
 
-            convert_record_id_to_aquifer_id(result_id, i, m_aquiferID_per_record);
+            convert_record_id_to_aquifer_id(result_id, i, aquiferID_per_record);
 
             // We add the aquifer id into each element of output_vector
             output_vector.at(i - 1).aquiferID = i;
@@ -133,41 +133,41 @@ namespace Opm {
                 // This is for the global indices
                 output_vector.at(i - 1).global_index.insert(
                                                              output_vector.at(i - 1).global_index.end(),
-                                                             m_aqurecord.at(record_index_matching_id).global_index_per_record.begin(),
-                                                             m_aqurecord.at(record_index_matching_id).global_index_per_record.end()
+                                                             aqurecords.at(record_index_matching_id).global_index_per_record.begin(),
+                                                             aqurecords.at(record_index_matching_id).global_index_per_record.end()
                                                            );
                 // This is for the influx_coeff
                 output_vector.at(i - 1).influx_coeff.insert(
                                                              output_vector.at(i - 1).influx_coeff.end(),
-                                                             m_aqurecord.at(record_index_matching_id).influx_coeff_per_record.begin(),
-                                                             m_aqurecord.at(record_index_matching_id).influx_coeff_per_record.end()
+                                                             aqurecords.at(record_index_matching_id).influx_coeff_per_record.begin(),
+                                                             aqurecords.at(record_index_matching_id).influx_coeff_per_record.end()
                                                            );
                 // This is for the influx_multiplier
                 output_vector.at(i - 1).influx_multiplier.insert(
                                                                   output_vector.at(i - 1).influx_multiplier.end(),
-                                                                  m_aqurecord.at(record_index_matching_id).influx_mult_per_record.begin(),
-                                                                  m_aqurecord.at(record_index_matching_id).influx_mult_per_record.end()
+                                                                  aqurecords.at(record_index_matching_id).influx_mult_per_record.begin(),
+                                                                  aqurecords.at(record_index_matching_id).influx_mult_per_record.end()
                                                                 );
                 // This is for the reservoir_face_dir
                 output_vector.at(i - 1).reservoir_face_dir.insert(
                                                                    output_vector.at(i - 1).reservoir_face_dir.end(),
-                                                                   m_aqurecord.at(record_index_matching_id).face_per_record.begin(),
-                                                                   m_aqurecord.at(record_index_matching_id).face_per_record.end()
+                                                                   aqurecords.at(record_index_matching_id).face_per_record.begin(),
+                                                                   aqurecords.at(record_index_matching_id).face_per_record.end()
                                                                  );
                 // This is for the record index in order for us to know which one is updated
                 output_vector.at(i - 1).record_index.insert(
                                                              output_vector.at(i - 1).record_index.end(),
-                                                             m_aqurecord.at(record_index_matching_id).record_index_per_record.begin(),
-                                                             m_aqurecord.at(record_index_matching_id).record_index_per_record.end()
-                                                           );  
+                                                             aqurecords.at(record_index_matching_id).record_index_per_record.begin(),
+                                                             aqurecords.at(record_index_matching_id).record_index_per_record.end()
+                                                           );
             }
         }
     }
 
-    std::vector<Aquancon::AquanconOutput> Aquancon::logic_application(const std::vector<Aquancon::AquanconOutput> original_vector)
+    std::vector<Aquancon::AquanconOutput> Aquancon::logic_application(const std::vector<Aquancon::AquanconOutput>& original_vector)
     {
         std::vector<Aquancon::AquanconOutput> output_vector = original_vector;
-        
+
         // Create a local struct to couple each element for easy sorting
         struct pair_elements
         {
@@ -178,23 +178,19 @@ namespace Opm {
           int record_index;
         };
 
-        // Create a working buffer 
-        std::vector<pair_elements> working_buffer;
 
         // Iterate through each aquifer IDs (This is because each element in the original vector represents an aquifer ID)
         for (auto aquconvec = output_vector.begin(); aquconvec != output_vector.end(); ++aquconvec)
         {
-            //Begin to fill the working buffer
-            working_buffer.clear();
-            working_buffer.resize(aquconvec->global_index.size());
+            // Create a working buffer
+            std::vector<pair_elements> working_buffer;
             for (size_t i = 0; i < aquconvec->global_index.size(); ++i )
-            {
-                working_buffer.at(i).global_index = aquconvec->global_index.at(i);
-                working_buffer.at(i).influx_coeff = aquconvec->influx_coeff.at(i);
-                working_buffer.at(i).influx_multiplier = aquconvec->influx_multiplier.at(i);
-                working_buffer.at(i).reservoir_face_dir = aquconvec->reservoir_face_dir.at(i);
-                working_buffer.at(i).record_index = aquconvec->record_index.at(i);
-            }
+                working_buffer.push_back( { aquconvec->global_index[i],
+                                            aquconvec->influx_coeff[i],
+                                            aquconvec->influx_multiplier[i],
+                                            aquconvec->reservoir_face_dir[i],
+                                            aquconvec->record_index[i]});
+
 
             // Sort by ascending order the working_buffer vector in order of priority:
             // 1) global_index, then 2) record_index
@@ -212,18 +208,26 @@ namespace Opm {
                         }
                      );
 
-            // We then proceed to obtain unique elements of the global_index, and we apply the 
+            // We then proceed to obtain unique elements of the global_index, and we apply the
             // following behaviour (as mentioned in the Eclipse 2014.1 Reference Manual p.345):
-            // If a reservoir cell is defined more than once, its previous value for the 
+            // If a reservoir cell is defined more than once, its previous value for the
             // aquifer influx coefficient is added to the present value.
 
             auto i2 = std::unique(  working_buffer.begin(),
                                     working_buffer.end(),
                                     [](pair_elements& element1, pair_elements& element2) -> bool
                                     {
+                                        // Not entirely clear for the manual; but it would seem
+                                        // natural that this equality check also included the face?
                                         if (element1.global_index == element2.global_index)
                                         {
-                                            *(element1.influx_coeff) += *(element2.influx_coeff);
+                                            if (element1.influx_coeff && element2.influx_coeff)
+                                                *(element1.influx_coeff) += *(element2.influx_coeff);
+                                            else {
+                                                if (element1.influx_coeff || element2.influx_coeff)
+                                                    throw std::invalid_argument("Sorry - can not combine defaulted and not default AQUANCON records");
+                                            }
+
                                             return true;
                                         }
 
@@ -248,21 +252,21 @@ namespace Opm {
             }
 
         }
- 
+
         return output_vector;
     }
 
     void Aquancon::convert_record_id_to_aquifer_id(std::vector<int>& record_indices_matching_id,
-                                                   int i, std::vector<int> m_aquiferID_per_record)
+                                                   int i, std::vector<int> aquiferID_per_record)
     {
-        auto it = std::find_if( m_aquiferID_per_record.begin(), m_aquiferID_per_record.end(), 
+        auto it = std::find_if( aquiferID_per_record.begin(), aquiferID_per_record.end(),
                                     [&](int id) {
                                         return id == i;
-                                    } 
+                                    }
                                 );
-        while (it != m_aquiferID_per_record.end()) {
-            record_indices_matching_id.emplace_back(std::distance(m_aquiferID_per_record.begin(), it));
-            it = std::find_if(std::next(it), m_aquiferID_per_record.end(), [&](int id){return id == i;});
+        while (it != aquiferID_per_record.end()) {
+            record_indices_matching_id.emplace_back(std::distance(aquiferID_per_record.begin(), it));
+            it = std::find_if(std::next(it), aquiferID_per_record.end(), [&](int id){return id == i;});
         }
     }
 

@@ -25,6 +25,71 @@ along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace Opm;
 
+inline Deck createAQUANCONDeck_DEFAULT_INFLUX2() {
+    const char *deckData =
+        "DIMENS\n"
+        "3 3 3 /\n"
+        "\n"
+        "GRID\n"
+        "\n"
+        "ACTNUM\n"
+        " 0 8*1 0 8*1 0 8*1 /\n"
+        "DXV\n"
+        "1 1 1 /\n"
+        "\n"
+        "DYV\n"
+        "1 1 1 /\n"
+        "\n"
+        "DZV\n"
+        "1 1 1 /\n"
+        "\n"
+        "TOPS\n"
+        "9*100 /\n"
+        "\n"
+        "SOLUTION\n"
+        "\n"
+        "AQUANCON\n"
+        "   1      1  1  1    1   1  1  J-  1.0 /\n"
+        "   1      1  1  1    1   1  1  J-   /\n"
+        "/ \n";
+
+    Parser parser;
+    return parser.parseString(deckData);
+}
+
+
+inline Deck createAQUANCONDeck_DEFAULT_INFLUX1() {
+  const char *deckData =
+    "DIMENS\n"
+    "3 3 3 /\n"
+    "\n"
+    "GRID\n"
+    "\n"
+    "ACTNUM\n"
+    " 0 8*1 0 8*1 0 8*1 /\n"
+    "DXV\n"
+    "1 1 1 /\n"
+    "\n"
+    "DYV\n"
+    "1 1 1 /\n"
+    "\n"
+    "DZV\n"
+    "1 1 1 /\n"
+    "\n"
+    "TOPS\n"
+    "9*100 /\n"
+    "\n"
+    "SOLUTION\n"
+    "\n"
+    "AQUANCON\n"
+    "   1      1  1  1    1   1  1  J-   /\n"
+    "   1      1  1  1    1   1  1  J-   /\n"
+    "/ \n";
+
+  Parser parser;
+  return parser.parseString(deckData);
+}
+
 inline Deck createAQUANCONDeck() {
     const char *deckData =
         "DIMENS\n"
@@ -94,4 +159,14 @@ BOOST_AUTO_TEST_CASE(AquanconTest){
         BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).record_index.begin(), aquifers.at(i).record_index.end(),
                                    expected_output.at(i).record_index.begin(), expected_output.at(i).record_index.end() );
     }
-}    
+}
+
+BOOST_AUTO_TEST_CASE(AquanconTest_DEFAULT_INFLUX) {
+    auto deck1 = createAQUANCONDeck_DEFAULT_INFLUX1();
+    EclipseState eclState1( deck1 );
+    BOOST_CHECK_NO_THROW(Aquancon( eclState1.getInputGrid(), deck1));
+
+    auto deck2 = createAQUANCONDeck_DEFAULT_INFLUX2();
+    EclipseState eclState2( deck2 );
+    BOOST_CHECK_THROW(Aquancon( eclState2.getInputGrid(), deck2), std::invalid_argument);
+}
