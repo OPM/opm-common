@@ -178,23 +178,19 @@ namespace Opm {
           int record_index;
         };
 
-        // Create a working buffer
-        std::vector<pair_elements> working_buffer;
 
         // Iterate through each aquifer IDs (This is because each element in the original vector represents an aquifer ID)
         for (auto aquconvec = output_vector.begin(); aquconvec != output_vector.end(); ++aquconvec)
         {
-            //Begin to fill the working buffer
-            working_buffer.clear();
-            working_buffer.resize(aquconvec->global_index.size());
+            // Create a working buffer
+            std::vector<pair_elements> working_buffer;
             for (size_t i = 0; i < aquconvec->global_index.size(); ++i )
-            {
-                working_buffer.at(i).global_index = aquconvec->global_index.at(i);
-                working_buffer.at(i).influx_coeff = aquconvec->influx_coeff.at(i);
-                working_buffer.at(i).influx_multiplier = aquconvec->influx_multiplier.at(i);
-                working_buffer.at(i).reservoir_face_dir = aquconvec->reservoir_face_dir.at(i);
-                working_buffer.at(i).record_index = aquconvec->record_index.at(i);
-            }
+                working_buffer.push_back( { aquconvec->global_index[i],
+                                            aquconvec->influx_coeff[i],
+                                            aquconvec->influx_multiplier[i],
+                                            aquconvec->reservoir_face_dir[i],
+                                            aquconvec->record_index[i]});
+
 
             // Sort by ascending order the working_buffer vector in order of priority:
             // 1) global_index, then 2) record_index
