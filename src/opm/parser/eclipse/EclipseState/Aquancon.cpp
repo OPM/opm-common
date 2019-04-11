@@ -33,17 +33,17 @@ namespace Opm {
 
             // Variables constants
             std::vector<std::shared_ptr<double>>  influx_coeff_per_record;  //Aquifer influx coefficient
-            std::vector<double>  influx_mult_per_record;   //Aquifer influx coefficient Multiplier       
-            // Cell face to connect aquifer to        
+            std::vector<double>  influx_mult_per_record;   //Aquifer influx coefficient Multiplier
+            // Cell face to connect aquifer to
             std::vector<int> face_per_record;
-            std::vector<int> record_index_per_record;         
+            std::vector<int> record_index_per_record;
         };
     }
 
     Aquancon::Aquancon(const EclipseGrid& grid, const Deck& deck)
-    { 
+    {
         if (!deck.hasKeyword("AQUANCON"))
-            return;  
+            return;
 
         std::vector<Opm::AquanconRecord> m_aqurecord;
         // Aquifer ID per record
@@ -56,7 +56,7 @@ namespace Opm {
         m_aquiferID_per_record.resize(aquanconKeyword.size());
 
         // We now do a loop over each record entry in aquancon
-        for (size_t aquanconRecordIdx = 0; aquanconRecordIdx < aquanconKeyword.size(); ++aquanconRecordIdx) 
+        for (size_t aquanconRecordIdx = 0; aquanconRecordIdx < aquanconKeyword.size(); ++aquanconRecordIdx)
         {
             const auto& aquanconRecord = aquanconKeyword.getRecord(aquanconRecordIdx);
             m_aquiferID_per_record.at(aquanconRecordIdx) = aquanconRecord.getItem("AQUIFER_ID").template get<int>(0);
@@ -75,7 +75,7 @@ namespace Opm {
             double influx_mult = aquanconRecord.getItem("INFLUX_MULT").getSIDouble(0);
 
             FaceDir::DirEnum faceDir = FaceDir::FromString(aquanconRecord.getItem("FACE").getTrimmedString(0));
-              
+
             // Loop over the cartesian indices to convert to the global grid index
             for (int k=m_aqurecord.at(aquanconRecordIdx).k1; k <= m_aqurecord.at(aquanconRecordIdx).k2; k++) {
                 for (int j=m_aqurecord.at(aquanconRecordIdx).j1; j <= m_aqurecord.at(aquanconRecordIdx).j2; j++)
@@ -111,11 +111,11 @@ namespace Opm {
         // Logic for grid connection applied here
         m_aquoutput = logic_application(m_aquoutput);
     }
-                                         
-    
+
+
     // This function is used to convert from a per record vector to a per aquifer ID vector.
-    void Aquancon::collate_function(std::vector<Aquancon::AquanconOutput>& output_vector, 
-                                    std::vector<Opm::AquanconRecord>& m_aqurecord, 
+    void Aquancon::collate_function(std::vector<Aquancon::AquanconOutput>& output_vector,
+                                    std::vector<Opm::AquanconRecord>& m_aqurecord,
                                     std::vector<int> m_aquiferID_per_record, int m_maxAquID)
     {
         output_vector.resize(m_maxAquID);
@@ -159,7 +159,7 @@ namespace Opm {
                                                              output_vector.at(i - 1).record_index.end(),
                                                              m_aqurecord.at(record_index_matching_id).record_index_per_record.begin(),
                                                              m_aqurecord.at(record_index_matching_id).record_index_per_record.end()
-                                                           );  
+                                                           );
             }
         }
     }
@@ -167,7 +167,7 @@ namespace Opm {
     std::vector<Aquancon::AquanconOutput> Aquancon::logic_application(const std::vector<Aquancon::AquanconOutput> original_vector)
     {
         std::vector<Aquancon::AquanconOutput> output_vector = original_vector;
-        
+
         // Create a local struct to couple each element for easy sorting
         struct pair_elements
         {
@@ -178,7 +178,7 @@ namespace Opm {
           int record_index;
         };
 
-        // Create a working buffer 
+        // Create a working buffer
         std::vector<pair_elements> working_buffer;
 
         // Iterate through each aquifer IDs (This is because each element in the original vector represents an aquifer ID)
@@ -212,9 +212,9 @@ namespace Opm {
                         }
                      );
 
-            // We then proceed to obtain unique elements of the global_index, and we apply the 
+            // We then proceed to obtain unique elements of the global_index, and we apply the
             // following behaviour (as mentioned in the Eclipse 2014.1 Reference Manual p.345):
-            // If a reservoir cell is defined more than once, its previous value for the 
+            // If a reservoir cell is defined more than once, its previous value for the
             // aquifer influx coefficient is added to the present value.
 
             auto i2 = std::unique(  working_buffer.begin(),
@@ -248,17 +248,17 @@ namespace Opm {
             }
 
         }
- 
+
         return output_vector;
     }
 
     void Aquancon::convert_record_id_to_aquifer_id(std::vector<int>& record_indices_matching_id,
                                                    int i, std::vector<int> m_aquiferID_per_record)
     {
-        auto it = std::find_if( m_aquiferID_per_record.begin(), m_aquiferID_per_record.end(), 
+        auto it = std::find_if( m_aquiferID_per_record.begin(), m_aquiferID_per_record.end(),
                                     [&](int id) {
                                         return id == i;
-                                    } 
+                                    }
                                 );
         while (it != m_aquiferID_per_record.end()) {
             record_indices_matching_id.emplace_back(std::distance(m_aquiferID_per_record.begin(), it));

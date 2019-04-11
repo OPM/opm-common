@@ -94,4 +94,4 @@ BOOST_AUTO_TEST_CASE(AquanconTest){
         BOOST_CHECK_EQUAL_COLLECTIONS( aquifers.at(i).record_index.begin(), aquifers.at(i).record_index.end(),
                                    expected_output.at(i).record_index.begin(), expected_output.at(i).record_index.end() );
     }
-}    
+}

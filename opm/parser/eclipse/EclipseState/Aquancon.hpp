@@ -53,13 +53,13 @@ namespace Opm {
             Aquancon(const EclipseGrid& grid, const Deck& deck);
 
             const std::vector<Aquancon::AquanconOutput>& getAquOutput() const;
-    
+
         private:
 
             std::vector<Aquancon::AquanconOutput> logic_application(const std::vector<Aquancon::AquanconOutput> original_vector);
 
-            void collate_function(std::vector<Aquancon::AquanconOutput>& output_vector, 
-                                  std::vector<Opm::AquanconRecord>& m_aqurecord, 
+            void collate_function(std::vector<Aquancon::AquanconOutput>& output_vector,
+                                  std::vector<Opm::AquanconRecord>& m_aqurecord,
                                   std::vector<int> m_aquiferID_per_record, int m_maxAquID);
 
             void convert_record_id_to_aquifer_id(std::vector<int>& record_indices_matching_id, int i,
