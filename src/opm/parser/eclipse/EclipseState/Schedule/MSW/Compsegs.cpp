@@ -19,6 +19,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
 
@@ -52,10 +53,10 @@ namespace Opm {
 
     std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword, const EclipseGrid& grid) {
 
-        // only handle the second record here
-        // The first record here only contains the well name
         std::vector< Compsegs > compsegs;
 
+        // The first record in the keyword only contains the well name
+        // looping from the second record in the keyword
         for (size_t recordIndex = 1; recordIndex < compsegsKeyword.size(); ++recordIndex) {
             const auto& record = compsegsKeyword.getRecord(recordIndex);
             // following the coordinate rule for connections
@@ -81,6 +82,14 @@ namespace Opm {
             } else {
                 // TODO: the distance_start plus the thickness of the grid block
                 throw std::runtime_error("this way to obtain DISTANCE_END not implemented yet!");
+            }
+
+            if (distance_end <= distance_start) {
+                const std::string& well_name = compsegsKeyword.getRecord(0).getItem("WELL").getTrimmedString(0);
+                std::ostringstream sstr;
+                sstr << " The end of the perforations need be to further down than the start of the perforations\n "
+                     << " well " << well_name << " " << I + 1 << " " << J + 1 << " " << K + 1 << " in keyword COMPSEGS\n";
+                throw std::logic_error(sstr.str());
             }
 
             if( !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) &&
