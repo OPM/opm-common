@@ -69,6 +69,31 @@ namespace Opm {
 
     }
 
+    namespace WellTarget {
+        enum ControlModeEnum {
+             ORAT =  1,
+             WRAT =  2,
+             GRAT =  3,
+             LRAT =  4,
+             CRAT =  5,   // Not supported
+             RESV =  6,
+             BHP  =  7,
+             THP  =  8,
+             VFP  =  9,
+             LIFT = 10,   // Not supported
+             GUID = 11
+        };
+        /*
+          There are unfortuntaley separate enums for production controls,
+          injection controls and also for WELTARG control arguments. Since the
+          WELTARG control arguments are *not* used to enumerate available
+          controls the numerical values are - conciously - not in 2^n range.
+        */
+
+        ControlModeEnum ControlModeFromString(const std::string& string_value);
+    }
+
+
     namespace WellInjector {
         enum TypeEnum {
             WATER = 1,

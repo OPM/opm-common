@@ -73,6 +73,7 @@ namespace Opm {
         static bool effectiveHistoryProductionControl(const WellProducer::ControlModeEnum cmode);
         void handleWCONPROD( const DeckRecord& record);
         void handleWCONHIST( const DeckRecord& record);
+        void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
         void resetDefaultBHPLimit();
 
     private:

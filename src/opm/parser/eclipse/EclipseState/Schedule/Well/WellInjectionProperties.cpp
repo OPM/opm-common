@@ -102,6 +102,47 @@ namespace Opm {
     }
 
 
+
+    void WellInjectionProperties::handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
+        if (cmode == WellTarget::BHP){
+            this->BHPLimit = newValue * siFactorP;
+        }
+        else if (cmode == WellTarget::ORAT){
+            if(this->injectorType == WellInjector::TypeEnum::OIL){
+                this->surfaceInjectionRate = newValue * siFactorL;
+            }else{
+                std::invalid_argument("Well type must be OIL to set the oil rate");
+            }
+        }
+        else if (cmode == WellTarget::WRAT){
+            if(this->injectorType == WellInjector::TypeEnum::WATER){
+                this->surfaceInjectionRate = newValue * siFactorL;
+            }else{
+                std::invalid_argument("Well type must be WATER to set the water rate");
+            }
+        }
+        else if (cmode == WellTarget::GRAT){
+            if(this->injectorType == WellInjector::TypeEnum::GAS){
+                this->surfaceInjectionRate = newValue * siFactorG;
+            }else{
+                std::invalid_argument("Well type must be GAS to set the gas rate");
+            }
+        }
+        else if (cmode == WellTarget::THP){
+            this->THPLimit = newValue * siFactorP;
+        }
+        else if (cmode == WellTarget::VFP){
+            this->VFPTableNumber = static_cast<int> (newValue);
+        }
+        else if (cmode == WellTarget::RESV){
+            this->reservoirInjectionRate = newValue * siFactorL;
+        }
+        else if (cmode != WellTarget::GUID){
+            throw std::invalid_argument("Invalid keyword (MODE) supplied");
+        }
+    }
+
+
     void WellInjectionProperties::handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name, const UnitSystem& unit_system) {
         // convert injection rates to SI
         const auto& typeItem = record.getItem("TYPE");

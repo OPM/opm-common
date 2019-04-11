@@ -614,6 +614,48 @@ namespace Opm {
     }
 
 
+    namespace WellTarget {
+
+        ControlModeEnum ControlModeFromString(const std::string& string_value) {
+            if (string_value == "ORAT")
+                return ORAT;
+
+            if (string_value == "WRAT")
+                return WRAT;
+
+            if (string_value == "GRAT")
+                return GRAT;
+
+            if (string_value == "LRAT")
+                return LRAT;
+
+            if (string_value == "CRAT")
+                return CRAT;
+
+            if (string_value == "RESV")
+                return RESV;
+
+            if (string_value == "BHP")
+                return BHP;
+
+            if (string_value == "THP")
+                return THP;
+
+            if (string_value == "VFP")
+                return VFP;
+
+            if (string_value == "LIFT")
+                return LIFT;
+
+            if (string_value == "GUID")
+                return GUID;
+
+            throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
+        }
+    }
+
+
+
 
     namespace WellEcon {
         const std::string WorkoverEnumToString(WorkoverEnum enumValue) {
