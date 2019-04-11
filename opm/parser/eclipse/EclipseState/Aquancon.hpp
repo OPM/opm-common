@@ -56,7 +56,7 @@ namespace Opm {
 
         private:
 
-            std::vector<Aquancon::AquanconOutput> logic_application(const std::vector<Aquancon::AquanconOutput> original_vector);
+            std::vector<Aquancon::AquanconOutput> logic_application(const std::vector<Aquancon::AquanconOutput>& original_vector);
 
             void collate_function(std::vector<Aquancon::AquanconOutput>& output_vector,
                                   std::vector<Opm::AquanconRecord>& m_aqurecord,

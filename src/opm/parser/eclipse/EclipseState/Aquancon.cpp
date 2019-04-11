@@ -164,7 +164,7 @@ namespace Opm {
         }
     }
 
-    std::vector<Aquancon::AquanconOutput> Aquancon::logic_application(const std::vector<Aquancon::AquanconOutput> original_vector)
+    std::vector<Aquancon::AquanconOutput> Aquancon::logic_application(const std::vector<Aquancon::AquanconOutput>& original_vector)
     {
         std::vector<Aquancon::AquanconOutput> output_vector = original_vector;
 
