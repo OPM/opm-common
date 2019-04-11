@@ -50,10 +50,10 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
         deckValid = deckValid && Section::checkSectionTopology(deck, parser, ensureKeywordSection);
     }
 
-    const std::string& deckUnitSystem = deck.getActiveUnitSystem().getName();
+    const std::string& deckUnitSystem = boost::to_upper_copy(deck.getActiveUnitSystem().getName());
     for (const auto& keyword : deck.getKeywordList("FILEUNIT")) {
         const std::string& fileUnitSystem =
-            keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0);
+            boost::to_upper_copy(keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0));
         if (fileUnitSystem != deckUnitSystem) {
             std::string msg =
                 "Unit system " + fileUnitSystem + " specified via the FILEUNIT keyword at "
