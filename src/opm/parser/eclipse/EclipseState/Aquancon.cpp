@@ -217,6 +217,8 @@ namespace Opm {
                                     working_buffer.end(),
                                     [](pair_elements& element1, pair_elements& element2) -> bool
                                     {
+                                        // Not entirely clear for the manual; but it would seem
+                                        // natural that this equality check also included the face?
                                         if (element1.global_index == element2.global_index)
                                         {
                                             if (element1.influx_coeff && element2.influx_coeff)
