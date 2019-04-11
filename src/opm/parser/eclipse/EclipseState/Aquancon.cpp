@@ -219,7 +219,13 @@ namespace Opm {
                                     {
                                         if (element1.global_index == element2.global_index)
                                         {
-                                            *(element1.influx_coeff) += *(element2.influx_coeff);
+                                            if (element1.influx_coeff && element2.influx_coeff)
+                                                *(element1.influx_coeff) += *(element2.influx_coeff);
+                                            else {
+                                                if (element1.influx_coeff || element2.influx_coeff)
+                                                    throw std::invalid_argument("Sorry - can not combine defaulted and not default AQUANCON records");
+                                            }
+
                                             return true;
                                         }
 
