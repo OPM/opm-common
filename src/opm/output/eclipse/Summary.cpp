@@ -1065,12 +1065,18 @@ static const std::unordered_map< std::string, UnitSystem::measure> block_units =
   {"BOSAT"      , UnitSystem::measure::identity},
   {"BWKR"      , UnitSystem::measure::identity},
   {"BOKR"      , UnitSystem::measure::identity},
-/*  {"BKRO"      , UnitSystem::measure::identity},
+  {"BKRO"      , UnitSystem::measure::identity},
   {"BGKR"      , UnitSystem::measure::identity},
   {"BKRG"      , UnitSystem::measure::identity},
   {"BKRW"      , UnitSystem::measure::identity},
-  {"BWPC"      , UnitSystem::measure::identity},
-  {"BGPC"      , UnitSystem::measure::identity}, */
+  {"BWPC"      , UnitSystem::measure::pressure},
+  {"BGPC"      , UnitSystem::measure::pressure},
+  {"BVWAT"      , UnitSystem::measure::viscosity},
+  {"BWVIS"      , UnitSystem::measure::viscosity}, 
+  {"BVGAS"      , UnitSystem::measure::viscosity},
+  {"BGVIS"      , UnitSystem::measure::viscosity}, 
+  {"BVOIL"      , UnitSystem::measure::viscosity},
+  {"BOVIS"      , UnitSystem::measure::viscosity}, 
 };
 
 inline std::vector< const Well* > find_wells( const Schedule& schedule,
