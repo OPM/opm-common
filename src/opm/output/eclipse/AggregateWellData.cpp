@@ -265,7 +265,7 @@ namespace {
                            const std::size_t               msWellID,
                            const std::map <const std::string, size_t>&  GroupMapNameInd,
 			   /*const std::vector<std::string>& groupNames,*/
-                           const int                       maxGroups,
+                           const int                       /* maxGroups */,
                            const std::size_t               sim_step,
                            IWellArray&                     iWell)
         {

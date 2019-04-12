@@ -41,7 +41,7 @@ namespace {
                            const Opm::ParseContext& ctxt,
                            Opm::ErrorGuard&         guard)
         {
-            const auto nWells = sched.numWells();
+            auto nWells = sched.numWells();
 
             if (nWells > static_cast<decltype(nWells)>(wdims.maxWellsInField()))
             {
@@ -83,7 +83,7 @@ namespace {
                             const Opm::ParseContext& ctxt,
                             Opm::ErrorGuard&         guard)
         {
-            const auto nGroups = sched.numGroups();
+            auto nGroups = sched.numGroups();
 
             // Note: "1 +" to account for FIELD group being in 'sched.numGroups()'
             //   but excluded from WELLDIMS(3).

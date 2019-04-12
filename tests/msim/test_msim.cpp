@@ -44,12 +44,12 @@
 using namespace Opm;
 
 
-double prod_opr(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
+double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double seconds_elapsed) {
     const auto& units = es.getUnits();
     return -units.to_si(UnitSystem::measure::rate, seconds_elapsed);
 }
 
-void pressure(const EclipseState& es, const Schedule& sched, data::Solution& sol, size_t report_step, double seconds_elapsed) {
+void pressure(const EclipseState& es, const Schedule& /* sched */, data::Solution& sol, size_t /* report_step */, double seconds_elapsed) {
     const auto& grid = es.getInputGrid();
     const auto& units = es.getUnits();
     if (!sol.has("PRESSURE"))
