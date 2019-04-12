@@ -41,9 +41,9 @@ namespace {
                            const Opm::ParseContext& ctxt,
                            Opm::ErrorGuard&         guard)
         {
-            auto nWells = sched.numWells();
+            const auto nWells = sched.numWells();
 
-            if (nWells > static_cast<decltype(nWells)>(wdims.maxWellsInField()))
+            if (nWells > std::size_t(wdims.maxWellsInField()))
             {
                 std::ostringstream os;
                 os << "Run uses " << nWells << " wells, but allocates at "
@@ -83,11 +83,11 @@ namespace {
                             const Opm::ParseContext& ctxt,
                             Opm::ErrorGuard&         guard)
         {
-            auto nGroups = sched.numGroups();
+            const auto nGroups = sched.numGroups();
 
             // Note: "1 +" to account for FIELD group being in 'sched.numGroups()'
             //   but excluded from WELLDIMS(3).
-            if (nGroups > 1 + static_cast<decltype(nGroups)>(wdims.maxGroupsInField()))
+            if (nGroups > 1U + wdims.maxGroupsInField())
             {
                 std::ostringstream os;
                 os << "Run uses " << (nGroups - 1) << " non-FIELD groups, but "
