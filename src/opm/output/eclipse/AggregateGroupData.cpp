@@ -55,7 +55,7 @@ namespace {
 
     int groupType(const Opm::Schedule& sched,
 		      const Opm::Group& group,
-		      std::size_t simStep)
+                      const std::size_t simStep)
     {
 	const std::string& groupName = group.name();
 	if (!sched.hasGroup(groupName))
@@ -118,7 +118,7 @@ namespace {
 	return groupIndexMap;
     }
 
-    int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, size_t simStep)
+    int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t simStep)
     {
 	int level = 0;
 	const std::vector< const Opm::Group* >  groups = sched.getGroups(simStep);
@@ -462,7 +462,7 @@ namespace {
 void
 Opm::RestartIO::Helpers::groupMaps::
 currentGrpTreeNameSeqIndMap(const Opm::Schedule&                        sched,
-                            size_t                                      simStep,
+                            const size_t                                      simStep,
                             const std::map<const std::string , size_t>& /* GnIMap */,
                             const std::map<size_t, const Opm::Group*>&  IGMap)
     {
@@ -545,7 +545,7 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
 
     // Define Static Contributions to SGrp Array.
     groupLoop(curGroups,
-              [this](const Group& /* group */, std::size_t groupID) -> void
+              [this](const Group& /* group */, const std::size_t groupID) -> void
     {
         auto sw = this->sGroup_[groupID];
         SGrp::staticContrib(sw);
