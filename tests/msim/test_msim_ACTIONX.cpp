@@ -66,25 +66,25 @@ struct test_data {
 };
 
 
-double prod_opr(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
+double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double oil_rate = 1.0;
     return -units.to_si(UnitSystem::measure::rate, oil_rate);
 }
 
-double prod_opr_low(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
+double prod_opr_low(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double oil_rate = 0.5;
     return -units.to_si(UnitSystem::measure::rate, oil_rate);
 }
 
-double prod_wpr_P1(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
+double prod_wpr_P1(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
     return -units.to_si(UnitSystem::measure::rate, water_rate);
 }
 
-double prod_wpr_P2(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
+double prod_wpr_P2(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
     if (report_step > 5)
@@ -93,13 +93,13 @@ double prod_wpr_P2(const EclipseState&  es, const Schedule& sched, const data::S
     return -units.to_si(UnitSystem::measure::rate, water_rate);
 }
 
-double prod_wpr_P3(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
+double prod_wpr_P3(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
     return -units.to_si(UnitSystem::measure::rate, water_rate);
 }
 
-double prod_wpr_P4(const EclipseState&  es, const Schedule& sched, const data::Solution& sol, size_t report_step, double seconds_elapsed) {
+double prod_wpr_P4(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
     if (report_step > 10)

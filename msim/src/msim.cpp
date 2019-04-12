@@ -51,7 +51,7 @@ void msim::run(Schedule& schedule, EclipseIO& io) {
 }
 
 
-void msim::post_step(Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const {
+void msim::post_step(Schedule& schedule, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step, EclipseIO& io) const {
     const auto& actions = schedule.actions();
     if (actions.empty())
         return;
@@ -98,7 +98,7 @@ void msim::run_step(const Schedule& schedule, data::Solution& sol, data::Wells& 
 
 
 
-void msim::output(size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const {
+void msim::output(size_t report_step, bool /* substep */, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const {
     RestartValue value(sol, well_data);
     io.writeTimeStep(report_step,
                      false,

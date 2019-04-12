@@ -150,7 +150,7 @@ std::size_t RFTConfig::firstRFTOutput() const {
 
     for (const auto& rft_pair : this->plt_config) {
         const auto& dynamic_state = rft_pair.second;
-        auto pred = [] (const std::pair<PLTConnections::PLTEnum, std::size_t>& elm) { return false; };
+        auto pred = [] (const std::pair<PLTConnections::PLTEnum, std::size_t>& ) { return false; };
         int this_first_rft = dynamic_state.find_if(pred);
         if (this_first_rft >= 0)
             first_rft = std::min(first_rft, static_cast<std::size_t>(this_first_rft));

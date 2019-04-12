@@ -416,7 +416,7 @@ namespace {
         void staticContrib(const Opm::Well&        well,
                            const std::size_t       rptStep,
                            const std::vector<int>& inteHead,
-			   const Opm::EclipseGrid&  grid,
+			   const Opm::EclipseGrid&  /* grid */,
                            ISegArray&              iSeg
 			  )
         {
