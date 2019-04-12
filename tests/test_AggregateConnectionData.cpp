@@ -71,7 +71,7 @@ struct MockIH
 
 MockIH::MockIH(const int numWells,
 	       const int nsegWell,
-	       const int ncwMax,
+	       const int /* ncwMax */,
 	       const int iConnPerConn,
 	       const int sConnPerConn,
 	       const int xConnPerConn)

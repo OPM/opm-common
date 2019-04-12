@@ -29,7 +29,7 @@ namespace Opm {
         {
         }
 
-        void Rock2dTable::init(const DeckRecord& record, size_t tableIdx)
+        void Rock2dTable::init(const DeckRecord& record, size_t /* tableIdx */)
         {
             m_pressureValues.push_back(record.getItem("PRESSURE").getSIDoubleData()[0]);
             m_pvmultValues.push_back(record.getItem("PVMULT").getSIDoubleData());

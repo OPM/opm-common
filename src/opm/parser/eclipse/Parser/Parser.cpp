@@ -322,7 +322,7 @@ void ParserState::loadFile(const boost::filesystem::path& inputFile) {
     boost::filesystem::path inputFileCanonical;
     try {
         inputFileCanonical = boost::filesystem::canonical(inputFile);
-    } catch (boost::filesystem::filesystem_error fs_error) {
+    } catch (const boost::filesystem::filesystem_error& fs_error) {
         std::string msg = "Could not open file: " + inputFile.string();
         parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, errors);
         return;
