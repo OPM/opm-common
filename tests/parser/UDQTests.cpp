@@ -24,6 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
@@ -953,4 +954,32 @@ BOOST_AUTO_TEST_CASE(UDQPARSE_PARSECONTEXT) {
 
     parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
     BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP", tokens, parseContext, errors), std::invalid_argument);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(UDA_VALUE) {
+    UDAValue value0;
+    BOOST_CHECK(value0.is<double>());
+    BOOST_CHECK(!value0.is<std::string>());
+    BOOST_CHECK_EQUAL( value0.get<double>(), 0);
+    BOOST_CHECK_THROW( value0.get<std::string>(), std::invalid_argument);
+
+
+    UDAValue value1(10);
+    BOOST_CHECK(value1.is<double>());
+    BOOST_CHECK(!value1.is<std::string>());
+    BOOST_CHECK_EQUAL( value1.get<double>(), 10);
+    BOOST_CHECK_THROW( value1.get<std::string>(), std::invalid_argument);
+
+
+    UDAValue value2("FUBHP");
+    BOOST_CHECK(!value2.is<double>());
+    BOOST_CHECK(value2.is<std::string>());
+    BOOST_CHECK_EQUAL( value2.get<std::string>(), std::string("FUBHP"));
+    BOOST_CHECK_THROW( value2.get<double>(), std::invalid_argument);
+
+
+    std::vector<UDAValue> values;
+    values.resize(100, UDAValue(1000));
 }
