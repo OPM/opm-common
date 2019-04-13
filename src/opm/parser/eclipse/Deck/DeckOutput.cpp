@@ -20,6 +20,7 @@
 #include <ostream>
 
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
 
 namespace Opm {
@@ -82,6 +83,14 @@ namespace Opm {
         this->os << value;
     }
 
+    template <>
+    void DeckOutput::write_value( const UDAValue& value ) {
+        if (value.is<double>())
+            this->write_value(value.get<double>());
+        else
+            this->write_value(value.get<std::string>());
+    }
+
     void DeckOutput::stash_default( ) {
         this->default_count++;
     }
@@ -132,4 +141,5 @@ namespace Opm {
     template void DeckOutput::write( const int& value);
     template void DeckOutput::write( const double& value);
     template void DeckOutput::write( const std::string& value);
+    template void DeckOutput::write( const UDAValue& value);
 }

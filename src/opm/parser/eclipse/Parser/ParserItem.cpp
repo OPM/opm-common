@@ -30,7 +30,7 @@
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
 #include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
-
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
 namespace Opm {
 
@@ -47,6 +47,11 @@ template<> const double& default_value< double >() {
     return value;
 }
 
+template<> const UDAValue& default_value< UDAValue >() {
+    static const UDAValue value = UDAValue(std::numeric_limits<double>::quiet_NaN());
+    return value;
+}
+
 template<> const std::string& default_value< std::string >() {
     static const std::string value = "";
     return value;
@@ -57,7 +62,7 @@ type_tag get_data_type_json( const std::string& str ) {
     if( str == "DOUBLE" )    return type_tag::fdouble;
     if( str == "STRING" )    return type_tag::string;
     if( str == "RAW_STRING") return type_tag::string;
-    if( str == "UDA")        return type_tag::fdouble;
+    if( str == "UDA")        return type_tag::uda;
     throw std::invalid_argument( str + " cannot be converted to enum 'tag'" );
 }
 
@@ -88,7 +93,14 @@ std::string ParserItem::string_from_size( ParserItem::item_size sz ) {
         case item_size::SINGLE: return "SINGLE";
     }
 
-    throw std::logic_error( "Fatal error; should not be reachable" );
+    throw std::logic_error( "ParserItem::string_from_size: Fatal error; should not be reachable" );
+}
+
+template<> const UDAValue& ParserItem::value_ref< UDAValue >() const {
+    if( this->data_type != get_type< UDAValue >() )
+        throw std::invalid_argument("ValueRef<UDAValue> Wrong type." );
+
+    return this->uval;
 }
 
 template<> const int& ParserItem::value_ref< int >() const {
@@ -164,17 +176,17 @@ ParserItem::ParserItem( const Json::JsonObject& json ) :
         this->setDefault( json.get_double( "default" ) );
         break;
 
+    case itype::UDA:
+        this->setDefault( UDAValue(json.get_double( "default" )) );
+        break;
+
     case itype::STRING:
     case itype::RAW_STRING:
         this->setDefault( json.get_string( "default" ) );
         break;
 
-    case itype::UDA:
-        this->setDefault( json.get_double( "default" ) );
-        break;
-
     default:
-        throw std::logic_error( "Item of unknown type." );
+        throw std::logic_error( "Item of unknown type: <" + json.get_string("value_type") + ">" );
     }
 }
 
@@ -205,7 +217,7 @@ void ParserItem::setInputType(ParserItem::itype input_type) {
         this->setDataType( std::string() );
 
     else if (input_type == itype::UDA)
-        this->setDataType( double() );
+        this->setDataType( UDAValue(0) );
 
     else
         throw std::invalid_argument("BUG: input type not recognized in setInputType()");
@@ -238,22 +250,17 @@ const T& ParserItem::getDefault() const {
 }
 
 bool ParserItem::hasDimension() const {
-    if( this->data_type != type_tag::fdouble )
-        return false;
-
     return !this->dimensions.empty();
 }
 
 size_t ParserItem::numDimensions() const {
-    if( this->data_type != type_tag::fdouble ) return 0;
     return this->dimensions.size();
 }
 
 const std::string& ParserItem::getDimension( size_t index ) const {
-    if( this->data_type != type_tag::fdouble )
-        throw std::invalid_argument("Item is not double.");
-
-    return this->dimensions.at( index );
+    if( this->data_type == type_tag::fdouble || this->data_type == type_tag::uda)
+        return this->dimensions.at( index );
+    throw std::invalid_argument("Item is not double / UDA .");
 }
 
 void ParserItem::push_backDimension( const std::string& dim ) {
@@ -277,6 +284,10 @@ void ParserItem::push_backDimension( const std::string& dim ) {
         return m_name;
     }
 
+
+type_tag ParserItem::dataType() const {
+    return this->data_type;
+}
 
 
     ParserItem::item_size ParserItem::sizeType() const {
@@ -341,8 +352,12 @@ bool ParserItem::operator==( const ParserItem& rhs ) const {
                 if( this->sval != rhs.sval ) return false;
                 break;
 
+            case type_tag::uda:
+                if( this->uval != rhs.uval ) return false;
+                break;
+
             default:
-                throw std::logic_error( "Item of unknown type." );
+                throw std::logic_error( "Item of unknown type data_type:" + tag_name(this->data_type));
         }
     }
     if( this->data_type != type_tag::fdouble ) return true;
@@ -427,6 +442,13 @@ std::string ParserItem::createCode(const std::string& indent) const {
             stream << "double(" << as_string(this->getDefault<double>()) << ")";
             break;
 
+        case type_tag::uda:
+            {
+                double double_value =this->getDefault<UDAValue>().get<double>();
+                stream << "UDAValue(" << as_string(double_value) << ")";
+            }
+            break;
+
         case type_tag::string:
             stream << "std::string(\"" << this->getDefault< std::string >() << "\")";
             break;
@@ -436,6 +458,9 @@ std::string ParserItem::createCode(const std::string& indent) const {
         }
         stream << " );" << '\n';
     }
+
+    for (size_t idim=0; idim < this->numDimensions(); idim++)
+        stream << indent <<"item.push_backDimension(\"" << this->getDimension( idim ) << "\");" << '\n';
 
     if (this->m_description.size() > 0)
         stream << indent << "item.setDescription(\"" << this->m_description << "\");" << '\n';
@@ -552,8 +577,10 @@ DeckItem ParserItem::scan( RawRecord& record ) const {
             return scan_item< double >( *this, record );
         case type_tag::string:
             return scan_item< std::string >( *this, record );
+        case type_tag::uda:
+            return scan_item<UDAValue>(*this, record);
         default:
-            throw std::logic_error( "Fatal error; should not be reachable" );
+            throw std::logic_error( "ParserItem::scan: Fatal error; should not be reachable" );
     }
 }
 
@@ -592,11 +619,16 @@ std::string ParserItem::inlineClassInit(const std::string& parentClass,
                 return std::to_string( this->getDefault< int >() );
             case type_tag::fdouble:
                 return std::to_string( this->getDefault< double >() );
+            case type_tag::uda:
+                {
+                    double value = this->getDefault<UDAValue>().get<double>();
+                    return "UDAValue(" + std::to_string(value) + ")";
+                }
             case type_tag::string:
                 return "\"" + this->getDefault< std::string >() + "\"";
 
             default:
-                throw std::logic_error( "Fatal error; should not be reachable" );
+                throw std::logic_error( "ParserItem::inlineClassInit: Fatal error; should not be reachable" );
         }
     };
 
@@ -661,13 +693,16 @@ bool ParserItem::parseRaw( ) const {
 template void ParserItem::setDefault( int );
 template void ParserItem::setDefault( double );
 template void ParserItem::setDefault( std::string );
+template void ParserItem::setDefault( UDAValue );
 
 template void ParserItem::setDataType( int );
 template void ParserItem::setDataType( double );
 template void ParserItem::setDataType( std::string );
+template void ParserItem::setDataType( UDAValue );
 
 template const int& ParserItem::getDefault() const;
 template const double& ParserItem::getDefault() const;
 template const std::string& ParserItem::getDefault() const;
+template const UDAValue& ParserItem::getDefault() const;
 
 }

@@ -28,6 +28,7 @@
 
 #include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -105,6 +106,7 @@ namespace Opm {
         throw std::invalid_argument( "Malformed floating point number '" + view + "'" );
     }
 
+
     template <>
     std::string readValueToken< std::string >( string_view view ) {
         if( view.size() == 0 || view[ 0 ] != '\'' )
@@ -114,6 +116,17 @@ namespace Opm {
             throw std::invalid_argument("Unable to parse string '" + view + "' as a string token");
 
         return view.substr( 1, view.size() - 1 );
+    }
+
+    template<>
+    UDAValue readValueToken< UDAValue >( string_view view ) {
+        double n = 0;
+        qi::real_parser< double, fortran_double< double > > double_;
+        auto cursor = view.begin();
+        const auto ok = qi::parse( cursor, view.end(), double_, n );
+
+        if( ok && cursor == view.end() ) return UDAValue(n);
+        return UDAValue( readValueToken<std::string>(view) );
     }
 
     void StarToken::init_( const string_view& token ) {

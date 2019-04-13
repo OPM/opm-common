@@ -978,8 +978,4 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE) {
     BOOST_CHECK(value2.is<std::string>());
     BOOST_CHECK_EQUAL( value2.get<std::string>(), std::string("FUBHP"));
     BOOST_CHECK_THROW( value2.get<double>(), std::invalid_argument);
-
-
-    std::vector<UDAValue> values;
-    values.resize(100, UDAValue(1000));
 }

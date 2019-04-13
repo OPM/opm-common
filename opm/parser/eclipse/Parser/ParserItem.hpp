@@ -80,6 +80,7 @@ namespace Opm {
         size_t numDimensions() const;
         const std::string& name() const;
         item_size sizeType() const;
+        type_tag dataType() const;
         void setSizeType(item_size size_type);
         std::string getDescription() const;
         bool scalar() const;
@@ -108,6 +109,7 @@ namespace Opm {
         double dval;
         int ival;
         std::string sval;
+        UDAValue uval;
         std::vector< std::string > dimensions;
 
         std::string m_name;
