@@ -293,6 +293,18 @@ void ParserItem::push_backDimension( const std::string& dim ) {
 
 
     void ParserItem::setSizeType(item_size size_type) {
+        /*
+          The restriction that data type UDA can only be combined with size_type
+          SINGLE is due to the way units are bolted on to the Deck
+          datastructures after the parsing has completed. UDA values are
+          currently only used as scalars in well/group control and the
+          restriction does not have any effect. If at some stage in the future
+          this should change the way units are applied to the deck must be
+          refactored.
+         */
+        if (this->data_type == type_tag::uda && size_type != item_size::SINGLE)
+            throw std::invalid_argument("Sorry - the UDA datatype can only be used with size type SINGLE");
+
         this->m_sizeType = size_type;
     }
 
