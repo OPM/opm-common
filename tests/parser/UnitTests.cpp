@@ -30,6 +30,12 @@
 
 using namespace Opm;
 
+BOOST_AUTO_TEST_CASE(DefDim) {
+    Dimension dim;
+    BOOST_CHECK_EQUAL(1.0, dim.getSIScaling());
+    BOOST_CHECK( dim.isCompositable() );
+}
+
 BOOST_AUTO_TEST_CASE(CreateDimension) {
     Dimension length("Length" , 1);
     BOOST_CHECK_EQUAL("Length" , length.getName());

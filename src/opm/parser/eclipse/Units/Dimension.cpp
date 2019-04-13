@@ -25,6 +25,14 @@
 
 namespace Opm {
 
+    Dimension::Dimension()
+    {
+        this->m_name = "Unit";
+        this->m_SIfactor = 1.0;
+        this->m_SIoffset = 0.0;
+
+    }
+
     Dimension::Dimension(const std::string& name, double SIfactor, double SIoffset)
     {
         for (auto iter = name.begin(); iter != name.end(); ++iter) {
