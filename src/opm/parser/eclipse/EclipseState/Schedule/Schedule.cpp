@@ -1661,7 +1661,7 @@ namespace Opm {
       This will recursively go all the way down through the group tree
       until the well leaf-nodes are encountered.
     */
-    std::vector< const Well* > Schedule::getWells(const std::string& group_name, size_t timeStep) const {
+    std::vector< const Well* > Schedule::getChildWells(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: " + group_name);
         {
@@ -1672,15 +1672,14 @@ namespace Opm {
                 const GroupTree& group_tree = getGroupTree( timeStep );
                 const auto& child_groups = group_tree.children( group_name );
 
-                if (child_groups.size()) {
+                if (child_groups.size() && query_mode == GroupWellQueryMode::Recursive) {
                     for (const auto& child : child_groups) {
-                        const auto& child_wells = getWells( child, timeStep );
+                        const auto& child_wells = getChildWells( child, timeStep, query_mode);
                         wells.insert( wells.end() , child_wells.begin() , child_wells.end());
                     }
                 } else {
-                    for (const auto& well_name : group.getWells( timeStep )) {
+                    for (const auto& well_name : group.getWells( timeStep ))
                         wells.push_back( getWell( well_name ));
-                    }
                 }
             }
             return wells;
@@ -1692,44 +1691,19 @@ namespace Opm {
             throw std::invalid_argument("No such group: " + group_name);
         {
             const auto& group = getGroup( group_name );
-	    std::vector<const Group*> child_groups;
+            std::vector<const Group*> child_groups;
 
             if (group.hasBeenDefined( timeStep )) {
                 const GroupTree& group_tree = getGroupTree( timeStep );
                 const auto& ch_grps = group_tree.children( group_name );
-		//for (const std::string& group_name : ch_grps) {
-		for ( auto it = ch_grps.begin() ; it != ch_grps.end(); it++) {
-                        child_groups.push_back( &getGroup(*it));
-                    }
-	    }
-	    return child_groups;
-	}
-    }
-
-        std::vector< const Well* > Schedule::getChildWells(const std::string& group_name, size_t timeStep) const {
-        if (!hasGroup(group_name))
-            throw std::invalid_argument("No such group: " + group_name);
-        {
-            const auto& group = getGroup( group_name );
-            std::vector<const Well*> wells;
-
-            if (group.hasBeenDefined( timeStep )) {
-                const GroupTree& group_tree = getGroupTree( timeStep );
-                const auto& child_groups = group_tree.children( group_name );
-
-                if (!child_groups.size()) {
-                    //for (const auto& well_name : group.getWells( timeStep )) {
-                    const auto& ch_wells = group.getWells( timeStep );
-                    for (auto it= ch_wells.begin(); it != ch_wells.end(); it++) {
-                        wells.push_back( getWell( *it ));
-                    }
+                //for (const std::string& group_name : ch_grps) {
+                for ( auto it = ch_grps.begin() ; it != ch_grps.end(); it++) {
+                    child_groups.push_back( &getGroup(*it));
                 }
             }
-            return wells;
+            return child_groups;
         }
     }
-
-
 
 
     std::vector< const Well* > Schedule::getWells(size_t timeStep) const {

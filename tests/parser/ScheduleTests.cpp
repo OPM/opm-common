@@ -359,10 +359,10 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
 
-    BOOST_CHECK_THROW( schedule.getWells( "NO_SUCH_GROUP" , 1 ), std::invalid_argument);
+    BOOST_CHECK_THROW( schedule.getChildWells( "NO_SUCH_GROUP" , 1 , GroupWellQueryMode::Recursive), std::invalid_argument);
 
     {
-        auto field_wells = schedule.getWells("FIELD" , 0);
+      auto field_wells = schedule.getChildWells("FIELD" , 0, GroupWellQueryMode::Recursive);
         BOOST_CHECK_EQUAL( field_wells.size() , 4U);
 
         BOOST_CHECK( has_well( field_wells, "DW_0" ));
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     }
 
     {
-        auto platform_wells = schedule.getWells("PLATFORM" , 0);
+      auto platform_wells = schedule.getChildWells("PLATFORM" , 0, GroupWellQueryMode::Recursive);
         BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
 
         BOOST_CHECK( has_well( platform_wells, "DW_0" ));
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     }
 
     {
-        auto child_wells1 = schedule.getWells("CG1" , 0);
+      auto child_wells1 = schedule.getChildWells("CG1" , 0, GroupWellQueryMode::Recursive);
         BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
 
         BOOST_CHECK( has_well( child_wells1, "DW_0" ));
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     }
 
     {
-        auto parent_wells2 = schedule.getWells("PG2" , 0);
+      auto parent_wells2 = schedule.getChildWells("PG2" , 0, GroupWellQueryMode::Recursive);
         BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
 
         BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
