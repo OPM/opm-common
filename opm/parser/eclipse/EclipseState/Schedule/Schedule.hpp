@@ -124,20 +124,7 @@ namespace Opm
         std::vector< const Well* > getOpenWells(size_t timeStep) const;
         std::vector< const Well* > getWells() const;
         std::vector< const Well* > getWells(size_t timeStep) const;
-
-        /*
-          The overload with a group name argument will return all
-          wells beneath that particular group; i.e.
-
-             getWells("FIELD",t);
-
-          is an inefficient way to get all the wells defined at time
-          't'.
-        */
-        //std::vector< const Group& > getChildGroups(const std::string& group_name, size_t timeStep) const;
-        std::vector< const Group* > getChildGroups(const std::string& group_name, size_t timeStep) const;
-        std::vector< const Well* > getWells(const std::string& group, size_t timeStep) const;
-        std::vector< const Well* > getChildWells(const std::string& group_name, size_t timeStep) const;
+        std::vector< const Well* > getChildWells(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const WellTestConfig& wtestConfig(size_t timestep) const;
@@ -147,6 +134,7 @@ namespace Opm
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
         const GroupTree& getGroupTree(size_t t) const;
+        std::vector< const Group* > getChildGroups(const std::string& group_name, size_t timeStep) const;
         size_t numGroups() const;
         size_t numGroups(size_t timeStep) const;
         bool hasGroup(const std::string& groupName) const;

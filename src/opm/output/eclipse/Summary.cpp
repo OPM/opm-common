@@ -1086,7 +1086,7 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
     if( type == ECL_SMSPEC_GROUP_VAR ) {
         if( !schedule.hasGroup( name ) ) return {};
 
-        return schedule.getWells( name, sim_step );
+        return schedule.getChildWells( name, sim_step, GroupWellQueryMode::Recursive);
     }
 
     if( type == ECL_SMSPEC_FIELD_VAR )

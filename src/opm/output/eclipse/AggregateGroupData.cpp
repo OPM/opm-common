@@ -178,7 +178,7 @@ namespace {
 	  // location nwgmax +1 in the iGrp array
 
 	    const auto childGroups = sched.getChildGroups(group.name(), simStep);
-	    const auto childWells  = sched.getChildWells(group.name(), simStep);
+	    const auto childWells  = sched.getChildWells(group.name(), simStep, Opm::GroupWellQueryMode::Immediate);
 	    const auto groupMapNameIndex =  currentGroupMapNameIndex(sched, simStep, inteHead);
 	    const auto mapIndexGroup = currentGroupMapIndexGroup(sched, simStep, inteHead);
 	    if ((childGroups.size() != 0) && (childWells.size()!=0))
