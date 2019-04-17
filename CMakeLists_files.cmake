@@ -171,7 +171,6 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
           src/opm/output/eclipse/CreateLogiHead.cpp
-          src/opm/output/eclipse/WellDataSerializers.cpp
           src/opm/output/eclipse/DoubHEAD.cpp
           src/opm/output/eclipse/EclipseGridInspector.cpp
           src/opm/output/eclipse/EclipseIO.cpp
@@ -290,8 +289,6 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_Wells.cpp
           tests/test_WindowedArray.cpp
           tests/test_writenumwells.cpp
-          tests/test_serialize_ICON.cpp
-          tests/test_serialize_SCON.cpp
       )
 endif()
 
