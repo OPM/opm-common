@@ -557,18 +557,6 @@ BOOST_AUTO_TEST_CASE(ReturnNumWellsTimestep) {
     BOOST_CHECK_EQUAL(schedule.numWells(3), 3);
 }
 
-BOOST_AUTO_TEST_CASE(ReturnMaxNumCompletionsForWellsInTimestep) {
-    EclipseGrid grid(10,10,10);
-    auto deck = createDeckWithWellsAndCompletionData();
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec);
-
-    BOOST_CHECK_EQUAL(schedule.getMaxNumConnectionsForWells(1), 7);
-    BOOST_CHECK_EQUAL(schedule.getMaxNumConnectionsForWells(3), 9);
-}
-
 BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     EclipseGrid grid(10,10,10);
     auto deck = createDeckForTestingCrossFlow();

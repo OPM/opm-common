@@ -1956,16 +1956,6 @@ namespace Opm {
         else throw std::invalid_argument("String " + eclipseString + " not recognized as a boolean-convertible string.");
     }
 
-    size_t Schedule::getMaxNumConnectionsForWells(size_t timestep) const {
-      size_t ncwmax = 0;
-      for( const auto& well_pair : this->m_wells) {
-          const auto& completions = well_pair.second.getConnections(timestep);
-
-          if( completions.size() > ncwmax )
-              ncwmax = completions.size();
-      }
-      return ncwmax;
-    }
 
     const Tuning& Schedule::getTuning() const {
       return this->m_tuning;
