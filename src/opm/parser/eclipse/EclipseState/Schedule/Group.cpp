@@ -291,9 +291,9 @@ namespace Opm {
         return this->m_wells.at( time_step ).size();
     }
 
-    void Group::addWell(size_t time_step, const Well* well ) {
+  void Group::addWell(size_t time_step, const std::string& well_name ) {
         auto new_set = this->m_wells.at( time_step );
-        new_set.insert( well->name() );
+        new_set.insert( well_name );
         this->m_wells.update( time_step, new_set );
     }
 
