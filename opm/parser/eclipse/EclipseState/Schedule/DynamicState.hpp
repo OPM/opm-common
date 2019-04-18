@@ -89,6 +89,29 @@ class DynamicState {
             std::fill_n( this->m_data.begin(), this->initial_range, initial );
         }
 
+
+        std::vector<std::pair<std::size_t, T>> unique() {
+            if (this->m_data.empty())
+                return {};
+
+            auto& current_value = this->m_data[0];
+            std::size_t current_index = 0;
+            std::vector<std::pair<std::size_t, T>> result{{current_index, current_value}};
+            while (true) {
+                if (this->m_data[current_index] != current_value) {
+                    current_value = this->m_data[current_index];
+                    result.emplace_back(current_index, current_value);
+                }
+
+                current_index++;
+                if (current_index == this->m_data.size())
+                    break;
+            }
+
+            return result;
+        }
+
+
         /**
            If the current value has been changed the method will
            return true, otherwise it will return false.
