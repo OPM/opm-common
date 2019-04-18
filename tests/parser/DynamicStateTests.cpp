@@ -311,3 +311,28 @@ BOOST_AUTO_TEST_CASE( update_equal ) {
     BOOST_CHECK_EQUAL(state[9] , 200);
     BOOST_CHECK_EQUAL(state[10], 200);
 }
+
+
+
+
+
+BOOST_AUTO_TEST_CASE( UNIQUE ) {
+    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
+    Opm::TimeMap timeMap{ startDate };
+    for (size_t i = 0; i < 10; i++)
+        timeMap.addTStep((i+1) * 24 * 60 * 60);
+
+    Opm::DynamicState<int> state(timeMap , 13);
+    auto unique0 = state.unique();
+    BOOST_CHECK_EQUAL(unique0.size(), 1);
+    BOOST_CHECK(unique0[0] == std::make_pair(std::size_t{0}, 13));
+
+    state.update(3,300);
+    state.update(6,600);
+    auto unique1 = state.unique();
+    BOOST_CHECK_EQUAL(unique1.size(), 3);
+    BOOST_CHECK(unique1[0] == std::make_pair(std::size_t{0}, 13));
+    BOOST_CHECK(unique1[1] == std::make_pair(std::size_t{3}, 300));
+    BOOST_CHECK(unique1[2] == std::make_pair(std::size_t{6}, 600));
+}
+
