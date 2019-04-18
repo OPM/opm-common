@@ -198,6 +198,7 @@ namespace Opm {
     }
 
 
+
     bool WellProductionProperties::operator==(const WellProductionProperties& other) const {
         return OilRate              == other.OilRate
             && WaterRate            == other.WaterRate

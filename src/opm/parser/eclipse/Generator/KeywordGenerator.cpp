@@ -124,7 +124,7 @@ namespace Opm {
         newSource << "}" << std::endl;
 
         newSource << "void Parser::addDefaultKeywords() {" << std::endl
-                  << "Opm::ParserKeywords::addDefaultKeywords(*this);" << std::endl
+                  << "  Opm::ParserKeywords::addDefaultKeywords(*this);" << std::endl
                   << "}}" << std::endl;
 
         return write_file( newSource, sourceFile, m_verbose, "source" );

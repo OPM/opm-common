@@ -701,7 +701,7 @@ void set_dimensions( ParserItem& item,
             || m_keywordSizeType   != rhs.m_keywordSizeType
             || isDataKeyword()     != rhs.isDataKeyword()
             || m_isTableCollection != rhs.m_isTableCollection )
-            return false;
+          return false;
 
         switch( m_keywordSizeType ) {
             case FIXED:
