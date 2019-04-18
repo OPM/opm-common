@@ -250,8 +250,6 @@ namespace Opm
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
         void addWellEvent(const std::string& well, ScheduleEvents::Events event, size_t reportStep);
-        static bool convertEclipseStringToBool(const std::string& eclipseString);
-
 #ifdef CHECK_WELLS
         bool checkWells(const ParseContext& parseContext, ErrorGuard& errors) const;
 #endif

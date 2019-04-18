@@ -1492,7 +1492,7 @@ namespace Opm {
             const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
             auto& well = this->m_wells.get( wellName );
 
-            bool availableForGroupControl = convertEclipseStringToBool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
+            bool availableForGroupControl = DeckItem::to_bool( record.getItem("GROUP_CONTROLLED").getTrimmedString(0) );
             well.setAvailableForGroupControl(currentStep, availableForGroupControl);
 
             well.setGuideRate(currentStep, record.getItem("GUIDE_RATE").get< double >(0));
@@ -1917,18 +1917,6 @@ namespace Opm {
     }
 
 
-    bool Schedule::convertEclipseStringToBool(const std::string& eclipseString) {
-        std::string lowerTrimmed = boost::algorithm::to_lower_copy(eclipseString);
-        boost::algorithm::trim(lowerTrimmed);
-
-        if (lowerTrimmed == "y" || lowerTrimmed == "yes") {
-            return true;
-        }
-        else if (lowerTrimmed == "n" || lowerTrimmed == "no") {
-            return false;
-        }
-        else throw std::invalid_argument("String " + eclipseString + " not recognized as a boolean-convertible string.");
-    }
 
 
     const Tuning& Schedule::getTuning() const {
