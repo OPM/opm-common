@@ -1913,7 +1913,7 @@ namespace Opm {
             m_groups.at( currentGroupName ).delWell( timeStep, well.name() );
         }
         well.setGroupName(timeStep , newGroup.name());
-        newGroup.addWell(timeStep , &well);
+        newGroup.addWell(timeStep , well.name());
     }
 
 

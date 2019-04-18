@@ -34,7 +34,6 @@ namespace Opm {
 
 
     class TimeMap;
-    class Well;
 
     namespace GroupInjection {
         struct InjectionData {
@@ -129,7 +128,7 @@ namespace Opm {
         bool hasWell(const std::string& wellName , size_t time_step) const;
         const std::set< std::string >& getWells( size_t time_step ) const;
         size_t numWells(size_t time_step) const;
-        void addWell(size_t time_step, const Well* well);
+        void addWell(size_t time_step, const std::string& well_name);
         void delWell(size_t time_step, const std::string& wellName );
 
     private:

@@ -160,16 +160,16 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
     auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
-    group.addWell( 3 , well1.get() );
+    group.addWell( 3 , well1->name() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(3));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
 
-    group.addWell( 4 , well1.get() );
+    group.addWell( 4 , well1->name() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(4));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
     BOOST_CHECK_EQUAL( 1U , group.numWells(5));
 
-    group.addWell( 6 , well2.get() );
+    group.addWell( 6 , well2->name() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(4));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
     BOOST_CHECK_EQUAL( 1U , group.numWells(5));
@@ -197,11 +197,11 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
     auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
-    group.addWell( 3 , well1.get() );
+    group.addWell( 3 , well1->name() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(3));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
 
-    group.addWell( 6 , well2.get() );
+    group.addWell( 6 , well2->name() );
     BOOST_CHECK_EQUAL( 1U , group.numWells(4));
     BOOST_CHECK_EQUAL( 0U , group.numWells(1));
     BOOST_CHECK_EQUAL( 1U , group.numWells(5));
@@ -229,10 +229,10 @@ BOOST_AUTO_TEST_CASE(getWells) {
     auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
     auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
 
-    group.addWell( 2 , well1.get() );
-    group.addWell( 3 , well1.get() );
-    group.addWell( 3 , well2.get() );
-    group.addWell( 4 , well1.get() );
+    group.addWell( 2 , well1->name() );
+    group.addWell( 3 , well1->name() );
+    group.addWell( 3 , well2->name() );
+    group.addWell( 4 , well1->name() );
 
     std::vector< std::string > names = { "WELL1", "WELL2" };
     std::vector< std::string > wnames;
