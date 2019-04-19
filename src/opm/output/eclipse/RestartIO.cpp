@@ -84,10 +84,10 @@ namespace {
 
     std::vector<int>
     serialize_OPM_IWEL(const data::Wells&              wells,
-                       const std::vector<const Well*>& sched_wells)
+                       const std::vector<std::string>& sched_wells)
     {
-        const auto getctrl = [&]( const Well* w ) {
-            const auto itr = wells.find( w->name() );
+      const auto getctrl = [&]( const std::string& wname ) {
+            const auto itr = wells.find( wname );
             return itr == wells.end() ? 0 : itr->second.control;
         };
 
@@ -325,7 +325,7 @@ namespace {
         write_kw(rst_file, "IGRP", groupData.getIGroup());
         write_kw(rst_file, "SGRP", groupData.getSGroup());
         write_kw(rst_file, "XGRP", groupData.getXGroup());
-	write_kw(rst_file, "ZGRP", serialize_ZWEL(groupData.getZGroup()));
+        write_kw(rst_file, "ZGRP", serialize_ZWEL(groupData.getZGroup()));
     }
 
     void writeMSWData(::Opm::RestartIO::ecl_rst_file_type* rst_file,
@@ -376,11 +376,12 @@ namespace {
         if (!ecl_compatible_rst)
         {
             const auto sched_wells = schedule.getWells(sim_step);
+            const auto sched_well_names = schedule.wellNames(sim_step);
 
             const auto opm_xwel =
                 serialize_OPM_XWEL(wells, sim_step, sched_wells, phases, grid);
 
-            const auto opm_iwel = serialize_OPM_IWEL(wells, sched_wells);
+            const auto opm_iwel = serialize_OPM_IWEL(wells, sched_well_names);
 
             write_kw(rst_file, "OPM_IWEL", opm_iwel);
             write_kw(rst_file, "OPM_XWEL", opm_xwel);

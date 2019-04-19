@@ -168,8 +168,8 @@ inline void keywordW( SummaryConfig::keyword_list& list,
                 list.push_back( SummaryConfig::keyword_type( keyword.name(), well_name ));
         }
     } else
-        for (const auto* well : schedule.getWells())
-            list.push_back( SummaryConfig::keyword_type( keyword.name(),  well->name()));
+        for (const auto& wname : schedule.wellNames())
+            list.push_back( SummaryConfig::keyword_type( keyword.name(),  wname));
   }
 
 
