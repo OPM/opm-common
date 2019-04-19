@@ -39,9 +39,6 @@ namespace Opm {
         return m_well_name;
     }
 
-    int WellSegments::numberBranch() const {
-        return m_number_branch;
-    }
 
   int WellSegments::size() const {
         return m_segments.size();
@@ -397,7 +394,6 @@ namespace Opm {
 
     bool WellSegments::operator==( const WellSegments& rhs ) const {
         return this->m_well_name == rhs.m_well_name
-            && this->m_number_branch == rhs.m_number_branch
             && this->m_depth_top == rhs.m_depth_top
             && this->m_length_top == rhs.m_length_top
             && this->m_volume_top == rhs.m_length_top
