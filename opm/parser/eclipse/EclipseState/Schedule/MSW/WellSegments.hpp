@@ -41,7 +41,6 @@ namespace Opm {
         double lengthTopSegment() const;
         double volumeTopSegment() const;
 
-        WellSegment::LengthDepthEnum lengthDepthType() const;
         WellSegment::CompPressureDropEnum compPressureDrop() const;
         WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
 
@@ -56,13 +55,14 @@ namespace Opm {
 
         const Segment& operator[](size_t idx) const;
         void orderSegments();
-        void processABS();
-        void processINC(const bool first_time);
+        void process(bool first_time);
 
         bool operator==( const WellSegments& ) const;
         bool operator!=( const WellSegments& ) const;
 
     private:
+        void processABS();
+        void processINC(const bool first_time);
 
         // name of the well
         std::string m_well_name;

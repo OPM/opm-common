@@ -459,14 +459,7 @@ namespace Opm {
         // overwrite the BHP reference depth with the one from WELSEGS keyword
         const double ref_depth = new_segmentset.depthTopSegment();
         m_refDepth.update( time_step, ref_depth );
-
-        if (new_segmentset.lengthDepthType() == WellSegment::ABS) {
-            new_segmentset.processABS();
-        } else if (new_segmentset.lengthDepthType() == WellSegment::INC) {
-            new_segmentset.processINC(first_time);
-        } else {
-            throw std::logic_error(" unknown length_depth_type in the new_segmentset");
-        }
+        new_segmentset.process(first_time);
         m_segmentset.update(time_step, new_segmentset);
     }
 
