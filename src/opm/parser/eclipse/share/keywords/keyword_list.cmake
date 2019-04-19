@@ -103,6 +103,7 @@ set( keywords
      000_Eclipse100/F/FIPOWG
      000_Eclipse100/F/FIP_PROBE
      000_Eclipse100/F/FLUXNUM
+     000_Eclipse100/F/FLUXTYPE
      000_Eclipse100/F/FMTIN
      000_Eclipse100/F/FMTOUT
      000_Eclipse100/F/FMWSET
