@@ -400,7 +400,7 @@ namespace Opm {
             && this->m_number_branch == rhs.m_number_branch
             && this->m_depth_top == rhs.m_depth_top
             && this->m_length_top == rhs.m_length_top
-            && this->m_volume_top == rhs.m_length_top
+            && this->m_volume_top == rhs.m_volume_top
             && this->m_length_depth_type == rhs.m_length_depth_type
             && this->m_comp_pressure_drop == rhs.m_comp_pressure_drop
             && this->m_multiphase_model == rhs.m_multiphase_model
