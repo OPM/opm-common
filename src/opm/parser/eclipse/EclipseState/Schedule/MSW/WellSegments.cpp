@@ -56,9 +56,6 @@ namespace Opm {
         return m_volume_top;
     }
 
-    WellSegment::LengthDepthEnum WellSegments::lengthDepthType() const {
-        return m_length_depth_type;
-    }
 
     WellSegment::CompPressureDropEnum WellSegments::compPressureDrop() const {
         return m_comp_pressure_drop;
@@ -224,6 +221,16 @@ namespace Opm {
         }
         return m_segments[segment_index];
     }
+
+    void WellSegments::process(bool first_time) {
+        if (this->m_length_depth_type == WellSegment::ABS)
+            this->processABS();
+        else if (this->m_length_depth_type == WellSegment::INC)
+            this->processINC(first_time);
+        else
+            throw std::logic_error("Invalid llength/depth/type in segment data structure");
+    }
+
 
     void WellSegments::processABS() {
         const double invalid_value = Segment::invalidValue(); // meaningless value to indicate unspecified/uncompleted values
