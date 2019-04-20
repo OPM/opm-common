@@ -35,7 +35,6 @@ namespace Opm {
         WellSegments() = default;
 
         std::string wellName() const;
-        int numberBranch() const;
         int size() const;
         double depthTopSegment() const;
         double lengthTopSegment() const;
@@ -66,8 +65,6 @@ namespace Opm {
 
         // name of the well
         std::string m_well_name;
-        // number of the branches
-        int m_number_branch;
         // depth of the nodal point of the top segment
         // it is taken as the BHP reference depth of the well
         // BHP reference depth data from elsewhere will be ignored for multi-segmented wells
