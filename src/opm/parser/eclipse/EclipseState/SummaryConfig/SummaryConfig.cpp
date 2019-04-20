@@ -168,8 +168,8 @@ inline void keywordW( SummaryConfig::keyword_list& list,
                 list.push_back( SummaryConfig::keyword_type( keyword.name(), well_name ));
         }
     } else
-        for (const auto* well : schedule.getWells())
-            list.push_back( SummaryConfig::keyword_type( keyword.name(),  well->name()));
+        for (const auto& wname : schedule.wellNames())
+            list.push_back( SummaryConfig::keyword_type( keyword.name(),  wname));
   }
 
 
@@ -388,7 +388,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     void makeSegmentNodes(const std::size_t               last_timestep,
                           const int                       segID,
                           const DeckKeyword&              keyword,
-                          const std::vector<const Well*>& wells,
+                          const Well*                     well,
                           SummaryConfig::keyword_list&    list)
     {
         // Modifies 'list' in place.
@@ -398,30 +398,27 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             list.push_back(SummaryConfig::keyword_type( keyword.name(), well, segNumber ));
         };
 
-        for (const auto* well : wells) {
-            if (! isMultiSegmentWell(last_timestep, well)) {
-                // Not an MSW.  Don't create summary vectors for segments.
-                continue;
-            }
+        if (! isMultiSegmentWell(last_timestep, well))
+            // Not an MSW.  Don't create summary vectors for segments.
+            return;
 
-            const auto& wname = well->name();
-            if (segID < 1) {
-                // Segment number defaulted.  Allocate a summary
-                // vector for each segment.
-                const auto nSeg = maxNumWellSegments(last_timestep, well);
+        const auto& wname = well->name();
+        if (segID < 1) {
+            // Segment number defaulted.  Allocate a summary
+            // vector for each segment.
+            const auto nSeg = maxNumWellSegments(last_timestep, well);
 
-                for (auto segNumber = 0*nSeg;
-                          segNumber <   nSeg; ++segNumber)
+            for (auto segNumber = 0*nSeg;
+                 segNumber <   nSeg; ++segNumber)
                 {
                     // One-based segment number.
                     makeNode(wname, segNumber + 1);
                 }
-            }
-            else {
-                // Segment number specified.  Allocate single
-                // summary vector for that segment number.
-                makeNode(wname, segID);
-            }
+        }
+        else {
+            // Segment number specified.  Allocate single
+            // summary vector for that segment number.
+            makeNode(wname, segID);
         }
     }
 
@@ -440,8 +437,9 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
         const auto segID = -1;
 
-        makeSegmentNodes(last_timestep, segID, keyword,
-                         schedule.getWells(), list);
+        for (const auto& well : schedule.getWells())
+            makeSegmentNodes(last_timestep, segID, keyword,
+                             well, list);
     }
 
     void keywordSWithRecords(const std::size_t            last_timestep,
@@ -481,11 +479,9 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             // segment number in record implies all segments.
             const auto segID = record.getItem(1).defaultApplied(0)
                 ? -1 : record.getItem(1).get<int>(0);
-            std::vector<const Well*> wells;
-            for (const auto& well_name : well_names)
-                wells.push_back( schedule.getWell(well_name) );
 
-            makeSegmentNodes(last_timestep, segID, keyword, wells, list);
+            for (const auto& well_name : well_names)
+                makeSegmentNodes(last_timestep, segID, keyword, schedule.getWell(well_name), list);
         }
     }
 

@@ -85,9 +85,7 @@ namespace {
             }
         };
 
-        for (const auto* well : sched.getWells()) {
-            const auto& well_name = well->name();
-
+        for (const auto& well_name : sched.wellNames()) {
             makeEntities('W', well_name);
 
             entities.emplace_back("WBHP" , well_name);
@@ -1125,8 +1123,8 @@ void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
     const auto& func_table = udq.function_table();
     UDQContext context(func_table, st);
     std::vector<std::string> wells;
-    for (const auto* well : schedule.getWells())
-        wells.push_back(well->name());
+    for (const auto& well_name : schedule.wellNames())
+        wells.push_back(well_name);
 
     for (const auto& assign : udq.assignments(UDQVarType::WELL_VAR)) {
         auto ws = assign.eval_wells(wells);
