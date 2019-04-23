@@ -35,7 +35,7 @@
 
 namespace Opm {
 
-    std::string WellSegments::wellName() const {
+    const std::string& WellSegments::wellName() const {
         return m_well_name;
     }
 

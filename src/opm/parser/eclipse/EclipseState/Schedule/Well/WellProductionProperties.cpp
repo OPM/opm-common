@@ -236,6 +236,7 @@ namespace Opm {
             << "THPH: "         << wp.THPH              << ", "
             << "VFP table: "    << wp.VFPTableNumber    << ", "
             << "ALQ: "          << wp.ALQValue          << ", "
+            << "WHISTCTL: "     << wp.whistctl_cmode    << ", "
             << "prediction: "   << wp.predictionMode    << " }";
     }
 

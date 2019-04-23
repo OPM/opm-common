@@ -95,6 +95,7 @@ namespace Opm {
         void switchToInjector( size_t timeStep);
         void switchToProducer( size_t timeStep);
 
+        bool setProducer(size_t timeStep, bool producer);
         bool isProducer(size_t timeStep) const;
         bool isInjector(size_t timeStep) const;
         void addWELSPECS(const DeckRecord& deckRecord);

@@ -140,7 +140,7 @@ static data::Wells result_wells() {
     rates3.set( rt::well_potential_oil, 30.14 / day );
     rates3.set( rt::well_potential_gas, 30.15 / day );
 
-    
+
     data::Rates rates6;
     rates6.set( rt::wat, 60.0 / day );
     rates6.set( rt::oil, 60.1 / day );
@@ -201,7 +201,7 @@ static data::Wells result_wells() {
     crates6.set( rt::reservoir_water, 600.6 / day );
     crates6.set( rt::reservoir_oil, 600.7 / day );
     crates6.set( rt::reservoir_gas, 600.8 / day );
-    
+
     // Segment vectors
     auto segment = ::Opm::data::Segment{};
     segment.rates.set(rt::wat,  123.45*sm3_pr_day());
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( -20.15, ecl_sum_get_well_var( resp, 1, "W_2", "WGPP" ), 1e-5 );
     BOOST_CHECK_CLOSE(  30.13, ecl_sum_get_well_var( resp, 1, "W_3", "WWPI" ), 1e-5 );
     BOOST_CHECK_CLOSE(  60.15, ecl_sum_get_well_var( resp, 1, "W_6", "WGPI" ), 1e-5 );
-    
+
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0, ecl_sum_get_well_var( resp, 1, "W_1", "WWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 20.0, ecl_sum_get_well_var( resp, 1, "W_2", "WWPT" ), 1e-5 );
@@ -550,7 +550,7 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     BOOST_CHECK_CLOSE( -10.15 - 20.15, ecl_sum_get_group_var( resp, 1, "G_1", "GGPP" ), 1e-5 );
     BOOST_CHECK_CLOSE(  30.13 + 60.13, ecl_sum_get_group_var( resp, 1, "G_2", "GWPI" ), 1e-5 );
     BOOST_CHECK_CLOSE(  30.15 + 60.15, ecl_sum_get_group_var( resp, 1, "G_2", "GGPI" ), 1e-5 );
-    
+
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_group_var( resp, 1, "G_1", "GWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_group_var( resp, 1, "G_1", "GOPT" ), 1e-5 );
@@ -800,7 +800,7 @@ BOOST_AUTO_TEST_CASE(field_keywords) {
     BOOST_CHECK_CLOSE( -10.15 - 20.15, ecl_sum_get_field_var( resp, 1, "FGPP" ), 1e-5 );
     BOOST_CHECK_CLOSE(  30.15 + 60.15, ecl_sum_get_field_var( resp, 1, "FGPI" ), 1e-5 );
     BOOST_CHECK_CLOSE(  30.13 + 60.13, ecl_sum_get_field_var( resp, 1, "FWPI" ), 1e-5 );
-    
+
     /* Production totals */
     BOOST_CHECK_CLOSE( 10.0 + 20.0, ecl_sum_get_field_var( resp, 1, "FWPT" ), 1e-5 );
     BOOST_CHECK_CLOSE( 10.1 + 20.1, ecl_sum_get_field_var( resp, 1, "FOPT" ), 1e-5 );
