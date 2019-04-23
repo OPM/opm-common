@@ -144,10 +144,10 @@ namespace {
                                         double skin_factor,
                                         const int satTableId,
                                         const WellCompletion::DirectionEnum direction,
-				        const std::size_t seqIndex,
-				        const double segDistStart,
-					const double segDistEnd,
-					const bool defaultSatTabId)
+                                        const std::size_t seqIndex,
+                                        const double segDistStart,
+                                        const double segDistEnd,
+                                        const bool defaultSatTabId)
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
@@ -167,10 +167,10 @@ namespace {
                                         double skin_factor,
                                         const int satTableId,
                                         const WellCompletion::DirectionEnum direction,
-					const std::size_t seqIndex,
-					const double segDistStart,
-					const double segDistEnd,
-					const bool defaultSatTabId)
+                                        const std::size_t seqIndex,
+                                        const double segDistStart,
+                                        const double segDistEnd,
+                                        const bool defaultSatTabId)
     {
         int complnum = (this->m_connections.size() + 1);
         this->addConnection(i,
@@ -186,10 +186,10 @@ namespace {
                             skin_factor,
                             satTableId,
                             direction,
-			    seqIndex,
-			    segDistStart,
-			    segDistEnd,
-			    defaultSatTabId);
+                            seqIndex,
+                            segDistStart,
+                            segDistEnd,
+                            defaultSatTabId);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
@@ -296,48 +296,47 @@ namespace {
                                       same_ijk );
 	    // Only add connection for active grid cells
             if (grid.cellActive(I, J, k)) {
-		if (prev == this->m_connections.end()) {
-		    std::size_t noConn = this->m_connections.size();
-		    this->addConnection(I,J,k,
-                                    grid.getCellDepth( I,J,k ),
-                                    state,
-                                    CF,
-                                    Kh,
-                                    rw,
-                                    r0,
-                                    skin_factor,
-                                    satTableId,
-                                    direction,
-				    noConn, 0., 0., defaultSatTable);
-		} 
-		else {
-		    std::size_t noConn = prev->getSeqIndex();
-		    // The complnum value carries over; the rest of the state is fully specified by
-		    // the current COMPDAT keyword.
-		    int complnum = prev->complnum();
-		    std::size_t css_ind = prev->getCompSegSeqIndex();
-		    int conSegNo = prev->segment(); 
-		    std::size_t con_SIndex = prev->getSeqIndex();
-		    double conCDepth = prev->depth();
-		    double conSDStart = prev->getSegDistStart();
-		    double conSDEnd = prev->getSegDistEnd();
-		    *prev = Connection(I,J,k,
-                                   complnum,
-                                   grid.getCellDepth(I,J,k),
-                                   state,
-                                   CF,
-                                   Kh,
-                                   rw,
-                                   r0,
-                                   skin_factor,
-                                   satTableId,
-                                   direction,
-				   noConn, conSDStart, conSDEnd, defaultSatTable);
-		      prev->setCompSegSeqIndex(css_ind);
-		      prev->updateSegment(conSegNo, conCDepth, con_SIndex);
-		}
-	    }
-	}
+                if (prev == this->m_connections.end()) {
+                    std::size_t noConn = this->m_connections.size();
+                    this->addConnection(I,J,k,
+                                        grid.getCellDepth( I,J,k ),
+                                        state,
+                                        CF,
+                                        Kh,
+                                        rw,
+                                        r0,
+                                        skin_factor,
+                                        satTableId,
+                                        direction,
+                                        noConn, 0., 0., defaultSatTable);
+                } else {
+                    std::size_t noConn = prev->getSeqIndex();
+                    // The complnum value carries over; the rest of the state is fully specified by
+                    // the current COMPDAT keyword.
+                    int complnum = prev->complnum();
+                    std::size_t css_ind = prev->getCompSegSeqIndex();
+                    int conSegNo = prev->segment();
+                    std::size_t con_SIndex = prev->getSeqIndex();
+                    double conCDepth = prev->depth();
+                    double conSDStart = prev->getSegDistStart();
+                    double conSDEnd = prev->getSegDistEnd();
+                    *prev = Connection(I,J,k,
+                                       complnum,
+                                       grid.getCellDepth(I,J,k),
+                                       state,
+                                       CF,
+                                       Kh,
+                                       rw,
+                                       r0,
+                                       skin_factor,
+                                       satTableId,
+                                       direction,
+                                       noConn, conSDStart, conSDEnd, defaultSatTable);
+                    prev->setCompSegSeqIndex(css_ind);
+                    prev->updateSegment(conSegNo, conCDepth, con_SIndex);
+                }
+            }
+        }
     }
 
 

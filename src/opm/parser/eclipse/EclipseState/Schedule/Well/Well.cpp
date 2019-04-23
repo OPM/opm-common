@@ -147,7 +147,7 @@ namespace Opm {
         if (isInjector(timeStep))
             switchToProducer( timeStep );
 
-        m_isProducer.update(timeStep , true);
+        this->setProducer(timeStep, true);
         return m_productionProperties.update(timeStep, newProperties);
     }
 
@@ -163,7 +163,7 @@ namespace Opm {
         if (isProducer(timeStep))
             switchToInjector( timeStep );
 
-        m_isProducer.update(timeStep , false);
+        this->setProducer(timeStep, false);
         return m_injectionProperties.update(timeStep, newProperties);
     }
 
@@ -176,8 +176,8 @@ namespace Opm {
     }
 
     bool Well::setPolymerProperties(size_t timeStep , const WellPolymerProperties& newProperties) {
-        m_isProducer.update(timeStep , false);
         bool update = m_polymerProperties.update(timeStep, newProperties);
+        this->setProducer(timeStep, false);
         return update;
     }
 
@@ -238,6 +238,10 @@ namespace Opm {
             return false;
         } else
             return m_status.update( timeStep , status );
+    }
+
+    bool Well::setProducer(size_t timeStep, bool producer) {
+        this->m_isProducer.update(timeStep, producer);
     }
 
     bool Well::isProducer(size_t timeStep) const {

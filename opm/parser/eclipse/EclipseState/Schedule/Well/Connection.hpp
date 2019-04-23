@@ -50,11 +50,10 @@ namespace Opm {
                    double skin_factor,
                    const int satTableId,
                    const WellCompletion::DirectionEnum direction,
-		   const std::size_t seqIndex,
-		   const double segDistStart,
-		   const double segDistEnd,
-		   const bool defaultSatTabId
-		  );
+                   const std::size_t seqIndex,
+                   const double segDistStart,
+                   const double segDistEnd,
+                   const bool defaultSatTabId);
 
 
         bool attachedToSegment() const;
@@ -79,15 +78,16 @@ namespace Opm {
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
         void updateSegment(int segment_number, double center_depth, std::size_t seqIndex);
-	const std::size_t& getSeqIndex() const;
-	const bool& getDefaultSatTabId() const;
-	const std::size_t& getCompSegSeqIndex() const;
-	void setCompSegSeqIndex(std::size_t index);
-	void setDefaultSatTabId(bool id);
-	const double& getSegDistStart() const;
-	const double& getSegDistEnd() const;
-	void setSegDistStart(const double& distStart);
-	void setSegDistEnd(const double& distEnd);
+        const std::size_t& getSeqIndex() const;
+        const bool& getDefaultSatTabId() const;
+        const std::size_t& getCompSegSeqIndex() const;
+        void setCompSegSeqIndex(std::size_t index);
+        void setDefaultSatTabId(bool id);
+        const double& getSegDistStart() const;
+        const double& getSegDistEnd() const;
+        void setSegDistStart(const double& distStart);
+        void setSegDistEnd(const double& distEnd);
+        std::string str() const;
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
@@ -104,11 +104,11 @@ namespace Opm {
         double m_skin_factor;
 
         std::array<int,3> ijk;
-	std::size_t m_seqIndex;
-	double m_segDistStart;
-	double m_segDistEnd;
-	bool m_defaultSatTabId;
-	std::size_t m_compSeg_seqIndex=0;
+        std::size_t m_seqIndex;
+        double m_segDistStart;
+        double m_segDistEnd;
+        bool m_defaultSatTabId;
+        std::size_t m_compSeg_seqIndex=0;
 
         // related segment number
         // -1 means the completion is not related to segment

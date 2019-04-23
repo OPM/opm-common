@@ -34,7 +34,7 @@ namespace Opm {
     public:
         WellSegments() = default;
 
-        std::string wellName() const;
+        const std::string& wellName() const;
         int size() const;
         double depthTopSegment() const;
         double lengthTopSegment() const;
