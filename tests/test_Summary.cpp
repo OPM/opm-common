@@ -1134,6 +1134,21 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
     }
     block_values[std::make_pair("BSWAT", 1)] = 8.0;
     block_values[std::make_pair("BSGAS", 1)] = 9.0;
+    block_values[std::make_pair("BOSAT", 1)] = 0.91;
+    block_values[std::make_pair("BWKR",  1)] = 0.81;
+    block_values[std::make_pair("BOKR",  1)] = 0.71;
+    block_values[std::make_pair("BKRO",  1)] = 0.73;
+    block_values[std::make_pair("BGKR",  1)] = 0.61;
+    block_values[std::make_pair("BKRG",  1)] = 0.63;
+    block_values[std::make_pair("BKRW",  1)] = 0.51;
+    block_values[std::make_pair("BWPC",  1)] = 0.53;
+    block_values[std::make_pair("BGPC",  1)] = 5.3;
+    block_values[std::make_pair("BVWAT", 1)] = 4.1;
+    block_values[std::make_pair("BWVIS", 1)] = 4.3;
+    block_values[std::make_pair("BVGAS", 1)] = 0.031;
+    block_values[std::make_pair("BGVIS", 1)] = 0.037;
+    block_values[std::make_pair("BVOIL", 1)] = 31.0;
+    block_values[std::make_pair("BOVIS", 1)] = 33.0;
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells ,  {},{}, block_values);
@@ -1155,8 +1170,23 @@ BOOST_AUTO_TEST_CASE(BLOCK_VARIABLES) {
 
     }
 
-    BOOST_CHECK_CLOSE( 8.0 , units.to_si( UnitSystem::measure::identity , ecl_sum_get_general_var( resp, 1, "BSWAT:1,1,1")) , 1e-5);
-    BOOST_CHECK_CLOSE( 9.0 , units.to_si( UnitSystem::measure::identity , ecl_sum_get_general_var( resp, 1, "BSGAS:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 8.0   , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BSWAT:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 9.0   , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BSGAS:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 0.91  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BOSAT:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 0.81  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BWKR:1,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 0.71  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BOKR:1,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 0.73  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BKRO:1,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 0.61  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BGKR:1,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 0.63  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BKRG:1,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 0.51  , units.to_si( UnitSystem::measure::identity  , ecl_sum_get_general_var( resp, 1, "BKRW:1,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 0.53  , units.to_si( UnitSystem::measure::pressure  , ecl_sum_get_general_var( resp, 1, "BWPC:1,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 5.3   , units.to_si( UnitSystem::measure::pressure  , ecl_sum_get_general_var( resp, 1, "BGPC:1,1,1"))  , 1e-5);
+    BOOST_CHECK_CLOSE( 4.1   , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BVWAT:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 4.3   , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BWVIS:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 0.031 , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BVGAS:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 0.037 , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BGVIS:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 31.0  , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BVOIL:1,1,1")) , 1e-5);
+    BOOST_CHECK_CLOSE( 33.0  , units.to_si( UnitSystem::measure::viscosity , ecl_sum_get_general_var( resp, 1, "BOVIS:1,1,1")) , 1e-5);
 
     BOOST_CHECK_CLOSE( 100                , ecl_sum_get_well_completion_var( resp, 1, "W_1", "CTFAC", 1)   , 1e-5);
     BOOST_CHECK_CLOSE( 2.1430730819702148 , ecl_sum_get_well_completion_var( resp, 1, "W_2", "CTFAC", 2)   , 1e-5);
