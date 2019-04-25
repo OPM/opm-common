@@ -241,7 +241,7 @@ namespace Opm {
     }
 
     bool Well::setProducer(size_t timeStep, bool producer) {
-        this->m_isProducer.update(timeStep, producer);
+        return this->m_isProducer.update(timeStep, producer);
     }
 
     bool Well::isProducer(size_t timeStep) const {
