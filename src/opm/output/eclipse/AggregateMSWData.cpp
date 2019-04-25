@@ -207,10 +207,18 @@ namespace {
 	    const auto& segNo = openConnections[connID]->segment();
 	    const auto& segInd = segSet.segmentNumberToIndex(segNo);
 	    const auto& Q = rateConns[connID].rates;
-	    qosc[segInd] += -units.from_si(M::liquid_surface_rate, Q.get(R::oil));
-	    qwsc[segInd] += -units.from_si(M::liquid_surface_rate, Q.get(R::wat));
-	    qgsc[segInd] += -units.from_si(M::gas_surface_rate,    Q.get(R::gas));
+	    
+	    auto get = [&units, &Q](const M u, const R q) -> double
+	    {
+		const auto val = Q.has(q) ? Q.get(q) : 0.0;
 
+		return - units.from_si(u, val);
+	    };
+
+	    qosc[segInd] += get(M::liquid_surface_rate, R::oil);
+	    qwsc[segInd] += get(M::liquid_surface_rate, R::wat);
+	    qgsc[segInd] += get(M::gas_surface_rate,    R::gas);
+	    
 	}
 
 	return {
