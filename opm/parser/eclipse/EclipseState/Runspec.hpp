@@ -37,7 +37,8 @@ enum class Phase {
     SOLVENT = 3,
     POLYMER = 4,
     ENERGY  = 5,
-    POLYMW  = 6
+    POLYMW  = 6,
+    FOAM  = 7
 };
 
 Phase get_phase( const std::string& );
@@ -47,7 +48,7 @@ class Phases {
     public:
         Phases() noexcept = default;
         Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
-                bool polymw = false ) noexcept;
+                bool polymw = false, bool foam = false ) noexcept;
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
