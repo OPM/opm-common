@@ -21,7 +21,6 @@
 #	                      the library needs it.
 
 list (APPEND MAIN_SOURCE_FILES
-      examples/test_util/EclFile.cpp
       src/opm/common/data/SimulationDataContainer.cpp
       src/opm/common/OpmLog/CounterLog.cpp
       src/opm/common/OpmLog/EclipsePRTLog.cpp
@@ -189,7 +188,6 @@ if(ENABLE_ECL_OUTPUT)
 endif()
 
 list (APPEND TEST_SOURCE_FILES
-      tests/test_EclFile.cpp
       tests/test_calculateCellVol.cpp
       tests/test_cmp.cpp
       tests/test_cubic.cpp
@@ -317,6 +315,17 @@ endif()
 list (APPEND EXAMPLE_SOURCE_FILES
 )
 if(ENABLE_ECL_INPUT)
+  list (APPEND TEST_DATA_FILES
+    tests/ECLFILE.INIT
+    tests/ECLFILE.FINIT
+    tests/SPE1CASE1.EGRID
+    tests/SPE1CASE1.RFT
+    tests/SPE1_TESTCASE.UNRST
+    tests/SPE1_TESTCASE.FUNRST
+    tests/SPE1CASE1.UNSMRY
+    tests/SPE1CASE1_RST60.SMSPEC
+    tests/SPE1CASE1_RST60.UNSMRY
+  )
   list (APPEND EXAMPLE_SOURCE_FILES
     examples/opmi.cpp
     examples/opmpack.cpp
@@ -337,8 +346,6 @@ if(ENABLE_ECL_INPUT)
 endif()
 
 list( APPEND PUBLIC_HEADER_FILES
-      examples/test_util/EclFile.hpp
-      examples/test_util/data/EclIOdata.hpp
       opm/common/ErrorMacros.hpp
       opm/common/Exceptions.hpp
       opm/common/data/SimulationDataContainer.hpp
