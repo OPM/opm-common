@@ -548,3 +548,27 @@ BOOST_AUTO_TEST_CASE(PolymerMolecularWeight) {
     BOOST_CHECK( phases.active( Phase::POLYMER ) );
     BOOST_CHECK( phases.active( Phase::POLYMW) );
 }
+
+
+BOOST_AUTO_TEST_CASE(Foam) {
+    const std::string input = R"(
+    RUNSPEC
+    OIL
+    GAS
+    WATER
+    FOAM
+    )";
+
+    Parser parser;
+
+    auto deck = parser.parseString(input);
+
+    Runspec runspec( deck );
+    const auto& phases = runspec.phases();
+    BOOST_CHECK_EQUAL( 4, phases.size() );
+    BOOST_CHECK( phases.active( Phase::OIL ) );
+    BOOST_CHECK( phases.active( Phase::GAS ) );
+    BOOST_CHECK( phases.active( Phase::WATER ) );
+    BOOST_CHECK( phases.active( Phase::FOAM) );
+
+}
