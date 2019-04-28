@@ -613,7 +613,6 @@ namespace {
         template <class XWellArray>
         void assignProducer(const std::string&         well,
                             const ::Opm::SummaryState& smry,
-			    const bool  ecl_compatible_rst, 
                             XWellArray&                xWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
@@ -638,47 +637,39 @@ namespace {
             xWell[Ix::WatCut]  = get("WWCT");
             xWell[Ix::GORatio] = get("WGOR");
 
-            if (ecl_compatible_rst) {
-                xWell[Ix::OilPrTotal]  = get("WOPT");
-                xWell[Ix::WatPrTotal]  = get("WWPT");
-                xWell[Ix::GasPrTotal]  = get("WGPT");
-                xWell[Ix::VoidPrTotal] = get("WVPT");
-            }
+            xWell[Ix::OilPrTotal]  = get("WOPT");
+            xWell[Ix::WatPrTotal]  = get("WWPT");
+            xWell[Ix::GasPrTotal]  = get("WGPT");
+            xWell[Ix::VoidPrTotal] = get("WVPT");
 
             // Not fully characterised.
             xWell[Ix::item37] = xWell[Ix::WatPrRate];
             xWell[Ix::item38] = xWell[Ix::GasPrRate];
 
-            if (ecl_compatible_rst) {
-                xWell[Ix::HistOilPrTotal] = get("WOPTH");
-                xWell[Ix::HistWatPrTotal] = get("WWPTH");
-                xWell[Ix::HistGasPrTotal] = get("WGPTH");
-            }
+            xWell[Ix::HistOilPrTotal] = get("WOPTH");
+            xWell[Ix::HistWatPrTotal] = get("WWPTH");
+            xWell[Ix::HistGasPrTotal] = get("WGPTH");
         }
 
         template <class GetSummaryVector, class XWellArray>
         void assignCommonInjector(GetSummaryVector& get,
-                                  const bool        ecl_compatible_rst,
                                   XWellArray&       xWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
 
             xWell[Ix::FlowBHP] = get("WBHP");
 
-            if (ecl_compatible_rst) {
-                // Note: Assign both water and gas cumulatives to support
-                // case of well alternating between injecting water and gas.
-                xWell[Ix::WatInjTotal]     = get("WWIT");
-                xWell[Ix::GasInjTotal]     = get("WGIT");
-                xWell[Ix::HistWatInjTotal] = get("WWITH");
-                xWell[Ix::HistGasInjTotal] = get("WGITH");
-            }
+            // Note: Assign both water and gas cumulatives to support
+            // case of well alternating between injecting water and gas.
+            xWell[Ix::WatInjTotal]     = get("WWIT");
+            xWell[Ix::GasInjTotal]     = get("WGIT");
+            xWell[Ix::HistWatInjTotal] = get("WWITH");
+            xWell[Ix::HistGasInjTotal] = get("WGITH");
         }
 
         template <class XWellArray>
         void assignWaterInjector(const std::string&         well,
                                  const ::Opm::SummaryState& smry,
-				 const bool  ecl_compatible_rst, 
                                  XWellArray&                xWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
@@ -690,7 +681,7 @@ namespace {
                 return smry.has(key) ? smry.get(key) : 0.0;
             };
 
-            assignCommonInjector(get, ecl_compatible_rst, xWell);
+            assignCommonInjector(get, xWell);
 
             // Injection rates reported as negative.
             xWell[Ix::WatPrRate] = -get("WWIR");
@@ -705,7 +696,6 @@ namespace {
         template <class XWellArray>
         void assignGasInjector(const std::string&         well,
                                const ::Opm::SummaryState& smry,
-			       const bool  ecl_compatible_rst, 
                                XWellArray&                xWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
@@ -717,7 +707,7 @@ namespace {
                 return smry.has(key) ? smry.get(key) : 0.0;
             };
 
-            assignCommonInjector(get, ecl_compatible_rst, xWell);
+            assignCommonInjector(get, xWell);
 
             // Injection rates reported as negative production rates.
             xWell[Ix::GasPrRate]  = -get("WGIR");
@@ -741,11 +731,10 @@ namespace {
         void dynamicContrib(const ::Opm::Well&         well,
                             const ::Opm::SummaryState& smry,
                             const std::size_t          sim_step,
-			    const bool                 ecl_compatible_rst,
                             XWellArray&                xWell)
         {
             if (well.isProducer(sim_step)) {
-                assignProducer(well.name(), smry, ecl_compatible_rst, xWell);
+                assignProducer(well.name(), smry, xWell);
             }
             else if (well.isInjector(sim_step)) {
                 using IType = ::Opm::WellInjector::TypeEnum;
@@ -759,16 +748,16 @@ namespace {
                     break;
 
                 case IType::WATER:
-                    assignWaterInjector(well.name(), smry, ecl_compatible_rst, xWell);
+                    assignWaterInjector(well.name(), smry, xWell);
                     break;
 
                 case IType::GAS:
-                    assignGasInjector(well.name(), smry, ecl_compatible_rst, xWell);
+                    assignGasInjector(well.name(), smry, xWell);
                     break;
 
                 case IType::MULTI:
-                    assignWaterInjector(well.name(), smry, ecl_compatible_rst, xWell);
-                    assignGasInjector  (well.name(), smry, ecl_compatible_rst, xWell);
+                    assignWaterInjector(well.name(), smry, xWell);
+                    assignGasInjector  (well.name(), smry, xWell);
                     break;
                 }
             }
@@ -883,7 +872,6 @@ void
 Opm::RestartIO::Helpers::AggregateWellData::
 captureDynamicWellData(const Schedule&             sched,
                        const std::size_t           sim_step,
-		       const bool ecl_compatible_rst,
                        const Opm::data::WellRates& xw,
                        const ::Opm::SummaryState&  smry)
 {
@@ -905,11 +893,11 @@ captureDynamicWellData(const Schedule&             sched,
     });
 
     // Dynamic contributions to XWEL array.
-    wellLoop(wells, [this, sim_step, ecl_compatible_rst, &smry]
+    wellLoop(wells, [this, sim_step, &smry]
         (const Well& well, const std::size_t wellID) -> void
     {
         auto xw = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, smry, sim_step, ecl_compatible_rst, xw);
+        XWell::dynamicContrib(well, smry, sim_step, xw);
     });
 }

@@ -52,7 +52,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
         void captureDynamicWellData(const Opm::Schedule&        sched,
                                     const std::size_t           sim_step,
-				    const bool ecl_compatible_rst,
                                     const Opm::data::WellRates& xw,
                                     const Opm::SummaryState&    smry);
 
