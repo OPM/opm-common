@@ -302,7 +302,6 @@ namespace {
 
     void writeGroup(::Opm::RestartIO::ecl_rst_file_type* rst_file,
                     int                                  sim_step,
-                    const bool                           ecl_compatible_rst,
                     const Schedule&                      schedule,
                     const Opm::SummaryState&             sumState,
                     const std::vector<int>&              ih)
@@ -320,8 +319,8 @@ namespace {
         groupData.captureDeclaredGroupData(schedule,
                                            rst_g_keys, rst_f_keys,
                                            grpKeyToInd, fldKeyToInd,
-                                           ecl_compatible_rst,
                                            simStep, sumState, ih);
+
         write_kw(rst_file, "IGRP", groupData.getIGroup());
         write_kw(rst_file, "SGRP", groupData.getSGroup());
         write_kw(rst_file, "XGRP", groupData.getXGroup());
@@ -364,7 +363,6 @@ namespace {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(schedule, units, sim_step, sumState, ih);
         wellData.captureDynamicWellData(schedule, sim_step,
-                                        ecl_compatible_rst,
                                         wells, sumState);
 
         write_kw(rst_file, "IWEL", wellData.getIWell());
@@ -555,8 +553,7 @@ void save(const std::string&  filename,
                     nextStepSize(value), seconds_elapsed,
                     schedule, grid, es);
 
-    writeGroup(rst_file.get(), sim_step, ecl_compatible_rst,
-               schedule, sumState, inteHD);
+    writeGroup(rst_file.get(), sim_step, schedule, sumState, inteHD);
 
     // Write well and MSW data only when applicable (i.e., when present)
     {

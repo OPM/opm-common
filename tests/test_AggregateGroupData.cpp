@@ -503,11 +503,9 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
     const auto& rst_f_keys  = agrpd.restart_field_keys;
     const auto& grpKeyToInd = agrpd.groupKeyToIndex;
     const auto& fldKeyToInd = agrpd.fieldKeyToIndex;
-    const bool ecl_compatible_rst = true;
     agrpd.captureDeclaredGroupData(simCase.sched,
 				   rst_g_keys, rst_f_keys,
 				   grpKeyToInd, fldKeyToInd,
-				   ecl_compatible_rst,
 				   rptStep, smry,
 				   ih.value);
 
