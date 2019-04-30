@@ -49,6 +49,7 @@ const std::string testHeader =
     "auto unitSystem =  UnitSystem::newMETRIC();\n";
 
 const std::string sourceHeader =
+    "#include <opm/parser/eclipse/Deck/UDAValue.hpp>\n"
     "#include <opm/parser/eclipse/Parser/ParserKeyword.hpp>\n"
     "#include <opm/parser/eclipse/Parser/ParserItem.hpp>\n"
     "#include <opm/parser/eclipse/Parser/ParserRecord.hpp>\n"

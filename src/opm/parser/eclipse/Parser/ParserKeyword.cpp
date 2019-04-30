@@ -648,8 +648,6 @@ void set_dimensions( ParserItem& item,
                         {
                             std::string indent3 = local_indent + "   ";
                             ss << item.createCode(indent3);
-                            for (size_t idim=0; idim < item.numDimensions(); idim++)
-                                ss << indent3 <<"item.push_backDimension(\"" << item.getDimension( idim ) << "\");" << '\n';
                             {
                                 std::string addItemMethod = "addItem";
                                 if (isDataKeyword())

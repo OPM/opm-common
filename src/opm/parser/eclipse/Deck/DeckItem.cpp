@@ -41,26 +41,45 @@ std::vector< T >& DeckItem::value_ref() {
 template<>
 const std::vector< int >& DeckItem::value_ref< int >() const {
     if( this->type != get_type< int >() )
-        throw std::invalid_argument( "Item of wrong type." );
+        throw std::invalid_argument( "DekcItem::velut_ref<int> Item of wrong type." );
 
     return this->ival;
 }
 
 template<>
 const std::vector< double >& DeckItem::value_ref< double >() const {
-    if( this->type != get_type< double >() )
-        throw std::invalid_argument( "Item of wrong type." );
+    if (this->type == get_type<double>())
+        return this->dval;
 
-    return this->dval;
+    /* Temporary return double values when user code asks for double on
+       something which is really a UDAValue.
+    */
+    if( this->type == get_type< UDAValue >() ) {
+        this->dval.clear();
+        for (const auto& uv : this->uval)
+            this->dval.push_back(uv.get<double>());
+
+        return this->dval;
+    }
+    throw std::invalid_argument( "DeckItem::value_ref<double> Item of wrong type." );
 }
 
 template<>
 const std::vector< std::string >& DeckItem::value_ref< std::string >() const {
     if( this->type != get_type< std::string >() )
-        throw std::invalid_argument( "Item of wrong type." );
+        throw std::invalid_argument( "DeckItem::value_ref<std::string> Item of wrong type." );
 
     return this->sval;
 }
+
+template<>
+const std::vector< UDAValue >& DeckItem::value_ref< UDAValue >() const {
+    if( this->type != get_type< UDAValue >() )
+        throw std::invalid_argument( "DeckItem::value_ref<UDAValue> Item of wrong type." );
+
+    return this->uval;
+}
+
 
 DeckItem::DeckItem( const std::string& nm ) : item_name( nm ) {}
 
@@ -78,6 +97,14 @@ DeckItem::DeckItem( const std::string& nm, double, size_t hint ) :
 {
     this->dval.reserve( hint );
     this->defaulted.reserve( hint );
+}
+
+DeckItem::DeckItem( const std::string& nm, UDAValue , size_t hint ) :
+    type( get_type< UDAValue >() ),
+    item_name( nm )
+{
+  this->uval.reserve( hint );
+  this->defaulted.reserve( hint );
 }
 
 DeckItem::DeckItem( const std::string& nm, std::string, size_t hint ) :
@@ -101,7 +128,8 @@ bool DeckItem::hasValue( size_t index ) const {
         case type_tag::integer: return this->ival.size() > index;
         case type_tag::fdouble: return this->dval.size() > index;
         case type_tag::string:  return this->sval.size() > index;
-        default: throw std::logic_error( "Type not set." );
+        case type_tag::uda:     return this->uval.size() > index;
+        default: throw std::logic_error( "DeckItem::hasValue: Type not set." );
     }
 }
 
@@ -110,7 +138,8 @@ size_t DeckItem::size() const {
         case type_tag::integer: return this->ival.size();
         case type_tag::fdouble: return this->dval.size();
         case type_tag::string:  return this->sval.size();
-        default: throw std::logic_error( "Type not set." );
+        case type_tag::uda:     return this->uval.size();
+        default: throw std::logic_error( "DeckItem::size: Type not set." );
     }
 }
 
@@ -118,6 +147,16 @@ size_t DeckItem::out_size() const {
     size_t data_size = this->size();
     return std::max( data_size , this->defaulted.size() );
 }
+
+/*
+  The non const overload is only used for the UDAValue type because we need to
+  mutate the UDAValue object and add dimension to it retroactively.
+*/
+/*template<>
+UDAValue& DeckItem::get( size_t index ) {
+    return this->uval[index];
+}
+*/
 
 template< typename T >
 const T& DeckItem::get( size_t index ) const {
@@ -149,6 +188,10 @@ void DeckItem::push_back( std::string x ) {
     this->push( std::move( x ) );
 }
 
+void DeckItem::push_back( UDAValue x ) {
+  this->push( std::move( x ) );
+}
+
 template< typename T >
 void DeckItem::push( T x, size_t n ) {
     auto& val = this->value_ref< T >();
@@ -167,6 +210,10 @@ void DeckItem::push_back( double x, size_t n ) {
 
 void DeckItem::push_back( std::string x, size_t n ) {
     this->push( std::move( x ), n );
+}
+
+void DeckItem::push_back( UDAValue x, size_t n ) {
+  this->push( std::move( x ), n );
 }
 
 template< typename T >
@@ -190,6 +237,10 @@ void DeckItem::push_backDefault( double x ) {
 
 void DeckItem::push_backDefault( std::string x ) {
     this->push_default( std::move( x ) );
+}
+
+void DeckItem::push_backDefault( UDAValue x ) {
+  this->push_default( std::move( x ) );
 }
 
 
@@ -238,12 +289,26 @@ const std::vector< double >& DeckItem::getSIDoubleData() const {
 }
 
 void DeckItem::push_backDimension( const Dimension& active,
-                                    const Dimension& def ) {
-    const auto& ds = this->value_ref< double >();
-    const bool dim_inactive = ds.empty()
-                            || this->defaultApplied( ds.size() - 1 );
+                                   const Dimension& def ) {
+    if (this->type == type_tag::fdouble) {
+        const auto& ds = this->value_ref< double >();
+        const bool dim_inactive = ds.empty()
+            || this->defaultApplied( ds.size() - 1 );
 
-    this->dimensions.push_back( dim_inactive ? def : active );
+        this->dimensions.push_back( dim_inactive ? def : active );
+        return;
+    }
+
+    if (this->type == type_tag::uda) {
+        auto& du = this->value_ref< UDAValue >();
+        const bool dim_inactive = du.empty()
+            || this->defaultApplied( du.size() - 1 );
+
+        this->dimensions.push_back( dim_inactive ? def : active );
+        return;
+    }
+
+    throw std::logic_error("Tried to push dimensions to an item which can not hold dimension. ");
 }
 
 type_tag DeckItem::getType() const {
@@ -274,8 +339,11 @@ void DeckItem::write(DeckOutput& stream) const {
     case type_tag::string:
         this->write_vector( stream,  this->sval );
         break;
+    case type_tag::uda:
+        this->write_vector( stream,  this->uval );
+        break;
     default:
-        throw std::logic_error( "Type not set." );
+        throw std::logic_error( "DeckItem::write: Type not set." );
     }
 }
 
@@ -405,8 +473,10 @@ bool DeckItem::to_bool(std::string string_value) {
 template const int& DeckItem::get< int >( size_t ) const;
 template const double& DeckItem::get< double >( size_t ) const;
 template const std::string& DeckItem::get< std::string >( size_t ) const;
+template const UDAValue& DeckItem::get< UDAValue >( size_t ) const;
 
 template const std::vector< int >& DeckItem::getData< int >() const;
 template const std::vector< double >& DeckItem::getData< double >() const;
+template const std::vector< UDAValue >& DeckItem::getData< UDAValue >() const;
 template const std::vector< std::string >& DeckItem::getData< std::string >() const;
 }

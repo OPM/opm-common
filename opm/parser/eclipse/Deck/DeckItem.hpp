@@ -27,6 +27,7 @@
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
 namespace Opm {
     class DeckOutput;
@@ -39,6 +40,7 @@ namespace Opm {
         DeckItem( const std::string&, int, size_t size_hint = 8 );
         DeckItem( const std::string&, double, size_t size_hint = 8 );
         DeckItem( const std::string&, std::string, size_t size_hint = 8 );
+        DeckItem( const std::string&, UDAValue, size_t size_hint = 8 );
 
         const std::string& name() const;
 
@@ -58,6 +60,7 @@ namespace Opm {
         size_t size() const;
         size_t out_size() const;
 
+        //template< typename T > T& get( size_t ) ;
         template< typename T > const T& get( size_t ) const;
         double getSIDouble( size_t ) const;
         std::string getTrimmedString( size_t ) const;
@@ -65,12 +68,15 @@ namespace Opm {
         template< typename T > const std::vector< T >& getData() const;
         const std::vector< double >& getSIDoubleData() const;
 
+        void push_back( UDAValue );
         void push_back( int );
         void push_back( double );
         void push_back( std::string );
+        void push_back( UDAValue, size_t );
         void push_back( int, size_t );
         void push_back( double, size_t );
         void push_back( std::string, size_t );
+        void push_backDefault( UDAValue );
         void push_backDefault( int );
         void push_backDefault( double );
         void push_backDefault( std::string );
@@ -107,9 +113,10 @@ namespace Opm {
         bool operator!=(const DeckItem& other) const;
         static bool to_bool(std::string string_value);
     private:
-        std::vector< double > dval;
+        mutable std::vector< double > dval;
         std::vector< int > ival;
         std::vector< std::string > sval;
+        std::vector< UDAValue > uval;
 
         type_tag type = type_tag::unknown;
 
