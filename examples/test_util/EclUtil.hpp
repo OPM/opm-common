@@ -19,6 +19,7 @@
 #ifndef ECL_UTIL_HPP
 #define ECL_UTIL_HPP
 
+#include <string>
 #include <tuple>
 #include <examples/test_util/data/EclIOdata.hpp>
 
