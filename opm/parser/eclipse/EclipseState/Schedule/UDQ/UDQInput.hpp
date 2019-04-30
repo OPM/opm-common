@@ -42,7 +42,12 @@ namespace Opm {
     public:
         explicit UDQInput(const Deck& deck);
         const std::string& unit(const std::string& key) const;
+	const std::string& udqKey(const std::size_t) const;
+	const std::size_t& key_seq_no(const std::string key) const;
+	const std::size_t& keytype_keyname_seq_no(const std::size_t keytype, const std::string keyname) const;
+	const std::size_t noUdqs();
         bool has_unit(const std::string& keyword) const;
+	bool is_define(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
         void add_record(const DeckRecord& record);
         void assign_unit(const std::string& keyword, const std::string& unit);
@@ -84,8 +89,7 @@ namespace Opm {
     private:
         UDQParams udq_params;
         UDQFunctionTable udqft;
-
-
+	
         /*
           The choices of datastructures are strongly motivated by the
           constraints imposed by the Eclipse formatted restart files; for
@@ -100,7 +104,11 @@ namespace Opm {
         std::unordered_map<std::string, std::string> units;
 
         OrderedMap<std::string, std::pair<size_t, UDQAction>> input_index;
+	std::vector<std::string> m_udq_keys;
+	std::unordered_map<std::string, bool> m_is_define;
         std::unordered_set<std::string> keywords;
+	std::unordered_map<std::string, std::size_t> m_key_seq_no;
+	std::unordered_map<std::size_t, std::unordered_map<std::string, std::size_t> > m_keytype_keyname_seq_no;
     };
 }
 

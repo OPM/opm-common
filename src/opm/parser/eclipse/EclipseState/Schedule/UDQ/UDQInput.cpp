@@ -22,6 +22,9 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
+
+#include <iostream>
 
 namespace Opm {
 
@@ -49,7 +52,7 @@ namespace Opm {
         auto action = UDQ::actionType(record.getItem("ACTION").get<std::string>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = record.getItem("DATA").getData<std::string>();
-
+	typedef std::unordered_map<std::size_t, std::unordered_map<std::string, std::size_t> > map_kksn;
         if (action == UDQAction::UPDATE)
             throw std::invalid_argument("The UDQ action UPDATE is not yet implemented in opm/flow");
 
@@ -69,15 +72,36 @@ namespace Opm {
             if (action == UDQAction::ASSIGN) {
                 std::vector<std::string> selector(data.begin(), data.end() - 1);
                 double value = std::stod(data.back());
+		this->m_is_define[quantity] = false;
                 auto assignment = this->m_assignments.find(quantity);
                 if (assignment == this->m_assignments.end())
                     this->m_assignments.insert( std::make_pair(quantity, UDQAssign(quantity, selector, value )));
                 else
                     assignment->second.add_record(selector, value);
-            } else if (action == UDQAction::DEFINE)
+            } 
+            else if (action == UDQAction::DEFINE) {
                 this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, data)));
-            else
+		this->m_is_define[quantity] = true;
+	    }
+            else 
                 throw std::runtime_error("Internal error - should not be here");
+	    
+	    if (!this->has_keyword(quantity)) {
+	      std::size_t no_udqs = m_udq_keys.size();
+	      this->m_udq_keys.emplace_back(quantity);
+	      this->m_key_seq_no[quantity] = no_udqs + 1;
+	      const std::size_t var_typ = static_cast<std::size_t>(UDQ::varType(quantity));
+
+	      map_kksn::const_iterator vt_it = this->m_keytype_keyname_seq_no.find(var_typ);
+	      if (vt_it != this->m_keytype_keyname_seq_no.end()) {
+		auto vt_sz = (vt_it->second).size();
+		this->m_keytype_keyname_seq_no[var_typ][quantity] = vt_sz + 1;
+	      }
+	      else {
+		this->m_keytype_keyname_seq_no[var_typ][quantity] = 1;
+	      }
+	    }
+	    this->keywords.insert(quantity);
         }
     }
 
@@ -189,9 +213,52 @@ namespace Opm {
 
         return false;
     }
+    
+    const std::size_t& UDQInput::key_seq_no(const std::string key) const {
+      	const auto pair_ptr = this->m_key_seq_no.find(key);
+        if (pair_ptr == this->m_key_seq_no.end()) {
+            throw std::invalid_argument("UDQInput - key_seq_no - unknown UDQ quantity" + key);
+	}
+	else
+	  return pair_ptr->second;
+    }
+    
+    const std::size_t& UDQInput::keytype_keyname_seq_no(const std::size_t keytype, const std::string keyname) const {
+      	const auto outer_ptr = this->m_keytype_keyname_seq_no.find(keytype);
+        if (outer_ptr == this->m_keytype_keyname_seq_no.end()) {
+            throw std::invalid_argument("UDQInput - m_keytype_keyname_seq_no - unknown key type " + keytype);
+	}
+	else {
+	    const auto map_keyname = outer_ptr->second;
+	    const auto inner_ptr = map_keyname.find(keyname);
+	    if (inner_ptr == map_keyname.end()) {
+		throw std::invalid_argument("UDQInput - m_keytype_keyname_seq_no - unknown key name " + keyname);
+	    }
+	    else {
+		return inner_ptr->second;
+	    }
+	}
+    }
 
-
+    bool UDQInput::is_define(const std::string& keyword) const {
+	bool define = false;
+	const auto pair_ptr = this->m_is_define.find(keyword);
+        if (pair_ptr == this->m_is_define.end()) {
+            throw std::invalid_argument("UDQInput - is_define - unknown UDQ quantity" + keyword);
+	}
+	else define = pair_ptr->second;
+        return define;
+    }
+    
     const UDQFunctionTable& UDQInput::function_table() const {
         return this->udqft;
+    }
+    
+    const std::string& UDQInput::udqKey(const std::size_t udq_no) const {
+        return this->m_udq_keys[udq_no];
+    }
+    
+    const std::size_t UDQInput::noUdqs() {
+        return this->m_udq_keys.size();
     }
 }

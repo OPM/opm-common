@@ -89,6 +89,13 @@ namespace Opm { namespace RestartIO {
 	struct Group {
 	  int ngroups;
 	};
+	
+	struct UdqParam {
+	  int    udqParam_1;
+	  double udqParam_2;
+	  double udqParam_3;
+	  double udqParam_4;
+	};
 
         InteHEAD();
         ~InteHEAD() = default;
