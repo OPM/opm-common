@@ -30,6 +30,9 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         TsInit = 1,             // Maximum Length of Next Timestep
         TsMaxz = 2,             // Maximum Length of Timestep After Next
         TsMinz = 3,             // Minumum Length of All Timesteps
+	UdqPar_2 = 212,		// UDQPARAM item number 2 (Permitted range (+/-) of user-defined quantities)
+	UdqPar_3 = 213,		// UDQPARAM item number 3 (Value given to undefined elements when outputting data)
+	UdqPar_4 = 214,		// UDQPARAM item number 4 (fractional equality tolerance used in ==, <= etc. functions)
     };
 
 }}}} // Opm::RestartIO::Helpers::VectorItems

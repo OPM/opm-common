@@ -28,6 +28,7 @@
 #include <opm/output/eclipse/AggregateWellData.hpp>
 #include <opm/output/eclipse/AggregateConnectionData.hpp>
 #include <opm/output/eclipse/AggregateMSWData.hpp>
+#include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/io/eclipse/OutputStream.hpp>
@@ -259,6 +260,24 @@ namespace {
         rstFile.write("RSEG", MSWData.getRSeg());
     }
 
+    void writeUDQ(int                           sim_step,
+                  const Schedule&               schedule,
+		  const std::vector<int>&      	ih,
+		  EclIO::OutputStream::Restart& rstFile)
+    {
+        // write UDQ - data to restart file
+        const std::size_t simStep = static_cast<size_t> (sim_step);
+
+	const auto udqDims = Helpers::createUdqDims(schedule, simStep, ih);
+	auto  udqData = Helpers::AggregateUDQData(udqDims);
+        udqData.captureDeclaredUDQData(schedule, simStep);
+	
+	rstFile.write("IUDQ", udqData.getIUDQ());
+	rstFile.write("IUAD", udqData.getIUAD());
+	rstFile.write("ZUDN", udqData.getZUDN());
+	rstFile.write("ZUDL", udqData.getZUDL());
+    }
+   
     void writeWell(int                           sim_step,
                    const bool                    ecl_compatible_rst,
                    const Phases&                 phases,
@@ -368,8 +387,11 @@ namespace {
     }
 
     void writeSolution(const RestartValue&           value,
+		       const Schedule& 	   	     schedule,
+		       int 			     report_step,
                        const bool                    ecl_compatible_rst,
                        const bool                    write_double_arg,
+		       const std::vector<int>&       inteHD,
                        EclIO::OutputStream::Restart& rstFile)
     {
         rstFile.message("STARTSOL");
@@ -396,6 +418,8 @@ namespace {
             }
         }
 
+        writeUDQ(report_step, schedule, inteHD, rstFile);
+        
         for (const auto& elm : value.extra) {
             const std::string& key = elm.first.key;
             if (extraInSolution(key)) {
@@ -489,8 +513,8 @@ void save(EclIO::OutputStream::Restart& rstFile,
                       value.wells, sumState, inteHD, rstFile);
         }
     }
-
-    writeSolution(value, ecl_compatible_rst, write_double, rstFile);
+    
+    writeSolution(value, schedule, sim_step, ecl_compatible_rst, write_double, inteHD, rstFile);
 
     if (! ecl_compatible_rst) {
         writeExtraData(value.extra, rstFile);
