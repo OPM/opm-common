@@ -19,6 +19,7 @@
 #include "EclFile.hpp"
 #include "EclUtil.hpp"
 
+#include <array>
 #include <functional>
 #include <string>
 #include <string.h>
