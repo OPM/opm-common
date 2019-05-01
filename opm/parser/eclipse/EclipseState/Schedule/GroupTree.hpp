@@ -27,38 +27,45 @@
 namespace Opm {
 
 class GroupTree {
-    public:
-        void update( const std::string& name);
-        void update( const std::string& name, const std::string& parent);
-	void updateSeqIndex( const std::string& name, const std::string& other_parent);
-        bool exists( const std::string& group ) const;
-        const std::string& parent( const std::string& name ) const;
-        std::vector< std::string > children( const std::string& parent ) const;
-	const std::map<std::string , size_t>& nameSeqIndMap() const;
-	const std::map<size_t, std::string >& seqIndNameMap() const;
-        bool operator==( const GroupTree& ) const;
-        bool operator!=( const GroupTree& ) const;
+public:
+    struct group {
+        std::string name;
+        std::string parent;
 
-    private:
-        struct group {
-            std::string name;
-            std::string parent;
+        bool operator<( const group& rhs ) const;
+        bool operator==( const std::string& name ) const;
+        bool operator!=( const std::string& name ) const;
 
-            bool operator<( const group& rhs ) const;
-            bool operator==( const std::string& name ) const;
-            bool operator!=( const std::string& name ) const;
+        bool operator<( const std::string& name ) const;
+        bool operator==( const group& rhs ) const;
+        bool operator!=( const group& rhs ) const;
+    };
 
-            bool operator<( const std::string& name ) const;
-            bool operator==( const group& rhs ) const;
-            bool operator!=( const group& rhs ) const;
-        };
+    void update( const std::string& name);
+    void update( const std::string& name, const std::string& parent);
+    void updateSeqIndex( const std::string& name, const std::string& other_parent);
+    bool exists( const std::string& group ) const;
+    const std::string& parent( const std::string& name ) const;
+    std::vector< std::string > children( const std::string& parent ) const;
+    const std::map<std::string , size_t>& nameSeqIndMap() const;
+    const std::map<size_t, std::string >& seqIndNameMap() const;
+    bool operator==( const GroupTree& ) const;
+    bool operator!=( const GroupTree& ) const;
+    std::vector<GroupTree::group>::const_iterator begin() const;
+    std::vector<GroupTree::group>::const_iterator end() const;
 
-        std::vector< group > groups = { group { "FIELD", "" } };
-        friend bool operator<( const std::string&, const group& );
-        std::vector< group >::iterator find( const std::string& );
-	std::map<std::string , size_t> m_nameSeqIndMap;
-	std::map<size_t, std::string > m_seqIndNameMap;
+private:
+    std::vector< group >::iterator find( const std::string& );
+    friend bool operator<( const std::string&, const group& );
+
+    std::vector< group > groups = { group { "FIELD", "" } };
+    std::map<std::string , size_t> m_nameSeqIndMap;
+    std::map<size_t, std::string > m_seqIndNameMap;
 };
+
+
+std::ostream& operator<<(std::ostream& stream, const GroupTree& gt);
+
 
 }
 
