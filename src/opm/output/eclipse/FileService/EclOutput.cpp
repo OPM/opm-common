@@ -33,10 +33,46 @@
 #include <stdexcept>
 #include <typeinfo>
 
-EclOutput::EclOutput(const std::string& inputFile, bool formatted) :
-  isFormatted(formatted)
+#include <boost/filesystem.hpp>
+
+EclOutput::EclOutput(const std::string&            filename,
+                     const bool                    formatted,
+                     const std::ios_base::openmode mode,
+                     const std::streampos          writePos)
+    : isFormatted{formatted}
 {
-    ofileH.open(inputFile, isFormatted ? std::ios::out : std::ios::out | std::ios::binary);
+    {
+        const auto binmode = mode | std::ios_base::binary;
+
+        this->ofileH.open(filename, this->isFormatted ? mode : binmode);
+    }
+
+    if (writePos == std::streampos{-1}) {
+        // No specified initial write position.  No further action
+        // required.
+        return;
+    }
+
+    // The user specified an initial write position.  Resize existing
+    // file (as if by POSIX function ::truncate()) to requested size,
+    // and place output position at that position (i.e., new EOF).  This
+    // case typically corresponds to reopening a unified restart file at
+    // the start of a particular SEQNUM keyword.
+    //
+    // Note that this intentionally operates on the file/path backing the
+    // already opened stream 'ofileH'.  In other words, open() followed
+    // by resize_file() followed by seekp() is the intended and expected
+    // order of operations.
+
+    boost::filesystem::resize_file(filename, writePos);
+
+    if (! this->ofileH.seekp(0, std::ios_base::end)) {
+        throw std::invalid_argument {
+            "Unable to Seek to Write Position " +
+            std::to_string(writePos) + " of File '"
+            + filename + "'"
+        };
+    }
 }
 
 
