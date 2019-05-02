@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
+#include <opm/io/eclipse/OutputStream.hpp>
 
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>
@@ -555,6 +556,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
 
 
 BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
+    namespace OS = ::Opm::EclIO::OutputStream;
+
     Setup setup("FIRST_SIM.DATA");
     test_work_area_type * test_area = test_work_area_alloc("test_Restart");
     auto& io_config = setup.es.getIOConfig();
@@ -568,17 +571,33 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
 
             io_config.setEclCompatibleRST( false );
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
-            RestartIO::save("OPM_FILE.UNRST", 1 ,
-                            100,
-                            restart_value,
-                            setup.es,
-                            setup.grid,
-                            setup.schedule,
-			    sumState,
-                            true);
+
+            const auto outputDir = std::string {
+                test_work_area_get_cwd(test_area)
+            };
 
             {
-                ecl_file_type * rst_file = ecl_file_open( "OPM_FILE.UNRST" , 0 );
+                const auto seqnum = 1;
+                auto rstFile = OS::Restart {
+                    OS::ResultSet{ outputDir, "OPM_FILE" }, seqnum,
+                    OS::Formatted{ false }, OS::Unified{ true }
+                };
+
+                RestartIO::save(rstFile, seqnum,
+                                100,
+                                restart_value,
+                                setup.es,
+                                setup.grid,
+                                setup.schedule,
+                                sumState,
+                                true);
+            }
+
+            {
+                const auto rstFile = ::Opm::EclIO::OutputStream::
+                    outputFileName({outputDir, "OPM_FILE"}, "UNRST");
+
+                ecl_file_type * rst_file = ecl_file_open( rstFile.c_str() , 0 );
                 ecl_kw_type * swat = ecl_file_iget_named_kw(rst_file, "SWAT", 0);
 
                 BOOST_CHECK_EQUAL( ECL_DOUBLE_TYPE, ecl_kw_get_type(swat));
@@ -587,16 +606,28 @@ BOOST_AUTO_TEST_CASE(ECL_FORMATTED) {
             }
 
             io_config.setEclCompatibleRST( true );
-            RestartIO::save("ECL_FILE.UNRST", 1 ,
-                            100,
-                            restart_value,
-                            setup.es,
-                            setup.grid,
-                            setup.schedule,
-			    sumState,
-                            true);
             {
-                ecl_file_type * rst_file = ecl_file_open( "ECL_FILE.UNRST" , 0 );
+                const auto seqnum = 1;
+                auto rstFile = OS::Restart {
+                    OS::ResultSet{ outputDir, "ECL_FILE" }, seqnum,
+                    OS::Formatted{ false }, OS::Unified{ true }
+                };
+
+                RestartIO::save(rstFile, seqnum,
+                                100,
+                                restart_value,
+                                setup.es,
+                                setup.grid,
+                                setup.schedule,
+                                sumState,
+                                true);
+            }
+
+            {
+                const auto rstFile = ::Opm::EclIO::OutputStream::
+                    outputFileName({outputDir, "ECL_FILE"}, "UNRST");
+
+                ecl_file_type * rst_file = ecl_file_open( rstFile.c_str() , 0 );
                 ecl_kw_type * swat = ecl_file_iget_named_kw(rst_file, "SWAT", 0);
 
                 BOOST_CHECK_EQUAL( ECL_FLOAT_TYPE, ecl_kw_get_type(swat));
@@ -656,6 +687,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
 
 
 BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
+    namespace OS = ::Opm::EclIO::OutputStream;
+
     Setup setup("FIRST_SIM.DATA");
     test_work_area_type * test_area = test_work_area_alloc("test_Restart");
     {
@@ -664,14 +697,20 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         auto wells = mkWells();
 	Opm::SummaryState sumState;
 
-        BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
+        const auto seqnum = 1;
+        auto rstFile = OS::Restart {
+            OS::ResultSet { test_work_area_get_cwd(test_area), "FILE" }, seqnum,
+            OS::Formatted { false }, OS::Unified { true }
+        };
+
+        BOOST_CHECK_THROW( RestartIO::save(rstFile, seqnum,
                                            100,
                                            RestartValue(cells, wells),
                                            setup.es,
                                            setup.grid ,
                                            setup.schedule,
 					   sumState),
-                                           std::runtime_error);
+                          std::runtime_error);
     }
     test_work_area_free(test_area);
 }
@@ -698,6 +737,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_KEYS) {
 }
 
 BOOST_AUTO_TEST_CASE(ExtraData_content) {
+    namespace OS = ::Opm::EclIO::OutputStream;
+
     Setup setup("FIRST_SIM.DATA");
     test_work_area_type * test_area = test_work_area_alloc("test_Restart");
     {
@@ -711,16 +752,31 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
 
             restart_value.addExtra("EXTRA", UnitSystem::measure::pressure, {10,1,2,3});
 
-            RestartIO::save("FILE.UNRST", 1 ,
-                            100,
-                            restart_value,
-                            setup.es,
-                            setup.grid,
-                            setup.schedule,
-                            sumState);
+            const auto outputDir = std::string {
+                test_work_area_get_cwd(test_area)
+            };
 
             {
-                ecl_file_type * f = ecl_file_open( "FILE.UNRST" , 0 );
+                const auto seqnum = 1;
+                auto rstFile = OS::Restart {
+                    OS::ResultSet { outputDir, "FILE" }, seqnum,
+                    OS::Formatted { false }, OS::Unified{ true }
+                };
+
+                RestartIO::save(rstFile, seqnum,
+                                100,
+                                restart_value,
+                                setup.es,
+                                setup.grid,
+                                setup.schedule,
+                                sumState);
+            }
+
+            const auto rstFile = ::Opm::EclIO::OutputStream::
+                outputFileName({outputDir, "FILE"}, "UNRST");
+
+            {
+                ecl_file_type * f = ecl_file_open( rstFile.c_str() , 0 );
                 BOOST_CHECK( ecl_file_has_kw( f , "EXTRA"));
                 {
                     ecl_kw_type * ex = ecl_file_iget_named_kw( f , "EXTRA" , 0 );
@@ -733,11 +789,11 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                 ecl_file_close( f );
             }
 
-            BOOST_CHECK_THROW( RestartIO::load( "FILE.UNRST" , 1 , {}, setup.es, setup.grid , setup.schedule,
+            BOOST_CHECK_THROW( RestartIO::load( rstFile , 1 , {}, setup.es, setup.grid , setup.schedule,
                                                 {{"NOT-THIS", UnitSystem::measure::identity, true}}) , std::runtime_error );
             {
                 const auto rst_value = RestartIO::load(
-                    "FILE.UNRST" , 1 ,
+                    rstFile , 1 ,
                     /* solution_keys = */ {
                         RestartKey("SWAT", UnitSystem::measure::identity),
                         RestartKey("NO"  , UnitSystem::measure::identity, false)
@@ -765,12 +821,17 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
 
 
 BOOST_AUTO_TEST_CASE(STORE_THPRES) {
+    namespace OS = ::Opm::EclIO::OutputStream;
+
     Setup setup("FIRST_SIM_THPRES.DATA");
     test_work_area_type * test_area = test_work_area_alloc("test_Restart_THPRES");
     {
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
+        const auto outputDir = std::string {
+            test_work_area_get_cwd(test_area)
+        };
         {
             RestartValue restart_value(cells, wells);
             RestartValue restart_value2(cells, wells);
@@ -792,28 +853,48 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
             const auto sumState = sim_state();
 
             /* THPRES data has wrong size in extra container. */
-            BOOST_CHECK_THROW( RestartIO::save("FILE.UNRST", 1 ,
-                                               100,
-                                               restart_value,
-                                               setup.es,
-                                               setup.grid,
-                                               setup.schedule,
-                                               sumState), std::runtime_error);
+            {
+                const auto seqnum = 1;
+                auto rstFile = OS::Restart {
+                    OS::ResultSet { outputDir, "FILE" }, seqnum,
+                    OS::Formatted { false }, OS::Unified { true }
+                };
+
+                BOOST_CHECK_THROW( RestartIO::save(rstFile, seqnum,
+                                                   100,
+                                                   restart_value,
+                                                   setup.es,
+                                                   setup.grid,
+                                                   setup.schedule,
+                                                   sumState),
+                                   std::runtime_error);
+            }
 
             int num_regions = setup.es.getTableManager().getEqldims().getNumEquilRegions();
             std::vector<double>  thpres(num_regions * num_regions, 78);
             restart_value2.addExtra("THRESHPR", UnitSystem::measure::pressure, thpres);
             restart_value2.addExtra("EXTRA", UnitSystem::measure::pressure, thpres);
 
-            RestartIO::save("FILE2.UNRST", 1,
-                            100,
-                            restart_value2,
-                            setup.es,
-                            setup.grid,
-                            setup.schedule, sumState);
+            {
+                const auto seqnum = 1;
+                auto rstFile = OS::Restart {
+                    OS::ResultSet { outputDir, "FILE2" }, seqnum,
+                    OS::Formatted { false }, OS::Unified { true }
+                };
+
+                RestartIO::save(rstFile, seqnum,
+                                100,
+                                restart_value2,
+                                setup.es,
+                                setup.grid,
+                                setup.schedule, sumState);
+            }
 
             {
-                ecl_file_type * rst_file = ecl_file_open("FILE2.UNRST", 0);
+                const auto rstFile = ::Opm::EclIO::OutputStream::
+                    outputFileName({outputDir, "FILE2"}, "UNRST");
+
+                ecl_file_type * rst_file = ecl_file_open(rstFile.c_str(), 0);
                 std::map<std::string,int> kw_pos;
                 for (int i=0; i < ecl_file_get_size(rst_file); i++)
                     kw_pos[ ecl_file_iget_header(rst_file, i ) ] = i;
@@ -839,6 +920,8 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
 {
     Setup setup("FIRST_SIM.DATA");
 
+    const auto wa = ::ecl::util::TestArea{"test_Restart"};
+
     // Write fully ECLIPSE compatible output.  This also saves cumulatives.
     setup.es.getIOConfig().setEclCompatibleRST(true);
 
@@ -848,10 +931,21 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
     };
     const auto sumState = sim_state();
 
-    RestartIO::save("FILE.UNRST", 1, 100, restart_value,
-                    setup.es, setup.grid, setup.schedule, sumState);
+    namespace OS = ::Opm::EclIO::OutputStream;
 
-    const auto rst_value = RestartIO::load("FILE.UNRST", 1,
+    const auto rset   = OS::ResultSet{ wa.test_cwd(), "FILE" };
+    const auto seqnum = 1;
+    {
+        auto rstFile = OS::Restart {
+            rset, seqnum, OS::Formatted{ false }, OS::Unified{ true }
+        };
+
+        RestartIO::save(rstFile, seqnum, 100, restart_value,
+                        setup.es, setup.grid, setup.schedule, sumState);
+    }
+
+    const auto rst_value = RestartIO::
+        load(OS::outputFileName(rset, "UNRST"), seqnum,
         /* solution_keys = */ {
             RestartKey("SWAT", UnitSystem::measure::identity),
         },
