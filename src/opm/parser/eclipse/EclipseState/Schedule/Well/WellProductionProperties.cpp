@@ -67,6 +67,7 @@ namespace Opm {
         else
             cmode = wp::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
 
+        // clearing the existing targets/limits
         m_productionControls = 0;
         if (effectiveHistoryProductionControl(cmode)) {
             this->addProductionControl( cmode );
