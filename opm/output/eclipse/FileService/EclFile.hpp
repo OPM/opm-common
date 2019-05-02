@@ -23,7 +23,7 @@
 
 #include <opm/output/eclipse/FileService/EclIOdata.hpp>
 
-#include <fstream>
+#include <ios>
 #include <string>
 #include <stdexcept>
 #include <unordered_map>
@@ -63,6 +63,9 @@ public:
     bool hasKey(const std::string &name) const;
 
     const std::vector<std::string>& arrayNames() const { return array_name; }
+
+    std::streampos
+    seekPosition(const std::vector<std::string>::size_type arrIndex) const;
 
 protected:
     bool formatted;
