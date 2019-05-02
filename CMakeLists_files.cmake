@@ -182,7 +182,6 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/EclipseGridInspector.cpp
           src/opm/output/eclipse/EclipseIO.cpp
           src/opm/output/eclipse/InteHEAD.cpp
-          src/opm/output/eclipse/libECLRestart.cpp
           src/opm/output/eclipse/LinearisedOutputTable.cpp
           src/opm/output/eclipse/LoadRestart.cpp
           src/opm/output/eclipse/LogiHEAD.cpp
@@ -597,7 +596,6 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/EclipseIO.hpp
         opm/output/eclipse/EclipseIOUtil.hpp
         opm/output/eclipse/InteHEAD.hpp
-        opm/output/eclipse/libECLRestart.hpp
         opm/output/eclipse/LinearisedOutputTable.hpp
         opm/output/eclipse/LogiHEAD.hpp
         opm/output/eclipse/RegionCache.hpp
