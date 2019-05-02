@@ -470,3 +470,12 @@ void EclOutput::writeFormattedCharArray(const std::vector<Opm::RestartIO::Helper
         ofileH << '\n';
     }
 }
+
+void message(const std::string& msg, EclOutput& ofile)
+{
+    // Generate message, i.e., output vector of type eclArrType::MESS,
+    // by passing an empty std::vector of element type 'char'.  Entire
+    // contents of message contained in the 'msg' string.
+
+    ofile.write(msg, std::vector<char>{});
+}

@@ -100,4 +100,6 @@ void EclOutput::write<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>
     (const std::string&                                                name,
      const std::vector<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>& data);
 
+void message(const std::string& msg, EclOutput& ofile);
+
 #endif
