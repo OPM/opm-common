@@ -52,6 +52,7 @@ namespace Opm {
     public:
         Well(const std::string& name, const size_t& seqIndex, int headI,
              int headJ, double refDepth, double drainageRadius, Phase preferredPhase,
+             WellProducer::ControlModeEnum whist_ctl,
              const TimeMap& timeMap, size_t creationTimeStep,
              WellCompletion::CompletionOrderEnum completionOrdering = WellCompletion::TRACK,
              bool allowCrossFlow = true, bool automaticShutIn = true);

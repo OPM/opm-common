@@ -35,6 +35,7 @@ namespace Opm {
 
     Well::Well(const std::string& name_, const size_t& seqIndex_, int headI,
                int headJ, double refDepth , double drainageRadius, Phase preferredPhase,
+               WellProducer::ControlModeEnum whist_ctl,
                const TimeMap& timeMap, size_t creationTimeStep,
                WellCompletion::CompletionOrderEnum completionOrdering,
                bool allowCrossFlow, bool automaticShutIn)
@@ -67,6 +68,9 @@ namespace Opm {
           m_segmentset( timeMap, WellSegments{} ),
           timesteps( timeMap.numTimesteps() )
     {
+        WellProductionProperties p;
+        p.whistctl_cmode = whist_ctl;
+        this->m_productionProperties = DynamicState<WellProductionProperties>(timeMap, p);
     }
 
     const std::string& Well::name() const {
