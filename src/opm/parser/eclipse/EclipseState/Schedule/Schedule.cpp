@@ -87,6 +87,7 @@ namespace Opm {
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
         udq_config(this->m_timeMap, std::make_shared<UDQInput>(deck)),
+        global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
         rft_config(this->m_timeMap)
     {
         addGroup( "FIELD", 0 );
@@ -436,7 +437,8 @@ namespace Opm {
                 std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
                     + ", which makes WHISTCTL keyword not affect the simulation at all";
                 OpmLog::warning(msg);
-            }
+            } else
+                this->global_whistctl_mode.update(currentStep, controlMode);
         }
 
         const std::string bhp_terminate = record.getItem("BPH_TERMINATE").getTrimmedString(0);
@@ -1628,10 +1630,9 @@ namespace Opm {
         }
 
         const size_t wseqIndex = m_wells.size();
-
         Well well(wellName, wseqIndex,
                   headI, headJ, refDepth, drainageRadius,
-                  preferredPhase, m_timeMap,
+                  preferredPhase, this->global_whistctl_mode[timeStep], m_timeMap,
                   timeStep,
                   wellConnectionOrder, allowCrossFlow, automaticShutIn);
 

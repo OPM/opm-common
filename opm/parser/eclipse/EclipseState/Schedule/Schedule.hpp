@@ -192,6 +192,7 @@ namespace Opm
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQInput>> udq_config;
+        DynamicState<WellProducer::ControlModeEnum> global_whistctl_mode;
         RFTConfig rft_config;
 
         Actions m_actions;

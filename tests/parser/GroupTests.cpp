@@ -156,8 +156,8 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
 
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
-    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
+    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
+    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1.get() );
@@ -193,8 +193,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
-    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
+    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
+    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1.get() );
@@ -226,8 +226,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 BOOST_AUTO_TEST_CASE(getWells) {
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
-    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, timeMap, 0);
+    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
+    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
 
     group.addWell( 2 , well1.get() );
     group.addWell( 3 , well1.get() );

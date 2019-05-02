@@ -1516,6 +1516,113 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
     BOOST_CHECK_EQUAL(well_p2->getProductionProperties(5).controlMode, Opm::WellProducer::ORAT);
 }
 
+BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "WHISTCTL\n"
+            " GRAT/ \n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "WELSPECS\n"
+            "    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "/\n"
+            "COMPDAT\n"
+            " 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            "/\n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 2\n"
+            " 15  OKT 2008 / \n"
+            "/\n"
+            "WHISTCTL\n"
+            " RESV / \n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 3\n"
+            " 18  OKT 2008 / \n"
+            "/\n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 4\n"
+            " 20  OKT 2008 / \n"
+            "/\n"
+            "WHISTCTL\n"
+            " LRAT / \n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 5\n"
+            " 25  OKT 2008 / \n"
+            "/\n"
+            "WHISTCTL\n"
+            " NONE / \n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            ;
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
+    auto* well_p1 = schedule.getWell("P1");
+    auto* well_p2 = schedule.getWell("P2");
+
+    //10  OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(1).controlMode, Opm::WellProducer::GRAT);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(1).controlMode, Opm::WellProducer::GRAT);
+
+    //15  OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(2).controlMode, Opm::WellProducer::RESV);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(2).controlMode, Opm::WellProducer::RESV);
+    // under history mode, a producing well should have only one rate target/limit or have no rate target/limit.
+    // the rate target/limit from previous report step should not be kept.
+    BOOST_CHECK( !well_p1->getProductionProperties(2).hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !well_p2->getProductionProperties(2).hasProductionControl(Opm::WellProducer::ORAT) );
+
+    //18  OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(3).controlMode, Opm::WellProducer::RESV);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(3).controlMode, Opm::WellProducer::RESV);
+    BOOST_CHECK( !well_p1->getProductionProperties(3).hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !well_p2->getProductionProperties(3).hasProductionControl(Opm::WellProducer::ORAT) );
+
+    // 20 OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(4).controlMode, Opm::WellProducer::LRAT);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(4).controlMode, Opm::WellProducer::LRAT);
+    BOOST_CHECK( !well_p1->getProductionProperties(4).hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !well_p2->getProductionProperties(4).hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !well_p1->getProductionProperties(4).hasProductionControl(Opm::WellProducer::RESV) );
+    BOOST_CHECK( !well_p2->getProductionProperties(4).hasProductionControl(Opm::WellProducer::RESV) );
+
+    // 25 OKT 2008
+    BOOST_CHECK_EQUAL(well_p1->getProductionProperties(5).controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK_EQUAL(well_p2->getProductionProperties(5).controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK( !well_p1->getProductionProperties(5).hasProductionControl(Opm::WellProducer::RESV) );
+    BOOST_CHECK( !well_p2->getProductionProperties(5).hasProductionControl(Opm::WellProducer::RESV) );
+    BOOST_CHECK( !well_p1->getProductionProperties(5).hasProductionControl(Opm::WellProducer::LRAT) );
+    BOOST_CHECK( !well_p2->getProductionProperties(5).hasProductionControl(Opm::WellProducer::LRAT) );
+}
+
 BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
     Opm::Parser parser;
     std::string input =
