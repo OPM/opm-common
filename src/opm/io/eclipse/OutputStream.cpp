@@ -194,6 +194,14 @@ write(const std::string& kw, const std::vector<std::string>& data)
 
 void
 Opm::EclIO::OutputStream::Restart::
+write(const std::string&                        kw,
+      const std::vector<PaddedOutputString<8>>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::Restart::
 openUnified(const std::string& fname,
             const bool         formatted,
             const int          seqnum)

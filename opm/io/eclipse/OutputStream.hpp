@@ -20,6 +20,8 @@
 #ifndef OPM_IO_OUTPUTSTREAM_HPP_INCLUDED
 #define OPM_IO_OUTPUTSTREAM_HPP_INCLUDED
 
+#include <opm/io/eclipse/PaddedOutputString.hpp>
+
 #include <ios>
 #include <memory>
 #include <string>
@@ -139,6 +141,17 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         /// \param[in] data Output values.
         void write(const std::string&              kw,
                    const std::vector<std::string>& data);
+
+        /// Write padded character data (8 characters per string)
+        /// to underlying output stream.
+        ///
+        /// Must not be called prior to \c prepareStep
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&                        kw,
+                   const std::vector<PaddedOutputString<8>>& data);
 
     private:
         /// Restart output stream.

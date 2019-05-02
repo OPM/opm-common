@@ -62,6 +62,20 @@ void EclOutput::write<std::string>(const std::string& name,
     }
 }
 
+template <>
+void EclOutput::write<PaddedOutputString<8>>
+    (const std::string&                        name,
+     const std::vector<PaddedOutputString<8>>& data)
+{
+    if (this->isFormatted) {
+        writeFormattedHeader(name, data.size(), CHAR);
+        writeFormattedCharArray(data);
+    }
+    else {
+        writeBinaryHeader(name, data.size(), CHAR);
+        writeBinaryCharArray(data);
+    }
+}
 
 void EclOutput::message(const std::string& msg)
 {
@@ -233,6 +247,41 @@ void EclOutput::writeBinaryCharArray(const std::vector<std::string>& data)
     }
 }
 
+void EclOutput::writeBinaryCharArray(const std::vector<PaddedOutputString<8>>& data)
+{
+    const auto size = data.size();
+
+    const auto sizeData = block_size_data_binary(CHAR);
+
+    const int sizeOfElement       = std::get<0>(sizeData);
+    const int maxBlockSize        = std::get<1>(sizeData);
+    const int maxNumberOfElements = maxBlockSize / sizeOfElement;
+
+    int rest = size * sizeOfElement;
+
+    if (!ofileH.is_open()) {
+        OPM_THROW(std::runtime_error,"fstream fileH not open for writing");
+    }
+
+    auto elm = data.begin();
+    while (rest > 0) {
+        const auto numElm = (rest > maxBlockSize)
+            ? maxNumberOfElements
+            : rest / sizeOfElement;
+
+        rest = (rest > maxBlockSize) ? rest - maxBlockSize : 0;
+
+        auto dhead = flipEndianInt(numElm * sizeOfElement);
+
+        ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+
+        for (auto i = 0*numElm; i < numElm; ++i, ++elm) {
+            ofileH.write(elm->c_str(), sizeOfElement);
+        }
+
+        ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
+    }
+}
 
 void EclOutput::writeFormattedHeader(const std::string& arrName, int size, eclArrType arrType)
 {
@@ -417,4 +466,25 @@ void EclOutput::writeFormattedCharArray(const std::vector<std::string>& data)
     }
 }
 
-}} // namespace Opm::ecl
+void EclOutput::writeFormattedCharArray(const std::vector<PaddedOutputString<8>>& data)
+{
+    const auto sizeData = block_size_data_formatted(CHAR);
+
+    const int nColumns = std::get<1>(sizeData);
+
+    const auto size = data.size();
+
+    for (auto i = 0*size; i < size; ++i) {
+        ofileH << " '" << data[i].c_str() << '\'';
+
+        if ((i+1) % nColumns == 0) {
+            ofileH << '\n';
+        }
+    }
+
+    if ((size % nColumns) != 0) {
+        ofileH << '\n';
+    }
+}
+
+}} // namespace Opm::EclIO

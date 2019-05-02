@@ -18,14 +18,14 @@
 #ifndef OPM_IO_ECLOUTPUT_HPP
 #define OPM_IO_ECLOUTPUT_HPP
 
-#include <iostream>
-#include <ios>
 #include <fstream>
-#include <vector>
-#include <iomanip>
+#include <ios>
+#include <string>
 #include <typeinfo>
+#include <vector>
 
 #include <opm/io/eclipse/EclIOdata.hpp>
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 namespace Opm { namespace EclIO { namespace OutputStream {
     class Restart;
@@ -81,6 +81,7 @@ private:
     void writeBinaryArray(const std::vector<T>& data);
 
     void writeBinaryCharArray(const std::vector<std::string>& data);
+    void writeBinaryCharArray(const std::vector<PaddedOutputString<8>>& data);
 
     void writeFormattedHeader(const std::string& arrName, int size, eclArrType arrType);
 
@@ -88,6 +89,7 @@ private:
     void writeFormattedArray(const std::vector<T>& data);
 
     void writeFormattedCharArray(const std::vector<std::string>& data);
+    void writeFormattedCharArray(const std::vector<PaddedOutputString<8>>& data);
 
     std::string make_real_string(float value) const;
     std::string make_doub_string(double value) const;
@@ -100,6 +102,12 @@ private:
 template<>
 void EclOutput::write<std::string>(const std::string& name,
                                    const std::vector<std::string>& data);
+
+template <>
+void EclOutput::write<PaddedOutputString<8>>
+    (const std::string&                        name,
+     const std::vector<PaddedOutputString<8>>& data);
+
 }} // namespace Opm::EclIO
 
 #endif // OPM_IO_ECLOUTPUT_HPP
