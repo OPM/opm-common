@@ -18,14 +18,15 @@
 #ifndef ECL_OUTPUT_HPP
 #define ECL_OUTPUT_HPP
 
-#include <iostream>
-#include <ios>
 #include <fstream>
-#include <vector>
-#include <iomanip>
+#include <ios>
+#include <string>
 #include <typeinfo>
+#include <vector>
 
 #include <opm/output/eclipse/FileService/EclIOdata.hpp>
+
+#include <opm/output/eclipse/CharArrayNullTerm.hpp>
 
 namespace EIOD = Opm::ecl;
 
@@ -72,6 +73,7 @@ private:
     void writeBinaryArray(const std::vector<T>& data);
 
     void writeBinaryCharArray(const std::vector<std::string>& data);
+    void writeBinaryCharArray(const std::vector<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>& data);
 
     void writeFormattedHeader(const std::string& arrName, int size, EIOD::eclArrType arrType);
 
@@ -79,6 +81,7 @@ private:
     void writeFormattedArray(const std::vector<T>& data);
 
     void writeFormattedCharArray(const std::vector<std::string>& data);
+    void writeFormattedCharArray(const std::vector<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>& data);
 
     std::string make_real_string(float value) const;
     std::string make_doub_string(double value) const;
@@ -91,5 +94,10 @@ private:
 template<>
 void EclOutput::write<std::string>(const std::string& name,
                                    const std::vector<std::string>& data);
+
+template <>
+void EclOutput::write<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>
+    (const std::string&                                                name,
+     const std::vector<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>& data);
 
 #endif
