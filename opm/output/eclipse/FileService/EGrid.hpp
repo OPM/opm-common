@@ -19,7 +19,7 @@
 #ifndef EGRID_HPP
 #define EGRID_HPP
 
-#include "EclFile.hpp"
+#include <opm/output/eclipse/FileService/EclFile.hpp>
 
 #include <array>
 #include <iostream>

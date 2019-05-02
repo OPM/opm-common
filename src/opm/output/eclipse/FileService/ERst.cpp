@@ -16,17 +16,17 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "ERst.hpp"
+#include <opm/output/eclipse/FileService/ERst.hpp>
 
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <iterator>
-#include <iomanip>
 #include <algorithm>
+#include <cstring>
+#include <iomanip>
+#include <iterator>
+#include <string>
+#include <sstream>
 
-
-ERst::ERst(const std::string& filename) : EclFile(filename)
+ERst::ERst(const std::string& filename)
+    : EclFile(filename)
 {
     loadData("SEQNUM");
 

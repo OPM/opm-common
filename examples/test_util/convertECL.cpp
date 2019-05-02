@@ -1,11 +1,10 @@
-#include <iostream>
 #include <chrono>
-#include <tuple>
 #include <iomanip>
+#include <iostream>
+#include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/EclOutput.hpp>
-
+#include <opm/output/eclipse/FileService/EclFile.hpp>
+#include <opm/output/eclipse/FileService/EclOutput.hpp>
 
 template<typename T>
 void write(EclOutput& outFile, EclFile& file1,

@@ -21,8 +21,8 @@
 #define ECLREGRESSIONTEST_HPP
 
 #include "EclFilesComparator.hpp"
-#include "data/EclIOdata.hpp"
 
+#include <opm/output/eclipse/FileService/EclIOdata.hpp>
 
 namespace EIOD = Opm::ecl;
 

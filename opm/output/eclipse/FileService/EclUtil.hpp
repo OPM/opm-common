@@ -19,10 +19,10 @@
 #ifndef ECL_UTIL_HPP
 #define ECL_UTIL_HPP
 
+#include <opm/output/eclipse/FileService/EclIOdata.hpp>
+
 #include <string>
 #include <tuple>
-#include <examples/test_util/data/EclIOdata.hpp>
-
 
 namespace Opm {
     namespace ecl {

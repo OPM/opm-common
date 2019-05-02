@@ -157,27 +157,51 @@ endif()
 
 # Build the compare utilities
 if(ENABLE_ECL_INPUT)
-  add_library(testutil STATIC
-              examples/test_util/EclFile.cpp
-              examples/test_util/EclFilesComparator.cpp
-              examples/test_util/EclOutput.cpp
-              examples/test_util/EclRegressionTest.cpp
-              examples/test_util/EclUtil.cpp
-              examples/test_util/EGrid.cpp
-              examples/test_util/ERft.cpp
-              examples/test_util/ERst.cpp
-              examples/test_util/ESmry.cpp)
+  add_executable(compareECL
+    examples/test_util/EclFilesComparator.cpp
+    examples/test_util/EclRegressionTest.cpp
+    examples/test_util/compareECL.cpp
+    )
+
+  add_executable(convertECL
+    examples/test_util/convertECL.cpp
+    )
+
   foreach(target compareECL convertECL)
-    add_executable(${target} examples/test_util/${target}.cpp)
-    target_link_libraries(${target} testutil opmcommon)
+    target_link_libraries(${target} opmcommon)
     install(TARGETS ${target} DESTINATION bin)
   endforeach()
 
   # Add the tests
-  set(_libs testutil opmcommon
+  set(_libs opmcommon
             ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-  foreach(test test_EclFilesComparator test_EclIO test_EclRegressionTest
-               test_EGrid test_ERft test_ERst test_ESmry)
+
+  opm_add_test(test_EclFilesComparator
+    CONDITION
+      ENABLE_ECL_INPUT
+    SOURCES
+      tests/test_EclFilesComparator.cpp
+      examples/test_util/EclFilesComparator.cpp
+    LIBRARIES
+      ${_libs}
+    WORKING_DIRECTORY
+      ${PROJECT_BINARY_DIR}/tests
+    )
+
+  opm_add_test(test_EclRegressionTest
+    CONDITION
+      ENABLE_ECL_INPUT
+    SOURCES
+      tests/test_EclRegressionTest.cpp
+      examples/test_util/EclFilesComparator.cpp
+      examples/test_util/EclRegressionTest.cpp
+    LIBRARIES
+      ${_libs}
+    WORKING_DIRECTORY
+      ${PROJECT_BINARY_DIR}/tests
+    )
+
+  foreach(test test_EclIO test_EGrid test_ERft test_ERst test_ESmry)
     opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
                          LIBRARIES ${_libs}
                          WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)

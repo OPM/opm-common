@@ -16,11 +16,12 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "EclFile.hpp"
-#include "EclUtil.hpp"
+#include <opm/output/eclipse/FileService/EclFile.hpp>
+#include <opm/output/eclipse/FileService/EclUtil.hpp>
 
 #include <array>
 #include <functional>
+#include <fstream>
 #include <string>
 #include <string.h>
 #include <sstream>
@@ -303,7 +304,7 @@ void readFormattedHeader(std::fstream& fileH, std::string& arrName,
                          int &num, EIOD::eclArrType &arrType)
 {
     std::string line;
-    getline(fileH,line);
+    std::getline(fileH,line);
 
     int p1 = line.find_first_of("'");
     int p2 = line.find_first_of("'",p1+1);

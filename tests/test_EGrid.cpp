@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <tuple>
 
-#include <examples/test_util/EGrid.hpp>
+#include <opm/output/eclipse/FileService/EGrid.hpp>
 
 #define BOOST_TEST_MODULE Test EGrid
 #include <boost/test/unit_test.hpp>

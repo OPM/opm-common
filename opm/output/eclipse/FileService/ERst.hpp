@@ -20,15 +20,12 @@
 #define ERST_HPP
 
 
-#include "EclFile.hpp"
+#include <opm/output/eclipse/FileService/EclFile.hpp>
 
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <vector>
-#include <ctime>
 #include <map>
-
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 class ERst : public EclFile
 {

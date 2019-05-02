@@ -174,6 +174,13 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/DoubHEAD.cpp
           src/opm/output/eclipse/EclipseGridInspector.cpp
           src/opm/output/eclipse/EclipseIO.cpp
+          src/opm/output/eclipse/FileService/EclFile.cpp
+          src/opm/output/eclipse/FileService/EclOutput.cpp
+          src/opm/output/eclipse/FileService/EclUtil.cpp
+          src/opm/output/eclipse/FileService/EGrid.cpp
+          src/opm/output/eclipse/FileService/ERft.cpp
+          src/opm/output/eclipse/FileService/ERst.cpp
+          src/opm/output/eclipse/FileService/ESmry.cpp
           src/opm/output/eclipse/InteHEAD.cpp
           src/opm/output/eclipse/libECLRestart.cpp
           src/opm/output/eclipse/LinearisedOutputTable.cpp
@@ -580,6 +587,14 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
         opm/output/eclipse/EclipseIOUtil.hpp
+        opm/output/eclipse/FileService/EclFile.hpp
+        opm/output/eclipse/FileService/EclIOdata.hpp
+        opm/output/eclipse/FileService/EclOutput.hpp
+        opm/output/eclipse/FileService/EclUtil.hpp
+        opm/output/eclipse/FileService/EGrid.hpp
+        opm/output/eclipse/FileService/ERft.hpp
+        opm/output/eclipse/FileService/ERst.hpp
+        opm/output/eclipse/FileService/ESmry.hpp
         opm/output/eclipse/InteHEAD.hpp
         opm/output/eclipse/libECLRestart.hpp
         opm/output/eclipse/LinearisedOutputTable.hpp

@@ -19,12 +19,13 @@
 #define ECL_OUTPUT_HPP
 
 #include <iostream>
+#include <ios>
 #include <fstream>
 #include <vector>
 #include <iomanip>
 #include <typeinfo>
 
-#include <examples/test_util/data/EclIOdata.hpp>
+#include <opm/output/eclipse/FileService/EclIOdata.hpp>
 
 namespace EIOD = Opm::ecl;
 

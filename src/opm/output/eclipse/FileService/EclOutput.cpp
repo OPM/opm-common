@@ -16,18 +16,17 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "EclOutput.hpp"
-#include "EclUtil.hpp"
+#include <opm/output/eclipse/FileService/EclOutput.hpp>
+#include <opm/output/eclipse/FileService/EclUtil.hpp>
+
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
 #include <iterator>
 #include <iomanip>
 #include <stdexcept>
-#include <typeinfo>
 #include <sstream>
 #include <stdio.h>
-
 
 EclOutput::EclOutput(const std::string& inputFile, bool formatted) :
   isFormatted(formatted)

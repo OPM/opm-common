@@ -26,8 +26,8 @@
 #include <stdexcept>
 #include <tuple>
 
-#include <examples/test_util/ERft.hpp>
-#include <examples/test_util/EclOutput.hpp>
+#include <opm/output/eclipse/FileService/ERft.hpp>
+#include <opm/output/eclipse/FileService/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EGrid
 #include <boost/test/unit_test.hpp>

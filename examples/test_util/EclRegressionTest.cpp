@@ -17,22 +17,22 @@
 */
 
 #include "EclRegressionTest.hpp"
+
 #include <opm/common/ErrorMacros.hpp>
+
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <set>
-#include <iomanip>
-#include <typeinfo>
 #include <type_traits>
+#include <typeinfo>
 #include <vector>
 
-#include <examples/test_util/ERst.hpp>
-#include <examples/test_util/ESmry.hpp>
-#include <examples/test_util/ERft.hpp>
-
-#include <chrono>
-
+#include <opm/output/eclipse/FileService/ERft.hpp>
+#include <opm/output/eclipse/FileService/ERst.hpp>
+#include <opm/output/eclipse/FileService/ESmry.hpp>
 
 // helper macro to handle error throws or not
 #define HANDLE_ERROR(type, message) \

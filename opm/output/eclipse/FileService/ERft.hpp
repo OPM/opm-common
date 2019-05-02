@@ -19,17 +19,16 @@
 #ifndef ERFT_HPP
 #define ERFT_HPP
 
+#include <opm/output/eclipse/FileService/EclFile.hpp>
 
-#include "EclFile.hpp"
-
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <vector>
 #include <ctime>
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <set>
-
+#include <string>
+#include <utility>
+#include <vector>
 
 class ERft : public EclFile
 {

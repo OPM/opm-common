@@ -16,6 +16,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#include <opm/output/eclipse/FileService/ESmry.hpp>
 
 #include <string>
 #include <string.h>
@@ -27,8 +28,7 @@
 #include <limits>
 #include <set>
 
-#include "EclFile.hpp"
-#include "ESmry.hpp"
+#include <opm/output/eclipse/FileService/EclFile.hpp>
 
 /*
 
@@ -308,7 +308,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
     for (auto keyw : keywList){
         keyword.push_back(keyw);
     }
-};
+}
 
 
 void ESmry::getRstString(const std::vector<std::string>& restartArray, std::string& pathRst, std::string& rootN) const {

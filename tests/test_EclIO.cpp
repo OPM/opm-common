@@ -25,8 +25,8 @@
 #include <algorithm>
 #include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/EclOutput.hpp>
+#include <opm/output/eclipse/FileService/EclFile.hpp>
+#include <opm/output/eclipse/FileService/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>

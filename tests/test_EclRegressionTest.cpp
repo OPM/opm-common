@@ -21,11 +21,12 @@
 #define BOOST_TEST_MODULE EclRegressionTest
 
 #include <boost/test/unit_test.hpp>
+
 #include <examples/test_util/EclRegressionTest.hpp>
 
-#include <examples/test_util/EGrid.hpp>
-#include <examples/test_util/ESmry.hpp>
-#include <examples/test_util/EclOutput.hpp>
+#include <opm/output/eclipse/FileService/EGrid.hpp>
+#include <opm/output/eclipse/FileService/ESmry.hpp>
+#include <opm/output/eclipse/FileService/EclOutput.hpp>
 
 #include <iomanip>
 

@@ -25,8 +25,8 @@
 #include <algorithm>
 #include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/ESmry.hpp>
+#include <opm/output/eclipse/FileService/EclFile.hpp>
+#include <opm/output/eclipse/FileService/ESmry.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>

@@ -16,7 +16,8 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "EclUtil.hpp"
+#include <opm/output/eclipse/FileService/EclUtil.hpp>
+
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>

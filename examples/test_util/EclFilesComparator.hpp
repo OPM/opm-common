@@ -21,12 +21,12 @@
 #define ECLFILESCOMPARATOR_HPP
 
 #include "Deviation.hpp"
+
 #include <map>
 #include <vector>
 #include <string>
 
-#include <examples/test_util/EGrid.hpp>
-
+#include <opm/output/eclipse/FileService/EGrid.hpp>
 
 class ECLFilesComparator {
 public:

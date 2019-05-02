@@ -20,16 +20,14 @@
 #define ECLFILE_HPP
 
 #include <opm/common/ErrorMacros.hpp>
-#include <examples/test_util/data/EclIOdata.hpp>
 
-#include <iostream>
-#include <string>
+#include <opm/output/eclipse/FileService/EclIOdata.hpp>
+
 #include <fstream>
-#include <vector>
-#include <ctime>
-#include <map>
+#include <string>
+#include <stdexcept>
 #include <unordered_map>
-#include <stdio.h>
+#include <vector>
 
 namespace EIOD = Opm::ecl;
 
@@ -98,7 +96,7 @@ protected:
           loadData(arrIndex);
         }
 
-        return array.find(arrIndex)->second;
+        return array.at(arrIndex);
     }
 
 private:

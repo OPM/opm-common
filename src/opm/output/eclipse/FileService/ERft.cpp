@@ -16,16 +16,16 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "ERft.hpp"
+#include <opm/output/eclipse/FileService/ERft.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <iterator>
-#include <iomanip>
-#include <algorithm>
 
+#include <algorithm>
+#include <cstring>
+#include <iomanip>
+#include <iterator>
+#include <string>
+#include <sstream>
 
 ERft::ERft(const std::string &filename) : EclFile(filename)
 {

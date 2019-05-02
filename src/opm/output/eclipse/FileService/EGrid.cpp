@@ -16,17 +16,17 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "EGrid.hpp"
+#include <opm/output/eclipse/FileService/EGrid.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
-#include <string>
-#include <string.h>
-#include <sstream>
+
+#include <algorithm>
+#include <cstring>
 #include <iterator>
 #include <iomanip>
-#include <algorithm>
 #include <numeric>
-
+#include <string>
+#include <sstream>
 
 EGrid::EGrid(const std::string &filename) : EclFile(filename)
 {
