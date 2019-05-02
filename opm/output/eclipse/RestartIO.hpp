@@ -24,22 +24,11 @@
 #ifndef RESTART_IO_HPP
 #define RESTART_IO_HPP
 
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-
-#include <opm/output/data/Cells.hpp>
-#include <opm/output/data/Solution.hpp>
-#include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
-#include <ert/ecl/EclKW.hpp>
-#include <ert/ecl/ecl_rsthead.h>
-#include <ert/ecl/ecl_rst_file.h>
-#include <ert/util/util.h>
-
-#include <map>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -47,7 +36,6 @@ namespace Opm {
 
     class EclipseGrid;
     class EclipseState;
-    class Phases;
     class Schedule;
 
 } // namespace Opm
