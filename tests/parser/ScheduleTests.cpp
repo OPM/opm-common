@@ -1491,18 +1491,32 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
     //15  OKT 2008
     BOOST_CHECK_EQUAL(well_p1->getProductionProperties(2).controlMode, Opm::WellProducer::RESV);
     BOOST_CHECK_EQUAL(well_p2->getProductionProperties(2).controlMode, Opm::WellProducer::RESV);
+    // under history mode, a producing well should have only one rate target/limit or have no rate target/limit.
+    // the rate target/limit from previous report step should not be kept.
+    BOOST_CHECK( !well_p1->getProductionProperties(2).hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !well_p2->getProductionProperties(2).hasProductionControl(Opm::WellProducer::ORAT) );
 
     //18  OKT 2008
     BOOST_CHECK_EQUAL(well_p1->getProductionProperties(3).controlMode, Opm::WellProducer::RESV);
     BOOST_CHECK_EQUAL(well_p2->getProductionProperties(3).controlMode, Opm::WellProducer::RESV);
+    BOOST_CHECK( !well_p1->getProductionProperties(3).hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !well_p2->getProductionProperties(3).hasProductionControl(Opm::WellProducer::ORAT) );
 
     // 20 OKT 2008
     BOOST_CHECK_EQUAL(well_p1->getProductionProperties(4).controlMode, Opm::WellProducer::LRAT);
     BOOST_CHECK_EQUAL(well_p2->getProductionProperties(4).controlMode, Opm::WellProducer::LRAT);
+    BOOST_CHECK( !well_p1->getProductionProperties(4).hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !well_p2->getProductionProperties(4).hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !well_p1->getProductionProperties(4).hasProductionControl(Opm::WellProducer::RESV) );
+    BOOST_CHECK( !well_p2->getProductionProperties(4).hasProductionControl(Opm::WellProducer::RESV) );
 
     // 25 OKT 2008
     BOOST_CHECK_EQUAL(well_p1->getProductionProperties(5).controlMode, Opm::WellProducer::ORAT);
     BOOST_CHECK_EQUAL(well_p2->getProductionProperties(5).controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK( !well_p1->getProductionProperties(5).hasProductionControl(Opm::WellProducer::RESV) );
+    BOOST_CHECK( !well_p2->getProductionProperties(5).hasProductionControl(Opm::WellProducer::RESV) );
+    BOOST_CHECK( !well_p1->getProductionProperties(5).hasProductionControl(Opm::WellProducer::LRAT) );
+    BOOST_CHECK( !well_p2->getProductionProperties(5).hasProductionControl(Opm::WellProducer::LRAT) );
 }
 
 BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
