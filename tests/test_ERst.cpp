@@ -16,20 +16,24 @@
    +   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    +   */
 
-
 #include "config.h"
-#include <iostream>
-#include <stdio.h>
-#include <iomanip>
-#include <math.h>
-#include <algorithm>
-#include <tuple>
 
-#include <examples/test_util/ERst.hpp>
-#include <examples/test_util/EclOutput.hpp>
+#include <opm/io/eclipse/ERst.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
+
+#include <opm/io/eclipse/EclOutput.hpp>
+
+#include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <math.h>
+#include <stdio.h>
+#include <tuple>
+
+using namespace Opm::ecl;
 
 template<typename InputIterator1, typename InputIterator2>
 bool
@@ -86,7 +90,7 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
 
     // try to get a list of vectors from non-existing report step, should throw exception
-    std::vector<std::tuple<std::string, EIOD::eclArrType, int>> rstArrays; // = rst1.listOfRstArrays(4);
+    std::vector<std::tuple<std::string, eclArrType, int>> rstArrays; // = rst1.listOfRstArrays(4);
     BOOST_CHECK_THROW(rstArrays = rst1.listOfRstArrays(4), std::invalid_argument);
 
     // non exising report step number, should throw exception 
@@ -124,24 +128,24 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
 static void readAndWrite(EclOutput& eclTest, ERst& rst1,
                          const std::string& name, int seqnum,
-                         EIOD::eclArrType arrType)
+                         eclArrType arrType)
 {
-    if (arrType == EIOD::INTE) {
+    if (arrType == INTE) {
         std::vector<int> vect = rst1.getRst<int>(name, seqnum);
         eclTest.write(name, vect);
-    } else if (arrType == EIOD::REAL) {
+    } else if (arrType == REAL) {
         std::vector<float> vect = rst1.getRst<float>(name, seqnum);
         eclTest.write(name, vect);
-    } else if (arrType == EIOD::DOUB) {
+    } else if (arrType == DOUB) {
         std::vector<double> vect = rst1.getRst<double>(name, seqnum);
         eclTest.write(name, vect);
-    } else if (arrType == EIOD::LOGI) {
+    } else if (arrType == LOGI) {
         std::vector<bool> vect = rst1.getRst<bool>(name, seqnum);
         eclTest.write(name, vect);
-    } else if (arrType == EIOD::CHAR) {
+    } else if (arrType == CHAR) {
         std::vector<std::string> vect = rst1.getRst<std::string>(name, seqnum);
         eclTest.write(name, vect);
-    } else if (arrType == EIOD::MESS) {
+    } else if (arrType == MESS) {
         eclTest.write(name, std::vector<char>());
     } else {
         std::cout << "unknown type " << std::endl;
@@ -172,7 +176,7 @@ BOOST_AUTO_TEST_CASE(TestERst_2) {
 
             for (auto& array : rstArrays) {
                 std::string name = std::get<0>(array);
-                EIOD::eclArrType arrType = std::get<1>(array);
+                eclArrType arrType = std::get<1>(array);
                 readAndWrite(eclTest, rst1, name, seqnums[i], arrType);
             }
         }
@@ -205,7 +209,7 @@ BOOST_AUTO_TEST_CASE(TestERst_3) {
 
         for (auto& array : rstArrays) {
             std::string name = std::get<0>(array);
-            EIOD::eclArrType arrType = std::get<1>(array);
+            eclArrType arrType = std::get<1>(array);
             readAndWrite(eclTest, rst1, name, seqnums[i], arrType);
         }
     }

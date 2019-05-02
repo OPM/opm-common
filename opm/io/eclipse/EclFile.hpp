@@ -16,22 +16,20 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#ifndef ECLFILE_HPP
-#define ECLFILE_HPP
+#ifndef OPM_IO_ECLFILE_HPP
+#define OPM_IO_ECLFILE_HPP
 
 #include <opm/common/ErrorMacros.hpp>
-#include <examples/test_util/data/EclIOdata.hpp>
 
-#include <iostream>
-#include <string>
+#include <opm/io/eclipse/EclIOdata.hpp>
+
 #include <fstream>
-#include <vector>
-#include <ctime>
-#include <map>
+#include <string>
+#include <stdexcept>
 #include <unordered_map>
-#include <stdio.h>
+#include <vector>
 
-namespace EIOD = Opm::ecl;
+namespace Opm { namespace ecl {
 
 class EclFile
 {
@@ -53,7 +51,7 @@ public:
       char_array.clear();
     }
 
-    using EclEntry = std::tuple<std::string, EIOD::eclArrType, int>;
+    using EclEntry = std::tuple<std::string, eclArrType, int>;
     std::vector<EclEntry> getList() const;
 
     template <typename T>
@@ -77,7 +75,7 @@ protected:
     std::unordered_map<int, std::vector<std::string>> char_array;
 
     std::vector<std::string> array_name;
-    std::vector<EIOD::eclArrType> array_type;
+    std::vector<eclArrType> array_type;
     std::vector<int> array_size;
 
     std::vector<unsigned long int> ifStreamPos;
@@ -85,7 +83,7 @@ protected:
     std::map<std::string, int> array_index;
 
     template<class T>
-    const std::vector<T>& getImpl(int arrIndex, EIOD::eclArrType type,
+    const std::vector<T>& getImpl(int arrIndex, eclArrType type,
                                   const std::unordered_map<int, std::vector<T>>& array,
                                   const std::string& typeStr)
     {
@@ -98,7 +96,7 @@ protected:
           loadData(arrIndex);
         }
 
-        return array.find(arrIndex)->second;
+        return array.at(arrIndex);
     }
 
 private:
@@ -107,4 +105,6 @@ private:
     void loadArray(std::fstream& fileH, int arrIndex);
 };
 
-#endif
+}} // namespace Opm::ecl
+
+#endif // OPM_IO_ECLFILE_HPP

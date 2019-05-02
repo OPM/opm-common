@@ -17,18 +17,20 @@
    */
 
 #include "EclFilesComparator.hpp"
+
 #include <opm/common/ErrorMacros.hpp>
+#include <opm/io/eclipse/EGrid.hpp>
 
 #include <stdio.h>
 
-#include <set>
-#include <iostream>
-#include <iomanip>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <iomanip>
 #include <numeric>
-#include <vector>
+#include <set>
 #include <type_traits>
+#include <vector>
 
 // helper macro to handle error throws or not
 #define HANDLE_ERROR(type, message) \
@@ -41,9 +43,10 @@
     } \
   }
 
+using Opm::ecl::EGrid;
 
 template <typename T>
-void ECLFilesComparator::printValuesForCell(const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const T& value1, const T& value2) const {
+void ECLFilesComparator::printValuesForCell(const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const T& value1, const T& value2) const {
 
     int nActive = -1;
     int nTot = -1;
@@ -86,15 +89,15 @@ void ECLFilesComparator::printValuesForCell(const std::string& keyword, const st
               << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
 }
 
-template void ECLFilesComparator::printValuesForCell<bool>       (const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const bool&        value1, const bool&        value2) const;
-template void ECLFilesComparator::printValuesForCell<int>        (const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const int&         value1, const int&         value2) const;
-template void ECLFilesComparator::printValuesForCell<double>     (const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const double&      value1, const double&      value2) const;
-template void ECLFilesComparator::printValuesForCell<std::string>(const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const std::string& value1, const std::string& value2) const;
+template void ECLFilesComparator::printValuesForCell<bool>       (const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const bool&        value1, const bool&        value2) const;
+template void ECLFilesComparator::printValuesForCell<int>        (const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const int&         value1, const int&         value2) const;
+template void ECLFilesComparator::printValuesForCell<double>     (const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const double&      value1, const double&      value2) const;
+template void ECLFilesComparator::printValuesForCell<std::string>(const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const std::string& value1, const std::string& value2) const;
 // Hack to work around case where std::vector<bool>::const_reference is not a bool. If it is we will initialize printValuesForCell<char> otherwise printValuesForCell<std::vector<bool>::const_reference>
 using boolConstReference = typename std::vector<bool>::const_reference;
 using boolTypeHelper = typename std::remove_const<typename std::remove_reference<boolConstReference>::type>::type;
 using boolType = typename std::conditional<std::is_same<boolTypeHelper, bool>::value, char, boolTypeHelper>::type;
-template void ECLFilesComparator::printValuesForCell<boolType>       (const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const boolType& value1, const boolType& value2) const;
+template void ECLFilesComparator::printValuesForCell<boolType>       (const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const boolType& value1, const boolType& value2) const;
 
 ECLFilesComparator::ECLFilesComparator(const std::string& basename1,
                                        const std::string& basename2,
@@ -126,7 +129,7 @@ double ECLFilesComparator::median(std::vector<double> vec) {
     }
     else {
         size_t n = vec.size() / 2;
-        nth_element(vec.begin(), vec.begin() + n, vec.end());
+        std::nth_element(vec.begin(), vec.begin() + n, vec.end());
         if (vec.size() % 2 == 0) {
             return 0.5 * (vec[n-1] + vec[n]);
         }
@@ -144,5 +147,3 @@ double ECLFilesComparator::average(const std::vector<double>& vec) {
     double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
     return sum/vec.size();
 }
-
-

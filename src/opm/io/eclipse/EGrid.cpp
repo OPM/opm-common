@@ -16,17 +16,19 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "EGrid.hpp"
+#include <opm/io/eclipse/EGrid.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
-#include <string>
-#include <string.h>
-#include <sstream>
+
+#include <algorithm>
+#include <cstring>
 #include <iterator>
 #include <iomanip>
-#include <algorithm>
 #include <numeric>
+#include <string>
+#include <sstream>
 
+namespace Opm { namespace ecl {
 
 EGrid::EGrid(const std::string &filename) : EclFile(filename)
 {
@@ -184,3 +186,5 @@ void EGrid::getCellCorners(int globindex, std::vector<double>& X,
 {
     return getCellCorners(ijk_from_global_index(globindex),X,Y,Z);
 }
+
+}} // namespace Opm::ecl

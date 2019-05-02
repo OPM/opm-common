@@ -17,24 +17,19 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef OPM_ECLIO_DATA_HPP
-#define OPM_ECLIO_DATA_HPP
+#ifndef OPM_IO_ECLIODATA_HPP
+#define OPM_IO_ECLIODATA_HPP
 
 #include <tuple>
 
-
-namespace Opm {
-
- namespace ecl {
+namespace Opm { namespace ecl {
 
     // type MESS have no assisiated data 
-    
     enum eclArrType {
         INTE, REAL, DOUB, CHAR, LOGI, MESS
     };
 
     // named constants related to binary file format
-    
     const unsigned int true_value = 0xffffffff;
     const unsigned int false_value = 0x00000000;
 
@@ -51,7 +46,6 @@ namespace Opm {
     const int MaxBlockSizeChar =  840;    // Maximum block size for CHAR arrays in binary files      
 
     // named constants related to formatted file file format
-
     const int MaxNumBlockInte = 1000;    // maximum number of Inte values in block => hard line shift
     const int MaxNumBlockReal = 1000;    // maximum number of Real values in block => hard line shift
     const int MaxNumBlockDoub = 1000;    // maximum number of Doub values in block => hard line shift
@@ -69,8 +63,7 @@ namespace Opm {
     const int columnWidthDoub = 23;      // number of characters fore each Inte Element 
     const int columnWidthLogi = 3;       // number of characters fore each Inte Element 
     const int columnWidthChar = 11;      // number of characters fore each Inte Element 
-    
- } // ecl
-} // Opm
 
-#endif // OPM_ECLIO_DATA_HPP
+}} // namespace Opm::ecl
+
+#endif // OPM_IO_ECLIODATA_HPP

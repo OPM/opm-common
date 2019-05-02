@@ -16,21 +16,23 @@
    +   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    +   */
 
-
 #include "config.h"
-#include <iostream>
-#include <stdio.h>
-#include <iomanip>
-#include <math.h>
+
 #include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <math.h>
+#include <stdio.h>
 #include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/EclOutput.hpp>
+#include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
 
+using namespace Opm::ecl;
 
 template<typename InputIterator1, typename InputIterator2>
 bool
@@ -270,24 +272,24 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
         int n=0;
         for (auto array : arrayList) {
             std::string name = std::get<0>(array);
-            EIOD::eclArrType arrType = std::get<1>(array);
+            eclArrType arrType = std::get<1>(array);
 
-            if (arrType == EIOD::INTE) {
+            if (arrType == INTE) {
                 std::vector<int> vect = file1.get<int>(n);
                 eclTest.write(name, vect);
-            } else if (arrType == EIOD::REAL) {
+            } else if (arrType == REAL) {
                 std::vector<float> vect = file1.get<float>(n);
                 eclTest.write(name, vect);
-            } else if (arrType == EIOD::DOUB) {
+            } else if (arrType == DOUB) {
                 std::vector<double> vect = file1.get<double>(n);
                 eclTest.write(name, vect);
-            } else if (arrType == EIOD::LOGI) {
+            } else if (arrType == LOGI) {
                 std::vector<bool> vect = file1.get<bool>(n);
                 eclTest.write(name, vect);
-            } else if (arrType == EIOD::CHAR) {
+            } else if (arrType == CHAR) {
                 std::vector<std::string> vect = file1.get<std::string>(n);
                 eclTest.write(name, vect);
-            } else if (arrType == EIOD::MESS) {
+            } else if (arrType == MESS) {
                 eclTest.write(name, std::vector<char>());
             } else {
                 std::cout << "unknown type " << std::endl;

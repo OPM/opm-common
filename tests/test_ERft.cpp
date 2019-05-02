@@ -16,21 +16,26 @@
    +   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    +   */
 
-
 #include "config.h"
-#include <iostream>
-#include <stdio.h>
-#include <iomanip>
-#include <math.h>
-#include <algorithm>
-#include <stdexcept>
-#include <tuple>
 
-#include <examples/test_util/ERft.hpp>
-#include <examples/test_util/EclOutput.hpp>
+#include <opm/io/eclipse/ERft.hpp>
 
 #define BOOST_TEST_MODULE Test EGrid
 #include <boost/test/unit_test.hpp>
+
+#include <opm/io/eclipse/EclIOdata.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
+
+#include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <math.h>
+#include <stdexcept>
+#include <stdio.h>
+#include <tuple>
+
+using namespace Opm::ecl;
 
 template<typename InputIterator1, typename InputIterator2>
 bool
@@ -167,24 +172,24 @@ BOOST_AUTO_TEST_CASE(TestERft_2) {
 
             for (auto& array : arrayList) {
                 std::string arrName = std::get<0>(array);
-                EIOD::eclArrType arrType = std::get<1>(array);
+                eclArrType arrType = std::get<1>(array);
 
-                if (arrType == EIOD::INTE) {
+                if (arrType == INTE) {
                     std::vector<int> vect = rft1.getRft<int>(arrName, wellName, date);
                     eclTest.write(arrName, vect);
-                } else if (arrType == EIOD::REAL) {
+                } else if (arrType == REAL) {
                     std::vector<float> vect = rft1.getRft<float>(arrName, wellName, date);
                     eclTest.write(arrName, vect);
-                } else if (arrType == EIOD::DOUB) {
+                } else if (arrType == DOUB) {
                     std::vector<double> vect = rft1.getRft<double>(arrName, wellName, date);
                     eclTest.write(arrName, vect);
-                } else if (arrType == EIOD::LOGI) {
+                } else if (arrType == LOGI) {
                     std::vector<bool> vect = rft1.getRft<bool>(arrName, wellName, date);
                     eclTest.write(arrName, vect);
-                } else if (arrType == EIOD::CHAR) {
+                } else if (arrType == CHAR) {
                     std::vector<std::string> vect = rft1.getRft<std::string>(arrName, wellName, date);
                     eclTest.write(arrName, vect);
-                } else if (arrType == EIOD::MESS) {
+                } else if (arrType == MESS) {
                     eclTest.write(arrName, std::vector<char>());
                 } else {
                     std::cout << "unknown type " << std::endl;

@@ -16,16 +16,18 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "ERft.hpp"
+#include <opm/io/eclipse/ERft.hpp>
 
 #include <opm/common/ErrorMacros.hpp>
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <iterator>
-#include <iomanip>
-#include <algorithm>
 
+#include <algorithm>
+#include <cstring>
+#include <iomanip>
+#include <iterator>
+#include <string>
+#include <sstream>
+
+namespace Opm { namespace ecl {
 
 ERft::ERft(const std::string &filename) : EclFile(filename)
 {
@@ -162,7 +164,7 @@ ERft::getRft<float>(const std::string& name, const std::string &wellName,
 {
     int arrInd = getArrayIndex(name, wellName, date);
 
-    if (array_type[arrInd] != EIOD::REAL) {
+    if (array_type[arrInd] != REAL) {
         std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         OPM_THROW(std::runtime_error, message);
     }
@@ -178,7 +180,7 @@ ERft::getRft<double>(const std::string& name, const std::string& wellName,
 {
     int arrInd = getArrayIndex(name, wellName, date);
 
-    if (array_type[arrInd] != EIOD::DOUB) {
+    if (array_type[arrInd] != DOUB) {
         std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         OPM_THROW(std::runtime_error, message);
     }
@@ -194,7 +196,7 @@ ERft::getRft<int>(const std::string& name, const std::string& wellName,
 {
     int arrInd = getArrayIndex(name, wellName, date);
 
-    if (array_type[arrInd] != EIOD::INTE) {
+    if (array_type[arrInd] != INTE) {
         std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         OPM_THROW(std::runtime_error, message);
     }
@@ -210,7 +212,7 @@ ERft::getRft<bool>(const std::string& name, const std::string& wellName,
 {
     int arrInd = getArrayIndex(name, wellName, date);
 
-    if (array_type[arrInd] != EIOD::LOGI) {
+    if (array_type[arrInd] != LOGI) {
         std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         OPM_THROW(std::runtime_error, message);
     }
@@ -226,7 +228,7 @@ ERft::getRft<std::string>(const std::string& name, const std::string& wellName,
 {
     int arrInd = getArrayIndex(name, wellName, date);
 
-    if (array_type[arrInd] != EIOD::CHAR) {
+    if (array_type[arrInd] != CHAR) {
         std::string message = "Array " + name + " found in RFT file for selected date and well, but called with wrong type";
         OPM_THROW(std::runtime_error, message);
     }
@@ -308,3 +310,5 @@ std::vector<ERft::RftDate> ERft::listOfdates() const
 {
     return { this->dateList.begin(), this->dateList.end() };
 }
+
+}} // namespace Opm::ecl

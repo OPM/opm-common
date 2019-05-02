@@ -21,12 +21,15 @@
 #define ECLFILESCOMPARATOR_HPP
 
 #include "Deviation.hpp"
+
 #include <map>
-#include <vector>
+#include <stddef.h>
 #include <string>
+#include <vector>
 
-#include <examples/test_util/EGrid.hpp>
-
+namespace Opm { namespace ecl {
+    class EGrid;
+}} // namespace Opm::ecl
 
 class ECLFilesComparator {
 public:
@@ -75,7 +78,13 @@ protected:
     std::string rootName1, rootName2;
 
     template <typename T>
-    void printValuesForCell(const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const T& value1, const T& value2) const;
+    void printValuesForCell(const std::string& keyword,
+                            const std::string& reference,
+                            size_t kw_size,
+                            size_t cell,
+                            Opm::ecl::EGrid *grid,
+                            const T& value1,
+                            const T& value2) const;
 
 private:
     double absTolerance      = 0;

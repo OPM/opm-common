@@ -18,17 +18,23 @@
 
 
 #include "config.h"
-#include <iostream>
-#include <stdio.h>
-#include <iomanip>
-#include <math.h>
-#include <algorithm>
-#include <tuple>
 
-#include <examples/test_util/EGrid.hpp>
+#include <opm/io/eclipse/EGrid.hpp>
 
 #define BOOST_TEST_MODULE Test EGrid
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
+#include <array>
+#include <fstream>
+#include <initializer_list>
+#include <iostream>
+#include <iomanip>
+#include <math.h>
+#include <stdio.h>
+#include <tuple>
+
+using Opm::ecl::EGrid;
 
 template<typename InputIterator1, typename InputIterator2>
 bool

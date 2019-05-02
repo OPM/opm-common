@@ -21,8 +21,12 @@
 #define ECLREGRESSIONTEST_HPP
 
 #include "EclFilesComparator.hpp"
-#include "data/EclIOdata.hpp"
 
+#include <opm/io/eclipse/EclIOdata.hpp>
+
+namespace Opm { namespace ecl {
+    class EGrid;
+}}
 
 namespace EIOD = Opm::ecl;
 
@@ -172,8 +176,8 @@ private:
     // Accept extra keywords in the restart file of the 'new' simulation.
     bool acceptExtraKeywords = false;
 
-    EGrid* grid1 = nullptr;
-    EGrid* grid2 = nullptr;
+    Opm::ecl::EGrid* grid1 = nullptr;
+    Opm::ecl::EGrid* grid2 = nullptr;
 };
 
 #endif

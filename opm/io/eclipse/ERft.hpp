@@ -16,20 +16,20 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#ifndef ERFT_HPP
-#define ERFT_HPP
+#ifndef OPM_IO_ERFT_HPP
+#define OPM_IO_ERFT_HPP
 
+#include <opm/io/eclipse/EclFile.hpp>
 
-#include "EclFile.hpp"
-
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <vector>
 #include <ctime>
 #include <map>
 #include <set>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
+namespace Opm { namespace ecl {
 
 class ERft : public EclFile
 {
@@ -79,5 +79,6 @@ private:
                       const RftDate& date) const;
 };
 
-#endif
+}} // namespace Opm::ecl
 
+#endif // OPM_IO_ERFT_HPP

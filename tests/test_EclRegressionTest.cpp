@@ -21,14 +21,18 @@
 #define BOOST_TEST_MODULE EclRegressionTest
 
 #include <boost/test/unit_test.hpp>
-#include <examples/test_util/EclRegressionTest.hpp>
 
-#include <examples/test_util/EGrid.hpp>
-#include <examples/test_util/ESmry.hpp>
-#include <examples/test_util/EclOutput.hpp>
+#include <test_util/EclRegressionTest.hpp>
+
+#include <opm/io/eclipse/EGrid.hpp>
+#include <opm/io/eclipse/ESmry.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
 
 #include <iomanip>
 
+using Opm::ecl::EGrid;
+using Opm::ecl::ESmry;
+using Opm::ecl::EclOutput;
 
 void makeEgridFile(const std::string &fileName, const std::vector<float> &coord,
                    const std::vector<float> &zcorn, const std::vector<int> &gridhead,

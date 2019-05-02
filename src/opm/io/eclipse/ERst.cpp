@@ -16,17 +16,19 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "ERst.hpp"
+#include <opm/io/eclipse/ERst.hpp>
 
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <iterator>
-#include <iomanip>
 #include <algorithm>
+#include <cstring>
+#include <iomanip>
+#include <iterator>
+#include <string>
+#include <sstream>
 
+namespace Opm { namespace ecl {
 
-ERst::ERst(const std::string& filename) : EclFile(filename)
+ERst::ERst(const std::string& filename)
+    : EclFile(filename)
 {
     loadData("SEQNUM");
 
@@ -143,7 +145,7 @@ template<>
 const std::vector<int>& ERst::getRst<int>(const std::string& name, int reportStepNumber)
 {
     int ind = getArrayIndex(name, reportStepNumber);
-    return getImpl(ind, EIOD::INTE, inte_array, "integer");
+    return getImpl(ind, INTE, inte_array, "integer");
 }
 
 
@@ -151,7 +153,7 @@ template<>
 const std::vector<float>& ERst::getRst<float>(const std::string& name, int reportStepNumber)
 {
     int ind = getArrayIndex(name, reportStepNumber);
-    return getImpl(ind, EIOD::REAL, real_array, "float");
+    return getImpl(ind, REAL, real_array, "float");
 }
 
 
@@ -159,7 +161,7 @@ template<>
 const std::vector<double>& ERst::getRst<double>(const std::string& name, int reportStepNumber)
 {
     int ind = getArrayIndex(name, reportStepNumber);
-    return getImpl(ind, EIOD::DOUB, doub_array, "double");
+    return getImpl(ind, DOUB, doub_array, "double");
 }
 
 
@@ -167,12 +169,14 @@ template<>
 const std::vector<bool>& ERst::getRst<bool>(const std::string& name, int reportStepNumber)
 {
     int ind = getArrayIndex(name, reportStepNumber);
-    return getImpl(ind, EIOD::LOGI, logi_array, "bool");
+    return getImpl(ind, LOGI, logi_array, "bool");
 }
 
 template<>
 const std::vector<std::string>& ERst::getRst<std::string>(const std::string& name, int reportStepNumber)
 {
     int ind = getArrayIndex(name, reportStepNumber);
-    return getImpl(ind, EIOD::CHAR, char_array, "string");
+    return getImpl(ind, CHAR, char_array, "string");
 }
+
+}} // namespace Opm::ecl

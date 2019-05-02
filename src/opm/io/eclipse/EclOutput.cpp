@@ -16,18 +16,19 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "EclOutput.hpp"
-#include "EclUtil.hpp"
+#include <opm/io/eclipse/EclOutput.hpp>
+#include <opm/io/eclipse/EclUtil.hpp>
+
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
 #include <iterator>
 #include <iomanip>
 #include <stdexcept>
-#include <typeinfo>
 #include <sstream>
 #include <stdio.h>
 
+namespace Opm { namespace ecl {
 
 EclOutput::EclOutput(const std::string& inputFile, bool formatted) :
   isFormatted(formatted)
@@ -42,23 +43,23 @@ void EclOutput::write<std::string>(const std::string& name,
 {
     if (isFormatted)
     {
-        writeFormattedHeader(name, data.size(), EIOD::CHAR);
+        writeFormattedHeader(name, data.size(), CHAR);
         writeFormattedCharArray(data);
     }
     else
     {
-        writeBinaryHeader(name, data.size(), EIOD::CHAR);
+        writeBinaryHeader(name, data.size(), CHAR);
         writeBinaryCharArray(data);
     }
 }
 
 
-void EclOutput::writeBinaryHeader(const std::string&arrName, int size, EIOD::eclArrType arrType)
+void EclOutput::writeBinaryHeader(const std::string&arrName, int size, eclArrType arrType)
 {
     std::string name = arrName + std::string(8 - arrName.size(),' ');
 
-    int flippedSize = EIOD::flipEndianInt(size);
-    int bhead = EIOD::flipEndianInt(16);
+    int flippedSize = flipEndianInt(size);
+    int bhead = flipEndianInt(16);
 
     ofileH.write(reinterpret_cast<char*>(&bhead), sizeof(bhead));
 
@@ -66,22 +67,22 @@ void EclOutput::writeBinaryHeader(const std::string&arrName, int size, EIOD::ecl
     ofileH.write(reinterpret_cast<char*>(&flippedSize), sizeof(flippedSize));
 
     switch(arrType) {
-    case EIOD::INTE:
+    case INTE:
         ofileH.write("INTE", 4);
         break;
-    case EIOD::REAL:
+    case REAL:
         ofileH.write("REAL", 4);
         break;
-    case EIOD::DOUB:
+    case DOUB:
         ofileH.write("DOUB", 4);
         break;
-    case EIOD::LOGI:
+    case LOGI:
         ofileH.write("LOGI", 4);
         break;
-    case EIOD::CHAR:
+    case CHAR:
         ofileH.write("CHAR", 4);
         break;
-    case EIOD::MESS:
+    case MESS:
         ofileH.write("MESS", 4);
         break;
     }
@@ -102,16 +103,16 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
     int n = 0;
     int size = data.size();
 
-    EIOD::eclArrType arrType = EIOD::MESS;
+    eclArrType arrType = MESS;
 
     if (typeid(std::vector<T>) == typeid(std::vector<int>)) {
-        arrType = EIOD::INTE;
+        arrType = INTE;
     } else if (typeid(std::vector<T>) == typeid(std::vector<float>)) {
-        arrType = EIOD::REAL;
+        arrType = REAL;
     } else if (typeid(std::vector<T>) == typeid(std::vector<double>)) {
-        arrType = EIOD::DOUB;
+        arrType = DOUB;
     } else if (typeid(std::vector<T>) == typeid(std::vector<bool>)) {
-        arrType = EIOD::LOGI;
+        arrType = LOGI;
     }
 
     auto sizeData = block_size_data_binary(arrType);
@@ -134,22 +135,22 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
             rest = 0;
         }
 
-        dhead = EIOD::flipEndianInt(num * sizeOfElement);
+        dhead = flipEndianInt(num * sizeOfElement);
 
         ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
 
         for (int i = 0; i < num; i++) {
-            if (arrType == EIOD::INTE) {
-                rval = EIOD::flipEndianInt(data[n]);
+            if (arrType == INTE) {
+                rval = flipEndianInt(data[n]);
                 ofileH.write(reinterpret_cast<char*>(&rval), sizeof(rval));
-            } else if (arrType == EIOD::REAL) {
-                value_f = EIOD::flipEndianFloat(data[n]);
+            } else if (arrType == REAL) {
+                value_f = flipEndianFloat(data[n]);
                 ofileH.write(reinterpret_cast<char*>(&value_f), sizeof(value_f));
-            } else if (arrType == EIOD::DOUB) {
-                value_d = EIOD::flipEndianDouble(data[n]);
+            } else if (arrType == DOUB) {
+                value_d = flipEndianDouble(data[n]);
                 ofileH.write(reinterpret_cast<char*>(&value_d), sizeof(value_d));
-            } else if (arrType == EIOD::LOGI) {
-                intVal = data[n] ? EIOD::true_value : EIOD::false_value;
+            } else if (arrType == LOGI) {
+                intVal = data[n] ? true_value : false_value;
                 ofileH.write(reinterpret_cast<char*>(&intVal), sizeOfElement);
             } else {
                 std::cout << "type not supported in write binaryarray" << std::endl;
@@ -178,7 +179,7 @@ void EclOutput::writeBinaryCharArray(const std::vector<std::string>& data)
     int n = 0;
     int size = data.size();
 
-    auto sizeData = EIOD::block_size_data_binary(EIOD::CHAR);
+    auto sizeData = block_size_data_binary(CHAR);
 
     int sizeOfElement = std::get<0>(sizeData);
     int maxBlockSize = std::get<1>(sizeData);
@@ -199,7 +200,7 @@ void EclOutput::writeBinaryCharArray(const std::vector<std::string>& data)
             rest = 0;
         }
 
-        dhead = EIOD::flipEndianInt(num * sizeOfElement);
+        dhead = flipEndianInt(num * sizeOfElement);
 
         ofileH.write(reinterpret_cast<char*>(&dhead), sizeof(dhead));
 
@@ -214,29 +215,29 @@ void EclOutput::writeBinaryCharArray(const std::vector<std::string>& data)
 }
 
 
-void EclOutput::writeFormattedHeader(const std::string& arrName, int size, EIOD::eclArrType arrType)
+void EclOutput::writeFormattedHeader(const std::string& arrName, int size, eclArrType arrType)
 {
     std::string name = arrName + std::string(8 - arrName.size(),' ');
 
     ofileH << " '" << name << "' " << std::setw(11) << size;
 
     switch (arrType) {
-    case EIOD::INTE:
+    case INTE:
         ofileH << " 'INTE'" <<  std::endl;
         break;
-    case EIOD::REAL:
+    case REAL:
         ofileH << " 'REAL'" <<  std::endl;
         break;
-    case EIOD::DOUB:
+    case DOUB:
         ofileH << " 'DOUB'" <<  std::endl;
         break;
-    case EIOD::LOGI:
+    case LOGI:
         ofileH << " 'LOGI'" <<  std::endl;
         break;
-    case EIOD::CHAR:
+    case CHAR:
         ofileH << " 'CHAR'" <<  std::endl;
         break;
-    case EIOD::MESS:
+    case MESS:
         ofileH << " 'MESS'" <<  std::endl;
         break;
     }
@@ -309,18 +310,18 @@ void EclOutput::writeFormattedArray(const std::vector<T>& data)
     int size = data.size();
     int n = 0;
 
-    EIOD::eclArrType arrType = EIOD::MESS;
+    eclArrType arrType = MESS;
     if (typeid(T) == typeid(int)) {
-        arrType = EIOD::INTE;
+        arrType = INTE;
     } else if (typeid(T) == typeid(float)) {
-        arrType = EIOD::REAL;
+        arrType = REAL;
     } else if (typeid(T) == typeid(double)) {
-        arrType = EIOD::DOUB;
+        arrType = DOUB;
     } else if (typeid(T) == typeid(bool)) {
-        arrType = EIOD::LOGI;
+        arrType = LOGI;
     }
 
-    auto sizeData = EIOD::block_size_data_formatted(arrType);
+    auto sizeData = block_size_data_formatted(arrType);
 
     int maxBlockSize = std::get<0>(sizeData);
     int nColumns = std::get<1>(sizeData);
@@ -330,16 +331,16 @@ void EclOutput::writeFormattedArray(const std::vector<T>& data)
         n++;
 
         switch (arrType) {
-        case EIOD::INTE:
+        case INTE:
             ofileH << std::setw(columnWidth) << data[i];
             break;
-        case EIOD::REAL:
+        case REAL:
             ofileH << std::setw(columnWidth) << make_real_string(data[i]);
             break;
-        case EIOD::DOUB:
+        case DOUB:
             ofileH << std::setw(columnWidth) << make_doub_string(data[i]);
             break;
-        case EIOD::LOGI:
+        case LOGI:
             if (data[i]) {
                 ofileH << "  T";
             } else {
@@ -374,7 +375,7 @@ template void EclOutput::writeFormattedArray<char>(const std::vector<char>& data
 
 void EclOutput::writeFormattedCharArray(const std::vector<std::string>& data)
 {
-    auto sizeData = EIOD::block_size_data_formatted(EIOD::CHAR);
+    auto sizeData = block_size_data_formatted(CHAR);
 
     int nColumns = std::get<1>(sizeData);
 
@@ -395,3 +396,5 @@ void EclOutput::writeFormattedCharArray(const std::vector<std::string>& data)
         ofileH  << std::endl;
     }
 }
+
+}} // namespace Opm::ecl

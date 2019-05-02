@@ -16,10 +16,10 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#ifndef EGRID_HPP
-#define EGRID_HPP
+#ifndef OPM_IO_EGRID_HPP
+#define OPM_IO_EGRID_HPP
 
-#include "EclFile.hpp"
+#include <opm/io/eclipse/EclFile.hpp>
 
 #include <array>
 #include <iostream>
@@ -29,6 +29,7 @@
 #include <ctime>
 #include <map>
 
+namespace Opm { namespace ecl {
 
 class EGrid : public EclFile
 {
@@ -59,4 +60,6 @@ private:
     std::vector<float> zcorn_array;
 };
 
-#endif
+}} // namespace Opm::ecl
+
+#endif // OPM_IO_EGRID_HPP
