@@ -32,7 +32,9 @@ namespace Opm { namespace ecl {
 class EclOutput
 {
 public:
-    EclOutput(const std::string& inputFile, bool formatted);
+    EclOutput(const std::string&            filename,
+              const bool                    formatted,
+              const std::ios_base::openmode mode = std::ios::out);
 
     template<typename T>
     void write(const std::string& name,
@@ -84,8 +86,8 @@ private:
     std::string make_real_string(float value) const;
     std::string make_doub_string(double value) const;
 
-    std::ofstream ofileH;
     bool isFormatted;
+    std::ofstream ofileH;
 };
 
 

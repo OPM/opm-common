@@ -35,10 +35,14 @@
 
 namespace Opm { namespace ecl {
 
-EclOutput::EclOutput(const std::string& inputFile, bool formatted) :
-  isFormatted(formatted)
+EclOutput::EclOutput(const std::string&            filename,
+                     const bool                    formatted,
+                     const std::ios_base::openmode mode)
+    : isFormatted{formatted}
 {
-    ofileH.open(inputFile, isFormatted ? std::ios::out : std::ios::out | std::ios::binary);
+    const auto binmode = mode | std::ios_base::binary;
+
+    this->ofileH.open(filename, this->isFormatted ? mode : binmode);
 }
 
 
