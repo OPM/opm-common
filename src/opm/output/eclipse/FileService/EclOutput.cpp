@@ -22,11 +22,16 @@
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <iterator>
 #include <iomanip>
-#include <stdexcept>
+#include <iostream>
+#include <ios>
 #include <sstream>
-#include <stdio.h>
+#include <stdexcept>
+#include <typeinfo>
 
 EclOutput::EclOutput(const std::string& inputFile, bool formatted) :
   isFormatted(formatted)
@@ -151,8 +156,8 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
                 intVal = data[n] ? EIOD::true_value : EIOD::false_value;
                 ofileH.write(reinterpret_cast<char*>(&intVal), sizeOfElement);
             } else {
-                std::cout << "type not supported in write binaryarray" << std::endl;
-                exit(1);
+                std::cerr << "type not supported in write binaryarray" << '\n';
+                std::exit(EXIT_FAILURE);
             }
 
             n++;
@@ -245,7 +250,7 @@ void EclOutput::writeFormattedHeader(const std::string& arrName, int size, EIOD:
 std::string EclOutput::make_real_string(float value) const
 {
     char buffer [15];
-    sprintf (buffer, "%10.7E", value);
+    std::sprintf (buffer, "%10.7E", value);
 
     if (value == 0.0) {
         return "0.00000000E+00";
@@ -260,7 +265,7 @@ std::string EclOutput::make_real_string(float value) const
             tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 7) +"E";
         }
 
-        sprintf (buffer, "%+03i", exp+1);
+        std::sprintf (buffer, "%+03i", exp+1);
         tmpstr = tmpstr+buffer;
 
         return tmpstr;
@@ -271,7 +276,7 @@ std::string EclOutput::make_real_string(float value) const
 std::string EclOutput::make_doub_string(double value) const
 {
     char buffer [21];
-    sprintf (buffer, "%19.13E", value);
+    std::sprintf (buffer, "%19.13E", value);
 
     if (value == 0.0) {
         return "0.00000000000000D+00";
@@ -281,20 +286,21 @@ std::string EclOutput::make_doub_string(double value) const
         int exp =  value < 0.0 ? std::stoi(tmpstr.substr(17, 4)) :  std::stoi(tmpstr.substr(16, 4));
 
         if (value < 0.0) {
-            if (abs(exp) < 100) {
+            if (std::abs(exp) < 100) {
                 tmpstr = "-0." + tmpstr.substr(1, 1) + tmpstr.substr(3, 13) + "D";
             } else {
                 tmpstr = "-0." + tmpstr.substr(1, 1) + tmpstr.substr(3, 13);
             }
-        } else {
-            if (abs(exp) < 100) {
+        }
+        else {
+            if (std::abs(exp) < 100) {
                 tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 13) + "D";
             } else {
                 tmpstr = "0." + tmpstr.substr(0, 1) + tmpstr.substr(2, 13);
             }
         }
 
-        sprintf (buffer, "%+03i", exp+1);
+        std::sprintf (buffer, "%+03i", exp+1);
         tmpstr = tmpstr + buffer;
 
         return tmpstr;
