@@ -19,17 +19,15 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclUtil.hpp>
 
+#include <algorithm>
 #include <array>
-#include <exception>
+#include <cstring>
 #include <functional>
 #include <fstream>
-#include <stdexcept>
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <iterator>
 #include <iomanip>
-#include <algorithm>
+#include <iterator>
+#include <sstream>
+#include <string>
 
 #include <opm/common/ErrorMacros.hpp>
 
@@ -552,6 +550,9 @@ EclFile::EclFile(const std::string& filename) : inputFilename(filename)
         n++;
     };
 
+    fileH.seekg(0, std::ios_base::end);
+    this->ifStreamPos.push_back(static_cast<unsigned long>(fileH.tellg()));
+
     fileH.close();
 }
 
@@ -759,6 +760,51 @@ bool EclFile::hasKey(const std::string &name) const
     return search != array_index.end();
 }
 
+std::streampos
+EclFile::seekPosition(const std::vector<std::string>::size_type arrIndex) const
+{
+    if (arrIndex >= this->array_name.size()) {
+        return { static_cast<std::streamoff>(this->ifStreamPos.back()) };
+    }
+
+    // StreamPos is file position of start of data vector's control
+    // character (unformatted) or data items (formatted).  We need
+    // file position of start of header, because that's where we're
+    // supposed to start writing new data.  Subtract header size.
+    //
+    //   (*) formatted header size = 30 characters =
+    //             1 space character
+    //          +  1 quote character
+    //          +  8 character header/vector name
+    //          +  1 quote character
+    //          +  1 space character
+    //          + 11 characters for number of elments
+    //          +  1 space character
+    //          +  1 quote character
+    //          +  4 characters for element type
+    //          +  1 quote character
+    //
+    //
+    //   (*) unformatted header size = 24 bytes =
+    //            4 byte control character
+    //          + 8 byte header/vector name
+    //          + 4 byte for number of elements
+    //          + 4 byte for element type
+    //          + 4 byte control character
+    //
+    //       +------+------------+------+------+------+
+    //       | Ctrl | Keyword    | #elm | type | Ctrl |  (item)
+    //       |  4   |  8         |  4   |  4   |  4   |  (#bytes)
+    //       +------+------------+------+------+------+
+    //
+
+    const auto headerSize = this->formatted ? 30ul : 24ul;
+    const auto datapos    = this->ifStreamPos[arrIndex];
+    const auto seekpos    = (datapos <= headerSize)
+        ? 0ul : datapos - headerSize;
+
+    return { static_cast<std::streamoff>(seekpos) };
+}
 
 template<>
 const std::vector<int>& EclFile::get<int>(const std::string& name)

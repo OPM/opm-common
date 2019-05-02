@@ -23,7 +23,7 @@
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 
-#include <fstream>
+#include <ios>
 #include <string>
 #include <stdexcept>
 #include <tuple>
@@ -99,6 +99,9 @@ protected:
 
         return array.at(arrIndex);
     }
+
+    std::streampos
+    seekPosition(const std::vector<std::string>::size_type arrIndex) const;
 
 private:
     std::vector<bool> arrayLoaded;
