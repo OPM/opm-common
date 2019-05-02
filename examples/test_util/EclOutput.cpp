@@ -271,7 +271,7 @@ std::string EclOutput::make_real_string(float value) const
 
 std::string EclOutput::make_doub_string(double value) const
 {
-    char buffer [20];
+    char buffer [21];
     sprintf (buffer, "%19.13E", value);
 
     if (value == 0.0) {
