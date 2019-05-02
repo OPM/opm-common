@@ -59,7 +59,7 @@ ERst::ERst(const std::string& filename)
     for (int i = 0; i < nReports; i++) {
         reportLoaded[seqnum[i]] = false;
     }
-};
+}
 
 
 bool ERst::hasReportStepNumber(int number) const
@@ -108,6 +108,15 @@ std::vector<EclFile::EclEntry> ERst::listOfRstArrays(int reportStepNumber)
     return list;
 }
 
+int ERst::restartStepArrayIndex(const int seqnumValue) const
+{
+    auto pos = this->arrIndexRange.lower_bound(seqnumValue);
+    if (pos == this->arrIndexRange.end()) {
+        return -1;
+    }
+
+    return pos->second.first;
+}
 
 int ERst::getArrayIndex(const std::string& name, int number) const
 {

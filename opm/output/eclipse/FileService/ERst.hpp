@@ -42,6 +42,8 @@ public:
 
     std::vector<EclEntry> listOfRstArrays(int reportStepNumber);
 
+    int restartStepArrayIndex(const int seqnumValue) const;
+
 private:
     int nReports;
     std::vector<int> seqnum;                           // report step numbers, from SEQNUM array in restart file
