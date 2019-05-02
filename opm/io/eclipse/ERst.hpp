@@ -21,6 +21,7 @@
 
 #include <opm/io/eclipse/EclFile.hpp>
 
+#include <ios>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -50,6 +51,9 @@ private:
     std::map<int, std::pair<int,int>> arrIndexRange;   // mapping report step number to array indeces (start and end)
 
     int getArrayIndex(const std::string& name, int seqnum) const;
+
+    std::streampos
+    restartStepWritePosition(const int seqnumValue) const;
 };
 
 }} // namespace Opm::ecl
