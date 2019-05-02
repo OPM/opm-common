@@ -35,12 +35,31 @@ Opm::RestartIO::Helpers::
 createLogiHead(const EclipseState& es)
 {
     const auto& rspec = es.runspec();
+    const auto& tabMgr = es.getTableManager();
+    const auto& phases = rspec.phases();
     const auto& wsd   = rspec.wellSegmentDimensions();
     const auto& hystPar = rspec.hysterPar();
 
+    auto pvt = ::Opm::RestartIO::LogiHEAD::PVTModel{};
+
+    pvt.isLiveOil = phases.active(::Opm::Phase::OIL) &&
+        !tabMgr.getPvtoTables().empty();
+
+    pvt.isWetGas = phases.active(::Opm::Phase::GAS) &&
+        !tabMgr.getPvtgTables().empty();
+
+    pvt.constComprOil = phases.active(::Opm::Phase::OIL) &&
+        !(pvt.isLiveOil ||
+          tabMgr.hasTables("PVDO") ||
+          tabMgr.getPvcdoTable().empty());
+	
     const auto lh = LogiHEAD{}
         .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
         ;
 
+    // Sequenced after 'lh' constructor to ensure that any changes
+    // to live oil/wet gas elements are from this particular call.
+    lh.pvtModel(pvt);
+	
     return lh.data();
 }
