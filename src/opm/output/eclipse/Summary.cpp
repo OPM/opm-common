@@ -1113,6 +1113,39 @@ inline std::vector< const Well* > find_wells( const Schedule& schedule,
 }
 
 
+bool need_wells(ecl_smspec_var_type var_type, const std::string& keyword) {
+    static const std::set<std::string> region_keywords{"ROIR", "RGIR", "RWIR", "ROPR", "RGPR", "RWPR", "ROIT", "RWIT", "RGIT", "ROPT", "RGPT", "RWPT"};
+    if (var_type == ECL_SMSPEC_WELL_VAR)
+        return true;
+
+    if (var_type == ECL_SMSPEC_GROUP_VAR)
+        return true;
+
+    if (var_type == ECL_SMSPEC_FIELD_VAR)
+        return true;
+
+    if (var_type == ECL_SMSPEC_COMPLETION_VAR)
+        return true;
+
+    if (var_type == ECL_SMSPEC_SEGMENT_VAR)
+        return true;
+
+    /*
+      Some of the region keywords are based on summing over all the connections
+      which fall in the region; i.e. RGIR is the total gas injection rate in the
+      region and consequently the list of defined wells is required, other
+      region keywords like 'ROIP' do not require well information.
+    */
+    if (var_type == ECL_SMSPEC_REGION_VAR) {
+        if (region_keywords.count(keyword) > 0)
+            return true;
+    }
+
+    return false;
+}
+
+
+
 bool is_udq(const std::string& keyword) {
     return (keyword.size() > 1 && keyword[1] == 'U');
 }
@@ -1449,20 +1482,41 @@ void Summary::add_timestep( int report_step,
 
     for( auto& f : this->handlers->handlers ) {
         const int num = smspec_node_get_num( f.first );
+        double unit_applied_val = smspec_node_get_default( f.first );
 
-        const auto schedule_wells = find_wells( schedule, f.first, sim_step, this->regionCache );
-        auto eff_factors = well_efficiency_factors( f.first, schedule, schedule_wells, sim_step );
+        if (need_wells(smspec_node_get_var_type(f.first ),
+                       smspec_node_get_keyword(f.first))) {
 
-        const auto val = f.second( { schedule_wells,
-                                     duration,
-                                     sim_step,
-                                     num,
-                                     wells,
-                                     this->regionCache,
-                                     this->grid,
-                                     eff_factors});
+            const auto schedule_wells = find_wells( schedule, f.first, sim_step, this->regionCache );
+            /*
+              It is not a bug as such if the schedule_wells list comes back
+              empty; it just means that at the current timestep no relevant
+              wells have been defined and we do not calculate a value.
+            */
+            if (schedule_wells.size() > 0) {
+                auto eff_factors = well_efficiency_factors( f.first, schedule, schedule_wells, sim_step );
+                const auto val = f.second( { schedule_wells,
+                                             duration,
+                                             sim_step,
+                                             num,
+                                             wells,
+                                             this->regionCache,
+                                             this->grid,
+                                             eff_factors});
+                unit_applied_val = es.getUnits().from_si( val.unit, val.value );
+            }
+        } else {
+            const auto val = f.second({ {},
+                                        duration,
+                                        sim_step,
+                                        num,
+                                        {},
+                                        this->regionCache,
+                                        this->grid,
+                                        {} });
+            unit_applied_val = es.getUnits().from_si( val.unit, val.value );
+        }
 
-        double unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         if (smspec_node_is_total(f.first)) {
             const auto* genkey = smspec_node_get_gen_key1( f.first );
             unit_applied_val += this->prev_state.get(genkey);
