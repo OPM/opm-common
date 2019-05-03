@@ -55,11 +55,8 @@ createLogiHead(const EclipseState& es)
 	
     const auto lh = LogiHEAD{}
         .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
+	.pvtModel(pvt)
         ;
-
-    // Sequenced after 'lh' constructor to ensure that any changes
-    // to live oil/wet gas elements are from this particular call.
-    lh.pvtModel(pvt);
 	
     return lh.data();
 }
