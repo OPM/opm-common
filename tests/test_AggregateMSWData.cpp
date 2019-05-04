@@ -529,7 +529,6 @@ END
 	state.update("SWFR:WINJ:4",  24.);
 
 	state.update("WBHP:WINJ",  234.);
-
         return state;
     }
     Opm::data::WellRates wr()
