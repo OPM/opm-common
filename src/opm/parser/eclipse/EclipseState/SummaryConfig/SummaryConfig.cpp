@@ -39,7 +39,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 
@@ -60,11 +59,11 @@ namespace {
         "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
         "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
         "FWIT",  "FWPR",  "FWPT", "FWPP",  "FOPP", "FGPP",  "FWPI",
-	"FOPI",  "FGPI",  
+	"FOPI",  "FGPI",
         "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
         "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
         "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT", "GWPP",  "GOPP",
-	"GGPP",  "GWPI",  "GOPI", "GGPI",  
+	"GGPP",  "GWPI",  "GOPI", "GGPI",
         "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
         "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
         "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
@@ -288,8 +287,6 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                         const GridDims& dims) {
 
     const auto& keywordstring = keyword.name();
-    const auto last_timestep = schedule.getTimeMap().last();
-
     for( const auto& record : keyword ) {
 
         const auto& wellitem = record.getItem( 0 );
@@ -302,13 +299,13 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             handleMissingWell( parseContext, errors, keyword.name(), wellitem.getTrimmedString( 0 ) );
 
         for(const auto& name : well_names) {
-            const auto* well = schedule.getWell(name);
+            const auto& well = schedule.getWell2atEnd(name);
             /*
              * we don't want to add completions that don't exist, so we iterate
              * over a well's completions regardless of the desired block is
              * defaulted or not
              */
-            for( const auto& connection : well->getConnections( last_timestep ) ) {
+            for( const auto& connection : well.getConnections() ) {
                 /* block coordinates defaulted */
                 auto cijk = getijk( connection );
 
@@ -348,34 +345,20 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                            });
     }
 
-    bool isMultiSegmentWell(const std::size_t last_timestep,
-                            const Well*       well)
-    {
-        for (auto step  = 0*last_timestep;
-                  step <=   last_timestep; ++step)
-        {
-            if (well->isMultiSegment(step)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     int maxNumWellSegments(const std::size_t last_timestep,
-                           const Well*       well)
+                           const Well2&       well)
     {
         auto numSeg = 0;
 
         for (auto step  = 0*last_timestep;
                   step <=   last_timestep; ++step)
         {
-            if (! well->isMultiSegment(step)) {
+            if (! well.isMultiSegment())
                 continue;
-            }
 
             const auto nseg =
-                well->getWellSegments(last_timestep).size();
+                well.getSegments().size();
 
             if (nseg > numSeg) {
                 numSeg = nseg;
@@ -388,7 +371,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     void makeSegmentNodes(const std::size_t               last_timestep,
                           const int                       segID,
                           const DeckKeyword&              keyword,
-                          const Well*                     well,
+                          const Well2&                    well,
                           SummaryConfig::keyword_list&    list)
     {
         // Modifies 'list' in place.
@@ -398,11 +381,11 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
             list.push_back(SummaryConfig::keyword_type( keyword.name(), well, segNumber ));
         };
 
-        if (! isMultiSegmentWell(last_timestep, well))
+        if (!well.isMultiSegment())
             // Not an MSW.  Don't create summary vectors for segments.
             return;
 
-        const auto& wname = well->name();
+        const auto& wname = well.name();
         if (segID < 1) {
             // Segment number defaulted.  Allocate a summary
             // vector for each segment.
@@ -437,7 +420,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
         const auto segID = -1;
 
-        for (const auto& well : schedule.getWells())
+        for (const auto& well : schedule.getWells2atEnd())
             makeSegmentNodes(last_timestep, segID, keyword,
                              well, list);
     }
@@ -481,7 +464,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                 ? -1 : record.getItem(1).get<int>(0);
 
             for (const auto& well_name : well_names)
-                makeSegmentNodes(last_timestep, segID, keyword, schedule.getWell(well_name), list);
+                makeSegmentNodes(last_timestep, segID, keyword, schedule.getWell2atEnd(well_name), list);
         }
     }
 

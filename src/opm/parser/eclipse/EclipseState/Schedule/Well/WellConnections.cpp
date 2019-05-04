@@ -457,8 +457,9 @@ namespace {
     }
 
     bool WellConnections::operator==( const WellConnections& rhs ) const {
-        return this->size() == rhs.size()
-            && std::equal( this->begin(), this->end(), rhs.begin() );
+        return this->size() == rhs.size() &&
+            this->num_removed == rhs.num_removed &&
+            std::equal( this->begin(), this->end(), rhs.begin() );
     }
 
     bool WellConnections::operator!=( const WellConnections& rhs ) const {

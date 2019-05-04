@@ -32,7 +32,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -116,72 +115,12 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     Schedule sched(deck , grid , eclipseProperties, runspec);
     BOOST_CHECK_EQUAL(4, 4);
 
-    auto* well1 = sched.getWell("W_1");
-    auto* well2 = sched.getWell("W_2");
-    auto* well4 = sched.getWell("W_4");
-    BOOST_CHECK_EQUAL( well1->getRefDepth() , grid.getCellDepth( 29 , 36 , 0 ));
-    BOOST_CHECK_EQUAL( well2->getRefDepth() , 100 );
-    BOOST_CHECK_THROW( well4->getRefDepth() , std::invalid_argument );
-}
-
-
-BOOST_AUTO_TEST_CASE(WellTestOpen) {
-    Parser parser;
-    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_WELLS2");
-    auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(40,60,30);
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule sched(deck,  grid , eclipseProperties, runspec);
-
-    auto well1 = sched.getWell( "W_1" );
-    auto well2 = sched.getWell( "W_2" );
-    auto well3 = sched.getWell( "W_3" );
-
-    {
-        auto wells = sched.getOpenWells( 0 );
-        BOOST_CHECK_EQUAL( 0U , wells.size() );
-    }
-
-    {
-        auto wells = sched.getOpenWells( 3 );
-        BOOST_CHECK_EQUAL( 1U , wells.size() );
-        BOOST_CHECK_EQUAL( well1 , wells[0] );
-    }
-
-    {
-        auto wells = sched.getOpenWells(6);
-        BOOST_CHECK_EQUAL( 3U , wells.size() );
-
-        BOOST_CHECK_EQUAL( well1 , wells[0] );
-        BOOST_CHECK_EQUAL( well2 , wells[1] );
-        BOOST_CHECK_EQUAL( well3 , wells[2] );
-    }
-
-    {
-        auto wells = sched.getOpenWells(12);
-        BOOST_CHECK_EQUAL( 3U , wells.size() );
-
-        BOOST_CHECK_EQUAL( well2 , wells[1] );
-        BOOST_CHECK_EQUAL( well3 , wells[2] );
-    }
-
-    {
-        auto wells = sched.getOpenWells(13);
-        BOOST_CHECK_EQUAL( 2U , wells.size() );
-
-        BOOST_CHECK_EQUAL( well2 , wells[0] );
-        BOOST_CHECK_EQUAL( well3 , wells[1] );
-    }
-
-    {
-        auto wells = sched.getOpenWells(14);
-        BOOST_CHECK_EQUAL( 3U , wells.size() );
-
-        BOOST_CHECK_EQUAL( well2 , wells[1] );
-        BOOST_CHECK_EQUAL( well3 , wells[2] );
-    }
+    const auto& well1 = sched.getWell2atEnd("W_1");
+    const auto& well2 = sched.getWell2atEnd("W_2");
+    const auto& well4 = sched.getWell2atEnd("W_4");
+    BOOST_CHECK_EQUAL( well1.getRefDepth() , grid.getCellDepth( 29 , 36 , 0 ));
+    BOOST_CHECK_EQUAL( well2.getRefDepth() , 100 );
+    BOOST_CHECK_THROW( well4.getRefDepth() , std::invalid_argument );
 }
 
 
@@ -203,95 +142,78 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     BOOST_CHECK(sched.hasWell("W_2"));
     BOOST_CHECK(sched.hasWell("W_3"));
 
+    BOOST_CHECK_CLOSE( 777/Metric::Time , sched.getWell2("W_2", 7).getProductionProperties().ResVRate , 0.0001);
+    BOOST_CHECK_EQUAL( 0 ,                sched.getWell2("W_2", 8).getProductionProperties().ResVRate);
+
+    BOOST_CHECK_EQUAL( WellCommon::SHUT , sched.getWell2("W_2", 3).getStatus());
+
     {
-        auto* well2 = sched.getWell("W_2");
         const auto& rft_config = sched.rftConfig();
-        BOOST_CHECK_EQUAL( 0 , well2->getProductionPropertiesCopy(2).ResVRate);
-        BOOST_CHECK_CLOSE( 777/Metric::Time , well2->getProductionPropertiesCopy(7).ResVRate , 0.0001);
-        BOOST_CHECK_EQUAL( 0 , well2->getProductionPropertiesCopy(8).ResVRate);
-
-        BOOST_CHECK_EQUAL( WellCommon::SHUT , well2->getStatus(3));
-
         BOOST_CHECK( !rft_config.rft("W_2", 2));
         BOOST_CHECK( rft_config.rft("W_2", 3));
         BOOST_CHECK( rft_config.rft("W_2", 4));
         BOOST_CHECK( !rft_config.rft("W_2", 5));
-        {
-            const WellProductionProperties& prop3 = well2->getProductionProperties(3);
-            BOOST_CHECK_EQUAL( WellProducer::ORAT , prop3.controlMode);
-            BOOST_CHECK(  prop3.hasProductionControl(WellProducer::ORAT));
-            BOOST_CHECK(  !prop3.hasProductionControl(WellProducer::GRAT));
-            BOOST_CHECK(  !prop3.hasProductionControl(WellProducer::WRAT));
-        }
-
-        // BOOST_CHECK( !well2->getProductionProperties(8).hasProductionControl(WellProducer::GRAT));
+        BOOST_CHECK( rft_config.rft("W_1", 3));
+    }
+    {
+        const WellProductionProperties& prop3 = sched.getWell2("W_2", 3).getProductionProperties();
+        BOOST_CHECK_EQUAL( WellProducer::ORAT , prop3.controlMode);
+        BOOST_CHECK(  prop3.hasProductionControl(WellProducer::ORAT));
+        BOOST_CHECK( !prop3.hasProductionControl(WellProducer::GRAT));
+        BOOST_CHECK( !prop3.hasProductionControl(WellProducer::WRAT));
     }
 
 
+    BOOST_CHECK_EQUAL( WellCommon::AUTO, sched.getWell2("W_3", 3).getStatus());
     {
-        auto* well3 = sched.getWell("W_3");
-
-        BOOST_CHECK_EQUAL( WellCommon::AUTO , well3->getStatus(3));
-        BOOST_CHECK_EQUAL( 0 , well3->getProductionPropertiesCopy(2).LiquidRate);
-
-        {
-            const WellProductionProperties& prop7 = well3->getProductionProperties(7);
-            BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate , 0.001);
-            BOOST_CHECK_EQUAL( WellProducer::RESV, prop7.controlMode);
-        }
-        BOOST_CHECK_CLOSE( 8000./Metric::Time, well3->getProductionPropertiesCopy(3).LiquidRate, 1.e-12);
-        BOOST_CHECK_CLOSE( 18000./Metric::Time, well3->getProductionPropertiesCopy(8).LiquidRate, 1.e-12);
+        const WellProductionProperties& prop7 = sched.getWell2("W_3", 7).getProductionProperties();
+        BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate , 0.001);
+        BOOST_CHECK_EQUAL( WellProducer::RESV, prop7.controlMode);
     }
+    BOOST_CHECK_CLOSE( 8000./Metric::Time , sched.getWell2("W_3", 3).getProductionProperties().LiquidRate, 1.e-12);
+    BOOST_CHECK_CLOSE( 18000./Metric::Time, sched.getWell2("W_3", 8).getProductionProperties().LiquidRate, 1.e-12);
+
 
     {
-        auto* well1 = sched.getWell("W_1");
-        const auto& rft_config = sched.rftConfig();
+        BOOST_CHECK_EQUAL(sched.getWell2("W_1", 3).getProductionProperties().predictionMode, false);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 3).getProductionProperties().WaterRate , 4/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 3).getProductionProperties().GasRate   , 12345/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 3).getProductionProperties().OilRate   , 4000/Metric::Time, 0.001);
 
-        BOOST_CHECK(rft_config.rft("W_1", 3));
-        BOOST_CHECK(well1->getProductionPropertiesCopy(0).predictionMode);
-        BOOST_CHECK_EQUAL(0, well1->getProductionPropertiesCopy(0).OilRate);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 4).getProductionProperties().OilRate   , 4000/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 4).getProductionProperties().WaterRate , 4/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 4).getProductionProperties().GasRate   , 12345/Metric::Time,0.001);
 
-        BOOST_CHECK_EQUAL(0, well1->getProductionPropertiesCopy(1).OilRate);
-        BOOST_CHECK_EQUAL(0, well1->getProductionPropertiesCopy(2).OilRate);
-
-        BOOST_CHECK(!well1->getProductionPropertiesCopy(3).predictionMode);
-        BOOST_CHECK_CLOSE(4000/Metric::Time , well1->getProductionPropertiesCopy(3).OilRate , 0.001);
-        BOOST_CHECK_CLOSE(4000/Metric::Time , well1->getProductionPropertiesCopy(4).OilRate , 0.001);
-        BOOST_CHECK_CLOSE(4000/Metric::Time , well1->getProductionPropertiesCopy(5).OilRate , 0.001);
-        BOOST_CHECK_CLOSE(4/Metric::Time      , well1->getProductionPropertiesCopy(3).WaterRate , 0.001);
-        BOOST_CHECK_CLOSE(12345/Metric::Time  , well1->getProductionPropertiesCopy(3).GasRate , 0.001);
-        BOOST_CHECK_CLOSE(4/Metric::Time      , well1->getProductionPropertiesCopy(4).WaterRate , 0.001);
-        BOOST_CHECK_CLOSE(12345/Metric::Time  , well1->getProductionPropertiesCopy(4).GasRate , 0.001);
-        BOOST_CHECK_CLOSE(4/Metric::Time      , well1->getProductionPropertiesCopy(5).WaterRate , 0.001);
-        BOOST_CHECK_CLOSE(12345/Metric::Time  , well1->getProductionPropertiesCopy(5).GasRate , 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 5).getProductionProperties().WaterRate, 4/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 5).getProductionProperties().GasRate , 12345/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 5).getProductionProperties().OilRate , 4000/Metric::Time, 0.001);
 
 
-        BOOST_CHECK(!well1->getProductionPropertiesCopy(6).predictionMode);
-        BOOST_CHECK_CLOSE(14000/Metric::Time , well1->getProductionPropertiesCopy(6).OilRate , 0.001);
+        BOOST_CHECK_EQUAL(sched.getWell2("W_1", 6).getProductionProperties().predictionMode, false);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 6).getProductionProperties().OilRate , 14000/Metric::Time, 0.001);
 
-        BOOST_CHECK(well1->getProductionPropertiesCopy(7).predictionMode);
-        BOOST_CHECK_CLOSE(11000/Metric::Time , well1->getProductionPropertiesCopy(7).OilRate , 0.001);
-        BOOST_CHECK_CLOSE(44/Metric::Time    , well1->getProductionPropertiesCopy(7).WaterRate , 0.001);
-        BOOST_CHECK_CLOSE(188/Metric::Time   , well1->getProductionPropertiesCopy(7).GasRate , 0.001);
+        BOOST_CHECK_EQUAL(sched.getWell2("W_1", 7).getProductionProperties().predictionMode, true);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 7).getProductionProperties().OilRate , 11000/Metric::Time, 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 7).getProductionProperties().WaterRate , 44/Metric::Time, 0.001);
 
-        BOOST_CHECK(!well1->getProductionPropertiesCopy(8).predictionMode);
-        BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionPropertiesCopy(8).OilRate , 0.001);
 
-        BOOST_CHECK_CLOSE(123.00 * Metric::Pressure , well1->getInjectionPropertiesCopy(10).BHPLimit, 0.001);
-        BOOST_CHECK_CLOSE(678.00 * Metric::Pressure , well1->getInjectionPropertiesCopy(10).THPLimit, 0.001);
+        BOOST_CHECK_EQUAL(sched.getWell2("W_1", 8).getProductionProperties().predictionMode, false);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 8).getProductionProperties().OilRate , 13000/Metric::Time , 0.001);
+
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 10).getInjectionProperties().BHPLimit, 123.00 * Metric::Pressure , 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 10).getInjectionProperties().THPLimit, 678.00 * Metric::Pressure , 0.001);
 
         {
-            const WellInjectionProperties& prop11 = well1->getInjectionProperties(11);
+            const WellInjectionProperties& prop11 = sched.getWell2("W_1", 11).getInjectionProperties();
             BOOST_CHECK_CLOSE(5000/Metric::Time , prop11.surfaceInjectionRate, 0.001);
             BOOST_CHECK_EQUAL( WellInjector::RATE  , prop11.controlMode);
-            BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 11 ));
         }
 
 
 
-        BOOST_CHECK( well1->isInjector(9));
+        BOOST_CHECK( sched.getWell2("W_1", 9).isInjector());
         {
-            const WellInjectionProperties& prop9 = well1->getInjectionProperties(9);
+            const WellInjectionProperties& prop9 = sched.getWell2("W_1", 9).getInjectionProperties();
             BOOST_CHECK_CLOSE(20000/Metric::Time ,  prop9.surfaceInjectionRate  , 0.001);
             BOOST_CHECK_CLOSE(200000/Metric::Time , prop9.reservoirInjectionRate, 0.001);
             BOOST_CHECK_CLOSE(6895 * Metric::Pressure , prop9.BHPLimit, 0.001);
@@ -304,14 +226,16 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         }
 
 
-        BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 12 ));
-        BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::RATE ));
-        BOOST_CHECK( !well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::RESV));
-        BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::THP ));
-        BOOST_CHECK(  well1->getInjectionPropertiesCopy(12).hasInjectionControl(WellInjector::BHP ));
-
-        BOOST_CHECK_EQUAL( WellCommon::SHUT , well1->getStatus( 13 ));
-        BOOST_CHECK_EQUAL( WellCommon::OPEN , well1->getStatus( 14 ));
+        BOOST_CHECK_EQUAL( WellCommon::OPEN, sched.getWell2("W_1", 11).getStatus( ));
+        BOOST_CHECK_EQUAL( WellCommon::OPEN, sched.getWell2("W_1", 12).getStatus( ));
+        BOOST_CHECK_EQUAL( WellCommon::SHUT, sched.getWell2("W_1", 13).getStatus( ));
+        BOOST_CHECK_EQUAL( WellCommon::OPEN, sched.getWell2("W_1", 14).getStatus( ));
+        {
+            BOOST_CHECK(  sched.getWell2("W_1", 12).getInjectionProperties().hasInjectionControl(WellInjector::RATE ));
+            BOOST_CHECK( !sched.getWell2("W_1", 12).getInjectionProperties().hasInjectionControl(WellInjector::RESV));
+            BOOST_CHECK(  sched.getWell2("W_1", 12).getInjectionProperties().hasInjectionControl(WellInjector::THP ));
+            BOOST_CHECK(  sched.getWell2("W_1", 12).getInjectionProperties().hasInjectionControl(WellInjector::BHP ));
+        }
     }
 }
 
@@ -320,7 +244,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT_DEFAULTED_ITEMS) {
     Parser parser;
     std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_COMPDAT1");
     auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(40,60,30);
+    EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
@@ -343,18 +267,19 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     BOOST_CHECK(sched.hasWell("W_2"));
     BOOST_CHECK(sched.hasWell("W_3"));
     {
-        auto* well1 = sched.getWell("W_1");
-        BOOST_CHECK_CLOSE(13000/Metric::Time , well1->getProductionPropertiesCopy(8).OilRate , 0.0001);
-        BOOST_CHECK_EQUAL(0U, well1->getConnections( 0 ).size() );
+        BOOST_CHECK_CLOSE(13000/Metric::Time , sched.getWell2("W_1", 8).getProductionProperties().OilRate , 0.0001);
+        {
+            const auto& connections = sched.getWell2("W_1", 3).getConnections();
+            BOOST_CHECK_EQUAL(4U, connections.size());
 
-        const auto& connections = well1->getConnections(3);
-        BOOST_CHECK_EQUAL(4U, connections.size());
-
-        BOOST_CHECK_EQUAL(WellCompletion::OPEN, connections.get(3).state());
-        BOOST_CHECK_EQUAL(2.2836805555555556e-12 , connections.get(3).CF());
-
-        BOOST_CHECK_EQUAL(4U, well1->getConnections( 7 ).size() );
-        BOOST_CHECK_EQUAL(WellCompletion::SHUT, well1->getConnections( 7 ).get( 3 ).state() );
+            BOOST_CHECK_EQUAL(WellCompletion::OPEN, connections.get(3).state());
+            BOOST_CHECK_EQUAL(2.2836805555555556e-12 , connections.get(3).CF());
+        }
+        {
+            const auto& connections = sched.getWell2("W_1", 7).getConnections();
+            BOOST_CHECK_EQUAL(4U, connections.size() );
+            BOOST_CHECK_EQUAL(WellCompletion::SHUT, connections.get( 3 ).state() );
+        }
     }
 }
 
@@ -549,41 +474,6 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
 }
 
 
-BOOST_AUTO_TEST_CASE(WellTestWELSPECSDataLoaded) {
-    Parser parser;
-    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_WELLS2");
-    auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(40,60,30);
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule sched(deck,  grid , eclipseProperties, runspec);
-
-    BOOST_CHECK_EQUAL(4U, sched.numWells());
-    BOOST_CHECK(sched.hasWell("W_1"));
-    BOOST_CHECK(sched.hasWell("W_2"));
-    BOOST_CHECK(sched.hasWell("W_3"));
-    {
-        const auto* well1 = sched.getWell("W_1");
-        BOOST_CHECK(!well1->hasBeenDefined(2));
-        BOOST_CHECK(well1->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(29, well1->getHeadI());
-        BOOST_CHECK_EQUAL(36, well1->getHeadJ());
-
-        const auto* well2 = sched.getWell("W_2");
-        BOOST_CHECK(!well2->hasBeenDefined(2));
-        BOOST_CHECK(well2->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(19, well2->getHeadI());
-        BOOST_CHECK_EQUAL(50, well2->getHeadJ());
-
-        const auto* well3 = sched.getWell("W_3");
-        BOOST_CHECK(!well3->hasBeenDefined(2));
-        BOOST_CHECK(well3->hasBeenDefined(3));
-        BOOST_CHECK_EQUAL(30, well3->getHeadI());
-        BOOST_CHECK_EQUAL(17, well3->getHeadJ());
-    }
-}
-
 /*
 BOOST_AUTO_TEST_CASE(WellTestWELOPEN_ConfigWithIndexes_Throws) {
     Parser parser;
@@ -623,23 +513,23 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     Runspec runspec (deck);
     Schedule sched(deck,  grid , eclipseProperties, runspec);
 
-    const auto* well1 = sched.getWell("W_1");
-    BOOST_CHECK(well1->isAvailableForGroupControl(0));
-    BOOST_CHECK_EQUAL(-1, well1->getGuideRate(0));
-    BOOST_CHECK_EQUAL(GuideRate::OIL, well1->getGuideRatePhase(0));
-    BOOST_CHECK_EQUAL(1.0, well1->getGuideRateScalingFactor(0));
+    const auto& well1 = sched.getWell2("W_1", 0);
+    BOOST_CHECK(well1.isAvailableForGroupControl( ));
+    BOOST_CHECK_EQUAL(-1, well1.getGuideRate( ));
+    BOOST_CHECK_EQUAL(GuideRate::OIL, well1.getGuideRatePhase( ));
+    BOOST_CHECK_EQUAL(1.0, well1.getGuideRateScalingFactor( ));
 
-    const auto* well2 = sched.getWell("W_2");
-    BOOST_CHECK(!well2->isAvailableForGroupControl(0));
-    BOOST_CHECK_EQUAL(-1, well2->getGuideRate(0));
-    BOOST_CHECK_EQUAL(GuideRate::UNDEFINED, well2->getGuideRatePhase(0));
-    BOOST_CHECK_EQUAL(1.0, well2->getGuideRateScalingFactor(0));
+    const auto& well2 = sched.getWell2("W_2", 0);
+    BOOST_CHECK(!well2.isAvailableForGroupControl( ));
+    BOOST_CHECK_EQUAL(-1, well2.getGuideRate( ));
+    BOOST_CHECK_EQUAL(GuideRate::UNDEFINED, well2.getGuideRatePhase( ));
+    BOOST_CHECK_EQUAL(1.0, well2.getGuideRateScalingFactor( ));
 
-    const auto* well3 = sched.getWell("W_3");
-    BOOST_CHECK(well3->isAvailableForGroupControl(0));
-    BOOST_CHECK_EQUAL(100, well3->getGuideRate(0));
-    BOOST_CHECK_EQUAL(GuideRate::RAT, well3->getGuideRatePhase(0));
-    BOOST_CHECK_EQUAL(0.5, well3->getGuideRateScalingFactor(0));
+    const auto& well3 = sched.getWell2("W_3", 0);
+    BOOST_CHECK(well3.isAvailableForGroupControl( ));
+    BOOST_CHECK_EQUAL(100, well3.getGuideRate( ));
+    BOOST_CHECK_EQUAL(GuideRate::RAT, well3.getGuideRatePhase( ));
+    BOOST_CHECK_EQUAL(0.5, well3.getGuideRateScalingFactor( ));
 }
 
 
@@ -670,8 +560,7 @@ COMPDAT \n\
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     Schedule sched(deck,  grid , eclipseProperties, runspec);
-    const auto* well = sched.getWell("W1");
-    const auto& connections = well->getConnections(0);
+    const auto& connections = sched.getWell2("W1", 0).getConnections();
     BOOST_CHECK_EQUAL( 10 , connections.get(0).getI() );
     BOOST_CHECK_EQUAL( 20 , connections.get(0).getJ() );
 }
@@ -685,7 +574,7 @@ BOOST_AUTO_TEST_CASE(OpmCode) {
     Parser parser;
     std::string scheduleFile(pathprefix() + "SCHEDULE/wells_group.data");
     auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(10,10,3);
+    EclipseGrid grid(10,10,5);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
@@ -705,18 +594,22 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
     Schedule sched(deck,  grid , eclipseProperties, runspec);
 
 
-    const auto* well1 = sched.getWell("W1");
-    const auto* well2 = sched.getWell("W2");
-    const auto* well3 = sched.getWell("W3");
-
-    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well1->getStatus(1));
-    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well2->getStatus(1));
-    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well3->getStatus(1));
-
-
-    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well1->getStatus(2));
-    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well2->getStatus(2));
-    BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well3->getStatus(2));
+    {
+        const auto& well1 = sched.getWell2("W1", 1);
+        const auto& well2 = sched.getWell2("W2", 1);
+        const auto& well3 = sched.getWell2("W3", 1);
+        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well1.getStatus());
+        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well2.getStatus());
+        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well3.getStatus());
+    }
+    {
+        const auto& well1 = sched.getWell2("W1", 2);
+        const auto& well2 = sched.getWell2("W2", 2);
+        const auto& well3 = sched.getWell2("W3", 2);
+        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well1.getStatus());
+        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well2.getStatus());
+        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well3.getStatus());
+    }
 }
 
 
@@ -735,36 +628,53 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
     BOOST_CHECK(sched.hasWell("INJE01"));
     BOOST_CHECK(sched.hasWell("PROD01"));
 
-    const auto* well1 = sched.getWell("INJE01");
-    BOOST_CHECK( well1->isInjector(0));
     {
-        const WellPolymerProperties& props_well10 = well1->getPolymerProperties(0);
+        const auto& well1 = sched.getWell2("INJE01", 0);
+        BOOST_CHECK( well1.isInjector());
+        const WellPolymerProperties& props_well10 = well1.getPolymerProperties();
         BOOST_CHECK_CLOSE(1.5*Metric::PolymerDensity, props_well10.m_polymerConcentration, 0.0001);
-        const WellPolymerProperties& props_well11 = well1->getPolymerProperties(1);
+    }
+    {
+        const auto& well1 = sched.getWell2("INJE01", 1);
+        const WellPolymerProperties& props_well11 = well1.getPolymerProperties();
         BOOST_CHECK_CLOSE(1.0*Metric::PolymerDensity, props_well11.m_polymerConcentration, 0.0001);
-        const WellPolymerProperties& props_well12 = well1->getPolymerProperties(2);
+    }
+    {
+        const auto& well1 = sched.getWell2("INJE01", 2);
+        const WellPolymerProperties& props_well12 = well1.getPolymerProperties();
         BOOST_CHECK_CLOSE(0.1*Metric::PolymerDensity, props_well12.m_polymerConcentration, 0.0001);
     }
 
-    const auto* well2 = sched.getWell("INJE02");
-    BOOST_CHECK( well2->isInjector(0));
     {
-        const WellPolymerProperties& props_well20 = well2->getPolymerProperties(0);
+        const auto& well2 = sched.getWell2("INJE02", 0);
+        BOOST_CHECK( well2.isInjector());
+        const WellPolymerProperties& props_well20 = well2.getPolymerProperties();
         BOOST_CHECK_CLOSE(2.0*Metric::PolymerDensity, props_well20.m_polymerConcentration, 0.0001);
-        const WellPolymerProperties& props_well21 = well2->getPolymerProperties(1);
+    }
+    {
+        const auto& well2 = sched.getWell2("INJE02", 1);
+        const WellPolymerProperties& props_well21 = well2.getPolymerProperties();
         BOOST_CHECK_CLOSE(1.5*Metric::PolymerDensity, props_well21.m_polymerConcentration, 0.0001);
-        const WellPolymerProperties& props_well22 = well2->getPolymerProperties(2);
+    }
+    {
+        const auto& well2 = sched.getWell2("INJE02", 2);
+        const WellPolymerProperties& props_well22 = well2.getPolymerProperties();
         BOOST_CHECK_CLOSE(0.2*Metric::PolymerDensity, props_well22.m_polymerConcentration, 0.0001);
     }
-
-    const auto* well3 = sched.getWell("INJE03");
-    BOOST_CHECK( well3->isInjector(0));
     {
-        const WellPolymerProperties& props_well30 = well3->getPolymerProperties(0);
+        const auto& well3 = sched.getWell2("INJE03", 0);
+        BOOST_CHECK( well3.isInjector());
+        const WellPolymerProperties& props_well30 = well3.getPolymerProperties();
         BOOST_CHECK_CLOSE(2.5*Metric::PolymerDensity, props_well30.m_polymerConcentration, 0.0001);
-        const WellPolymerProperties& props_well31 = well3->getPolymerProperties(1);
+    }
+    {
+        const auto& well3 = sched.getWell2("INJE03", 1);
+        const WellPolymerProperties& props_well31 = well3.getPolymerProperties();
         BOOST_CHECK_CLOSE(2.0*Metric::PolymerDensity, props_well31.m_polymerConcentration, 0.0001);
-        const WellPolymerProperties& props_well32 = well3->getPolymerProperties(2);
+    }
+    {
+        const auto& well3 = sched.getWell2("INJE03", 2);
+        const WellPolymerProperties& props_well32 = well3.getPolymerProperties();
         BOOST_CHECK_CLOSE(0.3*Metric::PolymerDensity, props_well32.m_polymerConcentration, 0.0001);
     }
 }
@@ -785,9 +695,8 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
     BOOST_CHECK(sched.hasWell("PROD01"));
     BOOST_CHECK(sched.hasWell("PROD02"));
 
-    const auto* prod1 = sched.getWell("PROD01");
     {
-        const WellEconProductionLimits& econ_limit1 = prod1->getEconProductionLimits(0);
+        const WellEconProductionLimits& econ_limit1 = sched.getWell2("PROD01", 0).getEconLimits();
         BOOST_CHECK(econ_limit1.onMinOilRate());
         BOOST_CHECK(econ_limit1.onMaxWaterCut());
         BOOST_CHECK(!(econ_limit1.onMinGasRate()));
@@ -809,7 +718,7 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
         BOOST_CHECK(econ_limit1.onAnyRateLimit());
         BOOST_CHECK(econ_limit1.onAnyEffectiveLimit());
 
-        const WellEconProductionLimits& econ_limit2 = prod1->getEconProductionLimits(1);
+        const WellEconProductionLimits& econ_limit2 = sched.getWell2("PROD01", 1).getEconLimits();
         BOOST_CHECK(!(econ_limit2.onMinOilRate()));
         BOOST_CHECK(econ_limit2.onMaxWaterCut());
         BOOST_CHECK(econ_limit2.onMinGasRate());
@@ -832,9 +741,8 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
         BOOST_CHECK(econ_limit2.onAnyEffectiveLimit());
     }
 
-    const auto* prod2 = sched.getWell("PROD02");
     {
-        const WellEconProductionLimits& econ_limit1 = prod2->getEconProductionLimits(0);
+        const WellEconProductionLimits& econ_limit1 = sched.getWell2("PROD02", 0).getEconLimits();
         BOOST_CHECK(!(econ_limit1.onMinOilRate()));
         BOOST_CHECK(!(econ_limit1.onMaxWaterCut()));
         BOOST_CHECK(!(econ_limit1.onMinGasRate()));
@@ -856,7 +764,7 @@ BOOST_AUTO_TEST_CASE(WellTestWECON) {
         BOOST_CHECK(!(econ_limit1.onAnyRateLimit()));
         BOOST_CHECK(!(econ_limit1.onAnyEffectiveLimit()));
 
-        const WellEconProductionLimits& econ_limit2 = prod2->getEconProductionLimits(1);
+        const WellEconProductionLimits& econ_limit2 = sched.getWell2("PROD02", 1).getEconLimits();
         BOOST_CHECK(!(econ_limit2.onMinOilRate()));
         BOOST_CHECK(econ_limit2.onMaxWaterCut());
         BOOST_CHECK(econ_limit2.onMinGasRate());
@@ -925,14 +833,11 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec(deck);
     Schedule sched(deck , grid , eclipseProperties, runspec);
-    const auto& w1 = sched.getWell( "W_1");
-    const auto& w2 = sched.getWell( "W_2");
 
-
-    BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::NEW_WELL , 0 ));
-    BOOST_CHECK( sched.hasWellEvent( "W_2", ScheduleEvents::NEW_WELL , 2 ));
+    BOOST_CHECK(  sched.hasWellEvent( "W_1", ScheduleEvents::NEW_WELL , 0 ));
+    BOOST_CHECK(  sched.hasWellEvent( "W_2", ScheduleEvents::NEW_WELL , 2 ));
     BOOST_CHECK( !sched.hasWellEvent( "W_2", ScheduleEvents::NEW_WELL , 3 ));
-    BOOST_CHECK( sched.hasWellEvent( "W_2", ScheduleEvents::WELL_WELSPECS_UPDATE , 3 ));
+    BOOST_CHECK(  sched.hasWellEvent( "W_2", ScheduleEvents::WELL_WELSPECS_UPDATE , 3 ));
 
     BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 0 ));
     BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::WELL_STATUS_CHANGE , 1 ));
@@ -942,7 +847,4 @@ BOOST_AUTO_TEST_CASE(TestWellEvents) {
 
     BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 0 ));
     BOOST_CHECK( sched.hasWellEvent( "W_1", ScheduleEvents::COMPLETION_CHANGE , 5 ));
-
-    BOOST_CHECK_EQUAL( w1->firstTimeStep( ) , 0 );
-    BOOST_CHECK_EQUAL( w2->firstTimeStep( ) , 2 );
 }

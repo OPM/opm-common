@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <cassert>
 #include <vector>
+#include <sstream>
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -29,7 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
@@ -103,15 +104,15 @@ namespace Opm {
     bool Connection::attachedToSegment() const {
         return (segment_number > 0);
     }
-    
+
     const std::size_t& Connection::getSeqIndex() const {
         return m_seqIndex;
     }
-    
+
     const bool& Connection::getDefaultSatTabId() const {
         return m_defaultSatTabId;
     }
-    
+
     const std::size_t& Connection::getCompSegSeqIndex() const {
         return m_compSeg_seqIndex;
     }
@@ -128,15 +129,15 @@ namespace Opm {
         return m_segDistEnd;
     }
 
-    
+
     void Connection::setCompSegSeqIndex(std::size_t index) {
         m_compSeg_seqIndex = index;
     }
-    
+
     void Connection::setDefaultSatTabId(bool id) {
         m_defaultSatTabId = id;
     }
-    
+
     void Connection::setSegDistStart(const double& distStart) {
         m_segDistStart = distStart;
     }
@@ -144,7 +145,7 @@ namespace Opm {
     void Connection::setSegDistEnd(const double& distEnd) {
         m_segDistEnd = distEnd;
     }
-    
+
     double Connection::depth() const {
         return this->center_depth;
     }
@@ -207,8 +208,30 @@ namespace Opm {
         return this->wPi;
     }
 
+
+
+    std::string Connection::str() const {
+        std::stringstream ss;
+        ss << "ijk: " << this->ijk[0] << ","  << this->ijk[1] << "," << this->ijk[2] << std::endl;
+        ss << "COMPLNUM " << this->m_complnum << std::endl;
+        ss << "CF " << this->m_CF << std::endl;
+        ss << "RW " << this->m_rw << std::endl;
+        ss << "R0 " << this->m_r0 << std::endl;
+        ss << "skinf " << this->m_skin_factor << std::endl;
+        ss << "wPi " << this->wPi << std::endl;
+        ss << "kh " << this->m_Kh << std::endl;
+        ss << "sat_tableId " << this->sat_tableId << std::endl;
+        ss << "open_state " << this->open_state << std::endl;
+        ss << "direction " << this->direction << std::endl;
+        ss << "segment_nr " << this->segment_number << std::endl;
+        ss << "center_depth " << this->center_depth << std::endl;
+        ss << "seqIndex " << this->m_seqIndex << std::endl;
+
+        return ss.str();
+}
+
     bool Connection::operator==( const Connection& rhs ) const {
-        return this->ijk == rhs.ijk
+        bool eq = this->ijk == rhs.ijk
             && this->m_complnum == rhs.m_complnum
             && this->m_CF == rhs.m_CF
             && this->m_rw == rhs.m_rw
@@ -222,6 +245,10 @@ namespace Opm {
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
             && this->m_seqIndex == rhs.m_seqIndex;
+        if (!eq) {
+            //std::cout << this->str() << rhs.str() << std::endl;
+        }
+        return eq;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {

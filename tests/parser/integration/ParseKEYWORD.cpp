@@ -572,38 +572,37 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
     const Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     const Schedule sched(deck, grid, eclipseProperties, runspec);
+
     // checking the relation between segments and completions
     // and also the depth of completions
-    {
-        BOOST_CHECK(sched.hasWell("PROD01"));
-        const auto* well = sched.getWell("PROD01");
-        const auto& connections = well->getConnections(0);
-        BOOST_CHECK_EQUAL(7U, connections.size());
+    BOOST_CHECK(sched.hasWell("PROD01"));
+    const auto& well = sched.getWell2("PROD01", 0);
+    const auto& connections = well.getConnections();
+    BOOST_CHECK_EQUAL(7U, connections.size());
 
-        const Connection& connection5 = connections.get(4);
-        const int seg_number_connection5 = connection5.segment();
-        const double connection5_depth = connection5.depth();
-        BOOST_CHECK_EQUAL(seg_number_connection5, 6);
-        BOOST_CHECK_CLOSE(connection5_depth, 2538.83, 0.001);
+    const Connection& connection5 = connections.get(4);
+    const int seg_number_connection5 = connection5.segment();
+    const double connection5_depth = connection5.depth();
+    BOOST_CHECK_EQUAL(seg_number_connection5, 6);
+    BOOST_CHECK_CLOSE(connection5_depth, 2538.83, 0.001);
 
-        const Connection& connection6 = connections.get(5);
-        const int seg_number_connection6 = connection6.segment();
-        const double connection6_depth = connection6.depth();
-        BOOST_CHECK_EQUAL(seg_number_connection6, 6);
-        BOOST_CHECK_CLOSE(connection6_depth, 2537.83, 0.001);
+    const Connection& connection6 = connections.get(5);
+    const int seg_number_connection6 = connection6.segment();
+    const double connection6_depth = connection6.depth();
+    BOOST_CHECK_EQUAL(seg_number_connection6, 6);
+    BOOST_CHECK_CLOSE(connection6_depth, 2537.83, 0.001);
 
-        const Connection& connection1 = connections.get(0);
-        const int seg_number_connection1 = connection1.segment();
-        const double connection1_depth = connection1.depth();
-        BOOST_CHECK_EQUAL(seg_number_connection1, 1);
-        BOOST_CHECK_EQUAL(connection1_depth, 2512.5);
+    const Connection& connection1 = connections.get(0);
+    const int seg_number_connection1 = connection1.segment();
+    const double connection1_depth = connection1.depth();
+    BOOST_CHECK_EQUAL(seg_number_connection1, 1);
+    BOOST_CHECK_EQUAL(connection1_depth, 2512.5);
 
-        const Connection& connection3 = connections.get(2);
-        const int seg_number_connection3 = connection3.segment();
-        const double connection3_depth = connection3.depth();
-        BOOST_CHECK_EQUAL(seg_number_connection3, 3);
-        BOOST_CHECK_EQUAL(connection3_depth, 2562.5);
-    }
+    const Connection& connection3 = connections.get(2);
+    const int seg_number_connection3 = connection3.segment();
+    const double connection3_depth = connection3.depth();
+    BOOST_CHECK_EQUAL(seg_number_connection3, 3);
+    BOOST_CHECK_EQUAL(connection3_depth, 2562.5);
 }
 
 BOOST_AUTO_TEST_CASE( PLYADS ) {
@@ -1363,21 +1362,24 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     BOOST_CHECK(sched.hasWell("PROX5"));
 
     {
-        auto* well = sched.getWell("PROD2");
-        BOOST_CHECK_CLOSE(1000/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
-        BOOST_CHECK_CLOSE(1500/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
+        const auto& well0 = sched.getWell2("PROD2", 0 );
+        const auto& well1 = sched.getWell2("PROD2", 1 );
+        BOOST_CHECK_CLOSE(1000/Metric::Time, well0.getProductionProperties().OilRate, 0.001);
+        BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate, 0.001);
     }
 
     {
-        auto* well = sched.getWell("PROD3");
-        BOOST_CHECK_CLOSE(0/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
-        BOOST_CHECK_CLOSE(1500/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
+        const auto& well0 = sched.getWell2("PROD3", 0 );
+        const auto& well1 = sched.getWell2("PROD3", 1 );
+        BOOST_CHECK_CLOSE(0/Metric::Time, well0.getProductionProperties().OilRate, 0.001);
+        BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate, 0.001);
     }
 
     {
-        auto* well = sched.getWell("PROX5");
-        BOOST_CHECK_CLOSE(2000/Metric::Time, well->getProductionProperties(0).OilRate, 0.001);
-        BOOST_CHECK_CLOSE(2000/Metric::Time, well->getProductionProperties(1).OilRate, 0.001);
+        const auto& well0 = sched.getWell2("PROX5", 0);
+        const auto& well1 = sched.getWell2("PROX5", 1);
+        BOOST_CHECK_CLOSE(2000/Metric::Time, well0.getProductionProperties().OilRate, 0.001);
+        BOOST_CHECK_CLOSE(2000/Metric::Time, well1.getProductionProperties().OilRate, 0.001);
     }
 }
 
@@ -1400,21 +1402,24 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     BOOST_CHECK(sched.hasWell("INJX5"));
 
     {
-        auto* well = sched.getWell("INJE2");
-        BOOST_CHECK_CLOSE(1000/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
-        BOOST_CHECK_CLOSE(1500/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
+        const auto& well0 = sched.getWell2("INJE2", 0);
+        const auto& well1 = sched.getWell2("INJE2", 1);
+        BOOST_CHECK_CLOSE(1000/Metric::Time, well0.getInjectionProperties().surfaceInjectionRate, 0.001);
+        BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getInjectionProperties().surfaceInjectionRate, 0.001);
     }
 
     {
-        auto* well = sched.getWell("INJE3");
-        BOOST_CHECK_CLOSE(0/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
-        BOOST_CHECK_CLOSE(1500/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
+        const auto& well0 = sched.getWell2("INJE3", 0);
+        const auto& well1 = sched.getWell2("INJE3", 1);
+        BOOST_CHECK_CLOSE(0000/Metric::Time, well0.getInjectionProperties().surfaceInjectionRate, 0.001);
+        BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getInjectionProperties().surfaceInjectionRate, 0.001);
     }
 
     {
-        auto* well = sched.getWell("INJX5");
-        BOOST_CHECK_CLOSE(2000/Metric::Time, well->getInjectionProperties(0).surfaceInjectionRate, 0.001);
-        BOOST_CHECK_CLOSE(2000/Metric::Time, well->getInjectionProperties(1).surfaceInjectionRate, 0.001);
+        const auto& well0 = sched.getWell2("INJX5", 0);
+        const auto& well1 = sched.getWell2("INJX5", 1);
+        BOOST_CHECK_CLOSE(2000/Metric::Time, well0.getInjectionProperties().surfaceInjectionRate, 0.001);
+        BOOST_CHECK_CLOSE(2000/Metric::Time, well1.getInjectionProperties().surfaceInjectionRate, 0.001);
     }
 }
 

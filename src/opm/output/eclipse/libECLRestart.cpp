@@ -27,11 +27,11 @@
 #include <time.h>
 #include <ctime>
 #include <cstring>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <iostream>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <fstream> 
+#include <fstream>
 #include <fcntl.h>
 #include <cstdint>
 #include <cstdlib>
@@ -78,7 +78,7 @@
 //#  else
 //#    error No known program_invocation_name in runtime library
 //#  endif
-//#endif  
+//#endif
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -230,12 +230,12 @@ static const char * string_type = "int";
 
 /*
    Macros for endian flipping. The macros create a new endian-flipped
-   value, and should be used as: 
+   value, and should be used as:
 
      flipped_value = FLIP32( value )
- 
+
    The macros are not exported and only available through the function
-   util_endian_flip_vector().  
+   util_endian_flip_vector().
 */
 
 
@@ -267,7 +267,7 @@ struct int_vector_struct {
   bool     data_owner;    /* Is the vector owner of the the actual storage data?
                              If this is false the vector can not be resized. */
   bool     read_only;
-};  
+};
 
 
 struct size_t_vector_struct {
@@ -325,15 +325,15 @@ struct node_data_struct {
   ::Opm::RestartIO::node_ctype        ctype;
   void             *data;
   int               buffer_size;  /* This is to facilitate deep copies of buffers. */
-  
+
   /*
     For the copy constructor and delete
     operator the logic is very simple:
-    
+
     if they are present they are used.
   */
   ::Opm::RestartIO::copyc_ftype    *copyc;  /* Copy constructor - can be NULL. */
-  ::Opm::RestartIO::free_ftype     *del;    /* Destructor - can be NULL. */ 
+  ::Opm::RestartIO::free_ftype     *del;    /* Destructor - can be NULL. */
 };
 
 
@@ -437,12 +437,12 @@ void util_abort__(const char * file , const char * function , int line , const c
   fprintf(stderr, "Version info       : %s\n" , (__abort_program_message == NULL) ? "<Not set>" : __abort_program_message);
   fprintf(stderr, "\nError message: ");
   fprintf(stderr , "Abort called from: %s (%s:%d) \n",function , file , line);
-  {  
+  {
     va_list ap;
     va_start(ap , fmt);
     vfprintf(stderr , fmt , ap);
     va_end(ap);
-  } 
+  }
   fprintf(stderr,"-----------------------------------------------------------------\n");
 
   signal(SIGABRT , SIG_DFL);
@@ -1421,7 +1421,7 @@ bool ecl_type_is_double(const ::Opm::RestartIO::ecl_data_type ecl_type) {
   return (ecl_type.type == ECL_DOUBLE_TYPE);
 }
 
- 
+
 bool ecl_type_is_bool(const ::Opm::RestartIO::ecl_data_type ecl_type) {
   return (ecl_type.type == ECL_BOOL_TYPE);
 }
@@ -1441,7 +1441,7 @@ static uint16_t util_endian_convert16( uint16_t u ) {
 static uint32_t util_endian_convert32( uint32_t u ) {
   const uint32_t m8  = (uint32_t) 0x00FF00FFUL;
   const uint32_t m16 = (uint32_t) 0x0000FFFFUL;
-  
+
   u = (( u >> 8U ) & m8)   | ((u & m8) << 8U);
   u = (( u >> 16U ) & m16) | ((u & m16) << 16U);
   return u;
@@ -1453,7 +1453,7 @@ static uint64_t util_endian_convert64( uint64_t u ) {
   const uint64_t m16 = (uint64_t) 0x0000FFFF0000FFFFULL;
   const uint64_t m32 = (uint64_t) 0x00000000FFFFFFFFULL;
 
-  
+
   u = (( u >> 8U ) & m8)   | ((u & m8) << 8U);
   u = (( u >> 16U ) & m16) | ((u & m16) << 16U);
   u = (( u >> 32U ) & m32) | ((u & m32) << 32U);
@@ -1465,7 +1465,7 @@ static uint64_t util_endian_convert32_64( uint64_t u ) {
   const uint64_t m8  = (uint64_t) 0x00FF00FF00FF00FFULL;
   const uint64_t m16 = (uint64_t) 0x0000FFFF0000FFFFULL;
 
-  
+
   u = (( u >> 8U ) & m8)   | ((u & m8) << 8U);
   u = (( u >> 16U ) & m16) | ((u & m16) << 16U);
   return u;
@@ -1478,7 +1478,7 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
   switch (element_size) {
   case(1):
     break;
-  case(2): 
+  case(2):
     {
       uint16_t *tmp16 = (uint16_t *) data;
 
@@ -1509,10 +1509,10 @@ void util_endian_flip_vector(void *data, int element_size , int elements) {
       break;
 #else
       uint32_t *tmp32 = (uint32_t *) data;
-      
+
       for (i = 0; i <elements; i++)
         tmp32[i] = util_endian_convert32(tmp32[i]);
-      
+
       break;
 #endif
     }
@@ -1805,16 +1805,16 @@ bool hash_node_key_eq(const ::Opm::RestartIO::hash_node_type * node , uint32_t g
   return eq;
 }
 
-::Opm::RestartIO::hash_node_type * hash_node_get_next(const ::Opm::RestartIO::hash_node_type * node) { 
-  return node->next_node; 
+::Opm::RestartIO::hash_node_type * hash_node_get_next(const ::Opm::RestartIO::hash_node_type * node) {
+  return node->next_node;
 }
 
 ::Opm::RestartIO::hash_node_type * hash_sll_get(const ::Opm::RestartIO::hash_sll_type *hash_sll, uint32_t global_index , const char *key) {
   ::Opm::RestartIO::hash_node_type * node = hash_sll->head;
-  
-  while ((node != NULL) && (!::Opm::RestartIO::hash_node_key_eq(node , global_index , key))) 
+
+  while ((node != NULL) && (!::Opm::RestartIO::hash_node_key_eq(node , global_index , key)))
     node =  ::Opm::RestartIO::hash_node_get_next(node);
-  
+
   return node;
 }
 
@@ -1907,7 +1907,7 @@ static void * __hash_get_node(const ::Opm::RestartIO::hash_type *hash_in , const
 
 /*****************************************************************/
 /* The three functions below here are the only functions accessing the
-   data field of the hash_node.  
+   data field of the hash_node.
 */
 
 ::Opm::RestartIO::node_data_type * hash_node_get_data(const ::Opm::RestartIO::hash_node_type * node) {
@@ -2185,7 +2185,7 @@ void node_data_free_container(::Opm::RestartIO::node_data_type * node_data) {
 void node_data_free(::Opm::RestartIO::node_data_type * node_data) {
   if (node_data->del != NULL)
     node_data->del( (void *) node_data->data );
-  
+
   ::Opm::RestartIO::node_data_free_container( node_data );
 }
 
@@ -2498,7 +2498,7 @@ stringlist_type * stringlist_alloc_new() {
   return ecl_file_view;
 }
 
-/** 
+/**
    If the node has a copy constructor, the data is copied immediately
    - so the node contains a copy from object creation time.
 */
@@ -2514,7 +2514,7 @@ static ::Opm::RestartIO::node_data_type * node_data_alloc__(const void * data , 
     node->data = node->copyc( data );
   else
     node->data = (void *) data;
-  
+
   return node;
 }
 
@@ -2525,7 +2525,7 @@ static ::Opm::RestartIO::node_data_type * node_data_alloc__(const void * data , 
 
 //jal - declare function before definition due to mutual calls for two functions
 static int vector_append_node(::Opm::RestartIO::vector_type * vector , ::Opm::RestartIO::node_data_type * node);
-  
+
 /**
     If the index is beyond the length of the vector the hole in the
     vector will be filled with NULL nodes.
@@ -2651,7 +2651,7 @@ static time_t timegm(struct tm * a_tm)
     }
     time_t utc = std::mktime(a_tm) - offset * 3600;
     return utc;
-}	
+}
 
 static bool util_make_datetime_utc__(int sec, int min, int hour , int mday , int month , int year, bool force_set, time_t * t) {
   bool valid = false;
@@ -2734,11 +2734,11 @@ static time_t rsthead_date( int day , int month , int year) {
 time_t ecl_rsthead_date( const ::Opm::RestartIO::ecl_kw_type * intehead_kw ) {
   /*return ::Opm::RestartIO::rsthead_date(  ::Opm::RestartIO::ecl_kw_iget_int( intehead_kw , INTEHEAD_DAY_INDEX)   ,
                         ::Opm::RestartIO::ecl_kw_iget_int( intehead_kw , INTEHEAD_MONTH_INDEX) ,
-                        ::Opm::RestartIO::ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  ); 
+                        ::Opm::RestartIO::ecl_kw_iget_int( intehead_kw , INTEHEAD_YEAR_INDEX)  );
                         */
   return ::Opm::RestartIO::rsthead_date(  ::Opm::RestartIO::ecl_kw_iget_type<int>( intehead_kw , ECL_INT_TYPE, INTEHEAD_DAY_INDEX)   ,
                         ::Opm::RestartIO::ecl_kw_iget_type<int>( intehead_kw , ECL_INT_TYPE, INTEHEAD_MONTH_INDEX) ,
-                        ::Opm::RestartIO::ecl_kw_iget_type<int>( intehead_kw , ECL_INT_TYPE, INTEHEAD_YEAR_INDEX)  ); 
+                        ::Opm::RestartIO::ecl_kw_iget_type<int>( intehead_kw , ECL_INT_TYPE, INTEHEAD_YEAR_INDEX)  );
 }
 
 
@@ -3296,14 +3296,14 @@ bool hash_sll_empty(const ::Opm::RestartIO::hash_sll_type * hash_sll) {
 }
 
 
-const char * hash_node_get_key(const ::Opm::RestartIO::hash_node_type * node) { 
-  return node->key; 
+const char * hash_node_get_key(const ::Opm::RestartIO::hash_node_type * node) {
+  return node->key;
 }
 
 ::Opm::RestartIO::hash_node_type * hash_sll_get_head(const ::Opm::RestartIO::hash_sll_type *hash_sll) { return hash_sll->head; }
 
-uint32_t hash_node_get_table_index(const ::Opm::RestartIO::hash_node_type * node)  { 
-  return node->table_index; 
+uint32_t hash_node_get_table_index(const ::Opm::RestartIO::hash_node_type * node)  {
+  return node->table_index;
 }
 
 /**
@@ -3377,7 +3377,7 @@ void hash_node_set_next(::Opm::RestartIO::hash_node_type *node , const ::Opm::Re
 
 
 void hash_sll_del_node(::Opm::RestartIO::hash_sll_type *hash_sll , ::Opm::RestartIO::hash_node_type *del_node) {
-  if (del_node == NULL) 
+  if (del_node == NULL)
     util_abort("%s: tried to delete NULL node - aborting \n",__func__);
 
   {
@@ -3390,8 +3390,8 @@ void hash_sll_del_node(::Opm::RestartIO::hash_sll_type *hash_sll , ::Opm::Restar
     }
 
     if (node == del_node) {
-      if (p_node == NULL) 
-        /* 
+      if (p_node == NULL)
+        /*
            We are attempting to delete the first element in the list.
         */
         hash_sll->head = ::Opm::RestartIO::hash_node_get_next(del_node);
@@ -3399,7 +3399,7 @@ void hash_sll_del_node(::Opm::RestartIO::hash_sll_type *hash_sll , ::Opm::Restar
         ::Opm::RestartIO::hash_node_set_next(p_node , ::Opm::RestartIO::hash_node_get_next(del_node));
       ::Opm::RestartIO::hash_node_free(del_node);
       hash_sll->length--;
-    } else 
+    } else
       util_abort("%s: tried to delete node not in list - aborting \n",__func__);
 
   }
@@ -3582,7 +3582,7 @@ hash_node_type * hash_node_alloc_new(const char *key, ::Opm::RestartIO::node_dat
   node->key         = util_alloc_string_copy( key );
   node->data        = data;
   node->next_node   = NULL;
-        
+
   node->global_index = hashf(node->key , strlen(node->key));
   ::Opm::RestartIO::hash_node_set_table_index(node , table_size);
   return node;

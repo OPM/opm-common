@@ -130,14 +130,16 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
 
         sim.run(td.schedule, io);
         {
-            const auto& w1 = td.schedule.getWell("P1");
-            const auto& w4 = td.schedule.getWell("P4");
-            std::size_t last_step = td.schedule.size() - 1;
-
-            BOOST_CHECK_EQUAL(w1->getStatus(1), WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w4->getStatus(1), WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w1->getStatus(last_step), WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w4->getStatus(last_step), WellCommon::StatusEnum::SHUT );
+            const auto& w1 = td.schedule.getWell2("P1", 1);
+            const auto& w4 = td.schedule.getWell2("P4", 1);
+            BOOST_CHECK_EQUAL(w1.getStatus(), WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w4.getStatus(), WellCommon::StatusEnum::OPEN );
+        }
+        {
+            const auto& w1 = td.schedule.getWell2atEnd("P1");
+            const auto& w4 = td.schedule.getWell2atEnd("P4");
+            BOOST_CHECK_EQUAL(w1.getStatus(), WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w4.getStatus(), WellCommon::StatusEnum::SHUT );
         }
 
         test_work_area_free(work_area);
@@ -165,36 +167,37 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
         {
-            const auto& w1 = td.schedule.getWell("P1");
-            const auto& w2 = td.schedule.getWell("P2");
-            const auto& w3 = td.schedule.getWell("P3");
-            const auto& w4 = td.schedule.getWell("P4");
+            const auto& w1 = td.schedule.getWell2("P1", 15);
+            const auto& w2 = td.schedule.getWell2("P2", 15);
+            const auto& w3 = td.schedule.getWell2("P3", 15);
+            const auto& w4 = td.schedule.getWell2("P4", 15);
 
-            BOOST_CHECK_EQUAL(w1->getStatus(15),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w2->getStatus(15),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w3->getStatus(15),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w4->getStatus(15),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w1.getStatus(),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w2.getStatus(),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w3.getStatus(),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w4.getStatus(),  WellCommon::StatusEnum::OPEN );
         }
 
 
         sim.run(td.schedule, io);
         {
-            const auto& w1 = td.schedule.getWell("P1");
-            const auto& w2 = td.schedule.getWell("P2");
-            const auto& w3 = td.schedule.getWell("P3");
-            const auto& w4 = td.schedule.getWell("P4");
-
-            BOOST_CHECK_EQUAL(w1->getStatus(15),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w3->getStatus(15),  WellCommon::StatusEnum::OPEN );
-
-            BOOST_CHECK_EQUAL(w2->getStatus(5),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w2->getStatus(6),  WellCommon::StatusEnum::SHUT );
-
-            BOOST_CHECK_EQUAL(w4->getStatus(10),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w4->getStatus(11),  WellCommon::StatusEnum::SHUT );
+            const auto& w1 = td.schedule.getWell2("P1", 15);
+            const auto& w3 = td.schedule.getWell2("P3", 15);
+            BOOST_CHECK_EQUAL(w1.getStatus(),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w3.getStatus(),  WellCommon::StatusEnum::OPEN );
         }
-
-
+        {
+            const auto& w2_5 = td.schedule.getWell2("P2", 5);
+            const auto& w2_6 = td.schedule.getWell2("P2", 6);
+            BOOST_CHECK_EQUAL(w2_5.getStatus(),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w2_6.getStatus(),  WellCommon::StatusEnum::SHUT );
+        }
+        {
+            const auto& w4_10 = td.schedule.getWell2("P4", 10);
+            const auto& w4_11 = td.schedule.getWell2("P4", 11);
+            BOOST_CHECK_EQUAL(w4_10.getStatus(),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK_EQUAL(w4_11.getStatus(),  WellCommon::StatusEnum::SHUT );
+        }
 
         test_work_area_free(work_area);
     }
