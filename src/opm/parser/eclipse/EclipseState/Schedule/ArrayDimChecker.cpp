@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
 
@@ -61,8 +60,9 @@ namespace {
                               Opm::ErrorGuard&         guard)
         {
             auto nconn = std::size_t{0};
-            for (const auto* well : sched.getWells()) {
-                nconn = std::max(nconn, well->getConnections().size());
+            for (const auto& well_name : sched.wellNames()) {
+                const auto& well = sched.getWell2atEnd(well_name);
+                nconn = std::max(nconn, well.getConnections().size());
             }
 
             if (nconn > static_cast<decltype(nconn)>(wdims.maxConnPerWell()))

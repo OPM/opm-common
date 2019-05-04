@@ -67,9 +67,11 @@ public:
     GuideRate::GuideRatePhaseEnum getGuideRatePhase() const;
     double getGuideRateScalingFactor() const;
 
+    bool hasBeenDefined(size_t timeStep) const;
     std::size_t firstTimeStep() const;
     bool canOpen() const;
     bool isProducer() const;
+    bool isInjector() const;
     size_t seqIndex() const;
     bool getAutomaticShutIn() const;
     bool getAllowCrossFlow() const;
@@ -91,6 +93,18 @@ public:
     WellCommon::StatusEnum getStatus() const;
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
+    /* The rate of a given phase under the following assumptions:
+     * * Returns zero if production is requested for an injector (and vice
+     *   versa)
+     * * If this is an injector and something else than the
+     *   requested phase is injected, returns 0, i.e.
+     *   water_injector.injection_rate( gas ) == 0
+     * * Mixed injection is not supported and always returns 0.
+     */
+    double production_rate( Phase phase) const;
+    double injection_rate( Phase phase) const;
+    static bool wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern);
+
     /*
       The getCompletions() function will return a map:
 
@@ -124,8 +138,6 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
-    void switchToProducer();
-    void switchToInjector();
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid);
@@ -134,6 +146,8 @@ public:
     bool handleWPIMULT(const DeckRecord& record);
 
     void filterConnections(const EclipseGrid& grid);
+    void switchToInjector();
+    void switchToProducer();
 private:
     std::string wname;
     std::string group_name;

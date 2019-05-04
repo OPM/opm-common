@@ -39,7 +39,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
@@ -115,6 +114,7 @@ namespace Opm
         size_t numWells() const;
         size_t numWells(size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
+        bool hasWell(const std::string& wellName, std::size_t timeStep) const;
 
         std::vector<std::string> wellNames(const std::string& pattern, size_t timeStep, const std::vector<std::string>& matching_wells = {}) const;
         std::vector<std::string> wellNames(const std::string& pattern) const;
@@ -123,12 +123,11 @@ namespace Opm
 
         void updateWell(std::shared_ptr<Well2> well, size_t reportStep);
         const Well2& getWell2(const std::string& wellName, size_t timeStep) const;
-        std::vector< const Well2* > getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const;
-        const Well* getWell(const std::string& wellName) const;
-        std::vector< const Well* > getOpenWells(size_t timeStep) const;
-        std::vector< const Well* > getWells() const;
-        std::vector< const Well* > getWells(size_t timeStep) const;
-        std::vector< const Well* > getChildWells(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const;
+        const Well2& getWell2atEnd(const std::string& well_name) const;
+        std::vector<Well2> getWells2(size_t timeStep) const;
+        std::vector<Well2> getWells2atEnd() const;
+
+        std::vector<Well2> getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const WellTestConfig& wtestConfig(size_t timestep) const;
@@ -169,7 +168,6 @@ namespace Opm
         void applyAction(size_t reportStep, const ActionX& action, const std::vector<std::string>& matching_wells);
     private:
         TimeMap m_timeMap;
-        OrderedMap< std::string, Well > m_wells;
         OrderedMap< std::string, Group > m_groups;
         OrderedMap< std::string, DynamicState<std::shared_ptr<Well2>>> wells_static;
         DynamicState< GroupTree > m_rootGroupTree;
@@ -189,7 +187,6 @@ namespace Opm
 
         Actions m_actions;
 
-        std::vector< Well* > getWells(const std::string& wellNamePattern, const std::vector<std::string>& matching_wells = {});
         std::vector< Group* > getGroups(const std::string& groupNamePattern);
         std::map<std::string,Events> well_events;
 

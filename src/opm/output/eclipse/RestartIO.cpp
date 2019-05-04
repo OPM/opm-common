@@ -51,7 +51,6 @@
 #include <ert/ecl/EclFilename.hpp>
 #include <ert/ecl/fortio.h>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 namespace Opm { namespace RestartIO {
 
 namespace {
@@ -98,11 +97,11 @@ namespace {
     }
 
     std::vector<double>
-    serialize_OPM_XWEL(const data::Wells&              wells,
-                       int                             sim_step,
-                       const std::vector<const Well*>& sched_wells,
-                       const Phases&                   phase_spec,
-                       const EclipseGrid&              grid)
+    serialize_OPM_XWEL(const data::Wells&             wells,
+                       int                            sim_step,
+                       const std::vector<Opm::Well2>& sched_wells,
+                       const Phases&                  phase_spec,
+                       const EclipseGrid&             grid)
     {
         using rt = data::Rates::opt;
 
@@ -112,13 +111,12 @@ namespace {
         if (phase_spec.active(Phase::GAS))   phases.push_back(rt::gas);
 
         std::vector< double > xwel;
-        for (const auto* sched_well : sched_wells) {
-
-            if (wells.count(sched_well->name()) == 0 ||
-                sched_well->getStatus(sim_step) == Opm::WellCommon::SHUT)
+        for (const auto& sched_well : sched_wells) {
+            if (wells.count(sched_well.name()) == 0 ||
+                sched_well.getStatus() == Opm::WellCommon::SHUT)
             {
-                const auto elems = (sched_well->getConnections( sim_step ).size()
-                                * (phases.size() + data::Connection::restart_size))
+                const auto elems = (sched_well.getConnections().size()
+                                    * (phases.size() + data::Connection::restart_size))
                     + 2 /* bhp, temperature */
                     + phases.size();
 
@@ -127,7 +125,7 @@ namespace {
                 continue;
             }
 
-            const auto& well = wells.at( sched_well->name() );
+            const auto& well = wells.at( sched_well.name() );
 
             xwel.push_back( well.bhp );
             xwel.push_back( well.temperature );
@@ -135,7 +133,7 @@ namespace {
             for (auto phase : phases)
                 xwel.push_back(well.rates.get(phase));
 
-            for (const auto& sc : sched_well->getConnections(sim_step)) {
+            for (const auto& sc : sched_well.getConnections()) {
                 const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
 
                 const auto rs_size = phases.size() + data::Connection::restart_size;
@@ -373,7 +371,7 @@ namespace {
         // Extended set of OPM well vectors
         if (!ecl_compatible_rst)
         {
-            const auto sched_wells = schedule.getWells(sim_step);
+            const auto sched_wells = schedule.getWells2(sim_step);
             const auto sched_well_names = schedule.wellNames(sim_step);
 
             const auto opm_xwel =
@@ -557,14 +555,14 @@ void save(const std::string&  filename,
 
     // Write well and MSW data only when applicable (i.e., when present)
     {
-        const auto& wells = schedule.getWells(sim_step);
+        const auto& wells = schedule.getWells2(sim_step);
 
         if (! wells.empty()) {
             const auto haveMSW =
                 std::any_of(std::begin(wells), std::end(wells),
-                    [sim_step](const Well* well)
+                    [sim_step](const Well2& well)
             {
-                return well->isMultiSegment(sim_step);
+                return well.isMultiSegment();
             });
 
             if (haveMSW) {

@@ -45,12 +45,12 @@
 struct MockIH
 {
     MockIH(const int numWells,
-	   
+
 	   const int igrpPerGrp	 = 101,  // no of data elements per group in IGRP array
 	   const int sgrpPerGrp  = 112,  // number of data elements per group in SGRP array
 	   const int xgrpPerGrp  = 180,  // number of data elements per group in XGRP array
 	   const int zgrpPerGrp  =   5);  // number of data elements per group in XGRP array
-    
+
 
     std::vector<int> value;
 
@@ -75,7 +75,7 @@ MockIH::MockIH(const int numWells,
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
 
     this->nwells = this->value[Ix::NWELLS] = numWells;
-    
+
     this->ngmaxz = this->value[Ix::NGMAXZ] = 5;
     this->nwgmax = this->value[Ix::NWGMAX] = 4;
     this->nigrpz = this->value[Ix::NIGRPZ] = igrpPerGrp;
@@ -93,7 +93,7 @@ namespace {
 RUNSPEC
 
 TITLE
-2 PRODUCERS  AND INJECTORS, 2 WELL GROUPS AND ONE INTERMEDIATE GROUP LEVEL  BELOW THE FIELD LEVEL 
+2 PRODUCERS  AND INJECTORS, 2 WELL GROUPS AND ONE INTERMEDIATE GROUP LEVEL  BELOW THE FIELD LEVEL
 
 DIMENS
  10  5  10  /
@@ -135,10 +135,10 @@ GRID        =========================================================
 BOX
  1 10 1 5 1 1 /
 
-TOPS 
+TOPS
 50*7000 /
 
-BOX 
+BOX
 1 10  1 5 1 10 /
 
 DXV
@@ -166,8 +166,8 @@ COPY
 
 RPTGRID
   -- Report Levels for Grid Section Data
-  -- 
- / 
+  --
+ /
 
 PROPS       ==========================================================
 
@@ -283,9 +283,9 @@ PVTO
 /
 
 
-RPTPROPS 
+RPTPROPS
 -- PROPS Reporting Options
--- 
+--
 /
 
 REGIONS    ===========================================================
@@ -323,9 +323,9 @@ RSVD       2 TABLES    3 NODES IN EACH           FIELD   12:00 17 AUG 83
 
 RPTRST
 -- Restart File Output Control
--- 
+--
 'BASIC=2' 'FLOWS' 'POT' 'PRES' /
- 
+
 
 SUMMARY      ===========================================================
 
@@ -444,7 +444,7 @@ END
 	state.add("GOPR:WGRP2",   43.);
 	state.add("GGPR:WGRP2",   70237.);
 	state.add("GWPR:WGRP2",   59.);
-	
+
 	state.add("FOPR",   3456.);
 	state.add("FGPR",   2003456.);
 	state.add("FWPR",   5678.);
@@ -463,7 +463,7 @@ struct SimulationCase
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
     Opm::Schedule     sched;
-}; 
+};
 
 // =====================================================================
 
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_SUITE(Aggregate_Group)
 BOOST_AUTO_TEST_CASE (Constructor)
 {
     const auto ih = MockIH{ 5 };
-   
+
     const auto agrpd = Opm::RestartIO::Helpers::AggregateGroupData{ ih.value };
 
     BOOST_CHECK_EQUAL(agrpd.getIGroup().size(), ih.ngmaxz * ih.nigrpz);
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched.getWells2(rptStep).size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{4});
@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 	BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  1); // Group GRP1 - Group type (well group = 0, node group = 1)
 	BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  1); // Group GRP1 - Group level (FIELD level is 0)
 	BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  5); // Group GRP1 - index of parent group (= 0 for FIELD)
-	
+
 	start = 1*ih.nigrpz;
 	BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Group WGRP1 - Child well number one - equal to well PROD1 (no 1)
 	BOOST_CHECK_EQUAL(iGrp[start + 1] ,  3); // Group WGRP1 - Child well number two - equal to well WINJ1 (no 3)
@@ -528,7 +528,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 	BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 26] ,  0); // Group WGRP1 - Group type (well group = 0, node group = 1)
 	BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  2); // Group WGRP1 - Group level (FIELD level is 0)
 	BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 28] ,  1); // Group GRP1 - index of parent group (= 0 for FIELD)
-	
+
 	start = (ih.ngmaxz-1)*ih.nigrpz;
 	BOOST_CHECK_EQUAL(iGrp[start + 0] ,  1); // Group FIELD - Child group number one - equal to group GRP1
 	BOOST_CHECK_EQUAL(iGrp[start + 4] ,  1); // Group FIELD - No of child groups
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 	BOOST_CHECK_EQUAL(iGrp[start + ih.nwgmax + 27] ,  0); // Group FIELD - Group level (FIELD level is 0)
     }
 
-    
+
     // XGRP (PROD)
     {
         auto start = 0*ih.nxgrpz;
@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 	BOOST_CHECK_EQUAL(xGrp[start + 0] ,  235.); // Group GRP1 - GOPR
 	BOOST_CHECK_EQUAL(xGrp[start + 1] ,  239.); // Group GRP1 - GWPR
 	BOOST_CHECK_EQUAL(xGrp[start + 2] ,  100237.); // Group GRP1 - GGPR
-	
+
 	start = 1*ih.nxgrpz;
 	BOOST_CHECK_EQUAL(xGrp[start + 0] ,  23.); // Group WGRP1 - GOPR
 	BOOST_CHECK_EQUAL(xGrp[start + 1] ,  29.); // Group WGRP1 - GWPR
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 	BOOST_CHECK_EQUAL(xGrp[start + 1] ,  59.); // Group WGRP2 - GWPR
 	BOOST_CHECK_EQUAL(xGrp[start + 2] ,  70237.); // Group WGRP2 - GGPR
 
-	
+
 	start = (ih.ngmaxz-1)*ih.nxgrpz;
 	BOOST_CHECK_EQUAL(xGrp[start + 0] ,  3456.); // Group FIELD - FOPR
 	BOOST_CHECK_EQUAL(xGrp[start + 1] ,  5678.); // Group FIELD - FWPR
@@ -569,18 +569,18 @@ BOOST_AUTO_TEST_CASE (Declared_Group_Data)
 
         const auto& zGrp = agrpd.getZGroup();
 	BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "GRP1    "); // Group GRP1 - GOPR
-	
+
 	start = 1*ih.nzgrpz;
 	BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "WGRP1   "); // Group WGRP1 - GOPR
 
 	start = 2*ih.nzgrpz;
 	BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "WGRP2   "); // Group WGRP2 - GOPR
-	
+
 	start = (ih.ngmaxz-1)*ih.nzgrpz;
 	BOOST_CHECK_EQUAL(zGrp[start + 0].c_str() ,  "FIELD   "); // Group FIELD - FOPR
     }
 
-    
+
 }
 
 

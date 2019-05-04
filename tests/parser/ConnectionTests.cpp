@@ -203,8 +203,8 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE1) {
     Opm::Schedule sched(deck, state);
     const auto& units = deck.getActiveUnitSystem();
 
-    const auto& prod = sched.getWell("PROD");
-    const auto& connections = prod->getConnections(0);
+    const auto& prod = sched.getWell2("PROD", 0);
+    const auto& connections = prod.getConnections();
     const auto& conn0 = connections[0];
     /* Expected values come from Eclipse simulation. */
     BOOST_CHECK_CLOSE(conn0.CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, 10.609), 2e-2);
@@ -316,8 +316,8 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE9) {
   {"PRODU26" ,3 ,     0.176,    118.6}};
 
    for (const auto& ec : expected) {
-       const auto& well = sched.getWell(ec.well);
-       const auto& connections = well->getConnections(0);
+     const auto& well = sched.getWell2(ec.well, 0);
+       const auto& connections = well.getConnections();
        const auto& conn = connections[ec.ci - 1];
 
        BOOST_CHECK_CLOSE( conn.CF(), units.to_si(Opm::UnitSystem::measure::transmissibility, ec.CF), 2e-1);

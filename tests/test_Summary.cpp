@@ -219,7 +219,7 @@ static data::Wells result_wells() {
     data::Connection well2_comp1 { 1  , crates2, 1.10 , 123.4, 212.1, 0.78, 0.0, 12.34};
     data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4, 150.6, 0.001, 0.89, 100.0};
     data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4, 456.78, 0.0, 0.15, 432.1};
-	data::Connection well6_comp1 { 5  , crates6, 6.11 , 623.4, 656.78, 0.0, 0.65, 632.1};
+    data::Connection well6_comp1 { 5  , crates6, 6.11 , 623.4, 656.78, 0.0, 0.65, 632.1};
     /*
       The completions
     */
@@ -285,7 +285,6 @@ struct setup {
 };
 
 BOOST_AUTO_TEST_SUITE(Summary)
-
 /*
  * Tests works by reading the Deck, write the summary output, then immediately
  * read it again (with ERT), and compare the read values with the input.

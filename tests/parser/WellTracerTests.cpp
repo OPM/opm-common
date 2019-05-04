@@ -24,7 +24,6 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -153,13 +152,12 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
     BOOST_CHECK_EQUAL(well_name, "W_1");
-    const auto* well = schedule.getWell(well_name);
-    BOOST_CHECK_EQUAL(well->getTracerProperties(0).getConcentration("I1"),0); //default 0
-    BOOST_CHECK_EQUAL(well->getTracerProperties(0).getConcentration("I2"),0); //default 0
-    BOOST_CHECK_EQUAL(well->getTracerProperties(1).getConcentration("I1"),1);
-    BOOST_CHECK_EQUAL(well->getTracerProperties(2).getConcentration("I1"),1);
-    BOOST_CHECK_EQUAL(well->getTracerProperties(4).getConcentration("I1"),0);
-    BOOST_CHECK_EQUAL(well->getTracerProperties(4).getConcentration("I2"),1);
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 0).getTracerProperties().getConcentration("I1"),0); //default 0
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 0).getTracerProperties().getConcentration("I2"),0); //default 0
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 1).getTracerProperties().getConcentration("I1"),1);
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 2).getTracerProperties().getConcentration("I1"),1);
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 4).getTracerProperties().getConcentration("I1"),0);
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 4).getTracerProperties().getConcentration("I2"),1);
 }
 
 

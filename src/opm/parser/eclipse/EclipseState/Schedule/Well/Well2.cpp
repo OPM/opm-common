@@ -104,9 +104,9 @@ Well2::Well2(const std::string& wname,
     production(std::make_shared<WellProductionProperties>()),
     injection(std::make_shared<WellInjectionProperties>())
 {
-    WellProductionProperties * p = new WellProductionProperties(*this->production);
+    auto p = std::make_shared<WellProductionProperties>();
     p->whistctl_cmode = whistctl_cmode;
-    this->production.reset( p );
+    this->updateProduction(p);
 }
 
 bool Well2::updateEfficiencyFactor(double efficiency_factor) {
@@ -147,7 +147,6 @@ bool Well2::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limi
 
     return false;
 }
-
 
 void Well2::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
@@ -354,6 +353,11 @@ bool Well2::isMultiSegment() const {
 bool Well2::isProducer() const {
     return this->producer;
 }
+
+bool Well2::isInjector() const {
+    return !this->producer;
+}
+
 
 bool Well2::isAvailableForGroupControl() const {
     return this->guide_rate.available;
@@ -584,6 +588,13 @@ std::size_t Well2::firstTimeStep() const {
     return this->init_step;
 }
 
+bool Well2::hasBeenDefined(size_t timeStep) const {
+    if (timeStep < this->init_step)
+        return false;
+    else
+        return true;
+}
+
 
 
 bool Well2::canOpen() const {
@@ -603,6 +614,50 @@ WellCompletion::CompletionOrderEnum Well2::getWellConnectionOrdering() const {
     return this->ordering;
 }
 
+double Well2::production_rate( Phase phase) const {
+    if( !this->isProducer() ) return 0.0;
+
+    const auto& p = this->getProductionProperties();
+
+    switch( phase ) {
+        case Phase::WATER: return p.WaterRate;
+        case Phase::OIL:   return p.OilRate;
+        case Phase::GAS:   return p.GasRate;
+        case Phase::SOLVENT:
+            throw std::invalid_argument( "Production of 'SOLVENT' requested." );
+        case Phase::POLYMER:
+            throw std::invalid_argument( "Production of 'POLYMER' requested." );
+        case Phase::ENERGY:
+            throw std::invalid_argument( "Production of 'ENERGY' requested." );
+        case Phase::POLYMW:
+            throw std::invalid_argument( "Production of 'POLYMW' requested.");
+    }
+
+    throw std::logic_error( "Unreachable state. Invalid Phase value. "
+                            "This is likely a programming error." );
+}
+
+double Well2::injection_rate( Phase phase) const {
+    if( !this->isInjector() ) return 0.0;
+
+    const auto& i = this->getInjectionProperties();
+    const auto type = i.injectorType;
+
+    if( phase == Phase::WATER && type != WellInjector::WATER ) return 0.0;
+    if( phase == Phase::OIL   && type != WellInjector::OIL   ) return 0.0;
+    if( phase == Phase::GAS   && type != WellInjector::GAS   ) return 0.0;
+
+    return i.surfaceInjectionRate;
+}
+
+
+bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern) {
+    bool wellNameInPattern = false;
+    if (util_fnmatch( wellNamePattern.c_str() , wellName.c_str()) == 0) {
+        wellNameInPattern = true;
+    }
+    return wellNameInPattern;
+}
 
 }
 
