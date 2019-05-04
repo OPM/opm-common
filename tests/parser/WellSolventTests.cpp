@@ -24,7 +24,6 @@
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
@@ -206,11 +205,10 @@ BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
     BOOST_CHECK_EQUAL(well_name, "W_1");
-    const auto* well = schedule.getWell(well_name);
-    BOOST_CHECK_EQUAL(well->getSolventFraction(0),0); //default 0
-    BOOST_CHECK_EQUAL(well->getSolventFraction(1),1);
-    BOOST_CHECK_EQUAL(well->getSolventFraction(2),1);
-    BOOST_CHECK_EQUAL(well->getSolventFraction(3),0);
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 0).getSolventFraction(),0); //default 0
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 1).getSolventFraction(),1);
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 2).getSolventFraction(),1);
+    BOOST_CHECK_EQUAL(schedule.getWell2("W_1", 3).getSolventFraction(),0);
 }
 
 BOOST_AUTO_TEST_CASE(TestOilInjector) {

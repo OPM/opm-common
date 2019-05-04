@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
@@ -54,32 +53,39 @@ void verifyWellState(const std::string& rst_filename,
   int numwells = well_info_get_num_wells(well_info);
   BOOST_CHECK_EQUAL( numwells, schedule.numWells() );
 
-  auto wells = schedule.getWells();
+  auto wells = schedule.getWells2atEnd();
 
   for (int i = 0; i < numwells; ++i) {
 
     //Verify wellnames
     const char * wellname = well_info_iget_well_name(well_info, i);
-    auto* well = wells.at(i);
-    BOOST_CHECK_EQUAL( wellname, well->name() );
-
-    // Verify well-head position data
     well_ts_type* well_ts = well_info_get_ts(well_info , wellname);
     well_state_type* well_state = well_ts_iget_state(well_ts, 0);
-    const well_conn_type* well_head = well_state_get_wellhead(well_state, ECL_GRID_GLOBAL_GRID);
-    BOOST_CHECK_EQUAL(well_conn_get_i(well_head), well->getHeadI());
-    BOOST_CHECK_EQUAL(well_conn_get_j(well_head), well->getHeadJ());
+    {
+        const auto& sched_well = wells.at(i);
+        BOOST_CHECK_EQUAL( wellname, sched_well.name() );
+
+        // Verify well-head position data
+        const well_conn_type* well_head = well_state_get_wellhead(well_state, ECL_GRID_GLOBAL_GRID);
+        BOOST_CHECK_EQUAL(well_conn_get_i(well_head), sched_well.getHeadI());
+        BOOST_CHECK_EQUAL(well_conn_get_j(well_head), sched_well.getHeadJ());
+    }
 
     for (int j = 0; j < well_ts_get_size(well_ts); ++j) {
+      const auto& well_at_end = schedule.getWell2atEnd(wellname);
+      if (!well_at_end.hasBeenDefined(j))
+        continue;
+
+      const auto& well = schedule.getWell2(wellname, j);
       well_state = well_ts_iget_state(well_ts, j);
 
       //Verify welltype
       int well_type = ERT_UNDOCUMENTED_ZERO;
-      if( well->isProducer( j ) ) {
+      if( well.isProducer( ) ) {
           well_type = ERT_PRODUCER;
       }
       else {
-          switch( well->getInjectionProperties( j ).injectorType ) {
+          switch( well.getInjectionProperties(  ).injectorType ) {
               case WellInjector::WATER:
                   well_type = ERT_WATER_INJECTOR;
                   break;
@@ -99,7 +105,7 @@ void verifyWellState(const std::string& rst_filename,
 
       //Verify wellstatus
       int ert_well_status = well_state_is_open(well_state) ? 1 : 0;
-      int wellstatus = well->getStatus( j ) == WellCommon::OPEN ? 1 : 0;
+      int wellstatus = well.getStatus(  ) == WellCommon::OPEN ? 1 : 0;
 
       BOOST_CHECK_EQUAL(ert_well_status, wellstatus);
 
@@ -107,8 +113,7 @@ void verifyWellState(const std::string& rst_filename,
       const well_conn_collection_type * well_connections = well_state_get_global_connections( well_state );
       size_t num_wellconnections = well_conn_collection_get_size(well_connections);
 
-      int report_nr = well_state_get_report_nr(well_state);
-      const auto& connections_set = well->getConnections((size_t)report_nr);
+      const auto& connections_set = well.getConnections();
 
       BOOST_CHECK_EQUAL(num_wellconnections, connections_set.size());
 

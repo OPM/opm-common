@@ -299,7 +299,6 @@ void compare(const SummaryState& st, const ecl_sum_type * ecl_sum, int tstep) {
 
 
 BOOST_AUTO_TEST_SUITE(Summary)
-
 /*
  * Tests works by reading the Deck, write the summary output, then immediately
  * read it again (with ERT), and compare the read values with the input.

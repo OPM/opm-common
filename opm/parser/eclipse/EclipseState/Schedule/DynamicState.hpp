@@ -90,17 +90,17 @@ class DynamicState {
         }
 
 
-        std::vector<std::pair<std::size_t, T>> unique() {
+        std::vector<std::pair<std::size_t, T>> unique() const {
             if (this->m_data.empty())
                 return {};
 
-            auto& current_value = this->m_data[0];
+            const auto * current_value = std::addressof(this->m_data[0]);
             std::size_t current_index = 0;
-            std::vector<std::pair<std::size_t, T>> result{{current_index, current_value}};
+            std::vector<std::pair<std::size_t, T>> result{{current_index, *current_value}};
             while (true) {
-                if (this->m_data[current_index] != current_value) {
-                    current_value = this->m_data[current_index];
-                    result.emplace_back(current_index, current_value);
+                if (this->m_data[current_index] != *current_value) {
+                    current_value = std::addressof(this->m_data[current_index]);
+                    result.emplace_back(current_index, *current_value);
                 }
 
                 current_index++;

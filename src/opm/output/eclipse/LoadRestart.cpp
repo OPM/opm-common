@@ -54,7 +54,6 @@
 #include <utility>
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
 
 class RestartFileView
@@ -671,17 +670,17 @@ namespace {
                               const ::Opm::RestartIO::ecl_kw_type*      opm_iwel,
                               const int                                 sim_step,
                               const std::vector<Opm::data::Rates::opt>& phases,
-                              const std::vector<const Opm::Well*>&      sched_wells)
+                              const std::vector<Opm::Well2>&            sched_wells)
     {
         const auto expected_xwel_size =
             std::accumulate(sched_wells.begin(), sched_wells.end(),
                             std::size_t(0),
-                [&phases, sim_step](const std::size_t acc, const Opm::Well* w)
+                [&phases, sim_step](const std::size_t acc, const Opm::Well2& w)
                 -> std::size_t
             {
                 return acc
                     + 2 + phases.size()
-                    + (w->getConnections(sim_step).size()
+                    + (w.getConnections().size()
                         * (phases.size() + Opm::data::Connection::restart_size));
             });
 
@@ -720,7 +719,7 @@ namespace {
 
         using rt = Opm::data::Rates::opt;
 
-        const auto& sched_wells = schedule.getWells(rst_view.simStep());
+        const auto& sched_wells = schedule.getWells2(rst_view.simStep());
         std::vector<rt> phases;
         {
             const auto& phase = es.runspec().phases();
@@ -738,8 +737,8 @@ namespace {
         const auto* opm_xwel_data = Load::ecl_kw_get_type_ptr<double>(opm_xwel, Load::ECL_DOUBLE_TYPE);
         const auto* opm_iwel_data = Load::ecl_kw_get_type_ptr<int>(opm_iwel, Load::ECL_INT_TYPE);
 
-        for (const auto* sched_well : sched_wells) {
-            auto& well = wells[ sched_well->name() ];
+        for (const auto& sched_well : sched_wells) {
+            auto& well = wells[ sched_well.name() ];
 
             well.bhp         = *opm_xwel_data++;
             well.temperature = *opm_xwel_data++;
@@ -749,7 +748,7 @@ namespace {
                 well.rates.set(phase, *opm_xwel_data++);
             }
 
-            for (const auto& sc : sched_well->getConnections(rst_view.simStep())) {
+            for (const auto& sc : sched_well.getConnections()) {
                 const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
 
                 if (!grid.cellActive(i, j, k) || sc.state() == Opm::WellCompletion::SHUT) {
@@ -835,7 +834,7 @@ namespace {
         if (gas) { xc.rates.set(Opm::data::Rates::opt::gas, 0.0); }
     }
 
-    void restoreConnResults(const Opm::Well&        well,
+    void restoreConnResults(const Opm::Well2&        well,
                             const std::size_t       wellID,
                             const std::size_t       sim_step,
                             const Opm::EclipseGrid& grid,
@@ -868,7 +867,8 @@ namespace {
             return;
         }
 
-        const auto conns      = well.getActiveConnections(sim_step, grid);
+        const auto& conn0 = well.getConnections();
+        const auto conns = Opm::WellConnections(conn0, grid);
         const auto ijk_to_res = ijk_to_resID(wellID, nConn, wellData);
 
         auto linConnID = std::size_t{0};
@@ -956,7 +956,7 @@ namespace {
     }
 
     Opm::data::Well
-    restore_well(const Opm::Well&        well,
+    restore_well(const Opm::Well2&       well,
                  const std::size_t       wellID,
                  const std::size_t       sim_step,
                  const Opm::EclipseGrid& grid,
@@ -1010,14 +1010,14 @@ namespace {
                            grid, usys, phases, wellData, xw);
 
         // 4) Restore segment quantities if applicable.
-        if (well.isMultiSegment(sim_step) &&
+        if (well.isMultiSegment() &&
             segData.hasDefinedValues())
         {
             const auto iwel   = wellData.iwel(wellID);
             const auto mswID  = iwel[VI::IWell::index::MsWID]; // One-based
             const auto numSeg = iwel[VI::IWell::index::NWseg];
 
-            const auto& segSet = well.getWellSegments(sim_step);
+            const auto& segSet = well.getSegments();
 
             if ((mswID > 0) && (numSeg > 0) &&
                 (segSet.size() == numSeg))
@@ -1053,14 +1053,13 @@ namespace {
         const auto& phases = es.runspec().phases();
 
         const auto  sim_step = rst_view.simStep();
-        const auto& wells    = schedule.getWells(sim_step);
-        for (auto nWells = wells.size(), wellID = 0*nWells;
-             wellID < nWells; ++wellID)
+        const auto& wells    = schedule.getWells2(sim_step);
+        for (auto nWells = wells.size(), wellID = 0*nWells; wellID < nWells; ++wellID)
         {
-            const auto* well = wells[wellID];
+            const auto& well = wells[wellID];
 
-            soln[well->name()] =
-                restore_well(*well, wellID, sim_step, grid,
+            soln[well.name()] =
+                restore_well(well, wellID, sim_step, grid,
                              units, phases, wellData, segData);
         }
 
@@ -1152,12 +1151,12 @@ namespace {
         // Well cumulatives
         {
             const auto  wellData = WellVectors { rst_view, intehead };
-            const auto& wells    = schedule.getWells(sim_step);
+            const auto& wells    = schedule.getWells2(sim_step);
 
             for (auto nWells = wells.size(), wellID = 0*nWells;
                  wellID < nWells; ++wellID)
             {
-                assign_well_cumulatives(wells[wellID]->name(),
+                assign_well_cumulatives(wells[wellID].name(),
                                         wellID, wellData, smry);
             }
         }

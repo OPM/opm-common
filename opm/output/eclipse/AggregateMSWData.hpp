@@ -55,13 +55,13 @@ namespace Opm { namespace RestartIO { namespace Helpers {
       std::vector<double> sofr;
       std::vector<double> swfr;
       std::vector<double> sgfr;
-    };    
-    
+    };
+
     class AggregateMSWData
     {
     public:
         explicit AggregateMSWData(const std::vector<int>& inteHead);
-	
+
         void captureDeclaredMSWData(const Opm::Schedule& sched,
                                      const std::size_t    rptStep,
 				     const Opm::UnitSystem& units,

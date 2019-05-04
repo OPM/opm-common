@@ -34,7 +34,6 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 
@@ -239,14 +238,14 @@ void RFT::writeTimeStep( const Schedule& schedule,
         if (!(rft_config.rft(well_name, report_step) || rft_config.plt(well_name, report_step)))
             continue;
 
-        auto* well = schedule.getWell(well_name);
         rft rft_node(ecl_rft_node_alloc_new( well_name.c_str(), "RFT", current_time, days ));
         const auto& wellData = wellDatas.at(well_name);
 
         if (wellData.connections.empty())
             continue;
 
-        for( const auto& connection : well->getConnections( report_step ) ) {
+        const auto& well = schedule.getWell2(well_name, report_step);
+        for( const auto& connection : well.getConnections() ) {
 
             const size_t i = size_t( connection.getI() );
             const size_t j = size_t( connection.getJ() );

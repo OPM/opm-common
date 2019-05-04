@@ -47,13 +47,13 @@
 struct MockIH
 {
     MockIH(const int numWells,
-	   
+
 	   const int nsegWell 	  =  1,  // E100
 	   const int ncwMax       = 20,
 	   const int iConnPerConn =  25,  // NICONZ
 	   const int sConnPerConn =  40,  // NSCONZ
 	   const int xConnPerConn =  58);  // NXCONZ
-    
+
 
     std::vector<int> value;
 
@@ -80,7 +80,7 @@ MockIH::MockIH(const int numWells,
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
 
     this->nwells = this->value[Ix::NWELLS] = numWells;
-    
+
     this->nsegwl = this->value[Ix::NSEGWL] = nsegWell;
     this->ncwmax = this->value[Ix::NCWMAX] = 20;
     this->nswlmx = this->value[Ix::NSWLMX] = 1;
@@ -144,10 +144,10 @@ GRID        =========================================================
 BOX
  1 10 1 5 1 1 /
 
-TOPS 
+TOPS
 50*7000 /
 
-BOX 
+BOX
 1 10  1 5 1 10 /
 
 DXV
@@ -175,15 +175,15 @@ COPY
 
 RPTGRID
   -- Report Levels for Grid Section Data
-  -- 
- / 
+  --
+ /
 
 EDIT
 
 EQUALS
  'PORV'   0.0    7 7  1 1  9 9  /
 /
- 
+
 PROPS       ==========================================================
 
 -- WATER RELATIVE PERMEABILITY AND CAPILLARY PRESSURE ARE TABULATED AS
@@ -292,9 +292,9 @@ PVTO
 /
 
 
-RPTPROPS 
+RPTPROPS
 -- PROPS Reporting Options
--- 
+--
 /
 
 REGIONS    ===========================================================
@@ -332,13 +332,13 @@ RSVD       2 TABLES    3 NODES IN EACH           FIELD   12:00 17 AUG 83
 
 RPTRST
 -- Restart File Output Control
--- 
+--
 'BASIC=2' 'FLOWS' 'POT' 'PRES' /
- 
+
 --RPTSOL
--- 
+--
 -- Initialisation Print Output
--- 
+--
 --'PRES' 'SOIL' 'SWAT' 'SGAS' 'RS' 'RESTART=1' 'FIP=2' 'EQUIL' 'RSVD' /
 
 SUMMARY      ===========================================================
@@ -464,7 +464,7 @@ END
         return Opm::Parser{}.parseString(input);
     }
 
-    
+
     Opm::data::WellRates wr()
     {
         using o = ::Opm::data::Rates::opt;
@@ -483,11 +483,11 @@ END
             for (int i = 0; i < 5; i++) {
 		xw["PROD"].connections.emplace_back();
 		auto& c = xw["PROD"].connections.back();
-		
+
 		c.rates.set(o::wat, qw*(float(i)+1.))
                    .set(o::oil, qo*(float(i)+1.))
                    .set(o::gas, qg*(float(i)+1.));
-		c.pressure = 215.; 
+		c.pressure = 215.;
 	    }
 	    auto seg = Opm::data::Segment{};
 	    for (std::size_t i = 1; i < 5; i++) {
@@ -502,7 +502,7 @@ END
             for (int i = 0; i < 5; i++) {
 		xw["WINJ"].connections.emplace_back();
 		auto& c = xw["WINJ"].connections.back();
-		
+
 		c.rates.set(o::wat, qw*(float(i)+1.))
 		       .set(o::oil, 0.)
 		       .set(o::gas, 0.);
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_SUITE(Aggregate_ConnData)
 BOOST_AUTO_TEST_CASE (Constructor)
 {
     const auto ih = MockIH{ 5 };
-   
+
     const auto amconn = Opm::RestartIO::Helpers::AggregateConnectionData{ ih.value };
 
     BOOST_CHECK_EQUAL(amconn.getIConn().size(), ih.nwells * ih.ncwmax * ih.niconz);
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched.getWells2(rptStep).size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
     auto amconn = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
     amconn.captureDeclaredConnData(simCase.sched,
 				  simCase.grid,
-				  simCase.es.getUnits(), 
+				  simCase.es.getUnits(),
 				  wrc,
 				  rptStep
 				  );
@@ -620,7 +620,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_EQUAL(iConn[start +  Ix::ComplNum  ] ,  3); // WINJ-connection 3, Complum number
 	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnDir   ] ,  1); // WINJ-connection 3, Connection direction
 	BOOST_CHECK_EQUAL(iConn[start +  Ix::Segment   ] ,  0); // WINJ-connection 3, Segment ID for direction
-	
+
 	start = ih.ncwmax*ih.niconz + 3*ih.niconz;
 	BOOST_CHECK_EQUAL(iConn[start +  Ix::SeqIndex  ] ,  4); // WINJ-connection 4, sequence number
 	BOOST_CHECK_EQUAL(iConn[start +  Ix::CellI     ] ,  6); // WINJ-connection 4, Cell I
@@ -632,7 +632,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_EQUAL(iConn[start +  Ix::ComplNum  ] ,  4); // WINJ-connection 4, Complum number
 	BOOST_CHECK_EQUAL(iConn[start +  Ix::ConnDir   ] ,  1); // WINJ-connection 4, Connection direction
 	BOOST_CHECK_EQUAL(iConn[start +  Ix::Segment   ] ,  0); // WINJ-connection 4, Segment ID for direction
-	
+
     }
 
     // SCONN (PROD)  + (WINJ)
@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12      ],       2.55826545  , 1.0e-5);  // PROD - conn 1 : Transmissibility factor
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistEnd  ], 	      130.  , 1.0e-5);  // PROD - conn 1 : Distance to end of connection in segment
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistStart], 	       30.  , 1.0e-5);	// PROD - conn 1 : Distance to start of connection in segment
-	
+
 	// Well no 2 - WINJ well
 	connNo = 3;
 	i0 = ih.ncwmax*ih.nsconz + (connNo-1)*ih.nsconz;
@@ -660,7 +660,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::item12      ],       2.55826545  , 1.0e-5);  // WINJ - conn 3 : Transmissibility factor
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistEnd  ], 	        0.  , 1.0e-5);  // WINJ - conn 3 : Distance to end of connection in segment
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistStart], 	        0.  , 1.0e-5);	// WINJ - conn 3 : Distance to start of connection in segment
-	
+
 	connNo = 4;
 	i0 = ih.ncwmax*ih.nsconz + (connNo-1)*ih.nsconz;
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::ConnTrans   ],        2.55826545 , 1.0e-5);  // WINJ - conn 4 : Transmissibility factor
@@ -671,9 +671,9 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistEnd  ], 	        0.  , 1.0e-5);  // WINJ - conn 4 : Distance to end of connection in segment
 	BOOST_CHECK_CLOSE(sconn[i0 + Ix::SegDistStart], 	        0.  , 1.0e-5);	// WINJ - conn 4 : Distance to start of connection in segment
 
-	
+
     }
-    
+
     // XCONN (PROD)  + (WINJ)
     {
 	using Ix = ::Opm::RestartIO::Helpers::VectorItems::XConn::index;
@@ -687,20 +687,20 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::OilRate  ],        -units.from_si(M::liquid_surface_rate,5.*(float(connNo))) , 1.0e-5);   // PROD - conn 1 : Surface oil rate
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate], 	 -units.from_si(M::liquid_surface_rate,4.*(float(connNo))) , 1.0e-5);	// PROD - conn 1 : Surface water rate
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::GasRate  ],        -units.from_si(M::gas_surface_rate,  50.*(float(connNo))) , 1.0e-5);   // PROD - conn 1 : Surface gas rate
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         215.) , 1.0e-5);   // PROD - conn 1 : Connection pressure 
+	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         215.) , 1.0e-5);   // PROD - conn 1 : Connection pressure
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate ],                                                              0.  , 1.0e-5);  // PROD - conn 1 : Reservoir volume rate
-	
+
 	// WINJ well
 	connNo = 3;
 	i0 = ih.ncwmax*ih.nxconz + (connNo-1)*ih.nxconz;
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate], 	 -units.from_si(M::liquid_surface_rate,7.*(float(connNo))) , 1.0e-5);	// WINJ - conn 3 : Surface water rate
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure 
+	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate ],                                                              0.  , 1.0e-5);  // WINJ - conn 3 : Reservoir volume rate
-		
+
 	connNo = 4;
 	i0 = ih.ncwmax*ih.nxconz + (connNo-1)*ih.nxconz;
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::WaterRate], 	 -units.from_si(M::liquid_surface_rate,7.*(float(connNo))) , 1.0e-5);	// WINJ - conn 3 : Surface water rate
-	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure 
+	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate ],                                                              0.  , 1.0e-5);  // WINJ - conn 3 : Reservoir volume rate
 
     }
