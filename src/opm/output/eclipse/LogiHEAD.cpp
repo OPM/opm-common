@@ -188,8 +188,6 @@ variousParam(const bool e300_radial,
              const int  nswlmx,
              const bool enableHyster)
 {
-    this -> data_[IsLiveOil]  = true;
-    this -> data_[IsWetGas]   = true;
     this -> data_[E300Radial] = e300_radial;
     this -> data_[E100Radial] = e100_radial;
     this -> data_[Hyster]     = enableHyster;
