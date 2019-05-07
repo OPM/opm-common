@@ -1,0 +1,67 @@
+language: python
+dist: trusty
+
+compiler:
+  - gcc
+
+os:
+  - linux
+
+env:
+  global:
+    - INSTALL_ROOT=$HOME/install
+
+addons:
+  apt:
+    sources:
+      - boost-latest
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.9
+      - g++-4.9
+      - libboost1.55-all-dev
+      - liblapack-dev
+
+sudo: required
+
+python:
+  - 2.7
+  - 3.6
+
+matrix:
+    fast_finish: true
+
+before_install:
+  - export CXX="g++-4.9" CC="gcc-4.9"
+
+install:
+  - pushd ..
+  - git clone https://github.com/Statoil/libecl.git
+  - git clone https://github.com/OPM/opm-common.git
+  - mkdir libecl/build
+  - pushd libecl/build
+  - cmake -DENABLE_PYTHON=OFF -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT ..
+  - make install
+  - popd
+  - mkdir opm-common/build
+  - pushd opm-common/build
+  - cmake .. -DCMAKE_PREFIX_PATH=$INSTALL_ROOT
+             -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT
+             -DBUILD_TESTING=OFF
+             -DBUILD_SHARED_LIBS=ON
+  - make install
+  - popd
+  - popd
+  - pip install -r requirements.txt
+
+
+script:
+  - mkdir build
+  - pushd build
+  - cmake .. -DCMAKE_PREFIX_PATH=$INSTALL_ROOT
+             -DUSE_RPATH=ON
+             -DCMAKE_INSTALL_PREFIX=$INSTALL_ROOT
+             -DPYTHON_EXECUTABLE=`which python`
+  - make install
+  - ctest --output-on-failure
+  - popd
