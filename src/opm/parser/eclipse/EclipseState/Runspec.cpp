@@ -46,11 +46,11 @@ std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
         case Phase::OIL:     return stream << "OIL";
         case Phase::GAS:     return stream << "GAS";
         case Phase::WATER:   return stream << "WATER";
-        case Phase::FOAM:    return stream << "FOAM";
         case Phase::SOLVENT: return stream << "SOLVENT";
         case Phase::POLYMER: return stream << "POLYMER";
         case Phase::ENERGY:  return stream << "ENERGY";
         case Phase::POLYMW:  return stream << "POLYMW";
+        case Phase::FOAM:    return stream << "FOAM";
 
     }
 
