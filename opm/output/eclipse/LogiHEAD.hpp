@@ -1,4 +1,5 @@
 /*
+  Copyright 2019 Equinor ASA.
   Copyright 2016, 2017 Statoil ASA.
 
   This file is part of the Open Porous Media Project (OPM).
@@ -27,6 +28,49 @@ namespace Opm { namespace RestartIO {
     class LogiHEAD
     {
     public:
+        /// Key characteristics of simulation run's PVT model.
+        struct PVTModel
+        {
+            /// Whether or not simulation run uses a live oil model (with
+            /// dissolved gas).
+            bool isLiveOil { false };
+
+            /// Whether or not simulation run uses a wet gas model (with
+            /// vaporised oil).
+            bool isWetGas { false };
+
+            /// Whether or not simulation run uses a constant
+            /// compressibility oil model (keyword PVCDO).
+            bool constComprOil { false };
+        };
+
+        /// Key characteristics of simulation model's saturation functions.
+        struct SatfuncFlags
+        {
+            /// Whether or not simulation run uses directionally dependent
+            /// relative permeability.
+            bool useDirectionalRelPerm { false };
+
+            /// Whether or not simulation run uses reversible relative
+            /// permeability functions.
+            bool useReversibleRelPerm { true };
+
+            /// Whether or not simulation run uses end-point scaling.
+            bool useEndScale { false };
+
+            /// Whether or not simulation run uses directionally dependent
+            /// end-point scaling.
+            bool useDirectionalEPS { false };
+
+            /// Whether or not simulation run uses reversible end-point
+            /// scaling.
+            bool useReversibleEPS { true  };
+
+            /// Whether or not simulation run activates the alternative
+            /// (three-point) end-point scaling feature.
+            bool useAlternateEPS { false };
+        };
+
         LogiHEAD();
         ~LogiHEAD() = default;
 
@@ -41,6 +85,21 @@ namespace Opm { namespace RestartIO {
                                const int  nswlmx,
 			       const bool enableHyster
 			      );
+
+        /// Assign PVT model characteristics.
+        ///
+        /// \param[in] pvt Current run's PVT model characteristics.
+        ///
+        /// \return \code *this \endcode.
+        LogiHEAD& pvtModel(const PVTModel& pvt);
+
+        /// Assign saturation function characteristics.
+        ///
+        /// \param[in] satfunc Current run's saturation function
+        ///    characteristics.
+        ///
+        /// \return \code *this \endcode.
+        LogiHEAD& saturationFunction(const SatfuncFlags& satfunc);
 
         const std::vector<bool>& data() const
         {

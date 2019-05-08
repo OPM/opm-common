@@ -31,15 +31,18 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/IOConfig/IOConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/Utility/Functional.hpp>
 
+#include <opm/output/eclipse/LogiHEAD.hpp>
 #include <opm/output/eclipse/RestartIO.hpp>
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/Tables.hpp>
+#include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <cstdlib>
 #include <memory>     // unique_ptr
@@ -50,6 +53,7 @@
 #include <ert/ecl/EclFilename.hpp>
 
 #include <ert/ecl/ecl_kw_magic.h>
+#include <ert/ecl/ecl_kw.h>
 #include <ert/ecl/ecl_init_file.h>
 #include <ert/ecl/ecl_file.h>
 #include <ert/ecl/ecl_grid.h>
@@ -92,8 +96,95 @@ void writeKeyword( ERT::FortIO& fortio ,
 
 }
 
+    void writeKeyword(ERT::FortIO&             fortio,
+                      const std::string&       keywordName,
+                      const std::vector<bool>& data)
+    {
+        auto freeKw = [](ecl_kw_type* kw)
+        {
+            if (kw != nullptr) { ecl_kw_free(kw); }
+        };
 
+        using KWPtr =
+            std::unique_ptr<ecl_kw_type, decltype(freeKw)>;
 
+        auto kw = KWPtr {
+            ecl_kw_alloc(keywordName.c_str(), data.size(), ECL_BOOL),
+            freeKw
+        };
+
+        if (kw == nullptr) { return; }
+
+        const auto n = data.size();
+        for (auto i = 0*n; i < n; ++i) {
+            ecl_kw_iset_bool(kw.get(), static_cast<int>(i), data[i]);
+        }
+
+        ecl_kw_fwrite(kw.get(), fortio.get());
+    }
+
+    void writeInitFileHeader(const ::Opm::EclipseState& es,
+                             const ::Opm::EclipseGrid&  grid,
+                             const ::Opm::Schedule&     sched,
+                             ERT::FortIO&               fortio)
+    {
+        // Expected order of header vectors:
+        //   1. INTEHEAD
+        //   2. LOGIHEAD
+        //   3. DOUBHEAD
+
+        // INTEHEAD
+        {
+            const auto ih = ::Opm::RestartIO::Helpers::
+                createInteHead(es, grid, sched, 0.0, 0, 0);
+
+            writeKeyword(fortio, "INTEHEAD", ih);
+        }
+
+        // LOGIHEAD
+        {
+            const auto& tabMgr = es.getTableManager();
+            const auto& rspec  = es.runspec();
+            const auto& phases = rspec.phases();
+            const auto& wsd    = rspec.wellSegmentDimensions();
+
+            auto pvt = ::Opm::RestartIO::LogiHEAD::PVTModel{};
+
+            pvt.isLiveOil = phases.active(::Opm::Phase::OIL) &&
+                !tabMgr.getPvtoTables().empty();
+
+            pvt.isWetGas = phases.active(::Opm::Phase::GAS) &&
+                !tabMgr.getPvtgTables().empty();
+
+            pvt.constComprOil = phases.active(::Opm::Phase::OIL) &&
+                !(pvt.isLiveOil ||
+                  tabMgr.hasTables("PVDO") ||
+                  tabMgr.getPvcdoTable().empty());
+
+            auto lh = ::Opm::RestartIO::LogiHEAD{}
+                 .variousParam(false, false,
+                               wsd.maxSegmentedWells(),
+                               rspec.hysterPar().active());
+
+            // Sequenced after 'lh' constructor to ensure that any changes
+            // to live oil/wet gas elements are from this particular call.
+            lh.pvtModel(pvt);
+
+            writeKeyword(fortio, "LOGIHEAD", lh.data());
+        }
+
+        // DOUBHEAD
+        {
+            const auto dh = ::Opm::RestartIO::Helpers::
+                createDoubHead(es, sched, 0, 0.0, 0.0);
+
+            // DOUBHEAD must be output as double precision so we can't use
+            // writeKeyword() here (double -> float conversion).
+            ERT::EclKW<double> kw("DOUBHEAD", dh);
+
+            kw.fwrite(fortio);
+        }
+    }
 
 
 class RFT {
@@ -243,29 +334,20 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<st
                         ioConfig.getFMTOUT(),
                         ECL_ENDIAN_FLIP );
 
+    writeInitFileHeader(this->es, this->grid, this->schedule, fortio);
 
-    // Write INIT header. Observe that the PORV vector is treated
-    // specially; that is because for this particulat vector we write
-    // a total of nx*ny*nz values, where the PORV vector has been
-    // explicitly set to zero for inactive cells. The convention is
-    // that the active/inactive cell mapping can be inferred by
-    // reading the PORV vector.
+    // The PORV vector is a special case.  This particular vector always
+    // holds a total of nx*ny*nz elements, and the elements are explicitly
+    // set to zero for inactive cells.  This treatment implies that the
+    // active/inactive cell mapping can be inferred by reading the PORV
+    // vector from the result set.
     {
-
         const auto& opm_data = this->es.get3DProperties().getDoubleGridProperty("PORV").getData();
         auto ecl_data = opm_data;
 
         for (size_t global_index = 0; global_index < opm_data.size(); global_index++)
             if (!this->grid.cellActive( global_index ))
                 ecl_data[global_index] = 0;
-
-
-        ecl_init_file_fwrite_header( fortio.get(),
-                                     this->grid.c_ptr(),
-                                     NULL,
-                                     units.getEclType(),
-                                     this->es.runspec( ).eclPhaseMask( ),
-                                     this->schedule.posixStartTime( ));
 
         units.from_si( UnitSystem::measure::volume, ecl_data );
         writeKeyword( fortio, "PORV" , ecl_data );
@@ -318,9 +400,7 @@ void EclipseIO::Impl::writeINITFile( const data::Solution& simProps, std::map<st
     // Write tables
     {
         Tables tables( this->es.getUnits() );
-        tables.addPVTO( this->es.getTableManager().getPvtoTables() );
-        tables.addPVTG( this->es.getTableManager().getPvtgTables() );
-        tables.addPVTW( this->es.getTableManager().getPvtwTable() );
+        tables.addPVTTables(this->es);
         tables.addDensity( this->es.getTableManager().getDensityTable( ) );
         tables.addSatFunc(this->es);
         fwrite(tables, fortio);
