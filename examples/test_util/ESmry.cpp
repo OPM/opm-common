@@ -153,10 +153,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
     // n=file number, i = position in param array in file n (one array pr time step), example arrayInd[n][i] = position in keyword list (std::set) 
 
     std::vector<std::vector<int>> arrayInd;
-    std::vector<int> tmpVect(keywList.size(), -1);
     
     for (int i = 0; i < nFiles; i++){
-        arrayInd.push_back(tmpVect);
+        arrayInd.push_back({});
     }
     
     int n = nFiles - 1;
@@ -177,6 +176,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         std::vector<std::string> keywords = smspec.get<std::string>("KEYWORDS");
         std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
         std::vector<int> nums = smspec.get<int>("NUMS");
+
+	std::vector<int> tmpVect(keywords.size(), -1);
+        arrayInd[n]=tmpVect;
 
         std::set<std::string>::iterator it;
 
