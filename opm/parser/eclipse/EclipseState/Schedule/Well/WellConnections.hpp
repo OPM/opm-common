@@ -28,7 +28,6 @@ namespace Opm {
     class Eclipse3DProperties;
     class WellConnections {
     public:
-        WellConnections() = default;
         WellConnections(int headI, int headJ);
         // cppcheck-suppress noExplicitConstructor
         WellConnections(const WellConnections& src, const EclipseGrid& grid);

@@ -331,6 +331,7 @@ namespace Opm {
 
         const static std::string RPT_UNKNOWN_MNEMONIC;
 
+        const static std::string SCHEDULE_WELL_ERROR;
 
         /*
           The SIMULATOR_KEYWORD_ errormodes are for the situation where the

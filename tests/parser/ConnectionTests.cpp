@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
 
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
-    Opm::WellConnections completionSet;
+    Opm::WellConnections completionSet(1,1);
     Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true);
     Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true);
     completionSet.add( completion1 );
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
     Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
     Opm::Connection completion2( 10,10,11, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
-    Opm::WellConnections completionSet;
+    Opm::WellConnections completionSet(1,1);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
 
 
 BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
-    Opm::WellConnections completionSet;
+  Opm::WellConnections completionSet(10,10);
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
 
     Opm::Connection completion1( 10,10,10, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
 BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     Opm::EclipseGrid grid(10,20,20);
     Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
-    Opm::WellConnections completions;
+    Opm::WellConnections completions(10,10);
     Opm::Connection completion1( 0,0,0, 1, 0.0, Opm::WellCompletion::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
     Opm::Connection completion2( 0,0,1, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
     Opm::Connection completion3( 0,0,2, 1, 0.0, Opm::WellCompletion::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
@@ -150,7 +150,7 @@ Opm::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     const auto deck = parser.parseString(compdat_keyword);
     Opm::Eclipse3DProperties props(deck, tables, grid );
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
-    Opm::WellConnections connections;
+    Opm::WellConnections connections(10,10);
     for (const auto& rec : keyword)
         connections.loadCOMPDAT(rec, grid, props);
 

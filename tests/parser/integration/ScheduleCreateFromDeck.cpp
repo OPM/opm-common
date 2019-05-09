@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT_DEFAULTED_ITEMS) {
     Parser parser;
     std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_COMPDAT1");
     auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(40,60,30);
+    EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE(OpmCode) {
     Parser parser;
     std::string scheduleFile(pathprefix() + "SCHEDULE/wells_group.data");
     auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(10,10,3);
+    EclipseGrid grid(10,10,5);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);

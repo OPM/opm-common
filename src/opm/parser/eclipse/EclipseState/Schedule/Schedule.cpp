@@ -108,11 +108,9 @@ namespace Opm {
 
         if (Section::hasSCHEDULE(deck))
             iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, eclipseProperties );
-
-#ifdef CHECK_WELLS
+#ifdef WELL_TEST
         checkWells(parseContext, errors);
 #endif
-
     }
 
 
@@ -458,6 +456,18 @@ namespace Opm {
                 well.setProductionProperties(currentStep, new_properties);
             }
         }
+
+        for (auto& well_pair : this->wells_static) {
+            auto& dynamic_state = well_pair.second;
+            auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+            auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+
+            if (prop->whistctl_cmode != controlMode) {
+                prop->whistctl_cmode = controlMode;
+                well2->updateProduction(prop);
+                this->updateWell(well2, currentStep);
+            }
+        }
     }
 
 
@@ -524,7 +534,6 @@ namespace Opm {
             const auto& record = keyword.getRecord(recordNr);
             const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
-            bool new_well = false;
 
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep);
@@ -546,38 +555,46 @@ namespace Opm {
                     }
                 }
                 addWell(wellName, record, currentStep, wellConnectionOrder);
-                new_well = true;
+            } else {
+                const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
+                const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
+                const auto& refDepthItem = record.getItem( "REF_DEPTH" );
+                double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
+                double refDepth = refDepthItem.hasValue( 0 )
+                    ? refDepthItem.getSIDouble( 0 )
+                    : -1.0;
+                {
+                    auto& currentWell = this->m_wells.get( wellName );
+                    this->addWellEvent(currentWell.name(), ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
+
+                    if( currentWell.getHeadI() != headI ) {
+                        std::string msg = "HEAD_I changed for well " + currentWell.name();
+                        OpmLog::info(Log::fileMessage(keyword.getFileName(), keyword.getLineNumber(), msg));
+                        currentWell.setHeadI( currentStep, headI );
+                    }
+
+                    if( currentWell.getHeadJ() != headJ ) {
+                        std::string msg = "HEAD_J changed for well " + currentWell.name();
+                        OpmLog::info(Log::fileMessage(keyword.getFileName(), keyword.getLineNumber(), msg));
+                        currentWell.setHeadJ( currentStep, headJ );
+                    }
+
+                    currentWell.setRefDepth( currentStep, refDepth );
+                    currentWell.setDrainageRadius( currentStep, drainageRadius );
+                }
+                {
+                    bool update = false;
+                    auto well2 = std::shared_ptr<Well2>(new Well2( this->getWell2(wellName, currentStep)));
+                    update = well2->updateHead(headI, headJ);
+                    update |= well2->updateRefDepth(refDepth);
+                    update |= well2->updateDrainageRadius(drainageRadius);
+
+                    if (update)
+                        this->updateWell(well2, currentStep);
+                }
             }
 
-            auto& currentWell = this->m_wells.get( wellName );
-
-            const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
-            const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
-            if (!new_well)
-                this->addWellEvent(currentWell.name(), ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
-
-            if( currentWell.getHeadI() != headI ) {
-                std::string msg = "HEAD_I changed for well " + currentWell.name();
-                OpmLog::info(Log::fileMessage(keyword.getFileName(), keyword.getLineNumber(), msg));
-                currentWell.setHeadI( currentStep, headI );
-            }
-
-            if( currentWell.getHeadJ() != headJ ) {
-                std::string msg = "HEAD_J changed for well " + currentWell.name();
-                OpmLog::info(Log::fileMessage(keyword.getFileName(), keyword.getLineNumber(), msg));
-                currentWell.setHeadJ( currentStep, headJ );
-            }
-
-            const auto& refDepthItem = record.getItem( "REF_DEPTH" );
-            double refDepth = refDepthItem.hasValue( 0 )
-                            ? refDepthItem.getSIDouble( 0 )
-                            : -1.0;
-            currentWell.setRefDepth( currentStep, refDepth );
-
-            double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
-            currentWell.setDrainageRadius( currentStep, drainageRadius );
-
-            addWellToGroup( this->m_groups.at( groupName ), this->m_wells.get( wellName ), currentStep);
+            addWellToGroup( this->m_groups.at( groupName ), wellName, currentStep);
             if (handleGroupFromWELSPECS(groupName, newTree))
                 needNewTree = true;
 
@@ -655,7 +672,7 @@ namespace Opm {
         this->m_oilvaporizationproperties.update( currentStep, ovp );
     }
 
-    void Schedule::handleWCONProducer( const DeckKeyword& keyword, size_t currentStep, bool isPredictionMode, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
@@ -668,23 +685,10 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
 
-                updateWellStatus( well , currentStep , status );
-                if (isPredictionMode) {
-                    bool addGrupProductionControl = well.isAvailableForGroupControl(currentStep);
-                    WellProductionProperties properties;
-
-                    if (addGrupProductionControl)
-                        properties.addProductionControl(WellProducer::GRUP);
-
-                    properties.handleWCONPROD(record);
-
-                    if (well.setProductionProperties(currentStep, properties)) {
-                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
-                        this->addWellEvent( well.name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
-                    }
-                } else {
+                updateWellStatus( well_name , currentStep , status );
+                {
+                    auto& well = this->m_wells.at(well_name);
                     bool switching_from_injector = !well.isProducer(currentStep);
                     WellProductionProperties properties(well.getProductionProperties(currentStep));
                     properties.handleWCONHIST(record);
@@ -696,44 +700,150 @@ namespace Opm {
                         m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                         this->addWellEvent( well.name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                     }
-
-                    if ( !well.getAllowCrossFlow() && !isPredictionMode && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
-
+                    if ( !well.getAllowCrossFlow() && (properties.OilRate + properties.WaterRate + properties.GasRate) == 0 ) {
                         std::string msg =
                             "Well " + well.name() + " is a history matched well with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                         OpmLog::note(msg);
-                        updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT );
+                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                    }
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    bool switching_from_injector = !well2->isProducer();
+                    auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                    properties->handleWCONHIST(record);
+
+                    if (switching_from_injector) {
+                        properties->resetDefaultBHPLimit();
+                        well2->updateProducer(true);
+                    }
+
+                    if (well2->updateProduction(properties) || switching_from_injector) {
+                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
+                        this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
+                        this->updateWell(well2, currentStep);
+                    }
+                    if ( !well2->getAllowCrossFlow() && (properties->OilRate + properties->WaterRate + properties->GasRate) == 0 ) {
+                        std::string msg =
+                            "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
+                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                        OpmLog::note(msg);
+                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
                     }
                 }
             }
         }
     }
 
-    void Schedule::updateWellStatus( Well& well, size_t reportStep , WellCommon::StatusEnum status) {
-        if( well.setStatus( reportStep, status ) ) {
-            m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
-            this->addWellEvent( well.name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+
+    void Schedule::handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern =
+                record.getItem("WELL").getTrimmedString(0);
+
+            const WellCommon::StatusEnum status =
+                WellCommon::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+
+            auto well_names = this->wellNames(wellNamePattern, currentStep);
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+
+            for( const auto& well_name : well_names) {
+
+                updateWellStatus( well_name , currentStep , status );
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    bool switching_from_injector = !well.isProducer(currentStep);
+                    WellProductionProperties properties(well.getProductionProperties(currentStep));
+                    if (well.isAvailableForGroupControl(currentStep))
+                        properties.addProductionControl(WellProducer::GRUP);
+
+                    properties.handleWCONPROD(record);
+
+                    if (switching_from_injector)
+                        properties.resetDefaultBHPLimit();
+
+                    if (well.setProductionProperties(currentStep, properties)) {
+                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
+                        this->addWellEvent( well.name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
+                    }
+                }
+
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    bool switching_from_injector = !well2->isProducer();
+                    auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                    if (well2->isAvailableForGroupControl())
+                        properties->addProductionControl(WellProducer::GRUP);
+
+                    properties->handleWCONPROD(record);
+
+                    if (switching_from_injector)
+                        properties->resetDefaultBHPLimit();
+
+                    if (well2->updateProduction(properties)) {
+                        m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
+                        this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
+                        this->updateWell(well2, currentStep);
+                    }
+                }
+            }
         }
     }
 
 
-    void Schedule::handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        handleWCONProducer(keyword, currentStep, false, parseContext, errors);
+    void Schedule::updateWell(std::shared_ptr<Well2> well, size_t reportStep) {
+        auto& dynamic_state = this->wells_static.at(well->name());
+        dynamic_state.update(reportStep, well);
     }
 
-    void Schedule::handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        handleWCONProducer( keyword, currentStep, true, parseContext, errors);
+
+    /*
+      Function is quite dangerous - because if this is called while holding a
+      Well2 pointer that will go stale and needs to be refreshed.
+    */
+    bool Schedule::updateWellStatus( const std::string& well_name, size_t reportStep , WellCommon::StatusEnum status) {
+        bool update = false;
+        {
+            auto& well = this->m_wells.at(well_name);
+            if( well.setStatus( reportStep, status ) ) {
+                m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
+                this->addWellEvent( well.name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+                update = true;
+            }
+        }
+        {
+            auto& dynamic_state = this->wells_static.at(well_name);
+            auto well2 = std::make_shared<Well2>(*dynamic_state[reportStep]);
+            if (well2->updateStatus(status)) {
+                m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
+                this->addWellEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+                this->updateWell(well2, reportStep);
+                update = true;
+            }
+        }
+        return update;
     }
+
 
     void Schedule::handleWPIMULT( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = this->wellNames(wellNamePattern, currentStep);
-
-            for( const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                well.handleWPIMULT(record, currentStep);
+            const auto& well_names = this->wellNames(wellNamePattern, currentStep);
+            for (const auto& wname : well_names) {
+                {
+                    auto& well = this->m_wells.at(wname);
+                    well.handleWPIMULT(record, currentStep);
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(wname);
+                    auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
+                    if (well_ptr->handleWPIMULT(record))
+                        this->updateWell(well_ptr, currentStep);
+                }
             }
         }
     }
@@ -745,36 +855,121 @@ namespace Opm {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
-            const auto well_names = this->wellNames(wellNamePattern, currentStep);
+            auto well_names = wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
-            for(const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                WellInjectionProperties properties(well.getInjectionPropertiesCopy(currentStep));
-                properties.handleWCONINJE(record, well.isAvailableForGroupControl(currentStep), well.name(), section.unitSystem());
+            for( const auto& well_name : well_names ) {
+                WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+                updateWellStatus( well_name , currentStep , status );
+                {
+                    auto& well = this->m_wells.at(well_name);
 
-                updateWellStatus( well, currentStep, WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0)));
-                if (well.setInjectionProperties(currentStep, properties)) {
-                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
-                    this->addWellEvent( well.name(), ScheduleEvents::INJECTION_UPDATE, currentStep);
-                }
+                    WellInjectionProperties properties(well.getInjectionPropertiesCopy(currentStep));
+                    properties.handleWCONINJE(record, well.isAvailableForGroupControl(currentStep), well_name, section.unitSystem());
 
-                // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
-                // it should be turned off.
-                if ( ! well.getAllowCrossFlow()
-                     && ( (properties.hasInjectionControl(WellInjector::RATE) && properties.surfaceInjectionRate == 0)
-                       || (properties.hasInjectionControl(WellInjector::RESV) && properties.reservoirInjectionRate == 0) ) ) {
-                    std::string msg =
-                            "Well " + well.name() + " is an injector with zero rate where crossflow is banned. " +
+                    if (well.setInjectionProperties(currentStep, properties)) {
+                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                        this->addWellEvent( well.name(), ScheduleEvents::INJECTION_UPDATE, currentStep);
+                    }
+
+                    // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
+                    // it should be turned off.
+                    if ( ! well.getAllowCrossFlow()
+                         && ( (properties.hasInjectionControl(WellInjector::RATE) && properties.surfaceInjectionRate == 0)
+                              || (properties.hasInjectionControl(WellInjector::RESV) && properties.reservoirInjectionRate == 0) ) ) {
+                        std::string msg =
+                            "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    OpmLog::note(msg);
-                    updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT );
+                        OpmLog::note(msg);
+                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                    }
+                }
+                {
+                    bool update_well = false;
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                    injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name, section.unitSystem());
+
+                    update_well = well2->updateProducer(false);
+                    update_well |= well2->updateInjection(injection);
+                    if (update_well) {
+                        this->updateWell(well2, currentStep);
+                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                        this->addWellEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
+                    }
+
+                    // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
+                    // it should be turned off.
+                    if ( ! well2->getAllowCrossFlow()
+                         && ( (injection->hasInjectionControl(WellInjector::RATE) && injection->surfaceInjectionRate == 0)
+                              || (injection->hasInjectionControl(WellInjector::RESV) && injection->reservoirInjectionRate == 0) ) ) {
+                        std::string msg =
+                            "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
+                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                        OpmLog::note(msg);
+                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                    }
                 }
             }
         }
     }
 
+    void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        for( const auto& record : keyword ) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+            const auto well_names = wellNames( wellNamePattern, currentStep );
+
+            if (well_names.empty())
+                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+
+            for (const auto& well_name : well_names) {
+                updateWellStatus( well_name, currentStep, status );
+                {
+                    auto& well = this->m_wells.at(well_name);
+
+                    WellInjectionProperties properties(well.getInjectionPropertiesCopy(currentStep));
+                    properties.handleWCONINJH(record, well.isProducer(currentStep), well_name, section.unitSystem());
+                    if (well.setInjectionProperties(currentStep, properties)) {
+                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                        this->addWellEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
+                    }
+                    if ( ! well.getAllowCrossFlow() && (properties.surfaceInjectionRate == 0)) {
+                        std::string msg =
+                            "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
+                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                        OpmLog::note(msg);
+                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                    }
+                }
+                {
+                    bool update_well = false;
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                    injection->handleWCONINJH(record, well2->isProducer(), well_name, section.unitSystem());
+
+                    update_well = well2->updateProducer(false);
+                    update_well |= well2->updateInjection(injection);
+                    if (update_well) {
+                        this->updateWell(well2, currentStep);
+                        m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
+                        this->addWellEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
+                    }
+
+                    if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate == 0)) {
+                        std::string msg =
+                            "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
+                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                        OpmLog::note(msg);
+                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                    }
+                }
+            }
+        }
+    }
 
     void Schedule::handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
@@ -785,23 +980,20 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                WellPolymerProperties properties(well.getPolymerPropertiesCopy(currentStep));
-
-                properties.m_polymerConcentration = record.getItem("POLYMER_CONCENTRATION").getSIDouble(0);
-                properties.m_saltConcentration = record.getItem("SALT_CONCENTRATION").getSIDouble(0);
-
-                const auto& group_polymer_item = record.getItem("GROUP_POLYMER_CONCENTRATION");
-                const auto& group_salt_item = record.getItem("GROUP_SALT_CONCENTRATION");
-
-                if (!group_polymer_item.defaultApplied(0)) {
-                    throw std::logic_error("Sorry explicit setting of \'GROUP_POLYMER_CONCENTRATION\' is not supported!");
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    WellPolymerProperties properties(well.getPolymerPropertiesCopy(currentStep));
+                    properties.handleWPOLYMER(record);
+                    well.setPolymerProperties(currentStep, properties);
                 }
-
-                if (!group_salt_item.defaultApplied(0)) {
-                    throw std::logic_error("Sorry explicit setting of \'GROUP_SALT_CONCENTRATION\' is not supported!");
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
+                    polymer_properties->handleWPOLYMER(record);
+                    if (well2->updatePolymerProperties(polymer_properties))
+                        this->updateWell(well2, currentStep);
                 }
-                well.setPolymerProperties(currentStep, properties);
             }
         }
     }
@@ -812,19 +1004,26 @@ namespace Opm {
         for (const auto& record : keyword) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto well_names = wellNames(wellNamePattern, currentStep);
+            const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                if (well.isProducer(currentStep) ) {
-                    throw std::logic_error("WPMITAB keyword can not be applied to production well " + well.name() );
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    WellPolymerProperties properties(well.getPolymerPropertiesCopy(currentStep));
+                    properties.handleWPMITAB(record);
+                    well.setPolymerProperties(currentStep, properties);
                 }
-                WellPolymerProperties properties(well.getPolymerProperties(currentStep));
-                properties.m_plymwinjtable = record.getItem("TABLE_NUMBER").get<int>(0);
-                well.setPolymerProperties(currentStep, properties);
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
+                    polymer_properties->handleWPMITAB(record);
+                    if (well2->updatePolymerProperties(polymer_properties))
+                        this->updateWell(well2, currentStep);
+                }
             }
         }
     }
@@ -841,14 +1040,20 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                if (well.isProducer(currentStep) )
-                    throw std::logic_error("WSKPTAB can not be applied to production well " + well.name() );
-
-                WellPolymerProperties properties(well.getPolymerProperties(currentStep));
-                properties.m_skprwattable = record.getItem("TABLE_NUMBER_WATER").get<int>(0);
-                properties.m_skprpolytable = record.getItem("TABLE_NUMBER_POLYMER").get<int>(0);
-                well.setPolymerProperties(currentStep, properties);
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    WellPolymerProperties properties(well.getPolymerPropertiesCopy(currentStep));
+                    properties.handleWSKPTAB(record);
+                    well.setPolymerProperties(currentStep, properties);
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
+                    polymer_properties->handleWSKPTAB(record);
+                    if (well2->updatePolymerProperties(polymer_properties))
+                        this->updateWell(well2, currentStep);
+                }
             }
         }
     }
@@ -857,15 +1062,24 @@ namespace Opm {
     void Schedule::handleWECON( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            WellEconProductionLimits econ_production_limits(record);
             const auto well_names = wellNames( wellNamePattern , currentStep);
 
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                well.setEconProductionLimits(currentStep, econ_production_limits);
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    WellEconProductionLimits econ_production_limits(record);
+                    well.setEconProductionLimits(currentStep, econ_production_limits);
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    auto econ_limits = std::make_shared<WellEconProductionLimits>( record );
+                    if (well2->updateEconLimits(econ_limits))
+                        this->updateWell(well2, currentStep);
+                }
             }
         }
     }
@@ -880,8 +1094,16 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                well.setEfficiencyFactor(currentStep, efficiencyFactor);
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    well.setEfficiencyFactor(currentStep, efficiencyFactor);
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    if (well2->updateEfficiencyFactor(efficiencyFactor))
+                        this->updateWell(well2, currentStep);
+                }
             }
         }
     }
@@ -971,18 +1193,32 @@ namespace Opm {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , currentStep);
+            double fraction = record.getItem("SOLVENT_FRACTION").get< double >(0);
 
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                WellInjectionProperties injectionProperties = well.getInjectionProperties( currentStep );
-                if (well.isInjector( currentStep ) && injectionProperties.injectorType == WellInjector::GAS) {
-                    double fraction = record.getItem("SOLVENT_FRACTION").get< double >(0);
-                    well.setSolventFraction(currentStep, fraction);
-                } else {
-                    throw std::invalid_argument("WSOLVENT keyword can only be applied to Gas injectors");
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    WellInjectionProperties injectionProperties = well.getInjectionProperties( currentStep );
+                    if (well.isInjector( currentStep ) && injectionProperties.injectorType == WellInjector::GAS) {
+                        well.setSolventFraction(currentStep, fraction);
+                    } else {
+                        throw std::invalid_argument("WSOLVENT keyword can only be applied to Gas injectors");
+                    }
+                }
+                {
+                    const auto& well = this->getWell2(well_name, currentStep);
+                    const auto& inj = well.getInjectionProperties();
+                    if (!well.isProducer() && inj.injectorType == WellInjector::GAS) {
+                        if (well.getSolventFraction() != fraction) {
+                            auto new_well = std::make_shared<Well2>(well);
+                            new_well->updateSolventFraction(fraction);
+                            this->updateWell(new_well, currentStep);
+                        }
+                    } else
+                        throw std::invalid_argument("The WSOLVENT keyword can only be applied to gas injectors");
                 }
             }
         }
@@ -998,13 +1234,21 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                WellTracerProperties wellTracerProperties = well.getTracerProperties( currentStep );
                 double tracerConcentration = record.getItem("CONCENTRATION").get< double >(0);
                 const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
-                wellTracerProperties.setConcentration(tracerName, tracerConcentration);
-                well.setTracerProperties(currentStep, wellTracerProperties);
-
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    WellTracerProperties wellTracerProperties = well.getTracerProperties( currentStep );
+                    wellTracerProperties.setConcentration(tracerName, tracerConcentration);
+                    well.setTracerProperties(currentStep, wellTracerProperties);
+                }
+                {
+                    auto well = std::make_shared<Well2>( this->getWell2(well_name, currentStep));
+                    auto wellTracerProperties = std::make_shared<WellTracerProperties>( well->getTracerProperties() );
+                    wellTracerProperties->setConcentration(tracerName, tracerConcentration);
+                    if (well->updateTracer(wellTracerProperties))
+                        this->updateWell(well, currentStep);
+                }
             }
         }
     }
@@ -1013,7 +1257,7 @@ namespace Opm {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern, currentStep );
-
+            double temp = record.getItem("TEMP").getSIDouble(0);
             if (well_names.empty())
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
@@ -1024,11 +1268,25 @@ namespace Opm {
                 // modifying the injector properties for producer wells currently leads
                 // to a very weird segmentation fault downstream. For now, let's take the
                 // water route.
-                auto& well = this->m_wells.at(well_name);
-                if (well.isInjector(currentStep)) {
-                    WellInjectionProperties injectionProperties = well.getInjectionProperties(currentStep);
-                    injectionProperties.temperature = record.getItem("TEMP").getSIDouble(0);
-                    well.setInjectionProperties(currentStep, injectionProperties);
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    if (well.isInjector(currentStep)) {
+                        WellInjectionProperties injectionProperties = well.getInjectionProperties(currentStep);
+                        injectionProperties.temperature = temp;
+                        well.setInjectionProperties(currentStep, injectionProperties);
+                    }
+                }
+                {
+                    const auto& well = this->getWell2(well_name, currentStep);
+                    double current_temp = well.getInjectionProperties().temperature;
+                    if (current_temp != temp && !well.isProducer()) {
+                        auto& dynamic_state = this->wells_static.at(well_name);
+                        auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
+                        auto inj = std::make_shared<WellInjectionProperties>(well_ptr->getInjectionProperties());
+                        inj->temperature = temp;
+                        well_ptr->updateInjection(inj);
+                        this->updateWell(well_ptr, currentStep);
+                    }
                 }
             }
         }
@@ -1040,6 +1298,7 @@ namespace Opm {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto well_names = wellNames( wellNamePattern , currentStep);
+            double temp = record.getItem("TEMPERATURE").getSIDouble(0);
 
             if (well_names.empty())
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
@@ -1051,42 +1310,25 @@ namespace Opm {
                 // modifying the injector properties for producer wells currently leads
                 // to a very weird segmentation fault downstream. For now, let's take the
                 // water route.
-                auto& well = this->m_wells.at(well_name);
-                if (well.isInjector(currentStep)) {
-                    WellInjectionProperties injectionProperties = well.getInjectionProperties(currentStep);
-                    injectionProperties.temperature = record.getItem("TEMPERATURE").getSIDouble(0);
-                    well.setInjectionProperties(currentStep, injectionProperties);
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    if (well.isInjector(currentStep)) {
+                        WellInjectionProperties injectionProperties = well.getInjectionProperties(currentStep);
+                        injectionProperties.temperature = temp;
+                        well.setInjectionProperties(currentStep, injectionProperties);
+                    }
                 }
-            }
-        }
-    }
-
-    void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
-        for( const auto& record : keyword ) {
-            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
-            const auto well_names = wellNames( wellNamePattern, currentStep );
-
-            if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
-
-            for (const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                updateWellStatus( well, currentStep, status );
-
-                WellInjectionProperties properties(well.getInjectionPropertiesCopy(currentStep));
-                properties.handleWCONINJH(record, well.isProducer(currentStep), well.name(), section.unitSystem());
-                if (well.setInjectionProperties(currentStep, properties)) {
-                    m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
-                    this->addWellEvent( well.name(), ScheduleEvents::INJECTION_UPDATE, currentStep);
-                }
-
-                if ( ! well.getAllowCrossFlow() && (properties.surfaceInjectionRate == 0)) {
-                    std::string msg =
-                            "Well " + well.name() + " is an injector with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                    OpmLog::note(msg);
-                    updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT );
+                {
+                    const auto& well = this->getWell2(well_name, currentStep);
+                    double current_temp = well.getInjectionProperties().temperature;
+                    if (current_temp != temp && !well.isProducer()) {
+                        auto& dynamic_state = this->wells_static.at(well_name);
+                        auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
+                        auto inj = std::make_shared<WellInjectionProperties>(well_ptr->getInjectionProperties());
+                        inj->temperature = temp;
+                        well_ptr->updateInjection(inj);
+                        this->updateWell(well_ptr, currentStep);
+                    }
                 }
             }
         }
@@ -1096,9 +1338,20 @@ namespace Opm {
                                    size_t timestep ) {
 
         for( const auto& record : keyword ) {
-            const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
-            auto& well = this->m_wells.get(well_name);
-            well.handleCOMPLUMP(record, timestep);
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = this->wellNames(wellNamePattern, timestep);
+            for (const auto& wname : well_names) {
+                {
+                    auto& well = this->m_wells.at(wname);
+                    well.handleCOMPLUMP(record, timestep);
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(wname);
+                    auto well_ptr = std::make_shared<Well2>( *dynamic_state[timestep] );
+                    if (well_ptr->handleCOMPLUMP(record))
+                        this->updateWell(well_ptr, timestep);
+                }
+            }
         }
     }
 
@@ -1117,8 +1370,7 @@ namespace Opm {
         for( const auto& record : keyword ) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
-
-            const auto well_names = wellNames( wellNamePattern, currentStep, matching_wells );
+            const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
 
             if (well_names.empty())
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
@@ -1128,29 +1380,46 @@ namespace Opm {
              */
             if( conn_defaulted( record ) ) {
                 const auto well_status = WellCommon::StatusFromString( status_str );
-                for(const auto& well_name : well_names) {
-                    auto& well = this->m_wells.at(well_name);
-                    if( well_status == open && !well.canOpen(currentStep) ) {
-                        auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
-                        std::string msg = "Well " + well.name()
-                            + " where crossflow is banned has zero total rate."
-                            + " This well is prevented from opening at "
-                            + std::to_string( days ) + " days";
-                        OpmLog::note(msg);
-                    } else {
-                        this->updateWellStatus( well, currentStep, well_status );
-                        if (well_status == open)
-                            this->rft_config.addWellOpen(well_name, currentStep);
+                for (const auto& wname : well_names) {
+                    {
+                        auto& well = this->m_wells.at(wname);
+                        if( well.canOpen(currentStep)  || well_status != open)
+                            this->updateWellStatus( well.name(), currentStep, well_status );
+                    }
+                    {
+                        auto& dynamic_state = this->wells_static.at(wname);
+                        auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
+                        if( well_status == open && !well_ptr->canOpen() ) {
+                            auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
+                            std::string msg = "Well " + wname
+                                + " where crossflow is banned has zero total rate."
+                                + " This well is prevented from opening at "
+                                + std::to_string( days ) + " days";
+                            OpmLog::note(msg);
+                        } else {
+                            this->updateWellStatus( wname, currentStep, well_status );
+                            if (well_status == open)
+                                this->rft_config.addWellOpen(wname, currentStep);
+                        }
                     }
                 }
 
                 continue;
             }
 
-            for( const auto& well_name : well_names ) {
-                auto& well = this->m_wells.at(well_name);
+            for (const auto& wname : well_names) {
                 const auto comp_status = WellCompletion::StateEnumFromString( status_str );
-                well.handleWELOPEN(record, currentStep, comp_status);
+                {
+                    auto& well = this->m_wells.at(wname);
+                    well.handleWELOPEN(record, currentStep, comp_status);
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(wname);
+                    auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
+                    if (well_ptr->handleWELOPEN(record, comp_status))
+                        // The updateWell call breaks test at line 825 and 831 in ScheduleTests
+                        this->updateWell(well_ptr, currentStep);
+                }
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
             }
         }
@@ -1189,21 +1458,43 @@ namespace Opm {
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                if(well.isProducer(currentStep)){
-                    WellProductionProperties prop = well.getProductionPropertiesCopy(currentStep);
-                    prop.handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
-                    if (cmode == WellTarget::GUID)
-                        well.setGuideRate(currentStep, newValue);
+                {
+                    auto& well = this->m_wells.at(well_name);
+                    if(well.isProducer(currentStep)){
+                        WellProductionProperties prop = well.getProductionPropertiesCopy(currentStep);
+                        prop.handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                        if (cmode == WellTarget::GUID)
+                            well.setGuideRate(currentStep, newValue);
 
-                    well.setProductionProperties(currentStep, prop);
-                } else {
-                    WellInjectionProperties prop = well.getInjectionPropertiesCopy(currentStep);
-                    prop.handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
-                    if (cmode == WellTarget::GUID)
-                        well.setGuideRate(currentStep, newValue);
+                        well.setProductionProperties(currentStep, prop);
+                    } else {
+                        WellInjectionProperties prop = well.getInjectionPropertiesCopy(currentStep);
+                        prop.handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                        if (cmode == WellTarget::GUID)
+                            well.setGuideRate(currentStep, newValue);
 
-                    well.setInjectionProperties(currentStep, prop);
+                        well.setInjectionProperties(currentStep, prop);
+                    }
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                    bool update = false;
+                    if (well2->isProducer()) {
+                        auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                        prop->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                        update = well2->updateProduction(prop);
+                        if (cmode == WellTarget::GUID)
+                            update |= well2->updateWellGuideRate(newValue);
+                    } else {
+                        auto inj = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                        inj->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
+                        update = well2->updateInjection(inj);
+                        if (cmode == WellTarget::GUID)
+                            update |= well2->updateWellGuideRate(newValue);
+                    }
+                    if (update)
+                        this->updateWell(well2, currentStep);
                 }
             }
         }
@@ -1452,22 +1743,63 @@ namespace Opm {
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            auto well_names = wellNames(wellNamePattern, currentStep);
-            if (well_names.empty())
+            auto wellnames = this->wellNames(wellNamePattern, currentStep);
+            if (wellnames.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
-            for (const auto& well_name : well_names) {
-                auto& well = this->m_wells.at(well_name);
-                well.handleCOMPDAT(currentStep, record, grid, eclipseProperties);
+            for (const auto& name : wellnames) {
+                {
+                    auto * well = std::addressof(this->m_wells.at(name));
+                    well->handleCOMPDAT(currentStep, record, grid, eclipseProperties);
 
-                if (well.getConnections( currentStep ).allConnectionsShut()) {
-                    std::string msg =
-                        "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
-                        "The well is therefore also shut.";
-                    OpmLog::note(msg);
-                    updateWellStatus( well, currentStep, WellCommon::StatusEnum::SHUT);
+                    if (well->getConnections( currentStep ).allConnectionsShut()) {
+                        std::string msg =
+                            "All completions in well " + well->name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
+                            "The well is therefore also shut.";
+                        OpmLog::note(msg);
+                        updateWellStatus( well->name(), currentStep, WellCommon::StatusEnum::SHUT);
+                    }
                 }
-                this->addWellEvent(well.name(), ScheduleEvents::COMPLETION_CHANGE, currentStep);
+                {
+                    auto well2 = std::shared_ptr<Well2>(new Well2( this->getWell2(name, currentStep)));
+                    auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
+                    connections->loadCOMPDAT(record, grid, eclipseProperties);
+
+                    /*
+                      This block implements the following dubious logic.
+
+                        1. All competions are shut.
+                        2. A new open completion is added.
+                        3. A currently SHUT well is opened.
+
+                      This code assumes that the reason the well is initially
+                      shut is due to all the shut completions, if the well was
+                      explicitly shut for another reason the explicit opening of
+                      the well might be in error?
+                    */
+                    /*if (all_shut0) {
+                        if (!connections->allConnectionsShut()) {
+                            if (well2->getStatus() == WellCommon::StatusEnum::SHUT) {
+                                printf("Running all_shut inner loop\n");
+                                if (this->updateWellStatus(well2->name(), currentStep, WellCommon::StatusEnum::OPEN))
+                                    // Refresh pointer if the status has updated current slot. Ugly
+                                    well2 = std::shared_ptr<Well2>(new Well2(this->getWell2(name, currentStep)));
+                            }
+                        }
+                    }
+                    */
+                    if (well2->updateConnections(connections))
+                        this->updateWell(well2, currentStep);
+
+                    if (well2->getStatus() == WellCommon::StatusEnum::SHUT) {
+                        std::string msg =
+                            "All completions in well " + well2->name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
+                            "The well is therefore also shut.";
+                        OpmLog::note(msg);
+                    }
+
+                }
+                this->addWellEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
             }
         }
         m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, currentStep);
@@ -1478,34 +1810,61 @@ namespace Opm {
 
     void Schedule::handleWELSEGS( const DeckKeyword& keyword, size_t currentStep) {
         const auto& record1 = keyword.getRecord(0);
-        auto& well = this->m_wells.get(record1.getItem("WELL").getTrimmedString(0));
-        well.handleWELSEGS(keyword, currentStep);WellSegments newSegmentset;
+        const auto& wname = record1.getItem("WELL").getTrimmedString(0);
+        {
+            auto& well = this->m_wells.get(wname);
+            well.handleWELSEGS(keyword, currentStep);
+        }
+        {
+            auto& dynamic_state = this->wells_static.at(wname);
+            auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
+            if (well_ptr->handleWELSEGS(keyword))
+                this->updateWell(well_ptr, currentStep);
+        }
     }
 
     void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid) {
         const auto& record1 = keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
-        auto& well = this->m_wells.get( well_name );
-        well.handleCOMPSEGS(keyword, grid, currentStep);
+        {
+            auto& well = this->m_wells.get( well_name );
+            well.handleCOMPSEGS(keyword, grid, currentStep);
+        }
+        {
+            auto& dynamic_state = this->wells_static.at(well_name);
+            auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
+            if (well_ptr->handleCOMPSEGS(keyword, grid))
+                this->updateWell(well_ptr, currentStep);
+        }
     }
 
     void Schedule::handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
-            const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
-            auto& well = this->m_wells.get( wellName );
+            const auto well_names = this->wellNames(record.getItem("WELL").getTrimmedString(0), currentStep);
+            for (const auto& well_name : well_names) {
+              bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
+                double guide_rate = record.getItem("GUIDE_RATE").get< double >(0);
+                double scaling_factor = record.getItem("SCALING_FACTOR").get< double >(0);
+                GuideRate::GuideRatePhaseEnum phase = GuideRate::UNDEFINED;
+                if (!record.getItem("PHASE").defaultApplied(0)) {
+                    std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
+                    phase = GuideRate::GuideRatePhaseEnumFromString(guideRatePhase);
+                }
 
-            bool availableForGroupControl = DeckItem::to_bool( record.getItem("GROUP_CONTROLLED").getTrimmedString(0) );
-            well.setAvailableForGroupControl(currentStep, availableForGroupControl);
-
-            well.setGuideRate(currentStep, record.getItem("GUIDE_RATE").get< double >(0));
-
-            if (!record.getItem("PHASE").defaultApplied(0)) {
-                std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
-                well.setGuideRatePhase(currentStep, GuideRate::GuideRatePhaseEnumFromString(guideRatePhase));
-            } else
-                well.setGuideRatePhase(currentStep, GuideRate::UNDEFINED);
-
-            well.setGuideRateScalingFactor(currentStep, record.getItem("SCALING_FACTOR").get< double >(0));
+                {
+                    auto& well = this->m_wells.get( well_name );
+                    well.setAvailableForGroupControl(currentStep, availableForGroupControl);
+                    well.setGuideRate(currentStep, guide_rate);
+                    well.setGuideRatePhase(currentStep, phase);
+                    well.setGuideRateScalingFactor(currentStep, scaling_factor);
+                }
+                {
+                    auto& dynamic_state = this->wells_static.at(well_name);
+                    auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
+                    if (well_ptr->updateWellGuideRate(availableForGroupControl, guide_rate, phase, scaling_factor))
+                        this->updateWell(well_ptr, currentStep);
+                }
+            }
         }
     }
 
@@ -1516,7 +1875,7 @@ namespace Opm {
             const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
             const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
             newTree.update(childName, parentName);
-	    newTree.updateSeqIndex(childName, parentName);
+            newTree.updateSeqIndex(childName, parentName);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep );
@@ -1637,6 +1996,30 @@ namespace Opm {
                   wellConnectionOrder, allowCrossFlow, automaticShutIn);
 
         m_wells.insert( std::make_pair(wellName, well ));
+
+        {
+            wells_static.insert( std::make_pair(wellName, DynamicState<std::shared_ptr<Well2>>(m_timeMap, nullptr)));
+
+            auto& dynamic_state = wells_static.at(wellName);
+            const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
+            std::size_t insert_index = this->wells_static.size() - 1;
+            auto well_ptr = std::make_shared<Well2>(wellName,
+                                                    group,
+                                                    timeStep,
+                                                    insert_index,
+                                                    headI,
+                                                    headJ,
+                                                    refDepth,
+                                                    preferredPhase,
+                                                    this->global_whistctl_mode[timeStep],
+                                                    wellConnectionOrder);
+
+            well_ptr->updateCrossFlow(allowCrossFlow);
+            well_ptr->updateAutoShutin(automaticShutIn);
+            well_ptr->updateDrainageRadius(drainageRadius);
+
+            dynamic_state.update(timeStep, well_ptr);
+        }
         m_events.addEvent( ScheduleEvents::NEW_WELL , timeStep );
         well_events.insert( std::make_pair(wellName, Events(this->m_timeMap)));
         this->addWellEvent(wellName, ScheduleEvents::NEW_WELL, timeStep);
@@ -1647,7 +2030,8 @@ namespace Opm {
     }
 
     size_t Schedule::numWells(size_t timestep) const {
-        return this->getWells( timestep ).size();
+        auto well_names = this->wellNames(timestep);
+        return well_names.size();
     }
 
     bool Schedule::hasWell(const std::string& wellName) const {
@@ -1681,6 +2065,31 @@ namespace Opm {
                 } else {
                     for (const auto& well_name : group.getWells( timeStep ))
                         wells.push_back( getWell( well_name ));
+                }
+            }
+            return wells;
+        }
+    }
+
+    std::vector< const Well2* > Schedule::getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const {
+        if (!hasGroup(group_name))
+            throw std::invalid_argument("No such group: " + group_name);
+        {
+            const auto& group = getGroup( group_name );
+            std::vector<const Well2*> wells;
+
+            if (group.hasBeenDefined( timeStep )) {
+                const GroupTree& group_tree = getGroupTree( timeStep );
+                const auto& child_groups = group_tree.children( group_name );
+
+                if (child_groups.size() && query_mode == GroupWellQueryMode::Recursive) {
+                    for (const auto& child : child_groups) {
+                        const auto& child_wells = getChildWells2( child, timeStep, query_mode );
+                        wells.insert( wells.end() , child_wells.begin() , child_wells.end());
+                    }
+                } else {
+                    for (const auto& well_name : group.getWells( timeStep ))
+                        wells.push_back( &getWell2( well_name, timeStep ));
                 }
             }
             return wells;
@@ -1730,6 +2139,17 @@ namespace Opm {
         return std::addressof( m_wells.get( wellName ) );
     }
 
+    const Well2& Schedule::getWell2(const std::string& wellName, size_t timeStep) const {
+        if (this->wells_static.count(wellName) == 0)
+            throw std::invalid_argument("No such well: " + wellName);
+
+        const auto& dynamic_state = this->wells_static.at(wellName);
+        auto& well_ptr = dynamic_state.get(timeStep);
+        if (!well_ptr)
+            throw std::invalid_argument("Well: " + wellName + " not yet defined at step: " + std::to_string(timeStep));
+
+        return *well_ptr;
+    }
 
     /*
       Observe that this method only returns wells which have state ==
@@ -1791,9 +2211,10 @@ namespace Opm {
         if (star_pos != std::string::npos) {
             int flags = 0;
             std::vector<std::string> names;
-            for (const auto& well_pair : this->m_wells) {
+            for (const auto& well_pair : this->wells_static) {
                 if (fnmatch(pattern.c_str(), well_pair.first.c_str(), flags) == 0) {
-                    if (well_pair.second.firstTimeStep() <= timeStep)
+                    const auto& dynamic_state = well_pair.second;
+                    if (dynamic_state.get(timeStep))
                         names.push_back(well_pair.first);
                 }
             }
@@ -1807,8 +2228,8 @@ namespace Opm {
 
         // Normal well name without any special characters
         if (this->hasWell(pattern)) {
-            auto well = this->getWell(pattern);
-            if (well->firstTimeStep() <= timeStep)
+            const auto& dynamic_state = this->wells_static.at(pattern);
+            if (dynamic_state.get(timeStep))
                 return { pattern };
         }
         return {};
@@ -1836,8 +2257,8 @@ namespace Opm {
 
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
-	const size_t gseqIndex = m_groups.size();
-  m_groups.insert( std::make_pair( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } ));
+        const size_t gseqIndex = m_groups.size();
+        m_groups.insert( std::make_pair( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } ));
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
@@ -1908,13 +2329,24 @@ namespace Opm {
         return groups;
     }
 
-    void Schedule::addWellToGroup( Group& newGroup, Well& well , size_t timeStep) {
-        const std::string currentGroupName = well.getGroupName(timeStep);
-        if (currentGroupName != "") {
-            m_groups.at( currentGroupName ).delWell( timeStep, well.name() );
+    void Schedule::addWellToGroup( Group& newGroup, const std::string& wellName , size_t timeStep) {
+        {
+            const auto& tmp_well = this->m_wells.at(wellName);
+            const std::string currentGroupName = tmp_well.getGroupName(timeStep);
+            if (currentGroupName != "")
+                m_groups.at( currentGroupName ).delWell( timeStep, wellName );
         }
-        well.setGroupName(timeStep , newGroup.name());
-        newGroup.addWell(timeStep , well.name());
+        {
+            auto& well = this->m_wells.at(wellName);
+            well.setGroupName(timeStep , newGroup.name());
+            newGroup.addWell(timeStep , wellName);
+        }
+        {
+            auto& dynamic_state = this->wells_static.at(wellName);
+            auto well_ptr = std::make_shared<Well2>( *dynamic_state[timeStep] );
+            if (well_ptr->updateGroup(newGroup.name()))
+                this->updateWell(well_ptr, timeStep);
+        }
     }
 
 
@@ -1970,7 +2402,7 @@ namespace Opm {
             auto& well = well_pair.second;
             const auto& completions = well.getConnections(timestep);
             if( completions.allConnectionsShut() )
-                this->updateWellStatus( well, timestep, WellCommon::StatusEnum::SHUT);
+                this->updateWellStatus( well.name(), timestep, WellCommon::StatusEnum::SHUT);
         }
     }
 
@@ -1979,6 +2411,14 @@ namespace Opm {
         for (auto& well_pair : this->m_wells) {
             auto well = well_pair.second;
             well.filterConnections(grid);
+        }
+
+        for (auto& dynamic_pair : this->wells_static) {
+            auto& dynamic_state = dynamic_pair.second;
+            for (auto& well_pair : dynamic_state.unique()) {
+                if (well_pair.second)
+                    well_pair.second->filterConnections(grid);
+            }
         }
     }
 
@@ -2080,9 +2520,273 @@ namespace Opm {
 
     }
 
+#ifdef WELL_TEST
+    bool Schedule::checkWells(const ParseContext& parseContext, ErrorGuard& errors) const {
 
-#ifdef CHECK_WELLS
-    bool checkWells(const ParseContext& parseContext, ErrorGuard& errors) const {
+        /* Total number of wells defined */
+        if (this->m_wells.size() != this->wells_static.size())
+            parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, "Well size error", errors);
+
+        /* The names and ordering of the wells */
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            const auto& well2 = *(dynamic_state.back());
+
+            if (well.name() != well2.name())
+                parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, "Wrong well name/ordering", errors);
+        }
+
+        /* When do they open */
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            if (dynamic_state.find_not(nullptr) != static_cast<int>(well.firstTimeStep()))
+                parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, "Well open time error", errors);
+
+            const auto& well2 = this->getWell2(well.name(), this->size() - 1);
+            if (well2.firstTimeStep() != well.firstTimeStep())
+                parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, "Well open time error", errors);
+        }
+
+        /* Group membership */
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                if (well2.groupName() != well.getGroupName(step)) {
+                    std::string msg = "Wrong group (" + well2.groupName() + ") for well: " + well2.name() + " at step: " + std::to_string(step) + " expected: " + well.getGroupName(step);
+                    parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                }
+            }
+        }
+
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                if (well2.getStatus() != well.getStatus(step)) {
+                    std::string msg = "Status difference in well: " + well2.name() + " at step: " + std::to_string(step) + " " + WellCommon::Status2String(well.getStatus(step)) + "/" + WellCommon::Status2String(well2.getStatus());
+                    parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                }
+            }
+        }
+
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                if (!well2.isProducer()) {
+                    printf("Sjekker INJ properties for %s:%ld \n", well2.name().c_str(), step);
+                    if (well2.getInjectionProperties() != well.getInjectionProperties(step)) {
+                        std::cout << "Injection difference in well: " + well2.name() + " at step: " + std::to_string(step) + " isProducer: " + std::to_string(well2.isProducer()) + " " + std::to_string(well.isProducer(step)) << std::endl;
+                        std::cout << well2.getInjectionProperties() << std::endl << well.getInjectionProperties(step) << std::endl << std::endl;
+
+                        std::string msg = "Injection difference in well: " + well2.name() + " at step: " + std::to_string(step);
+                        parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                    }
+                }
+            }
+        }
+
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                if (well2.isProducer()) {
+                    if (well2.getProductionProperties() != well.getProductionProperties(step)) {
+                        std::cout << "Production difference in well: " + well2.name() + " at step: " + std::to_string(step) + " isProducer: " + std::to_string(well2.isProducer()) + " " + std::to_string(well.isProducer(step)) << std::endl;
+                        std::cout << well2.getProductionProperties() << std::endl << well.getProductionProperties(step) << std::endl << std::endl;
+
+                        std::string msg = "Production difference in well: " + well2.name() + " at step: " + std::to_string(step);
+                        parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                    }
+                }
+            }
+        }
+
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                if (well2.getTracerProperties() != well.getTracerProperties(step)) {
+                    std::string msg = "Tracer difference in well: " + well2.name() + " at step: " + std::to_string(step);
+                    parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                }
+            }
+        }
+
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                if (well2.getPolymerProperties() != well.getPolymerProperties(step)) {
+                    std::string msg = "Polymer difference in well: " + well2.name() + " at step: " + std::to_string(step);
+                    parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                }
+            }
+        }
+
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                if (well2.getEconLimits() != well.getEconProductionLimits(step)) {
+                    std::string msg = "ECON LIMITS difference in well: " + well2.name() + " at step: " + std::to_string(step);
+                    parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                }
+            }
+        }
+
+
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                bool equal = true;
+                if (well2.getHeadI() != well.getHeadI(step))
+                    equal = false;
+
+                if (well2.getHeadJ() != well.getHeadJ(step))
+                    equal = false;
+
+                if (well2.getDrainageRadius() != well.getDrainageRadius(step))
+                    equal = false;
+
+                if (well2.isAvailableForGroupControl() != well.isAvailableForGroupControl(step))
+                     equal = false;
+
+                if (well2.getGuideRate() != well.getGuideRate(step))
+                    equal = false;
+
+                if (well2.getGuideRatePhase() != well.getGuideRatePhase(step))
+                    equal = false;
+
+                if (well2.getGuideRateScalingFactor() != well.getGuideRateScalingFactor(step))
+                    equal = false;
+
+                if (well2.isProducer() != well.isProducer(step))
+                    equal = false;
+
+                if (well2.getEfficiencyFactor() != well.getEfficiencyFactor(step))
+                    equal = false;
+
+                if (well2.getSolventFraction() != well.getSolventFraction(step))
+                    equal = false;
+
+                if (well2.isMultiSegment() != well.isMultiSegment(step))
+                    equal = false;
+
+                // The getRefdepth() function can "legitemately" blow up if the
+                // reference depth has been defaulted and the well has no
+                // connections.
+                try {
+                    double ref_depth = well.getRefDepth(step);
+                    if (well2.getRefDepth() != ref_depth)
+                        equal = false;
+                } catch(const std::invalid_argument& exc) {
+                    try {
+                         well2.getRefDepth();
+                        equal = false;
+                    } catch(const std::invalid_argument& exc) {
+                        //
+                    }
+                }
+
+                if (!equal) {
+                    std::string msg = "Difference in scalar property for well: " + well2.name() + " at step: " + std::to_string(step);
+                    parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                }
+            }
+        }
+
+        if (this->size() > 0) {
+            for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+                const auto& well = this->m_wells.iget(well_index);
+                const auto& dynamic_state = this->wells_static.iget(well_index);
+                auto last_step = this->size() - 1;
+                const auto& well2 = *(dynamic_state[last_step]);
+                bool equal = true;
+
+
+                if (well2.getWellConnectionOrdering() != well.getWellConnectionOrdering())
+                    equal = false;
+
+                if (well2.getPreferredPhase() != well.getPreferredPhase())
+                    equal = false;
+
+                if (well2.getAllowCrossFlow() != well.getAllowCrossFlow())
+                    equal = false;
+
+                if (well2.getAutomaticShutIn() != well.getAutomaticShutIn())
+                    equal = false;
+
+                if (well2.seqIndex() != well.seqIndex())
+                    equal = false;
+
+                if (!equal) {
+                    std::string msg = "DIfference in scalar property for well: " + well2.name();
+                    parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                }
+            }
+        }
+
+
+        /* Check connections, completions and segments*/
+        for (std::size_t well_index = 0; well_index < this->wells_static.size(); well_index++) {
+            const auto& well = this->m_wells.iget(well_index);
+            const auto& dynamic_state = this->wells_static.iget(well_index);
+            auto first_step = dynamic_state.find_not(nullptr);
+
+            for (std::size_t step = first_step; step < this->size(); step++) {
+                const auto& well2 = *(dynamic_state[step]);
+                {
+                    const auto& conn1 = well.getConnections(step);
+                    const auto& conn2 = well2.getConnections();
+
+                    if (conn1 != conn2)
+                        parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, "Connection error in WellTest for well:" + well2.name() + " at step: " + std::to_string(step), errors);
+                }
+                {
+                    const auto& compl1 = well.getCompletions(step);
+                    const auto& compl2 = well2.getCompletions();
+
+                    if (compl1 != compl2)
+                        parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, "Completion error", errors);
+                }
+
+                if (well2.isMultiSegment()) {
+                    const auto& segment1 = well.getWellSegments(step);
+                    const auto& segment2 = well2.getSegments();
+                    if (segment1 != segment2) {
+                        std::cout << segment1 << std::endl;
+                        std::cout << "------------------------------------------" << std::endl;
+                        std::cout << segment2 << std::endl;
+                        parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, "Segment error", errors);
+                    }
+                }
+            }
+        }
+
+
+        printf("Wells checked \n");
         return true;
     }
 #endif
