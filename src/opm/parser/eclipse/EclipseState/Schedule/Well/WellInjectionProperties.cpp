@@ -248,4 +248,20 @@ namespace Opm {
             << "control mode: "     << wp.controlMode << " }";
     }
 
+
+    InjectionControls WellInjectionProperties::controls(const SummaryState& st) const {
+        InjectionControls controls(this->injectionControls);
+
+        controls.surface_rate = this->surfaceInjectionRate;
+        controls.reservoir_rate = this->reservoirInjectionRate;
+        controls.bhp_limit = this->BHPLimit;
+        controls.thp_limit = this->THPLimit;
+        controls.temperature = this->temperature;
+        controls.injector_type = this->injectorType;
+        controls.cmode = this->controlMode;
+        controls.vfp_table_number = this->VFPTableNumber;
+        controls.injector_type = this->injectorType;
+
+        return controls;
+    }
 }

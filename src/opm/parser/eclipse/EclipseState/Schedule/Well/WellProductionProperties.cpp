@@ -267,4 +267,25 @@ namespace Opm {
         return BHPLimit;
     }
 
+
+    ProductionControls WellProductionProperties::controls(const SummaryState& st) const {
+        ProductionControls controls(this->m_productionControls);
+
+        controls.oil_rate = this->OilRate;
+        controls.water_rate = this->WaterRate;
+        controls.gas_rate = this->GasRate;
+        controls.liquid_rate = this->LiquidRate;
+        controls.resv_rate = this->ResVRate;
+        controls.bhp_limit = this->BHPLimit;
+        controls.thp_limit= this->THPLimit;
+        controls.bhp_history = this->BHPH;
+        controls.thp_history = this->THPH;
+        controls.vfp_table_number = this->VFPTableNumber;
+        controls.alq_value = this->ALQValue;
+        controls.cmode = this->controlMode;
+
+        return controls;
+    }
+
+
 } // namespace Opm

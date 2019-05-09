@@ -511,6 +511,8 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp
