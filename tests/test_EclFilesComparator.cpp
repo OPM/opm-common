@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(deviation) {
     dev = ECLFilesComparator::calculateDeviations(a,b);
 
     BOOST_CHECK_EQUAL(dev.abs, 3.0);
-    BOOST_CHECK_EQUAL(dev.rel, -1);
+    BOOST_CHECK_EQUAL(dev.rel, -1.0);
 }
 
 
