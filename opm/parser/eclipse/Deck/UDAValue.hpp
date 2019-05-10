@@ -31,8 +31,8 @@ namespace Opm {
 class UDAValue {
 public:
     UDAValue();
-    UDAValue(double);
-    UDAValue(const std::string&);
+    explicit UDAValue(double);
+    explicit UDAValue(const std::string&);
 
     template<typename T>
     T get() const;
