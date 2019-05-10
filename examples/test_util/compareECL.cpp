@@ -26,8 +26,8 @@
 static void printHelp() {
     std::cout << "\ncompareECL compares ECLIPSE files (restart (.RST), unified restart (.UNRST), initial (.INIT), summary (.SMRY), unified summary (.UNSMRY) or .RFT) and gridsizes (from .EGRID or .GRID file) from two simulations.\n"
               << "The program takes four arguments:\n\n"
-              << "1. Case number 1 (full path without extension)\n"
-              << "2. Case number 2 (full path without extension)\n"
+              << "1. Case number 1, reference case (full path without extension)\n"
+              << "2. Case number 2, test case (full path without extension)\n"
               << "3. Absolute tolerance\n"
               << "4. Relative tolerance (between 0 and 1)\n\n"
               << "In addition, the program takes these options (which must be given before the arguments):\n\n"

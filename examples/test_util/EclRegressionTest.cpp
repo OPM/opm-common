@@ -318,17 +318,21 @@ void ECLRegressionTest::loadGrids()
     foundEGrid1 = checkFileName(rootName1, "EGRID", fileName1);
     foundEGrid2 = checkFileName(rootName2, "EGRID", fileName2);
 
-    if (foundEGrid1 && foundEGrid2) {
+    if (foundEGrid1) {
         std::cout << "\nLoading EGrid " << fileName1 << "  .... ";
         grid1 = new EGrid(fileName1);
         std::cout << " done." << std::endl;
-
+    }
+    
+    if (foundEGrid2) {
         std::cout << "Loading EGrid " << fileName2 << "  .... ";
         grid2 = new EGrid(fileName2);
         std::cout << " done." << std::endl;
-    } else {
+    }
+    
+    if ((not foundEGrid1) || (not foundEGrid2)) {
         std::cout << "\nWarning! Both grids could not be loaded. Not possible to reference cell values to grid indices." << std::endl;
-        std::cout << "Grid compare will also fail. SMRY, RFT, UNRST and INIT files can be checked \n" << std::endl;
+        std::cout << "Grid compare may also fail. SMRY, RFT, UNRST and INIT files can be checked \n" << std::endl;
     }
 }
 
@@ -336,8 +340,17 @@ void ECLRegressionTest::loadGrids()
 void ECLRegressionTest::gridCompare()
 {
     deviations.clear();
-
+    
+    if ((grid1) && (not grid2)){
+        std::string message ="test case egrid file " + rootName2 + ".EGRID could not be loaded";
+	std::cout << message << std::endl;
+        OPM_THROW(std::runtime_error, message);
+    }
+    
     if (grid1 && grid2) {
+
+        std::cout << "comparing grids " << std::endl;
+    
         const auto& ijk1 = grid1->dimension();
         const auto& ijk2 = grid2->dimension();
 
@@ -395,7 +408,7 @@ void ECLRegressionTest::gridCompare()
 
         std::cout << "X, Y and Z coordinates " << " ... ";
 
-        std::vector<double> X1(8,0.0), Y1(8,0.0), Z1(8,0.0);
+        std::vector<double> X1(8,0.0), Y1(8,0.0) , Z1(8,0.0);
         std::vector<double> X2(8,0.0), Y2(8,0.0), Z2(8,0.0);
 
         for (int k = 0; k < ijk1[2]; k++) {
@@ -489,18 +502,27 @@ void ECLRegressionTest::gridCompare()
         if (!deviations.empty()) {
             printDeviationReport();
         }
+        
     } else {
-        std::cout << "\n!Warning, grid files not found, hence grids are not compared. \n" << std::endl;
+        std::cout << "\n!Warning, grid files not found, hence not compared. \n" << std::endl;
     }
+    
 }
 
 
 void ECLRegressionTest::results_init()
 {
     std::string fileName1, fileName2;
+
     bool foundInit1 = checkFileName(rootName1, "INIT", fileName1);
     bool foundInit2 = checkFileName(rootName2, "INIT", fileName2);
 
+    if ((foundInit1) && (not foundInit2)){
+        std::string message ="test case init file " + rootName2 + ".INIT not found";
+	std::cout << message << std::endl;
+        OPM_THROW(std::runtime_error, message);
+    }
+    
     if (foundInit1 && foundInit2) {
         EclFile init1(fileName1);
         std::cout << "\nLoading INIT file " << fileName1 << "  .... done" << std::endl;
@@ -591,8 +613,9 @@ void ECLRegressionTest::results_init()
             }
         }
     } else {
-        std::cout << "\n!Warning, init files not found, hence init files are not compared. \n" << std::endl;
+        std::cout << "\n!Warning, init files not found, hence not compared. \n" << std::endl;
     }
+    
 }
 
 
@@ -602,6 +625,12 @@ void ECLRegressionTest::results_rst()
     bool foundRst1 = checkFileName(rootName1,"UNRST",fileName1);
     bool foundRst2 = checkFileName(rootName2,"UNRST",fileName2);
 
+    if ((foundRst1) && (not foundRst2)){
+        std::string message ="test case restart file " + rootName2 + ".UNRST not found";
+	std::cout << message << std::endl;
+        OPM_THROW(std::runtime_error, message);
+    }
+    
     if (foundRst1 && foundRst2) {
         ERst rst1(fileName1);
         std::cout << "\nLoading restart file " << fileName1 << "  .... done" << std::endl;
@@ -728,7 +757,7 @@ void ECLRegressionTest::results_rst()
                     std::cout << "Comparing " << keywords1[i] << " ... ";
 
                     if (arrayType1[i] == EIOD::INTE) {
-                        auto vect1 = rst1.getRst<int>(keywords1[i], seqn);
+		        auto vect1 = rst1.getRst<int>(keywords1[i], seqn);
                         auto vect2 = rst2.getRst<int>(keywords2[ind2], seqn);
                         compareVectors(vect1, vect2, keywords1[i], reference);
                     } else if (arrayType1[i] == EIOD::REAL) {
@@ -763,8 +792,9 @@ void ECLRegressionTest::results_rst()
             printDeviationReport();
         }
     } else {
-        std::cout << "\n!Warning, restart files not found, hence restart files are not compared. \n" << std::endl;
+        std::cout << "\n!Warning, restart files not found, hence not compared. \n" << std::endl;
     }
+
 }
 
 
@@ -774,6 +804,12 @@ void ECLRegressionTest::results_smry()
     bool foundSmspec1 = checkFileName(rootName1, "SMSPEC", fileName1);
     bool foundSmspec2 = checkFileName(rootName2, "SMSPEC", fileName2);
 
+    if ((foundSmspec1) && (not foundSmspec2)){
+        std::string message ="test case summary file " + rootName2 + ".SMSPEC not found";
+	std::cout << message << std::endl;
+        OPM_THROW(std::runtime_error, message);
+    }
+    
     if (foundSmspec1 && foundSmspec2) {
         ESmry smry1(fileName1, loadBaseRunData);
         std::cout << "\nLoading summary file " << fileName1 << "  .... done" << std::endl;
@@ -849,8 +885,9 @@ void ECLRegressionTest::results_smry()
             }
         }
     } else {
-        std::cout << "\n!Warning, summary files not found, hence summary files are not compared. \n" << std::endl;
+        std::cout << "\n!Warning, summary files not found, hence not compared. \n" << std::endl;
     }
+    
 }
 
 
@@ -859,6 +896,12 @@ void ECLRegressionTest::results_rft()
     std::string fileName1, fileName2;
     bool foundRft1 = checkFileName(rootName1, "RFT", fileName1);
     bool foundRft2 = checkFileName(rootName2, "RFT", fileName2);
+
+    if ((foundRft1) && (not foundRft2)){
+        std::string message ="test case rft file " + rootName2 + ".RFT not found";
+	std::cout << message << std::endl;
+        OPM_THROW(std::runtime_error, message);
+    }
 
     if (foundRft1 && foundRft2) {
         ERft rft1(fileName1);
@@ -973,7 +1016,7 @@ void ECLRegressionTest::results_rft()
             printDeviationReport();
         }
     } else {
-        std::cout << "\n!Warning, rft files not found, hence rft files are not compared. \n" << std::endl;
+        std::cout << "\n!Warning, rft files not found, hence not compared. \n" << std::endl;
     }
 }
 
