@@ -75,6 +75,7 @@ namespace Opm {
         void handleWCONHIST( const DeckRecord& record);
         void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
         void resetDefaultBHPLimit();
+        void clearControls();
 
     private:
         int m_productionControls = 0;

@@ -757,6 +757,9 @@ namespace Opm {
                     auto& well = this->m_wells.at(well_name);
                     bool switching_from_injector = !well.isProducer(currentStep);
                     WellProductionProperties properties(well.getProductionProperties(currentStep));
+
+                    properties.clearControls();
+
                     if (well.isAvailableForGroupControl(currentStep))
                         properties.addProductionControl(WellProducer::GRUP);
 
@@ -776,6 +779,9 @@ namespace Opm {
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool switching_from_injector = !well2->isProducer();
                     auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+
+                    properties->clearControls();
+
                     if (well2->isAvailableForGroupControl())
                         properties->addProductionControl(WellProducer::GRUP);
 

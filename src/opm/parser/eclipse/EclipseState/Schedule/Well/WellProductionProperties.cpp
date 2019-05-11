@@ -68,7 +68,8 @@ namespace Opm {
             cmode = wp::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
 
         // clearing the existing targets/limits
-        m_productionControls = 0;
+        clearControls();
+
         if (effectiveHistoryProductionControl(cmode)) {
             this->addProductionControl( cmode );
             this->controlMode = cmode;
@@ -117,6 +118,7 @@ namespace Opm {
 
 
         this->init_rates(record);
+
         for( const auto& cmode : modes ) {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
 
@@ -251,6 +253,10 @@ namespace Opm {
 
     void WellProductionProperties::resetDefaultBHPLimit() {
         BHPLimit = 1. * unit::atm;
+    }
+
+    void WellProductionProperties::clearControls() {
+        m_productionControls = 0;
     }
 
     void WellProductionProperties::setBHPLimit(const double limit) {
