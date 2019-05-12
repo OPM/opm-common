@@ -1669,6 +1669,89 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
     BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::LRAT) );
 }
 
+BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
+    Opm::Parser parser;
+    std::string input =
+            "START             -- 0 \n"
+            "19 JUN 2007 / \n"
+            "SCHEDULE\n"
+            "DATES             -- 1\n"
+            " 10  OKT 2008 / \n"
+            "/\n"
+            "WELSPECS\n"
+            "    'P1'       'OP'   9   9 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'P2'       'OP'   5   5 1*     'OIL' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "    'I'       'OP'   1   1 1*     'WATER' 1*      1*  1*   1*  1*   1*  1*  / \n"
+            "/\n"
+            "COMPDAT\n"
+            " 'P1'  9  9   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P1'  9  9   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'P2'  5  5   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            " 'P2'  5  5   2   2 'OPEN' 1*   46.825   0.311  4332.346 1*  1*  'X'  22.123 / \n"
+            " 'I'  1  1   1   1 'OPEN' 1*   32.948   0.311  3047.839 1*  1*  'X'  22.100 / \n"
+            "/\n"
+            "WCONHIST\n"
+            " 'P1' 'OPEN' 'ORAT' 5*/ \n"
+            " 'P2' 'OPEN' 'ORAT' 5*/ \n"
+            "/\n"
+            "DATES             -- 2\n"
+            " 15  OKT 2008 / \n"
+            "/\n"
+            "WCONPROD\n"
+            " 'P1' 'OPEN' 'GRAT' 1*    200.0 300.0 / \n"
+            " 'P2' 'OPEN' 'WRAT' 1*    100.0 300.0 / \n"
+            "/\n"
+            "DATES             -- 3\n"
+            " 18  OKT 2008 / \n"
+            "/\n"
+            ;
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck);
+    Schedule schedule(deck, grid , eclipseProperties, runspec);
+    {
+        auto* well_p1 = schedule.getWell("P1");
+        auto* well_p2 = schedule.getWell("P2");
+
+        //Start
+        BOOST_CHECK_EQUAL(well_p1->getProductionProperties(0).controlMode, Opm::WellProducer::CMODE_UNDEFINED);
+        BOOST_CHECK_EQUAL(well_p2->getProductionProperties(0).controlMode, Opm::WellProducer::CMODE_UNDEFINED);
+
+        //10  OKT 2008
+        BOOST_CHECK_EQUAL(well_p1->getProductionProperties(1).controlMode, Opm::WellProducer::ORAT);
+        BOOST_CHECK_EQUAL(well_p2->getProductionProperties(1).controlMode, Opm::WellProducer::ORAT);
+
+        //15  OKT 2008
+        BOOST_CHECK_EQUAL(well_p1->getProductionProperties(2).controlMode, Opm::WellProducer::GRAT);
+        BOOST_CHECK(well_p1->getProductionProperties(2).hasProductionControl(Opm::WellProducer::WRAT) );
+        BOOST_CHECK_EQUAL(well_p2->getProductionProperties(2).controlMode, Opm::WellProducer::WRAT);
+        BOOST_CHECK(well_p2->getProductionProperties(2).hasProductionControl(Opm::WellProducer::GRAT) );
+        // the previous control limits/targets should not stay
+        BOOST_CHECK( !well_p1->getProductionProperties(2).hasProductionControl(Opm::WellProducer::ORAT) );
+        BOOST_CHECK( !well_p2->getProductionProperties(2).hasProductionControl(Opm::WellProducer::ORAT) );
+    }
+
+    //Start
+    BOOST_CHECK_THROW(schedule.getWell2("P1", 0), std::invalid_argument);
+    BOOST_CHECK_THROW(schedule.getWell2("P2", 0), std::invalid_argument);
+
+    //10  OKT 2008
+    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
+
+    //15  OKT 2008
+    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 2).getProductionProperties().controlMode, Opm::WellProducer::GRAT);
+    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::WRAT) );
+    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 2).getProductionProperties().controlMode, Opm::WellProducer::WRAT);
+    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::GRAT) );
+    // the previous control limits/targets should not stay
+    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
+}
+
 BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
     Opm::Parser parser;
     std::string input =
