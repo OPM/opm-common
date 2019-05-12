@@ -432,22 +432,22 @@ END
     {
         auto state = Opm::SummaryState{};
 
-	state.add("GOPR:GRP1",   235.);
-	state.add("GGPR:GRP1",   100237.);
-	state.add("GWPR:GRP1",   239.);
+	state.update("GOPR:GRP1",   235.);
+	state.update("GGPR:GRP1",   100237.);
+	state.update("GWPR:GRP1",   239.);
 
-	state.add("GOPR:WGRP1",   23.);
-	state.add("GGPR:WGRP1",   50237.);
-	state.add("GWPR:WGRP1",   29.);
+	state.update("GOPR:WGRP1",   23.);
+	state.update("GGPR:WGRP1",   50237.);
+	state.update("GWPR:WGRP1",   29.);
 
 
-	state.add("GOPR:WGRP2",   43.);
-	state.add("GGPR:WGRP2",   70237.);
-	state.add("GWPR:WGRP2",   59.);
+	state.update("GOPR:WGRP2",   43.);
+	state.update("GGPR:WGRP2",   70237.);
+	state.update("GWPR:WGRP2",   59.);
 	
-	state.add("FOPR",   3456.);
-	state.add("FGPR",   2003456.);
-	state.add("FWPR",   5678.);
+	state.update("FOPR",   3456.);
+	state.update("FGPR",   2003456.);
+	state.update("FWPR",   5678.);
 
 	return state;
     }

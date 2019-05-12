@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
 
 BOOST_AUTO_TEST_CASE(TestContext) {
     Opm::SummaryState st;
-    st.add_well_var("OP1", "WOPR", 100);
+    st.update_well_var("OP1", "WOPR", 100);
     Opm::ActionContext context(st);
 
     BOOST_REQUIRE_THROW(context.get("func", "arg"), std::out_of_range);
@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(LGR) {
 
 BOOST_AUTO_TEST_CASE(ActionContextTest) {
     SummaryState st;
-    st.add("WWCT:OP1", 100);
+    st.update("WWCT:OP1", 100);
     ActionContext context(st);
 
 
@@ -490,9 +490,9 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells) {
     SummaryState st;
     std::vector<std::string> matching_wells;
 
-    st.add_well_var("OPX", "WOPR", 0);
-    st.add_well_var("OPY", "WOPR", 0.50);
-    st.add_well_var("OPZ", "WOPR", 2.0);
+    st.update_well_var("OPX", "WOPR", 0);
+    st.update_well_var("OPY", "WOPR", 0.50);
+    st.update_well_var("OPZ", "WOPR", 2.0);
 
     ActionContext context(st);
     BOOST_CHECK( ast.eval(context, matching_wells) );
@@ -508,13 +508,13 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
   std::vector<std::string> matching_wells1;
   std::vector<std::string> matching_wells2;
 
-  st.add_well_var("PX", "WOPR", 0);
-  st.add_well_var("PY", "WOPR", 0.50);
-  st.add_well_var("PZ", "WOPR", 2.0);
+  st.update_well_var("PX", "WOPR", 0);
+  st.update_well_var("PY", "WOPR", 0.50);
+  st.update_well_var("PZ", "WOPR", 2.0);
 
-  st.add_well_var("IX", "WOPR", 0);
-  st.add_well_var("IY", "WOPR", 0.50);
-  st.add_well_var("IZ", "WOPR", 2.0);
+  st.update_well_var("IX", "WOPR", 0);
+  st.update_well_var("IY", "WOPR", 0.50);
+  st.update_well_var("IZ", "WOPR", 2.0);
 
   ActionContext context(st);
   BOOST_CHECK( ast1.eval(context, matching_wells1) );
@@ -534,13 +534,13 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
     SummaryState st;
     std::vector<std::string> matching_wells;
 
-    st.add_well_var("OPX", "WOPR", 0);
-    st.add_well_var("OPY", "WOPR", 0.50);
-    st.add_well_var("OPZ", "WOPR", 2.0);      // The WOPR check matches this well.
+    st.update_well_var("OPX", "WOPR", 0);
+    st.update_well_var("OPY", "WOPR", 0.50);
+    st.update_well_var("OPZ", "WOPR", 2.0);      // The WOPR check matches this well.
 
-    st.add_well_var("OPX", "WWCT", 1.0);
-    st.add_well_var("OPY", "WWCT", 0.0);     // The WWCT check matches this well.
-    st.add_well_var("OPZ", "WWCT", 1.0);
+    st.update_well_var("OPX", "WWCT", 1.0);
+    st.update_well_var("OPY", "WWCT", 0.0);     // The WWCT check matches this well.
+    st.update_well_var("OPZ", "WWCT", 1.0);
 
     ActionContext context(st);
     BOOST_CHECK( ast.eval(context, matching_wells) );
@@ -556,13 +556,13 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
     SummaryState st;
     std::vector<std::string> matching_wells;
 
-    st.add_well_var("OPX", "WOPR", 0);
-    st.add_well_var("OPY", "WOPR", 0.50);
-    st.add_well_var("OPZ", "WOPR", 2.0);      // The WOPR check matches this well.
+    st.update_well_var("OPX", "WOPR", 0);
+    st.update_well_var("OPY", "WOPR", 0.50);
+    st.update_well_var("OPZ", "WOPR", 2.0);      // The WOPR check matches this well.
 
-    st.add_well_var("OPX", "WWCT", 1.0);
-    st.add_well_var("OPY", "WWCT", 0.0);     // The WWCT check matches this well.
-    st.add_well_var("OPZ", "WWCT", 1.0);
+    st.update_well_var("OPX", "WWCT", 1.0);
+    st.update_well_var("OPY", "WWCT", 0.0);     // The WWCT check matches this well.
+    st.update_well_var("OPZ", "WWCT", 1.0);
 
     ActionContext context(st);
     BOOST_CHECK( ast.eval(context, matching_wells) );

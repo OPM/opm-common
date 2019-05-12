@@ -498,37 +498,37 @@ END
     {
         auto state = Opm::SummaryState{};
 
-	state.add("SPR:PROD:1",   235.);
-	state.add("SPR:PROD:2",   237.);
-	state.add("SPR:PROD:3",   239.);
-	state.add("SPR:PROD:4",   243.);
+	state.update("SPR:PROD:1",   235.);
+	state.update("SPR:PROD:2",   237.);
+	state.update("SPR:PROD:3",   239.);
+	state.update("SPR:PROD:4",   243.);
 
-	state.add("SOFR:PROD:1",   35.);
-	state.add("SOFR:PROD:2",   30.);
-	state.add("SOFR:PROD:3",   25.);
-	state.add("SOFR:PROD:4",   20.);
+	state.update("SOFR:PROD:1",   35.);
+	state.update("SOFR:PROD:2",   30.);
+	state.update("SOFR:PROD:3",   25.);
+	state.update("SOFR:PROD:4",   20.);
 	
-	state.add("SGFR:PROD:1",   25.E3);
-	state.add("SGFR:PROD:2",   20.E3);
-	state.add("SGFR:PROD:3",   15.E3);
-	state.add("SGFR:PROD:4",   10.E3);
+	state.update("SGFR:PROD:1",   25.E3);
+	state.update("SGFR:PROD:2",   20.E3);
+	state.update("SGFR:PROD:3",   15.E3);
+	state.update("SGFR:PROD:4",   10.E3);
 
-	state.add("SWFR:PROD:1",  11.);
-	state.add("SWFR:PROD:2",  12.);
-	state.add("SWFR:PROD:3",  13.);
-	state.add("SWFR:PROD:4",  14.);
+	state.update("SWFR:PROD:1",  11.);
+	state.update("SWFR:PROD:2",  12.);
+	state.update("SWFR:PROD:3",  13.);
+	state.update("SWFR:PROD:4",  14.);
 
-	state.add("SPR:WINJ:1",   310.);
-	state.add("SPR:WINJ:2",   320.);
-	state.add("SPR:WINJ:3",   330.);
-	state.add("SPR:WINJ:4",   340.);
+	state.update("SPR:WINJ:1",   310.);
+	state.update("SPR:WINJ:2",   320.);
+	state.update("SPR:WINJ:3",   330.);
+	state.update("SPR:WINJ:4",   340.);
 
-	state.add("SWFR:WINJ:1",  21.);
-	state.add("SWFR:WINJ:2",  22.);
-	state.add("SWFR:WINJ:3",  23.);
-	state.add("SWFR:WINJ:4",  24.);
+	state.update("SWFR:WINJ:1",  21.);
+	state.update("SWFR:WINJ:2",  22.);
+	state.update("SWFR:WINJ:3",  23.);
+	state.update("SWFR:WINJ:4",  24.);
 	
-	state.add("WBHP:WINJ",  234.);
+	state.update("WBHP:WINJ",  234.);
 	
         return state;
     }

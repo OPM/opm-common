@@ -21,16 +21,71 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm{
-    void SummaryState::add(const ecl::smspec_node& node, double value) {
-        if (node.get_var_type() == ECL_SMSPEC_WELL_VAR)
-            this->add_well_var(node.get_wgname(),
-                               node.get_keyword(),
-                               value);
-        else
-            this->add(node.get_gen_key1(), value);
+namespace {
+
+    bool is_total(const std::string& key) {
+        auto sep_pos = key.find(':');
+
+        if (sep_pos == 0)
+            return false;
+
+        if (sep_pos == std::string::npos) {
+            if (key.back() == 'T')
+                return true;
+
+            return (key.compare(key.size() - 2, 2, "TH") == 0);
+        } else
+            return is_total(key.substr(0,sep_pos));
     }
 
-    void SummaryState::add(const std::string& key, double value) {
+}
+    void SummaryState::update_elapsed(double delta) {
+        this->elapsed += delta;
+    }
+
+
+    double SummaryState::get_elapsed() const {
+        return this->elapsed;
+    }
+
+
+    void SummaryState::update(const std::string& key, double value) {
+        if (is_total(key))
+            this->values[key] += value;
+        else
+            this->values[key] = value;
+    }
+
+    void SummaryState::update(const ecl::smspec_node& node, double value) {
+        if (node.get_var_type() == ECL_SMSPEC_WELL_VAR)
+            this->update_well_var(node.get_wgname(),
+                                  node.get_keyword(),
+                                  value);
+        else {
+            const std::string& key = node.get_gen_key1();
+            if (node.is_total())
+                this->values[key] += value;
+            else
+                this->values[key] = value;
+
+        }
+    }
+
+
+    void SummaryState::update_well_var(const std::string& well, const std::string& var, double value) {
+        std::string key = var + ":" + well;
+        if (is_total(var)) {
+            this->values[key] += value;
+            this->well_values[var][well] += value;
+        } else {
+            this->values[key] = value;
+            this->well_values[var][well] = value;
+        }
+        this->m_wells.insert(well);
+    }
+
+
+    void SummaryState::set(const std::string& key, double value) {
         this->values[key] = value;
     }
 
@@ -46,12 +101,6 @@ namespace Opm{
             throw std::out_of_range("No such key: " + key);
 
         return iter->second;
-    }
-
-    void SummaryState::add_well_var(const std::string& well, const std::string& var, double value) {
-        this->add(var + ":" + well, value);
-        this->well_values[var][well] = value;
-        this->m_wells.insert(well);
     }
 
     bool SummaryState::has_well_var(const std::string& well, const std::string& var) const {
