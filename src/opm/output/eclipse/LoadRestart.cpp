@@ -1086,20 +1086,20 @@ namespace {
         const auto xwel = wellData.xwel(wellID);
 
         // No unit conversion here.  Smry expects output units.
-        smry.add(key("WOPT"), xwel[VI::XWell::index::OilPrTotal]);
-        smry.add(key("WWPT"), xwel[VI::XWell::index::WatPrTotal]);
-        smry.add(key("WGPT"), xwel[VI::XWell::index::GasPrTotal]);
-        smry.add(key("WVPT"), xwel[VI::XWell::index::VoidPrTotal]);
+        smry.update(key("WOPT"), xwel[VI::XWell::index::OilPrTotal]);
+        smry.update(key("WWPT"), xwel[VI::XWell::index::WatPrTotal]);
+        smry.update(key("WGPT"), xwel[VI::XWell::index::GasPrTotal]);
+        smry.update(key("WVPT"), xwel[VI::XWell::index::VoidPrTotal]);
 
-        smry.add(key("WWIT"), xwel[VI::XWell::index::WatInjTotal]);
-        smry.add(key("WGIT"), xwel[VI::XWell::index::GasInjTotal]);
+        smry.update(key("WWIT"), xwel[VI::XWell::index::WatInjTotal]);
+        smry.update(key("WGIT"), xwel[VI::XWell::index::GasInjTotal]);
 
-        smry.add(key("WOPTH"), xwel[VI::XWell::index::HistOilPrTotal]);
-        smry.add(key("WWPTH"), xwel[VI::XWell::index::HistWatPrTotal]);
-        smry.add(key("WGPTH"), xwel[VI::XWell::index::HistGasPrTotal]);
+        smry.update(key("WOPTH"), xwel[VI::XWell::index::HistOilPrTotal]);
+        smry.update(key("WWPTH"), xwel[VI::XWell::index::HistWatPrTotal]);
+        smry.update(key("WGPTH"), xwel[VI::XWell::index::HistGasPrTotal]);
 
-        smry.add(key("WWITH"), xwel[VI::XWell::index::HistWatInjTotal]);
-        smry.add(key("WGITH"), xwel[VI::XWell::index::HistGasInjTotal]);
+        smry.update(key("WWITH"), xwel[VI::XWell::index::HistWatInjTotal]);
+        smry.update(key("WGITH"), xwel[VI::XWell::index::HistGasInjTotal]);
     }
 
     void assign_group_cumulatives(const std::string&  group,
@@ -1123,19 +1123,19 @@ namespace {
         const auto xgrp = groupData.xgrp(groupID);
 
         // No unit conversion here.  Smry expects output units.
-        smry.add(key("OPT"), xgrp[VI::XGroup::index::OilPrTotal]);
-        smry.add(key("WPT"), xgrp[VI::XGroup::index::WatPrTotal]);
-        smry.add(key("GPT"), xgrp[VI::XGroup::index::GasPrTotal]);
-        smry.add(key("VPT"), xgrp[VI::XGroup::index::VoidPrTotal]);
+        smry.update(key("OPT"), xgrp[VI::XGroup::index::OilPrTotal]);
+        smry.update(key("WPT"), xgrp[VI::XGroup::index::WatPrTotal]);
+        smry.update(key("GPT"), xgrp[VI::XGroup::index::GasPrTotal]);
+        smry.update(key("VPT"), xgrp[VI::XGroup::index::VoidPrTotal]);
 
-        smry.add(key("WIT"), xgrp[VI::XGroup::index::WatInjTotal]);
-        smry.add(key("GIT"), xgrp[VI::XGroup::index::GasInjTotal]);
+        smry.update(key("WIT"), xgrp[VI::XGroup::index::WatInjTotal]);
+        smry.update(key("GIT"), xgrp[VI::XGroup::index::GasInjTotal]);
 
-        smry.add(key("OPTH"), xgrp[VI::XGroup::index::HistOilPrTotal]);
-        smry.add(key("WPTH"), xgrp[VI::XGroup::index::HistWatPrTotal]);
-        smry.add(key("GPTH"), xgrp[VI::XGroup::index::HistGasPrTotal]);
-        smry.add(key("WITH"), xgrp[VI::XGroup::index::HistWatInjTotal]);
-        smry.add(key("GITH"), xgrp[VI::XGroup::index::HistGasInjTotal]);
+        smry.update(key("OPTH"), xgrp[VI::XGroup::index::HistOilPrTotal]);
+        smry.update(key("WPTH"), xgrp[VI::XGroup::index::HistWatPrTotal]);
+        smry.update(key("GPTH"), xgrp[VI::XGroup::index::HistGasPrTotal]);
+        smry.update(key("WITH"), xgrp[VI::XGroup::index::HistWatInjTotal]);
+        smry.update(key("GITH"), xgrp[VI::XGroup::index::HistGasInjTotal]);
     }
 
     Opm::SummaryState

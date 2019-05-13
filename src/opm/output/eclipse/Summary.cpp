@@ -1164,7 +1164,7 @@ void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
         for (const auto& well : wells) {
             const auto& udq_value = ws[well];
             if (udq_value)
-                st.add_well_var(well, ws.name(), udq_value.value());
+                st.update_well_var(well, ws.name(), udq_value.value());
         }
     }
 
@@ -1173,7 +1173,7 @@ void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
         for (const auto& well : wells) {
             const auto& udq_value = ws[well];
             if (udq_value)
-                st.add_well_var(well, def.keyword(), udq_value.value());
+                st.update_well_var(well, def.keyword(), udq_value.value());
         }
     }
 }
@@ -1381,7 +1381,7 @@ Summary::Summary( const EclipseState& st,
     for (const auto& pair : this->handlers->handlers) {
         const auto * nodeptr = pair.first;
         if (nodeptr->is_total())
-            this->prev_state.add(*nodeptr, 0);
+            this->prev_state.update(*nodeptr, 0);
     }
 }
 
@@ -1522,7 +1522,7 @@ void Summary::add_timestep( int report_step,
             unit_applied_val += this->prev_state.get(genkey);
         }
 
-        st.add(*f.first, unit_applied_val);
+        st.update(*f.first, unit_applied_val);
     }
 
     for( const auto& value_pair : single_values ) {
@@ -1532,7 +1532,7 @@ void Summary::add_timestep( int report_step,
             const auto unit = single_values_units.at( key );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            st.add(*node_pair->second, output_value);
+            st.update(*node_pair->second, output_value);
         }
     }
 
@@ -1547,7 +1547,7 @@ void Summary::add_timestep( int report_step,
                 assert (smspec_node_get_num( nodeptr ) - 1 == static_cast<int>(reg));
                 double si_value = value_pair.second[reg];
                 double output_value = es.getUnits().from_si(unit , si_value );
-                st.add(*nodeptr, output_value);
+                st.update(*nodeptr, output_value);
             }
         }
     }
@@ -1560,7 +1560,7 @@ void Summary::add_timestep( int report_step,
             const auto unit = block_units.at( key.first );
             double si_value = value_pair.second;
             double output_value = es.getUnits().from_si(unit , si_value );
-            st.add(*nodeptr, output_value);
+            st.update(*nodeptr, output_value);
         }
     }
 
@@ -1616,9 +1616,10 @@ void Summary::reset_cumulative_quantities(const SummaryState& rstrt)
             // is constructed from information in a restart file--i.e., from
             // the double precision restart vectors 'XGRP' and 'XWEL' during
             // RestartIO::load().
-            this->prev_state.add(genkey, rstrt.get(genkey));
+            this->prev_state.set(genkey, rstrt.get(genkey));
         }
     }
 }
+
 
 }} // namespace Opm::out

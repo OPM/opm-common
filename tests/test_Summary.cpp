@@ -1388,16 +1388,16 @@ BOOST_AUTO_TEST_CASE(efficiency_factor) {
 
 BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     Opm::SummaryState st;
-    st.add("WWCT:OP_2", 100);
+    st.update("WWCT:OP_2", 100);
     BOOST_CHECK_CLOSE(st.get("WWCT:OP_2"), 100, 1e-5);
     BOOST_CHECK_THROW(st.get("NO_SUCH_KEY"), std::out_of_range);
     BOOST_CHECK(st.has("WWCT:OP_2"));
     BOOST_CHECK(!st.has("NO_SUCH_KEY"));
 
 
-    st.add_well_var("OP1", "WWCT", 0.75);
-    st.add_well_var("OP2", "WWCT", 0.75);
-    st.add_well_var("OP3", "WOPT", 0.75);
+    st.update_well_var("OP1", "WWCT", 0.75);
+    st.update_well_var("OP2", "WWCT", 0.75);
+    st.update_well_var("OP3", "WOPT", 0.75);
     BOOST_CHECK( st.has_well_var("OP1", "WWCT"));
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), 0.75);
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), st.get("WWCT:OP1"));
@@ -2921,43 +2921,43 @@ BOOST_AUTO_TEST_CASE(Reset)
     };
 
     auto rstrt = ::Opm::SummaryState{};
-    rstrt.add("WOPT:W_1", 1.0);
-    rstrt.add("WWPT:W_1", 2.0);
-    rstrt.add("WGPT:W_1", 3.0);
-    rstrt.add("WVPT:W_1", 4.0);
+    rstrt.update("WOPT:W_1", 1.0);
+    rstrt.update("WWPT:W_1", 2.0);
+    rstrt.update("WGPT:W_1", 3.0);
+    rstrt.update("WVPT:W_1", 4.0);
 
-    rstrt.add("WWIT:W_1", 5.0);
-    rstrt.add("WGIT:W_1", 6.0);
+    rstrt.update("WWIT:W_1", 5.0);
+    rstrt.update("WGIT:W_1", 6.0);
 
-    rstrt.add("WOPTH:W_1", 0.1);
-    rstrt.add("WWPTH:W_1", 0.2);
-    rstrt.add("WGPTH:W_1", 0.3);
+    rstrt.update("WOPTH:W_1", 0.1);
+    rstrt.update("WWPTH:W_1", 0.2);
+    rstrt.update("WGPTH:W_1", 0.3);
 
-    rstrt.add("WWITH:W_1", 0.5);
-    rstrt.add("WGITH:W_1", 0.6);
+    rstrt.update("WWITH:W_1", 0.5);
+    rstrt.update("WGITH:W_1", 0.6);
 
-    rstrt.add("GOPT:NoSuchGroup", 1.0);
-    rstrt.add("GWPT:NoSuchGroup", 2.0);
-    rstrt.add("GGPT:NoSuchGroup", 3.0);
-    rstrt.add("GVPT:NoSuchGroup", 4.0);
+    rstrt.update("GOPT:NoSuchGroup", 1.0);
+    rstrt.update("GWPT:NoSuchGroup", 2.0);
+    rstrt.update("GGPT:NoSuchGroup", 3.0);
+    rstrt.update("GVPT:NoSuchGroup", 4.0);
 
-    rstrt.add("GWIT:NoSuchGroup", 5.0);
-    rstrt.add("GGIT:NoSuchGroup", 6.0);
+    rstrt.update("GWIT:NoSuchGroup", 5.0);
+    rstrt.update("GGIT:NoSuchGroup", 6.0);
 
-    rstrt.add("FOPT", 10.0);
-    rstrt.add("FWPT", 20.0);
-    rstrt.add("FGPT", 30.0);
-    rstrt.add("FVPT", 40.0);
+    rstrt.update("FOPT", 10.0);
+    rstrt.update("FWPT", 20.0);
+    rstrt.update("FGPT", 30.0);
+    rstrt.update("FVPT", 40.0);
 
-    rstrt.add("FWIT", 50.0);
-    rstrt.add("FGIT", 60.0);
+    rstrt.update("FWIT", 50.0);
+    rstrt.update("FGIT", 60.0);
 
-    rstrt.add("FOPTH", 0.01);
-    rstrt.add("FWPTH", 0.02);
-    rstrt.add("FGPTH", 0.03);
+    rstrt.update("FOPTH", 0.01);
+    rstrt.update("FWPTH", 0.02);
+    rstrt.update("FGPTH", 0.03);
 
-    rstrt.add("FWITH", 0.05);
-    rstrt.add("FGITH", 0.06);
+    rstrt.update("FWITH", 0.05);
+    rstrt.update("FGITH", 0.06);
 
     smry.reset_cumulative_quantities(rstrt);
 
@@ -3077,6 +3077,55 @@ BOOST_AUTO_TEST_CASE(Reset)
 
     BOOST_CHECK_CLOSE(sumstate.get("FWITH"), 0.05, 1.0e-10);
     BOOST_CHECK_CLOSE(sumstate.get("FGITH"), 0.06, 1.0e-10);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
+    SummaryState st;
+    st.update("FOPR", 100);
+    BOOST_CHECK_EQUAL(st.get("FOPR"), 100);
+    st.update("FOPR", 100);
+    BOOST_CHECK_EQUAL(st.get("FOPR"), 100);
+    st.update("WOPR:OP1", 100);
+    BOOST_CHECK_EQUAL(st.get("WOPR:OP1"), 100);
+    st.update("WOPR:OP1", 100);
+    BOOST_CHECK_EQUAL(st.get("WOPR:OP1"), 100);
+
+    st.update("FOPT", 100);
+    BOOST_CHECK_EQUAL(st.get("FOPT"), 100);
+    st.update("FOPT", 100);
+    BOOST_CHECK_EQUAL(st.get("FOPT"), 200);
+    st.update("WOPT:OP1", 100);
+    BOOST_CHECK_EQUAL(st.get("WOPT:OP1"), 100);
+    st.update("WOPT:OP1", 100);
+    BOOST_CHECK_EQUAL(st.get("WOPT:OP1"), 200);
+
+    st.update_well_var("OP1", "WOPR", 100);
+    BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPR"), 100);
+    st.update_well_var("OP1", "WOPR", 100);
+    BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPR"), 100);
+
+    st.update_well_var("OP1", "WOPT", 100);
+    BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPT"), 100);
+    st.update_well_var("OP1", "WOPT", 100);
+    BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPT"), 200);
+
+    st.update_well_var("OP1", "WOPTH", 100);
+    BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPTH"), 100);
+    st.update_well_var("OP1", "WOPTH", 100);
+    BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPTH"), 200);
+
+    st.update("FOPTH", 100);
+    BOOST_CHECK_EQUAL(st.get("FOPTH"), 100);
+    st.update("FOPTH", 100);
+    BOOST_CHECK_EQUAL(st.get("FOPTH"), 200);
+
+
+    st.update_elapsed(100);
+    BOOST_CHECK_EQUAL(st.get_elapsed(), 100);
+    st.update_elapsed(100);
+    BOOST_CHECK_EQUAL(st.get_elapsed(), 200);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
