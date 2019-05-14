@@ -27,7 +27,8 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-
+#include <vector>
+#include <type_traits>
 
 // helper macro to handle error throws or not
 #define HANDLE_ERROR(type, message) \
@@ -89,7 +90,11 @@ template void ECLFilesComparator::printValuesForCell<bool>       (const std::str
 template void ECLFilesComparator::printValuesForCell<int>        (const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const int&         value1, const int&         value2) const;
 template void ECLFilesComparator::printValuesForCell<double>     (const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const double&      value1, const double&      value2) const;
 template void ECLFilesComparator::printValuesForCell<std::string>(const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const std::string& value1, const std::string& value2) const;
-
+// Hack to work around case where std::vector<bool>::const_reference is not a bool. If it is we will initialize printValuesForCell<char> otherwise printValuesForCell<std::vector<bool>::const_reference>
+using boolConstReference = typename std::vector<bool>::const_reference;
+using boolTypeHelper = typename std::remove_const<typename std::remove_reference<boolConstReference>::type>::type;
+using boolType = typename std::conditional<std::is_same<boolTypeHelper, bool>::value, char, boolTypeHelper>::type;
+template void ECLFilesComparator::printValuesForCell<boolType>       (const std::string& keyword, const std::string reference, size_t kw_size, size_t cell, EGrid *grid, const boolType& value1, const boolType& value2) const;
 
 ECLFilesComparator::ECLFilesComparator(const std::string& basename1,
                                        const std::string& basename2,
