@@ -39,8 +39,6 @@ BOOST_AUTO_TEST_CASE(Radial_Settings_and_Init)
 
     const auto& v = lh.data();
 
-    BOOST_CHECK_EQUAL(v[  0], true);  //
-    BOOST_CHECK_EQUAL(v[  1], true);  //
     BOOST_CHECK_EQUAL(v[  3], false); // E300 Radial
     BOOST_CHECK_EQUAL(v[  4], true);  // E100 Radial
     BOOST_CHECK_EQUAL(v[  6], true);  // enableHyster
