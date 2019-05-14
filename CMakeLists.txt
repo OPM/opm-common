@@ -8,7 +8,7 @@ set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
 option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
-option(ENABLE_WELL_TEST "Enable testing of well code when building Schedule object" OFF)
+option(ENABLE_WELL_TEST "Enable testing of well code when building Schedule object" ON)
 
 if (ENABLE_WELL_TEST)
   add_definitions(-DWELL_TEST)
