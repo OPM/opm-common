@@ -127,7 +127,7 @@ void ECLRegressionTest::compareVectors(const std::vector<T>& t1, const std::vect
 
     if (!result) {
         for (size_t i = 0; i < t1.size(); i++) {
-            deviationsForNonFloatingPoints(t1[i], t2[i], keyword, reference, t1.size(), i);
+            deviationsForNonFloatingPoints(T(t1[i]), T(t2[i]), keyword, reference, t1.size(), i);
         }
     }
 }
