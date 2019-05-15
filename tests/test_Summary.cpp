@@ -219,7 +219,7 @@ static data::Wells result_wells() {
     data::Connection well2_comp1 { 1  , crates2, 1.10 , 123.4, 212.1, 0.78, 0.0, 12.34};
     data::Connection well2_comp2 { 101, crates3, 1.11 , 123.4, 150.6, 0.001, 0.89, 100.0};
     data::Connection well3_comp1 { 2  , crates3, 1.11 , 123.4, 456.78, 0.0, 0.15, 432.1};
-	data::Connection well6_comp1 { 5  , crates6, 6.11 , 623.4, 656.78, 0.0, 0.65, 632.1};
+    data::Connection well6_comp1 { 5  , crates6, 6.11 , 623.4, 656.78, 0.0, 0.65, 632.1};
     /*
       The completions
     */
@@ -284,6 +284,20 @@ struct setup {
 
 };
 
+
+void compare(const SummaryState& st, const ecl_sum_type * ecl_sum, int tstep) {
+    for (const auto& key_value : st) {
+        const std::string& key = key_value.first;
+        double value = key_value.second;
+
+        if (ecl_sum_has_general_var(ecl_sum, key.c_str()))
+            // The ecl_sum value has been on disk where it has been stored as float
+            // - i.e. we must use BOOST_CHECK_CLOSE()
+            BOOST_CHECK_CLOSE(value, ecl_sum_get_general_var(ecl_sum, tstep, key.c_str()), 1e-5);
+    }
+}
+
+
 BOOST_AUTO_TEST_SUITE(Summary)
 
 /*
@@ -298,11 +312,29 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     util_make_path( "PATH" );
     cfg.name = "PATH/CASE";
 
+    SummaryState st0;
+    SummaryState st1;
+    SummaryState st2;
+
+    /*
+      The state of the summary object is modified in the add_timestep() routine,
+      therefor the eval and add_timestep() calls must be carefully interleaved -
+      the perils of state!
+    */
+
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
+    writer.eval(st0, 0, 0*day, cfg.es, cfg.schedule, cfg.wells, {});
     writer.add_timestep( 0, 0 * day, cfg.es, cfg.schedule, cfg.wells , {});
+
+    writer.eval(st1, 1, 1*day, cfg.es, cfg.schedule, cfg.wells, {});
     writer.add_timestep( 1, 1 * day, cfg.es, cfg.schedule, cfg.wells , {});
+
+    writer.eval(st2, 2, 2*day, cfg.es, cfg.schedule, cfg.wells, {});
     writer.add_timestep( 2, 2 * day, cfg.es, cfg.schedule, cfg.wells , {});
     writer.write();
+
+
+
 
     auto res = readsum( cfg.name );
     const auto* resp = res.get();
@@ -499,6 +531,10 @@ BOOST_AUTO_TEST_CASE(well_keywords) {
     BOOST_CHECK_CLOSE( 0.2, ecl_sum_get_well_var( resp, 1, "W_1", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 1.2, ecl_sum_get_well_var( resp, 1, "W_2", "WTHPH" ), 1e-5 );
     BOOST_CHECK_CLOSE( 2.2, ecl_sum_get_well_var( resp, 1, "W_3", "WTHPH" ), 1e-5 );
+
+    compare(st0, resp, 0);
+    compare(st1, resp, 1);
+    compare(st2, resp, 2);
 }
 
 BOOST_AUTO_TEST_CASE(udq_keywords) {

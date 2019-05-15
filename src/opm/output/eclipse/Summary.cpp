@@ -1461,14 +1461,15 @@ well_efficiency_factors( const ecl::smspec_node* node,
     return efac;
 }
 
-void Summary::add_timestep( int report_step,
-                            double secs_elapsed,
-                            const EclipseState& es,
-                            const Schedule& schedule,
-                            const data::Wells& wells ,
-                            const std::map<std::string, double>& single_values,
-                            const std::map<std::string, std::vector<double>>& region_values,
-                            const std::map<std::pair<std::string, int>, double>& block_values) {
+void Summary::eval( SummaryState& st,
+                    int report_step,
+                    double secs_elapsed,
+                    const EclipseState& es,
+                    const Schedule& schedule,
+                    const data::Wells& wells ,
+                    const std::map<std::string, double>& single_values,
+                    const std::map<std::string, std::vector<double>>& region_values,
+                    const std::map<std::pair<std::string, int>, double>& block_values) const {
 
     if (secs_elapsed < this->prev_time_elapsed) {
         const auto& usys    = es.getUnits();
@@ -1485,9 +1486,7 @@ void Summary::add_timestep( int report_step,
         };
     }
 
-    auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
     const double duration = secs_elapsed - this->prev_time_elapsed;
-    SummaryState st;
 
     /* report_step is the number of the file we are about to write - i.e. for instance CASE.S$report_step
      * for the data in a non-unified summary file.
@@ -1578,37 +1577,56 @@ void Summary::add_timestep( int report_step,
             st.update(*nodeptr, output_value);
         }
     }
-
     eval_udq(schedule, sim_step, st);
-    {
-        const ecl_sum_type * ecl_sum = this->ecl_sum.get();
-        const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
-        auto num_nodes = ecl_smspec_num_nodes(smspec);
-        for (int node_index = 0; node_index < num_nodes; node_index++) {
-            const auto& smspec_node = ecl_smspec_iget_node(smspec, node_index);
-            // The TIME node is treated specially, it is created internally in
-            // the ecl_sum instance when the timestep is created - and
-            // furthermore it is not in st SummaryState instance.
-            if (smspec_node.get_params_index() == ecl_smspec_get_time_index(smspec))
-                continue;
+}
 
-            const std::string key = smspec_node.get_gen_key1();
-            if (st.has(key))
-                ecl_sum_tstep_iset(tstep, smspec_node.get_params_index(), st.get(key));
-            /*
-              else
-              OpmLog::warning("Have configured summary variable " + key + " for summary output - but it has not been calculated");
-            */
-        }
+
+void Summary::internal_store(const SummaryState& st, int report_step, double secs_elapsed) {
+    auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
+    const ecl_sum_type * ecl_sum = this->ecl_sum.get();
+    const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
+    auto num_nodes = ecl_smspec_num_nodes(smspec);
+    for (int node_index = 0; node_index < num_nodes; node_index++) {
+        const auto& smspec_node = ecl_smspec_iget_node(smspec, node_index);
+        // The TIME node is treated specially, it is created internally in
+        // the ecl_sum instance when the timestep is created - and
+        // furthermore it is not in st SummaryState instance.
+        if (smspec_node.get_params_index() == ecl_smspec_get_time_index(smspec))
+            continue;
+
+        const std::string key = smspec_node.get_gen_key1();
+        if (st.has(key))
+            ecl_sum_tstep_iset(tstep, smspec_node.get_params_index(), st.get(key));
+
+        /*
+          else
+          OpmLog::warning("Have configured summary variable " + key + " for summary output - but it has not been calculated");
+        */
     }
+}
+
+
+void Summary::add_timestep( int report_step,
+                            double secs_elapsed,
+                            const EclipseState& es,
+                            const Schedule& schedule,
+                            const data::Wells& wells ,
+                            const std::map<std::string, double>& single_values,
+                            const std::map<std::string, std::vector<double>>& region_values,
+                            const std::map<std::pair<std::string, int>, double>& block_values) {
+    SummaryState st;
+    this->eval(st, report_step, secs_elapsed, es, schedule, wells, single_values, region_values, block_values);
+    this->internal_store(st, report_step, secs_elapsed);
 
     this->prev_state = st;
     this->prev_time_elapsed = secs_elapsed;
 }
 
-void Summary::write() {
+
+void Summary::write() const {
     ecl_sum_fwrite( this->ecl_sum.get() );
 }
+
 
 Summary::~Summary() {}
 
