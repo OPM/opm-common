@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
             write<std::string>(outFile, file1, name, index);
         } else if (arrType == EIOD::MESS) {
             // shold not be any associated data
+            outFile.write(name,std::vector<char>());
         } else {
             std::cout << "unknown array type " << std::endl;
             exit(1);
