@@ -3,8 +3,8 @@
   "sections" : [ "SPECIAL", "SCHEDULE" ],
   "items" :
     [{"name" : "WELL"                        , "value_type" : "STRING"},
-     {"name" : "POLYMER_CONCENTRATION"       , "value_type" : "UDA" , "dimension" : "PolymerDensity"},
-     {"name" : "SALT_CONCENTRATION"          , "value_type" : "UDA" , "dimension" : "PolymerDensity"},
+     {"name" : "POLYMER_CONCENTRATION"       , "value_type" : "DOUBLE" , "dimension" : "PolymerDensity"},
+     {"name" : "SALT_CONCENTRATION"          , "value_type" : "DOUBLE" , "dimension" : "PolymerDensity"},
      {"name" : "GROUP_POLYMER_CONCENTRATION" , "value_type" : "STRING"},
      {"name" : "GROUP_SALT_CONCENTRATION"    , "value_type" : "STRING"}
     ]
