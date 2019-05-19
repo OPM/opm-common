@@ -23,6 +23,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 
+#include "WellProductionProperties.hpp"
+#include "WellInjectionProperties.hpp"
 
 namespace Opm {
 

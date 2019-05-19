@@ -25,7 +25,8 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
+
+#include "WellProductionProperties.hpp"
 
 
 namespace Opm {

@@ -34,6 +34,9 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
+#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
+#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp"
+
 using namespace Opm;
 
 static TimeMap createXDaysTimeMap(size_t numDays) {

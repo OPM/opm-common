@@ -47,6 +47,9 @@
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
+#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp"
+
 using namespace Opm;
 
 static Deck createDeck() {

@@ -513,14 +513,12 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp
