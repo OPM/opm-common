@@ -60,11 +60,11 @@ namespace {
         "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
         "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
         "FWIT",  "FWPR",  "FWPT", "FWPP",  "FOPP", "FGPP",  "FWPI",
-	"FOPI",  "FGPI",  
+	"FOPI",  "FGPI",
         "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
         "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
         "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT", "GWPP",  "GOPP",
-	"GGPP",  "GWPI",  "GOPI", "GGPI",  
+	"GGPP",  "GWPI",  "GOPI", "GGPI",
         "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
         "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
         "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
@@ -156,6 +156,12 @@ inline void keywordW( SummaryConfig::keyword_list& list,
     const auto hasValue = []( const DeckKeyword& kw ) {
         return kw.getDataRecord().getDataItem().hasValue( 0 );
     };
+
+    if (keyword.name().back() == 'L') {
+        std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported");
+        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+        return;
+    }
 
     if (keyword.size() && hasValue(keyword)) {
         for( const std::string& pattern : keyword.getStringData()) {
