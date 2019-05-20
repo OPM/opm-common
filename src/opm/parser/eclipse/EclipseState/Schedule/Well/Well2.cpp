@@ -599,6 +599,22 @@ bool Well2::canOpen() const {
     }
 }
 
+
+bool Well2::predictionMode() const {
+    return this->prediction_mode;
+}
+
+
+bool Well2::updatePrediction(bool prediction_mode) {
+    if (this->prediction_mode != prediction_mode) {
+        this->prediction_mode = prediction_mode;
+        return true;
+    }
+
+    return false;
+}
+
+
 WellCompletion::CompletionOrderEnum Well2::getWellConnectionOrdering() const {
     return this->ordering;
 }
