@@ -389,6 +389,7 @@ set( keywords
      000_Eclipse100/W/WEFAC
      000_Eclipse100/W/WELLDIMS
      000_Eclipse100/W/WELL_PROBE
+     000_Eclipse100/W/WELL_COMPLETION_PROBE
      000_Eclipse100/W/WELOPEN
      000_Eclipse100/W/WELPI
      000_Eclipse100/W/WELSEGS

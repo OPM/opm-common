@@ -157,6 +157,12 @@ inline void keywordW( SummaryConfig::keyword_list& list,
         return kw.getDataRecord().getDataItem().hasValue( 0 );
     };
 
+    if (keyword.name().back() == 'L') {
+        std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported");
+        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+        return;
+    }
+
     if (keyword.size() && hasValue(keyword)) {
         for( const std::string& pattern : keyword.getStringData()) {
           auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );

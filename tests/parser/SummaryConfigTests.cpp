@@ -588,6 +588,24 @@ BOOST_AUTO_TEST_CASE( summary_FMWSET ) {
 }
 
 
+
+BOOST_AUTO_TEST_CASE( WOPRL ) {
+    const std::string input = R"(
+WOPRL
+   'W_1'  1 /
+   'WX2'  2 /
+   'W_3'  3 /
+/
+)";
+
+    ParseContext parseContext;
+    parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(createSummary( input, parseContext ), std::invalid_argument);
+    parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
+    BOOST_CHECK_NO_THROW( createSummary(input, parseContext ));
+}
+
+
 BOOST_AUTO_TEST_CASE( summary_require3DField ) {
     {
         const auto input = "WWCT\n/\n";
