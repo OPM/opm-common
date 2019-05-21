@@ -713,6 +713,7 @@ namespace Opm {
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool switching_from_injector = !well2->isProducer();
                     auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                    bool update_well = false;
                     properties->handleWCONHIST(record);
 
                     if (switching_from_injector) {
@@ -720,11 +721,21 @@ namespace Opm {
                         well2->updateProducer(true);
                     }
 
-                    if (well2->updateProduction(properties) || switching_from_injector) {
+                    if (well2->updateProducer(true))
+                        update_well = true;
+
+                    if (well2->updateProduction(properties))
+                        update_well = true;
+
+                    if (well2->updatePrediction(false))
+                        update_well = true;
+
+                    if (update_well) {
                         m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                         this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                         this->updateWell(well2, currentStep);
                     }
+
                     if ( !well2->getAllowCrossFlow() && (properties->OilRate + properties->WaterRate + properties->GasRate) == 0 ) {
                         std::string msg =
                             "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
@@ -779,9 +790,9 @@ namespace Opm {
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool switching_from_injector = !well2->isProducer();
                     auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                    bool update_well = switching_from_injector;
 
                     properties->clearControls();
-
                     if (well2->isAvailableForGroupControl())
                         properties->addProductionControl(WellProducer::GRUP);
 
@@ -790,7 +801,16 @@ namespace Opm {
                     if (switching_from_injector)
                         properties->resetDefaultBHPLimit();
 
-                    if (well2->updateProduction(properties)) {
+                    if (well2->updateProducer(true))
+                        update_well = true;
+
+                    if (well2->updateProduction(properties))
+                        update_well = true;
+
+                    if (well2->updatePrediction(true))
+                        update_well = true;
+
+                    if (update_well) {
                         m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                         this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                         this->updateWell(well2, currentStep);
@@ -898,8 +918,15 @@ namespace Opm {
                     auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name, section.unitSystem());
 
-                    update_well = well2->updateProducer(false);
-                    update_well |= well2->updateInjection(injection);
+                    if (well2->updateProducer(false))
+                        update_well = true;
+
+                    if (well2->updateInjection(injection))
+                        update_well = true;
+
+                    if (well2->updatePrediction(true))
+                        update_well = true;
+
                     if (update_well) {
                         this->updateWell(well2, currentStep);
                         m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
@@ -957,8 +984,15 @@ namespace Opm {
                     auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJH(record, well2->isProducer(), well_name, section.unitSystem());
 
-                    update_well = well2->updateProducer(false);
-                    update_well |= well2->updateInjection(injection);
+                    if (well2->updateProducer(false))
+                        update_well = true;
+
+                    if (well2->updateInjection(injection))
+                        update_well = true;
+
+                    if (well2->updatePrediction(false))
+                        update_well = true;
+
                     if (update_well) {
                         this->updateWell(well2, currentStep);
                         m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , currentStep );
@@ -2731,7 +2765,6 @@ namespace Opm {
                 const auto& well2 = *(dynamic_state[last_step]);
                 bool equal = true;
 
-
                 if (well2.getWellConnectionOrdering() != well.getWellConnectionOrdering())
                     equal = false;
 
@@ -2763,6 +2796,19 @@ namespace Opm {
 
             for (std::size_t step = first_step; step < this->size(); step++) {
                 const auto& well2 = *(dynamic_state[step]);
+                {
+                    bool predictionMode;
+                    if (well.isProducer(step))
+                        predictionMode = well.getProductionProperties(step).predictionMode;
+                    else
+                        predictionMode = well.getInjectionProperties(step).predictionMode;
+
+                    if (well2.predictionMode() != predictionMode) {
+                        std::string msg = "Predictionmode error for well:" + well2.name() + " at " + std::to_string(step);
+                        printf("Well:%d   Well2:%d \n", predictionMode, well2.predictionMode());
+                        parseContext.handleError(ParseContext::SCHEDULE_WELL_ERROR, msg, errors);
+                    }
+                }
                 {
                     const auto& conn1 = well.getConnections(step);
                     const auto& conn2 = well2.getConnections();

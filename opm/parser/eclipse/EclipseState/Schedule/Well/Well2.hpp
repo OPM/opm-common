@@ -68,6 +68,7 @@ public:
     double getGuideRateScalingFactor() const;
 
     std::size_t firstTimeStep() const;
+    bool predictionMode() const;
     bool canOpen() const;
     bool isProducer() const;
     size_t seqIndex() const;
@@ -106,6 +107,7 @@ public:
     */
     std::map<int, std::vector<Connection>> getCompletions() const;
 
+    bool updatePrediction(bool prediction_mode);
     bool updateAutoShutin(bool auto_shutin);
     bool updateCrossFlow(bool allow_cross_flow);
     bool updateHead(int I, int J);
@@ -153,6 +155,7 @@ private:
     WellGuideRate guide_rate;
     double efficiency_factor;
     double solvent_fraction;
+    bool prediction_mode = true;
 
     std::shared_ptr<const WellEconProductionLimits> econ_limits;
     std::shared_ptr<const WellPolymerProperties> polymer_properties;
