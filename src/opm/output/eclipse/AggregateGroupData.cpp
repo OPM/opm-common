@@ -26,7 +26,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 #include <algorithm>
 #include <cstddef>
@@ -98,7 +97,7 @@ namespace {
 	for (const auto* group : groups) {
 	    int ind = (group->name() == "FIELD")
 	    ? ngmaxz(inteHead)-1 : group->seqIndex()-1;
-	    const std::pair<size_t, const Opm::Group*> groupPair = std::make_pair(static_cast<size_t>(ind), group); 
+	    const std::pair<size_t, const Opm::Group*> groupPair = std::make_pair(static_cast<size_t>(ind), group);
 	    indexGroupMap.insert(groupPair);
 	}
 	return indexGroupMap;
@@ -112,7 +111,7 @@ namespace {
 	for (const auto* group : groups) {
 	    int ind = (group->name() == "FIELD")
                     ? ngmaxz(inteHead)-1 : group->seqIndex()-1;
-	    std::pair<const std::string, size_t> groupPair = std::make_pair(group->name(), ind); 
+	    std::pair<const std::string, size_t> groupPair = std::make_pair(group->name(), ind);
 	    groupIndexMap.insert(groupPair);
 	}
 	return groupIndexMap;
@@ -174,72 +173,72 @@ namespace {
 			   IGrpArray&              iGrp,
 			   const std::vector<int>& inteHead)
         {
-	  // find the number of wells or child groups belonging to a group and store in 
-	  // location nwgmax +1 in the iGrp array
+            // find the number of wells or child groups belonging to a group and store in
+            // location nwgmax +1 in the iGrp array
 
-	    const auto childGroups = sched.getChildGroups(group.name(), simStep);
-	    const auto childWells  = sched.getChildWells(group.name(), simStep, Opm::GroupWellQueryMode::Immediate);
-	    const auto groupMapNameIndex =  currentGroupMapNameIndex(sched, simStep, inteHead);
-	    const auto mapIndexGroup = currentGroupMapIndexGroup(sched, simStep, inteHead);
-	    if ((childGroups.size() != 0) && (childWells.size()!=0))
-	      throw std::invalid_argument("group has both wells and child groups" + group.name());
+            const auto childGroups = sched.getChildGroups(group.name(), simStep);
+            const auto childWells  = sched.getChildWells2(group.name(), simStep, Opm::GroupWellQueryMode::Immediate);
+            const auto groupMapNameIndex =  currentGroupMapNameIndex(sched, simStep, inteHead);
+            const auto mapIndexGroup = currentGroupMapIndexGroup(sched, simStep, inteHead);
+            if ((childGroups.size() != 0) && (childWells.size()!=0))
+                throw std::invalid_argument("group has both wells and child groups" + group.name());
             int igrpCount = 0;
-	    if (childWells.size() != 0) {
-		//group has child wells 
-		//store the well number (sequence index) in iGrp according to the sequence they are defined
-		for ( auto it = childWells.begin() ; it != childWells.end(); it++) {
-		    iGrp[igrpCount] = (*it)->seqIndex()+1;
-		    igrpCount+=1;
-		}
-	    }
-	    else if (childGroups.size() != 0) {
-		//group has child groups
-		//The field group always has seqIndex = 0 because it is always defined first
-	        //Hence the all groups except the Field group uses the seqIndex assigned
-		//iGrp contains the child groups in ascending group sequence index
-		std::vector<size_t> childGroupIndex;
-		Opm::RestartIO::Helpers::groupMaps groupMap;
-		groupMap.currentGrpTreeNameSeqIndMap(sched, simStep, groupMapNameIndex,mapIndexGroup);
-		const auto indGroupMap = groupMap.indexGroupMap();
-		const auto gNameIndMap = groupMap.groupNameIndexMap();
-		for (auto* grp : childGroups) {
-		  auto groupName = grp->name();
-		  auto searchGTName = gNameIndMap.find(groupName);
-		  if (searchGTName != gNameIndMap.end()) {
-		      childGroupIndex.push_back(searchGTName->second);
-		  }
-		  else {
-		      throw std::invalid_argument( "Invalid group name" );
-		  }
-		}
-		std::sort(childGroupIndex.begin(), childGroupIndex.end());
-		for (auto groupTreeIndex : childGroupIndex) {
-		    auto searchGTIterator = indGroupMap.find(groupTreeIndex);
-		    if (searchGTIterator != indGroupMap.end()) {
-			auto gname = (searchGTIterator->second)->name();
-			auto gSeqNoItr = groupMapNameIndex.find(gname);
-			if (gSeqNoItr != groupMapNameIndex.end()) {
-			    iGrp[igrpCount] = (gSeqNoItr->second) + 1;
-			    igrpCount+=1;
-			}
-			else {
-			    std::cout << "AggregateGroupData, ChildGroups - Group name: groupMapNameIndex: " << gSeqNoItr->first << std::endl;
-			    throw std::invalid_argument( "Invalid group name" );
-			}
-		    }
-		    else {
-			std::cout << "AggregateGroupData, ChildGroups - GroupTreeIndex: " << groupTreeIndex << std::endl;
-			throw std::invalid_argument( "Invalid GroupTree index" );
-		    }
-		}
-	    }
+            if (childWells.size() != 0) {
+                //group has child wells
+                //store the well number (sequence index) in iGrp according to the sequence they are defined
+                for ( const auto& well : childWells) {
+                    iGrp[igrpCount] = well.seqIndex()+1;
+                    igrpCount+=1;
+                }
+            }
+            else if (childGroups.size() != 0) {
+                //group has child groups
+                //The field group always has seqIndex = 0 because it is always defined first
+                //Hence the all groups except the Field group uses the seqIndex assigned
+                //iGrp contains the child groups in ascending group sequence index
+                std::vector<size_t> childGroupIndex;
+                Opm::RestartIO::Helpers::groupMaps groupMap;
+                groupMap.currentGrpTreeNameSeqIndMap(sched, simStep, groupMapNameIndex,mapIndexGroup);
+                const auto indGroupMap = groupMap.indexGroupMap();
+                const auto gNameIndMap = groupMap.groupNameIndexMap();
+                for (auto* grp : childGroups) {
+                    auto groupName = grp->name();
+                    auto searchGTName = gNameIndMap.find(groupName);
+                    if (searchGTName != gNameIndMap.end()) {
+                        childGroupIndex.push_back(searchGTName->second);
+                    }
+                    else {
+                        throw std::invalid_argument( "Invalid group name" );
+                    }
+                }
+                std::sort(childGroupIndex.begin(), childGroupIndex.end());
+                for (auto groupTreeIndex : childGroupIndex) {
+                    auto searchGTIterator = indGroupMap.find(groupTreeIndex);
+                    if (searchGTIterator != indGroupMap.end()) {
+                        auto gname = (searchGTIterator->second)->name();
+                        auto gSeqNoItr = groupMapNameIndex.find(gname);
+                        if (gSeqNoItr != groupMapNameIndex.end()) {
+                            iGrp[igrpCount] = (gSeqNoItr->second) + 1;
+                            igrpCount+=1;
+                        }
+                        else {
+                            std::cout << "AggregateGroupData, ChildGroups - Group name: groupMapNameIndex: " << gSeqNoItr->first << std::endl;
+                            throw std::invalid_argument( "Invalid group name" );
+                        }
+                    }
+                    else {
+                        std::cout << "AggregateGroupData, ChildGroups - GroupTreeIndex: " << groupTreeIndex << std::endl;
+                        throw std::invalid_argument( "Invalid GroupTree index" );
+                    }
+                }
+            }
 
 	    //assign the number of child wells or child groups to
 	    // location nwgmax
 	    iGrp[nwgmax] =  (childGroups.size() == 0)
                     ? childWells.size() : childGroups.size();
 
-	    // find the group type (well group (type 0) or node group (type 1) and store the type in  
+	    // find the group type (well group (type 0) or node group (type 1) and store the type in
 	    // location nwgmax + 26
 	    const auto grpType = groupType(sched, group, simStep);
 	    iGrp[nwgmax+26] = grpType;
@@ -248,7 +247,7 @@ namespace {
 	    //location nwgmax + 27
 	    const auto grpLevel = currentGroupLevel(sched, group, simStep);
 	    iGrp[nwgmax+27] = grpLevel;
-	    
+
 	    // set values for group probably connected to GCONPROD settings
 	    //
 	    if (group.name() != "FIELD")

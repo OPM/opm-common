@@ -36,7 +36,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/stat.h>
 
 //#ifndef ERT_VECTOR_H
@@ -49,7 +49,6 @@
 //jal - comment on the following include to avoid duplication
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 
 #include <opm/output/data/Cells.hpp>
 #include <opm/output/data/Solution.hpp>
@@ -132,8 +131,8 @@ typedef enum {
   ECL_PVT_M_UNITS  = 4
 } ert_ecl_unit_enum;
 
-  
-  
+
+
 typedef enum { ECL_OTHER_FILE           = 0   ,
                ECL_RESTART_FILE         = 1   ,
                ECL_UNIFIED_RESTART_FILE = 2   ,
@@ -188,11 +187,11 @@ typedef enum {
 
 
 typedef enum  {CTYPE_VOID_POINTER = 1,
-	       CTYPE_INT_VALUE    = 2, 
-	       CTYPE_DOUBLE_VALUE = 3, 
-	       CTYPE_FLOAT_VALUE  = 4 , 
-	       CTYPE_CHAR_VALUE   = 5 , 
-	       CTYPE_BOOL_VALUE   = 6 , 
+	       CTYPE_INT_VALUE    = 2,
+	       CTYPE_DOUBLE_VALUE = 3,
+	       CTYPE_FLOAT_VALUE  = 4 ,
+	       CTYPE_CHAR_VALUE   = 5 ,
+	       CTYPE_BOOL_VALUE   = 6 ,
 	       CTYPE_SIZE_T_VALUE = 7 ,
 	       CTYPE_INVALID      = 100} node_ctype;
 
@@ -341,10 +340,10 @@ typedef struct int_vector_struct int_vector_type;
 //typedef int (int_ftype) (int);
 typedef void       * (  copyc_ftype ) (const void *);
 typedef void         (  free_ftype )  (void *);
-struct ecl_rst_file_struct; 
+struct ecl_rst_file_struct;
 typedef struct ecl_rst_file_struct    ecl_rst_file_type;
 
-struct ecl_file_view_struct; 
+struct ecl_file_view_struct;
 typedef struct ecl_file_view_struct  ecl_file_view_type;
 
 struct ecl_type_struct {
@@ -353,7 +352,7 @@ struct ecl_type_struct {
 //orig
   const ::Opm::RestartIO::ecl_type_enum type;
   const size_t element_size;
- };  
+ };
 typedef struct ecl_type_struct       ecl_data_type;
 
 
@@ -361,11 +360,11 @@ struct ecl_rst_file_struct {
   fortio_type * fortio;
   bool          unified;
   bool          fmt_file;
-}; 
+};
 
 
 //struct ecl_kw_struct;
-// 
+//
 struct ecl_kw_struct {
   UTIL_TYPE_ID_DECLARATION;
   int               size;
@@ -383,7 +382,7 @@ struct inv_map_struct;
 typedef struct inv_map_struct inv_map_type;
 struct size_t_vector_struct;
 typedef struct size_t_vector_struct size_t_vector_type;
-typedef size_t (size_t_ftype) (size_t);  
+typedef size_t (size_t_ftype) (size_t);
 struct perm_vector_struct;
 typedef struct perm_vector_struct perm_vector_type;
 struct stringlist_struct;
@@ -397,7 +396,7 @@ typedef struct stringlist_struct stringlist_type;
 char *             ecl_type_alloc_name(const ::Opm::RestartIO::ecl_data_type);
 
 void                ecl_rsthead_free( ::Opm::RestartIO::ecl_rsthead_type * rsthead );
-::Opm::RestartIO::ecl_rsthead_type  * ecl_rsthead_alloc_from_kw( int report_step , const ::Opm::RestartIO::ecl_kw_type * intehead_kw , 
+::Opm::RestartIO::ecl_rsthead_type  * ecl_rsthead_alloc_from_kw( int report_step , const ::Opm::RestartIO::ecl_kw_type * intehead_kw ,
 				const ::Opm::RestartIO::ecl_kw_type * doubhead_kw , const ::Opm::RestartIO::ecl_kw_type * logihead_kw );
 Opm::RestartIO::ecl_rsthead_type  * ecl_rsthead_alloc( const Opm::RestartIO::ecl_file_view_type * rst_file , int report_step);
 Opm::RestartIO::ecl_rsthead_type  * ecl_rsthead_alloc_empty(void);
@@ -411,7 +410,7 @@ void ecl_util_set_date_values(time_t t , int * mday , int * month , int * year);
 void util_set_date_values_utc(time_t t , int * mday , int * month , int * year);
 void util_time_utc( time_t * t , struct tm * ts );
 ::Opm::RestartIO::ecl_data_type  ecl_kw_get_data_type(const ::Opm::RestartIO::ecl_kw_type *);
-int 		    ecl_type_get_sizeof_iotype(const ::Opm::RestartIO::ecl_data_type ecl_type); 
+int 		    ecl_type_get_sizeof_iotype(const ::Opm::RestartIO::ecl_data_type ecl_type);
 void                ecl_rsthead_fprintf( const ::Opm::RestartIO::ecl_rsthead_type * header , FILE * stream);
 void                ecl_rsthead_fprintf_struct( const ::Opm::RestartIO::ecl_rsthead_type * header , FILE * stream);
 bool                ecl_rsthead_equal( const ::Opm::RestartIO::ecl_rsthead_type * header1 , const Opm::RestartIO::ecl_rsthead_type * header2);
@@ -448,7 +447,7 @@ void     size_t_vector_iset(::Opm::RestartIO::size_t_vector_type *    , int , si
 void     size_t_vector_permute(::Opm::RestartIO::size_t_vector_type * vector , const ::Opm::RestartIO::perm_vector_type * perm);
 void     size_t_vector_set_read_only( ::Opm::RestartIO::size_t_vector_type * vector , bool read_only);
 int      vector_append_owned_ref( ::Opm::RestartIO::vector_type * , const void * , ::Opm::RestartIO::free_ftype * del);
-::Opm::RestartIO::size_t_vector_type * size_t_vector_alloc( int init_size , size_t );  
+::Opm::RestartIO::size_t_vector_type * size_t_vector_alloc( int init_size , size_t );
 int          util_stat(const char * filename , ::Opm::RestartIO::stat_type * stat_info);
 /*
   The two loose functions RestartIO::save() and RestartIO::load() can
@@ -473,7 +472,7 @@ int          util_stat(const char * filename , ::Opm::RestartIO::stat_type * sta
 */
 const char   * ecl_kw_get_header8(const ::Opm::RestartIO::ecl_kw_type *);
 const char   * ecl_kw_get_header(const ::Opm::RestartIO::ecl_kw_type * ecl_kw );
- 
+
 ::Opm::RestartIO::ecl_rst_file_type * ecl_rst_file_open_read( const char * filename );
 ::Opm::RestartIO::ecl_rst_file_type * ecl_rst_file_open_write( const char * filename );
 ::Opm::RestartIO::ecl_rst_file_type * ecl_rst_file_open_append( const char * filename );
@@ -566,9 +565,9 @@ const char * ecl_file_kw_get_header( const ::Opm::RestartIO::ecl_file_kw_type * 
 bool   ecl_kw_fskip_data__( ::Opm::RestartIO::ecl_data_type, int, fortio_type *);
 ::Opm::RestartIO::ecl_data_type   ecl_file_kw_get_data_type(const ::Opm::RestartIO::ecl_file_kw_type * file_kw);
 ::Opm::RestartIO::ecl_file_kw_type * ecl_file_view_iget_file_kw( const ::Opm::RestartIO::ecl_file_view_type * ecl_file_view , int global_index);
-::Opm::RestartIO::ecl_file_view_type * ecl_file_get_restart_view( ::Opm::RestartIO::ecl_file_type * ecl_file , 
+::Opm::RestartIO::ecl_file_view_type * ecl_file_get_restart_view( ::Opm::RestartIO::ecl_file_type * ecl_file ,
 								  int input_index, int report_step , time_t sim_time, double sim_days);
-::Opm::RestartIO::ecl_file_view_type * ecl_file_view_add_restart_view(::Opm::RestartIO::ecl_file_view_type * file_view , 
+::Opm::RestartIO::ecl_file_view_type * ecl_file_view_add_restart_view(::Opm::RestartIO::ecl_file_view_type * file_view ,
 								      int seqnum_index, int report_step , time_t sim_time, double sim_days);
 ::Opm::RestartIO::ecl_file_view_type * ecl_file_get_global_view( ::Opm::RestartIO::ecl_file_type * ecl_file );
 ::Opm::RestartIO::ecl_file_view_type      * ecl_file_view_alloc( fortio_type * fortio , int * flags , ::Opm::RestartIO::inv_map_type * inv_map , bool owner );
@@ -576,7 +575,7 @@ void      ecl_file_view_add_kw( ::Opm::RestartIO::ecl_file_view_type * ecl_file_
 void      ecl_file_view_free( ::Opm::RestartIO::ecl_file_view_type * ecl_file_view );
 void      ecl_file_select_global( ::Opm::RestartIO::ecl_file_type * ecl_file );
 void      vector_free(::Opm::RestartIO::vector_type * );
-void      vector_clear(::Opm::RestartIO::vector_type * vector); 
+void      vector_clear(::Opm::RestartIO::vector_type * vector);
 void      hash_free(::Opm::RestartIO::hash_type *);
 void      hash_sll_free(::Opm::RestartIO::hash_sll_type *);
 void      stringlist_free(::Opm::RestartIO::stringlist_type *);
@@ -709,10 +708,10 @@ template<> struct ecl_type< char* >
 
 template<> struct ecl_type< const char* >
  { static const ::Opm::RestartIO::ecl_type_enum type { ::Opm::RestartIO::ECL_CHAR_TYPE }; };
- 
- 
+
+
 template <typename T>
- 
+
 class EclKW_ref {
 public:
      explicit EclKW_ref( ::Opm::RestartIO::ecl_kw_type * kw ) : m_kw( kw ) {
@@ -917,23 +916,23 @@ struct deleter
        F( arg );
     }
 };
- 
+
 template <typename T , void (*F)(T*)>
 using ert_unique_ptr = std::unique_ptr<T, deleter<T,F> >;
 
 
-template <typename T> 
+template <typename T>
 T * ecl_kw_get_type_ptr (const ::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::RestartIO::ecl_type_enum ECL_TYPE)
-{ 
+{
   /* implementation */
     if (::Opm::RestartIO::ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                          \
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ::Opm::RestartIO::ecl_kw_get_header8(ecl_kw));                \
-  return (T *) ecl_kw->data;   
+  return (T *) ecl_kw->data;
 }
 
-  template <typename T> 
+  template <typename T>
 T ecl_kw_iget_type (const ::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::RestartIO::ecl_type_enum ECL_TYPE, int i)
-{ 
+{
   /* implementation */
   T value;                                                                                              \
   if (::Opm::RestartIO::ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                  \
@@ -943,8 +942,8 @@ T ecl_kw_iget_type (const ::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::Restart
 }
 
 
-template <typename T> 
-void ecl_kw_scalar_set_type( ::Opm::RestartIO::ecl_kw_type * ecl_kw , ::Opm::RestartIO::ecl_type_enum ECL_TYPE , T value){  
+template <typename T>
+void ecl_kw_scalar_set_type( ::Opm::RestartIO::ecl_kw_type * ecl_kw , ::Opm::RestartIO::ecl_type_enum ECL_TYPE , T value){
   /* implementation */
  if (::Opm::RestartIO::ecl_kw_get_type(ecl_kw) == ECL_TYPE) {                                    \
     T * data = static_cast<T *>(::Opm::RestartIO::ecl_kw_get_data_ref(ecl_kw));                         \
@@ -954,7 +953,7 @@ void ecl_kw_scalar_set_type( ::Opm::RestartIO::ecl_kw_type * ecl_kw , ::Opm::Res
  } else util_abort("%s: wrong type\n",__func__);                        \
 }
 
-template <typename T> 
+template <typename T>
 void ecl_kw_iset_type(::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::RestartIO::ecl_type_enum ECL_TYPE, int i, T value) {                                      \
   if (::Opm::RestartIO::ecl_kw_get_type(ecl_kw) != ECL_TYPE)                                                                  \
     util_abort("%s: Keyword: %s is wrong type - aborting \n",__func__ , ::Opm::RestartIO::ecl_kw_get_header8(ecl_kw));        \
@@ -962,14 +961,14 @@ void ecl_kw_iset_type(::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::RestartIO::
 }                         \
 
 
-//#undef  ECL_INT 
-#undef  ECL_FLOAT 
+//#undef  ECL_INT
+#undef  ECL_FLOAT
 #undef  ECL_DOUBLE
-#undef  ECL_BOOL 
+#undef  ECL_BOOL
 #undef  ECL_CHAR
-//#undef  ECL_MESS 
+//#undef  ECL_MESS
 #undef  ECL_STRING
-  
+
 #ifdef __cplusplus
 //#undef ECL_INT
 #define ECL_INT_2 ::Opm::RestartIO::ecl_data_type{::Opm::RestartIO::ECL_INT_TYPE, sizeof(int)}
@@ -1003,7 +1002,7 @@ void ecl_kw_iset_type(::Opm::RestartIO::ecl_kw_type * ecl_kw, ::Opm::RestartIO::
 #define util_abort(fmt , ...) ::Opm::RestartIO::util_abort__(__FILE__ , __func__ , __LINE__ , fmt , ##__VA_ARGS__)
 #endif // _MSC_VER
 
-  
+
 }
 
 // #ifndef ERT_ECL_ENDIAN_FLIP_H
@@ -1017,11 +1016,11 @@ extern "C" {
    This header file checks if the ECLIPSE endianness and the hardware
    endianness are equal, and defines the macro ECL_ENDIAN_FLIP
    accordingly.
-   
+
    All the ecl_xxx functions will use the ECL_ENDIAN_FLIP macro to
    determine whether the endian flip should be performed. When opening
    a fortio instance explicitly you can use the ECL_ENDIAN_FLIP macro
-   to get the endianness correct (for ECLIPSE usage that is).  
+   to get the endianness correct (for ECLIPSE usage that is).
 */
 
 #define ECLIPSE_BYTE_ORDER  __BIG_ENDIAN   // Alternatively: __LITTLE_ENDIAN

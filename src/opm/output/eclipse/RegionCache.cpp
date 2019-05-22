@@ -15,12 +15,12 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
+
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -33,16 +33,16 @@ namespace out {
 RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGrid& grid, const Schedule& schedule) {
     const auto& fipnum = properties.getIntGridProperty("FIPNUM");
 
-    const auto& wells = schedule.getWells();
+    const auto& wells = schedule.getWells2atEnd();
     for (const auto& well : wells) {
-        const auto& connections = well->getConnections( );
+        const auto& connections = well.getConnections( );
         for (const auto& c : connections) {
             size_t global_index = grid.getGlobalIndex( c.getI() , c.getJ() , c.getK());
             if (grid.cellActive( global_index )) {
                 size_t active_index = grid.activeIndex( global_index );
                 int region_id =fipnum.iget( global_index );
                 auto& well_index_list = this->connection_map[ region_id ];
-                well_index_list.push_back( { well->name() , active_index } );
+                well_index_list.push_back( { well.name() , active_index } );
             }
         }
     }
@@ -59,3 +59,4 @@ RegionCache::RegionCache(const Eclipse3DProperties& properties, const EclipseGri
 
 }
 }
+

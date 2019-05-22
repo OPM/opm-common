@@ -45,20 +45,20 @@
 struct MockIH
 {
     MockIH(const int numWells,
-	   
+
 	   const int nsegWell 	 =   2,  // E100
 	   const int isegPerWell =  22,  // E100
 	   const int rsegPerWell = 146,  // E100
 	   const int ilbsPerWell =   5,  // E100
 	   const int ilbrPerWell =  10); // E100
-    
+
 
     std::vector<int> value;
 
     using Sz = std::vector<int>::size_type;
 
     Sz nwells;
-    
+
     Sz nsegwl;
     Sz nswlmx;
     Sz nsegmx;
@@ -79,7 +79,7 @@ MockIH::MockIH(const int numWells,
     using Ix = ::Opm::RestartIO::Helpers::VectorItems::intehead;
 
     this->nwells = this->value[Ix::NWELLS] = numWells;
-    
+
     this->nsegwl = this->value[Ix::NSEGWL] = nsegWell;
     this->nswlmx = this->value[Ix::NSWLMX] = 2;
     this->nsegmx = this->value[Ix::NSEGMX] = 32;
@@ -143,10 +143,10 @@ GRID        =========================================================
 BOX
  1 10 1 5 1 1 /
 
-TOPS 
+TOPS
 50*7000 /
 
-BOX 
+BOX
 1 10  1 5 1 10 /
 
 DXV
@@ -174,8 +174,8 @@ COPY
 
 RPTGRID
   -- Report Levels for Grid Section Data
-  -- 
- / 
+  --
+ /
 
 PROPS       ==========================================================
 
@@ -291,9 +291,9 @@ PVTO
 /
 
 
-RPTPROPS 
+RPTPROPS
 -- PROPS Reporting Options
--- 
+--
 /
 
 REGIONS    ===========================================================
@@ -331,13 +331,13 @@ RSVD       2 TABLES    3 NODES IN EACH           FIELD   12:00 17 AUG 83
 
 RPTRST
 -- Restart File Output Control
--- 
+--
 'BASIC=2' 'FLOWS' 'POT' 'PRES' /
- 
+
 --RPTSOL
--- 
+--
 -- Initialisation Print Output
--- 
+--
 --'PRES' 'SOIL' 'SWAT' 'SGAS' 'RS' 'RESTART=1' 'FIP=2' 'EQUIL' 'RSVD' /
 
 SUMMARY      ===========================================================
@@ -507,7 +507,7 @@ END
 	state.update("SOFR:PROD:2",   30.);
 	state.update("SOFR:PROD:3",   25.);
 	state.update("SOFR:PROD:4",   20.);
-	
+
 	state.update("SGFR:PROD:1",   25.E3);
 	state.update("SGFR:PROD:2",   20.E3);
 	state.update("SGFR:PROD:3",   15.E3);
@@ -527,9 +527,9 @@ END
 	state.update("SWFR:WINJ:2",  22.);
 	state.update("SWFR:WINJ:3",  23.);
 	state.update("SWFR:WINJ:4",  24.);
-	
+
 	state.update("WBHP:WINJ",  234.);
-	
+
         return state;
     }
     Opm::data::WellRates wr()
@@ -550,7 +550,7 @@ END
             for (int i = 0; i < 5; i++) {
 		xw["PROD"].connections.emplace_back();
 		auto& c = xw["PROD"].connections.back();
-		
+
 		c.rates.set(o::wat, qw*(float(i)+1.))
                    .set(o::oil, qo*(float(i)+1.))
                    .set(o::gas, qg*(float(i)+1.));
@@ -568,7 +568,7 @@ END
             for (int i = 0; i < 5; i++) {
 		xw["WINJ"].connections.emplace_back();
 		auto& c = xw["WINJ"].connections.back();
-		
+
 		c.rates.set(o::wat, qw*(float(i)+1.))
 		       .set(o::oil, 0.)
 		       .set(o::gas, 0.);
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_SUITE(Aggregate_MSW)
 BOOST_AUTO_TEST_CASE (Constructor)
 {
     const auto ih = MockIH{ 5 };
-   
+
     const auto amswd = Opm::RestartIO::Helpers::AggregateMSWData{ ih.value };
 
     BOOST_CHECK_EQUAL(amswd.getISeg().size(), ih.nswlmx * ih.nsegmx * ih.nisegz);
@@ -619,7 +619,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
     const auto rptStep = std::size_t{1};
 
     const auto ih = MockIH {
-        static_cast<int>(simCase.sched.getWells(rptStep).size())
+        static_cast<int>(simCase.sched.getWells2(rptStep).size())
     };
 
     BOOST_CHECK_EQUAL(ih.nwells, MockIH::Sz{2});
@@ -629,8 +629,8 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
     auto amswd = Opm::RestartIO::Helpers::AggregateMSWData{ih.value};
     amswd.captureDeclaredMSWData(simCase.sched,
 			      rptStep,
-                              simCase.es.getUnits(), 
-			      ih.value,  
+                              simCase.es.getUnits(),
+			      ih.value,
 			      simCase.grid,
 			      smry,
 			      wrc
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         auto start = 2*ih.nisegz;
 
         const auto& iSeg = amswd.getISeg();
-	BOOST_CHECK_EQUAL(iSeg[start + 0] , 15); // PROD-segment 3, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 0] , 15); // PROD-segment 3, ordered segment
 	BOOST_CHECK_EQUAL(iSeg[start + 1] ,  2); // PROD-segment 3, outlet segment
 	BOOST_CHECK_EQUAL(iSeg[start + 2] ,  4); // PROD-segment 3, inflow segment current branch
 	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  1); // PROD-segment 3, branch number
@@ -649,11 +649,11 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_EQUAL(iSeg[start + 5] ,  1); // PROD-segment 3, Sum number of inflow branches from first segment to current segment
 	BOOST_CHECK_EQUAL(iSeg[start + 6] ,  0); // PROD-segment 3, number of connections in segment
 	BOOST_CHECK_EQUAL(iSeg[start + 7] ,  0); // PROD-segment 3, sum of connections with lower segmeent number than current segment
-	BOOST_CHECK_EQUAL(iSeg[start + 8] , 15); // PROD-segment 3, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 8] , 15); // PROD-segment 3, ordered segment
 
 	start = 13*ih.nisegz;
 
-	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  4); // PROD-segment 14, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  4); // PROD-segment 14, ordered segment
 	BOOST_CHECK_EQUAL(iSeg[start + 1] , 13); // PROD-segment 14, outlet segment
 	BOOST_CHECK_EQUAL(iSeg[start + 2] , 15); // PROD-segment 14, inflow segment current branch
 	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  2); // PROD-segment 14, branch number
@@ -661,7 +661,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_EQUAL(iSeg[start + 5] ,  0); // PROD-segment 14, Sum number of inflow branches from first segment to current segment
 	BOOST_CHECK_EQUAL(iSeg[start + 6] ,  1); // PROD-segment 14, number of connections in segment
 	BOOST_CHECK_EQUAL(iSeg[start + 7] ,  2); // PROD-segment 14, sum of connections with lower segmeent number than current segment
-	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  4); // PROD-segment 14, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  4); // PROD-segment 14, ordered segment
 
     }
 
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         auto start = ih.nisegz*ih.nsegmx + 13*ih.nisegz;
 
         const auto& iSeg = amswd.getISeg();
-	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  6); // WINJ-segment 14, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  6); // WINJ-segment 14, ordered segment
 	BOOST_CHECK_EQUAL(iSeg[start + 1] , 13); // WINJ-segment 14, outlet segment
 	BOOST_CHECK_EQUAL(iSeg[start + 2] ,  0); // WINJ-segment 14, inflow segment current branch
 	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  1); // WINJ-segment 14, branch number
@@ -678,10 +678,10 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_EQUAL(iSeg[start + 5] ,  1); // WINJ-segment 14, Sum number of inflow branches from first segment to current segment
 	BOOST_CHECK_EQUAL(iSeg[start + 6] ,  0); // WINJ-segment 14, number of connections in segment
 	BOOST_CHECK_EQUAL(iSeg[start + 7] ,  0); // WINJ-segment 14, sum of connections with lower segmeent number than current segment
-	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  6); // WINJ-segment 14, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  6); // WINJ-segment 14, ordered segment
 
 	start = ih.nisegz*ih.nsegmx + 16*ih.nisegz;
-	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  3); // WINJ-segment 17, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 0] ,  3); // WINJ-segment 17, ordered segment
 	BOOST_CHECK_EQUAL(iSeg[start + 1] , 16); // WINJ-segment 17, outlet segment
  	BOOST_CHECK_EQUAL(iSeg[start + 2] , 18); // WINJ-segment 17, inflow segment current branch
 	BOOST_CHECK_EQUAL(iSeg[start + 3] ,  2); // WINJ-segment 17, branch number
@@ -689,10 +689,10 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_EQUAL(iSeg[start + 5] ,  0); // WINJ-segment 17, Sum number of inflow branches from first segment to current segment
 	BOOST_CHECK_EQUAL(iSeg[start + 6] ,  1); // WINJ-segment 17, number of connections in segment
 	BOOST_CHECK_EQUAL(iSeg[start + 7] ,  3); // WINJ-segment 17, sum of connections with lower segmeent number than current segment
-	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  3); // WINJ-segment 17, ordered segment 
+	BOOST_CHECK_EQUAL(iSeg[start + 8] ,  3); // WINJ-segment 17, ordered segment
 
     }
-    
+
     // RSEG (PROD)  + (WINJ)
     {
 	// well no 1 - PROD
@@ -712,21 +712,21 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_CLOSE(rseg[i0 +  5], 0.31   , 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 +  6],   10.  , 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 +  7], 7010.  , 1.0e-10);
-	
+
 	const double temp_o = smry.get("SOFR:PROD:1");
 	const double temp_w = smry.get("SWFR:PROD:1")*0.1;
 	const double temp_g = smry.get("SGFR:PROD:1")*gfactor;
-	
+
 	auto t0 = temp_o + temp_w + temp_g;
 	double t1 = (std::abs(temp_w) > 0) ? temp_w / t0 : 0.;
 	double t2 = (std::abs(temp_g) > 0) ? temp_g / t0 : 0.;
-	
+
 	BOOST_CHECK_CLOSE(rseg[i0 +  8],  t0, 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 +  9],  t1, 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 + 10],  t2, 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 + 11], 235., 1.0e-10);
     }
-  
+
     {
     // well no 2 - WINJ
 	const std::string wname = "WINJ";
@@ -746,23 +746,23 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_CLOSE(rseg[i0 +  5], 0.31   , 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 +  6],   10.  , 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 +  7], 7010.  , 1.0e-10);
-	
+
 	const double temp_o = 0.;
 	const double temp_w = -units.from_si(M::liquid_surface_rate,105.)*0.1;
 	const double temp_g = 0.0*gfactor;
-	
+
 	auto t0 = temp_o + temp_w + temp_g;
 	double t1 = (std::abs(temp_w) > 0) ? temp_w / t0 : 0.;
 	double t2 = (std::abs(temp_g) > 0) ? temp_g / t0 : 0.;
-	
+
 	BOOST_CHECK_CLOSE(rseg[i0 +  8],  t0, 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 +  9],  t1, 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 + 10],  t2, 1.0e-10);
 	BOOST_CHECK_CLOSE(rseg[i0 + 11], 234., 1.0e-10);
-    
+
     }
-    
-    // ILBR 
+
+    // ILBR
     {
         auto start =  0*ih.nilbrz;
 
@@ -772,23 +772,23 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_EQUAL(iLBr[start + 1] , 12); // PROD-branch   1, No of segments in branch
 	BOOST_CHECK_EQUAL(iLBr[start + 2] ,  1); // PROD-branch   1, first segment
 	BOOST_CHECK_EQUAL(iLBr[start + 3] , 12); // PROD-branch   1, last segment
-	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  0); // PROD-branch   1, branch no - 1 
+	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  0); // PROD-branch   1, branch no - 1
 	//PROD
 	start =  1*ih.nilbrz;
 	BOOST_CHECK_EQUAL(iLBr[start + 0] ,  3); // PROD-branch   2, outlet segment
 	BOOST_CHECK_EQUAL(iLBr[start + 1] ,  5); // PROD-branch   2, No of segments in branch
 	BOOST_CHECK_EQUAL(iLBr[start + 2] , 13); // PROD-branch   2, first segment
 	BOOST_CHECK_EQUAL(iLBr[start + 3] , 17); // PROD-branch   2, last segment
-	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // PROD-branch   2, branch no - 1 
+	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // PROD-branch   2, branch no - 1
 
-	
+
 	start = ih.nilbrz*ih.nlbrmx + 0*ih.nilbrz;
 	//WINJ
 	BOOST_CHECK_EQUAL(iLBr[start + 0] ,  0); // WINJ-branch   1, outlet segment
 	BOOST_CHECK_EQUAL(iLBr[start + 1] , 14); // WINJ-branch   1, No of segments in branch
 	BOOST_CHECK_EQUAL(iLBr[start + 2] ,  1); // WINJ-branch   1, first segment
 	BOOST_CHECK_EQUAL(iLBr[start + 3] , 14); // WINJ-branch   1, last segment
-	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  0); // WINJ-branch   1, branch no - 1 
+	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  0); // WINJ-branch   1, branch no - 1
 
 	start = ih.nilbrz*ih.nlbrmx + 1*ih.nilbrz;
 	//WINJ
@@ -796,11 +796,11 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_EQUAL(iLBr[start + 1] ,  5); // WINJ-branch   2, No of segments in branch
 	BOOST_CHECK_EQUAL(iLBr[start + 2] , 15); // WINJ-branch   2, first segment
 	BOOST_CHECK_EQUAL(iLBr[start + 3] , 19); // WINJ-branch   2, last segment
-	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // WINJ-branch   2, branch no - 1 
+	BOOST_CHECK_EQUAL(iLBr[start + 4] ,  1); // WINJ-branch   2, branch no - 1
 
 
     }
-    
+
        // ILBS
     {
         auto start =  0*ih.nlbrmx;
@@ -808,7 +808,7 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
         const auto& iLBs = amswd.getILBs();
 	//PROD
 	BOOST_CHECK_EQUAL(iLBs[start + 0] ,  13); // PROD-branch   2, first segment in branch
-	
+
 	start = ih.nlbrmx + 0*ih.nlbrmx;
 	//WINJ
 	BOOST_CHECK_EQUAL(iLBs[start + 0] ,  15); // WINJ-branch   2, first segment in branch

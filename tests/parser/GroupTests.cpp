@@ -31,7 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
@@ -156,8 +155,8 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
 
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
-    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
+    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
+    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1->name() );
@@ -193,8 +192,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
-    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
+    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
+    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1->name() );
@@ -226,8 +225,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 BOOST_AUTO_TEST_CASE(getWells) {
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well >("WELL1", 1, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
-    auto well2 = std::make_shared< Well >("WELL2", 2, 0, 0, 0.0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, timeMap, 0);
+    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
+    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
 
     group.addWell( 2 , well1->name() );
     group.addWell( 3 , well1->name() );
@@ -333,14 +332,14 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck );
     Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
-    const auto* currentWell = schedule.getWell("B-37T2");
-    const Opm::WellProductionProperties& wellProductionProperties = currentWell->getProductionProperties(0);
+    const auto& currentWell = schedule.getWell2("B-37T2", 0);
+    const Opm::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
     BOOST_CHECK_EQUAL(wellProductionProperties.controlMode, Opm::WellProducer::ControlModeEnum::GRUP);
 
-    BOOST_CHECK_EQUAL(currentWell->isAvailableForGroupControl(0), true);
-    BOOST_CHECK_EQUAL(currentWell->getGuideRate(0), 30);
-    BOOST_CHECK_EQUAL(currentWell->getGuideRatePhase(0), Opm::GuideRate::OIL);
-    BOOST_CHECK_EQUAL(currentWell->getGuideRateScalingFactor(0), 1.0);
+    BOOST_CHECK_EQUAL(currentWell.isAvailableForGroupControl(), true);
+    BOOST_CHECK_EQUAL(currentWell.getGuideRate(), 30);
+    BOOST_CHECK_EQUAL(currentWell.getGuideRatePhase(), Opm::GuideRate::OIL);
+    BOOST_CHECK_EQUAL(currentWell.getGuideRateScalingFactor(), 1.0);
 
 
 }
