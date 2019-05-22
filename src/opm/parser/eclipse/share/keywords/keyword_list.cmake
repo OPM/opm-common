@@ -34,6 +34,7 @@ set( keywords
      000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
      000_Eclipse100/B/BOX
+     000_Eclipse100/B/BRANPROP
      000_Eclipse100/C/CARFIN
      000_Eclipse100/C/CECON
      000_Eclipse100/C/COMPDAT
@@ -112,6 +113,8 @@ set( keywords
      000_Eclipse100/G/GAS
      000_Eclipse100/G/GCONINJE
      000_Eclipse100/G/GCONPROD
+     000_Eclipse100/G/GCONSALE
+     000_Eclipse100/G/GCONSUMP
      000_Eclipse100/G/GDFILE
      000_Eclipse100/G/GDORIENT
      000_Eclipse100/G/GECON
@@ -119,6 +122,7 @@ set( keywords
      000_Eclipse100/G/GLIFTOPT
      000_Eclipse100/G/GMWSET
      000_Eclipse100/G/GNETINJE
+     000_Eclipse100/G/GPMAINT
      000_Eclipse100/G/GRAVITY
      000_Eclipse100/G/GRID
      000_Eclipse100/G/GRIDFILE
@@ -128,6 +132,7 @@ set( keywords
      000_Eclipse100/G/GRUPNET
      000_Eclipse100/G/GRUPTREE
      000_Eclipse100/G/GSATPROD
+     000_Eclipse100/G/GUIDERAT
      000_Eclipse100/I/IMBNUM
      000_Eclipse100/I/IMKRVD
      000_Eclipse100/I/IMPES
@@ -182,6 +187,7 @@ set( keywords
      000_Eclipse100/N/NEXTSTEP
      000_Eclipse100/N/NNC
      000_Eclipse100/N/NOCASC
+     000_Eclipse100/N/NODEPROP
      000_Eclipse100/N/NOECHO
      000_Eclipse100/N/NOGGF
      000_Eclipse100/N/NOINSPEC

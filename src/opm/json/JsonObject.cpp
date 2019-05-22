@@ -32,8 +32,8 @@
 namespace Json {
 
     void JsonObject::initialize(const std::string& inline_json) {
-        root = cJSON_Parse( inline_json.c_str() );
-        if (!root)
+        this->root = cJSON_Parse( inline_json.c_str() );
+        if (!this->root)
             throw std::invalid_argument("Parsing json input failed");
         owner = true;
     }
@@ -54,7 +54,12 @@ namespace Json {
         if (stream) {
             std::string content_from_file( (std::istreambuf_iterator<char>(stream)),
                                  (std::istreambuf_iterator<char>()));
-            initialize( content_from_file );
+
+            this->root = cJSON_Parse( content_from_file.c_str() );
+            if (!this->root)
+                throw std::invalid_argument("Parsing json file: " + jsonFile.string() + " failed ");
+
+            this->owner = true;
         } else
             throw std::invalid_argument("Loading json from file: " + jsonFile.string() + " failed.");
     }
@@ -63,20 +68,20 @@ namespace Json {
 
 
     JsonObject::JsonObject( cJSON * object ) {
-        root = object;
+        this->root = object;
         owner = false;
     }
 
 
     JsonObject::~JsonObject() {
-        if (owner && root)
-            cJSON_Delete(root);
+        if (owner && this->root)
+            cJSON_Delete(this->root);
     }
 
 
 
     bool JsonObject::has_item( const std::string& key) const {
-        cJSON * object = cJSON_GetObjectItem( root , key.c_str() );
+        cJSON * object = cJSON_GetObjectItem( this->root , key.c_str() );
         if (object)
             return true;
         else
@@ -85,14 +90,14 @@ namespace Json {
 
 
     bool JsonObject::is_array( ) const {
-        if (root->type == cJSON_Array)
+        if (this->root->type == cJSON_Array)
             return true;
         else
             return false;
     }
 
     bool JsonObject::is_number( ) const {
-        if (root->type == cJSON_Number)
+        if (this->root->type == cJSON_Number)
             return true;
         else
             return false;
@@ -100,14 +105,14 @@ namespace Json {
 
 
     bool JsonObject::is_string( ) const {
-        if (root->type == cJSON_String)
+        if (this->root->type == cJSON_String)
             return true;
         else
             return false;
     }
 
     bool JsonObject::is_object( ) const {
-        if (root->type == cJSON_Object)
+        if (this->root->type == cJSON_Object)
             return true;
         else
             return false;
@@ -115,14 +120,14 @@ namespace Json {
 
 
     size_t JsonObject::size() const {
-        int int_size = cJSON_GetArraySize( root );
+        int int_size = cJSON_GetArraySize( this->root );
         return (size_t) int_size;
     }
 
 
     JsonObject JsonObject::get_array_item( size_t index ) const {
         if (is_array()) {
-            cJSON * new_c_ptr = cJSON_GetArrayItem( root , index );
+            cJSON * new_c_ptr = cJSON_GetArrayItem( this->root , index );
             if (new_c_ptr)
                 return JsonObject( new_c_ptr );
             else
@@ -133,7 +138,7 @@ namespace Json {
 
 
     JsonObject JsonObject::get_item(const std::string& key) const {
-        cJSON * c_ptr = cJSON_GetObjectItem( root , key.c_str() );
+        cJSON * c_ptr = cJSON_GetObjectItem( this->root , key.c_str() );
         if (c_ptr)
             return JsonObject( c_ptr );
         else
@@ -149,7 +154,7 @@ namespace Json {
 
     std::string JsonObject::as_string() const {
         if (is_string())
-            return root->valuestring;
+            return this->root->valuestring;
         else
             throw std::invalid_argument("Object is not a string object");
     }
@@ -162,8 +167,8 @@ namespace Json {
 
 
     int JsonObject::as_int() const {
-        if (root->type == cJSON_Number)
-            return root->valueint;
+        if (this->root->type == cJSON_Number)
+            return this->root->valueint;
         else
             throw std::invalid_argument("Object is not a number object.");
     }
@@ -176,8 +181,8 @@ namespace Json {
 
 
     double JsonObject::as_double() const {
-        if (root->type == cJSON_Number)
-            return root->valuedouble;
+        if (this->root->type == cJSON_Number)
+            return this->root->valuedouble;
         else
             throw std::invalid_argument("Object is not a number object.");
     }
@@ -194,7 +199,7 @@ namespace Json {
 
 
     std::string JsonObject::to_string() const {
-        char * c_str = cJSON_Print( root );
+        char * c_str = cJSON_Print( this->root );
         std::string s(c_str);
         free( c_str );
 
