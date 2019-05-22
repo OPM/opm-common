@@ -185,6 +185,7 @@ set( keywords
      000_Eclipse100/N/NEXTSTEP
      000_Eclipse100/N/NNC
      000_Eclipse100/N/NOCASC
+     000_Eclipse100/N/NODEPROP
      000_Eclipse100/N/NOECHO
      000_Eclipse100/N/NOGGF
      000_Eclipse100/N/NOINSPEC
