@@ -34,6 +34,7 @@ set( keywords
      000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
      000_Eclipse100/B/BOX
+     000_Eclipse100/B/BRANPROP
      000_Eclipse100/C/CARFIN
      000_Eclipse100/C/CECON
      000_Eclipse100/C/COMPDAT
