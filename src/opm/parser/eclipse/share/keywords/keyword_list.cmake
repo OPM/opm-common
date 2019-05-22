@@ -130,6 +130,7 @@ set( keywords
      000_Eclipse100/G/GRUPNET
      000_Eclipse100/G/GRUPTREE
      000_Eclipse100/G/GSATPROD
+     000_Eclipse100/G/GUIDERAT
      000_Eclipse100/I/IMBNUM
      000_Eclipse100/I/IMKRVD
      000_Eclipse100/I/IMPES
