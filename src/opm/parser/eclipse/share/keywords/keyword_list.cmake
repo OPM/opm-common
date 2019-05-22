@@ -113,6 +113,7 @@ set( keywords
      000_Eclipse100/G/GAS
      000_Eclipse100/G/GCONINJE
      000_Eclipse100/G/GCONPROD
+     000_Eclipse100/G/GCONSALE
      000_Eclipse100/G/GCONSUMP
      000_Eclipse100/G/GDFILE
      000_Eclipse100/G/GDORIENT
