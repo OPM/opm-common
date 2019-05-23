@@ -334,8 +334,10 @@ bool Well2::updateSolventFraction(double solvent_fraction) {
 }
 
 
-bool Well2::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid) {
-    std::shared_ptr<WellConnections> new_connection_set( newConnectionsWithSegments(keyword, *this->connections, *this->segments , grid) );
+bool Well2::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
+                           const ParseContext& parseContext, ErrorGuard& errors) {
+    std::shared_ptr<WellConnections> new_connection_set( newConnectionsWithSegments(keyword, *this->connections, *this->segments , grid,
+                                                                                    parseContext, errors) );
     return this->updateConnections(new_connection_set);
 }
 

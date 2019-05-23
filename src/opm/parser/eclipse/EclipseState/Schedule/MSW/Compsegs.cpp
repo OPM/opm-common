@@ -51,7 +51,8 @@ namespace Opm {
     {
     }
 
-    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword, const EclipseGrid& grid) {
+    std::vector< Compsegs > Compsegs::compsegsFromCOMPSEGSKeyword(const DeckKeyword& compsegsKeyword, const EclipseGrid& grid,
+                                                                  const ParseContext& parseContext, ErrorGuard& errors) {
 
         std::vector< Compsegs > compsegs;
 
@@ -65,6 +66,8 @@ namespace Opm {
             const int K = record.getItem<ParserKeywords::COMPSEGS::K>().get< int >(0) - 1;
             const int branch = record.getItem<ParserKeywords::COMPSEGS::BRANCH>().get< int >(0);
 
+            const std::string& well_name = compsegsKeyword.getRecord(0).getItem("WELL").getTrimmedString(0);
+
             double distance_start;
             double distance_end;
             if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().hasValue(0)) {
@@ -75,31 +78,38 @@ namespace Opm {
                 // TODO: the end of the previous connection or range
                 // 'previous' should be in term of the input order
                 // since basically no specific order for the connections
-                throw std::runtime_error("this way to obtain DISTANCE_START not implemented yet!");
+                const std::string msg = "This way to obtain DISTANCE_START in keyword COMPSEGS "
+                                        "is not implemented yet for well " + well_name;
+                parseContext.handleError(ParseContext::SCHEDULE_NOT_SUPPORTED_COMPSEGS, msg, errors);
             }
             if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().hasValue(0)) {
                 distance_end = record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().getSIDouble(0);
             } else {
                 // TODO: the distance_start plus the thickness of the grid block
-                throw std::runtime_error("this way to obtain DISTANCE_END not implemented yet!");
+                const std::string msg = "This way to obtain DISTANCE_END in keyword COMPSEGS "
+                                        "is not implemented yet for well " + well_name;
+                parseContext.handleError(ParseContext::SCHEDULE_NOT_SUPPORTED_COMPSEGS, msg, errors);
             }
 
             if (distance_end <= distance_start) {
-                const std::string& well_name = compsegsKeyword.getRecord(0).getItem("WELL").getTrimmedString(0);
                 std::ostringstream sstr;
                 sstr << " The end of the perforations need be to further down than the start of the perforations\n "
                      << " well " << well_name << " " << I + 1 << " " << J + 1 << " " << K + 1 << " in keyword COMPSEGS\n";
-                throw std::logic_error(sstr.str());
+                parseContext.handleError(ParseContext::SCHEDULE_INVALID_COMPSEGS, sstr.str(), errors);
             }
 
             if( !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) &&
                 !record.getItem< ParserKeywords::COMPSEGS::DISTANCE_END >().hasValue( 0 ) ) {
-                throw std::runtime_error("the direction has to be specified when DISTANCE_END in the record is not specified");
+                const std::string msg = "The direction has to be specified when DISTANCE_END "
+                                        "is not specified in keyword COMPSEGS for well " + well_name;
+                parseContext.handleError(ParseContext::SCHEDULE_INVALID_COMPSEGS, msg, errors);
             }
 
             if( record.getItem< ParserKeywords::COMPSEGS::END_IJK >().hasValue( 0 ) &&
                !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) ) {
-                throw std::runtime_error("the direction has to be specified when END_IJK in the record is specified");
+                const std::string msg = "The direction has to be specified when END_IJK "
+                                        "is specified in keyword COMPSEGS for well " + well_name;
+                parseContext.handleError(ParseContext::SCHEDULE_INVALID_COMPSEGS, msg, errors);
             }
 
             /*
@@ -122,7 +132,9 @@ namespace Opm {
 
             if (center_depth < 0.) {
                 //TODO: get the depth from COMPDAT data.
-                throw std::runtime_error("this way to obtain CENTER_DISTANCE not implemented yet either!");
+                const std::string msg = "This way to obtain CENTER_DISTANCE in keyword COMPSEGS "
+                                        "is not implemented yet for well " + well_name;
+                parseContext.handleError(ParseContext::SCHEDULE_NOT_SUPPORTED_COMPSEGS, msg, errors);
             }
 
             int segment_number;

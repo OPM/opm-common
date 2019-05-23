@@ -333,6 +333,9 @@ namespace Opm {
 
         const static std::string SCHEDULE_WELL_ERROR;
 
+        const static std::string SCHEDULE_INVALID_COMPSEGS;
+        const static std::string SCHEDULE_NOT_SUPPORTED_COMPSEGS;
+
         /*
           The SIMULATOR_KEYWORD_ errormodes are for the situation where the
           parser recognizes, and correctly parses a keyword, but we know that
