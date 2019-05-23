@@ -21,7 +21,8 @@
 #define BOOST_TEST_MODULE EclFilesComparatorTest
 
 #include <boost/test/unit_test.hpp>
-#include <examples/test_util/EclFilesComparator.hpp>
+
+#include <test_util/EclFilesComparator.hpp>
 
 BOOST_AUTO_TEST_CASE(deviation) {
     double a = 1;

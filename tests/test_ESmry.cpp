@@ -16,20 +16,24 @@
    +   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    +   */
 
-
 #include "config.h"
-#include <iostream>
-#include <stdio.h>
-#include <iomanip>
-#include <math.h>
-#include <algorithm>
-#include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/ESmry.hpp>
+#include <opm/io/eclipse/ESmry.hpp>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
+
+#include <opm/io/eclipse/EclFile.hpp>
+
+#include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <math.h>
+#include <stdio.h>
+#include <tuple>
+
+using Opm::ecl::ESmry;
 
 template<typename InputIterator1, typename InputIterator2>
 bool

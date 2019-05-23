@@ -16,14 +16,12 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "EclUtil.hpp"
+#include <opm/io/eclipse/EclUtil.hpp>
+
 #include <opm/common/ErrorMacros.hpp>
 
 #include <algorithm>
 #include <stdexcept>
-
-
-namespace EIOD = Opm::ecl;
 
 
 int Opm::ecl::flipEndianInt(int num)
@@ -60,22 +58,22 @@ std::tuple<int, int> Opm::ecl::block_size_data_binary(eclArrType arrType)
     using BlockSizeTuple = std::tuple<int, int>;
 
     switch (arrType) {
-    case EIOD::INTE:
-        return BlockSizeTuple{EIOD::sizeOfInte, EIOD::MaxBlockSizeInte};
+    case INTE:
+        return BlockSizeTuple{sizeOfInte, MaxBlockSizeInte};
         break;
-    case EIOD::REAL:
-        return BlockSizeTuple{EIOD::sizeOfReal, EIOD::MaxBlockSizeReal};
+    case REAL:
+        return BlockSizeTuple{sizeOfReal, MaxBlockSizeReal};
         break;
-    case EIOD::DOUB:
-        return BlockSizeTuple{EIOD::sizeOfDoub, EIOD::MaxBlockSizeDoub};
+    case DOUB:
+        return BlockSizeTuple{sizeOfDoub, MaxBlockSizeDoub};
         break;
-    case EIOD::LOGI:
-        return BlockSizeTuple{EIOD::sizeOfLogi, EIOD::MaxBlockSizeLogi};
+    case LOGI:
+        return BlockSizeTuple{sizeOfLogi, MaxBlockSizeLogi};
         break;
-    case EIOD::CHAR:
-        return BlockSizeTuple{EIOD::sizeOfChar, EIOD::MaxBlockSizeChar};
+    case CHAR:
+        return BlockSizeTuple{sizeOfChar, MaxBlockSizeChar};
         break;
-    case EIOD::MESS:
+    case MESS:
         OPM_THROW(std::invalid_argument, "Type 'MESS' have no associated data");
         break;
     default:
@@ -85,27 +83,27 @@ std::tuple<int, int> Opm::ecl::block_size_data_binary(eclArrType arrType)
 }
 
 
-std::tuple<int, int, int> Opm::ecl::block_size_data_formatted(EIOD::eclArrType arrType)
+std::tuple<int, int, int> Opm::ecl::block_size_data_formatted(eclArrType arrType)
 {
     using BlockSizeTuple = std::tuple<int, int, int>;
 
     switch (arrType) {
-    case EIOD::INTE:
-        return BlockSizeTuple{EIOD::MaxNumBlockInte, EIOD::numColumnsInte, EIOD::columnWidthInte};
+    case INTE:
+        return BlockSizeTuple{MaxNumBlockInte, numColumnsInte, columnWidthInte};
         break;
-    case EIOD::REAL:
-        return BlockSizeTuple{EIOD::MaxNumBlockReal,EIOD::numColumnsReal, EIOD::columnWidthReal};
+    case REAL:
+        return BlockSizeTuple{MaxNumBlockReal,numColumnsReal, columnWidthReal};
         break;
-    case EIOD::DOUB:
-        return BlockSizeTuple{EIOD::MaxNumBlockDoub,EIOD::numColumnsDoub, EIOD::columnWidthDoub};
+    case DOUB:
+        return BlockSizeTuple{MaxNumBlockDoub,numColumnsDoub, columnWidthDoub};
         break;
-    case EIOD::LOGI:
-        return BlockSizeTuple{EIOD::MaxNumBlockLogi,EIOD::numColumnsLogi, EIOD::columnWidthLogi};
+    case LOGI:
+        return BlockSizeTuple{MaxNumBlockLogi,numColumnsLogi, columnWidthLogi};
         break;
-    case EIOD::CHAR:
-        return BlockSizeTuple{EIOD::MaxNumBlockChar,EIOD::numColumnsChar, EIOD::columnWidthChar};
+    case CHAR:
+        return BlockSizeTuple{MaxNumBlockChar,numColumnsChar, columnWidthChar};
         break;
-    case EIOD::MESS:
+    case MESS:
         OPM_THROW(std::invalid_argument, "Type 'MESS' have no associated data") ;
         break;
     default:

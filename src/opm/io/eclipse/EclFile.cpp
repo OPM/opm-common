@@ -16,11 +16,14 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#include "EclFile.hpp"
-#include "EclUtil.hpp"
+#include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclUtil.hpp>
 
 #include <array>
+#include <exception>
 #include <functional>
+#include <fstream>
+#include <stdexcept>
 #include <string>
 #include <string.h>
 #include <sstream>
@@ -64,14 +67,14 @@ bool isEOF(std::fstream* fileH)
 
 
 void readBinaryHeader(std::fstream& fileH, std::string& arrName,
-                      int& size, EIOD::eclArrType &arrType)
+                      int& size, Opm::ecl::eclArrType &arrType)
 {
     int bhead;
     std::string tmpStrName(8,' ');
     std::string tmpStrType(4,' ');
 
     fileH.read(reinterpret_cast<char*>(&bhead), sizeof(bhead));
-    bhead = EIOD::flipEndianInt(bhead);
+    bhead = Opm::ecl::flipEndianInt(bhead);
 
     if (bhead != 16) {
         std::string message="Error reading binary header. Expected 16 bytes of header data, found " + std::to_string(bhead);
@@ -81,12 +84,12 @@ void readBinaryHeader(std::fstream& fileH, std::string& arrName,
     fileH.read(&tmpStrName[0], 8);
 
     fileH.read(reinterpret_cast<char*>(&size), sizeof(size));
-    size = EIOD::flipEndianInt(size);
+    size = Opm::ecl::flipEndianInt(size);
 
     fileH.read(&tmpStrType[0], 4);
 
     fileH.read(reinterpret_cast<char*>(&bhead), sizeof(bhead));
-    bhead = EIOD::flipEndianInt(bhead);
+    bhead = Opm::ecl::flipEndianInt(bhead);
 
     if (bhead != 16) {
         std::string message="Error reading binary header. Expected 16 bytes of header data, found " + std::to_string(bhead);
@@ -95,54 +98,54 @@ void readBinaryHeader(std::fstream& fileH, std::string& arrName,
 
     arrName = tmpStrName;
     if (tmpStrType == "INTE")
-        arrType = EIOD::INTE;
+        arrType = Opm::ecl::INTE;
     else if (tmpStrType == "REAL")
-        arrType = EIOD::REAL;
+        arrType = Opm::ecl::REAL;
     else if (tmpStrType == "DOUB")
-        arrType = EIOD::DOUB;
+        arrType = Opm::ecl::DOUB;
     else if (tmpStrType == "CHAR")
-        arrType = EIOD::CHAR;
+        arrType = Opm::ecl::CHAR;
     else if (tmpStrType =="LOGI")
-        arrType = EIOD::LOGI;
+        arrType = Opm::ecl::LOGI;
     else if (tmpStrType == "MESS")
-        arrType = EIOD::MESS;
+        arrType = Opm::ecl::MESS;
     else
         OPM_THROW(std::runtime_error, "Error, unknown array type '" + tmpStrType +"'");
 }
 
 
-unsigned long int sizeOnDiskBinary(int num, EIOD::eclArrType arrType)
+unsigned long int sizeOnDiskBinary(int num, Opm::ecl::eclArrType arrType)
 {
     unsigned long int size = 0;
 
-    if (arrType == EIOD::MESS) {
+    if (arrType == Opm::ecl::MESS) {
         if (num > 0) {
             std::string message = "In routine calcSizeOfArray, type MESS can not have size > 0";
             OPM_THROW(std::invalid_argument, message);
         }
     } else {
-        auto sizeData = EIOD::block_size_data_binary(arrType);
+        auto sizeData = Opm::ecl::block_size_data_binary(arrType);
 
         int sizeOfElement = std::get<0>(sizeData);
         int maxBlockSize = std::get<1>(sizeData);
         int maxNumberOfElements = maxBlockSize / sizeOfElement;
 
         size = num * sizeOfElement;
-        size = size + ((num-1) / maxNumberOfElements) * 2 * EIOD::sizeOfInte; // 8 byte (two integers) every 1000 element
+        size = size + ((num-1) / maxNumberOfElements) * 2 * Opm::ecl::sizeOfInte; // 8 byte (two integers) every 1000 element
 
         if (num > 0) {
-            size = size + 2 * EIOD::sizeOfInte;
+            size = size + 2 * Opm::ecl::sizeOfInte;
         }
     }
 
     return size;
 }
 
-unsigned long int sizeOnDiskFormatted(const int num, EIOD::eclArrType arrType)
+unsigned long int sizeOnDiskFormatted(const int num, Opm::ecl::eclArrType arrType)
 {
     unsigned long int size = 0;
 
-    if (arrType == EIOD::MESS) {
+    if (arrType == Opm::ecl::MESS) {
         if (num > 0) {
             OPM_THROW(std::invalid_argument, "In routine calcSizeOfArray, type MESS can not have size > 0");
         }
@@ -185,7 +188,7 @@ unsigned long int sizeOnDiskFormatted(const int num, EIOD::eclArrType arrType)
 
 
 template<typename T, typename T2>
-std::vector<T> readBinaryArray(std::fstream& fileH, const int size, EIOD::eclArrType type,
+std::vector<T> readBinaryArray(std::fstream& fileH, const int size, Opm::ecl::eclArrType type,
                                std::function<T(T2)>& flip)
 {
     std::vector<T> arr;
@@ -201,7 +204,7 @@ std::vector<T> readBinaryArray(std::fstream& fileH, const int size, EIOD::eclArr
     while (rest > 0) {
         int dhead;
         fileH.read(reinterpret_cast<char*>(&dhead), sizeof(dhead));
-        dhead = EIOD::flipEndianInt(dhead);
+        dhead = Opm::ecl::flipEndianInt(dhead);
 
         int num = dhead / sizeOfElement;
 
@@ -225,7 +228,7 @@ std::vector<T> readBinaryArray(std::fstream& fileH, const int size, EIOD::eclArr
 
         int dtail;
         fileH.read(reinterpret_cast<char*>(&dtail), sizeof(dtail));
-        dtail = EIOD::flipEndianInt(dtail);
+        dtail = Opm::ecl::flipEndianInt(dtail);
 
         if (dhead != dtail) {
             OPM_THROW(std::runtime_error, "Error reading binary data, tail not matching header.");
@@ -238,22 +241,22 @@ std::vector<T> readBinaryArray(std::fstream& fileH, const int size, EIOD::eclArr
 
 std::vector<int> readBinaryInteArray(std::fstream &fileH, const int size)
 {
-    std::function<int(int)> f = EIOD::flipEndianInt;
-    return readBinaryArray<int,int>(fileH, size, EIOD::INTE, f);
+    std::function<int(int)> f = Opm::ecl::flipEndianInt;
+    return readBinaryArray<int,int>(fileH, size, Opm::ecl::INTE, f);
 }
 
 
 std::vector<float> readBinaryRealArray(std::fstream& fileH, const int size)
 {
-    std::function<float(float)> f = EIOD::flipEndianFloat;
-    return readBinaryArray<float,float>(fileH, size, EIOD::REAL, f);
+    std::function<float(float)> f = Opm::ecl::flipEndianFloat;
+    return readBinaryArray<float,float>(fileH, size, Opm::ecl::REAL, f);
 }
 
 
 std::vector<double> readBinaryDoubArray(std::fstream& fileH, const int size)
 {
-    std::function<double(double)> f = EIOD::flipEndianDouble;
-    return readBinaryArray<double,double>(fileH, size, EIOD::DOUB, f);
+    std::function<double(double)> f = Opm::ecl::flipEndianDouble;
+    return readBinaryArray<double,double>(fileH, size, Opm::ecl::DOUB, f);
 }
 
 std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const int size)
@@ -261,9 +264,9 @@ std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const int size)
     std::function<bool(unsigned int)> f = [](unsigned int intVal)
                                           {
                                               bool value;
-                                              if (intVal == EIOD::true_value) {
+                                              if (intVal == Opm::ecl::true_value) {
                                                   value = true;
-                                              } else if (intVal == EIOD::false_value) {
+                                              } else if (intVal == Opm::ecl::false_value) {
                                                   value = false;
                                               } else {
                                                   OPM_THROW(std::runtime_error, "Error reading logi value");
@@ -271,7 +274,7 @@ std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const int size)
 
                                               return value;
                                           };
-    return readBinaryArray<bool,unsigned int>(fileH, size, EIOD::LOGI, f);
+    return readBinaryArray<bool,unsigned int>(fileH, size, Opm::ecl::LOGI, f);
 }
 
 
@@ -281,9 +284,9 @@ std::vector<std::string> readBinaryCharArray(std::fstream& fileH, const int size
     std::function<std::string(Char8)> f = [](const Char8& val)
                                           {
                                               std::string res(val.begin(), val.end());
-                                              return EIOD::trimr(res);
+                                              return Opm::ecl::trimr(res);
                                           };
-    return readBinaryArray<std::string,Char8>(fileH, size, EIOD::CHAR, f);
+    return readBinaryArray<std::string,Char8>(fileH, size, Opm::ecl::CHAR, f);
 }
 
 
@@ -300,10 +303,10 @@ std::vector<std::string> split_string(const std::string& inputStr)
 
 
 void readFormattedHeader(std::fstream& fileH, std::string& arrName,
-                         int &num, EIOD::eclArrType &arrType)
+                         int &num, Opm::ecl::eclArrType &arrType)
 {
     std::string line;
-    getline(fileH,line);
+    std::getline(fileH,line);
 
     int p1 = line.find_first_of("'");
     int p2 = line.find_first_of("'",p1+1);
@@ -321,17 +324,17 @@ void readFormattedHeader(std::fstream& fileH, std::string& arrName,
     num = std::stoi(antStr);
 
     if (arrTypeStr == "INTE")
-        arrType = EIOD::INTE;
+        arrType = Opm::ecl::INTE;
     else if (arrTypeStr == "REAL")
-        arrType = EIOD::REAL;
+        arrType = Opm::ecl::REAL;
     else if (arrTypeStr == "DOUB")
-        arrType = EIOD::DOUB;
+        arrType = Opm::ecl::DOUB;
     else if (arrTypeStr == "CHAR")
-        arrType = EIOD::CHAR;
+        arrType = Opm::ecl::CHAR;
     else if (arrTypeStr == "LOGI")
-        arrType = EIOD::LOGI;
+        arrType = Opm::ecl::LOGI;
     else if (arrTypeStr == "MESS")
-        arrType = EIOD::MESS;
+        arrType = Opm::ecl::MESS;
     else
         OPM_THROW(std::runtime_error, "Error, unknown array type '" + arrTypeStr +"'");
 
@@ -421,7 +424,7 @@ std::vector<std::string> readFormattedCharArray(std::fstream& fileH, const int s
             if (value == "        ") {
                 arr.push_back("");
             } else {
-                arr.push_back(EIOD::trimr(value));
+                arr.push_back(Opm::ecl::trimr(value));
             }
 
             num++;
@@ -495,6 +498,9 @@ std::vector<double> readFormattedDoubArray(std::fstream& fileH, const int size)
 
 } // anonymous namespace
 
+// ==========================================================================
+
+namespace Opm { namespace ecl {
 
 EclFile::EclFile(const std::string& filename) : inputFilename(filename)
 {
@@ -516,7 +522,7 @@ EclFile::EclFile(const std::string& filename) : inputFilename(filename)
     int n = 0;
     while (!isEOF(&fileH)) {
         std::string arrName(8,' ');
-        EIOD::eclArrType arrType;
+        eclArrType arrType;
         int num;
 
         if (formatted) {
@@ -528,7 +534,7 @@ EclFile::EclFile(const std::string& filename) : inputFilename(filename)
         array_size.push_back(num);
         array_type.push_back(arrType);
 
-        array_name.push_back(EIOD::trimr(arrName));
+        array_name.push_back(trimr(arrName));
         array_index[array_name[n]] = n;
 
         unsigned long int pos = fileH.tellg();
@@ -557,22 +563,22 @@ void EclFile::loadArray(std::fstream& fileH, int arrIndex)
 
     if (formatted) {
         switch (array_type[arrIndex]) {
-        case EIOD::INTE:
+        case INTE:
             inte_array[arrIndex] = readFormattedInteArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::REAL:
+        case REAL:
             real_array[arrIndex] = readFormattedRealArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::DOUB:
+        case DOUB:
             doub_array[arrIndex] = readFormattedDoubArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::LOGI:
+        case LOGI:
             logi_array[arrIndex] = readFormattedLogiArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::CHAR:
+        case CHAR:
             char_array[arrIndex] = readFormattedCharArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::MESS:
+        case MESS:
             break;
         default:
             OPM_THROW(std::runtime_error, "Asked to read unexpected array type");
@@ -581,22 +587,22 @@ void EclFile::loadArray(std::fstream& fileH, int arrIndex)
 
     } else {
         switch (array_type[arrIndex]) {
-        case EIOD::INTE:
+        case INTE:
             inte_array[arrIndex] = readBinaryInteArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::REAL:
+        case REAL:
             real_array[arrIndex] = readBinaryRealArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::DOUB:
+        case DOUB:
             doub_array[arrIndex] = readBinaryDoubArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::LOGI:
+        case LOGI:
             logi_array[arrIndex] = readBinaryLogiArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::CHAR:
+        case CHAR:
             char_array[arrIndex] = readBinaryCharArray(fileH, array_size[arrIndex]);
             break;
-        case EIOD::MESS:
+        case MESS:
             break;
         default:
             OPM_THROW(std::runtime_error, "Asked to read unexpected array type");
@@ -716,35 +722,35 @@ std::vector<EclFile::EclEntry> EclFile::getList() const
 template<>
 const std::vector<int>& EclFile::get<int>(int arrIndex)
 {
-    return getImpl(arrIndex, EIOD::INTE, inte_array, "integer");
+    return getImpl(arrIndex, INTE, inte_array, "integer");
 }
 
 template<>
 const std::vector<float>&
 EclFile::get<float>(int arrIndex)
 {
-    return getImpl(arrIndex, EIOD::REAL, real_array, "float");
+    return getImpl(arrIndex, REAL, real_array, "float");
 }
 
 
 template<>
 const std::vector<double> &EclFile::get<double>(int arrIndex)
 {
-    return getImpl(arrIndex, EIOD::DOUB, doub_array, "double");
+    return getImpl(arrIndex, DOUB, doub_array, "double");
 }
 
 
 template<>
 const std::vector<bool>& EclFile::get<bool>(int arrIndex)
 {
-    return getImpl(arrIndex, EIOD::LOGI, logi_array, "bool");
+    return getImpl(arrIndex, LOGI, logi_array, "bool");
 }
 
 
 template<>
 const std::vector<std::string>& EclFile::get<std::string>(int arrIndex)
 {
-    return getImpl(arrIndex, EIOD::CHAR, char_array, "string");
+    return getImpl(arrIndex, CHAR, char_array, "string");
 }
 
 
@@ -765,7 +771,7 @@ const std::vector<int>& EclFile::get<int>(const std::string& name)
         OPM_THROW(std::invalid_argument, message);
     }
 
-    return getImpl(search->second, EIOD::INTE, inte_array, "integer");
+    return getImpl(search->second, INTE, inte_array, "integer");
 }
 
 template<>
@@ -778,7 +784,7 @@ const std::vector<float>& EclFile::get<float>(const std::string& name)
         OPM_THROW(std::invalid_argument, message);
     }
 
-    return getImpl(search->second, EIOD::REAL, real_array, "float");
+    return getImpl(search->second, REAL, real_array, "float");
 }
 
 
@@ -792,7 +798,7 @@ const std::vector<double>& EclFile::get<double>(const std::string &name)
         OPM_THROW(std::invalid_argument, message);
     }
 
-    return getImpl(search->second, EIOD::DOUB, doub_array, "double");
+    return getImpl(search->second, DOUB, doub_array, "double");
 }
 
 
@@ -806,7 +812,7 @@ const std::vector<bool>& EclFile::get<bool>(const std::string &name)
         OPM_THROW(std::invalid_argument, message);
     }
 
-    return getImpl(search->second, EIOD::LOGI, logi_array, "bool");
+    return getImpl(search->second, LOGI, logi_array, "bool");
 }
 
 
@@ -820,5 +826,7 @@ const std::vector<std::string>& EclFile::get<std::string>(const std::string &nam
         OPM_THROW(std::invalid_argument, message);
     }
 
-    return getImpl(search->second, EIOD::CHAR, char_array, "string");
+    return getImpl(search->second, CHAR, char_array, "string");
 }
+
+}} // namespace Opm::ecl

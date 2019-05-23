@@ -164,6 +164,13 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list( APPEND MAIN_SOURCE_FILES
+          src/opm/io/eclipse/EclFile.cpp
+          src/opm/io/eclipse/EclOutput.cpp
+          src/opm/io/eclipse/EclUtil.cpp
+          src/opm/io/eclipse/EGrid.cpp
+          src/opm/io/eclipse/ERft.cpp
+          src/opm/io/eclipse/ERst.cpp
+          src/opm/io/eclipse/ESmry.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
@@ -562,6 +569,14 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list(APPEND PUBLIC_HEADER_FILES
+        opm/io/eclipse/EclFile.hpp
+        opm/io/eclipse/EclIOdata.hpp
+        opm/io/eclipse/EclOutput.hpp
+        opm/io/eclipse/EclUtil.hpp
+        opm/io/eclipse/EGrid.hpp
+        opm/io/eclipse/ERft.hpp
+        opm/io/eclipse/ERst.hpp
+        opm/io/eclipse/ESmry.hpp
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp

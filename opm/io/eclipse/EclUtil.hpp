@@ -16,25 +16,25 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#ifndef ECL_UTIL_HPP
-#define ECL_UTIL_HPP
+#ifndef OPM_IO_ECLUTIL_HPP
+#define OPM_IO_ECLUTIL_HPP
+
+#include <opm/io/eclipse/EclIOdata.hpp>
 
 #include <string>
 #include <tuple>
-#include <examples/test_util/data/EclIOdata.hpp>
 
+namespace Opm { namespace ecl {
 
-namespace Opm {
-    namespace ecl {
-        int flipEndianInt(int num);
-        float flipEndianFloat(float num);
-        double flipEndianDouble(double num);
+    int flipEndianInt(int num);
+    float flipEndianFloat(float num);
+    double flipEndianDouble(double num);
 
-        std::tuple<int, int> block_size_data_binary(eclArrType arrType);
-        std::tuple<int, int, int> block_size_data_formatted(eclArrType arrType);
+    std::tuple<int, int> block_size_data_binary(eclArrType arrType);
+    std::tuple<int, int, int> block_size_data_formatted(eclArrType arrType);
 
-        std::string trimr(const std::string &str1);
-    }
-}
+    std::string trimr(const std::string &str1);
 
-#endif
+}} // namespace Opm::ecl
+
+#endif // OPM_IO_ECLUTIL_HPP

@@ -16,15 +16,13 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#ifndef ESMRY_HPP
-#define ESMRY_HPP
+#ifndef OPM_IO_ESMRY_HPP
+#define OPM_IO_ESMRY_HPP
 
-#include <iostream>
 #include <string>
-#include <fstream>
 #include <vector>
-#include <ctime>
-#include <map>
+
+namespace Opm { namespace ecl {
 
 class ESmry
 {
@@ -55,6 +53,6 @@ private:
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num);
 };
 
-#endif
+}} // namespace Opm::ecl
 
-
+#endif // OPM_IO_ESMRY_HPP

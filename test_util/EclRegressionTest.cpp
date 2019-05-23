@@ -17,22 +17,23 @@
 */
 
 #include "EclRegressionTest.hpp"
+
+#include <opm/io/eclipse/EGrid.hpp>
+#include <opm/io/eclipse/ERft.hpp>
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/ESmry.hpp>
+
 #include <opm/common/ErrorMacros.hpp>
+
 #include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <iomanip>
 #include <iostream>
 #include <set>
-#include <iomanip>
-#include <typeinfo>
 #include <type_traits>
+#include <typeinfo>
 #include <vector>
-
-#include <examples/test_util/ERst.hpp>
-#include <examples/test_util/ESmry.hpp>
-#include <examples/test_util/ERft.hpp>
-
-#include <chrono>
-
 
 // helper macro to handle error throws or not
 #define HANDLE_ERROR(type, message) \
@@ -45,6 +46,7 @@
     } \
   }
 
+using namespace Opm::ecl;
 
 ECLRegressionTest::~ECLRegressionTest()
 {
@@ -264,8 +266,8 @@ void ECLRegressionTest::compareKeywords(const std::vector<std::string> &keywords
 
 void ECLRegressionTest::checkSpesificKeyword(std::vector<std::string>& keywords1,
                                              std::vector<std::string>& keywords2,
-                                             std::vector<EIOD::eclArrType>& arrayType1,
-                                             std::vector<EIOD::eclArrType>& arrayType2,
+                                             std::vector<eclArrType>& arrayType1,
+                                             std::vector<eclArrType>& arrayType2,
                                              const std::string& reference)
 {
     auto search1 = std::find(keywords1.begin(), keywords1.end(), spesificKeyword);
@@ -276,7 +278,7 @@ void ECLRegressionTest::checkSpesificKeyword(std::vector<std::string>& keywords1
         OPM_THROW(std::runtime_error, "\nTesting spesific kewyword in " << reference << ". Keyword not found in any of the cases .");
     }
 
-    EIOD::eclArrType arrType;
+    eclArrType arrType;
     if (search1 != keywords1.end()) {
         int ind = std::distance(keywords1.begin(), search1);
         arrType = arrayType1[ind];
@@ -360,7 +362,7 @@ void ECLRegressionTest::gridCompare()
             auto arrayList2 = grid2->getList();
 
             std::vector<std::string> keywords1;
-            std::vector<EIOD::eclArrType> arrayType1;
+            std::vector<eclArrType> arrayType1;
 
             for (auto& array : arrayList1) {
                 keywords1.push_back(std::get<0>(array));
@@ -368,7 +370,7 @@ void ECLRegressionTest::gridCompare()
             }
 
             std::vector<std::string> keywords2;
-            std::vector<EIOD::eclArrType> arrayType2;
+            std::vector<eclArrType> arrayType2;
 
             for (auto& array : arrayList2) {
                 keywords2.push_back(std::get<0>(array));
@@ -541,7 +543,7 @@ void ECLRegressionTest::results_init()
         auto arrayList2 = init2.getList();
 
         std::vector<std::string> keywords1;
-        std::vector<EIOD::eclArrType> arrayType1;
+        std::vector<eclArrType> arrayType1;
 
         for (const auto& array : arrayList1) {
             keywords1.push_back(std::get<0>(array));
@@ -549,7 +551,7 @@ void ECLRegressionTest::results_init()
         }
 
         std::vector<std::string> keywords2;
-        std::vector<EIOD::eclArrType> arrayType2;
+        std::vector<eclArrType> arrayType2;
 
         for (const auto& array : arrayList2) {
             keywords2.push_back(std::get<0>(array));
@@ -578,27 +580,27 @@ void ECLRegressionTest::results_init()
 
                 std::cout << "Comparing " << keywords1[i] << " ... ";
 
-                if (arrayType1[i] == EIOD::INTE) {
+                if (arrayType1[i] == INTE) {
                     auto vect1 = init1.get<int>(keywords1[i]);
                     auto vect2 = init2.get<int>(keywords2[ind2]);
                     compareVectors(vect1, vect2, keywords1[i],reference);
-                } else if (arrayType1[i] == EIOD::REAL) {
+                } else if (arrayType1[i] == REAL) {
                     auto vect1 = init1.get<float>(keywords1[i]);
                     auto vect2 = init2.get<float>(keywords2[ind2]);
                     compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
-                } else if (arrayType1[i] == EIOD::DOUB) {
+                } else if (arrayType1[i] == DOUB) {
                     auto vect1 = init1.get<double>(keywords1[i]);
                     auto vect2 = init2.get<double>(keywords2[ind2]);
                     compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
-                } else if (arrayType1[i] == EIOD::LOGI) {
+                } else if (arrayType1[i] == LOGI) {
                     auto vect1 = init1.get<bool>(keywords1[i]);
                     auto vect2 = init2.get<bool>(keywords2[ind2]);
                     compareVectors(vect1, vect2, keywords1[i], reference);
-                } else if (arrayType1[i] == EIOD::CHAR) {
+                } else if (arrayType1[i] == CHAR) {
                     auto vect1 = init1.get<std::string>(keywords1[i]);
                     auto vect2 = init2.get<std::string>(keywords2[ind2]);
                     compareVectors(vect1, vect2, keywords1[i], reference);
-                } else if (arrayType1[i] == EIOD::MESS) {
+                } else if (arrayType1[i] == MESS) {
                     // shold not be any associated data
                 } else {
                     std::cout << "unknown array type " << std::endl;
@@ -701,14 +703,14 @@ void ECLRegressionTest::results_rst()
             auto arrays2 = rst2.listOfRstArrays(seqn);
 
             std::vector<std::string> keywords1;
-            std::vector<EIOD::eclArrType> arrayType1;
+            std::vector<eclArrType> arrayType1;
             for (const auto& array : arrays1) {
                 keywords1.push_back(std::get<0>(array));
                 arrayType1.push_back(std::get<1>(array));
             }
 
             std::vector<std::string> keywords2;
-            std::vector<EIOD::eclArrType> arrayType2;
+            std::vector<eclArrType> arrayType2;
             for (const auto& array : arrays2) {
                 keywords2.push_back(std::get<0>(array));
                 arrayType2.push_back(std::get<1>(array));
@@ -731,8 +733,8 @@ void ECLRegressionTest::results_rst()
                 keywords1 = keywords2 = keywords;
 
                 int nKeys = keywords.size();
-                arrayType1.assign(nKeys, EIOD::REAL);
-                arrayType2.assign(nKeys, EIOD::REAL);
+                arrayType1.assign(nKeys, REAL);
+                arrayType2.assign(nKeys, REAL);
             }
 
             if (printKeywordOnly) {
@@ -756,27 +758,27 @@ void ECLRegressionTest::results_rst()
 
                     std::cout << "Comparing " << keywords1[i] << " ... ";
 
-                    if (arrayType1[i] == EIOD::INTE) {
-		        auto vect1 = rst1.getRst<int>(keywords1[i], seqn);
+                    if (arrayType1[i] == INTE) {
+                        auto vect1 = rst1.getRst<int>(keywords1[i], seqn);
                         auto vect2 = rst2.getRst<int>(keywords2[ind2], seqn);
                         compareVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == EIOD::REAL) {
+                    } else if (arrayType1[i] == REAL) {
                         auto vect1 = rst1.getRst<float>(keywords1[i], seqn);
                         auto vect2 = rst2.getRst<float>(keywords2[ind2], seqn);
                         compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == EIOD::DOUB) {
+                    } else if (arrayType1[i] == DOUB) {
                         auto vect1 = rst1.getRst<double>(keywords1[i], seqn);
                         auto vect2 = rst2.getRst<double>(keywords2[ind2], seqn);
                         compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == EIOD::LOGI) {
+                    } else if (arrayType1[i] == LOGI) {
                         auto vect1 = rst1.getRst<bool>(keywords1[i], seqn);
                         auto vect2 = rst2.getRst<bool>(keywords2[ind2], seqn);
                         compareVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == EIOD::CHAR) {
+                    } else if (arrayType1[i] == CHAR) {
                         auto vect1 = rst1.getRst<std::string>(keywords1[i], seqn);
                         auto vect2 = rst2.getRst<std::string>(keywords2[ind2], seqn);
                         compareVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == EIOD::MESS) {
+                    } else if (arrayType1[i] == MESS) {
                         // shold not be any associated data
                     } else {
                         std::cout << "unknown array type " << std::endl;
@@ -826,8 +828,8 @@ void ECLRegressionTest::results_smry()
         std::vector<std::string> keywords1 = smry1.keywordList();
         std::vector<std::string> keywords2 = smry2.keywordList();
 
-        std::vector<EIOD::eclArrType> arrayType1(keywords1.size(), EIOD::REAL);
-        std::vector<EIOD::eclArrType> arrayType2 (keywords1.size(), EIOD::REAL);
+        std::vector<eclArrType> arrayType1(keywords1.size(), REAL);
+        std::vector<eclArrType> arrayType2 (keywords1.size(), REAL);
 
         if (integrationTest) {
             std::vector<std::string> keywords;
@@ -848,8 +850,8 @@ void ECLRegressionTest::results_smry()
 
             int nKeys = keywords.size();
 
-            arrayType1.assign(nKeys, EIOD::REAL);
-            arrayType2.assign(nKeys ,EIOD::REAL);
+            arrayType1.assign(nKeys, REAL);
+            arrayType2.assign(nKeys, REAL);
         }
 
         if (printKeywordOnly) {
@@ -951,14 +953,14 @@ void ECLRegressionTest::results_rft()
             auto vectList2 = rft2.listOfRftArrays(well, date);
 
             std::vector<std::string> keywords1;
-            std::vector<EIOD::eclArrType> arrayType1;
+            std::vector<eclArrType> arrayType1;
             for (auto& array : vectList1 ) {
                 keywords1.push_back(std::get<0>(array)) ;
                 arrayType1.push_back(std::get<1>(array)) ;
             }
 
             std::vector<std::string> keywords2;
-            std::vector<EIOD::eclArrType> arrayType2;
+            std::vector<eclArrType> arrayType2;
             for (auto& array : vectList2 ) {
                 keywords2.push_back(std::get<0>(array)) ;
                 arrayType2.push_back(std::get<1>(array)) ;
@@ -975,31 +977,31 @@ void ECLRegressionTest::results_rft()
 
                 for (auto& array : vectList1 ) {
                     std::string keywords = std::get<0>(array);
-                    EIOD::eclArrType arrayType = std::get<1>(array);
+                    eclArrType arrayType = std::get<1>(array);
 
                     std::cout << "Comparing: " << keywords << " ... ";
 
-                    if (arrayType == EIOD::INTE) {
+                    if (arrayType == INTE) {
                         auto vect1 = rft1.getRft<int>(keywords, well, date);
                         auto vect2 = rft2.getRft<int>(keywords, well, date);
                         compareVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == EIOD::REAL) {
+                    } else if (arrayType == REAL) {
                         auto vect1 = rft1.getRft<float>(keywords, well, date);
                         auto vect2 = rft2.getRft<float>(keywords, well, date);
                         compareFloatingPointVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == EIOD::DOUB) {
+                    } else if (arrayType == DOUB) {
                         auto vect1 = rft1.getRft<double>(keywords, well, date);
                         auto vect2 = rft2.getRft<double>(keywords, well, date);
                         compareFloatingPointVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == EIOD::LOGI) {
+                    } else if (arrayType == LOGI) {
                         auto vect1 = rft1.getRft<bool>(keywords, well, date);
                         auto vect2 = rft2.getRft<bool>(keywords, well, date);
                         compareVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == EIOD::CHAR) {
+                    } else if (arrayType == CHAR) {
                         auto vect1 = rft1.getRft<std::string>(keywords, well, date);
                         auto vect2 = rft2.getRft<std::string>(keywords, well, date);
                         compareVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == EIOD::MESS) {
+                    } else if (arrayType == MESS) {
                         // shold not be any associated data
                     } else {
                         std::cout << "unknown array type " << std::endl;
@@ -1023,8 +1025,8 @@ void ECLRegressionTest::results_rft()
 
 void ECLRegressionTest::printComparisonForKeywordLists(const std::vector<std::string>& arrayList1,
                                                        const std::vector<std::string>& arrayList2,
-                                                       const std::vector<EIOD::eclArrType>& arrayType1,
-                                                       const std::vector<EIOD::eclArrType>& arrayType2) const
+                                                       const std::vector<eclArrType>& arrayType1,
+                                                       const std::vector<eclArrType>& arrayType2) const
 {
     unsigned int maxLen = 0;
 

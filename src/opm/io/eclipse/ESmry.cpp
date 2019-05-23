@@ -16,6 +16,7 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
+#include <opm/io/eclipse/ESmry.hpp>
 
 #include <string>
 #include <string.h>
@@ -27,8 +28,7 @@
 #include <limits>
 #include <set>
 
-#include "EclFile.hpp"
-#include "ESmry.hpp"
+#include <opm/io/eclipse/EclFile.hpp>
 
 /*
 
@@ -49,6 +49,8 @@
      SOFX           OP_1           12675             |       12        SOFX:OP_1:12675, SOFX:OP_1:i,j,jk
 
  */
+
+namespace Opm { namespace ecl {
 
 ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 {
@@ -308,7 +310,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
     for (auto keyw : keywList){
         keyword.push_back(keyw);
     }
-};
+}
 
 
 void ESmry::getRstString(const std::vector<std::string>& restartArray, std::string& pathRst, std::string& rootN) const {
@@ -429,3 +431,5 @@ const std::vector<float>& ESmry::get(const std::string& name) const
 
     return param[ind];
 }
+
+}} // namespace Opm::ecl

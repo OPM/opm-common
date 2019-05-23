@@ -16,19 +16,17 @@
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
 
-#ifndef ERST_HPP
-#define ERST_HPP
+#ifndef OPM_IO_ERST_HPP
+#define OPM_IO_ERST_HPP
 
+#include <opm/io/eclipse/EclFile.hpp>
 
-#include "EclFile.hpp"
-
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <vector>
-#include <ctime>
 #include <map>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
+namespace Opm { namespace ecl {
 
 class ERst : public EclFile
 {
@@ -54,4 +52,6 @@ private:
     int getArrayIndex(const std::string& name, int seqnum) const;
 };
 
-#endif
+}} // namespace Opm::ecl
+
+#endif // OPM_IO_ERST_HPP

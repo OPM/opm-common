@@ -15,19 +15,19 @@
    You should have received a copy of the GNU General Public License
    along with OPM.  If not, see <http://www.gnu.org/licenses/>.
    */
-#ifndef ECL_OUTPUT_HPP
-#define ECL_OUTPUT_HPP
+#ifndef OPM_IO_ECLOUTPUT_HPP
+#define OPM_IO_ECLOUTPUT_HPP
 
 #include <iostream>
+#include <ios>
 #include <fstream>
 #include <vector>
 #include <iomanip>
 #include <typeinfo>
 
-#include <examples/test_util/data/EclIOdata.hpp>
+#include <opm/io/eclipse/EclIOdata.hpp>
 
-namespace EIOD = Opm::ecl;
-
+namespace Opm { namespace ecl {
 
 class EclOutput
 {
@@ -38,41 +38,41 @@ public:
     void write(const std::string& name,
                const std::vector<T>& data)
     {
-        EIOD::eclArrType arrType = EIOD::MESS;
+        eclArrType arrType = MESS;
         if (typeid(T) == typeid(int))
-            arrType = EIOD::INTE;
+            arrType = INTE;
         else if (typeid(T) == typeid(float))
-            arrType = EIOD::REAL;
+            arrType = REAL;
         else if (typeid(T) == typeid(double))
-            arrType = EIOD::DOUB;
+            arrType = DOUB;
         else if (typeid(T) == typeid(bool))
-            arrType = EIOD::LOGI;
+            arrType = LOGI;
         else if (typeid(T) == typeid(char))
-            arrType = EIOD::MESS;
+            arrType = MESS;
 
         if (isFormatted)
         {
             writeFormattedHeader(name, data.size(), arrType);
-            if (arrType != EIOD::MESS)
+            if (arrType != MESS)
                 writeFormattedArray(data);
         }
         else
         {
             writeBinaryHeader(name, data.size(), arrType);
-            if (arrType != EIOD::MESS)
+            if (arrType != MESS)
                 writeBinaryArray(data);
         }
     }
 
 private:
-    void writeBinaryHeader(const std::string& arrName, int size, EIOD::eclArrType arrType);
+    void writeBinaryHeader(const std::string& arrName, int size, eclArrType arrType);
 
     template <typename T>
     void writeBinaryArray(const std::vector<T>& data);
 
     void writeBinaryCharArray(const std::vector<std::string>& data);
 
-    void writeFormattedHeader(const std::string& arrName, int size, EIOD::eclArrType arrType);
+    void writeFormattedHeader(const std::string& arrName, int size, eclArrType arrType);
 
     template <typename T>
     void writeFormattedArray(const std::vector<T>& data);
@@ -91,4 +91,6 @@ template<>
 void EclOutput::write<std::string>(const std::string& name,
                                    const std::vector<std::string>& data);
 
-#endif
+}} // namespace Opm::ecl
+
+#endif // OPM_IO_ECLOUTPUT_HPP

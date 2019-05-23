@@ -1,11 +1,12 @@
-#include <iostream>
 #include <chrono>
-#include <tuple>
 #include <iomanip>
+#include <iostream>
+#include <tuple>
 
-#include <examples/test_util/EclFile.hpp>
-#include <examples/test_util/EclOutput.hpp>
+#include <opm/io/eclipse/EclFile.hpp>
+#include <opm/io/eclipse/EclOutput.hpp>
 
+using namespace Opm::ecl;
 
 template<typename T>
 void write(EclOutput& outFile, EclFile& file1,
@@ -57,19 +58,19 @@ int main(int argc, char **argv) {
 
     for (size_t index = 0; index < arrayList.size(); index++) {
         std::string name = std::get<0>(arrayList[index]);
-        EIOD::eclArrType arrType = std::get<1>(arrayList[index]);
+        eclArrType arrType = std::get<1>(arrayList[index]);
 
-        if (arrType == EIOD::INTE) {
+        if (arrType == INTE) {
             write<int>(outFile, file1, name, index);
-        } else if (arrType == EIOD::REAL) {
+        } else if (arrType == REAL) {
             write<float>(outFile, file1, name,index);
-        } else if (arrType == EIOD::DOUB) {
+        } else if (arrType == DOUB) {
             write<double>(outFile, file1, name, index);
-        } else if (arrType == EIOD::LOGI) {
+        } else if (arrType == LOGI) {
             write<bool>(outFile, file1, name, index);
-        } else if (arrType == EIOD::CHAR) {
+        } else if (arrType == CHAR) {
             write<std::string>(outFile, file1, name, index);
-        } else if (arrType == EIOD::MESS) {
+        } else if (arrType == MESS) {
             // shold not be any associated data
             outFile.write(name,std::vector<char>());
         } else {

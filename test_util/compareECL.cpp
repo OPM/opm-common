@@ -17,6 +17,7 @@
    */
 
 #include "EclRegressionTest.hpp"
+
 #include <opm/common/ErrorMacros.hpp>
 
 #include <iostream>
