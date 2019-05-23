@@ -681,16 +681,20 @@ bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::st
 
 
 ProductionControls Well2::productionControls(const SummaryState& st) const {
-    if (this->isProducer())
-        return this->production->controls(st);
-    else
+    if (this->isProducer()) {
+        auto controls = this->production->controls(st);
+        controls.prediction_mode = this->predictionMode();
+        return controls;
+    } else
         throw std::logic_error("Trying to get production data from an injector");
 }
 
 InjectionControls Well2::injectionControls(const SummaryState& st) const {
-    if (!this->isProducer())
-        return this->injection->controls(st);
-    else
+    if (!this->isProducer()) {
+        auto controls = this->injection->controls(st);
+        controls.prediction_mode = this->predictionMode();
+        return controls;
+    } else
         throw std::logic_error("Trying to get injection data from a producer");
 }
 

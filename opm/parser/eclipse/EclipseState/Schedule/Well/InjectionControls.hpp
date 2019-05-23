@@ -37,7 +37,8 @@ public:
     double surface_rate;
     double reservoir_rate;
     double temperature;
-    int vfp_table_number;
+    int    vfp_table_number;
+    bool   prediction_mode;
 
     bool hasControl(WellInjector::ControlModeEnum cmode) const {
         return (this->controls & cmode) != 0;

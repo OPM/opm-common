@@ -397,117 +397,6 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
         BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
         BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
     }
-
-    {
-        auto field_wells = schedule.getChildWells2("FIELD" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( field_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( field_wells, "DW_0" ));
-        BOOST_CHECK( has_well( field_wells, "CW_1" ));
-        BOOST_CHECK( has_well( field_wells, "BW_2" ));
-        BOOST_CHECK( has_well( field_wells, "AW_3" ));
-    }
-
-    {
-        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( platform_wells, "DW_0" ));
-        BOOST_CHECK( has_well( platform_wells, "CW_1" ));
-        BOOST_CHECK( has_well( platform_wells, "BW_2" ));
-        BOOST_CHECK( has_well( platform_wells, "AW_3" ));
-    }
-
-    {
-        auto child_wells1 = schedule.getChildWells2("CG1" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
-
-        BOOST_CHECK( has_well( child_wells1, "DW_0" ));
-        BOOST_CHECK( has_well( child_wells1, "CW_1" ));
-    }
-
-    {
-        auto parent_wells2 = schedule.getChildWells2("PG2" , 0, GroupWellQueryMode::Recursive);
-<<<<<<< 464bc4b795fce07f55903cf4a4f5a051c058993e
-        BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
-
-        BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
-        BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
-    }
-
-    {
-        auto field_wells = schedule.getChildWells2("FIELD" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( field_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( field_wells, "DW_0" ));
-        BOOST_CHECK( has_well( field_wells, "CW_1" ));
-        BOOST_CHECK( has_well( field_wells, "BW_2" ));
-        BOOST_CHECK( has_well( field_wells, "AW_3" ));
-    }
-
-    {
-        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( platform_wells, "DW_0" ));
-        BOOST_CHECK( has_well( platform_wells, "CW_1" ));
-        BOOST_CHECK( has_well( platform_wells, "BW_2" ));
-        BOOST_CHECK( has_well( platform_wells, "AW_3" ));
-    }
-
-    {
-        auto child_wells1 = schedule.getChildWells2("CG1" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
-
-        BOOST_CHECK( has_well( child_wells1, "DW_0" ));
-        BOOST_CHECK( has_well( child_wells1, "CW_1" ));
-    }
-
-    {
-        auto parent_wells2 = schedule.getChildWells2("PG2" , 0, GroupWellQueryMode::Recursive);
-=======
->>>>>>> Remove old well implementation
-        BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
-
-        BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
-        BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
-    }
-
-    {
-        auto field_wells = schedule.getChildWells2("FIELD" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( field_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( field_wells, "DW_0" ));
-        BOOST_CHECK( has_well( field_wells, "CW_1" ));
-        BOOST_CHECK( has_well( field_wells, "BW_2" ));
-        BOOST_CHECK( has_well( field_wells, "AW_3" ));
-    }
-
-    {
-        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( platform_wells, "DW_0" ));
-        BOOST_CHECK( has_well( platform_wells, "CW_1" ));
-        BOOST_CHECK( has_well( platform_wells, "BW_2" ));
-        BOOST_CHECK( has_well( platform_wells, "AW_3" ));
-    }
-
-    {
-        auto child_wells1 = schedule.getChildWells2("CG1" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
-
-        BOOST_CHECK( has_well( child_wells1, "DW_0" ));
-        BOOST_CHECK( has_well( child_wells1, "CW_1" ));
-    }
-
-    {
-        auto parent_wells2 = schedule.getChildWells2("PG2" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
-
-        BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
-        BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
-    }
 }
 
 
@@ -1497,15 +1386,8 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), true);
 
     // The well is producer for timestep 3 and the injection properties BHPLimit should be set to zero.
-<<<<<<< 464bc4b795fce07f55903cf4a4f5a051c058993e
     BOOST_CHECK(sched.getWell2("I", 3).isProducer());
     BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getInjectionProperties().BHPLimit, 0); // 3
-=======
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getInjectionProperties().BHPLimit, 0); // 3
-
-    // We have injectionControl(BHP) at step2, do not understand how it has suddenly vanished when going to step3
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), false );
->>>>>>> Remove old well implementation
     BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().BHPLimit, 6891.2 * 1e5); // 4

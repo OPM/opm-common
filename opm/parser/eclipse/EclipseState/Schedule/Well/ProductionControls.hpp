@@ -41,6 +41,7 @@ public:
     double thp_limit;
     double alq_value;
     int    vfp_table_number;
+    bool   prediction_mode;
 
     bool hasControl(WellProducer::ControlModeEnum cmode) const {
         return (this->controls & cmode) != 0;
