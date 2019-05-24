@@ -55,17 +55,14 @@ namespace Opm { namespace ecl {
 ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 {
     std::string rootN;
-    std::vector<int> actInd;
     bool formatted=false;
     
     char buff[1000];
     getcwd( buff, 1000 );
 
     std::string currentWorkingDir(buff);
-    std::string currentDir=currentWorkingDir;
 
     std::string smspec_filen;
-    std::string unsmry_filen;
 
     if (filename.substr(filename.length() - 7, 7) == ".SMSPEC") {
         rootN = filename.substr(0,filename.length() -7);
@@ -81,10 +78,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
     if (formatted) {
         smspec_filen = path + "/" + rootN + ".FSMSPEC";
-        unsmry_filen = path + "/" + rootN + ".FUNSMRY";
     } else {
         smspec_filen = path + "/" + rootN + ".SMSPEC";
-        unsmry_filen = path + "/" + rootN + ".UNSMRY";
     }
 
     std::vector<std::pair<std::string,int>> smryArray;
@@ -135,7 +130,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         std::vector<std::string> keywords = smspec_rst.get<std::string>("KEYWORDS");
         std::vector<std::string> wgnames = smspec_rst.get<std::string>("WGNAMES");
         std::vector<int> nums = smspec_rst.get<int>("NUMS");
-        std::vector<std::string> units = smspec_rst.get<std::string>("UNITS");
 
         for (size_t i = 0; i < keywords.size(); i++) {
             std::string str1 = makeKeyString(keywords[i], wgnames[i], nums[i]);
@@ -200,7 +194,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
     param.assign(keywList.size(), {});
     
     int fromReportStepNumber = 0;
-    int reportStepNumber = 0;
     int toReportStepNumber;
 
     float time = 0.0;
@@ -245,8 +238,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
                 std::string message="Reading summary file, expecting keyword MINISTEP, found '" + std::get<0>(list1[i]) + "'";
                 throw std::invalid_argument(message);
             }
-
-            std::vector<int> ministep = unsmry.get<int>(i);
 
             i++;
 
