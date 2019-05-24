@@ -750,12 +750,12 @@ namespace {
         }
 
         Opm::RestartIO::Helpers::WindowedArray<
-            Opm::RestartIO::Helpers::CharArrayNullTerm<8>
+            Opm::EclIO::PaddedOutputString<8>
         >
         allocate(const std::vector<int>& inteHead)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
-                Opm::RestartIO::Helpers::CharArrayNullTerm<8>
+                Opm::EclIO::PaddedOutputString<8>
             >;
 
             return WV {

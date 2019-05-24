@@ -32,6 +32,8 @@
 
 #include <opm/output/eclipse/libECLRestart.hpp>
 
+#include <opm/io/eclipse/PaddedOutputString.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -168,7 +170,7 @@ namespace {
     }
 
     std::vector<const char*>
-    serialize_ZWEL(const std::vector<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>& zwel)
+    serialize_ZWEL(const std::vector<EclIO::PaddedOutputString<8>>& zwel)
     {
         std::vector<const char*> data(zwel.size(), nullptr);
         std::size_t it = 0;

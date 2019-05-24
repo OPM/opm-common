@@ -280,7 +280,6 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateMSWData.cpp
           tests/test_AggregateConnectionData.cpp
           tests/test_ArrayDimChecker.cpp
-          tests/test_CharArrayNullTerm.cpp
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
           tests/test_InteHEAD.cpp
@@ -288,6 +287,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_LogiHEAD.cpp
           tests/test_OutputStream.cpp
           tests/test_regionCache.cpp
+          tests/test_PaddedOutputString.cpp
           tests/test_Restart.cpp
           tests/test_RFT.cpp
           tests/test_Solution.cpp
@@ -577,6 +577,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/ERft.hpp
         opm/io/eclipse/ERst.hpp
         opm/io/eclipse/ESmry.hpp
+        opm/io/eclipse/PaddedOutputString.hpp
         opm/io/eclipse/OutputStream.hpp
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
@@ -591,7 +592,6 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/AggregateConnectionData.hpp
         opm/output/eclipse/AggregateMSWData.hpp
         opm/output/eclipse/AggregateWellData.hpp
-        opm/output/eclipse/CharArrayNullTerm.hpp
         opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp
         opm/output/eclipse/EclipseIO.hpp
