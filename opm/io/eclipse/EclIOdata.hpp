@@ -22,7 +22,7 @@
 
 #include <tuple>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
     // type MESS have no assisiated data 
     enum eclArrType {
@@ -64,6 +64,6 @@ namespace Opm { namespace ecl {
     const int columnWidthLogi = 3;       // number of characters fore each Inte Element 
     const int columnWidthChar = 11;      // number of characters fore each Inte Element 
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_ECLIODATA_HPP

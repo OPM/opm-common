@@ -29,7 +29,7 @@
 #include <ctime>
 #include <map>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 class EGrid : public EclFile
 {
@@ -60,6 +60,6 @@ private:
     std::vector<float> zcorn_array;
 };
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_EGRID_HPP

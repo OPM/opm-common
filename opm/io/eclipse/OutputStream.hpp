@@ -25,13 +25,13 @@
 #include <string>
 #include <vector>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
     class EclOutput;
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
-namespace Opm { namespace ecl { namespace OutputStream {
+namespace Opm { namespace EclIO { namespace OutputStream {
 
     struct Formatted { bool set; };
     struct Unified   { bool set; };
@@ -213,6 +213,6 @@ namespace Opm { namespace ecl { namespace OutputStream {
     std::string outputFileName(const ResultSet&   rsetDescriptor,
                                const std::string& ext);
 
-}}} // namespace Opm::ecl::OutputStream
+}}} // namespace Opm::EclIO::OutputStream
 
 #endif //  OPM_IO_OUTPUTSTREAM_HPP_INCLUDED

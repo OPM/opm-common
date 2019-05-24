@@ -25,7 +25,7 @@
 #include <string>
 #include <sstream>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 ERst::ERst(const std::string& filename)
     : EclFile(filename)

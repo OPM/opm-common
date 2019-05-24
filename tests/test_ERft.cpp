@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <tuple>
 
-using namespace Opm::ecl;
+using namespace Opm::EclIO;
 
 template<typename InputIterator1, typename InputIterator2>
 bool

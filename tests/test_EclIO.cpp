@@ -32,7 +32,7 @@
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
 
-using namespace Opm::ecl;
+using namespace Opm::EclIO;
 
 template<typename InputIterator1, typename InputIterator2>
 bool

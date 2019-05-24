@@ -60,7 +60,7 @@ namespace {
     {
         namespace Restart
         {
-            std::unique_ptr<Opm::ecl::ERst>
+            std::unique_ptr<Opm::EclIO::ERst>
             read(const std::string& filename)
             {
                 // Bypass some of the internal logic of the ERst constructor.
@@ -82,28 +82,28 @@ namespace {
 
                 // File exists and can (could?) be opened.  Attempt to form
                 // an ERst object on top of it.
-                return std::unique_ptr<Opm::ecl::ERst> {
-                    new Opm::ecl::ERst{filename}
+                return std::unique_ptr<Opm::EclIO::ERst> {
+                    new Opm::EclIO::ERst{filename}
                 };
             }
 
-            std::unique_ptr<Opm::ecl::EclOutput>
+            std::unique_ptr<Opm::EclIO::EclOutput>
             writeNew(const std::string& filename,
                      const bool         isFmt)
             {
-                return std::unique_ptr<Opm::ecl::EclOutput> {
-                    new Opm::ecl::EclOutput {
+                return std::unique_ptr<Opm::EclIO::EclOutput> {
+                    new Opm::EclIO::EclOutput {
                         filename, isFmt, std::ios_base::out
                     }
                 };
             }
 
-            std::unique_ptr<Opm::ecl::EclOutput>
+            std::unique_ptr<Opm::EclIO::EclOutput>
             writeExisting(const std::string& filename,
                           const bool         isFmt)
             {
-                return std::unique_ptr<Opm::ecl::EclOutput> {
-                    new Opm::ecl::EclOutput {
+                return std::unique_ptr<Opm::EclIO::EclOutput> {
+                    new Opm::EclIO::EclOutput {
                         filename, isFmt, std::ios_base::app
                     }
                 };
@@ -112,7 +112,7 @@ namespace {
     } // namespace Open
 } // Anonymous namespace
 
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 Restart(const ResultSet& rset,
         const int        seqnum,
         const Formatted& fmt,
@@ -137,63 +137,63 @@ Restart(const ResultSet& rset,
     }
 }
 
-Opm::ecl::OutputStream::Restart::~Restart()
+Opm::EclIO::OutputStream::Restart::~Restart()
 {}
 
-Opm::ecl::OutputStream::Restart::Restart(Restart&& rhs)
+Opm::EclIO::OutputStream::Restart::Restart(Restart&& rhs)
     : stream_{ std::move(rhs.stream_) }
 {}
 
-Opm::ecl::OutputStream::Restart&
-Opm::ecl::OutputStream::Restart::operator=(Restart&& rhs)
+Opm::EclIO::OutputStream::Restart&
+Opm::EclIO::OutputStream::Restart::operator=(Restart&& rhs)
 {
     this->stream_ = std::move(rhs.stream_);
 
     return *this;
 }
 
-void Opm::ecl::OutputStream::Restart::message(const std::string& msg)
+void Opm::EclIO::OutputStream::Restart::message(const std::string& msg)
 {
     this->stream().message(msg);
 }
 
 void
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 write(const std::string& kw, const std::vector<int>& data)
 {
     this->writeImpl(kw, data);
 }
 
 void
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 write(const std::string& kw, const std::vector<bool>& data)
 {
     this->writeImpl(kw, data);
 }
 
 void
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 write(const std::string& kw, const std::vector<float>& data)
 {
     this->writeImpl(kw, data);
 }
 
 void
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 write(const std::string& kw, const std::vector<double>& data)
 {
     this->writeImpl(kw, data);
 }
 
 void
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 write(const std::string& kw, const std::vector<std::string>& data)
 {
     this->writeImpl(kw, data);
 }
 
 void
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 openUnified(const std::string& fname,
             const bool         formatted,
             const int          seqnum)
@@ -226,7 +226,7 @@ openUnified(const std::string& fname,
 }
 
 void
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 openNew(const std::string& fname,
         const bool         formatted)
 {
@@ -234,7 +234,7 @@ openNew(const std::string& fname,
 }
 
 void
-Opm::ecl::OutputStream::Restart::
+Opm::EclIO::OutputStream::Restart::
 openExisting(const std::string&   fname,
              const bool           formatted,
              const std::streampos writePos)
@@ -271,13 +271,13 @@ openExisting(const std::string&   fname,
     }
 }
 
-Opm::ecl::EclOutput&
-Opm::ecl::OutputStream::Restart::stream()
+Opm::EclIO::EclOutput&
+Opm::EclIO::OutputStream::Restart::stream()
 {
     return *this->stream_;
 }
 
-namespace Opm { namespace ecl { namespace OutputStream {
+namespace Opm { namespace EclIO { namespace OutputStream {
 
     template <typename T>
     void Restart::writeImpl(const std::string&    kw,
@@ -290,8 +290,8 @@ namespace Opm { namespace ecl { namespace OutputStream {
 
 
 std::string
-Opm::ecl::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
-                                       const std::string& ext)
+Opm::EclIO::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
+                                         const std::string& ext)
 {
     namespace fs = boost::filesystem;
 

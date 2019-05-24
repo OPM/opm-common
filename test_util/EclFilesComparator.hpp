@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
     class EGrid;
 }} // namespace Opm::ecl
 
@@ -82,7 +82,7 @@ protected:
                             const std::string& reference,
                             size_t kw_size,
                             size_t cell,
-                            Opm::ecl::EGrid *grid,
+                            Opm::EclIO::EGrid *grid,
                             const T& value1,
                             const T& value2) const;
 

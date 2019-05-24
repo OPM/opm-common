@@ -46,7 +46,7 @@
     } \
   }
 
-using namespace Opm::ecl;
+using namespace Opm::EclIO;
 
 ECLRegressionTest::~ECLRegressionTest()
 {

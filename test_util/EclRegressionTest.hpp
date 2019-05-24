@@ -24,11 +24,11 @@
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
     class EGrid;
 }}
 
-namespace EIOD = Opm::ecl;
+namespace EIOD = Opm::EclIO;
 
 
 /*! \brief A class for executing a regression test for two ECLIPSE files.
@@ -176,8 +176,8 @@ private:
     // Accept extra keywords in the restart file of the 'new' simulation.
     bool acceptExtraKeywords = false;
 
-    Opm::ecl::EGrid* grid1 = nullptr;
-    Opm::ecl::EGrid* grid2 = nullptr;
+    Opm::EclIO::EGrid* grid1 = nullptr;
+    Opm::EclIO::EGrid* grid2 = nullptr;
 };
 
 #endif

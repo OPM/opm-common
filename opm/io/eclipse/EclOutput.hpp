@@ -27,11 +27,11 @@
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 
-namespace Opm { namespace ecl { namespace OutputStream {
+namespace Opm { namespace EclIO { namespace OutputStream {
     class Restart;
 }}}
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 class EclOutput
 {
@@ -100,6 +100,6 @@ private:
 template<>
 void EclOutput::write<std::string>(const std::string& name,
                                    const std::vector<std::string>& data);
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_ECLOUTPUT_HPP

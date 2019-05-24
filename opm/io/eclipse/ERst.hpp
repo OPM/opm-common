@@ -27,11 +27,11 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Opm { namespace ecl { namespace OutputStream {
+namespace Opm { namespace EclIO { namespace OutputStream {
     class Restart;
 }}}
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 class ERst : public EclFile
 {
@@ -62,6 +62,6 @@ private:
     restartStepWritePosition(const int seqnumValue) const;
 };
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_ERST_HPP

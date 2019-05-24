@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <tuple>
 
-using Opm::ecl::EGrid;
+using Opm::EclIO::EGrid;
 
 template<typename InputIterator1, typename InputIterator2>
 bool

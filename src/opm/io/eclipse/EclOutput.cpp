@@ -33,7 +33,7 @@
 #include <stdexcept>
 #include <typeinfo>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 EclOutput::EclOutput(const std::string&            filename,
                      const bool                    formatted,

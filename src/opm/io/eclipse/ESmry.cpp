@@ -50,7 +50,7 @@
 
  */
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 {

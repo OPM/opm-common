@@ -6,7 +6,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 
-using namespace Opm::ecl;
+using namespace Opm::EclIO;
 
 template<typename T>
 void write(EclOutput& outFile, EclFile& file1,

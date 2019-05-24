@@ -28,7 +28,7 @@
 #include <string>
 #include <sstream>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 EGrid::EGrid(const std::string &filename) : EclFile(filename)
 {

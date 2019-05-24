@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <tuple>
 
-using Opm::ecl::ESmry;
+using Opm::EclIO::ESmry;
 
 template<typename InputIterator1, typename InputIterator2>
 bool
