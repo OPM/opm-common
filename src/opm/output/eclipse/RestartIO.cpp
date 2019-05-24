@@ -98,7 +98,6 @@ namespace {
 
     std::vector<double>
     serialize_OPM_XWEL(const data::Wells&             wells,
-                       int                            sim_step,
                        const std::vector<Opm::Well2>& sched_wells,
                        const Phases&                  phase_spec,
                        const EclipseGrid&             grid)
@@ -375,7 +374,7 @@ namespace {
             const auto sched_well_names = schedule.wellNames(sim_step);
 
             const auto opm_xwel =
-                serialize_OPM_XWEL(wells, sim_step, sched_wells, phases, grid);
+                serialize_OPM_XWEL(wells, sched_wells, phases, grid);
 
             const auto opm_iwel = serialize_OPM_IWEL(wells, sched_well_names);
 
@@ -560,7 +559,7 @@ void save(const std::string&  filename,
         if (! wells.empty()) {
             const auto haveMSW =
                 std::any_of(std::begin(wells), std::end(wells),
-                    [sim_step](const Well2& well)
+                    [](const Well2& well)
             {
                 return well.isMultiSegment();
             });

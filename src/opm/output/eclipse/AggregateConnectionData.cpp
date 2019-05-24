@@ -78,7 +78,6 @@ namespace {
     template <class ConnOp>
     void connectionLoop(const std::vector<Opm::Well2>& wells,
                         const Opm::EclipseGrid&        grid,
-                        const std::size_t              sim_step,
                         ConnOp&&                       connOp)
     {
         for (auto nWell = wells.size(), wellID = 0*nWell;
@@ -336,7 +335,7 @@ captureDeclaredConnData(const Schedule&        sched,
         }
     }
 
-    connectionLoop(wells, grid, sim_step, [&units, &allWellConnections, this]
+    connectionLoop(wells, grid, [&units, &allWellConnections, this]
                    (const Well2&      well, const std::size_t wellID,
                     const Connection& conn, const std::size_t connID) -> void
                                           {
