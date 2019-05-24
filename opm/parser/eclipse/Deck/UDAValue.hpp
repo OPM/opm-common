@@ -26,6 +26,14 @@
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+
+
 namespace Opm {
 
 class UDAValue {
@@ -53,6 +61,15 @@ private:
     /* This 'mutable' modifier is a hack to avoid tampering with the overall
        const-ness of the data in a deck item. */
     mutable Dimension dim;
+protected:
+    friend class  boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version){
+	ar & numeric_value;
+	ar & double_value;
+	ar & string_value;
+	ar & dim;
+    }
 };
 }
 

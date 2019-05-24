@@ -339,6 +339,7 @@ if(ENABLE_ECL_INPUT)
     examples/opmpack.cpp
     examples/opmhash.cpp
     examples/serializedeck.cpp
+    examples/timeserializedeck.cpp
   )
 endif()
 

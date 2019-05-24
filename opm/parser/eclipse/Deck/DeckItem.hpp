@@ -151,6 +151,7 @@ namespace Opm {
 	ar & defaulted;
 	ar & dimensions;
 	ar & SIdata;
+	ar & uval;
       }
     };
 }
