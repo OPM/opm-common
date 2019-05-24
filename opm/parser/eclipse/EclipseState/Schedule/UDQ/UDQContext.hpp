@@ -35,9 +35,11 @@ namespace Opm {
         UDQContext(const UDQFunctionTable& udqft, const SummaryState& summary_state);
         double get(const std::string& key) const;
         double get_well_var(const std::string& well, const std::string& var) const;
+        double get_group_var(const std::string& group, const std::string& var) const;
         void add(const std::string& key, double value);
         const UDQFunctionTable& function_table() const;
         std::vector<std::string> wells() const;
+        std::vector<std::string> groups() const;
     private:
         const UDQFunctionTable& udqft;
         const SummaryState& summary_state;

@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 Statoil ASA.
+Copyright 2018 Statoil ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -28,7 +28,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
@@ -58,7 +57,7 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
 
     st.update_well_var("P1", "WOPR", 1);
 
-    auto res_add = def_add.eval_wells(context);
+    auto res_add = def_add.eval(context);
     BOOST_CHECK_EQUAL( res_add["P1"].value() , 2);
 }
 
@@ -70,11 +69,33 @@ BOOST_AUTO_TEST_CASE(UDQ_TABLE_EXCEPTION) {
 
 
 
+BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
+    std::vector<std::string> wells = {"P1", "P2", "P3", "P4"};
+    UDQParams udqp;
+    UDQFunctionTable udqft(udqp);
+    UDQDefine def_fxxx(udqp, "FU_SCALAR", {"123"});
+    UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "WOPR", ")"});
+    SummaryState st;
+    UDQContext context(udqft, st);
+
+    st.update_well_var("P1", "WOPR", 1.0);
+    st.update_well_var("P2", "WOPR", 2.0);
+    st.update_well_var("P3", "WOPR", 3.0);
+    st.update_well_var("P4", "WOPR", 4.0);
+
+    auto fxxx_res = def_fxxx.eval(context);
+    BOOST_CHECK_EQUAL( fxxx_res[0].value(), 123.0 );
+    BOOST_CHECK( fxxx_res.var_type() == UDQVarType::FIELD_VAR);
+
+    auto fopr_res = def_fopr.eval(context);
+    BOOST_CHECK_EQUAL( fopr_res[0].value(), 10.0 );
+}
+
 
 BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     std::vector<std::string> wells = {"P1", "P2", "I1", "I2"};
-    UDQWellSet ws("NAME", wells);
-    UDQWellSet ws2("NAME", wells, 100.0);
+    UDQSet ws = UDQSet::wells("NAME", wells);
+    UDQSet ws2 = UDQSet::wells("NAME", wells, 100.0);
 
     BOOST_CHECK_EQUAL(4, ws.size());
     ws.assign("P1", 1.0);
@@ -83,7 +104,7 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     BOOST_CHECK_EQUAL(value.value(), 1.0);
     BOOST_CHECK_EQUAL(ws["P1"].value(), 1.0);
 
-    BOOST_REQUIRE_THROW(ws.assign("NO_SUCH_WELL", 1.0), std::invalid_argument);
+    BOOST_REQUIRE_THROW(ws.assign("NO_SUCH_WELL", 1.0), std::out_of_range);
 
     ws.assign("*", 2.0);
     for (const auto& w : wells)
@@ -104,14 +125,42 @@ BOOST_AUTO_TEST_CASE(UDQWellSetTest) {
     for (const auto& w : wells)
         BOOST_CHECK_EQUAL(ws2[w].value(), 100.0);
 
-    UDQSet us("NAME", wells.size());
-    for (std::size_t i=0; i < wells.size(); i++)
-        us.assign(i, 1.0 * i);
+    UDQSet scalar = UDQSet::scalar("NAME", 1.0);
+    BOOST_CHECK_EQUAL(scalar.size() , 1);
+    BOOST_CHECK_EQUAL(scalar[0].value(), 1.0);
 
-    UDQWellSet ws3("name", wells, us);
-    for (std::size_t i=0; i < wells.size(); i++)
-        BOOST_CHECK_EQUAL(ws3[wells[i]].value(), i*1.0);
+    UDQSet empty = UDQSet::empty("EMPTY");
+    BOOST_CHECK_EQUAL(empty.size() , 0);
 }
+
+
+BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
+    std::vector<std::string> groups = {"G1", "G2", "G3", "G4"};
+    UDQSet gs = UDQSet::groups("NAME", groups);
+
+    BOOST_CHECK_EQUAL(4, gs.size());
+    gs.assign("G1", 1.0);
+
+    const auto& value = gs["G1"];
+    BOOST_CHECK_EQUAL(value.value(), 1.0);
+    {
+        UDQParams udqp;
+        UDQFunctionTable udqft(udqp);
+        UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "GOPR", ")"});
+        SummaryState st;
+        UDQContext context(udqft, st);
+
+        st.update_group_var("G1", "GOPR", 1.0);
+        st.update_group_var("G2", "GOPR", 2.0);
+        st.update_group_var("G3", "GOPR", 3.0);
+        st.update_group_var("G4", "GOPR", 4.0);
+
+
+        auto res = def_fopr.eval(context);
+        BOOST_CHECK_EQUAL(res[0].value(), 10.0);
+    }
+}
+
 
 
 BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
@@ -125,7 +174,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         st.update_well_var("W1", "WBHP", 11);
         st.update_well_var("W2", "WBHP", 2);
         st.update_well_var("W3", "WBHP", 3);
-        auto res = def.eval_wells(context);
+        auto res = def.eval(context);
         BOOST_CHECK_EQUAL(res.size(), 3);
         BOOST_CHECK_EQUAL( res["W1"].value(), 11 );
         BOOST_CHECK_EQUAL( res["W2"].value(), 2 );
@@ -141,7 +190,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         st.update_well_var("P2", "WBHP", 2);
         st.update_well_var("I1", "WBHP", 1);
         st.update_well_var("I2", "WBHP", 2);
-        auto res = def.eval_wells(context);
+        auto res = def.eval(context);
         BOOST_CHECK_EQUAL(res.size(), 4);
         BOOST_CHECK_EQUAL( res["P1"].value(), 1 );
         BOOST_CHECK_EQUAL( res["P2"].value(), 2 );
@@ -155,7 +204,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
 
 
         st.update_well_var("P1", "WBHP", 1);
-        BOOST_CHECK_THROW( def.eval_wells( context ), std::invalid_argument);
+        BOOST_CHECK_THROW( def.eval( context ), std::invalid_argument);
     }
 
     {
@@ -167,24 +216,11 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         st.update_well_var("I1", "WBHP", 2);
         st.update_well_var("I2", "WBHP", 1);
 
-        auto res = def.eval_wells(context);
+        auto res = def.eval(context);
         BOOST_CHECK_EQUAL( res["P1"].value(), 4 );
         BOOST_CHECK_EQUAL( res["P2"].value(), 3 );
         BOOST_CHECK_EQUAL( res["I1"].value(), 2 );
         BOOST_CHECK_EQUAL( res["I2"].value(), 1 );
-    }
-
-    // This should eventually fail because the SUM() function evaluates to
-    // scalar context and that is not appropriate for the WUBHP variable which
-    // should evaluate to a full well set.
-    {
-        UDQDefine def(udqp, "WUBHP", {"SUM" , "(", "WBHP", ")"});
-        SummaryState st;
-        UDQContext context(udqft, st);
-
-
-        st.update_well_var("P1", "WBHP", 1);
-        BOOST_CHECK_THROW( def.eval_wells( context ), std::invalid_argument);
     }
 }
 
@@ -234,6 +270,14 @@ BOOST_AUTO_TEST_CASE(ENUM_CONVERSION) {
     BOOST_CHECK(UDQ::varType("RUBHP") == UDQVarType::REGION_VAR);
     BOOST_CHECK(UDQ::varType("AUBHP") == UDQVarType::AQUIFER_VAR);
     BOOST_CHECK(UDQ::varType("SUBHP") == UDQVarType::SEGMENT_VAR);
+
+    BOOST_CHECK(UDQ::targetType("WBHP") == UDQVarType::WELL_VAR);
+    BOOST_CHECK(UDQ::targetType("GBHP") == UDQVarType::GROUP_VAR);
+    BOOST_CHECK(UDQ::targetType("CBHP") == UDQVarType::CONNECTION_VAR);
+    BOOST_CHECK(UDQ::targetType("FBHP") == UDQVarType::FIELD_VAR);
+    BOOST_CHECK(UDQ::targetType("RBHP") == UDQVarType::REGION_VAR);
+    BOOST_CHECK(UDQ::targetType("ABHP") == UDQVarType::AQUIFER_VAR);
+    BOOST_CHECK(UDQ::targetType("SBHP") == UDQVarType::SEGMENT_VAR);
 
     BOOST_REQUIRE_THROW( UDQ::actionType("INVALID_ACTION"), std::invalid_argument);
     BOOST_CHECK(UDQ::actionType("DEFINE") == UDQAction::DEFINE );
@@ -482,47 +526,47 @@ BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("SUM"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), 7);
+        BOOST_CHECK_EQUAL(result[0].value(), 7);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORM1"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), 7);
+        BOOST_CHECK_EQUAL(result[0].value(), 7);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORM2"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), std::sqrt(1 + 4+ 16));
+        BOOST_CHECK_EQUAL(result[0].value(), std::sqrt(1 + 4+ 16));
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("NORMI"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), 4);
+        BOOST_CHECK_EQUAL(result[0].value(), 4);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("MIN"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), 1);
+        BOOST_CHECK_EQUAL(result[0].value(), 1);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("MAX"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), 4);
+        BOOST_CHECK_EQUAL(result[0].value(), 4);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEA"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), 7.0/3);
+        BOOST_CHECK_EQUAL(result[0].value(), 7.0/3);
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEG"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), std::exp((std::log(1) + std::log(2.0) + std::log(4))/3));
+        BOOST_CHECK_EQUAL(result[0].value(), std::exp((std::log(1) + std::log(2.0) + std::log(4))/3));
     }
     {
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("PROD"));
         auto result = func.eval(arg);
-        BOOST_CHECK_EQUAL(result.value(), 8.0);
+        BOOST_CHECK_EQUAL(result[0].value(), 8.0);
     }
     {
         UDQSet arg2("NAME", 4);
@@ -531,7 +575,7 @@ BOOST_AUTO_TEST_CASE(UDQ_FUNCTION_TABLE) {
         arg2.assign(3,4);
         const auto& func = dynamic_cast<const UDQScalarFunction&>(udqft.get("AVEH"));
         auto result = func.eval(arg2);
-        BOOST_CHECK_EQUAL(result.value(), 2.0);
+        BOOST_CHECK_EQUAL(result[0].value(), 2.0);
     }
 }
 
@@ -787,18 +831,18 @@ BOOST_AUTO_TEST_CASE(UDQASSIGN_TEST) {
     UDQAssign as3("WUPR", {"P1"}, 4.0);
     std::vector<std::string> ws1 = {"P1", "P2", "I1", "I2"};
 
-    auto res1 = as1.eval_wells(ws1);
+    auto res1 = as1.eval(ws1);
     BOOST_CHECK_EQUAL(res1.size(), 4);
     BOOST_CHECK_EQUAL(res1["P1"].value(), 1.0);
     BOOST_CHECK_EQUAL(res1["I2"].value(), 1.0);
 
-    auto res2 = as2.eval_wells(ws1);
+    auto res2 = as2.eval(ws1);
     BOOST_CHECK_EQUAL(res2["P1"].value(), 2.0);
     BOOST_CHECK_EQUAL(res2["P2"].value(), 2.0);
     BOOST_CHECK(!res2["I1"].defined());
     BOOST_CHECK(!res2["I2"].defined());
 
-    auto res3 = as3.eval_wells(ws1);
+    auto res3 = as3.eval(ws1);
     BOOST_CHECK_EQUAL(res3["P1"].value(), 4.0);
     BOOST_CHECK(!res3["P2"].defined());
     BOOST_CHECK(!res3["I1"].defined());
@@ -819,8 +863,8 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     st.update_well_var("P1", "WWIR", 4);
     st.update_well_var("P1", "WOPT", 7);
 
-    auto res_pow1 = def_pow1.eval_wells(context);
-    auto res_pow2 = def_pow2.eval_wells(context);
+    auto res_pow1 = def_pow1.eval(context);
+    auto res_pow2 = def_pow2.eval(context);
     BOOST_CHECK_EQUAL( res_pow1["P1"].value() , 1 + 2 * std::pow(3,4));
     BOOST_CHECK_EQUAL( res_pow2["P1"].value() , std::pow(1 + 2, 1 + 3*4 - 7));
 }
@@ -842,7 +886,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     st.update_well_var("P2", "WGOR",  4);
     st.update_well_var("P2", "WWIR",  1);
 
-    auto res_cmp = def_cmp.eval_wells(context);
+    auto res_cmp = def_cmp.eval(context);
     BOOST_CHECK_EQUAL( res_cmp["P1"].value() , 1.0);
     BOOST_CHECK_EQUAL( res_cmp["P2"].value() , 0.0);
 }
@@ -876,42 +920,42 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     st.update_well_var("P3", "WWPR", 3);
     st.update_well_var("P4", "WWPR", 4);
 
-    auto res_add = def_add.eval_wells(context);
+    auto res_add = def_add.eval(context);
     BOOST_CHECK_EQUAL( res_add.size(), 4);
     BOOST_CHECK_EQUAL( res_add["P1"].value(), 2);
     BOOST_CHECK_EQUAL( res_add["P2"].value(), 4);
     BOOST_CHECK_EQUAL( res_add["P3"].value(), 6);
     BOOST_CHECK_EQUAL( res_add["P4"].value(), 8);
 
-    auto res_sub = def_sub.eval_wells(context);
+    auto res_sub = def_sub.eval(context);
     BOOST_CHECK_EQUAL( res_sub.size(), 4);
     BOOST_CHECK_EQUAL( res_sub["P1"].value(), 0);
     BOOST_CHECK_EQUAL( res_sub["P2"].value(), 0);
     BOOST_CHECK_EQUAL( res_sub["P3"].value(), 0);
     BOOST_CHECK_EQUAL( res_sub["P4"].value(), 0);
 
-    auto res_div = def_div.eval_wells(context);
+    auto res_div = def_div.eval(context);
     BOOST_CHECK_EQUAL( res_div.size(), 4);
     BOOST_CHECK_EQUAL( res_div["P1"].value(), 1);
     BOOST_CHECK_EQUAL( res_div["P2"].value(), 1);
     BOOST_CHECK_EQUAL( res_div["P3"].value(), 1);
     BOOST_CHECK_EQUAL( res_div["P4"].value(), 1);
 
-    auto res_mul = def_mul.eval_wells(context);
+    auto res_mul = def_mul.eval(context);
     BOOST_CHECK_EQUAL( res_mul.size(), 4);
     BOOST_CHECK_EQUAL( res_mul["P1"].value(), 1);
     BOOST_CHECK_EQUAL( res_mul["P2"].value(), 4);
     BOOST_CHECK_EQUAL( res_mul["P3"].value(), 9);
     BOOST_CHECK_EQUAL( res_mul["P4"].value(),16);
 
-    auto res_muladd = def_muladd.eval_wells(context);
+    auto res_muladd = def_muladd.eval(context);
     BOOST_CHECK_EQUAL( res_muladd.size(), 4);
     BOOST_CHECK_EQUAL( res_muladd["P1"].value(), 1 + 1);
     BOOST_CHECK_EQUAL( res_muladd["P2"].value(), 4 + 2);
     BOOST_CHECK_EQUAL( res_muladd["P3"].value(), 9 + 3);
     BOOST_CHECK_EQUAL( res_muladd["P4"].value(),16 + 4);
 
-    auto res_wuwct= def_wuwct.eval_wells(context);
+    auto res_wuwct= def_wuwct.eval(context);
     BOOST_CHECK_EQUAL( res_wuwct.size(), 4);
     BOOST_CHECK_EQUAL( res_wuwct["P1"].value(),0.50);
     BOOST_CHECK_EQUAL( res_wuwct["P2"].value(),0.50);
@@ -935,7 +979,7 @@ BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
 }
 
 
-BOOST_AUTO_TEST_CASE(UDQPARSE_PARSECONTEXT) {
+BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
     UDQParams udqp;
     ParseContext parseContext;
     ErrorGuard errors;
@@ -946,15 +990,48 @@ BOOST_AUTO_TEST_CASE(UDQPARSE_PARSECONTEXT) {
         SummaryState st;
         UDQContext context(UDQFunctionTable(udqp), st);
         st.update_well_var("P1", "WBHP", 1);
-        printf("Have returned with def1 \n");
 
-        auto res = def1.eval_wells(context);
+        auto res = def1.eval(context);
         BOOST_CHECK_EQUAL(res["P1"].value(), udqp.undefinedValue());
     }
 
     parseContext.update(ParseContext::UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
     BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP", tokens, parseContext, errors), std::invalid_argument);
 }
+
+BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
+    UDQParams udqp;
+    ParseContext parseContext;
+    ErrorGuard errors;
+    std::vector<std::string> tokens1 = {"WBHP", "+", "1"};
+    std::vector<std::string> tokens2 = {"SUM", "(", "WBHP", ")"};
+    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::IGNORE);
+    {
+        UDQDefine def1(udqp, "FUBHP", tokens1, parseContext, errors);
+        UDQDefine def2(udqp, "WUBHP", tokens2, parseContext, errors);
+
+        SummaryState st;
+        UDQContext context(UDQFunctionTable(udqp), st);
+        st.update_well_var("P1", "WBHP", 1);
+
+        auto res1 = def1.eval(context);
+        BOOST_CHECK_EQUAL(res1[0].value(), udqp.undefinedValue());
+
+        auto res2 = def2.eval(context);
+        BOOST_CHECK_EQUAL(res2.size(), st.num_wells());
+        for (std::size_t index = 0; index < res2.size(); index++)
+            BOOST_CHECK_EQUAL(res2[index].value(), udqp.undefinedValue());
+    }
+
+    parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::THROW_EXCEPTION);
+
+    // This fails because the well expression (WBHP + 1) is assigned to the field variable FUBHP
+    BOOST_CHECK_THROW( UDQDefine(udqp, "FUBHP", tokens1, parseContext, errors), std::invalid_argument);
+
+    // This fails because the scalar expression SUM(WBHP) is assigned to the well variable WUBHP
+    BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP", tokens2, parseContext, errors), std::invalid_argument);
+}
+
 
 
 

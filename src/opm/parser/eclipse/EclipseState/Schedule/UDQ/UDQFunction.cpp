@@ -41,7 +41,7 @@ const std::string& UDQFunction::name() const {
     return this->m_name;
 }
 
-UDQScalarFunction::UDQScalarFunction(const std::string&name, std::function<UDQScalar(const UDQSet& arg)> f) :
+UDQScalarFunction::UDQScalarFunction(const std::string&name, std::function<UDQSet(const UDQSet& arg)> f) :
     UDQFunction(name),
     func(std::move(f))
 {
@@ -49,7 +49,7 @@ UDQScalarFunction::UDQScalarFunction(const std::string&name, std::function<UDQSc
 
 
 
-UDQScalar UDQScalarFunction::eval(const UDQSet& arg) const {
+UDQSet UDQScalarFunction::eval(const UDQSet& arg) const {
     return this->func(arg);
 }
 
@@ -59,76 +59,91 @@ UDQSet UDQUnaryElementalFunction::eval(const UDQSet& arg) const {
 }
 
 /*****************************************************************/
-UDQScalar UDQScalarFunction::MIN(const UDQSet& arg) {
-    std::vector<double> defined_values = arg.defined_values();
+UDQSet UDQScalarFunction::MIN(const UDQSet& arg) {
+    auto defined_values = arg.defined_values();
     if (defined_values.empty())
-        return {};
+        return UDQSet::empty("MIN");
 
-    return *std::min_element(defined_values.begin(), defined_values.end());
+    return UDQSet::scalar("MIN", *std::min_element(defined_values.begin(), defined_values.end()));
 }
 
-UDQScalar UDQScalarFunction::MAX(const UDQSet& arg) {
-    std::vector<double> defined_values = arg.defined_values();
+UDQSet UDQScalarFunction::MAX(const UDQSet& arg) {
+    auto defined_values = arg.defined_values();
     if (defined_values.empty())
-        return {};
+        return UDQSet::empty("MAX");
 
-    return *std::max_element(defined_values.begin(), defined_values.end());
+    return UDQSet::scalar("MAX", *std::max_element(defined_values.begin(), defined_values.end()));
 }
 
-UDQScalar UDQScalarFunction::SUM(const UDQSet& arg) {
-    std::vector<double> defined_values = arg.defined_values();
-    return std::accumulate(defined_values.begin(), defined_values.end(), 0.0);
-}
-
-UDQScalar UDQScalarFunction::PROD(const UDQSet& arg) {
-    std::vector<double> defined_values = arg.defined_values();
-    return std::accumulate(defined_values.begin(), defined_values.end(), 1.0, std::multiplies<double>{});
-}
-
-UDQScalar UDQScalarFunction::AVEA(const UDQSet& arg) {
-    std::vector<double> defined_values = arg.defined_values();
+UDQSet UDQScalarFunction::SUM(const UDQSet& arg) {
+    auto defined_values = arg.defined_values();
     if (defined_values.empty())
-        return {};
-    return std::accumulate( defined_values.begin(), defined_values.end(), 0.0) / defined_values.size();
+        return UDQSet::empty("SUM");
+
+    return UDQSet::scalar("SUM", std::accumulate(defined_values.begin(), defined_values.end(), 0.0));
 }
 
-UDQScalar UDQScalarFunction::AVEG(const UDQSet& arg) {
-    std::vector<double> defined_values = arg.defined_values();
+UDQSet UDQScalarFunction::PROD(const UDQSet& arg) {
+    auto defined_values = arg.defined_values();
     if (defined_values.empty())
-        return {};
+        return UDQSet::empty("PROD");
+
+    return UDQSet::scalar("PROD", std::accumulate(defined_values.begin(), defined_values.end(), 1.0, std::multiplies<double>{}));
+}
+
+UDQSet UDQScalarFunction::AVEA(const UDQSet& arg) {
+    auto defined_values = arg.defined_values();
+    if (defined_values.empty())
+        return UDQSet::empty("AVEA");
+
+    return UDQSet::scalar("AVEA", std::accumulate( defined_values.begin(), defined_values.end(), 0.0) / defined_values.size());
+}
+
+UDQSet UDQScalarFunction::AVEG(const UDQSet& arg) {
+    auto defined_values = arg.defined_values();
+    if (defined_values.empty())
+        return UDQSet::empty("AVEG");
 
     if (std::find_if(defined_values.begin(), defined_values.end(), [](double x) { return x <= 0; }) != defined_values.end())
         throw std::invalid_argument("Function AVEG must have only positive arguments");
 
-    double log_mean = std::accumulate( defined_values.begin(), defined_values.end(), 0.0, [](double x, double y) { return x + std::log(std::fabs(y)); }) / defined_values.size();
-    return std::exp( log_mean );
+    double log_mean = std::accumulate( defined_values.begin(), defined_values.end(), 0.0, [](double x, double y) { return x + std::log(y); }) / defined_values.size();
+    return UDQSet::scalar("AVEG", std::exp(log_mean));
 }
 
 
-UDQScalar UDQScalarFunction::AVEH(const UDQSet& arg) {
-    std::vector<double> defined_values = arg.defined_values();
+UDQSet UDQScalarFunction::AVEH(const UDQSet& arg) {
+    auto defined_values = arg.defined_values();
     if (defined_values.empty())
-        return {};
+        return UDQSet::empty("AVEH");
 
-    return defined_values.size() / std::accumulate(defined_values.begin(), defined_values.end(), 0.0, [](double x, double y) { return x + 1.0/y; });
+    return UDQSet::scalar("AVEH", defined_values.size() / std::accumulate(defined_values.begin(), defined_values.end(), 0.0, [](double x, double y) { return x + 1.0/y; }));
 }
 
-
-UDQScalar UDQScalarFunction::NORM1(const UDQSet& arg) {
+UDQSet UDQScalarFunction::NORMI(const UDQSet& arg) {
     auto defined_values = arg.defined_values();
-    return std::accumulate( defined_values.begin(), defined_values.end(), 0.0, [](double x, double y) { return x + std::fabs(y);});
+    if (defined_values.empty())
+        return UDQSet::empty("NORMI");
+
+    return UDQSet::scalar("NORMI", std::accumulate( defined_values.begin(), defined_values.end(), 0.0, [](double x, double y) { return std::max(x, std::fabs(y));}));
 }
 
-UDQScalar UDQScalarFunction::NORM2(const UDQSet& arg) {
+
+UDQSet UDQScalarFunction::NORM1(const UDQSet& arg) {
     auto defined_values = arg.defined_values();
-    return std::sqrt(std::inner_product(defined_values.begin(), defined_values.end(), defined_values.begin(), 0.0));
+    if (defined_values.empty())
+        return UDQSet::empty("NORM1");
+
+    return UDQSet::scalar("NORM1", std::accumulate( defined_values.begin(), defined_values.end(), 0.0, [](double x, double y) { return x + std::fabs(y);}));
 }
 
-UDQScalar UDQScalarFunction::NORMI(const UDQSet& arg) {
+UDQSet UDQScalarFunction::NORM2(const UDQSet& arg) {
     auto defined_values = arg.defined_values();
-    return std::accumulate( defined_values.begin(), defined_values.end(), 0.0, [](const double x, const double y) { return std::max(x, std::fabs(y));});
-}
+    if (defined_values.empty())
+        return UDQSet::empty("NORM2");
 
+    return UDQSet::scalar("NORM2", std::sqrt(std::inner_product(defined_values.begin(), defined_values.end(), defined_values.begin(), 0.0)));
+}
 
 UDQUnaryElementalFunction::UDQUnaryElementalFunction(const std::string&name, std::function<UDQSet(const UDQSet& arg)> f) :
     UDQFunction(name),
@@ -263,7 +278,7 @@ namespace {
 
     UDQSet udq_union(const UDQSet& arg1, const UDQSet& arg2) {
         if (arg1.size() != arg2.size())
-            throw std::invalid_argument("UDQ sets have incoimpatible size");
+            throw std::invalid_argument("UDQ sets have incompatible size");
 
         UDQSet result = arg1;
         for (std::size_t index = 0; index < result.size(); index++) {

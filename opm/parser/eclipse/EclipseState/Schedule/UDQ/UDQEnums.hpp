@@ -24,14 +24,16 @@
 namespace Opm {
 
 enum class UDQVarType {
-    WELL_VAR = 1,
-    CONNECTION_VAR= 2,
-    FIELD_VAR = 3,
-    GROUP_VAR = 4,
-    REGION_VAR = 5,
-    SEGMENT_VAR = 6,
-    AQUIFER_VAR = 7,
-    BLOCK_VAR = 8
+    NONE = 0,
+    SCALAR = 1,
+    WELL_VAR = 2,
+    CONNECTION_VAR= 3,
+    FIELD_VAR = 4,
+    GROUP_VAR = 5,
+    REGION_VAR = 6,
+    SEGMENT_VAR = 7,
+    AQUIFER_VAR = 8,
+    BLOCK_VAR = 9
 };
 
 
@@ -101,6 +103,8 @@ enum class UDQAction {
 
 namespace UDQ {
 
+    bool compatibleTypes(UDQVarType lhs, UDQVarType rhs);
+    UDQVarType targetType(const std::string& keyword);
     UDQVarType varType(const std::string& keyword);
     UDQAction actionType(const std::string& action_string);
     UDQTokenType funcType(const std::string& func_name);
@@ -108,6 +112,7 @@ namespace UDQ {
     bool elementalUnaryFunc(UDQTokenType token_type);
     bool scalarFunc(UDQTokenType token_type);
     bool cmpFunc(UDQTokenType token_type);
+
 }
 }
 

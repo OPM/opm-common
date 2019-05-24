@@ -235,7 +235,7 @@ UDQASTNode UDQParser::parse_cmp() {
 
 
 
-UDQASTNode UDQParser::parse(const UDQParams& udq_params, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
+UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
 {
     UDQParser parser(udq_params, tokens);
     parser.next();
@@ -254,6 +254,16 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, const std::vector<std::
             std::string msg = "Failed to parse UDQ expression";
             parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
         }
+        return UDQASTNode( udq_params.undefinedValue() );
+    }
+
+    if (!UDQ::compatibleTypes(target_type, tree.var_type)) {
+        std::string msg = "Invalid compile-time type conversion detected in UDQ expression target type: " + std::to_string(static_cast<int>(target_type)) + " expr type: " + std::to_string(static_cast<int>(tree.var_type));
+        for (const auto& token : tokens)
+            std::cout << token << " ";
+        std::cout << std::endl;
+        parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg, errors);
+
         return UDQASTNode( udq_params.undefinedValue() );
     }
 

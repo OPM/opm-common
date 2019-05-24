@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
@@ -33,17 +33,18 @@ namespace Opm {
 
 class UDQASTNode {
 public:
-    UDQASTNode();
-
     UDQASTNode(UDQTokenType type_arg);
     UDQASTNode(double scalar_value);
     UDQASTNode(UDQTokenType type_arg, const std::string& string_value, const std::vector<std::string>& selector);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& arg);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& left, const UDQASTNode& right);
-    UDQWellSet eval_wells(const UDQContext& context);
-    UDQTokenType type;
 
+    UDQSet eval(UDQVarType eval_target, const UDQContext& context) const;
+
+    UDQTokenType type;
+    UDQVarType var_type = UDQVarType::NONE;
 private:
+
     std::string string_value;
     double scalar_value;
     std::vector<std::string> selector;

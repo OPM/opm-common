@@ -124,6 +124,38 @@ namespace {
                                                                      {"PROD", UDQTokenType::scalar_func_prod}};
 }
 
+UDQVarType targetType(const std::string& keyword) {
+
+    char first_char =  keyword[0];
+    switch(first_char) {
+    case 'W':
+        return UDQVarType::WELL_VAR;
+    case 'G':
+        return UDQVarType::GROUP_VAR;
+    case 'C':
+        return UDQVarType::CONNECTION_VAR;
+    case 'R':
+        return UDQVarType::REGION_VAR;
+    case 'F':
+        return UDQVarType::FIELD_VAR;
+    case 'S':
+        return UDQVarType::SEGMENT_VAR;
+    case 'A':
+        return UDQVarType::AQUIFER_VAR;
+    case 'B':
+        return UDQVarType::BLOCK_VAR;
+    default:
+        try {
+            std::stod(keyword);
+            return UDQVarType::SCALAR;
+        } catch(const std::invalid_argument& exc) {
+            return UDQVarType::NONE;
+        }
+    }
+
+}
+
+
 UDQVarType varType(const std::string& keyword) {
     if (keyword[1] != 'U')
         throw std::invalid_argument("Keyword: " + keyword + " is not of UDQ type");
@@ -197,5 +229,18 @@ UDQTokenType funcType(const std::string& func_name) {
 
     return UDQTokenType::error;
 }
+
+
+bool compatibleTypes(UDQVarType lhs, UDQVarType rhs) {
+    if (lhs == rhs)
+        return true;
+
+    if (lhs == UDQVarType::FIELD_VAR && rhs == UDQVarType::SCALAR)
+        return true;
+
+    return false;
+}
+
+
 }
 }

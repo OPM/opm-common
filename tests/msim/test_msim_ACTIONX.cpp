@@ -273,18 +273,24 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
         ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
-        for (const auto& well : {"P1", "P2", "P3", "P4"}) {
-            std::string wwct_key  = std::string("WWCT:") + well;
-            std::string wuwct_key = std::string("WUWCT:") + well;
 
-            BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, wwct_key.c_str()));
-            BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, wuwct_key.c_str()));
+        for (int step = 0; step < ecl_sum_get_data_length(ecl_sum); step++) {
+            double wopr_sum = 0;
+            for (const auto& well : {"P1", "P2", "P3", "P4"}) {
+                std::string wwct_key  = std::string("WWCT:") + well;
+                std::string wuwct_key = std::string("WUWCT:") + well;
+                std::string wopr_key  = std::string("WOPR:") + well;
 
-            for (int step = 0; step < ecl_sum_get_data_length(ecl_sum); step++)
                 BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, step, wwct_key.c_str()),
                                    ecl_sum_get_general_var(ecl_sum, step, wuwct_key.c_str()));
 
+                wopr_sum += ecl_sum_get_general_var(ecl_sum, step , wopr_key.c_str());
+            }
+            BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, step, "FOPR"),
+                               ecl_sum_get_general_var(ecl_sum, step, "FUOPR"));
+            BOOST_CHECK_EQUAL( wopr_sum, ecl_sum_get_general_var(ecl_sum, step, "FOPR"));
         }
+
 
         test_work_area_free(work_area);
     }

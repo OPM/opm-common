@@ -356,6 +356,12 @@ WUOPR
 /
 WUWCT
 /
+
+FOPR
+
+FUOPR
+
+
 SCHEDULE
 -- -------------------------------------------------------------------------
 RPTSCHED
@@ -374,6 +380,8 @@ UDQ
   UNITS  WUOPR 'SM3/DAY' /
   DEFINE WUWCT WWPR / (WWPR + WOPR) /
   UNITS  WUWCT '1' /
+  DEFINE FUOPR SUM(WOPR) /
+  UNITS  FUOPR 'SM3/DAY' /
 /
 
 

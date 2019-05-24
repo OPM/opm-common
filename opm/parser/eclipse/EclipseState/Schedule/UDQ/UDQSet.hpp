@@ -23,6 +23,9 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
+#include <unordered_map>
+
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {
 
@@ -53,8 +56,17 @@ public:
 class UDQSet {
 public:
     UDQSet(const std::string& name, std::size_t size);
+    static UDQSet scalar(const std::string& name, double value);
+    static UDQSet empty(const std::string& name);
+    static UDQSet wells(const std::string& name, const std::vector<std::string>& wells);
+    static UDQSet wells(const std::string& name, const std::vector<std::string>& wells, double scalar_value);
+    static UDQSet groups(const std::string& name, const std::vector<std::string>& groups);
+    static UDQSet groups(const std::string& name, const std::vector<std::string>& groups, double scalar_value);
+    static UDQSet field(const std::string& name, double scalar_value);
+
     void assign(double value);
     void assign(std::size_t index, double value);
+    void assign(const std::string& wgname, double value);
 
     std::size_t size() const;
     void operator+=(const UDQSet& rhs);
@@ -67,14 +79,22 @@ public:
     void operator/=(double rhs);
 
     const UDQScalar& operator[](std::size_t index) const;
+    const UDQScalar& operator[](const std::string& wgname) const;
     std::vector<UDQScalar>::const_iterator begin() const;
     std::vector<UDQScalar>::const_iterator end() const;
 
     std::vector<double> defined_values() const;
     std::size_t defined_size() const;
     const std::string& name() const;
+    UDQVarType var_type() const;
 private:
+    UDQSet() = default;
+    UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
+
+
     std::string m_name;
+    UDQVarType m_var_type;
+    std::unordered_map<std::string, std::size_t> wgname_index;
     std::vector<UDQScalar> values;
 };
 

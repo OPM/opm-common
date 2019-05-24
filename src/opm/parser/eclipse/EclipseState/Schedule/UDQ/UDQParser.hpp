@@ -39,26 +39,31 @@ struct UDQParseNode {
         type(type_arg),
         value(value_arg),
         selector(selector)
-    {}
+    {
+        if (type_arg == UDQTokenType::ecl_expr)
+            this->var_type = UDQ::targetType(value_arg);
+    }
+
 
     UDQParseNode(UDQTokenType type_arg, const std::string& value_arg) :
         UDQParseNode(type_arg, value_arg, {})
     {}
 
+
     // Implicit converting constructor.
     UDQParseNode(UDQTokenType type_arg) : UDQParseNode(type_arg, "")
     {}
 
-
     UDQTokenType type;
     std::string value;
     std::vector<std::string> selector;
+    UDQVarType var_type = UDQVarType::NONE;
 };
 
 
 class UDQParser {
 public:
-    static UDQASTNode parse(const UDQParams& udq_params, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors);
+    static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors);
 
 private:
     UDQParser(const UDQParams& udq_params, const std::vector<std::string>& tokens) :

@@ -1175,7 +1175,7 @@ void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
         wells.push_back(well_name);
 
     for (const auto& assign : udq.assignments(UDQVarType::WELL_VAR)) {
-        auto ws = assign.eval_wells(wells);
+        auto ws = assign.eval(wells);
         for (const auto& well : wells) {
             const auto& udq_value = ws[well];
             if (udq_value)
@@ -1184,12 +1184,18 @@ void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
     }
 
     for (const auto& def : udq.definitions(UDQVarType::WELL_VAR)) {
-        auto ws = def.eval_wells(context);
+        auto ws = def.eval(context);
         for (const auto& well : wells) {
             const auto& udq_value = ws[well];
             if (udq_value)
                 st.update_well_var(well, def.keyword(), udq_value.value());
         }
+    }
+
+    for (const auto& def : udq.definitions(UDQVarType::FIELD_VAR)) {
+        auto field_udq = def.eval(context);
+        if (field_udq[0])
+            st.update(def.keyword(), field_udq[0].value());
     }
 }
 }

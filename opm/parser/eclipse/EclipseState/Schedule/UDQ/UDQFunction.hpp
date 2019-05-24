@@ -44,22 +44,22 @@ private:
 
 class UDQScalarFunction : public UDQFunction {
 public:
-    UDQScalarFunction(const std::string&name, std::function<UDQScalar(const UDQSet& arg)> f);
-    UDQScalar eval(const UDQSet& arg) const;
+    UDQScalarFunction(const std::string&name, std::function<UDQSet(const UDQSet& arg)> f);
+    UDQSet eval(const UDQSet& arg) const;
 
-    static UDQScalar SUM(const UDQSet& arg);
-    static UDQScalar AVEA(const UDQSet& arg);
-    static UDQScalar AVEG(const UDQSet& arg);
-    static UDQScalar AVEH(const UDQSet& arg);
-    static UDQScalar MIN(const UDQSet& arg);
-    static UDQScalar MAX(const UDQSet& arg);
-    static UDQScalar NORM1(const UDQSet& arg);
-    static UDQScalar NORM2(const UDQSet& arg);
-    static UDQScalar NORMI(const UDQSet& arg);
-    static UDQScalar PROD(const UDQSet& arg);
+    static UDQSet SUM(const UDQSet& arg);
+    static UDQSet AVEA(const UDQSet& arg);
+    static UDQSet AVEG(const UDQSet& arg);
+    static UDQSet AVEH(const UDQSet& arg);
+    static UDQSet MIN(const UDQSet& arg);
+    static UDQSet MAX(const UDQSet& arg);
+    static UDQSet NORM1(const UDQSet& arg);
+    static UDQSet NORM2(const UDQSet& arg);
+    static UDQSet NORMI(const UDQSet& arg);
+    static UDQSet PROD(const UDQSet& arg);
 
 private:
-    std::function<UDQScalar(const UDQSet& arg)> func;
+    std::function<UDQSet(const UDQSet& arg)> func;
 };
 
 
