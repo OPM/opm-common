@@ -58,14 +58,15 @@ namespace Opm {
 
         void calculateCenterDepthWithSegments(const WellSegments& segment_set);
 
-        static std::vector< Compsegs > compsegsFromCOMPSEGSKeyword( const DeckKeyword& compsegsKeyword, const EclipseGrid& grid);
+        static std::vector< Compsegs > compsegsFromCOMPSEGSKeyword(const DeckKeyword& compsegsKeyword, const EclipseGrid& grid,
+                                                                   const ParseContext& parseContext, ErrorGuard& errors);
 
         // get the segment number information and depth information based on the information from WellSegments
-        static void processCOMPSEGS(std::vector< Compsegs >& compsegs, const WellSegments& segment_set );
+        static void processCOMPSEGS(std::vector< Compsegs >& compsegs, const WellSegments& segment_set);
 
         // update the segment related information for Connections
         static void updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
-						 const EclipseGrid& grid,
+						                         const EclipseGrid& grid,
                                                  WellConnections& connection_set);
 
     };

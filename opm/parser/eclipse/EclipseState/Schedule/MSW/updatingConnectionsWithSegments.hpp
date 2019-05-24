@@ -27,8 +27,9 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 
 namespace Opm {
-    WellConnections * newConnectionsWithSegments(const DeckKeyword& compsegs, const WellConnections& input_connections, 
-						 const WellSegments& segments, const EclipseGrid& grid);
+    WellConnections * newConnectionsWithSegments(const DeckKeyword& compsegs, const WellConnections& input_connections,
+                                                 const WellSegments& segments, const EclipseGrid& grid,
+                                                 const ParseContext& parseContext, ErrorGuard& errors);
 }
 
 #endif
