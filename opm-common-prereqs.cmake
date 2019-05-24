@@ -18,7 +18,7 @@ if(ENABLE_ECL_INPUT)
         "ecl REQUIRED"
         # various runtime library enhancements
         "Boost 1.44.0
-          COMPONENTS system serialization filesystem unit_test_framework regex REQUIRED")
+          COMPONENTS system serialization filesystem unit_test_framework regex program_options REQUIRED")
 else()
   list(APPEND opm-common_DEPS
         # various runtime library enhancements

@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <getopt.h>
+#include <stdio.h>
+#include <unistd.h>  
 #include <boost/filesystem.hpp>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
@@ -31,11 +33,20 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
+#include <boost/program_options.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp> 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+namespace po = boost::program_options;
+namespace pt = boost::property_tree;
+
+
 #include <iostream>
 #include <chrono>
 typedef std::chrono::high_resolution_clock Clock;
 
-inline void pack_deck( const char * deck_file, std::ostream& os) {
+inline void pack_deck( const char * deck_file, std::ostream& os, bool do_compare, bool do_ascii) {
     Opm::ParseContext parseContext(Opm::InputError::WARN);
     Opm::ErrorGuard errors;
     Opm::Parser parser;
@@ -46,7 +57,6 @@ inline void pack_deck( const char * deck_file, std::ostream& os) {
     std::cout << "Parsing: "
 	      << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 	      << " milliseconds" << std::endl;
-    bool do_compare = true;
     if(do_compare){
       t1 = Clock::now();
       os << deck;
@@ -55,43 +65,45 @@ inline void pack_deck( const char * deck_file, std::ostream& os) {
 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 		<< " milliseconds" << std::endl;   
     }
-
-    ///
-    // {
-    //   t1 = Clock::now();
-    //   {  
-    // 	std::ofstream ofs("deck_serialized.ser");
-    // 	boost::archive::text_oarchive oa(ofs);
-    // 	oa << deck;
-    //   }
-    //   t2 = Clock::now();
-    // }
-    // std::cout << "Boost serializing ascii writing: "
-    // 	      << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-    // 	      << " milliseconds" << std::endl;   
  
-    // std::cout << "Start deserialized deck "<< std::endl;
-    // {
-    //   Opm::Deck deck_new;
-    //   t1 = Clock::now();
-    //   {  
-    // 	std::ifstream ifs("deck_serialized.ser");
-    // 	boost::archive::text_iarchive ia(ifs);
-    // 	ia >> deck_new;
-    // 	std::cout << "dezerialized deck finnished "<< std::endl;
+    if(do_ascii){
+	{
+	    t1 = Clock::now();
+	    {  
+		std::ofstream ofs("deck_serialized.ser");
+		boost::archive::text_oarchive oa(ofs);
+		oa << deck;
+	  }
+	    t2 = Clock::now();
+	}
+
+	std::cout << "Boost serializing ascii writing: "
+		  << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		  << " milliseconds" << std::endl;   
 	
-    //   }
-    //   t2 = Clock::now();
-    //   std::cout << "Boost deserialising ascii reading: "
-    // 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
-    // 	      << " milliseconds" << std::endl;   
-      
-    //   std::cout << "write out dezerialized deck" << std::endl;
-    //   deck_new.fullView();
+	std::cout << "Start deserialized deck "<< std::endl;
+	{
+	    Opm::Deck deck_new;
+	    t1 = Clock::now();
+	    {  
+		std::ifstream ifs("deck_serialized.ser");
+		boost::archive::text_iarchive ia(ifs);
+		ia >> deck_new;
+		std::cout << "dezerialized deck finnished "<< std::endl;
+		
+	    }
+	    t2 = Clock::now();
+	    std::cout << "Boost deserialising ascii reading: "
+		      << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
+		      << " milliseconds" << std::endl;   
+	    
+	    std::cout << "write out dezerialized deck" << std::endl;
+	    deck_new.fullView();
     
-    //   std::ofstream file("deck_full_view.txt");
-    //   file << deck_new;
-    // }
+	    std::ofstream file("deck_full_view.txt");
+	    file << deck_new;
+	}
+    }
     {
       t1 = Clock::now();
       {  
@@ -118,9 +130,9 @@ inline void pack_deck( const char * deck_file, std::ostream& os) {
 		<< std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 		<< " milliseconds" << std::endl;
       if(do_compare){
-	std::ofstream file("deck_full_view_bin.txt");
-	deck_new.fullView();
-	file << deck_new;
+	  std::ofstream file("deck_full_view_bin.txt",std::ios::binary);
+	  deck_new.fullView();
+	  file << deck_new;
       }
     }
  
@@ -158,41 +170,58 @@ Print NEW_CASE in cwd:
 
 
 int main(int argc, char** argv) {
-    int arg_offset = 1;
-    bool stdout_output = true;
-    const char * coutput_arg;
-
-    while (true) {
-        int c;
-        c = getopt(argc, argv, "o:");
-        if (c == -1)
-            break;
-
-        switch(c) {
-        case 'o':
-            stdout_output = false;
-            coutput_arg = optarg;
-            break;
+    po::variables_map vm;
+    bool stdout_output = false;
+    try {
+        po::options_description desc("Allowed options");
+        desc.add_options()
+	    ("help", "produce help message")
+	    ("f", po::value<std::string>(),"input file")
+	    ("o", po::value<std::string>(), "output file")
+	    ("a", po::value<bool>()->default_value(false), "Do ascii")
+	    ("c", po::value<bool>()->default_value(false), "Compare");
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
+	if (vm.count("help")) {
+            std::cout << desc << "\n";
+            return 1;
         }
-    }
-    arg_offset = optind;
-    if (arg_offset >= argc)
-        print_help_and_exit();
 
+        if (!vm.count("f")) {
+            std::cout << "f: inpufilenot set.\n";
+            return 1;
+        }
+        else if (!vm.count("o")) {
+            std::cout << "o outputfile not set.\n";
+	    stdout_output = true;
+        }
+    } catch (std::exception& e) {
+        std::cerr << "error: " << e.what() << "\n";
+        return 1;
+    } catch (...) {
+        std::cerr << "Exception of unknown type!\n";
+    }
+
+    bool do_ascii = vm["a"].as<bool>();
+    bool do_compare = vm["c"].as<bool>();
+    std::string inputfile = vm["f"].as<std::string>();
+    std::cout << "Inputfile : " << inputfile << std::endl;
     if (stdout_output)
-        pack_deck(argv[arg_offset], std::cout);
+        pack_deck(inputfile.c_str(), std::cout, do_compare, do_ascii);
     else {
         std::ofstream os;
         using path = boost::filesystem::path;
-        path input_arg(argv[arg_offset]);
-        path output_arg(coutput_arg);
+	std::string outputfile = vm["o"].as<std::string>();
+	std::cout << "Outputfile : " << outputfile << std::endl;
+        path input_arg(inputfile.c_str());
+        path output_arg(outputfile.c_str());
         if (boost::filesystem::is_directory(output_arg)) {
             path output_path = output_arg / input_arg.filename();
             os.open(output_path.string());
         } else
             os.open(output_arg.string());
 
-        pack_deck(argv[arg_offset], os);
+        pack_deck(inputfile.c_str(), os, do_compare, do_ascii);
     }
 }
 
