@@ -193,7 +193,7 @@ namespace Opm {
               friend class  boost::serialization::access;
               template<class Archive>
 	      void serialize(Archive & ar, const unsigned int version){
-		ar & boost::serialization::base_object<DeckView>(*this);
+		//ar & boost::serialization::base_object<DeckView>(*this);
 		ar & keywordList;
 		//ar & defaultUnits;
 		//ar & activeUnits;
