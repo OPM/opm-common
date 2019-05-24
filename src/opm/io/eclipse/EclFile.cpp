@@ -44,7 +44,6 @@ bool isFormatted(const std::string& filename)
     int p = filename.find_last_of(".");
     int l = filename.length();
 
-    std::string rootN = filename.substr(0,p);
     std::string extension = filename.substr(p,l-p);
 
     return extension.substr(1,1) == "F" || extension.substr(1,1) == "A";
