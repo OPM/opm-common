@@ -90,7 +90,10 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
-    const Opm::WellConnections * new_connection_set = Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard);
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
+    Opm::WellConnections* new_connection_set = nullptr;
+    BOOST_CHECK_NO_THROW(new_connection_set = Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
 
     BOOST_CHECK_EQUAL(7U, new_connection_set->size());
 
@@ -175,5 +178,66 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
 
     Opm::ErrorGuard   errorGuard;
     Opm::ParseContext parseContext;
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::THROW_EXCEPTION);
     BOOST_CHECK_THROW(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
+
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_INVALID, Opm::InputError::IGNORE);
+    BOOST_CHECK_NO_THROW(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
+}
+
+BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
+    Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
+    Opm::WellConnections connection_set(10,10);
+    Opm::EclipseGrid grid(20,20,20);
+    connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+
+    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::WellCompletion::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
+
+    BOOST_CHECK_EQUAL( 7U , connection_set.size() );
+
+    const std::string compsegs_string =
+        "WELSEGS \n"
+        "'PROD01' 2512.5 2512.5 1.0e-5 'ABS' 'H--' 'HO' /\n"
+        "2         2      1      1    2537.5 2537.5  0.3   0.00010 /\n"
+        "3         3      1      2    2562.5 2562.5  0.2  0.00010 /\n"
+        "4         4      2      2    2737.5 2537.5  0.2  0.00010 /\n"
+        "6         6      2      4    3037.5 2539.5  0.2  0.00010 /\n"
+        "7         7      2      6    3337.5 2534.5  0.2  0.00010 /\n"
+        "/\n"
+        "\n"
+        "COMPSEGS\n"
+        "PROD01 / \n"
+        "20    1     1     1   2512.5   2525.0 /\n"
+        "20    1     2     1   2525.0   2550.0 /\n"
+        "20    1     3     1   2550.0   2575.0 /\n"
+        "19    1     2     2   2637.5   2837.5 2* -8./\n"
+        "18    1     2     2   2837.5   3037.5 /\n"
+        "17    1     2     2   3037.5   3237.5 /\n"
+        "16    1     2     2   3237.5   3437.5 /\n"
+        "/\n";
+
+    Opm::Parser parser;
+    Opm::Deck deck = parser.parseString(compsegs_string);
+
+    const Opm::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
+    BOOST_CHECK_EQUAL( 8U, compsegs.size() );
+
+    Opm::WellSegments segment_set;
+    const Opm::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
+    segment_set.loadWELSEGS(welsegs);
+
+    BOOST_CHECK_EQUAL(6U, segment_set.size());
+
+    Opm::ErrorGuard   errorGuard;
+    Opm::ParseContext parseContext;
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::THROW_EXCEPTION);
+    BOOST_CHECK_THROW(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
+
+    parseContext.update(Opm::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Opm::InputError::IGNORE);
+    BOOST_CHECK_NO_THROW(Opm::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
 }

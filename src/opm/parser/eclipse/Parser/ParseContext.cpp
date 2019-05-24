@@ -110,8 +110,8 @@ namespace Opm {
 
         addKey(UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
         this->addKey(SCHEDULE_WELL_ERROR, InputError::THROW_EXCEPTION);
-        this->addKey(SCHEDULE_INVALID_COMPSEGS, InputError::THROW_EXCEPTION);
-        this->addKey(SCHEDULE_NOT_SUPPORTED_COMPSEGS, InputError::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_COMPSEGS_INVALID, InputError::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputError::THROW_EXCEPTION);
     }
 
     void ParseContext::initEnv() {
@@ -347,6 +347,6 @@ namespace Opm {
     const std::string ParseContext::UDQ_PARSE_ERROR = "UDQ_PARSE_ERROR";
     const std::string ParseContext::SCHEDULE_WELL_ERROR = "SCHEDULE_WELL_ERROR";
 
-    const std::string ParseContext::SCHEDULE_INVALID_COMPSEGS = "SCHEDULE_INVALID_COMPSEGS";
-    const std::string ParseContext::SCHEDULE_NOT_SUPPORTED_COMPSEGS = "SCHEDULE_NOT_SUPPORTED_COMPSEGS";
+    const std::string ParseContext::SCHEDULE_COMPSEGS_INVALID = "SCHEDULE_COMPSEG_INVALID";
+    const std::string ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED = "SCHEDULE_COMPSEGS_NOT_SUPPORTED";
 }

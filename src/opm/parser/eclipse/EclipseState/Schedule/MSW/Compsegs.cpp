@@ -80,7 +80,7 @@ namespace Opm {
                 // since basically no specific order for the connections
                 const std::string msg = "This way to obtain DISTANCE_START in keyword COMPSEGS "
                                         "is not implemented yet for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_NOT_SUPPORTED_COMPSEGS, msg, errors);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg, errors);
             }
             if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().hasValue(0)) {
                 distance_end = record.getItem<ParserKeywords::COMPSEGS::DISTANCE_END>().getSIDouble(0);
@@ -88,28 +88,28 @@ namespace Opm {
                 // TODO: the distance_start plus the thickness of the grid block
                 const std::string msg = "This way to obtain DISTANCE_END in keyword COMPSEGS "
                                         "is not implemented yet for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_NOT_SUPPORTED_COMPSEGS, msg, errors);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg, errors);
             }
 
             if (distance_end <= distance_start) {
                 std::ostringstream sstr;
                 sstr << " The end of the perforations need be to further down than the start of the perforations\n "
                      << " well " << well_name << " " << I + 1 << " " << J + 1 << " " << K + 1 << " in keyword COMPSEGS\n";
-                parseContext.handleError(ParseContext::SCHEDULE_INVALID_COMPSEGS, sstr.str(), errors);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, sstr.str(), errors);
             }
 
             if( !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) &&
                 !record.getItem< ParserKeywords::COMPSEGS::DISTANCE_END >().hasValue( 0 ) ) {
                 const std::string msg = "The direction has to be specified when DISTANCE_END "
                                         "is not specified in keyword COMPSEGS for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_INVALID_COMPSEGS, msg, errors);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg, errors);
             }
 
             if( record.getItem< ParserKeywords::COMPSEGS::END_IJK >().hasValue( 0 ) &&
                !record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) ) {
                 const std::string msg = "The direction has to be specified when END_IJK "
                                         "is specified in keyword COMPSEGS for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_INVALID_COMPSEGS, msg, errors);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_INVALID, msg, errors);
             }
 
             /*
@@ -134,7 +134,7 @@ namespace Opm {
                 //TODO: get the depth from COMPDAT data.
                 const std::string msg = "This way to obtain CENTER_DISTANCE in keyword COMPSEGS "
                                         "is not implemented yet for well " + well_name;
-                parseContext.handleError(ParseContext::SCHEDULE_NOT_SUPPORTED_COMPSEGS, msg, errors);
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, msg, errors);
             }
 
             int segment_number;
@@ -157,7 +157,10 @@ namespace Opm {
                                        seqIndex);
               }
             } else { // a range is defined. genrate a range of Compsegs
-                throw std::runtime_error("entering COMPSEGS entries with a range is not supported yet!");
+                std::ostringstream sstr;
+                sstr << "COMPSEGS entries can only be input for single connection, not supporting COMPSEGS entries specified with a range yet.\n"
+                     << " well " << well_name << " " << I + 1 << " " << J + 1 << " " << K + 1 << " in keyword COMPSEGS\n";
+                parseContext.handleError(ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, sstr.str(), errors);
             }
         }
 
@@ -190,11 +193,10 @@ namespace Opm {
             }
 
             if (segment_number == 0) {
-                throw std::runtime_error("The perforation failed in finding a related segment \n");
-            }
-
-            if (compseg.center_depth < 0.) {
-                throw std::runtime_error("Obtaining perforation depth from COMPDAT data is not supported yet");
+                std::ostringstream sstr;
+                sstr << "The connection specified in COMPSEGS with index of " << compseg.m_i + 1 << " "
+                     << compseg.m_j + 1 << " " << compseg.m_k + 1 << " failed in finding a related segment";
+                throw std::runtime_error(sstr.str());
             }
 
             compseg.segment_number = segment_number;

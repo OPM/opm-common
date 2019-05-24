@@ -333,8 +333,8 @@ namespace Opm {
 
         const static std::string SCHEDULE_WELL_ERROR;
 
-        const static std::string SCHEDULE_INVALID_COMPSEGS;
-        const static std::string SCHEDULE_NOT_SUPPORTED_COMPSEGS;
+        const static std::string SCHEDULE_COMPSEGS_INVALID;
+        const static std::string SCHEDULE_COMPSEGS_NOT_SUPPORTED;
 
         /*
           The SIMULATOR_KEYWORD_ errormodes are for the situation where the
