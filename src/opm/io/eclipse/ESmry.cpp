@@ -203,7 +203,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
     while (n >= 0){
 
-        reportStepNumber = fromReportStepNumber;
+        int reportStepNumber = fromReportStepNumber;
 
         if (n > 0) {
             auto rstFrom = smryArray[n-1];
@@ -364,9 +364,8 @@ std::string ESmry::makeKeyString(const std::string &keyword, const std::string &
         keyStr = keyword + ":" + std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
 
     } else if (keyword.substr(0, 1) == "C") {
-        int _i,_j,_k;
-
         if (num > 0) {
+            int _i,_j,_k;
             ijk_from_global_index(num, _i, _j, _k);
             keyStr = keyword + ":" + wgname+ ":" + std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
         }
