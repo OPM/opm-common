@@ -7,6 +7,7 @@ set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
 
 option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
+option(ENABLE_PYTHON "Enable python bindings?" OFF)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(ENABLE_WELL_TEST "Enable testing of well code when building Schedule object" OFF)
 
@@ -213,3 +214,13 @@ install(DIRECTORY cmake DESTINATION share/opm)
 
 # Install tab completion skeleton
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
+
+if(ENABLE_PYTHON)
+  include(UsePyBind11)
+  include(ExternalProject)
+  externalproject_add(PythonBindings
+                      SOURCE_DIR ${PROJECT_SOURCE_DIR}/python
+                      CMAKE_ARGS -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}/PyBind11-prefix
+                      -Dopm-common_DIR=${PROJECT_BINARY_DIR})
+   add_dependencies(PythonBindings PyBind11 opmcommon)
+endif()
