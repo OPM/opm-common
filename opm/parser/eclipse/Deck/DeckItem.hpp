@@ -29,6 +29,14 @@
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+
+
 namespace Opm {
     class DeckOutput;
 
@@ -131,6 +139,19 @@ namespace Opm {
         template< typename T > void push( T, size_t );
         template< typename T > void push_default( T );
         template< typename T > void write_vector(DeckOutput& writer, const std::vector<T>& data) const;
+    protected:
+      friend class  boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	ar & dval;
+	ar & ival;
+	ar & sval;
+	ar & type;
+	ar & item_name;
+	ar & defaulted;
+	ar & dimensions;
+	ar & SIdata;
+      }
     };
 }
 #endif  /* DECKITEM_HPP */

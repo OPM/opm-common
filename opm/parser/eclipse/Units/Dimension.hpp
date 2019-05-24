@@ -22,6 +22,14 @@
 
 #include <string>
 
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+
+
 namespace Opm {
 
     class Dimension {
@@ -47,6 +55,15 @@ namespace Opm {
         std::string m_name;
         double m_SIfactor;
         double m_SIoffset;
+    protected:
+      friend class  boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	ar & m_name;
+	//	ar & m_SIfactor;
+	ar & m_SIoffset;
+      }
+
     };
 }
 

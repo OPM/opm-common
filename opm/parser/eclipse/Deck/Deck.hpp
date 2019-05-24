@@ -27,9 +27,24 @@
 #include <string>
 
 #include <boost/filesystem.hpp>
+#include <boost/archive/tmpdir.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/assume_abstract.hpp>
+
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+
+
 
 #ifdef OPM_PARSER_DECK_API_WARNING
 #ifndef OPM_PARSER_DECK_API
@@ -107,6 +122,14 @@ namespace Opm {
             const_iterator first;
             const_iterator last;
             std::map< std::string, std::vector< size_t > > keywordMap;
+    protected:
+      friend class  boost::serialization::access;
+      template<class Archive>
+      void serialize(Archive & ar, const unsigned int version){
+	//ar & first;
+	//ar & last;
+	ar & keywordMap; 
+      }
 
     };
 
@@ -130,7 +153,11 @@ namespace Opm {
             Deck( std::initializer_list< std::string > );
 
             Deck( const Deck& );
-
+            void fullView(){
+	      this->reinit(keywordList.begin(), keywordList.end());
+	      this->activeUnits = UnitSystem::newMETRIC();
+	      this->defaultUnits = UnitSystem::newMETRIC();  	      
+	    }
             //! \brief Deleted assignment operator.
             Deck& operator=(const Deck& rhs) = delete;
 
@@ -162,6 +189,17 @@ namespace Opm {
 
             std::string m_dataFile;
             std::string input_path;
+        protected:
+              friend class  boost::serialization::access;
+              template<class Archive>
+	      void serialize(Archive & ar, const unsigned int version){
+		ar & boost::serialization::base_object<DeckView>(*this);
+		ar & keywordList;
+		//ar & defaultUnits;
+		//ar & activeUnits;
+		ar & m_dataFile;
+		ar & input_path;
+	      }
     };
 }
 #endif  /* DECK_HPP */

@@ -18,12 +18,12 @@ if(ENABLE_ECL_INPUT)
         "ecl REQUIRED"
         # various runtime library enhancements
         "Boost 1.44.0
-          COMPONENTS system filesystem unit_test_framework regex REQUIRED")
+          COMPONENTS system serialization filesystem unit_test_framework regex REQUIRED")
 else()
   list(APPEND opm-common_DEPS
         # various runtime library enhancements
         "Boost 1.44.0
-          COMPONENTS system unit_test_framework REQUIRED")
+          COMPONENTS system serialization unit_test_framework REQUIRED")
 endif()
 # We need a defined target for libecl when linking.
 # The definition of the target is done implicitly below when
