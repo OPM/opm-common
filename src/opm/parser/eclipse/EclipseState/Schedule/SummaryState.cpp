@@ -61,16 +61,31 @@ namespace {
             this->update_well_var(node.get_wgname(),
                                   node.get_keyword(),
                                   value);
+        else if (node.get_var_type() == ECL_SMSPEC_GROUP_VAR)
+            this->update_group_var(node.get_wgname(),
+                                   node.get_keyword(),
+                                   value);
         else {
             const std::string& key = node.get_gen_key1();
             if (node.is_total())
                 this->values[key] += value;
             else
                 this->values[key] = value;
-
         }
     }
 
+
+    void SummaryState::update_group_var(const std::string& group, const std::string& var, double value) {
+        std::string key = var + ":" + group;
+        if (is_total(var)) {
+            this->values[key] += value;
+            this->group_values[var][group] += value;
+        } else {
+            this->values[key] = value;
+            this->group_values[var][group] = value;
+        }
+        this->m_groups.insert(group);
+    }
 
     void SummaryState::update_well_var(const std::string& well, const std::string& var, double value) {
         std::string key = var + ":" + well;
@@ -119,6 +134,21 @@ namespace {
         return this->well_values.at(var).at(well);
     }
 
+    bool SummaryState::has_group_var(const std::string& group, const std::string& var) const {
+        const auto& var_iter = this->group_values.find(var);
+        if (var_iter == this->group_values.end())
+            return false;
+
+        const auto& group_iter = var_iter->second.find(group);
+        if (group_iter == var_iter->second.end())
+            return false;
+
+        return true;
+    }
+
+    double SummaryState::get_group_var(const std::string& group, const std::string& var) const {
+        return this->group_values.at(var).at(group);
+    }
 
     SummaryState::const_iterator SummaryState::begin() const {
         return this->values.begin();
@@ -147,6 +177,20 @@ namespace {
     }
 
 
+    std::vector<std::string> SummaryState::groups(const std::string& var) const {
+        const auto& var_iter = this->group_values.find(var);
+        if (var_iter == this->group_values.end())
+            return {};
 
+        std::vector<std::string> groups;
+        for (const auto& pair : var_iter->second)
+            groups.push_back(pair.first);
+        return groups;
+    }
+
+
+    std::vector<std::string> SummaryState::groups() const {
+        return std::vector<std::string>(this->m_groups.begin(), this->m_groups.end());
+    }
 
 }
