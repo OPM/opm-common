@@ -74,18 +74,23 @@ public:
 
     bool has(const std::string& key) const;
     bool has_well_var(const std::string& well, const std::string& var) const;
+    bool has_group_var(const std::string& group, const std::string& var) const;
 
     void update(const std::string& key, double value);
     void update(const ecl::smspec_node& node, double value);
     void update_well_var(const std::string& well, const std::string& var, double value);
+    void update_group_var(const std::string& group, const std::string& var, double value);
     void update_elapsed(double delta);
 
     double get(const std::string&) const;
-    double get_well_var(const std::string& well, const std::string& var) const;
     double get_elapsed() const;
+    double get_well_var(const std::string& well, const std::string& var) const;
+    double get_group_var(const std::string& group, const std::string& var) const;
 
     std::vector<std::string> wells() const;
     std::vector<std::string> wells(const std::string& var) const;
+    std::vector<std::string> groups() const;
+    std::vector<std::string> groups(const std::string& var) const;
     const_iterator begin() const;
     const_iterator end() const;
 private:
@@ -95,6 +100,10 @@ private:
     // The first key is the variable and the second key is the well.
     std::unordered_map<std::string, std::unordered_map<std::string, double>> well_values;
     std::unordered_set<std::string> m_wells;
+
+    // The first key is the variable and the second key is the group.
+    std::unordered_map<std::string, std::unordered_map<std::string, double>> group_values;
+    std::unordered_set<std::string> m_groups;
 };
 
 }
