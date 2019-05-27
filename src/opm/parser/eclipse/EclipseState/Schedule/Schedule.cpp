@@ -2293,10 +2293,5 @@ namespace Opm {
 
     }
 
-#ifdef WELL_TEST
-    bool Schedule::checkWells(const ParseContext& parseContext, ErrorGuard& errors) const {
-        return true;
-    }
-#endif
 }
 
