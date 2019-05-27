@@ -23,6 +23,7 @@
 #include <ios>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace Opm { namespace ecl {
 
@@ -94,10 +95,65 @@ namespace Opm { namespace ecl { namespace OutputStream {
             return this->unified_;
         }
 
-        /// Access writable output stream.
+        /// Generate a message string (keyword type 'MESS') in underlying
+        /// output stream.
         ///
-        /// Must not be called prior to \c prepareStep.
-        EclOutput& stream();
+        /// Must not be called prior to \c prepareStep
+        ///
+        /// \param[in] msg Message string (e.g., "STARTSOL").
+        void message(const std::string& msg);
+
+        /// Write integer data to underlying output stream.
+        ///
+        /// Must not be called prior to \c prepareStep
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&      kw,
+                   const std::vector<int>& data);
+
+        /// Write boolean data to underlying output stream.
+        ///
+        /// Must not be called prior to \c prepareStep
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&       kw,
+                   const std::vector<bool>& data);
+
+        /// Write single precision floating point data to underlying
+        /// output stream.
+        ///
+        /// Must not be called prior to \c prepareStep
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&        kw,
+                   const std::vector<float>& data);
+
+        /// Write double precision floating point data to underlying
+        /// output stream.
+        ///
+        /// Must not be called prior to \c prepareStep
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&         kw,
+                   const std::vector<double>& data);
+
+        /// Write unpadded string data to underlying output stream.
+        ///
+        /// Must not be called prior to \c prepareStep
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&              kw,
+                   const std::vector<std::string>& data);
 
     private:
         ResultSet rset_;
@@ -139,6 +195,16 @@ namespace Opm { namespace ecl { namespace OutputStream {
         ///    place output indicator at end of file (i.e, simple append).
         void openExisting(const std::string&   fname,
                           const std::streampos writePos);
+
+        /// Access writable output stream.
+        ///
+        /// Must not be called prior to \c prepareStep.
+        EclOutput& stream();
+
+        /// Implementation function for public \c write overload set.
+        template <typename T>
+        void writeImpl(const std::string&    kw,
+                       const std::vector<T>& data);
     };
 
     /// Derive filename corresponding to output stream of particular result

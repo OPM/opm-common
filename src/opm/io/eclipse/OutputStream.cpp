@@ -158,10 +158,44 @@ void Opm::ecl::OutputStream::Restart::prepareStep(const int seqnum)
     }
 }
 
-Opm::ecl::EclOutput&
-Opm::ecl::OutputStream::Restart::stream()
+void Opm::ecl::OutputStream::Restart::message(const std::string& msg)
 {
-    return *this->stream_;
+    this->stream().message(msg);
+}
+
+void
+Opm::ecl::OutputStream::Restart::
+write(const std::string& kw, const std::vector<int>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::ecl::OutputStream::Restart::
+write(const std::string& kw, const std::vector<bool>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::ecl::OutputStream::Restart::
+write(const std::string& kw, const std::vector<float>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::ecl::OutputStream::Restart::
+write(const std::string& kw, const std::vector<double>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::ecl::OutputStream::Restart::
+write(const std::string& kw, const std::vector<std::string>& data)
+{
+    this->writeImpl(kw, data);
 }
 
 void
@@ -238,6 +272,24 @@ openExisting(const std::string&   fname,
         };
     }
 }
+
+Opm::ecl::EclOutput&
+Opm::ecl::OutputStream::Restart::stream()
+{
+    return *this->stream_;
+}
+
+namespace Opm { namespace ecl { namespace OutputStream {
+
+    template <typename T>
+    void Restart::writeImpl(const std::string&    kw,
+                            const std::vector<T>& data)
+    {
+        this->stream().write(kw, data);
+    }
+
+}}}
+
 
 std::string
 Opm::ecl::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,

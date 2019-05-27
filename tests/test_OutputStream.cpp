@@ -424,13 +424,11 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
         rst.prepareStep(1);
 
-        auto& rstFile = rst.stream();
-
-        rstFile.write("I", std::vector<int>        {1, 7, 2, 9});
-        rstFile.write("L", std::vector<bool>       {true, false, false, true});
-        rstFile.write("S", std::vector<float>      {3.1f, 4.1f, 59.265f});
-        rstFile.write("D", std::vector<double>     {2.71, 8.21});
-        rstFile.write("Z", std::vector<std::string>{"W1", "W2"});
+        rst.write("I", std::vector<int>        {1, 7, 2, 9});
+        rst.write("L", std::vector<bool>       {true, false, false, true});
+        rst.write("S", std::vector<float>      {3.1f, 4.1f, 59.265f});
+        rst.write("D", std::vector<double>     {2.71, 8.21});
+        rst.write("Z", std::vector<std::string>{"W1", "W2"});
     }
 
     {
@@ -438,13 +436,11 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
         rst.prepareStep(13);
 
-        auto& rstFile = rst.stream();
-
-        rstFile.write("I", std::vector<int>        {35, 51, 13});
-        rstFile.write("L", std::vector<bool>       {true, true, true, false});
-        rstFile.write("S", std::vector<float>      {17.29e-02f, 1.4142f});
-        rstFile.write("D", std::vector<double>     {0.6931, 1.6180, 123.45e6});
-        rstFile.write("Z", std::vector<std::string>{"G1", "FIELD"});
+        rst.write("I", std::vector<int>        {35, 51, 13});
+        rst.write("L", std::vector<bool>       {true, true, true, false});
+        rst.write("S", std::vector<float>      {17.29e-02f, 1.4142f});
+        rst.write("D", std::vector<double>     {0.6931, 1.6180, 123.45e6});
+        rst.write("Z", std::vector<std::string>{"G1", "FIELD"});
     }
 
     {
@@ -537,13 +533,11 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
         rst.prepareStep(5);  // Before 13.  Should overwrite 13
 
-        auto& rstFile = rst.stream();
-
-        rstFile.write("I", std::vector<int>        {1, 2, 3, 4});
-        rstFile.write("L", std::vector<bool>       {false, false, false, true});
-        rstFile.write("S", std::vector<float>      {1.23e-04f, 1.234e5f, -5.4321e-9f});
-        rstFile.write("D", std::vector<double>     {0.6931, 1.6180});
-        rstFile.write("Z", std::vector<std::string>{"HELLO", ", ", "WORLD"});
+        rst.write("I", std::vector<int>        {1, 2, 3, 4});
+        rst.write("L", std::vector<bool>       {false, false, false, true});
+        rst.write("S", std::vector<float>      {1.23e-04f, 1.234e5f, -5.4321e-9f});
+        rst.write("D", std::vector<double>     {0.6931, 1.6180});
+        rst.write("Z", std::vector<std::string>{"HELLO", ", ", "WORLD"});
     }
 
     {
@@ -637,13 +631,11 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
         rst.prepareStep(13);
 
-        auto& rstFile = rst.stream();
-
-        rstFile.write("I", std::vector<int>        {35, 51, 13});
-        rstFile.write("L", std::vector<bool>       {true, true, true, false});
-        rstFile.write("S", std::vector<float>      {17.29e-02f, 1.4142f});
-        rstFile.write("D", std::vector<double>     {0.6931, 1.6180, 123.45e6});
-        rstFile.write("Z", std::vector<std::string>{"G1", "FIELD"});
+        rst.write("I", std::vector<int>        {35, 51, 13});
+        rst.write("L", std::vector<bool>       {true, true, true, false});
+        rst.write("S", std::vector<float>      {17.29e-02f, 1.4142f});
+        rst.write("D", std::vector<double>     {0.6931, 1.6180, 123.45e6});
+        rst.write("Z", std::vector<std::string>{"G1", "FIELD"});
     }
 
     {
@@ -745,13 +737,11 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
 
         rst.prepareStep(1);
 
-        auto& rstFile = rst.stream();
-
-        rstFile.write("I", std::vector<int>        {1, 7, 2, 9});
-        rstFile.write("L", std::vector<bool>       {true, false, false, true});
-        rstFile.write("S", std::vector<float>      {3.1f, 4.1f, 59.265f});
-        rstFile.write("D", std::vector<double>     {2.71, 8.21});
-        rstFile.write("Z", std::vector<std::string>{"W1", "W2"});
+        rst.write("I", std::vector<int>        {1, 7, 2, 9});
+        rst.write("L", std::vector<bool>       {true, false, false, true});
+        rst.write("S", std::vector<float>      {3.1f, 4.1f, 59.265f});
+        rst.write("D", std::vector<double>     {2.71, 8.21});
+        rst.write("Z", std::vector<std::string>{"W1", "W2"});
     }
 
     {
@@ -759,13 +749,11 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
 
         rst.prepareStep(13);
 
-        auto& rstFile = rst.stream();
-
-        rstFile.write("I", std::vector<int>        {35, 51, 13});
-        rstFile.write("L", std::vector<bool>       {true, true, true, false});
-        rstFile.write("S", std::vector<float>      {17.29e-02f, 1.4142f});
-        rstFile.write("D", std::vector<double>     {0.6931, 1.6180, 123.45e6});
-        rstFile.write("Z", std::vector<std::string>{"G1", "FIELD"});
+        rst.write("I", std::vector<int>        {35, 51, 13});
+        rst.write("L", std::vector<bool>       {true, true, true, false});
+        rst.write("S", std::vector<float>      {17.29e-02f, 1.4142f});
+        rst.write("D", std::vector<double>     {0.6931, 1.6180, 123.45e6});
+        rst.write("Z", std::vector<std::string>{"G1", "FIELD"});
     }
 
     {
@@ -848,13 +836,11 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
 
         rst.prepareStep(5);  // Separate output.  Step 13 should be unaffected.
 
-        auto& rstFile = rst.stream();
-
-        rstFile.write("I", std::vector<int>        {1, 2, 3, 4});
-        rstFile.write("L", std::vector<bool>       {false, false, false, true});
-        rstFile.write("S", std::vector<float>      {1.23e-04f, 1.234e5f, -5.4321e-9f});
-        rstFile.write("D", std::vector<double>     {0.6931, 1.6180});
-        rstFile.write("Z", std::vector<std::string>{"HELLO", ", ", "WORLD"});
+        rst.write("I", std::vector<int>        {1, 2, 3, 4});
+        rst.write("L", std::vector<bool>       {false, false, false, true});
+        rst.write("S", std::vector<float>      {1.23e-04f, 1.234e5f, -5.4321e-9f});
+        rst.write("D", std::vector<double>     {0.6931, 1.6180});
+        rst.write("Z", std::vector<std::string>{"HELLO", ", ", "WORLD"});
     }
 
     {
