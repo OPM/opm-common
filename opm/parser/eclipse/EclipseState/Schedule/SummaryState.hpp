@@ -93,6 +93,8 @@ public:
     std::vector<std::string> groups(const std::string& var) const;
     const_iterator begin() const;
     const_iterator end() const;
+    std::size_t num_wells() const;
+    std::size_t size() const;
 private:
     double elapsed;
     std::unordered_map<std::string,double> values;
