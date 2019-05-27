@@ -27,6 +27,10 @@
 #include <unordered_map>
 #include <vector>
 
+namespace Opm { namespace ecl { namespace OutputStream {
+    class Restart;
+}}}
+
 namespace Opm { namespace ecl {
 
 class ERst : public EclFile
@@ -43,6 +47,8 @@ public:
     const std::vector<int>& listOfReportStepNumbers() const { return seqnum; }
 
     std::vector<EclEntry> listOfRstArrays(int reportStepNumber);
+
+    friend class OutputStream::Restart;
 
 private:
     int nReports;

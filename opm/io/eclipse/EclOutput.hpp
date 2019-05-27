@@ -27,6 +27,10 @@
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 
+namespace Opm { namespace ecl { namespace OutputStream {
+    class Restart;
+}}}
+
 namespace Opm { namespace ecl {
 
 class EclOutput
@@ -67,6 +71,8 @@ public:
     }
 
     void message(const std::string& msg);
+
+    friend class OutputStream::Restart;
 
 private:
     void writeBinaryHeader(const std::string& arrName, int size, eclArrType arrType);
