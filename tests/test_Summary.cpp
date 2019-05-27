@@ -1463,6 +1463,7 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     st.update_well_var("OP1", "WWCT", 0.75);
     st.update_well_var("OP2", "WWCT", 0.75);
     st.update_well_var("OP3", "WOPT", 0.75);
+    st.update_well_var("OP3", "WGPR", 0.75);
     BOOST_CHECK( st.has_well_var("OP1", "WWCT"));
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), 0.75);
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), st.get("WWCT:OP1"));
@@ -1496,6 +1497,12 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP1"), 1);
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP2"), 1);
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP3"), 1);
+
+    BOOST_CHECK_EQUAL(st.size(), 5);
+
+    // The well 'OP_2' which was indirectly added with the
+    // st.update("WWCT:OP_2", 100) call is *not* counted as a well!
+    BOOST_CHECK_EQUAL(st.num_wells(), 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
