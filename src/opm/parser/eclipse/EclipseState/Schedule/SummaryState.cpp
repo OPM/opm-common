@@ -193,4 +193,11 @@ namespace {
         return std::vector<std::string>(this->m_groups.begin(), this->m_groups.end());
     }
 
+    std::size_t SummaryState::num_wells() const {
+        return this->m_wells.size();
+    }
+
+    std::size_t SummaryState::size() const {
+        return this->values.size();
+    }
 }
