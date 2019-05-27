@@ -945,7 +945,7 @@ BOOST_AUTO_TEST_CASE(UDQPARSE_PARSECONTEXT) {
         UDQDefine def1(udqp, "WUBHP", tokens, parseContext, errors);
         SummaryState st;
         UDQContext context(UDQFunctionTable(udqp), st);
-        st.update_well_var("P1", "WOPR", 1);
+        st.update_well_var("P1", "WBHP", 1);
         printf("Have returned with def1 \n");
 
         auto res = def1.eval_wells(context);
