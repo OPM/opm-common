@@ -59,6 +59,16 @@ void EclOutput::write<std::string>(const std::string& name,
 }
 
 
+void EclOutput::message(const std::string& msg)
+{
+    // Generate message, i.e., output vector of type eclArrType::MESS,
+    // by passing an empty std::vector of element type 'char'.  Entire
+    // contents of message contained in the 'msg' string.
+
+    this->write(msg, std::vector<char>{});
+}
+
+
 void EclOutput::writeBinaryHeader(const std::string&arrName, int size, eclArrType arrType)
 {
     std::string name = arrName + std::string(8 - arrName.size(),' ');

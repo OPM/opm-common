@@ -64,6 +64,8 @@ public:
         }
     }
 
+    void message(const std::string& msg);
+
 private:
     void writeBinaryHeader(const std::string& arrName, int size, eclArrType arrType);
 
@@ -90,7 +92,6 @@ private:
 template<>
 void EclOutput::write<std::string>(const std::string& name,
                                    const std::vector<std::string>& data);
-
 }} // namespace Opm::ecl
 
 #endif // OPM_IO_ECLOUTPUT_HPP
