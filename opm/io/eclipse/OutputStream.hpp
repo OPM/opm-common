@@ -52,12 +52,23 @@ namespace Opm { namespace ecl { namespace OutputStream {
     public:
         /// Constructor.
         ///
+        /// Opens file stream pertaining to restart of particular report
+        /// step and also outputs a SEQNUM record in the case of a unified
+        /// output stream.
+        ///
+        /// Must be called before accessing the stream object through the
+        /// stream() member function.
+        ///
         /// \param[in] rset Output directory and base name of output stream.
+        ///
+        /// \param[in] seqnum Sequence number of new report.  One-based
+        ///    report step ID.
         ///
         /// \param[in] fmt Whether or not to create formatted output files.
         ///
         /// \param[in] unif Whether or not to create unified output files.
-        explicit Restart(ResultSet        rset,
+        explicit Restart(const ResultSet& rset,
+                         const int        seqnum,
                          const Formatted& fmt,
                          const Unified&   unif);
 
@@ -68,32 +79,6 @@ namespace Opm { namespace ecl { namespace OutputStream {
 
         Restart& operator=(const Restart& rhs) = delete;
         Restart& operator=(Restart&& rhs);
-
-        /// Opens file stream pertaining to restart of particular report
-        /// step and also outputs a SEQNUM record in the case of a unified
-        /// output stream.
-        ///
-        /// Must be called before accessing the stream object through the
-        /// stream() member function.
-        ///
-        /// \param[in] seqnum Sequence number of new report.  One-based
-        ///    report step ID.
-        void prepareStep(const int seqnum);
-
-        const ResultSet& resultSetDescriptor() const
-        {
-            return this->rset_;
-        }
-
-        bool formatted() const
-        {
-            return this->formatted_;
-        }
-
-        bool unified() const
-        {
-            return this->unified_;
-        }
 
         /// Generate a message string (keyword type 'MESS') in underlying
         /// output stream.
@@ -156,10 +141,6 @@ namespace Opm { namespace ecl { namespace OutputStream {
                    const std::vector<std::string>& data);
 
     private:
-        ResultSet rset_;
-        bool      formatted_;
-        bool      unified_;
-
         /// Restart output stream.
         std::unique_ptr<EclOutput> stream_;
 
@@ -170,9 +151,13 @@ namespace Opm { namespace ecl { namespace OutputStream {
         ///
         /// \param[in] fname Filename of output stream.
         ///
+        /// \param[in] formatted Whether or not to create a
+        ///    formatted output file.
+        ///
         /// \param[in] seqnum Sequence number of new report.  One-based
         ///    report step ID.
         void openUnified(const std::string& fname,
+                         const bool         formatted,
                          const int          seqnum);
 
         /// Open new output stream.
@@ -181,7 +166,11 @@ namespace Opm { namespace ecl { namespace OutputStream {
         /// that does not already exist.  Writes to \c stream_.
         ///
         /// \param[in] fname Filename of new output stream.
-        void openNew(const std::string& fname);
+        ///
+        /// \param[in] formatted Whether or not to create a
+        ///    formatted output file.
+        void openNew(const std::string& fname,
+                     const bool         formatted);
 
         /// Open existing output file and place stream's output indicator
         /// in appropriate location.
@@ -194,6 +183,7 @@ namespace Opm { namespace ecl { namespace OutputStream {
         ///    indicator.  Use \code streampos{ streamoff{-1} } \endcode to
         ///    place output indicator at end of file (i.e, simple append).
         void openExisting(const std::string&   fname,
+                          const bool           formatted,
                           const std::streampos writePos);
 
         /// Access writable output stream.
@@ -222,19 +212,6 @@ namespace Opm { namespace ecl { namespace OutputStream {
     /// \return outputDir/baseName.ext
     std::string outputFileName(const ResultSet&   rsetDescriptor,
                                const std::string& ext);
-
-    /// Derive filename of restart output stream.
-    ///
-    /// Knows the rules for formatted vs. unformatted, and separate vs.
-    /// unified output files.
-    ///
-    /// \param[in] rst Previously configured restart stream.
-    ///
-    /// \param[in] seqnum Sequence number (1-based report step ID).
-    ///
-    /// \return Filename corresponding to stream's configuration.
-    std::string outputFileName(const Restart& rst,
-                               const int      seqnum);
 
 }}} // namespace Opm::ecl::OutputStream
 

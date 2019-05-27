@@ -113,40 +113,19 @@ namespace {
 } // Anonymous namespace
 
 Opm::ecl::OutputStream::Restart::
-Restart(ResultSet        rset,
+Restart(const ResultSet& rset,
+        const int        seqnum,
         const Formatted& fmt,
         const Unified&   unif)
-    : rset_     (std::move(rset))
-    , formatted_{fmt.set}
-    , unified_  {unif.set}
-{}
-
-Opm::ecl::OutputStream::Restart::~Restart()
-{}
-
-Opm::ecl::OutputStream::Restart::Restart(Restart&& rhs)
-    : rset_     (std::move(rhs.rset_))
-    , formatted_{rhs.formatted_}
-    , unified_  {rhs.unified_}
-{}
-
-Opm::ecl::OutputStream::Restart&
-Opm::ecl::OutputStream::Restart::operator=(Restart&& rhs)
 {
-    this->rset_      = std::move(rhs.rset_);
-    this->formatted_ = rhs.formatted_;
-    this->unified_   = rhs.unified_;
+    const auto ext = FileExtension::
+        restart(seqnum, fmt.set, unif.set);
 
-    return *this;
-}
+    const auto fname = outputFileName(rset, ext);
 
-void Opm::ecl::OutputStream::Restart::prepareStep(const int seqnum)
-{
-    const auto fname = outputFileName(*this, seqnum);
-
-    if (this->unified_) {
+    if (unif.set) {
         // Run uses unified restart files.
-        this->openUnified(fname, seqnum);
+        this->openUnified(fname, fmt.set, seqnum);
 
         // Write SEQNUM value to stream to start new output sequence.
         this->stream_->write("SEQNUM", std::vector<int>{ seqnum });
@@ -154,8 +133,23 @@ void Opm::ecl::OutputStream::Restart::prepareStep(const int seqnum)
     else {
         // Run uses separate, not unified, restart files.  Create a
         // new output file and open an output stream on it.
-        this->openNew(fname);
+        this->openNew(fname, fmt.set);
     }
+}
+
+Opm::ecl::OutputStream::Restart::~Restart()
+{}
+
+Opm::ecl::OutputStream::Restart::Restart(Restart&& rhs)
+    : stream_{ std::move(rhs.stream_) }
+{}
+
+Opm::ecl::OutputStream::Restart&
+Opm::ecl::OutputStream::Restart::operator=(Restart&& rhs)
+{
+    this->stream_ = std::move(rhs.stream_);
+
+    return *this;
 }
 
 void Opm::ecl::OutputStream::Restart::message(const std::string& msg)
@@ -201,6 +195,7 @@ write(const std::string& kw, const std::vector<std::string>& data)
 void
 Opm::ecl::OutputStream::Restart::
 openUnified(const std::string& fname,
+            const bool         formatted,
             const int          seqnum)
 {
     // Determine if we're creating a new output/restart file or
@@ -210,7 +205,7 @@ openUnified(const std::string& fname,
 
     if (rst == nullptr) {
         // No such unified restart file exists.  Create new file.
-        this->openNew(fname);
+        this->openNew(fname, formatted);
     }
     else if (! rst->hasKey("SEQNUM")) {
         // File with correct filename exists but does not appear
@@ -225,23 +220,26 @@ openUnified(const std::string& fname,
         // Restart file exists and appears to be a unified restart
         // resource.  Open writable restart stream backed by the
         // specific file.
-        this->openExisting(fname, rst->restartStepWritePosition(seqnum));
+        this->openExisting(fname, formatted,
+                           rst->restartStepWritePosition(seqnum));
     }
 }
 
 void
-Opm::ecl::OutputStream::Restart::openNew(const std::string& fname)
+Opm::ecl::OutputStream::Restart::
+openNew(const std::string& fname,
+        const bool         formatted)
 {
-    this->stream_ = Open::Restart::writeNew(fname, this->formatted_);
+    this->stream_ = Open::Restart::writeNew(fname, formatted);
 }
 
 void
 Opm::ecl::OutputStream::Restart::
 openExisting(const std::string&   fname,
+             const bool           formatted,
              const std::streampos writePos)
 {
-    this->stream_ = Open::Restart::
-        writeExisting(fname, this->formatted_);
+    this->stream_ = Open::Restart::writeExisting(fname, formatted);
 
     if (writePos == std::streampos(-1)) {
         // No specified initial write position.  Typically the case if
@@ -306,14 +304,4 @@ Opm::ecl::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
 
     return (fs::path { rsetDescriptor.outputDir } / fname)
         .generic().string();
-}
-
-std::string
-Opm::ecl::OutputStream::outputFileName(const Restart& rst,
-                                       const int      seqnum)
-{
-    const auto ext = FileExtension::
-        restart(seqnum, rst.formatted(), rst.unified());
-
-    return outputFileName(rst.resultSetDescriptor(), ext);
 }

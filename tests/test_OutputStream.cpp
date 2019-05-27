@@ -125,262 +125,6 @@ BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
     }
 }
 
-BOOST_AUTO_TEST_CASE(Formatted_Separate)
-{
-    const auto odir   = std::string{"/x/y/z///"};
-    const auto seqnum = 123;
-    const auto fmt    = ::Opm::ecl::OutputStream::Formatted{ true };
-    const auto unif   = ::Opm::ecl::OutputStream::Unified  { false };
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE"
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.F0123");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE."  // CASE DOT
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.F0123");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE.01"
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.01.F0123");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE.01."  // CASE.01 DOT
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.01.F0123");
-    }
-}
-
-BOOST_AUTO_TEST_CASE(Formatted_Unified)
-{
-    const auto odir   = std::string{"/x/y/z///"};
-    const auto seqnum = 123;
-    const auto fmt    = ::Opm::ecl::OutputStream::Formatted{ true };
-    const auto unif   = ::Opm::ecl::OutputStream::Unified  { true };
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE"
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.FUNRST");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE."  // CASE DOT
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.FUNRST");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE.01"
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.01.FUNRST");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE.01."  // CASE.01 DOT
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.01.FUNRST");
-    }
-}
-
-BOOST_AUTO_TEST_CASE(Unformatted_Separate)
-{
-    const auto odir   = std::string{"/x/y/z///"};
-    const auto seqnum = 123;
-    const auto fmt    = ::Opm::ecl::OutputStream::Formatted{ false };
-    const auto unif   = ::Opm::ecl::OutputStream::Unified  { false };
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE"
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.X0123");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE."  // CASE DOT
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.X0123");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE.01"
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.01.X0123");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE.01."  // CASE.01 DOT
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.01.X0123");
-    }
-}
-
-BOOST_AUTO_TEST_CASE(Unformatted_Unified)
-{
-    const auto odir   = std::string{"/x/y/z///"};
-    const auto seqnum = 123;
-    const auto fmt    = ::Opm::ecl::OutputStream::Formatted{ false };
-    const auto unif   = ::Opm::ecl::OutputStream::Unified  { true };
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE"
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.UNRST");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE."  // CASE DOT
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.UNRST");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE.01"
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.01.UNRST");
-    }
-
-    {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
-            odir, "CASE.01."  // CASE.01 DOT
-        };
-
-        const auto rst = ::Opm::ecl::OutputStream::Restart {
-            rset, fmt, unif
-        };
-
-        const auto fname = outputFileName(rst, seqnum);
-
-        BOOST_CHECK_EQUAL(fname, odir + "CASE.01.UNRST");
-    }
-}
-
 BOOST_AUTO_TEST_SUITE_END() // FileName
 
 // ==========================================================================
@@ -420,9 +164,10 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
     const auto unif = ::Opm::ecl::OutputStream::Unified  { true };
 
     {
-        auto rst = ::Opm::ecl::OutputStream::Restart{ rset, fmt, unif };
-
-        rst.prepareStep(1);
+        const auto seqnum = 1;
+        auto rst = ::Opm::ecl::OutputStream::Restart {
+            rset, seqnum, fmt, unif
+        };
 
         rst.write("I", std::vector<int>        {1, 7, 2, 9});
         rst.write("L", std::vector<bool>       {true, false, false, true});
@@ -432,9 +177,10 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
     }
 
     {
-        auto rst = ::Opm::ecl::OutputStream::Restart{ rset, fmt, unif };
-
-        rst.prepareStep(13);
+        const auto seqnum = 13;
+        auto rst = ::Opm::ecl::OutputStream::Restart {
+            rset, seqnum, fmt, unif
+        };
 
         rst.write("I", std::vector<int>        {35, 51, 13});
         rst.write("L", std::vector<bool>       {true, true, true, false});
@@ -529,9 +275,10 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
     }
 
     {
-        auto rst = ::Opm::ecl::OutputStream::Restart{ rset, fmt, unif };
-
-        rst.prepareStep(5);  // Before 13.  Should overwrite 13
+        const auto seqnum = 5;  // Before 13.  Should overwrite 13
+        auto rst = ::Opm::ecl::OutputStream::Restart {
+            rset, seqnum, fmt, unif
+        };
 
         rst.write("I", std::vector<int>        {1, 2, 3, 4});
         rst.write("L", std::vector<bool>       {false, false, false, true});
@@ -627,9 +374,10 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
     }
 
     {
-        auto rst = ::Opm::ecl::OutputStream::Restart{ rset, fmt, unif };
-
-        rst.prepareStep(13);
+        const auto seqnum = 13;
+        auto rst = ::Opm::ecl::OutputStream::Restart {
+            rset, seqnum, fmt, unif
+        };
 
         rst.write("I", std::vector<int>        {35, 51, 13});
         rst.write("L", std::vector<bool>       {true, true, true, false});
@@ -723,7 +471,6 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
                                           expect_Z.end());
         }
     }
-
 }
 
 BOOST_AUTO_TEST_CASE(Formatted_Separate)
@@ -733,9 +480,10 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
     const auto unif = ::Opm::ecl::OutputStream::Unified  { false };
 
     {
-        auto rst = ::Opm::ecl::OutputStream::Restart{ rset, fmt, unif };
-
-        rst.prepareStep(1);
+        const auto seqnum = 1;
+        auto rst = ::Opm::ecl::OutputStream::Restart {
+            rset, seqnum, fmt, unif
+        };
 
         rst.write("I", std::vector<int>        {1, 7, 2, 9});
         rst.write("L", std::vector<bool>       {true, false, false, true});
@@ -745,9 +493,10 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
     }
 
     {
-        auto rst = ::Opm::ecl::OutputStream::Restart{ rset, fmt, unif };
-
-        rst.prepareStep(13);
+        const auto seqnum = 13;
+        auto rst = ::Opm::ecl::OutputStream::Restart {
+            rset, seqnum, fmt, unif
+        };
 
         rst.write("I", std::vector<int>        {35, 51, 13});
         rst.write("L", std::vector<bool>       {true, true, true, false});
@@ -760,7 +509,7 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
         using ::Opm::ecl::OutputStream::Restart;
 
         const auto fname = ::Opm::ecl::OutputStream::
-            outputFileName(Restart{rset, fmt, unif}, 13);
+            outputFileName(rset, "F0013");
 
         auto rst = ::Opm::ecl::EclFile{fname};
 
@@ -832,9 +581,11 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
     }
 
     {
-        auto rst = ::Opm::ecl::OutputStream::Restart{ rset, fmt, unif };
-
-        rst.prepareStep(5);  // Separate output.  Step 13 should be unaffected.
+        // Separate output.  Step 13 should be unaffected.
+        const auto seqnum = 5;
+        auto rst = ::Opm::ecl::OutputStream::Restart {
+            rset, seqnum, fmt, unif
+        };
 
         rst.write("I", std::vector<int>        {1, 2, 3, 4});
         rst.write("L", std::vector<bool>       {false, false, false, true});
@@ -847,7 +598,7 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
         using ::Opm::ecl::OutputStream::Restart;
 
         const auto fname = ::Opm::ecl::OutputStream::
-            outputFileName(Restart{rset, fmt, unif}, 5);
+            outputFileName(rset, "F0005");
 
         auto rst = ::Opm::ecl::EclFile{fname};
 
@@ -926,7 +677,7 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
         using ::Opm::ecl::OutputStream::Restart;
 
         const auto fname = ::Opm::ecl::OutputStream::
-            outputFileName(Restart{rset, fmt, unif}, 13);
+            outputFileName(rset, "F0013");
 
         auto rst = ::Opm::ecl::EclFile{fname};
 
