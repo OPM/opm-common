@@ -27,12 +27,18 @@
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 
+namespace Opm { namespace ecl { namespace OutputStream {
+    class Restart;
+}}}
+
 namespace Opm { namespace ecl {
 
 class EclOutput
 {
 public:
-    EclOutput(const std::string& inputFile, bool formatted);
+    EclOutput(const std::string&            filename,
+              const bool                    formatted,
+              const std::ios_base::openmode mode = std::ios::out);
 
     template<typename T>
     void write(const std::string& name,
@@ -64,6 +70,10 @@ public:
         }
     }
 
+    void message(const std::string& msg);
+
+    friend class OutputStream::Restart;
+
 private:
     void writeBinaryHeader(const std::string& arrName, int size, eclArrType arrType);
 
@@ -82,15 +92,14 @@ private:
     std::string make_real_string(float value) const;
     std::string make_doub_string(double value) const;
 
-    std::ofstream ofileH;
     bool isFormatted;
+    std::ofstream ofileH;
 };
 
 
 template<>
 void EclOutput::write<std::string>(const std::string& name,
                                    const std::vector<std::string>& data);
-
 }} // namespace Opm::ecl
 
 #endif // OPM_IO_ECLOUTPUT_HPP

@@ -21,10 +21,15 @@
 
 #include <opm/io/eclipse/EclFile.hpp>
 
+#include <ios>
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+namespace Opm { namespace ecl { namespace OutputStream {
+    class Restart;
+}}}
 
 namespace Opm { namespace ecl {
 
@@ -43,6 +48,8 @@ public:
 
     std::vector<EclEntry> listOfRstArrays(int reportStepNumber);
 
+    friend class OutputStream::Restart;
+
 private:
     int nReports;
     std::vector<int> seqnum;                           // report step numbers, from SEQNUM array in restart file
@@ -50,6 +57,9 @@ private:
     std::map<int, std::pair<int,int>> arrIndexRange;   // mapping report step number to array indeces (start and end)
 
     int getArrayIndex(const std::string& name, int seqnum) const;
+
+    std::streampos
+    restartStepWritePosition(const int seqnumValue) const;
 };
 
 }} // namespace Opm::ecl

@@ -207,7 +207,7 @@ namespace Opm
         void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid);
+        void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONINJE( const SCHEDULESection&,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWSOLVENT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
@@ -252,9 +252,6 @@ namespace Opm
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
         void addWellEvent(const std::string& well, ScheduleEvents::Events event, size_t reportStep);
-#ifdef WELL_TEST
-        bool checkWells(const ParseContext& parseContext, ErrorGuard& errors) const;
-#endif
     };
 }
 

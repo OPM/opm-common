@@ -35,10 +35,14 @@
 
 namespace Opm { namespace ecl {
 
-EclOutput::EclOutput(const std::string& inputFile, bool formatted) :
-  isFormatted(formatted)
+EclOutput::EclOutput(const std::string&            filename,
+                     const bool                    formatted,
+                     const std::ios_base::openmode mode)
+    : isFormatted{formatted}
 {
-    ofileH.open(inputFile, isFormatted ? std::ios::out : std::ios::out | std::ios::binary);
+    const auto binmode = mode | std::ios_base::binary;
+
+    this->ofileH.open(filename, this->isFormatted ? mode : binmode);
 }
 
 
@@ -56,6 +60,16 @@ void EclOutput::write<std::string>(const std::string& name,
         writeBinaryHeader(name, data.size(), CHAR);
         writeBinaryCharArray(data);
     }
+}
+
+
+void EclOutput::message(const std::string& msg)
+{
+    // Generate message, i.e., output vector of type eclArrType::MESS,
+    // by passing an empty std::vector of element type 'char'.  Entire
+    // contents of message contained in the 'msg' string.
+
+    this->write(msg, std::vector<char>{});
 }
 
 

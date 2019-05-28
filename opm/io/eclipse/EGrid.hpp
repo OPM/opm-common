@@ -52,7 +52,7 @@ public:
 
 private:
     std::array<int, 3> nijk;
-    int nNNC, nactive;
+    int nactive;
 
     std::vector<int> act_index;
     std::vector<int> glob_index;

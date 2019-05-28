@@ -1463,24 +1463,46 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     st.update_well_var("OP1", "WWCT", 0.75);
     st.update_well_var("OP2", "WWCT", 0.75);
     st.update_well_var("OP3", "WOPT", 0.75);
+    st.update_well_var("OP3", "WGPR", 0.75);
     BOOST_CHECK( st.has_well_var("OP1", "WWCT"));
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), 0.75);
     BOOST_CHECK_EQUAL( st.get_well_var("OP1", "WWCT"), st.get("WWCT:OP1"));
-
-
     const auto& wopr_wells = st.wells("WOPR");
     BOOST_CHECK_EQUAL( wopr_wells.size() , 0);
 
     const auto& wwct_wells = st.wells("WWCT");
     BOOST_CHECK_EQUAL( wwct_wells.size(), 2);
-    BOOST_CHECK_EQUAL(std::count(wwct_wells.begin(), wwct_wells.end(), "OP1"), 1);
-    BOOST_CHECK_EQUAL(std::count(wwct_wells.begin(), wwct_wells.end(), "OP2"), 1);
+
+    st.update_group_var("G1", "GWCT", 0.25);
+    st.update_group_var("G2", "GWCT", 0.25);
+    st.update_group_var("G3", "GOPT", 0.25);
+    BOOST_CHECK( st.has_group_var("G1", "GWCT"));
+    BOOST_CHECK_EQUAL( st.get_group_var("G1", "GWCT"), 0.25);
+    BOOST_CHECK_EQUAL( st.get_group_var("G1", "GWCT"), st.get("GWCT:G1"));
+    const auto& gopr_groups = st.groups("GOPR");
+    BOOST_CHECK_EQUAL( gopr_groups.size() , 0);
+
+    const auto& gwct_groups = st.groups("GWCT");
+    BOOST_CHECK_EQUAL( gwct_groups.size(), 2);
+    BOOST_CHECK_EQUAL(std::count(gwct_groups.begin(), gwct_groups.end(), "G1"), 1);
+    BOOST_CHECK_EQUAL(std::count(gwct_groups.begin(), gwct_groups.end(), "G2"), 1);
+    const auto& all_groups = st.groups();
+    BOOST_CHECK_EQUAL( all_groups.size(), 3);
+    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G1"), 1);
+    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G2"), 1);
+    BOOST_CHECK_EQUAL(std::count(all_groups.begin(), all_groups.end(), "G3"), 1);
 
     const auto& all_wells = st.wells();
     BOOST_CHECK_EQUAL( all_wells.size(), 3);
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP1"), 1);
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP2"), 1);
     BOOST_CHECK_EQUAL(std::count(all_wells.begin(), all_wells.end(), "OP3"), 1);
+
+    BOOST_CHECK_EQUAL(st.size(), 8);
+
+    // The well 'OP_2' which was indirectly added with the
+    // st.update("WWCT:OP_2", 100) call is *not* counted as a well!
+    BOOST_CHECK_EQUAL(st.num_wells(), 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -3180,6 +3202,11 @@ BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
     BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPTH"), 100);
     st.update_well_var("OP1", "WOPTH", 100);
     BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPTH"), 200);
+
+    st.update_group_var("G1", "GOPTH", 100);
+    BOOST_CHECK_EQUAL(st.get_group_var("G1", "GOPTH"), 100);
+    st.update_group_var("G1", "GOPTH", 100);
+    BOOST_CHECK_EQUAL(st.get_group_var("G1", "GOPTH"), 200);
 
     st.update("FOPTH", 100);
     BOOST_CHECK_EQUAL(st.get("FOPTH"), 100);

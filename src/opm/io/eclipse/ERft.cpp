@@ -33,7 +33,6 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
 {
     loadData();
     std::vector<int> first;
-    std::vector<int> second;
 
     std::vector<std::string> wellName;
     std::vector<RftDate> dates;

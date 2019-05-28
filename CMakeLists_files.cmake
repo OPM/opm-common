@@ -171,6 +171,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ERft.cpp
           src/opm/io/eclipse/ERst.cpp
           src/opm/io/eclipse/ESmry.cpp
+          src/opm/io/eclipse/OutputStream.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
@@ -286,6 +287,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_InteHEAD.cpp
           tests/test_LinearisedOutputTable.cpp
           tests/test_LogiHEAD.cpp
+          tests/test_OutputStream.cpp
           tests/test_regionCache.cpp
           tests/test_Restart.cpp
           tests/test_RFT.cpp
@@ -578,6 +580,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/io/eclipse/ERft.hpp
         opm/io/eclipse/ERst.hpp
         opm/io/eclipse/ESmry.hpp
+        opm/io/eclipse/OutputStream.hpp
         opm/output/data/Cells.hpp
         opm/output/data/Solution.hpp
         opm/output/data/Wells.hpp

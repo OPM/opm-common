@@ -275,7 +275,7 @@ namespace Opm {
             handleWELSEGS(keyword, currentStep);
 
         else if (keyword.name() == "COMPSEGS")
-            handleCOMPSEGS(keyword, currentStep, grid);
+            handleCOMPSEGS(keyword, currentStep, grid, parseContext, errors);
 
         else if (keyword.name() == "WELOPEN")
             handleWELOPEN(keyword, currentStep, parseContext, errors);
@@ -1669,13 +1669,14 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid) {
+    void Schedule::handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid,
+                                   const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& record1 = keyword.getRecord(0);
         const std::string& well_name = record1.getItem("WELL").getTrimmedString(0);
         {
             auto& dynamic_state = this->wells_static.at(well_name);
             auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
-            if (well_ptr->handleCOMPSEGS(keyword, grid))
+            if (well_ptr->handleCOMPSEGS(keyword, grid, parseContext, errors))
                 this->updateWell(well_ptr, currentStep);
         }
     }
@@ -2292,10 +2293,5 @@ namespace Opm {
 
     }
 
-#ifdef WELL_TEST
-    bool Schedule::checkWells(const ParseContext& parseContext, ErrorGuard& errors) const {
-        return true;
-    }
-#endif
 }
 
