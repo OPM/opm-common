@@ -303,5 +303,5 @@ Opm::ecl::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
     }.replace_extension(ext);
 
     return (fs::path { rsetDescriptor.outputDir } / fname)
-        .generic().string();
+        .generic_string();
 }
