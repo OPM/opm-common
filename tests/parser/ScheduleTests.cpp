@@ -47,6 +47,9 @@
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
+#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
+#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp"
+
 using namespace Opm;
 
 static Deck createDeck() {
@@ -359,79 +362,6 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     BOOST_CHECK_THROW( schedule.getChildWells2( "NO_SUCH_GROUP" , 1 , GroupWellQueryMode::Recursive), std::invalid_argument);
-
-    {
-        auto field_wells = schedule.getChildWells2("FIELD" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( field_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( field_wells, "DW_0" ));
-        BOOST_CHECK( has_well( field_wells, "CW_1" ));
-        BOOST_CHECK( has_well( field_wells, "BW_2" ));
-        BOOST_CHECK( has_well( field_wells, "AW_3" ));
-    }
-
-    {
-        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( platform_wells, "DW_0" ));
-        BOOST_CHECK( has_well( platform_wells, "CW_1" ));
-        BOOST_CHECK( has_well( platform_wells, "BW_2" ));
-        BOOST_CHECK( has_well( platform_wells, "AW_3" ));
-    }
-
-    {
-        auto child_wells1 = schedule.getChildWells2("CG1" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
-
-        BOOST_CHECK( has_well( child_wells1, "DW_0" ));
-        BOOST_CHECK( has_well( child_wells1, "CW_1" ));
-    }
-
-    {
-        auto parent_wells2 = schedule.getChildWells2("PG2" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
-
-        BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
-        BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
-    }
-
-    {
-        auto field_wells = schedule.getChildWells2("FIELD" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( field_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( field_wells, "DW_0" ));
-        BOOST_CHECK( has_well( field_wells, "CW_1" ));
-        BOOST_CHECK( has_well( field_wells, "BW_2" ));
-        BOOST_CHECK( has_well( field_wells, "AW_3" ));
-    }
-
-    {
-        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
-
-        BOOST_CHECK( has_well( platform_wells, "DW_0" ));
-        BOOST_CHECK( has_well( platform_wells, "CW_1" ));
-        BOOST_CHECK( has_well( platform_wells, "BW_2" ));
-        BOOST_CHECK( has_well( platform_wells, "AW_3" ));
-    }
-
-    {
-        auto child_wells1 = schedule.getChildWells2("CG1" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
-
-        BOOST_CHECK( has_well( child_wells1, "DW_0" ));
-        BOOST_CHECK( has_well( child_wells1, "CW_1" ));
-    }
-
-    {
-        auto parent_wells2 = schedule.getChildWells2("PG2" , 0, GroupWellQueryMode::Recursive);
-        BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
-
-        BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
-        BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
-    }
-
     {
         auto field_wells = schedule.getChildWells2("FIELD" , 0, GroupWellQueryMode::Recursive);
         BOOST_CHECK_EQUAL( field_wells.size() , 4U);
@@ -1135,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
 
     for(size_t i = 0; i < cs4.size(); i++ )
         BOOST_CHECK_EQUAL(cs4.get( i ).wellPi(), 1.0);
-    
+
     BOOST_CHECK_THROW(schedule.simTime(10000), std::invalid_argument);
     auto sim_time1 = schedule.simTime(1);
     int day, month,year;

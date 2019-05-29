@@ -51,16 +51,6 @@ const std::vector< double >& DeckItem::value_ref< double >() const {
     if (this->type == get_type<double>())
         return this->dval;
 
-    /* Temporary return double values when user code asks for double on
-       something which is really a UDAValue.
-    */
-    if( this->type == get_type< UDAValue >() ) {
-        this->dval.clear();
-        for (const auto& uv : this->uval)
-            this->dval.push_back(uv.get<double>());
-
-        return this->dval;
-    }
     throw std::invalid_argument( "DeckItem::value_ref<double> Item of wrong type." );
 }
 

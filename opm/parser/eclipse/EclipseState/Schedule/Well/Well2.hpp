@@ -25,11 +25,12 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
 
@@ -39,6 +40,8 @@ namespace Opm {
 class DeckRecord;
 class EclipseGrid;
 class DeckKeyword;
+class WellInjectionProperties;
+class WellProductionProperties;
 
 struct WellGuideRate {
     bool available;
@@ -150,6 +153,8 @@ public:
     void filterConnections(const EclipseGrid& grid);
     void switchToInjector();
     void switchToProducer();
+    ProductionControls productionControls(const SummaryState& st) const;
+    InjectionControls injectionControls(const SummaryState& st) const;
 private:
     std::string wname;
     std::string group_name;

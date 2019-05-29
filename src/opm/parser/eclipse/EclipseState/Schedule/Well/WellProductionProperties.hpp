@@ -25,10 +25,12 @@
 
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp>
 
 namespace Opm {
 
     class DeckRecord;
+    class SummaryState;
 
     class WellProductionProperties {
     public:
@@ -77,6 +79,7 @@ namespace Opm {
         void resetDefaultBHPLimit();
         void clearControls();
 
+        ProductionControls controls(const SummaryState& st) const;
     private:
         int m_productionControls = 0;
         void init_rates( const DeckRecord& record );

@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -38,6 +39,8 @@
 #include <cstring>
 #include <iterator>
 #include <string>
+
+
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
@@ -133,8 +136,8 @@ namespace {
         int wellType(const Opm::Well2&  well,
                      const std::size_t sim_step)
         {
-            using WTypeVal = ::Opm::RestartIO::Helpers::
-                VectorItems::IWell::Value::WellType;
+            using WTypeVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellType;
+            Opm::SummaryState summaryState;
 
             if (well.isProducer()) {
                 return WTypeVal::Producer;
@@ -142,8 +145,7 @@ namespace {
 
             using IType = ::Opm::WellInjector::TypeEnum;
 
-            const auto itype = well
-                .getInjectionProperties().injectorType;
+            const auto itype = well.injectionControls(summaryState).injector_type;
 
             switch (itype) {
             case IType::OIL:   return WTypeVal::OilInj;
@@ -156,25 +158,24 @@ namespace {
         int wellVFPTab(const Opm::Well2&  well,
                        const std::size_t sim_step)
         {
+            Opm::SummaryState summaryState;
             if (well.isInjector()) {
-                return well.getInjectionProperties().VFPTableNumber;
+                return well.injectionControls(summaryState).vfp_table_number;
             }
-
-            return well.getProductionProperties().VFPTableNumber;
+            return well.productionControls(summaryState).vfp_table_number;
         }
 
         int ctrlMode(const Opm::Well2&  well,
                      const std::size_t sim_step)
         {
-            using WMCtrlVal = ::Opm::RestartIO::Helpers::
-                VectorItems::IWell::Value::WellCtrlMode;
+            using WMCtrlVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+            Opm::SummaryState summaryState;
 
             if (well.isInjector()) {
-                const auto& prop = well
-                    .getInjectionProperties();
+                const auto& controls = well.injectionControls(summaryState);
 
-                const auto wmctl = prop.controlMode;
-                const auto wtype = prop.injectorType;
+                const auto wmctl = controls.cmode;
+                const auto wtype = controls.injector_type;
 
                 using CMode = ::Opm::WellInjector::ControlModeEnum;
                 using WType = ::Opm::WellInjector::TypeEnum;
@@ -209,12 +210,11 @@ namespace {
                 }
             }
             else if (well.isProducer()) {
-                const auto& prop = well
-                    .getProductionProperties();
+                const auto& controls = well.productionControls(summaryState);
 
                 using CMode = ::Opm::WellProducer::ControlModeEnum;
 
-                switch (prop.controlMode) {
+                switch (controls.cmode) {
                 case CMode::ORAT: return WMCtrlVal::OilRate;
                 case CMode::WRAT: return WMCtrlVal::WatRate;
                 case CMode::GRAT: return WMCtrlVal::GasRate;
@@ -312,14 +312,7 @@ namespace {
             // control mode in the simulator.
             iWell[Ix::ActWCtrl] = ctrlMode(well, sim_step);
 
-            const auto isPred =
-                (well.isProducer() &&
-                 well.getProductionProperties().predictionMode)
-                ||
-                (well.isInjector() &&
-                 well.getInjectionProperties().predictionMode);
-
-            if (isPred) {
+            if (well.predictionMode()) {
                 // Well in prediction mode (WCONPROD, WCONINJE).  Assign
                 // requested control mode for prediction.
                 iWell[Ix::PredReqWCtrl] = iWell[Ix::ActWCtrl];
@@ -474,38 +467,38 @@ namespace {
             assignDefaultSWell(sWell);
 
             if (well.isProducer()) {
-                const auto& pp = well.getProductionProperties();
-                const auto& predMode = pp.predictionMode;
+                const auto& pc = well.productionControls(smry);
+                const auto& predMode = well.predictionMode();
 
-                if ((pp.OilRate != 0.0) || (!predMode)) {
+                if ((pc.oil_rate != 0.0) || (!predMode)) {
                     sWell[Ix::OilRateTarget] =
-                        swprop(M::liquid_surface_rate, pp.OilRate);
+                        swprop(M::liquid_surface_rate, pc.oil_rate);
                 }
 
-                if ((pp.WaterRate != 0.0) || (!predMode)) {
+                if ((pc.water_rate != 0.0) || (!predMode)) {
                     sWell[Ix::WatRateTarget] =
-                        swprop(M::liquid_surface_rate, pp.WaterRate);
+                        swprop(M::liquid_surface_rate, pc.water_rate);
                 }
 
-                if ((pp.GasRate != 0.0) || (!predMode)) {
+                if ((pc.gas_rate != 0.0) || (!predMode)) {
                     sWell[Ix::GasRateTarget] =
-                        swprop(M::gas_surface_rate, pp.GasRate);
+                        swprop(M::gas_surface_rate, pc.gas_rate);
                     sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
                 }
 
-                if (pp.LiquidRate != 0.0 || (!predMode)) {
+                if (pc.liquid_rate != 0.0 || (!predMode)) {
                     sWell[Ix::LiqRateTarget] =
-                        swprop(M::liquid_surface_rate, pp.LiquidRate);
+                        swprop(M::liquid_surface_rate, pc.liquid_rate);
                     sWell[Ix::HistLiqRateTarget] = sWell[Ix::LiqRateTarget];
                 }
                 else  {
                     sWell[Ix::LiqRateTarget] =
-                        swprop(M::liquid_surface_rate, pp.OilRate + pp.WaterRate);
+                        swprop(M::liquid_surface_rate, pc.oil_rate + pc.water_rate);
                 }
 
-                if (pp.ResVRate != 0.0)  {
+                if (pc.resv_rate != 0.0)  {
                     sWell[Ix::ResVRateTarget] =
-                        swprop(M::rate, pp.ResVRate);
+                        swprop(M::rate, pc.resv_rate);
                 }
                 else if ((smry.has("WVPR:" + well.name())) && (!predMode)) {
                     // Write out summary voidage production rate if
@@ -516,49 +509,49 @@ namespace {
                     }
                 }
 
-                sWell[Ix::THPTarget] = pp.THPLimit != 0.0
-                    ? swprop(M::pressure, pp.THPLimit)
+                sWell[Ix::THPTarget] = pc.thp_limit != 0.0
+                    ? swprop(M::pressure, pc.thp_limit)
                     : 0.0;
 
-                sWell[Ix::BHPTarget] = pp.BHPLimit != 0.0
-                    ? swprop(M::pressure, pp.BHPLimit)
+                sWell[Ix::BHPTarget] = pc.bhp_limit != 0.0
+                    ? swprop(M::pressure, pc.bhp_limit)
                     : swprop(M::pressure, 1.0*::Opm::unit::atm);
                 sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
             }
             else if (well.isInjector()) {
-                const auto& ip = well.getInjectionProperties();
+                const auto& ic = well.injectionControls(smry);
 
                 using IP = ::Opm::WellInjector::ControlModeEnum;
                 using IT = ::Opm::WellInjector::TypeEnum;
 
-                if (ip.hasInjectionControl(IP::RATE)) {
-                    if (ip.injectorType == IT::OIL) {
+                if (ic.hasControl(IP::RATE)) {
+                    if (ic.injector_type == IT::OIL) {
                         sWell[Ix::OilRateTarget] =
-                            swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
+                            swprop(M::liquid_surface_rate, ic.surface_rate);
                     }
-                    if (ip.injectorType == IT::WATER) {
+                    if (ic.injector_type == IT::WATER) {
                         sWell[Ix::WatRateTarget] =
-                            swprop(M::liquid_surface_rate, ip.surfaceInjectionRate);
+                            swprop(M::liquid_surface_rate, ic.surface_rate);
                         sWell[Ix::HistLiqRateTarget] = sWell[Ix::WatRateTarget];
                     }
-                    if (ip.injectorType == IT::GAS) {
+                    if (ic.injector_type == IT::GAS) {
                         sWell[Ix::GasRateTarget] =
-                            swprop(M::gas_surface_rate, ip.surfaceInjectionRate);
+                            swprop(M::gas_surface_rate, ic.surface_rate);
                         sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
                     }
                 }
 
-                if (ip.hasInjectionControl(IP::RESV)) {
+                if (ic.hasControl(IP::RESV)) {
                     sWell[Ix::ResVRateTarget] =
-                        swprop(M::rate, ip.reservoirInjectionRate);
+                        swprop(M::rate, ic.reservoir_rate);
                 }
 
-                if (ip.hasInjectionControl(IP::THP)) {
-                    sWell[Ix::THPTarget] = swprop(M::pressure, ip.THPLimit);
+                if (ic.hasControl(IP::THP)) {
+                    sWell[Ix::THPTarget] = swprop(M::pressure, ic.thp_limit);
                 }
 
-                sWell[Ix::BHPTarget] = ip.hasInjectionControl(IP::BHP)
-                    ? swprop(M::pressure, ip.BHPLimit)
+                sWell[Ix::BHPTarget] = ic.hasControl(IP::BHP)
+                    ? swprop(M::pressure, ic.bhp_limit)
                     : swprop(M::pressure, 1.0E05*::Opm::unit::psia);
                 sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
             }
@@ -595,10 +588,11 @@ namespace {
         {
             using M  = ::Opm::UnitSystem::measure;
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::XWell::index;
+            Opm::SummaryState summaryState;
 
             const auto bhpTarget = well.isInjector()
-                ? well.getInjectionProperties ().BHPLimit
-                : well.getProductionProperties().BHPLimit;
+                ? well.injectionControls(summaryState).bhp_limit
+                : well.productionControls(summaryState).bhp_limit;
 
             xWell[Ix::BHPTarget] = units.from_si(M::pressure, bhpTarget);
         }
@@ -731,9 +725,7 @@ namespace {
             }
             else if (well.isInjector()) {
                 using IType = ::Opm::WellInjector::TypeEnum;
-
-                const auto itype = well
-                    .getInjectionProperties().injectorType;
+                const auto itype = well.injectionControls(smry).injector_type;
 
                 switch (itype) {
                 case IType::OIL:

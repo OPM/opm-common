@@ -23,11 +23,13 @@
 #include <iosfwd>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
 
 namespace Opm {
 
     class DeckRecord;
     class UnitSystem;
+    class SummaryState;
 
     struct WellInjectionProperties {
         double  surfaceInjectionRate;
@@ -70,6 +72,7 @@ namespace Opm {
         void resetDefaultHistoricalBHPLimit();
 
         void setBHPLimit(const double limit);
+        InjectionControls controls(const SummaryState& st) const;
     };
 
     std::ostream& operator<<( std::ostream&, const WellInjectionProperties& );

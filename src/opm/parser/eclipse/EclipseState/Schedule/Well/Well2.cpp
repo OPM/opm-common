@@ -23,6 +23,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 
+#include "WellProductionProperties.hpp"
+#include "WellInjectionProperties.hpp"
 
 namespace Opm {
 
@@ -675,6 +677,25 @@ bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::st
         wellNameInPattern = true;
     }
     return wellNameInPattern;
+}
+
+
+ProductionControls Well2::productionControls(const SummaryState& st) const {
+    if (this->isProducer()) {
+        auto controls = this->production->controls(st);
+        controls.prediction_mode = this->predictionMode();
+        return controls;
+    } else
+        throw std::logic_error("Trying to get production data from an injector");
+}
+
+InjectionControls Well2::injectionControls(const SummaryState& st) const {
+    if (!this->isProducer()) {
+        auto controls = this->injection->controls(st);
+        controls.prediction_mode = this->predictionMode();
+        return controls;
+    } else
+        throw std::logic_error("Trying to get injection data from a producer");
 }
 
 }

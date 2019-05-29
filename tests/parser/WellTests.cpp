@@ -33,13 +33,16 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+
+#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
+#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp"
 
 using namespace Opm;
 
@@ -745,4 +748,13 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 
     BOOST_CHECK_EQUAL( Pproperties.controlMode , Opm::WellProducer::CMODE_UNDEFINED );
     BOOST_CHECK_EQUAL( Iproperties.controlMode , Opm::WellInjector::CMODE_UNDEFINED );
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
+    Opm::Well2 well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Opm::WellCompletion::DEPTH);
+    Opm::SummaryState st;
+    const auto prod_controls = well.productionControls(st);
 }
