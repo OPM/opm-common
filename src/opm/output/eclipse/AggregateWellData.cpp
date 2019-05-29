@@ -133,8 +133,7 @@ namespace {
             return ind;
         }
 
-        int wellType(const Opm::Well2&  well,
-                     const std::size_t sim_step)
+        int wellType(const Opm::Well2& well)
         {
             using WTypeVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellType;
             Opm::SummaryState summaryState;
@@ -155,8 +154,7 @@ namespace {
             }
         }
 
-        int wellVFPTab(const Opm::Well2&  well,
-                       const std::size_t sim_step)
+        int wellVFPTab(const Opm::Well2& well)
         {
             Opm::SummaryState summaryState;
             if (well.isInjector()) {
@@ -165,8 +163,7 @@ namespace {
             return well.productionControls(summaryState).vfp_table_number;
         }
 
-        int ctrlMode(const Opm::Well2&  well,
-                     const std::size_t sim_step)
+        int ctrlMode(const Opm::Well2& well)
         {
             using WMCtrlVal = ::Opm::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
             Opm::SummaryState summaryState;
@@ -261,9 +258,6 @@ namespace {
         void staticContrib(const Opm::Well2&               well,
                            const std::size_t               msWellID,
                            const std::map <const std::string, size_t>&  GroupMapNameInd,
-                           /*const std::vector<std::string>& groupNames,*/
-                           const int                       /* maxGroups */,
-                           const std::size_t               sim_step,
                            IWellArray&                     iWell)
         {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
@@ -295,8 +289,8 @@ namespace {
             iWell[Ix::Group] =
                 groupIndex(trim(well.groupName()), GroupMapNameInd);
 
-            iWell[Ix::WType]  = wellType  (well, sim_step);
-            iWell[Ix::VFPTab] = wellVFPTab(well, sim_step);
+            iWell[Ix::WType]  = wellType  (well);
+            iWell[Ix::VFPTab] = wellVFPTab(well);
             iWell[Ix::XFlow]  = well.getAllowCrossFlow() ? 1 : 0;
 
             // The following items aren't fully characterised yet, but
@@ -310,7 +304,7 @@ namespace {
             // the target control mode requested in the simulation deck.
             // This item is supposed to be the well's actual, active target
             // control mode in the simulator.
-            iWell[Ix::ActWCtrl] = ctrlMode(well, sim_step);
+            iWell[Ix::ActWCtrl] = ctrlMode(well);
 
             if (well.predictionMode()) {
                 // Well in prediction mode (WCONPROD, WCONINJE).  Assign
@@ -337,35 +331,35 @@ namespace {
             iWell[Ix::CompOrd] = compOrder(well);
         }
 
-                template <class IWellArray>
-                void dynamicContribShut(IWellArray& iWell)
+        template <class IWellArray>
+        void dynamicContribShut(IWellArray& iWell)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+            iWell[Ix::item9 ] = -1000;
+            iWell[Ix::item11] = -1000;
+        }
+
+        template <class IWellArray>
+        void dynamicContribOpen(const Opm::data::Well& xw,
+                                IWellArray&            iWell)
+        {
+            using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+
+            const auto any_flowing_conn =
+                std::any_of(std::begin(xw.connections),
+                            std::end  (xw.connections),
+                    [](const Opm::data::Connection& c)
                 {
-                    using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
+                    return c.rates.any();
+                });
 
-                    iWell[Ix::item9 ] = -1000;
-                    iWell[Ix::item11] = -1000;
-                }
+            iWell[Ix::item9] = any_flowing_conn
+                ? iWell[Ix::ActWCtrl] : -1;
 
-            template <class IWellArray>
-                void dynamicContribOpen(const Opm::data::Well& xw,
-                                        IWellArray&            iWell)
-            {
-                using Ix = ::Opm::RestartIO::Helpers::VectorItems::IWell::index;
-
-                const auto any_flowing_conn =
-                    std::any_of(std::begin(xw.connections),
-                                std::end  (xw.connections),
-                                [](const Opm::data::Connection& c)
-                                {
-                                    return c.rates.any();
-                                });
-
-                iWell[Ix::item9] = any_flowing_conn
-                    ? iWell[Ix::ActWCtrl] : -1;
-
-                iWell[Ix::item11] = 1;
-            }
-        } // IWell
+            iWell[Ix::item11] = 1;
+        }
+    } // IWell
 
     namespace SWell {
         std::size_t entriesPerWell(const std::vector<int>& inteHead)
@@ -452,7 +446,6 @@ namespace {
         template <class SWellArray>
         void staticContrib(const Opm::Well2&      well,
                            const Opm::UnitSystem& units,
-                           const std::size_t      sim_step,
                            const ::Opm::SummaryState& smry,
                            SWellArray&            sWell)
         {
@@ -581,9 +574,8 @@ namespace {
         }
 
         template <class XWellArray>
-        void staticContrib(const ::Opm::Well2&     well,
+        void staticContrib(const ::Opm::Well2&    well,
                            const Opm::UnitSystem& units,
-                           const std::size_t      sim_step,
                            XWellArray&            xWell)
         {
             using M  = ::Opm::UnitSystem::measure;
@@ -717,7 +709,6 @@ namespace {
         template <class XWellArray>
         void dynamicContrib(const ::Opm::Well2&        well,
                             const ::Opm::SummaryState& smry,
-                            const std::size_t          sim_step,
                             XWellArray&                xWell)
         {
             if (well.isProducer()) {
@@ -812,43 +803,42 @@ captureDeclaredWellData(const Schedule&   sched,
         const auto groupMapNameIndex = IWell::currentGroupMapNameIndex(sched, sim_step, inteHead);
         auto msWellID       = std::size_t{0};
 
-        wellLoop(wells, [&groupMapNameIndex, &msWellID, sim_step, this]
-                 (const Well2& well, const std::size_t wellID) -> void
-                 {
-                     msWellID += well.isMultiSegment();  // 1-based index.
-                     auto iw   = this->iWell_[wellID];
+        wellLoop(wells, [&groupMapNameIndex, &msWellID, this]
+            (const Well2& well, const std::size_t wellID) -> void
+        {
+            msWellID += well.isMultiSegment();  // 1-based index.
+            auto iw   = this->iWell_[wellID];
 
-                     IWell::staticContrib(well, msWellID, groupMapNameIndex,
-                                          this->nWGMax_, sim_step, iw);
-                 });
+            IWell::staticContrib(well, msWellID, groupMapNameIndex, iw);
+        });
     }
 
     // Static contributions to SWEL array.
-    wellLoop(wells, [&units, sim_step, &smry, this]
-             (const Well2& well, const std::size_t wellID) -> void
-             {
-                 auto sw = this->sWell_[wellID];
+    wellLoop(wells, [&units, &smry, this]
+        (const Well2& well, const std::size_t wellID) -> void
+    {
+        auto sw = this->sWell_[wellID];
 
-                 SWell::staticContrib(well, units, sim_step, smry, sw);
-             });
+        SWell::staticContrib(well, units, smry, sw);
+    });
 
     // Static contributions to XWEL array.
-    wellLoop(wells, [&units, sim_step, this]
-             (const Well2& well, const std::size_t wellID) -> void
-             {
-                 auto xw = this->xWell_[wellID];
+    wellLoop(wells, [&units, this]
+        (const Well2& well, const std::size_t wellID) -> void
+    {
+        auto xw = this->xWell_[wellID];
 
-                 XWell::staticContrib(well, units, sim_step, xw);
-             });
+        XWell::staticContrib(well, units, xw);
+    });
 
     // Static contributions to ZWEL array.
     wellLoop(wells,
-             [this](const Well2& well, const std::size_t wellID) -> void
-             {
-                 auto zw = this->zWell_[wellID];
+        [this](const Well2& well, const std::size_t wellID) -> void
+    {
+        auto zw = this->zWell_[wellID];
 
-                 ZWell::staticContrib(well, zw);
-             });
+        ZWell::staticContrib(well, zw);
+    });
 }
 
 // ---------------------------------------------------------------------
@@ -864,25 +854,25 @@ captureDynamicWellData(const Schedule&             sched,
 
     // Dynamic contributions to IWEL array.
     wellLoop(wells, [this, &xw]
-             (const Well2& well, const std::size_t wellID) -> void
-             {
-                 auto iWell = this->iWell_[wellID];
+        (const Well2& well, const std::size_t wellID) -> void
+    {
+        auto iWell = this->iWell_[wellID];
 
-                 auto i = xw.find(well.name());
-                 if ((i == std::end(xw)) || !i->second.flowing()) {
-                     IWell::dynamicContribShut(iWell);
-                 }
-                 else {
-                     IWell::dynamicContribOpen(i->second, iWell);
-                 }
-             });
+        auto i = xw.find(well.name());
+        if ((i == std::end(xw)) || !i->second.flowing()) {
+            IWell::dynamicContribShut(iWell);
+        }
+        else {
+            IWell::dynamicContribOpen(i->second, iWell);
+        }
+    });
 
     // Dynamic contributions to XWEL array.
-    wellLoop(wells, [this, sim_step, &smry]
+    wellLoop(wells, [this, &smry]
         (const Well2& well, const std::size_t wellID) -> void
     {
         auto xw = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, smry, sim_step, xw);
+        XWell::dynamicContrib(well, smry, xw);
     });
 }

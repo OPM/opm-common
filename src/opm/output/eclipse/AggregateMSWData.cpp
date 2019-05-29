@@ -103,11 +103,11 @@ namespace {
 
         return {
             outletS,
-                noSegInBranch,
-                firstSeg,
-                lastSeg,
-                branch
-                };
+            noSegInBranch,
+            firstSeg,
+            lastSeg,
+            branch
+        };
     }
 
     std::vector <std::size_t> segmentIndFromOrderedSegmentInd(const Opm::WellSegments& segSet, const std::vector<std::size_t>& ordSegNo) {
@@ -186,45 +186,44 @@ namespace {
     getSegmentSetSSTerms(const Opm::WellSegments& segSet, const std::vector<Opm::data::Connection>& rateConns,
                          const Opm::WellConnections& welConns, const Opm::UnitSystem& units)
     {
-      std::vector<double> qosc (segSet.size(), 0.);
-      std::vector<double> qwsc (segSet.size(), 0.);
-      std::vector<double> qgsc (segSet.size(), 0.);
-      std::vector<const Opm::Connection* > openConnections;
-      using M  = ::Opm::UnitSystem::measure;
-      using R  = ::Opm::data::Rates::opt;
-      for (auto nConn = welConns.size(), connID = 0*nConn; connID < nConn; connID++) {
-        if (welConns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) openConnections.push_back(&welConns[connID]);
-      }
-      if (openConnections.size() != rateConns.size()) {
-        throw std::invalid_argument {
-          "Inconsistent number of open connections I in Opm::WellConnections (" +
-            std::to_string(welConns.size()) + ") and vector<Opm::data::Connection> (" +
-            std::to_string(rateConns.size()) + ") in Well " + segSet.wellName()
+        std::vector<double> qosc (segSet.size(), 0.);
+        std::vector<double> qwsc (segSet.size(), 0.);
+        std::vector<double> qgsc (segSet.size(), 0.);
+        std::vector<const Opm::Connection* > openConnections;
+        using M  = ::Opm::UnitSystem::measure;
+        using R  = ::Opm::data::Rates::opt;
+        for (auto nConn = welConns.size(), connID = 0*nConn; connID < nConn; connID++) {
+            if (welConns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) openConnections.push_back(&welConns[connID]);
+        }
+        if (openConnections.size() != rateConns.size()) {
+            throw std::invalid_argument {
+                "Inconsistent number of open connections I in Opm::WellConnections (" +
+                std::to_string(welConns.size()) + ") and vector<Opm::data::Connection> (" +
+                std::to_string(rateConns.size()) + ") in Well " + segSet.wellName()
             };
-      }
-      for (auto nConn = openConnections.size(), connID = 0*nConn; connID < nConn; connID++) {
-        const auto& segNo = openConnections[connID]->segment();
-        const auto& segInd = segSet.segmentNumberToIndex(segNo);
-        const auto& Q = rateConns[connID].rates;
+        }
+        for (auto nConn = openConnections.size(), connID = 0*nConn; connID < nConn; connID++) {
+            const auto& segNo = openConnections[connID]->segment();
+            const auto& segInd = segSet.segmentNumberToIndex(segNo);
+            const auto& Q = rateConns[connID].rates;
 
-        auto get = [&units, &Q](const M u, const R q) -> double
-                   {
-                     const auto val = Q.has(q) ? Q.get(q) : 0.0;
+            auto get = [&units, &Q](const M u, const R q) -> double
+            {
+                const auto val = Q.has(q) ? Q.get(q) : 0.0;
 
-                     return - units.from_si(u, val);
-                   };
+                return - units.from_si(u, val);
+            };
 
-        qosc[segInd] += get(M::liquid_surface_rate, R::oil);
-        qwsc[segInd] += get(M::liquid_surface_rate, R::wat);
-        qgsc[segInd] += get(M::gas_surface_rate,    R::gas);
+            qosc[segInd] += get(M::liquid_surface_rate, R::oil);
+            qwsc[segInd] += get(M::liquid_surface_rate, R::wat);
+            qgsc[segInd] += get(M::gas_surface_rate,    R::gas);
+        }
 
-      }
-
-      return {
-              qosc,
-              qwsc,
-              qgsc
-      };
+        return {
+            qosc,
+            qwsc,
+            qgsc
+        };
     }
 
     Opm::RestartIO::Helpers::SegmentSetFlowRates
@@ -261,9 +260,9 @@ namespace {
         }
         return {
             sofr,
-                swfr,
-                sgfr
-                };
+            swfr,
+            sgfr
+        };
     }
 
 
@@ -415,7 +414,7 @@ namespace {
 
             return WV {
                 WV::NumWindows{ nswlmx(inteHead) },
-                    WV::WindowSize{ entriesPerMSW(inteHead) }
+                WV::WindowSize{ entriesPerMSW(inteHead) }
             };
         }
 
@@ -469,19 +468,19 @@ namespace {
 
             return WV {
                 WV::NumWindows{ nswlmx(inteHead) },
-                    WV::WindowSize{ entriesPerMSW(inteHead) }
+                WV::WindowSize{ entriesPerMSW(inteHead) }
             };
         }
 
         template <class RSegArray>
-        void staticContrib_useMSW(const Opm::Well2&  	well,
-                                  const std::size_t          		rptStep,
-                                  const std::vector<int>&    		inteHead,
-                                  const Opm::EclipseGrid&    		grid,
-                                  const Opm::UnitSystem&     		units,
-                                  const ::Opm::SummaryState& 		smry,
-                                  const Opm::data::WellRates&  	wr,
-                                  RSegArray&                 		rSeg)
+        void staticContrib_useMSW(const Opm::Well2&           well,
+                                  const std::size_t           rptStep,
+                                  const std::vector<int>&     inteHead,
+                                  const Opm::EclipseGrid&     grid,
+                                  const Opm::UnitSystem&      units,
+                                  const ::Opm::SummaryState&  smry,
+                                  const Opm::data::WellRates& wr,
+                                  RSegArray&                  rSeg)
         {
             if (well.isMultiSegment()) {
                 // use segment index as counter  - zero-based
@@ -516,14 +515,13 @@ namespace {
                 auto sSFR = Opm::RestartIO::Helpers::SegmentSetFlowRates{};
                 if (haveWellRes) {
                     sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
-
                 }
                 auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
-                    {
-                        // 'stringSegNum' is one-based (1 .. #segments inclusive)
-                        const auto key = vector + ':' + wname + ':' + stringSegNum;
-                        return smry.has(key) ? smry.get(key) : 0.0;
-                    };
+                {
+                    // 'stringSegNum' is one-based (1 .. #segments inclusive)
+                    const auto key = vector + ':' + wname + ':' + stringSegNum;
+                    return smry.has(key) ? smry.get(key) : 0.0;
+                };
 
                 // Treat the top segment individually
                 rSeg[0] = units.from_si(M::length, welSegSet.lengthTopSegment());
@@ -644,7 +642,7 @@ namespace {
 
             return WV {
                 WV::NumWindows{ nswlmx(inteHead) },
-                    WV::WindowSize{ entriesPerMSW(inteHead) }
+                WV::WindowSize{ entriesPerMSW(inteHead) }
             };
         }
 
@@ -684,7 +682,7 @@ namespace {
 
             return WV {
                 WV::NumWindows{ nswlmx(inteHead) },
-                    WV::WindowSize{ entriesPerMSW(inteHead) }
+                WV::WindowSize{ entriesPerMSW(inteHead) }
             };
         }
 
@@ -751,41 +749,41 @@ captureDeclaredMSWData(const Schedule&         sched,
     // Extract Contributions to ISeg Array
     {
         MSWLoop(msw, [rptStep, inteHead, &grid, this]
-                (const Well2& well, const std::size_t mswID) -> void
-                {
-                    auto imsw = this->iSeg_[mswID];
+            (const Well2& well, const std::size_t mswID) -> void
+        {
+            auto imsw = this->iSeg_[mswID];
 
-                    ISeg::staticContrib(well, rptStep, inteHead, grid, imsw);
-                });
+            ISeg::staticContrib(well, rptStep, inteHead, grid, imsw);
+        });
     }
     // Extract Contributions to RSeg Array
     {
         MSWLoop(msw, [&units, rptStep, inteHead, &grid, &smry, this, &wr]
-                (const Well2& well, const std::size_t mswID) -> void
-                {
-                    auto rmsw = this->rSeg_[mswID];
+            (const Well2& well, const std::size_t mswID) -> void
+        {
+            auto rmsw = this->rSeg_[mswID];
 
-                    RSeg::staticContrib_useMSW(well, rptStep, inteHead, grid, units, smry, wr, rmsw);
-                });
+            RSeg::staticContrib_useMSW(well, rptStep, inteHead, grid, units, smry, wr, rmsw);
+        });
     }
     // Extract Contributions to ILBS Array
     {
         MSWLoop(msw, [rptStep, this]
-                (const Well2& well, const std::size_t mswID) -> void
-                {
-                    auto ilbs_msw = this->iLBS_[mswID];
+            (const Well2& well, const std::size_t mswID) -> void
+        {
+            auto ilbs_msw = this->iLBS_[mswID];
 
-                    ILBS::staticContrib(well, rptStep, ilbs_msw);
-                });
+            ILBS::staticContrib(well, rptStep, ilbs_msw);
+        });
     }
     // Extract Contributions to ILBR Array
     {
         MSWLoop(msw, [rptStep, inteHead, this]
-                (const Well2& well, const std::size_t mswID) -> void
-                {
-                    auto ilbr_msw = this->iLBR_[mswID];
+            (const Well2& well, const std::size_t mswID) -> void
+        {
+            auto ilbr_msw = this->iLBR_[mswID];
 
-                    ILBR::staticContrib(well, rptStep, inteHead, ilbr_msw);
-                });
+            ILBR::staticContrib(well, rptStep, inteHead, ilbr_msw);
+        });
     }
 }

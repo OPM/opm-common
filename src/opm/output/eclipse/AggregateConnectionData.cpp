@@ -78,41 +78,40 @@ namespace {
     template <class ConnOp>
     void connectionLoop(const std::vector<Opm::Well2>& wells,
                         const Opm::EclipseGrid&        grid,
-                        const std::size_t              sim_step,
                         ConnOp&&                       connOp)
     {
         for (auto nWell = wells.size(), wellID = 0*nWell;
              wellID < nWell; ++wellID)
-            {
-                const auto& well = wells[wellID];
-                const auto& conn0 = well.getConnections();
-                const auto& conns = Opm::WellConnections( conn0, grid );
-                const int niSI = static_cast<int>(conn0.size());
-                std::map <std::size_t, const Opm::Connection*> sIToConn;
+        {
+            const auto& well = wells[wellID];
+            const auto& conn0 = well.getConnections();
+            const auto& conns = Opm::WellConnections( conn0, grid );
+            const int niSI = static_cast<int>(conn0.size());
+            std::map <std::size_t, const Opm::Connection*> sIToConn;
 
-                //Branch according to MSW well or not and
-                //sort active connections according to appropriate seqIndex
-                if (well.isMultiSegment()) {
-                    //sort connections according to input sequence in COMPSEGS
-                    sIToConn = mapCompSegSeqIndexToConnection(conns);
-                } else {
-                    //sort connections according to input sequence in COMPDAT
-                    sIToConn = mapSeqIndexToConnection(conns);
-                }
-
-                std::vector<const Opm::Connection*> connSI;
-                for (int iSI = 0; iSI < niSI; iSI++) {
-                    const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
-                    if (searchSI != sIToConn.end()) {
-                        connSI.push_back(searchSI->second);
-                    }
-                }
-                for (auto nConn = connSI.size(), connID = 0*nConn;
-                     connID < nConn; ++connID)
-                    {
-                        connOp(well, wellID, *(connSI[connID]), connID);
-                    }
+            //Branch according to MSW well or not and
+            //sort active connections according to appropriate seqIndex
+            if (well.isMultiSegment()) {
+                //sort connections according to input sequence in COMPSEGS
+                sIToConn = mapCompSegSeqIndexToConnection(conns);
+            } else {
+                //sort connections according to input sequence in COMPDAT
+                sIToConn = mapSeqIndexToConnection(conns);
             }
+
+            std::vector<const Opm::Connection*> connSI;
+            for (int iSI = 0; iSI < niSI; iSI++) {
+                const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
+                if (searchSI != sIToConn.end()) {
+                    connSI.push_back(searchSI->second);
+                }
+            }
+            for (auto nConn = connSI.size(), connID = 0*nConn;
+                 connID < nConn; ++connID)
+            {
+                connOp(well, wellID, *(connSI[connID]), connID);
+            }
+        }
     }
 
     namespace IConn {
@@ -128,8 +127,8 @@ namespace {
 
             return WM {
                 WM::NumRows   { numWells(inteHead) },
-                    WM::NumCols   { maxNumConn(inteHead) },
-                        WM::WindowSize{ entriesPerConn(inteHead) }
+                WM::NumCols   { maxNumConn(inteHead) },
+                WM::WindowSize{ entriesPerConn(inteHead) }
             };
         }
 
@@ -180,8 +179,8 @@ namespace {
 
             return WM {
                 WM::NumRows   { numWells(inteHead) },
-                    WM::NumCols   { maxNumConn(inteHead) },
-                        WM::WindowSize{ entriesPerConn(inteHead) }
+                WM::NumCols   { maxNumConn(inteHead) },
+                WM::WindowSize{ entriesPerConn(inteHead) }
             };
         }
 
@@ -194,9 +193,9 @@ namespace {
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::SConn::index;
 
             auto scprop = [&units](const M u, const double x) -> float
-                          {
-                              return static_cast<float>(units.from_si(u, x));
-                          };
+            {
+                return static_cast<float>(units.from_si(u, x));
+            };
 
             sConn[Ix::ConnTrans] =
                 scprop(M::transmissibility, conn.CF());
@@ -230,8 +229,8 @@ namespace {
 
             return WM {
                 WM::NumRows   { numWells(inteHead) },
-                    WM::NumCols   { maxNumConn(inteHead) },
-                        WM::WindowSize{ entriesPerConn(inteHead) }
+                WM::NumCols   { maxNumConn(inteHead) },
+                WM::WindowSize{ entriesPerConn(inteHead) }
             };
         }
 
@@ -328,33 +327,32 @@ captureDeclaredConnData(const Schedule&        sched,
                 else if ((conns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) && (rCInd >= xr->second.connections.size())) {
                     throw std::invalid_argument {
                         "Inconsistent number of open connections I in vector<Opm::data::Connection*> (" +
-                            std::to_string(xr->second.connections.size()) + ") in Well " + wl.name()
-                            };
-
+                        std::to_string(xr->second.connections.size()) + ") in Well " + wl.name()
+                    };
                 }
             }
         }
     }
 
-    connectionLoop(wells, grid, sim_step, [&units, &allWellConnections, this]
-                   (const Well2&      well, const std::size_t wellID,
-                    const Connection& conn, const std::size_t connID) -> void
-                                          {
-                                              auto ic = this->iConn_(wellID, connID);
-                                              auto sc = this->sConn_(wellID, connID);
+    connectionLoop(wells, grid, [&units, &allWellConnections, this]
+        (const Well2&      well, const std::size_t wellID,
+         const Connection& conn, const std::size_t connID) -> void
+    {
+        auto ic = this->iConn_(wellID, connID);
+        auto sc = this->sConn_(wellID, connID);
 
-                                              IConn::staticContrib(conn, connID, ic);
-                                              SConn::staticContrib(conn, units, sc);
+        IConn::staticContrib(conn, connID, ic);
+        SConn::staticContrib(conn, units, sc);
 
-                                              auto xi = allWellConnections.find(well.name());
-                                              if ((xi != allWellConnections.end()) &&
-                                                  (connID < xi->second.size()))
-                                                  //(connID < xi->second.connections.size()))
-                                                  {
-                                                      auto xc = this->xConn_(wellID, connID);
+        auto xi = allWellConnections.find(well.name());
+        if ((xi != allWellConnections.end()) &&
+            (connID < xi->second.size()))
+            //(connID < xi->second.connections.size()))
+        {
+            auto xc = this->xConn_(wellID, connID);
 
-                                                      //XConn::dynamicContrib(xi->second.connections[connID],
-                                                      if (xi->second[connID]) XConn::dynamicContrib(*(xi->second[connID]), units, xc);
-                                                  }
-                                          });
+            //XConn::dynamicContrib(xi->second.connections[connID],
+            if (xi->second[connID]) XConn::dynamicContrib(*(xi->second[connID]), units, xc);
+        }
+    });
 }
