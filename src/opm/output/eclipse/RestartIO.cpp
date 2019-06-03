@@ -30,26 +30,26 @@
 #include <opm/output/eclipse/AggregateMSWData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
-#include <opm/output/eclipse/libECLRestart.hpp>
+#include <opm/io/eclipse/OutputStream.hpp>
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Eqldims.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
+#include <fstream>
 #include <initializer_list>
 #include <iterator>
 #include <string>
 #include <unordered_set>
 #include <vector>
-
-#include <ert/ecl/FortIO.hpp>
-#include <ert/ecl/EclFilename.hpp>
-#include <ert/ecl/fortio.h>
 
 namespace Opm { namespace RestartIO {
 
@@ -167,20 +167,6 @@ namespace {
         return xwel;
     }
 
-    std::vector<const char*>
-    serialize_ZWEL(const std::vector<Opm::RestartIO::Helpers::CharArrayNullTerm<8>>& zwel)
-    {
-        std::vector<const char*> data(zwel.size(), nullptr);
-        std::size_t it = 0;
-
-        for (const auto& well : zwel) {
-            data[it] = well.c_str();
-            it += 1;
-        }
-
-        return data;
-    }
-
     void checkSaveArguments(const EclipseState& es,
                             const RestartValue& restart_value,
                             const EclipseGrid&  grid)
@@ -206,102 +192,37 @@ namespace {
         }
     }
 
-    ert_unique_ptr<ecl_rst_file_type, ecl_rst_file_close>
-    openRestartFile(const std::string& filename,
-                    const int          report_step)
-    {
-        auto rst_file = ::Opm::RestartIO::
-            ert_unique_ptr< ::Opm::RestartIO::ecl_rst_file_type,
-                            ::Opm::RestartIO::ecl_rst_file_close>{};
-
-        if (::Opm::RestartIO::EclFiletype(filename) == ECL_UNIFIED_RESTART_FILE)
-            rst_file.reset(::Opm::RestartIO::ecl_rst_file_open_write_seek(filename.c_str(),
-                                                                          report_step));
-        else
-            rst_file.reset(::Opm::RestartIO::ecl_rst_file_open_write(filename.c_str()));
-
-        return rst_file;
-    }
-
-    ert_unique_ptr<ecl_kw_type, ecl_kw_free>
-    make_ecl_kw_pointer(const std::string&         kw,
-                        const std::vector<double>& data,
-                        const bool                 write_double)
-    {
-        auto kw_ptr = Opm::RestartIO::
-            ert_unique_ptr< ::Opm::RestartIO::ecl_kw_type, ecl_kw_free>{};
-
-        if (write_double) {
-            ::Opm::RestartIO::ecl_kw_type* ecl_kw =
-                ::Opm::RestartIO::ecl_kw_alloc(kw.c_str(), data.size(), ECL_DOUBLE);
-
-            ::Opm::RestartIO::ecl_kw_set_memcpy_data(ecl_kw , data.data());
-
-            kw_ptr.reset(ecl_kw);
-        }
-        else {
-            ::Opm::RestartIO::ecl_kw_type* ecl_kw = ::Opm::RestartIO::
-                ecl_kw_alloc(kw.c_str(), data.size(), ECL_FLOAT);
-
-            float* float_data = ecl_kw_get_type_ptr<float>(ecl_kw, ECL_FLOAT_TYPE);
-
-            for (auto n = data.size(), i = 0*n; i < n; ++i) {
-                float_data[i] = static_cast<float>(data[i]);
-            }
-
-            kw_ptr.reset(ecl_kw);
-        }
-
-        return kw_ptr;
-    }
-
-    template <typename T>
-    void write_kw(::Opm::RestartIO::ecl_rst_file_type* rst_file,
-                  const std::string&                   keyword,
-                  const std::vector<T>&                data)
-    {
-        const auto kw = EclKW<T>(keyword, data);
-
-        ::Opm::RestartIO::ecl_rst_file_add_kw(rst_file, kw.get());
-    }
-
     std::vector<int>
-    writeHeader(::Opm::RestartIO::ecl_rst_file_type* rst_file,
-                const int                            sim_step,
-                const int                            report_step,
-                const double                         next_step_size,
-                const double                         simTime,
-                const Schedule&                      schedule,
-                const EclipseGrid&                   grid,
-                const EclipseState&                  es)
+    writeHeader(const int                     sim_step,
+                const double                  next_step_size,
+                const double                  simTime,
+                const Schedule&               schedule,
+                const EclipseGrid&            grid,
+                const EclipseState&           es,
+                EclIO::OutputStream::Restart& rstFile)
     {
-        if (rst_file->unified) {
-            ::Opm::RestartIO::ecl_rst_file_fwrite_SEQNUM(rst_file, report_step);
-        }
-
         // write INTEHEAD to restart file
         const auto ih = Helpers::createInteHead(es, grid, schedule,
                                                 simTime, sim_step, sim_step);
-        write_kw(rst_file, "INTEHEAD", ih);
+        rstFile.write("INTEHEAD", ih);
 
         // write LOGIHEAD to restart file
-        const auto lh = Helpers::createLogiHead(es);
-        write_kw(rst_file, "LOGIHEAD", lh);
+        rstFile.write("LOGIHEAD", Helpers::createLogiHead(es));
 
         // write DOUBHEAD to restart file
         const auto dh = Helpers::createDoubHead(es, schedule, sim_step,
                                                 simTime, next_step_size);
-        write_kw(rst_file, "DOUBHEAD", dh);
+        rstFile.write("DOUBHEAD", dh);
 
         // return the inteHead vector
         return ih;
     }
 
-    void writeGroup(::Opm::RestartIO::ecl_rst_file_type* rst_file,
-                    int                                  sim_step,
-                    const Schedule&                      schedule,
-                    const Opm::SummaryState&             sumState,
-                    const std::vector<int>&              ih)
+    void writeGroup(int                           sim_step,
+                    const Schedule&               schedule,
+                    const Opm::SummaryState&      sumState,
+                    const std::vector<int>&       ih,
+                    EclIO::OutputStream::Restart& rstFile)
     {
         // write IGRP to restart file
         const size_t simStep = static_cast<size_t> (sim_step);
@@ -318,20 +239,20 @@ namespace {
                                            grpKeyToInd, fldKeyToInd,
                                            simStep, sumState, ih);
 
-        write_kw(rst_file, "IGRP", groupData.getIGroup());
-        write_kw(rst_file, "SGRP", groupData.getSGroup());
-        write_kw(rst_file, "XGRP", groupData.getXGroup());
-        write_kw(rst_file, "ZGRP", serialize_ZWEL(groupData.getZGroup()));
+        rstFile.write("IGRP", groupData.getIGroup());
+        rstFile.write("SGRP", groupData.getSGroup());
+        rstFile.write("XGRP", groupData.getXGroup());
+        rstFile.write("ZGRP", groupData.getZGroup());
     }
 
-    void writeMSWData(::Opm::RestartIO::ecl_rst_file_type* rst_file,
-                      int                                  sim_step,
-                      const UnitSystem&                    units,
-                      const Schedule&                      schedule,
-                      const EclipseGrid&                   grid,
-                      const Opm::SummaryState&             sumState,
-                      const Opm::data::Wells&              wells,
-                      const std::vector<int>&              ih)
+    void writeMSWData(int                           sim_step,
+                      const UnitSystem&             units,
+                      const Schedule&               schedule,
+                      const EclipseGrid&            grid,
+                      const Opm::SummaryState&      sumState,
+                      const Opm::data::Wells&       wells,
+                      const std::vector<int>&       ih,
+                      EclIO::OutputStream::Restart& rstFile)
     {
         // write ISEG, RSEG, ILBS and ILBR to restart file
         const auto simStep = static_cast<std::size_t> (sim_step);
@@ -340,32 +261,32 @@ namespace {
         MSWData.captureDeclaredMSWData(schedule, simStep, units,
                                        ih, grid, sumState, wells);
 
-        write_kw(rst_file, "ISEG", MSWData.getISeg());
-        write_kw(rst_file, "ILBS", MSWData.getILBs());
-        write_kw(rst_file, "ILBR", MSWData.getILBr());
-        write_kw(rst_file, "RSEG", MSWData.getRSeg());
+        rstFile.write("ISEG", MSWData.getISeg());
+        rstFile.write("ILBS", MSWData.getILBs());
+        rstFile.write("ILBR", MSWData.getILBr());
+        rstFile.write("RSEG", MSWData.getRSeg());
     }
 
-    void writeWell(::Opm::RestartIO::ecl_rst_file_type* rst_file,
-                   int                                  sim_step,
-                   const bool                           ecl_compatible_rst,
-                   const Phases&                        phases,
-                   const UnitSystem&                    units,
-                   const EclipseGrid&                   grid,
-                   const Schedule&                      schedule,
-                   const data::Wells&                   wells,
-                   const Opm::SummaryState&             sumState,
-                   const std::vector<int>&              ih)
+    void writeWell(int                           sim_step,
+                   const bool                    ecl_compatible_rst,
+                   const Phases&                 phases,
+                   const UnitSystem&             units,
+                   const EclipseGrid&            grid,
+                   const Schedule&               schedule,
+                   const data::Wells&            wells,
+                   const Opm::SummaryState&      sumState,
+                   const std::vector<int>&       ih,
+                   EclIO::OutputStream::Restart& rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
         wellData.captureDeclaredWellData(schedule, units, sim_step, sumState, ih);
         wellData.captureDynamicWellData(schedule, sim_step,
                                         wells, sumState);
 
-        write_kw(rst_file, "IWEL", wellData.getIWell());
-        write_kw(rst_file, "SWEL", wellData.getSWell());
-        write_kw(rst_file, "XWEL", wellData.getXWell());
-        write_kw(rst_file, "ZWEL", serialize_ZWEL(wellData.getZWell()));
+        rstFile.write("IWEL", wellData.getIWell());
+        rstFile.write("SWEL", wellData.getSWell());
+        rstFile.write("XWEL", wellData.getXWell());
+        rstFile.write("ZWEL", wellData.getZWell());
 
         // Extended set of OPM well vectors
         if (!ecl_compatible_rst)
@@ -378,17 +299,17 @@ namespace {
 
             const auto opm_iwel = serialize_OPM_IWEL(wells, sched_well_names);
 
-            write_kw(rst_file, "OPM_IWEL", opm_iwel);
-            write_kw(rst_file, "OPM_XWEL", opm_xwel);
+            rstFile.write("OPM_IWEL", opm_iwel);
+            rstFile.write("OPM_XWEL", opm_xwel);
         }
 
         auto connectionData = Helpers::AggregateConnectionData(ih);
         connectionData.captureDeclaredConnData(schedule, grid, units,
                                                wells, sim_step);
 
-        write_kw(rst_file, "ICON", connectionData.getIConn());
-        write_kw(rst_file, "SCON", connectionData.getSConn());
-        write_kw(rst_file, "XCON", connectionData.getXConn());
+        rstFile.write("ICON", connectionData.getIConn());
+        rstFile.write("SCON", connectionData.getSConn());
+        rstFile.write("XCON", connectionData.getXConn());
     }
 
     bool haveHysteresis(const RestartValue& value)
@@ -454,20 +375,26 @@ namespace {
         }
     }
 
-    void writeSolution(ecl_rst_file_type*  rst_file,
-                       const RestartValue& value,
-                       const bool          ecl_compatible_rst,
-                       const bool          write_double_arg)
+    void writeSolution(const RestartValue&           value,
+                       const bool                    ecl_compatible_rst,
+                       const bool                    write_double_arg,
+                       EclIO::OutputStream::Restart& rstFile)
     {
-        ecl_rst_file_start_solution(rst_file);
+        rstFile.message("STARTSOL");
 
-        auto write = [rst_file]
+        auto write = [&rstFile]
             (const std::string&         key,
              const std::vector<double>& data,
              const bool                 write_double) -> void
         {
-            auto kw = make_ecl_kw_pointer(key, data, write_double);
-            ::Opm::RestartIO::ecl_rst_file_add_kw(rst_file, kw.get());
+            if (write_double) {
+                rstFile.write(key, data);
+            }
+            else {
+                rstFile.write(key, std::vector<float> {
+                    data.begin(), data.end()
+                });
+            }
         };
 
         for (const auto& elm : value.solution) {
@@ -490,7 +417,7 @@ namespace {
             writeEclipseCompatHysteresis(value, write_double_arg, write);
         }
 
-        ecl_rst_file_end_solution(rst_file);
+        rstFile.message("ENDSOL");
 
         if (ecl_compatible_rst) {
             return;
@@ -503,41 +430,38 @@ namespace {
         }
     }
 
-    void writeExtraData(::Opm::RestartIO::ecl_rst_file_type* rst_file,
-                        const RestartValue::ExtraVector&     extra_data)
+    void writeExtraData(const RestartValue::ExtraVector& extra_data,
+                        EclIO::OutputStream::Restart&    rstFile)
     {
         for (const auto& extra_value : extra_data) {
             const std::string& key = extra_value.first.key;
-            const std::vector<double>& data = extra_value.second;
-            if (! extraInSolution(key)) {
-                ecl_kw_type * ecl_kw = ecl_kw_alloc_new_shared( key.c_str() , data.size() , ECL_DOUBLE , const_cast<double *>(data.data()));
-                ecl_rst_file_add_kw( rst_file , ecl_kw);
-                ecl_kw_free( ecl_kw );
-            }
 
+            if (! extraInSolution(key)) {
+                rstFile.write(key, extra_value.second);
+            }
         }
     }
 
 } // Anonymous namespace
 
-void save(const std::string&  filename,
-          int                 report_step,
-          double              seconds_elapsed,
-          RestartValue        value,
-          const EclipseState& es,
-          const EclipseGrid&  grid,
-          const Schedule&     schedule,
-          const SummaryState& sumState,
-          bool                write_double)
+void save(EclIO::OutputStream::Restart& rstFile,
+          int                           report_step,
+          double                        seconds_elapsed,
+          RestartValue                  value,
+          const EclipseState&           es,
+          const EclipseGrid&            grid,
+          const Schedule&               schedule,
+          const SummaryState&           sumState,
+          bool                          write_double)
 {
     ::Opm::RestartIO::checkSaveArguments(es, value, grid);
 
-    const auto ecl_compatible_rst = es.getIOConfig().getEclCompatibleRST();
+    const auto& ioCfg = es.getIOConfig();
+    const auto ecl_compatible_rst = ioCfg.getEclCompatibleRST();
 
     const auto  sim_step = std::max(report_step - 1, 0);
     const auto& units    = es.getUnits();
 
-    auto rst_file = openRestartFile(filename, report_step);
     if (ecl_compatible_rst) {
         write_double = false;
     }
@@ -546,11 +470,10 @@ void save(const std::string&  filename,
     value.convertFromSI(units);
 
     const auto inteHD =
-        writeHeader(rst_file.get(), sim_step, report_step,
-                    nextStepSize(value), seconds_elapsed,
-                    schedule, grid, es);
+        writeHeader(sim_step, nextStepSize(value), seconds_elapsed,
+                    schedule, grid, es, rstFile);
 
-    writeGroup(rst_file.get(), sim_step, schedule, sumState, inteHD);
+    writeGroup(sim_step, schedule, sumState, inteHD, rstFile);
 
     // Write well and MSW data only when applicable (i.e., when present)
     {
@@ -565,20 +488,20 @@ void save(const std::string&  filename,
             });
 
             if (haveMSW) {
-                writeMSWData(rst_file.get(), sim_step, units,
-                             schedule, grid, sumState, value.wells, inteHD);
+                writeMSWData(sim_step, units, schedule, grid, sumState,
+                             value.wells, inteHD, rstFile);
             }
 
-            writeWell(rst_file.get(), sim_step, ecl_compatible_rst,
+            writeWell(sim_step, ecl_compatible_rst,
                       es.runspec().phases(), units, grid, schedule,
-                      value.wells, sumState, inteHD);
+                      value.wells, sumState, inteHD, rstFile);
         }
     }
 
-    writeSolution(rst_file.get(), value, ecl_compatible_rst, write_double);
+    writeSolution(value, ecl_compatible_rst, write_double, rstFile);
 
     if (! ecl_compatible_rst) {
-        writeExtraData(rst_file.get(), value.extra);
+        writeExtraData(value.extra, rstFile);
     }
 }
 

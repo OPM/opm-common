@@ -24,7 +24,7 @@
 #include <string>
 #include <tuple>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
     int flipEndianInt(int num);
     float flipEndianFloat(float num);
@@ -35,6 +35,6 @@ namespace Opm { namespace ecl {
 
     std::string trimr(const std::string &str1);
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_ECLUTIL_HPP

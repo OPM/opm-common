@@ -21,7 +21,6 @@
 #define OPM_AGGREGATE_MSW_DATA_HPP
 
 #include <opm/output/data/Wells.hpp>
-#include <opm/output/eclipse/CharArrayNullTerm.hpp>
 #include <opm/output/eclipse/WindowedArray.hpp>
 
 #include <string>

@@ -40,7 +40,7 @@
 
 #include <boost/filesystem.hpp>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
     // Needed by BOOST_CHECK_EQUAL_COLLECTIONS.
     std::ostream&
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
     const auto ext  = std::string{"F0123"};
 
     {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
+        const auto rset = ::Opm::EclIO::OutputStream::ResultSet {
             odir, "CASE"
         };
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
     }
 
     {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
+        const auto rset = ::Opm::EclIO::OutputStream::ResultSet {
             odir, "CASE." // CASE DOT
         };
 
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
     }
 
     {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
+        const auto rset = ::Opm::EclIO::OutputStream::ResultSet {
             odir, "CASE.01"
         };
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
     }
 
     {
-        const auto rset = ::Opm::ecl::OutputStream::ResultSet {
+        const auto rset = ::Opm::EclIO::OutputStream::ResultSet {
             odir, "CASE.01." // CASE.01 DOT
         };
 
@@ -147,7 +147,7 @@ public:
         boost::filesystem::remove_all(this->odir_);
     }
 
-    operator ::Opm::ecl::OutputStream::ResultSet() const
+    operator ::Opm::EclIO::OutputStream::ResultSet() const
     {
         return { this->odir_.string(), this->base_ };
     }
@@ -160,12 +160,12 @@ private:
 BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 {
     const auto rset = RSet("CASE");
-    const auto fmt  = ::Opm::ecl::OutputStream::Formatted{ false };
-    const auto unif = ::Opm::ecl::OutputStream::Unified  { true };
+    const auto fmt  = ::Opm::EclIO::OutputStream::Formatted{ false };
+    const auto unif = ::Opm::EclIO::OutputStream::Unified  { true };
 
     {
         const auto seqnum = 1;
-        auto rst = ::Opm::ecl::OutputStream::Restart {
+        auto rst = ::Opm::EclIO::OutputStream::Restart {
             rset, seqnum, fmt, unif
         };
 
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
     {
         const auto seqnum = 13;
-        auto rst = ::Opm::ecl::OutputStream::Restart {
+        auto rst = ::Opm::EclIO::OutputStream::Restart {
             rset, seqnum, fmt, unif
         };
 
@@ -190,10 +190,10 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
     }
 
     {
-        const auto fname = ::Opm::ecl::OutputStream::
+        const auto fname = ::Opm::EclIO::OutputStream::
             outputFileName(rset, "UNRST");
 
-        auto rst = ::Opm::ecl::ERst{fname};
+        auto rst = ::Opm::EclIO::ERst{fname};
 
         BOOST_CHECK(rst.hasReportStepNumber( 1));
         BOOST_CHECK(rst.hasReportStepNumber(13));
@@ -209,13 +209,13 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
         {
             const auto vectors        = rst.listOfRstArrays(13);
-            const auto expect_vectors = std::vector<Opm::ecl::EclFile::EclEntry>{
-                Opm::ecl::EclFile::EclEntry{"SEQNUM", Opm::ecl::eclArrType::INTE, 1},
-                Opm::ecl::EclFile::EclEntry{"I", Opm::ecl::eclArrType::INTE, 3},
-                Opm::ecl::EclFile::EclEntry{"L", Opm::ecl::eclArrType::LOGI, 4},
-                Opm::ecl::EclFile::EclEntry{"S", Opm::ecl::eclArrType::REAL, 2},
-                Opm::ecl::EclFile::EclEntry{"D", Opm::ecl::eclArrType::DOUB, 3},
-                Opm::ecl::EclFile::EclEntry{"Z", Opm::ecl::eclArrType::CHAR, 2},
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"SEQNUM", Opm::EclIO::eclArrType::INTE, 1},
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 3},
+                Opm::EclIO::EclFile::EclEntry{"L", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 2},
+                Opm::EclIO::EclFile::EclEntry{"D", Opm::EclIO::eclArrType::DOUB, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
     {
         const auto seqnum = 5;  // Before 13.  Should overwrite 13
-        auto rst = ::Opm::ecl::OutputStream::Restart {
+        auto rst = ::Opm::EclIO::OutputStream::Restart {
             rset, seqnum, fmt, unif
         };
 
@@ -288,10 +288,10 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
     }
 
     {
-        const auto fname = ::Opm::ecl::OutputStream::
+        const auto fname = ::Opm::EclIO::OutputStream::
             outputFileName(rset, "UNRST");
 
-        auto rst = ::Opm::ecl::ERst{fname};
+        auto rst = ::Opm::EclIO::ERst{fname};
 
         BOOST_CHECK( rst.hasReportStepNumber( 1));
         BOOST_CHECK( rst.hasReportStepNumber( 5));
@@ -308,13 +308,13 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
         {
             const auto vectors        = rst.listOfRstArrays(5);
-            const auto expect_vectors = std::vector<Opm::ecl::EclFile::EclEntry>{
-                Opm::ecl::EclFile::EclEntry{"SEQNUM", Opm::ecl::eclArrType::INTE, 1},
-                Opm::ecl::EclFile::EclEntry{"I", Opm::ecl::eclArrType::INTE, 4},
-                Opm::ecl::EclFile::EclEntry{"L", Opm::ecl::eclArrType::LOGI, 4},
-                Opm::ecl::EclFile::EclEntry{"S", Opm::ecl::eclArrType::REAL, 3},
-                Opm::ecl::EclFile::EclEntry{"D", Opm::ecl::eclArrType::DOUB, 2},
-                Opm::ecl::EclFile::EclEntry{"Z", Opm::ecl::eclArrType::CHAR, 3},
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"SEQNUM", Opm::EclIO::eclArrType::INTE, 1},
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"L", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"D", Opm::EclIO::eclArrType::DOUB, 2},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 3},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
     {
         const auto seqnum = 13;
-        auto rst = ::Opm::ecl::OutputStream::Restart {
+        auto rst = ::Opm::EclIO::OutputStream::Restart {
             rset, seqnum, fmt, unif
         };
 
@@ -387,10 +387,10 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
     }
 
     {
-        const auto fname = ::Opm::ecl::OutputStream::
+        const auto fname = ::Opm::EclIO::OutputStream::
             outputFileName(rset, "UNRST");
 
-        auto rst = ::Opm::ecl::ERst{fname};
+        auto rst = ::Opm::EclIO::ERst{fname};
 
         BOOST_CHECK(rst.hasReportStepNumber( 1));
         BOOST_CHECK(rst.hasReportStepNumber( 5));
@@ -407,13 +407,13 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 
         {
             const auto vectors        = rst.listOfRstArrays(13);
-            const auto expect_vectors = std::vector<Opm::ecl::EclFile::EclEntry>{
-                Opm::ecl::EclFile::EclEntry{"SEQNUM", Opm::ecl::eclArrType::INTE, 1},
-                Opm::ecl::EclFile::EclEntry{"I", Opm::ecl::eclArrType::INTE, 3},
-                Opm::ecl::EclFile::EclEntry{"L", Opm::ecl::eclArrType::LOGI, 4},
-                Opm::ecl::EclFile::EclEntry{"S", Opm::ecl::eclArrType::REAL, 2},
-                Opm::ecl::EclFile::EclEntry{"D", Opm::ecl::eclArrType::DOUB, 3},
-                Opm::ecl::EclFile::EclEntry{"Z", Opm::ecl::eclArrType::CHAR, 2},
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"SEQNUM", Opm::EclIO::eclArrType::INTE, 1},
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 3},
+                Opm::EclIO::EclFile::EclEntry{"L", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 2},
+                Opm::EclIO::EclFile::EclEntry{"D", Opm::EclIO::eclArrType::DOUB, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -476,12 +476,12 @@ BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 BOOST_AUTO_TEST_CASE(Formatted_Separate)
 {
     const auto rset = RSet("CASE.T01.");
-    const auto fmt  = ::Opm::ecl::OutputStream::Formatted{ true };
-    const auto unif = ::Opm::ecl::OutputStream::Unified  { false };
+    const auto fmt  = ::Opm::EclIO::OutputStream::Formatted{ true };
+    const auto unif = ::Opm::EclIO::OutputStream::Unified  { false };
 
     {
         const auto seqnum = 1;
-        auto rst = ::Opm::ecl::OutputStream::Restart {
+        auto rst = ::Opm::EclIO::OutputStream::Restart {
             rset, seqnum, fmt, unif
         };
 
@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
 
     {
         const auto seqnum = 13;
-        auto rst = ::Opm::ecl::OutputStream::Restart {
+        auto rst = ::Opm::EclIO::OutputStream::Restart {
             rset, seqnum, fmt, unif
         };
 
@@ -506,22 +506,22 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
     }
 
     {
-        using ::Opm::ecl::OutputStream::Restart;
+        using ::Opm::EclIO::OutputStream::Restart;
 
-        const auto fname = ::Opm::ecl::OutputStream::
+        const auto fname = ::Opm::EclIO::OutputStream::
             outputFileName(rset, "F0013");
 
-        auto rst = ::Opm::ecl::EclFile{fname};
+        auto rst = ::Opm::EclIO::EclFile{fname};
 
         {
             const auto vectors        = rst.getList();
-            const auto expect_vectors = std::vector<Opm::ecl::EclFile::EclEntry>{
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
                 // No SEQNUM in separate output files
-                Opm::ecl::EclFile::EclEntry{"I", Opm::ecl::eclArrType::INTE, 3},
-                Opm::ecl::EclFile::EclEntry{"L", Opm::ecl::eclArrType::LOGI, 4},
-                Opm::ecl::EclFile::EclEntry{"S", Opm::ecl::eclArrType::REAL, 2},
-                Opm::ecl::EclFile::EclEntry{"D", Opm::ecl::eclArrType::DOUB, 3},
-                Opm::ecl::EclFile::EclEntry{"Z", Opm::ecl::eclArrType::CHAR, 2},
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 3},
+                Opm::EclIO::EclFile::EclEntry{"L", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 2},
+                Opm::EclIO::EclFile::EclEntry{"D", Opm::EclIO::eclArrType::DOUB, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
     {
         // Separate output.  Step 13 should be unaffected.
         const auto seqnum = 5;
-        auto rst = ::Opm::ecl::OutputStream::Restart {
+        auto rst = ::Opm::EclIO::OutputStream::Restart {
             rset, seqnum, fmt, unif
         };
 
@@ -595,22 +595,22 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
     }
 
     {
-        using ::Opm::ecl::OutputStream::Restart;
+        using ::Opm::EclIO::OutputStream::Restart;
 
-        const auto fname = ::Opm::ecl::OutputStream::
+        const auto fname = ::Opm::EclIO::OutputStream::
             outputFileName(rset, "F0005");
 
-        auto rst = ::Opm::ecl::EclFile{fname};
+        auto rst = ::Opm::EclIO::EclFile{fname};
 
         {
             const auto vectors        = rst.getList();
-            const auto expect_vectors = std::vector<Opm::ecl::EclFile::EclEntry>{
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
                 // No SEQNUM in separate output files
-                Opm::ecl::EclFile::EclEntry{"I", Opm::ecl::eclArrType::INTE, 4},
-                Opm::ecl::EclFile::EclEntry{"L", Opm::ecl::eclArrType::LOGI, 4},
-                Opm::ecl::EclFile::EclEntry{"S", Opm::ecl::eclArrType::REAL, 3},
-                Opm::ecl::EclFile::EclEntry{"D", Opm::ecl::eclArrType::DOUB, 2},
-                Opm::ecl::EclFile::EclEntry{"Z", Opm::ecl::eclArrType::CHAR, 3},
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"L", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"D", Opm::EclIO::eclArrType::DOUB, 2},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 3},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
@@ -674,22 +674,22 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
     // -------------------------------------------------------
 
     {
-        using ::Opm::ecl::OutputStream::Restart;
+        using ::Opm::EclIO::OutputStream::Restart;
 
-        const auto fname = ::Opm::ecl::OutputStream::
+        const auto fname = ::Opm::EclIO::OutputStream::
             outputFileName(rset, "F0013");
 
-        auto rst = ::Opm::ecl::EclFile{fname};
+        auto rst = ::Opm::EclIO::EclFile{fname};
 
         {
             const auto vectors        = rst.getList();
-            const auto expect_vectors = std::vector<Opm::ecl::EclFile::EclEntry>{
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
                 // No SEQNUM in separate output files.
-                Opm::ecl::EclFile::EclEntry{"I", Opm::ecl::eclArrType::INTE, 3},
-                Opm::ecl::EclFile::EclEntry{"L", Opm::ecl::eclArrType::LOGI, 4},
-                Opm::ecl::EclFile::EclEntry{"S", Opm::ecl::eclArrType::REAL, 2},
-                Opm::ecl::EclFile::EclEntry{"D", Opm::ecl::eclArrType::DOUB, 3},
-                Opm::ecl::EclFile::EclEntry{"Z", Opm::ecl::eclArrType::CHAR, 2},
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 3},
+                Opm::EclIO::EclFile::EclEntry{"L", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 2},
+                Opm::EclIO::EclFile::EclEntry{"D", Opm::EclIO::eclArrType::DOUB, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
             };
 
             BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),

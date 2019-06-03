@@ -30,7 +30,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 class EclFile
 {
@@ -109,6 +109,6 @@ private:
     void loadArray(std::fstream& fileH, int arrIndex);
 };
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_ECLFILE_HPP

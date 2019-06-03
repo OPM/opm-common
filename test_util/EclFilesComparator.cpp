@@ -43,7 +43,7 @@
     } \
   }
 
-using Opm::ecl::EGrid;
+using Opm::EclIO::EGrid;
 
 template <typename T>
 void ECLFilesComparator::printValuesForCell(const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const T& value1, const T& value2) const {

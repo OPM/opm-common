@@ -52,6 +52,11 @@ namespace Opm {
 
 } // namespace Opm
 
+namespace Opm { namespace EclIO { namespace OutputStream {
+
+    class Restart;
+
+}}}
 
 /*
   The two free functions RestartIO::save() and RestartIO::load() can
@@ -76,15 +81,15 @@ namespace Opm {
 */
 namespace Opm { namespace RestartIO {
 
-    void save(const std::string&  filename,
-              int                 report_step,
-              double              seconds_elapsed,
-              RestartValue        value,
-              const EclipseState& es,
-              const EclipseGrid&  grid,
-              const Schedule&     schedule,
-              const SummaryState& sumState,
-              bool                write_double = false);
+    void save(EclIO::OutputStream::Restart& rstFile,
+              int                           report_step,
+              double                        seconds_elapsed,
+              RestartValue                  value,
+              const EclipseState&           es,
+              const EclipseGrid&            grid,
+              const Schedule&               schedule,
+              const SummaryState&           sumState,
+              bool                          write_double = false);
 
     std::pair<RestartValue, SummaryState>
     load(const std::string&             filename,

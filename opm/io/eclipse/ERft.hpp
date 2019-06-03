@@ -29,7 +29,7 @@
 #include <utility>
 #include <vector>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 class ERft : public EclFile
 {
@@ -79,6 +79,6 @@ private:
                       const RftDate& date) const;
 };
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_ERFT_HPP

@@ -43,6 +43,8 @@
 #include <opm/output/eclipse/Tables.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
+#include <opm/io/eclipse/OutputStream.hpp>
+
 #include <cstdlib>
 #include <memory>     // unique_ptr
 #include <unordered_map>
@@ -532,12 +534,15 @@ void EclipseIO::writeTimeStep(int report_step,
     */
     if(!isSubstep && restart.getWriteRestartFile(report_step))
     {
-        std::string filename = ERT::EclFilename( this->impl->outputDir,
-                                                 this->impl->baseName,
-                                                 ioConfig.getUNIFOUT() ? ECL_UNIFIED_RESTART_FILE : ECL_RESTART_FILE,
-                                                 report_step,
-                                                 ioConfig.getFMTOUT() );
-        RestartIO::save(filename, report_step, secs_elapsed, value, es, grid, schedule,
+        EclIO::OutputStream::Restart rstFile {
+            EclIO::OutputStream::ResultSet { this->impl->outputDir,
+                                             this->impl->baseName },
+            report_step,
+            EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
+            EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
+        };
+
+        RestartIO::save(rstFile, report_step, secs_elapsed, value, es, grid, schedule,
                         this->impl->summary.get_restart_vectors(), write_double);
     }
 

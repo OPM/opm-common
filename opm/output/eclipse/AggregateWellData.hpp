@@ -20,8 +20,9 @@
 #ifndef OPM_AGGREGATE_WELL_DATA_HPP
 #define OPM_AGGREGATE_WELL_DATA_HPP
 
-#include <opm/output/eclipse/CharArrayNullTerm.hpp>
 #include <opm/output/eclipse/WindowedArray.hpp>
+
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
 #include <string>
@@ -74,7 +75,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         }
 
         /// Retrieve Character Well Data Array.
-        const std::vector<CharArrayNullTerm<8>>& getZWell() const
+        const std::vector<EclIO::PaddedOutputString<8>>& getZWell() const
         {
             return this->zWell_.data();
         }
@@ -92,7 +93,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         WindowedArray<double> xWell_;
 
         /// Aggregate 'ZWEL' array (Character) for all wells.
-        WindowedArray<CharArrayNullTerm<8>> zWell_;
+        WindowedArray<EclIO::PaddedOutputString<8>> zWell_;
 
         /// Maximum number of groups in model.
         int nWGMax_;

@@ -30,9 +30,9 @@
 
 #include <iomanip>
 
-using Opm::ecl::EGrid;
-using Opm::ecl::ESmry;
-using Opm::ecl::EclOutput;
+using Opm::EclIO::EGrid;
+using Opm::EclIO::ESmry;
+using Opm::EclIO::EclOutput;
 
 void makeEgridFile(const std::string &fileName, const std::vector<float> &coord,
                    const std::vector<float> &zcorn, const std::vector<int> &gridhead,

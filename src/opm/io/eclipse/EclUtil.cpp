@@ -24,14 +24,14 @@
 #include <stdexcept>
 
 
-int Opm::ecl::flipEndianInt(int num)
+int Opm::EclIO::flipEndianInt(int num)
 {
     unsigned int tmp = __builtin_bswap32(num);
     return static_cast<int>(tmp);
 }
 
 
-float Opm::ecl::flipEndianFloat(float num)
+float Opm::EclIO::flipEndianFloat(float num)
 {
     float value = num;
 
@@ -42,7 +42,7 @@ float Opm::ecl::flipEndianFloat(float num)
 }
 
 
-double Opm::ecl::flipEndianDouble(double num)
+double Opm::EclIO::flipEndianDouble(double num)
 {
     double value = num;
 
@@ -53,7 +53,7 @@ double Opm::ecl::flipEndianDouble(double num)
 }
 
 
-std::tuple<int, int> Opm::ecl::block_size_data_binary(eclArrType arrType)
+std::tuple<int, int> Opm::EclIO::block_size_data_binary(eclArrType arrType)
 {
     using BlockSizeTuple = std::tuple<int, int>;
 
@@ -83,7 +83,7 @@ std::tuple<int, int> Opm::ecl::block_size_data_binary(eclArrType arrType)
 }
 
 
-std::tuple<int, int, int> Opm::ecl::block_size_data_formatted(eclArrType arrType)
+std::tuple<int, int, int> Opm::EclIO::block_size_data_formatted(eclArrType arrType)
 {
     using BlockSizeTuple = std::tuple<int, int, int>;
 
@@ -113,7 +113,7 @@ std::tuple<int, int, int> Opm::ecl::block_size_data_formatted(eclArrType arrType
 }
 
 
-std::string Opm::ecl::trimr(const std::string &str1)
+std::string Opm::EclIO::trimr(const std::string &str1)
 {
     if (str1 == "        ") {
         return "";

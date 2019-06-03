@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 class ESmry
 {
@@ -53,6 +53,6 @@ private:
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num);
 };
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
 #endif // OPM_IO_ESMRY_HPP

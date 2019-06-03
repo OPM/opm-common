@@ -20,18 +20,20 @@
 #ifndef OPM_IO_OUTPUTSTREAM_HPP_INCLUDED
 #define OPM_IO_OUTPUTSTREAM_HPP_INCLUDED
 
+#include <opm/io/eclipse/PaddedOutputString.hpp>
+
 #include <ios>
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
     class EclOutput;
 
-}} // namespace Opm::ecl
+}} // namespace Opm::EclIO
 
-namespace Opm { namespace ecl { namespace OutputStream {
+namespace Opm { namespace EclIO { namespace OutputStream {
 
     struct Formatted { bool set; };
     struct Unified   { bool set; };
@@ -83,14 +85,10 @@ namespace Opm { namespace ecl { namespace OutputStream {
         /// Generate a message string (keyword type 'MESS') in underlying
         /// output stream.
         ///
-        /// Must not be called prior to \c prepareStep
-        ///
         /// \param[in] msg Message string (e.g., "STARTSOL").
         void message(const std::string& msg);
 
         /// Write integer data to underlying output stream.
-        ///
-        /// Must not be called prior to \c prepareStep
         ///
         /// \param[in] kw Name of output vector (keyword).
         ///
@@ -99,8 +97,6 @@ namespace Opm { namespace ecl { namespace OutputStream {
                    const std::vector<int>& data);
 
         /// Write boolean data to underlying output stream.
-        ///
-        /// Must not be called prior to \c prepareStep
         ///
         /// \param[in] kw Name of output vector (keyword).
         ///
@@ -111,8 +107,6 @@ namespace Opm { namespace ecl { namespace OutputStream {
         /// Write single precision floating point data to underlying
         /// output stream.
         ///
-        /// Must not be called prior to \c prepareStep
-        ///
         /// \param[in] kw Name of output vector (keyword).
         ///
         /// \param[in] data Output values.
@@ -122,8 +116,6 @@ namespace Opm { namespace ecl { namespace OutputStream {
         /// Write double precision floating point data to underlying
         /// output stream.
         ///
-        /// Must not be called prior to \c prepareStep
-        ///
         /// \param[in] kw Name of output vector (keyword).
         ///
         /// \param[in] data Output values.
@@ -132,13 +124,20 @@ namespace Opm { namespace ecl { namespace OutputStream {
 
         /// Write unpadded string data to underlying output stream.
         ///
-        /// Must not be called prior to \c prepareStep
-        ///
         /// \param[in] kw Name of output vector (keyword).
         ///
         /// \param[in] data Output values.
         void write(const std::string&              kw,
                    const std::vector<std::string>& data);
+
+        /// Write padded character data (8 characters per string)
+        /// to underlying output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&                        kw,
+                   const std::vector<PaddedOutputString<8>>& data);
 
     private:
         /// Restart output stream.
@@ -213,6 +212,6 @@ namespace Opm { namespace ecl { namespace OutputStream {
     std::string outputFileName(const ResultSet&   rsetDescriptor,
                                const std::string& ext);
 
-}}} // namespace Opm::ecl::OutputStream
+}}} // namespace Opm::EclIO::OutputStream
 
 #endif //  OPM_IO_OUTPUTSTREAM_HPP_INCLUDED

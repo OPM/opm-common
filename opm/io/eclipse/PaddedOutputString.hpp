@@ -17,8 +17,8 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OPM_CHARARRAY_HEADER_HPP
-#define OPM_CHARARRAY_HEADER_HPP
+#ifndef OPM_PADDEDOUTPUTSTRING_HEADER_HPP
+#define OPM_PADDEDOUTPUTSTRING_HEADER_HPP
 
 #include <algorithm>
 #include <array>
@@ -26,7 +26,7 @@
 #include <cstddef>
 #include <string>
 
-namespace Opm { namespace RestartIO { namespace Helpers {
+namespace Opm { namespace EclIO {
 
     /// Null-terminated, left adjusted, space padded array of N characters.
     ///
@@ -36,30 +36,30 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     ///
     /// \tparam N Number of characters.
     template <std::size_t N>
-    class CharArrayNullTerm
+    class PaddedOutputString
     {
     public:
-        CharArrayNullTerm()
+        PaddedOutputString()
         {
             this->clear();
         }
 
-        explicit CharArrayNullTerm(const std::string& s)
-            : CharArrayNullTerm()
+        explicit PaddedOutputString(const std::string& s)
+            : PaddedOutputString()
         {
             this->copy_in(s.c_str(), s.size());
         }
 
-        ~CharArrayNullTerm() = default;
+        ~PaddedOutputString() = default;
 
-        CharArrayNullTerm(const CharArrayNullTerm& rhs) = default;
-        CharArrayNullTerm(CharArrayNullTerm&& rhs) = default;
+        PaddedOutputString(const PaddedOutputString& rhs) = default;
+        PaddedOutputString(PaddedOutputString&& rhs) = default;
 
-        CharArrayNullTerm& operator=(const CharArrayNullTerm& rhs) = default;
-        CharArrayNullTerm& operator=(CharArrayNullTerm&& rhs) = default;
+        PaddedOutputString& operator=(const PaddedOutputString& rhs) = default;
+        PaddedOutputString& operator=(PaddedOutputString&& rhs) = default;
 
         /// Assign from \code std::string \endcode.
-        CharArrayNullTerm& operator=(const std::string& s)
+        PaddedOutputString& operator=(const std::string& s)
         {
             this->clear();
             this->copy_in(s.data(), s.size());
@@ -99,5 +99,5 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         }
     };
 
-}}} // Opm::RestartIO::Helpers
-#endif // CHARARRAY_HEADER
+}} // Opm::EclIO
+#endif // OPM_PADDEDOUTPUTSTRING_HEADER_HPP

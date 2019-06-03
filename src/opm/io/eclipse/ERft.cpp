@@ -27,7 +27,7 @@
 #include <string>
 #include <sstream>
 
-namespace Opm { namespace ecl {
+namespace Opm { namespace EclIO {
 
 ERft::ERft(const std::string &filename) : EclFile(filename)
 {
