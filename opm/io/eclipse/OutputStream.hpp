@@ -85,14 +85,10 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         /// Generate a message string (keyword type 'MESS') in underlying
         /// output stream.
         ///
-        /// Must not be called prior to \c prepareStep
-        ///
         /// \param[in] msg Message string (e.g., "STARTSOL").
         void message(const std::string& msg);
 
         /// Write integer data to underlying output stream.
-        ///
-        /// Must not be called prior to \c prepareStep
         ///
         /// \param[in] kw Name of output vector (keyword).
         ///
@@ -101,8 +97,6 @@ namespace Opm { namespace EclIO { namespace OutputStream {
                    const std::vector<int>& data);
 
         /// Write boolean data to underlying output stream.
-        ///
-        /// Must not be called prior to \c prepareStep
         ///
         /// \param[in] kw Name of output vector (keyword).
         ///
@@ -113,8 +107,6 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         /// Write single precision floating point data to underlying
         /// output stream.
         ///
-        /// Must not be called prior to \c prepareStep
-        ///
         /// \param[in] kw Name of output vector (keyword).
         ///
         /// \param[in] data Output values.
@@ -124,8 +116,6 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         /// Write double precision floating point data to underlying
         /// output stream.
         ///
-        /// Must not be called prior to \c prepareStep
-        ///
         /// \param[in] kw Name of output vector (keyword).
         ///
         /// \param[in] data Output values.
@@ -133,8 +123,6 @@ namespace Opm { namespace EclIO { namespace OutputStream {
                    const std::vector<double>& data);
 
         /// Write unpadded string data to underlying output stream.
-        ///
-        /// Must not be called prior to \c prepareStep
         ///
         /// \param[in] kw Name of output vector (keyword).
         ///
@@ -144,8 +132,6 @@ namespace Opm { namespace EclIO { namespace OutputStream {
 
         /// Write padded character data (8 characters per string)
         /// to underlying output stream.
-        ///
-        /// Must not be called prior to \c prepareStep
         ///
         /// \param[in] kw Name of output vector (keyword).
         ///
