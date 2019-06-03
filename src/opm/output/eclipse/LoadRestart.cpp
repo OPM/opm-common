@@ -695,14 +695,13 @@ namespace {
 
     void checkWellVectorSizes(const std::vector<int>&                   opm_iwel,
                               const std::vector<double>&                opm_xwel,
-                              const int                                 sim_step,
                               const std::vector<Opm::data::Rates::opt>& phases,
                               const std::vector<Opm::Well2>&            sched_wells)
     {
         const auto expected_xwel_size =
             std::accumulate(sched_wells.begin(), sched_wells.end(),
                             std::size_t(0),
-                [&phases, sim_step](const std::size_t acc, const Opm::Well2& w)
+                [&phases](const std::size_t acc, const Opm::Well2& w)
                 -> std::size_t
             {
                 return acc
@@ -755,9 +754,7 @@ namespace {
             if (phase.active(Opm::Phase::GAS))   { phases.push_back(rt::gas); }
         }
 
-        checkWellVectorSizes(opm_iwel, opm_xwel,
-                             rst_view.simStep(),
-                             phases, sched_wells);
+        checkWellVectorSizes(opm_iwel, opm_xwel, phases, sched_wells);
 
         Opm::data::Wells wells;
         auto opm_xwel_data = opm_xwel.begin();
@@ -862,9 +859,8 @@ namespace {
         if (gas) { xc.rates.set(Opm::data::Rates::opt::gas, 0.0); }
     }
 
-    void restoreConnResults(const Opm::Well2&        well,
+    void restoreConnResults(const Opm::Well2&       well,
                             const std::size_t       wellID,
-                            const std::size_t       sim_step,
                             const Opm::EclipseGrid& grid,
                             const Opm::UnitSystem&  usys,
                             const Opm::Phases&      phases,
@@ -986,7 +982,6 @@ namespace {
     Opm::data::Well
     restore_well(const Opm::Well2&       well,
                  const std::size_t       wellID,
-                 const std::size_t       sim_step,
                  const Opm::EclipseGrid& grid,
                  const Opm::UnitSystem&  usys,
                  const Opm::Phases&      phases,
@@ -1034,8 +1029,7 @@ namespace {
 
         // 3) Restore connection flow rates (xw.connections[i].rates)
         //    and pressure values (xw.connections[i].pressure).
-        restoreConnResults(well, wellID, sim_step,
-                           grid, usys, phases, wellData, xw);
+        restoreConnResults(well, wellID, grid, usys, phases, wellData, xw);
 
         // 4) Restore segment quantities if applicable.
         if (well.isMultiSegment() &&
@@ -1074,16 +1068,15 @@ namespace {
         const auto& units  = es.getUnits();
         const auto& phases = es.runspec().phases();
 
-        const auto  sim_step = rst_view->simStep();
-        const auto& wells    = schedule.getWells2(sim_step);
+        const auto& wells = schedule.getWells2(rst_view->simStep());
         for (auto nWells = wells.size(), wellID = 0*nWells;
                   wellID < nWells; ++wellID)
         {
             const auto& well = wells[wellID];
 
             soln[well.name()] =
-                restore_well(well, wellID, sim_step, grid,
-                             units, phases, wellData, segData);
+                restore_well(well, wellID, grid, units,
+                             phases, wellData, segData);
         }
 
         return soln;
