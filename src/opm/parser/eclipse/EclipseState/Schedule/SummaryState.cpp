@@ -17,6 +17,7 @@
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <unordered_map>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
@@ -24,16 +25,26 @@ namespace Opm{
 namespace {
 
     bool is_total(const std::string& key) {
+        static const std::unordered_set<std::string> totals = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
+                                                               "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
+                                                               "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
+                                                               "CPT", "CIT"};
+
         auto sep_pos = key.find(':');
 
         if (sep_pos == 0)
             return false;
 
         if (sep_pos == std::string::npos) {
-            if (key.back() == 'T')
-                return true;
+            if (key.back() == 'T' || key.compare(key.size() - 2, 2, "TH") == 0) {
+                std::size_t end_shift = 0;
+                if (key.back() == 'H')
+                    end_shift += 1;
 
-            return (key.compare(key.size() - 2, 2, "TH") == 0);
+                std::string sub_key = key.substr(1, key.size() - (1 + end_shift));
+                return (totals.count( sub_key ) == 1);
+            }
+            return false;
         } else
             return is_total(key.substr(0,sep_pos));
     }
