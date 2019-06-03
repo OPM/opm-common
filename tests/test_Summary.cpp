@@ -3193,6 +3193,11 @@ BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
     st.update_well_var("OP1", "WOPR", 100);
     BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPR"), 100);
 
+    st.update_well_var("OP1", "WWCT", 0.50);
+    BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WWCT"), 0.50);
+    st.update_well_var("OP1", "WWCT", 0.50);
+    BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WWCT"), 0.50);
+
     st.update_well_var("OP1", "WOPT", 100);
     BOOST_CHECK_EQUAL(st.get_well_var("OP1", "WOPT"), 100);
     st.update_well_var("OP1", "WOPT", 100);
