@@ -121,23 +121,22 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
 
         }
     }
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(this->udq_params, tokens, parseContext, errors) );
+    std::cout << keyword << " = ";
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(this->udq_params, this->m_var_type, tokens, parseContext, errors) );
     this->input_tokens = tokens;
 }
 
 
-UDQWellSet UDQDefine::eval_wells(const UDQContext& context) const {
-    return this->ast->eval_wells(context);
-}
 
 UDQSet UDQDefine::eval(const UDQContext& context) const {
-    switch (this->m_var_type) {
-    case UDQVarType::WELL_VAR:
-        return this->eval_wells(context);
-    default:
-        throw std::invalid_argument("UDQ subtype: not supported");
+    UDQSet res = this->ast->eval(this->m_var_type, context);
+    if (!UDQ::compatibleTypes(this->var_type(), res.var_type())) {
+        std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
+        throw std::invalid_argument(msg);
     }
+    return res;
 }
+
 
 UDQVarType UDQDefine::var_type() const {
     return this->m_var_type;

@@ -254,6 +254,7 @@ namespace Opm {
         const static std::string UNSUPPORTED_TERMINATE_IF_BHP;
 
         const static std::string UDQ_PARSE_ERROR;
+        const static std::string UDQ_TYPE_ERROR;
 
         /*
           If the third item in the THPRES keyword is defaulted the

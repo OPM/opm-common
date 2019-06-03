@@ -25,7 +25,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQWellSet.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 
@@ -55,7 +55,6 @@ public:
               T&& errors);
 
 
-    UDQWellSet eval_wells(const UDQContext& context) const;
     UDQSet eval(const UDQContext& context) const;
     const std::string& keyword() const;
     const std::vector<std::string>& tokens() const;

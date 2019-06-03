@@ -63,10 +63,17 @@ namespace Opm {
         return this->summary_state.get_well_var(well, var);
     }
 
+    double UDQContext::get_group_var(const std::string& group, const std::string& var) const {
+        return this->summary_state.get_group_var(group, var);
+    }
+
     std::vector<std::string> UDQContext::wells() const {
         return this->summary_state.wells();
     }
 
+    std::vector<std::string> UDQContext::groups() const {
+        return this->summary_state.groups();
+    }
 
     const UDQFunctionTable& UDQContext::function_table() const {
         return this->udqft;
