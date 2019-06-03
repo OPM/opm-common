@@ -48,14 +48,8 @@ public:
     Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule&, const std::string& );
     Summary( const EclipseState&, const SummaryConfig&, const EclipseGrid&, const Schedule&, const char* basename );
 
-    void add_timestep(int report_step,
-                      double secs_elapsed,
-                      const EclipseState& es,
-                      const Schedule& schedule,
-                      const data::Wells&,
-                      const std::map<std::string, double>& single_values,
-                      const std::map<std::string, std::vector<double>>& region_values = {},
-                      const std::map<std::pair<std::string, int>, double>& block_values = {});
+    void add_timestep(const SummaryState& st,
+                      int report_step);
 
 
     void eval(SummaryState& summary_state,
@@ -71,14 +65,10 @@ public:
 
 
     ~Summary();
-
-    const SummaryState& get_restart_vectors() const;
-
-    void reset_cumulative_quantities(const SummaryState& rstrt);
     void write() const;
 
 private:
-    void internal_store(const SummaryState& summary_state, int report_step, double seconds_elapsed);
+    void internal_store(const SummaryState& summary_state, int report_step);
 
 
     class keyword_handlers;
@@ -87,8 +77,6 @@ private:
     out::RegionCache regionCache;
     ERT::ert_unique_ptr< ecl_sum_type, ecl_sum_free > ecl_sum;
     std::unique_ptr< keyword_handlers > handlers;
-    double prev_time_elapsed = 0;
-    SummaryState prev_state;
 };
 
 }

@@ -1253,9 +1253,6 @@ Summary::Summary( const EclipseState& st,
             restart_step = init_config.getRestartStep();
         } else
             OpmLog::warning("Restart case too long - not embedded in SMSPEC file");
-
-        this->prev_time_elapsed =
-            schedule.getTimeMap().getTimePassedUntil(restart_step);
     }
     ecl_sum.reset( ecl_sum_alloc_restart_writer2(basename,
                                                  restart_case,
@@ -1400,12 +1397,6 @@ Summary::Summary( const EclipseState& st,
             hndlrs.emplace_back(rvec.back().get(), func->second);
         }
     }
-
-    for (const auto& pair : this->handlers->handlers) {
-        const auto * nodeptr = pair.first;
-        if (nodeptr->is_total())
-            this->prev_state.update(*nodeptr, 0);
-    }
 }
 
 /*
@@ -1478,10 +1469,10 @@ void Summary::eval( SummaryState& st,
                     const std::map<std::string, std::vector<double>>& region_values,
                     const std::map<std::pair<std::string, int>, double>& block_values) const {
 
-    if (secs_elapsed < this->prev_time_elapsed) {
+    if (secs_elapsed < st.get_elapsed()) {
         const auto& usys    = es.getUnits();
         const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
-        const auto  prev_el = usys.from_si(measure::time, this->prev_time_elapsed);
+        const auto  prev_el = usys.from_si(measure::time, st.get_elapsed());
         const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
 
         throw std::invalid_argument {
@@ -1493,7 +1484,7 @@ void Summary::eval( SummaryState& st,
         };
     }
 
-    const double duration = secs_elapsed - this->prev_time_elapsed;
+    const double duration = secs_elapsed - st.get_elapsed();
 
     /* report_step is the number of the file we are about to write - i.e. for instance CASE.S$report_step
      * for the data in a non-unified summary file.
@@ -1538,11 +1529,6 @@ void Summary::eval( SummaryState& st,
             unit_applied_val = es.getUnits().from_si( val.unit, val.value );
         }
 
-        if (smspec_node_is_total(f.first)) {
-            const auto* genkey = smspec_node_get_gen_key1( f.first );
-            unit_applied_val += this->prev_state.get(genkey);
-        }
-
         st.update(*f.first, unit_applied_val);
     }
 
@@ -1585,11 +1571,12 @@ void Summary::eval( SummaryState& st,
         }
     }
     eval_udq(schedule, sim_step, st);
+    st.update_elapsed(duration);
 }
 
 
-void Summary::internal_store(const SummaryState& st, int report_step, double secs_elapsed) {
-    auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, secs_elapsed );
+void Summary::internal_store(const SummaryState& st, int report_step) {
+    auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, st.get_elapsed() );
     const ecl_sum_type * ecl_sum = this->ecl_sum.get();
     const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
     auto num_nodes = ecl_smspec_num_nodes(smspec);
@@ -1613,20 +1600,9 @@ void Summary::internal_store(const SummaryState& st, int report_step, double sec
 }
 
 
-void Summary::add_timestep( int report_step,
-                            double secs_elapsed,
-                            const EclipseState& es,
-                            const Schedule& schedule,
-                            const data::Wells& wells ,
-                            const std::map<std::string, double>& single_values,
-                            const std::map<std::string, std::vector<double>>& region_values,
-                            const std::map<std::pair<std::string, int>, double>& block_values) {
-    SummaryState st;
-    this->eval(st, report_step, secs_elapsed, es, schedule, wells, single_values, region_values, block_values);
-    this->internal_store(st, report_step, secs_elapsed);
-
-    this->prev_state = st;
-    this->prev_time_elapsed = secs_elapsed;
+void Summary::add_timestep( const SummaryState& st,
+                            int report_step) {
+    this->internal_store(st, report_step);
 }
 
 
@@ -1637,29 +1613,7 @@ void Summary::write() const {
 
 Summary::~Summary() {}
 
-const SummaryState& Summary::get_restart_vectors() const
-{
-    return this->prev_state;
-}
 
-void Summary::reset_cumulative_quantities(const SummaryState& rstrt)
-{
-    for (const auto& f : this->handlers->handlers) {
-        if (! smspec_node_is_total(f.first)) {
-            // Ignore quantities that are not cumulative ("total").
-            continue;
-        }
-
-        const auto* genkey = smspec_node_get_gen_key1(f.first);
-        if (rstrt.has(genkey)) {
-            // Assume 'rstrt' uses output units.  This is satisfied if rstrt
-            // is constructed from information in a restart file--i.e., from
-            // the double precision restart vectors 'XGRP' and 'XWEL' during
-            // RestartIO::load().
-            this->prev_state.set(genkey, rstrt.get(genkey));
-        }
-    }
-}
 
 
 }} // namespace Opm::out

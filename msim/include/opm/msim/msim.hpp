@@ -21,7 +21,7 @@ namespace Opm {
 class EclipseIO;
 class ParseContext;
 class Parser;
-
+class SummaryState;
 class msim {
 
 public:
@@ -33,12 +33,12 @@ public:
     void well_rate(const std::string& well, data::Rates::opt rate, std::function<well_rate_function> func);
     void solution(const std::string& field, std::function<solution_function> func);
     void run(Schedule& schedule, EclipseIO& io);
-    void post_step(Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const;
+    void post_step(Schedule& schedule, const SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const;
 private:
 
-    void run_step(const Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const;
-    void run_step(const Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, double dt, EclipseIO& io) const;
-    void output(size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const;
+    void run_step(const Schedule& schedule, SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step, EclipseIO& io) const;
+    void run_step(const Schedule& schedule, SummaryState& st, data::Solution& sol, data::Wells& well_data, size_t report_step, double dt, EclipseIO& io) const;
+    void output(const SummaryState& st, size_t report_step, bool substep, double seconds_elapsed, const data::Solution& sol, const data::Wells& well_data, EclipseIO& io) const;
     void simulate(const Schedule& schedule, data::Solution& sol, data::Wells& well_data, size_t report_step, double seconds_elapsed, double time_step) const;
 
     EclipseState state;

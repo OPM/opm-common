@@ -91,14 +91,15 @@ namespace Opm { namespace RestartIO {
               const SummaryState&           sumState,
               bool                          write_double = false);
 
-    std::pair<RestartValue, SummaryState>
-    load(const std::string&             filename,
-         int                            report_step,
-         const std::vector<RestartKey>& solution_keys,
-         const EclipseState&            es,
-         const EclipseGrid&             grid,
-         const Schedule&                schedule,
-         const std::vector<RestartKey>& extra_keys = {});
+
+    RestartValue load(const std::string&             filename,
+                      int                            report_step,
+                      SummaryState&                  summary_state,
+                      const std::vector<RestartKey>& solution_keys,
+                      const EclipseState&            es,
+                      const EclipseGrid&             grid,
+                      const Schedule&                schedule,
+                      const std::vector<RestartKey>& extra_keys = {});
 
 }} // namespace Opm::RestartIO
 

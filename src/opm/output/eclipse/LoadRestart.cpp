@@ -1143,16 +1143,16 @@ namespace {
         smry.update(key("GITH"), xgrp[VI::XGroup::index::HistGasInjTotal]);
     }
 
-    Opm::SummaryState
-    restore_cumulative(const RestartFileView& rst_view,
-                       const ::Opm::Schedule& schedule)
+    void restore_cumulative(Opm::SummaryState& smry,
+                            const RestartFileView& rst_view,
+                            const ::Opm::Schedule& schedule)
     {
-        auto smry = Opm::SummaryState{};
-
         const auto  sim_step = rst_view.simStep();
         const auto* intehead = rst_view.getKeyword("INTEHEAD");
+        smry.update_elapsed(schedule.seconds( rst_view.reportStep() ));
 
-        if (intehead == nullptr) { return smry; }
+        if (intehead == nullptr)
+            return;
 
         // Well cumulatives
         {
@@ -1191,16 +1191,15 @@ namespace {
                 assign_group_cumulatives(gname, groupOrderIx, groupData, smry);
             }
         }
-
-        return smry;
     }
 } // Anonymous namespace
 
 namespace Opm { namespace RestartIO  {
 
-    std::pair<RestartValue, SummaryState>
+    RestartValue
     load(const std::string&             filename,
          int                            report_step,
+         SummaryState&                  summary_state,
          const std::vector<RestartKey>& solution_keys,
          const EclipseState&            es,
          const EclipseGrid&             grid,
@@ -1224,10 +1223,8 @@ namespace Opm { namespace RestartIO  {
             restoreExtra(rst_view, extra_keys, es.getUnits(), rst_value);
         }
 
-        return {
-            std::move(rst_value),
-            restore_cumulative(rst_view, schedule)
-        };
+        restore_cumulative(summary_state, rst_view, schedule);
+        return rst_value;
     }
 
 }} // Opm::RestartIO

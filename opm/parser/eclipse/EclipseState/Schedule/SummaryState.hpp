@@ -98,7 +98,7 @@ public:
     std::size_t num_wells() const;
     std::size_t size() const;
 private:
-    double elapsed;
+    double elapsed = 0;
     std::unordered_map<std::string,double> values;
 
     // The first key is the variable and the second key is the well.

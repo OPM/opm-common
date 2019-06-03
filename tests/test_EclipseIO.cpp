@@ -292,6 +292,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
         auto& eclGrid = es.getInputGrid();
         Schedule schedule(deck, eclGrid, es.get3DProperties(), es.runspec());
         SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
+        SummaryState st;
         es.getIOConfig().setBaseName( "FOO" );
 
         EclipseIO eclWriter( es, eclGrid , schedule, summary_config);
@@ -329,7 +330,8 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
 
             RestartValue restart_value(sol, wells);
             auto first_step = ecl_util_make_date( 10 + i, 11, 2008 );
-            eclWriter.writeTimeStep( i,
+            eclWriter.writeTimeStep( st,
+                                     i,
                                      false,
                                      first_step - start_time,
                                      restart_value,

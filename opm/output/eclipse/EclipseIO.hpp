@@ -35,6 +35,7 @@
 #include <opm/output/data/Solution.hpp>
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/RestartValue.hpp>
+#include <opm/output/eclipse/Summary.hpp>
 
 namespace Opm {
 
@@ -171,7 +172,8 @@ public:
      *     hardcoded static map misc_units in Summary.cpp.
      */
 
-    void writeTimeStep( int report_step,
+    void writeTimeStep( const SummaryState& st,
+                        int report_step,
                         bool isSubstep,
                         double seconds_elapsed,
                         RestartValue value,
@@ -219,13 +221,11 @@ public:
       missing, if the bool is false missing keywords will be ignored
       (there will *not* be an empty vector in the return value).
     */
-    RestartValue loadRestart(const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys = {}) const;
-
+    RestartValue loadRestart(SummaryState& summary_state, const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys = {}) const;
+    const out::Summary& summary();
 
     EclipseIO( const EclipseIO& ) = delete;
     ~EclipseIO();
-
-    const SummaryState& summaryState() const;
 
 private:
     class Impl;
