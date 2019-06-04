@@ -56,6 +56,9 @@ private:
     std::unordered_map<int,bool> reportLoaded;
     std::map<int, std::pair<int,int>> arrIndexRange;   // mapping report step number to array indeces (start and end)
 
+    void initUnified();
+    void initSeparate(const int number);
+
     int getArrayIndex(const std::string& name, int seqnum) const;
 
     std::streampos
