@@ -20,46 +20,44 @@
 
 #include <algorithm>
 #include <cstring>
+#include <exception>
 #include <iomanip>
 #include <iterator>
-#include <string>
 #include <sstream>
+#include <stdexcept>
+#include <string>
+
+#include <boost/regex.hpp>
+
+namespace {
+    int seqnumFromSeparateFilename(const std::string& filename)
+    {
+        const auto re = boost::regex {
+            R"~(\.[FX]([0-9]{4})$)~"
+        };
+
+        auto match = boost::smatch{};
+        if (boost::regex_search(filename, match, re)) {
+            return std::stoi(match[1]);
+        }
+
+        throw std::invalid_argument {
+            "Unable to Determine Report Step Sequence Number "
+            "From Restart Filename \"" + filename + '"'
+        };
+    }
+}
 
 namespace Opm { namespace EclIO {
 
 ERst::ERst(const std::string& filename)
     : EclFile(filename)
 {
-    loadData("SEQNUM");
-
-    std::vector<int> firstIndex;
-
-    for (size_t i = 0;  i < array_name.size(); i++) {
-        if (array_name[i] == "SEQNUM") {
-            auto seqn = get<int>(i);
-            seqnum.push_back(seqn[0]);
-            firstIndex.push_back(i);
-        }
+    if (this->hasKey("SEQNUM")) {
+        this->initUnified();
     }
-
-
-    for (size_t i = 0; i < seqnum.size(); i++) {
-        std::pair<int,int> range;
-        range.first = firstIndex[i];
-
-        if (i != seqnum.size() - 1) {
-            range.second = firstIndex[i+1];
-        } else {
-            range.second = array_name.size();
-        }
-
-        arrIndexRange[seqnum[i]] = range;
-    }
-
-    nReports = seqnum.size();
-
-    for (int i = 0; i < nReports; i++) {
-        reportLoaded[seqnum[i]] = false;
+    else {
+        this->initSeparate(seqnumFromSeparateFilename(filename));
     }
 }
 
@@ -108,6 +106,52 @@ std::vector<EclFile::EclEntry> ERst::listOfRstArrays(int reportStepNumber)
     }
 
     return list;
+}
+
+void ERst::initUnified()
+{
+    loadData("SEQNUM");
+
+    std::vector<int> firstIndex;
+
+    for (size_t i = 0;  i < array_name.size(); i++) {
+        if (array_name[i] == "SEQNUM") {
+            auto seqn = get<int>(i);
+            seqnum.push_back(seqn[0]);
+            firstIndex.push_back(i);
+        }
+    }
+
+
+    for (size_t i = 0; i < seqnum.size(); i++) {
+        std::pair<int,int> range;
+        range.first = firstIndex[i];
+
+        if (i != seqnum.size() - 1) {
+            range.second = firstIndex[i+1];
+        } else {
+            range.second = array_name.size();
+        }
+
+        arrIndexRange[seqnum[i]] = range;
+    }
+
+    nReports = seqnum.size();
+
+    for (int i = 0; i < nReports; i++) {
+        reportLoaded[seqnum[i]] = false;
+    }
+}
+
+void ERst::initSeparate(const int number)
+{
+    auto& range = this->arrIndexRange[number];
+    range.first = 0;
+    range.second = static_cast<int>(this->array_name.size());
+
+    this->seqnum.assign(1, number);
+    this->nReports = 1;
+    this->reportLoaded[number] = false;
 }
 
 int ERst::getArrayIndex(const std::string& name, int number) const
