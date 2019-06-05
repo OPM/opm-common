@@ -18,6 +18,7 @@
 */
 
 #include <unordered_map>
+#include <cstring>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
@@ -211,4 +212,134 @@ namespace {
     std::size_t SummaryState::size() const {
         return this->values.size();
     }
+
+
+namespace {
+    class Serializer {
+    public:
+        Serializer() = default;
+        Serializer(const std::vector<char>& buffer) :
+            buffer(buffer)
+        {}
+
+
+        template <typename T>
+        void put(const T& value) {
+            this->pack(std::addressof(value), sizeof(T));
+        }
+
+
+
+        template <typename T>
+        T get() {
+            T value;
+            std::memcpy(&value, &this->buffer[pos], sizeof(T));
+            this->pos += sizeof(T);
+            return value;
+        }
+
+        std::vector<char> buffer;
+    private:
+        void pack(const void * ptr, std::size_t value_size) {
+            std::size_t write_pos = this->buffer.size();
+            std::size_t new_size = write_pos + value_size;
+            this->buffer.resize( new_size );
+            std::memcpy(&this->buffer[write_pos], ptr, value_size);
+        }
+
+        std::size_t pos = 0;
+    };
+
+    template <>
+    void Serializer::put(const std::string& value) {
+        this->put<std::string::size_type>(value.size());
+        this->pack(value.c_str(), value.size());
+    }
+
+    template <>
+    std::string Serializer::get() {
+        std::string::size_type length = this->get<std::string::size_type>();
+        this->pos += length;
+        return {std::addressof(this->buffer[this->pos - length]), length};
+    }
+
+    void put_map(Serializer& ser, const std::unordered_map<std::string, double>& values) {
+        ser.put(values.size());
+        for (const auto& value_pair : values) {
+            ser.put(value_pair.first);
+            ser.put(value_pair.second);
+        }
+    }
+
+}
+
+    std::vector<char> SummaryState::serialize() const {
+        std::vector<char> buffer;
+        Serializer ser;
+        ser.put(this->elapsed);
+        put_map(ser, values);
+
+        ser.put(this->well_values.size());
+        for (const auto& well_var_pair : this->well_values) {
+            ser.put(well_var_pair.first);
+            put_map(ser, well_var_pair.second);
+        }
+
+        ser.put(this->group_values.size());
+        for (const auto& group_var_pair : this->group_values) {
+            ser.put(group_var_pair.first);
+            put_map(ser, group_var_pair.second);
+        }
+
+        return std::move(ser.buffer);
+    }
+
+
+    void  SummaryState::deserialize(const std::vector<char>& buffer) {
+        this->values.clear();
+        this->m_wells.clear();
+        this->well_values.clear();
+        this->m_groups.clear();
+        this->group_values.clear();
+        this->elapsed = 0;
+
+        Serializer ser(buffer);
+        this->elapsed = ser.get<double>();
+        {
+            std::size_t num_values = ser.get<std::size_t>();
+            for (std::size_t index = 0; index < num_values; index++) {
+                std::string key = ser.get<std::string>();
+                double value = ser.get<double>();
+                this->update(key, value);
+            }
+        }
+
+        {
+            std::size_t num_well_var = ser.get<std::size_t>();
+            for (std::size_t var_index = 0; var_index < num_well_var; var_index++) {
+                std::string var = ser.get<std::string>();
+
+                std::size_t num_well = ser.get<std::size_t>();
+                for (std::size_t well_index=0; well_index < num_well; well_index++) {
+                    std::string well = ser.get<std::string>();
+                    double value = ser.get<double>();
+                    this->update_well_var(well, var, value);
+                }
+            }
+        }
+
+        {
+            std::size_t num_group_var = ser.get<std::size_t>();
+            for (std::size_t var_index = 0; var_index < num_group_var; var_index++) {
+                std::string var = ser.get<std::string>();
+
+                std::size_t num_group = ser.get<std::size_t>();
+                for (std::size_t group_index=0; group_index < num_group; group_index++) {
+                    std::string group = ser.get<std::string>();
+                    double value = ser.get<double>();
+                    this->update_group_var(group, var, value);
+                }
+            }
+        }
+     }
 }
