@@ -75,6 +75,10 @@ public:
         return this->sim_step_;
     }
 
+    int reportStep() const {
+        return this->report_step;
+    }
+
     operator const Opm::RestartIO::ecl_file_view_type*() const
     {
         return this->step_view_;
@@ -96,6 +100,7 @@ private:
         Opm::RestartIO::ecl_file_close>;
 
     std::size_t                         sim_step_;
+    int                                 report_step;
     RstFile                             rst_file_;
     Opm::RestartIO::ecl_file_view_type* step_view_ = nullptr;
 
@@ -113,6 +118,7 @@ private:
 RestartFileView::RestartFileView(const std::string& filename,
                                  const int          report_step)
     : sim_step_(std::max(report_step - 1, 0))
+    , report_step(report_step)
     , rst_file_(Opm::RestartIO::ecl_file_open(filename.c_str(), 0))
 {
     namespace Load = Opm::RestartIO;
