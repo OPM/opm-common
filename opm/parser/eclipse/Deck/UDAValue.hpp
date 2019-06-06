@@ -23,6 +23,7 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
+#include <iosfwd>
 
 #include <opm/parser/eclipse/Units/Dimension.hpp>
 
@@ -54,6 +55,8 @@ private:
        const-ness of the data in a deck item. */
     mutable Dimension dim;
 };
+
+std::ostream& operator<<( std::ostream& stream, const UDAValue& uda_value );
 }
 
 
