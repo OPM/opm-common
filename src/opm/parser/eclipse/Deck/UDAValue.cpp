@@ -16,6 +16,7 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <iostream>
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 
@@ -93,4 +94,11 @@ bool UDAValue::operator!=(const UDAValue& other) const {
     return !(*this == other);
 }
 
+std::ostream& operator<<( std::ostream& stream, const UDAValue& uda_value ) {
+    if (uda_value.is<double>())
+        stream << uda_value.get<double>();
+    else
+        stream << "'" << uda_value.get<std::string>() << "'";
+    return stream;
+}
 }
