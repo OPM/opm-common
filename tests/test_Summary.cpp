@@ -3218,6 +3218,10 @@ BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {
     st.update("FOPTH", 100);
     BOOST_CHECK_EQUAL(st.get("FOPTH"), 200);
 
+    st.update("WGPTS", 100);
+    BOOST_CHECK_EQUAL(st.get("WGPTS"), 100);
+    st.update("WGPTS", 100);
+    BOOST_CHECK_EQUAL(st.get("WGPTS"), 200);
 
     st.update_elapsed(100);
     BOOST_CHECK_EQUAL(st.get_elapsed(), 100);

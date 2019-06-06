@@ -26,25 +26,23 @@ namespace Opm{
 namespace {
 
     bool is_total(const std::string& key) {
-        static const std::unordered_set<std::string> totals = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
-                                                               "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
-                                                               "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
-                                                               "CPT", "CIT"};
+        static const std::vector<std::string> totals = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
+                                                        "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
+                                                        "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
+                                                        "CPT", "CIT"};
 
         auto sep_pos = key.find(':');
 
+        // Starting with ':' - that is probably broken?!
         if (sep_pos == 0)
             return false;
 
         if (sep_pos == std::string::npos) {
-            if (key.back() == 'T' || key.compare(key.size() - 2, 2, "TH") == 0) {
-                std::size_t end_shift = 0;
-                if (key.back() == 'H')
-                    end_shift += 1;
-
-                std::string sub_key = key.substr(1, key.size() - (1 + end_shift));
-                return (totals.count( sub_key ) == 1);
+            for (const auto& total : totals) {
+                if (key.compare(1, total.size(), total) == 0)
+                    return true;
             }
+
             return false;
         } else
             return is_total(key.substr(0,sep_pos));
