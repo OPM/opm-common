@@ -67,8 +67,9 @@ bool UDAValue::is<std::string>() const {
 
 template<>
 double UDAValue::get() const {
-    if (this->numeric_value)
-        return this->double_value;
+    this->assert_numeric();
+    return this->dim.convertRawToSi(this->double_value);
+}
 
     throw std::invalid_argument("UDAValue does not hold a numerical value");
 }
