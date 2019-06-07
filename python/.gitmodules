@@ -1,8 +1,0 @@
-[submodule "pycmake"]
-    path = pycmake
-    url = git://github.com/Statoil/pycmake.git
-    branch = 21f1eb9
-[submodule "pybind11"]
-	path = pybind11
-	url = git://github.com/pybind/pybind11.git
-	branch = add56ccdcac23a6c522a2c1174a866e293c61dab
