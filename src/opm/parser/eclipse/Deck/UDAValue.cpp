@@ -40,6 +40,18 @@ UDAValue::UDAValue(const std::string& value):
 {
 }
 
+void UDAValue::assert_numeric() const {
+    std::string msg = "Internal error: The support for use of UDQ/UDA is not complete in opm/flow. The string: '" + this->string_value + "' must be numeric";
+    this->assert_numeric(msg);
+}
+
+
+void UDAValue::assert_numeric(const std::string& error_msg) const {
+    if (this->numeric_value)
+        return;
+
+    throw std::invalid_argument(error_msg);
+}
 
 template<>
 bool UDAValue::is<double>() const {

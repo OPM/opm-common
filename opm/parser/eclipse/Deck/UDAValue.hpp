@@ -41,6 +41,9 @@ public:
     template<typename T>
     bool is() const;
 
+
+    void assert_numeric() const;
+    void assert_numeric(const std::string& error_msg) const;
     void set_dim(const Dimension& dim) const;
     const Dimension& get_dim() const;
 
