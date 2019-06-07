@@ -41,6 +41,8 @@ public:
     template<typename T>
     bool is() const;
 
+    void reset(double value);
+    void reset(const std::string& value);
 
     void assert_numeric() const;
     void assert_numeric(const std::string& error_msg) const;
