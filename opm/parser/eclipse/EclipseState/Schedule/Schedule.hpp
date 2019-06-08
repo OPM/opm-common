@@ -196,11 +196,11 @@ namespace Opm
                                     const Eclipse3DProperties& eclipseProperties);
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
-        void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder);
+        void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder, const UnitSystem& unit_system);
         void handleUDQ(const DeckKeyword& keyword, size_t currentStep);
         void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t currentStep);
-        void handleWELSPECS( const SCHEDULESection&, size_t, size_t  );
+        void handleWELSPECS( const SCHEDULESection&, size_t, size_t , const UnitSystem& unit_system);
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);

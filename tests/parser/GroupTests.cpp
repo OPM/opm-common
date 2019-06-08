@@ -158,8 +158,8 @@ BOOST_AUTO_TEST_CASE(GroupAddWell) {
 
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
-    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
+    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC());
+    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC());
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1->name() );
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
-    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
+    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC());
+    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC());
 
     BOOST_CHECK_EQUAL(0U , group.numWells(2));
     group.addWell( 3 , well1->name() );
@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
 BOOST_AUTO_TEST_CASE(getWells) {
     auto timeMap = createXDaysTimeMap( 10 );
     Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
-    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH);
+    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC());
+    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC());
 
     group.addWell( 2 , well1->name() );
     group.addWell( 3 , well1->name() );
