@@ -151,6 +151,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     const auto num_cells = grid.getCartesianSize();
     EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
     int countTimeStep = schedule.getTimeMap().numTimesteps();
+    SummaryState st;
 
     data::Solution solution;
     solution.insert( "PRESSURE",UnitSystem::measure::pressure , std::vector< double >( num_cells, 1 ) , data::TargetType::RESTART_SOLUTION);
@@ -159,7 +160,8 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     data::Wells wells;
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep){
-        eclipseWriter.writeTimeStep( timestep,
+        eclipseWriter.writeTimeStep( st,
+                                     timestep,
                                      false,
                                      timestep,
                                      RestartValue(solution, wells),

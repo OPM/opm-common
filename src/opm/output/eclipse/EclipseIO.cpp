@@ -488,7 +488,8 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
 }
 
 // implementation of the writeTimeStep method
-void EclipseIO::writeTimeStep(int report_step,
+void EclipseIO::writeTimeStep(const SummaryState& st,
+                              int report_step,
                               bool  isSubstep,
                               double secs_elapsed,
                               RestartValue value,
@@ -516,14 +517,8 @@ void EclipseIO::writeTimeStep(int report_step,
       very intial report_step==0 call, which is only garbage.
     */
     if (report_step > 0) {
-        this->impl->summary.add_timestep( report_step,
-                                          secs_elapsed,
-                                          es,
-                                          schedule,
-                                          value.wells ,
-                                          single_summary_values ,
-                                          region_summary_values,
-                                          block_summary_values);
+        this->impl->summary.add_timestep( st,
+                                          report_step);
         this->impl->summary.write();
     }
 
@@ -543,7 +538,7 @@ void EclipseIO::writeTimeStep(int report_step,
         };
 
         RestartIO::save(rstFile, report_step, secs_elapsed, value, es, grid, schedule,
-                        this->impl->summary.get_restart_vectors(), write_double);
+                        st, write_double);
     }
 
 
@@ -564,8 +559,7 @@ void EclipseIO::writeTimeStep(int report_step,
  }
 
 
-
-RestartValue EclipseIO::loadRestart(const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys) const {
+RestartValue EclipseIO::loadRestart(SummaryState& summary_state, const std::vector<RestartKey>& solution_keys, const std::vector<RestartKey>& extra_keys) const {
     const auto& es                       = this->impl->es;
     const auto& grid                     = this->impl->grid;
     const auto& schedule                 = this->impl->schedule;
@@ -576,14 +570,8 @@ RestartValue EclipseIO::loadRestart(const std::vector<RestartKey>& solution_keys
                                                                         report_step,
                                                                         false );
 
-    auto rst = RestartIO::load(filename, report_step, solution_keys,
-                               es, grid, schedule, extra_keys);
-
-    // Technically a violation of 'const'.  Allowed because 'impl' is
-    // constant pointer to mutable Impl.
-    this->impl->summary.reset_cumulative_quantities(rst.second);
-
-    return std::move(rst.first);
+    return RestartIO::load(filename, report_step, summary_state, solution_keys,
+                           es, grid, schedule, extra_keys);
 }
 
 EclipseIO::EclipseIO( const EclipseState& es,
@@ -609,9 +597,8 @@ EclipseIO::EclipseIO( const EclipseState& es,
     }
 }
 
-
-const SummaryState& EclipseIO::summaryState() const {
-    return this->impl->summary.get_restart_vectors();
+const out::Summary& EclipseIO::summary() {
+    return this->impl->summary;
 }
 
 
