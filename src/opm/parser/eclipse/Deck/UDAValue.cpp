@@ -40,6 +40,18 @@ UDAValue::UDAValue(const std::string& value):
 {
 }
 
+void UDAValue::assert_numeric() const {
+    std::string msg = "Internal error: The support for use of UDQ/UDA is not complete in opm/flow. The string: '" + this->string_value + "' must be numeric";
+    this->assert_numeric(msg);
+}
+
+
+void UDAValue::assert_numeric(const std::string& error_msg) const {
+    if (this->numeric_value)
+        return;
+
+    throw std::invalid_argument(error_msg);
+}
 
 template<>
 bool UDAValue::is<double>() const {
@@ -55,10 +67,18 @@ bool UDAValue::is<std::string>() const {
 
 template<>
 double UDAValue::get() const {
-    if (this->numeric_value)
-        return this->double_value;
+    this->assert_numeric();
+    return this->dim.convertRawToSi(this->double_value);
+}
 
-    throw std::invalid_argument("UDAValue does not hold a numerical value");
+void UDAValue::reset(double value) {
+    this->double_value = value;
+    this->numeric_value = true;
+}
+
+void UDAValue::reset(const std::string& value) {
+    this->string_value = value;
+    this->numeric_value = false;
 }
 
 template<>
@@ -83,6 +103,9 @@ bool UDAValue::operator==(const UDAValue& other) const {
     if (this->numeric_value != other.numeric_value)
         return false;
 
+    if (this->dim != other.dim)
+        return false;
+
     if (this->numeric_value)
         return (this->double_value == other.double_value);
 
@@ -101,4 +124,7 @@ std::ostream& operator<<( std::ostream& stream, const UDAValue& uda_value ) {
         stream << "'" << uda_value.get<std::string>() << "'";
     return stream;
 }
+
+
+
 }
