@@ -35,7 +35,7 @@
 
 using namespace Opm;
 
-inline std::string prefix() {
+inline std::string path_prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];
 }
 
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE( NorneRestartConfig ) {
     rptConfig.push_back( std::make_tuple(241 , true , boost::gregorian::date( 2006,10,10)) );
 
     Parser parser;
-    auto deck = parser.parseFile( prefix() + "IOConfig/RPTRST_DECK.DATA");
+    auto deck = parser.parseFile( path_prefix() + "IOConfig/RPTRST_DECK.DATA");
     EclipseState state(deck);
     Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
 
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
 
 
     Parser parser;
-    auto deck = parser.parseFile(prefix() + "IOConfig/RPT_TEST2.DATA");
+    auto deck = parser.parseFile(path_prefix() + "IOConfig/RPT_TEST2.DATA");
     EclipseState state( deck);
     Schedule schedule(deck, state.getInputGrid(), state.get3DProperties(), state.runspec());
     const auto& rstConfig = state.cfg().restart();
@@ -363,6 +363,6 @@ BOOST_AUTO_TEST_CASE( RestartConfig2 ) {
 
 BOOST_AUTO_TEST_CASE( SPE9END ) {
     Parser parser;
-    auto deck = parser.parseFile(prefix() + "IOConfig/SPE9_END.DATA");
+    auto deck = parser.parseFile(path_prefix() + "IOConfig/SPE9_END.DATA");
     BOOST_CHECK_NO_THROW( EclipseState state( deck) );
 }

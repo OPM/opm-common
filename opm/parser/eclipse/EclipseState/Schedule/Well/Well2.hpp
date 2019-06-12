@@ -33,6 +33,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
+#include <opm/parser/eclipse/Units/Units.hpp>
 
 
 namespace Opm {
@@ -62,7 +63,8 @@ public:
           double ref_depth,
           Phase phase,
           WellProducer::ControlModeEnum whistctl_cmode,
-          WellCompletion::CompletionOrderEnum ordering);
+          WellCompletion::CompletionOrderEnum ordering,
+          const UnitSystem& unit_system);
 
     bool isMultiSegment() const;
     bool isAvailableForGroupControl() const;
@@ -165,6 +167,7 @@ private:
     double ref_depth;
     Phase phase;
     WellCompletion::CompletionOrderEnum ordering;
+    UnitSystem unit_system;
 
     WellCommon::StatusEnum status;
     double drainage_radius;

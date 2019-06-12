@@ -224,7 +224,7 @@ namespace Opm {
             handleWLIST( keyword, currentStep );
 
         else if (keyword.name() == "WELSPECS")
-            handleWELSPECS( section, keywordIdx, currentStep );
+            handleWELSPECS( section, keywordIdx, currentStep, unit_system);
 
         else if (keyword.name() == "WHISTCTL")
             handleWHISTCTL(keyword, currentStep, parseContext, errors);
@@ -526,7 +526,8 @@ namespace Opm {
 
     void Schedule::handleWELSPECS( const SCHEDULESection& section,
                                    size_t index,
-                                   size_t currentStep ) {
+                                   size_t currentStep,
+                                   const UnitSystem& unit_system) {
         bool needNewTree = false;
         auto newTree = m_rootGroupTree.get(currentStep);
 
@@ -567,8 +568,8 @@ namespace Opm {
                         }
                     }
                 }
-                addWell(wellName, record, currentStep, wellConnectionOrder);
-                addWellToGroup( this->m_groups.at( groupName ), wellName, currentStep);
+                this->addWell(wellName, record, currentStep, wellConnectionOrder, unit_system);
+                this->addWellToGroup(this->m_groups.at( groupName ), wellName, currentStep);
             } else {
                 const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
                 const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
@@ -1786,7 +1787,12 @@ namespace Opm {
         return m_rootGroupTree.get(timeStep);
     }
 
-    void Schedule::addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellConnectionOrder) {
+    void Schedule::addWell(const std::string& wellName,
+                           const DeckRecord& record,
+                           size_t timeStep,
+                           WellCompletion::CompletionOrderEnum wellConnectionOrder,
+                           const UnitSystem& unit_system) {
+
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
@@ -1829,7 +1835,16 @@ namespace Opm {
             auto& dynamic_state = wells_static.at(wellName);
             const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
             std::size_t insert_index = this->wells_static.size() - 1;
-            auto well_ptr = std::make_shared<Well2>(wellName, group, timeStep, insert_index, headI, headJ, refDepth, preferredPhase, this->global_whistctl_mode[timeStep], wellConnectionOrder);
+            auto well_ptr = std::make_shared<Well2>(wellName,
+                                                    group,
+                                                    timeStep,
+                                                    insert_index,
+                                                    headI, headJ,
+                                                    refDepth,
+                                                    preferredPhase,
+                                                    this->global_whistctl_mode[timeStep],
+                                                    wellConnectionOrder,
+                                                    unit_system);
 
             well_ptr->updateCrossFlow(allowCrossFlow);
             well_ptr->updateAutoShutin(automaticShutIn);
