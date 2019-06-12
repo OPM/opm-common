@@ -155,7 +155,7 @@ private:
 
     // keywords that triggers strict tolerances
     const std::vector<std::string> keywordsStrictTol = {"COORD", "ZCORN", "PORV", "DEPTH", "DX", "DY", "DZ", "PERMX", "PERMY", "PERMZ", "NTG",
-                                                        "TRANX", "TRANY", "TRANZ", "TRANNNC", "SGRP", "SWEL", "SCON", "DOUBHEAD"
+                                                        "TRANX", "TRANY", "TRANZ", "TRANNNC", "SGRP", "SCON", "DOUBHEAD"
                                                        };
 
     // Only compare last occurrence
