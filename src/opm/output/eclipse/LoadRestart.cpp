@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2018 Equinor ASA
+  Copyright (c) 2018-2019 Equinor ASA
   Copyright (c) 2016 Statoil ASA
   Copyright (c) 2013-2015 Andreas Lauser
   Copyright (c) 2013 SINTEF ICT, Applied Mathematics.
@@ -24,6 +24,9 @@
 
 #include <opm/output/eclipse/RestartIO.hpp>
 
+#include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/EclIOdata.hpp>
+
 #include <opm/output/eclipse/RestartValue.hpp>
 
 #include <opm/output/eclipse/VectorItems/connection.hpp>
@@ -33,28 +36,58 @@
 #include <opm/output/eclipse/VectorItems/msw.hpp>
 #include <opm/output/eclipse/VectorItems/well.hpp>
 
-#include <opm/output/eclipse/libECLRestart.hpp>
-
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <exception>
+#include <functional>
 #include <initializer_list>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
 namespace VI = ::Opm::RestartIO::Helpers::VectorItems;
+
+namespace {
+    template <typename T>
+    struct ArrayType;
+
+    template<>
+    struct ArrayType<int>
+    {
+        static Opm::EclIO::eclArrType T;
+    };
+
+    template<>
+    struct ArrayType<float>
+    {
+        static Opm::EclIO::eclArrType T;
+    };
+
+    template<>
+    struct ArrayType<double>
+    {
+        static Opm::EclIO::eclArrType T;
+    };
+
+    Opm::EclIO::eclArrType ArrayType<int>::T    = ::Opm::EclIO::eclArrType::INTE;
+    Opm::EclIO::eclArrType ArrayType<float>::T  = ::Opm::EclIO::eclArrType::REAL;
+    Opm::EclIO::eclArrType ArrayType<double>::T = ::Opm::EclIO::eclArrType::DOUB;
+}
 
 class RestartFileView
 {
@@ -75,85 +108,97 @@ public:
         return this->sim_step_;
     }
 
-    int reportStep() const {
-        return this->report_step;
+    int reportStep() const
+    {
+        return this->report_step_;
     }
 
-    operator const Opm::RestartIO::ecl_file_view_type*() const
+    template <typename ElmType>
+    bool hasKeyword(const std::string& vector) const
     {
-        return this->step_view_;
+        if (this->rst_file_ == nullptr) { return false; }
+
+        return this->vectors_
+            .at(ArrayType<ElmType>::T).count(vector) > 0;
     }
 
-    const Opm::RestartIO::ecl_kw_type* getKeyword(const char* kw) const
+    template <typename ElmType>
+    const std::vector<ElmType>&
+    getKeyword(const std::string& vector)
     {
-        namespace Load = Opm::RestartIO;
+        return this->rst_file_->getRst<ElmType>(vector, this->report_step_);
+    }
 
-        // Main grid only.  Does not handle/support LGR.
-        return Load::ecl_file_view_has_kw       (*this, kw)
-            ?  Load::ecl_file_view_iget_named_kw(*this, kw, 0)
-            :  nullptr;
+    const std::vector<int>& intehead()
+    {
+        const auto& ihkw = std::string { "INTEHEAD" };
+
+        if (! this->hasKeyword<int>(ihkw)) {
+            throw std::domain_error {
+                "Purported Restart File Does not Have Integer Header"
+            };
+        }
+
+        return this->getKeyword<int>(ihkw);
     }
 
 private:
-    using RstFile = Opm::RestartIO::ert_unique_ptr<
-        Opm::RestartIO::ecl_file_type,
-        Opm::RestartIO::ecl_file_close>;
+    using RstFile = std::unique_ptr<Opm::EclIO::ERst>;
 
-    std::size_t                         sim_step_;
-    int                                 report_step;
-    RstFile                             rst_file_;
-    Opm::RestartIO::ecl_file_view_type* step_view_ = nullptr;
+    using VectorColl = std::unordered_set<std::string>;
+    using TypedColl  = std::unordered_map<
+        Opm::EclIO::eclArrType, VectorColl, std::hash<int>
+        >;
 
-    operator Opm::RestartIO::ecl_file_type*()
-    {
-        return this->rst_file_.get();
-    }
-
-    operator const Opm::RestartIO::ecl_file_type*() const
-    {
-        return this->rst_file_.get();
-    }
+    RstFile     rst_file_;
+    int         report_step_;
+    std::size_t sim_step_;
+    TypedColl   vectors_;
 };
 
 RestartFileView::RestartFileView(const std::string& filename,
                                  const int          report_step)
-    : sim_step_(std::max(report_step - 1, 0))
-    , report_step(report_step)
-    , rst_file_(Opm::RestartIO::ecl_file_open(filename.c_str(), 0))
+    : rst_file_   { new Opm::EclIO::ERst{filename} }
+    , report_step_(report_step)
+    , sim_step_   (std::max(report_step - 1, 0))
 {
-    namespace Load = Opm::RestartIO;
-
-    if (this->rst_file_ == nullptr) {
-        throw std::invalid_argument {
-            "Unable to open Restart File '" + filename
-            + "' at Report Step " + std::to_string(report_step)
-        };
+    if (! rst_file_->hasReportStepNumber(this->report_step_)) {
+        rst_file_.reset();
+        return;
     }
 
-    this->step_view_ =
-        (Load::EclFiletype(filename) == Load::ECL_UNIFIED_RESTART_FILE)
-        ? Load::ecl_file_get_restart_view(*this, -1, report_step, -1, -1)
-        : Load::ecl_file_get_global_view (*this);    // Separate
+    this->rst_file_->loadReportStepNumber(this->report_step_);
 
-    if (this->step_view_ == nullptr) {
-        throw std::runtime_error {
-            "Unable to acquire restart information for report step "
-            + std::to_string(report_step)
-        };
+    for (const auto& vector : this->rst_file_->listOfRstArrays(this->report_step_)) {
+        const auto& type = std::get<1>(vector);
+
+        switch (type) {
+        case ::Opm::EclIO::eclArrType::CHAR:
+        case ::Opm::EclIO::eclArrType::LOGI:
+        case ::Opm::EclIO::eclArrType::MESS:
+            // Currently ignored
+            continue;
+
+        default:
+            this->vectors_[type].emplace(std::get<0>(vector));
+            break;
+        }
     }
 }
 
 RestartFileView::RestartFileView(RestartFileView&& rhs)
-    : sim_step_ (rhs.sim_step_)            // Scalar (size_t)
-    , rst_file_ (std::move(rhs.rst_file_))
-    , step_view_(rhs.step_view_)           // Pointer
+    : rst_file_   (std::move(rhs.rst_file_))
+    , report_step_(rhs.report_step_)
+    , sim_step_   (rhs.sim_step_)            // Scalar (size_t)
+    , vectors_    (std::move(rhs.vectors_))
 {}
 
 RestartFileView& RestartFileView::operator=(RestartFileView&& rhs)
 {
-    this->sim_step_  = rhs.sim_step_;            // Scalar (size_t)
-    this->rst_file_  = std::move(rhs.rst_file_);
-    this->step_view_ = rhs.step_view_;           // Pointer copy
+    this->rst_file_    = std::move(rhs.rst_file_);
+    this->report_step_ = rhs.report_step_;         // Scalar (int)
+    this->sim_step_    = rhs.sim_step_;            // Scalar (size_t)
+    this->vectors_     = std::move(rhs.vectors_);
 
     return *this;
 }
@@ -162,33 +207,20 @@ RestartFileView& RestartFileView::operator=(RestartFileView&& rhs)
 
 namespace {
     template <typename T>
-    const T* getPtr(const ::Opm::RestartIO::ecl_kw_type* kw)
-    {
-        return (kw == nullptr) ? nullptr
-            : static_cast<const T*>(ecl_kw_iget_ptr(kw /* <- ADL */, 0));
-    }
-
-    template <typename T>
-    boost::iterator_range<const T*>
-    getDataWindow(const T*          arr,
-                  const std::size_t windowSize,
-                  const std::size_t entity,
-                  const std::size_t subEntity               = 0,
-                  const std::size_t maxSubEntitiesPerEntity = 1)
+    boost::iterator_range<typename std::vector<T>::const_iterator>
+    getDataWindow(const std::vector<T>& arr,
+                  const std::size_t     windowSize,
+                  const std::size_t     entity,
+                  const std::size_t     subEntity               = 0,
+                  const std::size_t     maxSubEntitiesPerEntity = 1)
     {
         const auto off =
             windowSize * (subEntity + maxSubEntitiesPerEntity*entity);
 
-        const auto* begin = arr   + off;
-        const auto* end   = begin + windowSize;
+        auto begin = arr.begin() + off;
+        auto end   = begin       + windowSize;
 
         return { begin, end };
-    }
-
-    int getInteHeadElem(const ::Opm::RestartIO::ecl_kw_type* intehead,
-                        const std::vector<int>::size_type    i)
-    {
-        return getPtr<int>(intehead)[i];
     }
 }
 
@@ -198,10 +230,12 @@ class WellVectors
 {
 public:
     template <typename T>
-    using Window = boost::iterator_range<const T*>;
+    using Window = boost::iterator_range<
+        typename std::vector<T>::const_iterator
+    >;
 
-    explicit WellVectors(const RestartFileView&               rst_view,
-                         const ::Opm::RestartIO::ecl_kw_type* intehead);
+    explicit WellVectors(const std::vector<int>&          intehead,
+                         std::shared_ptr<RestartFileView> rst_view);
 
     bool hasDefinedWellValues() const;
     bool hasDefinedConnectionValues() const;
@@ -222,36 +256,29 @@ private:
     std::size_t numIConElem_;
     std::size_t numXConElem_;
 
-    const ::Opm::RestartIO::ecl_kw_type* iwel_;
-    const ::Opm::RestartIO::ecl_kw_type* xwel_;
-
-    const ::Opm::RestartIO::ecl_kw_type* icon_;
-    const ::Opm::RestartIO::ecl_kw_type* xcon_;
+    std::shared_ptr<RestartFileView> rstView_;
 };
 
-WellVectors::WellVectors(const RestartFileView&               rst_view,
-                         const ::Opm::RestartIO::ecl_kw_type* intehead)
-    : maxConnPerWell_(getInteHeadElem(intehead, VI::intehead::NCWMAX))
-    , numIWelElem_   (getInteHeadElem(intehead, VI::intehead::NIWELZ))
-    , numXWelElem_   (getInteHeadElem(intehead, VI::intehead::NXWELZ))
-    , numIConElem_   (getInteHeadElem(intehead, VI::intehead::NICONZ))
-    , numXConElem_   (getInteHeadElem(intehead, VI::intehead::NXCONZ))
-    , iwel_          (rst_view.getKeyword("IWEL"))
-    , xwel_          (rst_view.getKeyword("XWEL"))
-    , icon_          (rst_view.getKeyword("ICON"))
-    , xcon_          (rst_view.getKeyword("XCON"))
+WellVectors::WellVectors(const std::vector<int>&          intehead,
+                         std::shared_ptr<RestartFileView> rst_view)
+    : maxConnPerWell_(intehead[VI::intehead::NCWMAX])
+    , numIWelElem_   (intehead[VI::intehead::NIWELZ])
+    , numXWelElem_   (intehead[VI::intehead::NXWELZ])
+    , numIConElem_   (intehead[VI::intehead::NICONZ])
+    , numXConElem_   (intehead[VI::intehead::NXCONZ])
+    , rstView_       (std::move(rst_view))
 {}
 
 bool WellVectors::hasDefinedWellValues() const
 {
-    return ! ((this->iwel_ == nullptr) ||
-              (this->xwel_ == nullptr));
+    return this->rstView_->hasKeyword<int>   ("IWEL")
+        && this->rstView_->hasKeyword<double>("XWEL");
 }
 
 bool WellVectors::hasDefinedConnectionValues() const
 {
-    return ! ((this->icon_ == nullptr) ||
-              (this->xcon_ == nullptr));
+    return this->rstView_->hasKeyword<int>   ("ICON")
+        && this->rstView_->hasKeyword<double>("XCON");
 }
 
 WellVectors::Window<int>
@@ -263,7 +290,7 @@ WellVectors::iwel(const std::size_t wellID) const
         };
     }
 
-    return getDataWindow(getPtr<int>(this->iwel_),
+    return getDataWindow(this->rstView_->getKeyword<int>("IWEL"),
                          this->numIWelElem_, wellID);
 }
 
@@ -276,7 +303,7 @@ WellVectors::xwel(const std::size_t wellID) const
         };
     }
 
-    return getDataWindow(getPtr<double>(this->xwel_),
+    return getDataWindow(this->rstView_->getKeyword<double>("XWEL"),
                          this->numXWelElem_, wellID);
 }
 
@@ -289,8 +316,9 @@ WellVectors::icon(const std::size_t wellID, const std::size_t connID) const
         };
     }
 
-    return getDataWindow(getPtr<int>(this->icon_), this->numIConElem_,
-                         wellID, connID, this->maxConnPerWell_);
+    return getDataWindow(this->rstView_->getKeyword<int>("ICON"),
+                         this->numIConElem_, wellID, connID,
+                         this->maxConnPerWell_);
 }
 
 WellVectors::Window<double>
@@ -302,8 +330,9 @@ WellVectors::xcon(const std::size_t wellID, const std::size_t connID) const
         };
     }
 
-    return getDataWindow(getPtr<double>(this->xcon_), this->numXConElem_,
-                         wellID, connID, this->maxConnPerWell_);
+    return getDataWindow(this->rstView_->getKeyword<double>("XCON"),
+                         this->numXConElem_, wellID, connID,
+                         this->maxConnPerWell_);
 }
 
 // ---------------------------------------------------------------------
@@ -312,10 +341,12 @@ class GroupVectors
 {
 public:
     template <typename T>
-    using Window = boost::iterator_range<const T*>;
+    using Window = boost::iterator_range<
+        typename std::vector<T>::const_iterator
+    >;
 
-    explicit GroupVectors(const RestartFileView&               rst_view,
-                          const ::Opm::RestartIO::ecl_kw_type* intehead);
+    explicit GroupVectors(const std::vector<int>&          intehead,
+                          std::shared_ptr<RestartFileView> rst_view);
 
     bool hasDefinedValues() const;
 
@@ -329,23 +360,21 @@ private:
     std::size_t numIGrpElem_;
     std::size_t numXGrpElem_;
 
-    const ::Opm::RestartIO::ecl_kw_type* igrp_;
-    const ::Opm::RestartIO::ecl_kw_type* xgrp_;
+    std::shared_ptr<RestartFileView> rstView_;
 };
 
-GroupVectors::GroupVectors(const RestartFileView&               rst_view,
-                           const ::Opm::RestartIO::ecl_kw_type* intehead)
-    : maxNumGroups_(getInteHeadElem(intehead, VI::intehead::NGMAXZ) - 1) // -FIELD
-    , numIGrpElem_ (getInteHeadElem(intehead, VI::intehead::NIGRPZ))
-    , numXGrpElem_ (getInteHeadElem(intehead, VI::intehead::NXGRPZ))
-    , igrp_        (rst_view.getKeyword("IGRP"))
-    , xgrp_        (rst_view.getKeyword("XGRP"))
+GroupVectors::GroupVectors(const std::vector<int>&          intehead,
+                           std::shared_ptr<RestartFileView> rst_view)
+    : maxNumGroups_(intehead[VI::intehead::NGMAXZ] - 1) // -FIELD
+    , numIGrpElem_ (intehead[VI::intehead::NIGRPZ])
+    , numXGrpElem_ (intehead[VI::intehead::NXGRPZ])
+    , rstView_     (std::move(rst_view))
 {}
 
 bool GroupVectors::hasDefinedValues() const
 {
-    return ! ((this->igrp_ == nullptr) ||
-              (this->xgrp_ == nullptr));
+    return this->rstView_->hasKeyword<int>   ("IGRP")
+        && this->rstView_->hasKeyword<double>("XGRP");
 }
 
 std::size_t GroupVectors::maxGroups() const
@@ -358,11 +387,11 @@ GroupVectors::igrp(const std::size_t groupID) const
 {
     if (! this->hasDefinedValues()) {
         throw std::logic_error {
-            "Cannot Request IWEL Values Unless Defined"
+            "Cannot Request IGRP Values Unless Defined"
         };
     }
 
-    return getDataWindow(getPtr<int>(this->igrp_),
+    return getDataWindow(this->rstView_->getKeyword<int>("IGRP"),
                          this->numIGrpElem_, groupID);
 }
 
@@ -375,7 +404,7 @@ GroupVectors::xgrp(const std::size_t groupID) const
         };
     }
 
-    return getDataWindow(getPtr<double>(this->xgrp_),
+    return getDataWindow(this->rstView_->getKeyword<double>("XGRP"),
                          this->numXGrpElem_, groupID);
 }
 
@@ -385,10 +414,12 @@ class SegmentVectors
 {
 public:
     template <typename T>
-    using Window = boost::iterator_range<const T*>;
+    using Window = boost::iterator_range<
+        typename std::vector<T>::const_iterator
+    >;
 
-    explicit SegmentVectors(const RestartFileView&               rst_view,
-                            const ::Opm::RestartIO::ecl_kw_type* intehead);
+    explicit SegmentVectors(const std::vector<int>&          intehead,
+                            std::shared_ptr<RestartFileView> rst_view);
 
     bool hasDefinedValues() const;
 
@@ -403,23 +434,21 @@ private:
     std::size_t numISegElm_;
     std::size_t numRSegElm_;
 
-    const ::Opm::RestartIO::ecl_kw_type* iseg_;
-    const ::Opm::RestartIO::ecl_kw_type* rseg_;
+    std::shared_ptr<RestartFileView> rstView_;
 };
 
-SegmentVectors::SegmentVectors(const RestartFileView&               rst_view,
-                               const ::Opm::RestartIO::ecl_kw_type* intehead)
-    : maxSegPerWell_(getInteHeadElem(intehead, VI::intehead::NSEGMX))
-    , numISegElm_   (getInteHeadElem(intehead, VI::intehead::NISEGZ))
-    , numRSegElm_   (getInteHeadElem(intehead, VI::intehead::NRSEGZ))
-    , iseg_         (rst_view.getKeyword("ISEG"))
-    , rseg_         (rst_view.getKeyword("RSEG"))
+SegmentVectors::SegmentVectors(const std::vector<int>&          intehead,
+                               std::shared_ptr<RestartFileView> rst_view)
+    : maxSegPerWell_(intehead[VI::intehead::NSEGMX])
+    , numISegElm_   (intehead[VI::intehead::NISEGZ])
+    , numRSegElm_   (intehead[VI::intehead::NRSEGZ])
+    , rstView_      (std::move(rst_view))
 {}
 
 bool SegmentVectors::hasDefinedValues() const
 {
-    return ! ((this->iseg_ == nullptr) ||
-              (this->rseg_ == nullptr));
+    return this->rstView_->hasKeyword<int>   ("ISEG")
+        && this->rstView_->hasKeyword<double>("RSEG");
 }
 
 SegmentVectors::Window<int>
@@ -431,8 +460,9 @@ SegmentVectors::iseg(const std::size_t mswID, const std::size_t segID) const
         };
     }
 
-    return getDataWindow(getPtr<int>(this->iseg_), this->numISegElm_,
-                         mswID, segID, this->maxSegPerWell_);
+    return getDataWindow(this->rstView_->getKeyword<int>("ISEG"),
+                         this->numISegElm_, mswID, segID,
+                         this->maxSegPerWell_);
 }
 
 SegmentVectors::Window<double>
@@ -444,8 +474,9 @@ SegmentVectors::rseg(const std::size_t mswID, const std::size_t segID) const
         };
     }
 
-    return getDataWindow(getPtr<double>(this->rseg_), this->numRSegElm_,
-                         mswID, segID, this->maxSegPerWell_);
+    return getDataWindow(this->rstView_->getKeyword<double>("RSEG"),
+                         this->numRSegElm_, mswID, segID,
+                         this->maxSegPerWell_);
 }
 
 // ---------------------------------------------------------------------
@@ -463,23 +494,21 @@ namespace {
     }
 
     std::vector<double>
-    double_vector(const ::Opm::RestartIO::ecl_kw_type* ecl_kw)
+    double_vector(const std::string& key, RestartFileView& rst_view)
     {
-        namespace Load = ::Opm::RestartIO;
-
-        const auto size = static_cast<std::size_t>(
-            Load::ecl_kw_get_size(ecl_kw));
-
-        if (Load::ecl_type_get_type(Load::ecl_kw_get_data_type(ecl_kw)) == Load::ECL_DOUBLE_TYPE) {
-            const double* ecl_data = Load::ecl_kw_get_type_ptr<double>(ecl_kw, Load::ECL_DOUBLE_TYPE);
-
-            return { ecl_data , ecl_data + size };
+        if (rst_view.hasKeyword<double>(key)) {
+            // Data exists as type DOUB.  Return unchanged.
+            return rst_view.getKeyword<double>(key);
         }
-        else {
-            const float* ecl_data = Load::ecl_kw_get_type_ptr<float>(ecl_kw, Load::ECL_FLOAT_TYPE);
+        else if (rst_view.hasKeyword<float>(key)) {
+            // Data exists as type REAL.  Convert to double.
+            const auto& data = rst_view.getKeyword<float>(key);
 
-            return { ecl_data , ecl_data + size };
+            return { data.begin(), data.end() };
         }
+
+        // Data unavailable.  Return empty.
+        return {};
     }
 
     void insertSolutionVector(const std::vector<double>&           vector,
@@ -499,14 +528,14 @@ namespace {
                    Opm::data::TargetType::RESTART_SOLUTION);
     }
 
-    void loadIfAvailable(const RestartFileView&               rst_view,
-                         const Opm::RestartKey&               value,
+    void loadIfAvailable(const Opm::RestartKey&               value,
                          const std::vector<double>::size_type numcells,
+                         RestartFileView&                     rst_view,
                          Opm::data::Solution&                 sol)
     {
-        const auto* kw = rst_view.getKeyword(value.key.c_str());
+        const auto& kwdata = double_vector(value.key, rst_view);
 
-        if (kw == nullptr) {
+        if (kwdata.empty()) {
             throwIfMissingRequired(value);
 
             // If we get here, the requested value was not available in the
@@ -515,27 +544,27 @@ namespace {
             return;
         }
 
-        insertSolutionVector(double_vector(kw), value, numcells, sol);
+        insertSolutionVector(kwdata, value, numcells, sol);
     }
 
-    void loadHysteresisIfAvailable(const RestartFileView&               rst_view,
-                                   const std::string&                   primary,
+    void loadHysteresisIfAvailable(const std::string&                   primary,
                                    const Opm::RestartKey&               fallback_key,
                                    const std::vector<double>::size_type numcells,
+                                   RestartFileView&                     rst_view,
                                    Opm::data::Solution&                 sol)
     {
-        const auto* kw = rst_view.getKeyword(primary.c_str());
+        auto kwdata = double_vector(primary, rst_view);
 
-        if (kw == nullptr) {
+        if (kwdata.empty()) {
             // Primary key does not exist in rst_view.  Attempt to load
             // fallback keys directly.
 
-            loadIfAvailable(rst_view, fallback_key, numcells, sol);
+            loadIfAvailable(fallback_key, numcells, rst_view, sol);
         }
         else {
             // Primary exists in rst_view.  Translate to Flow's hysteresis
             // parameter.
-            auto smax = double_vector(kw);
+            auto smax = std::move(kwdata);
 
             std::transform(std::begin(smax), std::end(smax), std::begin(smax),
                            [](const double s) { return 1.0 - s; });
@@ -556,8 +585,8 @@ namespace {
     }
 
     void restoreHysteresisVector(const Opm::RestartKey& value,
-                                 const RestartFileView& rst_view,
                                  const int              numcells,
+                                 RestartFileView&       rst_view,
                                  Opm::data::Solution&   sol)
     {
         const auto& key = value.key;
@@ -566,27 +595,26 @@ namespace {
         {
             // Attempt to load from SOMAX, fall back to value.key if
             // unavailable--typically in OPM Extended restart file.
-            loadHysteresisIfAvailable(rst_view, "SOMAX",
-                                      value, numcells, sol);
+            loadHysteresisIfAvailable("SOMAX", value, numcells,
+                                      rst_view, sol);
         }
         else if ((key == "KRNSW_GO") || (key == "PCSWM_GO"))
         {
             // Attempt to load from SGMAX, fall back to value.key if
             // unavailable--typically in OPM Extended restart file.
-            loadHysteresisIfAvailable(rst_view, "SGMAX",
-                                      value, numcells, sol);
+            loadHysteresisIfAvailable("SGMAX", value, numcells,
+                                      rst_view, sol);
         }
     }
 
     std::vector<double>
-    getOpmExtraFromDoubHEAD(const RestartFileView& rst_view,
-                            const bool             required,
-                            const Opm::UnitSystem& usys)
+    getOpmExtraFromDoubHEAD(const bool             required,
+                            const Opm::UnitSystem& usys,
+                            RestartFileView&       rst_view)
     {
         using M = Opm::UnitSystem::measure;
 
-        const auto* doubhead =
-            getPtr<double>(rst_view.getKeyword("DOUBHEAD"));
+        const auto& doubhead = rst_view.getKeyword<double>("DOUBHEAD");
 
         const auto TsInit = doubhead[VI::doubhead::TsInit];
 
@@ -598,9 +626,9 @@ namespace {
     }
 
     Opm::data::Solution
-    restoreSOLUTION(const RestartFileView&              rst_view,
-                    const std::vector<Opm::RestartKey>& solution_keys,
-                    const int                           numcells)
+    restoreSOLUTION(const std::vector<Opm::RestartKey>& solution_keys,
+                    const int                           numcells,
+                    RestartFileView&                    rst_view)
     {
         Opm::data::Solution sol(/* init_si = */ false);
 
@@ -609,29 +637,27 @@ namespace {
                 // Special case handling of hysteresis data.  Possibly needs
                 // translation from ECLIPSE-compatible set to Flow's known
                 // set of hysteresis vectors.
-                restoreHysteresisVector(value, rst_view, numcells, sol);
+                restoreHysteresisVector(value, numcells, rst_view, sol);
                 continue;
             }
 
             // Load regular (non-hysteresis) vector if available.
-            loadIfAvailable(rst_view, value, numcells, sol);
+            loadIfAvailable(value, numcells, rst_view, sol);
         }
 
         return sol;
     }
 
-    void restoreExtra(const RestartFileView&              rst_view,
-                      const std::vector<Opm::RestartKey>& extra_keys,
+    void restoreExtra(const std::vector<Opm::RestartKey>& extra_keys,
                       const Opm::UnitSystem&              usys,
+                      RestartFileView&                    rst_view,
                       Opm::RestartValue&                  rst_value)
     {
         for (const auto& extra : extra_keys) {
             const auto& vector = extra.key;
-            const auto* kw     = rst_view.getKeyword(vector.c_str());
+            auto        kwdata = double_vector(vector, rst_view);
 
-            auto kwdata = std::vector<double>{};
-
-            if (kw == nullptr) {
+            if (kwdata.empty()) {
                 // Requested vector not available in result set.  Take
                 // appropriate action depending on specific vector and
                 // 'extra.required'.
@@ -651,14 +677,9 @@ namespace {
                     // and caller requires that item be present through the
                     // 'extra.required' mechanism.
 
-                    kwdata = getOpmExtraFromDoubHEAD(rst_view,
-                                                     extra.required,
-                                                     usys);
+                    kwdata = getOpmExtraFromDoubHEAD(extra.required,
+                                                     usys, rst_view);
                 }
-            }
-            else {
-                // Requisite vector available in result set.  Recover data.
-                kwdata = double_vector(kw);
             }
 
             rst_value.addExtra(vector, extra.dim, std::move(kwdata));
@@ -672,16 +693,15 @@ namespace {
         }
     }
 
-    void checkWellVectorSizes(const ::Opm::RestartIO::ecl_kw_type*      opm_xwel,
-                              const ::Opm::RestartIO::ecl_kw_type*      opm_iwel,
-                              const int                                 sim_step,
+    void checkWellVectorSizes(const std::vector<int>&                   opm_iwel,
+                              const std::vector<double>&                opm_xwel,
                               const std::vector<Opm::data::Rates::opt>& phases,
                               const std::vector<Opm::Well2>&            sched_wells)
     {
         const auto expected_xwel_size =
             std::accumulate(sched_wells.begin(), sched_wells.end(),
                             std::size_t(0),
-                [&phases, sim_step](const std::size_t acc, const Opm::Well2& w)
+                [&phases](const std::size_t acc, const Opm::Well2& w)
                 -> std::size_t
             {
                 return acc
@@ -690,38 +710,37 @@ namespace {
                         * (phases.size() + Opm::data::Connection::restart_size));
             });
 
-        if (static_cast<std::size_t>(::Opm::RestartIO::ecl_kw_get_size(opm_xwel)) != expected_xwel_size)
-        {
+        if (opm_xwel.size() != expected_xwel_size) {
             throw std::runtime_error {
                 "Mismatch between OPM_XWEL and deck; "
-                "OPM_XWEL size was " + std::to_string(::Opm::RestartIO::ecl_kw_get_size(opm_xwel)) +
+                "OPM_XWEL size was " + std::to_string(opm_xwel.size()) +
                 ", expected " + std::to_string(expected_xwel_size)
             };
         }
 
-        if (::Opm::RestartIO::ecl_kw_get_size(opm_iwel) != int(sched_wells.size())) {
+        if (opm_iwel.size() != sched_wells.size()) {
             throw std::runtime_error {
                 "Mismatch between OPM_IWEL and deck; "
-                "OPM_IWEL size was " + std::to_string(::Opm::RestartIO::ecl_kw_get_size(opm_iwel)) +
+                "OPM_IWEL size was " + std::to_string(opm_iwel.size()) +
                 ", expected " + std::to_string(sched_wells.size())
             };
         }
     }
 
     Opm::data::Wells
-    restore_wells_opm(const RestartFileView&     rst_view,
-                      const ::Opm::EclipseState& es,
+    restore_wells_opm(const ::Opm::EclipseState& es,
                       const ::Opm::EclipseGrid&  grid,
-                      const ::Opm::Schedule&     schedule)
+                      const ::Opm::Schedule&     schedule,
+                      RestartFileView&           rst_view)
     {
-        namespace Load = ::Opm::RestartIO;
-
-        const auto* opm_iwel = rst_view.getKeyword("OPM_IWEL");
-        const auto* opm_xwel = rst_view.getKeyword("OPM_XWEL");
-
-        if ((opm_xwel == nullptr) || (opm_iwel == nullptr)) {
+        if (! (rst_view.hasKeyword<int>   ("OPM_IWEL") &&
+               rst_view.hasKeyword<double>("OPM_XWEL")))
+        {
             return {};
         }
+
+        const auto& opm_iwel = rst_view.getKeyword<int>   ("OPM_IWEL");
+        const auto& opm_xwel = rst_view.getKeyword<double>("OPM_XWEL");
 
         using rt = Opm::data::Rates::opt;
 
@@ -735,23 +754,22 @@ namespace {
             if (phase.active(Opm::Phase::GAS))   { phases.push_back(rt::gas); }
         }
 
-        checkWellVectorSizes(opm_xwel, opm_iwel,
-                             rst_view.simStep(),
-                             phases, sched_wells);
+        checkWellVectorSizes(opm_iwel, opm_xwel, phases, sched_wells);
 
         Opm::data::Wells wells;
-        const auto* opm_xwel_data = Load::ecl_kw_get_type_ptr<double>(opm_xwel, Load::ECL_DOUBLE_TYPE);
-        const auto* opm_iwel_data = Load::ecl_kw_get_type_ptr<int>(opm_iwel, Load::ECL_INT_TYPE);
+        auto opm_xwel_data = opm_xwel.begin();
+        auto opm_iwel_data = opm_iwel.begin();
 
         for (const auto& sched_well : sched_wells) {
             auto& well = wells[ sched_well.name() ];
 
-            well.bhp         = *opm_xwel_data++;
-            well.temperature = *opm_xwel_data++;
-            well.control     = *opm_iwel_data++;
+            well.bhp         = *opm_xwel_data;  ++opm_xwel_data;
+            well.temperature = *opm_xwel_data;  ++opm_xwel_data;
+            well.control     = *opm_iwel_data;  ++opm_iwel_data;
 
             for (const auto& phase : phases) {
-                well.rates.set(phase, *opm_xwel_data++);
+                well.rates.set(phase, *opm_xwel_data);
+                ++opm_xwel_data;
             }
 
             for (const auto& sc : sched_well.getConnections()) {
@@ -766,11 +784,12 @@ namespace {
                 auto& connection = well.connections.back();
 
                 connection.index          = grid.getGlobalIndex(i, j, k);
-                connection.pressure       = *opm_xwel_data++;
-                connection.reservoir_rate = *opm_xwel_data++;
+                connection.pressure       = *opm_xwel_data;  ++opm_xwel_data;
+                connection.reservoir_rate = *opm_xwel_data;  ++opm_xwel_data;
 
                 for (const auto& phase : phases) {
-                    connection.rates.set(phase, *opm_xwel_data++);
+                    connection.rates.set(phase, *opm_xwel_data);
+                    ++opm_xwel_data;
                 }
             }
         }
@@ -840,9 +859,8 @@ namespace {
         if (gas) { xc.rates.set(Opm::data::Rates::opt::gas, 0.0); }
     }
 
-    void restoreConnResults(const Opm::Well2&        well,
+    void restoreConnResults(const Opm::Well2&       well,
                             const std::size_t       wellID,
-                            const std::size_t       sim_step,
                             const Opm::EclipseGrid& grid,
                             const Opm::UnitSystem&  usys,
                             const Opm::Phases&      phases,
@@ -964,7 +982,6 @@ namespace {
     Opm::data::Well
     restore_well(const Opm::Well2&       well,
                  const std::size_t       wellID,
-                 const std::size_t       sim_step,
                  const Opm::EclipseGrid& grid,
                  const Opm::UnitSystem&  usys,
                  const Opm::Phases&      phases,
@@ -1012,8 +1029,7 @@ namespace {
 
         // 3) Restore connection flow rates (xw.connections[i].rates)
         //    and pressure values (xw.connections[i].pressure).
-        restoreConnResults(well, wellID, sim_step,
-                           grid, usys, phases, wellData, xw);
+        restoreConnResults(well, wellID, grid, usys, phases, wellData, xw);
 
         // 4) Restore segment quantities if applicable.
         if (well.isMultiSegment() &&
@@ -1037,36 +1053,30 @@ namespace {
     }
 
     Opm::data::Wells
-    restore_wells_ecl(const RestartFileView&     rst_view,
-                      const ::Opm::EclipseState& es,
-                      const ::Opm::EclipseGrid&  grid,
-                      const ::Opm::Schedule&     schedule)
+    restore_wells_ecl(const ::Opm::EclipseState&       es,
+                      const ::Opm::EclipseGrid&        grid,
+                      const ::Opm::Schedule&           schedule,
+                      std::shared_ptr<RestartFileView> rst_view)
     {
         auto soln = ::Opm::data::Wells{};
 
-        const auto* intehead = rst_view.getKeyword("INTEHEAD");
+        const auto& intehead = rst_view->intehead();;
 
-        if (intehead == nullptr) {
-            // Result set does not provide indexing information.
-            // Can't do anything here.
-            return soln;
-        }
-
-        const auto wellData = WellVectors   { rst_view, intehead };
-        const auto segData  = SegmentVectors{ rst_view, intehead };
+        const auto wellData = WellVectors   { intehead, rst_view };
+        const auto segData  = SegmentVectors{ intehead, rst_view };
 
         const auto& units  = es.getUnits();
         const auto& phases = es.runspec().phases();
 
-        const auto  sim_step = rst_view.simStep();
-        const auto& wells    = schedule.getWells2(sim_step);
-        for (auto nWells = wells.size(), wellID = 0*nWells; wellID < nWells; ++wellID)
+        const auto& wells = schedule.getWells2(rst_view->simStep());
+        for (auto nWells = wells.size(), wellID = 0*nWells;
+                  wellID < nWells; ++wellID)
         {
             const auto& well = wells[wellID];
 
             soln[well.name()] =
-                restore_well(well, wellID, sim_step, grid,
-                             units, phases, wellData, segData);
+                restore_well(well, wellID, grid, units,
+                             phases, wellData, segData);
         }
 
         return soln;
@@ -1143,20 +1153,18 @@ namespace {
         smry.update(key("GITH"), xgrp[VI::XGroup::index::HistGasInjTotal]);
     }
 
-    void restore_cumulative(Opm::SummaryState& smry,
-                            const RestartFileView& rst_view,
-                            const ::Opm::Schedule& schedule)
+    void restore_cumulative(::Opm::SummaryState&             smry,
+                            const ::Opm::Schedule&           schedule,
+                            std::shared_ptr<RestartFileView> rst_view)
     {
-        const auto  sim_step = rst_view.simStep();
-        const auto* intehead = rst_view.getKeyword("INTEHEAD");
-        smry.update_elapsed(schedule.seconds( rst_view.reportStep() ));
+        const auto  sim_step = rst_view->simStep();
+        const auto& intehead = rst_view->intehead();
 
-        if (intehead == nullptr)
-            return;
+        smry.update_elapsed(schedule.seconds(rst_view->reportStep()));
 
         // Well cumulatives
         {
-            const auto  wellData = WellVectors { rst_view, intehead };
+            const auto  wellData = WellVectors { intehead, rst_view };
             const auto& wells    = schedule.getWells2(sim_step);
 
             for (auto nWells = wells.size(), wellID = 0*nWells;
@@ -1169,7 +1177,9 @@ namespace {
 
         // Group cumulatives, including FIELD.
         {
-            const auto groupData = GroupVectors { rst_view, intehead };
+            const auto groupData = GroupVectors {
+                intehead, std::move(rst_view)
+            };
 
             for (const auto* group : schedule.getGroups(sim_step)) {
                 const auto& gname = group->name();
@@ -1206,24 +1216,26 @@ namespace Opm { namespace RestartIO  {
          const Schedule&                schedule,
          const std::vector<RestartKey>& extra_keys)
     {
-        const auto rst_view = RestartFileView{ filename, report_step };
+        auto rst_view =
+            std::make_shared<RestartFileView>(filename, report_step);
 
-        auto xr = restoreSOLUTION(rst_view, solution_keys,
-                                  grid.getNumActive());
+        auto xr = restoreSOLUTION(solution_keys,
+                                  grid.getNumActive(), *rst_view);
 
         xr.convertToSI(es.getUnits());
 
-        auto xw = Opm::RestartIO::ecl_file_view_has_kw(rst_view, "OPM_XWEL")
-            ? restore_wells_opm(rst_view, es, grid, schedule)
-            : restore_wells_ecl(rst_view, es, grid, schedule);
+        auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
+            ? restore_wells_opm(es, grid, schedule, *rst_view)
+            : restore_wells_ecl(es, grid, schedule,  rst_view);
 
         auto rst_value = RestartValue{ std::move(xr), std::move(xw) };
 
         if (! extra_keys.empty()) {
-            restoreExtra(rst_view, extra_keys, es.getUnits(), rst_value);
+            restoreExtra(extra_keys, es.getUnits(), *rst_view, rst_value);
         }
 
-        restore_cumulative(summary_state, rst_view, schedule);
+        restore_cumulative(summary_state, schedule, std::move(rst_view));
+
         return rst_value;
     }
 
