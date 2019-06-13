@@ -44,7 +44,7 @@
 using namespace Opm;
 
 
-double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double seconds_elapsed) {
+double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double seconds_elapsed) {
     const auto& units = es.getUnits();
     return -units.to_si(UnitSystem::measure::rate, seconds_elapsed);
 }
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(RUN) {
         test_work_area_type * work_area = test_work_area_alloc("test_msim");
         EclipseIO io(state, state.getInputGrid(), schedule, summary_config);
 
-        msim.run(schedule, io);
+        msim.run(schedule, io, false);
 
         for (const auto& fname : {"SPE1CASE1.INIT", "SPE1CASE1.UNRST", "SPE1CASE1.EGRID", "SPE1CASE1.SMSPEC", "SPE1CASE1.UNSMRY"})
             BOOST_CHECK( util_is_file( fname ));

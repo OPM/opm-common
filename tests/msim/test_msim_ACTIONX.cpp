@@ -66,25 +66,25 @@ struct test_data {
 };
 
 
-double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+double prod_opr(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double oil_rate = 1.0;
     return -units.to_si(UnitSystem::measure::rate, oil_rate);
 }
 
-double prod_opr_low(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+double prod_opr_low(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double oil_rate = 0.5;
     return -units.to_si(UnitSystem::measure::rate, oil_rate);
 }
 
-double prod_wpr_P1(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+double prod_wpr_P1(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
     return -units.to_si(UnitSystem::measure::rate, water_rate);
 }
 
-double prod_wpr_P2(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
+double prod_wpr_P2(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
     if (report_step > 5)
@@ -93,13 +93,13 @@ double prod_wpr_P2(const EclipseState&  es, const Schedule& /* sched */, const d
     return -units.to_si(UnitSystem::measure::rate, water_rate);
 }
 
-double prod_wpr_P3(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
+double prod_wpr_P3(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t /* report_step */, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
     return -units.to_si(UnitSystem::measure::rate, water_rate);
 }
 
-double prod_wpr_P4(const EclipseState&  es, const Schedule& /* sched */, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
+double prod_wpr_P4(const EclipseState&  es, const Schedule& /* sched */, const SummaryState&, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
     const auto& units = es.getUnits();
     double water_rate = 0.0;
     if (report_step > 10)
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
         sim.well_rate("P3", data::Rates::opt::oil, prod_opr);
         sim.well_rate("P4", data::Rates::opt::oil, prod_opr_low);
 
-        sim.run(td.schedule, io);
+        sim.run(td.schedule, io, false);
         {
             const auto& w1 = td.schedule.getWell2("P1", 1);
             const auto& w4 = td.schedule.getWell2("P4", 1);
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
         }
 
 
-        sim.run(td.schedule, io);
+        sim.run(td.schedule, io, false);
         {
             const auto& w1 = td.schedule.getWell2("P1", 15);
             const auto& w3 = td.schedule.getWell2("P3", 15);
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
         sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
-        sim.run(td.schedule, io);
+        sim.run(td.schedule, io, false);
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
 
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
         sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
         sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
 
-        sim.run(td.schedule, io);
+        sim.run(td.schedule, io, false);
 
         const auto& base_name = td.state.getIOConfig().getBaseName();
         ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
