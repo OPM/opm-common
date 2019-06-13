@@ -241,6 +241,33 @@ bool compatibleTypes(UDQVarType lhs, UDQVarType rhs) {
     return false;
 }
 
+std::string typeName(UDQVarType var_type) {
+    switch (var_type) {
+    case UDQVarType::NONE:
+        return "NONE";
+    case UDQVarType::SCALAR:
+        return "SCALAR";
+    case UDQVarType::WELL_VAR:
+        return "WELL_VAR";
+    case UDQVarType::CONNECTION_VAR:
+        return "CONNECTION_VAR";
+    case UDQVarType::FIELD_VAR:
+        return "FIELD_VAR";
+    case UDQVarType::GROUP_VAR:
+        return "GROUP_VAR";
+    case UDQVarType::REGION_VAR:
+        return "REGION_VAR";
+    case UDQVarType::SEGMENT_VAR:
+        return "SEGMENT_VAR";
+    case UDQVarType::AQUIFER_VAR:
+        return "AQUIFER_VAR";
+    case UDQVarType::BLOCK_VAR:
+        return "BLOCK_VAR";
+    default:
+        throw std::runtime_error("Should not be here");
+    }
+}
+
 
 }
 }

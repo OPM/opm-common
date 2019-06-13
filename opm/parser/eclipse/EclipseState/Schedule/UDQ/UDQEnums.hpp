@@ -113,6 +113,7 @@ namespace UDQ {
     bool scalarFunc(UDQTokenType token_type);
     bool cmpFunc(UDQTokenType token_type);
 
+    std::string typeName(UDQVarType var_type);
 }
 }
 
