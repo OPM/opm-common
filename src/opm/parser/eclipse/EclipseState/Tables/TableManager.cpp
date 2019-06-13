@@ -768,6 +768,11 @@ namespace Opm {
         return getTables("AQUTAB");
     }
 
+    const TableContainer& TableManager::getFoamadsTables() const {
+        return getTables("FOAMADS");
+    }
+
+
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
         return m_pvtgTables;
     }
