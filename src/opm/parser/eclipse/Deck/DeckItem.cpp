@@ -294,6 +294,38 @@ void DeckItem::push_backDimension( const Dimension& active,
         const bool dim_inactive = du.empty()
             || this->defaultApplied( du.size() - 1 );
 
+        // The data model when it comes to UDA values, dimensions for vectors
+        // and so on is stretched beyond the breaking point. It is a *really*
+        // hard assumption here that UDA values only apply to scalar values.
+        if (du.size() > 1)
+            throw std::logic_error("Internal program meltdown - we do not handle non-scalar UDA values");
+
+        /*
+          The interaction between UDA values and dimensions is not really clean,
+          and treated differently for items with UDAValue and 'normal' items
+          with double data. The points of difference include:
+
+          - The double data do not have a dimension property; that is solely
+            carried by the DeckItem which will apply unit conversion and return
+            naked double values with the correct transformations applied. The
+            UDAvalues will hold on to a Dimension object, which is not used
+            before the UDAValue is eventually converted to a numerical value at
+            simulation time.
+
+          - For double data like PORO the conversion is one dimension object
+            which is applied to all elements in the container, whereas for
+            UDAValues one would need to assign an individual Dimension object to
+            each UDAValue instance - this is "solved" by requiring that in the
+            case of UDAValues only scalar values are allowed; that is not really
+            a practical limitation.
+
+          Finally the use of set() method to mutate the DeckItem in the case of
+          UDAValues is unfortunate.
+        */
+
+        if (du.size() == 1)
+            du[0].set_dim( dim_inactive ? def : active );
+
         this->dimensions.push_back( dim_inactive ? def : active );
         return;
     }
