@@ -230,12 +230,19 @@ UDQASTNode UDQParser::parse_cmp() {
     return left;
 }
 
+namespace {
+    void dump_tokens(const std::string& target_var, const std::vector<std::string>& tokens) {
+        std::cout << target_var << " = ";
+        for (const auto& token : tokens)
+            std::cout << token << " ";
+        std::cout << std::endl;
+    }
+}
 
 
 
 
-
-UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
+UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
 {
     UDQParser parser(udq_params, tokens);
     parser.next();
@@ -258,11 +265,19 @@ UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type,
     }
 
     if (!UDQ::compatibleTypes(target_type, tree.var_type)) {
-        std::string msg = "Invalid compile-time type conversion detected in UDQ expression target type: " + std::to_string(static_cast<int>(target_type)) + " expr type: " + std::to_string(static_cast<int>(tree.var_type));
-        for (const auto& token : tokens)
-            std::cout << token << " ";
-        std::cout << std::endl;
+        std::string msg = "Invalid compile-time type conversion detected in UDQ expression target type: " + UDQ::typeName(target_type) + " expr type: " + UDQ::typeName(tree.var_type);
         parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg, errors);
+        if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE)
+            dump_tokens(target_var, tokens);
+
+        return UDQASTNode( udq_params.undefinedValue() );
+    }
+
+    if (tree.var_type == UDQVarType::NONE) {
+        std::string msg = "Parse error when evaluating UDQ define expression - could not determine expression type";
+        parseContext.handleError(ParseContext::UDQ_TYPE_ERROR, msg, errors);
+        if (parseContext.get(ParseContext::UDQ_TYPE_ERROR) != InputError::IGNORE)
+            dump_tokens(target_var, tokens);
 
         return UDQASTNode( udq_params.undefinedValue() );
     }

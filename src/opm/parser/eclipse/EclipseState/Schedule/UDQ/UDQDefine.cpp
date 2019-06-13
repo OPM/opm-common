@@ -121,8 +121,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
 
         }
     }
-    std::cout << keyword << " = ";
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(this->udq_params, this->m_var_type, tokens, parseContext, errors) );
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(this->udq_params, this->m_var_type, this->m_keyword, tokens, parseContext, errors) );
     this->input_tokens = tokens;
 }
 

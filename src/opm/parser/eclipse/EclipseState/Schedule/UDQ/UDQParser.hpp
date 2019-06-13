@@ -63,7 +63,7 @@ struct UDQParseNode {
 
 class UDQParser {
 public:
-    static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors);
+  static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors);
 
 private:
     UDQParser(const UDQParams& udq_params, const std::vector<std::string>& tokens) :
