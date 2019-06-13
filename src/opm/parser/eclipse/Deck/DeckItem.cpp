@@ -41,7 +41,7 @@ std::vector< T >& DeckItem::value_ref() {
 template<>
 const std::vector< int >& DeckItem::value_ref< int >() const {
     if( this->type != get_type< int >() )
-        throw std::invalid_argument( "DekcItem::velut_ref<int> Item of wrong type." );
+        throw std::invalid_argument( "DeckItem::value_ref<int> Item of wrong type. this->type: " + tag_name(this->type) + " " + this->name());
 
     return this->ival;
 }
@@ -57,7 +57,7 @@ const std::vector< double >& DeckItem::value_ref< double >() const {
 template<>
 const std::vector< std::string >& DeckItem::value_ref< std::string >() const {
     if( this->type != get_type< std::string >() )
-        throw std::invalid_argument( "DeckItem::value_ref<std::string> Item of wrong type." );
+        throw std::invalid_argument( "DeckItem::value_ref<std::string> Item of wrong type. this->type: " + tag_name(this->type) + " " + this->name());
 
     return this->sval;
 }
@@ -65,7 +65,7 @@ const std::vector< std::string >& DeckItem::value_ref< std::string >() const {
 template<>
 const std::vector< UDAValue >& DeckItem::value_ref< UDAValue >() const {
     if( this->type != get_type< UDAValue >() )
-        throw std::invalid_argument( "DeckItem::value_ref<UDAValue> Item of wrong type." );
+        throw std::invalid_argument( "DeckItem::value_ref<UDAValue> Item of wrong type. this->type: " + tag_name(this->type) + " " + this->name());
 
     return this->uval;
 }
