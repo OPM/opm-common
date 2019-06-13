@@ -133,6 +133,45 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
         std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
         throw std::invalid_argument(msg);
     }
+
+    if (res.var_type() == UDQVarType::SCALAR) {
+        /*
+          If the right hand side evaluates to a scalar that scalar value should
+          be set for all wells in the wellset:
+
+          UDQ
+            DEFINE WUINJ1  SUM(WOPR) * 1.25 /
+            DEFINE WUINJ2  WOPR OP1  * 5.0 /
+          /
+
+          Both the expressions "SUM(WOPR)" and "WOPR OP1" evaluate to a scalar,
+          this should then be copied all wells, so that WUINJ1:$WELL should
+          evaulate to the same numerical value for all wells; the same should
+          also apply for group sets.
+        */
+
+        double scalar_value = res[0].value();
+        if (this->var_type() == UDQVarType::WELL_VAR) {
+            const std::vector<std::string> wells = context.wells();
+            UDQSet well_res = UDQSet::wells(this->m_keyword, wells);
+
+            for (const auto& well : wells)
+                well_res.assign(well, scalar_value);
+
+            return well_res;
+        }
+
+        if (this->var_type() == UDQVarType::GROUP_VAR) {
+            const std::vector<std::string> groups = context.groups();
+            UDQSet group_res = UDQSet::groups(this->m_keyword, groups);
+
+            for (const auto& group : groups)
+                group_res.assign(group, scalar_value);
+
+            return group_res;
+        }
+    }
+
     return res;
 }
 

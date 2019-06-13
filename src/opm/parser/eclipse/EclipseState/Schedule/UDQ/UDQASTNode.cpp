@@ -103,48 +103,61 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
     if (this->type == UDQTokenType::ecl_expr) {
         if (this->var_type == UDQVarType::WELL_VAR) {
             const auto& wells = context.wells();
-            auto res = UDQSet::wells(this->string_value, wells);
 
             if (this->selector.size() > 0) {
                 int fnmatch_flags = 0;
                 const std::string& well_pattern = this->selector[0];
                 if (well_pattern.find("*") == std::string::npos)
-                    throw std::invalid_argument("When evaluating a well UDQ you can not use fully qualified well variables");
-
-                for (const auto& well : wells) {
-                    if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0)
-                        res.assign(well, context.get_well_var(well, this->string_value));
+                    /*
+                      The well name has been fully qualified - i.e. this
+                       evaulates to a scalar, which will then subsequently be
+                       scattered to all wells.
+                    */
+                    return UDQSet::scalar(this->string_value, context.get_well_var(well_pattern, this->string_value));
+                else {
+                    auto res = UDQSet::wells(this->string_value, wells);
+                    for (const auto& well : wells) {
+                        if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0)
+                            res.assign(well, context.get_well_var(well, this->string_value));
+                    }
+                    return res;
                 }
             } else {
+                auto res = UDQSet::wells(this->string_value, wells);
                 for (const auto& well : wells)
                     res.assign(well, context.get_well_var(well, this->string_value));
+                return res;
             }
-
-            return res;
         }
 
         if (this->var_type == UDQVarType::GROUP_VAR) {
             const auto& groups = context.groups();
-            auto res = UDQSet::groups(this->string_value, groups);
 
             if (this->selector.size() > 0) {
                 int fnmatch_flags = 0;
                 const std::string& group_pattern = this->selector[0];
                 if (group_pattern.find("*") == std::string::npos)
-                    throw std::invalid_argument("When evaluating a group UDQ you can not use fully qualified group variables");
-
-                for (const auto& group : groups) {
-                    if (fnmatch(group_pattern.c_str(), group.c_str(), fnmatch_flags) == 0)
-                        res.assign(group, context.get_group_var(group, this->string_value));
+                    /*
+                      The group name has been fully qualified - i.e. this
+                       evaulates to a scalar, which will then subsequently be
+                       scattered to all groups.
+                    */
+                    return UDQSet::scalar(this->string_value, context.get_group_var(group_pattern, this->string_value));
+                else {
+                    auto res = UDQSet::groups(this->string_value, groups);
+                    for (const auto& group : groups) {
+                        if (fnmatch(group_pattern.c_str(), group.c_str(), fnmatch_flags) == 0)
+                            res.assign(group, context.get_group_var(group, this->string_value));
+                    }
+                    return res;
                 }
             } else {
+                auto res = UDQSet::groups(this->string_value, groups);
                 for (const auto& group : groups)
                     res.assign(group, context.get_group_var(group, this->string_value));
+                return res;
             }
-
-            return res;
         }
-        throw std::invalid_argument("When evaluating general inner kernel only Wxxx end Gxxx xpressions are allowed - for now.");
     }
 
 

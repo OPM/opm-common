@@ -198,16 +198,6 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
         BOOST_CHECK_EQUAL( res["I1"].defined(), false);
     }
     {
-        UDQDefine def(udqp, "WUBHP", {"WBHP" , "'P1'"});
-        SummaryState st;
-        UDQContext context(udqft, st);
-
-
-        st.update_well_var("P1", "WBHP", 1);
-        BOOST_CHECK_THROW( def.eval( context ), std::invalid_argument);
-    }
-
-    {
         UDQDefine def(udqp, "WUBHP", {"NINT" , "(", "WBHP", ")"});
         SummaryState st;
         UDQContext context(udqft, st);
@@ -897,6 +887,70 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
 }
 */
 
+BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
+    UDQParams udqp;
+    UDQFunctionTable udqft;
+    SummaryState st;
+    UDQContext context(udqft, st);
+
+    st.update_well_var("P1", "WOPR", 1);
+    st.update_well_var("P2", "WOPR", 2);
+    st.update_well_var("P3", "WOPR", 3);
+    st.update_well_var("P4", "WOPR", 4);
+
+    st.update_well_var("P1", "WWPR", 1);
+    st.update_well_var("P2", "WWPR", 2);
+    st.update_well_var("P3", "WWPR", 3);
+    st.update_well_var("P4", "WWPR", 4);
+
+    {
+        UDQDefine def(udqp, "WUOPR", {"WOPR", "'*1'"});
+        auto res = def.eval(context);
+        BOOST_CHECK_EQUAL(4, res.size());
+        auto well1 = res["P1"];
+        BOOST_CHECK( well1.defined() );
+        BOOST_CHECK_EQUAL(well1.value() , 1);
+
+        auto well2 = res["P2"];
+        BOOST_CHECK( !well2.defined() );
+
+        auto well4 = res["P4"];
+        BOOST_CHECK( !well4.defined() );
+    }
+    {
+        UDQDefine def(udqp, "WUOPR", {"1"});
+        auto res = def.eval(context);
+        BOOST_CHECK_EQUAL(4, res.size());
+        auto well1 = res["P1"];
+        BOOST_CHECK( well1.defined() );
+        BOOST_CHECK_EQUAL(well1.value() , 1);
+
+        auto well2 = res["P2"];
+        BOOST_CHECK( well2.defined() );
+        BOOST_CHECK_EQUAL(well2.value() , 1);
+
+        auto well4 = res["P4"];
+        BOOST_CHECK( well4.defined() );
+        BOOST_CHECK_EQUAL(well4.value() , 1);
+    }
+    {
+        UDQDefine def(udqp, "WUOPR", {"WOPR", "'P1'"});
+        auto res = def.eval(context);
+        BOOST_CHECK_EQUAL(4, res.size());
+        auto well1 = res["P1"];
+        BOOST_CHECK( well1.defined() );
+        BOOST_CHECK_EQUAL(well1.value() , 1);
+
+        auto well2 = res["P2"];
+        BOOST_CHECK( well2.defined() );
+        BOOST_CHECK_EQUAL(well2.value() , 1);
+
+        auto well4 = res["P4"];
+        BOOST_CHECK( well4.defined() );
+        BOOST_CHECK_EQUAL(well4.value() , 1);
+    }
+}
+
 
 BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     UDQParams udqp;
@@ -988,7 +1042,8 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
     {
         UDQDefine def1(udqp, "WUBHP", tokens, parseContext, errors);
         SummaryState st;
-        UDQContext context(UDQFunctionTable(udqp), st);
+        UDQFunctionTable udqft(udqp);
+        UDQContext context(udqft, st);
         st.update_well_var("P1", "WBHP", 1);
 
         auto res = def1.eval(context);
@@ -1011,8 +1066,10 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
         UDQDefine def2(udqp, "WUBHP", tokens2, parseContext, errors);
 
         SummaryState st;
-        UDQContext context(UDQFunctionTable(udqp), st);
+        UDQFunctionTable udqft(udqp);
+        UDQContext context(udqft, st);
         st.update_well_var("P1", "WBHP", 1);
+        st.update_well_var("P2", "WBHP", 2);
 
         auto res1 = def1.eval(context);
         BOOST_CHECK_EQUAL(res1[0].value(), udqp.undefinedValue());
@@ -1020,16 +1077,13 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
         auto res2 = def2.eval(context);
         BOOST_CHECK_EQUAL(res2.size(), st.num_wells());
         for (std::size_t index = 0; index < res2.size(); index++)
-            BOOST_CHECK_EQUAL(res2[index].value(), udqp.undefinedValue());
+            BOOST_CHECK_EQUAL(res2[index].value(), 3);
     }
 
     parseContext.update(ParseContext::UDQ_TYPE_ERROR, InputError::THROW_EXCEPTION);
 
     // This fails because the well expression (WBHP + 1) is assigned to the field variable FUBHP
     BOOST_CHECK_THROW( UDQDefine(udqp, "FUBHP", tokens1, parseContext, errors), std::invalid_argument);
-
-    // This fails because the scalar expression SUM(WBHP) is assigned to the well variable WUBHP
-    BOOST_CHECK_THROW( UDQDefine(udqp, "WUBHP", tokens2, parseContext, errors), std::invalid_argument);
 }
 
 

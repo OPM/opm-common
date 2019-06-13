@@ -235,7 +235,7 @@ bool compatibleTypes(UDQVarType lhs, UDQVarType rhs) {
     if (lhs == rhs)
         return true;
 
-    if (lhs == UDQVarType::FIELD_VAR && rhs == UDQVarType::SCALAR)
+    if (rhs == UDQVarType::SCALAR)
         return true;
 
     return false;
