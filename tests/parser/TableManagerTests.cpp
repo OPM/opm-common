@@ -38,6 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
 
@@ -487,6 +488,82 @@ BOOST_AUTO_TEST_CASE(PlyadsTable_Tests) {
         const auto& plyadsKeyword = deck.getKeyword("PLYADS");
 
         BOOST_CHECK_THROW(Opm::PlyadsTable(plyadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(FoamadsTable_Tests) {
+    {
+        const char *correctDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "FOAMADS\n"
+            "0.00    0.0 \n"
+            "0.25    0.000010\n"
+            "0.50    0.000018\n"
+            "0.75    0.000023\n"
+            "1.00    0.000027\n"
+            "1.25    0.000030\n"
+            "1.50    0.000030\n"
+            "1.75    0.000030\n"
+            "2.00    0.000030\n"
+            "3.00    0.000030 /\n";
+        Opm::Parser parser;
+        auto deck = parser.parseString(correctDeckData);
+        const auto& foamadsKeyword = deck.getKeyword("FOAMADS");
+        Opm::FoamadsTable foamadsTable(foamadsKeyword.getRecord(0).getItem(0));
+
+
+        BOOST_CHECK_CLOSE(foamadsTable.getFoamConcentrationColumn().front(), 0.0, 1e-6);
+        BOOST_CHECK_CLOSE(foamadsTable.getFoamConcentrationColumn().back(), 3.0, 1e-6);
+
+        BOOST_CHECK_CLOSE(foamadsTable.getAdsorbedFoamColumn().front(), 0.0, 1e-6);
+        BOOST_CHECK_CLOSE(foamadsTable.getAdsorbedFoamColumn().back(), 0.000030, 1e-6);
+    }
+
+    {
+        // first column not strictly monotonic
+        const char *incorrectDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "FOAMADS\n"
+            "0.00    0.0 \n"
+            "0.00    0.000010\n"
+            "0.50    0.000018\n"
+            "0.75    0.000023\n"
+            "1.00    0.000027\n"
+            "1.25    0.000030\n"
+            "1.50    0.000030\n"
+            "1.75    0.000030\n"
+            "2.00    0.000030\n"
+            "3.00    0.000030 /\n";
+        Opm::Parser parser;
+        auto deck = parser.parseString(incorrectDeckData);
+        const auto& foamadsKeyword = deck.getKeyword("FOAMADS");
+
+        BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+    }
+
+    {
+        // second column not monotonic
+        const char *incorrectDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "FOAMADS\n"
+            "0.00    0.0 \n"
+            "0.25    0.000010\n"
+            "0.50    0.000018\n"
+            "0.75    0.000023\n"
+            "1.00    0.000027\n"
+            "1.25    0.000030\n"
+            "1.50    0.000030\n"
+            "1.75    0.000030\n"
+            "2.00    0.000030\n"
+            "3.00    0.000029 /\n";
+        Opm::Parser parser;
+        auto deck = parser.parseString(incorrectDeckData);
+        const auto& foamadsKeyword = deck.getKeyword("FOAMADS");
+
+        BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
     }
 }
 
