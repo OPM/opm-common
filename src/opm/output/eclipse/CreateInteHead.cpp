@@ -192,7 +192,7 @@ namespace {
 
         const auto nsegwl =
             std::count_if(std::begin(sched_wells), std::end(sched_wells),
-                          [lookup_step](const Opm::Well2& well)
+                          [](const Opm::Well2& well)
             {
                 return well.isMultiSegment();
             });
