@@ -334,12 +334,7 @@ BOOST_AUTO_TEST_CASE(EclipseIOIntegration) {
                                      i,
                                      false,
                                      first_step - start_time,
-                                     restart_value,
-                                     {},
-                                     {},
-                                     {});
-
-
+                                     restart_value);
 
             checkRestartFile( i );
         }

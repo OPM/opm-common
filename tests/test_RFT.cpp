@@ -158,10 +158,7 @@ BOOST_AUTO_TEST_CASE(test_RFT) {
                                      2,
                                      false,
                                      step_time - start_time,
-                                     restart_value,
-                                     {},
-                                     {},
-                                     {});
+                                     restart_value);
     }
 
     verifyRFTFile("TESTRFT.RFT");
@@ -253,10 +250,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2) {
                                              step,
                                              false,
                                              step_time - start_time,
-                                             restart_value,
-                                             {},
-                                             {},
-                                             {});
+                                             restart_value);
             }
             verifyRFTFile2("TESTRFT.RFT");
         }

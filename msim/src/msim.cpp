@@ -114,10 +114,7 @@ void msim::output(const SummaryState& st, size_t report_step, bool /* substep */
                      report_step,
                      false,
                      seconds_elapsed,
-                     value,
-                     {},
-                     {},
-                     {});
+                     value);
 }
 
 

@@ -483,7 +483,7 @@ RestartValue first_sim(const EclipseState& es, EclipseIO& eclWriter, SummaryStat
                              false,
                              first_step - start_time,
                              restart_value,
-			     {}, {}, {}, write_double);
+                             write_double);
 
     return restart_value;
 }
