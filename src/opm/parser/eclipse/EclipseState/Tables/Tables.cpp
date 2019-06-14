@@ -44,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
@@ -462,6 +463,22 @@ const TableColumn& PlyadsTable::getAdsorbedPolymerColumn() const {
     return SimpleTable::getColumn(1);
 }
 
+FoamadsTable::FoamadsTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema("FoamConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema("AdsorbedFoam" , Table::INCREASING , Table::DEFAULT_NONE ));
+
+    SimpleTable::init(item);
+}
+
+
+const TableColumn& FoamadsTable::getFoamConcentrationColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& FoamadsTable::getAdsorbedFoamColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
 PlymaxTable::PlymaxTable( const DeckRecord& record ) {
     m_schema.addColumn( ColumnSchema("C_POLYMER",     Table::RANDOM , Table::DEFAULT_NONE) );
     m_schema.addColumn( ColumnSchema("C_POLYMER_MAX", Table::RANDOM , Table::DEFAULT_NONE) );
@@ -481,6 +498,27 @@ const TableColumn& PlymaxTable::getPolymerConcentrationColumn() const {
 const TableColumn& PlymaxTable::getMaxPolymerConcentrationColumn() const {
     return SimpleTable::getColumn(1);
 }
+
+//FoammaxTable::FoammaxTable( const DeckRecord& record ) {
+//    m_schema.addColumn( ColumnSchema("C_FOAM",     Table::RANDOM , Table::DEFAULT_NONE) );
+//    m_schema.addColumn( ColumnSchema("C_FOAM_MAX", Table::RANDOM , Table::DEFAULT_NONE) );
+//
+//    addColumns();
+//    for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
+//        auto& column = getColumn( colIdx );
+//
+//        column.addValue( record.getItem( colIdx ).getSIDouble(0) );
+//    }
+//}
+//
+//const TableColumn& FoammaxTable::getFoamymerConcentrationColumn() const {
+//    return SimpleTable::getColumn(0);
+//}
+//
+//const TableColumn& FoammaxTable::getMaxFoamymerConcentrationColumn() const {
+//    return SimpleTable::getColumn(1);
+//}
+
 
 PlyrockTable::PlyrockTable( const DeckRecord& record ) {
     m_schema.addColumn( ColumnSchema("DeadPoreVolume",            Table::RANDOM , Table::DEFAULT_NONE) );
