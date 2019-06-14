@@ -292,6 +292,7 @@ struct fn_args {
     double duration;
     const int sim_step;
     int  num;
+    const SummaryState& st;
     const data::Wells& wells;
     const out::RegionCache& regionCache;
     const EclipseGrid& grid;
@@ -1323,6 +1324,7 @@ Summary::Summary( const EclipseState& st,
                                     0,           // Duration of time step
                                     0,           // Simulation step
                                     node.num(),
+                                    {},          // SummaryState
                                     {},          // Well results - data::Wells
                                     {},          // Region <-> cell mappings.
                                     this->grid,
@@ -1511,6 +1513,7 @@ void Summary::eval( SummaryState& st,
                                              duration,
                                              sim_step,
                                              num,
+                                             st,
                                              wells,
                                              this->regionCache,
                                              this->grid,
@@ -1522,6 +1525,7 @@ void Summary::eval( SummaryState& st,
                                         duration,
                                         sim_step,
                                         num,
+                                        st,
                                         {},
                                         this->regionCache,
                                         this->grid,
