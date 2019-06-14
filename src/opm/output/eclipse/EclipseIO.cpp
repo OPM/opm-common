@@ -493,9 +493,6 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
                               bool  isSubstep,
                               double secs_elapsed,
                               RestartValue value,
-                              const std::map<std::string, double>& single_summary_values,
-                              const std::map<std::string, std::vector<double> >& region_summary_values,
-                              const std::map<std::pair<std::string, int>, double>& block_summary_values,
                               const bool write_double)
  {
 
