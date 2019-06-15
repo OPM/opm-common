@@ -382,8 +382,7 @@ inline quantity rate( const fn_args& args ) {
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
-    const auto ts = args.sim_step;
-    auto pred = [&wells,ts]( const Well2& w ) {
+    auto pred = [&wells]( const Well2& w ) {
         const auto& name = w.name();
         return w.isInjector( ) == injection
             && wells.count( name ) > 0

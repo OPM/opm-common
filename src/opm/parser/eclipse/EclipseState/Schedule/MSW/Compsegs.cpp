@@ -68,8 +68,8 @@ namespace Opm {
 
             const std::string& well_name = compsegsKeyword.getRecord(0).getItem("WELL").getTrimmedString(0);
 
-            double distance_start;
-            double distance_end;
+            double distance_start = 0.0;
+            double distance_end = -1.0;
             if (record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().hasValue(0)) {
                 distance_start = record.getItem<ParserKeywords::COMPSEGS::DISTANCE_START>().getSIDouble(0);
             } else if (recordIndex == 1) {

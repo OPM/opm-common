@@ -41,7 +41,7 @@ namespace Opm {
 class DeckRecord;
 class EclipseGrid;
 class DeckKeyword;
-class WellInjectionProperties;
+struct WellInjectionProperties;
 class WellProductionProperties;
 
 struct WellGuideRate {
