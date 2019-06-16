@@ -213,7 +213,7 @@ UDQVarType UDQSet::var_type() const {
 
 void UDQSet::operator+=(const UDQSet& rhs) {
     if (this->size() != rhs.size())
-        throw std::invalid_argument("Incompatible size");
+        throw std::invalid_argument("Incompatible size in UDQSet operator+");
 
     for (std::size_t index = 0; index < this->size(); index++)
         this->values[index] += rhs[index];
