@@ -1,3 +1,8 @@
+Note: 
+This is a dump of the pybind11 distribution, version 2.3.0. 
+A more elegant solutions might be explored in the future.
+
+
 ![pybind11 logo](https://github.com/pybind/pybind11/raw/master/docs/pybind11-logo.png)
 
 # pybind11 — Seamless operability between C++11 and Python
