@@ -78,6 +78,7 @@ public:
     bool canOpen() const;
     bool isProducer() const;
     bool isInjector() const;
+    WellInjector::TypeEnum injectorType() const;
     size_t seqIndex() const;
     bool getAutomaticShutIn() const;
     bool getAllowCrossFlow() const;
@@ -157,6 +158,10 @@ public:
     void switchToProducer();
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
+
+    int vfp_table_number() const;
+    double alq_value() const;
+    double temperature() const;
 private:
     std::string wname;
     std::string group_name;
