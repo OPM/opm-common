@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     Opm::Well2 well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Opm::WellCompletion::DEPTH, UnitSystem::newMETRIC());
     Opm::SummaryState st;
-    const auto prod_controls = well.productionControls(st);
+    well.productionControls(st);
 }
 
 
