@@ -759,3 +759,22 @@ BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     Opm::SummaryState st;
     const auto prod_controls = well.productionControls(st);
 }
+
+
+BOOST_AUTO_TEST_CASE(ExtraAccessors) {
+    Opm::Well2 inj("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC());
+    Opm::Well2 prod("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC());
+
+    auto inj_props= std::make_shared<Opm::WellInjectionProperties>(inj.getInjectionProperties());
+    inj_props->VFPTableNumber = 100;
+    inj.updateInjection(inj_props);
+
+    auto prod_props = std::make_shared<Opm::WellProductionProperties>( prod.getProductionProperties() );
+    prod_props->VFPTableNumber = 200;
+    prod.updateProduction(prod_props);
+
+    BOOST_CHECK_THROW(inj.alq_value(), std::runtime_error);
+    BOOST_CHECK_THROW(prod.temperature(), std::runtime_error);
+    BOOST_CHECK_EQUAL(inj.vfp_table_number(), 100);
+    BOOST_CHECK_EQUAL(prod.vfp_table_number(), 200);
+}

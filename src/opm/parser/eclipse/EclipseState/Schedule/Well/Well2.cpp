@@ -365,6 +365,15 @@ bool Well2::isInjector() const {
 }
 
 
+WellInjector::TypeEnum Well2::injectorType() const {
+    if (this->producer)
+        throw std::runtime_error("Can not access injectorType attribute of a producer");
+
+    return this->injection->injectorType;
+}
+
+
+
 bool Well2::isAvailableForGroupControl() const {
     return this->guide_rate.available;
 }
@@ -699,6 +708,37 @@ InjectionControls Well2::injectionControls(const SummaryState& st) const {
     } else
         throw std::logic_error("Trying to get injection data from a producer");
 }
+
+
+/*
+  These three accessor functions are at the "wrong" level of abstraction;
+  the same properties are part of the InjectionControls and
+  ProductionControls structs. They are made available here to avoid passing
+  a SummaryState instance in situations where it is not really needed.
+*/
+
+
+int Well2::vfp_table_number() const {
+    if (this->producer)
+        return this->production->VFPTableNumber;
+    else
+        return this->injection->VFPTableNumber;
+}
+
+double Well2::alq_value() const {
+    if (this->producer)
+        return this->production->ALQValue;
+
+    throw std::runtime_error("Can not ask for ALQ value in an injector");
+}
+
+double Well2::temperature() const {
+    if (!this->producer)
+        return this->injection->temperature;
+
+    throw std::runtime_error("Can not ask for temperature in a producer");
+}
+
 
 }
 
