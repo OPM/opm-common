@@ -108,12 +108,7 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
                 int fnmatch_flags = 0;
                 const std::string& well_pattern = this->selector[0];
                 if (well_pattern.find("*") == std::string::npos)
-                    /*
-                      The well name has been fully qualified - i.e. this
-                       evaulates to a scalar, which will then subsequently be
-                       scattered to all wells.
-                    */
-                    return UDQSet::scalar(this->string_value, context.get_well_var(well_pattern, this->string_value));
+                    return UDQSet::wells(this->string_value, wells, context.get_well_var(well_pattern, this->string_value));
                 else {
                     auto res = UDQSet::wells(this->string_value, wells);
                     for (const auto& well : wells) {
@@ -137,12 +132,7 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
                 int fnmatch_flags = 0;
                 const std::string& group_pattern = this->selector[0];
                 if (group_pattern.find("*") == std::string::npos)
-                    /*
-                      The group name has been fully qualified - i.e. this
-                       evaulates to a scalar, which will then subsequently be
-                       scattered to all groups.
-                    */
-                    return UDQSet::scalar(this->string_value, context.get_group_var(group_pattern, this->string_value));
+                    return UDQSet::groups(this->string_value, groups, context.get_group_var(group_pattern, this->string_value));
                 else {
                     auto res = UDQSet::groups(this->string_value, groups);
                     for (const auto& group : groups) {

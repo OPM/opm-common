@@ -1017,6 +1017,23 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     BOOST_CHECK_EQUAL( res_wuwct["P4"].value(),0.50);
 }
 
+BOOST_AUTO_TEST_CASE(DECK_TEST) {
+    UDQParams udqp;
+    UDQFunctionTable udqft(udqp);
+    UDQDefine def(udqp, "WUOPRL", {"(", "WOPR", "OP1", "-", "150", ")", "*", "0.90"});
+    SummaryState st;
+    UDQContext context(udqft, st);
+
+    st.update_well_var("OP1", "WOPR", 300);
+    st.update_well_var("OP2", "WOPR", 3000);
+    st.update_well_var("OP3", "WOPR", 30000);
+
+    auto res = def.eval(context);
+    BOOST_CHECK_EQUAL(res.size(), 3);
+    for (std::size_t index = 0; index < res.size(); index++)
+        BOOST_CHECK( res[index].value() == (300 - 150)*0.90);
+}
+
 
 BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
     UDQParams udqp;
