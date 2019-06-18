@@ -114,7 +114,7 @@ namespace {
                 size = std::max(size, static_cast<std::size_t>(nwgmax));
             }
 
-            if (size >= static_cast<decltype(size)>(wdims.maxWellsPerGroup()))
+            if (size > static_cast<decltype(size)>(wdims.maxWellsPerGroup()))
             {
                 std::ostringstream os;
                 os << "Run uses maximum group size of " << size << ", but "
