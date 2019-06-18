@@ -3059,7 +3059,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(Reset_Cumulative_Vectors)
 
-/*
+
 BOOST_AUTO_TEST_CASE(Reset)
 {
     const auto config = setup { "test.Reset.Cumulative" };
@@ -3226,7 +3226,36 @@ BOOST_AUTO_TEST_CASE(Reset)
     BOOST_CHECK_CLOSE(sumstate.get("FWITH"), 0.05, 1.0e-10);
     BOOST_CHECK_CLOSE(sumstate.get("FGITH"), 0.06, 1.0e-10);
 }
-*/
+
+BOOST_AUTO_TEST_CASE(SummaryState_Default) {
+    SummaryState st;
+    BOOST_CHECK_EQUAL(st.get("FOPT", 200), 200);
+    BOOST_CHECK_EQUAL(st.get_well_var("WELL", "WOPR", 300), 300);
+    BOOST_CHECK_EQUAL(st.get_group_var("GROUP", "GOPR", 400), 400);
+
+    st.update("FOPT", 100);
+    BOOST_CHECK_EQUAL(st.get("FOPT", 200), 100);
+
+
+    st.update_well_var("WELL", "WWCT", 1.0);
+    BOOST_CHECK_EQUAL(st.get_well_var("WELL", "WOPR", 300), 300);
+
+    st.update_well_var("W", "WOPR", 1.0);
+    BOOST_CHECK_EQUAL(st.get_well_var("WELL", "WOPR", 300), 300);
+
+    st.update_well_var("WELL", "WOPR", 1.0);
+    BOOST_CHECK_EQUAL(st.get_well_var("WELL", "WOPR", 300), 1);
+
+    st.update_group_var("GROUP", "GWCT", 1.0);
+    BOOST_CHECK_EQUAL(st.get_group_var("GROUP", "GOPR", 300), 300);
+
+    st.update_group_var("G", "GOPR", 1.0);
+    BOOST_CHECK_EQUAL(st.get_group_var("GROUP", "GOPR", 300), 300);
+
+    st.update_group_var("GROUP", "GOPR", 1.0);
+    BOOST_CHECK_EQUAL(st.get_group_var("GROUP", "GOPR", 300), 1);
+}
+
 
 
 BOOST_AUTO_TEST_CASE(SummaryState_TOTAL) {

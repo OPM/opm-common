@@ -119,6 +119,14 @@ namespace {
         return (this->values.find(key) != this->values.end());
     }
 
+    double SummaryState::get(const std::string& key, double default_value) const {
+        const auto iter = this->values.find(key);
+        if (iter == this->values.end())
+            return default_value;
+
+        return iter->second;
+    }
+
 
     double SummaryState::get(const std::string& key) const {
         const auto iter = this->values.find(key);
@@ -144,6 +152,18 @@ namespace {
         return this->well_values.at(var).at(well);
     }
 
+    double SummaryState::get_well_var(const std::string& well, const std::string& var, double default_value) const {
+        const auto& var_iter = this->well_values.find(var);
+        if (var_iter == this->well_values.end())
+            return default_value;
+
+        const auto& well_iter = var_iter->second.find(well);
+        if (well_iter == var_iter->second.end())
+            return default_value;
+
+        return well_iter->second;
+    }
+
     bool SummaryState::has_group_var(const std::string& group, const std::string& var) const {
         const auto& var_iter = this->group_values.find(var);
         if (var_iter == this->group_values.end())
@@ -158,6 +178,18 @@ namespace {
 
     double SummaryState::get_group_var(const std::string& group, const std::string& var) const {
         return this->group_values.at(var).at(group);
+    }
+
+    double SummaryState::get_group_var(const std::string& group, const std::string& var, double default_value) const {
+        const auto& var_iter = this->group_values.find(var);
+        if (var_iter == this->group_values.end())
+            return default_value;
+
+        const auto& group_iter = var_iter->second.find(group);
+        if (group_iter == var_iter->second.end())
+            return default_value;
+
+        return group_iter->second;
     }
 
     SummaryState::const_iterator SummaryState::begin() const {

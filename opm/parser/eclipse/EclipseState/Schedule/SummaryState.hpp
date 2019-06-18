@@ -82,10 +82,13 @@ public:
     void update_group_var(const std::string& group, const std::string& var, double value);
     void update_elapsed(double delta);
 
-    double get(const std::string&) const;
     double get_elapsed() const;
+    double get(const std::string&) const;
+    double get(const std::string&, double default_value) const;
     double get_well_var(const std::string& well, const std::string& var) const;
+    double get_well_var(const std::string& well, const std::string& var, double default_value) const;
     double get_group_var(const std::string& group, const std::string& var) const;
+    double get_group_var(const std::string& group, const std::string& var, double default_value) const;
 
     std::vector<std::string> wells() const;
     std::vector<std::string> wells(const std::string& var) const;
