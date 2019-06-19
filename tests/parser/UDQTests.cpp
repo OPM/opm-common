@@ -32,6 +32,7 @@ Copyright 2018 Statoil ASA.
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 using namespace Opm;
@@ -1230,3 +1231,115 @@ UDQ
     BOOST_CHECK( input[0].is<UDQDefine>());
 }
 
+
+BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
+    UDQActive usage;
+    BOOST_CHECK_EQUAL( usage.size(), 0 );
+    BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 0);
+
+    UDAValue uda1("UDQ");
+    usage.update(uda1, "W1", UDAControl::WCONPROD_ORAT);
+    BOOST_CHECK_EQUAL( usage.size(), 1 );
+    BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 1);
+
+    usage.update(uda1, "W1", UDAControl::WCONPROD_GRAT);
+    BOOST_CHECK_EQUAL( usage.size(), 2 );
+    BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 2);
+
+
+    std::size_t index = 0;
+    for (const auto& record : usage) {
+        BOOST_CHECK_EQUAL(record.index, index);
+        BOOST_CHECK_EQUAL(record.wgname, "W1");
+        BOOST_CHECK_EQUAL(record.active, true);
+
+        if (index == 0)
+            BOOST_CHECK(record.control == UDAControl::WCONPROD_ORAT);
+        else
+            BOOST_CHECK(record.control == UDAControl::WCONPROD_GRAT);
+
+        index += 1;
+    }
+
+
+    UDAValue uda2(100);
+    usage.update(uda2, "W1", UDAControl::WCONPROD_ORAT);
+    BOOST_CHECK_EQUAL(usage[0].active, false);
+    BOOST_CHECK_EQUAL(usage[1].active, true);
+    BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(IntegrationTest) {
+#include "data/integration_tests/udq.data"
+    auto schedule = make_schedule(deck_string);
+    {
+        const auto& active = schedule.udqActive(1);
+        BOOST_CHECK_EQUAL(active.size(), 4);
+
+        BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
+        BOOST_CHECK(active[1].control == UDAControl::WCONPROD_LRAT);
+        BOOST_CHECK(active[2].control == UDAControl::WCONPROD_ORAT);
+        BOOST_CHECK(active[3].control == UDAControl::WCONPROD_LRAT);
+
+        BOOST_CHECK(active[0].wgname == "OPL02");
+        BOOST_CHECK(active[1].wgname == "OPL02");
+        BOOST_CHECK(active[2].wgname == "OPU02");
+        BOOST_CHECK(active[3].wgname == "OPU02");
+
+        BOOST_CHECK(active[0].udq == "WUOPRL");
+        BOOST_CHECK(active[1].udq == "WULPRL");
+        BOOST_CHECK(active[2].udq == "WUOPRU");
+        BOOST_CHECK(active[3].udq == "WULPRU");
+
+        BOOST_CHECK(active[0].index == 0);
+        BOOST_CHECK(active[1].index == 1);
+        BOOST_CHECK(active[2].index == 2);
+        BOOST_CHECK(active[3].index == 3);
+
+        BOOST_CHECK(active[0].active == true);
+        BOOST_CHECK(active[1].active == true);
+        BOOST_CHECK(active[2].active == true);
+        BOOST_CHECK(active[3].active == true);
+
+        BOOST_CHECK(active.use_count("WUOPRL") == 1);
+        BOOST_CHECK(active.use_count("WULPRL") == 1);
+        BOOST_CHECK(active.use_count("WUOPRU") == 1);
+        BOOST_CHECK(active.use_count("WULPRU") == 1);
+    }
+
+    {
+        const auto& active = schedule.udqActive(6);
+        BOOST_CHECK_EQUAL(active.size(), 4);
+
+        BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
+        BOOST_CHECK(active[1].control == UDAControl::WCONPROD_LRAT);
+        BOOST_CHECK(active[2].control == UDAControl::WCONPROD_ORAT);
+        BOOST_CHECK(active[3].control == UDAControl::WCONPROD_LRAT);
+
+        BOOST_CHECK(active[0].wgname == "OPL02");
+        BOOST_CHECK(active[1].wgname == "OPL02");
+        BOOST_CHECK(active[2].wgname == "OPU02");
+        BOOST_CHECK(active[3].wgname == "OPU02");
+
+        BOOST_CHECK(active[0].udq == "WUOPRL");
+        BOOST_CHECK(active[1].udq == "WULPRL");
+        BOOST_CHECK(active[2].udq == "WUOPRU");
+        BOOST_CHECK(active[3].udq == "WULPRU");
+
+        BOOST_CHECK(active[0].index == 0);
+        BOOST_CHECK(active[1].index == 1);
+        BOOST_CHECK(active[2].index == 2);
+        BOOST_CHECK(active[3].index == 3);
+
+        BOOST_CHECK(active[0].active == false);
+        BOOST_CHECK(active[1].active == false);
+        BOOST_CHECK(active[2].active == true);
+        BOOST_CHECK(active[3].active == true);
+
+        BOOST_CHECK_EQUAL(active.use_count("WUOPRL"), 0);
+        BOOST_CHECK_EQUAL(active.use_count("WULPRL"), 0);
+        BOOST_CHECK_EQUAL(active.use_count("WUOPRU"), 1);
+        BOOST_CHECK_EQUAL(active.use_count("WULPRU"), 1);
+    }
+}

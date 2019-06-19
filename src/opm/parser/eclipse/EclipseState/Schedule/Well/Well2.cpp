@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 
 #include "WellProductionProperties.hpp"
 #include "WellInjectionProperties.hpp"
@@ -781,6 +782,4 @@ double Well2::temperature() const {
     throw std::runtime_error("Can not ask for temperature in a producer");
 }
 
-
 }
-
