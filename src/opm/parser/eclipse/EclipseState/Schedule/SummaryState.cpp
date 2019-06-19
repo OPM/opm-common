@@ -272,7 +272,6 @@ namespace {
 }
 
     std::vector<char> SummaryState::serialize() const {
-        std::vector<char> buffer;
         Serializer ser;
         ser.put(this->elapsed);
         put_map(ser, values);
