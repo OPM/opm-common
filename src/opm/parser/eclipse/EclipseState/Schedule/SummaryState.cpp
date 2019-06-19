@@ -216,7 +216,7 @@ namespace {
     class Serializer {
     public:
         Serializer() = default;
-        Serializer(const std::vector<char>& buffer) :
+        explicit Serializer(const std::vector<char>& buffer) :
             buffer(buffer)
         {}
 

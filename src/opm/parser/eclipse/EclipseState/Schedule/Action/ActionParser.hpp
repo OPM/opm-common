@@ -50,7 +50,7 @@ public:
     static ASTNode parse(const std::vector<std::string>& tokens);
 
 private:
-    ActionParser(const std::vector<std::string>& tokens);
+    explicit ActionParser(const std::vector<std::string>& tokens);
 
     TokenType get_type(const std::string& arg) const;
     ParseNode current() const;
