@@ -37,6 +37,11 @@
 namespace {
     namespace FileExtension
     {
+        std::string init(const bool formatted)
+        {
+            return formatted ? "FINIT" : "INIT";
+        }
+
         std::string
         restart(const int  rptStep,
                 const bool formatted,
@@ -58,6 +63,20 @@ namespace {
 
     namespace Open
     {
+        namespace Init
+        {
+            std::unique_ptr<Opm::EclIO::EclOutput>
+            write(const std::string& filename,
+                  const bool         isFmt)
+            {
+                return std::unique_ptr<Opm::EclIO::EclOutput> {
+                    new Opm::EclIO::EclOutput {
+                        filename, isFmt, std::ios_base::out
+                    }
+                };
+            }
+        }
+
         namespace Restart
         {
             std::unique_ptr<Opm::EclIO::ERst>
@@ -111,6 +130,87 @@ namespace {
         } // namespace Restart
     } // namespace Open
 } // Anonymous namespace
+
+// =====================================================================
+
+Opm::EclIO::OutputStream::Init::
+Init(const ResultSet& rset,
+     const Formatted& fmt)
+{
+    const auto fname = outputFileName(rset, FileExtension::init(fmt.set));
+
+    this->open(fname, fmt.set);
+}
+
+Opm::EclIO::OutputStream::Init::~Init()
+{}
+
+Opm::EclIO::OutputStream::Init::Init(Init&& rhs)
+    : stream_{ std::move(rhs.stream_) }
+{}
+
+Opm::EclIO::OutputStream::Init&
+Opm::EclIO::OutputStream::Init::operator=(Init&& rhs)
+{
+    this->stream_ = std::move(rhs.stream_);
+
+    return *this;
+}
+
+void
+Opm::EclIO::OutputStream::Init::
+write(const std::string& kw, const std::vector<int>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::Init::
+write(const std::string& kw, const std::vector<bool>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::Init::
+write(const std::string& kw, const std::vector<float>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::Init::
+write(const std::string& kw, const std::vector<double>& data)
+{
+    this->writeImpl(kw, data);
+}
+
+void
+Opm::EclIO::OutputStream::Init::
+open(const std::string& fname,
+     const bool         formatted)
+{
+    this->stream_ = Open::Init::write(fname, formatted);
+}
+
+Opm::EclIO::EclOutput&
+Opm::EclIO::OutputStream::Init::stream()
+{
+    return *this->stream_;
+}
+
+namespace Opm { namespace EclIO { namespace OutputStream {
+
+    template <typename T>
+    void Init::writeImpl(const std::string&    kw,
+                         const std::vector<T>& data)
+    {
+        this->stream().write(kw, data);
+    }
+
+}}}
+
+// =====================================================================
 
 Opm::EclIO::OutputStream::Restart::
 Restart(const ResultSet& rset,

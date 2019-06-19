@@ -75,8 +75,6 @@ namespace {
     }
 } // Anonymous namespace
 
-BOOST_AUTO_TEST_SUITE(RestartStream)
-
 BOOST_AUTO_TEST_SUITE(FileName)
 
 BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
@@ -129,8 +127,6 @@ BOOST_AUTO_TEST_SUITE_END() // FileName
 
 // ==========================================================================
 
-BOOST_AUTO_TEST_SUITE(Class_Restart)
-
 class RSet
 {
 public:
@@ -156,6 +152,345 @@ private:
     boost::filesystem::path odir_;
     std::string             base_;
 };
+
+// ==========================================================================
+
+BOOST_AUTO_TEST_SUITE(Class_Init)
+
+BOOST_AUTO_TEST_CASE(Unformatted)
+{
+    const auto rset = RSet("CASE");
+    const auto fmt  = ::Opm::EclIO::OutputStream::Formatted{ false };
+
+    {
+        auto init = ::Opm::EclIO::OutputStream::Init {
+            rset, fmt
+        };
+
+        init.write("I", std::vector<int>   {1, 7, 2, 9});
+        init.write("L", std::vector<bool>  {true, false, false, true});
+        init.write("S", std::vector<float> {3.1f, 4.1f, 59.265f});
+        init.write("D", std::vector<double>{2.71, 8.21});
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "INIT");
+
+        auto init = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(init.hasKey("I"));
+        BOOST_CHECK(init.hasKey("L"));
+        BOOST_CHECK(init.hasKey("S"));
+        BOOST_CHECK(init.hasKey("D"));
+
+        {
+            const auto vectors        = init.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"L", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"D", Opm::EclIO::eclArrType::DOUB, 2},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        init.loadData();
+
+        {
+            const auto& I = init.get<int>("I");
+            const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& L = init.get<bool>("L");
+            const auto  expect_L = std::vector<bool> {
+                true, false, false, true,
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(L.begin(), L.end(),
+                                          expect_L.begin(),
+                                          expect_L.end());
+        }
+
+        {
+            const auto& S = init.get<float>("S");
+            const auto  expect_S = std::vector<float>{
+                3.1f, 4.1f, 59.265f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& D = init.get<double>("D");
+            const auto  expect_D = std::vector<double>{
+                2.71, 8.21,
+            };
+
+            check_is_close(D, expect_D);
+        }
+    }
+
+    // Second write request replaces original contents
+    {
+        auto init = ::Opm::EclIO::OutputStream::Init {
+            rset, fmt
+        };
+
+        init.write("I2", std::vector<int>   {1, 2, 3, 4, 5, 6});
+        init.write("L2", std::vector<bool>  {false, false, true, true});
+        init.write("S2", std::vector<float> {-1.0f, 2.0f, -3.0e-4f});
+        init.write("D2", std::vector<double>{2.71, 8.21, 18.28459});
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "INIT");
+
+        auto init = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(!init.hasKey("I"));
+        BOOST_CHECK(!init.hasKey("L"));
+        BOOST_CHECK(!init.hasKey("S"));
+        BOOST_CHECK(!init.hasKey("D"));
+
+        BOOST_CHECK(init.hasKey("I2"));
+        BOOST_CHECK(init.hasKey("L2"));
+        BOOST_CHECK(init.hasKey("S2"));
+        BOOST_CHECK(init.hasKey("D2"));
+
+        {
+            const auto vectors        = init.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I2", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"L2", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S2", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"D2", Opm::EclIO::eclArrType::DOUB, 3},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        init.loadData();
+
+        {
+            const auto& I = init.get<int>("I2");
+            const auto  expect_I = std::vector<int>{ 1, 2, 3, 4, 5, 6 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& L = init.get<bool>("L2");
+            const auto  expect_L = std::vector<bool> {
+                false, false, true, true,
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(L.begin(), L.end(),
+                                          expect_L.begin(),
+                                          expect_L.end());
+        }
+
+        {
+            const auto& S = init.get<float>("S2");
+            const auto  expect_S = std::vector<float>{
+                -1.0f, 2.0f, -3.0e-4f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& D = init.get<double>("D2");
+            const auto  expect_D = std::vector<double>{
+                2.71, 8.21, 18.28459,
+            };
+
+            check_is_close(D, expect_D);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Formatted)
+{
+    const auto rset = RSet("CASE");
+    const auto fmt  = ::Opm::EclIO::OutputStream::Formatted{ true };
+
+    {
+        auto init = ::Opm::EclIO::OutputStream::Init {
+            rset, fmt
+        };
+
+        init.write("I", std::vector<int>   {1, 7, 2, 9});
+        init.write("L", std::vector<bool>  {true, false, false, true});
+        init.write("S", std::vector<float> {3.1f, 4.1f, 59.265f});
+        init.write("D", std::vector<double>{2.71, 8.21});
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "FINIT");
+
+        auto init = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(init.hasKey("I"));
+        BOOST_CHECK(init.hasKey("L"));
+        BOOST_CHECK(init.hasKey("S"));
+        BOOST_CHECK(init.hasKey("D"));
+
+        {
+            const auto vectors        = init.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"L", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"D", Opm::EclIO::eclArrType::DOUB, 2},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        init.loadData();
+
+        {
+            const auto& I = init.get<int>("I");
+            const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& L = init.get<bool>("L");
+            const auto  expect_L = std::vector<bool> {
+                true, false, false, true,
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(L.begin(), L.end(),
+                                          expect_L.begin(),
+                                          expect_L.end());
+        }
+
+        {
+            const auto& S = init.get<float>("S");
+            const auto  expect_S = std::vector<float>{
+                3.1f, 4.1f, 59.265f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& D = init.get<double>("D");
+            const auto  expect_D = std::vector<double>{
+                2.71, 8.21,
+            };
+
+            check_is_close(D, expect_D);
+        }
+    }
+
+
+    // Second write request replaces original contents
+    {
+        auto init = ::Opm::EclIO::OutputStream::Init {
+            rset, fmt
+        };
+
+        init.write("I2", std::vector<int>   {1, 2, 3, 4, 5, 6});
+        init.write("L2", std::vector<bool>  {false, false, true, true});
+        init.write("S2", std::vector<float> {-1.0f, 2.0f, -3.0e-4f});
+        init.write("D2", std::vector<double>{2.71, 8.21, 18.28459});
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "FINIT");
+
+        auto init = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(!init.hasKey("I"));
+        BOOST_CHECK(!init.hasKey("L"));
+        BOOST_CHECK(!init.hasKey("S"));
+        BOOST_CHECK(!init.hasKey("D"));
+
+        BOOST_CHECK(init.hasKey("I2"));
+        BOOST_CHECK(init.hasKey("L2"));
+        BOOST_CHECK(init.hasKey("S2"));
+        BOOST_CHECK(init.hasKey("D2"));
+
+        {
+            const auto vectors        = init.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I2", Opm::EclIO::eclArrType::INTE, 6},
+                Opm::EclIO::EclFile::EclEntry{"L2", Opm::EclIO::eclArrType::LOGI, 4},
+                Opm::EclIO::EclFile::EclEntry{"S2", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"D2", Opm::EclIO::eclArrType::DOUB, 3},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        init.loadData();
+
+        {
+            const auto& I = init.get<int>("I2");
+            const auto  expect_I = std::vector<int>{ 1, 2, 3, 4, 5, 6 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& L = init.get<bool>("L2");
+            const auto  expect_L = std::vector<bool> {
+                false, false, true, true,
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(L.begin(), L.end(),
+                                          expect_L.begin(),
+                                          expect_L.end());
+        }
+
+        {
+            const auto& S = init.get<float>("S2");
+            const auto  expect_S = std::vector<float>{
+                -1.0f, 2.0f, -3.0e-4f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& D = init.get<double>("D2");
+            const auto  expect_D = std::vector<double>{
+                2.71, 8.21, 18.28459,
+            };
+
+            check_is_close(D, expect_D);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// ==========================================================================
+
+BOOST_AUTO_TEST_SUITE(Class_Restart)
 
 BOOST_AUTO_TEST_CASE(Unformatted_Unified)
 {
@@ -750,5 +1085,3 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Class_Restart
-
-BOOST_AUTO_TEST_SUITE_END() // RestartStream
