@@ -61,6 +61,7 @@ namespace Opm
     class ErrorGuard;
     class WListManager;
     class UDQInput;
+    class UDQActive;
 
     class Schedule {
     public:
@@ -135,6 +136,7 @@ namespace Opm
         std::vector<Well2> getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
+        const UDQActive& udqActive(size_t timeStep) const;
         const WellTestConfig& wtestConfig(size_t timestep) const;
         const WListManager& getWListManager(size_t timeStep) const;
         const UDQInput& getUDQConfig(size_t timeStep) const;
@@ -186,6 +188,7 @@ namespace Opm
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQInput>> udq_config;
+        DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<WellProducer::ControlModeEnum> global_whistctl_mode;
         RFTConfig rft_config;
 
@@ -194,6 +197,7 @@ namespace Opm
         std::vector< Group* > getGroups(const std::string& groupNamePattern);
         std::map<std::string,Events> well_events;
 
+        void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
         bool updateWellStatus( const std::string& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , const std::string& wellName , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,

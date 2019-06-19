@@ -53,6 +53,9 @@ namespace Opm {
         if (action == UDQAction::UPDATE)
             throw std::invalid_argument("The UDQ action UPDATE is not yet implemented in opm/flow");
 
+        if (action == UDQAction::UPDATE)
+            throw std::invalid_argument("The UDQ action UPDATE is not yet implemented in opm/flow");
+
         if (action == UDQAction::UNITS)
             this->assign_unit( quantity, data[0] );
         else {

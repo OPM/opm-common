@@ -77,7 +77,6 @@ namespace Opm {
          consisting of only the ASSIGN and DEFINE keywords, in input order.
         */
         std::vector<std::pair<size_t, UDQDefine>> input_definitions() const;
-
         std::vector<UDQAssign> assignments() const;
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
         const UDQParams& params() const;
@@ -101,6 +100,7 @@ namespace Opm {
         std::unordered_map<std::string, std::string> units;
 
         OrderedMap<std::string, std::pair<size_t, UDQAction>> input_index;
+        std::unordered_set<std::string> keywords;
     };
 }
 
