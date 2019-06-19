@@ -41,6 +41,9 @@ namespace Opm {
     {
     }
 
+    const UDQParams& UDQInput::params() const {
+        return this->udq_params;
+    }
 
 
     void UDQInput::add_record(const DeckRecord& record) {

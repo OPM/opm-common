@@ -64,7 +64,8 @@ public:
           Phase phase,
           WellProducer::ControlModeEnum whistctl_cmode,
           WellCompletion::CompletionOrderEnum ordering,
-          const UnitSystem& unit_system);
+          const UnitSystem& unit_system,
+          double udq_undefined);
 
     bool isMultiSegment() const;
     bool isAvailableForGroupControl() const;
@@ -173,6 +174,7 @@ private:
     Phase phase;
     WellCompletion::CompletionOrderEnum ordering;
     UnitSystem unit_system;
+    double udq_undefined;
 
     WellCommon::StatusEnum status;
     double drainage_radius;
