@@ -479,7 +479,7 @@ void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std
 
         simProps.convertFromSI( es.getUnits() );
         if( ioConfig.getWriteINITFile() )
-            this->impl->writeINITFile( simProps , int_data, nnc );
+            this->impl->writeINITFile( simProps , std::move(int_data), nnc );
 
         if( ioConfig.getWriteEGRIDFile( ) )
             this->impl->writeEGRIDFile( nnc );
