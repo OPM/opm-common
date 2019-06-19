@@ -1844,7 +1844,8 @@ namespace Opm {
                                                     preferredPhase,
                                                     this->global_whistctl_mode[timeStep],
                                                     wellConnectionOrder,
-                                                    unit_system);
+                                                    unit_system,
+                                                    this->getUDQConfig(timeStep).params().undefinedValue());
 
             well_ptr->updateCrossFlow(allowCrossFlow);
             well_ptr->updateAutoShutin(automaticShutIn);
