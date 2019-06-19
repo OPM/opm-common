@@ -15,7 +15,7 @@ set( warnings "${warnings} -Wredundant-decls" )
 set( CMAKE_CXX_FLAGS "-std=c++11 ${warnings} ${CMAKE_CXX_FLAGS}" )
 
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/pycmake/cmake/Modules)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/pycmake)
 
 option( USE_RPATH "Embed RPATH in libraries and binaries" OFF)
 if (USE_RPATH)
