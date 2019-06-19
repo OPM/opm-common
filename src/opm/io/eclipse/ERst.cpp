@@ -6,7 +6,7 @@
    OPM is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-
+#include <iostream>
    OPM is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,26 +27,32 @@
 #include <stdexcept>
 #include <string>
 
-#include <boost/regex.hpp>
+#include <iostream>
+
 
 namespace {
     int seqnumFromSeparateFilename(const std::string& filename)
     {
-        const auto re = boost::regex {
-            R"~(\.[FX]([0-9]{4})$)~"
-        };
+        int p=0;
 
-        auto match = boost::smatch{};
-        if (boost::regex_search(filename, match, re)) {
-            return std::stoi(match[1]);
+        std::string errMessage="Unable to Determine Report Step Sequence Number From Restart Filename \"" + filename + '"'; 
+        
+        if (filename.find(".F") != std::string::npos) {
+            p = filename.find_last_of(".F");
+        } else if (filename.find(".X") != std::string::npos) {
+            p = filename.find_last_of(".X");
+        } else {
+            OPM_THROW(std::invalid_argument, errMessage);
         }
-
-        throw std::invalid_argument {
-            "Unable to Determine Report Step Sequence Number "
-            "From Restart Filename \"" + filename + '"'
-        };
+        
+        try {
+            return std::stoi(filename.substr(p+1,filename.size() - p-1));
+        } catch (...) {
+            OPM_THROW(std::invalid_argument, errMessage);
+        }
     }
 }
+
 
 namespace Opm { namespace EclIO {
 
@@ -57,7 +63,7 @@ ERst::ERst(const std::string& filename)
         this->initUnified();
     }
     else {
-        this->initSeparate(seqnumFromSeparateFilename(filename));
+	this->initSeparate(seqnumFromSeparateFilename(filename));
     }
 }
 

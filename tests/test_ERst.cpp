@@ -75,6 +75,8 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
 }
 
 
+
+
 BOOST_AUTO_TEST_CASE(TestERst_1) {
 
     std::string testFile="SPE1_TESTCASE.UNRST";
@@ -84,7 +86,6 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     rst1.loadReportStepNumber(5);
     
     std::vector<int> reportStepNumbers = rst1.listOfReportStepNumbers();
-
     BOOST_CHECK_EQUAL(reportStepNumbers==refReportStepNumbers, true);
 
     BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(4), false);
@@ -225,6 +226,40 @@ BOOST_AUTO_TEST_CASE(TestERst_3) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
 }
+
+BOOST_AUTO_TEST_CASE(TestERst_4) {
+
+    std::string testFile1="./SPE1_TESTCASE.UNRST";
+    std::string testFile2="./SPE1_TESTCASE.F0025";
+    std::string testFile3="./SPE1_TESTCASE.X0025";
+
+    ERst rst1(testFile1);
+    rst1.loadReportStepNumber(25);
+
+    ERst rst2(testFile2);
+    rst2.loadReportStepNumber(25);
+
+    ERst rst3(testFile3);
+    rst3.loadReportStepNumber(25);
+
+    BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(4), false);
+    BOOST_CHECK_EQUAL(rst1.hasReportStepNumber(25), true);
+
+    BOOST_CHECK_EQUAL(rst2.hasReportStepNumber(4), false);
+    BOOST_CHECK_EQUAL(rst2.hasReportStepNumber(25), true);
+
+    BOOST_CHECK_EQUAL(rst3.hasReportStepNumber(4), false);
+    BOOST_CHECK_EQUAL(rst3.hasReportStepNumber(25), true);
+
+    std::vector<float> pres1 = rst1.getRst<float>("PRESSURE",25);
+    std::vector<float> pres2 = rst2.getRst<float>("PRESSURE",25);
+    std::vector<float> pres3 = rst3.getRst<float>("PRESSURE",25);
+    
+    BOOST_CHECK_EQUAL(pres1==pres2, true);
+    BOOST_CHECK_EQUAL(pres1==pres3, true);
+    
+}
+
 
 // ====================================================================
 
@@ -881,4 +916,7 @@ BOOST_AUTO_TEST_CASE(Formatted)
     }
 }
 
+
+
 BOOST_AUTO_TEST_SUITE_END()
+
