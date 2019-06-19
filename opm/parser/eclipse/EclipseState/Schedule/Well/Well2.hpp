@@ -127,6 +127,21 @@ public:
     */
     std::map<int, std::vector<Connection>> getCompletions() const;
 
+    /*
+      The getCompletionsByConnnectionIndices() function will return a map:
+
+      {
+        1 : [ConnectionIndex, ConnectioniIndex],
+        2 : [ConnectionIndex, ConnectionIndex, ConnectoniIndex],
+        3 : [ConnectionIndex],
+        4 : [ConnectionIndex]
+      }
+
+      The integer ID's correspond to the COMPLETION id given by the COMPLUMP
+      keyword.
+    */
+    std::map<int, std::vector<int>> getCompletionsByConnectionIndices() const;
+
     bool updatePrediction(bool prediction_mode);
     bool updateAutoShutin(bool auto_shutin);
     bool updateCrossFlow(bool allow_cross_flow);

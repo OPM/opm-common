@@ -2153,17 +2153,35 @@ BOOST_AUTO_TEST_CASE( complump ) {
     BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 2 ).state() );
     BOOST_CHECK_EQUAL( shut, sc1.getFromIJK( 2, 2, 3 ).state() );
 
-    const auto& completions = schedule.getWell2("W1", 1).getCompletions();
-    BOOST_CHECK_EQUAL(completions.size(), 4);
 
-    const auto& c1 = completions.at(1);
-    BOOST_CHECK_EQUAL(c1.size(), 3);
+    {
+        const auto& completions = schedule.getWell2("W1", 1).getCompletions();
+        BOOST_CHECK_EQUAL(completions.size(), 4);
 
-    for (const auto& pair : completions) {
-        if (pair.first == 1)
-            BOOST_CHECK(pair.second.size() > 1);
-        else
-            BOOST_CHECK_EQUAL(pair.second.size(), 1);
+        const auto& c1 = completions.at(1);
+        BOOST_CHECK_EQUAL(c1.size(), 3);
+
+        for (const auto& pair : completions) {
+            if (pair.first == 1)
+                BOOST_CHECK(pair.second.size() > 1);
+            else
+                BOOST_CHECK_EQUAL(pair.second.size(), 1);
+        }
+    }
+
+    {
+        const auto& completions = schedule.getWell2("W1", 1).getCompletionsByConnectionIndices();
+        BOOST_CHECK_EQUAL(completions.size(), 4);
+
+        const auto& c1 = completions.at(1);
+        BOOST_CHECK_EQUAL(c1.size(), 3);
+
+        for (const auto& pair : completions) {
+            if (pair.first == 1)
+                BOOST_CHECK_EQUAL(pair.second.size(), 3);
+            else
+                BOOST_CHECK_EQUAL(pair.second.size(), 1);
+        }
     }
 }
 

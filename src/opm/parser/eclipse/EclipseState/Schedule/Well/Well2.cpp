@@ -497,6 +497,25 @@ std::map<int, std::vector<Connection>> Well2::getCompletions() const {
     return completions;
 }
 
+
+std::map<int, std::vector<int>> Well2::getCompletionsByConnectionIndices() const {
+    std::map<int, std::vector<int>> completions;
+
+    const auto& conns = *this->connections;
+    const int num_conns = conns.size();
+
+    for (int c = 0; c < num_conns; c++) {
+        auto pair = completions.find( conns[c].complnum() );
+        if (pair == completions.end())
+            completions[conns[c].complnum()] = {};
+
+        pair = completions.find(conns[c].complnum());
+        pair->second.push_back(c);
+    }
+
+    return completions;
+}
+
 Phase Well2::getPreferredPhase() const {
     return this->phase;
 }
