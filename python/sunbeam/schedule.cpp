@@ -43,11 +43,6 @@ namespace {
         return system_clock::from_time_t(local_time);
     }
 
-    std::vector< Well2 > get_wells( const Schedule& sch, const size_t& timestep ) {
-
-        return sch.getWells2(timestep);
-    }
-
     const Well2& get_well( const Schedule& sch, const std::string& name, const size_t& timestep ) try {
         return sch.getWell2( name, timestep );
     } catch( const std::invalid_argument& e ) {
@@ -92,11 +87,11 @@ namespace {
 void sunbeam::export_Schedule(py::module& module) {
 
     py::class_< Schedule >( module, "Schedule")
-    .def_property_readonly( "_wells", &get_wells )
     .def_property_readonly( "_groups", &get_groups )
     .def_property_readonly( "start",  &get_start_time )
     .def_property_readonly( "end",    &get_end_time )
     .def_property_readonly( "timesteps", &get_timesteps )
+    .def( "get_wells", &Schedule::getWells2)
     .def("_getwell", &get_well)
     .def( "__contains__", &has_well )
     .def( "_group", &Schedule::getGroup, ref_internal)
