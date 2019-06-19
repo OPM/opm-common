@@ -11,9 +11,8 @@ class Schedule(object):
         lw = len(self.wells)
         return 'Schedule(timesteps: %d, wells: %d)' % (lt, lw)
 
-    @property
-    def wells(self):
-        return list(map(Well, self._wells))
+    def get_wells(self, timestep = 0):
+        return list(map(Well, self._get_wells(timestep)))
 
     def group(self, timestep=0):
         return {grp.name: grp for grp in self.groups(timestep)}
@@ -28,16 +27,14 @@ class Schedule(object):
 @delegate(lib.Well)
 class Well(object):
 
-    def pos(self, timestep = None):
-        if timestep is None:
-            return self.I(), self.J(), self.ref()
-        return self.I(timestep), self.J(timestep), self.ref(timestep)
+    def pos(self):
+        return self.I(), self.J(), self.ref()
 
     def __repr__(self):
         return 'Well(name = "%s")' % self.name
 
-    def connections(self, timestep):
-        return list(map(Connection, self._connections(timestep)))
+    def connections(self):
+        return list(map(Connection, self._connections()))
 
     def __eq__(self,other):
         return self._sun.__equal__(other._sun)
@@ -48,13 +45,13 @@ class Well(object):
         return fn
 
     @staticmethod
-    def injector(timestep):
-        def fn(well): return well.isinjector(timestep)
+    def injector():
+        def fn(well): return well.isinjector()
         return fn
 
     @staticmethod
-    def producer(timestep):
-        def fn(well): return well.isproducer(timestep)
+    def producer():
+        def fn(well): return well.isproducer()
         return fn
 
     # using the names flowing and closed for functions that test if a well is
@@ -62,13 +59,13 @@ class Well(object):
     # imperative words 'open' and 'close' (or 'shut') for *changing* the status
     # later
     @staticmethod
-    def flowing(timestep):
-        def fn(well): return well.status(timestep) == 'OPEN'
+    def flowing():
+        def fn(well): return well.status() == 'OPEN'
         return fn
 
     @staticmethod
-    def closed(timestep):
-        def fn(well): return well.status(timestep) == 'SHUT'
+    def closed():
+        def fn(well): return well.status() == 'SHUT'
         return fn
 
     @staticmethod

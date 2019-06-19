@@ -91,7 +91,7 @@ void sunbeam::export_Schedule(py::module& module) {
     .def_property_readonly( "start",  &get_start_time )
     .def_property_readonly( "end",    &get_end_time )
     .def_property_readonly( "timesteps", &get_timesteps )
-    .def( "get_wells", &Schedule::getWells2)
+    .def( "_get_wells", &Schedule::getWells2)
     .def("_getwell", &get_well)
     .def( "__contains__", &has_well )
     .def( "_group", &Schedule::getGroup, ref_internal)
