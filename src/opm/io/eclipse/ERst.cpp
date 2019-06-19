@@ -33,6 +33,7 @@
 namespace {
     int seqnumFromSeparateFilename(const std::string& filename)
     {
+
         int p=0;
 
         std::string errMessage="Unable to Determine Report Step Sequence Number From Restart Filename \"" + filename + '"'; 
