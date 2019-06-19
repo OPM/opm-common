@@ -1,4 +1,4 @@
-#include <opm/parser/eclipse/EclipseState/Schedule/Connection.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
 #include "sunbeam.hpp"
 
