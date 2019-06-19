@@ -223,6 +223,16 @@ namespace Opm {
 	  return pair_ptr->second;
     }
     
+    const std::string& UDQInput::udqdef_data(const std::string key) const {
+      	const auto pair_ptr = this->m_udqdef_data.find(key);
+        if (pair_ptr == this->m_udqdef_data.end()) {
+            throw std::invalid_argument("UDQInput - udqdef_data - unknown UDQ quantity" + key);
+	}
+	else
+	  return pair_ptr->second;
+    }
+
+    
     const std::size_t& UDQInput::keytype_keyname_seq_no(const std::size_t keytype, const std::string keyname) const {
       	const auto outer_ptr = this->m_keytype_keyname_seq_no.find(keytype);
         if (outer_ptr == this->m_keytype_keyname_seq_no.end()) {

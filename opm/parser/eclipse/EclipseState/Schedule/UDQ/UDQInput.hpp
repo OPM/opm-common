@@ -43,6 +43,7 @@ namespace Opm {
         explicit UDQInput(const Deck& deck);
         const std::string& unit(const std::string& key) const;
 	const std::string& udqKey(const std::size_t) const;
+	const std::string& udqdef_data(const std::string key) const;
 	const std::size_t& key_seq_no(const std::string key) const;
 	const std::size_t& keytype_keyname_seq_no(const std::size_t keytype, const std::string keyname) const;
 	const std::size_t noUdqs();
@@ -106,6 +107,7 @@ namespace Opm {
         OrderedMap<std::string, std::pair<size_t, UDQAction>> input_index;
 	std::vector<std::string> m_udq_keys;
 	std::unordered_map<std::string, bool> m_is_define;
+	std::unordered_map<std::string, std::string> m_udqdef_data;
         std::unordered_set<std::string> keywords;
 	std::unordered_map<std::string, std::size_t> m_key_seq_no;
 	std::unordered_map<std::size_t, std::unordered_map<std::string, std::size_t> > m_keytype_keyname_seq_no;
