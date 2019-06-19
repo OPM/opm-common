@@ -2105,11 +2105,11 @@ BOOST_AUTO_TEST_CASE( complump ) {
             /
 
             COMPDAT
-                'W1' 0 0 1 2 'SHUT' 1*    /
+                'W1' 0 0 1 1 'SHUT' 1*    /
                 'W1' 0 0 2 3 'SHUT' 1*    /
                 'W1' 0 0 4 6 'SHUT' 1*    /
                 'W2' 0 0 3 4 'SHUT' 1*    /
-                'W2' 0 0 1 4 'SHUT' 1*    /
+                'W2' 0 0 1 2 'SHUT' 1*    /
             /
 
             COMPLUMP
