@@ -100,7 +100,6 @@ enum class UDQAction {
     UPDATE
 };
 
-
 enum class UDAControl {
     WCONPROD_ORAT,
     WCONPROD_GRAT,

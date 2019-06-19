@@ -44,6 +44,7 @@ class EclipseGrid;
 class DeckKeyword;
 struct WellInjectionProperties;
 class WellProductionProperties;
+class UDQActive;
 
 struct WellGuideRate {
     bool available;
@@ -162,7 +163,6 @@ public:
     void switchToProducer();
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
-
     int vfp_table_number() const;
     double alq_value() const;
     double temperature() const;

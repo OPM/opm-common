@@ -48,6 +48,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -94,6 +95,7 @@ namespace {
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
+        udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
         rft_config(this->m_timeMap)
     {
@@ -773,12 +775,11 @@ namespace {
                     bool switching_from_injector = !well2->isProducer();
                     auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
                     bool update_well = switching_from_injector;
-
                     properties->clearControls();
                     if (well2->isAvailableForGroupControl())
                         properties->addProductionControl(WellProducer::GRUP);
 
-                    properties->handleWCONPROD(record);
+                    properties->handleWCONPROD(well_name, record);
 
                     if (switching_from_injector)
                         properties->resetDefaultBHPLimit();
@@ -797,6 +798,10 @@ namespace {
                         this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                         this->updateWell(well2, currentStep);
                     }
+
+                    auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
+                    if (properties->updateUDQActive(*udq))
+                        this->updateUDQActive(currentStep, udq);
                 }
             }
         }
@@ -901,6 +906,10 @@ namespace {
                              }
                          }
                     }
+
+                    auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
+                    if (injection->updateUDQActive(*udq))
+                        this->updateUDQActive(currentStep, udq);
                 }
             }
         }
@@ -2478,6 +2487,13 @@ namespace {
         return tables;
     }
 
+    const UDQActive& Schedule::udqActive(size_t timeStep) const {
+        return *this->udq_active[timeStep];
+    }
+
+    void Schedule::updateUDQActive( size_t timeStep, std::shared_ptr<UDQActive> udq ) {
+        this->udq_active.update(timeStep, udq);
+    }
 
     const WellTestConfig& Schedule::wtestConfig(size_t timeStep) const {
         const auto& ptr = this->wtest_config.get(timeStep);
