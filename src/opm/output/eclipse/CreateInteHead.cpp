@@ -71,6 +71,7 @@ namespace {
 
     Opm::RestartIO::InteHEAD::WellTableDim
     getWellTableDims(const int              nwgmax,
+                     const int              ngmax,
                      const ::Opm::Runspec&  rspec,
                      const ::Opm::Schedule& sched,
                      const std::size_t      lookup_step)
@@ -86,7 +87,8 @@ namespace {
         const auto maxWellInGroup =
             std::max(wd.maxWellsPerGroup(), nwgmax);
 
-        const auto maxGroupInField = wd.maxGroupsInField();
+        const auto maxGroupInField =
+            std::max(wd.maxGroupsInField(), ngmax);
 
         return {
             numWells,
@@ -258,7 +260,8 @@ createInteHead(const EclipseState& es,
         .dimensions         (grid.getNXYZ())
         .numActive          (static_cast<int>(grid.getNumActive()))
         .unitConventions    (getUnitConvention(es.getDeckUnitSystem()))
-        .wellTableDimensions(getWellTableDims(nwgmax, rspec, sched, lookup_step))
+        .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec,
+                                              sched, lookup_step))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
         .activePhases       (getActivePhases(rspec))
              // The numbers below have been determined experimentally to work
