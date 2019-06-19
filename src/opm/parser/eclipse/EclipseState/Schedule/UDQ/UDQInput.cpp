@@ -22,6 +22,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
+
 
 namespace Opm {
 
@@ -41,6 +43,9 @@ namespace Opm {
     {
     }
 
+    const UDQParams& UDQInput::params() const {
+        return this->udq_params;
+    }
 
 
     void UDQInput::add_record(const DeckRecord& record) {

@@ -53,6 +53,7 @@ namespace Opm {
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
 
         const UDQFunctionTable& function_table() const;
+        const UDQParams& params() const;
     private:
         UDQParams udq_params;
         UDQFunctionTable udqft;
