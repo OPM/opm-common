@@ -10,10 +10,10 @@ class TestSchedule(unittest.TestCase):
         cls.sch = sunbeam.parse('spe3/SPE3CASE1.DATA').schedule
 
     def testWells(self):
-        self.assertEqual(2, len(self.sch.wells))
+        self.assertEqual(2, len(self.sch.get_wells(0)))
 
         with self.assertRaises(KeyError):
-            self.sch['foo']
+            self.sch.get_well('foo', 0)
 
     def testContains(self):
         self.assertTrue('PROD' in self.sch)
@@ -31,19 +31,19 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(dt.datetime(2016, 1, 1), timesteps[7])
 
     def testGroups(self):
-        g1 = self.sch.group()['G1'].wells
+        g1 = self.sch.group(0)['G1'].wells
         self.assertEqual(2, len(g1))
 
         def head(xs): return next(iter(xs))
 
-        inje = head(filter(sunbeam.Well.injector(0), g1))
-        prod = head(filter(sunbeam.Well.producer(0), g1))
+        inje = head(filter(sunbeam.Well.injector(), g1))
+        prod = head(filter(sunbeam.Well.producer(), g1))
 
-        self.assertEqual(self.sch['INJ'],  inje)
-        self.assertEqual(self.sch['PROD'], prod)
+        self.assertEqual(self.sch.get_well('INJ', 0).isinjector(),  inje.isinjector())
+        self.assertEqual(self.sch.get_well('PROD', 0).isproducer(), prod.isproducer())
 
         with self.assertRaises(KeyError):
-            self.sch.group()['foo']
+            self.sch.group(0)['foo']
 
 
 if __name__ == "__main__":

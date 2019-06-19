@@ -20,8 +20,8 @@ class Schedule(object):
     def groups(self, timestep=0):
         return [Group(x, self, timestep) for x in self._groups if x.name != 'FIELD']
 
-    def __getitem__(self,well):
-         return Well(self._getwell(well))
+    def get_well(self, well, timestep):
+         return Well(self._getwell(well, timestep))
 
 
 @delegate(lib.Well)
@@ -126,7 +126,7 @@ class Group(object):
     @property
     def wells(self):
         names = self._wellnames(self.timestep)
-        return [w for w in self._schedule.wells if w.name in names]
+        return [w for w in self._schedule.get_wells(self.timestep) if w.name in names]
 
     @property
     def vfp_table_nr(self):
