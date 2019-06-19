@@ -43,16 +43,13 @@ namespace {
         return system_clock::from_time_t(local_time);
     }
 
-    std::vector< Well > get_wells( const Schedule& sch ) {
-        std::vector< Well > wells;
-        for( const auto& w : sch.getWells() )
-            wells.push_back( *w );
+    std::vector< Well2 > get_wells( const Schedule& sch, const size_t& timestep ) {
 
-        return wells;
+        return sch.getWells2(timestep);
     }
 
-    const Well& get_well( const Schedule& sch, const std::string& name ) try {
-        return *sch.getWell( name );
+    const Well2& get_well( const Schedule& sch, const std::string& name, const size_t& timestep ) try {
+        return sch.getWell2( name, timestep );
     } catch( const std::invalid_argument& e ) {
         throw py::key_error( name );
     }
@@ -86,6 +83,10 @@ namespace {
         return groups;
     }
 
+    bool has_well( const Schedule& sch, const std::string& wellName) {
+        return sch.hasWell( wellName );
+    }
+
 }
 
 void sunbeam::export_Schedule(py::module& module) {
@@ -97,7 +98,7 @@ void sunbeam::export_Schedule(py::module& module) {
     .def_property_readonly( "end",    &get_end_time )
     .def_property_readonly( "timesteps", &get_timesteps )
     .def("_getwell", &get_well)
-    .def( "__contains__", &Schedule::hasWell )
+    .def( "__contains__", &has_well )
     .def( "_group", &Schedule::getGroup, ref_internal)
     .def( "_group_tree", &get_grouptree, ref_internal);
 

@@ -1,20 +1,20 @@
-#include <opm/parser/eclipse/EclipseState/Schedule/Well.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <pybind11/stl.h>
 #include "sunbeam.hpp"
 
 
 namespace {
 
-    std::vector<Connection> connections( const Well& w, size_t timestep ) {
-        const auto& well_connections = w.getConnections( timestep );
+    std::vector<Connection> connections( const Well2& w ) {
+        const auto& well_connections = w.getConnections();
         return std::vector<Connection>(well_connections.begin(), well_connections.end());
     }
 
-    std::string status( const Well& w, size_t timestep )  {
-        return WellCommon::Status2String( w.getStatus( timestep ) );
+    std::string status( const Well2& w )  {
+        return WellCommon::Status2String( w.getStatus() );
     }
 
-    std::string preferred_phase( const Well& w ) {
+    std::string preferred_phase( const Well2& w ) {
         switch( w.getPreferredPhase() ) {
             case Phase::OIL:   return "OIL";
             case Phase::GAS:   return "GAS";
@@ -23,20 +23,20 @@ namespace {
         }
     }
 
-    int    (Well::*headI)() const = &Well::getHeadI;
-    int    (Well::*headJ)() const = &Well::getHeadI;
-    double (Well::*refD)()  const = &Well::getRefDepth;
+    int    (Well2::*headI)() const = &Well2::getHeadI;
+    int    (Well2::*headJ)() const = &Well2::getHeadI;
+    double (Well2::*refD)()  const = &Well2::getRefDepth;
 
-    int    (Well::*headI_at)(size_t) const = &Well::getHeadI;
-    int    (Well::*headJ_at)(size_t) const = &Well::getHeadI;
-    double (Well::*refD_at)(size_t)  const = &Well::getRefDepth;
+    int    (Well2::*headI_at)() const = &Well2::getHeadI;
+    int    (Well2::*headJ_at)() const = &Well2::getHeadI;
+    double (Well2::*refD_at)()  const = &Well2::getRefDepth;
 
 }
 
 void sunbeam::export_Well(py::module& module) {
 
-    py::class_< Well >( module, "Well")
-        .def_property_readonly( "name", &Well::name )
+    py::class_< Well2 >( module, "Well")
+        .def_property_readonly( "name", &Well2::name )
         .def_property_readonly( "preferred_phase", &preferred_phase )
         .def( "I",               headI )
         .def( "I",               headI_at )
@@ -45,13 +45,12 @@ void sunbeam::export_Well(py::module& module) {
         .def( "ref",             refD )
         .def( "ref",             refD_at )
         .def( "status",          &status )
-        .def( "isdefined",       &Well::hasBeenDefined )
-        .def( "isinjector",      &Well::isInjector )
-        .def( "isproducer",      &Well::isProducer )
-        .def( "group",           &Well::getGroupName )
-        .def( "guide_rate",      &Well::getGuideRate )
-        .def( "available_gctrl", &Well::isAvailableForGroupControl )
-        .def( "__equal__",       &Well::operator== )
+        .def( "isdefined",       &Well2::hasBeenDefined )
+        .def( "isinjector",      &Well2::isInjector )
+        .def( "isproducer",      &Well2::isProducer )
+        .def( "group",           &Well2::groupName )
+        .def( "guide_rate",      &Well2::getGuideRate )
+        .def( "available_gctrl", &Well2::isAvailableForGroupControl )
         .def( "_connections",    &connections );
 
 }
