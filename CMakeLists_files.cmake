@@ -87,7 +87,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/GroupTree.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/injection.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.cpp
@@ -101,6 +101,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Connection.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/well_uda.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/Well2.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WList.cpp

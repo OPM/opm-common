@@ -24,7 +24,8 @@
 
 namespace Opm {
 
-    UDQContext::UDQContext(const UDQFunctionTable& udqft, const SummaryState& summary_state) :
+    UDQContext::UDQContext(const UDQParams& params, const UDQFunctionTable& udqft, const SummaryState& summary_state) :
+        params(params),
         udqft(udqft),
         summary_state(summary_state)
     {
@@ -63,8 +64,16 @@ namespace Opm {
         return this->summary_state.get_well_var(well, var);
     }
 
+    bool UDQContext::has_well_var(const std::string& well, const std::string& var) const {
+        return this->summary_state.has_well_var(well, var);
+    }
+
     double UDQContext::get_group_var(const std::string& group, const std::string& var) const {
         return this->summary_state.get_group_var(group, var);
+    }
+
+    bool UDQContext::has_group_var(const std::string& group, const std::string& var) const {
+        return this->summary_state.has_group_var(group, var);
     }
 
     std::vector<std::string> UDQContext::wells() const {

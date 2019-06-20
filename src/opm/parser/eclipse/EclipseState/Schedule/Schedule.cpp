@@ -62,7 +62,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include "injection.hpp"
+#include "Well/injection.hpp"
 #include "Well/WellProductionProperties.hpp"
 #include "Well/WellInjectionProperties.hpp"
 
@@ -1119,7 +1119,7 @@ namespace Opm {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , currentStep);
-            double fraction = record.getItem("SOLVENT_FRACTION").get< double >(0);
+            double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).get<double>();
 
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
@@ -1151,7 +1151,7 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                double tracerConcentration = record.getItem("CONCENTRATION").get< double >(0);
+                double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).get<double>();
                 const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
                 {
                     auto well = std::make_shared<Well2>( this->getWell2(well_name, currentStep));
@@ -1383,15 +1383,14 @@ namespace Opm {
 
                 Phase wellPhase = get_phase( record.getItem("PHASE").getTrimmedString(0));
 
-                // calculate SI injection rates for the group
-                double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< double >(0);
+                double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0).get<double>();
                 surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, wellPhase, section.unitSystem());
-                double reservoirInjectionRate = record.getItem("RESV_TARGET").getSIDouble(0);
+                double reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0).get<double>();
 
                 group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
                 group->setReservoirMaxRate( currentStep , reservoirInjectionRate);
-                group->setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").getSIDouble(0));
-                group->setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").getSIDouble(0));
+                group->setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>());
+                group->setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>());
 
                 group->setInjectionGroup(currentStep, true);
             }
@@ -1411,10 +1410,10 @@ namespace Opm {
                     GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                     group->setProductionControlMode( currentStep , controlMode );
                 }
-                group->setOilTargetRate( currentStep , record.getItem("OIL_TARGET").getSIDouble(0));
-                group->setGasTargetRate( currentStep , record.getItem("GAS_TARGET").getSIDouble(0));
-                group->setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").getSIDouble(0));
-                group->setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").getSIDouble(0));
+                group->setOilTargetRate( currentStep , record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>());
+                group->setGasTargetRate( currentStep , record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>());
+                group->setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>());
+                group->setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>());
                 group->setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
                 {
                     GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );

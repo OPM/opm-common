@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQParams udqp;
     UDQDefine def_add(udqp, "WU", {"WOPR", "+", "1"});
     SummaryState st;
-    UDQContext context(udqft, st);
+    UDQContext context(UDQParams(), udqft, st);
 
     st.update_well_var("P1", "WOPR", 1);
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(UDQFieldSetTest) {
     UDQDefine def_fxxx(udqp, "FU_SCALAR", {"123"});
     UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "WOPR", ")"});
     SummaryState st;
-    UDQContext context(udqft, st);
+    UDQContext context(udqp, udqft, st);
 
     st.update_well_var("P1", "WOPR", 1.0);
     st.update_well_var("P2", "WOPR", 2.0);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(UDQ_GROUP_TEST) {
         UDQFunctionTable udqft(udqp);
         UDQDefine def_fopr(udqp, "FUOPR", {"SUM", "(", "GOPR", ")"});
         SummaryState st;
-        UDQContext context(udqft, st);
+        UDQContext context(udqp, udqft, st);
 
         st.update_group_var("G1", "GOPR", 1.0);
         st.update_group_var("G2", "GOPR", 2.0);
@@ -168,8 +168,9 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     UDQFunctionTable udqft(udqp);
     {
         UDQDefine def(udqp, "WUBHP", {"WBHP"});
+        UDQParams udqp;
         SummaryState st;
-        UDQContext context(udqft, st);
+        UDQContext context(udqp, udqft, st);
 
         st.update_well_var("W1", "WBHP", 11);
         st.update_well_var("W2", "WBHP", 2);
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     {
         UDQDefine def(udqp, "WUBHP", {"WBHP" , "'P*'"});
         SummaryState st;
-        UDQContext context(udqft, st);
+        UDQContext context(udqp, udqft, st);
 
 
         st.update_well_var("P1", "WBHP", 1);
@@ -200,7 +201,7 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     {
         UDQDefine def(udqp, "WUBHP", {"NINT" , "(", "WBHP", ")"});
         SummaryState st;
-        UDQContext context(udqft, st);
+        UDQContext context(udqp, udqft, st);
         st.update_well_var("P1", "WBHP", 4);
         st.update_well_var("P2", "WBHP", 3);
         st.update_well_var("I1", "WBHP", 2);
@@ -438,7 +439,8 @@ ASSIGN WU2 8.0 /
 BOOST_AUTO_TEST_CASE(UDQ_CONTEXT) {
     SummaryState st;
     UDQFunctionTable func_table;
-    UDQContext ctx(func_table, st);
+    UDQParams udqp;
+    UDQContext ctx(udqp, func_table, st);
     BOOST_CHECK_EQUAL(ctx.get("JAN"), 1.0);
 
     BOOST_REQUIRE_THROW(ctx.get("NO_SUCH_KEY"), std::out_of_range);
@@ -845,7 +847,7 @@ BOOST_AUTO_TEST_CASE(UDQ_POW_TEST) {
     UDQDefine def_pow1(udqp, "WU", {"WOPR", "+", "WWPR", "*", "WGOR", "^", "WWIR"});
     UDQDefine def_pow2(udqp, "WU", {"(", "WOPR", "+", "WWPR", ")", "^", "(", "WOPR", "+" , "WGOR", "*", "WWIR", "-", "WOPT", ")"});
     SummaryState st;
-    UDQContext context(udqft, st);
+    UDQContext context(udqp, udqft, st);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P1", "WWPR", 2);
@@ -864,7 +866,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     UDQParams udqp;
     UDQDefine def_cmp(udqp, "WU", {"WOPR", ">", "WWPR", "+", "WGOR", "*", "WWIR"});
     SummaryState st;
-    UDQContext context(udqft, st);
+    UDQContext context(udqp, udqft, st);
 
     st.update_well_var("P1", "WOPR",  0);
     st.update_well_var("P1", "WWPR", 10);
@@ -891,7 +893,7 @@ BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     UDQParams udqp;
     UDQFunctionTable udqft;
     SummaryState st;
-    UDQContext context(udqft, st);
+    UDQContext context(udqp, udqft, st);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -962,7 +964,7 @@ BOOST_AUTO_TEST_CASE(UDQ_BASIC_MATH_TEST) {
     UDQDefine def_muladd(udqp , "WUX", {"WOPR", "+", "WOPR", "*", "WOPR"});
     UDQDefine def_wuwct(udqp , "WUWCT", {"WWPR", "/", "(", "WOPR", "+", "WWPR", ")"});
     SummaryState st;
-    UDQContext context(udqft, st);
+    UDQContext context(udqp, udqft, st);
 
     st.update_well_var("P1", "WOPR", 1);
     st.update_well_var("P2", "WOPR", 2);
@@ -1022,7 +1024,7 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
     UDQFunctionTable udqft(udqp);
     UDQDefine def(udqp, "WUOPRL", {"(", "WOPR", "OP1", "-", "150", ")", "*", "0.90"});
     SummaryState st;
-    UDQContext context(udqft, st);
+    UDQContext context(udqp, udqft, st);
 
     st.update_well_var("OP1", "WOPR", 300);
     st.update_well_var("OP2", "WOPR", 3000);
@@ -1060,7 +1062,7 @@ BOOST_AUTO_TEST_CASE(UDQ_PARSE_ERROR) {
         UDQDefine def1(udqp, "WUBHP", tokens, parseContext, errors);
         SummaryState st;
         UDQFunctionTable udqft(udqp);
-        UDQContext context(udqft, st);
+        UDQContext context(udqp, udqft, st);
         st.update_well_var("P1", "WBHP", 1);
 
         auto res = def1.eval(context);
@@ -1084,7 +1086,7 @@ BOOST_AUTO_TEST_CASE(UDQ_TYPE_ERROR) {
 
         SummaryState st;
         UDQFunctionTable udqft(udqp);
-        UDQContext context(udqft, st);
+        UDQContext context(udqp, udqft, st);
         st.update_well_var("P1", "WBHP", 1);
         st.update_well_var("P2", "WBHP", 2);
 
