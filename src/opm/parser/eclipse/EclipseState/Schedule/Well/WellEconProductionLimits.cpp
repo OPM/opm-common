@@ -50,11 +50,11 @@ namespace Opm {
 
 
     WellEconProductionLimits::WellEconProductionLimits(const DeckRecord& record)
-        : m_min_oil_rate(record.getItem("MIN_OIL_PRODUCTION").getSIDouble(0))
-        , m_min_gas_rate(record.getItem("MIN_GAS_PRODUCTION").getSIDouble(0))
-        , m_max_water_cut(record.getItem("MAX_WATER_CUT").get<double>(0))
-        , m_max_gas_oil_ratio(record.getItem("MAX_GAS_OIL_RATIO").get<double>(0))
-        , m_max_water_gas_ratio(record.getItem("MAX_WATER_GAS_RATIO").get<double>(0))
+        : m_min_oil_rate(record.getItem("MIN_OIL_PRODUCTION").get<UDAValue>(0).get<double>())
+        , m_min_gas_rate(record.getItem("MIN_GAS_PRODUCTION").get<UDAValue>(0).get<double>())
+        , m_max_water_cut(record.getItem("MAX_WATER_CUT").get<UDAValue>(0).get<double>())
+        , m_max_gas_oil_ratio(record.getItem("MAX_GAS_OIL_RATIO").get<UDAValue>(0).get<double>())
+        , m_max_water_gas_ratio(record.getItem("MAX_WATER_GAS_RATIO").get<UDAValue>(0).get<double>())
         , m_workover(WellEcon::WorkoverEnumFromString(record.getItem("WORKOVER_RATIO_LIMIT").getTrimmedString(0)))
         , m_end_run(false)
         , m_followon_well(record.getItem("FOLLOW_ON_WELL").getTrimmedString(0))
