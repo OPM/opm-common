@@ -1151,7 +1151,7 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
-                double tracerConcentration = record.getItem("CONCENTRATION").get< double >(0);
+                double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).get<double>();
                 const std::string& tracerName = record.getItem("TRACER").getTrimmedString(0);
                 {
                     auto well = std::make_shared<Well2>( this->getWell2(well_name, currentStep));
