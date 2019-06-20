@@ -1171,7 +1171,7 @@ void eval_udq(const Schedule& schedule, std::size_t sim_step, SummaryState& st)
 {
     const UDQInput& udq = schedule.getUDQConfig(sim_step);
     const auto& func_table = udq.function_table();
-    UDQContext context(func_table, st);
+    UDQContext context(udq.params(), func_table, st);
     std::vector<std::string> wells;
     for (const auto& well_name : schedule.wellNames())
         wells.push_back(well_name);
