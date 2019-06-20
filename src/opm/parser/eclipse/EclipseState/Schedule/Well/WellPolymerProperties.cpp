@@ -16,8 +16,10 @@
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
+
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 
 #include <string>
 #include <vector>
@@ -46,9 +48,6 @@ namespace Opm {
 
 
     void WellPolymerProperties::handleWPOLYMER(const DeckRecord& record) {
-        this->m_polymerConcentration = record.getItem("POLYMER_CONCENTRATION").getSIDouble(0);
-        this->m_saltConcentration = record.getItem("SALT_CONCENTRATION").getSIDouble(0);
-
         const auto& group_polymer_item = record.getItem("GROUP_POLYMER_CONCENTRATION");
         const auto& group_salt_item = record.getItem("GROUP_SALT_CONCENTRATION");
 
@@ -57,6 +56,9 @@ namespace Opm {
 
         if (!group_salt_item.defaultApplied(0))
             throw std::logic_error("Sorry explicit setting of \'GROUP_SALT_CONCENTRATION\' is not supported!");
+
+        this->m_polymerConcentration = record.getItem("POLYMER_CONCENTRATION").get<UDAValue>(0).get<double>();
+        this->m_saltConcentration = record.getItem("SALT_CONCENTRATION").get<UDAValue>(0).get<double>();
     }
 
     void WellPolymerProperties::handleWPMITAB(const DeckRecord& record) {
