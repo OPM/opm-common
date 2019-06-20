@@ -1119,7 +1119,7 @@ namespace Opm {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , currentStep);
-            double fraction = record.getItem("SOLVENT_FRACTION").get< double >(0);
+            double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).get<double>();
 
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
