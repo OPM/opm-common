@@ -954,17 +954,17 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
 
     const auto& well_1 = schedule.getWell2("OP_1", 1);
     const auto wpp_1 = well_1.getProductionProperties();
-    BOOST_CHECK_EQUAL(wpp_1.WaterRate, 0);
+    BOOST_CHECK_EQUAL(wpp_1.WaterRate.get<double>(), 0);
 
     const auto& well_2 = schedule.getWell2("OP_1", 2);
     const auto wpp_2 = well_2.getProductionProperties();
-    BOOST_CHECK_EQUAL(wpp_2.OilRate, 1300 * siFactorL);
-    BOOST_CHECK_EQUAL(wpp_2.WaterRate, 1400 * siFactorL);
-    BOOST_CHECK_EQUAL(wpp_2.GasRate, 1500.52 * siFactorG);
-    BOOST_CHECK_EQUAL(wpp_2.LiquidRate, 1600.58 * siFactorL);
-    BOOST_CHECK_EQUAL(wpp_2.ResVRate, 1801.05 * siFactorL);
-    BOOST_CHECK_EQUAL(wpp_2.BHPLimit, 1900 * siFactorP);
-    BOOST_CHECK_EQUAL(wpp_2.THPLimit, 2000 * siFactorP);
+    BOOST_CHECK_EQUAL(wpp_2.OilRate.get<double>(), 1300 * siFactorL);
+    BOOST_CHECK_EQUAL(wpp_2.WaterRate.get<double>(), 1400 * siFactorL);
+    BOOST_CHECK_EQUAL(wpp_2.GasRate.get<double>(), 1500.52 * siFactorG);
+    BOOST_CHECK_EQUAL(wpp_2.LiquidRate.get<double>(), 1600.58 * siFactorL);
+    BOOST_CHECK_EQUAL(wpp_2.ResVRate.get<double>(), 1801.05 * siFactorL);
+    BOOST_CHECK_EQUAL(wpp_2.BHPLimit.get<double>(), 1900 * siFactorP);
+    BOOST_CHECK_EQUAL(wpp_2.THPLimit.get<double>(), 2000 * siFactorP);
     BOOST_CHECK_EQUAL(wpp_2.VFPTableNumber, 2100);
     BOOST_CHECK_EQUAL(well_2.getGuideRate(), 2300.14);
 }
@@ -1376,21 +1376,21 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     Schedule sched(deck, grid , eclipseProperties, runspec);
 
     // The BHP limit should not be effected by WCONHIST
-    BOOST_CHECK_EQUAL(sched.getWell2("P", 1).getProductionProperties().BHPLimit, 50 * 1e5); // 1
-    BOOST_CHECK_EQUAL(sched.getWell2("P", 2).getProductionProperties().BHPLimit, 50 * 1e5); // 2
+    BOOST_CHECK_EQUAL(sched.getWell2("P", 1).getProductionProperties().BHPLimit.get<double>(), 50 * 1e5); // 1
+    BOOST_CHECK_EQUAL(sched.getWell2("P", 2).getProductionProperties().BHPLimit.get<double>(), 50 * 1e5); // 2
 
 
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 1).getInjectionProperties().BHPLimit, 600 * 1e5); // 1
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().BHPLimit, 600 * 1e5); // 2
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 1).getInjectionProperties().BHPLimit.get<double>(), 600 * 1e5); // 1
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().BHPLimit.get<double>(), 600 * 1e5); // 2
 
     BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), true);
 
     // The well is producer for timestep 3 and the injection properties BHPLimit should be set to zero.
     BOOST_CHECK(sched.getWell2("I", 3).isProducer());
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getInjectionProperties().BHPLimit, 0); // 3
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getInjectionProperties().BHPLimit.get<double>(), 0); // 3
     BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), true );
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().BHPLimit, 6891.2 * 1e5); // 4
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().BHPLimit.get<double>(), 6891.2 * 1e5); // 4
 }
 
 BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {

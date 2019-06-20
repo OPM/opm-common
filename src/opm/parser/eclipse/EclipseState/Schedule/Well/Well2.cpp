@@ -157,7 +157,7 @@ bool Well2::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limi
 void Well2::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
 
-    p->BHPLimit = 0;
+    p->BHPLimit.reset( 0 );
     p->dropInjectionControl( Opm::WellInjector::BHP );
     this->updateInjection( p );
     this->updateProducer(true);
@@ -167,7 +167,8 @@ void Well2::switchToProducer() {
 void Well2::switchToInjector() {
     auto p = std::make_shared<WellProductionProperties>(getProductionProperties());
 
-    p->BHPLimit = 0;
+    p->BHPLimit.assert_numeric();
+    p->BHPLimit.reset(0);
     p->dropProductionControl( Opm::WellProducer::BHP );
     this->updateProduction( p );
     this->updateProducer( false );
@@ -618,12 +619,27 @@ bool Well2::canOpen() const {
     if (this->allow_cross_flow)
         return true;
 
+    /*
+      If the UDAValue is in string mode we return true unconditionally, without
+      evaluating the internal UDA value.
+    */
     if (this->producer) {
         const auto& prod = *this->production;
-        return (prod.WaterRate + prod.OilRate + prod.GasRate) != 0;
+        if (prod.OilRate.is<std::string>())
+            return true;
+
+        if (prod.GasRate.is<std::string>())
+          return true;
+
+        if (prod.WaterRate.is<std::string>())
+          return true;
+
+        return ((prod.OilRate.get<double>() + prod.GasRate.get<double>() + prod.WaterRate.get<double>()) != 0);
     } else {
         const auto& inj = *this->injection;
-        return inj.surfaceInjectionRate != 0;
+        if (inj.surfaceInjectionRate.is<std::string>())
+            return true;
+        return inj.surfaceInjectionRate.get<double>() != 0;
     }
 }
 
@@ -647,15 +663,15 @@ WellCompletion::CompletionOrderEnum Well2::getWellConnectionOrdering() const {
     return this->ordering;
 }
 
-double Well2::production_rate(const SummaryState& st, Phase phase_arg) const {
+double Well2::production_rate(const SummaryState& st, Phase phase) const {
     if( !this->isProducer() ) return 0.0;
 
-    const auto& p = this->getProductionProperties();
+    const auto controls = this->productionControls(st);
 
-    switch( phase_arg ) {
-        case Phase::WATER: return p.WaterRate;
-        case Phase::OIL:   return p.OilRate;
-        case Phase::GAS:   return p.GasRate;
+    switch( phase ) {
+        case Phase::WATER: return controls.water_rate;
+        case Phase::OIL:   return controls.oil_rate;
+        case Phase::GAS:   return controls.gas_rate;
         case Phase::SOLVENT:
             throw std::invalid_argument( "Production of 'SOLVENT' requested." );
         case Phase::POLYMER:
@@ -672,15 +688,15 @@ double Well2::production_rate(const SummaryState& st, Phase phase_arg) const {
 
 double Well2::injection_rate(const SummaryState& st, Phase phase_arg) const {
     if( !this->isInjector() ) return 0.0;
+    const auto controls = this->injectionControls(st);
 
-    const auto& i = this->getInjectionProperties();
-    const auto type = i.injectorType;
+    const auto type = controls.injector_type;
 
     if( phase_arg == Phase::WATER && type != WellInjector::WATER ) return 0.0;
     if( phase_arg == Phase::OIL   && type != WellInjector::OIL   ) return 0.0;
     if( phase_arg == Phase::GAS   && type != WellInjector::GAS   ) return 0.0;
 
-    return i.surfaceInjectionRate;
+    return controls.surface_rate;
 }
 
 

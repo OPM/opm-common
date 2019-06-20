@@ -45,11 +45,11 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     public:
         explicit AggregateWellData(const std::vector<int>& inteHead);
 
-	void captureDeclaredWellData(const Schedule&   	sched,
-                        const UnitSystem& 		units,
-                        const std::size_t 		sim_step,
-			const ::Opm::SummaryState&  	smry,
-			const std::vector<int>& 	inteHead);
+        void captureDeclaredWellData(const Schedule&   	sched,
+                                     const UnitSystem& 		units,
+                                     const std::size_t 		sim_step,
+                                     const ::Opm::SummaryState&  	smry,
+                                     const std::vector<int>& 	inteHead);
 
         void captureDynamicWellData(const Opm::Schedule&        sched,
                                     const std::size_t           sim_step,
