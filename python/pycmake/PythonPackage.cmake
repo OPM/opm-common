@@ -33,7 +33,7 @@
 #       correctly with the given arguments, and which will report as a unit
 #       test failure.
 
-configure_file(${CMAKE_CURRENT_LIST_DIR}/pycmake_test_runner.py ${CMAKE_BINARY_DIR}/tests/pycmake_test_runner.py COPYONLY)
+configure_file(${CMAKE_CURRENT_LIST_DIR}/pycmake_test_runner.py ${CMAKE_BINARY_DIR}/python/tests/pycmake_test_runner.py COPYONLY)
 
 function(to_path_list var path1)
     if("${CMAKE_HOST_SYSTEM}" MATCHES ".*Windows.*")
@@ -72,7 +72,7 @@ function(add_python_test TESTNAME PYTHON_TEST_FILE)
     configure_file(${PYTHON_TEST_FILE} ${PYTHON_TEST_FILE} COPYONLY)
 
     add_test(NAME ${TESTNAME}
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python/tests
             COMMAND python pycmake_test_runner.py ${PYTHON_TEST_FILE}
             )
 
