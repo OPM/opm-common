@@ -133,6 +133,29 @@ namespace {
 	}
     } // iUad
     
+    
+	namespace zUdn {
+
+        Opm::RestartIO::Helpers::WindowedArray<
+            Opm::EclIO::PaddedOutputString<8>
+        >
+        allocate(const std::vector<int>& udqDims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedArray<
+                Opm::EclIO::PaddedOutputString<8>
+            >;
+
+            return WV {
+                WV::NumWindows{ static_cast<std::size_t>(udqDims[0]) },
+                WV::WindowSize{ static_cast<std::size_t>(udqDims[4]) }
+            };
+        }
+
+        template <class zUdnArray>
+        void staticContrib(const Opm::Group& group, ZGroupArray& zGroup)
+        {
+            zGroup[0] = group.name();
+        }
 } // Anonymous
 
 // =====================================================================
@@ -158,70 +181,12 @@ namespace {
 	}
         return result;
     }
-    /*void
-    Opm::RestartIO::Helpers::iUADData::
-    noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active)
-    {
-	auto udq_cfg = sched.getUDQConfig(simStep);
-	//auto udq_active = sched.udqActive(simStep);
-	
-	// Loop over the number of Active UDQs and set all UDQActive restart data items
-	
-	std::vector<std::size_t>	wgkey_ctrl_type;
-	std::vector<std::size_t> 	udq_seq_no;
-	std::vector<std::size_t> 	no_use_wgkey;
-	std::vector<std::size_t> 	first_use_wg; 
-	std::size_t count = 0;
-	
-	auto mx_iuads = udq_active.size();
-	wgkey_ctrl_type.resize(mx_iuads, 0);
-	udq_seq_no.resize(mx_iuads, 0);
-	no_use_wgkey.resize(mx_iuads, 0);
-	first_use_wg.resize(mx_iuads, 0);
-	
-	std::cout << "noIUDAs:  ind, udq_key, ctrl_keywrd, name, ctrl_type" << std::endl;
-	std::size_t cnt_inp = 0;
-	for (auto it = udq_active.begin(); it != udq_active.end(); it++) 
-	{
-	    cnt_inp+=1;
-	    auto ind = it->index;
-	    auto udq_key = it->udq;
-	    auto ctrl_keywrd = it->keyword;
-	    auto name = it->wgname;
-	    auto ctrl_type = it->control;
-	    std::string wg_kc = ctrl_keywrd + "_" + ctrl_type;
-	    
-	    //auto hash_key = hash(udq_key, ctrl_keywrd, ctrl_type);
-	    const auto key_it = iUADData::UDACtrlType.find(wg_kc);
-	    const std::size_t v_typ = static_cast<std::size_t>(key_it->second);
-	    std::pair<bool,std::size_t> res = findInVector<std::size_t>(wgkey_ctrl_type, v_typ);
-	    if (res.first) {
-		//key already exist
-		auto key_ind = res.second;
-		no_use_wgkey[key_ind]+=1;
-	    }
-	    else {
-		//new key
-		wgkey_ctrl_type[count] = v_typ;
-		const std::size_t var_typ = static_cast<std::size_t>(Opm::UDQ::varType(udq_key));
-		udq_seq_no[count] = udq_cfg.keytype_keyname_seq_no(var_typ, udq_key);
-		no_use_wgkey[count] = 1;
-		first_use_wg[count] =  cnt_inp;
-		count+=1;
-	    }
-	    
-	}
-	this->m_wgkey_ctrl_type = wgkey_ctrl_type;
-	this->m_udq_seq_no = udq_seq_no;
-	this->m_no_use_wgkey = no_use_wgkey;
-	this->m_first_use_wg = first_use_wg;
-	this->m_count = count;
-     } */
 
-         void  Opm::RestartIO::Helpers::iUADData::noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active)
+         //void  Opm::RestartIO::Helpers::iUADData::noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active)
+	 void  Opm::RestartIO::Helpers::iUADData::noIUDAs(const Opm::Schedule& sched, const std::size_t simStep)
     {
 	auto udq_cfg = sched.getUDQConfig(simStep);
-	//auto udq_active = sched.udqActive(simStep);
+	auto udq_active = sched.udqActive(simStep);
 	
 	// Loop over the number of Active UDQs and set all UDQActive restart data items
 	
@@ -253,7 +218,7 @@ namespace {
 	    std::string wg_udqk_kc = ctrl_keywrd + "_" + udq_key + "_" + ctrl_type;
 	    
 	    std::cout << "noIUDAs:" << ind << " " <<  udq_key << " " << ctrl_keywrd << " " << name << " " << ctrl_type << " " << wg_kc << " " << wg_udqk_kc << std::endl;
-	    
+
 	    const auto key_it = iUADData::UDACtrlType.find(wg_kc);
 	    if (key_it == iUADData::UDACtrlType.end()) {
 		std::cout << "Invalid argument - end of map loc_iUADData::UDACtrlType: " << wg_kc << std::endl; 
@@ -292,7 +257,16 @@ namespace {
 	    first_use_wg[it] =  cnt_use + 1;
 	    cnt_use += no_use_wgkey[it];
 	}
-	
+
+	auto& udq_def = udq_cfg.definitions();
+	//
+	//loop over all definitions 
+	for (auto it : udq_def) {
+	    std::cout << "udq: " << it.keyword() << std::endl;
+	    for (auto it_tok : it.tokens()) {
+		std::cout << "token: " << it_tok << std::endl;
+	    }
+	}
 	this->m_wgkey_ctrl_type = wgkey_ctrl_type;
 	this->m_udq_seq_no = udq_seq_no;
 	this->m_no_use_wgkey = no_use_wgkey;
@@ -311,7 +285,7 @@ AggregateUDQData(const std::vector<int>& udqDims)
 void
 Opm::RestartIO::Helpers::AggregateUDQData::
 captureDeclaredUDQData(const Opm::Schedule&                 sched,
-		       const Opm::UDQActive& 		udq_active,
+//		       const Opm::UDQActive& 		udq_active,
 		       const std::size_t                    simStep)
 {
     //get list of current UDQs
@@ -320,7 +294,8 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
     const auto& no_udq = udqCfg.noUdqs();
     
     Opm::RestartIO::Helpers::iUADData iuad_data;
-    iuad_data.noIUDAs(sched, simStep, udq_active);
+    //iuad_data.noIUDAs(sched, simStep, udq_active);
+    iuad_data.noIUDAs(sched, simStep);
     const auto& no_iuad = iuad_data.count(); 
     
     UDQLoop(no_udq, [&sched, simStep, this]

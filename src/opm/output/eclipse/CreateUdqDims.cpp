@@ -58,6 +58,12 @@ namespace {
 	std::size_t no_entries = 5;
         return no_entries;
     }
+    
+        std::size_t entriesPerZUDN()
+    {
+	std::size_t no_entries = 2;
+        return no_entries;
+    }
 } // Anonymous
 
 // #####################################################################
@@ -67,21 +73,24 @@ namespace {
 std::vector<int>
 Opm::RestartIO::Helpers::
 createUdqDims(const Schedule&     	sched,
-	      const Opm::UDQActive& 	udq_active,
+//	      const Opm::UDQActive& 	udq_active,
               const std::size_t        	lookup_step) 
 {
     Opm::RestartIO::Helpers::iUADData iuad_data;
-    iuad_data.noIUDAs(sched, lookup_step, udq_active);
+    //iuad_data.noIUDAs(sched, lookup_step, udq_active);
+    iuad_data.noIUDAs(sched, lookup_step);
     const auto& no_iuad = iuad_data.count();
     std::vector<int> udqDims; 
-    
+    // 0
     udqDims.emplace_back(noUDQs(sched, lookup_step));
-    
+    // 1
     udqDims.emplace_back(entriesPerIUDQ());
-    
+    // 2
     udqDims.emplace_back(no_iuad);
-    
+    // 3
     udqDims.emplace_back(entriesPerIUAD());
+    // 4
+    udqDims.emplace_back(entriesPerZUDN());
 
     return udqDims;
 }

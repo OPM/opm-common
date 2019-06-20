@@ -267,11 +267,12 @@ namespace {
         // write IGRP to restart file
         const std::size_t simStep = static_cast<size_t> (sim_step);
 
-	//const auto udqDims = Helpers::createUdqDims(schedule, simStep);
-	//auto  udqData = Helpers::AggregateUDQData(udqDims);
-        //udqData.captureDeclaredUDQData(schedule, simStep);
+	const auto udqDims = Helpers::createUdqDims(schedule, simStep);
+	auto  udqData = Helpers::AggregateUDQData(udqDims);
+        udqData.captureDeclaredUDQData(schedule, simStep);
 	
-	//rstFile.write("IUDQ", udqData.getIUDQ());
+	rstFile.write("IUDQ", udqData.getIUDQ());
+	rstFile.write("IUAD", udqData.getIUAD());
     }
     
     void writeWell(int                           sim_step,

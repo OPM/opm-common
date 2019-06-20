@@ -31,6 +31,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
+#include <opm/io/eclipse/PaddedOutputString.hpp>
+
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -82,7 +84,8 @@ namespace Opm { namespace RestartIO { namespace Helpers {
       { "WCONINJE_GRAT", 500003 },
     };
 
-    void noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active);
+    //void noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active);
+    void noIUDAs(const Opm::Schedule& sched, const std::size_t simStep);
 
     private:
 	std::vector<std::string>	m_wgkey_udqkey_ctrl_type;
@@ -99,7 +102,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	explicit AggregateUDQData(const std::vector<int>& udqDims);
 
 	void captureDeclaredUDQData(const Opm::Schedule&	sched,
-				    const Opm::UDQActive& 	udq_active,
+//				    const Opm::UDQActive& 	udq_active,
 				    const std::size_t           simStep);
 
         const std::vector<int>& getIUDQ() const
@@ -110,6 +113,16 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         const std::vector<int>& getIUAD() const
         {
             return this->iUAD_.data();
+        }
+        
+        const std::vector<CharArrayNullTerm<8>>& getZUDN() const
+        {
+            return this->zUDN_.data();
+        }
+               
+        const std::vector<CharArrayNullTerm<8>>& getZUDL() const
+        {
+            return this->zUDL_.data();
         }
 #if 0        
         const std::vector<int>& getIUAP() const
@@ -132,15 +145,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->dUDF_.data();
         }
 
-        const std::vector<CharArrayNullTerm<8>>& getZUDN() const
-        {
-            return this->zUDN_.data();
-        }
-        
-        const std::vector<CharArrayNullTerm<8>>& getZUDL() const
-        {
-            return this->zUDL_.data();
-        }
 #endif
 
 
@@ -150,6 +154,13 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
 	/// Aggregate 'IUAD' array (Integer) for all UDQ data  (5 integers pr UDQ that is used for various well and group controls)
         WindowedArray<int> iUAD_;
+	
+	
+        /// Aggregate 'ZUDN' array (Character) for all UDQ data. (2 * 8 chars pr UDQ -> UNIT keyword)
+        WindowedArray<CharArrayNullTerm<8>> zUDN_;
+
+        /// Aggregate 'ZUDL' array (Character) for all UDQ data.  (16 * 8 chars pr UDQ DEFINE "Data for operation - Msth Expression)
+	WindowedMatrix<CharArrayNullTerm<8>> zUDL_;
 #if 0	
 	/// Aggregate 'IUAP' array (Integer) for all UDQ data  (1 integer pr UDQ constraint used)
         WindowedArray<int> iUAP_;
@@ -165,12 +176,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	
 	/// Aggregate 'DUDF' array (Double Precision) for all UDQ data.  (Dimension = Number of FU - UDQ's, with value equal to the actual constraint)
         WindowedArray<double> dUDF_;
-
-        /// Aggregate 'ZUDN' array (Character) for all UDQ data. (2 * 8 chars pr UDQ -> UNIT keyword)
-        WindowedArray<CharArrayNullTerm<8>> zUDN_;
-
-        /// Aggregate 'ZUDL' array (Character) for all UDQ data.  (16 * 8 chars pr UDQ DEFINE "Data for operation - Msth Expression)
-	WindowedMatrix<CharArrayNullTerm<8>> zUDL_;
 #endif
 	
 
