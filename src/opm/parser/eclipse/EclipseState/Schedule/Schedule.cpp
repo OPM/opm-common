@@ -1410,10 +1410,10 @@ namespace Opm {
                     GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                     group->setProductionControlMode( currentStep , controlMode );
                 }
-                group->setOilTargetRate( currentStep , record.getItem("OIL_TARGET").getSIDouble(0));
-                group->setGasTargetRate( currentStep , record.getItem("GAS_TARGET").getSIDouble(0));
-                group->setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").getSIDouble(0));
-                group->setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").getSIDouble(0));
+                group->setOilTargetRate( currentStep , record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>());
+                group->setGasTargetRate( currentStep , record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>());
+                group->setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>());
+                group->setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>());
                 group->setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
                 {
                     GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
