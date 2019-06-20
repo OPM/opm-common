@@ -1383,15 +1383,14 @@ namespace Opm {
 
                 Phase wellPhase = get_phase( record.getItem("PHASE").getTrimmedString(0));
 
-                // calculate SI injection rates for the group
-                double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< double >(0);
+                double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0).get<double>();
                 surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, wellPhase, section.unitSystem());
-                double reservoirInjectionRate = record.getItem("RESV_TARGET").getSIDouble(0);
+                double reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0).get<double>();
 
                 group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
                 group->setReservoirMaxRate( currentStep , reservoirInjectionRate);
-                group->setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").getSIDouble(0));
-                group->setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").getSIDouble(0));
+                group->setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>());
+                group->setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>());
 
                 group->setInjectionGroup(currentStep, true);
             }
