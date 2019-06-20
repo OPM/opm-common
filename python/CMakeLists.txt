@@ -1,10 +1,4 @@
-cmake_minimum_required( VERSION 2.8 )
-project( SUNBEAM )
-enable_language( CXX )
-include( CheckCXXSourceCompiles )
-include( CTest )
 
-find_package(opm-common REQUIRED)
 find_package(PythonInterp REQUIRED)
 
 set( warnings "-Wall -Wextra -pedantic -Wpointer-arith" )
@@ -15,7 +9,7 @@ set( warnings "${warnings} -Wredundant-decls" )
 set( CMAKE_CXX_FLAGS "-std=c++11 ${warnings} ${CMAKE_CXX_FLAGS}" )
 
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/pycmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/python/pycmake)
 
 option( USE_RPATH "Embed RPATH in libraries and binaries" OFF)
 if (USE_RPATH)
