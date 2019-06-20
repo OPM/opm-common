@@ -26,7 +26,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
 #include "WellInjectionProperties.hpp"
-#include "../injection.hpp"
+#include "injection.hpp"
 
 namespace Opm {
 

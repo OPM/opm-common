@@ -62,7 +62,7 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include "injection.hpp"
+#include "Well/injection.hpp"
 #include "Well/WellProductionProperties.hpp"
 #include "Well/WellInjectionProperties.hpp"
 
