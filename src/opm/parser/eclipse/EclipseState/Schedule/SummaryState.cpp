@@ -19,6 +19,8 @@
 
 #include <unordered_map>
 #include <cstring>
+#include <iostream>
+#include <iomanip>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
@@ -339,4 +341,12 @@ namespace {
             }
         }
      }
+
+    std::ostream& operator<<(std::ostream& stream, const SummaryState& st) {
+        stream << "Simulated seconds: " << st.get_elapsed() << std::endl;
+        for (const auto& value_pair : st)
+            stream << std::setw(17) << value_pair.first << ": " << value_pair.second << std::endl;
+
+        return stream;
+    }
 }
