@@ -109,8 +109,8 @@ public:
      *   water_injector.injection_rate( gas ) == 0
      * * Mixed injection is not supported and always returns 0.
      */
-    double production_rate( Phase phase) const;
-    double injection_rate( Phase phase) const;
+    double production_rate( const SummaryState& st, Phase phase) const;
+    double injection_rate( const SummaryState& st,  Phase phase) const;
     static bool wellNameInWellNamePattern(const std::string& wellName, const std::string& wellNamePattern);
 
     /*

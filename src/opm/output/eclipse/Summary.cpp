@@ -578,7 +578,7 @@ inline quantity production_history( const fn_args& args ) {
     for( const auto& sched_well : args.schedule_wells ){
 
         double eff_fac = efac( args.eff_factors, sched_well.name() );
-        sum += sched_well.production_rate( phase ) * eff_fac;
+        sum += sched_well.production_rate( args.st, phase ) * eff_fac;
     }
 
 
@@ -591,7 +591,7 @@ inline quantity injection_history( const fn_args& args ) {
     double sum = 0.0;
     for( const auto& sched_well : args.schedule_wells ){
         double eff_fac = efac( args.eff_factors, sched_well.name() );
-        sum += sched_well.injection_rate( phase ) * eff_fac;
+        sum += sched_well.injection_rate( args.st, phase ) * eff_fac;
     }
 
 

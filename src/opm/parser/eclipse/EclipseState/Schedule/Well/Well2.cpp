@@ -647,7 +647,7 @@ WellCompletion::CompletionOrderEnum Well2::getWellConnectionOrdering() const {
     return this->ordering;
 }
 
-double Well2::production_rate( Phase phase_arg) const {
+double Well2::production_rate(const SummaryState& st, Phase phase_arg) const {
     if( !this->isProducer() ) return 0.0;
 
     const auto& p = this->getProductionProperties();
@@ -670,7 +670,7 @@ double Well2::production_rate( Phase phase_arg) const {
                             "This is likely a programming error." );
 }
 
-double Well2::injection_rate( Phase phase_arg) const {
+double Well2::injection_rate(const SummaryState& st, Phase phase_arg) const {
     if( !this->isInjector() ) return 0.0;
 
     const auto& i = this->getInjectionProperties();
