@@ -269,7 +269,7 @@ namespace Opm {
     }
 
 
-    ProductionControls WellProductionProperties::controls(const SummaryState& st) const {
+    ProductionControls WellProductionProperties::controls(const SummaryState&) const {
         ProductionControls controls(this->m_productionControls);
 
         controls.oil_rate = this->OilRate;

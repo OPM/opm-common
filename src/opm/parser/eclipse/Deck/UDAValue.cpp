@@ -90,8 +90,8 @@ std::string UDAValue::get() const {
 }
 
 
-void UDAValue::set_dim(const Dimension& dim) const {
-    this->dim = dim;
+void UDAValue::set_dim(const Dimension& dim_arg) const {
+    this->dim = dim_arg;
 }
 
 const Dimension& UDAValue::get_dim() const {

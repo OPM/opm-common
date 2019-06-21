@@ -130,11 +130,11 @@ T& ParserItem::value_ref() {
 }
 
 
-ParserItem::ParserItem( const std::string& itemName, ParserItem::itype input_type) :
+ParserItem::ParserItem( const std::string& itemName, ParserItem::itype input_type_arg) :
     m_name(itemName),
     m_defaultSet(false)
 {
-    this->setInputType(input_type);
+    this->setInputType(input_type_arg);
 }
 
 ParserItem::ParserItem( const Json::JsonObject& json ) :
@@ -201,8 +201,8 @@ void ParserItem::setDefault( T val ) {
 }
 
 
-void ParserItem::setInputType(ParserItem::itype input_type) {
-    this->input_type = input_type;
+void ParserItem::setInputType(ParserItem::itype input_type_arg) {
+    this->input_type = input_type_arg;
 
     if (input_type == itype::INT)
         this->setDataType(int());

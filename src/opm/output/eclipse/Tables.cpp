@@ -2355,13 +2355,13 @@ namespace Opm {
             const auto numPrimary =
                 std::max(numPressNodes, PVTFunc::Gas::maxNumPressNodes(pvtg));
 
-            const auto data = PVTFunc::Gas::
+            const auto tableData = PVTFunc::Gas::
                 fromPVTG(numCompNodes, numPrimary, this->units, pvtg);
 
             const auto pressData = PVTFunc::Gas::
                 pressureNodes(numPrimary, this->units, pvtg);
 
-            this->addData(TABDIMS_IBPVTG_OFFSET_ITEM, data);
+            this->addData(TABDIMS_IBPVTG_OFFSET_ITEM, tableData);
             this->addData(TABDIMS_JBPVTG_OFFSET_ITEM, pressData);
 
             this->m_tabdims[TABDIMS_NPPVTG_ITEM] = numPrimary;
@@ -2375,9 +2375,9 @@ namespace Opm {
             const auto numRows =
                 std::max(numPressNodes, PVTFunc::Gas::maxNumPressNodes(pvdg));
 
-            const auto data = PVTFunc::Gas::fromPVDG(numRows, this->units, pvdg);
+            const auto tableData = PVTFunc::Gas::fromPVDG(numRows, this->units, pvdg);
 
-            this->addData(TABDIMS_IBPVTG_OFFSET_ITEM, data);
+            this->addData(TABDIMS_IBPVTG_OFFSET_ITEM, tableData);
             this->m_tabdims[TABDIMS_NPPVTG_ITEM] = numRows;
             this->m_tabdims[TABDIMS_NTPVTG_ITEM] = pvdg.size();
         }
@@ -2409,13 +2409,13 @@ namespace Opm {
             const auto numRows =
                 std::max(numPressNodes, PVTFunc::Oil::maxNumPressNodes(pvto));
 
-            const auto data = PVTFunc::Oil::
+            const auto tableData = PVTFunc::Oil::
                 fromPVTO(numCompNodes, numRows, this->units, pvto);
 
             const auto rsData = PVTFunc::Oil::
                 compositionNodes(numCompNodes, this->units, pvto);
 
-            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, data);
+            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, tableData);
             this->addData(TABDIMS_JBPVTO_OFFSET_ITEM, rsData);
 
             this->m_tabdims[TABDIMS_NPPVTO_ITEM] = numRows;
@@ -2429,9 +2429,9 @@ namespace Opm {
             const auto numRows =
                 std::max(numPressNodes, PVTFunc::Oil::maxNumPressNodes(pvdo));
 
-            const auto data = PVTFunc::Oil::fromPVDO(numRows, this->units, pvdo);
+            const auto tableData = PVTFunc::Oil::fromPVDO(numRows, this->units, pvdo);
 
-            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, data);
+            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, tableData);
             this->m_tabdims[TABDIMS_NPPVTO_ITEM] = numRows;
             this->m_tabdims[TABDIMS_NTPVTO_ITEM] = pvdo.size();
         }
@@ -2441,9 +2441,9 @@ namespace Opm {
 
             const auto numRows = std::max(numPressNodes, pvcdo.size());
 
-            const auto data = PVTFunc::Oil::fromPVCDO(numRows, this->units, pvcdo);
+            const auto tableData = PVTFunc::Oil::fromPVCDO(numRows, this->units, pvcdo);
 
-            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, data);
+            this->addData(TABDIMS_IBPVTO_OFFSET_ITEM, tableData);
             this->m_tabdims[TABDIMS_NPPVTO_ITEM] = numRows;
             this->m_tabdims[TABDIMS_NTPVTO_ITEM] = pvcdo.size();
         }
@@ -2459,9 +2459,9 @@ namespace Opm {
             return;
         }
 
-        const auto data = PVTFunc::Water::fromPVTW(this->units, pvtw);
+        const auto tableData = PVTFunc::Water::fromPVTW(this->units, pvtw);
 
-        this->addData(TABDIMS_IBPVTW_OFFSET_ITEM, data);
+        this->addData(TABDIMS_IBPVTW_OFFSET_ITEM, tableData);
         this->m_tabdims[TABDIMS_NTPVTW_ITEM] = pvtw.size();
     }
 

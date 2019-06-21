@@ -29,7 +29,7 @@ class ESmry
 public:
     explicit ESmry(const std::string& filename, bool loadBaseRunData=false);   // filename (smspec file) or file root name
 
-    const int numberOfVectors() const { return nVect; }
+    int numberOfVectors() const { return nVect; }
 
     bool hasKey(const std::string& key) const;
 
@@ -40,7 +40,7 @@ private:
     int nVect, nI, nJ, nK;
     std::string path="";
 
-    void ijk_from_global_index(int glob, int &i, int &j, int &k);
+    void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
     std::vector<std::vector<float>> param;
     std::vector<std::string> keyword;
 
@@ -50,7 +50,7 @@ private:
     void getRstString(const std::vector<std::string> &restartArray, std::string &path, std::string &rootN) const;
     void updatePathAndRootName(std::string &path, std::string &rootN) const;
 
-    std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num);
+    std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num) const;
 };
 
 }} // namespace Opm::EclIO

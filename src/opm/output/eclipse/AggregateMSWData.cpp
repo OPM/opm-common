@@ -420,11 +420,8 @@ namespace {
 
         template <class ISegArray>
         void staticContrib(const Opm::Well2&       well,
-                           const std::size_t       rptStep,
                            const std::vector<int>& inteHead,
-                           const Opm::EclipseGrid&  /* grid */,
-                           ISegArray&              iSeg
-                           )
+                           ISegArray&              iSeg)
         {
             if (well.isMultiSegment()) {
                 //loop over segment set and print out information
@@ -474,7 +471,6 @@ namespace {
 
         template <class RSegArray>
         void staticContrib_useMSW(const Opm::Well2&           well,
-                                  const std::size_t           rptStep,
                                   const std::vector<int>&     inteHead,
                                   const Opm::EclipseGrid&     grid,
                                   const Opm::UnitSystem&      units,
@@ -492,10 +488,7 @@ namespace {
                 //loop over segment set and print out information
                 const auto&  noElmSeg  = nrsegz(inteHead);
                 const auto& welSegSet = well.getSegments();
-                const auto& segNumber  = welSegSet[segIndex].segmentNumber();
-
-                // 'stringSegNum' is one-based (1 .. #segments inclusive)
-                std::string stringSegNum = std::to_string(segNumber);
+                auto segNumber = welSegSet[segIndex].segmentNumber();
 
                 const auto& conn0 = well.getConnections();
                 const auto& welConns = Opm::WellConnections(conn0, grid);
@@ -516,6 +509,8 @@ namespace {
                 if (haveWellRes) {
                     sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
                 }
+                // 'stringSegNum' is one-based (1 .. #segments inclusive)
+                std::string stringSegNum = std::to_string(segNumber);
                 auto get = [&smry, &wname, &stringSegNum](const std::string& vector)
                 {
                     // 'stringSegNum' is one-based (1 .. #segments inclusive)
@@ -569,7 +564,7 @@ namespace {
                 //Treat subsequent segments
                 for (segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
 
-                    const auto& segNumber = welSegSet[segIndex].segmentNumber();
+                    segNumber = welSegSet[segIndex].segmentNumber();
                     // 'stringSegNum' is one-based (1 .. #segments inclusive)
                     stringSegNum = std::to_string(segNumber);
 
@@ -648,7 +643,6 @@ namespace {
 
         template <class ILBSArray>
         void staticContrib(const Opm::Well2& well,
-                           const std::size_t rptStep,
                            ILBSArray&        iLBS)
         {
             if (well.isMultiSegment()) {
@@ -688,7 +682,6 @@ namespace {
 
         template <class ILBRArray>
         void staticContrib(const Opm::Well2&  well,
-                           const std::size_t rptStep,
                            const std::vector<int>& inteHead,
                            ILBRArray&        iLBR)
         {
@@ -748,42 +741,42 @@ captureDeclaredMSWData(const Schedule&         sched,
     }
     // Extract Contributions to ISeg Array
     {
-        MSWLoop(msw, [rptStep, inteHead, &grid, this]
+        MSWLoop(msw, [&inteHead, this]
             (const Well2& well, const std::size_t mswID) -> void
         {
             auto imsw = this->iSeg_[mswID];
 
-            ISeg::staticContrib(well, rptStep, inteHead, grid, imsw);
+            ISeg::staticContrib(well, inteHead, imsw);
         });
     }
     // Extract Contributions to RSeg Array
     {
-        MSWLoop(msw, [&units, rptStep, inteHead, &grid, &smry, this, &wr]
+        MSWLoop(msw, [&units, &inteHead, &grid, &smry, this, &wr]
             (const Well2& well, const std::size_t mswID) -> void
         {
             auto rmsw = this->rSeg_[mswID];
 
-            RSeg::staticContrib_useMSW(well, rptStep, inteHead, grid, units, smry, wr, rmsw);
+            RSeg::staticContrib_useMSW(well, inteHead, grid, units, smry, wr, rmsw);
         });
     }
     // Extract Contributions to ILBS Array
     {
-        MSWLoop(msw, [rptStep, this]
+        MSWLoop(msw, [this]
             (const Well2& well, const std::size_t mswID) -> void
         {
             auto ilbs_msw = this->iLBS_[mswID];
 
-            ILBS::staticContrib(well, rptStep, ilbs_msw);
+            ILBS::staticContrib(well, ilbs_msw);
         });
     }
     // Extract Contributions to ILBR Array
     {
-        MSWLoop(msw, [rptStep, inteHead, this]
+        MSWLoop(msw, [&inteHead, this]
             (const Well2& well, const std::size_t mswID) -> void
         {
             auto ilbr_msw = this->iLBR_[mswID];
 
-            ILBR::staticContrib(well, rptStep, inteHead, ilbr_msw);
+            ILBR::staticContrib(well, inteHead, ilbr_msw);
         });
     }
 }

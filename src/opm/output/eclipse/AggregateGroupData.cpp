@@ -486,10 +486,6 @@ AggregateGroupData(const std::vector<int>& inteHead)
 void
 Opm::RestartIO::Helpers::AggregateGroupData::
 captureDeclaredGroupData(const Opm::Schedule&                 sched,
-			 const std::vector<std::string>&      restart_group_keys,
-			 const std::vector<std::string>&      restart_field_keys,
-			 const std::map<std::string, size_t>& groupKeyToIndex,
-			 const std::map<std::string, size_t>& fieldKeyToIndex,
 			 const std::size_t                    simStep,
 			 const Opm::SummaryState&             sumState,
 			 const std::vector<int>&              inteHead)
@@ -524,15 +520,13 @@ captureDeclaredGroupData(const Opm::Schedule&                 sched,
     });
 
     // Define Dynamic Contributions to XGrp Array.
-    groupLoop(curGroups, [&restart_group_keys, &restart_field_keys,
-                          &groupKeyToIndex, &fieldKeyToIndex,
-                          &sumState, this]
+    groupLoop(curGroups, [&sumState, this]
 	(const Group& group, const std::size_t groupID) -> void
     {
         auto xg = this->xGroup_[groupID];
 
-        XGrp::dynamicContrib(restart_group_keys, restart_field_keys,
-                             groupKeyToIndex, fieldKeyToIndex, group,
+        XGrp::dynamicContrib(this->restart_group_keys, this->restart_field_keys,
+                             this->groupKeyToIndex, this->fieldKeyToIndex, group,
                              sumState, xg);
     });
 

@@ -1975,7 +1975,6 @@ namespace Opm {
 
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern, size_t timeStep, const std::vector<std::string>& matching_wells) const {
-        std::vector<std::string> names;
         if (pattern.size() == 0)
             return {};
 
