@@ -64,6 +64,13 @@ namespace {
 	std::size_t no_entries = 2;
         return no_entries;
     }
+    
+        std::size_t entriesPerZUDL()
+    {
+	std::size_t no_entries = 16;
+        return no_entries;
+    }
+
 } // Anonymous
 
 // #####################################################################
@@ -91,6 +98,8 @@ createUdqDims(const Schedule&     	sched,
     udqDims.emplace_back(entriesPerIUAD());
     // 4
     udqDims.emplace_back(entriesPerZUDN());
+    // 5
+    udqDims.emplace_back(entriesPerZUDL());
 
     return udqDims;
 }

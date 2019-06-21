@@ -81,6 +81,13 @@ namespace Opm {
             else if (action == UDQAction::DEFINE) {
                 this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, data)));
 		this->m_is_define[quantity] = true;
+		std::string all_data = "";
+		for (auto it = data.begin(); it != data.end(); it++) {
+		    all_data+= *it + " ";
+		    std::cout << "UDQInput - quantity: " << quantity << "  data(it):" << *it << std::endl;
+		}
+		std::cout << "UDQInput - all_data: " << all_data << std::endl;
+		this->m_udqdef_data[quantity] = all_data;
 	    }
             else 
                 throw std::runtime_error("Internal error - should not be here");

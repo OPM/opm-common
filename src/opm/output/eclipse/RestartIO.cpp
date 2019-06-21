@@ -273,6 +273,8 @@ namespace {
 	
 	rstFile.write("IUDQ", udqData.getIUDQ());
 	rstFile.write("IUAD", udqData.getIUAD());
+	rstFile.write("ZUDN", udqData.getZUDN());
+	rstFile.write("ZUDL", udqData.getZUDL());
     }
     
     void writeWell(int                           sim_step,

@@ -21,6 +21,7 @@
 #define OPM_AGGREGATE_UDQ_DATA_HPP
 
 #include <opm/output/eclipse/WindowedArray.hpp>
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
@@ -30,8 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-
-#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <cstddef>
 #include <string>
@@ -115,12 +114,12 @@ namespace Opm { namespace RestartIO { namespace Helpers {
             return this->iUAD_.data();
         }
         
-        const std::vector<CharArrayNullTerm<8>>& getZUDN() const
+        const std::vector<EclIO::PaddedOutputString<8>>& getZUDN() const
         {
             return this->zUDN_.data();
         }
                
-        const std::vector<CharArrayNullTerm<8>>& getZUDL() const
+        const std::vector<EclIO::PaddedOutputString<8>>& getZUDL() const
         {
             return this->zUDL_.data();
         }
@@ -157,12 +156,12 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	
 	
         /// Aggregate 'ZUDN' array (Character) for all UDQ data. (2 * 8 chars pr UDQ -> UNIT keyword)
-        WindowedArray<CharArrayNullTerm<8>> zUDN_;
+        WindowedArray<EclIO::PaddedOutputString<8>> zUDN_;
 
         /// Aggregate 'ZUDL' array (Character) for all UDQ data.  (16 * 8 chars pr UDQ DEFINE "Data for operation - Msth Expression)
-	WindowedMatrix<CharArrayNullTerm<8>> zUDL_;
+	WindowedArray<EclIO::PaddedOutputString<8>> zUDL_;
 #if 0	
-	/// Aggregate 'IUAP' array (Integer) for all UDQ data  (1 integer pr UDQ constraint used)
+	/// Aggregate 'IUAP' array (ICharArrayNullTermnteger) for all UDQ data  (1 integer pr UDQ constraint used)
         WindowedArray<int> iUAP_;
 	
 	/// Aggregate 'IGPH' array (Integer) for all UDQ data  (3 - zeroes - as of current understanding)

@@ -103,7 +103,7 @@ namespace {
 	}
     } // iUdq
     
-        namespace iUad {
+    namespace iUad {
 
         Opm::RestartIO::Helpers::WindowedArray<int>
         allocate(const std::vector<int>& udqDims)
@@ -151,11 +151,78 @@ namespace {
             };
         }
 
-        template <class zUdnArray>
-        void staticContrib(const Opm::Group& group, ZGroupArray& zGroup)
+	template <class zUdnArray>
+        void staticContrib(const Opm::Schedule& sched, 
+			   const std::size_t simStep,
+			   const int indUdq,
+			   zUdnArray& zUdn)
         {
-            zGroup[0] = group.name();
+	    // loop over the current UDQs and write the required properties to the restart file
+	    
+	    //Get UDQ config data for the actual report step
+	    auto udqCfg = sched.getUDQConfig(simStep);
+	    const std::string& key = udqCfg.udqKey(indUdq);
+	    if (udqCfg.has_keyword(key)) {
+		// entry 1 is udq keyword
+		zUdn[0] = key;
+		// entry 2: the units of the keyword - if it exist - else blanks
+		zUdn[1] =  (udqCfg.has_unit(key)) ? udqCfg.unit(key) : "        ";
+	    }
         }
+    } // zUdn
+    
+    namespace zUdl {
+
+        Opm::RestartIO::Helpers::WindowedArray<
+            Opm::EclIO::PaddedOutputString<8>
+        >
+        allocate(const std::vector<int>& udqDims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedArray<
+                Opm::EclIO::PaddedOutputString<8>
+            >;
+
+            return WV {
+                WV::NumWindows{ static_cast<std::size_t>(udqDims[0]) },
+                WV::WindowSize{ static_cast<std::size_t>(udqDims[5]) }
+            };
+        }
+        
+        template <class zUdlArray>
+	void staticContrib(const Opm::Schedule& sched, 
+			   const std::size_t simStep,
+			   const int indUdq,
+			   zUdlArray& zUdl)
+        {
+	    // loop over the current UDQs and write the required properties to the restart file
+	    
+	    //Get UDQ config data for the actual report step
+	    auto udqCfg = sched.getUDQConfig(simStep);
+	    const std::string& key = udqCfg.udqKey(indUdq);
+	    int l_sstr = 8;
+	    int max_l_str = 128;
+	    if (udqCfg.has_keyword(key)) {
+		// write out the input formula if key is a DEFINE udq
+		if (udqCfg.is_define(key)) {
+		    const std::string& z_data = udqCfg.udqdef_data(key);
+		    int n_sstr =  z_data.size()/l_sstr;
+		    if (static_cast<int>(z_data.size()) > max_l_str) {
+			std::cout << "Too long input data string (max 128 characters): " << z_data << std::endl; 
+			throw std::invalid_argument("UDQ - variable: " + key);
+		    }
+		    else {
+			for (int i = 0; i < n_sstr; i++) {
+			    zUdl[i] = z_data.substr(i*l_sstr, l_sstr);
+			}
+			//add remainder of last non-zero string
+			if ((z_data.size() % l_sstr) > 0) 
+			    zUdl[n_sstr] = z_data.substr(n_sstr*l_sstr);
+		    }
+		}
+	    }
+        }     
+    } // zUdl
+    
 } // Anonymous
 
 // =====================================================================
@@ -253,7 +320,7 @@ namespace {
 	
 	// Loop over all iUADs to set the first use paramter
 	int cnt_use = 0;
-	for (auto it = 0; it < count; it++) {
+	for (std::size_t it = 0; it < count; it++) {
 	    first_use_wg[it] =  cnt_use + 1;
 	    cnt_use += no_use_wgkey[it];
 	}
@@ -277,7 +344,9 @@ namespace {
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const std::vector<int>& udqDims)
     : iUDQ_ (iUdq::allocate(udqDims)),
-      iUAD_ (iUad::allocate(udqDims))
+      iUAD_ (iUad::allocate(udqDims)),
+      zUDN_ (zUdn::allocate(udqDims)),
+      zUDL_ (zUdl::allocate(udqDims))
 {}
 
 // ---------------------------------------------------------------------
@@ -306,11 +375,28 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         iUdq::staticContrib(sched, simStep, ind_iudq, i_udq);
     });
     
-        UDQLoop(no_iuad, [&iuad_data, this]
+    UDQLoop(no_iuad, [&iuad_data, this]
         (const std::size_t& ind_iuad, const std::size_t uadID) -> void
     {
         auto i_uad = this->iUAD_[uadID];
 
         iUad::staticContrib(iuad_data, ind_iuad, i_uad);
     });
+	
+    UDQLoop(no_udq, [&sched, simStep, this]
+        (const std::size_t& ind_zudn, const std::size_t udqID) -> void
+    {
+        auto z_udn = this->zUDN_[udqID];
+
+        zUdn::staticContrib(sched, simStep, ind_zudn, z_udn);
+    });
+    
+        UDQLoop(no_udq, [&sched, simStep, this]
+        (const std::size_t& ind_zudl, const std::size_t udqID) -> void
+    {
+        auto z_udl = this->zUDL_[udqID];
+
+        zUdl::staticContrib(sched, simStep, ind_zudl, z_udl);
+    });
+
 }
