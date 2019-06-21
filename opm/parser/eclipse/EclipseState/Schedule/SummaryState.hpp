@@ -24,6 +24,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <iosfwd>
 
 #include <ert/ecl/smspec_node.hpp>
 
@@ -109,6 +110,9 @@ private:
     std::unordered_map<std::string, std::unordered_map<std::string, double>> group_values;
     std::unordered_set<std::string> m_groups;
 };
+
+
+std::ostream& operator<<(std::ostream& stream, const SummaryState& st);
 
 }
 #endif
