@@ -112,15 +112,19 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
                 else {
                     auto res = UDQSet::wells(this->string_value, wells);
                     for (const auto& well : wells) {
-                        if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0)
-                            res.assign(well, context.get_well_var(well, this->string_value));
+                        if (fnmatch(well_pattern.c_str(), well.c_str(), fnmatch_flags) == 0) {
+                            if (context.has_well_var(well, this->string_value))
+                                res.assign(well, context.get_well_var(well, this->string_value));
+                        }
                     }
                     return res;
                 }
             } else {
                 auto res = UDQSet::wells(this->string_value, wells);
-                for (const auto& well : wells)
-                    res.assign(well, context.get_well_var(well, this->string_value));
+                for (const auto& well : wells) {
+                    if (context.has_well_var(well, this->string_value))
+                        res.assign(well, context.get_well_var(well, this->string_value));
+                }
                 return res;
             }
         }
@@ -136,15 +140,19 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
                 else {
                     auto res = UDQSet::groups(this->string_value, groups);
                     for (const auto& group : groups) {
-                        if (fnmatch(group_pattern.c_str(), group.c_str(), fnmatch_flags) == 0)
-                            res.assign(group, context.get_group_var(group, this->string_value));
+                        if (fnmatch(group_pattern.c_str(), group.c_str(), fnmatch_flags) == 0) {
+                            if (context.has_group_var(group, this->string_value))
+                                res.assign(group, context.get_group_var(group, this->string_value));
+                        }
                     }
                     return res;
                 }
             } else {
                 auto res = UDQSet::groups(this->string_value, groups);
-                for (const auto& group : groups)
-                    res.assign(group, context.get_group_var(group, this->string_value));
+                for (const auto& group : groups) {
+                    if (context.has_group_var(group, this->string_value))
+                        res.assign(group, context.get_group_var(group, this->string_value));
+                }
                 return res;
             }
         }
