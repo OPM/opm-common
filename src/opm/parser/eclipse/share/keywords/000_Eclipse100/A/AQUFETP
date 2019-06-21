@@ -1,4 +1,4 @@
-{"name" : "AQUFETP" , "sections" : ["SOLUTION" , "SCHEDULE"], "size" : {"keyword":"AQUDIMS" , "item":"NANAQU"},
+{"name" : "AQUFETP" , "sections" : ["SOLUTION" , "SCHEDULE"],
         "items" : [
         {"name" : "AQUIFER_ID" ,              	"value_type" : "INT"},
         {"name" : "DAT_DEPTH" ,     		"value_type" : "DOUBLE" ,                        "dimension" : "Length"},

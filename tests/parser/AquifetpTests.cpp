@@ -51,7 +51,7 @@ inline Deck createAquifetpDeck() {
   "SOLUTION\n"
   "\n"
   "AQUFETP\n"
-  "1  70000.0  4.0e3 2.0e9 1.0e-5	500 1 0	0\n"
+  "1  70000.0  4.0e3 2.0e9 1.0e-5	500 1 0	0 /\n"
   "/\n";
 
   Parser parser;
@@ -122,7 +122,7 @@ inline Deck createAquifetpDeck_defaultPressure(){
   "SOLUTION\n"
   "\n"
   "AQUFETP\n"
-  "1  70000.0  1* 2.0e9 1.0e-5	500 1 0	0\n"
+  "1  70000.0  1* 2.0e9 1.0e-5	500 1 0	0 /\n"
   "/\n";
 
   Parser parser;
