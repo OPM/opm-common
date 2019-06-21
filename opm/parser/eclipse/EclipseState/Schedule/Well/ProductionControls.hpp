@@ -43,8 +43,8 @@ public:
     int    vfp_table_number;
     bool   prediction_mode;
 
-    bool hasControl(WellProducer::ControlModeEnum cmode) const {
-        return (this->controls & cmode) != 0;
+    bool hasControl(WellProducer::ControlModeEnum cmode_arg) const {
+        return (this->controls & cmode_arg) != 0;
     }
 
 private:

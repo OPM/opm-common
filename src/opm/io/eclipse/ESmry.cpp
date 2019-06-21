@@ -82,38 +82,40 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         smspec_filen = path + "/" + rootN + ".SMSPEC";
     }
 
-    std::vector<std::pair<std::string,int>> smryArray;
-
-    EclFile smspec1(smspec_filen);
-
-    smspec1.loadData();   // loading all data
-
-    std::set<std::string> keywList;
-
-    std::vector<int> dimens = smspec1.get<int>("DIMENS");
-
-    nI = dimens[1];
-    nJ = dimens[2];
-    nK = dimens[3];
-
-    std::vector<std::string> restartArray = smspec1.get<std::string>("RESTART");
-    std::vector<std::string> keywords = smspec1.get<std::string>("KEYWORDS");
-    std::vector<std::string> wgnames = smspec1.get<std::string>("WGNAMES");
-    std::vector<int> nums = smspec1.get<int>("NUMS");
-
-    for (unsigned int i=0; i<keywords.size(); i++) {
-        std::string str1 = makeKeyString(keywords[i], wgnames[i], nums[i]);
-        if (str1.length() > 0) {
-            keywList.insert(str1);
-        }
-    }
-
     std::string rstRootN = "";
     std::string pathRstFile = path;
+    std::set<std::string> keywList;
+    std::vector<std::pair<std::string,int>> smryArray;
 
-    getRstString(restartArray, pathRstFile, rstRootN);
+    // Read data from the summary into local data members.
+    {
 
-    smryArray.push_back({smspec_filen, dimens[5]});
+        EclFile smspec1(smspec_filen);
+
+        smspec1.loadData();   // loading all data
+
+        std::vector<int> dimens = smspec1.get<int>("DIMENS");
+
+        nI = dimens[1]; // This is correct -- dimens[0] is something else!
+        nJ = dimens[2];
+        nK = dimens[3];
+
+        std::vector<std::string> restartArray = smspec1.get<std::string>("RESTART");
+        std::vector<std::string> keywords = smspec1.get<std::string>("KEYWORDS");
+        std::vector<std::string> wgnames = smspec1.get<std::string>("WGNAMES");
+        std::vector<int> nums = smspec1.get<int>("NUMS");
+
+        for (unsigned int i=0; i<keywords.size(); i++) {
+            std::string str1 = makeKeyString(keywords[i], wgnames[i], nums[i]);
+            if (str1.length() > 0) {
+                keywList.insert(str1);
+            }
+        }
+
+        getRstString(restartArray, pathRstFile, rstRootN);
+
+        smryArray.push_back({smspec_filen, dimens[5]});
+    }
 
     // checking if this is a restart run. Supporting nested restarts (restart, from restart, ...)
     // std::set keywList is storing keywords from all runs involved
@@ -272,8 +274,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
             
             // adding defaut values (0.0) in case vector not found in this particular summary file
             
-            for (size_t i = 0; i < param.size(); i++){            
-                param[i].push_back(0.0);
+            for (size_t ii = 0; ii < param.size(); ii++){            
+                param[ii].push_back(0.0);
             }
 
             for (size_t j = 0; j < tmpData.size(); j++) {
@@ -338,7 +340,7 @@ bool ESmry::hasKey(const std::string &key) const
 }
 
 
-void ESmry::ijk_from_global_index(int glob,int &i,int &j,int &k)
+void ESmry::ijk_from_global_index(int glob,int &i,int &j,int &k) const
 {
     int tmpGlob = glob - 1;
 
@@ -350,30 +352,30 @@ void ESmry::ijk_from_global_index(int glob,int &i,int &j,int &k)
 }
 
 
-std::string ESmry::makeKeyString(const std::string &keyword, const std::string &wgname, int num)
+std::string ESmry::makeKeyString(const std::string& keywordArg, const std::string& wgname, int num) const
 {
     std::string keyStr;
     std::vector<std::string> segmExcep= {"STEPTYPE", "SEPARATE", "SUMTHIN"};
 
-    if (keyword.substr(0, 1) == "A") {
-        keyStr = keyword + ":" + std::to_string(num);
-    } else if (keyword.substr(0, 1) == "B") {
+    if (keywordArg.substr(0, 1) == "A") {
+        keyStr = keywordArg + ":" + std::to_string(num);
+    } else if (keywordArg.substr(0, 1) == "B") {
         int _i,_j,_k;
         ijk_from_global_index(num, _i, _j, _k);
 
-        keyStr = keyword + ":" + std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
+        keyStr = keywordArg + ":" + std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
 
-    } else if (keyword.substr(0, 1) == "C") {
+    } else if (keywordArg.substr(0, 1) == "C") {
         if (num > 0) {
             int _i,_j,_k;
             ijk_from_global_index(num, _i, _j, _k);
-            keyStr = keyword + ":" + wgname+ ":" + std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
+            keyStr = keywordArg + ":" + wgname+ ":" + std::to_string(_i) + "," + std::to_string(_j) + "," + std::to_string(_k);
         }
-    } else if (keyword.substr(0, 1) == "G") {
+    } else if (keywordArg.substr(0, 1) == "G") {
         if ( wgname != ":+:+:+:+") {
-            keyStr = keyword + ":" + wgname;
+            keyStr = keywordArg + ":" + wgname;
         }
-    } else if (keyword.substr(0, 1) == "R" && keyword.substr(2, 1) == "F") {
+    } else if (keywordArg.substr(0, 1) == "R" && keywordArg.substr(2, 1) == "F") {
         // NUMS = R1 + 32768*(R2 + 10)
         int r2 = 0;
         int y = 32768 * (r2 + 10) - num;
@@ -386,22 +388,22 @@ std::string ESmry::makeKeyString(const std::string &keyword, const std::string &
         r2--;
         int r1 = num - 32768 * (r2 + 10);
 
-        keyStr = keyword + ":" + std::to_string(r1) + "-" + std::to_string(r2);
-    } else if (keyword.substr(0, 1) == "R") {
-        keyStr = keyword + ":" + std::to_string(num);
-    } else if (keyword.substr(0, 1) == "S") {
-        auto it = std::find(segmExcep.begin(), segmExcep.end(), keyword);
+        keyStr = keywordArg + ":" + std::to_string(r1) + "-" + std::to_string(r2);
+    } else if (keywordArg.substr(0, 1) == "R") {
+        keyStr = keywordArg + ":" + std::to_string(num);
+    } else if (keywordArg.substr(0, 1) == "S") {
+        auto it = std::find(segmExcep.begin(), segmExcep.end(), keywordArg);
         if (it != segmExcep.end()) {
-            keyStr = keyword;
+            keyStr = keywordArg;
         } else {
-            keyStr = keyword + ":" + wgname + ":" + std::to_string(num);
+            keyStr = keywordArg + ":" + wgname + ":" + std::to_string(num);
         }
-    } else if (keyword.substr(0,1) == "W") {
+    } else if (keywordArg.substr(0,1) == "W") {
         if (wgname != ":+:+:+:+") {
-            keyStr = keyword + ":" + wgname;
+            keyStr = keywordArg + ":" + wgname;
         }
     } else {
-        keyStr = keyword;
+        keyStr = keywordArg;
     }
 
     return keyStr;

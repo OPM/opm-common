@@ -32,8 +32,8 @@
 namespace Opm {
 
 ActionAST::ActionAST(const std::vector<std::string>& tokens) {
-    auto condition = ActionParser::parse(tokens);
-    this->condition.reset( new ASTNode(condition) );
+    auto condition_node = ActionParser::parse(tokens);
+    this->condition.reset( new ASTNode(condition_node) );
 }
 
 

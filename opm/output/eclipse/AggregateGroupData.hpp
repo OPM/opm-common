@@ -58,10 +58,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	explicit AggregateGroupData(const std::vector<int>& inteHead);
 
 	void captureDeclaredGroupData(const Opm::Schedule&                 sched,
-				      const std::vector<std::string>&      restart_group_keys,
-				      const std::vector<std::string>&      restart_field_keys,
-				      const std::map<std::string, size_t>& groupKeyToIndex,
-				      const std::map<std::string, size_t>& fieldKeyToIndex,
 				      const std::size_t                    simStep,
 				      const Opm::SummaryState&             sumState,
 				      const std::vector<int>&              inteHead);

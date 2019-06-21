@@ -49,12 +49,11 @@ namespace Opm {
 
 
     void WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name, const UnitSystem& unit_system) {
-        WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
-        this->injectorType = injectorType;
+        this->injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
         this->predictionMode = true;
 
         if (!record.getItem("RATE").defaultApplied(0)) {
-            this->surfaceInjectionRate = injection::rateToSI(record.getItem("RATE").get< double >(0) , injectorType, unit_system);
+            this->surfaceInjectionRate = injection::rateToSI(record.getItem("RATE").get< double >(0) , this->injectorType, unit_system);
             this->addInjectionControl(WellInjector::RATE);
         } else
             this->dropInjectionControl(WellInjector::RATE);
@@ -92,9 +91,9 @@ namespace Opm {
             this->dropInjectionControl(WellInjector::GRUP);
         {
             const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-            WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
-            if (this->hasInjectionControl( controlMode))
-                this->controlMode = controlMode;
+            WellInjector::ControlModeEnum controlModeArg = WellInjector::ControlModeFromString( cmodeString );
+            if (this->hasInjectionControl( controlModeArg))
+                this->controlMode = controlModeArg;
             else {
                 throw std::invalid_argument("Tried to set invalid control: " + cmodeString + " for well: " + well_name);
             }
@@ -150,12 +149,9 @@ namespace Opm {
             const std::string msg = "Injection type can not be defaulted for keyword WCONINJH";
             throw std::invalid_argument(msg);
         }
-        const WellInjector::TypeEnum injectorType = WellInjector::TypeFromString( typeItem.getTrimmedString(0));
+        this->injectorType = WellInjector::TypeFromString( typeItem.getTrimmedString(0));
         double injectionRate = record.getItem("RATE").get< double >(0);
-        injectionRate = injection::rateToSI(injectionRate, injectorType, unit_system);
-
-        this->injectorType = injectorType;
-
+        injectionRate = injection::rateToSI(injectionRate, this->injectorType, unit_system);
 
         if (!record.getItem("RATE").defaultApplied(0))
             this->surfaceInjectionRate = injectionRate;
@@ -165,15 +161,15 @@ namespace Opm {
             this->THPH = record.getItem("THP").getSIDouble(0);
 
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const WellInjector::ControlModeEnum controlMode = WellInjector::ControlModeFromString( cmodeString );
+        const WellInjector::ControlModeEnum newControlMode = WellInjector::ControlModeFromString( cmodeString );
 
-        if ( !(controlMode == WellInjector::RATE || controlMode == WellInjector::BHP) ) {
+        if ( !(newControlMode == WellInjector::RATE || newControlMode == WellInjector::BHP) ) {
             const std::string msg = "Only RATE and BHP control are allowed for WCONINJH for well " + well_name;
             throw std::invalid_argument(msg);
         }
 
         // when well is under BHP control, we use its historical BHP value as BHP limit
-        if (controlMode == WellInjector::BHP) {
+        if (newControlMode == WellInjector::BHP) {
             this->setBHPLimit(this->BHPH);
         } else {
             const bool switching_from_producer = is_producer;
@@ -188,13 +184,13 @@ namespace Opm {
         }
 
         this->addInjectionControl(WellInjector::BHP);
-        this->addInjectionControl(controlMode);
-        this->controlMode = controlMode;
+        this->addInjectionControl(newControlMode);
+        this->controlMode = newControlMode;
         this->predictionMode = false;
 
-        const int VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
-        if (VFPTableNumber > 0) {
-            this->VFPTableNumber = VFPTableNumber;
+        const int VFPTableNumberArg = record.getItem("VFP_TABLE").get< int >(0);
+        if (VFPTableNumberArg > 0) {
+            this->VFPTableNumber = VFPTableNumberArg;
         }
     }
 
@@ -249,7 +245,7 @@ namespace Opm {
     }
 
 
-    InjectionControls WellInjectionProperties::controls(const SummaryState& st) const {
+    InjectionControls WellInjectionProperties::controls(const SummaryState&) const {
         InjectionControls controls(this->injectionControls);
 
         controls.surface_rate = this->surfaceInjectionRate;

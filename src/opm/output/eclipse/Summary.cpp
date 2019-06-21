@@ -1580,8 +1580,7 @@ void Summary::eval( SummaryState& st,
 
 void Summary::internal_store(const SummaryState& st, int report_step) {
     auto* tstep = ecl_sum_add_tstep( this->ecl_sum.get(), report_step, st.get_elapsed() );
-    const ecl_sum_type * ecl_sum = this->ecl_sum.get();
-    const ecl_smspec_type * smspec = ecl_sum_get_smspec(ecl_sum);
+    const ecl_smspec_type * smspec = ecl_sum_get_smspec(this->ecl_sum.get());
     auto num_nodes = ecl_smspec_num_nodes(smspec);
     for (int node_index = 0; node_index < num_nodes; node_index++) {
         const auto& smspec_node = ecl_smspec_iget_node(smspec, node_index);

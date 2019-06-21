@@ -229,15 +229,7 @@ namespace {
 
         auto  groupData = Helpers::AggregateGroupData(ih);
 
-        const auto& rst_g_keys  = groupData.restart_group_keys;
-        const auto& rst_f_keys  = groupData.restart_field_keys;
-        const auto& grpKeyToInd = groupData.groupKeyToIndex;
-        const auto& fldKeyToInd = groupData.fieldKeyToIndex;
-
-        groupData.captureDeclaredGroupData(schedule,
-                                           rst_g_keys, rst_f_keys,
-                                           grpKeyToInd, fldKeyToInd,
-                                           simStep, sumState, ih);
+        groupData.captureDeclaredGroupData(schedule, simStep, sumState, ih);
 
         rstFile.write("IGRP", groupData.getIGroup());
         rstFile.write("SGRP", groupData.getSGroup());

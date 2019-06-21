@@ -353,8 +353,8 @@ void ECLRegressionTest::gridCompare()
 
         std::cout << "comparing grids " << std::endl;
     
-        const auto& ijk1 = grid1->dimension();
-        const auto& ijk2 = grid2->dimension();
+        const auto& dim1 = grid1->dimension();
+        const auto& dim2 = grid2->dimension();
 
         if (printKeywordOnly) {
 
@@ -385,19 +385,19 @@ void ECLRegressionTest::gridCompare()
 
         std::cout << "Dimensions             " << " ... ";
 
-        if (ijk1[0] != ijk2[0]  || ijk1[1] != ijk2[1] || ijk1[2] != ijk2[2]) {
+        if (dim1[0] != dim2[0]  || dim1[1] != dim2[1] || dim1[2] != dim2[2]) {
             OPM_THROW(std::runtime_error, "\n Grid1 and grid2 have different dimensions.  "
-                      << "\n grid1 : "  << ijk1[0] << "x" << ijk1[1] << "x"<< ijk1[2]
-                      << "\n grid2 : "  << ijk2[0] << "x" << ijk2[1] << "x"<< ijk2[2]);
+                      << "\n grid1 : "  << dim1[0] << "x" << dim1[1] << "x"<< dim1[2]
+                      << "\n grid2 : "  << dim2[0] << "x" << dim2[1] << "x"<< dim2[2]);
         }
 
         std::cout << " done." << std::endl;
 
         std::cout << "Active cells           " << " ... ";
 
-        for (int k = 0; k < ijk1[2]; k++) {
-            for (int j=0; j < ijk1[1]; j++) {
-                for (int i = 0; i < ijk2[0]; i++) {
+        for (int k = 0; k < dim1[2]; k++) {
+            for (int j=0; j < dim1[1]; j++) {
+                for (int i = 0; i < dim2[0]; i++) {
                     if (grid1->active_index(i,j,k) != grid2->active_index(i,j,k)) {
                         OPM_THROW(std::runtime_error, "\nGrid1 and grid2 have different definition of active cells. "
                                   " First difference found for cell i="<< i+1 << " j=" << j+1 << " k=" << k+1);
@@ -413,9 +413,9 @@ void ECLRegressionTest::gridCompare()
         std::vector<double> X1(8,0.0), Y1(8,0.0) , Z1(8,0.0);
         std::vector<double> X2(8,0.0), Y2(8,0.0), Z2(8,0.0);
 
-        for (int k = 0; k < ijk1[2]; k++) {
-            for (int j = 0; j < ijk1[1]; j++) {
-                for (int i = 0; i < ijk1[0]; i++) {
+        for (int k = 0; k < dim1[2]; k++) {
+            for (int j = 0; j < dim1[1]; j++) {
+                for (int i = 0; i < dim1[0]; i++) {
                     if (grid1->active_index(i,j,k) > -1) {
                         grid1->getCellCorners({i,j,k}, X1, Y1, Z1);
                         grid2->getCellCorners({i,j,k}, X2, Y2, Z2);
