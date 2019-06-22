@@ -30,8 +30,9 @@
 
 namespace Opm {
 
-    WellInjectionProperties::WellInjectionProperties()
-      : injectorType(WellInjector::WATER),
+    WellInjectionProperties::WellInjectionProperties(const std::string& wname)
+      : name(wname),
+        injectorType(WellInjector::WATER),
         controlMode(WellInjector::CMODE_UNDEFINED) {
         surfaceInjectionRate=0.0;
         reservoirInjectionRate=0.0;

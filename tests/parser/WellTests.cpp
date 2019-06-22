@@ -744,8 +744,8 @@ BOOST_AUTO_TEST_CASE(BHP_CMODE)
 
 
 BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
-    const Opm::WellInjectionProperties Iproperties;
     const Opm::WellProductionProperties Pproperties("W");
+    const Opm::WellInjectionProperties Iproperties("W");
 
     BOOST_CHECK_EQUAL( Pproperties.controlMode , Opm::WellProducer::CMODE_UNDEFINED );
     BOOST_CHECK_EQUAL( Iproperties.controlMode , Opm::WellInjector::CMODE_UNDEFINED );

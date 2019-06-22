@@ -108,7 +108,7 @@ Well2::Well2(const std::string& wname,
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
     production(std::make_shared<WellProductionProperties>(wname)),
-    injection(std::make_shared<WellInjectionProperties>())
+    injection(std::make_shared<WellInjectionProperties>(wname))
 {
     auto p = std::make_shared<WellProductionProperties>(wname);
     p->whistctl_cmode = whistctl_cmode;
