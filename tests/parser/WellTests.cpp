@@ -488,7 +488,7 @@ namespace {
 
             auto deck = parser.parseString(input);
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
-            Opm::WellProductionProperties hist;
+            Opm::WellProductionProperties hist("W");
             hist.handleWCONHIST(record);
 
 
@@ -542,7 +542,7 @@ namespace {
             auto deck = parser.parseString(input);
             const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
-            Opm::WellProductionProperties pred;
+            Opm::WellProductionProperties pred("W");
             pred.handleWCONPROD(record);
 
             return pred;
@@ -744,8 +744,8 @@ BOOST_AUTO_TEST_CASE(BHP_CMODE)
 
 
 BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
-    const Opm::WellProductionProperties Pproperties;
     const Opm::WellInjectionProperties Iproperties;
+    const Opm::WellProductionProperties Pproperties("W");
 
     BOOST_CHECK_EQUAL( Pproperties.controlMode , Opm::WellProducer::CMODE_UNDEFINED );
     BOOST_CHECK_EQUAL( Iproperties.controlMode , Opm::WellInjector::CMODE_UNDEFINED );

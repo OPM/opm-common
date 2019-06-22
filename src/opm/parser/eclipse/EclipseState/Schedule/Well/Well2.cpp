@@ -107,10 +107,10 @@ Well2::Well2(const std::string& wname,
     polymer_properties(std::make_shared<WellPolymerProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
-    production(std::make_shared<WellProductionProperties>()),
+    production(std::make_shared<WellProductionProperties>(wname)),
     injection(std::make_shared<WellInjectionProperties>())
 {
-    auto p = std::make_shared<WellProductionProperties>();
+    auto p = std::make_shared<WellProductionProperties>(wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
 }
