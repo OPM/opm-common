@@ -32,6 +32,7 @@ namespace Opm {
     class SummaryState;
 
     struct WellInjectionProperties {
+        std::string name;
         double  surfaceInjectionRate;
         double  reservoirInjectionRate;
         double  temperature;
@@ -48,7 +49,7 @@ namespace Opm {
         bool operator==(const WellInjectionProperties& other) const;
         bool operator!=(const WellInjectionProperties& other) const;
 
-        WellInjectionProperties();
+        WellInjectionProperties(const std::string& wname);
         void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name, const UnitSystem& unit_system);
         void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name, const UnitSystem& unit_system);
@@ -72,7 +73,7 @@ namespace Opm {
         void resetDefaultHistoricalBHPLimit();
 
         void setBHPLimit(const double limit);
-        InjectionControls controls(const SummaryState& st) const;
+        InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
     };
 
     std::ostream& operator<<( std::ostream&, const WellInjectionProperties& );

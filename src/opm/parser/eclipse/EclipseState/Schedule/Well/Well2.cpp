@@ -107,10 +107,10 @@ Well2::Well2(const std::string& wname,
     polymer_properties(std::make_shared<WellPolymerProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
-    production(std::make_shared<WellProductionProperties>()),
-    injection(std::make_shared<WellInjectionProperties>())
+    production(std::make_shared<WellProductionProperties>(wname)),
+    injection(std::make_shared<WellInjectionProperties>(wname))
 {
-    auto p = std::make_shared<WellProductionProperties>();
+    auto p = std::make_shared<WellProductionProperties>(wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
 }
@@ -695,7 +695,7 @@ bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::st
 
 ProductionControls Well2::productionControls(const SummaryState& st) const {
     if (this->isProducer()) {
-        auto controls = this->production->controls(st);
+        auto controls = this->production->controls(st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
         return controls;
     } else
@@ -704,7 +704,7 @@ ProductionControls Well2::productionControls(const SummaryState& st) const {
 
 InjectionControls Well2::injectionControls(const SummaryState& st) const {
     if (!this->isProducer()) {
-        auto controls = this->injection->controls(st);
+        auto controls = this->injection->controls(this->unit_system, st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
         return controls;
     } else

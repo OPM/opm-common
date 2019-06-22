@@ -36,6 +36,7 @@ namespace Opm {
     public:
         // the rates serve as limits under prediction mode
         // while they are observed rates under historical mode
+        std::string name;
         double  OilRate     = 0.0;
         double  WaterRate   = 0.0;
         double  GasRate     = 0.0;
@@ -55,7 +56,7 @@ namespace Opm {
 
         bool operator==(const WellProductionProperties& other) const;
         bool operator!=(const WellProductionProperties& other) const;
-        WellProductionProperties();
+        WellProductionProperties(const std::string& name_arg);
 
         bool hasProductionControl(WellProducer::ControlModeEnum controlModeArg) const {
             return (m_productionControls & controlModeArg) != 0;
@@ -79,7 +80,7 @@ namespace Opm {
         void resetDefaultBHPLimit();
         void clearControls();
 
-        ProductionControls controls(const SummaryState& st) const;
+        ProductionControls controls(const SummaryState& st, double udq_default) const;
     private:
         int m_productionControls = 0;
         void init_rates( const DeckRecord& record );

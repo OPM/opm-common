@@ -31,8 +31,9 @@
 
 namespace Opm {
 
-    WellProductionProperties::
-    WellProductionProperties() : predictionMode( true )
+    WellProductionProperties::WellProductionProperties(const std::string& name_arg) :
+        name(name_arg),
+        predictionMode( true )
     {}
 
 
@@ -269,7 +270,7 @@ namespace Opm {
     }
 
 
-    ProductionControls WellProductionProperties::controls(const SummaryState&) const {
+    ProductionControls WellProductionProperties::controls(const SummaryState&, double udq_default) const {
         ProductionControls controls(this->m_productionControls);
 
         controls.oil_rate = this->OilRate;
