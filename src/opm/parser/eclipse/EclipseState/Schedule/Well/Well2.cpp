@@ -704,7 +704,7 @@ ProductionControls Well2::productionControls(const SummaryState& st) const {
 
 InjectionControls Well2::injectionControls(const SummaryState& st) const {
     if (!this->isProducer()) {
-        auto controls = this->injection->controls(st);
+        auto controls = this->injection->controls(this->unit_system, st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
         return controls;
     } else

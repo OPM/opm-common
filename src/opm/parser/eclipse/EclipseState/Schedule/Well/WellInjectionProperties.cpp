@@ -246,7 +246,7 @@ namespace Opm {
     }
 
 
-    InjectionControls WellInjectionProperties::controls(const SummaryState&) const {
+    InjectionControls WellInjectionProperties::controls(const UnitSystem& unit_system, const SummaryState&, double udq_default) const {
         InjectionControls controls(this->injectionControls);
 
         controls.surface_rate = this->surfaceInjectionRate;

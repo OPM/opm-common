@@ -73,7 +73,7 @@ namespace Opm {
         void resetDefaultHistoricalBHPLimit();
 
         void setBHPLimit(const double limit);
-        InjectionControls controls(const SummaryState& st) const;
+        InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
     };
 
     std::ostream& operator<<( std::ostream&, const WellInjectionProperties& );
