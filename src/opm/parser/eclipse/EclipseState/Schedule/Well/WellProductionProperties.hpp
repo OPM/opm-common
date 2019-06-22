@@ -80,7 +80,7 @@ namespace Opm {
         void resetDefaultBHPLimit();
         void clearControls();
 
-        ProductionControls controls(const SummaryState& st) const;
+        ProductionControls controls(const SummaryState& st, double udq_default) const;
     private:
         int m_productionControls = 0;
         void init_rates( const DeckRecord& record );
