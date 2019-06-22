@@ -33,11 +33,12 @@
 
 
 struct keyword {
-    keyword(const std::string& name, const std::string& filename, std::size_t line_number, std::size_t content_hash) :
-        name(name),
-        filename(filename),
-        line_number(line_number),
-        content_hash(content_hash)
+    keyword(const std::string& name_arg, const std::string& filename_arg,
+            std::size_t line_number_arg, std::size_t content_hash_arg) :
+        name(name_arg),
+        filename(filename_arg),
+        line_number(line_number_arg),
+        content_hash(content_hash_arg)
     {}
 
 

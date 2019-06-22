@@ -298,17 +298,17 @@ void ParserState::closeFile() {
     this->input_stack.pop();
 }
 
-ParserState::ParserState(const ParseContext& __parseContext, ErrorGuard& errors) :
+ParserState::ParserState(const ParseContext& __parseContext, ErrorGuard& errors_arg) :
     parseContext( __parseContext ),
-    errors( errors )
+    errors( errors_arg )
 {}
 
 ParserState::ParserState( const ParseContext& context,
-                          ErrorGuard& errors,
+                          ErrorGuard& errors_arg,
                           boost::filesystem::path p ) :
     rootPath( boost::filesystem::canonical( p ).parent_path() ),
     parseContext( context ),
-    errors( errors )
+    errors( errors_arg )
 {
     openRootFile( p );
 }

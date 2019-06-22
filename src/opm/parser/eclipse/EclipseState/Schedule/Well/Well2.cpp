@@ -72,29 +72,29 @@ namespace {
 }
 
 
-Well2::Well2(const std::string& wname,
+Well2::Well2(const std::string& wname_arg,
              const std::string& gname,
-             std::size_t init_step,
-             std::size_t insert_index,
-             int headI,
-             int headJ,
-             double ref_depth,
-             Phase phase,
+             std::size_t init_step_arg,
+             std::size_t insert_index_arg,
+             int headI_arg,
+             int headJ_arg,
+             double ref_depth_arg,
+             Phase phase_arg,
              WellProducer::ControlModeEnum whistctl_cmode,
-             WellCompletion::CompletionOrderEnum ordering,
-             const UnitSystem& unit_system,
-             double udq_undefined) :
-    wname(wname),
+             WellCompletion::CompletionOrderEnum ordering_arg,
+             const UnitSystem& unit_system_arg,
+             double udq_undefined_arg) :
+    wname(wname_arg),
     group_name(gname),
-    init_step(init_step),
-    insert_index(insert_index),
-    headI(headI),
-    headJ(headJ),
-    ref_depth(ref_depth),
-    phase(phase),
-    ordering(ordering),
-    unit_system(unit_system),
-    udq_undefined(udq_undefined),
+    init_step(init_step_arg),
+    insert_index(insert_index_arg),
+    headI(headI_arg),
+    headJ(headJ_arg),
+    ref_depth(ref_depth_arg),
+    phase(phase_arg),
+    ordering(ordering_arg),
+    unit_system(unit_system_arg),
+    udq_undefined(udq_undefined_arg),
     status(WellCommon::SHUT),
     drainage_radius(ParserKeywords::WELSPECS::D_RADIUS::defaultValue),
     allow_cross_flow(DeckItem::to_bool(ParserKeywords::WELSPECS::CROSSFLOW::defaultValue)),
@@ -383,15 +383,15 @@ bool Well2::isAvailableForGroupControl() const {
 
 double Well2::getGuideRate() const {
     return this->guide_rate.guide_rate;
-};
+}
 
 GuideRate::GuideRatePhaseEnum Well2::getGuideRatePhase() const {
     return this->guide_rate.guide_phase;
-};
+}
 
 double Well2::getGuideRateScalingFactor() const {
     return this->guide_rate.scale_factor;
-};
+}
 
 
 double Well2::getEfficiencyFactor() const {

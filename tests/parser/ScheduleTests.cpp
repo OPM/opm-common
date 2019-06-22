@@ -2018,19 +2018,21 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     Runspec runspec (deck);
     Schedule schedule( deck, grid, eclipseProperties,runspec);
 
-    const auto& w1cs = schedule.getWell2( "W1", 1 ).getConnections();
-    BOOST_CHECK_EQUAL( 1, w1cs.get( 0 ).complnum() );
-    BOOST_CHECK_EQUAL( 2, w1cs.get( 1 ).complnum() );
-    BOOST_CHECK_EQUAL( 3, w1cs.get( 2 ).complnum() );
-    BOOST_CHECK_EQUAL( 4, w1cs.get( 3 ).complnum() );
-    BOOST_CHECK_EQUAL( 5, w1cs.get( 4 ).complnum() );
+    {
+        const auto& w1cs = schedule.getWell2( "W1", 1 ).getConnections();
+        BOOST_CHECK_EQUAL( 1, w1cs.get( 0 ).complnum() );
+        BOOST_CHECK_EQUAL( 2, w1cs.get( 1 ).complnum() );
+        BOOST_CHECK_EQUAL( 3, w1cs.get( 2 ).complnum() );
+        BOOST_CHECK_EQUAL( 4, w1cs.get( 3 ).complnum() );
+        BOOST_CHECK_EQUAL( 5, w1cs.get( 4 ).complnum() );
 
-    const auto& w2cs = schedule.getWell2( "W2", 1 ).getConnections();
-    BOOST_CHECK_EQUAL( 1, w2cs.getFromIJK( 4, 4, 2 ).complnum() );
-    BOOST_CHECK_EQUAL( 2, w2cs.getFromIJK( 4, 4, 0 ).complnum() );
-    BOOST_CHECK_EQUAL( 3, w2cs.getFromIJK( 4, 4, 1 ).complnum() );
-    BOOST_CHECK_EQUAL( 4, w2cs.getFromIJK( 4, 4, 3 ).complnum() );
-    BOOST_CHECK_EQUAL( 5, w2cs.getFromIJK( 4, 4, 4 ).complnum() );
+        const auto& w2cs = schedule.getWell2( "W2", 1 ).getConnections();
+        BOOST_CHECK_EQUAL( 1, w2cs.getFromIJK( 4, 4, 2 ).complnum() );
+        BOOST_CHECK_EQUAL( 2, w2cs.getFromIJK( 4, 4, 0 ).complnum() );
+        BOOST_CHECK_EQUAL( 3, w2cs.getFromIJK( 4, 4, 1 ).complnum() );
+        BOOST_CHECK_EQUAL( 4, w2cs.getFromIJK( 4, 4, 3 ).complnum() );
+        BOOST_CHECK_EQUAL( 5, w2cs.getFromIJK( 4, 4, 4 ).complnum() );
+    }
 
     {
         const auto& w1cs = schedule.getWell2( "W1", 1 ).getConnections();

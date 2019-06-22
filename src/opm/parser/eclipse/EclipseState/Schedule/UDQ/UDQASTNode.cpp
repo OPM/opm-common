@@ -28,8 +28,8 @@ namespace Opm {
 
 
 
-UDQASTNode::UDQASTNode(UDQTokenType type) :
-    type(type),
+UDQASTNode::UDQASTNode(UDQTokenType type_arg) :
+    type(type_arg),
     var_type(UDQVarType::NONE)
 {
     if (type == UDQTokenType::error)
@@ -41,10 +41,10 @@ UDQASTNode::UDQASTNode(UDQTokenType type) :
     throw std::invalid_argument("The one argument constructor is only available for error and end");
 }
 
-UDQASTNode::UDQASTNode(double scalar_value) :
+UDQASTNode::UDQASTNode(double scalar_value_arg) :
     type(UDQTokenType::number),
     var_type(UDQVarType::SCALAR),
-    scalar_value(scalar_value)
+    scalar_value(scalar_value_arg)
 {}
 
 
@@ -82,12 +82,12 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
-                       const std::string& string_value,
-                       const std::vector<std::string>& selector) :
+                       const std::string& string_value_arg,
+                       const std::vector<std::string>& selector_arg) :
     type(type_arg),
-    var_type(UDQ::targetType(string_value)),
-    string_value(string_value),
-    selector(selector)
+    var_type(UDQ::targetType(string_value_arg)),
+    string_value(string_value_arg),
+    selector(selector_arg)
 {
     if (type_arg == UDQTokenType::number)
         this->scalar_value = std::stod(string_value);

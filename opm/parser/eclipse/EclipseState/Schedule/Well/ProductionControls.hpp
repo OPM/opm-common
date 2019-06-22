@@ -24,8 +24,8 @@
 namespace Opm {
 struct ProductionControls {
 public:
-    ProductionControls(int controls) :
-        controls(controls)
+    ProductionControls(int controls_arg) :
+        controls(controls_arg)
     {
     }
 

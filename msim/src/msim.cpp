@@ -33,8 +33,8 @@
 
 namespace Opm {
 
-msim::msim(const EclipseState& state) :
-    state(state)
+msim::msim(const EclipseState& state_arg) :
+    state(state_arg)
 {}
 
 void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {

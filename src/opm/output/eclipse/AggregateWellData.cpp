@@ -870,8 +870,8 @@ captureDynamicWellData(const Schedule&             sched,
     wellLoop(wells, [this, &smry]
         (const Well2& well, const std::size_t wellID) -> void
     {
-        auto xw = this->xWell_[wellID];
+        auto xwell = this->xWell_[wellID];
 
-        XWell::dynamicContrib(well, smry, xw);
+        XWell::dynamicContrib(well, smry, xwell);
     });
 }

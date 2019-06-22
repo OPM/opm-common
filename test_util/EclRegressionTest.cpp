@@ -147,31 +147,31 @@ void ECLRegressionTest::deviationsForNonFloatingPoints(T val1, T val2, const std
 
 void ECLRegressionTest::deviationsForCell(double val1, double val2, const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, bool allowNegativeValues, bool useStrictTol)
 {
-    double absTolerance = useStrictTol ? strictAbsTol : getAbsTolerance();
-    double relTolerance = useStrictTol ? strictAbsTol : getRelTolerance();
+    double absToleranceLoc = useStrictTol ? strictAbsTol : getAbsTolerance();
+    double relToleranceLoc = useStrictTol ? strictAbsTol : getRelTolerance();
 
     if (!allowNegativeValues) {
         if (val1 < 0) {
-            if (std::abs(val1) > absTolerance) {
+            if (std::abs(val1) > absToleranceLoc) {
                 printValuesForCell(keyword, reference, kw_size, cell, grid1, val1, val2);
                 HANDLE_ERROR(std::runtime_error, "Negative value in first file, "
-                             << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
+                             << "which in absolute value exceeds the absolute tolerance of " << absToleranceLoc << ".");
             }
             val1 = 0;
         }
 
         if (val2 < 0) {
-            if (std::abs(val2) > absTolerance) {
+            if (std::abs(val2) > absToleranceLoc) {
                 printValuesForCell(keyword, reference, kw_size, cell, grid1, val1, val2);
                 HANDLE_ERROR(std::runtime_error, "Negative value in second file, "
-                             << "which in absolute value exceeds the absolute tolerance of " << absTolerance << ".");
+                             << "which in absolute value exceeds the absolute tolerance of " << absToleranceLoc << ".");
             }
             val2 = 0;
         }
     }
 
     Deviation dev = calculateDeviations(val1, val2);
-    if (dev.abs > absTolerance && (dev.rel > relTolerance || dev.rel == -1)) {
+    if (dev.abs > absToleranceLoc && (dev.rel > relToleranceLoc || dev.rel == -1)) {
         if (analysis) {
             std::string keywref = keyword + ": " + reference;
             deviations[keywref].push_back(dev);
@@ -183,8 +183,8 @@ void ECLRegressionTest::deviationsForCell(double val1, double val2, const std::s
             }
 
             HANDLE_ERROR(std::runtime_error, "Deviations exceed tolerances."
-                         << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absTolerance << "."
-                         << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relTolerance << ".");
+                         << "\nThe absolute deviation is " << dev.abs << ", and the tolerance limit is " << absToleranceLoc << "."
+                         << "\nThe relative deviation is " << dev.rel << ", and the tolerance limit is " << relToleranceLoc << ".");
         }
     }
 

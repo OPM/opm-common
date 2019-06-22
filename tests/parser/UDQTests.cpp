@@ -168,7 +168,6 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
     UDQFunctionTable udqft(udqp);
     {
         UDQDefine def(udqp, "WUBHP", {"WBHP"});
-        UDQParams udqp;
         SummaryState st;
         UDQContext context(udqp, udqft, st);
 
@@ -626,15 +625,15 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
     }
     {
         const auto& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get("^"));
-        UDQSet arg1("NAME", 4);
-        UDQSet arg2("NAME", 4);
+        UDQSet arg1_local("NAME", 4);
+        UDQSet arg2_local("NAME", 4);
 
-        for (std::size_t i=0; i < arg1.size(); i++) {
-            arg1.assign(i, i + 1);
-            arg2.assign(i, 2);
+        for (std::size_t i=0; i < arg1_local.size(); i++) {
+            arg1_local.assign(i, i + 1);
+            arg2_local.assign(i, 2);
         }
-        auto result = func.eval(arg1, arg2);
-        for (std::size_t i=0; i < arg1.size(); i++)
+        auto result = func.eval(arg1_local, arg2_local);
+        for (std::size_t i=0; i < arg1_local.size(); i++)
             BOOST_CHECK_EQUAL( result[i].value(), (i+1)*(i+1));
     }
     {
@@ -714,34 +713,34 @@ BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("LOG"));
-        UDQSet arg("NAME", 3);
-        arg.assign(0, 10);
-        arg.assign(2,1000);
+        UDQSet arg_local("NAME", 3);
+        arg_local.assign(0, 10);
+        arg_local.assign(2,1000);
 
-        auto result = func.eval(arg);
+        auto result = func.eval(arg_local);
         BOOST_CHECK_EQUAL( result[0].value(), 1);
         BOOST_CHECK( !result[1] );
         BOOST_CHECK_EQUAL( result[2].value(), 3);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("NINT"));
-        UDQSet arg("NAME", 3);
-        arg.assign(0, 0.75);
-        arg.assign(2, 1.25);
+        UDQSet arg_local("NAME", 3);
+        arg_local.assign(0, 0.75);
+        arg_local.assign(2, 1.25);
 
-        auto result = func.eval(arg);
+        auto result = func.eval(arg_local);
         BOOST_CHECK_EQUAL( result[0].value(), 1);
         BOOST_CHECK( !result[1] );
         BOOST_CHECK_EQUAL( result[2].value(), 1);
     }
     {
         const auto& func = dynamic_cast<const UDQUnaryElementalFunction&>(udqft.get("RANDN"));
-        UDQSet arg("NAME", 3);
-        arg.assign(0, -1.0);
-        arg.assign(2, -1.0);
+        UDQSet arg_local("NAME", 3);
+        arg_local.assign(0, -1.0);
+        arg_local.assign(2, -1.0);
 
-        auto result1 = func.eval(arg);
-        auto result2 = func.eval(arg);
+        auto result1 = func.eval(arg_local);
+        auto result2 = func.eval(arg_local);
         BOOST_CHECK( result1[0].value() != -1.0);
         BOOST_CHECK( !result1[1] );
         BOOST_CHECK( result1[2].value() != -1.0);

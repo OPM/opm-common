@@ -35,10 +35,10 @@ class ParseContext;
 class ErrorGuard;
 
 struct UDQParseNode {
-    UDQParseNode(UDQTokenType type_arg, const std::string& value_arg, const std::vector<std::string>& selector) :
+    UDQParseNode(UDQTokenType type_arg, const std::string& value_arg, const std::vector<std::string>& selector_arg) :
         type(type_arg),
         value(value_arg),
-        selector(selector)
+        selector(selector_arg)
     {
         if (type_arg == UDQTokenType::ecl_expr)
             this->var_type = UDQ::targetType(value_arg);
@@ -66,10 +66,10 @@ public:
   static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors);
 
 private:
-    UDQParser(const UDQParams& udq_params1, const std::vector<std::string>& tokens) :
+    UDQParser(const UDQParams& udq_params1, const std::vector<std::string>& tokens1) :
         udq_params(udq_params1),
         udqft(UDQFunctionTable(udq_params)),
-        tokens(tokens)
+        tokens(tokens1)
     {}
 
     UDQASTNode parse_cmp();
