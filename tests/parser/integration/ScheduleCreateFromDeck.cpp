@@ -203,14 +203,14 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK_EQUAL(sched.getWell2("W_1", 8).getProductionProperties().predictionMode, false);
         BOOST_CHECK_CLOSE(sched.getWell2("W_1", 8).getProductionProperties().OilRate , 13000/Metric::Time , 0.001);
 
-        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 10).getInjectionProperties().BHPLimit, 123.00 * Metric::Pressure , 0.001);
-        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 10).getInjectionProperties().THPLimit, 678.00 * Metric::Pressure , 0.001);
 
         {
             const WellInjectionProperties& prop11 = sched.getWell2("W_1", 11).getInjectionProperties();
             BOOST_CHECK_CLOSE(5000/Metric::Time , prop11.surfaceInjectionRate, 0.001);
             BOOST_CHECK_EQUAL( WellInjector::RATE  , prop11.controlMode);
         }
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 10).getInjectionProperties().BHPLimit.get<double>(), 123.00 * Metric::Pressure , 0.001);
+        BOOST_CHECK_CLOSE(sched.getWell2("W_1", 10).getInjectionProperties().THPLimit.get<double>(), 678.00 * Metric::Pressure , 0.001);
 
 
 
@@ -219,13 +219,15 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
             const WellInjectionProperties& prop9 = sched.getWell2("W_1", 9).getInjectionProperties();
             BOOST_CHECK_CLOSE(20000/Metric::Time ,  prop9.surfaceInjectionRate  , 0.001);
             BOOST_CHECK_CLOSE(200000/Metric::Time , prop9.reservoirInjectionRate, 0.001);
-            BOOST_CHECK_CLOSE(6895 * Metric::Pressure , prop9.BHPLimit, 0.001);
-            BOOST_CHECK_CLOSE(0 , prop9.THPLimit , 0.001);
             BOOST_CHECK_EQUAL( WellInjector::RESV  , prop9.controlMode);
             BOOST_CHECK(  prop9.hasInjectionControl(WellInjector::RATE ));
             BOOST_CHECK(  prop9.hasInjectionControl(WellInjector::RESV ));
             BOOST_CHECK( !prop9.hasInjectionControl(WellInjector::THP));
             BOOST_CHECK(  prop9.hasInjectionControl(WellInjector::BHP));
+            SummaryState st;
+            const auto controls = sched.getWell2("W_1", 9).injectionControls(st);
+            BOOST_CHECK_CLOSE(6895 * Metric::Pressure , controls.bhp_limit, 0.001);
+            BOOST_CHECK_CLOSE(0 , controls.thp_limit , 0.001);
         }
 
 

@@ -271,16 +271,16 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 
 
     auto productionProps = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
-    productionProps->BHPLimit = 100;
+    productionProps->BHPLimit.reset(100);
     productionProps->addProductionControl(Opm::WellProducer::BHP);
     well.updateProduction(productionProps);
-    BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPLimit);
+    BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPLimit.get<double>());
     BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Opm::WellProducer::BHP ));
 
     auto injProps = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injProps->THPLimit = 200;
+    injProps->THPLimit.reset(200);
     well.updateInjection(injProps);
-    BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPLimit);
+    BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPLimit.get<double>());
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::THP ));
 }
 
@@ -328,8 +328,8 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     properties3->GasRate = 100;
     properties3->LiquidRate = 100;
     properties3->ResVRate = 100;
-    properties3->BHPLimit = 100;
-    properties3->THPLimit = 100;
+    properties3->BHPLimit.reset(100);
+    properties3->THPLimit.reset(100);
     properties3->addProductionControl(Opm::WellProducer::ORAT);
     properties3->addProductionControl(Opm::WellProducer::LRAT);
     properties3->addProductionControl(Opm::WellProducer::BHP);
@@ -369,9 +369,9 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
 
     auto injProps3 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injProps3->BHPLimit = 100;
+    injProps3->BHPLimit.reset(100);
     injProps3->addInjectionControl(Opm::WellInjector::BHP);
-    injProps3->THPLimit = 100;
+    injProps3->THPLimit.reset(100);
     injProps3->addInjectionControl(Opm::WellInjector::THP);
     well.updateInjection(injProps3);
 
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::WRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::GRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::LRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
     BOOST_CHECK_EQUAL(p.ALQValue, 10.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
 
-    BOOST_CHECK_EQUAL(p.BHPLimit, 5.e7); // 500 barsa
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 5.e7); // 500 barsa
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
@@ -707,8 +707,8 @@ BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
     BOOST_CHECK_EQUAL(p.ALQValue, 13.);
-    BOOST_CHECK_EQUAL(p.THPLimit, 1000000.); // 10 barsa
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.); // 1 atm.
+    BOOST_CHECK_EQUAL(p.THPLimit.get<double>(), 1000000.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.); // 1 atm.
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
@@ -729,8 +729,8 @@ BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
     BOOST_CHECK_EQUAL(p.ALQValue, 13.);
-    BOOST_CHECK_EQUAL(p.THPLimit, 1000000.); // 10 barsa
-    BOOST_CHECK_EQUAL(p.BHPLimit, 2000000.); // 20 barsa
+    BOOST_CHECK_EQUAL(p.THPLimit.get<double>(), 1000000.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 2000000.); // 20 barsa
 }
 
 

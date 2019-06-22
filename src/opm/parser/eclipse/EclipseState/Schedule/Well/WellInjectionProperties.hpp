@@ -35,9 +35,9 @@ namespace Opm {
         std::string name;
         double  surfaceInjectionRate;
         double  reservoirInjectionRate;
+        UDAValue  BHPLimit;
+        UDAValue  THPLimit;
         double  temperature;
-        double  BHPLimit;
-        double  THPLimit;
         double  BHPH;
         double  THPH;
         int     VFPTableNumber;

@@ -43,8 +43,8 @@ namespace Opm {
         double  LiquidRate  = 0.0;
         double  ResVRate    = 0.0;
         // BHP and THP limit
-        double  BHPLimit    = 0.0;
-        double  THPLimit    = 0.0;
+        UDAValue  BHPLimit;
+        UDAValue  THPLimit;
         // historical BHP and THP under historical mode
         double  BHPH        = 0.0;
         double  THPH        = 0.0;

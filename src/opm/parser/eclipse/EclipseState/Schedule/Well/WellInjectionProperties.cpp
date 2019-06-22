@@ -24,9 +24,12 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+
 
 #include "WellInjectionProperties.hpp"
 #include "injection.hpp"
+#include "well_uda.hpp"
 
 namespace Opm {
 
@@ -39,8 +42,6 @@ namespace Opm {
         temperature=
             Metric::TemperatureOffset
             + ParserKeywords::STCOND::TEMPERATURE::defaultValue;
-        BHPLimit=0.0;
-        THPLimit=0.0;
         BHPH=0.0;
         THPH=0.0;
         VFPTableNumber=0;
@@ -68,7 +69,7 @@ namespace Opm {
 
 
         if (!record.getItem("THP").defaultApplied(0)) {
-            this->THPLimit       = record.getItem("THP").getSIDouble(0);
+            this->THPLimit       = record.getItem("THP").get<UDAValue>(0);
             this->addInjectionControl(WellInjector::THP);
         } else
             this->dropInjectionControl(WellInjector::THP);
@@ -82,7 +83,7 @@ namespace Opm {
           current behavoir agrees with the behovir of Eclipse when BHPLimit is not
           specified while employed during group control.
         */
-        this->setBHPLimit(record.getItem("BHP").getSIDouble(0));
+        this->setBHPLimit(record.getItem("BHP").get<UDAValue>(0).get<double>());
         // BHP control should always be there.
         this->addInjectionControl(WellInjector::BHP);
 
@@ -105,7 +106,7 @@ namespace Opm {
 
     void WellInjectionProperties::handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
         if (cmode == WellTarget::BHP){
-            this->BHPLimit = newValue * siFactorP;
+            this->BHPLimit.reset( newValue * siFactorP );
         }
         else if (cmode == WellTarget::ORAT){
             if(this->injectorType == WellInjector::TypeEnum::OIL){
@@ -129,7 +130,7 @@ namespace Opm {
             }
         }
         else if (cmode == WellTarget::THP){
-            this->THPLimit = newValue * siFactorP;
+            this->THPLimit.reset( newValue * siFactorP );
         }
         else if (cmode == WellTarget::VFP){
             this->VFPTableNumber = static_cast<int> (newValue);
@@ -220,11 +221,11 @@ namespace Opm {
     void WellInjectionProperties::resetDefaultHistoricalBHPLimit() {
         // this default BHP value is from simulation result,
         // without finding any related document
-        BHPLimit = 6891.2 * unit::barsa;
+        BHPLimit.reset( 6891.2 * unit::barsa );
     }
 
     void WellInjectionProperties::setBHPLimit(const double limit) {
-        BHPLimit = limit;
+        BHPLimit.reset( limit );
     }
 
     std::ostream& operator<<( std::ostream& stream,
@@ -246,13 +247,13 @@ namespace Opm {
     }
 
 
-    InjectionControls WellInjectionProperties::controls(const UnitSystem& unit_system, const SummaryState&, double udq_default) const {
+    InjectionControls WellInjectionProperties::controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const {
         InjectionControls controls(this->injectionControls);
 
         controls.surface_rate = this->surfaceInjectionRate;
         controls.reservoir_rate = this->reservoirInjectionRate;
-        controls.bhp_limit = this->BHPLimit;
-        controls.thp_limit = this->THPLimit;
+        controls.bhp_limit = UDA::eval_well_uda(this->BHPLimit, this->name, st, udq_default);
+        controls.thp_limit = UDA::eval_well_uda(this->THPLimit, this->name, st, udq_default);
         controls.temperature = this->temperature;
         controls.injector_type = this->injectorType;
         controls.cmode = this->controlMode;

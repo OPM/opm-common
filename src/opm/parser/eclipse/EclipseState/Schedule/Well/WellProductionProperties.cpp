@@ -23,11 +23,13 @@
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include "WellProductionProperties.hpp"
-
+#include "well_uda.hpp"
 
 namespace Opm {
 
@@ -51,9 +53,9 @@ namespace Opm {
         this->LiquidRate = this->WaterRate + this->OilRate;
 
         if ( record.getItem( "BHP" ).hasValue(0) )
-            this->BHPH = record.getItem("BHP").getSIDouble(0);
+            this->BHPH = record.getItem("BHP").get<UDAValue>(0).get<double>();
         if ( record.getItem( "THP" ).hasValue(0) )
-            this->THPH = record.getItem("THP").getSIDouble(0);
+            this->THPH = record.getItem("THP").get<UDAValue>(0).get<double>();
 
         const auto& cmodeItem = record.getItem("CMODE");
         if ( cmodeItem.defaultApplied(0) ) {
@@ -104,9 +106,9 @@ namespace Opm {
     {
         this->predictionMode = true;
 
-        this->BHPLimit       = record.getItem("BHP"      ).getSIDouble(0);
-        this->THPLimit       = record.getItem("THP"      ).getSIDouble(0);
         this->ALQValue       = record.getItem("ALQ"      ).get< double >(0); //NOTE: Unit of ALQ is never touched
+        this->BHPLimit       = record.getItem("BHP").get<UDAValue>(0);
+        this->THPLimit       = record.getItem("THP").get<UDAValue>(0);
         this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
         this->LiquidRate     = record.getItem("LRAT").getSIDouble(0);
         this->ResVRate       = record.getItem("RESV").getSIDouble(0);
@@ -125,7 +127,7 @@ namespace Opm {
             if( !record.getItem( cmode.first ).defaultApplied( 0 ) ) {
 
                 // a zero value THP limit will not be handled as a THP limit
-                if (cmode.first == "THP" && this->THPLimit == 0.)
+                if (cmode.first == "THP" && this->THPLimit.get<double>() == 0.)
                     continue;
 
                 this->addProductionControl( cmode.second );
@@ -190,10 +192,12 @@ namespace Opm {
             this->ResVRate = newValue * siFactorL;
         }
         else if (cmode == WellTarget::BHP){
-            this->BHPLimit = newValue * siFactorP;
+            this->BHPLimit.assert_numeric("Can not combine UDA and WELTARG");
+            this->BHPLimit = UDAValue( newValue * siFactorP );
         }
         else if (cmode == WellTarget::THP){
-            this->THPLimit = newValue * siFactorP;
+            this->THPLimit.assert_numeric("Can not combine UDA and WELTARG");
+            this->THPLimit = UDAValue(newValue * siFactorP);
         }
         else if (cmode == WellTarget::VFP){
             this->VFPTableNumber = static_cast<int> (newValue);
@@ -254,7 +258,7 @@ namespace Opm {
     }
 
     void WellProductionProperties::resetDefaultBHPLimit() {
-        BHPLimit = 1. * unit::atm;
+        BHPLimit.reset( 1. * unit::atm );
     }
 
     void WellProductionProperties::clearControls() {
@@ -262,15 +266,15 @@ namespace Opm {
     }
 
     void WellProductionProperties::setBHPLimit(const double limit) {
-        BHPLimit = limit;
+        BHPLimit.reset( limit );
     }
 
     double WellProductionProperties::getBHPLimit() const {
-        return BHPLimit;
+        return BHPLimit.get<double>();
     }
 
 
-    ProductionControls WellProductionProperties::controls(const SummaryState&, double udq_default) const {
+    ProductionControls WellProductionProperties::controls(const SummaryState& st, double udq_undefined) const {
         ProductionControls controls(this->m_productionControls);
 
         controls.oil_rate = this->OilRate;
@@ -278,8 +282,8 @@ namespace Opm {
         controls.gas_rate = this->GasRate;
         controls.liquid_rate = this->LiquidRate;
         controls.resv_rate = this->ResVRate;
-        controls.bhp_limit = this->BHPLimit;
-        controls.thp_limit= this->THPLimit;
+        controls.bhp_limit = UDA::eval_well_uda(this->BHPLimit, this->name, st, udq_undefined);
+        controls.thp_limit= UDA::eval_well_uda(this->THPLimit, this->name, st, udq_undefined);
         controls.bhp_history = this->BHPH;
         controls.thp_history = this->THPH;
         controls.vfp_table_number = this->VFPTableNumber;
