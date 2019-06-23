@@ -255,6 +255,86 @@ namespace {
         }
     }
 
+    void writeSatFuncScaling(const ::Opm::EclipseState&        es,
+                             const ::Opm::EclipseGrid&         grid,
+                             const ::Opm::UnitSystem&          units,
+                             ::Opm::EclIO::OutputStream::Init& initFile)
+    {
+        const auto scalingVectors = Properties {
+            // Primary drainage curve
+
+            // Water saturation end-points
+            {"SWL"  , ::Opm::UnitSystem::measure::identity },
+            {"SWCR" , ::Opm::UnitSystem::measure::identity },
+            // {"SWGCR", ::Opm::UnitSystem::measure::identity },
+            {"SWU"  , ::Opm::UnitSystem::measure::identity },
+
+            // Gas saturation end-points
+            {"SGL"  , ::Opm::UnitSystem::measure::identity },
+            {"SGCR" , ::Opm::UnitSystem::measure::identity },
+            // {"SGWCR", ::Opm::UnitSystem::measure::identity },
+            {"SGU"  , ::Opm::UnitSystem::measure::identity },
+
+            // Oil saturation end-points
+            {"SOWCR", ::Opm::UnitSystem::measure::identity },
+            {"SOGCR", ::Opm::UnitSystem::measure::identity },
+
+            // Vertical scaling of relative permeability
+            {"KRO"  , ::Opm::UnitSystem::measure::identity },
+            {"KRG"  , ::Opm::UnitSystem::measure::identity },
+            {"KRW"  , ::Opm::UnitSystem::measure::identity },
+            {"KRGR" , ::Opm::UnitSystem::measure::identity },
+            {"KRWR" , ::Opm::UnitSystem::measure::identity },
+            {"KRORW", ::Opm::UnitSystem::measure::identity },
+            {"KRORG", ::Opm::UnitSystem::measure::identity },
+
+            // Capillary pressure scaling
+            {"SWLPC", ::Opm::UnitSystem::measure::identity },
+            {"SGLPC", ::Opm::UnitSystem::measure::identity },
+            {"PCG"  , ::Opm::UnitSystem::measure::pressure },
+            {"PCW"  , ::Opm::UnitSystem::measure::pressure },
+
+            // ===============================================
+
+            // Imbibition curve
+
+            // Water saturation end-points
+            {"ISWL"  , ::Opm::UnitSystem::measure::identity },
+            {"ISWCR" , ::Opm::UnitSystem::measure::identity },
+            // {"ISWGCR", ::Opm::UnitSystem::measure::identity },
+            {"ISWU"  , ::Opm::UnitSystem::measure::identity },
+
+            // Gas saturation end-points
+            {"ISGL"  , ::Opm::UnitSystem::measure::identity },
+            {"ISGCR" , ::Opm::UnitSystem::measure::identity },
+            // {"ISGWCR", ::Opm::UnitSystem::measure::identity },
+            {"ISGU"  , ::Opm::UnitSystem::measure::identity },
+
+            // Oil saturation end-points
+            {"ISOWCR", ::Opm::UnitSystem::measure::identity },
+            {"ISOGCR", ::Opm::UnitSystem::measure::identity },
+
+            // Vertical scaling of relative permeability
+            {"IKRO"  , ::Opm::UnitSystem::measure::identity },
+            {"IKRG"  , ::Opm::UnitSystem::measure::identity },
+            {"IKRW"  , ::Opm::UnitSystem::measure::identity },
+            {"IKRGR" , ::Opm::UnitSystem::measure::identity },
+            {"IKRWR" , ::Opm::UnitSystem::measure::identity },
+            {"IKRORW", ::Opm::UnitSystem::measure::identity },
+            {"IKRORG", ::Opm::UnitSystem::measure::identity },
+
+            // Capillary pressure scaling
+            {"ISWLPC", ::Opm::UnitSystem::measure::identity },
+            {"ISGLPC", ::Opm::UnitSystem::measure::identity },
+            {"IPCG"  , ::Opm::UnitSystem::measure::pressure },
+            {"IPCW"  , ::Opm::UnitSystem::measure::pressure },
+        };
+
+        writeDoubleCellProperties(scalingVectors,
+                                  es.get3DProperties().getDoubleProperties(),
+                                  grid, units, initFile);
+    }
+
     void writeNonNeighbourConnections(const ::Opm::NNC&                 nnc,
                                       const ::Opm::UnitSystem&          units,
                                       ::Opm::EclIO::OutputStream::Init& initFile)
@@ -302,6 +382,8 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
     writeIntegerCellProperties(es, grid, initFile);
 
     writeIntegerMaps(std::move(int_data), initFile);
+
+    writeSatFuncScaling(es, grid, units, initFile);
 
     if (true || (nnc.numNNC() > std::size_t{0})) {
         writeNonNeighbourConnections(nnc, units, initFile);
