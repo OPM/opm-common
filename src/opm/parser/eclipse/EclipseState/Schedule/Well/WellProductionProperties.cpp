@@ -23,11 +23,13 @@
 
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include "WellProductionProperties.hpp"
-
+#include "well_uda.hpp"
 
 namespace Opm {
 
@@ -270,7 +272,7 @@ namespace Opm {
     }
 
 
-    ProductionControls WellProductionProperties::controls(const SummaryState&, double udq_default) const {
+    ProductionControls WellProductionProperties::controls(const SummaryState& st, double udq_undefined) const {
         ProductionControls controls(this->m_productionControls);
 
         controls.oil_rate = this->OilRate;

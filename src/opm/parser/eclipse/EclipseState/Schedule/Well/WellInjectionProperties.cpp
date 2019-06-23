@@ -24,9 +24,12 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+
 
 #include "WellInjectionProperties.hpp"
 #include "injection.hpp"
+#include "well_uda.hpp"
 
 namespace Opm {
 
@@ -246,7 +249,7 @@ namespace Opm {
     }
 
 
-    InjectionControls WellInjectionProperties::controls(const UnitSystem& unit_system, const SummaryState&, double udq_default) const {
+    InjectionControls WellInjectionProperties::controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const {
         InjectionControls controls(this->injectionControls);
 
         controls.surface_rate = this->surfaceInjectionRate;
