@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 
