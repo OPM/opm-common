@@ -46,6 +46,15 @@
 #include <utility>
 
 namespace {
+
+    struct CellProperty
+    {
+        std::string                name;
+        ::Opm::UnitSystem::measure unit;
+    };
+
+    using Properties = std::vector<CellProperty>;
+
     std::vector<float> singlePrecision(const std::vector<double>& x)
     {
         return { x.begin(), x.end() };
@@ -127,17 +136,44 @@ namespace {
         initFile.write("DZ"   , dz);
     }
 
+    template <typename T, class WriteVector>
+    void writeCellProperties(const Properties&               propList,
+                             const ::Opm::GridProperties<T>& propValues,
+                             const ::Opm::EclipseGrid&       grid,
+                             WriteVector&&                   write)
+    {
+        for (const auto& prop : propList) {
+            if (! propValues.hasKeyword(prop.name)) {
+                continue;
+            }
+
+            const auto& opm_property = propValues.getKeyword(prop.name);
+
+            write(prop, opm_property.compressedCopy(grid));
+        }
+    }
+
+    void writeDoubleCellProperties(const Properties&                    propList,
+                                   const ::Opm::GridProperties<double>& propValues,
+                                   const ::Opm::EclipseGrid&            grid,
+                                   const ::Opm::UnitSystem&             units,
+                                   ::Opm::EclIO::OutputStream::Init&    initFile)
+    {
+        writeCellProperties(propList, propValues, grid,
+            [&units, &initFile](const CellProperty&   prop,
+                                std::vector<double>&& value)
+        {
+            units.from_si(prop.unit, value);
+            initFile.write(prop.name, singlePrecision(value));
+        });
+    }
+
     void writeDoubleCellProperties(const ::Opm::EclipseState&        es,
                                    const ::Opm::EclipseGrid&         grid,
                                    const ::Opm::UnitSystem&          units,
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        using double_kw = std::pair<std::string, ::Opm::UnitSystem::measure>;
-
-        // This is a rather arbitrary hardcoded list of 3D keywords
-        // which are written to the INIT file, if they are in the
-        // current EclipseState.
-        const auto doubleKeywords = std::vector<double_kw> {
+        const auto doubleKeywords = Properties {
             {"PORO"  , ::Opm::UnitSystem::measure::identity },
             {"PERMX" , ::Opm::UnitSystem::measure::permeability },
             {"PERMY" , ::Opm::UnitSystem::measure::permeability },
@@ -151,17 +187,8 @@ namespace {
         const auto& properties = es.get3DProperties().getDoubleProperties();
         properties.assertKeyword("NTG");
 
-        for (const auto& kw_pair : doubleKeywords) {
-            if (! properties.hasKeyword( kw_pair.first)) {
-                continue;
-            }
-
-            const auto& opm_property = properties.getKeyword(kw_pair.first);
-            auto ecl_data = opm_property.compressedCopy(grid);
-            units.from_si(kw_pair.second, ecl_data);
-
-            initFile.write(kw_pair.first, singlePrecision(ecl_data));
-        }
+        writeDoubleCellProperties(doubleKeywords, properties,
+                                  grid, units, initFile);
     }
 
     void writeIntegerCellProperties(const ::Opm::EclipseState&        es,
