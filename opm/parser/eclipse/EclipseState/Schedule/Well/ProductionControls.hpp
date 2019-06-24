@@ -20,6 +20,7 @@
 
 #ifndef PRODUCTION_CONTROLS_HPP
 #define PRODUCTION_CONTROLS_HPP
+#include <iosfwd>
 
 namespace Opm {
 struct ProductionControls {
@@ -50,5 +51,7 @@ public:
 private:
     int controls;
 };
+
+std::ostream& operator<<( std::ostream&, const ProductionControls& );
 }
 #endif

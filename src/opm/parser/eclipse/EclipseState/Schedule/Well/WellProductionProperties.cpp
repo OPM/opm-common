@@ -293,4 +293,18 @@ namespace Opm {
     }
 
 
+    std::ostream& operator<<( std::ostream& stream, const ProductionControls& controls) {
+        return stream
+            << "ProductionControls{ "
+            << "orat: " << controls.oil_rate << ", "
+            << "wrat: " << controls.water_rate << ", "
+            << "grat: " << controls.gas_rate << ", "
+            << "lrat: " << controls.liquid_rate << ", "
+            << "resv: " << controls.resv_rate << ", "
+            << "BHP: "  << controls.bhp_limit << ", "
+            << "THP: "  << controls.thp_limit << ", "
+            << "cmode: " << controls.cmode << "}";
+    }
+
+
 } // namespace Opm
