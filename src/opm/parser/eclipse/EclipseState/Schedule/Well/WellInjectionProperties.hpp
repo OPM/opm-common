@@ -22,6 +22,7 @@
 
 #include <iosfwd>
 
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
 
@@ -33,11 +34,11 @@ namespace Opm {
 
     struct WellInjectionProperties {
         std::string name;
-        double  surfaceInjectionRate;
-        double  reservoirInjectionRate;
+        UDAValue  surfaceInjectionRate;
+        UDAValue  reservoirInjectionRate;
+        UDAValue  BHPLimit;
+        UDAValue  THPLimit;
         double  temperature;
-        double  BHPLimit;
-        double  THPLimit;
         double  BHPH;
         double  THPH;
         int     VFPTableNumber;

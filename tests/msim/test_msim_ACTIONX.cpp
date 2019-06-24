@@ -108,6 +108,18 @@ double prod_wpr_P4(const EclipseState&  es, const Schedule& /* sched */, const S
     return -units.to_si(UnitSystem::measure::rate, water_rate);
 }
 
+
+double inj_wir_INJ(const EclipseState&  es, const Schedule& sched, const SummaryState& st, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
+    printf("report_step:%ld  Has FUINJ: %d \n", report_step, st.has("FUINJ"));
+    if (st.has("FUINJ")) {
+        const auto& well = sched.getWell2("INJ", report_step);
+        const auto controls = well.injectionControls(st);
+        printf("st[FUINJ] = %lg \n", st.get("FUINJ"));
+        return controls.surface_rate;
+    } else
+        return -99;
+}
+
 /*
   The deck tested here has a UDQ DEFINE statement which sorts the wells after
   oil production rate, and then subsequently closes the well with lowest OPR
@@ -293,5 +305,42 @@ BOOST_AUTO_TEST_CASE(UDQ_WUWCT) {
 
 
         test_work_area_free(work_area);
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(UDA) {
+#include "uda.include"
+    test_data td( uda_deck );
+    msim sim(td.state);
+    EclipseIO io(td.state, td.state.getInputGrid(), td.schedule, td.summary_config);
+
+    sim.well_rate("P1", data::Rates::opt::wat, prod_wpr_P1);
+    sim.well_rate("P2", data::Rates::opt::wat, prod_wpr_P2);
+    sim.well_rate("P3", data::Rates::opt::wat, prod_wpr_P3);
+    sim.well_rate("P4", data::Rates::opt::wat, prod_wpr_P4);
+    sim.well_rate("INJ", data::Rates::opt::wat, inj_wir_INJ);
+    {
+        ecl::util::TestArea ta("uda_sim");
+
+        sim.run(td.schedule, io, true);
+
+        const auto& base_name = td.state.getIOConfig().getBaseName();
+        ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
+
+        // Should only get at report steps
+        for (int report_step = 2; report_step < ecl_sum_get_last_report_step(ecl_sum); report_step++) {
+            double wwpr_sum = 0;
+            {
+                int prev_tstep = ecl_sum_iget_report_end(ecl_sum, report_step - 1);
+                for (const auto& well : {"P1", "P2", "P3", "P4"}) {
+                    std::string wwpr_key  = std::string("WWPR:") + well;
+                    wwpr_sum += ecl_sum_get_general_var(ecl_sum, prev_tstep, wwpr_key.c_str());
+                }
+            }
+            BOOST_CHECK_CLOSE( 0.90 * wwpr_sum, ecl_sum_get_general_var(ecl_sum, ecl_sum_iget_report_end(ecl_sum, report_step), "WWIR:INJ"), 1e-3);
+        }
+
+        ecl_sum_free( ecl_sum );
     }
 }
