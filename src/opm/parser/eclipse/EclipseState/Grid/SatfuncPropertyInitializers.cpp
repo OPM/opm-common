@@ -16,6 +16,9 @@
 
 
 #include <array>
+#include <exception>
+#include <stdexcept>
+#include <string>
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -698,9 +701,10 @@ namespace Opm {
         const auto& endnum = intGridProperties->getKeyword("ENDNUM");
         int numSatTables = tabdims.getNumSatTables();
 
-        satnum.checkLimits( 1 , numSatTables );
+        // SATNUM = 0 *might* occur in deactivated cells
+        satnum.checkLimits( 0 , numSatTables );
 
-        // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
+        // Actually assign the defaults. If the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
         // cell and we would need to know how the simulator wants to interpolate between
         // sampling points. Both of these are outside the scope of opm-parser, so we just
@@ -712,6 +716,25 @@ namespace Opm {
         for( size_t cellIdx = 0; cellIdx < gridsize; cellIdx++ ) {
             int satTableIdx = satnum.iget( cellIdx ) - 1;
             int endNum = endnum.iget( cellIdx ) - 1;
+
+            if (! eclipseGrid->cellActive(cellIdx)) {
+                // Pick from appropriate saturation region if defined
+                // in this cell, else use region 1 (satTableIdx == 0).
+                values[cellIdx] = (satTableIdx >= 0)
+                    ? fallbackValues[satTableIdx] : fallbackValues[0];
+                continue;
+            }
+
+            // Active cell better have {SAT,END}NUM > 0.
+            if ((satTableIdx < 0) || (endNum < 0)) {
+                throw std::invalid_argument {
+                    "Region Index Out of Bounds in Active Cell "
+                    + std::to_string(cellIdx) + ". SATNUM = "
+                    + std::to_string(satTableIdx + 1) + ", ENDNUM = "
+                    + std::to_string(endNum + 1)
+                };
+            }
+
             double cellDepth = eclipseGrid->getCellDepth( cellIdx );
 
 
@@ -742,8 +765,10 @@ namespace Opm {
         auto tabdims = tableManager->getTabdims();
         const int numSatTables = tabdims.getNumSatTables();
 
-        imbnum.checkLimits( 1 , numSatTables );
-        // acctually assign the defaults. if the ENPVD keyword was specified in the deck,
+        // IMBNUM = 0 *might* occur in deactivated cells
+        imbnum.checkLimits( 0 , numSatTables );
+
+        // Actually assign the defaults. if the ENPVD keyword was specified in the deck,
         // this currently cannot be done because we would need the Z-coordinate of the
         // cell and we would need to know how the simulator wants to interpolate between
         // sampling points. Both of these are outside the scope of opm-parser, so we just
@@ -754,6 +779,25 @@ namespace Opm {
         for( size_t cellIdx = 0; cellIdx < gridsize; cellIdx++ ) {
             int imbTableIdx = imbnum.iget( cellIdx ) - 1;
             int endNum = endnum.iget( cellIdx ) - 1;
+
+            if (! eclipseGrid->cellActive(cellIdx)) {
+                // Pick from appropriate saturation region if defined
+                // in this cell, else use region 1 (imbTableIdx == 0).
+                values[cellIdx] = (imbTableIdx >= 0)
+                    ? fallBackValues[imbTableIdx] : fallBackValues[0];
+                continue;
+            }
+
+            // Active cell better have {IMB,END}NUM > 0.
+            if ((imbTableIdx < 0) || (endNum < 0)) {
+                throw std::invalid_argument {
+                    "Region Index Out of Bounds in Active Cell "
+                    + std::to_string(cellIdx) + ". IMBNUM = "
+                    + std::to_string(imbTableIdx + 1) + ", ENDNUM = "
+                    + std::to_string(endNum + 1)
+                };
+            }
+
             double cellDepth = eclipseGrid->getCellDepth( cellIdx );
 
             values[cellIdx] = selectValue(imptvdTables,
