@@ -150,12 +150,33 @@ std::size_t RFTConfig::firstRFTOutput() const {
 
     for (const auto& rft_pair : this->plt_config) {
         const auto& dynamic_state = rft_pair.second;
+        /*
+          We do not really output PLT, so this predictae will unconditionally
+          return false.
+        */
         auto pred = [] (const std::pair<PLTConnections::PLTEnum, std::size_t>& ) { return false; };
         int this_first_rft = dynamic_state.find_if(pred);
         if (this_first_rft >= 0)
             first_rft = std::min(first_rft, static_cast<std::size_t>(this_first_rft));
     }
 
+    for (const auto& rft_pair : this->rft_config) {
+      const auto& dynamic_state = rft_pair.second;
+
+      auto pred = [] (const std::pair<RFTConnections::RFTEnum, std::size_t>& rft_pair) {
+                    if (rft_pair.first == RFTConnections::RFTEnum::YES)
+                        return true;
+                    if (rft_pair.first == RFTConnections::RFTEnum::REPT)
+                        return true;
+                    if (rft_pair.first == RFTConnections::RFTEnum::TIMESTEP)
+                        return true;
+                    return false;
+                  };
+
+      int this_first_rft = dynamic_state.find_if(pred);
+      if (this_first_rft >= 0)
+        first_rft = std::min(first_rft, static_cast<std::size_t>(this_first_rft));
+    }
     return first_rft;
 }
 
