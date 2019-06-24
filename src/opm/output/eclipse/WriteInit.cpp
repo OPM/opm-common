@@ -36,12 +36,14 @@
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <cstddef>
 #include <exception>
+#include <initializer_list>
 #include <stdexcept>
 #include <utility>
 
@@ -255,24 +257,35 @@ namespace {
         }
     }
 
+    void writeFilledSatFuncScaling(const Properties&                 propList,
+                                   ::Opm::GridProperties<double>&&   propValues,
+                                   const ::Opm::EclipseGrid&         grid,
+                                   const ::Opm::UnitSystem&          units,
+                                   ::Opm::EclIO::OutputStream::Init& initFile)
+    {
+        for (const auto& prop : propList) {
+            propValues.assertKeyword(prop.name);
+        }
+
+        writeDoubleCellProperties(propList, propValues, grid, units, initFile);
+    }
+
     void writeSatFuncScaling(const ::Opm::EclipseState&        es,
                              const ::Opm::EclipseGrid&         grid,
                              const ::Opm::UnitSystem&          units,
                              ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        const auto scalingVectors = Properties {
+        auto scalingVectors = Properties {
             // Primary drainage curve
 
             // Water saturation end-points
             {"SWL"  , ::Opm::UnitSystem::measure::identity },
             {"SWCR" , ::Opm::UnitSystem::measure::identity },
-            // {"SWGCR", ::Opm::UnitSystem::measure::identity },
             {"SWU"  , ::Opm::UnitSystem::measure::identity },
 
             // Gas saturation end-points
             {"SGL"  , ::Opm::UnitSystem::measure::identity },
             {"SGCR" , ::Opm::UnitSystem::measure::identity },
-            // {"SGWCR", ::Opm::UnitSystem::measure::identity },
             {"SGU"  , ::Opm::UnitSystem::measure::identity },
 
             // Oil saturation end-points
@@ -293,46 +306,63 @@ namespace {
             {"SGLPC", ::Opm::UnitSystem::measure::identity },
             {"PCG"  , ::Opm::UnitSystem::measure::pressure },
             {"PCW"  , ::Opm::UnitSystem::measure::pressure },
-
-            // ===============================================
-
-            // Imbibition curve
-
-            // Water saturation end-points
-            {"ISWL"  , ::Opm::UnitSystem::measure::identity },
-            {"ISWCR" , ::Opm::UnitSystem::measure::identity },
-            // {"ISWGCR", ::Opm::UnitSystem::measure::identity },
-            {"ISWU"  , ::Opm::UnitSystem::measure::identity },
-
-            // Gas saturation end-points
-            {"ISGL"  , ::Opm::UnitSystem::measure::identity },
-            {"ISGCR" , ::Opm::UnitSystem::measure::identity },
-            // {"ISGWCR", ::Opm::UnitSystem::measure::identity },
-            {"ISGU"  , ::Opm::UnitSystem::measure::identity },
-
-            // Oil saturation end-points
-            {"ISOWCR", ::Opm::UnitSystem::measure::identity },
-            {"ISOGCR", ::Opm::UnitSystem::measure::identity },
-
-            // Vertical scaling of relative permeability
-            {"IKRO"  , ::Opm::UnitSystem::measure::identity },
-            {"IKRG"  , ::Opm::UnitSystem::measure::identity },
-            {"IKRW"  , ::Opm::UnitSystem::measure::identity },
-            {"IKRGR" , ::Opm::UnitSystem::measure::identity },
-            {"IKRWR" , ::Opm::UnitSystem::measure::identity },
-            {"IKRORW", ::Opm::UnitSystem::measure::identity },
-            {"IKRORG", ::Opm::UnitSystem::measure::identity },
-
-            // Capillary pressure scaling
-            {"ISWLPC", ::Opm::UnitSystem::measure::identity },
-            {"ISGLPC", ::Opm::UnitSystem::measure::identity },
-            {"IPCG"  , ::Opm::UnitSystem::measure::pressure },
-            {"IPCW"  , ::Opm::UnitSystem::measure::pressure },
         };
 
-        writeDoubleCellProperties(scalingVectors,
-                                  es.get3DProperties().getDoubleProperties(),
-                                  grid, units, initFile);
+        if (es.runspec().hysterPar().active()) {
+            // Run uses hysteresis.  Output scaled imbibition curve too.
+            scalingVectors.insert(scalingVectors.end(),
+            {
+                // Water saturation end-points
+                {"ISWL"  , ::Opm::UnitSystem::measure::identity },
+                {"ISWCR" , ::Opm::UnitSystem::measure::identity },
+                {"ISWU"  , ::Opm::UnitSystem::measure::identity },
+
+                // Gas saturation end-points
+                {"ISGL"  , ::Opm::UnitSystem::measure::identity },
+                {"ISGCR" , ::Opm::UnitSystem::measure::identity },
+                {"ISGU"  , ::Opm::UnitSystem::measure::identity },
+
+                // Oil saturation end-points
+                {"ISOWCR", ::Opm::UnitSystem::measure::identity },
+                {"ISOGCR", ::Opm::UnitSystem::measure::identity },
+
+                // Vertical scaling of relative permeability
+                {"IKRO"  , ::Opm::UnitSystem::measure::identity },
+                {"IKRG"  , ::Opm::UnitSystem::measure::identity },
+                {"IKRW"  , ::Opm::UnitSystem::measure::identity },
+                {"IKRGR" , ::Opm::UnitSystem::measure::identity },
+                {"IKRWR" , ::Opm::UnitSystem::measure::identity },
+                {"IKRORW", ::Opm::UnitSystem::measure::identity },
+                {"IKRORG", ::Opm::UnitSystem::measure::identity },
+
+                // Capillary pressure scaling
+                {"ISWLPC", ::Opm::UnitSystem::measure::identity },
+                {"ISGLPC", ::Opm::UnitSystem::measure::identity },
+                {"IPCG"  , ::Opm::UnitSystem::measure::pressure },
+                {"IPCW"  , ::Opm::UnitSystem::measure::pressure },
+            });
+        }
+
+        const auto& props = es.get3DProperties().getDoubleProperties();
+
+        if (! es.cfg().init().filleps()) {
+            // No FILLEPS in input deck.  Output those endpoint arrays that
+            // exist in the input deck.
+            writeDoubleCellProperties(scalingVectors, props,
+                                      grid, units, initFile);
+        }
+        else {
+            // Input deck specified FILLEPS so we should output all endpoint
+            // arrays, whether explicitly defined in the input deck or not.
+            // However, downstream clients of GridProperties<double> should
+            // not see scaling arrays created for output purposes only, so
+            // make a copy of the properties object and modify that copy in
+            // order to leave the original intact.
+            auto propsCopy = props;
+            writeFilledSatFuncScaling(scalingVectors,
+                                      std::move(propsCopy),
+                                      grid, units, initFile);
+        }
     }
 
     void writeNonNeighbourConnections(const ::Opm::NNC&                 nnc,
