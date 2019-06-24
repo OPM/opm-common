@@ -279,9 +279,9 @@ namespace Opm {
         // SGLPC and would thus lead to a cyclic dependency of the property initializer
         // and EclipseState. (an analogous statement applies to ISGLPC.)
         for( const auto& kw : { "SGLPC", "SGL", "SGLX", "SGLX-", "SGLY", "SGLY-", "SGLZ", "SGLZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, SGLLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, SGLLookup, "1", true );
         for( const auto& kw : { "ISGLPC", "ISGL", "ISGLX", "ISGLX-", "ISGLY", "ISGLY-", "ISGLZ", "ISGLZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, ISGLLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, ISGLLookup, "1", true );
 
         // keywords to specify the connate water saturation: this is slighly wrong for
         // SWLPC because it is supposed to default to SWL: If SWL is explicitly
@@ -291,102 +291,102 @@ namespace Opm {
         // SWLPC and would thus lead to a cyclic dependency of the property initializer
         // and EclipseState. (an analogous statement applies to ISWLPC.)
         for( const auto& kw : { "SWLPC", "SWL", "SWLX", "SWLX-", "SWLY", "SWLY-", "SWLZ", "SWLZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, SWLLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, SWLLookup, "1", true );
         for( const auto& kw : { "ISWLPC", "ISWL", "ISWLX", "ISWLX-", "ISWLY", "ISWLY-", "ISWLZ", "ISWLZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, ISWLLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, ISWLLookup, "1", true );
 
         // keywords to specify the maximum gas saturation.
         for( const auto& kw : { "SGU", "SGUX", "SGUX-", "SGUY", "SGUY-", "SGUZ", "SGUZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, SGULookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, SGULookup, "1", true );
         for( const auto& kw : { "ISGU", "ISGUX", "ISGUX-", "ISGUY", "ISGUY-", "ISGUZ", "ISGUZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, ISGULookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, ISGULookup, "1", true );
 
         // keywords to specify the maximum water saturation.
         for( const auto& kw : { "SWU", "SWUX", "SWUX-", "SWUY", "SWUY-", "SWUZ", "SWUZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, SWULookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, SWULookup, "1", true );
         for( const auto& kw : { "ISWU", "ISWUX", "ISWUX-", "ISWUY", "ISWUY-", "ISWUZ", "ISWUZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, ISWULookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, ISWULookup, "1", true );
 
         // keywords to specify the scaled critical gas saturation.
         for( const auto& kw : { "SGCR", "SGCRX", "SGCRX-", "SGCRY", "SGCRY-", "SGCRZ", "SGCRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, SGCRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, SGCRLookup, "1", true );
         for( const auto& kw : { "ISGCR", "ISGCRX", "ISGCRX-", "ISGCRY", "ISGCRY-", "ISGCRZ", "ISGCRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, ISGCRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, ISGCRLookup, "1", true );
 
         // keywords to specify the scaled critical oil-in-water saturation.
         for( const auto& kw : { "SOWCR", "SOWCRX", "SOWCRX-", "SOWCRY", "SOWCRY-", "SOWCRZ", "SOWCRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, SOWCRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, SOWCRLookup, "1", true );
         for( const auto& kw : { "ISOWCR", "ISOWCRX", "ISOWCRX-", "ISOWCRY", "ISOWCRY-", "ISOWCRZ", "ISOWCRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, ISOWCRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, ISOWCRLookup, "1", true );
 
         // keywords to specify the scaled critical oil-in-gas saturation.
         for( const auto& kw : { "SOGCR", "SOGCRX", "SOGCRX-", "SOGCRY", "SOGCRY-", "SOGCRZ", "SOGCRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, SOGCRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, SOGCRLookup, "1", true );
         for( const auto& kw : { "ISOGCR", "ISOGCRX", "ISOGCRX-", "ISOGCRY", "ISOGCRY-", "ISOGCRZ", "ISOGCRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, ISOGCRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, ISOGCRLookup, "1", true );
 
         // keywords to specify the scaled critical water saturation.
         for( const auto& kw : { "SWCR", "SWCRX", "SWCRX-", "SWCRY", "SWCRY-", "SWCRZ", "SWCRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, SWCRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, SWCRLookup, "1", true );
         for( const auto& kw : { "ISWCR", "ISWCRX", "ISWCRX-", "ISWCRY", "ISWCRY-", "ISWCRZ", "ISWCRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, ISWCRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, ISWCRLookup, "1", true );
 
         // keywords to specify the scaled oil-water capillary pressure
         for( const auto& kw : { "PCW", "PCWX", "PCWX-", "PCWY", "PCWY-", "PCWZ", "PCWZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, PCWLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, PCWLookup, "1", true );
         for( const auto& kw : { "IPCW", "IPCWX", "IPCWX-", "IPCWY", "IPCWY-", "IPCWZ", "IPCWZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IPCWLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IPCWLookup, "1", true );
 
         // keywords to specify the scaled gas-oil capillary pressure
         for( const auto& kw : { "PCG", "PCGX", "PCGX-", "PCGY", "PCGY-", "PCGZ", "PCGZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, PCGLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, PCGLookup, "1", true );
         for( const auto& kw : { "IPCG", "IPCGX", "IPCGX-", "IPCGY", "IPCGY-", "IPCGZ", "IPCGZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IPCGLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IPCGLookup, "1", true );
 
         // keywords to specify the scaled water relative permeability
         for( const auto& kw : { "KRW", "KRWX", "KRWX-", "KRWY", "KRWY-", "KRWZ", "KRWZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, KRWLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, KRWLookup, "1", true );
         for( const auto& kw : { "IKRW", "IKRWX", "IKRWX-", "IKRWY", "IKRWY-", "IKRWZ", "IKRWZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IKRWLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IKRWLookup, "1", true );
 
         // keywords to specify the scaled water relative permeability at the critical
         // saturation
         for( const auto& kw : { "KRWR" , "KRWRX" , "KRWRX-" , "KRWRY" , "KRWRY-" , "KRWRZ" , "KRWRZ-"  } )
-            supportedDoubleKeywords.emplace_back( kw, KRWRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, KRWRLookup, "1", true );
         for( const auto& kw : { "IKRWR" , "IKRWRX" , "IKRWRX-" , "IKRWRY" , "IKRWRY-" , "IKRWRZ" , "IKRWRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IKRWRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IKRWRLookup, "1", true );
 
         // keywords to specify the scaled oil relative permeability
         for( const auto& kw : { "KRO", "KROX", "KROX-", "KROY", "KROY-", "KROZ", "KROZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, KROLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, KROLookup, "1", true );
         for( const auto& kw : { "IKRO", "IKROX", "IKROX-", "IKROY", "IKROY-", "IKROZ", "IKROZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IKROLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IKROLookup, "1", true );
 
         // keywords to specify the scaled water relative permeability at the critical
         // water saturation
         for( const auto& kw : { "KRORW", "KRORWX", "KRORWX-", "KRORWY", "KRORWY-", "KRORWZ", "KRORWZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, KRORWLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, KRORWLookup, "1", true );
         for( const auto& kw : { "IKRORW", "IKRORWX", "IKRORWX-", "IKRORWY", "IKRORWY-", "IKRORWZ", "IKRORWZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IKRORWLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IKRORWLookup, "1", true );
 
         // keywords to specify the scaled water relative permeability at the critical
         // water saturation
         for( const auto& kw : { "KRORG", "KRORGX", "KRORGX-", "KRORGY", "KRORGY-", "KRORGZ", "KRORGZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, KRORGLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, KRORGLookup, "1", true );
         for( const auto& kw : { "IKRORG", "IKRORGX", "IKRORGX-", "IKRORGY", "IKRORGY-", "IKRORGZ", "IKRORGZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IKRORGLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IKRORGLookup, "1", true );
 
         // keywords to specify the scaled gas relative permeability
         for( const auto& kw : { "KRG", "KRGX", "KRGX-", "KRGY", "KRGY-", "KRGZ", "KRGZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, KRGLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, KRGLookup, "1", true );
         for( const auto& kw : { "IKRG", "IKRGX", "IKRGX-", "IKRGY", "IKRGY-", "IKRGZ", "IKRGZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IKRGLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IKRGLookup, "1", true );
 
         // keywords to specify the scaled gas relative permeability
         for( const auto& kw : { "KRGR", "KRGRX", "KRGRX-", "KRGRY", "KRGRY-", "KRGRZ", "KRGRZ-" } )
-             supportedDoubleKeywords.emplace_back( kw, KRGRLookup, "1" );
+             supportedDoubleKeywords.emplace_back( kw, KRGRLookup, "1", true );
         for( const auto& kw : { "IKRGR", "IKRGRX", "IKRGRX-", "IKRGRY", "IKRGRY-", "IKRGRZ", "IKRGRZ-" } )
-            supportedDoubleKeywords.emplace_back( kw, IKRGRLookup, "1" );
+            supportedDoubleKeywords.emplace_back( kw, IKRGRLookup, "1", true );
 
         // Solution keywords - required fror enumerated restart.
         supportedDoubleKeywords.emplace_back( "PRESSURE", 0.0 , "Pressure", true );
