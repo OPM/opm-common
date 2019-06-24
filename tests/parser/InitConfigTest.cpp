@@ -233,4 +233,306 @@ BOOST_AUTO_TEST_CASE(RestartCWD) {
     test_work_area_free(work_area);
 }
 
+// --------------------------------------------------------------------
 
+BOOST_AUTO_TEST_SUITE (FILLEPS)
+
+BOOST_AUTO_TEST_CASE(WrongSection)
+{
+    // FILLEPS in GRID section (should ideally be caught at load time)
+    auto input = std::string { R"(
+RUNSPEC
+
+DIMENS
+  5 5 3 /
+
+TITLE
+Break FILLEPS Keyword
+
+START
+  24 'JUN' 2019 /
+
+GAS
+OIL
+WATER
+DISGAS
+METRIC
+
+TABDIMS
+/
+
+GRID
+INIT
+
+DXV
+  5*100 /
+
+DYV
+  5*100 /
+
+DZV
+  3*10 /
+
+TOPS
+  25*2000 /
+
+EQUALS
+  PERMX 100 /
+/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+MULTIPLY
+  PERMZ 0.1 /
+/
+
+PORO
+  75*0.3 /
+
+-- Wrong section (should be in PROPS)
+FILLEPS
+
+PROPS
+
+SWOF
+  0 0 1 0
+  1 1 0 0 /
+
+SGOF
+  0 0 1 0
+  1 1 0 0 /
+
+DENSITY
+  900 1000 1 /
+
+PVTW
+  400 1 1.0E-06 1 0 /
+
+PVDG
+   30  0.04234     0.01344
+  530  0.003868    0.02935
+/
+
+PVTO
+    0.000       1.0    1.07033 0.645
+              500.0    1.02339 1.029  /
+   17.345      25.0    1.14075 0.484
+              500.0    1.07726 0.834  /
+   31.462      50.0    1.18430 0.439
+              500.0    1.11592 0.757  /
+   45.089      75.0    1.22415 0.402
+              500.0    1.15223 0.689  /
+/
+
+END
+)" };
+
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(input)
+    };
+
+    // Keyword present but placed in wrong section => treat as absent
+    BOOST_CHECK(! es.cfg().init().filleps());
+}
+
+BOOST_AUTO_TEST_CASE(Present)
+{
+    auto input = std::string { R"(
+RUNSPEC
+
+DIMENS
+  5 5 3 /
+
+TITLE
+Break FILLEPS Keyword
+
+START
+  24 'JUN' 2019 /
+
+GAS
+OIL
+WATER
+DISGAS
+METRIC
+
+TABDIMS
+/
+
+GRID
+INIT
+
+DXV
+  5*100 /
+
+DYV
+  5*100 /
+
+DZV
+  3*10 /
+
+TOPS
+  25*2000 /
+
+EQUALS
+  PERMX 100 /
+/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+MULTIPLY
+  PERMZ 0.1 /
+/
+
+PORO
+  75*0.3 /
+
+PROPS
+
+SWOF
+  0 0 1 0
+  1 1 0 0 /
+
+SGOF
+  0 0 1 0
+  1 1 0 0 /
+
+DENSITY
+  900 1000 1 /
+
+PVTW
+  400 1 1.0E-06 1 0 /
+
+PVDG
+   30  0.04234     0.01344
+  530  0.003868    0.02935
+/
+
+PVTO
+    0.000       1.0    1.07033 0.645
+              500.0    1.02339 1.029  /
+   17.345      25.0    1.14075 0.484
+              500.0    1.07726 0.834  /
+   31.462      50.0    1.18430 0.439
+              500.0    1.11592 0.757  /
+   45.089      75.0    1.22415 0.402
+              500.0    1.15223 0.689  /
+/
+
+FILLEPS
+
+END
+)" };
+
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(input)
+    };
+
+    BOOST_CHECK(es.cfg().init().filleps());
+}
+
+BOOST_AUTO_TEST_CASE(Absent)
+{
+    auto input = std::string { R"(
+RUNSPEC
+
+DIMENS
+  5 5 3 /
+
+TITLE
+Break FILLEPS Keyword
+
+START
+  24 'JUN' 2019 /
+
+GAS
+OIL
+WATER
+DISGAS
+METRIC
+
+TABDIMS
+/
+
+GRID
+INIT
+
+DXV
+  5*100 /
+
+DYV
+  5*100 /
+
+DZV
+  3*10 /
+
+TOPS
+  25*2000 /
+
+EQUALS
+  PERMX 100 /
+/
+
+COPY
+  PERMX PERMY /
+  PERMX PERMZ /
+/
+
+MULTIPLY
+  PERMZ 0.1 /
+/
+
+PORO
+  75*0.3 /
+
+PROPS
+
+SWOF
+  0 0 1 0
+  1 1 0 0 /
+
+SGOF
+  0 0 1 0
+  1 1 0 0 /
+
+DENSITY
+  900 1000 1 /
+
+PVTW
+  400 1 1.0E-06 1 0 /
+
+PVDG
+   30  0.04234     0.01344
+  530  0.003868    0.02935
+/
+
+PVTO
+    0.000       1.0    1.07033 0.645
+              500.0    1.02339 1.029  /
+   17.345      25.0    1.14075 0.484
+              500.0    1.07726 0.834  /
+   31.462      50.0    1.18430 0.439
+              500.0    1.11592 0.757  /
+   45.089      75.0    1.22415 0.402
+              500.0    1.15223 0.689  /
+/
+
+-- No FILLEPS here
+-- FILLEPS
+
+END
+)" };
+
+    const auto es = ::Opm::EclipseState {
+        ::Opm::Parser{}.parseString(input)
+    };
+
+    BOOST_CHECK(! es.cfg().init().filleps());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
