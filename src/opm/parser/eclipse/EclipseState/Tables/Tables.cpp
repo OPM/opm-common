@@ -499,27 +499,6 @@ const TableColumn& PlymaxTable::getMaxPolymerConcentrationColumn() const {
     return SimpleTable::getColumn(1);
 }
 
-//FoammaxTable::FoammaxTable( const DeckRecord& record ) {
-//    m_schema.addColumn( ColumnSchema("C_FOAM",     Table::RANDOM , Table::DEFAULT_NONE) );
-//    m_schema.addColumn( ColumnSchema("C_FOAM_MAX", Table::RANDOM , Table::DEFAULT_NONE) );
-//
-//    addColumns();
-//    for (size_t colIdx = 0; colIdx < record.size(); colIdx++) {
-//        auto& column = getColumn( colIdx );
-//
-//        column.addValue( record.getItem( colIdx ).getSIDouble(0) );
-//    }
-//}
-//
-//const TableColumn& FoammaxTable::getFoamymerConcentrationColumn() const {
-//    return SimpleTable::getColumn(0);
-//}
-//
-//const TableColumn& FoammaxTable::getMaxFoamymerConcentrationColumn() const {
-//    return SimpleTable::getColumn(1);
-//}
-
-
 PlyrockTable::PlyrockTable( const DeckRecord& record ) {
     m_schema.addColumn( ColumnSchema("DeadPoreVolume",            Table::RANDOM , Table::DEFAULT_NONE) );
     m_schema.addColumn( ColumnSchema("ResidualResistanceFactor",  Table::RANDOM , Table::DEFAULT_NONE) );
