@@ -954,16 +954,16 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
 
     const auto& well_1 = schedule.getWell2("OP_1", 1);
     const auto wpp_1 = well_1.getProductionProperties();
-    BOOST_CHECK_EQUAL(wpp_1.WaterRate, 0);
+    BOOST_CHECK_EQUAL(wpp_1.WaterRate.get<double>(), 0);
 
     const auto& well_2 = schedule.getWell2("OP_1", 2);
     const auto wpp_2 = well_2.getProductionProperties();
-    BOOST_CHECK_EQUAL(wpp_2.OilRate, 1300 * siFactorL);
-    BOOST_CHECK_EQUAL(wpp_2.WaterRate, 1400 * siFactorL);
-    BOOST_CHECK_EQUAL(wpp_2.GasRate, 1500.52 * siFactorG);
-    BOOST_CHECK_EQUAL(wpp_2.LiquidRate, 1600.58 * siFactorL);
     BOOST_CHECK_EQUAL(wpp_2.BHPLimit, 1900 * siFactorP);
     BOOST_CHECK_EQUAL(wpp_2.THPLimit, 2000 * siFactorP);
+    BOOST_CHECK_EQUAL(wpp_2.OilRate.get<double>(), 1300 * siFactorL);
+    BOOST_CHECK_EQUAL(wpp_2.WaterRate.get<double>(), 1400 * siFactorL);
+    BOOST_CHECK_EQUAL(wpp_2.GasRate.get<double>(), 1500.52 * siFactorG);
+    BOOST_CHECK_EQUAL(wpp_2.LiquidRate.get<double>(), 1600.58 * siFactorL);
     BOOST_CHECK_EQUAL(wpp_2.ResVRate.get<double>(), 1801.05 * siFactorL);
     BOOST_CHECK_EQUAL(wpp_2.VFPTableNumber, 2100);
     BOOST_CHECK_EQUAL(well_2.getGuideRate(), 2300.14);

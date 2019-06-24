@@ -1367,22 +1367,22 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     {
         const auto& well0 = sched.getWell2("PROD2", 0 );
         const auto& well1 = sched.getWell2("PROD2", 1 );
-        BOOST_CHECK_CLOSE(1000/Metric::Time, well0.getProductionProperties().OilRate, 0.001);
-        BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate, 0.001);
+        BOOST_CHECK_CLOSE(1000/Metric::Time, well0.getProductionProperties().OilRate.get<double>(), 0.001);
+        BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate.get<double>(), 0.001);
     }
 
     {
         const auto& well0 = sched.getWell2("PROD3", 0 );
         const auto& well1 = sched.getWell2("PROD3", 1 );
-        BOOST_CHECK_CLOSE(0/Metric::Time, well0.getProductionProperties().OilRate, 0.001);
-        BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate, 0.001);
+        BOOST_CHECK_CLOSE(0/Metric::Time, well0.getProductionProperties().OilRate.get<double>(), 0.001);
+        BOOST_CHECK_CLOSE(1500/Metric::Time, well1.getProductionProperties().OilRate.get<double>(), 0.001);
     }
 
     {
         const auto& well0 = sched.getWell2("PROX5", 0);
         const auto& well1 = sched.getWell2("PROX5", 1);
-        BOOST_CHECK_CLOSE(2000/Metric::Time, well0.getProductionProperties().OilRate, 0.001);
-        BOOST_CHECK_CLOSE(2000/Metric::Time, well1.getProductionProperties().OilRate, 0.001);
+        BOOST_CHECK_CLOSE(2000/Metric::Time, well0.getProductionProperties().OilRate.get<double>(), 0.001);
+        BOOST_CHECK_CLOSE(2000/Metric::Time, well1.getProductionProperties().OilRate.get<double>(), 0.001);
     }
 }
 
@@ -1396,6 +1396,7 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     Eclipse3DProperties eclipseProperties( deck , table, grid );
     Runspec runspec (deck);
     Schedule sched( deck, grid, eclipseProperties, runspec);
+    SummaryState st;
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("PROD1"));

@@ -232,18 +232,18 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
         well.updateInjection(injectionProps3);
 
         auto properties = std::make_shared<Opm::WellProductionProperties>( well.getProductionProperties() );
-        properties->OilRate = 100;
-        properties->GasRate = 200;
-        properties->WaterRate = 300;
+        properties->OilRate.reset(100);
+        properties->GasRate.reset(200);
+        properties->WaterRate.reset(300);
         well.updateProduction(properties);
 
         BOOST_CHECK_EQUAL( false , well.isInjector());
         BOOST_CHECK_EQUAL( true , well.isProducer());
         BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties().surfaceInjectionRate);
         BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties().reservoirInjectionRate);
-        BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().OilRate);
-        BOOST_CHECK_EQUAL( 200 , well.getProductionProperties().GasRate);
-        BOOST_CHECK_EQUAL( 300 , well.getProductionProperties().WaterRate);
+        BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().OilRate.get<double>());
+        BOOST_CHECK_EQUAL( 200 , well.getProductionProperties().GasRate.get<double>());
+        BOOST_CHECK_EQUAL( 300 , well.getProductionProperties().WaterRate.get<double>());
     }
 }
 
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
 
     auto properties1 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
-    properties1->OilRate = 100;
+    properties1->OilRate.reset(100);
     properties1->addProductionControl(Opm::WellProducer::ORAT);
     well.updateProduction(properties1);
     BOOST_CHECK(  well.getProductionProperties().hasProductionControl( Opm::WellProducer::ORAT ));
@@ -323,12 +323,12 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
 
     auto properties3 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
-    properties3->OilRate = 100;
-    properties3->WaterRate = 100;
-    properties3->GasRate = 100;
-    properties3->LiquidRate = 100;
     properties3->BHPLimit = 100;
     properties3->THPLimit = 100;
+    properties3->OilRate.reset(100);
+    properties3->WaterRate.reset(100);
+    properties3->GasRate.reset(100);
+    properties3->LiquidRate.reset(100);
     properties3->ResVRate.reset(100);
     properties3->addProductionControl(Opm::WellProducer::ORAT);
     properties3->addProductionControl(Opm::WellProducer::LRAT);
@@ -535,8 +535,7 @@ namespace {
         }
 
 
-        Opm::WellProductionProperties
-        properties(const std::string& input)
+        Opm::WellProductionProperties properties(const std::string& input)
         {
             Opm::Parser parser;
             auto deck = parser.parseString(input);
@@ -756,8 +755,22 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     Opm::Well2 well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Opm::WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::WellProductionProperties prod("OP1");
     Opm::SummaryState st;
     well.productionControls(st);
+
+    // Use a scalar FIELD variable - that should work; although it is a bit weird.
+    st.update("FUX", 1);
+    prod.OilRate = UDAValue("FUX");
+    BOOST_CHECK_EQUAL(1, prod.controls(st, 0).oil_rate);
+
+
+    // Use the wellrate WUX for well OP1; the well is now added with
+    // SummaryState::update_well_var() and we should automatically fetch the
+    // correct well value.
+    prod.OilRate = UDAValue("WUX");
+    st.update_well_var("OP1", "WUX", 10);
+    BOOST_CHECK_EQUAL(10, prod.controls(st, 0).oil_rate);
 }
 
 

@@ -722,13 +722,19 @@ namespace Opm {
                         this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                         this->updateWell(well2, currentStep);
                     }
-
-                    if ( !well2->getAllowCrossFlow() && (properties->OilRate + properties->WaterRate + properties->GasRate) == 0 ) {
-                        std::string msg =
-                            "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                        OpmLog::note(msg);
-                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                    if ( !well2->getAllowCrossFlow()) {
+                        // The numerical content of the rate UDAValues is accessed unconditionally;
+                        // since this is in history mode use of UDA values is not allowed anyway.
+                        const auto& oil_rate = properties->OilRate;
+                        const auto& water_rate = properties->WaterRate;
+                        const auto& gas_rate = properties->GasRate;
+                        if ((oil_rate.get<double>() + water_rate.get<double>() + gas_rate.get<double>()) == 0) {
+                            std::string msg =
+                                "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
+                                "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                            OpmLog::note(msg);
+                            updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                        }
                     }
                 }
             }
