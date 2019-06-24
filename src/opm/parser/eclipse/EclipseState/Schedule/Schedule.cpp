@@ -722,13 +722,19 @@ namespace Opm {
                         this->addWellEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
                         this->updateWell(well2, currentStep);
                     }
-
-                    if ( !well2->getAllowCrossFlow() && (properties->OilRate + properties->WaterRate + properties->GasRate) == 0 ) {
-                        std::string msg =
-                            "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                        OpmLog::note(msg);
-                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                    if ( !well2->getAllowCrossFlow()) {
+                        // The numerical content of the rate UDAValues is accessed unconditionally;
+                        // since this is in history mode use of UDA values is not allowed anyway.
+                        const auto& oil_rate = properties->OilRate;
+                        const auto& water_rate = properties->WaterRate;
+                        const auto& gas_rate = properties->GasRate;
+                        if ((oil_rate.get<double>() + water_rate.get<double>() + gas_rate.get<double>()) == 0) {
+                            std::string msg =
+                                "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
+                                "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+                            OpmLog::note(msg);
+                            updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                        }
                     }
                 }
             }
@@ -866,14 +872,24 @@ namespace Opm {
 
                     // if the well has zero surface rate limit or reservior rate limit, while does not allow crossflow,
                     // it should be turned off.
-                    if ( ! well2->getAllowCrossFlow()
-                         && ( (injection->hasInjectionControl(WellInjector::RATE) && injection->surfaceInjectionRate == 0)
-                              || (injection->hasInjectionControl(WellInjector::RESV) && injection->reservoirInjectionRate == 0) ) ) {
-                        std::string msg =
-                            "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
-                            "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
-                        OpmLog::note(msg);
-                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                    if ( ! well2->getAllowCrossFlow() ) {
+                         std::string msg =
+                         "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
+                         "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
+
+                         if (injection->surfaceInjectionRate.is<double>()) {
+                             if (injection->hasInjectionControl(WellInjector::RATE) && injection->surfaceInjectionRate.get<double>() == 0) {
+                                 OpmLog::note(msg);
+                                 updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                             }
+                         }
+
+                         if (injection->reservoirInjectionRate.is<double>()) {
+                             if (injection->hasInjectionControl(WellInjector::RESV) && injection->reservoirInjectionRate.get<double>() == 0) {
+                                 OpmLog::note(msg);
+                                 updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                             }
+                         }
                     }
                 }
             }
@@ -913,7 +929,7 @@ namespace Opm {
                         this->addWellEvent( well_name, ScheduleEvents::INJECTION_UPDATE, currentStep);
                     }
 
-                    if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate == 0)) {
+                    if ( ! well2->getAllowCrossFlow() && (injection->surfaceInjectionRate.get<double>() == 0)) {
                         std::string msg =
                             "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";

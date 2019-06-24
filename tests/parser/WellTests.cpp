@@ -206,22 +206,21 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
     /* Set a surface injection rate => Well becomes an Injector */
     auto injectionProps1 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injectionProps1->surfaceInjectionRate = 100;
+    injectionProps1->surfaceInjectionRate.reset(100);
     well.updateInjection(injectionProps1);
     BOOST_CHECK_EQUAL( true  , well.isInjector());
     BOOST_CHECK_EQUAL( false , well.isProducer());
-    BOOST_CHECK_EQUAL( 100 , well.getInjectionProperties().surfaceInjectionRate);
+    BOOST_CHECK_EQUAL( 100 , well.getInjectionProperties().surfaceInjectionRate.get<double>());
 
     {
         Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
 
         /* Set a reservoir injection rate => Well becomes an Injector */
         auto injectionProps2 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-        injectionProps2->reservoirInjectionRate = 200;
+        injectionProps2->reservoirInjectionRate.reset(200);
         well.updateInjection(injectionProps2);
-        BOOST_CHECK_EQUAL( true  , well.isInjector());
         BOOST_CHECK_EQUAL( false , well.isProducer());
-        BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().reservoirInjectionRate);
+        BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().reservoirInjectionRate.get<double>());
     }
 
     {
@@ -232,18 +231,18 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
         well.updateInjection(injectionProps3);
 
         auto properties = std::make_shared<Opm::WellProductionProperties>( well.getProductionProperties() );
-        properties->OilRate = 100;
-        properties->GasRate = 200;
-        properties->WaterRate = 300;
+        properties->OilRate.reset(100);
+        properties->GasRate.reset(200);
+        properties->WaterRate.reset(300);
         well.updateProduction(properties);
 
         BOOST_CHECK_EQUAL( false , well.isInjector());
         BOOST_CHECK_EQUAL( true , well.isProducer());
-        BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties().surfaceInjectionRate);
-        BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties().reservoirInjectionRate);
-        BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().OilRate);
-        BOOST_CHECK_EQUAL( 200 , well.getProductionProperties().GasRate);
-        BOOST_CHECK_EQUAL( 300 , well.getProductionProperties().WaterRate);
+        BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties().surfaceInjectionRate.get<double>());
+        BOOST_CHECK_EQUAL( 0 , well.getInjectionProperties().reservoirInjectionRate.get<double>());
+        BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().OilRate.get<double>());
+        BOOST_CHECK_EQUAL( 200 , well.getProductionProperties().GasRate.get<double>());
+        BOOST_CHECK_EQUAL( 300 , well.getProductionProperties().WaterRate.get<double>());
     }
 }
 
@@ -271,16 +270,16 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 
 
     auto productionProps = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
-    productionProps->BHPLimit = 100;
+    productionProps->BHPLimit.reset(100);
     productionProps->addProductionControl(Opm::WellProducer::BHP);
     well.updateProduction(productionProps);
-    BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPLimit);
+    BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPLimit.get<double>());
     BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Opm::WellProducer::BHP ));
 
     auto injProps = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injProps->THPLimit = 200;
+    injProps->THPLimit.reset(200);
     well.updateInjection(injProps);
-    BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPLimit);
+    BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPLimit.get<double>());
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::THP ));
 }
 
@@ -292,7 +291,7 @@ BOOST_AUTO_TEST_CASE(InjectorType) {
     auto injectionProps = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
     injectionProps->injectorType = Opm::WellInjector::WATER;
     well.updateInjection(injectionProps);
-    // TODO: Should we test for something other than water here, as long as
+    // TODO: Should we test for something other than wate here, as long as
     //       the default value for InjectorType is WellInjector::WATER?
     BOOST_CHECK_EQUAL( Opm::WellInjector::WATER , well.getInjectionProperties().injectorType);
 }
@@ -310,7 +309,7 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
 
     auto properties1 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
-    properties1->OilRate = 100;
+    properties1->OilRate.reset(100);
     properties1->addProductionControl(Opm::WellProducer::ORAT);
     well.updateProduction(properties1);
     BOOST_CHECK(  well.getProductionProperties().hasProductionControl( Opm::WellProducer::ORAT ));
@@ -323,13 +322,13 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
 
     auto properties3 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
-    properties3->OilRate = 100;
-    properties3->WaterRate = 100;
-    properties3->GasRate = 100;
-    properties3->LiquidRate = 100;
-    properties3->BHPLimit = 100;
-    properties3->THPLimit = 100;
+    properties3->OilRate.reset(100);
+    properties3->WaterRate.reset(100);
+    properties3->GasRate.reset(100);
+    properties3->LiquidRate.reset(100);
     properties3->ResVRate.reset(100);
+    properties3->BHPLimit.reset(100);
+    properties3->THPLimit.reset(100);
     properties3->addProductionControl(Opm::WellProducer::ORAT);
     properties3->addProductionControl(Opm::WellProducer::LRAT);
     properties3->addProductionControl(Opm::WellProducer::BHP);
@@ -356,22 +355,22 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
 
     auto injProps1 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injProps1->surfaceInjectionRate = 100;
+    injProps1->surfaceInjectionRate.reset(100);
     injProps1->addInjectionControl(Opm::WellInjector::RATE);
     well.updateInjection(injProps1);
     BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
 
     auto injProps2 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injProps2->reservoirInjectionRate = 100;
+    injProps2->reservoirInjectionRate.reset(100);
     injProps2->addInjectionControl(Opm::WellInjector::RESV);
     well.updateInjection(injProps2);
     BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
 
     auto injProps3 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injProps3->BHPLimit = 100;
+    injProps3->BHPLimit.reset(100);
     injProps3->addInjectionControl(Opm::WellInjector::BHP);
-    injProps3->THPLimit = 100;
+    injProps3->THPLimit.reset(100);
     injProps3->addInjectionControl(Opm::WellInjector::THP);
     well.updateInjection(injProps3);
 
@@ -535,8 +534,7 @@ namespace {
         }
 
 
-        Opm::WellProductionProperties
-        properties(const std::string& input)
+        Opm::WellProductionProperties properties(const std::string& input)
         {
             Opm::Parser parser;
             auto deck = parser.parseString(input);
@@ -565,7 +563,7 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
@@ -581,7 +579,7 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::WRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
@@ -597,7 +595,7 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::GRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
@@ -613,7 +611,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::LRAT);
 
     BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
@@ -630,7 +628,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
@@ -649,7 +647,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
     BOOST_CHECK_EQUAL(p.ALQValue, 10.);
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.);
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
@@ -667,7 +665,7 @@ BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
 
-    BOOST_CHECK_EQUAL(p.BHPLimit, 5.e7); // 500 barsa
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 5.e7); // 500 barsa
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
@@ -707,8 +705,8 @@ BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
     BOOST_CHECK_EQUAL(p.ALQValue, 13.);
-    BOOST_CHECK_EQUAL(p.THPLimit, 1000000.); // 10 barsa
-    BOOST_CHECK_EQUAL(p.BHPLimit, 101325.); // 1 atm.
+    BOOST_CHECK_EQUAL(p.THPLimit.get<double>(), 1000000.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.); // 1 atm.
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
@@ -729,8 +727,8 @@ BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
     BOOST_CHECK_EQUAL(p.ALQValue, 13.);
-    BOOST_CHECK_EQUAL(p.THPLimit, 1000000.); // 10 barsa
-    BOOST_CHECK_EQUAL(p.BHPLimit, 2000000.); // 20 barsa
+    BOOST_CHECK_EQUAL(p.THPLimit.get<double>(), 1000000.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 2000000.); // 20 barsa
 }
 
 
@@ -756,8 +754,22 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
     Opm::Well2 well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Opm::WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::WellProductionProperties prod("OP1");
     Opm::SummaryState st;
     well.productionControls(st);
+
+    // Use a scalar FIELD variable - that should work; although it is a bit weird.
+    st.update("FUX", 1);
+    prod.OilRate = UDAValue("FUX");
+    BOOST_CHECK_EQUAL(1, prod.controls(st, 0).oil_rate);
+
+
+    // Use the wellrate WUX for well OP1; the well is now added with
+    // SummaryState::update_well_var() and we should automatically fetch the
+    // correct well value.
+    prod.OilRate = UDAValue("WUX");
+    st.update_well_var("OP1", "WUX", 10);
+    BOOST_CHECK_EQUAL(10, prod.controls(st, 0).oil_rate);
 }
 
 
