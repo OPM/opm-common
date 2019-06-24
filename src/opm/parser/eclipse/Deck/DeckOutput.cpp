@@ -85,8 +85,12 @@ namespace Opm {
 
     template <>
     void DeckOutput::write_value( const UDAValue& value ) {
-        if (value.is<double>())
-            this->write_value(value.get<double>());
+        if (value.is<double>()) {
+            double si_value = value.get<double>();
+            const auto& dim = value.get_dim();
+            double deck_value = dim.convertSiToRaw(si_value);
+            this->write_value(deck_value);
+        }
         else
             this->write_value(value.get<std::string>());
     }
