@@ -1,5 +1,6 @@
 /*
   Copyright (C) 2014 by Andreas Lauser
+  Copyright (C) 2019 SINTEF Digital
 
   This file is part of the Open Porous Media project (OPM).
 
