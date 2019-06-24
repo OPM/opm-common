@@ -48,6 +48,86 @@ namespace Opm { namespace EclIO { namespace OutputStream {
         std::string baseName;
     };
 
+    /// File manager for "init" output streams.
+    class Init
+    {
+    public:
+        /// Constructor.
+        ///
+        /// Opens file stream for writing.
+        ///
+        /// \param[in] rset Output directory and base name of output stream.
+        ///
+        /// \param[in] fmt Whether or not to create formatted output files.
+        explicit Init(const ResultSet& rset,
+                      const Formatted& fmt);
+
+        ~Init();
+
+        Init(const Init& rhs) = delete;
+        Init(Init&& rhs);
+
+        Init& operator=(const Init& rhs) = delete;
+        Init& operator=(Init&& rhs);
+
+        /// Write integer data to underlying output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&      kw,
+                   const std::vector<int>& data);
+
+        /// Write boolean data to underlying output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&       kw,
+                   const std::vector<bool>& data);
+
+        /// Write single precision floating point data to underlying
+        /// output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&        kw,
+                   const std::vector<float>& data);
+
+        /// Write double precision floating point data to underlying
+        /// output stream.
+        ///
+        /// \param[in] kw Name of output vector (keyword).
+        ///
+        /// \param[in] data Output values.
+        void write(const std::string&         kw,
+                   const std::vector<double>& data);
+
+    private:
+        /// Init file output stream.
+        std::unique_ptr<EclOutput> stream_;
+
+        /// Open output stream.
+        ///
+        /// Writes to \c stream_.
+        ///
+        /// \param[in] fname Filename of new output stream.
+        ///
+        /// \param[in] formatted Whether or not to create a
+        ///    formatted output file.
+        void open(const std::string& fname,
+                  const bool         formatted);
+
+        /// Access writable output stream.
+        EclOutput& stream();
+
+        /// Implementation function for public \c write overload set.
+        template <typename T>
+        void writeImpl(const std::string&    kw,
+                       const std::vector<T>& data);
+    };
+
     /// File manager for restart output streams.
     class Restart
     {

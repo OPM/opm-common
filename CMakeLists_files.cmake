@@ -191,6 +191,7 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/Tables.cpp
           src/opm/output/eclipse/RegionCache.cpp
           src/opm/output/eclipse/RestartValue.cpp
+          src/opm/output/eclipse/WriteInit.cpp
           src/opm/output/data/Solution.cpp
       )
 endif()
@@ -607,6 +608,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/Summary.hpp
         opm/output/eclipse/Tables.hpp
         opm/output/eclipse/WindowedArray.hpp
+        opm/output/eclipse/WriteInit.hpp
         opm/output/eclipse/WriteRestartHelpers.hpp
         opm/output/OutputWriter.hpp
         )
