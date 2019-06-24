@@ -1039,15 +1039,7 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
 BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
     UDQParams udqp;
     UDQDefine def1(udqp, "WUBHP", {"1/(WWCT", "'W1*')"});
-    std::vector<std::string> tokens1 = {"1", "/", "(", "WWCT", "W1*", ")"};
-    BOOST_CHECK_EQUAL_COLLECTIONS(tokens1.begin(), tokens1.end(),
-                                  def1.tokens().begin(), def1.tokens().end());
-
-
     UDQDefine def2(udqp, "WUBHP", {"2*(1",  "+" , "WBHP)"});
-    std::vector<std::string> tokens2 = {"2", "*", "(", "1", "+", "WBHP", ")"};
-    BOOST_CHECK_EQUAL_COLLECTIONS(tokens2.begin(), tokens2.end(),
-                                  def2.tokens().begin(), def2.tokens().end());
 }
 
 
