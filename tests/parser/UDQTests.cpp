@@ -1039,7 +1039,10 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
 BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
     UDQParams udqp;
     UDQDefine def1(udqp, "WUBHP", {"1/(WWCT", "'W1*')"});
+    BOOST_CHECK_EQUAL( def1.input_string() , "1/(WWCT 'W1*')");
+
     UDQDefine def2(udqp, "WUBHP", {"2*(1",  "+" , "WBHP)"});
+    BOOST_CHECK_EQUAL( def2.input_string() , "2*(1 + WBHP)");
 }
 
 

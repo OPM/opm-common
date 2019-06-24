@@ -57,12 +57,14 @@ public:
 
     UDQSet eval(const UDQContext& context) const;
     const std::string& keyword() const;
+    const std::string& input_string() const;
     UDQVarType  var_type() const;
 private:
     const UDQParams& udq_params;  // Beacuse of the shared RNG stream this must be a reference.
     std::string m_keyword;
     std::shared_ptr<UDQASTNode> ast;
     UDQVarType m_var_type;
+    std::string string_data;
 };
 }
 
