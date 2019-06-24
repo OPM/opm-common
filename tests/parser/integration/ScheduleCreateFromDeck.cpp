@@ -145,8 +145,8 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     BOOST_CHECK(sched.hasWell("W_2"));
     BOOST_CHECK(sched.hasWell("W_3"));
 
-    BOOST_CHECK_CLOSE( 777/Metric::Time , sched.getWell2("W_2", 7).getProductionProperties().ResVRate , 0.0001);
-    BOOST_CHECK_EQUAL( 0 ,                sched.getWell2("W_2", 8).getProductionProperties().ResVRate);
+    BOOST_CHECK_CLOSE( 777/Metric::Time , sched.getWell2("W_2", 7).getProductionProperties().ResVRate.get<double>() , 0.0001);
+    BOOST_CHECK_EQUAL( 0 ,                sched.getWell2("W_2", 8).getProductionProperties().ResVRate.get<double>());
 
     BOOST_CHECK_EQUAL( WellCommon::SHUT , sched.getWell2("W_2", 3).getStatus());
 

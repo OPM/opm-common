@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
 
     auto properties2 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
-    properties2->ResVRate = 100;
+    properties2->ResVRate.reset( 100 );
     properties2->addProductionControl(Opm::WellProducer::RESV);
     well.updateProduction(properties2);
     BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
@@ -327,9 +327,9 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     properties3->WaterRate = 100;
     properties3->GasRate = 100;
     properties3->LiquidRate = 100;
-    properties3->ResVRate = 100;
     properties3->BHPLimit = 100;
     properties3->THPLimit = 100;
+    properties3->ResVRate.reset(100);
     properties3->addProductionControl(Opm::WellProducer::ORAT);
     properties3->addProductionControl(Opm::WellProducer::LRAT);
     properties3->addProductionControl(Opm::WellProducer::BHP);

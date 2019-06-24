@@ -111,7 +111,7 @@ namespace Opm {
         this->ALQValue       = record.getItem("ALQ"      ).get< double >(0); //NOTE: Unit of ALQ is never touched
         this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
         this->LiquidRate     = record.getItem("LRAT").getSIDouble(0);
-        this->ResVRate       = record.getItem("RESV").getSIDouble(0);
+        this->ResVRate       = record.getItem("RESV").get<UDAValue>(0);
 
         namespace wp = WellProducer;
         using mode = std::pair< const std::string, wp::ControlModeEnum >;
@@ -158,7 +158,7 @@ namespace Opm {
     {
         this->init_rates(record);
         this->LiquidRate = 0;
-        this->ResVRate = 0;
+        this->ResVRate.reset(0);
 
         // when the well is switching to history matching producer from prediction mode
         // or switching from injector to producer
@@ -189,7 +189,8 @@ namespace Opm {
             this->LiquidRate = newValue * siFactorL;
         }
         else if (cmode == WellTarget::RESV){
-            this->ResVRate = newValue * siFactorL;
+            this->ResVRate.assert_numeric("Can not combine UDA and WELTARG");
+            this->ResVRate.reset( newValue * siFactorL );
         }
         else if (cmode == WellTarget::BHP){
             this->BHPLimit = newValue * siFactorP;
@@ -279,9 +280,9 @@ namespace Opm {
         controls.water_rate = this->WaterRate;
         controls.gas_rate = this->GasRate;
         controls.liquid_rate = this->LiquidRate;
-        controls.resv_rate = this->ResVRate;
         controls.bhp_limit = this->BHPLimit;
         controls.thp_limit= this->THPLimit;
+        controls.resv_rate = UDA::eval_well_uda(this->ResVRate, this->name, st, udq_undefined);
         controls.bhp_history = this->BHPH;
         controls.thp_history = this->THPH;
         controls.vfp_table_number = this->VFPTableNumber;
