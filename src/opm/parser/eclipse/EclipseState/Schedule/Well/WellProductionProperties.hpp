@@ -42,7 +42,7 @@ namespace Opm {
         double  WaterRate   = 0.0;
         double  GasRate     = 0.0;
         double  LiquidRate  = 0.0;
-        double  ResVRate    = 0.0;
+        UDAValue  ResVRate;
         // BHP and THP limit
         double  BHPLimit    = 0.0;
         double  THPLimit    = 0.0;
