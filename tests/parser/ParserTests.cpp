@@ -1976,6 +1976,25 @@ DENSITY
     BOOST_CHECK( pbub.defaultApplied( 0 ) );
 }
 
+BOOST_AUTO_TEST_CASE(IGNORE_SOH) {
+    // Check that parsing RSCONSTT does not bleed into next keyword.
+
+    const auto deck_string = std::string { R"(
+FIELD
+TABDIMS
+  1* 2
+/
+-- The ^A should be here - that is ASCII character 1 which is sometimes
+-- inserted by the windows editor Notepad++
+PROPS
+RSCONSTT
+  0.35  932 /
+  0.40  945 /
+)" };
+
+    const auto deck = Parser{}.parseString( deck_string );
+}
+
 
 BOOST_AUTO_TEST_CASE(ParseRSConstT) {
     // Check that parsing RSCONSTT does not bleed into next keyword.

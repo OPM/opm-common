@@ -48,7 +48,7 @@ namespace Opm {
          */
 
         constexpr bool sep_table[ 128 ] = {
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
+            0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -60,7 +60,7 @@ namespace Opm {
 
         struct is_separator {
             /*
-             * ch is space, comma, \r, \n, \t, \v or \f => true
+             * ch is SOH (ASCII 1), space, comma, \r, \n, \t, \v or \f => true
              * else false
              */
             constexpr bool operator()( int ch ) const {
