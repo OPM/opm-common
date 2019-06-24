@@ -29,19 +29,30 @@
 
 namespace Opm {
 
+
 class UDQAssign{
 public:
+
+    /*
+      If the same keyword is assigned several times the different assignment
+      records are assembled in one UDQAssign instance. This is an attempt to
+      support restart in a situation where a full UDQ ASSIGN statement can be
+      swapped with a UDQ DEFINE statement.
+    */
+    struct AssignRecord {
+        std::vector<std::string> selector;
+        double value;
+    };
+
     UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value);
     const std::string& keyword() const;
-    double value() const;
     UDQVarType var_type() const;
-    const std::vector<std::string>& selector() const;
+    void add_record(const std::vector<std::string>& selector, double value);
     UDQSet eval(const std::vector<std::string>& wells) const;
 private:
     std::string m_keyword;
     UDQVarType m_var_type;
-    std::vector<std::string> m_selector;
-    double m_value;
+    std::vector<AssignRecord> records;
 };
 }
 

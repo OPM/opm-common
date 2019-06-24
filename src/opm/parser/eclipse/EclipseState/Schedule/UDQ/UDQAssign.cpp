@@ -24,22 +24,17 @@ namespace Opm {
 
 UDQAssign::UDQAssign(const std::string& keyword, const std::vector<std::string>& selector, double value) :
     m_keyword(keyword),
-    m_var_type(UDQ::varType(keyword)),
-    m_selector(selector),
-    m_value(value)
-{}
+    m_var_type(UDQ::varType(keyword))
+{
+    this->add_record(selector, value);
+}
 
+void UDQAssign::add_record(const std::vector<std::string>& selector, double value) {
+    this->records.push_back({selector, value});
+}
 
 const std::string& UDQAssign::keyword() const {
     return this->m_keyword;
-}
-
-const std::vector<std::string>& UDQAssign::selector() const {
-    return this->m_selector;
-}
-
-double UDQAssign::value() const {
-    return this->m_value;
 }
 
 UDQVarType UDQAssign::var_type() const {
@@ -48,12 +43,16 @@ UDQVarType UDQAssign::var_type() const {
 
 UDQSet UDQAssign::eval(const std::vector<std::string>& wells) const {
     if (this->m_var_type == UDQVarType::WELL_VAR) {
-        UDQSet ws= UDQSet::wells(this->m_keyword, wells);
+        UDQSet ws = UDQSet::wells(this->m_keyword, wells);
 
-        if (this->m_selector.empty())
-            ws.assign(this->m_value);
-        else
-            ws.assign(this->m_selector[0], this->m_value);
+        for (const auto& record : this->records) {
+            const auto& selector = record.selector;
+            double value = record.value;
+            if (selector.empty())
+                ws.assign(value);
+            else
+                ws.assign(selector[0], value);
+        }
 
         return ws;
     }

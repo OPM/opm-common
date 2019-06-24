@@ -97,7 +97,8 @@ enum class UDQAction {
     ASSIGN,
     DEFINE,
     UNITS,
-    UPDATE};
+    UPDATE
+};
 
 
 
