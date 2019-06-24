@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
     WellTestConfig wc;
     WellTestState st;
     wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 0, 0, 0);
-    st.addClosedWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
     BOOST_CHECK_EQUAL(st.sizeWells(), 1);
 
     auto shut_wells = st.updateWell(wc, 5000);
@@ -80,43 +80,53 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
 }
 
 BOOST_AUTO_TEST_CASE(WTEST_STATE) {
+    const double day = 86400.;
     WellTestConfig wc;
     WellTestState st;
-    st.addClosedWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
+    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
     BOOST_CHECK_EQUAL(st.sizeWells(), 1);
 
-    st.addClosedWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100);
+    st.openWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
     BOOST_CHECK_EQUAL(st.sizeWells(), 1);
 
-    st.addClosedWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
+    st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
+    BOOST_CHECK_EQUAL(st.sizeWells(), 1);
+
+    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.sizeWells(), 2);
 
-    st.addClosedWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100);
+    st.closeWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.sizeWells(), 3);
 
     auto shut_wells = st.updateWell(wc, 5000);
     BOOST_CHECK_EQUAL( shut_wells.size(), 0);
 
-    wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000, 2, 0);
+    wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000. * day, 2, 0);
     // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 200).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 200. * day).size(), 0);
 
     // We should test it:
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 1200).size(), 1);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 1200. * day).size(), 1);
 
     // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 1700).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 1700. * day).size(), 0);
 
-    // We should test it:
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 2400).size(), 1);
+    st.openWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL);
+
+    st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1900. * day);
+
+    // We should not test it:
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 2400. * day).size(), 0);
+
+    // We should test it now:
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 3000. * day).size(), 1);
 
     // Too many attempts:
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 24000).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 24000. * day).size(), 0);
 
     st.dropWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
 
-    st.openWell("WELL_NAME");
-    BOOST_CHECK_EQUAL(st.sizeWells(), 1);
+    BOOST_CHECK_EQUAL(st.sizeWells(), 2);
 }
 
 
