@@ -29,8 +29,8 @@ UDQFunctionTable::UDQFunctionTable() :
     UDQFunctionTable(UDQParams())
 {}
 
-UDQFunctionTable::UDQFunctionTable(const UDQParams& params) :
-    params(params)
+UDQFunctionTable::UDQFunctionTable(const UDQParams& params_arg) :
+    params(params_arg)
 {
     // SCalar functions
     this->insert_function( std::make_shared<UDQScalarFunction>("SUM", UDQScalarFunction::SUM) );

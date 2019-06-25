@@ -46,8 +46,9 @@ public:
     //! \param[in] absTolerance Tolerance for absolute deviation.
     //! \param[in] relTolerance Tolerance for relative deviation.
     //! \details This constructor only calls the constructor of the superclass, see the docs for ECLFilesComparator for more information.
-    ECLRegressionTest(const std::string& basename1, const std::string& basename2, double absTolerance, double relTolerance):
-        ECLFilesComparator(basename1, basename2, absTolerance, relTolerance) {}
+    ECLRegressionTest(const std::string& basename1, const std::string& basename2,
+                      double absToleranceArg, double relToleranceArg):
+        ECLFilesComparator(basename1, basename2, absToleranceArg, relToleranceArg) {}
 
     ~ECLRegressionTest();
 

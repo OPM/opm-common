@@ -24,10 +24,10 @@
 
 namespace Opm {
 
-    UDQContext::UDQContext(const UDQParams& params, const UDQFunctionTable& udqft, const SummaryState& summary_state) :
-        params(params),
-        udqft(udqft),
-        summary_state(summary_state)
+    UDQContext::UDQContext(const UDQParams& params_arg, const UDQFunctionTable& udqft_arg, const SummaryState& summary_state_arg) :
+        params(params_arg),
+        udqft(udqft_arg),
+        summary_state(summary_state_arg)
     {
         for (const auto& pair : TimeMap::eclipseMonthIndices())
             this->add(pair.first, pair.second);

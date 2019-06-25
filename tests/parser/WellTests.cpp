@@ -198,19 +198,23 @@ BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
 BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     // HACK: This test checks correctly setting of isProducer/isInjector. This property depends on which of
     //       WellProductionProperties/WellInjectionProperties is set last, independent of actual values.
-    Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
+    {
+        Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
 
-    /* 1: Well is created as producer */
-    BOOST_CHECK_EQUAL( false , well.isInjector());
-    BOOST_CHECK_EQUAL( true , well.isProducer());
 
-    /* Set a surface injection rate => Well becomes an Injector */
-    auto injectionProps1 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injectionProps1->surfaceInjectionRate.reset(100);
-    well.updateInjection(injectionProps1);
-    BOOST_CHECK_EQUAL( true  , well.isInjector());
-    BOOST_CHECK_EQUAL( false , well.isProducer());
-    BOOST_CHECK_EQUAL( 100 , well.getInjectionProperties().surfaceInjectionRate.get<double>());
+        /* 1: Well is created as producer */
+        BOOST_CHECK_EQUAL( false , well.isInjector());
+        BOOST_CHECK_EQUAL( true , well.isProducer());
+
+        /* Set a surface injection rate => Well becomes an Injector */
+        auto injectionProps1 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+        injectionProps1->surfaceInjectionRate.reset(100);
+        well.updateInjection(injectionProps1);
+        BOOST_CHECK_EQUAL( true  , well.isInjector());
+        BOOST_CHECK_EQUAL( false , well.isProducer());
+        BOOST_CHECK_EQUAL( 100 , well.getInjectionProperties().surfaceInjectionRate.get<double>());
+    }
+
 
     {
         Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);

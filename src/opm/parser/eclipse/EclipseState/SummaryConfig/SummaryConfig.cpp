@@ -382,9 +382,9 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     {
         // Modifies 'list' in place.
         auto makeNode = [&keyword, &list]
-            (const std::string& well, const int segNumber)
+            (const std::string& well_name, const int segNumber)
         {
-            list.push_back(SummaryConfig::keyword_type( keyword.name(), well, segNumber ));
+            list.push_back(SummaryConfig::keyword_type( keyword.name(), well_name, segNumber ));
         };
 
         if (!well.isMultiSegment())

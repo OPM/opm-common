@@ -62,28 +62,28 @@ std::vector<std::string> quote_split(const std::string& item) {
 }
 
 template <typename T>
-UDQDefine::UDQDefine(const UDQParams& udq_params,
+UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
                      const std::string& keyword,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      T&& errors) :
-    UDQDefine(udq_params, keyword, deck_data, parseContext, errors)
+    UDQDefine(udq_params_arg, keyword, deck_data, parseContext, errors)
 {}
 
 
-UDQDefine::UDQDefine(const UDQParams& udq_params,
+UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
                      const std::string& keyword,
                      const std::vector<std::string>& deck_data) :
-    UDQDefine(udq_params, keyword, deck_data, ParseContext(), ErrorGuard())
+    UDQDefine(udq_params_arg, keyword, deck_data, ParseContext(), ErrorGuard())
 {}
 
 
-UDQDefine::UDQDefine(const UDQParams& udq_params,
+UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
                      const std::string& keyword,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      ErrorGuard& errors) :
-    udq_params(udq_params),
+    udq_params(udq_params_arg),
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword))
 {

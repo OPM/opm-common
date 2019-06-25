@@ -218,8 +218,8 @@ namespace {
     class Serializer {
     public:
         Serializer() = default;
-        explicit Serializer(const std::vector<char>& buffer) :
-            buffer(buffer)
+        explicit Serializer(const std::vector<char>& buffer_arg) :
+            buffer(buffer_arg)
         {}
 
 

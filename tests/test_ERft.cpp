@@ -140,14 +140,14 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
     BOOST_CHECK_EQUAL(vect3.size(), 16);
 
     // called with invalid argument, array not existing, wrong well name or wrong date
-    BOOST_CHECK_THROW(std::vector<int> vect1=rft1.getRft<int>("CONIPOS","C-2H", Date{2016,5,31}),std::invalid_argument);
-    BOOST_CHECK_THROW(std::vector<int> vect1=rft1.getRft<int>("CONIPOS","B-2H", Date{2016,5,30}),std::invalid_argument);
-    BOOST_CHECK_THROW(std::vector<int> vect1=rft1.getRft<int>("XXXXXXX","B-2H", Date{2016,5,31}),std::invalid_argument);
+    BOOST_CHECK_THROW(std::vector<int> vect11=rft1.getRft<int>("CONIPOS","C-2H", Date{2016,5,31}),std::invalid_argument);
+    BOOST_CHECK_THROW(std::vector<int> vect11=rft1.getRft<int>("CONIPOS","B-2H", Date{2016,5,30}),std::invalid_argument);
+    BOOST_CHECK_THROW(std::vector<int> vect11=rft1.getRft<int>("XXXXXXX","B-2H", Date{2016,5,31}),std::invalid_argument);
 
     // called with wrong type
-    BOOST_CHECK_THROW(std::vector<int> vect1=rft1.getRft<int>("SGAS","B-2H", Date{2016,5,31}),std::runtime_error);
-    BOOST_CHECK_THROW(std::vector<float> vect1=rft1.getRft<float>("CONIPOS","B-2H", Date{2016,5,31}),std::runtime_error);
-    BOOST_CHECK_THROW(std::vector<std::string> vect1=rft1.getRft<std::string>("CONIPOS","B-2H", Date{2016,5,31}), std::runtime_error);
+    BOOST_CHECK_THROW(std::vector<int> vect11=rft1.getRft<int>("SGAS","B-2H", Date{2016,5,31}),std::runtime_error);
+    BOOST_CHECK_THROW(std::vector<float> vect11=rft1.getRft<float>("CONIPOS","B-2H", Date{2016,5,31}),std::runtime_error);
+    BOOST_CHECK_THROW(std::vector<std::string> vect11=rft1.getRft<std::string>("CONIPOS","B-2H", Date{2016,5,31}), std::runtime_error);
 }
 
 

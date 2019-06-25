@@ -24,8 +24,8 @@
 namespace Opm {
 struct InjectionControls {
 public:
-    InjectionControls(int controls) :
-        controls(controls)
+    InjectionControls(int controls_arg) :
+        controls(controls_arg)
     {}
 
     double bhp_limit;

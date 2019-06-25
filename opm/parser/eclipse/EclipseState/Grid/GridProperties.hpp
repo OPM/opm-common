@@ -54,9 +54,6 @@
 
 namespace Opm {
 
-    void setKeywordBox( const DeckRecord& deckRecord,
-                        BoxManager& boxManager);
-
     class Eclipse3DProperties;
 
     template <typename T>
