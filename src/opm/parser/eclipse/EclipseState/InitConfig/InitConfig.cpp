@@ -23,6 +23,7 @@
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp>
 
@@ -37,7 +38,10 @@ namespace Opm {
         return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
     }
 
-    InitConfig::InitConfig(const Deck& deck) : equil(equils(deck)) {
+    InitConfig::InitConfig(const Deck& deck)
+        : equil(equils(deck))
+        , m_filleps(PROPSSection{deck}.hasKeyword("FILLEPS"))
+    {
         if( !deck.hasKeyword( "RESTART" ) ) {
             if( deck.hasKeyword( "SKIPREST" ) ) {
                 std::cout << "Deck has SKIPREST, but no RESTART. "

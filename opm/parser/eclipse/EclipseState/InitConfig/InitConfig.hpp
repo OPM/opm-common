@@ -41,12 +41,18 @@ namespace Opm {
         bool hasEquil() const;
         const Equil& getEquil() const;
 
+        bool filleps() const
+        {
+            return this->m_filleps;
+        }
+
     private:
+        Equil equil;
+        bool m_filleps;
+
         bool m_restartRequested = false;
         int m_restartStep = 0;
         std::string m_restartRootName;
-
-        Equil equil;
     };
 
 } //namespace Opm
