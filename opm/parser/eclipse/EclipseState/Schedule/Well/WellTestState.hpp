@@ -86,14 +86,6 @@ public:
     */
     std::vector<std::pair<std::string, int>> updateCompletion(const WellTestConfig& config, double sim_time);
 
-
-    /*
-      If the simulator decides that a constraint is no longer met the dropWell()
-      method should be called to indicate that this reason for keeping the well
-      closed is no longer active.
-    */
-    void dropWell(const std::string& well_name, WellTestConfig::Reason reason);
-
     /*
       If the simulator decides that a constraint is no longer met the dropCompletion()
       method should be called to indicate that this reason for keeping the well

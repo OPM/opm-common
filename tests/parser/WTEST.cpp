@@ -123,10 +123,6 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
 
     // Too many attempts:
     BOOST_CHECK_EQUAL( st.updateWell(wc, 24000. * day).size(), 0);
-
-    st.dropWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC);
-
-    BOOST_CHECK_EQUAL(st.sizeWells(), 2);
 }
 
 
