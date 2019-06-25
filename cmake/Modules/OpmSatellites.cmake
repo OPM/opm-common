@@ -316,6 +316,7 @@ macro(opm_add_test TestName)
       if(CURTEST_DEPENDS)
         add_dependencies("${CURTEST_EXE_NAME}" ${CURTEST_DEPENDS})
       endif()
+      add_static_analysis_tests(CURTEST_SOURCES ${project}_INCLUDE_DIRS)
     else()
       if (NOT CURTEST_NO_COMPILE)
         # in addition to being run, the test must be compiled. (the
@@ -324,9 +325,8 @@ macro(opm_add_test TestName)
         add_executable("${CURTEST_EXE_NAME}" ${CURTEST_EXCLUDE_FROM_ALL} ${CURTEST_SOURCES})
         if(HAVE_DYNAMIC_BOOST_TEST)
           set_target_properties (${CURTEST_EXE_NAME} PROPERTIES
-		  COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
-	  )
-	endif()
+		                             COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK)
+        endif()
         target_link_libraries (${CURTEST_EXE_NAME} ${CURTEST_LIBRARIES})
 
         if(CURTEST_DEPENDS)
@@ -335,6 +335,7 @@ macro(opm_add_test TestName)
         if(TARGET ${project}_prepare)
           add_dependencies("${CURTEST_EXE_NAME}" ${project}_prepare)
         endif()
+        add_static_analysis_tests(CURTEST_SOURCES ${project}_INCLUDE_DIRS)
       endif()
 
       # figure out how the test should be run. if a test driver script

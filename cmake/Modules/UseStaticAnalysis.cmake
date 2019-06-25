@@ -34,17 +34,26 @@ function(add_static_analysis_tests sources includes)
       list(APPEND IPATHS -I ${dep})
     endforeach()
     foreach(src ${${sources}})
-      file(RELATIVE_PATH name ${PROJECT_SOURCE_DIR} ${src})
-      if(CPPCHECK_FOUND)
-        add_test(NAME cppcheck+${name}
-                 COMMAND bin/cppcheck-test.sh ${CPPCHECK_PROGRAM} ${src} ${IPATHS}
-                 CONFIGURATIONS analyze cppcheck)
+      if(NOT IS_ABSOLUTE ${src})
+        set(src ${PROJECT_SOURCE_DIR}/${src})
       endif()
-      if(CLANGCHECK_FOUND AND CMAKE_EXPORT_COMPILE_COMMANDS)
-        add_test(NAME clang-check+${name}
-                 COMMAND bin/clang-check-test.sh ${CLANGCHECK_PROGRAM} ${src}
-                 CONFIGURATIONS analyze clang-check)
+      file(RELATIVE_PATH name ${PROJECT_SOURCE_DIR} ${src})
+      list(FIND SCA_SOURCES ${name} ALREADY_ADDED)
+      if(ALREADY_ADDED EQUAL -1)
+        if(CPPCHECK_FOUND AND NOT TARGET cppcheck+${name})
+          add_test(NAME cppcheck+${name}
+                   COMMAND bin/cppcheck-test.sh ${CPPCHECK_PROGRAM} ${src} ${IPATHS}
+                   CONFIGURATIONS analyze cppcheck)
+          list(APPEND SCA_SOURCES ${name})
+        endif()
+        if(CLANGCHECK_FOUND AND CMAKE_EXPORT_COMPILE_COMMANDS AND NOT TARGET clang-check+${name})
+          add_test(NAME clang-check+${name}
+                   COMMAND bin/clang-check-test.sh ${CLANGCHECK_PROGRAM} ${src}
+                   CONFIGURATIONS analyze clang-check)
+          list(APPEND SCA_SOURCES ${name})
+        endif()
       endif()
     endforeach()
   endif()
+  set(SCA_SOURCES ${SCA_SOURCES} PARENT_SCOPE)
 endfunction()
