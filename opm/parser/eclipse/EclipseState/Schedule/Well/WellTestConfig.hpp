@@ -42,11 +42,15 @@ public:
         double test_interval;
         int num_test;
         double startup_time;
+        // the related WTEST keywords is entered and will begin
+        // taking effects since this report step
+        int begin_report_step;
     };
 
     WellTestConfig();
-    void add_well(const std::string& well, Reason reason, double test_interval, int num_test, double startup_time);
-    void add_well(const std::string& well, const std::string& reasons, double test_interval, int num_test, double startup_time);
+    void add_well(const std::string& well, Reason reason, double test_interval, int num_test, double startup_time, int current_step);
+    void add_well(const std::string& well, const std::string& reasons, double test_interval,
+                  int num_test, double startup_time, int current_step);
     void drop_well(const std::string& well);
     bool has(const std::string& well) const;
     bool has(const std::string& well, Reason reason) const;
