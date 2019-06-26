@@ -39,9 +39,13 @@ public:
 
 
 
-    struct ClosedWell {
+    struct WTestWell {
         std::string name;
         WellTestConfig::Reason reason;
+        // the well can be re-opened if the well testing is successful. We only test when it is closed.
+        bool closed;
+        // it can be the time of last test,
+        // or the time that the well is closed if not test has not been performed after
         double last_test;
         int num_attempt;
     };
@@ -58,7 +62,7 @@ public:
       The simulator has decided to close a particular well; we then add it here
       as a closed well with a particualar reason.
     */
-    void addClosedWell(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
+    void closeWell(const std::string& well_name, WellTestConfig::Reason reason, double sim_time);
 
     /*
       The simulator has decided to close a particular completion in a well; we then add it here
@@ -82,14 +86,6 @@ public:
     */
     std::vector<std::pair<std::string, int>> updateCompletion(const WellTestConfig& config, double sim_time);
 
-
-    /*
-      If the simulator decides that a constraint is no longer met the dropWell()
-      method should be called to indicate that this reason for keeping the well
-      closed is no longer active.
-    */
-    void dropWell(const std::string& well_name, WellTestConfig::Reason reason);
-
     /*
       If the simulator decides that a constraint is no longer met the dropCompletion()
       method should be called to indicate that this reason for keeping the well
@@ -97,8 +93,9 @@ public:
     */
     void dropCompletion(const std::string& well_name, int complnum);
 
-    bool hasWell(const std::string& well_name, WellTestConfig::Reason reason) const;
-    void openWell(const std::string& well_name);
+    bool hasWellClosed(const std::string& well_name, WellTestConfig::Reason reason) const;
+
+    void openWell(const std::string& well_name, WellTestConfig::Reason reason);
 
     bool hasCompletion(const std::string& well_name, const int complnum) const;
 
@@ -111,8 +108,11 @@ public:
     double lastTestTime(const std::string& well_name) const;
 
 private:
-    std::vector<ClosedWell> wells;
+    std::vector<WTestWell> wells;
     std::vector<ClosedCompletion> completions;
+
+
+    WTestWell* getWell(const std::string& well_name, WellTestConfig::Reason reason);
 };
 
 

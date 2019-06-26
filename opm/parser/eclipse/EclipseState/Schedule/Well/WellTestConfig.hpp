@@ -53,6 +53,8 @@ public:
     const WTESTWell& get(const std::string& well, Reason reason) const;
     size_t size() const;
 
+    static std::string reasonToString(const Reason reason);
+
 private:
     std::vector<WTESTWell> wells;
 };
