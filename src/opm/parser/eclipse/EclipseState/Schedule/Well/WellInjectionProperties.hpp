@@ -52,8 +52,8 @@ namespace Opm {
 
         WellInjectionProperties(const std::string& wname);
         void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
-        void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name, const UnitSystem& unit_system);
-        void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name, const UnitSystem& unit_system);
+        void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
+        void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
         bool hasInjectionControl(WellInjector::ControlModeEnum controlModeArg) const {
             if (injectionControls & controlModeArg)
                 return true;

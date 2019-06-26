@@ -109,8 +109,8 @@ double prod_wpr_P4(const EclipseState&  es, const Schedule& /* sched */, const S
 }
 
 
-double inj_wir_INJ(const EclipseState&  es, const Schedule& sched, const SummaryState& st, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
     printf("report_step:%ld  Has FUINJ: %d \n", report_step, st.has("FUINJ"));
+double inj_wir_INJ(const EclipseState& , const Schedule& sched, const SummaryState& st, const data::Solution& /* sol */, size_t report_step, double /* seconds_elapsed */) {
     if (st.has("FUINJ")) {
         const auto& well = sched.getWell2("INJ", report_step);
         const auto controls = well.injectionControls(st);
