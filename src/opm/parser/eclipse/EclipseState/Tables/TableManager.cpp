@@ -51,6 +51,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
@@ -228,6 +229,8 @@ namespace Opm {
         addTables( "PLYVISC", m_tabdims.getNumPVTTables());
         addTables( "PLYDHFLF", m_tabdims.getNumPVTTables());
 
+        addTables( "FOAMADS", m_tabdims.getNumSatTables() );
+
         addTables( "PVDG", m_tabdims.getNumPVTTables());
         addTables( "PVDO", m_tabdims.getNumPVTTables());
         addTables( "PVDS", m_tabdims.getNumPVTTables());
@@ -359,6 +362,9 @@ namespace Opm {
         initSimpleTableContainer<PlyadsTable>(deck, "PLYADS", m_tabdims.getNumSatTables());
         initSimpleTableContainer<PlyviscTable>(deck, "PLYVISC", m_tabdims.getNumPVTTables());
         initSimpleTableContainer<PlydhflfTable>(deck, "PLYDHFLF", m_tabdims.getNumPVTTables());
+
+        initSimpleTableContainer<FoamadsTable>(deck, "FOAMADS", m_tabdims.getNumSatTables());
+
         initPlyrockTables(deck);
         initPlymaxTables(deck);
         initGasvisctTables(deck);
@@ -767,6 +773,11 @@ namespace Opm {
     const TableContainer& TableManager::getAqutabTables() const {
         return getTables("AQUTAB");
     }
+
+    const TableContainer& TableManager::getFoamadsTables() const {
+        return getTables("FOAMADS");
+    }
+
 
     const std::vector<PvtgTable>& TableManager::getPvtgTables() const {
         return m_pvtgTables;

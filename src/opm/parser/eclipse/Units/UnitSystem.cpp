@@ -983,6 +983,7 @@ namespace {
         system.addDimension("ReservoirVolume", Metric::ReservoirVolume );
         system.addDimension("Density"   , Metric::Density );
         system.addDimension("PolymerDensity", Metric::PolymerDensity);
+        system.addDimension("FoamDensity", Metric::FoamDensity);
         system.addDimension("Salinity", Metric::Salinity);
         system.addDimension("Viscosity" , Metric::Viscosity);
         system.addDimension("Timestep"  , Metric::Timestep);
@@ -1013,6 +1014,7 @@ namespace {
         system.addDimension("ReservoirVolume", Field::ReservoirVolume );
         system.addDimension("Density", Field::Density );
         system.addDimension("PolymerDensity", Field::PolymerDensity);
+        system.addDimension("FoamDensity", Field::FoamDensity);
         system.addDimension("Salinity", Field::Salinity);
         system.addDimension("Viscosity", Field::Viscosity);
         system.addDimension("Timestep", Field::Timestep);
@@ -1043,6 +1045,7 @@ namespace {
         system.addDimension("ReservoirVolume", Lab::ReservoirVolume );
         system.addDimension("Density", Lab::Density );
         system.addDimension("PolymerDensity", Lab::PolymerDensity);
+        system.addDimension("FoamDensity", Lab::FoamDensity);
         system.addDimension("Salinity", Lab::Salinity);
         system.addDimension("Viscosity", Lab::Viscosity);
         system.addDimension("Timestep", Lab::Timestep);
@@ -1072,6 +1075,7 @@ namespace {
         system.addDimension("ReservoirVolume", PVT_M::ReservoirVolume );
         system.addDimension("Density"   , PVT_M::Density );
         system.addDimension("PolymerDensity", PVT_M::PolymerDensity);
+        system.addDimension("FoamDensity", PVT_M::FoamDensity);
         system.addDimension("Salinity", PVT_M::Salinity);
         system.addDimension("Viscosity" , PVT_M::Viscosity);
         system.addDimension("Timestep"  , PVT_M::Timestep);
@@ -1100,6 +1104,7 @@ namespace {
         system.addDimension("ReservoirVolume", 1.0);
         system.addDimension("Density"   , 1.0);
         system.addDimension("PolymerDensity", 1.0);
+        system.addDimension("FoamDensity", 1.0);
         system.addDimension("Salinity", 1.0);
         system.addDimension("Viscosity" , 1.0);
         system.addDimension("Timestep"  , 1.0);

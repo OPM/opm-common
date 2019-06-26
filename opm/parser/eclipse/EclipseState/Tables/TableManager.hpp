@@ -108,6 +108,7 @@ namespace Opm {
         const TableContainer& getPlyrockTables() const;
         const TableContainer& getPlyshlogTables() const;
         const TableContainer& getAqutabTables() const;
+        const TableContainer& getFoamadsTables() const;
 
         const TableContainer& getSorwmisTables() const;
         const TableContainer& getSgcwmisTables() const;

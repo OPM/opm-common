@@ -476,6 +476,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Tables/TableContainer.hpp
        opm/parser/eclipse/EclipseState/Tables/AqutabTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp
+       opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp
        opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp
        opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp

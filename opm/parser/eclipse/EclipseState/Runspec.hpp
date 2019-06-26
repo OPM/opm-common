@@ -37,8 +37,12 @@ enum class Phase {
     SOLVENT = 3,
     POLYMER = 4,
     ENERGY  = 5,
-    POLYMW  = 6
+    POLYMW  = 6,
+    FOAM  = 7
+    // If you add more entries to this enum, remember to update NUM_PHASES_IN_ENUM below.
 };
+
+constexpr int NUM_PHASES_IN_ENUM = static_cast<int>(Phase::FOAM) + 1;  // Used to get correct size of the bitset in class Phases.
 
 Phase get_phase( const std::string& );
 std::ostream& operator<<( std::ostream&, const Phase& );
@@ -47,12 +51,12 @@ class Phases {
     public:
         Phases() noexcept = default;
         Phases( bool oil, bool gas, bool wat, bool solvent = false, bool polymer = false, bool energy = false,
-                bool polymw = false ) noexcept;
+                bool polymw = false, bool foam = false ) noexcept;
 
         bool active( Phase ) const noexcept;
         size_t size() const noexcept;
     private:
-        std::bitset< 7 > bits;
+        std::bitset< NUM_PHASES_IN_ENUM > bits;
 };
 
 

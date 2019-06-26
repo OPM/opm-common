@@ -44,6 +44,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyrockTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
@@ -459,6 +460,22 @@ const TableColumn& PlyadsTable::getPolymerConcentrationColumn() const {
 }
 
 const TableColumn& PlyadsTable::getAdsorbedPolymerColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
+FoamadsTable::FoamadsTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema("FoamConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema("AdsorbedFoam" , Table::INCREASING , Table::DEFAULT_NONE ));
+
+    SimpleTable::init(item);
+}
+
+
+const TableColumn& FoamadsTable::getFoamConcentrationColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& FoamadsTable::getAdsorbedFoamColumn() const {
     return SimpleTable::getColumn(1);
 }
 
