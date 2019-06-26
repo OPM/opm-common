@@ -663,12 +663,12 @@ WellCompletion::CompletionOrderEnum Well2::getWellConnectionOrdering() const {
     return this->ordering;
 }
 
-double Well2::production_rate(const SummaryState& st, Phase phase) const {
+double Well2::production_rate(const SummaryState& st, Phase prod_phase) const {
     if( !this->isProducer() ) return 0.0;
 
     const auto controls = this->productionControls(st);
 
-    switch( phase ) {
+    switch( prod_phase ) {
         case Phase::WATER: return controls.water_rate;
         case Phase::OIL:   return controls.oil_rate;
         case Phase::GAS:   return controls.gas_rate;

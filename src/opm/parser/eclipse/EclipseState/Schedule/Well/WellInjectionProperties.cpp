@@ -34,8 +34,8 @@
 namespace Opm {
 
 
-    WellInjectionProperties::WellInjectionProperties(const std::string& name)
-        : name(name),
+    WellInjectionProperties::WellInjectionProperties(const std::string& wname)
+        : name(wname),
           injectorType(WellInjector::WATER),
           controlMode(WellInjector::CMODE_UNDEFINED)
     {
