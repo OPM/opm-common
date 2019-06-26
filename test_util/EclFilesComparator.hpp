@@ -69,7 +69,6 @@ public:
     static double average(const std::vector<double>& vec);
 
 protected:
-    std::vector<std::string> keywords1, keywords2;
     bool throwOnError = true; //!< Throw on first error
     bool analysis = false; //!< Perform full error analysis
     std::map<std::string, std::vector<Deviation>> deviations;
