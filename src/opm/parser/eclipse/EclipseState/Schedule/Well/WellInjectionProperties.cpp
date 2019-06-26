@@ -34,8 +34,8 @@
 namespace Opm {
 
 
-    WellInjectionProperties::WellInjectionProperties(const std::string& name)
-        : name(name),
+    WellInjectionProperties::WellInjectionProperties(const std::string& wname)
+        : name(wname),
           injectorType(WellInjector::WATER),
           controlMode(WellInjector::CMODE_UNDEFINED)
     {
@@ -50,7 +50,7 @@ namespace Opm {
     }
 
 
-    void WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name, const UnitSystem& unit_system) {
+    void WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name) {
         this->injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
         this->predictionMode = true;
 
@@ -143,7 +143,7 @@ namespace Opm {
     }
 
 
-    void WellInjectionProperties::handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name, const UnitSystem& unit_system) {
+    void WellInjectionProperties::handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name) {
         // convert injection rates to SI
         const auto& typeItem = record.getItem("TYPE");
         if (typeItem.defaultApplied(0)) {

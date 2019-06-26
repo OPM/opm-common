@@ -236,7 +236,7 @@ namespace Opm {
             handleWCONPROD(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WCONINJE")
-            handleWCONINJE(section, keyword, currentStep, parseContext, errors);
+            handleWCONINJE(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WPOLYMER")
             handleWPOLYMER(keyword, currentStep, parseContext, errors);
@@ -263,7 +263,7 @@ namespace Opm {
             handleWINJTEMP(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WCONINJH")
-            handleWCONINJH(section, keyword, currentStep, parseContext, errors);
+            handleWCONINJH(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WGRUPCON")
             handleWGRUPCON(keyword, currentStep);
@@ -837,7 +837,7 @@ namespace Opm {
 
 
 
-    void Schedule::handleWCONINJE( const SCHEDULESection& section, const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
@@ -853,7 +853,7 @@ namespace Opm {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
-                    injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name, section.unitSystem());
+                    injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name);
 
                     if (well2->updateProducer(false))
                         update_well = true;
@@ -896,7 +896,7 @@ namespace Opm {
         }
     }
 
-    void Schedule::handleWCONINJH( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWCONINJH(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
@@ -912,7 +912,7 @@ namespace Opm {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
-                    injection->handleWCONINJH(record, well2->isProducer(), well_name, section.unitSystem());
+                    injection->handleWCONINJH(record, well2->isProducer(), well_name);
 
                     if (well2->updateProducer(false))
                         update_well = true;

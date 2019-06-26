@@ -51,12 +51,12 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
             double time_step = std::min(week, 0.5*schedule.stepLength(report_step - 1));
             run_step(schedule, st, sol, well_data, report_step, time_step, io);
         }
-        post_step(schedule, st, sol, well_data, report_step, io);
+        post_step(schedule, st, sol, well_data, report_step);
     }
 }
 
 
-void msim::post_step(Schedule& schedule, const SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step, EclipseIO& io) const {
+void msim::post_step(Schedule& schedule, const SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step) const {
     const auto& actions = schedule.actions();
     if (actions.empty())
         return;
