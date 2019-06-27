@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
 /*
@@ -84,6 +85,11 @@ class GridPropertySupportedKeywordInfo {
         const init& initializer() const;
         const post& postProcessor() const;
         bool isDefaultInitializable() const;
+
+        void setPostProcessor(post processor)
+        {
+            this->m_postProcessor = std::move(processor);
+        }
 
     private:
 
