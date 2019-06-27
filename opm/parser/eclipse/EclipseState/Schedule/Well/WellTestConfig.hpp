@@ -61,6 +61,8 @@ public:
 
 private:
     std::vector<WTESTWell> wells;
+
+    WTESTWell* getWell(const std::string& well_name, const Reason reason);
 };
 
 
