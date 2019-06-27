@@ -49,8 +49,8 @@ SATNUM
 
     @classmethod
     def setUpClass(cls):
-        cls.spe3 = sunbeam.parse('spe3/SPE3CASE1.DATA')
-        cpa = sunbeam.parse('data/CORNERPOINT_ACTNUM.DATA')
+        cls.spe3 = sunbeam.parse('tests/spe3/SPE3CASE1.DATA')
+        cpa = sunbeam.parse('tests/data/CORNERPOINT_ACTNUM.DATA')
         cls.state = cls.spe3.state
         cls.cp_state = cpa.state
 
@@ -139,7 +139,7 @@ SATNUM
         # jf["OIL_WATER"]    = 21.0   # set in deck
         # jf["GAS_OIL"]      = -1.0   # N/A
 
-        js = sunbeam.parse('data/JFUNC.DATA').state
+        js = sunbeam.parse('tests/data/JFUNC.DATA').state
         self.assertEqual('JFUNC TEST', js.title)
         jf = js.jfunc()
         print(jf)

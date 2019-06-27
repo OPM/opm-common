@@ -69,3 +69,7 @@ install
 
 # emacs directory setting:
 .dir-locals.el
+
+*.pyc
+*.eggs
+*.egg-info

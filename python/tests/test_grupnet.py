@@ -3,12 +3,10 @@ import unittest
 
 import sunbeam
 
-python_dir = sys.argv[2]
-
 class TestGrupnet(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        norne = python_dir + '/examples/data/norne/NORNE_ATW2013.DATA'
+        norne = 'examples/data/norne/NORNE_ATW2013.DATA'
         cls.sch = sunbeam.parse(norne, [('PARSE_RANDOM_SLASH', sunbeam.action.ignore)]).schedule
 
     def test_vfp_table(self):
