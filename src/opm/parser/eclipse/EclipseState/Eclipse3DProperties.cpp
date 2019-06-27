@@ -19,7 +19,9 @@
 
 #include <algorithm>
 #include <functional>
+#include <initializer_list>
 #include <set>
+#include <string>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/Section.hpp>
@@ -1031,4 +1033,40 @@ namespace Opm {
         }
     }
 
+    /**
+     * Special purpose operation to make various *SOGCR* data elements
+     * account for (scaled) connate water saturation.
+     *
+     * Must only be called if run uses SGOF, because that table is implicitly
+     * defined in terms of connate water saturation.  Subtracts SWL only
+     * if the data item was defaulted (i.e., extracted from unscaled table).
+     */
+    void Eclipse3DProperties::adjustSOGCRwithSWL()
+    {
+        for (const auto* prefix : { "", "I" }) {
+            for (const auto* suffix : { "", "X", "X-", "Y", "Y-", "Z", "Z-" })
+            {
+                const auto epvector = prefix + std::string{"SOGCR"} + suffix;
+                const auto subtract = prefix + std::string{"SWL"} + suffix;
+
+                auto& kwInfo = this->m_doubleGridProperties
+                    .m_supportedKeywords[epvector];
+
+                kwInfo.setPostProcessor([subtract, this]
+                    (const std::vector<bool>& defaulted,
+                     std::vector<double>&     sogcr)
+                {
+                    const auto& swl = this->
+                        getDoubleGridProperty(subtract).getData();
+
+                    const auto nel = swl.size();
+                    for (auto i = 0*nel; i < nel; ++i) {
+                        if (defaulted[i]) {
+                            sogcr[i] -= swl[i];
+                        }
+                    }
+                });
+            }
+        }
+    }
 }
