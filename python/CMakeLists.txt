@@ -1,11 +1,6 @@
 
 find_package(PythonInterp REQUIRED)
 
-set( warnings "-Wall -Wextra -pedantic -Wpointer-arith" )
-set( warnings "${warnings} -Wformat-nonliteral -Wcast-align" )
-set( warnings "${warnings} -Wmissing-declarations -Wcast-qual" )
-set( warnings "${warnings} -Wwrite-strings -Wchar-subscripts " )
-set( warnings "${warnings} -Wredundant-decls" )
 set( CMAKE_CXX_FLAGS "-std=c++11 ${warnings} ${CMAKE_CXX_FLAGS}" )
 
 
