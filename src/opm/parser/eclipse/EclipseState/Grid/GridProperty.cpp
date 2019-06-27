@@ -39,15 +39,15 @@ namespace Opm {
     }
 
     template< typename T >
-    static std::function< void( std::vector< T >& ) > noop() {
-        return []( std::vector< T >& ) { return; };
+    static std::function< void( const std::vector<bool>&, std::vector< T >& ) > noop() {
+        return []( const std::vector<bool>&, std::vector< T >& ) { return; };
     }
 
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             std::function< std::vector< T >( size_t ) > init,
-            std::function< void( std::vector< T >& ) > post,
+            std::function< void( const std::vector<bool>& defaulted, std::vector< T >& ) > post,
             const std::string& dimString,
             bool defaultInitializable ) :
         m_keywordName( name ),
@@ -87,7 +87,7 @@ namespace Opm {
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             const T defaultValue,
-            std::function< void( std::vector< T >& ) > post,
+            std::function< void( const std::vector<bool>&, std::vector< T >& ) > post,
             const std::string& dimString,
             bool defaultInitializable ) :
         m_keywordName( name ),
@@ -113,7 +113,9 @@ namespace Opm {
     }
 
     template< typename T >
-    const std::function< void( std::vector< T >& ) >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
+    const std::function< void( const std::vector<bool>&, std::vector< T >& ) >&
+    GridPropertySupportedKeywordInfo< T >::postProcessor() const
+    {
         return this->m_postProcessor;
     }
 
@@ -395,7 +397,7 @@ namespace Opm {
     void GridProperty< T >::runPostProcessor() {
         if( this->m_hasRunPostProcessor ) return;
         this->m_hasRunPostProcessor = true;
-        this->m_kwInfo.postProcessor()( m_data );
+        this->m_kwInfo.postProcessor()( m_defaulted, m_data );
     }
 
     template< typename T >

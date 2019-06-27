@@ -45,7 +45,10 @@ class GridPropertySupportedKeywordInfo {
         GridPropertySupportedKeywordInfo() = default;
 
         using init = std::function< std::vector< T >( size_t ) >;
-        using post = std::function< void( std::vector< T >& ) >;
+        using post = std::function<
+            void(const std::vector<bool>& defaulted,
+                 std::vector< T >&)
+        >;
 
         GridPropertySupportedKeywordInfo(
             const std::string& name,

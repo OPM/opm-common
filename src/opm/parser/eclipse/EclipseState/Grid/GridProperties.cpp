@@ -578,7 +578,7 @@ namespace Opm {
     template< typename T >
     void GridProperties<T>::postAddKeyword(const std::string& name,
                                            const T defaultValue,
-                                           std::function< void( std::vector< T >& ) > postProcessor,
+                                           std::function< void( const std::vector<bool>& defaulted, std::vector< T >& ) > postProcessor,
                                            const std::string& dimString,
                                            const bool defaultInitializable )
     {

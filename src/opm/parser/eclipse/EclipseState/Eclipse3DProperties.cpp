@@ -267,7 +267,7 @@ namespace Opm {
 
         const auto tempLookup = std::bind( temperature_lookup, _1, tableManager, eclipseGrid, intGridProperties );
 
-        const auto distributeTopLayer = std::bind( &distTopLayer, _1, eclipseGrid );
+        const auto distributeTopLayer = std::bind( &distTopLayer, std::placeholders::_2, eclipseGrid );
 
         std::vector< GridProperties< double >::SupportedKeywordInfo > supportedDoubleKeywords;
 
@@ -531,7 +531,7 @@ namespace Opm {
 
         {
             auto initPORVProcessor =  std::bind(&initPORV,
-                                      std::placeholders::_1,
+                                      std::placeholders::_2,
                                       &deck,
                                       &eclipseGrid,
                                       &m_intGridProperties,
@@ -546,7 +546,7 @@ namespace Opm {
 
         {
             auto actnumPP = std::bind(&ACTNUMPostProcessor,
-                                      std::placeholders::_1,
+                                      std::placeholders::_2,
                                       &m_doubleGridProperties);
 
             m_intGridProperties.postAddKeyword( "ACTNUM",
