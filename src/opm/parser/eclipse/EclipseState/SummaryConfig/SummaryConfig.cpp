@@ -125,7 +125,7 @@ namespace {
     };
 
     bool is_udq(const std::string& keyword) {
-        return (keyword.size() > 1 && keyword[1] == 'U');
+        return (keyword.size() > 1 && keyword[1] == 'U' && keyword != "SUMTHIN");
     }
 
 
