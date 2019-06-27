@@ -51,9 +51,9 @@ BOOST_AUTO_TEST_CASE(CreateWellTestConfig) {
     BOOST_CHECK_THROW(wc.add_well("NAME3", "X", 1,2,3, 1), std::invalid_argument);
 
     wc.add_well("NAME", "PEGDC", 10, 10, 10, 1);
-    BOOST_CHECK_EQUAL(wc.size(), 6);
+    BOOST_CHECK_EQUAL(wc.size(), 5);
     wc.add_well("NAMEX", "PGDC", 10, 10, 10, 1);
-    BOOST_CHECK_EQUAL(wc.size(), 10);
+    BOOST_CHECK_EQUAL(wc.size(), 9);
     wc.drop_well("NAME");
     BOOST_CHECK_EQUAL(wc.size(), 4);
     BOOST_CHECK(wc.has("NAMEX"));
@@ -81,7 +81,6 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
 
 BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     const double day = 86400.;
-    WellTestConfig wc;
     WellTestState st;
     st.closeWell("WELL_NAME", WellTestConfig::Reason::ECONOMIC, 100. * day);
     BOOST_CHECK_EQUAL(st.sizeWells(), 1);
@@ -98,7 +97,8 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     st.closeWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.sizeWells(), 3);
 
-    auto shut_wells = st.updateWell(wc, 5000);
+    WellTestConfig wc;
+    auto shut_wells = st.updateWell(wc, 110. * day);
     BOOST_CHECK_EQUAL( shut_wells.size(), 0);
 
     wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000. * day, 2, 0, 1);
@@ -122,7 +122,16 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     BOOST_CHECK_EQUAL( st.updateWell(wc, 3000. * day).size(), 1);
 
     // Too many attempts:
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 24000. * day).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 4000. * day).size(), 0);
+
+    wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000. * day, 3, 0, 5);
+
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 4100. * day).size(), 1);
+
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 5200. * day).size(), 1);
+
+    wc.drop_well("WELL_NAME");
+    BOOST_CHECK_EQUAL( st.updateWell(wc, 6300. * day).size(), 0);
 }
 
 
