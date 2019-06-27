@@ -4,6 +4,7 @@ declare -A configurations
 
 declare -A EXTRA_MODULE_FLAGS
 EXTRA_MODULE_FLAGS[opm-simulators]="-DBUILD_EBOS_EXTENSIONS=ON -DBUILD_EBOS_DEBUG_EXTENSIONS=ON"
+EXTRA_MODULE_FLAGS[opm-common] = "-DENABLE_PYTHON=ON"
 
 # Parse revisions from trigger comment and setup arrays
 # Depends on: 'upstreams', upstreamRev',
