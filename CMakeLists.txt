@@ -211,6 +211,7 @@ install(DIRECTORY cmake DESTINATION share/opm)
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (ENABLE_PYTHON)
+  set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
   add_subdirectory(python)
 endif()
 
