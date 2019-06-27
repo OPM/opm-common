@@ -558,6 +558,13 @@ namespace Opm {
                                                 true );
         }
 
+        if (tableManager.hasTables("SGOF")) {
+            // Run uses SGOF.  Install a keyword/data post-processor to
+            // subtract scaled connate water from defaulted *SOGCR*
+            // (critical oil saturation in gas/oil system) end points.
+            this->adjustSOGCRwithSWL();
+        }
+
         processGridProperties(deck, eclipseGrid);
     }
 
