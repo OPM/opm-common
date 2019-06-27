@@ -129,6 +129,7 @@ namespace Opm {
         m_nz( nz ),
         m_kwInfo( kwInfo ),
         m_data( kwInfo.initializer()( nx * ny * nz ) ),
+        m_defaulted( nx * ny * nz, true ),
         m_hasRunPostProcessor( false )
     {}
 
@@ -177,6 +178,11 @@ namespace Opm {
     void GridProperty< T >::iset(size_t i , size_t j , size_t k , T value) {
         size_t g = i + j*m_nx + k*m_nx*m_ny;
         iset(g,value);
+    }
+
+    template< typename T >
+    const std::vector< bool >& GridProperty< T >::wasDefaulted() const {
+        return this->m_defaulted;
     }
 
     template< typename T >
@@ -425,11 +431,13 @@ namespace Opm {
 template<>
 void GridProperty<int>::setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
     m_data[targetIdx] = deckItem.get< int >(sourceIdx);
+    m_defaulted[targetIdx] = false;
 }
 
 template<>
 void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
     m_data[targetIdx] = deckItem.getSIDouble(sourceIdx);
+    m_defaulted[targetIdx] = false;
 }
 
 template<>

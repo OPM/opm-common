@@ -110,6 +110,7 @@ public:
     void iset(size_t i , size_t j , size_t k , T value);
 
 
+    const std::vector<bool>& wasDefaulted() const;
     const std::vector<T>& getData() const;
     std::vector<T>& getData();
 
@@ -269,6 +270,7 @@ private:
     size_t m_nx, m_ny, m_nz;
     SupportedKeywordInfo m_kwInfo;
     std::vector<T> m_data;
+    std::vector<bool> m_defaulted;
     bool m_hasRunPostProcessor = false;
     bool assigned = false;
 };
