@@ -8,7 +8,7 @@ set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
 option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
-option(ENABLE_PYTHON "Enable python bindings?" ON)
+option(ENABLE_PYTHON "Enable python bindings?" OFF)
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
@@ -211,6 +211,8 @@ install(DIRECTORY cmake DESTINATION share/opm)
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (ENABLE_PYTHON)
+  set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  add_subdirectory(python)
 endif()
 
 

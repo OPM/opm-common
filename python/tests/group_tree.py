@@ -4,7 +4,7 @@ import sunbeam
 
 class TestGroupTree(unittest.TestCase):
     def setUp(self):
-        norne = '../../examples/data/norne/NORNE_ATW2013.DATA'
+        norne = '../../../python/examples/data/norne/NORNE_ATW2013.DATA'
         self.sch = sunbeam.parse(norne, [('PARSE_RANDOM_SLASH', sunbeam.action.ignore)]).schedule
 
     def test_group(self):
