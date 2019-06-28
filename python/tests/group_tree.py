@@ -1,6 +1,6 @@
 import sys
-
 import unittest
+
 import sunbeam
 
 python_dir = sys.argv[2]
