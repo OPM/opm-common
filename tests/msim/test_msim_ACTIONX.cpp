@@ -239,21 +239,21 @@ BOOST_AUTO_TEST_CASE(UDQ_ASSIGN) {
         ecl_sum_type * ecl_sum = ecl_sum_fread_alloc_case( base_name.c_str(), ":");
         BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUBHP:P1") );
         BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUBHP:P2") );
-        BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUOPR:P3") );
-        BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUOPR:P4") );
+        BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUOPRL:P3") );
+        BOOST_CHECK( ecl_sum_has_general_var(ecl_sum, "WUOPRL:P4") );
 
         BOOST_CHECK_EQUAL( ecl_sum_get_unit(ecl_sum, "WUBHP:P1"), "BARSA");
-        BOOST_CHECK_EQUAL( ecl_sum_get_unit(ecl_sum, "WUOPR:P1"), "SM3/DAY");
+        BOOST_CHECK_EQUAL( ecl_sum_get_unit(ecl_sum, "WUOPRL:P1"), "SM3/DAY");
 
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P1"), 11);
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P2"), 12);
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P3"), 13);
         BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUBHP:P4"), 14);
 
-        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P1"), 20);
-        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P2"), 20);
-        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P3"), 20);
-        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPR:P4"), 20);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPRL:P1"), 20);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPRL:P2"), 20);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPRL:P3"), 20);
+        BOOST_CHECK_EQUAL( ecl_sum_get_general_var(ecl_sum, 1, "WUOPRL:P4"), 20);
         ecl_sum_free( ecl_sum );
 
         test_work_area_free(work_area);
