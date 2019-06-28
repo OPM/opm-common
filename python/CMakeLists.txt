@@ -3,6 +3,7 @@ find_package(PythonInterp REQUIRED)
 
 set( CMAKE_CXX_FLAGS "-std=c++11 ${warnings} ${CMAKE_CXX_FLAGS}" )
 
+set( PYTHON_DIR ${CMAKE_SOURCE_DIR}/python )
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/python/pycmake)
 

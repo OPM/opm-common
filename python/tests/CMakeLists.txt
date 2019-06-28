@@ -10,5 +10,5 @@ configure_file(data/schedule/TEMPLATE.SCH data/schedule/TEMPLATE.SCH COPYONLY)
 configure_file(utils.py utils.py COPYONLY)
 
 foreach(prog time_vector connection deck group_tree grupnet parse_deck parse state props schedule wells)
-    add_python_test(${prog} ${prog}.py)
+    add_python_test(${prog} ${prog}.py ${PYTHON_DIR})
 endforeach()
