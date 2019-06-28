@@ -12,7 +12,14 @@ namespace Opm {
         public:
             explicit FoamRecord( const DeckRecord& );
 
+            double referenceSurfactantConcentration() const;
+            double exponent() const;
+            double minimumSurfactantConcentration() const;
+
         private:
+            double reference_surfactant_concentration_;
+            double exponent_;
+            double minimum_surfactant_concentration_;
     };
 
     class Foam {

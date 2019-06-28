@@ -6,8 +6,22 @@
 namespace Opm {
 
     FoamRecord::FoamRecord( const DeckRecord& record ) :
+        reference_surfactant_concentration_( record.getItem( 0 ).getSIDouble( 0 ) ),
+        exponent_( record.getItem( 1 ).getSIDouble( 0 ) ),
+        minimum_surfactant_concentration_( record.getItem( 2 ).getSIDouble( 0 ) )
     {}
 
+    double FoamRecord::referenceSurfactantConcentration() const {
+        return this->reference_surfactant_concentration_;
+    }
+
+    double FoamRecord::exponent() const {
+        return this->exponent_;
+    }
+
+    double FoamRecord::minimumSurfactantConcentration() const {
+        return this->minimum_surfactant_concentration_;
+    }
 
     /* */
 
