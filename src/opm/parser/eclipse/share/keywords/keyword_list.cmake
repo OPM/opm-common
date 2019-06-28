@@ -110,6 +110,7 @@ set( keywords
      000_Eclipse100/F/FMWSET
      000_Eclipse100/F/FOAM
      000_Eclipse100/F/FOAMADS
+     000_Eclipse100/F/FOAMFSC
      000_Eclipse100/F/FRICTION
      000_Eclipse100/F/FULLIMP
      000_Eclipse100/G/GAS

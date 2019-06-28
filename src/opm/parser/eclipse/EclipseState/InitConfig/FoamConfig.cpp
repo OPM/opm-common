@@ -1,4 +1,3 @@
-#if 0
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
@@ -36,4 +35,3 @@ namespace Opm {
         return this->records.end();
     }
 }
-#endif

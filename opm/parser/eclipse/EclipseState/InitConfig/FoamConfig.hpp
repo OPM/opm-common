@@ -1,8 +1,6 @@
 #ifndef OPM_FOAM_HPP
 #define OPM_FOAM_HPP
 
-#if 0
-
 #include <vector>
 
 namespace Opm {
@@ -37,6 +35,5 @@ namespace Opm {
     };
 
 }
-#endif
 
 #endif //OPM_FOAM_HPP
