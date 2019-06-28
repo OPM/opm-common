@@ -152,17 +152,26 @@ inline void keywordW( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
 
-    const auto hasValue = []( const DeckKeyword& kw ) {
-        return kw.getDataRecord().getDataItem().hasValue( 0 );
-    };
+    /*
+      Here is a two step check whether this keyword should be discarded as not
+      supported:
 
+        1. Well keywords ending with 'L' represent completions, they are not
+           supported.
+
+        2. If the keyword is a UDQ keyword there is no convention enforced to
+           the last character, and in that case it is treated as a normal well
+           keyword anyways.
+    */
     if (keyword.name().back() == 'L') {
-        std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported");
-        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
-        return;
+        if (!is_udq(keyword.name())) {
+            std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported");
+            parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+            return;
+        }
     }
 
-    if (keyword.size() && hasValue(keyword)) {
+    if (keyword.size() && keyword.getDataRecord().getDataItem().hasValue(0)) {
         for( const std::string& pattern : keyword.getStringData()) {
           auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );
 
