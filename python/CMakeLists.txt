@@ -1,7 +1,7 @@
 
 find_package(PythonInterp REQUIRED)
 
-set( CMAKE_CXX_FLAGS "-std=c++11 ${warnings} ${CMAKE_CXX_FLAGS}" )
+set( CMAKE_CXX_FLAGS "-std=c++11" )
 
 set( PYTHON_DIR ${CMAKE_SOURCE_DIR}/python )
 
