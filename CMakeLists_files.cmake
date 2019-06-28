@@ -72,6 +72,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Grid/setKeywordBox.cpp
     src/opm/parser/eclipse/EclipseState/Grid/TransMult.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/Equil.cpp
+    src/opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.cpp
     src/opm/parser/eclipse/EclipseState/InitConfig/InitConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/IOConfig.cpp
     src/opm/parser/eclipse/EclipseState/IOConfig/RestartConfig.cpp
@@ -414,6 +415,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Parser/ParserConst.hpp
        opm/parser/eclipse/EclipseState/InitConfig/InitConfig.hpp
        opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp
+       opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.hpp
        opm/parser/eclipse/EclipseState/Util/Value.hpp
        opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp
        opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
