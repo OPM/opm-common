@@ -34,7 +34,7 @@ namespace Opm {
             if (well_ptr->closed) {
                 throw std::runtime_error( " Well " + well_name + " is closed with reason "
                                         + WellTestConfig::reasonToString(reason)
-                                        + ", we ware trying to close it again with same reason!");
+                                        + ", we are trying to close it again with same reason!");
             }
             // the well exists already, we just update it with action of closing
             well_ptr->closed = true;
@@ -77,7 +77,7 @@ namespace Opm {
             return (reason == well.reason && well.name == well_name);
         });
 
-        return (well_iter == wells.end() ? nullptr : &(*well_iter) );
+        return (well_iter == wells.end() ? nullptr : std::addressof(*well_iter) );
     }
 
 
@@ -166,9 +166,9 @@ namespace Opm {
                                             {
                                                 return (well.name == well_name);
                                             });
-        if (well_iter == wells.end()) {
+        if (well_iter == wells.end())
             throw std::runtime_error("No well named " + well_name + " found in WellTestState.");
-        }
+
         return well_iter->last_test;
     }
 
@@ -183,7 +183,9 @@ namespace Opm {
                     well.num_attempt = 0;
                     well.wtest_report_step = well_config.begin_report_step;
                 }
-                assert(well_config.begin_report_step == well.wtest_report_step);
+                if (well_config.begin_report_step != well.wtest_report_step)
+                    throw std::logic_error(" Bug in OPM/flow when using WTEST information related to well " + well.name);
+
             } else {
                 // If there is WTEST step, due to new WTEST input, which does not specify any testing closure cause,
                 // there is no WTEST request anymore.
@@ -192,8 +194,9 @@ namespace Opm {
                     well.wtest_report_step = -1;
                     well.num_attempt = 0;
                 }
-                assert(well.wtest_report_step == -1);
-                assert(well.num_attempt == 0);
+                if (well.wtest_report_step != -1 || well.num_attempt != 0)
+                    throw std::logic_error(" Bugs in OPM/flow when there is WTEST request for well " + well.name);
+
             }
         }
     }

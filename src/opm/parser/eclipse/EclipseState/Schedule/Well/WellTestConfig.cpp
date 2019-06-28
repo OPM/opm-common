@@ -135,7 +135,7 @@ WellTestConfig::WTESTWell*  WellTestConfig::getWell(const std::string& well_name
         return (reason == well.shut_reason && well.name == well_name);
     });
 
-    return (well_iter == wells.end() ? nullptr : &(*well_iter) );
+    return (well_iter == wells.end() ? nullptr : std::addressof(*well_iter) );
 }
 
 
