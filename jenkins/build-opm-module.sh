@@ -113,9 +113,9 @@ function build_module {
     test $? -eq 0 || exit 2
     if test -z "$CTEST_CONFIGURATION"
     then
-      ctest -V -T Test --no-compress-output
+      ctest -T Test --no-compress-output
     else
-      ctest -V -C $CTEST_CONFIGURATION --timeout 5000 -T Test --no-compress-output
+      ctest -C $CTEST_CONFIGURATION --timeout 5000 -T Test --no-compress-output
     fi
 
     # Convert to junit format
