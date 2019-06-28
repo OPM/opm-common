@@ -31,11 +31,19 @@ namespace Opm {
         WTestWell* well_ptr = getWell(well_name, reason);
 
         if (well_ptr) {
+            if (well_ptr->closed) {
+                throw std::runtime_error( " Well " + well_name + " is closed with reason "
+                                        + WellTestConfig::reasonToString(reason)
+                                        + ", we are trying to close it again with same reason!");
+            }
             // the well exists already, we just update it with action of closing
             well_ptr->closed = true;
             well_ptr->last_test = sim_time;
-        } else
-            this->wells.push_back({well_name, reason, true, sim_time, 0});
+        } else {
+            // by default, we use -1 if there is no WTEST request for this well
+            // it will be updated when checking for WellTestConfig
+            this->wells.push_back({well_name, reason, true, sim_time, 0, -1});
+        }
     }
 
 
@@ -69,7 +77,7 @@ namespace Opm {
             return (reason == well.reason && well.name == well_name);
         });
 
-        return (well_iter == wells.end() ? nullptr : &(*well_iter) );
+        return (well_iter == wells.end() ? nullptr : std::addressof(*well_iter) );
     }
 
 
@@ -79,6 +87,9 @@ namespace Opm {
 
     std::vector<std::pair<std::string, WellTestConfig::Reason>> WellTestState::updateWell(const WellTestConfig& config, double sim_time) {
         std::vector<std::pair<std::string, WellTestConfig::Reason>> output;
+
+        updateForNewWTEST(config);
+
         for (auto& well : this->wells) {
             if (well.closed && config.has(well.name, well.reason)) {
                 const auto& well_config = config.get(well.name, well.reason);
@@ -155,10 +166,39 @@ namespace Opm {
                                             {
                                                 return (well.name == well_name);
                                             });
-        if (well_iter == wells.end()) {
+        if (well_iter == wells.end())
             throw std::runtime_error("No well named " + well_name + " found in WellTestState.");
-        }
+
         return well_iter->last_test;
+    }
+
+    void WellTestState::updateForNewWTEST(const Opm::WellTestConfig& config)
+    {
+        // check whether to reset based on the new WTEST request
+        for (auto& well: this->wells) {
+            if (config.has(well.name, well.reason)) {
+                const auto& well_config = config.get(well.name, well.reason);
+                if (well_config.begin_report_step > well.wtest_report_step) {
+                    // there is a new WTEST input, we should reset the counting
+                    well.num_attempt = 0;
+                    well.wtest_report_step = well_config.begin_report_step;
+                }
+                if (well_config.begin_report_step != well.wtest_report_step)
+                    throw std::logic_error(" Bug in OPM/flow when using WTEST information related to well " + well.name);
+
+            } else {
+                // If there is WTEST step, due to new WTEST input, which does not specify any testing closure cause,
+                // there is no WTEST request anymore.
+                // If there is no WTEST step, then everything stay the same.
+                if (well.wtest_report_step >= 0) {
+                    well.wtest_report_step = -1;
+                    well.num_attempt = 0;
+                }
+                if (well.wtest_report_step != -1 || well.num_attempt != 0)
+                    throw std::logic_error(" Bugs in OPM/flow when there is WTEST request for well " + well.name);
+
+            }
+        }
     }
 
 }

@@ -28,31 +28,40 @@ WellTestConfig::WellTestConfig() {
 
 }
 
-void WellTestConfig::add_well(const std::string& well, Reason shut_reason, double test_interval, int num_retries, double startup_time) {
-    wells.push_back({well, shut_reason, test_interval, num_retries, startup_time});
+void WellTestConfig::add_well(const std::string& well, Reason shut_reason, double test_interval,
+                              int num_retries, double startup_time, const int current_step) {
+
+    WTESTWell* well_ptr = getWell(well, shut_reason);
+
+    if (well_ptr) {
+        *well_ptr = WTESTWell{well, shut_reason, test_interval, num_retries, startup_time, current_step};
+    } else {
+        wells.push_back({well, shut_reason, test_interval, num_retries, startup_time, current_step});
+    }
 }
 
 
-void WellTestConfig::add_well(const std::string& well, const std::string& reasons, double test_interval, int num_retries, double startup_time) {
-    if (reasons.size() == 0)
+void WellTestConfig::add_well(const std::string& well, const std::string& reasons, double test_interval,
+                              int num_retries, double startup_time, const int current_step) {
+    if (reasons.empty())
         throw std::invalid_argument("Can not pass empty string to stop testing to add_well() method.");
 
     for (auto c : reasons) {
         switch(c) {
         case 'P' :
-            add_well(well, Reason::PHYSICAL, test_interval, num_retries, startup_time);
+            add_well(well, Reason::PHYSICAL, test_interval, num_retries, startup_time, current_step);
             break;
          case 'E' :
-            add_well(well, Reason::ECONOMIC, test_interval, num_retries, startup_time);
+            add_well(well, Reason::ECONOMIC, test_interval, num_retries, startup_time, current_step);
             break;
         case 'G':
-            add_well(well, Reason::GROUP, test_interval, num_retries, startup_time);
+            add_well(well, Reason::GROUP, test_interval, num_retries, startup_time, current_step);
             break;
         case 'D':
-            add_well(well, Reason::THP_DESIGN, test_interval, num_retries, startup_time);
+            add_well(well, Reason::THP_DESIGN, test_interval, num_retries, startup_time, current_step);
             break;
         case 'C':
-            add_well(well, Reason::COMPLETION, test_interval, num_retries, startup_time);
+            add_well(well, Reason::COMPLETION, test_interval, num_retries, startup_time, current_step);
             break;
         default:
             throw std::invalid_argument("Invalid character in WTEST configuration");
@@ -117,6 +126,16 @@ std::string WellTestConfig::reasonToString(const Reason reason) {
     default:
         throw std::runtime_error("unknown closure reason");
     }
+}
+
+
+
+WellTestConfig::WTESTWell*  WellTestConfig::getWell(const std::string& well_name, const Reason reason) {
+    const auto well_iter = std::find_if(wells.begin(), wells.end(), [&well_name, &reason](const WTESTWell& well) {
+        return (reason == well.shut_reason && well.name == well_name);
+    });
+
+    return (well_iter == wells.end() ? nullptr : std::addressof(*well_iter) );
 }
 
 

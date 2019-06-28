@@ -1116,15 +1116,15 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             double test_interval = record.getItem("INTERVAL").getSIDouble(0);
-            const std::string& reason = record.getItem("REASON").get<std::string>(0);
+            const std::string& reasons = record.getItem("REASON").get<std::string>(0);
             int num_test = record.getItem("TEST_NUM").get<int>(0);
             double startup_time = record.getItem("START_TIME").getSIDouble(0);
 
             for(const auto& well_name : well_names) {
-                if (reason.size() == 0)
+                if (reasons.empty())
                     new_config->drop_well(well_name);
                 else
-                    new_config->add_well(well_name, reason, test_interval, num_test, startup_time);
+                    new_config->add_well(well_name, reasons, test_interval, num_test, startup_time, currentStep);
             }
         }
         this->wtest_config.update(currentStep, new_config);

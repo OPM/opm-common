@@ -48,6 +48,11 @@ public:
         // or the time that the well is closed if not test has not been performed after
         double last_test;
         int num_attempt;
+        // if there is a WTEST setup for well testing,
+        // it will be the report step that WTEST is specified.
+        // if no, it is -1, which indicates we do not know the associated WTEST yet,
+        // or there is not associated WTEST request
+        int wtest_report_step;
     };
 
 
@@ -113,6 +118,8 @@ private:
 
 
     WTestWell* getWell(const std::string& well_name, WellTestConfig::Reason reason);
+
+    void updateForNewWTEST(const WellTestConfig& config);
 };
 
 
