@@ -30,9 +30,6 @@ namespace Opm {
 
 class ActionContext {
 public:
-    /*
-      Observe that the ActionContext takes a copy of the SummaryState object.
-    */
     explicit ActionContext(const SummaryState& summary_state);
 
     /*
@@ -48,7 +45,7 @@ public:
     std::vector<std::string> wells(const std::string& func) const;
 
 private:
-    SummaryState summary_state;
+    const SummaryState& summary_state;
     std::map<std::string, double> values;
 };
 }
