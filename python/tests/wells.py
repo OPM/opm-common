@@ -88,7 +88,7 @@ class TestWells(unittest.TestCase):
         self.assertEqual(2, len(flowing))
         self.assertEqual(0, len(closed))
 
-        flowing1 = filter(lambda x: not sunbeam.Well.closed(1)(x), wells)
+        flowing1 = filter(lambda x: not sunbeam.Well.closed()(x), wells)
         closed1  = filter(sunbeam.Well.closed(), wells)
         self.assertListEqual(list(closed), list(closed1))
 

@@ -68,12 +68,12 @@ function(add_python_package PACKAGE_NAME PACKAGE_PATH PYTHON_FILES)
     install(FILES ${PYTHON_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}/${PACKAGE_PATH})
 endfunction()
 
-function(add_python_test TESTNAME PYTHON_TEST_FILE)
+function(add_python_test TESTNAME PYTHON_TEST_FILE arg)
     configure_file(${PYTHON_TEST_FILE} ${PYTHON_TEST_FILE} COPYONLY)
 
     add_test(NAME ${TESTNAME}
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python/tests
-            COMMAND python pycmake_test_runner.py ${PYTHON_TEST_FILE}
+            COMMAND python pycmake_test_runner.py ${PYTHON_TEST_FILE} ${arg}
             )
 
     to_path_list(pythonpath "${CMAKE_BINARY_DIR}/python" "$ENV{PYTHONPATH}")
