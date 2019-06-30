@@ -241,6 +241,7 @@ void makeRftFile(const std::string &fileName,
 }
 
 
+ 
 BOOST_AUTO_TEST_CASE(gridCompare) {
 
     std::vector<float> coord = {2000,2000,2000,1999.9127,1999.8691,2009.9951,2099.9849,2000,2001.7452,2099.8975,1999.8691,2011.7404,2199.9695,2000,2003.4905,2199.8823,
@@ -1104,6 +1105,22 @@ BOOST_AUTO_TEST_CASE(results_unsmry_2) {
     }
 
 }
+
+
+
+BOOST_AUTO_TEST_CASE(results_unsmry_3) {
+
+
+    ECLRegressionTest test1("SPE1CASE1", "SPE1CASE1A", 1e-3, 1e-3);
+
+    BOOST_CHECK_THROW(test1.results_smry(),std::runtime_error);
+
+    test1.setReportStepOnly(true);
+
+    BOOST_CHECK_NO_THROW(test1.results_smry());
+
+}
+
 
 BOOST_AUTO_TEST_CASE(results_rft_1) {
     using Date = std::tuple<int, int, int>;

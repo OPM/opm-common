@@ -63,6 +63,10 @@ public:
     // will ignore extra keywords which are only present
     // in the new simulation.
 
+    void setReportStepOnly(bool reportStepOnlyArg) {
+        this->reportStepOnly = reportStepOnlyArg;
+    }
+
     void setAcceptExtraKeywords(bool acceptExtraKeywordsArg) {
         this->acceptExtraKeywords = acceptExtraKeywordsArg;
     }
@@ -158,6 +162,8 @@ private:
     const std::vector<std::string> keywordsStrictTol = {"COORD", "ZCORN", "PORV", "DEPTH", "DX", "DY", "DZ", "PERMX", "PERMY", "PERMZ", "NTG",
                                                         "TRANX", "TRANY", "TRANZ", "TRANNNC", "SGRP", "SCON", "DOUBHEAD"
                                                        };
+
+    bool reportStepOnly = false;
 
     // Only compare last occurrence
     bool onlyLastSequence = false;
