@@ -46,6 +46,14 @@ class GridPropertySupportedKeywordInfo {
         GridPropertySupportedKeywordInfo() = default;
 
         using init = std::function< std::vector< T >( size_t ) >;
+
+        /**
+         * Property post-processor function type.
+         *
+         * Defaulted flag (one element for each Cartesian cell/data element)
+         * identifies whether the property value was defaulted in that cell
+         * (true) or assigned through a deck mechanism (false).
+         */
         using post = std::function<
             void(const std::vector<bool>& defaulted,
                  std::vector< T >&)
@@ -86,6 +94,32 @@ class GridPropertySupportedKeywordInfo {
         const post& postProcessor() const;
         bool isDefaultInitializable() const;
 
+        /**
+         * Replace post-processor after object is created.
+         *
+         * XXX: This is essentially a hack, but it enables using
+         *   post-processors that can't be created at construction time.
+         *
+         *   One example of this use case is the post-processor for SOGCR in
+         *   a run using Family I (SWOF/SGOF) saturation function tables.
+         *   The SGOF table is implicitly defined in terms of the connate
+         *   water saturation, and the critical oil-in-gas saturation
+         *   post-processor needs to take this fact into account.  That, in
+         *   turn, means that the post-processor must have a way of
+         *   accessing SWL data (defaulted or assigned) which means that the
+         *   post-processor needs to be aware of the collection of grid
+         *   properties, not just a single property in isolation.
+         *
+         *   In our current system, the GridPropertySupportedKeywordInfo
+         *   objects are constructor arguments to that collection and so
+         *   have no way of referring to the collection itself.  This method
+         *   provides a mechanism for creating the post-processor once the
+         *   collection is formed.
+         *
+         * \param[in] processor New post-processor function.  Replaces
+         *   existing post-processor, typically created at construction
+         *   time.
+         */
         void setPostProcessor(post processor)
         {
             this->m_postProcessor = std::move(processor);
