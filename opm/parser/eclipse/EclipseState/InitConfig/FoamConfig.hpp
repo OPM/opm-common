@@ -20,6 +20,7 @@
 #ifndef OPM_FOAMCONFIG_HPP
 #define OPM_FOAMCONFIG_HPP
 
+#include <cstddef>
 #include <vector>
 
 namespace Opm {
@@ -48,9 +49,9 @@ namespace Opm {
             FoamConfig() = default;
             explicit FoamConfig( const DeckKeyword& );
 
-            const FoamRecord& getRecord( size_t id ) const;
+            const FoamRecord& getRecord( std::size_t id ) const;
 
-            size_t size() const;
+            std::size_t size() const;
             bool empty() const;
 
             const_iterator begin() const;

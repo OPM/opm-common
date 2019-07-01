@@ -50,11 +50,11 @@ namespace Opm {
         records( keyword.begin(), keyword.end() )
     {}
 
-    const FoamRecord& FoamConfig::getRecord( size_t id ) const {
+    const FoamRecord& FoamConfig::getRecord( std::size_t id ) const {
         return this->records.at( id );
     }
 
-    size_t FoamConfig::size() const {
+    std::size_t FoamConfig::size() const {
         return this->records.size();
     }
 
