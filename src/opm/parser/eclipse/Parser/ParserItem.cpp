@@ -72,7 +72,7 @@ type_tag get_data_type_json( const std::string& str ) {
 std::string as_string(double value) {
     if (std::fabs(value) < 1e-4) {
         std::ostringstream ss;
-        ss << std::setprecision(12) << std::fixed << value;
+        ss << std::setprecision(12) << value;
         return ss.str();
     } else
         return std::to_string(value);
