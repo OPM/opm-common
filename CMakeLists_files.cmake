@@ -231,6 +231,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/EventTests.cpp
     tests/parser/FaceDirTests.cpp
     tests/parser/FaultTests.cpp
+    tests/parser/FoamTests.cpp
     tests/parser/FunctionalTests.cpp
     tests/parser/GeomodifierTests.cpp
     tests/parser/GridPropertyTests.cpp
