@@ -5,6 +5,8 @@
 
 namespace Opm {
 
+    // FoamRecord member functions.
+
     FoamRecord::FoamRecord( const DeckRecord& record ) :
         reference_surfactant_concentration_( record.getItem( 0 ).getSIDouble( 0 ) ),
         exponent_( record.getItem( 1 ).getSIDouble( 0 ) ),
@@ -23,29 +25,29 @@ namespace Opm {
         return this->minimum_surfactant_concentration_;
     }
 
-    /* */
+    // FoamConfig member functions.
 
-    Foam::Foam( const DeckKeyword& keyword ) :
+    FoamConfig::FoamConfig( const DeckKeyword& keyword ) :
         records( keyword.begin(), keyword.end() )
     {}
 
-    const FoamRecord& Foam::getRecord( size_t id ) const {
+    const FoamRecord& FoamConfig::getRecord( size_t id ) const {
         return this->records.at( id );
     }
 
-    size_t Foam::size() const {
+    size_t FoamConfig::size() const {
         return this->records.size();
     }
 
-    bool Foam::empty() const {
+    bool FoamConfig::empty() const {
         return this->records.empty();
     }
 
-    Foam::const_iterator Foam::begin() const {
+    FoamConfig::const_iterator FoamConfig::begin() const {
         return this->records.begin();
     }
 
-    Foam::const_iterator Foam::end() const {
+    FoamConfig::const_iterator FoamConfig::end() const {
         return this->records.end();
     }
-}
+} // namespace Opm

@@ -1,5 +1,5 @@
-#ifndef OPM_FOAM_HPP
-#define OPM_FOAM_HPP
+#ifndef OPM_FOAMCONFIG_HPP
+#define OPM_FOAMCONFIG_HPP
 
 #include <vector>
 
@@ -22,12 +22,12 @@ namespace Opm {
             double minimum_surfactant_concentration_;
     };
 
-    class Foam {
+    class FoamConfig {
         public:
             using const_iterator = std::vector< FoamRecord >::const_iterator;
 
-            Foam() = default;
-            explicit Foam( const DeckKeyword& );
+            FoamConfig() = default;
+            explicit FoamConfig( const DeckKeyword& );
 
             const FoamRecord& getRecord( size_t id ) const;
 
@@ -43,4 +43,4 @@ namespace Opm {
 
 }
 
-#endif //OPM_FOAM_HPP
+#endif // OPM_FOAMCONFIG_HPP
