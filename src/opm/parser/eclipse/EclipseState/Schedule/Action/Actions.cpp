@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
 namespace Opm {
+namespace Action {
 
 size_t Actions::size() const {
     return this->actions.size();
@@ -64,5 +65,5 @@ std::vector<const ActionX *> Actions::pending(std::time_t sim_time) const {
     return action_vector;
 }
 
-
+}
 }

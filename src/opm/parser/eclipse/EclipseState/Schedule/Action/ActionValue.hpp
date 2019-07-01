@@ -1,7 +1,7 @@
 #ifndef ACTION_VALUE_HPP
 #define ACTION_VALUE_HPP
 
-#include "WellSet.hpp"
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
 enum TokenType {
   number,        //  0
@@ -23,23 +23,26 @@ enum TokenType {
 
 
 namespace Opm {
+namespace Action {
 
-class ActionValue {
+class Value {
 public:
-    explicit ActionValue(double value);
-    ActionValue() = default;
+    explicit Value(double value);
+    Value() = default;
 
-    bool eval_cmp(TokenType op, const ActionValue& rhs, WellSet& matching_wells) const;
+    Result eval_cmp(TokenType op, const Value& rhs) const;
     void add_well(const std::string& well, double value);
     double scalar() const;
 
 private:
-    bool eval_cmp_wells(TokenType op, double rhs, WellSet& matching_wells) const;
+    Action::Result eval_cmp_wells(TokenType op, double rhs) const;
 
     double scalar_value;
     double is_scalar = false;
     std::vector<std::pair<std::string, double>> well_values;
 };
 
+
+}
 }
 #endif

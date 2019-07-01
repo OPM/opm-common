@@ -28,25 +28,22 @@
 
 #include "ASTNode.hpp"
 #include "ActionParser.hpp"
+#include "ActionValue.hpp"
 
 namespace Opm {
+namespace Action {
 
-ActionAST::ActionAST(const std::vector<std::string>& tokens) {
-    auto condition_node = ActionParser::parse(tokens);
-    this->condition.reset( new ASTNode(condition_node) );
+AST::AST(const std::vector<std::string>& tokens) {
+    auto condition_node = Action::Parser::parse(tokens);
+    this->condition.reset( new Action::ASTNode(condition_node) );
 }
 
 
-bool ActionAST::eval(const ActionContext& context, std::vector<std::string>& matching_wells) const {
-    if (this->condition) {
-        WellSet wells;
-        bool eval_result = this->condition->eval(context, wells);
-        matching_wells = wells.wells();
-        return eval_result;
-    } else
-        // In the case of missing condition we always evaluate to false. That
-        // is not crystal clear from the manual.
-        return false;
+Action::Result AST::eval(const Action::Context& context) const {
+    if (this->condition)
+        return this->condition->eval(context);
+    else
+        return Action::Result(false);
 }
-
+}
 }

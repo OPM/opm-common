@@ -24,13 +24,14 @@
 #include "ActionParser.hpp"
 
 namespace Opm {
+namespace Action {
 
-ActionParser::ActionParser(const std::vector<std::string>& tokens_arg) :
+Parser::Parser(const std::vector<std::string>& tokens_arg) :
     tokens(tokens_arg)
 {}
 
 
-TokenType ActionParser::get_type(const std::string& arg) const {
+TokenType Parser::get_type(const std::string& arg) const {
     std::string lower_arg = arg;
     std::for_each(lower_arg.begin(),
                   lower_arg.end(),
@@ -81,7 +82,8 @@ TokenType ActionParser::get_type(const std::string& arg) const {
     return TokenType::ecl_expr;
 }
 
-ParseNode ActionParser::next() {
+
+ParseNode Parser::next() {
     this->current_pos++;
     if (static_cast<size_t>(this->current_pos) == this->tokens.size())
         return TokenType::end;
@@ -91,7 +93,7 @@ ParseNode ActionParser::next() {
 }
 
 
-ParseNode ActionParser::current() const {
+ParseNode Parser::current() const {
     if (static_cast<size_t>(this->current_pos) == this->tokens.size())
         return TokenType::end;
 
@@ -100,9 +102,7 @@ ParseNode ActionParser::current() const {
 }
 
 
-
-
-ASTNode ActionParser::parse_left() {
+Action::ASTNode Parser::parse_left() {
     auto current = this->current();
     if (current.type != TokenType::ecl_expr)
         return TokenType::error;
@@ -115,10 +115,10 @@ ASTNode ActionParser::parse_left() {
         current = this->next();
     }
 
-    return ASTNode(TokenType::ecl_expr, func, arg_list);
+    return Action::ASTNode(TokenType::ecl_expr, func, arg_list);
 }
 
-ASTNode ActionParser::parse_op() {
+Action::ASTNode Parser::parse_op() {
     auto current = this->current();
     if (current.type == TokenType::op_gt ||
         current.type == TokenType::op_ge ||
@@ -133,11 +133,11 @@ ASTNode ActionParser::parse_op() {
 }
 
 
-ASTNode ActionParser::parse_right() {
+Action::ASTNode Parser::parse_right() {
     auto current = this->current();
     if (current.type == TokenType::number) {
         this->next();
-        return ASTNode( strtod(current.value.c_str(), nullptr) );
+        return Action::ASTNode( strtod(current.value.c_str(), nullptr) );
     }
 
     current = this->current();
@@ -151,12 +151,12 @@ ASTNode ActionParser::parse_right() {
         arg_list.push_back(current.value);
         current = this->next();
     }
-    return ASTNode(TokenType::ecl_expr, func, arg_list);
+    return Action::ASTNode(TokenType::ecl_expr, func, arg_list);
 }
 
 
 
-ASTNode ActionParser::parse_cmp() {
+Action::ASTNode Parser::parse_cmp() {
     auto current = this->current();
 
     if (current.type == TokenType::open_paren) {
@@ -188,14 +188,14 @@ ASTNode ActionParser::parse_cmp() {
     }
 }
 
-ASTNode ActionParser::parse_and() {
+Action::ASTNode Parser::parse_and() {
     auto left = this->parse_cmp();
     if (left.type == TokenType::error)
         return TokenType::error;
 
     auto current = this->current();
     if (current.type == TokenType::op_and) {
-        ASTNode and_node(TokenType::op_and);
+        Action::ASTNode and_node(TokenType::op_and);
         and_node.add_child(left);
 
         while (this->current().type == TokenType::op_and) {
@@ -213,14 +213,14 @@ ASTNode ActionParser::parse_and() {
 }
 
 
-ASTNode ActionParser::parse_or() {
+Action::ASTNode Parser::parse_or() {
     auto left = this->parse_and();
     if (left.type == TokenType::error)
         return TokenType::error;
 
     auto current = this->current();
     if (current.type == TokenType::op_or) {
-        ASTNode or_node(TokenType::op_or);
+        Action::ASTNode or_node(TokenType::op_or);
         or_node.add_child(left);
 
         while (this->current().type == TokenType::op_or) {
@@ -238,8 +238,8 @@ ASTNode ActionParser::parse_or() {
 }
 
 
-ASTNode ActionParser::parse(const std::vector<std::string>& tokens) {
-    ActionParser parser(tokens);
+Action::ASTNode Parser::parse(const std::vector<std::string>& tokens) {
+    Parser parser(tokens);
     parser.next();
 
     auto tree = parser.parse_or();
@@ -254,6 +254,6 @@ ASTNode ActionParser::parse(const std::vector<std::string>& tokens) {
 
     return tree;
 }
-
+}
 }
 

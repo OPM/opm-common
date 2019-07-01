@@ -3,7 +3,7 @@
 
 
 namespace Opm {
-
+namespace Action {
 
 namespace {
 
@@ -74,13 +74,13 @@ bool eval_cmp_scalar(double lhs, TokenType op, double rhs) {
 }
 
 
-ActionValue::ActionValue(double value) :
+Value::Value(double value) :
     scalar_value(value),
     is_scalar(true)
 { }
 
 
-double ActionValue::scalar() const {
+double Value::scalar() const {
     if (!this->is_scalar)
         throw std::invalid_argument("This value node represents a well list and can not be evaluated in scalar context");
 
@@ -88,7 +88,7 @@ double ActionValue::scalar() const {
 }
 
 
-void ActionValue::add_well(const std::string& well, double value) {
+void Value::add_well(const std::string& well, double value) {
     if (this->is_scalar)
         throw std::invalid_argument("This value node has been created as a scalar node - can not add well variables");
 
@@ -96,22 +96,24 @@ void ActionValue::add_well(const std::string& well, double value) {
 }
 
 
-bool ActionValue::eval_cmp_wells(TokenType op, double rhs, WellSet& matching_wells) const {
-    bool ret_value = false;
+Result Value::eval_cmp_wells(TokenType op, double rhs) const {
+    std::vector<std::string> wells;
+    bool result = false;
+
     for (const auto& pair : this->well_values) {
         const std::string& well = pair.first;
         const double value = pair.second;
 
         if (eval_cmp_scalar(value, op, rhs)) {
-            matching_wells.add(well);
-            ret_value = true;
+            wells.push_back(well);
+            result = true;
         }
     }
-    return ret_value;
+    return Result(result, wells);
 }
 
 
-bool ActionValue::eval_cmp(TokenType op, const ActionValue& rhs, WellSet& matching_wells) const {
+Result Value::eval_cmp(TokenType op, const Value& rhs) const {
     if (op == TokenType::number ||
         op == TokenType::ecl_expr ||
         op == TokenType::open_paren ||
@@ -126,9 +128,10 @@ bool ActionValue::eval_cmp(TokenType op, const ActionValue& rhs, WellSet& matchi
         throw std::invalid_argument("The right hand side must be a scalar value");
 
     if (this->is_scalar)
-        return eval_cmp_scalar(this->scalar(), op, rhs.scalar());
+        return Action::Result(eval_cmp_scalar(this->scalar(), op, rhs.scalar()));
 
-    return this->eval_cmp_wells(op, rhs.scalar(), matching_wells);
+    return this->eval_cmp_wells(op, rhs.scalar());
 }
 
+}
 }

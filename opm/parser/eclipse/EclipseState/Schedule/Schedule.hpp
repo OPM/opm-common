@@ -87,7 +87,6 @@
 
 namespace Opm
 {
-
     class Actions;
     class Deck;
     class DeckKeyword;
@@ -181,7 +180,7 @@ namespace Opm
         const WellTestConfig& wtestConfig(size_t timestep) const;
         const WListManager& getWListManager(size_t timeStep) const;
         const UDQInput& getUDQConfig(size_t timeStep) const;
-        const Actions& actions() const;
+        const Action::Actions& actions() const;
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
         GTNode groupTree(std::size_t report_step) const;
@@ -212,7 +211,7 @@ namespace Opm
         void filterConnections(const EclipseGrid& grid);
         size_t size() const;
 
-        void applyAction(size_t reportStep, const ActionX& action, const std::vector<std::string>& matching_wells);
+        void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
     private:
         TimeMap m_timeMap;
         OrderedMap< std::string, DynamicState<std::shared_ptr<Well2>>> wells_static;
@@ -231,7 +230,7 @@ namespace Opm
         DynamicState<WellProducer::ControlModeEnum> global_whistctl_mode;
         RFTConfig rft_config;
 
-        Actions m_actions;
+        Action::Actions m_actions;
 
         std::map<std::string,Events> well_events;
 

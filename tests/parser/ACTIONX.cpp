@@ -44,7 +44,7 @@ using namespace Opm;
 
 
 
-
+#if 0
 BOOST_AUTO_TEST_CASE(Create) {
     const auto action_kw = std::string{ R"(
 ACTIONX
@@ -143,7 +143,7 @@ TSTEP
 
 BOOST_AUTO_TEST_CASE(TestActions) {
     Opm::SummaryState st;
-    Opm::ActionContext context(st);
+    Opm::Action::Context context(st);
     Opm::Actions config;
     std::vector<std::string> matching_wells;
     BOOST_CHECK_EQUAL(config.size(), 0);
@@ -169,16 +169,15 @@ BOOST_AUTO_TEST_CASE(TestActions) {
     // The action2 instance has an empty condition, so it will never evaluate to true.
     BOOST_CHECK(action2.ready(util_make_date_utc(1,7,2000)));
     BOOST_CHECK(!action2.ready(util_make_date_utc(1,6,2000)));
-    BOOST_CHECK(!action2.eval(util_make_date_utc(1,6,2000), context, matching_wells));
+    BOOST_CHECK(!action2.eval(util_make_date_utc(1,6,2000), context));
 
     auto pending = config.pending( util_make_date_utc(7,8,2000));
     BOOST_CHECK_EQUAL( pending.size(), 2);
     for (auto& ptr : pending) {
         BOOST_CHECK( ptr->ready(util_make_date_utc(7,8,2000)));
-        BOOST_CHECK( !ptr->eval(util_make_date_utc(7,8,2000), context, matching_wells));
+        BOOST_CHECK( !ptr->eval(util_make_date_utc(7,8,2000), context));
     }
-
-    BOOST_CHECK(!action2.eval(util_make_date_utc(7,8,2000), context, matching_wells ));
+    BOOST_CHECK(!action2.eval(util_make_date_utc(7,8,2000), context));
 }
 
 
@@ -186,7 +185,7 @@ BOOST_AUTO_TEST_CASE(TestActions) {
 BOOST_AUTO_TEST_CASE(TestContext) {
     Opm::SummaryState st;
     st.update_well_var("OP1", "WOPR", 100);
-    Opm::ActionContext context(st);
+    Opm::Action::Context context(st);
 
     BOOST_REQUIRE_THROW(context.get("func", "arg"), std::out_of_range);
 
@@ -226,199 +225,191 @@ TSTEP
 }
 
 
-BOOST_AUTO_TEST_CASE(TestActionAST_BASIC) {
+BOOST_AUTO_TEST_CASE(TestAction::AST_BASIC) {
     // Missing comparator
-    BOOST_REQUIRE_THROW( ActionAST( {"WWCT", "OPX", "0.75"} ), std::invalid_argument);
+    BOOST_REQUIRE_THROW( Action::AST( {"WWCT", "OPX", "0.75"} ), std::invalid_argument);
 
     // Left hand side must be function expression
-    BOOST_REQUIRE_THROW( ActionAST({"0.75", "<", "1.0"}), std::invalid_argument);
+    BOOST_REQUIRE_THROW( Action::AST({"0.75", "<", "1.0"}), std::invalid_argument);
 
     //Extra data
-    BOOST_REQUIRE_THROW(ActionAST({"0.75", "<", "1.0", "EXTRA"}), std::invalid_argument);
+    BOOST_REQUIRE_THROW(Action::AST({"0.75", "<", "1.0", "EXTRA"}), std::invalid_argument);
 
-    ActionAST ast1({"WWCT", "OPX", ">", "0.75"});
-    ActionAST ast2({"WWCT", "OPX", "=", "WWCT", "OPX"});
-    ActionAST ast3({"WWCT", "OPY", ">", "0.75"});
+    Action::AST ast1({"WWCT", "OPX", ">", "0.75"});
+    Action::AST ast2({"WWCT", "OPX", "=", "WWCT", "OPX"});
+    Action::AST ast3({"WWCT", "OPY", ">", "0.75"});
     SummaryState st;
-    ActionContext context(st);
+    Action::Context context(st);
     std::vector<std::string> matching_wells;
 
     context.add("WWCT", "OPX", 100);
-    BOOST_CHECK(ast1.eval(context, matching_wells));
+    BOOST_CHECK(ast1.eval(context));
 
     context.add("WWCT", "OPX", -100);
-    BOOST_CHECK(!ast1.eval(context, matching_wells));
+    BOOST_CHECK(!ast1.eval(context));
 
-    BOOST_CHECK(ast2.eval(context, matching_wells));
-    BOOST_REQUIRE_THROW(ast3.eval(context, matching_wells), std::out_of_range);
+    BOOST_CHECK(ast2.eval(context));
+    BOOST_REQUIRE_THROW(ast3.eval(context), std::out_of_range);
 }
 
-BOOST_AUTO_TEST_CASE(TestActionAST_OR_AND) {
-    ActionAST ast_or({"WWCT", "OPX", ">", "0.75", "OR", "WWCT", "OPY", ">", "0.75"});
-    ActionAST ast_and({"WWCT", "OPX", ">", "0.75", "AND", "WWCT", "OPY", ">", "0.75"});
-    ActionAST par({"WWCT", "OPX", ">", "0.75", "AND", "(", "WWCT", "OPY", ">", "0.75", "OR", "WWCT", "OPZ", ">", "0.75", ")"});
+BOOST_AUTO_TEST_CASE(TestAction::AST_OR_AND) {
+    Action::AST ast_or({"WWCT", "OPX", ">", "0.75", "OR", "WWCT", "OPY", ">", "0.75"});
+    Action::AST ast_and({"WWCT", "OPX", ">", "0.75", "AND", "WWCT", "OPY", ">", "0.75"});
+    Action::AST par({"WWCT", "OPX", ">", "0.75", "AND", "(", "WWCT", "OPY", ">", "0.75", "OR", "WWCT", "OPZ", ">", "0.75", ")"});
     SummaryState st;
-    ActionContext context(st);
-    std::vector<std::string> matching_wells;
+    Action::Context context(st);
 
     context.add("WWCT", "OPX", 100);
     context.add("WWCT", "OPY", -100);
     context.add("WWCT", "OPZ", 100);
-    BOOST_CHECK( ast_or.eval(context, matching_wells) );
-    BOOST_CHECK( !ast_and.eval(context, matching_wells) );
-    BOOST_CHECK( par.eval(context, matching_wells));
+    BOOST_CHECK( ast_or.eval(context) );
+    BOOST_CHECK( !ast_and.eval(context) );
+    BOOST_CHECK( par.eval(context));
 
 
     context.add("WWCT", "OPX", -100);
     context.add("WWCT", "OPY", 100);
     context.add("WWCT", "OPZ", 100);
-    BOOST_CHECK( ast_or.eval(context, matching_wells) );
-    BOOST_CHECK( !ast_and.eval(context, matching_wells) );
-    BOOST_CHECK( !par.eval(context, matching_wells));
+    BOOST_CHECK( ast_or.eval(context));
+    BOOST_CHECK( !ast_and.eval(context) );
+    BOOST_CHECK( !par.eval(context));
 
 
     context.add("WWCT", "OPX", 100);
     context.add("WWCT", "OPY", 100);
     context.add("WWCT", "OPZ", -100);
-    BOOST_CHECK( ast_or.eval(context, matching_wells) );
-    BOOST_CHECK( ast_and.eval(context, matching_wells) );
-    BOOST_CHECK( par.eval(context, matching_wells));
+    BOOST_CHECK( ast_or.eval(context));
+    BOOST_CHECK( ast_and.eval(context) );
+    BOOST_CHECK( par.eval(context));
 
     context.add("WWCT", "OPX", -100);
     context.add("WWCT", "OPY", -100);
     context.add("WWCT", "OPZ", -100);
-    BOOST_CHECK( !ast_or.eval(context, matching_wells) );
-    BOOST_CHECK( !ast_and.eval(context, matching_wells) );
-    BOOST_CHECK( !par.eval(context, matching_wells));
+    BOOST_CHECK( !ast_or.eval(context) );
+    BOOST_CHECK( !ast_and.eval(context) );
+    BOOST_CHECK( !par.eval(context));
 }
 
 BOOST_AUTO_TEST_CASE(DATE) {
-    ActionAST ast({"MNTH", ">=", "JUN"});
+    Action::AST ast({"MNTH", ">=", "JUN"});
     SummaryState st;
-    ActionContext context(st);
-    std::vector<std::string> matching_wells;
+    Action::Context context(st);
 
     context.add("MNTH", 6);
-    BOOST_CHECK( ast.eval(context, matching_wells) );
+    BOOST_CHECK( ast.eval(context));
 
     context.add("MNTH", 8);
-    BOOST_CHECK( ast.eval(context, matching_wells) );
+    BOOST_CHECK( ast.eval(context) );
 
     context.add("MNTH", 5);
-    BOOST_CHECK( !ast.eval(context, matching_wells) );
+    BOOST_CHECK( !ast.eval(context));
 }
 
 
 BOOST_AUTO_TEST_CASE(MANUAL1) {
-    ActionAST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});
+    Action::AST ast({"GGPR", "FIELD", ">", "50000", "AND", "WGOR", "PR", ">" ,"GGOR", "FIELD"});
     SummaryState st;
-    ActionContext context(st);
-    std::vector<std::string> matching_wells;
+    Action::Context context(st);
 
     context.add("GGPR", "FIELD", 60000 );
     context.add("WGOR", "PR" , 300 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( ast.eval(context, matching_wells) );
+    BOOST_CHECK( ast.eval(context));
 
     context.add("GGPR", "FIELD", 0 );
     context.add("WGOR", "PR" , 300 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( !ast.eval(context, matching_wells) );
+    BOOST_CHECK( !ast.eval(context) );
 
     context.add("GGPR", "FIELD", 60000 );
     context.add("WGOR", "PR" , 100 );
     context.add("GGOR", "FIELD", 200);
-    BOOST_CHECK( !ast.eval(context, matching_wells) );
+    BOOST_CHECK( !ast.eval(context) );
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL2) {
-    ActionAST ast({"GWCT", "LIST1", ">", "0.70", "AND", "(", "GWPR", "LIST1", ">", "GWPR", "LIST2", "OR", "GWPR", "LIST1", ">", "GWPR", "LIST3", ")"});
+    Action::AST ast({"GWCT", "LIST1", ">", "0.70", "AND", "(", "GWPR", "LIST1", ">", "GWPR", "LIST2", "OR", "GWPR", "LIST1", ">", "GWPR", "LIST3", ")"});
     SummaryState st;
-    ActionContext context(st);
-    std::vector<std::string> matching_wells;
+    Action::Context context(st);
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 2 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( !ast.eval(context, matching_wells));
+    BOOST_CHECK( !ast.eval(context));
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 2 );
     context.add("GWPR", "LIST3", 0 );
-    BOOST_CHECK( ast.eval(context, matching_wells));
+    BOOST_CHECK( ast.eval(context));
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( ast.eval(context, matching_wells));
+    BOOST_CHECK( ast.eval(context));
 
     context.add("GWCT", "LIST1", 1.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 0 );
-    BOOST_CHECK( ast.eval(context, matching_wells));
+    BOOST_CHECK( ast.eval(context));
 
     context.add("GWCT", "LIST1", 0.0);
     context.add("GWPR", "LIST1", 1 );
     context.add("GWPR", "LIST2", 0 );
     context.add("GWPR", "LIST3", 3 );
-    BOOST_CHECK( !ast.eval(context, matching_wells));
+    BOOST_CHECK( !ast.eval(context));
 }
 
 BOOST_AUTO_TEST_CASE(MANUAL3) {
-    ActionAST ast({"MNTH", ".GE.", "MAR", "AND", "MNTH", ".LE.", "OCT", "AND", "GMWL", "HIGH", ".GE.", "4"});
+    Action::AST ast({"MNTH", ".GE.", "MAR", "AND", "MNTH", ".LE.", "OCT", "AND", "GMWL", "HIGH", ".GE.", "4"});
     SummaryState st;
-    ActionContext context(st);
-    std::vector<std::string> matching_wells;
+    Action::Context context(st);
 
     context.add("MNTH", 4);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( ast.eval(context, matching_wells));
+    BOOST_CHECK( ast.eval(context));
 
     context.add("MNTH", 3);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( ast.eval(context, matching_wells));
+    BOOST_CHECK( ast.eval(context));
 
     context.add("MNTH", 11);
     context.add("GMWL", "HIGH", 4);
-    BOOST_CHECK( !ast.eval(context, matching_wells));
+    BOOST_CHECK( !ast.eval(context));
 
     context.add("MNTH", 3);
     context.add("GMWL", "HIGH", 3);
-    BOOST_CHECK( !ast.eval(context, matching_wells));
+    BOOST_CHECK( !ast.eval(context));
 }
 
 
 BOOST_AUTO_TEST_CASE(MANUAL4) {
-    ActionAST ast({"GWCT", "FIELD", ">", "0.8", "AND", "DAY", ">", "1", "AND", "MNTH", ">", "JUN", "AND", "YEAR", ">=", "2021"});
+    Action::AST ast({"GWCT", "FIELD", ">", "0.8", "AND", "DAY", ">", "1", "AND", "MNTH", ">", "JUN", "AND", "YEAR", ">=", "2021"});
     SummaryState st;
-    ActionContext context(st);
-    std::vector<std::string> matching_wells;
-
+    Action::Context context(st);
 
     context.add("MNTH", 7);
     context.add("DAY", 2);
     context.add("YEAR", 2030);
     context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( ast.eval(context, matching_wells) );
+    BOOST_CHECK( ast.eval(context) );
 
     context.add("MNTH", 7);
     context.add("DAY", 2);
     context.add("YEAR", 2019);
     context.add("GWCT", "FIELD", 1.0);
-    BOOST_CHECK( !ast.eval(context, matching_wells) );
+    BOOST_CHECK( !ast.eval(context) );
 }
 
 
 
 BOOST_AUTO_TEST_CASE(MANUAL5) {
-    ActionAST ast({"WCG2", "PROD1", ">", "WCG5", "PROD2", "AND", "GCG3", "G1", ">", "GCG7", "G2", "OR", "FCG1", ">", "FCG7"});
+    Action::AST ast({"WCG2", "PROD1", ">", "WCG5", "PROD2", "AND", "GCG3", "G1", ">", "GCG7", "G2", "OR", "FCG1", ">", "FCG7"});
     SummaryState st;
-    ActionContext context(st);
-    std::vector<std::string> matching_wells;
+    Action::Context context(st);
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -426,7 +417,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7",  50);
-    BOOST_CHECK(ast.eval(context, matching_wells));
+    BOOST_CHECK(ast.eval(context));
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -434,7 +425,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7", 150);
-    BOOST_CHECK(ast.eval(context, matching_wells));
+    BOOST_CHECK(ast.eval(context));
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -442,7 +433,7 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 100);
     context.add("FCG7", 150);
-    BOOST_CHECK(!ast.eval(context, matching_wells));
+    BOOST_CHECK(!ast.eval(context));
 
     context.add("WCG2", "PROD1", 100);
     context.add("WCG5", "PROD2",  50);
@@ -450,29 +441,28 @@ BOOST_AUTO_TEST_CASE(MANUAL5) {
     context.add("GCG7", "G2", 100);
     context.add("FCG1", 200);
     context.add("FCG7", 150);
-    BOOST_CHECK(ast.eval(context, matching_wells));
+    BOOST_CHECK(ast.eval(context));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(LGR) {
-    ActionAST ast({"LWCC" , "OPX", "LOCAL", "1", "2", "3", ">", "100"});
+    Action::AST ast({"LWCC" , "OPX", "LOCAL", "1", "2", "3", ">", "100"});
     SummaryState st;
-    ActionContext context(st);
-    std::vector<std::string> matching_wells;
+    Action::Context context(st);
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 200);
-    BOOST_CHECK(ast.eval(context, matching_wells));
+    BOOST_CHECK(ast.eval(context));
 
     context.add("LWCC", "OPX:LOCAL:1:2:3", 20);
-    BOOST_CHECK(!ast.eval(context, matching_wells));
+    BOOST_CHECK(!ast.eval(context));
 }
 
 
-BOOST_AUTO_TEST_CASE(ActionContextTest) {
+BOOST_AUTO_TEST_CASE(Action::ContextTest) {
     SummaryState st;
     st.update("WWCT:OP1", 100);
-    ActionContext context(st);
+    Action::Context context(st);
 
 
     BOOST_CHECK_EQUAL(context.get("WWCT", "OP1"), 100);
@@ -486,27 +476,26 @@ BOOST_AUTO_TEST_CASE(ActionContextTest) {
 
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells) {
-    ActionAST ast({"WOPR", "*", ">", "1.0"});
+    Action::AST ast({"WOPR", "*", ">", "1.0"});
     SummaryState st;
-    std::vector<std::string> matching_wells;
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
     st.update_well_var("OPZ", "WOPR", 2.0);
 
-    ActionContext context(st);
-    BOOST_CHECK( ast.eval(context, matching_wells) );
+    Action::Context context(st);
+    auto res = ast.eval(context);
+    auto wells = res.wells();
+    BOOST_CHECK( res);
 
-    BOOST_CHECK_EQUAL( matching_wells.size(), 1);
-    BOOST_CHECK_EQUAL( matching_wells[0], "OPZ" );
+    BOOST_CHECK_EQUAL( wells.size(), 1);
+    BOOST_CHECK_EQUAL( wells[0], "OPZ" );
 }
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
-  ActionAST ast1({"WOPR", "P*", ">", "1.0"});
-  ActionAST ast2({"WOPR", "*", ">", "1.0"});
+  Action::AST ast1({"WOPR", "P*", ">", "1.0"});
+  Action::AST ast2({"WOPR", "*", ">", "1.0"});
   SummaryState st;
-  std::vector<std::string> matching_wells1;
-  std::vector<std::string> matching_wells2;
 
   st.update_well_var("PX", "WOPR", 0);
   st.update_well_var("PY", "WOPR", 0.50);
@@ -516,23 +505,26 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells2) {
   st.update_well_var("IY", "WOPR", 0.50);
   st.update_well_var("IZ", "WOPR", 2.0);
 
-  ActionContext context(st);
-  BOOST_CHECK( ast1.eval(context, matching_wells1) );
-  BOOST_CHECK_EQUAL( matching_wells1.size(), 1);
-  BOOST_CHECK_EQUAL( matching_wells1[0], "PZ" );
+  Action::Context context(st);
+  auto res1 = ast1.eval(context);
+  auto res2 = ast2.eval(context);
+  auto wells1 = res1.wells();
+  auto wells2 = res2.wells();
+  BOOST_CHECK(res1);
+  BOOST_CHECK_EQUAL( wells1.size(), 1);
+  BOOST_CHECK_EQUAL( wells1[0], "PZ" );
 
-  BOOST_CHECK( ast2.eval(context, matching_wells2) );
-  BOOST_CHECK_EQUAL( matching_wells2.size(), 2);
-  BOOST_CHECK_EQUAL( std::count(matching_wells2.begin(), matching_wells2.end(), "PZ") , 1);
-  BOOST_CHECK_EQUAL( std::count(matching_wells2.begin(), matching_wells2.end(), "IZ") , 1);
+  BOOST_CHECK(res2);
+  BOOST_CHECK_EQUAL( wells2.size(), 2);
+  BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "PZ") , 1);
+  BOOST_CHECK_EQUAL( std::count(wells2.begin(), wells2.end(), "IZ") , 1);
 }
-
+#endif
 
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
-    ActionAST ast({"WOPR", "*", ">", "1.0", "AND", "WWCT", "*", "<", "0.50"});
+    Action::AST ast({"WOPR", "*", ">", "1.0", "AND", "WWCT", "*", "<", "0.50"});
     SummaryState st;
-    std::vector<std::string> matching_wells;
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
@@ -542,19 +534,19 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_AND) {
     st.update_well_var("OPY", "WWCT", 0.0);     // The WWCT check matches this well.
     st.update_well_var("OPZ", "WWCT", 1.0);
 
-    ActionContext context(st);
-    BOOST_CHECK( ast.eval(context, matching_wells) );
+    Action::Context context(st);
+    auto res = ast.eval(context);
+    BOOST_CHECK(res);
 
     // Even though condition as a whole matches, there is no finite set of wells
     // which mathes both conditions when combined with AND - i.e. the matching_wells
     // variable should be empty.
-    BOOST_CHECK( matching_wells.empty() );
+    BOOST_CHECK( res.wells().empty() );
 }
 
 BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
-    ActionAST ast({"WOPR", "*", ">", "1.0", "OR", "WWCT", "*", "<", "0.50"});
+    Action::AST ast({"WOPR", "*", ">", "1.0", "OR", "WWCT", "*", "<", "0.50"});
     SummaryState st;
-    std::vector<std::string> matching_wells;
 
     st.update_well_var("OPX", "WOPR", 0);
     st.update_well_var("OPY", "WOPR", 0.50);
@@ -564,13 +556,42 @@ BOOST_AUTO_TEST_CASE(TestMatchingWells_OR) {
     st.update_well_var("OPY", "WWCT", 0.0);     // The WWCT check matches this well.
     st.update_well_var("OPZ", "WWCT", 1.0);
 
-    ActionContext context(st);
-    BOOST_CHECK( ast.eval(context, matching_wells) );
+    Action::Context context(st);
+    auto res = ast.eval(context);
+    auto wells = res.wells();
+    BOOST_CHECK(res);
 
     // The well 'OPZ' matches the first condition and the well 'OPY' matches the
     // second condition, since the two conditions are combined with || the
     // resulting mathcing_wells variable should contain both these wells.
-    BOOST_CHECK_EQUAL( matching_wells.size(), 2);
-    BOOST_CHECK( std::find(matching_wells.begin(), matching_wells.end(), "OPZ") != matching_wells.end());
-    BOOST_CHECK( std::find(matching_wells.begin(), matching_wells.end(), "OPY") != matching_wells.end());
+    BOOST_CHECK_EQUAL( wells.size(), 2);
+    BOOST_CHECK( std::find(wells.begin(), wells.end(), "OPZ") != wells.end());
+    BOOST_CHECK( std::find(wells.begin(), wells.end(), "OPY") != wells.end());
+}
+
+BOOST_AUTO_TEST_CASE(TestFieldAND) {
+    Action::AST ast({"FMWPR", ">=", "4", "AND", "WUPR3", "OP*", "=", "1"});
+    SummaryState st;
+    Action::Context context(st);
+
+    st.update_well_var("OP1", "WUPR3", 3);
+    st.update_well_var("OP2", "WUPR3", 2);
+    st.update_well_var("OP3", "WUPR3", 1);
+    st.update_well_var("OP4", "WUPR3", 4);
+
+    st.update("FMWPR", 1);
+    {
+        auto res = ast.eval(context);
+        auto wells = res.wells();
+        BOOST_CHECK(!res);
+    }
+
+    st.update("FMWPR", 4);
+    {
+        auto res = ast.eval(context);
+        auto wells = res.wells();
+        BOOST_CHECK(res);
+        BOOST_CHECK_EQUAL(wells.size(), 1);
+        BOOST_CHECK_EQUAL(wells[0], "OP3");
+    }
 }

@@ -27,10 +27,17 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm {
+namespace Action {
 
-class ActionContext {
+/*
+  The Action::Context class is used as context when the ACTIONX condition is
+  evaluated. The Action::Context class is mainly just a thin wrapper around the
+  SummaryState class.
+*/
+
+class Context {
 public:
-    explicit ActionContext(const SummaryState& summary_state);
+    explicit Context(const SummaryState& summary_state);
 
     /*
       The get methods will first check the internal storage in the 'values' map
@@ -48,5 +55,6 @@ private:
     const SummaryState& summary_state;
     std::map<std::string, double> values;
 };
+}
 }
 #endif

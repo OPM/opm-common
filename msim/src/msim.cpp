@@ -61,13 +61,13 @@ void msim::post_step(Schedule& schedule, const SummaryState& st, data::Solution&
     if (actions.empty())
         return;
 
-    ActionContext context( st );
-    std::vector<std::string> matching_wells;
+    Action::Context context( st );
 
     auto sim_time = schedule.simTime(report_step);
     for (const auto& action : actions.pending(sim_time)) {
-        if (action->eval(sim_time, context, matching_wells))
-            schedule.applyAction(report_step, *action, matching_wells);
+        auto result = action->eval(sim_time, context);
+        if (result)
+            schedule.applyAction(report_step, *action, result);
     }
 }
 
