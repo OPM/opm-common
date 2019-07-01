@@ -28,6 +28,7 @@
 #include <opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
@@ -38,8 +39,14 @@ namespace Opm {
         return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
     }
 
+    static inline FoamConfig foamconfigs( const Deck& deck ) {
+        if( !deck.hasKeyword<ParserKeywords::FOAMFSC>( ) ) return {};
+        return FoamConfig( deck.getKeyword<ParserKeywords::FOAMFSC>(  ) );
+    }
+
     InitConfig::InitConfig(const Deck& deck)
         : equil(equils(deck))
+        , foamconfig(foamconfigs(deck))
         , m_filleps(PROPSSection{deck}.hasKeyword("FILLEPS"))
     {
         if( !deck.hasKeyword( "RESTART" ) ) {
@@ -97,6 +104,17 @@ namespace Opm {
             throw std::runtime_error( "Error: No 'EQUIL' present" );
 
         return this->equil;
+    }
+
+    bool InitConfig::hasFoamConfig() const {
+        return !this->foamconfig.empty();
+    }
+
+    const FoamConfig& InitConfig::getFoamConfig() const {
+        if( !this->hasFoamConfig() )
+            throw std::runtime_error( "Error: No foam model configuration keywords present" );
+
+        return this->foamconfig;
     }
 
 } //namespace Opm
