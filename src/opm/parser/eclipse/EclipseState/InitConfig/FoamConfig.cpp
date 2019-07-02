@@ -18,18 +18,20 @@
 */
 
 #include <opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.hpp>
+#include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 
 namespace Opm {
 
     // FoamRecord member functions.
 
-    FoamRecord::FoamRecord( const DeckRecord& record ) :
-        reference_surfactant_concentration_( record.getItem( 0 ).getSIDouble( 0 ) ),
-        exponent_( record.getItem( 1 ).getSIDouble( 0 ) ),
-        minimum_surfactant_concentration_( record.getItem( 2 ).getSIDouble( 0 ) )
+    FoamRecord::FoamRecord( const DeckRecord& record )
+        : reference_surfactant_concentration_( record.getItem( 0 ).getSIDouble( 0 ) )
+        , exponent_( record.getItem( 1 ).getSIDouble( 0 ) )
+        , minimum_surfactant_concentration_( record.getItem( 2 ).getSIDouble( 0 ) )
     {}
 
     double FoamRecord::referenceSurfactantConcentration() const {
@@ -46,12 +48,16 @@ namespace Opm {
 
     // FoamConfig member functions.
 
-    FoamConfig::FoamConfig( const DeckKeyword& keyword ) :
-        records( keyword.begin(), keyword.end() )
-    {}
+    FoamConfig::FoamConfig( const Deck& deck )
+    {
+        if (deck.hasKeyword<ParserKeywords::FOAMFSC>()) {
+            const auto& kw = deck.getKeyword<ParserKeywords::FOAMFSC>();
+            this->records = std::vector<FoamRecord>(kw.begin(), kw.end());
+        }
+    }
 
-    const FoamRecord& FoamConfig::getRecord( std::size_t id ) const {
-        return this->records.at( id );
+    const FoamRecord& FoamConfig::getRecord( std::size_t index ) const {
+        return this->records.at( index );
     }
 
     std::size_t FoamConfig::size() const {

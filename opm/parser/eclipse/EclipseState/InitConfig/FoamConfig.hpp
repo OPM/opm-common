@@ -25,7 +25,7 @@
 
 namespace Opm {
 
-    class DeckKeyword;
+    class Deck;
     class DeckRecord;
 
     class FoamRecord {
@@ -47,9 +47,9 @@ namespace Opm {
             using const_iterator = std::vector< FoamRecord >::const_iterator;
 
             FoamConfig() = default;
-            explicit FoamConfig( const DeckKeyword& );
+            explicit FoamConfig( const Deck& );
 
-            const FoamRecord& getRecord( std::size_t id ) const;
+            const FoamRecord& getRecord( std::size_t index ) const;
 
             std::size_t size() const;
             bool empty() const;

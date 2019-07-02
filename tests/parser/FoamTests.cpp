@@ -31,61 +31,61 @@ using namespace Opm;
 
 
 static Deck createDeck() {
-const char *deckData =
-"RUNSPEC\n"
-"\n"
-"DIMENS\n"
-" 10 10 10 /\n"
-"TABDIMS\n"
-"3 /\n"
-"GRID\n"
-"DX\n"
-"1000*0.25 /\n"
-"DY\n"
-"1000*0.25 /\n"
-"DZ\n"
-"1000*0.25 /\n"
-"TOPS\n"
-"100*0.25 /\n"
-"FAULTS \n"
-"  'F1'  1  1  1  4   1  4  'X' / \n"
-"  'F2'  5  5  1  4   1  4  'X-' / \n"
-"/\n"
-"MULTFLT \n"
-"  'F1' 0.50 / \n"
-"  'F2' 0.50 / \n"
-"/\n"
-"EDIT\n"
-"MULTFLT /\n"
-"  'F2' 0.25 / \n"
-"/\n"
-"WATER\n"
-"\n"
-"OIL\n"
-"\n"
-"GAS\n"
-"\n"
-"FOAM\n"
-"\n"
-"TITLE\n"
-"The title\n"
-"\n"
-"START\n"
-"8 MAR 1998 /\n"
-"\n"
-"PROPS\n"
-"FOAMFSC\n"
-"1 2 0.3 /\n"
-"4 5 /\n"
-"6 /\n"
-"\n"
-"REGIONS\n"
-"SWAT\n"
-"1000*1 /\n"
-"SATNUM\n"
-"1000*2 /\n"
-"\n";
+    // Using a raw string literal with xxx as delimiter.
+    const char *deckData = R"xxx(
+RUNSPEC
 
+DIMENS
+ 10 10 10 /
+TABDIMS
+3 /
+GRID
+DX
+1000*0.25 /
+DY
+1000*0.25 /
+DZ
+1000*0.25 /
+TOPS
+100*0.25 /
+FAULTS
+  'F1'  1  1  1  4   1  4  'X' /
+  'F2'  5  5  1  4   1  4  'X-' /
+/
+MULTFLT
+  'F1' 0.50 /
+  'F2' 0.50 /
+/
+EDIT
+MULTFLT /
+  'F2' 0.25 /
+/
+WATER
+
+OIL
+
+GAS
+
+FOAM
+
+TITLE
+The title
+
+START
+8 MAR 1998 /
+
+PROPS
+FOAMFSC
+1 2 0.3 /
+4 5 /
+6 /
+
+REGIONS
+SWAT
+1000*1 /
+SATNUM
+1000*2 /
+)xxx"; // End of raw string literal with xxx as delimiter.
     Parser parser;
     return parser.parseString( deckData );
 }

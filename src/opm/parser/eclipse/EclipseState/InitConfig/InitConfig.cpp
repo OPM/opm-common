@@ -28,7 +28,6 @@
 #include <opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp>
 
 #include <opm/parser/eclipse/Parser/ParserKeywords/E.hpp>
-#include <opm/parser/eclipse/Parser/ParserKeywords/F.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/R.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
@@ -39,14 +38,9 @@ namespace Opm {
         return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
     }
 
-    static inline FoamConfig foamconfigs( const Deck& deck ) {
-        if( !deck.hasKeyword<ParserKeywords::FOAMFSC>( ) ) return {};
-        return FoamConfig( deck.getKeyword<ParserKeywords::FOAMFSC>(  ) );
-    }
-
     InitConfig::InitConfig(const Deck& deck)
         : equil(equils(deck))
-        , foamconfig(foamconfigs(deck))
+        , foamconfig(deck)
         , m_filleps(PROPSSection{deck}.hasKeyword("FILLEPS"))
     {
         if( !deck.hasKeyword( "RESTART" ) ) {
