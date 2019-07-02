@@ -34,6 +34,7 @@ static void printHelp() {
               << "In addition, the program takes these options (which must be given before the arguments):\n\n"
               << "-a Run a full analysis of errors.\n"
               << "-h Print help and exit.\n"
+              << "-d Use report steps only when comparing results from summary files.\n"
               << "-i Execute integration test (regression test is default).\n"
               << "   The integration test compares SGAS, SWAT and PRESSURE in unified restart files, and WOPR, WGPR, WWPR and WBHP (all wells) in summary file. \n"
               << "-k Specify specific keyword to compare (capitalized), for examples -k PRESSURE or -k WOPR:A-1H \n"
@@ -66,6 +67,7 @@ static void printHelp() {
 int main(int argc, char** argv) {
     bool integrationTest           = false;
     bool onlyLastSequence          = false;
+    bool reportStepOnly            = false;
     bool printKeywords             = false;
     bool specificKeyword           = false;
     bool specificReportStepNumber  = false;
@@ -79,7 +81,7 @@ int main(int argc, char** argv) {
     int reportStepNumber           = -1;
     std::string fileTypeString;
 
-    while ((c = getopt(argc, argv, "hik:alnpt:Rr:x")) != -1) {
+    while ((c = getopt(argc, argv, "hik:alnpt:Rr:x:d")) != -1) {
         switch (c) {
         case 'a':
             analysis = true;
@@ -87,6 +89,9 @@ int main(int argc, char** argv) {
         case 'h':
             printHelp();
             return 0;
+        case 'd':
+            reportStepOnly = true;
+            break;
         case 'i':
             integrationTest = true;
             break;
@@ -168,7 +173,11 @@ int main(int argc, char** argv) {
         if (onlyLastSequence) {
             comparator.setOnlyLastReportNumber(true);
         }
-
+        
+        if (reportStepOnly) {
+            comparator.setReportStepOnly(true);
+        }
+        
         if (specificKeyword) {
             comparator.compareSpesificKeyword(keyword);
         }

@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <unistd.h>
 #include <limits>
+#include <limits.h>
 #include <set>
 
 #include <opm/io/eclipse/EclFile.hpp>
@@ -57,8 +58,11 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
     std::string rootN;
     bool formatted=false;
     
-    char buff[1000];
-    getcwd( buff, 1000 );
+    char buff[PATH_MAX];
+    
+    if (getcwd( buff, PATH_MAX )==NULL){
+        throw std::invalid_argument("failed when trying to get current working directory");
+    }
 
     std::string currentWorkingDir(buff);
 
@@ -422,6 +426,20 @@ const std::vector<float>& ESmry::get(const std::string& name) const
     int ind = std::distance(keyword.begin(), it);
 
     return param[ind];
+}
+
+std::vector<float> ESmry::get_at_rstep(const std::string& name) const
+{
+    std::vector<float> full_vector= this->get(name);
+
+    std::vector<float> rstep_vector;
+    rstep_vector.reserve(seqIndex.size());
+    
+    for (auto ind : seqIndex){
+        rstep_vector.push_back(full_vector[ind]);
+    }
+    
+    return rstep_vector;
 }
 
 }} // namespace Opm::ecl

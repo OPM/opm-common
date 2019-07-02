@@ -34,6 +34,9 @@ public:
     bool hasKey(const std::string& key) const;
 
     const std::vector<float>& get(const std::string& name) const;
+
+    std::vector<float> get_at_rstep(const std::string& name) const;
+
     const std::vector<std::string>& keywordList() const { return keyword; }
 
 private:

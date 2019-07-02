@@ -317,6 +317,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SUMMARY_EFF_FAC.DATA
           tests/SPE1CASE1.DATA
           tests/SPE1CASE1.SMSPEC
+          tests/SPE1CASE1A.SMSPEC
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
       )
@@ -335,6 +336,7 @@ if(ENABLE_ECL_INPUT)
     tests/SPE1_TESTCASE.F0025
     tests/SPE1_TESTCASE.X0025
     tests/SPE1CASE1.UNSMRY
+    tests/SPE1CASE1A.UNSMRY
     tests/SPE1CASE1_RST60.SMSPEC
     tests/SPE1CASE1_RST60.UNSMRY
   )

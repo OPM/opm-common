@@ -824,7 +824,11 @@ void ECLRegressionTest::results_smry()
         std::string reference = "Summary file";
 
         std::cout << "\nComparing summary files " << std::endl;
-
+        
+        if (reportStepOnly){
+            std::cout << " -- Values at report steps will be compared. Time steps in between reports are ignored " << std::endl;
+        }
+        
         std::vector<std::string> keywords1 = smry1.keywordList();
         std::vector<std::string> keywords2 = smry2.keywordList();
 
@@ -870,9 +874,18 @@ void ECLRegressionTest::results_smry()
             std::cout << "\nChecking " << keywords1.size() << "  vectors  ... ";
 
             for (size_t i = 0; i < keywords1.size(); i++) {
-                std::vector<float> vect1 = smry1.get( keywords1[i]);
-                std::vector<float> vect2 = smry2.get( keywords1[i]);
 
+                std::vector<float> vect1;
+                std::vector<float> vect2;
+                
+                if (reportStepOnly){
+                    vect1 = smry1.get_at_rstep( keywords1[i]);
+                    vect2 = smry2.get_at_rstep( keywords1[i]);
+                } else {
+                    vect1 = smry1.get( keywords1[i]);
+                    vect2 = smry2.get( keywords1[i]);
+                }
+                
                 if (vect1.size() != vect2.size()) {
                     OPM_THROW(std::runtime_error, "\nKeyword " << keywords1[i] << " summary vector of different length");
                 }
