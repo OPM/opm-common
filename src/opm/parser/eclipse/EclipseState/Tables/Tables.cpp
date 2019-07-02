@@ -45,6 +45,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyshlogTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlyviscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FoammobTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PmiscTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/TlpmixpaTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PvdgTable.hpp>
@@ -470,12 +471,26 @@ FoamadsTable::FoamadsTable( const DeckItem& item ) {
     SimpleTable::init(item);
 }
 
-
 const TableColumn& FoamadsTable::getFoamConcentrationColumn() const {
     return SimpleTable::getColumn(0);
 }
 
 const TableColumn& FoamadsTable::getAdsorbedFoamColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
+FoammobTable::FoammobTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema("FoamConcentration" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema("MobilityMultiplier" , Table::DECREASING , Table::DEFAULT_NONE ));
+
+    SimpleTable::init(item);
+}
+
+const TableColumn& FoammobTable::getFoamConcentrationColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& FoammobTable::getMobilityMultiplierColumn() const {
     return SimpleTable::getColumn(1);
 }
 
