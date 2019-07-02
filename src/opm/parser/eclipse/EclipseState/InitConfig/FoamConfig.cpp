@@ -33,14 +33,15 @@ FoamData::FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_
     : reference_surfactant_concentration_(FOAMFSC_record.getItem(0).getSIDouble(0))
     , exponent_(FOAMFSC_record.getItem(1).getSIDouble(0))
     , minimum_surfactant_concentration_(FOAMFSC_record.getItem(2).getSIDouble(0))
-    , allow_desorption_(static_cast<FoamAllowDesorption>(FOAMROCK_record.getItem(0).get<int>(0)))
+    , allow_desorption_(true) // will be overwritten below
     , rock_density_(FOAMROCK_record.getItem(1).getSIDouble(0))
 {
-    // Check validity of adsorption index.
+    // Check validity of adsorption index and set allow_desorption_ member.
     const int ads_ind = FOAMROCK_record.getItem(0).get<int>(0);
     if (ads_ind < 1 || ads_ind > 2) {
         throw std::runtime_error("Illegal adsorption index in FOAMROCK, must be 1 or 2.");
     }
+    allow_desorption_ = (ads_ind == 1);
 }
 
 double
@@ -61,7 +62,7 @@ FoamData::minimumSurfactantConcentration() const
     return this->minimum_surfactant_concentration_;
 }
 
-FoamData::FoamAllowDesorption
+bool
 FoamData::allowDesorption() const
 {
     return this->allow_desorption_;
@@ -87,9 +88,8 @@ FoamConfig::FoamConfig(const Deck& deck)
             throw std::runtime_error("FOAMFSC and FOAMROCK keywords have different number of records.");
         }
         const int num_records = kw_foamfsc.size();
-        this->data_.reserve(num_records);
-        for (int record = 0; record < num_records; ++record) {
-            this->data_.emplace_back(kw_foamfsc.getRecord(record), kw_foamrock.getRecord(record));
+        for (int record_index = 0; record_index < num_records; ++record_index) {
+            this->data_.emplace_back(kw_foamfsc.getRecord(record_index), kw_foamrock.getRecord(record_index));
         }
     }
 }

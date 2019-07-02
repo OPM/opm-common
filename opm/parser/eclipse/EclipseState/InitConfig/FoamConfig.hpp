@@ -39,15 +39,14 @@ public:
     double exponent() const;
     double minimumSurfactantConcentration() const;
 
-    enum class FoamAllowDesorption { Yes = 1, No = 2 };
-    FoamAllowDesorption allowDesorption() const;
+    bool allowDesorption() const;
     double rockDensity() const;
 
 private:
     double reference_surfactant_concentration_;
     double exponent_;
     double minimum_surfactant_concentration_;
-    FoamAllowDesorption allow_desorption_;
+    bool allow_desorption_;
     double rock_density_;
 };
 
