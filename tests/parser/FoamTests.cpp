@@ -80,6 +80,11 @@ FOAMFSC
 4 5 /
 6 /
 
+FOAMROCK
+1 2000 /
+2 1800 /
+2 2400 /
+
 REGIONS
 SWAT
 1000*1 /
@@ -99,11 +104,19 @@ BOOST_AUTO_TEST_CASE(FoamConfigTest) {
     BOOST_CHECK_EQUAL(fc.getRecord(0).referenceSurfactantConcentration(), 1.0);
     BOOST_CHECK_EQUAL(fc.getRecord(0).exponent(), 2.0);
     BOOST_CHECK_EQUAL(fc.getRecord(0).minimumSurfactantConcentration(), 0.3);
+    BOOST_CHECK(fc.getRecord(0).allowDesorption() == FoamData::FoamAllowDesorption::Yes);
+    BOOST_CHECK_EQUAL(fc.getRecord(0).rockDensity(), 2000.0);
+
     BOOST_CHECK_EQUAL(fc.getRecord(1).referenceSurfactantConcentration(), 4.0);
     BOOST_CHECK_EQUAL(fc.getRecord(1).exponent(), 5.0);
     BOOST_CHECK_EQUAL(fc.getRecord(1).minimumSurfactantConcentration(), 1e-20); // Defaulted.
+    BOOST_CHECK(fc.getRecord(1).allowDesorption() == FoamData::FoamAllowDesorption::No);
+    BOOST_CHECK_EQUAL(fc.getRecord(1).rockDensity(), 1800.0);
+
     BOOST_CHECK_EQUAL(fc.getRecord(2).referenceSurfactantConcentration(), 6.0);
     BOOST_CHECK_EQUAL(fc.getRecord(2).exponent(), 1.0); // Defaulted.
     BOOST_CHECK_EQUAL(fc.getRecord(2).minimumSurfactantConcentration(), 1e-20); // Defaulted.
+    BOOST_CHECK(fc.getRecord(2).allowDesorption() == FoamData::FoamAllowDesorption::No);
+    BOOST_CHECK_EQUAL(fc.getRecord(2).rockDensity(), 2400.0);
 }
 

@@ -23,44 +23,54 @@
 #include <cstddef>
 #include <vector>
 
-namespace Opm {
+namespace Opm
+{
 
-    class Deck;
-    class DeckRecord;
+class Deck;
+class DeckRecord;
 
-    class FoamRecord {
-        public:
-            explicit FoamRecord( const DeckRecord& );
+/// Foam behaviour data for a single SATNUM region.
+class FoamData
+{
+public:
+    explicit FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_record);
 
-            double referenceSurfactantConcentration() const;
-            double exponent() const;
-            double minimumSurfactantConcentration() const;
+    double referenceSurfactantConcentration() const;
+    double exponent() const;
+    double minimumSurfactantConcentration() const;
 
-        private:
-            double reference_surfactant_concentration_;
-            double exponent_;
-            double minimum_surfactant_concentration_;
-    };
+    enum class FoamAllowDesorption { Yes = 1, No = 2 };
+    FoamAllowDesorption allowDesorption() const;
+    double rockDensity() const;
 
-    class FoamConfig {
-        public:
-            using const_iterator = std::vector< FoamRecord >::const_iterator;
+private:
+    double reference_surfactant_concentration_;
+    double exponent_;
+    double minimum_surfactant_concentration_;
+    FoamAllowDesorption allow_desorption_;
+    double rock_density_;
+};
 
-            FoamConfig() = default;
-            explicit FoamConfig( const Deck& );
+/// Foam behaviour data for all SATNUM regions.
+class FoamConfig
+{
+public:
+    FoamConfig() = default;
+    explicit FoamConfig(const Deck&);
 
-            const FoamRecord& getRecord( std::size_t index ) const;
+    const FoamData& getRecord(std::size_t index) const;
 
-            std::size_t size() const;
-            bool empty() const;
+    std::size_t size() const;
+    bool empty() const;
 
-            const_iterator begin() const;
-            const_iterator end() const;
+    using const_iterator = std::vector<FoamData>::const_iterator;
+    const_iterator begin() const;
+    const_iterator end() const;
 
-        private:
-            std::vector< FoamRecord > records;
-    };
+private:
+    std::vector<FoamData> data_;
+};
 
-}
+} // end namespace Opm
 
 #endif // OPM_FOAMCONFIG_HPP
