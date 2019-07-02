@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 
 namespace Opm {
 
@@ -81,7 +82,9 @@ public:
       update method will update the internal state of the object by counting up
       the openiing attempts, and also set the time for the last attempt to open.
     */
-    std::vector<std::pair<std::string, WellTestConfig::Reason>> updateWell(const WellTestConfig& config, double sim_time);
+    std::vector<std::pair<std::string, WellTestConfig::Reason>> updateWells(const WellTestConfig& config,
+                                                                            const std::vector<Well2>& wells_ecl,
+                                                                            double sim_time);
 
     /*
       The update will consult the WellTestConfig object and return a list of
@@ -100,7 +103,16 @@ public:
 
     bool hasWellClosed(const std::string& well_name, WellTestConfig::Reason reason) const;
 
+    /* whether there is a well with the well_name closed in the WellTestState,
+     * no matter what is the closing cause */
+    bool hasWellClosed(const std::string& well_name) const;
+
     void openWell(const std::string& well_name, WellTestConfig::Reason reason);
+
+    /* open the well no matter what is the closing cause.
+     * it is used when WELOPEN or WCON* keyword request to open the well */
+    void openWell(const std::string& well_name);
+
 
     bool hasCompletion(const std::string& well_name, const int complnum) const;
 

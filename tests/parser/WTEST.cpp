@@ -75,8 +75,20 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
     st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 100);
     BOOST_CHECK_EQUAL(st.sizeWells(), 1);
 
-    auto shut_wells = st.updateWell(wc, 5000);
-    BOOST_CHECK_EQUAL( shut_wells.size(), 1);
+    const UnitSystem us{};
+    std::vector<Well2> wells;
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., Phase::OIL, WellProducer::NONE, WellCompletion::TRACK, us, 0.);
+    {
+          wells[0].updateStatus(WellCommon::SHUT);
+          auto shut_wells = st.updateWells(wc, wells, 5000);
+          BOOST_CHECK_EQUAL(shut_wells.size(), 0);
+    }
+
+    {
+          wells[0].updateStatus(WellCommon::OPEN);
+          auto shut_wells = st.updateWells(wc, wells, 5000);
+          BOOST_CHECK_EQUAL( shut_wells.size(), 1);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(WTEST_STATE) {
@@ -97,41 +109,59 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
     st.closeWell("WELLX", WellTestConfig::Reason::PHYSICAL, 100. * day);
     BOOST_CHECK_EQUAL(st.sizeWells(), 3);
 
+    const UnitSystem us{};
+    std::vector<Well2> wells;
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., Phase::OIL, WellProducer::NONE, WellCompletion::TRACK, us, 0.);
+    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200., Phase::OIL, WellProducer::NONE, WellCompletion::TRACK, us, 0.);
+
     WellTestConfig wc;
-    auto shut_wells = st.updateWell(wc, 110. * day);
-    BOOST_CHECK_EQUAL( shut_wells.size(), 0);
+    {
+        wells[0].updateStatus(WellCommon::SHUT);
+        auto shut_wells = st.updateWells(wc, wells, 110. * day);
+        BOOST_CHECK_EQUAL(shut_wells.size(), 0);
+    }
+    {
+        wells[0].updateStatus(WellCommon::OPEN);
+        auto shut_wells = st.updateWells(wc, wells, 110. * day);
+        BOOST_CHECK_EQUAL(shut_wells.size(), 0);
+    }
 
     wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000. * day, 2, 0, 1);
     // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 200. * day).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 200. * day).size(), 0);
 
     // We should test it:
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 1200. * day).size(), 1);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 1200. * day).size(), 1);
 
     // Not sufficient time has passed.
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 1700. * day).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 1700. * day).size(), 0);
 
     st.openWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL);
 
     st.closeWell("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1900. * day);
 
     // We should not test it:
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 2400. * day).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 2400. * day).size(), 0);
 
     // We should test it now:
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 3000. * day).size(), 1);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 3000. * day).size(), 1);
 
     // Too many attempts:
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 4000. * day).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 4000. * day).size(), 0);
 
     wc.add_well("WELL_NAME", WellTestConfig::Reason::PHYSICAL, 1000. * day, 3, 0, 5);
 
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 4100. * day).size(), 1);
 
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 5200. * day).size(), 1);
+    wells[0].updateStatus(WellCommon::SHUT);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 4100. * day).size(), 0);
+
+    wells[0].updateStatus(WellCommon::OPEN);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 4100. * day).size(), 1);
+
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 5200. * day).size(), 1);
 
     wc.drop_well("WELL_NAME");
-    BOOST_CHECK_EQUAL( st.updateWell(wc, 6300. * day).size(), 0);
+    BOOST_CHECK_EQUAL( st.updateWells(wc, wells, 6300. * day).size(), 0);
 }
 
 
@@ -150,7 +180,14 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
     st.addClosedCompletion("WELLX", 3, 100);
     BOOST_CHECK_EQUAL(st.sizeCompletions(), 3);
 
-    auto closed_completions = st.updateWell(wc, 5000);
+    const UnitSystem us{};
+    std::vector<Well2> wells;
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., Phase::OIL, WellProducer::NONE, WellCompletion::TRACK, us, 0.);
+    wells[0].updateStatus(WellCommon::OPEN);
+    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200., Phase::OIL, WellProducer::NONE, WellCompletion::TRACK, us, 0.);
+    wells[1].updateStatus(WellCommon::OPEN);
+
+    auto closed_completions = st.updateWells(wc, wells, 5000);
     BOOST_CHECK_EQUAL( closed_completions.size(), 0);
 
     wc.add_well("WELL_NAME", WellTestConfig::Reason::COMPLETION, 1000, 2, 0, 0);
