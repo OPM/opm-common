@@ -32,6 +32,7 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 #include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
@@ -433,4 +434,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(0), 0);
         BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(0), 9);
         BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(0), 9999);
+}
+
+
+BOOST_AUTO_TEST_CASE(Group2Create) {
+    Opm::Group2 group("NAME");
 }
