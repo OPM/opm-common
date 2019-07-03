@@ -55,6 +55,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
@@ -237,6 +238,9 @@ namespace Opm {
 
         else if (keyword.name() == "WCONINJE")
             handleWCONINJE(keyword, currentStep, parseContext, errors);
+
+        else if (keyword.name() == "WFOAM")
+            handleWFOAM(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WPOLYMER")
             handleWPOLYMER(keyword, currentStep, parseContext, errors);
@@ -937,6 +941,25 @@ namespace Opm {
                         updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
                     }
                 }
+            }
+        }
+    }
+
+    void Schedule::handleWFOAM( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, currentStep );
+
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
+                auto foam_properties = std::make_shared<WellFoamProperties>(well2->getFoamProperties());
+                foam_properties->handleWFOAM(record);
+                if (well2->updateFoamProperties(foam_properties))
+                    this->updateWell(well2, currentStep);
             }
         }
     }

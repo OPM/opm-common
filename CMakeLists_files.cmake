@@ -108,6 +108,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WList.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.cpp
@@ -528,6 +529,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well/WList.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp

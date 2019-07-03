@@ -104,6 +104,7 @@ Well2::Well2(const std::string& wname_arg,
     efficiency_factor(1.0),
     solvent_fraction(0.0),
     econ_limits(std::make_shared<WellEconProductionLimits>()),
+    foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
@@ -127,6 +128,17 @@ bool Well2::updateEfficiencyFactor(double efficiency_factor_arg) {
 bool Well2::updateWellGuideRate(double guide_rate_arg) {
     if (this->guide_rate.guide_rate != guide_rate_arg) {
         this->guide_rate.guide_rate = guide_rate_arg;
+        return true;
+    }
+
+    return false;
+}
+
+
+bool Well2::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties_arg) {
+    if (*this->foam_properties != *foam_properties_arg) {
+        this->foam_properties = foam_properties_arg;
+        this->producer = false;
         return true;
     }
 
@@ -450,6 +462,10 @@ const std::string& Well2::name() const {
 
 const WellConnections& Well2::getConnections() const {
     return *this->connections;
+}
+
+const WellFoamProperties& Well2::getFoamProperties() const {
+    return *this->foam_properties;
 }
 
 const WellPolymerProperties& Well2::getPolymerProperties() const {
