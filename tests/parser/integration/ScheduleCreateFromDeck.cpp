@@ -680,6 +680,73 @@ BOOST_AUTO_TEST_CASE(WellTestWPOLYMER) {
 }
 
 
+BOOST_AUTO_TEST_CASE(WellTestWFOAM) {
+    Parser parser;
+    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_FOAM");
+    auto deck =  parser.parseFile(scheduleFile);
+    EclipseGrid grid(30,30,30);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck);
+    Schedule sched(deck,  grid , eclipseProperties, runspec);
+
+
+    BOOST_CHECK_EQUAL(4U, sched.numWells());
+    BOOST_CHECK(sched.hasWell("INJE01"));
+    BOOST_CHECK(sched.hasWell("PROD01"));
+
+    {
+        const auto& well1 = sched.getWell2("INJE01", 0);
+        BOOST_CHECK( well1.isInjector());
+        const WellFoamProperties& props_well10 = well1.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.11, props_well10.m_foamConcentration);
+    }
+    {
+        const auto& well1 = sched.getWell2("INJE01", 1);
+        const WellFoamProperties& props_well11 = well1.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.12, props_well11.m_foamConcentration);
+    }
+    {
+        const auto& well1 = sched.getWell2("INJE01", 2);
+        const WellFoamProperties& props_well12 = well1.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.13, props_well12.m_foamConcentration);
+    }
+
+    {
+        const auto& well2 = sched.getWell2("INJE02", 0);
+        BOOST_CHECK( well2.isInjector());
+        const WellFoamProperties& props_well20 = well2.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.0, props_well20.m_foamConcentration);
+    }
+    {
+        const auto& well2 = sched.getWell2("INJE02", 1);
+        const WellFoamProperties& props_well21 = well2.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.22, props_well21.m_foamConcentration);
+    }
+    {
+        const auto& well2 = sched.getWell2("INJE02", 2);
+        const WellFoamProperties& props_well22 = well2.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.0, props_well22.m_foamConcentration);
+    }
+    {
+        const auto& well3 = sched.getWell2("INJE03", 0);
+        BOOST_CHECK( well3.isInjector());
+        const WellFoamProperties& props_well30 = well3.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.31, props_well30.m_foamConcentration);
+    }
+    {
+        const auto& well3 = sched.getWell2("INJE03", 1);
+        const WellFoamProperties& props_well31 = well3.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.0, props_well31.m_foamConcentration);
+    }
+    {
+        const auto& well3 = sched.getWell2("INJE03", 2);
+        const WellFoamProperties& props_well32 = well3.getFoamProperties();
+        BOOST_CHECK_EQUAL(0.33, props_well32.m_foamConcentration);
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(WellTestWECON) {
     Parser parser;
     std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_WECON");
