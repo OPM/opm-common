@@ -39,6 +39,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PlyadsTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PlymaxTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/FoamadsTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/FoammobTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PbvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
 
@@ -564,6 +565,64 @@ BOOST_AUTO_TEST_CASE(FoamadsTable_Tests) {
         const auto& foamadsKeyword = deck.getKeyword("FOAMADS");
 
         BOOST_CHECK_THROW(Opm::FoamadsTable(foamadsKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(FoammobTable_Tests) {
+    {
+        const char *correctDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "FOAMMOB\n"
+            "0.00    1.0 \n"
+            "0.01    0.5\n"
+            "0.02    0.1\n"
+            "0.03    0.1 /\n";
+        Opm::Parser parser;
+        auto deck = parser.parseString(correctDeckData);
+        const auto& foammobKeyword = deck.getKeyword("FOAMMOB");
+        Opm::FoammobTable foammobTable(foammobKeyword.getRecord(0).getItem(0));
+
+
+        BOOST_CHECK_CLOSE(foammobTable.getFoamConcentrationColumn().front(), 0.0, 1e-6);
+        BOOST_CHECK_CLOSE(foammobTable.getFoamConcentrationColumn().back(), 0.03, 1e-6);
+
+        BOOST_CHECK_CLOSE(foammobTable.getMobilityMultiplierColumn().front(), 1.0, 1e-6);
+        BOOST_CHECK_CLOSE(foammobTable.getMobilityMultiplierColumn().back(), 0.1, 1e-6);
+    }
+
+    {
+        // first column not strictly monotonic
+        const char *incorrectDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "FOAMMOB\n"
+            "0.00    1.0 \n"
+            "0.01    0.5\n"
+            "0.02    0.1\n"
+            "0.02    0.1 /\n";
+        Opm::Parser parser;
+        auto deck = parser.parseString(incorrectDeckData);
+        const auto& foammobKeyword = deck.getKeyword("FOAMMOB");
+
+        BOOST_CHECK_THROW(Opm::FoammobTable(foammobKeyword.getRecord(0).getItem(0)), std::invalid_argument);
+    }
+
+    {
+        // second column not monotonic
+        const char *incorrectDeckData =
+            "TABDIMS\n"
+            "/\n"
+            "FOAMMOB\n"
+            "0.00    1.0 \n"
+            "0.01    0.5\n"
+            "0.02    0.1\n"
+            "0.03    0.11 /\n";
+        Opm::Parser parser;
+        auto deck = parser.parseString(incorrectDeckData);
+        const auto& foammobKeyword = deck.getKeyword("FOAMMOB");
+
+        BOOST_CHECK_THROW(Opm::FoammobTable(foammobKeyword.getRecord(0).getItem(0)), std::invalid_argument);
     }
 }
 

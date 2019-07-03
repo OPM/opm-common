@@ -78,6 +78,18 @@ FoamData::rockDensity() const
 
 FoamConfig::FoamConfig(const Deck& deck)
 {
+    if (deck.hasKeyword<ParserKeywords::FOAMOPTS>()) {
+        // We only support the default (GAS transport phase, TAB mobility reduction model)
+        // setup for foam at this point, so we detect and deal with it here even though we
+        // do not store any data related to it.
+        const auto& kw_foamopts = deck.getKeyword<ParserKeywords::FOAMOPTS>();
+        if (kw_foamopts.getRecord(0).getItem(0).get<std::string>(0) != "GAS") {
+            throw std::runtime_error("In FOAMOPTS, only the GAS transport phase is supported.");
+        }
+        if (kw_foamopts.getRecord(0).getItem(1).get<std::string>(0) != "TAB") {
+            throw std::runtime_error("In FOAMOPTS, only the TAB gas mobility reduction model is supported.");
+        }
+    }
     if (deck.hasKeyword<ParserKeywords::FOAMFSC>()) {
         const auto& kw_foamfsc = deck.getKeyword<ParserKeywords::FOAMFSC>();
         if (!deck.hasKeyword<ParserKeywords::FOAMROCK>()) {

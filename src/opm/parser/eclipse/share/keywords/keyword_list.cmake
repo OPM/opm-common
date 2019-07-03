@@ -111,6 +111,8 @@ set( keywords
      000_Eclipse100/F/FOAM
      000_Eclipse100/F/FOAMADS
      000_Eclipse100/F/FOAMFSC
+     000_Eclipse100/F/FOAMMOB
+     000_Eclipse100/F/FOAMOPTS
      000_Eclipse100/F/FOAMROCK
      000_Eclipse100/F/FRICTION
      000_Eclipse100/F/FULLIMP
@@ -407,6 +409,7 @@ set( keywords
      000_Eclipse100/W/WELSPECL
      000_Eclipse100/W/WELSPECS
      000_Eclipse100/W/WELTARG
+     000_Eclipse100/W/WFOAM
      000_Eclipse100/W/WGASPROD
      000_Eclipse100/W/WGRUPCON
      000_Eclipse100/W/WHISTCTL
