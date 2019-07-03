@@ -28,6 +28,15 @@
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
+
+
+void initLogging() {
+    std::shared_ptr<Opm::StreamLog> cout_log = std::make_shared<Opm::StreamLog>(std::cout, Opm::Log::DefaultMessageTypes);
+    Opm::OpmLog::addBackend( "COUT" , cout_log);
+}
 
 inline void loadDeck( const char * deck_file) {
     Opm::ParseContext parseContext;
@@ -45,6 +54,7 @@ inline void loadDeck( const char * deck_file) {
 
 
 int main(int argc, char** argv) {
+    initLogging();
     for (int iarg = 1; iarg < argc; iarg++)
         loadDeck( argv[iarg] );
 }
