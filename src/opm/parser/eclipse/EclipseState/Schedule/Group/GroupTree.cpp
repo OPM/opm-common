@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <iostream>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.hpp>
 
 namespace Opm {
 

@@ -1,4 +1,4 @@
-#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <pybind11/stl.h>
 #include "sunbeam.hpp"
 
