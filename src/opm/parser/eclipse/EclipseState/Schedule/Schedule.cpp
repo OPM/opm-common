@@ -954,7 +954,7 @@ namespace Opm {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
-                auto& dynamic_state = this->wells_static.at(well_name);
+                const auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                 auto foam_properties = std::make_shared<WellFoamProperties>(well2->getFoamProperties());
                 foam_properties->handleWFOAM(record);
@@ -974,7 +974,7 @@ namespace Opm {
 
             for( const auto& well_name : well_names) {
                 {
-                    auto& dynamic_state = this->wells_static.at(well_name);
+                    const auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     auto polymer_properties = std::make_shared<WellPolymerProperties>( well2->getPolymerProperties() );
                     polymer_properties->handleWPOLYMER(record);

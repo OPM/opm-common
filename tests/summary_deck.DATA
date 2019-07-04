@@ -721,10 +721,6 @@ COMPDAT
     W_6   0 0  2  2 2*              1*        2*    0.7 /   -- Active index: 2
 /
 
-WPOLYMER
-'W_3' 1.5 1.0 /
-/
-
 WCONHIST
 -- history rates are set so that W_1 produces 1, W_2 produces 2 etc.
 -- index.offset.
@@ -738,6 +734,9 @@ WCONINJH
     W_3 WATER STOP 30.0 2.1 2.2 /
 /
 
+WPOLYMER
+'W_3' 1.5 1.0 /
+/
 WCONINJH
 -- Injection historical rates (water only, as we only support pure injectors)
     W_6 GAS STOP 30000.0  /

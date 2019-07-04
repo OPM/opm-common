@@ -136,9 +136,12 @@ bool Well2::updateWellGuideRate(double guide_rate_arg) {
 
 
 bool Well2::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties_arg) {
+    if (this->producer) {
+        throw std::runtime_error("Not allowed to set foam injection properties for well " + name()
+                                 + " since it is a production well");
+    }
     if (*this->foam_properties != *foam_properties_arg) {
         this->foam_properties = foam_properties_arg;
-        this->producer = false;
         return true;
     }
 
@@ -147,9 +150,12 @@ bool Well2::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_proper
 
 
 bool Well2::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties_arg) {
+    if (this->producer) {
+        throw std::runtime_error("Not allowed to set polymer injection properties for well " + name() +
+                                 " since it is a production well");
+    }
     if (*this->polymer_properties != *polymer_properties_arg) {
         this->polymer_properties = polymer_properties_arg;
-        this->producer = false;
         return true;
     }
 
