@@ -3002,6 +3002,9 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
         "WELSPECS\n"
         "'INJE01' 'I'    1  1 1 'WATER'     /\n"
         "/\n"
+        "WCONINJE\n"
+        "'INJE01' 'WATER' 'OPEN' 'RATE' 800.00  1* 1000 /\n"
+        "/\n"
         "TSTEP\n"
         " 1/\n"
         "WPOLYMER\n"
@@ -3047,6 +3050,56 @@ BOOST_AUTO_TEST_CASE(POLYINJ_TEST) {
     BOOST_CHECK_EQUAL(poly3.m_plymwinjtable, 3);
     BOOST_CHECK_EQUAL(poly3.m_skprwattable, 2);
     BOOST_CHECK_EQUAL(poly3.m_skprpolytable, 2);
+}
+
+// Test for WFOAM
+BOOST_AUTO_TEST_CASE(WFOAM_TEST) {
+    const char *deckData =
+        "START\n"
+        "   8 MAR 2018/\n"
+        "GRID\n"
+        "PERMX\n"
+        "  1000*0.25 /\n"
+        "COPY\n"
+        "  PERMX  PERMY /\n"
+        "  PERMX  PERMZ /\n"
+        "/\n"
+        "PROPS\n \n"
+        "SCHEDULE\n"
+        "WELSPECS\n"
+        "'INJE01' 'I'    1  1 1 'WATER'     /\n"
+        "/\n"
+        "WCONINJE\n"
+        "'INJE01' 'GAS' 'OPEN' 'RATE' 80000.00  1* 1000 /\n"
+        "/\n"
+        "TSTEP\n"
+        " 1/\n"
+        "WFOAM\n"
+        "    'INJE01' 0.2 /\n"
+        "/\n"
+        "TSTEP\n"
+        " 2*1/\n"
+        "WFOAM\n"
+        "    'INJE01' 0.3 /\n"
+        "/\n"
+        "TSTEP\n"
+        " 1 /\n";
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deckData);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Runspec runspec (deck);
+    Schedule schedule(deck, grid1 , eclipseProperties, runspec);
+
+    const auto& f0 = schedule.getWell2("INJE01", 0).getFoamProperties();
+    const auto& f1 = schedule.getWell2("INJE01", 1).getFoamProperties();
+    const auto& f3 = schedule.getWell2("INJE01", 3).getFoamProperties();
+
+    BOOST_CHECK_EQUAL(f0.m_foamConcentration, 0.0);
+    BOOST_CHECK_EQUAL(f1.m_foamConcentration, 0.2);
+    BOOST_CHECK_EQUAL(f3.m_foamConcentration, 0.3);
 }
 
 

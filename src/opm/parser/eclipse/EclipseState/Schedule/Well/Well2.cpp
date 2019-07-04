@@ -104,6 +104,7 @@ Well2::Well2(const std::string& wname_arg,
     efficiency_factor(1.0),
     solvent_fraction(0.0),
     econ_limits(std::make_shared<WellEconProductionLimits>()),
+    foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
@@ -134,10 +135,27 @@ bool Well2::updateWellGuideRate(double guide_rate_arg) {
 }
 
 
+bool Well2::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties_arg) {
+    if (this->producer) {
+        throw std::runtime_error("Not allowed to set foam injection properties for well " + name()
+                                 + " since it is a production well");
+    }
+    if (*this->foam_properties != *foam_properties_arg) {
+        this->foam_properties = foam_properties_arg;
+        return true;
+    }
+
+    return false;
+}
+
+
 bool Well2::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties_arg) {
+    if (this->producer) {
+        throw std::runtime_error("Not allowed to set polymer injection properties for well " + name() +
+                                 " since it is a production well");
+    }
     if (*this->polymer_properties != *polymer_properties_arg) {
         this->polymer_properties = polymer_properties_arg;
-        this->producer = false;
         return true;
     }
 
@@ -450,6 +468,10 @@ const std::string& Well2::name() const {
 
 const WellConnections& Well2::getConnections() const {
     return *this->connections;
+}
+
+const WellFoamProperties& Well2::getFoamProperties() const {
+    return *this->foam_properties;
 }
 
 const WellPolymerProperties& Well2::getPolymerProperties() const {

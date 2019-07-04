@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp>
@@ -93,6 +94,7 @@ public:
     const WellProductionProperties& getProductionProperties() const;
     const WellInjectionProperties& getInjectionProperties() const;
     const WellEconProductionLimits& getEconLimits() const;
+    const WellFoamProperties& getFoamProperties() const;
     const WellPolymerProperties& getPolymerProperties() const;
     const WellTracerProperties& getTracerProperties() const;
     const WellConnections& getConnections() const;
@@ -143,6 +145,7 @@ public:
     bool updateEfficiencyFactor(double efficiency_factor);
     bool updateSolventFraction(double solvent_fraction);
     bool updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties);
+    bool updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties);
     bool updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties);
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
@@ -187,6 +190,7 @@ private:
     bool prediction_mode = true;
 
     std::shared_ptr<const WellEconProductionLimits> econ_limits;
+    std::shared_ptr<const WellFoamProperties> foam_properties;
     std::shared_ptr<const WellPolymerProperties> polymer_properties;
     std::shared_ptr<const WellTracerProperties> tracer_properties;
     std::shared_ptr<WellConnections> connections; // The WellConnections object can not be const because of the filterConnections method - would be beneficial to rewrite to enable const
