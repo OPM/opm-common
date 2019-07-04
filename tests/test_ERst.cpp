@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
 
     ERst rst1(testFile);
     rst1.loadReportStepNumber(5);
-    
+
     std::vector<int> reportStepNumbers = rst1.listOfReportStepNumbers();
     BOOST_CHECK_EQUAL(reportStepNumbers==refReportStepNumbers, true);
 
@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     std::vector<std::tuple<std::string, eclArrType, int>> rstArrays; // = rst1.listOfRstArrays(4);
     BOOST_CHECK_THROW(rstArrays = rst1.listOfRstArrays(4), std::invalid_argument);
 
-    // non exising report step number, should throw exception 
-    
+    // non exising report step number, should throw exception
+
     BOOST_CHECK_THROW(std::vector<int> vect1=rst1.getRst<int>("ICON",0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<float> vect2=rst1.getRst<float>("PRESSURE",0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<double> vect3=rst1.getRst<double>("XGRP",0) , std::invalid_argument );
@@ -161,13 +161,13 @@ static void readAndWrite(EclOutput& eclTest, ERst& rst1,
 
 
 BOOST_AUTO_TEST_CASE(TestERst_2) {
-    
+
     std::string testFile="SPE1_TESTCASE.UNRST";
     std::string outFile="TEST.UNRST";
 
     // using API for ERst to read all array from a binary unified restart file1
-    // Then write the data back to a new file and check that new file is identical with input file 
-    
+    // Then write the data back to a new file and check that new file is identical with input file
+
     ERst rst1(testFile);
 
     {
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(TestERst_3) {
     std::string outFile="TEST.FUNRST";
 
     // using API for ERst to read all array from a formatted unified restart file1
-    // Then write the data back to a new file and check that new file is identical with input file 
+    // Then write the data back to a new file and check that new file is identical with input file
 
     ERst rst1(testFile);
 
@@ -254,10 +254,10 @@ BOOST_AUTO_TEST_CASE(TestERst_4) {
     std::vector<float> pres1 = rst1.getRst<float>("PRESSURE",25);
     std::vector<float> pres2 = rst2.getRst<float>("PRESSURE",25);
     std::vector<float> pres3 = rst3.getRst<float>("PRESSURE",25);
-    
+
     BOOST_CHECK_EQUAL(pres1==pres2, true);
     BOOST_CHECK_EQUAL(pres1==pres3, true);
-    
+
 }
 
 
