@@ -33,7 +33,8 @@ class DeckRecord;
 class FoamData
 {
 public:
-    explicit FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_record);
+    FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_record);
+    explicit FoamData(const DeckRecord& FOAMROCK_record);
 
     double referenceSurfactantConcentration() const;
     double exponent() const;
