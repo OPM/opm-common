@@ -150,7 +150,7 @@ function clone_module {
   git init .
   if [ "$1" == "libecl" ]
   then
-    git remote add origin https://github.com/Statoil/$1
+    git remote add origin https://github.com/equinor/$1
     git fetch origin master
     git checkout $2
     git checkout -b branch_to_build
