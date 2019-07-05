@@ -60,6 +60,21 @@ namespace Opm {
     }
 
 
+    void WellTestState::openWell(const std::string& well_name) {
+        for (auto& well : wells)
+            if (well.name == well_name)
+                well.closed = false;
+    }
+
+    bool WellTestState::hasWellClosed(const std::string& well_name) const {
+        for (const auto& well : wells)
+            if (well.name == well_name && well.closed)
+                return true;
+
+        return false;
+    }
+
+
     bool WellTestState::hasWellClosed(const std::string& well_name, WellTestConfig::Reason reason) const {
         const auto well_iter = std::find_if(wells.begin(),
                                             wells.end(),
@@ -85,12 +100,28 @@ namespace Opm {
         return this->wells.size();
     }
 
-    std::vector<std::pair<std::string, WellTestConfig::Reason>> WellTestState::updateWell(const WellTestConfig& config, double sim_time) {
+    std::vector<std::pair<std::string, WellTestConfig::Reason>>
+    WellTestState::updateWells(const WellTestConfig& config,
+                               const std::vector<Well2>& wells_ecl,
+                               double sim_time) {
         std::vector<std::pair<std::string, WellTestConfig::Reason>> output;
 
         updateForNewWTEST(config);
 
         for (auto& well : this->wells) {
+            auto well_ecl = std::find_if(wells_ecl.begin(), wells_ecl.end(),
+                    [&well](const Well2& w)
+                    {
+                        return w.name() == well.name;
+                    });
+
+            if (well_ecl == wells_ecl.end())
+                throw std::runtime_error("No well named " + well.name + " is found in wells_ecl.");
+
+            // if the well is SHUT, we do not consider to test it
+            if (well_ecl->getStatus() != WellCommon::OPEN)
+                continue;
+
             if (well.closed && config.has(well.name, well.reason)) {
                 const auto& well_config = config.get(well.name, well.reason);
                 double elapsed = sim_time - well.last_test;
@@ -167,7 +198,7 @@ namespace Opm {
                                                 return (well.name == well_name);
                                             });
         if (well_iter == wells.end())
-            throw std::runtime_error("No well named " + well_name + " found in WellTestState.");
+            throw std::runtime_error("No well named " + well_name + " is found in WellTestState.");
 
         return well_iter->last_test;
     }
