@@ -150,15 +150,20 @@ function clone_module {
   git init .
   if [ "$1" == "libecl" ]
   then
-    git remote add origin https://github.com/Statoil/$1
-    git fetch origin master
-    git checkout $2
-    git checkout -b branch_to_build
+    git remote add origin https://github.com/equinor/$1
+    if [[ "$2" == 7abee4f1* ]]
+    then
+       git fetch origin master
+       git checkout $2
+       git branch branch_to_build
+    else
+       git fetch --depth 1 origin $2:branch_to_build
+    fi
   else
     git remote add origin https://github.com/OPM/$1
     git fetch --depth 1 origin $2:branch_to_build
-    git checkout branch_to_build
   fi
+  git checkout branch_to_build
   git log HEAD -1 | cat
   test $? -eq 0 || exit 1
   popd
