@@ -101,7 +101,8 @@ namespace Opm {
     }
 
     bool InitConfig::hasFoamConfig() const {
-        return !this->foamconfig.empty();
+        // return !this->foamconfig.empty();
+        return true;
     }
 
     const FoamConfig& InitConfig::getFoamConfig() const {

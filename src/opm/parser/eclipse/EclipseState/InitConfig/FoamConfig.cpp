@@ -44,6 +44,21 @@ FoamData::FoamData(const DeckRecord& FOAMFSC_record, const DeckRecord& FOAMROCK_
     allow_desorption_ = (ads_ind == 1);
 }
 
+FoamData::FoamData(const DeckRecord& FOAMROCK_record)
+    : reference_surfactant_concentration_(0.0)
+    , exponent_(0.0)
+    , minimum_surfactant_concentration_(1e-20)
+    , allow_desorption_(true) // will be overwritten below
+    , rock_density_(FOAMROCK_record.getItem(1).getSIDouble(0))
+{
+    // Check validity of adsorption index and set allow_desorption_ member.
+    const int ads_ind = FOAMROCK_record.getItem(0).get<int>(0);
+    if (ads_ind < 1 || ads_ind > 2) {
+        throw std::runtime_error("Illegal adsorption index in FOAMROCK, must be 1 or 2.");
+    }
+    allow_desorption_ = (ads_ind == 1);
+}
+
 double
 FoamData::referenceSurfactantConcentration() const
 {
@@ -91,10 +106,11 @@ FoamConfig::FoamConfig(const Deck& deck)
         }
     }
     if (deck.hasKeyword<ParserKeywords::FOAMFSC>()) {
-        const auto& kw_foamfsc = deck.getKeyword<ParserKeywords::FOAMFSC>();
         if (!deck.hasKeyword<ParserKeywords::FOAMROCK>()) {
             throw std::runtime_error("FOAMFSC present but no FOAMROCK keyword found.");
         }
+        // We have both FOAMFSC and FOAMROCK.
+        const auto& kw_foamfsc = deck.getKeyword<ParserKeywords::FOAMFSC>();
         const auto& kw_foamrock = deck.getKeyword<ParserKeywords::FOAMROCK>();
         if (kw_foamfsc.size() != kw_foamrock.size()) {
             throw std::runtime_error("FOAMFSC and FOAMROCK keywords have different number of records.");
@@ -102,6 +118,12 @@ FoamConfig::FoamConfig(const Deck& deck)
         const int num_records = kw_foamfsc.size();
         for (int record_index = 0; record_index < num_records; ++record_index) {
             this->data_.emplace_back(kw_foamfsc.getRecord(record_index), kw_foamrock.getRecord(record_index));
+        }
+    } else if (deck.hasKeyword<ParserKeywords::FOAMROCK>()) {
+        // We have FOAMROCK, but not FOAMFSC.
+        const auto& kw_foamrock = deck.getKeyword<ParserKeywords::FOAMROCK>();
+        for (const auto& record : kw_foamrock) {
+            this->data_.emplace_back(record);
         }
     }
 }
