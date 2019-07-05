@@ -14,7 +14,6 @@ EXTRA_MODULE_FLAGS[libecl]="-DCMAKE_POSITION_INDEPENDENT_CODE=1"
 #             'CONFIGURATIONS', 'TOOLCHAINS'
 function parseRevisions {
   # Set default for libecl to be last known good commit.
-  upstreamRev[libecl]=7abee4f1a19dbba0c845e3dc23f7950021e12059
   for upstream in ${upstreams[*]}
   do
     if grep -qi "$upstream=" <<< $ghprbCommentBody
@@ -151,18 +150,10 @@ function clone_module {
   if [ "$1" == "libecl" ]
   then
     git remote add origin https://github.com/equinor/$1
-    if [[ "$2" == 7abee4f1* ]]
-    then
-       git fetch origin master
-       git checkout $2
-       git branch branch_to_build
-    else
-       git fetch --depth 1 origin $2:branch_to_build
-    fi
   else
     git remote add origin https://github.com/OPM/$1
-    git fetch --depth 1 origin $2:branch_to_build
   fi
+  git fetch --depth 1 origin $2:branch_to_build
   git checkout branch_to_build
   git log HEAD -1 | cat
   test $? -eq 0 || exit 1
