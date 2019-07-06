@@ -20,7 +20,7 @@
 
 
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
 #define INVALID_GROUP_RATE -999e100
 #define INVALID_EFFICIENCY_FACTOR 0.0
