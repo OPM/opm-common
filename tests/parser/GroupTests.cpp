@@ -288,6 +288,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     Runspec runspec (deck );
     Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
 
+    auto group_names = schedule.groupNames("PRODUC");
+    BOOST_CHECK_EQUAL(group_names.size(), 1);
+    BOOST_CHECK_EQUAL(group_names[0], "PRODUC");
+
     const auto& group1 = schedule.getGroup("PRODUC");
     BOOST_CHECK_EQUAL(group1.getGroupEfficiencyFactor(0), 0.85);
     BOOST_CHECK(group1.getTransferGroupEfficiencyFactor(0));

@@ -147,6 +147,7 @@ namespace Opm
         size_t numGroups(size_t timeStep) const;
         bool hasGroup(const std::string& groupName) const;
         const Group& getGroup(const std::string& groupName) const;
+        Group& getGroup(const std::string& groupName);
         std::vector< const Group* > getGroups() const;
         std::vector< const Group* > getGroups(size_t timeStep) const;
         const Tuning& getTuning() const;

@@ -82,6 +82,11 @@ namespace {
         return sch.hasWell( wellName );
     }
 
+    const Group& get_group(const Schedule& sch, const std::string group_name) {
+        return sch.getGroup(group_name);
+    }
+
+
 }
 
 void sunbeam::export_Schedule(py::module& module) {
@@ -94,7 +99,7 @@ void sunbeam::export_Schedule(py::module& module) {
     .def( "_get_wells", &Schedule::getWells2)
     .def("_getwell", &get_well)
     .def( "__contains__", &has_well )
-    .def( "_group", &Schedule::getGroup, ref_internal)
+    .def( "_group", &get_group, ref_internal)
     .def( "_group_tree", &get_grouptree, ref_internal);
 
 }
