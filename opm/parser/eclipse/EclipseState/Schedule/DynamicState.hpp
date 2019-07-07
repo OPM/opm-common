@@ -203,6 +203,10 @@ class DynamicState {
     }
 
 
+    std::size_t size() const {
+        return this->m_data.size();
+    }
+
     private:
         std::vector< T > m_data;
         size_t initial_range;
