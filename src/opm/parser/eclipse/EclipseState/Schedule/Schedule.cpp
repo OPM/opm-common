@@ -2190,53 +2190,6 @@ namespace {
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
 
-    std::vector< const Group* > Schedule::getGroups() const {
-        std::vector< const Group* > groups;
-
-        for( const auto& group : m_groups )
-            groups.push_back( std::addressof(group.second) );
-
-        return groups;
-    }
-
-    std::vector< Group* > Schedule::getGroups(const std::string& groupNamePattern) {
-        size_t wildcard_pos = groupNamePattern.find("*");
-
-        if( wildcard_pos != groupNamePattern.length()-1 ) {
-            if( m_groups.count( groupNamePattern ) == 0) return {};
-            return { std::addressof( m_groups.get( groupNamePattern ) ) };
-        }
-
-        std::vector< Group* > groups;
-        for( auto& group_pair : this->m_groups ) {
-            auto& group = group_pair.second;
-            if( Group::groupNameInGroupNamePattern( group.name(), groupNamePattern ) ) {
-                groups.push_back( std::addressof( group ) );
-            }
-        }
-
-        return groups;
-    }
-
-    std::vector< const Group* > Schedule::getGroups(size_t timeStep) const {
-
-        if (timeStep >= m_timeMap.size()) {
-            throw std::invalid_argument("Timestep to large");
-        }
-
-        auto defined = [=]( const Group& g ) {
-            return g.hasBeenDefined( timeStep );
-        };
-
-        std::vector< const Group* > groups;
-
-        for( const auto& group_pair : m_groups ) {
-            const auto& group = group_pair.second;
-            if( !defined( group) ) continue;
-            groups.push_back( &group );
-        }
-        return groups;
-    }
 
     void Schedule::addWellToGroup( Group& newGroup, const std::string& wellName , size_t timeStep) {
         auto& dynamic_state = this->wells_static.at(wellName);

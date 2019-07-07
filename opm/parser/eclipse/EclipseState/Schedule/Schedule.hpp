@@ -148,8 +148,6 @@ namespace Opm
         bool hasGroup(const std::string& groupName) const;
         const Group& getGroup(const std::string& groupName) const;
         Group& getGroup(const std::string& groupName);
-        std::vector< const Group* > getGroups() const;
-        std::vector< const Group* > getGroups(size_t timeStep) const;
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;

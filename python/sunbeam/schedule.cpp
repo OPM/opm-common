@@ -73,8 +73,9 @@ namespace {
 
     std::vector<Group> get_groups( const Schedule& sch ) {
         std::vector< Group > groups;
-        for( const auto& g : sch.getGroups() )
-            groups.push_back( *g );
+        for( const auto& group_name : sch.groupNames())
+            groups.push_back( sch.getGroup(group_name) );
+
         return groups;
     }
 

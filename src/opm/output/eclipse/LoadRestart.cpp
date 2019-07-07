@@ -1181,9 +1181,8 @@ namespace {
                 intehead, std::move(rst_view)
             };
 
-            for (const auto* group : schedule.getGroups(sim_step)) {
-                const auto& gname = group->name();
-
+            for (const auto& gname : schedule.groupNames(sim_step)) {
+                const auto& group = schedule.getGroup(gname);
                 // Note: Order of group values in {I,X}GRP arrays mostly
                 // matches group's order of occurrence in .DATA file.
                 // Values pertaining to FIELD are stored at zero-based order
@@ -1196,7 +1195,7 @@ namespace {
                 // proofing and robustness in case that ever changes.
                 const auto groupOrderIx = (gname == "FIELD")
                     ? groupData.maxGroups() // NGMAXZ -- Item 3 of WELLDIMS
-                    : std::max(group->seqIndex(), std::size_t{1}) - 1;
+                    : std::max(group.seqIndex(), std::size_t{1}) - 1;
 
                 assign_group_cumulatives(gname, groupOrderIx, groupData, smry);
             }

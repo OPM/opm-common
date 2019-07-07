@@ -91,58 +91,58 @@ namespace {
 
     std::map <size_t, const Opm::Group*>  currentGroupMapIndexGroup(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
     {
-	const auto& groups = sched.getGroups(simStep);
-	// make group index for current report step
-	std::map <size_t, const Opm::Group*> indexGroupMap;
-	for (const auto* group : groups) {
-	    int ind = (group->name() == "FIELD")
-	    ? ngmaxz(inteHead)-1 : group->seqIndex()-1;
-	    const std::pair<size_t, const Opm::Group*> groupPair = std::make_pair(static_cast<size_t>(ind), group);
-	    indexGroupMap.insert(groupPair);
-	}
-	return indexGroupMap;
+        // make group index for current report step
+        std::map <size_t, const Opm::Group*> indexGroupMap;
+        for (const auto& group_name : sched.groupNames(simStep)) {
+            const auto& group = sched.getGroup(group_name);
+            int ind = (group.name() == "FIELD")
+                ? ngmaxz(inteHead)-1 : group.seqIndex()-1;
+
+            const std::pair<size_t, const Opm::Group*> groupPair = std::make_pair(static_cast<size_t>(ind), std::addressof(group));
+            indexGroupMap.insert(groupPair);
+        }
+        return indexGroupMap;
     }
 
     std::map <const std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
     {
-	const auto& groups = sched.getGroups(simStep);
-	// make group name to index map for the current time step
-	std::map <const std::string, size_t> groupIndexMap;
-	for (const auto* group : groups) {
-	    int ind = (group->name() == "FIELD")
-                    ? ngmaxz(inteHead)-1 : group->seqIndex()-1;
-	    std::pair<const std::string, size_t> groupPair = std::make_pair(group->name(), ind);
-	    groupIndexMap.insert(groupPair);
-	}
-	return groupIndexMap;
+        // make group name to index map for the current time step
+        std::map <const std::string, size_t> groupIndexMap;
+        for (const auto& group_name : sched.groupNames(simStep)) {
+            const auto& group = sched.getGroup(group_name);
+            int ind = (group.name() == "FIELD")
+                ? ngmaxz(inteHead)-1 : group.seqIndex()-1;
+            std::pair<const std::string, size_t> groupPair = std::make_pair(group.name(), ind);
+            groupIndexMap.insert(groupPair);
+        }
+        return groupIndexMap;
     }
 
     int currentGroupLevel(const Opm::Schedule& sched, const Opm::Group& group, const size_t simStep)
     {
-	int level = 0;
-	const std::vector< const Opm::Group* >  groups = sched.getGroups(simStep);
-      	const std::string& groupName = group.name();
-	if (!sched.hasGroup(groupName))
+        int level = 0;
+        const std::string& groupName = group.name();
+        if (!sched.hasGroup(groupName))
             throw std::invalid_argument("No such group: " + groupName);
         {
             if (group.hasBeenDefined( simStep )) {
                 const auto& groupTree = sched.getGroupTree( simStep );
-		//find group level - field level is 0
-		std::string tstGrpName = groupName;
-		while (((tstGrpName.size())>0) && (!(tstGrpName=="FIELD"))) {
-		    std::string curParent = groupTree.parent(tstGrpName);
-		    level+=1;
-		    tstGrpName = curParent;
-		}
-		return level;
-	    }
-	    else {
-		std::stringstream str;
-		str << "actual group has not been defined at report time: " << simStep;
-		throw std::invalid_argument(str.str());
-	    }
-	}
-	return level;
+                //find group level - field level is 0
+                std::string tstGrpName = groupName;
+                while (((tstGrpName.size())>0) && (!(tstGrpName=="FIELD"))) {
+                    std::string curParent = groupTree.parent(tstGrpName);
+                    level+=1;
+                    tstGrpName = curParent;
+                }
+                return level;
+            }
+            else {
+                std::stringstream str;
+                str << "actual group has not been defined at report time: " << simStep;
+                throw std::invalid_argument(str.str());
+            }
+        }
+        return level;
     }
 
 
