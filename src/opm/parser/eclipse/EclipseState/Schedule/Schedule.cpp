@@ -68,6 +68,15 @@
 namespace Opm {
 
 
+namespace {
+
+    bool name_match(const std::string& pattern, const std::string& name) {
+        int flags = 0;
+        return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
+    }
+
+}
+
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
                         const Eclipse3DProperties& eclipseProperties,
@@ -2028,10 +2037,9 @@ namespace Opm {
         // Normal pattern matching
         auto star_pos = pattern.find('*');
         if (star_pos != std::string::npos) {
-            int flags = 0;
             std::vector<std::string> names;
             for (const auto& well_pair : this->wells_static) {
-                if (fnmatch(pattern.c_str(), well_pair.first.c_str(), flags) == 0) {
+                if (name_match(pattern, well_pair.first)) {
                     const auto& dynamic_state = well_pair.second;
                     if (dynamic_state.get(timeStep))
                         names.push_back(well_pair.first);
@@ -2073,6 +2081,74 @@ namespace Opm {
         std::vector<std::string> names;
         for (const auto& well_pair : this->wells_static)
             names.push_back(well_pair.first);
+
+        return names;
+    }
+
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern, size_t timeStep) const {
+        if (pattern.size() == 0)
+            return {};
+
+        // Normal pattern matching
+        auto star_pos = pattern.find('*');
+        if (star_pos != std::string::npos) {
+            std::vector<std::string> names;
+            for (const auto& group_pair : this->m_groups) {
+                if (name_match(pattern, group_pair.first)) {
+                    const auto& group = group_pair.second;
+                    if (group.hasBeenDefined(timeStep))
+                        names.push_back(group_pair.first);
+                }
+            }
+            return names;
+        }
+
+        // Normal group name without any special characters
+        if (this->hasGroup(pattern)) {
+            const auto& group = this->m_groups.at(pattern);
+            if (group.hasBeenDefined(timeStep))
+                return { pattern };
+        }
+        return {};
+    }
+
+    std::vector<std::string> Schedule::groupNames(size_t timeStep) const {
+        std::vector<std::string> names;
+        for (const auto& group_pair : this->m_groups) {
+            const auto& group = group_pair.second;
+            if (group.hasBeenDefined(timeStep))
+                names.push_back( group.name() );
+        }
+        return names;
+    }
+
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern) const {
+        if (pattern.size() == 0)
+            return {};
+
+        // Normal pattern matching
+        auto star_pos = pattern.find('*');
+        if (star_pos != std::string::npos) {
+            int flags = 0;
+            std::vector<std::string> names;
+            for (const auto& group_pair : this->m_groups) {
+                if (fnmatch(pattern.c_str(), group_pair.first.c_str(), flags) == 0)
+                    names.push_back(group_pair.first);
+            }
+            return names;
+        }
+
+        // Normal group name without any special characters
+        if (this->hasGroup(pattern))
+            return { pattern };
+
+        return {};
+    }
+
+    std::vector<std::string> Schedule::groupNames() const {
+        std::vector<std::string> names;
+        for (const auto& group_pair : this->m_groups)
+            names.push_back(group_pair.first);
 
         return names;
     }

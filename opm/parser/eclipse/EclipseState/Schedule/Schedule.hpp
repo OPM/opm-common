@@ -121,6 +121,11 @@ namespace Opm
         std::vector<std::string> wellNames(size_t timeStep) const;
         std::vector<std::string> wellNames() const;
 
+        std::vector<std::string> groupNames(const std::string& pattern, size_t timeStep) const;
+        std::vector<std::string> groupNames(size_t timeStep) const;
+        std::vector<std::string> groupNames(const std::string& pattern) const;
+        std::vector<std::string> groupNames() const;
+
         void updateWell(std::shared_ptr<Well2> well, size_t reportStep);
         const Well2& getWell2(const std::string& wellName, size_t timeStep) const;
         const Well2& getWell2atEnd(const std::string& well_name) const;
