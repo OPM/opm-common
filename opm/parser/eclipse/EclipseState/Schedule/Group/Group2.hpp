@@ -28,7 +28,7 @@ namespace Opm {
 
 class Group2 {
 public:
-    Group2(const std::string& group_name);
+    explicit Group2(const std::string& group_name);
 
 private:
     std::string name;
