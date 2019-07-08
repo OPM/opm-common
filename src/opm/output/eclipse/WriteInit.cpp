@@ -57,6 +57,175 @@ namespace {
 
     using Properties = std::vector<CellProperty>;
 
+    class ScalingVectors
+    {
+    public:
+        ScalingVectors& withHysteresis(const bool active);
+        ScalingVectors& collect(const ::Opm::Phases& ph);
+
+        const Properties& getVectors() const
+        {
+            return this->vectors_;
+        }
+
+    private:
+        Properties vectors_{};
+        bool       useHysteresis_{false};
+
+        void insertScaledWaterEndPoints();
+        void insertScaledGasEndPoints();
+        void insertScaledOilEndPoints(const ::Opm::Phases& ph);
+        void insertScaledRelpermValues(const ::Opm::Phases& ph);
+        void insertScaledCapillaryPressure(const ::Opm::Phases& ph);
+        void insertImbibitionPoints();
+    };
+
+    ScalingVectors& ScalingVectors::withHysteresis(const bool active)
+    {
+        this->useHysteresis_ = active;
+
+        return *this;
+    }
+
+    ScalingVectors& ScalingVectors::collect(const ::Opm::Phases& ph)
+    {
+        if (ph.active(::Opm::Phase::WATER)) {
+            this->insertScaledWaterEndPoints();
+        }
+
+        if (ph.active(::Opm::Phase::GAS)) {
+            this->insertScaledGasEndPoints();
+        }
+
+        if (ph.active(::Opm::Phase::OIL)) {
+            this->insertScaledOilEndPoints(ph);
+        }
+
+        this->insertScaledRelpermValues(ph);
+
+        if (ph.active(::Opm::Phase::OIL)) {
+            this->insertScaledCapillaryPressure(ph);
+        }
+
+        if (this->useHysteresis_) {
+            // Run uses hysteresis.  Output scaled imbibition curve too.
+            this->insertImbibitionPoints();
+        }
+
+        return *this;
+    }
+
+    void ScalingVectors::insertScaledWaterEndPoints()
+    {
+        this->vectors_.insert(this->vectors_.end(),
+        {
+            {"SWL" , ::Opm::UnitSystem::measure::identity },
+            {"SWCR", ::Opm::UnitSystem::measure::identity },
+            {"SWU" , ::Opm::UnitSystem::measure::identity },
+        });
+    }
+
+    void ScalingVectors::insertScaledGasEndPoints()
+    {
+        this->vectors_.insert(this->vectors_.end(),
+        {
+            {"SGL" , ::Opm::UnitSystem::measure::identity },
+            {"SGCR", ::Opm::UnitSystem::measure::identity },
+            {"SGU" , ::Opm::UnitSystem::measure::identity },
+        });
+    }
+
+    void ScalingVectors::insertScaledOilEndPoints(const ::Opm::Phases& ph)
+    {
+        if (ph.active(::Opm::Phase::WATER)) {
+            this->vectors_.push_back(CellProperty {
+                "SOWCR", ::Opm::UnitSystem::measure::identity
+            });
+        }
+
+        if (ph.active(::Opm::Phase::GAS)) {
+            this->vectors_.push_back(CellProperty {
+                "SOGCR", ::Opm::UnitSystem::measure::identity
+            });
+        }
+    }
+
+    void ScalingVectors::insertScaledRelpermValues(const ::Opm::Phases& ph)
+    {
+        if (ph.active(::Opm::Phase::WATER)) {
+            this->vectors_.insert(this->vectors_.end(),
+            {
+                {"KRW" , ::Opm::UnitSystem::measure::identity },
+                {"KRWR", ::Opm::UnitSystem::measure::identity },
+            });
+        }
+
+        if (ph.active(::Opm::Phase::GAS)) {
+            this->vectors_.insert(this->vectors_.end(),
+            {
+                {"KRG" , ::Opm::UnitSystem::measure::identity },
+                {"KRGR", ::Opm::UnitSystem::measure::identity },
+            });
+        }
+
+        if (ph.active(::Opm::Phase::OIL)) {
+            this->vectors_.push_back(CellProperty {
+                "KRO", ::Opm::UnitSystem::measure::identity
+            });
+
+            if (ph.active(::Opm::Phase::WATER)) {
+                this->vectors_.push_back(CellProperty {
+                    "KRORW", ::Opm::UnitSystem::measure::identity
+                });
+            }
+
+            if (ph.active(::Opm::Phase::GAS)) {
+                this->vectors_.push_back(CellProperty {
+                    "KRORG", ::Opm::UnitSystem::measure::identity
+                });
+            }
+        }
+    }
+
+    void ScalingVectors::insertScaledCapillaryPressure(const ::Opm::Phases& ph)
+    {
+        if (ph.active(::Opm::Phase::WATER)) {
+            this->vectors_.insert(this->vectors_.end(),
+            {
+                {"SWLPC", ::Opm::UnitSystem::measure::identity },
+                {"PCW"  , ::Opm::UnitSystem::measure::pressure },
+            });
+        }
+
+        if (ph.active(::Opm::Phase::GAS)) {
+            this->vectors_.insert(this->vectors_.end(),
+            {
+                {"SGLPC", ::Opm::UnitSystem::measure::identity },
+                {"PCG"  , ::Opm::UnitSystem::measure::pressure },
+            });
+        }
+    }
+
+    void ScalingVectors::insertImbibitionPoints()
+    {
+        const auto start = static_cast<std::string::size_type>(0);
+        const auto count = static_cast<std::string::size_type>(1);
+        const auto npt   = this->vectors_.size();
+
+        this->vectors_.reserve(2 * npt);
+
+        for (auto i = 0*npt; i < npt; ++i) {
+            auto pt = this->vectors_[i]; // Copy, preserve unit of measure.
+
+            // Imbibition vector.  E.g., SOWCR -> ISOWCR
+            pt.name.insert(start, count, 'I');
+
+            this->vectors_.push_back(std::move(pt));
+        }
+    }
+
+    // =================================================================
+
     std::vector<float> singlePrecision(const std::vector<double>& x)
     {
         return { x.begin(), x.end() };
@@ -275,80 +444,16 @@ namespace {
                              const ::Opm::UnitSystem&          units,
                              ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        auto scalingVectors = Properties {
-            // Primary drainage curve
-
-            // Water saturation end-points
-            {"SWL"  , ::Opm::UnitSystem::measure::identity },
-            {"SWCR" , ::Opm::UnitSystem::measure::identity },
-            {"SWU"  , ::Opm::UnitSystem::measure::identity },
-
-            // Gas saturation end-points
-            {"SGL"  , ::Opm::UnitSystem::measure::identity },
-            {"SGCR" , ::Opm::UnitSystem::measure::identity },
-            {"SGU"  , ::Opm::UnitSystem::measure::identity },
-
-            // Oil saturation end-points
-            {"SOWCR", ::Opm::UnitSystem::measure::identity },
-            {"SOGCR", ::Opm::UnitSystem::measure::identity },
-
-            // Vertical scaling of relative permeability
-            {"KRO"  , ::Opm::UnitSystem::measure::identity },
-            {"KRG"  , ::Opm::UnitSystem::measure::identity },
-            {"KRW"  , ::Opm::UnitSystem::measure::identity },
-            {"KRGR" , ::Opm::UnitSystem::measure::identity },
-            {"KRWR" , ::Opm::UnitSystem::measure::identity },
-            {"KRORW", ::Opm::UnitSystem::measure::identity },
-            {"KRORG", ::Opm::UnitSystem::measure::identity },
-
-            // Capillary pressure scaling
-            {"SWLPC", ::Opm::UnitSystem::measure::identity },
-            {"SGLPC", ::Opm::UnitSystem::measure::identity },
-            {"PCG"  , ::Opm::UnitSystem::measure::pressure },
-            {"PCW"  , ::Opm::UnitSystem::measure::pressure },
-        };
-
-        if (es.runspec().hysterPar().active()) {
-            // Run uses hysteresis.  Output scaled imbibition curve too.
-            scalingVectors.insert(scalingVectors.end(),
-            {
-                // Water saturation end-points
-                {"ISWL"  , ::Opm::UnitSystem::measure::identity },
-                {"ISWCR" , ::Opm::UnitSystem::measure::identity },
-                {"ISWU"  , ::Opm::UnitSystem::measure::identity },
-
-                // Gas saturation end-points
-                {"ISGL"  , ::Opm::UnitSystem::measure::identity },
-                {"ISGCR" , ::Opm::UnitSystem::measure::identity },
-                {"ISGU"  , ::Opm::UnitSystem::measure::identity },
-
-                // Oil saturation end-points
-                {"ISOWCR", ::Opm::UnitSystem::measure::identity },
-                {"ISOGCR", ::Opm::UnitSystem::measure::identity },
-
-                // Vertical scaling of relative permeability
-                {"IKRO"  , ::Opm::UnitSystem::measure::identity },
-                {"IKRG"  , ::Opm::UnitSystem::measure::identity },
-                {"IKRW"  , ::Opm::UnitSystem::measure::identity },
-                {"IKRGR" , ::Opm::UnitSystem::measure::identity },
-                {"IKRWR" , ::Opm::UnitSystem::measure::identity },
-                {"IKRORW", ::Opm::UnitSystem::measure::identity },
-                {"IKRORG", ::Opm::UnitSystem::measure::identity },
-
-                // Capillary pressure scaling
-                {"ISWLPC", ::Opm::UnitSystem::measure::identity },
-                {"ISGLPC", ::Opm::UnitSystem::measure::identity },
-                {"IPCG"  , ::Opm::UnitSystem::measure::pressure },
-                {"IPCW"  , ::Opm::UnitSystem::measure::pressure },
-            });
-        }
+        const auto epsVectors = ScalingVectors{}
+            .withHysteresis(es.runspec().hysterPar().active())
+            .collect       (es.runspec().phases());
 
         const auto& props = es.get3DProperties().getDoubleProperties();
 
         if (! es.cfg().init().filleps()) {
             // No FILLEPS in input deck.  Output those endpoint arrays that
             // exist in the input deck.
-            writeDoubleCellProperties(scalingVectors, props,
+            writeDoubleCellProperties(epsVectors.getVectors(), props,
                                       grid, units, initFile);
         }
         else {
@@ -359,7 +464,7 @@ namespace {
             // make a copy of the properties object and modify that copy in
             // order to leave the original intact.
             auto propsCopy = props;
-            writeFilledSatFuncScaling(scalingVectors,
+            writeFilledSatFuncScaling(epsVectors.getVectors(),
                                       std::move(propsCopy),
                                       grid, units, initFile);
         }
