@@ -174,6 +174,7 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::iset(size_t index, T value) {
         this->m_data.at( index ) = value;
+        this->m_defaulted.at( index ) = false;
     }
 
     template< typename T >
@@ -217,8 +218,10 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::maskedSet( T value, const std::vector< bool >& mask ) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (mask[g])
+            if (mask[g]) {
                 m_data[g] = value;
+                m_defaulted[g] = false;
+            }
         }
         this->assigned = true;
     }
@@ -243,8 +246,10 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::maskedCopy( const GridProperty< T >& other, const std::vector< bool >& mask) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (mask[g])
+            if (mask[g]) {
                 m_data[g] = other.m_data[g];
+                m_defaulted[g] = other.m_defaulted[g];
+            }
         }
         this->assigned = other.deckAssigned();
     }
@@ -300,13 +305,16 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox ) {
         if (inputBox.isGlobal()) {
-            for (size_t i = 0; i < src.getCartesianSize(); ++i)
+            for (size_t i = 0; i < src.getCartesianSize(); ++i) {
                 m_data[i] = src.m_data[i];
+                m_defaulted[i] = src.m_defaulted[i];
+            }
         } else {
             const std::vector<size_t>& indexList = inputBox.getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] = src.m_data[targetIndex];
+                m_defaulted[targetIndex] = src.m_defaulted[targetIndex];
             }
         }
         this->assigned = src.deckAssigned();
@@ -315,13 +323,16 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::maxvalue( T value, const Box& inputBox ) {
         if (inputBox.isGlobal()) {
-            for (size_t i = 0; i < m_data.size(); ++i)
+            for (size_t i = 0; i < m_data.size(); ++i) {
                 m_data[i] = std::min(value,m_data[i]);
+                m_defaulted[i] = false;
+            }
         } else {
             const std::vector<size_t>& indexList = inputBox.getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] = std::min(value,m_data[targetIndex]);
+                m_defaulted[targetIndex] = false;
             }
         }
     }
@@ -329,13 +340,16 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::minvalue( T value, const Box& inputBox ) {
         if (inputBox.isGlobal()) {
-            for (size_t i = 0; i < m_data.size(); ++i)
+            for (size_t i = 0; i < m_data.size(); ++i) {
                 m_data[i] = std::max(value,m_data[i]);
+                m_defaulted[i] = false;
+            }
         } else {
             const std::vector<size_t>& indexList = inputBox.getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] = std::max(value,m_data[targetIndex]);
+                m_defaulted[targetIndex] = false;
             }
         }
     }
@@ -372,11 +386,13 @@ namespace Opm {
     void GridProperty< T >::setScalar( T value, const Box& inputBox ) {
         if (inputBox.isGlobal()) {
             std::fill(m_data.begin(), m_data.end(), value);
+            m_defaulted.assign(m_defaulted.size(), false);
         } else {
             const std::vector<size_t>& indexList = inputBox.getIndexList();
             for (size_t i = 0; i < indexList.size(); i++) {
                 size_t targetIndex = indexList[i];
                 m_data[targetIndex] = value;
+                m_defaulted[targetIndex] = false;
             }
         }
         this->assigned = true;
