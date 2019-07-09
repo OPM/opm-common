@@ -20,12 +20,17 @@
 #   - CMP0026 to allow access to the LOCATION target property
 #   - CMP0048 to indicate that we want to deal with the *VERSION*
 #     variables ourselves
+#   - CMP0064 to indicate that we want TEST if conditions to be evaluated
 if (POLICY CMP0026)
 	cmake_policy(SET CMP0026 OLD)
 endif()
 
 if (POLICY CMP0048)
 	cmake_policy(SET CMP0048 OLD)
+endif()
+
+if(POLICY CMP0064)
+  cmake_policy(SET CMP0064 NEW)
 endif()
 
 # set the behavior of the policy 0054 to NEW. (i.e. do not implicitly
