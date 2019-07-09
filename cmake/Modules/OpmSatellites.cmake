@@ -159,7 +159,11 @@ macro (opm_data satellite target dirname)
   set (${satellite}_INPUT_FILES)
   if (NOT PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 	foreach (input_datafile IN LISTS ${satellite}_DATA)
-	  file (RELATIVE_PATH rel_datafile "${PROJECT_SOURCE_DIR}" ${input_datafile})
+	  if (IS_ABSOLUTE ${input_datafile})
+      file (RELATIVE_PATH rel_datafile "${PROJECT_SOURCE_DIR}" ${input_datafile})
+    else()
+      set(rel_datafile ${input_datafile})
+    endif()
 	  set (output_datafile "${PROJECT_BINARY_DIR}/${rel_datafile}")
 	  add_custom_command (
 		OUTPUT ${output_datafile}
