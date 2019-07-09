@@ -36,14 +36,18 @@ function(add_static_analysis_tests sources includes)
     foreach(src ${${sources}})
       file(RELATIVE_PATH name ${PROJECT_SOURCE_DIR} ${src})
       if(CPPCHECK_FOUND)
-        add_test(NAME cppcheck+${name}
-                 COMMAND bin/cppcheck-test.sh ${CPPCHECK_PROGRAM} ${src} ${IPATHS}
-                 CONFIGURATIONS analyze cppcheck)
+        if(NOT TEST cppcheck+${name})
+          add_test(NAME cppcheck+${name}
+                   COMMAND bin/cppcheck-test.sh ${CPPCHECK_PROGRAM} ${src} ${IPATHS}
+                   CONFIGURATIONS analyze cppcheck)
+        endif()
       endif()
       if(CLANGCHECK_FOUND AND CMAKE_EXPORT_COMPILE_COMMANDS)
-        add_test(NAME clang-check+${name}
-                 COMMAND bin/clang-check-test.sh ${CLANGCHECK_PROGRAM} ${src}
-                 CONFIGURATIONS analyze clang-check)
+        if(NOT TEST clang-check+${name})
+          add_test(NAME clang-check+${name}
+                   COMMAND bin/clang-check-test.sh ${CLANGCHECK_PROGRAM} ${src}
+                   CONFIGURATIONS analyze clang-check)
+        endif()
       endif()
     endforeach()
   endif()
