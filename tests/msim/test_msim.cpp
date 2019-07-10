@@ -85,8 +85,6 @@ BOOST_AUTO_TEST_CASE(RUN) {
             for (int time_index=0; time_index < ecl_sum_get_data_length(ecl_sum); time_index++) {
                 double seconds_elapsed = ecl_sum_iget_sim_days(ecl_sum, time_index) * 86400;
                 double opr = ecl_sum_iget(ecl_sum, time_index, param_index);
-
-                opr = ecl_sum_iget(ecl_sum, time_index, param_index);
                 BOOST_CHECK_CLOSE(seconds_elapsed, opr, 1e-3);
             }
             ecl_sum_free( ecl_sum );

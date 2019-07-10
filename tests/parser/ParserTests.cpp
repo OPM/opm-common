@@ -269,11 +269,9 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
 
 BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     Parser parser;
-    const auto* eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
-
     BOOST_CHECK( parser.loadKeywordFromFile( prefix() + "parser/EQLDIMS2" ) );
 
-    eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
+    const auto* eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
     const auto& record = eqldims->getRecord(0);
     BOOST_CHECK(record.hasItem("NEW"));
 }

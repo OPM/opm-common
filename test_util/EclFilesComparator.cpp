@@ -47,40 +47,36 @@ using Opm::EclIO::EGrid;
 
 template <typename T>
 void ECLFilesComparator::printValuesForCell(const std::string& keyword, const std::string& reference, size_t kw_size, size_t cell, EGrid *grid, const T& value1, const T& value2) const {
-
-    int nActive = -1;
-    int nTot = -1;
-
     if (grid) {
-        nActive = grid->activeCells();
-        nTot = grid->totalNumberOfCells();
-    }
+        int nActive = grid->activeCells();
+        int nTot = grid->totalNumberOfCells();
 
-    if (static_cast<int>(kw_size) == nActive) {
-        auto ijk = grid->ijk_from_active_index(cell);
+        if (static_cast<int>(kw_size) == nActive) {
+            auto ijk = grid->ijk_from_active_index(cell);
 
-        ijk[0]++, ijk[1]++, ijk[2]++;
+            ijk[0]++, ijk[1]++, ijk[2]++;
 
-        std::cout << std::endl
-                  << "\nKeyword: " << keyword << ", origin "  << reference << "\n"
-                  << "Global index (zero based)   = "  << cell << "\n"
-                  << "Grid coordinate             = (" << ijk[0] << ", " << ijk[1] << ", " << ijk[2] << ")" << "\n"
-                  << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
-        return;
-    }
+            std::cout << std::endl
+                      << "\nKeyword: " << keyword << ", origin "  << reference << "\n"
+                      << "Global index (zero based)   = "  << cell << "\n"
+                      << "Grid coordinate             = (" << ijk[0] << ", " << ijk[1] << ", " << ijk[2] << ")" << "\n"
+                      << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
+            return;
+        }
 
-    if (static_cast<int>(kw_size) == nTot) {
+        if (static_cast<int>(kw_size) == nTot) {
 
-        auto ijk = grid->ijk_from_global_index(cell);
+            auto ijk = grid->ijk_from_global_index(cell);
 
-        ijk[0]++, ijk[1]++, ijk[2]++;
+            ijk[0]++, ijk[1]++, ijk[2]++;
 
-        std::cout << std::endl
-                  << "\nKeyword: " << keyword << ", origin "  << reference << "\n\n"
-                  << "Global index (zero based)   = "  << cell << "\n"
-                  << "Grid coordinate             = (" << ijk[0] << ", " << ijk[1] << ", " << ijk[2] << ")" << "\n"
-                  << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
-        return;
+            std::cout << std::endl
+                      << "\nKeyword: " << keyword << ", origin "  << reference << "\n\n"
+                      << "Global index (zero based)   = "  << cell << "\n"
+                      << "Grid coordinate             = (" << ijk[0] << ", " << ijk[1] << ", " << ijk[2] << ")" << "\n"
+                      << "(first value, second value) = (" << value1 << ", " << value2 << ")\n\n";
+            return;
+        }
     }
 
     std::cout << std::endl
@@ -102,10 +98,8 @@ template void ECLFilesComparator::printValuesForCell<boolType>       (const std:
 ECLFilesComparator::ECLFilesComparator(const std::string& basename1,
                                        const std::string& basename2,
                                        double absToleranceArg, double relToleranceArg) :
+    rootName1(basename1), rootName2(basename2),
     absTolerance(absToleranceArg), relTolerance(relToleranceArg) {
-
-    rootName1 = basename1;
-    rootName2 = basename2;
 }
 
 

@@ -145,7 +145,7 @@ if (ENABLE_MOCKSIM)
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
   foreach( test test_msim test_msim_ACTIONX )
-    opm_add_test(${test} SOURCES tests/msim/${test}
+    opm_add_test(${test} SOURCES tests/msim/${test}.cpp
                          LIBRARIES ${_libs}
                          WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
   endforeach()
