@@ -113,9 +113,6 @@ void ECLRegressionTest::compareFloatingPointVectors(const std::vector<T>& t1, co
 template <typename T>
 void ECLRegressionTest::compareVectors(const std::vector<T>& t1, const std::vector<T>& t2, const std::string& keyword, const std::string& reference) {
 
-    bool result;
-    std::string typeStr;
-
     if (t1.size() != t2.size()) {
         HANDLE_ERROR(std::runtime_error, "\nError trying to compare two vectors with different size " << keyword << " - " << reference
                      << "\n > size of first vector : " << t1.size() << "\n > size of second vector: " << t2.size());
@@ -125,7 +122,7 @@ void ECLRegressionTest::compareVectors(const std::vector<T>& t1, const std::vect
         HANDLE_ERROR(std::runtime_error, "\nMember function compareVectors should not be used with floating point vectors ");
     }
 
-    result = t1 == t2 ? true : false ;
+    bool result = t1 == t2 ? true : false ;
 
     if (!result) {
         for (size_t i = 0; i < t1.size(); i++) {
