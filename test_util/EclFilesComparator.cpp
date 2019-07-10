@@ -98,10 +98,8 @@ template void ECLFilesComparator::printValuesForCell<boolType>       (const std:
 ECLFilesComparator::ECLFilesComparator(const std::string& basename1,
                                        const std::string& basename2,
                                        double absToleranceArg, double relToleranceArg) :
+    rootName1(basename1), rootName2(basename2),
     absTolerance(absToleranceArg), relTolerance(relToleranceArg) {
-
-    rootName1 = basename1;
-    rootName2 = basename2;
 }
 
 
