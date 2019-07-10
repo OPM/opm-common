@@ -80,7 +80,7 @@ public:
     }
 
     void compareSpesificKeyword(std::string keyword) {
-        this->spesificKeyword = keyword;
+        this->spesificKeyword = std::move(keyword);
     }
     void compareSpesificRstReportStepNumber(int seqn) {
         this->spesificSequence = seqn;
