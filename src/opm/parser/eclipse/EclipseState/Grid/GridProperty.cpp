@@ -173,8 +173,7 @@ namespace Opm {
 
     template< typename T >
     void GridProperty< T >::iset(size_t index, T value) {
-        this->m_data.at( index ) = value;
-        this->m_defaulted.at( index ) = false;
+        this->setElement(index, value);
     }
 
     template< typename T >
@@ -218,10 +217,8 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::maskedSet( T value, const std::vector< bool >& mask ) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (mask[g]) {
-                m_data[g] = value;
-                m_defaulted[g] = false;
-            }
+            if (mask[g])
+                this->setElement(g, value);
         }
         this->assigned = true;
     }
@@ -246,10 +243,8 @@ namespace Opm {
     template< typename T >
     void GridProperty< T >::maskedCopy( const GridProperty< T >& other, const std::vector< bool >& mask) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
-            if (mask[g]) {
-                m_data[g] = other.m_data[g];
-                m_defaulted[g] = other.m_defaulted[g];
-            }
+            if (mask[g])
+                this->setElement(g, other.m_data[g], other.m_defaulted[g]);
         }
         this->assigned = other.deckAssigned();
     }
@@ -304,54 +299,33 @@ namespace Opm {
 
     template< typename T >
     void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox ) {
-        if (inputBox.isGlobal()) {
-            for (size_t i = 0; i < src.getCartesianSize(); ++i) {
-                m_data[i] = src.m_data[i];
-                m_defaulted[i] = src.m_defaulted[i];
-            }
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = src.m_data[targetIndex];
-                m_defaulted[targetIndex] = src.m_defaulted[targetIndex];
-            }
-        }
+        if (inputBox.isGlobal())
+            for (size_t i = 0; i < src.getCartesianSize(); ++i)
+                this->setElement(i, src.m_data[i], src.m_defaulted[i]);
+        else
+            for (const auto& i : inputBox.getIndexList())
+                this->setElement(i, src.m_data[i], src.m_defaulted[i]);
         this->assigned = src.deckAssigned();
     }
 
     template< typename T >
     void GridProperty< T >::maxvalue( T value, const Box& inputBox ) {
-        if (inputBox.isGlobal()) {
-            for (size_t i = 0; i < m_data.size(); ++i) {
-                m_data[i] = std::min(value,m_data[i]);
-                m_defaulted[i] = false;
-            }
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = std::min(value,m_data[targetIndex]);
-                m_defaulted[targetIndex] = false;
-            }
-        }
+        if (inputBox.isGlobal())
+            for (size_t i = 0; i < m_data.size(); ++i)
+                this->setElement(i, std::min(value, this->m_data[i]));
+        else
+            for (const auto& i : inputBox.getIndexList())
+                this->setElement(i, std::min(value, this->m_data[i]));
     }
 
     template< typename T >
     void GridProperty< T >::minvalue( T value, const Box& inputBox ) {
-        if (inputBox.isGlobal()) {
-            for (size_t i = 0; i < m_data.size(); ++i) {
-                m_data[i] = std::max(value,m_data[i]);
-                m_defaulted[i] = false;
-            }
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = std::max(value,m_data[targetIndex]);
-                m_defaulted[targetIndex] = false;
-            }
-        }
+        if (inputBox.isGlobal())
+            for (size_t i = 0; i < m_data.size(); ++i)
+                this->setElement(i, std::max(value, this->m_data[i]));
+        else
+            for (const auto& i : inputBox.getIndexList())
+                this->setElement(i, std::max(value, this->m_data[i]));
     }
 
     template< typename T >
@@ -387,14 +361,9 @@ namespace Opm {
         if (inputBox.isGlobal()) {
             std::fill(m_data.begin(), m_data.end(), value);
             m_defaulted.assign(m_defaulted.size(), false);
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = value;
-                m_defaulted[targetIndex] = false;
-            }
-        }
+        } else
+            for (const auto& i : inputBox.getIndexList())
+                this->setElement(i, value);
         this->assigned = true;
     }
 
@@ -448,15 +417,20 @@ namespace Opm {
 
 template<>
 void GridProperty<int>::setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
-    m_data[targetIdx] = deckItem.get< int >(sourceIdx);
-    m_defaulted[targetIdx] = false;
+    this->setElement(targetIdx, deckItem.get< int >(sourceIdx));
 }
 
 template<>
 void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
-    m_data[targetIdx] = deckItem.getSIDouble(sourceIdx);
-    m_defaulted[targetIdx] = false;
+    this->setElement(targetIdx, deckItem.getSIDouble(sourceIdx));
 }
+
+    template <typename T>
+    void GridProperty<T>::setElement(const typename std::vector<T>::size_type i, const T value, const bool defaulted) {
+        this->m_data[i] = value;
+        this->m_defaulted[i] = defaulted;
+    }
+
 
 template<>
 bool GridProperty<int>::containsNaN( ) const {

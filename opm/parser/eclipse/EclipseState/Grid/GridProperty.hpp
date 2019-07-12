@@ -309,6 +309,9 @@ public:
 private:
     const DeckItem& getDeckItem( const DeckKeyword& );
     void setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem);
+    void setElement(const typename std::vector<T>::size_type i,
+                    const T                                  value,
+                    const bool                               defaulted = false);
 
     size_t m_nx, m_ny, m_nz;
     SupportedKeywordInfo m_kwInfo;
