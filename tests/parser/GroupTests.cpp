@@ -92,15 +92,6 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
 }
 
 
-BOOST_AUTO_TEST_CASE(InjectRateOK) {
-    auto timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , 1, timeMap , 0);
-    BOOST_CHECK_EQUAL( 0 , group.getInjectionRate( 0 ));
-    group.setInjectionRate( 2 , 100 );
-    BOOST_CHECK_EQUAL( 100 , group.getInjectionRate( 2 ));
-    BOOST_CHECK_EQUAL( 100 , group.getInjectionRate( 8 ));
-}
-
 
 BOOST_AUTO_TEST_CASE(ControlModeOK) {
     auto timeMap = createXDaysTimeMap(10);

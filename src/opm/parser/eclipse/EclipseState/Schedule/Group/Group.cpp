@@ -40,7 +40,6 @@ namespace Opm {
     GroupInjection::InjectionData::InjectionData(const TimeMap& timeMap) :
         phase( timeMap, Phase::WATER  ),
         controlMode( timeMap, NONE  ),
-        rate( timeMap, 0  ),
         surfaceFlowMaxRate( timeMap, 0 ),
         reservoirFlowMaxRate( timeMap, 0 ),
         targetReinjectFraction( timeMap, 0 ),
@@ -123,14 +122,6 @@ namespace Opm {
 
     Phase Group::getInjectionPhase( size_t time_step ) const {
         return m_injection.phase.get( time_step );
-    }
-
-    void Group::setInjectionRate( size_t time_step , double rate) {
-        m_injection.rate.update( time_step , rate);
-    }
-
-    double Group::getInjectionRate( size_t time_step ) const {
-        return m_injection.rate.get( time_step );
     }
 
     void Group::setInjectionControlMode(size_t time_step , GroupInjection::ControlEnum controlMode) {
