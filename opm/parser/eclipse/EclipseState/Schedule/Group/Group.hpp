@@ -41,7 +41,6 @@ namespace Opm {
 
             DynamicState< Phase > phase;
             DynamicState< GroupInjection::ControlEnum > controlMode;
-            DynamicState< double > rate;
             DynamicState< double > surfaceFlowMaxRate;
             DynamicState< double > reservoirFlowMaxRate;
             DynamicState< double > targetReinjectFraction;
@@ -81,9 +80,6 @@ namespace Opm {
 
         void                      setInjectionControlMode(size_t time_step , GroupInjection::ControlEnum ControlMode);
         GroupInjection::ControlEnum getInjectionControlMode( size_t time_step) const;
-
-        void   setInjectionRate(size_t time_step , double rate);
-        double getInjectionRate( size_t time_step) const;
 
         void   setSurfaceMaxRate( size_t time_step , double rate);
         double getSurfaceMaxRate( size_t time_step ) const;
