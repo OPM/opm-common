@@ -68,6 +68,15 @@
 namespace Opm {
 
 
+namespace {
+
+    bool name_match(const std::string& pattern, const std::string& name) {
+        int flags = 0;
+        return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
+    }
+
+}
+
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
                         const Eclipse3DProperties& eclipseProperties,
@@ -1403,19 +1412,20 @@ namespace Opm {
     void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            auto groups = getGroups ( groupNamePattern );
+            const auto group_names = this->groupNames(groupNamePattern);
 
-            if (groups.empty())
+            if (group_names.empty())
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
-            for (auto* group : groups){
+            for (const auto& group_name : group_names){
+                auto& group = this->getGroup(group_name);
                 {
                     Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0) );
-                    group->setInjectionPhase( currentStep , phase );
+                    group.setInjectionPhase( currentStep , phase );
                 }
                 {
                     GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                    group->setInjectionControlMode( currentStep , controlMode );
+                    group.setInjectionControlMode( currentStep , controlMode );
                 }
 
                 Phase wellPhase = get_phase( record.getItem("PHASE").getTrimmedString(0));
@@ -1424,12 +1434,12 @@ namespace Opm {
                 surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, wellPhase, section.unitSystem());
                 double reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0).get<double>();
 
-                group->setSurfaceMaxRate( currentStep , surfaceInjectionRate);
-                group->setReservoirMaxRate( currentStep , reservoirInjectionRate);
-                group->setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>());
-                group->setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>());
+                group.setSurfaceMaxRate( currentStep , surfaceInjectionRate);
+                group.setReservoirMaxRate( currentStep , reservoirInjectionRate);
+                group.setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>());
+                group.setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>());
 
-                group->setInjectionGroup(currentStep, true);
+                group.setInjectionGroup(currentStep, true);
             }
         }
     }
@@ -1437,27 +1447,28 @@ namespace Opm {
     void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            auto groups = getGroups ( groupNamePattern );
+            const auto group_names = this->groupNames(groupNamePattern);
 
-            if (groups.empty())
+            if (group_names.empty())
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
-            for (auto* group : groups){
+            for (const auto& group_name : group_names){
+                auto& group = this->getGroup(group_name);
                 {
                     GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                    group->setProductionControlMode( currentStep , controlMode );
+                    group.setProductionControlMode( currentStep , controlMode );
                 }
-                group->setOilTargetRate( currentStep , record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>());
-                group->setGasTargetRate( currentStep , record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>());
-                group->setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>());
-                group->setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>());
-                group->setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
+                group.setOilTargetRate( currentStep , record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>());
+                group.setGasTargetRate( currentStep , record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>());
+                group.setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>());
+                group.setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>());
+                group.setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
                 {
                     GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
-                    group->setProductionExceedLimitAction( currentStep , exceedAction );
+                    group.setProductionExceedLimitAction( currentStep , exceedAction );
                 }
 
-                group->setProductionGroup(currentStep, true);
+                group.setProductionGroup(currentStep, true);
             }
         }
     }
@@ -1466,17 +1477,18 @@ namespace Opm {
     void Schedule::handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
-            auto groups = getGroups ( groupNamePattern );
+            const auto group_names = this->groupNames(groupNamePattern);
 
-            if (groups.empty())
+            if (group_names.empty())
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
-            for (auto* group : groups){
-                group->setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
-
+            for (const auto& group_name : group_names){
+                auto& group = this->getGroup(group_name);
                 const std::string& transfer_str = record.getItem("TRANSFER_EXT_NET").getTrimmedString(0);
                 bool transfer = (transfer_str == "YES") ? true : false;
-                group->setTransferGroupEfficiencyFactor(currentStep, transfer);
+
+                group.setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
+                group.setTransferGroupEfficiencyFactor(currentStep, transfer);
             }
         }
     }
@@ -2028,10 +2040,9 @@ namespace Opm {
         // Normal pattern matching
         auto star_pos = pattern.find('*');
         if (star_pos != std::string::npos) {
-            int flags = 0;
             std::vector<std::string> names;
             for (const auto& well_pair : this->wells_static) {
-                if (fnmatch(pattern.c_str(), well_pair.first.c_str(), flags) == 0) {
+                if (name_match(pattern, well_pair.first)) {
                     const auto& dynamic_state = well_pair.second;
                     if (dynamic_state.get(timeStep))
                         names.push_back(well_pair.first);
@@ -2077,6 +2088,74 @@ namespace Opm {
         return names;
     }
 
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern, size_t timeStep) const {
+        if (pattern.size() == 0)
+            return {};
+
+        // Normal pattern matching
+        auto star_pos = pattern.find('*');
+        if (star_pos != std::string::npos) {
+            std::vector<std::string> names;
+            for (const auto& group_pair : this->m_groups) {
+                if (name_match(pattern, group_pair.first)) {
+                    const auto& group = group_pair.second;
+                    if (group.hasBeenDefined(timeStep))
+                        names.push_back(group_pair.first);
+                }
+            }
+            return names;
+        }
+
+        // Normal group name without any special characters
+        if (this->hasGroup(pattern)) {
+            const auto& group = this->m_groups.at(pattern);
+            if (group.hasBeenDefined(timeStep))
+                return { pattern };
+        }
+        return {};
+    }
+
+    std::vector<std::string> Schedule::groupNames(size_t timeStep) const {
+        std::vector<std::string> names;
+        for (const auto& group_pair : this->m_groups) {
+            const auto& group = group_pair.second;
+            if (group.hasBeenDefined(timeStep))
+                names.push_back( group.name() );
+        }
+        return names;
+    }
+
+    std::vector<std::string> Schedule::groupNames(const std::string& pattern) const {
+        if (pattern.size() == 0)
+            return {};
+
+        // Normal pattern matching
+        auto star_pos = pattern.find('*');
+        if (star_pos != std::string::npos) {
+            int flags = 0;
+            std::vector<std::string> names;
+            for (const auto& group_pair : this->m_groups) {
+                if (fnmatch(pattern.c_str(), group_pair.first.c_str(), flags) == 0)
+                    names.push_back(group_pair.first);
+            }
+            return names;
+        }
+
+        // Normal group name without any special characters
+        if (this->hasGroup(pattern))
+            return { pattern };
+
+        return {};
+    }
+
+    std::vector<std::string> Schedule::groupNames() const {
+        std::vector<std::string> names;
+        for (const auto& group_pair : this->m_groups)
+            names.push_back(group_pair.first);
+
+        return names;
+    }
+
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
         const size_t gseqIndex = m_groups.size();
@@ -2087,14 +2166,15 @@ namespace Opm {
     size_t Schedule::numGroups() const {
         return m_groups.size();
     }
+
     size_t Schedule::numGroups(size_t timeStep) const {
-        return this->getGroups( timeStep ).size();
+        const auto group_names = this->groupNames(timeStep);
+        return group_names.size();
     }
 
     bool Schedule::hasGroup(const std::string& groupName) const {
         return m_groups.count(groupName) > 0;
     }
-
 
     const Group& Schedule::getGroup(const std::string& groupName) const {
         if (hasGroup(groupName)) {
@@ -2103,53 +2183,13 @@ namespace Opm {
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
 
-    std::vector< const Group* > Schedule::getGroups() const {
-        std::vector< const Group* > groups;
-
-        for( const auto& group : m_groups )
-            groups.push_back( std::addressof(group.second) );
-
-        return groups;
+    Group& Schedule::getGroup(const std::string& groupName) {
+        if (hasGroup(groupName)) {
+            return m_groups.at(groupName);
+        } else
+            throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
 
-    std::vector< Group* > Schedule::getGroups(const std::string& groupNamePattern) {
-        size_t wildcard_pos = groupNamePattern.find("*");
-
-        if( wildcard_pos != groupNamePattern.length()-1 ) {
-            if( m_groups.count( groupNamePattern ) == 0) return {};
-            return { std::addressof( m_groups.get( groupNamePattern ) ) };
-        }
-
-        std::vector< Group* > groups;
-        for( auto& group_pair : this->m_groups ) {
-            auto& group = group_pair.second;
-            if( Group::groupNameInGroupNamePattern( group.name(), groupNamePattern ) ) {
-                groups.push_back( std::addressof( group ) );
-            }
-        }
-
-        return groups;
-    }
-
-    std::vector< const Group* > Schedule::getGroups(size_t timeStep) const {
-
-        if (timeStep >= m_timeMap.size()) {
-            throw std::invalid_argument("Timestep to large");
-        }
-
-        auto defined = [=]( const Group& g ) {
-            return g.hasBeenDefined( timeStep );
-        };
-
-        std::vector< const Group* > groups;
-
-        for( const auto& group_pair : m_groups ) {
-            const auto& group = group_pair.second;
-            if( !defined( group) ) continue;
-            groups.push_back( &group );
-        }
-        return groups;
-    }
 
     void Schedule::addWellToGroup( Group& newGroup, const std::string& wellName , size_t timeStep) {
         auto& dynamic_state = this->wells_static.at(wellName);

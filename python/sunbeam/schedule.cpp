@@ -73,14 +73,20 @@ namespace {
 
     std::vector<Group> get_groups( const Schedule& sch ) {
         std::vector< Group > groups;
-        for( const auto& g : sch.getGroups() )
-            groups.push_back( *g );
+        for( const auto& group_name : sch.groupNames())
+            groups.push_back( sch.getGroup(group_name) );
+
         return groups;
     }
 
     bool has_well( const Schedule& sch, const std::string& wellName) {
         return sch.hasWell( wellName );
     }
+
+    const Group& get_group(const Schedule& sch, const std::string group_name) {
+        return sch.getGroup(group_name);
+    }
+
 
 }
 
@@ -94,7 +100,7 @@ void sunbeam::export_Schedule(py::module& module) {
     .def( "_get_wells", &Schedule::getWells2)
     .def("_getwell", &get_well)
     .def( "__contains__", &has_well )
-    .def( "_group", &Schedule::getGroup, ref_internal)
+    .def( "_group", &get_group, ref_internal)
     .def( "_group_tree", &get_grouptree, ref_internal);
 
 }

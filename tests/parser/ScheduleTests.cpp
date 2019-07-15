@@ -377,11 +377,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrdered) {
     BOOST_CHECK_EQUAL( "BW_2" , well_names[1]);
     BOOST_CHECK_EQUAL( "AW_3" , well_names[2]);
 
-    auto groups = schedule.getGroups();
-    // groups[0] is 'FIELD'
-    BOOST_CHECK_EQUAL( "CG", groups[1]->name());
-    BOOST_CHECK_EQUAL( "BG", groups[2]->name());
-    BOOST_CHECK_EQUAL( "AG", groups[3]->name());
+    auto group_names = schedule.groupNames();
+    BOOST_CHECK_EQUAL( "FIELD", group_names[0]);
+    BOOST_CHECK_EQUAL( "CG", group_names[1]);
+    BOOST_CHECK_EQUAL( "BG", group_names[2]);
+    BOOST_CHECK_EQUAL( "AG", group_names[3]);
 }
 
 
@@ -437,6 +437,10 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
         BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
         BOOST_CHECK( has_well( parent_wells2, "AW_3" ));
     }
+    auto group_names = schedule.groupNames("P*", 0);
+    BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PG1") != group_names.end() );
+    BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PG2") != group_names.end() );
+    BOOST_CHECK( std::find(group_names.begin(), group_names.end(), "PLATFORM") != group_names.end() );
 }
 
 
@@ -512,27 +516,6 @@ BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTime
     BOOST_CHECK( schedule.getGroupTree( 0 ).exists( "FIELD" ) );
     BOOST_CHECK( schedule.getGroupTree( 0 ).exists( "FAREN" ) );
     BOOST_CHECK_EQUAL( "FAREN", schedule.getGroupTree( 0 ).parent( "BARNET" ) );
-}
-
-BOOST_AUTO_TEST_CASE(GetGroups) {
-    auto deck = deckWithGRUPTREE();
-    EclipseGrid grid(10,10,10);
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule schedule(deck , grid , eclipseProperties, runspec);
-
-    auto groups = schedule.getGroups();
-
-    BOOST_CHECK_EQUAL( 3, groups.size() );
-
-    std::vector< std::string > names;
-    for( const auto group : groups ) names.push_back( group->name() );
-    std::sort( names.begin(), names.end() );
-
-    BOOST_CHECK_EQUAL( "BARNET", names[ 0 ] );
-    BOOST_CHECK_EQUAL( "FAREN",  names[ 1 ] );
-    BOOST_CHECK_EQUAL( "FIELD",  names[ 2 ] );
 }
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {

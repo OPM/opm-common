@@ -198,9 +198,9 @@ inline void keywordG( SummaryConfig::keyword_list& list,
     if( keyword.size() == 0 ||
         !keyword.getDataRecord().getDataItem().hasValue( 0 ) ) {
 
-        for( const auto& group : schedule.getGroups() ) {
-            if( group->name() == "FIELD" ) continue;
-            list.push_back( SummaryConfig::keyword_type(keyword.name(), group->name() ));
+        for( const auto& group : schedule.groupNames() ) {
+            if( group == "FIELD" ) continue;
+            list.push_back( SummaryConfig::keyword_type(keyword.name(), group ));
         }
         return;
     }

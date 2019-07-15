@@ -104,32 +104,32 @@ namespace {
             };
         }
 
-	std::map <const std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
-	{
-	    const auto& groups = sched.getGroups(simStep);
-	    // make group name to index map for the current time step
-	    std::map <const std::string, size_t> groupIndexMap;
-	    for (const auto* group : groups) {
-		int ind = (group->name() == "FIELD")
-			? inteHead[VI::intehead::NGMAXZ]-1 : group->seqIndex()-1;
-		std::pair<const std::string, size_t> groupPair = std::make_pair(group->name(), ind);
-		groupIndexMap.insert(groupPair);
-	    }
-	    return groupIndexMap;
+        std::map <const std::string, size_t>  currentGroupMapNameIndex(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead)
+        {
+            // make group name to index map for the current time step
+            std::map <const std::string, size_t> groupIndexMap;
+            for (const auto& group_name : sched.groupNames(simStep)) {
+                const auto& group = sched.getGroup(group_name);
+                int ind = (group.name() == "FIELD")
+                    ? inteHead[VI::intehead::NGMAXZ]-1 : group.seqIndex()-1;
+                std::pair<const std::string, size_t> groupPair = std::make_pair(group.name(), ind);
+                groupIndexMap.insert(groupPair);
+            }
+            return groupIndexMap;
         }
 
         int groupIndex(const std::string&              grpName,
                        const std::map <const std::string, size_t>&  currentGroupMapNameIndex)
         {
-	    int ind = 0;
-	    auto searchGTName = currentGroupMapNameIndex.find(grpName);
-	    if (searchGTName != currentGroupMapNameIndex.end()) {
-		ind = searchGTName->second + 1;
-	    }
-	    else {
-		std::cout << "group Name: " << grpName << std::endl;
-		throw std::invalid_argument( "Invalid group name" );
-	    }
+            int ind = 0;
+            auto searchGTName = currentGroupMapNameIndex.find(grpName);
+            if (searchGTName != currentGroupMapNameIndex.end()) {
+                ind = searchGTName->second + 1;
+            }
+            else {
+                std::cout << "group Name: " << grpName << std::endl;
+                throw std::invalid_argument( "Invalid group name" );
+            }
             return ind;
         }
 

@@ -94,12 +94,9 @@ namespace {
             entities.emplace_back("WWVIR", well_name);
         }
 
-        for (const auto* grp : sched.getGroups()) {
-            const auto& grp_name = grp->name();
-
-            if (grp_name != "FIELD") {
+        for (const auto& grp_name : sched.groupNames()) {
+            if (grp_name != "FIELD")
                 makeEntities('G', grp_name);
-            }
         }
 
         makeEntities('F', "FIELD");

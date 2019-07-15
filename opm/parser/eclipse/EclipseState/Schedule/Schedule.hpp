@@ -121,6 +121,11 @@ namespace Opm
         std::vector<std::string> wellNames(size_t timeStep) const;
         std::vector<std::string> wellNames() const;
 
+        std::vector<std::string> groupNames(const std::string& pattern, size_t timeStep) const;
+        std::vector<std::string> groupNames(size_t timeStep) const;
+        std::vector<std::string> groupNames(const std::string& pattern) const;
+        std::vector<std::string> groupNames() const;
+
         void updateWell(std::shared_ptr<Well2> well, size_t reportStep);
         const Well2& getWell2(const std::string& wellName, size_t timeStep) const;
         const Well2& getWell2atEnd(const std::string& well_name) const;
@@ -142,8 +147,7 @@ namespace Opm
         size_t numGroups(size_t timeStep) const;
         bool hasGroup(const std::string& groupName) const;
         const Group& getGroup(const std::string& groupName) const;
-        std::vector< const Group* > getGroups() const;
-        std::vector< const Group* > getGroups(size_t timeStep) const;
+        Group& getGroup(const std::string& groupName);
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
