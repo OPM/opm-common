@@ -191,7 +191,17 @@ namespace Opm {
         ActionEnum ActionEnumFromString( const std::string& stringValue );
     }
 
+    // A group can have both injection controls and production controls set at
+    // the same time, i.e. this enum is used as a bitmask.
+    enum class GroupType : unsigned {
+        NONE = 0,
+        PRODUCTION = 1,
+        INJECTION = 2,
+        MIXED = 3
+    };
 
+    GroupType operator |(GroupType lhs, GroupType rhs);
+    GroupType operator &(GroupType lhs, GroupType rhs);
 
     namespace GroupProduction {
 

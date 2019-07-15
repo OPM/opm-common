@@ -1439,7 +1439,7 @@ namespace {
                 group.setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>());
                 group.setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>());
 
-                group.setInjectionGroup(currentStep, true);
+                group.setInjectionGroup(currentStep);
             }
         }
     }
@@ -1468,7 +1468,7 @@ namespace {
                     group.setProductionExceedLimitAction( currentStep , exceedAction );
                 }
 
-                group.setProductionGroup(currentStep, true);
+                group.setProductionGroup(currentStep);
             }
         }
     }
