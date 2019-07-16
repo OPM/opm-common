@@ -39,15 +39,15 @@ namespace Opm {
     }
 
     template< typename T >
-    static std::function< void( std::vector< T >& ) > noop() {
-        return []( std::vector< T >& ) { return; };
+    static std::function< void( const std::vector<bool>&, std::vector< T >& ) > noop() {
+        return []( const std::vector<bool>&, std::vector< T >& ) { return; };
     }
 
     template< typename T >
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             std::function< std::vector< T >( size_t ) > init,
-            std::function< void( std::vector< T >& ) > post,
+            std::function< void( const std::vector<bool>& defaulted, std::vector< T >& ) > post,
             const std::string& dimString,
             bool defaultInitializable ) :
         m_keywordName( name ),
@@ -87,7 +87,7 @@ namespace Opm {
     GridPropertySupportedKeywordInfo< T >::GridPropertySupportedKeywordInfo(
             const std::string& name,
             const T defaultValue,
-            std::function< void( std::vector< T >& ) > post,
+            std::function< void( const std::vector<bool>&, std::vector< T >& ) > post,
             const std::string& dimString,
             bool defaultInitializable ) :
         m_keywordName( name ),
@@ -113,7 +113,9 @@ namespace Opm {
     }
 
     template< typename T >
-    const std::function< void( std::vector< T >& ) >& GridPropertySupportedKeywordInfo< T >::postProcessor() const {
+    const std::function< void( const std::vector<bool>&, std::vector< T >& ) >&
+    GridPropertySupportedKeywordInfo< T >::postProcessor() const
+    {
         return this->m_postProcessor;
     }
 
@@ -129,6 +131,7 @@ namespace Opm {
         m_nz( nz ),
         m_kwInfo( kwInfo ),
         m_data( kwInfo.initializer()( nx * ny * nz ) ),
+        m_defaulted( nx * ny * nz, true ),
         m_hasRunPostProcessor( false )
     {}
 
@@ -170,13 +173,18 @@ namespace Opm {
 
     template< typename T >
     void GridProperty< T >::iset(size_t index, T value) {
-        this->m_data.at( index ) = value;
+        this->setElement(index, value);
     }
 
     template< typename T >
     void GridProperty< T >::iset(size_t i , size_t j , size_t k , T value) {
         size_t g = i + j*m_nx + k*m_nx*m_ny;
         iset(g,value);
+    }
+
+    template< typename T >
+    const std::vector< bool >& GridProperty< T >::wasDefaulted() const {
+        return this->m_defaulted;
     }
 
     template< typename T >
@@ -210,7 +218,7 @@ namespace Opm {
     void GridProperty< T >::maskedSet( T value, const std::vector< bool >& mask ) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
             if (mask[g])
-                m_data[g] = value;
+                this->setElement(g, value);
         }
         this->assigned = true;
     }
@@ -236,7 +244,7 @@ namespace Opm {
     void GridProperty< T >::maskedCopy( const GridProperty< T >& other, const std::vector< bool >& mask) {
         for (size_t g = 0; g < getCartesianSize(); g++) {
             if (mask[g])
-                m_data[g] = other.m_data[g];
+                this->setElement(g, other.m_data[g], other.m_defaulted[g]);
         }
         this->assigned = other.deckAssigned();
     }
@@ -291,45 +299,33 @@ namespace Opm {
 
     template< typename T >
     void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox ) {
-        if (inputBox.isGlobal()) {
+        if (inputBox.isGlobal())
             for (size_t i = 0; i < src.getCartesianSize(); ++i)
-                m_data[i] = src.m_data[i];
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = src.m_data[targetIndex];
-            }
-        }
+                this->setElement(i, src.m_data[i], src.m_defaulted[i]);
+        else
+            for (const auto& i : inputBox.getIndexList())
+                this->setElement(i, src.m_data[i], src.m_defaulted[i]);
         this->assigned = src.deckAssigned();
     }
 
     template< typename T >
     void GridProperty< T >::maxvalue( T value, const Box& inputBox ) {
-        if (inputBox.isGlobal()) {
+        if (inputBox.isGlobal())
             for (size_t i = 0; i < m_data.size(); ++i)
-                m_data[i] = std::min(value,m_data[i]);
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = std::min(value,m_data[targetIndex]);
-            }
-        }
+                this->setElement(i, std::min(value, this->m_data[i]));
+        else
+            for (const auto& i : inputBox.getIndexList())
+                this->setElement(i, std::min(value, this->m_data[i]));
     }
 
     template< typename T >
     void GridProperty< T >::minvalue( T value, const Box& inputBox ) {
-        if (inputBox.isGlobal()) {
+        if (inputBox.isGlobal())
             for (size_t i = 0; i < m_data.size(); ++i)
-                m_data[i] = std::max(value,m_data[i]);
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = std::max(value,m_data[targetIndex]);
-            }
-        }
+                this->setElement(i, std::max(value, this->m_data[i]));
+        else
+            for (const auto& i : inputBox.getIndexList())
+                this->setElement(i, std::max(value, this->m_data[i]));
     }
 
     template< typename T >
@@ -364,13 +360,10 @@ namespace Opm {
     void GridProperty< T >::setScalar( T value, const Box& inputBox ) {
         if (inputBox.isGlobal()) {
             std::fill(m_data.begin(), m_data.end(), value);
-        } else {
-            const std::vector<size_t>& indexList = inputBox.getIndexList();
-            for (size_t i = 0; i < indexList.size(); i++) {
-                size_t targetIndex = indexList[i];
-                m_data[targetIndex] = value;
-            }
-        }
+            m_defaulted.assign(m_defaulted.size(), false);
+        } else
+            for (const auto& i : inputBox.getIndexList())
+                this->setElement(i, value);
         this->assigned = true;
     }
 
@@ -389,7 +382,7 @@ namespace Opm {
     void GridProperty< T >::runPostProcessor() {
         if( this->m_hasRunPostProcessor ) return;
         this->m_hasRunPostProcessor = true;
-        this->m_kwInfo.postProcessor()( m_data );
+        this->m_kwInfo.postProcessor()( m_defaulted, m_data );
     }
 
     template< typename T >
@@ -424,13 +417,20 @@ namespace Opm {
 
 template<>
 void GridProperty<int>::setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
-    m_data[targetIdx] = deckItem.get< int >(sourceIdx);
+    this->setElement(targetIdx, deckItem.get< int >(sourceIdx));
 }
 
 template<>
 void GridProperty<double>::setDataPoint(size_t sourceIdx, size_t targetIdx, const DeckItem& deckItem) {
-    m_data[targetIdx] = deckItem.getSIDouble(sourceIdx);
+    this->setElement(targetIdx, deckItem.getSIDouble(sourceIdx));
 }
+
+    template <typename T>
+    void GridProperty<T>::setElement(const typename std::vector<T>::size_type i, const T value, const bool defaulted) {
+        this->m_data[i] = value;
+        this->m_defaulted[i] = defaulted;
+    }
+
 
 template<>
 bool GridProperty<int>::containsNaN( ) const {

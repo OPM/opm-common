@@ -61,6 +61,8 @@ static const Opm::DeckKeyword createTABDIMSKeyword( ) {
     return deck.getKeyword("TABDIMS");
 }
 
+BOOST_AUTO_TEST_SUITE(Basic_Proprty_Contents)
+
 BOOST_AUTO_TEST_CASE(Empty) {
     typedef Opm::GridProperty<int>::SupportedKeywordInfo SupportedKeywordInfo;
     SupportedKeywordInfo keywordInfo("SATNUM" , 77, "1");
@@ -570,3 +572,170 @@ BOOST_AUTO_TEST_CASE(hasKeyword_assertKeyword) {
 
     BOOST_CHECK_THROW( gridProperties.getKeyword( "NOT-SUPPORTED" ), std::invalid_argument );
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Defaulted_Flag)
+
+namespace {
+
+    struct Setup
+    {
+        Setup(const ::Opm::Deck& deck)
+            : tabMgr{ deck }
+            , eGrid { deck }
+            , props { deck, tabMgr, eGrid }
+        {}
+
+        Setup(const std::string& input)
+            : Setup(::Opm::Parser{}.parseString(input))
+        {}
+
+        ::Opm::TableManager        tabMgr;
+        ::Opm::EclipseGrid         eGrid;
+        ::Opm::Eclipse3DProperties props;
+    };
+
+} // Anonymous
+
+BOOST_AUTO_TEST_CASE(EndScale_Horizontal)
+{
+    const auto input = std::string { R"(
+RUNSPEC
+
+TITLE
+Defaulted SOWCR
+
+DIMENS
+ 5 5 1 /
+
+OIL
+WATER
+METRIC
+
+ENDSCALE
+/
+
+TABDIMS
+/
+
+GRID
+
+DXV
+  5*100
+/
+
+DYV
+ 5*100
+/
+
+DZV
+  10
+/
+
+TOPS
+  25*2000 /
+
+PROPS
+
+SWOF
+  0.0 0.0 1.0 0.0
+  1.0 1.0 0.0 0.0
+/
+
+SOWCR
+  1*  1*    1*    1*   1*
+  1*  0.2   0.3   0.4  1*
+  1*  0.3   1*    0.5  1*
+  1*  0.4   0.5   0.6  1*
+  1*  1*    1*    1*   1* /
+
+SWL
+  0.1   0.1   0.1   0.1   0.1
+  0.1   0.2   0.3   0.4   0.1
+  0.1   0.3   0.1   0.5   0.1
+  0.1   0.4   0.5   0.6   0.1
+  0.1   0.1   0.1   0.1   0.1 /
+
+BOX
+  1 5 2 2 1 1 /
+
+SWU
+  5*0.23 /
+
+EQUALS
+  SWU  0.8  2 2 3 4 1 1 / Two elements
+  SWU  0.7  4 4 3 3 1 1 / Single element
+/
+
+-- Adds value to a defaulted value, should still be treated as defaulted
+ADD
+  SWU 0.05 3 3 5 5 1 1 /
+/
+
+-- Assigns new value (no longer defaulted)
+MINVALUE
+  SWU 0.3 5 5 5 5 1 1 /
+/
+
+END)" };
+
+    const auto cse = Setup{ input };
+
+    {
+        BOOST_CHECK(cse.props.hasDeckDoubleGridProperty("SOWCR"));
+
+        const auto& sowcr = cse.props.getDoubleGridProperty("SOWCR");
+        const auto& dflt  = sowcr.wasDefaulted();
+
+        const auto T = true;
+        const auto F = false;
+        const auto expect_dflt = std::vector<bool> {
+            T,   T,   T,   T,   T,
+            T,   F,   F,   F,   T,
+            T,   F,   T,   F,   T,
+            T,   F,   F,   F,   T,
+            T,   T,   T,   T,   T,
+        };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(dflt       .begin(), dflt       .end(),
+                                      expect_dflt.begin(), expect_dflt.end());
+    }
+
+    {
+        BOOST_CHECK(cse.props.hasDeckDoubleGridProperty("SWL"));
+
+        const auto& swl  = cse.props.getDoubleGridProperty("SWL");
+        const auto& dflt = swl.wasDefaulted();
+
+        const auto expect_dflt =
+            std::vector<bool>(cse.eGrid.getNumActive(), false);
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(dflt       .begin(), dflt       .end(),
+                                      expect_dflt.begin(), expect_dflt.end());
+    }
+
+    {
+        BOOST_CHECK(cse.props.hasDeckDoubleGridProperty("SWU"));
+
+        const auto& swu  = cse.props.getDoubleGridProperty("SWU");
+        const auto& dflt = swu.wasDefaulted();
+
+        const auto T = true;
+        const auto F = false;
+        const auto expect_dflt = std::vector<bool> {
+            T,   T,   T,   T,   T,
+            F,   F,   F,   F,   F,
+            T,   F,   T,   F,   T,
+            T,   F,   T,   T,   T,
+            T,   T,   T,   T,   F,
+        };
+
+        BOOST_CHECK_EQUAL_COLLECTIONS(dflt       .begin(), dflt       .end(),
+                                      expect_dflt.begin(), expect_dflt.end());
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
