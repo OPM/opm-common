@@ -166,14 +166,7 @@ int ERst::getArrayIndex(const std::string& name, int number) const
         std::string message = "Trying to get vector " + name + " from non existing sequence " + std::to_string(number);
         OPM_THROW(std::invalid_argument, message);
     }
-
-    auto search = reportLoaded.find(number);
-
-    if (!search->second) {
-        std::string message = "Data not loaded for sequence " + std::to_string(number);
-        OPM_THROW(std::runtime_error, message);
-    }
-
+    
     auto range_it = arrIndexRange.find(number);
 
     std::pair<int,int> indexRange = range_it->second;

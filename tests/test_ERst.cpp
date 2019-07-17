@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <tuple>
 #include <type_traits>
+#include<numeric>
 
 #include <boost/filesystem.hpp>
 
@@ -74,7 +75,11 @@ bool operator==(const std::vector<T> & t1, const std::vector<T> & t2)
     return std::equal(t1.begin(), t1.end(), t2.begin(), t2.end());
 }
 
-
+template <typename T>
+T calcSum(const std::vector<T>& x)
+{
+    return std::accumulate(x.begin(), x.end(), T(0));
+}
 
 
 BOOST_AUTO_TEST_CASE(TestERst_1) {
@@ -82,6 +87,27 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     std::string testFile="SPE1_TESTCASE.UNRST";
     std::vector<int> refReportStepNumbers= {1,2,5,10,15,25,50,100,120};
 
+    std::vector<std::string> ref_zwel_10 = {"PROD","","","INJ","",""};        
+    std::vector<std::string> ref_zwel_25 = {"PROD","","","INJ","",""};        
+
+    std::vector<int> ref_icon_10 = {1,10,10,3,0,1,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0,1,1, 
+                                    1,1,0,1,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0};
+
+    std::vector<int> ref_icon_25 = {1,10,10,3,0,1,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0,1,1,
+                                    1,1,0,1,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0,0,0};
+
+    std::vector<bool> ref_logih_10 = {true,true,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,
+        false,false,false,false,false,false};
+
+
+    std::vector<bool> ref_logih_25 = ref_logih_10;
+    
     ERst rst1(testFile);
     rst1.loadReportStepNumber(5);
     
@@ -107,13 +133,6 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     BOOST_CHECK_THROW(std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",0) , std::invalid_argument );
     BOOST_CHECK_THROW(std::vector<std::string> vect4=rst1.getRst<std::string>("ZWEL",0) , std::invalid_argument );
 
-    // report step number exists, but data is not loaded. Should throw exception
-    BOOST_CHECK_THROW(std::vector<int> vect1=rst1.getRst<int>("ICON",10) , std::runtime_error );
-    BOOST_CHECK_THROW(std::vector<float> vect2=rst1.getRst<float>("PRESSURE",10) , std::runtime_error );
-    BOOST_CHECK_THROW(std::vector<double> vect3=rst1.getRst<double>("XGRP",10) , std::runtime_error );
-    BOOST_CHECK_THROW(std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",10) , std::runtime_error );
-    BOOST_CHECK_THROW(std::vector<std::string> vect4=rst1.getRst<std::string>("ZWEL",10) , std::runtime_error );
-
     // calling getRst<T> member function with wrong type, should throw exception
 
     BOOST_CHECK_THROW(std::vector<float> vect1=rst1.getRst<float>("ICON",5) , std::runtime_error );
@@ -122,15 +141,46 @@ BOOST_AUTO_TEST_CASE(TestERst_1) {
     BOOST_CHECK_THROW(std::vector<double> vect4=rst1.getRst<double>("LOGIHEAD",5), std::runtime_error );
     BOOST_CHECK_THROW(std::vector<bool> vect5=rst1.getRst<bool>("ZWEL",5), std::runtime_error );
 
+    // report step number exists, but data is not loaded. Vector should in this case
+    // be loaded on demand. Hence not throwing an exception
+
+    std::vector<int> vect1=rst1.getRst<int>("ICON",10);
+    std::vector<float> vect2=rst1.getRst<float>("PRESSURE",10);
+    std::vector<double> vect3=rst1.getRst<double>("XGRP",10);
+    std::vector<bool> vect4=rst1.getRst<bool>("LOGIHEAD",10);
+    std::vector<std::string> vect5=rst1.getRst<std::string>("ZWEL",10);
+
+    BOOST_CHECK_EQUAL(ref_icon_10==vect1, true);
+
+    BOOST_CHECK_EQUAL(vect2.size()==300, true);
+    BOOST_REQUIRE_CLOSE (calcSum(vect2), 1.68803e+06, 1e-3);
+
+    BOOST_CHECK_EQUAL(vect3.size()==360, true);
+    BOOST_REQUIRE_CLOSE (calcSum(vect3), 1.81382e+08, 1e-3);
+
+    BOOST_CHECK_EQUAL(ref_logih_10==vect4, true);
+    BOOST_CHECK_EQUAL(ref_zwel_10==vect5, true);
+
     rst1.loadReportStepNumber(25);
 
-    std::vector<int> vect1 = rst1.getRst<int>("ICON",25);
-    std::vector<float> vect2 = rst1.getRst<float>("PRESSURE",25);
-    std::vector<double> vect3 = rst1.getRst<double>("XGRP",25);
-    std::vector<bool> vect4 = rst1.getRst<bool>("LOGIHEAD",25);
-    std::vector<std::string> vect5 = rst1.getRst<std::string>("ZWEL",25);
-}
+    vect1 = rst1.getRst<int>("ICON",25);
+    vect2 = rst1.getRst<float>("PRESSURE",25);
+    vect3 = rst1.getRst<double>("XGRP",25);
+    vect4 = rst1.getRst<bool>("LOGIHEAD",25);
+    vect5 = rst1.getRst<std::string>("ZWEL",25);
 
+    BOOST_CHECK_EQUAL(ref_icon_25==vect1, true);
+
+    BOOST_CHECK_EQUAL(vect2.size()==300, true);
+    BOOST_REQUIRE_CLOSE (calcSum(vect2), 1.92496e+06, 1e-3);
+
+    BOOST_CHECK_EQUAL(vect3.size()==360, true);
+    BOOST_REQUIRE_CLOSE (calcSum(vect3), 4.58807e+08, 1e-3);
+
+    BOOST_CHECK_EQUAL(ref_logih_25==vect4, true);
+    BOOST_CHECK_EQUAL(ref_zwel_25==vect5, true);
+    
+}
 
 static void readAndWrite(EclOutput& eclTest, ERst& rst1,
                          const std::string& name, int seqnum,
@@ -919,4 +969,3 @@ BOOST_AUTO_TEST_CASE(Formatted)
 
 
 BOOST_AUTO_TEST_SUITE_END()
-
