@@ -71,8 +71,8 @@ namespace Opm {
 	const size_t& seqIndex() const;
         bool isProductionGroup(size_t timeStep) const;
         bool isInjectionGroup(size_t timeStep) const;
-        void setProductionGroup(size_t timeStep, bool isProductionGroup);
-        void setInjectionGroup(size_t timeStep, bool isInjectionGroup_);
+        void setProductionGroup(size_t timeStep);
+        void setInjectionGroup(size_t timeStep);
 
         /******************************************************************/
         void             setInjectionPhase(size_t time_step, Phase);
@@ -128,14 +128,16 @@ namespace Opm {
         void delWell(size_t time_step, const std::string& wellName );
 
     private:
+        bool hasType(size_t timeStep, GroupType gtype) const;
+        void addType(size_t timeStep, GroupType new_gtype);
+
         size_t m_creationTimeStep;
         std::string m_name;
 	size_t m_seqIndex;
         GroupInjection::InjectionData m_injection;
         GroupProduction::ProductionData m_production;
         DynamicState< std::set< std::string > > m_wells;
-        DynamicState<int> m_isProductionGroup;
-        DynamicState<int> m_isInjectionGroup;
+        DynamicState<GroupType> group_type;
         DynamicState<double> m_efficiencyFactor;
         DynamicState<int> m_transferEfficiencyFactor;
         DynamicState<int> m_groupNetVFPTable;

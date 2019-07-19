@@ -724,5 +724,12 @@ namespace Opm {
 
     }
 
+    GroupType operator|(GroupType lhs, GroupType rhs) {
+        return static_cast<GroupType>(static_cast<std::underlying_type<GroupType>::type>(lhs) | static_cast<std::underlying_type<GroupType>::type>(rhs));
+    }
+
+    GroupType operator&(GroupType lhs, GroupType rhs) {
+        return static_cast<GroupType>(static_cast<std::underlying_type<GroupType>::type>(lhs) & static_cast<std::underlying_type<GroupType>::type>(rhs));
+    }
 
 }
