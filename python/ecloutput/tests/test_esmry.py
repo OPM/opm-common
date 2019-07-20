@@ -43,4 +43,9 @@ if __name__ == "__main__":
     assert time[0]==0.0
     assert fopt[len(fopt)-1]==5623955.0
 
+    print ("len fopt : %i " % len(fopt))
+    fopt2 = smry3.get("FOPT",True)
+    print ("len fopt2: %i " % len(fopt2))
+
+    
     print ("finished, all good")

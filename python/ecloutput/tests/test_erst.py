@@ -12,8 +12,9 @@ if __name__ == "__main__":
     rst1 = ERst("../data/SPE9.UNRST")
 
     assert rst1.hasReportStepNumber(37)==True
-
-    rst1.loadReportStepNumber(37)
+    
+    # not needed since load on the demand in place also for restart
+    #rst1.loadReportStepNumber(37)
 
     rstNumList=rst1.listOfReportStepNumbers()
     

@@ -21,7 +21,7 @@ PYBIND11_MODULE(esmry_bind, m) {
         .def("hasKey", &Opm::EclIO::ESmry::hasKey)   
         .def("keywordList", &Opm::EclIO::ESmry::keywordList)   
         .def("get", &Opm::EclIO::ESmry::get)   
-      //  .def("getStartdat", &Opm::EclIO::ESmry::getStartdat)   
+        .def("getAtRstep", &Opm::EclIO::ESmry::get_at_rstep)   
         .def("numberOfVectors", &Opm::EclIO::ESmry::numberOfVectors);   
 
 }

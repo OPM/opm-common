@@ -330,8 +330,11 @@ class ESmry:
     def keywordList(self):
         return self.esmry.keywordList()	
 
-    def get(self,name):
-        return self.esmry.get(name)	
+    def get(self,name, reportStepOnly=False):
+        if reportStepOnly:
+            return self.esmry.getAtRstep(name)
+        else:
+            return self.esmry.get(name)	
 
 
 class EclModInit:	
