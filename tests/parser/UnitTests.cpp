@@ -65,17 +65,10 @@ BOOST_AUTO_TEST_CASE(CreateUnitSystem) {
 }
 
 
-BOOST_AUTO_TEST_CASE(UnitSystemEmptyHasNone) {
-    UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
-    BOOST_CHECK_EQUAL( false , system.hasDimension("Length"));
-    BOOST_CHECK_EQUAL( false , system.hasDimension("LXY"));
-}
-
-
 
 BOOST_AUTO_TEST_CASE(UnitSystemGetMissingDimensionThrows) {
     UnitSystem system(UnitSystem::UnitType::UNIT_TYPE_METRIC);
-    BOOST_CHECK_THROW( system.getDimension("Length") , std::out_of_range );
+    BOOST_CHECK_THROW( system.getDimension("Missing") , std::out_of_range );
 }
 
 BOOST_AUTO_TEST_CASE(UnitSystemGetNewOK) {
@@ -631,4 +624,18 @@ BOOST_AUTO_TEST_CASE(TemperatureConversions)
     BOOST_CHECK_CLOSE(lab.from_si(Meas::temperature , 274.15), 1.0, 1.0e-10);
     BOOST_CHECK_CLOSE(field.to_si(Meas::temperature , 1.0), (459.67 + 1.0)*5.0/9.0, 1.0e-10);
     BOOST_CHECK_CLOSE(field.from_si(Meas::temperature , (459.67 + 1.0)*5.0/9.0), 1.0, 1.0e-10);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(DECK_NAMES) {
+    BOOST_CHECK( !UnitSystem::valid_name("INVALID"));
+    BOOST_CHECK( UnitSystem::valid_name("FIELD"));
+    BOOST_CHECK( UnitSystem::valid_name("METRIC"));
+    BOOST_CHECK( UnitSystem::valid_name("LAB"));
+    BOOST_CHECK( UnitSystem::valid_name("PVT-M"));
+
+
+    UnitSystem us("METRIC");
+    BOOST_CHECK_EQUAL( us.deck_name(), "METRIC");
 }
