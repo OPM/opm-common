@@ -75,6 +75,7 @@ namespace Opm {
         };
 
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
+        explicit UnitSystem(const std::string& deck_name);
         explicit UnitSystem(ert_ecl_unit_enum ecl_type);
 
         const std::string& getName() const;
@@ -98,7 +99,9 @@ namespace Opm {
         void from_si( measure, std::vector<double>& ) const;
         void to_si( measure, std::vector<double>& ) const;
         const char* name( measure ) const;
+        std::string deck_name() const;
 
+        static bool valid_name(const std::string& deck_name);
         static ert_ecl_unit_enum ecl_units(UnitType opm_unit);
         static UnitSystem newMETRIC();
         static UnitSystem newFIELD();
@@ -107,6 +110,11 @@ namespace Opm {
         static UnitSystem newINPUT();
     private:
         Dimension parseFactor( const std::string& ) const;
+        void initINPUT();
+        void initMETRIC();
+        void initFIELD();
+        void initPVT_M();
+        void initLAB();
 
         std::string m_name;
         UnitType m_unittype;
