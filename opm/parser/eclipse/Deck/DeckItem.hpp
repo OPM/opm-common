@@ -131,6 +131,8 @@ namespace Opm {
         template< typename T > void push( T, size_t );
         template< typename T > void push_default( T );
         template< typename T > void write_vector(DeckOutput& writer, const std::vector<T>& data) const;
+        void write_double_vector(DeckOutput& stream) const;
+        void write_UDA_vector(DeckOutput& stream) const;
     };
 }
 #endif  /* DECKITEM_HPP */

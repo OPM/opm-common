@@ -20,22 +20,37 @@
 #include <iostream>
 #include <getopt.h>
 #include <boost/filesystem.hpp>
+#include <memory>
 
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/InputErrorAction.hpp>
 #include <opm/parser/eclipse/Deck/Deck.hpp>
+#include <opm/parser/eclipse/Deck/DeckOutput.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+#include <opm/common/OpmLog/OpmLog.hpp>
+#include <opm/common/OpmLog/StreamLog.hpp>
+#include <opm/common/OpmLog/LogUtil.hpp>
 
 
-inline void pack_deck( const char * deck_file, std::ostream& os) {
+
+void initLogging(std::ostream& log_stream) {
+    std::shared_ptr<Opm::StreamLog> lg = std::make_shared<Opm::StreamLog>(log_stream, Opm::Log::DefaultMessageTypes);
+    Opm::OpmLog::addBackend("CONSOLE", lg);
+}
+
+
+inline void pack_deck( const char * deck_file, std::ostream& os, const Opm::UnitSystem * output_units) {
     Opm::ParseContext parseContext(Opm::InputError::WARN);
     Opm::ErrorGuard errors;
     Opm::Parser parser;
+    const int precision = 10;
+    Opm::DeckOutput out(os, precision, output_units);
 
     auto deck = parser.parseFile(deck_file, parseContext, errors);
-    os << deck;
-
+    deck.write(out);
 }
 
 
@@ -70,13 +85,14 @@ Print NEW_CASE in cwd:
 
 
 int main(int argc, char** argv) {
+    std::unique_ptr<Opm::UnitSystem> output_units;
     int arg_offset = 1;
     bool stdout_output = true;
     const char * coutput_arg;
 
     while (true) {
         int c;
-        c = getopt(argc, argv, "o:");
+        c = getopt(argc, argv, "o:u:");
         if (c == -1)
             break;
 
@@ -85,15 +101,21 @@ int main(int argc, char** argv) {
             stdout_output = false;
             coutput_arg = optarg;
             break;
+
+        case 'u':
+            output_units.reset( new Opm::UnitSystem(optarg) );
+            break;
         }
     }
+
     arg_offset = optind;
     if (arg_offset >= argc)
         print_help_and_exit();
 
-    if (stdout_output)
-        pack_deck(argv[arg_offset], std::cout);
-    else {
+    if (stdout_output) {
+        initLogging(std::cerr);
+        pack_deck(argv[arg_offset], std::cout, output_units.get());
+    } else {
         std::ofstream os;
         using path = boost::filesystem::path;
         path input_arg(argv[arg_offset]);
@@ -104,7 +126,8 @@ int main(int argc, char** argv) {
         } else
             os.open(output_arg.string());
 
-        pack_deck(argv[arg_offset], os);
+        initLogging(std::cout);
+        pack_deck(argv[arg_offset], os, output_units.get());
     }
 }
 
