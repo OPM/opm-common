@@ -97,8 +97,29 @@ enum class UDQAction {
     ASSIGN,
     DEFINE,
     UNITS,
-    UPDATE};
+    UPDATE
+};
 
+
+enum class UDAControl {
+    WCONPROD_ORAT,
+    WCONPROD_GRAT,
+    WCONPROD_WRAT,
+    WCONPROD_LRAT,
+    WCONPROD_RESV,
+    WCONPROD_BHP,
+    WCONPROD_THP,
+    //
+    WCONINJE_RATE,
+    WCONINJE_RESV,
+    WCONINJE_BHP,
+    WCONINJE_THP,
+    //
+    GCONPROD_OIL_TARGET,
+    GCONPROD_WATER_TARGET,
+    GCONPROD_GAS_TARGET,
+    GCONPROD_LIQUID_TARGET
+};
 
 
 namespace UDQ {

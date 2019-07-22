@@ -48,6 +48,7 @@ Schedule make_schedule(const std::string& input) {
     return Schedule(deck, grid , eclipseProperties, runspec);
 }
 
+
 BOOST_AUTO_TEST_CASE(MIX_SCALAR) {
     UDQFunctionTable udqft;
     UDQParams udqp;
@@ -276,7 +277,6 @@ BOOST_AUTO_TEST_CASE(ENUM_CONVERSION) {
 }
 
 
-
 BOOST_AUTO_TEST_CASE(UDQ_KEWYORDS) {
     const std::string input = R"(
 RUNSPEC
@@ -418,18 +418,18 @@ ASSIGN WU2 8.0 /
     const auto& assignments = udq.assignments();
     const auto& ass0 = assignments[0];
     const auto& ass1 = assignments[1];
+    auto w1 = ass0.eval({"P1", "P2", "P12"});
+    auto w2 = ass1.eval({"P1", "P2", "P12"});
+    BOOST_CHECK_EQUAL(w1.name(), "WU1");
+    BOOST_CHECK_EQUAL(w2.name(), "WU2");
 
+    BOOST_CHECK_EQUAL( w1["P12"].value(), 4.0 );
+    BOOST_CHECK_EQUAL( w1["P1"].defined(), false );
+    BOOST_CHECK_EQUAL( w1["P2"].defined(), false );
 
-    BOOST_CHECK_EQUAL(ass0.keyword(), "WU1");
-    BOOST_CHECK_EQUAL(ass1.keyword(), "WU2");
-
-    BOOST_CHECK_EQUAL(ass0.value(), 4.0 );
-    BOOST_CHECK_EQUAL(ass1.value(), 8.0 );
-
-    std::vector<std::string> sel0 = {"P12"};
-    std::vector<std::string> sel1 = {};
-    BOOST_CHECK_EQUAL_COLLECTIONS(ass0.selector().begin(), ass0.selector().end(), sel0.begin(), sel0.end());
-    BOOST_CHECK_EQUAL_COLLECTIONS(ass1.selector().begin(), ass1.selector().end(), sel1.begin(), sel1.end());
+    BOOST_CHECK_EQUAL( w2["P12"].value(), 8.0 );
+    BOOST_CHECK_EQUAL( w2["P1"].value(), 8.0 );
+    BOOST_CHECK_EQUAL( w2["P2"].value(), 8.0 );
 }
 
 
@@ -1039,15 +1039,10 @@ BOOST_AUTO_TEST_CASE(DECK_TEST) {
 BOOST_AUTO_TEST_CASE(UDQPARSE_TEST1) {
     UDQParams udqp;
     UDQDefine def1(udqp, "WUBHP", {"1/(WWCT", "'W1*')"});
-    std::vector<std::string> tokens1 = {"1", "/", "(", "WWCT", "W1*", ")"};
-    BOOST_CHECK_EQUAL_COLLECTIONS(tokens1.begin(), tokens1.end(),
-                                  def1.tokens().begin(), def1.tokens().end());
-
+    BOOST_CHECK_EQUAL( def1.input_string() , "1/(WWCT 'W1*')");
 
     UDQDefine def2(udqp, "WUBHP", {"2*(1",  "+" , "WBHP)"});
-    std::vector<std::string> tokens2 = {"2", "*", "(", "1", "+", "WBHP", ")"};
-    BOOST_CHECK_EQUAL_COLLECTIONS(tokens2.begin(), tokens2.end(),
-                                  def2.tokens().begin(), def2.tokens().end());
+    BOOST_CHECK_EQUAL( def2.input_string() , "2*(1 + WBHP)");
 }
 
 
@@ -1149,3 +1144,87 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE_DIM) {
     value0.set_dim( dim );
     BOOST_CHECK_EQUAL( value0.get<double>(), 10);
 }
+
+
+BOOST_AUTO_TEST_CASE(UDQ_INPUT_BASIC) {
+    std::string deck_string = R"(
+SCHEDULE
+
+UDQ
+    ASSIGN WUBHP1 11 /
+    ASSIGN WUOPR  20 /
+    ASSIGN WUBHP2 P2 12 /
+    UNITS  WUBHP 'BARSA' /
+    UNITS  WUOPR 'SM3/DAY' /
+    DEFINE WUWCT WWPR / (WWPR + WOPR) /
+    UNITS  WUWCT '1' /
+    DEFINE FUOPR SUM(WOPR) /
+    UNITS  FUOPR 'SM3/DAY' /
+    UNITS  FUXXX 'SM3/DAY' /
+/
+
+UDQ
+    ASSIGN WUBHPX P2 12 /
+    DEFINE FUOPRX SUM(WOPR) /
+/
+
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+
+
+    const auto& def_input = udq.input_definitions();
+    const auto& def = udq.definitions();
+    BOOST_CHECK_EQUAL(def_input.size(), 3);
+    for (std::size_t i = 0; i < def_input.size(); i++)
+        BOOST_CHECK_EQUAL(def[i].input_string(), def_input[i].second.input_string());
+
+    BOOST_CHECK_EQUAL(def_input[0].first, 3);
+    BOOST_CHECK_EQUAL(def_input[1].first, 4);
+    BOOST_CHECK_EQUAL(def_input[2].first, 6);
+
+
+    BOOST_CHECK_EQUAL(def[0].keyword(), "WUWCT");
+    BOOST_CHECK_EQUAL(def[1].keyword(), "FUOPR");
+    BOOST_CHECK_EQUAL(def[2].keyword(), "FUOPRX");
+
+    BOOST_CHECK( udq.has_keyword("FUXXX") );
+}
+
+
+BOOST_AUTO_TEST_CASE(UDQ_INPUT_OVERWRITE) {
+    std::string deck_string = R"(
+SCHEDULE
+
+UDQ
+    ASSIGN WUBHP1 11 /
+    ASSIGN WUOPR  20 /
+    ASSIGN WUBHP2 P2 12 /
+    UNITS  WUBHP 'BARSA' /
+    UNITS  WUOPR 'SM3/DAY' /
+    DEFINE WUWCT WWPR / (WWPR + WOPR) /
+    UNITS  WUWCT '1' /
+    DEFINE FUOPR SUM(WOPR) /
+    UNITS  FUOPR 'SM3/DAY' /
+/
+
+UDQ
+    DEFINE WUBHP1 SUM(WOPR) /
+/
+
+)";
+    auto schedule = make_schedule(deck_string);
+    const auto& udq = schedule.getUDQConfig(0);
+
+
+    const auto& def_input = udq.input_definitions();
+    const auto& def = udq.definitions();
+    BOOST_CHECK_EQUAL(def_input.size(), 3);
+    for (std::size_t i = 0; i < def_input.size(); i++)
+        BOOST_CHECK_EQUAL(def[i].input_string(), def_input[i].second.input_string());
+
+    BOOST_CHECK_EQUAL(def_input[0].first, 0);
+    BOOST_CHECK_EQUAL(def_input[1].first, 3);
+    BOOST_CHECK_EQUAL(def_input[2].first, 4);
+}
+
