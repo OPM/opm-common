@@ -1,4 +1,5 @@
 import sys
+import numpy as np 
 
 sys.path.append('../module')
 
@@ -20,6 +21,9 @@ if __name__ == "__main__":
     assert file1.hasArray("PORV")==True
     porv = file1.get("PORV")
     assert len(porv)==9000
+    
+    assert porv.dtype=="float32"
+
 
     arrList = file1.getListOfArrays()
 

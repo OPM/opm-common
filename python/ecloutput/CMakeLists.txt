@@ -28,16 +28,17 @@ include_directories(../..)
 
 
 pybind11_add_module(eclfile src/eclfile_binding.cpp)
-pybind11_add_module(egrid src/egrid_binding.cpp)
-pybind11_add_module(erst src/erst_binding.cpp)
-pybind11_add_module(erft src/erft_binding.cpp)
-pybind11_add_module(esmry src/esmry_binding.cpp)
-pybind11_add_module(eminit src/eminit_binding.cpp)
+#pybind11_add_module(egrid src/egrid_binding.cpp)
+#pybind11_add_module(erst src/erst_binding.cpp)
+#pybind11_add_module(erft src/erft_binding.cpp)
+#pybind11_add_module(esmry src/esmry_binding.cpp)
+#pybind11_add_module(eminit src/eminit_binding.cpp)
 
 
 
 
-foreach(module eclfile egrid esmry erst erft eminit)
+#foreach(module eclfile egrid esmry erst erft eminit)
+foreach(module eclfile )
 
    if( PYTHON36 )
        set_target_properties( ${module} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/../shared_obj_files/python3.6 )

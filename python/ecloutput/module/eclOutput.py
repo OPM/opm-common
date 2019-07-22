@@ -2,11 +2,11 @@ import os
 import sys
 
 from eclfile_bind import EclFileBind
-from egrid_bind import EGridBind
-from erst_bind import ERstBind
-from erft_bind import ERftBind
-from esmry_bind import ESmryBind
-from eminit_bind import EclModInitBind
+#from egrid_bind import EGridBind
+#from erst_bind import ERstBind
+#from erft_bind import ERftBind
+#from esmry_bind import ESmryBind
+#from eminit_bind import EclModInitBind
 
 from enum import Enum
 import datetime
@@ -61,7 +61,7 @@ class EclFile:
     def hasArray(self, name):
         return self.eclfile.hasKey(name)
     
-    def get(self, arg):
+    def get(self, arg, numpy=True):
         
         try:
             ind = int(arg)
@@ -75,21 +75,32 @@ class EclFile:
         self.eclfile.loadDataByIndex(ind)
         
         if self.arrayTypeList[ind]==eclArrType.INTE:
-            list1=self.eclfile.getInteFromIndex(ind)
+            if numpy:
+                list1=self.eclfile.getInteFromIndexNumpy(ind)
+            else:
+                list1=self.eclfile.getInteFromIndex(ind)
         elif self.arrayTypeList[ind]==eclArrType.REAL:            
-            list1=self.eclfile.getRealFromIndex(ind)
+            if numpy:
+                list1=self.eclfile.getRealFromIndexNumpy(ind)
+            else:
+                list1=self.eclfile.getRealFromIndex(ind)
         elif self.arrayTypeList[ind]==eclArrType.DOUB:            
-            list1=self.eclfile.getDoubFromIndex(ind)
+            if numpy:
+                list1=self.eclfile.getDoubFromIndexNumpy(ind)
+            else:    
+                list1=self.eclfile.getDoubFromIndex(ind)
         elif self.arrayTypeList[ind]==eclArrType.LOGI:            
             list1=self.eclfile.getLogiFromIndex(ind)
+            
         elif self.arrayTypeList[ind]==eclArrType.CHAR:            
             list1=self.eclfile.getCharFromIndex(ind)
+                
         elif self.arrayTypeList[ind]==eclArrType.MESS:            
             list1=[]
         
         return list1
 
-
+'''
 class EGrid:	
 
     def __init__(self, fileName):
@@ -411,3 +422,4 @@ class EclModInit:
     def getNumberOfActiveCells(self):
         return self.eclmod.getNumberOfActiveCells()
 
+    '''
