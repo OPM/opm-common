@@ -27,11 +27,13 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 
 #include <opm/output/data/Solution.hpp>
+#include <opm/output/eclipse/LogiHEAD.hpp>
 #include <opm/output/eclipse/Tables.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
@@ -231,6 +233,58 @@ namespace {
         return { x.begin(), x.end() };
     }
 
+    ::Opm::RestartIO::LogiHEAD::PVTModel
+    pvtFlags(const ::Opm::Runspec& rspec, const ::Opm::TableManager& tabMgr)
+    {
+        auto pvt = ::Opm::RestartIO::LogiHEAD::PVTModel{};
+
+        const auto& phases = rspec.phases();
+
+        pvt.isLiveOil = phases.active(::Opm::Phase::OIL) &&
+            !tabMgr.getPvtoTables().empty();
+
+        pvt.isWetGas = phases.active(::Opm::Phase::GAS) &&
+            !tabMgr.getPvtgTables().empty();
+
+        pvt.constComprOil = phases.active(::Opm::Phase::OIL) &&
+            !(pvt.isLiveOil ||
+              tabMgr.hasTables("PVDO") ||
+              tabMgr.getPvcdoTable().empty());
+
+        return pvt;
+    }
+
+    ::Opm::RestartIO::LogiHEAD::SatfuncFlags
+    satfuncFlags(const ::Opm::Runspec& rspec)
+    {
+        auto flags = ::Opm::RestartIO::LogiHEAD::SatfuncFlags{};
+
+        const auto& eps = rspec.endpointScaling();
+        if (eps) {
+            flags.useEndScale       = true;
+            flags.useDirectionalEPS = eps.directional();
+            flags.useReversibleEPS  = eps.reversible();
+            flags.useAlternateEPS   = eps.threepoint();
+        }
+
+        return flags;
+    }
+
+    std::vector<bool> logihead(const ::Opm::EclipseState& es)
+    {
+        const auto& rspec   = es.runspec();
+        const auto& wsd     = rspec.wellSegmentDimensions();
+        const auto& hystPar = rspec.hysterPar();
+
+        const auto lh = ::Opm::RestartIO::LogiHEAD{}
+            .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
+            .pvtModel(pvtFlags(rspec, es.getTableManager()))
+            .saturationFunction(satfuncFlags(rspec))
+            ;
+
+        return lh.data();
+    }
+
     void writeInitFileHeader(const ::Opm::EclipseState&      es,
                              const ::Opm::EclipseGrid&       grid,
                              const ::Opm::Schedule&          sched,
@@ -244,10 +298,7 @@ namespace {
         }
 
         {
-            const auto lh = ::Opm::RestartIO::Helpers::
-                createLogiHead(es);
-
-            initFile.write("LOGIHEAD", lh);
+            initFile.write("LOGIHEAD", logihead(es));
         }
 
         {
