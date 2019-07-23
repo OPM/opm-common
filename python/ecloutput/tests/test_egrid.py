@@ -1,5 +1,11 @@
 import sys
 
+try:
+    import numpy as np 
+    numpyOK=True
+except:
+    numpyOK=False
+
 
 sys.path.append('../module')
 
@@ -7,6 +13,9 @@ from eclOutput import EGrid
 
 
 if __name__ == "__main__":
+
+    if not numpyOK:
+        print ("\nWarning!, numpy package not found found !\n")
 
     grid1 = EGrid("../data/9_EDITNNC.EGRID")
     
@@ -50,10 +59,21 @@ if __name__ == "__main__":
 
     
     X,Y,Z=grid1.getXYZ(100)
+
+    if numpyOK:
+        assert isinstance(X, np.ndarray)==True
+        assert isinstance(Y, np.ndarray)==True
+        assert isinstance(Z, np.ndarray)==True
+
+        assert X.dtype=="float64"
+        assert Y.dtype=="float64"
+        assert Z.dtype=="float64"
+
+    else:
+        assert isinstance(X, list)==True
+        assert isinstance(Y, list)==True
+        assert isinstance(Z, list)==True
     
-    assert X.dtype=="float64"
-    assert Y.dtype=="float64"
-    assert Z.dtype=="float64"
 
     Xref=[2899.45166015625,2999.390869140625,2899.45166015625,2999.390869140625,2899.4176237656716,2999.3568089317187,2899.417623015281,2999.356808099622]
 

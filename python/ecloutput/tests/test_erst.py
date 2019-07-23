@@ -1,13 +1,20 @@
 import sys
 
+try:
+    import numpy as np 
+    numpyOK=True
+except:
+    numpyOK=False
+
 
 sys.path.append('../module')
 
 from eclOutput import ERst
 
-
-
 if __name__ == "__main__":
+
+    if not numpyOK:
+        print ("\nWarning!, numpy package not found found !\n")
 
     rst1 = ERst("../data/SPE9.UNRST")
 
@@ -37,8 +44,11 @@ if __name__ == "__main__":
     assert test2[65]==1
     assert test2[66]==2016
     
-    assert test2.dtype=="int32"
-    
+    if numpyOK:
+        assert test2.dtype=="int32"
+        assert isinstance(test2, np.ndarray)==True
+    else:
+        assert isinstance(test2, list)==True
     
     test3 = rst1.get("LOGIHEAD",37)
     assert len(test3)==121
@@ -52,7 +62,12 @@ if __name__ == "__main__":
     assert test4[101]==0.025
     assert test4[198]==1e+20
 
-    assert test4.dtype=="float64"
+    if numpyOK:
+        assert test4.dtype=="float64"
+        assert isinstance(test4, np.ndarray)==True
+    else:
+        assert isinstance(test4, list)==True
+
 
     assert rst1.hasArray("PRESSURE", 37)==True
     assert rst1.hasArray("XXX", 37)==False
@@ -63,7 +78,11 @@ if __name__ == "__main__":
     assert test5[107]==2397.0341796875
     assert test5[1499]==2685.482421875
 
-    assert test5.dtype=="float32"
+    if numpyOK:
+        assert test5.dtype=="float32"
+        assert isinstance(test5, np.ndarray)==True
+    else:
+        assert isinstance(test5, list)==True
  
 
     print ("finished, all good")

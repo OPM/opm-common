@@ -3,8 +3,8 @@ project(eclOutput)
 
 # select Python version 
 
-option(PYTHON27 "Compile library for Python version 2.7" On)
-option(PYTHON36 "Compile library for Python version 3.6" OFF)
+option(PYTHON27 "Compile library for Python version 2.7" OFF)
+option(PYTHON36 "Compile library for Python version 3.6" ON)
 
 
 if( PYTHON36 )

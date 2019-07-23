@@ -1,6 +1,13 @@
 import os
 import sys
 
+try:
+    import numpy
+    numpyOk =True
+except:
+    numpyOk =False
+    
+
 from eclfile_bind import EclFileBind
 from egrid_bind import EGridBind
 from erst_bind import ERstBind
@@ -72,17 +79,17 @@ class EclFile:
         self.eclfile.loadDataByIndex(ind)
         
         if self.arrayTypeList[ind]==eclArrType.INTE:
-            if numpy:
+            if numpy and numpyOk:
                 list1=self.eclfile.getInteFromIndexNumpy(ind)
             else:
                 list1=self.eclfile.getInteFromIndex(ind)
         elif self.arrayTypeList[ind]==eclArrType.REAL:            
-            if numpy:
+            if numpy and numpyOk:
                 list1=self.eclfile.getRealFromIndexNumpy(ind)
             else:
                 list1=self.eclfile.getRealFromIndex(ind)
         elif self.arrayTypeList[ind]==eclArrType.DOUB:            
-            if numpy:
+            if numpy and numpyOk:
                 list1=self.eclfile.getDoubFromIndexNumpy(ind)
             else:    
                 list1=self.eclfile.getDoubFromIndex(ind)
@@ -130,7 +137,7 @@ class EGrid:
 
     def getXYZ(self, globInd, numpy=True):
 
-        if numpy:
+        if numpy and numpyOk:
             X,Y,Z=self.egrid.getCellCornersNumpy(globInd)
         else:
             X,Y,Z=self.egrid.getCellCorners(globInd)
@@ -186,7 +193,6 @@ class ERst:
             return True
         else:
             return False
-            
 
     def hasReportStepNumber(self, num):
         return self.erst.hasReportStepNumber(num)
@@ -216,19 +222,19 @@ class ERst:
         aind=self.arrayNameList[rind].index(name)
         
         if self.arrayTypeList[rind][aind]==eclArrType.INTE:
-            if numpy:
+            if numpy and numpyOk:
                 array=self.erst.getInteArrayNumpy(name, num)
             else:
                 array=self.erst.getInteArray(name, num)
         elif self.arrayTypeList[rind][aind]==eclArrType.LOGI:
             array=self.erst.getLogiArray(name, num)
         elif self.arrayTypeList[rind][aind]==eclArrType.DOUB:
-            if numpy:
+            if numpy and numpyOk:
                 array=self.erst.getDoubArrayNumpy(name, num)
             else:
                 array=self.erst.getDoubArray(name, num)
         elif self.arrayTypeList[rind][aind]==eclArrType.REAL:
-            if numpy:
+            if numpy and numpyOk:
                 array=self.erst.getRealArrayNumpy(name, num)
             else:
                 array=self.erst.getRealArray(name, num)
@@ -298,11 +304,9 @@ class ERft:
         else:
             return False
 
-
     def hasArray(self, arrName, welln, date):
         dateTuple = (date.year, date.month, date.day)
         return self.erst.hasArray(arrName, welln,dateTuple ) 
-        
 
     def get(self, arrName, welln, date, numpy=True):
         
@@ -321,19 +325,19 @@ class ERft:
         arrInd = self.arrayNameList[rftInd].index(arrName)
 
         if self.arrayTypeList[rftInd][arrInd]==eclArrType.INTE:
-            if numpy:
+            if numpy and numpyOk:
                 array=self.erst.getInteRftArrayNumpy(arrName, welln, date.year, date.month, date.day)
             else:    
                 array=self.erst.getInteRftArray(arrName, welln, date.year, date.month, date.day)
         elif self.arrayTypeList[rftInd][arrInd]==eclArrType.LOGI:
             array=self.erst.getLogiRftArray(arrName, welln, date.year, date.month, date.day)
         elif self.arrayTypeList[rftInd][arrInd]==eclArrType.DOUB:
-            if numpy:
+            if numpy and numpyOk:
                 array=self.erst.getDoubRftArrayNumpy(arrName, welln, date.year, date.month, date.day)
             else:    
                 array=self.erst.getDoubRftArray(arrName, welln, date.year, date.month, date.day)
         elif self.arrayTypeList[rftInd][arrInd]==eclArrType.REAL:
-            if numpy:
+            if numpy and numpyOk:
                 array=self.erst.getRealRftArrayNumpy(arrName, welln, date.year, date.month, date.day)
             else:    
                 array=self.erst.getRealRftArray(arrName, welln, date.year, date.month, date.day)
@@ -364,13 +368,14 @@ class ESmry:
         return self.esmry.keywordList()	
 
     def get(self,name, reportStepOnly=False, numpy=True):
+
         if reportStepOnly:
-            if numpy:
+            if numpy and numpyOk:
                 return self.esmry.getAtRstepNumpy(name)
             else: 
                 return self.esmry.getAtRstep(name)
         else:
-            if numpy:
+            if numpy and numpyOk:
                 return self.esmry.getNumpy(name) 
             else: 
                 return self.esmry.get(name)        
@@ -415,6 +420,7 @@ class EclModInit:
     
 
     def getParam(self, name, numpy=True):
+
         try:
             ind = self.arrayNameList.index(name)
         except:
@@ -422,12 +428,12 @@ class EclModInit:
             exit(1)
             
         if self.arrayTypeList[ind]==eclArrType.INTE:
-            if numpy:
+            if numpy and numpyOk:
                list1=self.eclmod.getInteParamNumpy(name)
             else:    
                list1=self.eclmod.getInteParam(name)
         elif self.arrayTypeList[ind]==eclArrType.REAL:            
-            if numpy:
+            if numpy and numpyOk:
                list1=self.eclmod.getRealParamNumpy(name)
             else:
                list1=self.eclmod.getRealParam(name)
@@ -455,4 +461,3 @@ class EclModInit:
 
     def getNumberOfActiveCells(self):
         return self.eclmod.getNumberOfActiveCells()
-

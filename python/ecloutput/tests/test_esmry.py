@@ -1,11 +1,19 @@
 import sys
-import numpy as np
+
+try:
+    import numpy as np 
+    numpyOK=True
+except:
+    numpyOK=False
 
 sys.path.append('../module')
 
 from eclOutput import ESmry
 
 if __name__ == "__main__":
+
+    if not numpyOK:
+        print ("\nWarning!, numpy package not found found !\n")
 
     smry1 = ESmry("../data/9_EDITNNC.SMSPEC")
 
@@ -31,11 +39,19 @@ if __name__ == "__main__":
 
     time2a = smry1.get("TIME")
     assert len(time2a)==130
-    assert isinstance(time2a, np.ndarray)==True
+
+    if numpyOK:
+        assert isinstance(time2a, np.ndarray)==True
+    else:
+        assert isinstance(time2a, list)==True
     
     time2b = smry1.get("TIME", reportStepOnly=True)
     assert len(time2b)==33
-    assert isinstance(time2b, np.ndarray)==True
+
+    if numpyOK:
+        assert isinstance(time2b, np.ndarray)==True
+    else:
+        assert isinstance(time2b, list)==True
     
     time = smry1.get("TIME")
     fopt = smry1.get("FOPT")
