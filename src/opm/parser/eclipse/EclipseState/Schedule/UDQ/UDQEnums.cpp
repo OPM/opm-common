@@ -268,6 +268,57 @@ std::string typeName(UDQVarType var_type) {
     }
 }
 
+UDAKeyword keyword(UDAControl control) {
+    if (control == UDAControl::WCONPROD_ORAT)
+        return UDAKeyword::WCONPROD;
 
+    if (control == UDAControl::WCONPROD_GRAT)
+        return UDAKeyword::WCONPROD;
+
+    if (control == UDAControl::WCONPROD_WRAT)
+        return UDAKeyword::WCONPROD;
+
+    if (control == UDAControl::WCONPROD_LRAT)
+        return UDAKeyword::WCONPROD;
+
+    if (control == UDAControl::WCONPROD_RESV)
+        return UDAKeyword::WCONPROD;
+
+    if (control == UDAControl::WCONPROD_BHP)
+        return UDAKeyword::WCONPROD;
+
+    if (control == UDAControl::WCONPROD_THP)
+        return UDAKeyword::WCONPROD;
+
+    /*-----------------------------------------------------------*/
+
+    if (control == UDAControl::WCONINJE_RATE)
+        return UDAKeyword::WCONINJE;
+
+    if (control == UDAControl::WCONINJE_RESV)
+        return UDAKeyword::WCONINJE;
+
+    if (control == UDAControl::WCONINJE_BHP)
+        return UDAKeyword::WCONINJE;
+
+    if (control == UDAControl::WCONINJE_THP)
+        return UDAKeyword::WCONINJE;
+
+    /*-----------------------------------------------------------*/
+
+    if (control == UDAControl::GCONPROD_OIL_TARGET)
+        return UDAKeyword::GCONPROD;
+
+    if (control == UDAControl::GCONPROD_WATER_TARGET)
+        return UDAKeyword::GCONPROD;
+
+    if (control == UDAControl::GCONPROD_GAS_TARGET)
+        return UDAKeyword::GCONPROD;
+
+    if (control == UDAControl::GCONPROD_LIQUID_TARGET)
+        return UDAKeyword::GCONPROD;
+
+    throw std::logic_error("Unrecognized enum type - internal error");
+}
 }
 }
