@@ -1,5 +1,5 @@
 import sys
-
+import numpy as np
 
 sys.path.append('../module')
 
@@ -11,7 +11,6 @@ if __name__ == "__main__":
 
     assert smry1.hasKey("FOPT")==True
     assert smry1.hasKey("WOPR:X-2H")==False
-   # print smry1.numberOfVectors()
     
     assert smry1.numberOfVectors()==112
 
@@ -21,6 +20,22 @@ if __name__ == "__main__":
     
     assert keyList[0]=="BGSAT:11,13,9"
     assert keyList[35]=="WGIRH:INJ1"
+    
+    time1a = smry1.get("TIME", numpy=False)
+    assert len(time1a)==130
+    assert isinstance(time1a, list)==True
+
+    time1b = smry1.get("TIME", numpy=False, reportStepOnly=True)
+    assert len(time1b)==33
+    assert isinstance(time1b, list)==True
+
+    time2a = smry1.get("TIME")
+    assert len(time2a)==130
+    assert isinstance(time2a, np.ndarray)==True
+    
+    time2b = smry1.get("TIME", reportStepOnly=True)
+    assert len(time2b)==33
+    assert isinstance(time2b, np.ndarray)==True
     
     time = smry1.get("TIME")
     fopt = smry1.get("FOPT")

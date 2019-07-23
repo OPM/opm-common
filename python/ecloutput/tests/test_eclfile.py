@@ -39,6 +39,24 @@ if __name__ == "__main__":
     assert tabdims[0]==885
     assert tabdims[7]==67
     assert tabdims[15]==0
+
+    file2 = EclFile("../data/9_EDITNNC.SMSPEC")
+
+    assert file2.hasArray("KEYWORDS")==True
+    keyw = file2.get("KEYWORDS")
+    
+    assert len(keyw)==312
+    assert keyw[0]=="TIME"
+    assert keyw[16]=="FWCT"
+    
+    file3 = EclFile("../data/9_EDITNNC.INIT")
+
+    assert file3.hasArray("LOGIHEAD")==True
+    logih = file3.get("LOGIHEAD")
+    assert len(logih)==121
+    assert logih[0]==True
+    assert logih[2]==False
+    assert logih[8]==True
     
 
     print("Finished, all good")

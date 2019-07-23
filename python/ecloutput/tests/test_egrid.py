@@ -48,8 +48,12 @@ if __name__ == "__main__":
     
     assert actInd==1000
 
-    '''
+    
     X,Y,Z=grid1.getXYZ(100)
+    
+    assert X.dtype=="float64"
+    assert Y.dtype=="float64"
+    assert Z.dtype=="float64"
 
     Xref=[2899.45166015625,2999.390869140625,2899.45166015625,2999.390869140625,2899.4176237656716,2999.3568089317187,2899.417623015281,2999.356808099622]
 
@@ -62,7 +66,6 @@ if __name__ == "__main__":
         assert Y[i]==Yref[i]
         assert Z[i]==Zref[i]
 
-    '''
     print ("finished, all good")
 
 

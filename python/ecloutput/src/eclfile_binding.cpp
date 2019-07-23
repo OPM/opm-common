@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "pybind11/numpy.h"
+#include <pybind11/numpy.h>
 
 #include <src/opm/io/eclipse/EclFile.cpp>
 #include <opm/io/eclipse/EclIOdata.hpp>
@@ -22,17 +22,17 @@ public:
 
     py::array_t<float> getFloatNumpy(int arrIndex) {
         std::vector<float> tmp=get<float>(arrIndex);
-        return py::array(py::dtype("f"), {tmp.size()}, {}, &tmp[0]);  // is ok
+        return py::array(py::dtype("f"), {tmp.size()}, {}, &tmp[0]);
     };
 
     py::array_t<double> getDoubleNumpy(int arrIndex) {
         std::vector<double> tmp=get<double>(arrIndex);
-        return py::array(py::dtype("d"), {tmp.size()}, {}, &tmp[0]);  // is ok
+        return py::array(py::dtype("d"), {tmp.size()}, {}, &tmp[0]);
     };
 
     py::array_t<int> getIntegerNumpy(int arrIndex) {
         std::vector<int> tmp=get<int>(arrIndex);
-        return py::array(py::dtype("i"), {tmp.size()}, {}, &tmp[0]);  // is ok
+        return py::array(py::dtype("i"), {tmp.size()}, {}, &tmp[0]); 
     };
 
     

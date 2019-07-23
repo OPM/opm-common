@@ -13,9 +13,6 @@ if __name__ == "__main__":
 
     assert rst1.hasReportStepNumber(37)==True
     
-    # not needed since load on the demand in place also for restart
-    #rst1.loadReportStepNumber(37)
-
     rstNumList=rst1.listOfReportStepNumbers()
     
     assert len(rstNumList)==2
@@ -39,7 +36,10 @@ if __name__ == "__main__":
     assert test2[64]==6
     assert test2[65]==1
     assert test2[66]==2016
-
+    
+    assert test2.dtype=="int32"
+    
+    
     test3 = rst1.get("LOGIHEAD",37)
     assert len(test3)==121
     assert test3[0]==True
@@ -52,6 +52,8 @@ if __name__ == "__main__":
     assert test4[101]==0.025
     assert test4[198]==1e+20
 
+    assert test4.dtype=="float64"
+
     assert rst1.hasArray("PRESSURE", 37)==True
     assert rst1.hasArray("XXX", 37)==False
 
@@ -61,6 +63,8 @@ if __name__ == "__main__":
     assert test5[107]==2397.0341796875
     assert test5[1499]==2685.482421875
 
+    assert test5.dtype=="float32"
+ 
 
     print ("finished, all good")
 

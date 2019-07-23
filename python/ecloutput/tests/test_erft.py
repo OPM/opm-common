@@ -11,7 +11,8 @@ import datetime
 if __name__ == "__main__":
 
 
-    rft1 = ERft("../data/9_EDITNNC.RFT")
+  #  rft1 = ERft("../data/9_EDITNNC.RFT")
+    rft1 = ERft("../data/TEST.RFT")
 
     dato = datetime.date(2019, 2, 1)
 
@@ -24,7 +25,8 @@ if __name__ == "__main__":
     for i in range(0,len(pressure)):
        assert pref[i]==pressure[i]
 
-
+    assert pressure.dtype=="float32"
+    
     # testing hasRft
     
     dato = datetime.date(2019, 2, 1)
@@ -53,6 +55,15 @@ if __name__ == "__main__":
     assert rftReportList[0]==("PROD1",datetime.date(2019,2,1))
     assert rftReportList[1]==("INJ1",datetime.date(2019,2,1))
 
+    kcon = rft1.get("CONKPOS", "PROD1", dato)
+    ref_kcon=[ 7, 8, 9, 10]
+
+    assert len(kcon)==len(ref_kcon)
+
+    for i in range(0,len(kcon)):
+       assert ref_kcon[i]==kcon[i]
+    
+    assert kcon.dtype=="int32"
     
     print ("finished, all good")
 

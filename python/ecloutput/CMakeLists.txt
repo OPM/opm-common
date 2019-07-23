@@ -3,8 +3,8 @@ project(eclOutput)
 
 # select Python version 
 
-option(PYTHON27 "Compile library for Python version 2.7" OFF)
-option(PYTHON36 "Compile library for Python version 3.6" ON)
+option(PYTHON27 "Compile library for Python version 2.7" On)
+option(PYTHON36 "Compile library for Python version 3.6" OFF)
 
 
 if( PYTHON36 )
@@ -19,26 +19,20 @@ endif()
 # or specify on command line with cmake
 # cmake -DPYBIND11_PYTHON_VERSION=3.5 ..
 
-
 #add_subdirectory(pybind11)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../pybind11 ${CMAKE_CURRENT_BINARY_DIR}/pybind11)
-
 
 include_directories(../..)
 
 
 pybind11_add_module(eclfile src/eclfile_binding.cpp)
-#pybind11_add_module(egrid src/egrid_binding.cpp)
-#pybind11_add_module(erst src/erst_binding.cpp)
-#pybind11_add_module(erft src/erft_binding.cpp)
-#pybind11_add_module(esmry src/esmry_binding.cpp)
-#pybind11_add_module(eminit src/eminit_binding.cpp)
+pybind11_add_module(egrid src/egrid_binding.cpp)
+pybind11_add_module(erst src/erst_binding.cpp)
+pybind11_add_module(erft src/erft_binding.cpp)
+pybind11_add_module(esmry src/esmry_binding.cpp)
+pybind11_add_module(eminit src/eminit_binding.cpp)
 
-
-
-
-#foreach(module eclfile egrid esmry erst erft eminit)
-foreach(module eclfile )
+foreach(module eclfile egrid erst erft esmry eminit)
 
    if( PYTHON36 )
        set_target_properties( ${module} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/../shared_obj_files/python3.6 )

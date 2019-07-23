@@ -1,4 +1,6 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 
 #include <src/opm/io/eclipse/EclFile.cpp>
 #include <src/opm/io/eclipse/ESmry.cpp>
@@ -13,17 +15,36 @@
 
 namespace py = pybind11;
 
+class ESmryTmp : public Opm::EclIO::ESmry {
+    
+public:
+    ESmryTmp(const std::string& filename, bool loadBaseRunData): Opm::EclIO::ESmry(filename, loadBaseRunData) {};
+
+    py::array_t<float> get_numpy(const std::string& name) {
+        std::vector<float> tmp=get(name);
+        return py::array(py::dtype("f"), {tmp.size()}, {}, &tmp[0]);
+    };
+
+    py::array_t<float> get_at_rstep_numpy(const std::string& name) {
+        std::vector<float> tmp=get_at_rstep(name);
+        return py::array(py::dtype("f"), {tmp.size()}, {}, &tmp[0]);
+    };
+    
+};
+
 
 PYBIND11_MODULE(esmry_bind, m) {
 
-    py::class_<Opm::EclIO::ESmry>(m, "ESmryBind")
+    py::class_<ESmryTmp>(m, "ESmryBind")
         .def(py::init<const std::string &, bool>())
-        .def("hasKey", &Opm::EclIO::ESmry::hasKey)   
-        .def("keywordList", &Opm::EclIO::ESmry::keywordList)   
-        .def("get", &Opm::EclIO::ESmry::get)   
-        .def("getAtRstep", &Opm::EclIO::ESmry::get_at_rstep)   
-        .def("numberOfVectors", &Opm::EclIO::ESmry::numberOfVectors);   
-
+        .def("hasKey", &ESmryTmp::hasKey)   
+        .def("keywordList", &ESmryTmp::keywordList)   
+        .def("get", &ESmryTmp::get)   
+        .def("getNumpy", &ESmryTmp::get_numpy)   
+        .def("getAtRstep", &ESmryTmp::get_at_rstep)   
+        .def("getAtRstepNumpy", &ESmryTmp::get_at_rstep_numpy)   
+        .def("numberOfVectors", &ESmryTmp::numberOfVectors);   
+    
 }
 
 
