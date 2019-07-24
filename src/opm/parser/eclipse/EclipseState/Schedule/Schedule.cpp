@@ -115,9 +115,8 @@ namespace {
 
         if (Section::hasSCHEDULE(deck))
             iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, eclipseProperties );
-#ifdef WELL_TEST
-        checkWells(parseContext, errors);
-#endif
+
+        checkGroups(parseContext, errors);
     }
 
 
@@ -2448,5 +2447,161 @@ namespace {
 
     }
 
-}
 
+#ifdef GROUP_TEST
+
+    bool Schedule::checkGroups(const ParseContext& parseContext, ErrorGuard& errors) {
+        if (this->m_groups.size() != this->groups.size())
+            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group count mismatch", errors);
+
+        // Check group names
+        for (const auto& group_pair : this->m_groups) {
+            if (this->groups.count(group_pair.second.name()) == 0)
+                parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group missing named group", errors);
+        }
+
+
+        // Insert index and defined()
+        for (const auto& group_pair : this->m_groups) {
+            const auto& group = group_pair.second;
+            const auto& dynamic_state = this->groups.at(group.name());
+
+            if (group.seqIndex() != dynamic_state.back()->insert_index())
+                parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group - seq index error", errors);
+
+            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
+                const auto& group2_ptr = dynamic_state[index];
+                if (group2_ptr == nullptr) {
+                    if (group.hasBeenDefined(index))
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
+                } else {
+                    if (!group.hasBeenDefined(index))
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
+
+                    if (group.hasBeenDefined(index) != group2_ptr->defined(index))
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
+                }
+            }
+        }
+
+
+        // GCONINJE
+        for (const auto& group_pair : this->m_groups) {
+            const auto& group = group_pair.second;
+            const auto& dynamic_state = this->groups.at(group.name());
+
+            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
+                const auto& group_ptr = dynamic_state[index];
+                if (group_ptr == nullptr) {
+                    if (group.getSurfaceMaxRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 2", errors);
+
+                    if (group.getReservoirMaxRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 3", errors);
+
+                    if (group.getTargetReinjectFraction(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 4", errors);
+
+                    if (group.getTargetVoidReplacementFraction(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 5", errors);
+                } else {
+                    if (group_ptr->isInjectionGroup()) {
+                        const auto& injection = group_ptr->injectionProperties();
+                        if (group.getReservoirMaxRate(index) != injection.resv_max_rate)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 6", errors);
+
+                        if (group.getSurfaceMaxRate(index) != injection.surface_max_rate)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 7", errors);
+
+                        if (group.getTargetReinjectFraction(index) != injection.target_reinj_fraction)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 9", errors);
+
+                        if (group.getTargetVoidReplacementFraction(index) != injection.target_void_fraction)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 10", errors);
+
+                        if (group.getInjectionControlMode(index) != injection.cmode)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 11", errors);
+
+                        if (group.getInjectionPhase(index) != injection.phase)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 12", errors);
+
+                        if (group.isProductionGroup(index) != group_ptr->isProductionGroup())
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 13", errors);
+                    }
+                }
+            }
+        }
+
+
+        // GCONPROD && GEFAC
+        for (const auto& group_pair : this->m_groups) {
+            const auto& group = group_pair.second;
+            const auto& dynamic_state = this->groups.at(group.name());
+
+            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
+                const auto& group_ptr = dynamic_state[index];
+                if (group_ptr == nullptr) {
+                    if (group.getOilTargetRate(index) != 0) {
+                        printf("Looking at group: %s  step:%ld  orat:%lg \n", group.name().c_str(), index, group.getOilTargetRate(index));
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 2", errors);
+                    }
+
+                    if (group.getGasTargetRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 3", errors);
+
+                    if (group.getWaterTargetRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 4", errors);
+
+                    if (group.getLiquidTargetRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 5", errors);
+
+                    if (group.getReservoirVolumeTargetRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 6", errors);
+                } else {
+                    if (group_ptr->isProductionGroup()) {
+                        const auto& production = group_ptr->productionProperties();
+                        if (group.getOilTargetRate(index) != production.oil_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 7", errors);
+
+                        if (group.getGasTargetRate(index) != production.gas_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 8", errors);
+
+                        if (group.getWaterTargetRate(index) != production.water_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 9", errors);
+
+                        if (group.getLiquidTargetRate(index) != production.liquid_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 10", errors);
+
+                        if (group.getReservoirVolumeTargetRate(index) != production.resv_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 11", errors);
+
+                        if (group.getProductionControlMode(index) != production.cmode) {
+                            printf("Looking at group: %s  step:%ld  cmode:%d != %d \n", group.name().c_str(), index, static_cast<int>(group.getProductionControlMode(index)), static_cast<int>(production.cmode));
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 12", errors);
+                        }
+                        if (group.getProductionExceedLimitAction(index) != production.exceed_action)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 13", errors);
+
+                        if (group.isProductionGroup(index) != group_ptr->isProductionGroup())
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 14", errors);
+                    }
+
+                    if (group.getGroupEfficiencyFactor(index) != group_ptr->getGroupEfficiencyFactor())
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "GEFAC error", errors);
+
+                    if (group.getTransferGroupEfficiencyFactor(index) != group_ptr->getTransferGroupEfficiencyFactor())
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "GEFAC error", errors);
+                }
+            }
+        }
+        return true;
+    }
+
+#else
+
+    bool Schedule::checkGroups(const ParseContext& parseContext, ErrorGuard& errors) {
+        return true;
+    }
+
+#endif
+}
