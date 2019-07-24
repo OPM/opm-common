@@ -137,6 +137,8 @@ BOOST_AUTO_TEST_CASE(test_IOrderSet) {
 
 
     Opm::IOrderSet<int> iset2;
+
+
     for (int i=10; i >= 0; i--)
         iset2.insert(i);
 

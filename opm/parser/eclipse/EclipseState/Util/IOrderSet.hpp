@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
-#include <list>
+#include <vector>
 
 namespace Opm {
 

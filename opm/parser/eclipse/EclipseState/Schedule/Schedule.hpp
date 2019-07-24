@@ -29,6 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
@@ -148,6 +149,8 @@ namespace Opm
         bool hasGroup(const std::string& groupName) const;
         const Group& getGroup(const std::string& groupName) const;
         Group& getGroup(const std::string& groupName);
+        const Group2& getGroup2(const std::string& groupName, size_t timeStep) const;
+
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
@@ -174,6 +177,7 @@ namespace Opm
         TimeMap m_timeMap;
         OrderedMap< std::string, Group > m_groups;
         OrderedMap< std::string, DynamicState<std::shared_ptr<Well2>>> wells_static;
+        OrderedMap< std::string, DynamicState<std::shared_ptr<Group2>>> groups;
         DynamicState< GroupTree > m_rootGroupTree;
         DynamicState< OilVaporizationProperties > m_oilvaporizationproperties;
         Events m_events;
@@ -194,6 +198,8 @@ namespace Opm
         std::vector< Group* > getGroups(const std::string& groupNamePattern);
         std::map<std::string,Events> well_events;
 
+        void updateGroup(std::shared_ptr<Group2> group, size_t reportStep);
+        bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         bool updateWellStatus( const std::string& well, size_t reportStep , WellCommon::StatusEnum status);
         void addWellToGroup( Group& newGroup , const std::string& wellName , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,

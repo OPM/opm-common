@@ -1418,28 +1418,37 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                auto& group = this->getGroup(group_name);
-                {
-                    Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0) );
-                    group.setInjectionPhase( currentStep , phase );
-                }
-                {
-                    GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                    group.setInjectionControlMode( currentStep , controlMode );
-                }
-
-                Phase wellPhase = get_phase( record.getItem("PHASE").getTrimmedString(0));
-
+                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
+                Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
                 double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0).get<double>();
-                surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, wellPhase, section.unitSystem());
                 double reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0).get<double>();
+                double reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>();
+                double voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>();
 
-                group.setSurfaceMaxRate( currentStep , surfaceInjectionRate);
-                group.setReservoirMaxRate( currentStep , reservoirInjectionRate);
-                group.setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>());
-                group.setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>());
+                surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
+                {
+                    auto& group = this->getGroup(group_name);
+                    group.setInjectionPhase( currentStep , phase );
+                    group.setInjectionControlMode( currentStep , controlMode );
+                    group.setSurfaceMaxRate( currentStep, surfaceInjectionRate);
+                    group.setReservoirMaxRate( currentStep, reservoirInjectionRate);
+                    group.setTargetReinjectFraction( currentStep, reinj_target);
+                    group.setTargetVoidReplacementFraction( currentStep, voidage_target);
+                    group.setInjectionGroup(currentStep);
+                }
+                {
+                    auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
+                    Group2::GroupInjectionProperties injection;
+                    injection.phase = phase;
+                    injection.cmode = controlMode;
+                    injection.surface_max_rate = surfaceInjectionRate;
+                    injection.resv_max_rate = reservoirInjectionRate;
+                    injection.target_reinj_fraction = reinj_target;
+                    injection.target_void_fraction = voidage_target;
 
-                group.setInjectionGroup(currentStep);
+                    if (group_ptr->updateInjection(injection))
+                        this->updateGroup(group_ptr, currentStep);
+                }
             }
         }
     }
@@ -1453,22 +1462,39 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                auto& group = this->getGroup(group_name);
-                {
-                    GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                    group.setProductionControlMode( currentStep , controlMode );
-                }
-                group.setOilTargetRate( currentStep , record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>());
-                group.setGasTargetRate( currentStep , record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>());
-                group.setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>());
-                group.setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>());
-                group.setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
-                {
-                    GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
-                    group.setProductionExceedLimitAction( currentStep , exceedAction );
-                }
+                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
+                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
+                auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>();
+                auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>();
+                auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>();
+                auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>();
+                auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
 
-                group.setProductionGroup(currentStep);
+                {
+                    auto& group = this->getGroup(group_name);
+                    group.setProductionControlMode( currentStep , controlMode );
+                    group.setOilTargetRate( currentStep , oil_target);
+                    group.setGasTargetRate( currentStep , gas_target);
+                    group.setWaterTargetRate( currentStep , water_target);
+                    group.setLiquidTargetRate( currentStep , liquid_target);
+                    group.setReservoirVolumeTargetRate( currentStep , resv_target);
+                    group.setProductionExceedLimitAction( currentStep , exceedAction );
+                    group.setProductionGroup(currentStep);
+                }
+                {
+                    auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
+                    Group2::GroupProductionProperties production;
+                    production.cmode = controlMode;
+                    production.oil_target = oil_target;
+                    production.gas_target = gas_target;
+                    production.water_target = water_target;
+                    production.liquid_target = liquid_target;
+                    production.resv_target = resv_target;
+                    production.exceed_action = exceedAction;
+
+                    if (group_ptr->updateProduction(production))
+                        this->updateGroup(group_ptr, currentStep);
+                }
             }
         }
     }
@@ -1483,12 +1509,19 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                auto& group = this->getGroup(group_name);
-                const std::string& transfer_str = record.getItem("TRANSFER_EXT_NET").getTrimmedString(0);
-                bool transfer = (transfer_str == "YES") ? true : false;
+                bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
+                auto gefac = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
+                {
+                    auto& group = this->getGroup(group_name);
 
-                group.setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
-                group.setTransferGroupEfficiencyFactor(currentStep, transfer);
+                    group.setGroupEfficiencyFactor(currentStep, gefac);
+                    group.setTransferGroupEfficiencyFactor(currentStep, transfer);
+                }
+                {
+                    auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
+                    if (group_ptr->update_gefac(gefac, transfer))
+                        this->updateGroup(group_ptr, currentStep);
+                }
             }
         }
     }
@@ -1770,6 +1803,7 @@ namespace {
         m_rootGroupTree.update(currentStep, newTree);
     }
 
+
     void Schedule::handleGRUPNET( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
             const auto& groupName = record.getItem("NAME").getTrimmedString(0);
@@ -1777,9 +1811,16 @@ namespace {
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep);
 
-            auto& group = this->m_groups.at( groupName );
             int table = record.getItem("VFP_TABLE").get< int >(0);
-            group.setGroupNetVFPTable(currentStep, table);
+            {
+                auto& group = this->m_groups.at( groupName );
+                group.setGroupNetVFPTable(currentStep, table);
+            }
+            {
+                auto group_ptr = std::make_shared<Group2>( this->getGroup2(groupName, currentStep) );
+                if (group_ptr->updateNetVFPTable(table))
+                    this->updateGroup(group_ptr, currentStep);
+            }
         }
     }
 
@@ -2006,6 +2047,22 @@ namespace {
         return *well_ptr;
     }
 
+    const Group2& Schedule::getGroup2(const std::string& groupName, size_t timeStep) const {
+        if (this->groups.count(groupName) == 0)
+            throw std::invalid_argument("No such group: " + groupName);
+
+        const auto& dynamic_state = this->groups.at(groupName);
+        auto& group_ptr = dynamic_state.get(timeStep);
+        if (!group_ptr)
+            throw std::invalid_argument("Group: " + groupName + " not yet defined at step: " + std::to_string(timeStep));
+
+        return *group_ptr;
+    }
+
+    void Schedule::updateGroup(std::shared_ptr<Group2> group, size_t reportStep) {
+        auto& dynamic_state = this->groups.at(group->name());
+        dynamic_state.update(reportStep, group);
+    }
 
     /*
       There are many SCHEDULE keyword which take a wellname as argument. In
@@ -2158,7 +2215,15 @@ namespace {
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
         const size_t gseqIndex = m_groups.size();
+        // Old group
         m_groups.insert( std::make_pair( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } ));
+
+        // New group
+        groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group2>>(this->m_timeMap, nullptr)));
+        auto group_ptr = std::make_shared<Group2>(groupName, gseqIndex, timeStep);
+        auto& dynamic_state = this->groups.at(groupName);
+        dynamic_state.update(timeStep, group_ptr);
+
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
     }
 
