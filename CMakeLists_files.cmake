@@ -422,6 +422,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/InitConfig/Equil.hpp
        opm/parser/eclipse/EclipseState/InitConfig/FoamConfig.hpp
        opm/parser/eclipse/EclipseState/Util/Value.hpp
+       opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp
        opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp
        opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp
        opm/parser/eclipse/EclipseState/Edit/EDITNNC.hpp

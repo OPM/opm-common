@@ -26,6 +26,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
+#include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
 
 
 BOOST_AUTO_TEST_CASE( check_empty) {
@@ -115,4 +116,55 @@ BOOST_AUTO_TEST_CASE( check_order ) {
     */
 }
 
+BOOST_AUTO_TEST_CASE(test_IOrderSet) {
+    Opm::IOrderSet<std::string> iset;
+    BOOST_CHECK(iset.empty());
+    BOOST_CHECK_EQUAL(iset.size(), 0);
+    BOOST_CHECK_EQUAL(iset.count("HEI"), 0);
+    BOOST_CHECK_EQUAL(iset.contains("HEI"), false);
+
+    BOOST_CHECK(iset.insert("HEI"));
+    BOOST_CHECK_EQUAL(iset.size(), 1);
+    BOOST_CHECK_EQUAL(iset.count("HEI"), 1);
+    BOOST_CHECK_EQUAL(iset.contains("HEI"), true);
+
+    BOOST_CHECK(!iset.insert("HEI"));
+    BOOST_CHECK_EQUAL(iset.size(), 1);
+    BOOST_CHECK_EQUAL(iset.count("HEI"), 1);
+    BOOST_CHECK_EQUAL(iset.contains("HEI"), true);
+
+    BOOST_CHECK_THROW(iset[10], std::out_of_range);
+
+
+    Opm::IOrderSet<int> iset2;
+    for (int i=10; i >= 0; i--)
+        iset2.insert(i);
+
+    int expected = 10;
+    std::size_t index=0;
+    const auto &d = iset2.data();
+    for (const auto &v : iset2) {
+        BOOST_CHECK_EQUAL(v, expected);
+        BOOST_CHECK_EQUAL(iset2[index], expected);
+        BOOST_CHECK_EQUAL(d[index], expected);
+        expected--;
+        index++;
+    }
+
+
+    Opm::IOrderSet<std::string> iset3;
+    iset3.insert("AAA");
+    iset3.insert("BBB");
+
+    BOOST_CHECK_EQUAL(iset3[0], "AAA");
+    BOOST_CHECK_EQUAL(iset3[1], "BBB");
+
+    BOOST_CHECK_EQUAL(iset3.erase("AAA"), 1);
+    BOOST_CHECK_EQUAL(iset3.size() , 1);
+    BOOST_CHECK_EQUAL(iset3[0], "BBB");
+
+    BOOST_CHECK_EQUAL(iset3.erase("AAA"), 0);
+    BOOST_CHECK_EQUAL(iset3.size() , 1);
+    BOOST_CHECK_EQUAL(iset3[0], "BBB");
+}
 
