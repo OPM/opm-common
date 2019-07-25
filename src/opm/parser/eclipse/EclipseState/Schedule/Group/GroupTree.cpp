@@ -170,12 +170,4 @@ std::vector<GroupTree::group>::const_iterator GroupTree::end() const {
     return this->groups.end();
 }
 
-std::ostream& operator<<(std::ostream& stream, const GroupTree& gt) {
-    for (const auto& group_pair : gt)
-        stream << group_pair.parent << " -> " << group_pair.name << std::endl;
-
-    stream << std::endl << std::endl;
-    return stream;
-}
-
 }
