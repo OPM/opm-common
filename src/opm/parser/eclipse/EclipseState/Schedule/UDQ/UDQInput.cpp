@@ -45,55 +45,103 @@ namespace Opm {
         return this->udq_params;
     }
 
-
     void UDQInput::add_record(const DeckRecord& record) {
         auto action = UDQ::actionType(record.getItem("ACTION").get<std::string>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = record.getItem("DATA").getData<std::string>();
 
+        if (action == UDQAction::UPDATE)
+            throw std::invalid_argument("The UDQ action UPDATE is not yet implemented in opm/flow");
+
         if (action == UDQAction::UNITS)
             this->assign_unit( quantity, data[0] );
-        else if (action == UDQAction::ASSIGN) {
-            std::vector<std::string> selector(data.begin(), data.end() - 1);
-            double value = std::stod(data.back());
-            this->m_assignments.emplace_back( quantity, selector, value );
-        } else
-            this->m_definitions.emplace_back(this->udq_params, quantity, data);
-        this->keywords.insert(quantity);
+        else {
+            auto index_iter = this->input_index.find(quantity);
+            if (this->input_index.find(quantity) == this->input_index.end())
+                this->input_index[quantity] = std::make_pair(this->input_index.size(), action);
+            else
+                index_iter->second.second = action;
+
+
+            if (action == UDQAction::ASSIGN) {
+                std::vector<std::string> selector(data.begin(), data.end() - 1);
+                double value = std::stod(data.back());
+                auto assignment = this->m_assignments.find(quantity);
+                if (assignment == this->m_assignments.end())
+                    this->m_assignments.insert( std::make_pair(quantity, UDQAssign(quantity, selector, value )));
+                else
+                    assignment->second.add_record(selector, value);
+            } else if (action == UDQAction::DEFINE)
+                this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, data)));
+            else
+                throw std::runtime_error("Internal error - should not be here");
+        }
     }
 
 
-    const std::vector<UDQDefine>& UDQInput::definitions() const {
-        return this->m_definitions;
+    std::vector<UDQDefine> UDQInput::definitions() const {
+        std::vector<UDQDefine> ret;
+        for (const auto& index_pair : this->input_index) {
+            if (index_pair.second.second == UDQAction::DEFINE) {
+                const std::string& key = index_pair.first;
+                ret.push_back(this->m_definitions.at(key));
+            }
+        }
+        return ret;
     }
+
 
     std::vector<UDQDefine> UDQInput::definitions(UDQVarType var_type) const {
         std::vector<UDQDefine> filtered_defines;
-
-        std::copy_if(this->m_definitions.begin(),
-                     this->m_definitions.end(),
-                     std::back_inserter(filtered_defines),
-                     [&var_type](const UDQDefine& def) { return def.var_type() == var_type; });
-
+        for (const auto& index_pair : this->input_index) {
+            if (index_pair.second.second == UDQAction::DEFINE) {
+                const std::string& key = index_pair.first;
+                const auto& udq_define = this->m_definitions.at(key);
+                if (udq_define.var_type() == var_type)
+                    filtered_defines.push_back(udq_define);
+            }
+        }
         return filtered_defines;
     }
 
 
-    const std::vector<UDQAssign>& UDQInput::assignments() const {
-        return this->m_assignments;
+    std::vector<std::pair<size_t, UDQDefine>> UDQInput::input_definitions() const {
+        std::vector<std::pair<size_t, UDQDefine>> res;
+        for (const auto& index_pair : this->input_index) {
+            if (index_pair.second.second == UDQAction::DEFINE) {
+                const std::string& key = index_pair.first;
+                res.emplace_back(index_pair.second.first, this->m_definitions.at(key));
+            }
+        }
+        return res;
+    }
+
+
+    std::vector<UDQAssign> UDQInput::assignments() const {
+        std::vector<UDQAssign> ret;
+        for (const auto& index_pair : this->input_index) {
+            if (index_pair.second.second == UDQAction::ASSIGN) {
+                const std::string& key = index_pair.first;
+                ret.push_back(this->m_assignments.at(key));
+            }
+        }
+        return ret;
     }
 
 
     std::vector<UDQAssign> UDQInput::assignments(UDQVarType var_type) const {
-        std::vector<UDQAssign> filtered_assignments;
-
-        std::copy_if(this->m_assignments.begin(),
-                     this->m_assignments.end(),
-                     std::back_inserter(filtered_assignments),
-                     [&var_type](const UDQAssign& assignment) { return assignment.var_type() == var_type; });
-
-        return filtered_assignments;
+        std::vector<UDQAssign> filtered_defines;
+        for (const auto& index_pair : this->input_index) {
+            if (index_pair.second.second == UDQAction::ASSIGN) {
+                const std::string& key = index_pair.first;
+                const auto& udq_define = this->m_assignments.at(key);
+                if (udq_define.var_type() == var_type)
+                    filtered_defines.push_back(udq_define);
+            }
+        }
+        return filtered_defines;
     }
+
 
 
     const std::string& UDQInput::unit(const std::string& key) const {
@@ -121,9 +169,24 @@ namespace Opm {
         return (this->units.count(keyword) > 0);
     }
 
+
     bool UDQInput::has_keyword(const std::string& keyword) const {
-        return (this->keywords.count(keyword) > 0);
+        if (this->m_assignments.count(keyword) > 0)
+            return true;
+
+        if (this->m_definitions.count(keyword) > 0)
+            return true;
+
+        /*
+          That a keyword is mentioned with UNITS is enough to consider it
+           as a keyword which is present.
+        */
+        if (this->units.count(keyword) > 0)
+            return true;
+
+        return false;
     }
+
 
     const UDQFunctionTable& UDQInput::function_table() const {
         return this->udqft;

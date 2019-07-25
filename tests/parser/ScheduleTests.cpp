@@ -1156,13 +1156,9 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         BOOST_CHECK_EQUAL(g_g1.getOilTargetRate(2), 2000 * siFactorL);
 
         auto g_g2 = schedule.getGroup("G2");
-        BOOST_CHECK_EQUAL(g_g2.getOilTargetRate(1), -999e100); // Invalid group rate - default
         BOOST_CHECK_EQUAL(g_g2.getOilTargetRate(2), 2000 * siFactorL);
 
         auto g_h1 = schedule.getGroup("H1");
-        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(0), -999e100);
-        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(1), -999e100);
-        BOOST_CHECK_EQUAL(g_h1.getOilTargetRate(2), -999e100);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {

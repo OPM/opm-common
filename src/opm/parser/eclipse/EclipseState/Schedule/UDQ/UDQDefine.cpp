@@ -122,7 +122,13 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
         }
     }
     this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(this->udq_params, this->m_var_type, this->m_keyword, tokens, parseContext, errors) );
-    this->input_tokens = tokens;
+
+    this->string_data = "";
+    for (std::size_t index = 0; index < deck_data.size(); index++) {
+        this->string_data += deck_data[index];
+        if (index != deck_data.size() - 1)
+            this->string_data += " ";
+    }
 }
 
 
@@ -180,12 +186,13 @@ UDQVarType UDQDefine::var_type() const {
     return this->m_var_type;
 }
 
-const std::vector<std::string>& UDQDefine::tokens() const {
-    return this->input_tokens;
-}
 
 const std::string& UDQDefine::keyword() const {
     return this->m_keyword;
+}
+
+const std::string& UDQDefine::input_string() const {
+    return this->string_data;
 }
 
 }

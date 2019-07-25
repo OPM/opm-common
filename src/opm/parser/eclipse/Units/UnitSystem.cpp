@@ -755,45 +755,205 @@ namespace {
     {
         switch(unit) {
             case(UnitType::UNIT_TYPE_METRIC):
-                m_name = "Metric";
-                this->measure_table_from_si = to_metric;
-                this->measure_table_to_si = from_metric;
-                this->measure_table_to_si_offset = from_metric_offset;
-                this->unit_name_table = metric_names;
+                this->initMETRIC();
                 break;
+
             case(UnitType::UNIT_TYPE_FIELD):
-                m_name = "Field";
-                this->measure_table_from_si = to_field;
-                this->measure_table_to_si = from_field;
-                this->measure_table_to_si_offset = from_field_offset;
-                this->unit_name_table = field_names;
+                this->initFIELD();
                 break;
+
             case(UnitType::UNIT_TYPE_LAB):
-                m_name = "Lab";
-                this->measure_table_from_si = to_lab;
-                this->measure_table_to_si = from_lab;
-                this->measure_table_to_si_offset = from_lab_offset;
-                this->unit_name_table = lab_names;
+                this->initLAB();
                 break;
+
             case(UnitType::UNIT_TYPE_PVT_M):
-                m_name = "PVT-M";
-                this->measure_table_from_si = to_pvt_m;
-                this->measure_table_to_si = from_pvt_m;
-                this->measure_table_to_si_offset = from_pvt_m_offset;
-                this->unit_name_table = pvt_m_names;
+                this->initPVT_M();
                 break;
+
             case(UnitType::UNIT_TYPE_INPUT):
-                m_name = "Input";
-                this->measure_table_from_si = to_input;
-                this->measure_table_to_si = from_input;
-                this->measure_table_to_si_offset = from_input_offset;
-                this->unit_name_table = input_names;
+                this->initINPUT();
                 break;
+
             default:
                 throw std::runtime_error("Tried to construct UnitSystem with unknown unit family.");
                 break;
         };
     }
+
+    void UnitSystem::initINPUT() {
+        this->m_name = "Input";
+        this->measure_table_from_si = to_input;
+        this->measure_table_to_si = from_input;
+        this->measure_table_to_si_offset = from_input_offset;
+        this->unit_name_table = input_names;
+
+        this->addDimension("1"         , 1.0);
+        this->addDimension("Unit"         , 1.0);
+        this->addDimension("Pressure"  , 1.0);
+        this->addDimension("Temperature", 1.0);
+        this->addDimension("AbsoluteTemperature", 1.0, 0.0);
+        this->addDimension("Length"    , 1.0);
+        this->addDimension("Time"      , 1.0);
+        this->addDimension("Mass"         , 1.0);
+        this->addDimension("Permeability", 1.0);
+        this->addDimension("Transmissibility", 1.0);
+        this->addDimension("GasDissolutionFactor", 1.0);
+        this->addDimension("OilDissolutionFactor", 1.0);
+        this->addDimension("LiquidSurfaceVolume", 1.0);
+        this->addDimension("GasSurfaceVolume" , 1.0);
+        this->addDimension("ReservoirVolume", 1.0);
+        this->addDimension("Density"   , 1.0);
+        this->addDimension("PolymerDensity", 1.0);
+        this->addDimension("FoamDensity", 1.0);
+        this->addDimension("FoamSurfactantConcentration", 1.0);
+        this->addDimension("Salinity", 1.0);
+        this->addDimension("Viscosity" , 1.0);
+        this->addDimension("Timestep"  , 1.0);
+        this->addDimension("SurfaceTension"  , 1.0);
+        this->addDimension("Energy", 1.0);
+        this->addDimension("ContextDependent", 1.0);
+    }
+
+
+    void UnitSystem::initPVT_M() {
+        this->m_name = "PVT-M";
+        this->measure_table_from_si = to_pvt_m;
+        this->measure_table_to_si = from_pvt_m;
+        this->measure_table_to_si_offset = from_pvt_m_offset;
+        this->unit_name_table = pvt_m_names;
+
+        this->addDimension("1"         , 1.0);
+        this->addDimension("Unit"         , 1.0);
+        this->addDimension("Pressure"  , PVT_M::Pressure );
+        this->addDimension("Temperature", PVT_M::Temperature, PVT_M::TemperatureOffset);
+        this->addDimension("AbsoluteTemperature", PVT_M::AbsoluteTemperature);
+        this->addDimension("Length"    , PVT_M::Length);
+        this->addDimension("Time"      , PVT_M::Time );
+        this->addDimension("Mass"         , PVT_M::Mass );
+        this->addDimension("Permeability", PVT_M::Permeability );
+        this->addDimension("Transmissibility", PVT_M::Transmissibility );
+        this->addDimension("GasDissolutionFactor", PVT_M::GasDissolutionFactor);
+        this->addDimension("OilDissolutionFactor", PVT_M::OilDissolutionFactor);
+        this->addDimension("LiquidSurfaceVolume", PVT_M::LiquidSurfaceVolume );
+        this->addDimension("GasSurfaceVolume" , PVT_M::GasSurfaceVolume );
+        this->addDimension("ReservoirVolume", PVT_M::ReservoirVolume );
+        this->addDimension("Density"   , PVT_M::Density );
+        this->addDimension("PolymerDensity", PVT_M::PolymerDensity);
+        this->addDimension("FoamDensity", PVT_M::FoamDensity);
+        this->addDimension("FoamSurfactantConcentration", PVT_M::FoamSurfactantConcentration);
+        this->addDimension("Salinity", PVT_M::Salinity);
+        this->addDimension("Viscosity" , PVT_M::Viscosity);
+        this->addDimension("Timestep"  , PVT_M::Timestep);
+        this->addDimension("SurfaceTension"  , PVT_M::SurfaceTension);
+        this->addDimension("Energy", PVT_M::Energy);
+        this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+    }
+
+
+    void UnitSystem::initLAB() {
+        this->m_name = "Lab";
+        this->measure_table_from_si = to_lab;
+        this->measure_table_to_si = from_lab;
+        this->measure_table_to_si_offset = from_lab_offset;
+        this->unit_name_table = lab_names;
+
+        this->addDimension("1"    , 1.0);
+        this->addDimension("Unit"         , 1.0);
+        this->addDimension("Pressure", Lab::Pressure );
+        this->addDimension("Temperature", Lab::Temperature, Lab::TemperatureOffset);
+        this->addDimension("AbsoluteTemperature", Lab::AbsoluteTemperature);
+        this->addDimension("Length", Lab::Length);
+        this->addDimension("Time" , Lab::Time);
+        this->addDimension("Mass", Lab::Mass);
+        this->addDimension("Permeability", Lab::Permeability );
+        this->addDimension("Transmissibility", Lab::Transmissibility );
+        this->addDimension("GasDissolutionFactor" , Lab::GasDissolutionFactor);
+        this->addDimension("OilDissolutionFactor", Lab::OilDissolutionFactor);
+        this->addDimension("LiquidSurfaceVolume", Lab::LiquidSurfaceVolume );
+        this->addDimension("GasSurfaceVolume", Lab::GasSurfaceVolume );
+        this->addDimension("ReservoirVolume", Lab::ReservoirVolume );
+        this->addDimension("Density", Lab::Density );
+        this->addDimension("PolymerDensity", Lab::PolymerDensity);
+        this->addDimension("FoamDensity", Lab::FoamDensity);
+        this->addDimension("FoamSurfactantConcentration", Lab::FoamSurfactantConcentration);
+        this->addDimension("Salinity", Lab::Salinity);
+        this->addDimension("Viscosity", Lab::Viscosity);
+        this->addDimension("Timestep", Lab::Timestep);
+        this->addDimension("SurfaceTension"  , Lab::SurfaceTension);
+        this->addDimension("Energy", Lab::Energy);
+        this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+    }
+
+
+
+    void UnitSystem::initMETRIC() {
+        this->m_name = "Metric";
+        this->measure_table_from_si = to_metric;
+        this->measure_table_to_si = from_metric;
+        this->measure_table_to_si_offset = from_metric_offset;
+        this->unit_name_table = metric_names;
+
+        this->addDimension("1"         , 1.0);
+        this->addDimension("Unit"         , 1.0);
+        this->addDimension("Pressure"  , Metric::Pressure );
+        this->addDimension("Temperature", Metric::Temperature, Metric::TemperatureOffset);
+        this->addDimension("AbsoluteTemperature", Metric::AbsoluteTemperature);
+        this->addDimension("Length"    , Metric::Length);
+        this->addDimension("Time"      , Metric::Time );
+        this->addDimension("Mass"         , Metric::Mass );
+        this->addDimension("Permeability", Metric::Permeability );
+        this->addDimension("Transmissibility", Metric::Transmissibility );
+        this->addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
+        this->addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
+        this->addDimension("LiquidSurfaceVolume", Metric::LiquidSurfaceVolume );
+        this->addDimension("GasSurfaceVolume" , Metric::GasSurfaceVolume );
+        this->addDimension("ReservoirVolume", Metric::ReservoirVolume );
+        this->addDimension("Density"   , Metric::Density );
+        this->addDimension("PolymerDensity", Metric::PolymerDensity);
+        this->addDimension("FoamDensity", Metric::FoamDensity);
+        this->addDimension("FoamSurfactantConcentration", Metric::FoamSurfactantConcentration);
+        this->addDimension("Salinity", Metric::Salinity);
+        this->addDimension("Viscosity" , Metric::Viscosity);
+        this->addDimension("Timestep"  , Metric::Timestep);
+        this->addDimension("SurfaceTension"  , Metric::SurfaceTension);
+        this->addDimension("Energy", Metric::Energy);
+        this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+    }
+
+    void UnitSystem::initFIELD() {
+        m_name = "Field";
+        this->measure_table_from_si = to_field;
+        this->measure_table_to_si = from_field;
+        this->measure_table_to_si_offset = from_field_offset;
+        this->unit_name_table = field_names;
+
+        this->addDimension("1"    , 1.0);
+        this->addDimension("Unit"         , 1.0);
+        this->addDimension("Pressure", Field::Pressure );
+        this->addDimension("Temperature", Field::Temperature, Field::TemperatureOffset);
+        this->addDimension("AbsoluteTemperature", Field::AbsoluteTemperature);
+        this->addDimension("Length", Field::Length);
+        this->addDimension("Time" , Field::Time);
+        this->addDimension("Mass", Field::Mass);
+        this->addDimension("Permeability", Field::Permeability );
+        this->addDimension("Transmissibility", Field::Transmissibility );
+        this->addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
+        this->addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
+        this->addDimension("LiquidSurfaceVolume", Field::LiquidSurfaceVolume );
+        this->addDimension("GasSurfaceVolume", Field::GasSurfaceVolume );
+        this->addDimension("ReservoirVolume", Field::ReservoirVolume );
+        this->addDimension("Density", Field::Density );
+        this->addDimension("PolymerDensity", Field::PolymerDensity);
+        this->addDimension("FoamDensity", Field::FoamDensity);
+        this->addDimension("FoamSurfactantConcentration", Field::FoamSurfactantConcentration);
+        this->addDimension("Salinity", Field::Salinity);
+        this->addDimension("Viscosity", Field::Viscosity);
+        this->addDimension("Timestep", Field::Timestep);
+        this->addDimension("SurfaceTension"  , Field::SurfaceTension);
+        this->addDimension("Energy", Field::Energy);
+        this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+    }
+
 
     namespace {
 
@@ -808,6 +968,48 @@ namespace {
             }
         }
 
+        UnitSystem::UnitType fromDeckName(const std::string& deck_name) {
+            if (deck_name == "FIELD")
+                return UnitSystem::UnitType::UNIT_TYPE_FIELD;
+
+            if (deck_name == "METRIC")
+                return UnitSystem::UnitType::UNIT_TYPE_METRIC;
+
+            if (deck_name == "LAB")
+                return UnitSystem::UnitType::UNIT_TYPE_LAB;
+
+            if (deck_name == "PVT-M")
+                return UnitSystem::UnitType::UNIT_TYPE_PVT_M;
+
+            throw std::invalid_argument("Unit string: " + deck_name + " not recognized ");
+        }
+    }
+
+    bool UnitSystem::valid_name(const std::string& deck_name) {
+        if (deck_name == "FIELD")
+            return true;
+
+        if (deck_name == "METRIC")
+            return true;
+
+        if (deck_name == "LAB")
+            return true;
+
+        if (deck_name == "PVT-M")
+            return true;
+
+        return false;
+    }
+
+    std::string UnitSystem::deck_name() const {
+        switch( this->m_unittype) {
+        case(UnitType::UNIT_TYPE_METRIC): return "METRIC";
+        case(UnitType::UNIT_TYPE_FIELD):  return "FIELD";
+        case(UnitType::UNIT_TYPE_LAB):    return "LAB";
+        case(UnitType::UNIT_TYPE_PVT_M):  return "PVT-M";
+        default:
+            throw std::invalid_argument("No valuid deckname could be inferred");
+        }
     }
 
     UnitSystem::UnitSystem(const ert_ecl_unit_enum unit_type)
@@ -815,6 +1017,11 @@ namespace {
     {
     }
 
+
+    UnitSystem::UnitSystem(const std::string& deck_name) :
+        UnitSystem( fromDeckName(deck_name) )
+    {
+    }
 
     bool UnitSystem::hasDimension(const std::string& dimension) const {
         return (m_dimensions.find( dimension ) != m_dimensions.end());
@@ -958,164 +1165,34 @@ namespace {
         std::transform( data.begin() , data.end() , data.begin() , scale);
     }
 
-
-
     const char* UnitSystem::name( measure m ) const {
         return this->unit_name_table[ static_cast< int >( m ) ];
     }
 
+
     UnitSystem UnitSystem::newMETRIC() {
         UnitSystem system( UnitType::UNIT_TYPE_METRIC );
-
-        system.addDimension("1"         , 1.0);
-        system.addDimension("Pressure"  , Metric::Pressure );
-        system.addDimension("Temperature", Metric::Temperature, Metric::TemperatureOffset);
-        system.addDimension("AbsoluteTemperature", Metric::AbsoluteTemperature);
-        system.addDimension("Length"    , Metric::Length);
-        system.addDimension("Time"      , Metric::Time );
-        system.addDimension("Mass"         , Metric::Mass );
-        system.addDimension("Permeability", Metric::Permeability );
-        system.addDimension("Transmissibility", Metric::Transmissibility );
-        system.addDimension("GasDissolutionFactor", Metric::GasDissolutionFactor);
-        system.addDimension("OilDissolutionFactor", Metric::OilDissolutionFactor);
-        system.addDimension("LiquidSurfaceVolume", Metric::LiquidSurfaceVolume );
-        system.addDimension("GasSurfaceVolume" , Metric::GasSurfaceVolume );
-        system.addDimension("ReservoirVolume", Metric::ReservoirVolume );
-        system.addDimension("Density"   , Metric::Density );
-        system.addDimension("PolymerDensity", Metric::PolymerDensity);
-        system.addDimension("FoamDensity", Metric::FoamDensity);
-        system.addDimension("FoamSurfactantConcentration", Metric::FoamSurfactantConcentration);
-        system.addDimension("Salinity", Metric::Salinity);
-        system.addDimension("Viscosity" , Metric::Viscosity);
-        system.addDimension("Timestep"  , Metric::Timestep);
-        system.addDimension("SurfaceTension"  , Metric::SurfaceTension);
-        system.addDimension("Energy", Metric::Energy);
-        system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
-
-
 
     UnitSystem UnitSystem::newFIELD() {
         UnitSystem system( UnitType::UNIT_TYPE_FIELD );
-
-        system.addDimension("1"    , 1.0);
-        system.addDimension("Pressure", Field::Pressure );
-        system.addDimension("Temperature", Field::Temperature, Field::TemperatureOffset);
-        system.addDimension("AbsoluteTemperature", Field::AbsoluteTemperature);
-        system.addDimension("Length", Field::Length);
-        system.addDimension("Time" , Field::Time);
-        system.addDimension("Mass", Field::Mass);
-        system.addDimension("Permeability", Field::Permeability );
-        system.addDimension("Transmissibility", Field::Transmissibility );
-        system.addDimension("GasDissolutionFactor" , Field::GasDissolutionFactor);
-        system.addDimension("OilDissolutionFactor", Field::OilDissolutionFactor);
-        system.addDimension("LiquidSurfaceVolume", Field::LiquidSurfaceVolume );
-        system.addDimension("GasSurfaceVolume", Field::GasSurfaceVolume );
-        system.addDimension("ReservoirVolume", Field::ReservoirVolume );
-        system.addDimension("Density", Field::Density );
-        system.addDimension("PolymerDensity", Field::PolymerDensity);
-        system.addDimension("FoamDensity", Field::FoamDensity);
-        system.addDimension("FoamSurfactantConcentration", Field::FoamSurfactantConcentration);
-        system.addDimension("Salinity", Field::Salinity);
-        system.addDimension("Viscosity", Field::Viscosity);
-        system.addDimension("Timestep", Field::Timestep);
-        system.addDimension("SurfaceTension"  , Field::SurfaceTension);
-        system.addDimension("Energy", Field::Energy);
-        system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
-
 
 
     UnitSystem UnitSystem::newLAB() {
         UnitSystem system( UnitType::UNIT_TYPE_LAB );
-
-        system.addDimension("1"    , 1.0);
-        system.addDimension("Pressure", Lab::Pressure );
-        system.addDimension("Temperature", Lab::Temperature, Lab::TemperatureOffset);
-        system.addDimension("AbsoluteTemperature", Lab::AbsoluteTemperature);
-        system.addDimension("Length", Lab::Length);
-        system.addDimension("Time" , Lab::Time);
-        system.addDimension("Mass", Lab::Mass);
-        system.addDimension("Permeability", Lab::Permeability );
-        system.addDimension("Transmissibility", Lab::Transmissibility );
-        system.addDimension("GasDissolutionFactor" , Lab::GasDissolutionFactor);
-        system.addDimension("OilDissolutionFactor", Lab::OilDissolutionFactor);
-        system.addDimension("LiquidSurfaceVolume", Lab::LiquidSurfaceVolume );
-        system.addDimension("GasSurfaceVolume", Lab::GasSurfaceVolume );
-        system.addDimension("ReservoirVolume", Lab::ReservoirVolume );
-        system.addDimension("Density", Lab::Density );
-        system.addDimension("PolymerDensity", Lab::PolymerDensity);
-        system.addDimension("FoamDensity", Lab::FoamDensity);
-        system.addDimension("FoamSurfactantConcentration", Lab::FoamSurfactantConcentration);
-        system.addDimension("Salinity", Lab::Salinity);
-        system.addDimension("Viscosity", Lab::Viscosity);
-        system.addDimension("Timestep", Lab::Timestep);
-        system.addDimension("SurfaceTension"  , Lab::SurfaceTension);
-        system.addDimension("Energy", Lab::Energy);
-        system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 
-
     UnitSystem UnitSystem::newPVT_M() {
         UnitSystem system( UnitType::UNIT_TYPE_PVT_M );
-
-        system.addDimension("1"         , 1.0);
-        system.addDimension("Pressure"  , PVT_M::Pressure );
-        system.addDimension("Temperature", PVT_M::Temperature, PVT_M::TemperatureOffset);
-        system.addDimension("AbsoluteTemperature", PVT_M::AbsoluteTemperature);
-        system.addDimension("Length"    , PVT_M::Length);
-        system.addDimension("Time"      , PVT_M::Time );
-        system.addDimension("Mass"         , PVT_M::Mass );
-        system.addDimension("Permeability", PVT_M::Permeability );
-        system.addDimension("Transmissibility", PVT_M::Transmissibility );
-        system.addDimension("GasDissolutionFactor", PVT_M::GasDissolutionFactor);
-        system.addDimension("OilDissolutionFactor", PVT_M::OilDissolutionFactor);
-        system.addDimension("LiquidSurfaceVolume", PVT_M::LiquidSurfaceVolume );
-        system.addDimension("GasSurfaceVolume" , PVT_M::GasSurfaceVolume );
-        system.addDimension("ReservoirVolume", PVT_M::ReservoirVolume );
-        system.addDimension("Density"   , PVT_M::Density );
-        system.addDimension("PolymerDensity", PVT_M::PolymerDensity);
-        system.addDimension("FoamDensity", PVT_M::FoamDensity);
-        system.addDimension("FoamSurfactantConcentration", PVT_M::FoamSurfactantConcentration);
-        system.addDimension("Salinity", PVT_M::Salinity);
-        system.addDimension("Viscosity" , PVT_M::Viscosity);
-        system.addDimension("Timestep"  , PVT_M::Timestep);
-        system.addDimension("SurfaceTension"  , PVT_M::SurfaceTension);
-        system.addDimension("Energy", PVT_M::Energy);
-        system.addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
         return system;
     }
 
     UnitSystem UnitSystem::newINPUT() {
         UnitSystem system( UnitType::UNIT_TYPE_INPUT );
-
-        system.addDimension("1"         , 1.0);
-        system.addDimension("Pressure"  , 1.0);
-        system.addDimension("Temperature", 1.0);
-        system.addDimension("AbsoluteTemperature", 1.0, 0.0);
-        system.addDimension("Length"    , 1.0);
-        system.addDimension("Time"      , 1.0);
-        system.addDimension("Mass"         , 1.0);
-        system.addDimension("Permeability", 1.0);
-        system.addDimension("Transmissibility", 1.0);
-        system.addDimension("GasDissolutionFactor", 1.0);
-        system.addDimension("OilDissolutionFactor", 1.0);
-        system.addDimension("LiquidSurfaceVolume", 1.0);
-        system.addDimension("GasSurfaceVolume" , 1.0);
-        system.addDimension("ReservoirVolume", 1.0);
-        system.addDimension("Density"   , 1.0);
-        system.addDimension("PolymerDensity", 1.0);
-        system.addDimension("FoamDensity", 1.0);
-        system.addDimension("FoamSurfactantConcentration", 1.0);
-        system.addDimension("Salinity", 1.0);
-        system.addDimension("Viscosity" , 1.0);
-        system.addDimension("Timestep"  , 1.0);
-        system.addDimension("SurfaceTension"  , 1.0);
-        system.addDimension("Energy", 1.0);
-        system.addDimension("ContextDependent", 1.0);
         return system;
      }
 

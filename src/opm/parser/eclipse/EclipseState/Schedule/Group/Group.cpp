@@ -22,19 +22,16 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 
-#define INVALID_GROUP_RATE -999e100
-#define INVALID_EFFICIENCY_FACTOR 0.0
-
 
 namespace Opm {
     GroupProduction::ProductionData::ProductionData(const TimeMap& timeMap) :
         controlMode( timeMap , GroupProduction::NONE ),
         exceedAction( timeMap , GroupProductionExceedLimit::NONE ),
-        oilTarget( timeMap , INVALID_GROUP_RATE),
-        waterTarget( timeMap , INVALID_GROUP_RATE ),
-        gasTarget( timeMap , INVALID_GROUP_RATE ),
-        liquidTarget( timeMap , INVALID_GROUP_RATE ),
-        reservoirVolumeTarget( timeMap , INVALID_GROUP_RATE )
+        oilTarget( timeMap , 0),
+        waterTarget( timeMap , 0 ),
+        gasTarget( timeMap , 0 ),
+        liquidTarget( timeMap , 0 ),
+        reservoirVolumeTarget( timeMap , 0 )
     {}
 
     GroupInjection::InjectionData::InjectionData(const TimeMap& timeMap) :
