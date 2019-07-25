@@ -619,7 +619,7 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
 
     writeSatFuncScaling(es, grid, units, initFile);
 
-    if (true || (nnc.numNNC() > std::size_t{0})) {
+    if (nnc.numNNC() > std::size_t{0}) {
         writeNonNeighbourConnections(nnc, units, initFile);
     }
 }
