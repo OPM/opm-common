@@ -1760,7 +1760,6 @@ namespace {
             const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
             const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
             newTree.update(childName, parentName);
-            newTree.updateSeqIndex(childName, parentName);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep );
