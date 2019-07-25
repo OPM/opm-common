@@ -359,10 +359,29 @@ namespace {
     }
 
     template <typename T, class WriteVector>
-    void writeCellProperties(const Properties&               propList,
-                             const ::Opm::GridProperties<T>& propValues,
-                             const ::Opm::EclipseGrid&       grid,
-                             WriteVector&&                   write)
+    void writeCellPropertiesWithDefaultFlag(const Properties& propList,
+                                            const ::Opm::GridProperties<T>& propValues,
+                                            const ::Opm::EclipseGrid&       grid,
+                                            WriteVector&&                   write)
+    {
+        for (const auto& prop : propList) {
+            if (! propValues.hasKeyword(prop.name)) {
+                continue;
+            }
+
+            const auto& opm_property = propValues.getKeyword(prop.name);
+            const auto& dflt         = opm_property.wasDefaulted();
+
+            write(prop, grid.compressedVector(dflt),
+                  opm_property.compressedCopy(grid));
+        }
+    }
+
+    template <typename T, class WriteVector>
+    void writeCellPropertiesValuesOnly(const Properties& propList,
+                                       const ::Opm::GridProperties<T>& propValues,
+                                       const ::Opm::EclipseGrid&       grid,
+                                       WriteVector&&                   write)
     {
         for (const auto& prop : propList) {
             if (! propValues.hasKeyword(prop.name)) {
@@ -379,15 +398,40 @@ namespace {
                                    const ::Opm::GridProperties<double>& propValues,
                                    const ::Opm::EclipseGrid&            grid,
                                    const ::Opm::UnitSystem&             units,
+                                   const bool                           needDflt,
                                    ::Opm::EclIO::OutputStream::Init&    initFile)
     {
-        writeCellProperties(propList, propValues, grid,
-            [&units, &initFile](const CellProperty&   prop,
-                                std::vector<double>&& value)
-        {
-            units.from_si(prop.unit, value);
-            initFile.write(prop.name, singlePrecision(value));
-        });
+        if (needDflt) {
+            writeCellPropertiesWithDefaultFlag(propList, propValues, grid,
+                [&units, &initFile](const CellProperty&   prop,
+                                    std::vector<bool>&&   dflt,
+                                    std::vector<double>&& value)
+            {
+                units.from_si(prop.unit, value);
+
+                for (auto n = dflt.size(), i = decltype(n){}; i < n; ++i) {
+                    if (dflt[i]) {
+                        // Element defaulted.  Output sentinel value
+                        // (-1.0e+20) to signify defaulted element.
+                        //
+                        // Note: Start as float for roundtripping through
+                        // function singlePrecision().
+                        value[i] = static_cast<double>(-1.0e+20f);
+                    }
+                }
+
+                initFile.write(prop.name, singlePrecision(value));
+            });
+        }
+        else {
+            writeCellPropertiesValuesOnly(propList, propValues, grid,
+                [&units, &initFile](const CellProperty&   prop,
+                                    std::vector<double>&& value)
+            {
+                units.from_si(prop.unit, value);
+                initFile.write(prop.name, singlePrecision(value));
+            });
+        }
     }
 
     void writeDoubleCellProperties(const ::Opm::EclipseState&        es,
@@ -410,7 +454,7 @@ namespace {
         properties.assertKeyword("NTG");
 
         writeDoubleCellProperties(doubleKeywords, properties,
-                                  grid, units, initFile);
+                                  grid, units, false, initFile);
     }
 
     void writeIntegerCellProperties(const ::Opm::EclipseState&        es,
@@ -487,7 +531,9 @@ namespace {
             propValues.assertKeyword(prop.name);
         }
 
-        writeDoubleCellProperties(propList, propValues, grid, units, initFile);
+        // Don't write sentinel value if input defaulted.
+        writeDoubleCellProperties(propList, propValues, grid,
+                                  units, false, initFile);
     }
 
     void writeSatFuncScaling(const ::Opm::EclipseState&        es,
@@ -503,9 +549,10 @@ namespace {
 
         if (! es.cfg().init().filleps()) {
             // No FILLEPS in input deck.  Output those endpoint arrays that
-            // exist in the input deck.
+            // exist in the input deck.  Write sentinel value if input
+            // defaulted.
             writeDoubleCellProperties(epsVectors.getVectors(), props,
-                                      grid, units, initFile);
+                                      grid, units, true, initFile);
         }
         else {
             // Input deck specified FILLEPS so we should output all endpoint
@@ -513,7 +560,8 @@ namespace {
             // However, downstream clients of GridProperties<double> should
             // not see scaling arrays created for output purposes only, so
             // make a copy of the properties object and modify that copy in
-            // order to leave the original intact.
+            // order to leave the original intact.  Don't write sentinel
+            // value if input defaulted.
             auto propsCopy = props;
             writeFilledSatFuncScaling(epsVectors.getVectors(),
                                       std::move(propsCopy),
