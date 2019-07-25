@@ -198,7 +198,6 @@ namespace Opm
         void addWellToGroup( Group& newGroup , const std::string& wellName , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const Eclipse3DProperties& eclipseProperties);
-        bool handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const;
         void addGroup(const std::string& groupName , size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder, const UnitSystem& unit_system);
         void handleUDQ(const DeckKeyword& keyword, size_t currentStep);

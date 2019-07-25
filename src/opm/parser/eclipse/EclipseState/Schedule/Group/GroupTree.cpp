@@ -25,8 +25,8 @@
 
 namespace Opm {
 
-void GroupTree::update( const std::string& name) {
-    this->update( name, "FIELD");
+bool GroupTree::update( const std::string& name) {
+    return this->update( name, "FIELD");
 }
 
 /*
@@ -45,7 +45,10 @@ const std::map<size_t, std::string >& GroupTree::seqIndNameMap() const {
     return m_seqIndNameMap;
 }
 
-void GroupTree::update( const std::string& name, const std::string& other_parent) {
+bool GroupTree::update( const std::string& name, const std::string& other_parent) {
+    if( this->exists( name) )
+        return false;
+
     if( name == "FIELD" )
         throw std::invalid_argument( "The FIELD group name is reserved." );
 
@@ -59,10 +62,11 @@ void GroupTree::update( const std::string& name, const std::string& other_parent
     auto node = this->find( name );
     if( node == this->groups.end() || node->name != name ) {
         this->groups.insert( node, 1, group { name, other_parent } );
-        return;
+        return true;
     }
 
     node->parent = other_parent;
+    return true;
 }
 
 void GroupTree::updateSeqIndex( const std::string& name, const std::string& other_parent) {

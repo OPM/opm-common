@@ -427,14 +427,6 @@ namespace {
     }
 
 
-    bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const {
-        if( newTree.exists( groupName ) ) return false;
-
-        newTree.update( groupName );
-        return true;
-    }
-
-
     void Schedule::handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& record = keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
@@ -612,7 +604,7 @@ namespace {
                 }
             }
 
-            if (handleGroupFromWELSPECS(groupName, newTree))
+            if (newTree.update(groupName))
                 needNewTree = true;
         }
 

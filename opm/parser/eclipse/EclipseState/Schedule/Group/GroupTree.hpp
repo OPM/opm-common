@@ -41,10 +41,9 @@ public:
         bool operator!=( const group& rhs ) const;
     };
 
-    void update( const std::string& name);
-    void update( const std::string& name, const std::string& parent);
+    bool update( const std::string& name);
+    bool update( const std::string& name, const std::string& parent);
     void updateSeqIndex( const std::string& name, const std::string& other_parent);
-    bool exists( const std::string& group ) const;
     const std::string& parent( const std::string& name ) const;
     std::vector< std::string > children( const std::string& parent ) const;
     const std::map<std::string , size_t>& nameSeqIndMap() const;
@@ -56,6 +55,7 @@ public:
 
 private:
     std::vector< group >::iterator find( const std::string& );
+    bool exists( const std::string& group ) const;
     friend bool operator<( const std::string&, const group& );
 
     std::vector< group > groups = { group { "FIELD", "" } };
