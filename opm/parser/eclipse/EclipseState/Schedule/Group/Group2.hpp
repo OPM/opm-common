@@ -68,6 +68,9 @@ struct GroupProductionProperties {
     int getGroupNetVFPTable() const;
     bool updateNetVFPTable(int vfp_arg);
     bool update_gefac(double gefac, bool transfer_gefac);
+
+    const std::string& parent() const;
+    bool updateParent(const std::string& parent);
     bool updateInjection(const GroupInjectionProperties& injection);
     bool updateProduction(const GroupProductionProperties& production);
     bool isProductionGroup() const;
@@ -99,6 +102,7 @@ private:
     bool transfer_gefac;
     int vfp_table;
 
+    std::string parent_group;
     IOrderSet<std::string> m_wells;
     IOrderSet<std::string> m_groups;
 

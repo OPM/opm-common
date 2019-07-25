@@ -30,7 +30,11 @@ Group2::Group2(const std::string& name, std::size_t insert_index_arg, std::size_
     gefac(1),
     transfer_gefac(true),
     vfp_table(0)
-{}
+{
+    // All groups are initially created as children of the "FIELD" group.
+    if (name != "FIELD")
+        this->parent_group = "FIELD";
+}
 
 std::size_t Group2::insert_index() const {
     return this->m_insert_index;
@@ -99,6 +103,22 @@ bool Group2::updateProduction(const GroupProductionProperties& production) {
 
     return update;
 }
+
+
+const std::string& Group2::parent() const {
+    return this->parent_group;
+}
+
+
+bool Group2::updateParent(const std::string& parent) {
+    if (this->parent_group != parent) {
+        this->parent_group = parent;
+        return true;
+    }
+
+    return false;
+}
+
 
 
 bool Group2::GroupInjectionProperties::operator==(const GroupInjectionProperties& other) const {
@@ -173,7 +193,7 @@ const std::vector<std::string>& Group2::groups() const {
 
 bool Group2::addWell(const std::string& well_name) {
     if (!this->m_groups.empty())
-        throw std::logic_error("Groups can not mix group and well children");
+        throw std::logic_error("Groups can not mix group and well children. Trying to add well: " + well_name + " to group: " + this->name());
 
     if (this->m_wells.count(well_name) == 0) {
         this->m_wells.insert(well_name);
@@ -189,13 +209,13 @@ bool Group2::hasWell(const std::string& well_name) const  {
 void Group2::delWell(const std::string& well_name) {
     auto rm_count = this->m_wells.erase(well_name);
     if (rm_count == 0)
-        throw std::invalid_argument("Group does not have well: " + well_name);
+        throw std::invalid_argument("Group: " + this->name() + " does not have well: " + well_name);
 }
 
 
 bool Group2::addGroup(const std::string& group_name) {
     if (!this->m_wells.empty())
-        throw std::logic_error("Groups can not mix group and well children");
+        throw std::logic_error("Groups can not mix group and well children. Trying to add group: " + group_name + " to group: " + this->name());
 
     if (this->m_groups.count(group_name) == 0) {
         this->m_groups.insert(group_name);

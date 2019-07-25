@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_size ) {
     Schedule schedule(deck,  grid , eclipseProperties,runspec);
 
     // Time 0, only from WELSPECS
-    BOOST_CHECK_EQUAL( 2U, schedule.getGroupTree(0).children("FIELD").size() );
+    BOOST_CHECK_EQUAL( 3U, schedule.getGroupTree(0).children("FIELD").size() );
 
     // Time 1, a new group added in tree
     BOOST_CHECK_EQUAL( 3U, schedule.getGroupTree(1).children("FIELD").size() );
@@ -360,7 +360,7 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
     // Time 0, only from WELSPECS
     const auto& tree0 = schedule.getGroupTree( 0 );
     BOOST_CHECK( tree0.exists( "FIELD" ) );
-    BOOST_CHECK_EQUAL( "FIELD", tree0.parent( "GROUP_BJARNE" ) );
+    BOOST_CHECK_EQUAL( "FIELD", tree0.parent( "GROUP_NILS" ) );
     BOOST_CHECK( tree0.exists("GROUP_ODD") );
 
     // Time 1, now also from GRUPTREE
@@ -399,6 +399,16 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     BOOST_CHECK_EQUAL( "FIELD", tree0.parent( "GROUP_BJARNE" ) );
     BOOST_CHECK_EQUAL( "GROUP_BJARNE", tree0.parent( "GROUP_BIRGER" ) );
     BOOST_CHECK_EQUAL( "GROUP_NEW", tree0.parent( "GROUP_NILS" ) );
+
+    const auto& field_group = sched.getGroup2("FIELD", 1);
+    const auto& new_group = sched.getGroup2("GROUP_NEW", 1);
+    const auto& nils_group = sched.getGroup2("GROUP_NILS", 1);
+    BOOST_CHECK_EQUAL(field_group.groups().size(), 2);
+    BOOST_CHECK( field_group.hasGroup("GROUP_NEW"));
+    BOOST_CHECK( field_group.hasGroup("GROUP_BJARNE"));
+    BOOST_CHECK_EQUAL( new_group.parent(), "FIELD");
+    BOOST_CHECK( new_group.hasGroup("GROUP_NILS"));
+    BOOST_CHECK_EQUAL( nils_group.parent(), "GROUP_NEW");
 }
 
 BOOST_AUTO_TEST_CASE( WellTestGroups ) {

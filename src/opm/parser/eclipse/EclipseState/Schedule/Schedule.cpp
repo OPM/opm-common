@@ -579,7 +579,7 @@ namespace {
                     }
                 }
                 this->addWell(wellName, record, currentStep, wellConnectionOrder, unit_system);
-                this->addWellToGroup(this->m_groups.at( groupName ), wellName, currentStep);
+                this->addWellToGroup(groupName, wellName, currentStep);
             } else {
                 const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
                 const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
@@ -1798,6 +1798,8 @@ namespace {
 
             if (!hasGroup(childName))
                 addGroup( childName , currentStep );
+
+            this->addGroupToGroup(parentName, childName, currentStep);
         }
         m_rootGroupTree.update(currentStep, newTree);
     }
@@ -1872,6 +1874,33 @@ namespace {
 
     const GroupTree& Schedule::getGroupTree(size_t timeStep) const {
         return m_rootGroupTree.get(timeStep);
+    }
+
+
+    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const {
+        auto root_group = this->getGroup2(root_node, report_step);
+        GTNode tree(root_group, parent);
+
+        for (const auto& wname : root_group.wells()) {
+            const auto& well = this->getWell2(wname, report_step);
+            tree.add_well(well);
+        }
+
+        for (const auto& gname : root_group.groups()) {
+            auto child_group = this->groupTree(gname, report_step, std::addressof(tree));
+            tree.add_group(child_group);
+        }
+
+        return tree;
+    }
+
+    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step) const {
+        return this->groupTree(root_node, report_step, nullptr);
+    }
+
+
+    GTNode Schedule::groupTree(std::size_t report_step) const {
+        return this->groupTree("FIELD", report_step);
     }
 
     void Schedule::addWell(const std::string& wellName,
@@ -1968,7 +1997,7 @@ namespace {
 
     std::vector< Well2 > Schedule::getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const {
         if (!hasGroup(group_name))
-            throw std::invalid_argument("No such group: " + group_name);
+            throw std::invalid_argument("No such group: '" + group_name + "'");
         {
             const auto& group = getGroup( group_name );
             std::vector<Well2> wells;
@@ -1994,7 +2023,7 @@ namespace {
 
     std::vector< const Group* > Schedule::getChildGroups(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
-            throw std::invalid_argument("No such group: " + group_name);
+            throw std::invalid_argument("No such group: '" + group_name + "'");
         {
             const auto& group = getGroup( group_name );
             std::vector<const Group*> child_groups;
@@ -2048,7 +2077,7 @@ namespace {
 
     const Group2& Schedule::getGroup2(const std::string& groupName, size_t timeStep) const {
         if (this->groups.count(groupName) == 0)
-            throw std::invalid_argument("No such group: " + groupName);
+            throw std::invalid_argument("No such group: '" + groupName + "'");
 
         const auto& dynamic_state = this->groups.at(groupName);
         auto& group_ptr = dynamic_state.get(timeStep);
@@ -2224,6 +2253,11 @@ namespace {
         dynamic_state.update(timeStep, group_ptr);
 
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
+
+        // All newly created groups are attached to the field group,
+        // can then be relocated with the GRUPTREE keyword.
+        if (groupName != "FIELD")
+            this->addGroupToGroup("FIELD", *group_ptr, timeStep);
     }
 
     size_t Schedule::numGroups() const {
@@ -2253,16 +2287,65 @@ namespace {
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
 
+    void Schedule::addGroupToGroup( const std::string& parent_group, const Group2& child_group, size_t timeStep) {
+        // Add to new parent
+        auto& dynamic_state = this->groups.at(parent_group);
+        auto parent_ptr = std::make_shared<Group2>( *dynamic_state[timeStep] );
+        if (parent_ptr->addGroup(child_group.name()))
+            this->updateGroup(parent_ptr, timeStep);
 
-    void Schedule::addWellToGroup( Group& newGroup, const std::string& wellName , size_t timeStep) {
-        auto& dynamic_state = this->wells_static.at(wellName);
-        auto well_ptr = std::make_shared<Well2>( *dynamic_state[timeStep] );
-        if (well_ptr->groupName() != "")
-            this->m_groups.at(well_ptr->groupName()).delWell(timeStep, wellName);
+        // Check and update backreference in child
+        if (child_group.parent() != parent_group) {
+            auto old_parent = std::make_shared<Group2>( this->getGroup2(child_group.parent(), timeStep) );
+            old_parent->delGroup(child_group.name());
+            this->updateGroup(old_parent, timeStep);
 
-        well_ptr->updateGroup(newGroup.name());
-        newGroup.addWell(timeStep, well_ptr->name());
-        this->updateWell(well_ptr, timeStep);
+            auto child_ptr = std::make_shared<Group2>( child_group );
+            child_ptr->updateParent(parent_group);
+            this->updateGroup(child_ptr, timeStep);
+
+        }
+    }
+
+    void Schedule::addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep) {
+        this->addGroupToGroup(parent_group, this->getGroup2(child_group, timeStep), timeStep);
+    }
+
+    void Schedule::addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep) {
+        const auto& well = this->getWell2(well_name, timeStep);
+        const auto old_gname = well.groupName();
+        {
+            auto well_ptr = std::make_shared<Well2>( well );
+            well_ptr->updateGroup(group_name);
+            this->updateWell(well_ptr, timeStep);
+        }
+
+        // Remove well child reference from previous group
+        // Old Group implementation
+        if (old_gname != group_name) {
+            {
+                auto& group = this->m_groups.at(old_gname);
+                group.delWell(timeStep, well_name);
+            }
+
+            // New Group2 implementation
+            {
+                auto group = std::make_shared<Group2>(this->getGroup2(old_gname, timeStep));
+                group->delWell(well_name);
+                this->updateGroup(group, timeStep);
+            }
+        }
+
+        // Add well child reference to new parent group
+        {
+            auto& group = this->m_groups.at(group_name);
+            group.addWell(timeStep, well_name);
+        }
+        {
+            auto group = std::make_shared<Group2>(this->getGroup2(group_name, timeStep));
+            group->addWell(well_name);
+            this->updateGroup(group, timeStep);
+        }
    }
 
 
