@@ -29,6 +29,9 @@ set( keywords
      000_Eclipse100/A/ALKADS
      000_Eclipse100/A/ALKALINE
      000_Eclipse100/A/ALKROCK
+     000_Eclipse100/A/ALPOLADS
+     000_Eclipse100/A/ALSURFAD
+     000_Eclipse100/A/ALSURFST
      000_Eclipse100/A/API
      000_Eclipse100/A/APIGROUP
      000_Eclipse100/A/AQUANCON
