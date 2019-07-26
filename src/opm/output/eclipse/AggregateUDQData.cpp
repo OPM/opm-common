@@ -133,8 +133,7 @@ namespace {
 	}
     } // iUad
     
-    
-	namespace zUdn {
+    namespace zUdn {
 
         Opm::RestartIO::Helpers::WindowedArray<
             Opm::EclIO::PaddedOutputString<8>
@@ -223,6 +222,26 @@ namespace {
         }     
     } // zUdl
     
+    namespace iGph {
+
+        Opm::RestartIO::Helpers::WindowedArray<int>
+        allocate(const std::vector<int>& udqDims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            return WV {
+                WV::NumWindows{ static_cast<std::size_t>(udqDims[6]) },
+                WV::WindowSize{ static_cast<std::size_t>(1) }
+            };
+        }
+
+        template <class IGPHArray>
+        void staticContrib(const int indGph,
+			   IGPHArray& iGph)
+        {
+	    // to be added
+	}
+    } // iGph
+
 } // Anonymous
 
 // =====================================================================
@@ -333,7 +352,8 @@ AggregateUDQData(const std::vector<int>& udqDims)
     : iUDQ_ (iUdq::allocate(udqDims)),
       iUAD_ (iUad::allocate(udqDims)),
       zUDN_ (zUdn::allocate(udqDims)),
-      zUDL_ (zUdl::allocate(udqDims))
+      zUDL_ (zUdl::allocate(udqDims)),
+      iGPH_ (iGph::allocate(udqDims))
 {}
 
 // ---------------------------------------------------------------------

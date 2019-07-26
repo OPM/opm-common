@@ -21,6 +21,7 @@
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
+#include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
@@ -59,18 +60,23 @@ namespace {
         return no_entries;
     }
     
-        std::size_t entriesPerZUDN()
+    std::size_t entriesPerZUDN()
     {
 	std::size_t no_entries = 2;
         return no_entries;
     }
     
-        std::size_t entriesPerZUDL()
+    std::size_t entriesPerZUDL()
     {
-	std::size_t no_entries = 16;
+    std::size_t no_entries = 16;
         return no_entries;
     }
 
+    std::size_t entriesPerIGph(const std::vector<int>& inteHead)
+    {
+	std::size_t no_entries = inteHead[20];
+        return no_entries;
+    }
 } // Anonymous
 
 // #####################################################################
@@ -79,8 +85,9 @@ namespace {
 
 std::vector<int>
 Opm::RestartIO::Helpers::
-createUdqDims(const Schedule&     	sched,
-              const std::size_t        	lookup_step) 
+createUdqDims(const Schedule&     		sched,
+              const std::size_t        		lookup_step,
+	      const std::vector<int>&           inteHead) 
 {
     Opm::RestartIO::Helpers::iUADData iuad_data;
     iuad_data.noIUADs(sched, lookup_step);
@@ -98,6 +105,8 @@ createUdqDims(const Schedule&     	sched,
     udqDims.emplace_back(entriesPerZUDN());
     // 5
     udqDims.emplace_back(entriesPerZUDL());
+    // 6
+    udqDims.emplace_back(entriesPerIGph(inteHead));
 
     return udqDims;
 }

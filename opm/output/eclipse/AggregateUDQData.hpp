@@ -146,16 +146,18 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         {
             return this->zUDL_.data();
         }
+        
+                const std::vector<int>& getIGPH() const
+        {
+            return this->iGPH_.data();
+        }
 #if 0        
         const std::vector<int>& getIUAP() const
         {
             return this->iUAP_.data();
         }
         
-        const std::vector<int>& getIGPH() const
-        {
-            return this->iGPH_.data();
-        }
+
 
         const std::vector<double>& getDUDW() const
         {
@@ -183,15 +185,12 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
         /// Aggregate 'ZUDL' array (Character) for all UDQ data.  (16 * 8 chars pr UDQ DEFINE "Data for operation - Msth Expression)
 	WindowedArray<EclIO::PaddedOutputString<8>> zUDL_;
-#if 0	
-	/// Aggregate 'IUAP' array (ICharArrayNullTermnteger) for all UDQ data  (1 integer pr UDQ constraint used)
-        WindowedArray<int> iUAP_;
 	
 	/// Aggregate 'IGPH' array (Integer) for all UDQ data  (3 - zeroes - as of current understanding)
         WindowedArray<int> iGPH_;
-	
-        /// Aggregate 'SWEL' array (Real) for all wells.
-        //WindowedArray<float> sGroup_;
+#if 0	
+	/// Aggregate 'IUAP' array (ICharArrayNullTermnteger) for all UDQ data  (1 integer pr UDQ constraint used)
+        WindowedArray<int> iUAP_;
 
         /// Aggregate 'DUDW' array (Double Precision) for all UDQ data. (Dimension = max no wells * noOfUDQ's)
         WindowedArray<double> dUDW_;

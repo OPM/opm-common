@@ -109,7 +109,6 @@ namespace Opm {
 	std::vector<std::string> m_udq_keys;
 	std::unordered_map<std::string, bool> m_is_define;
 	std::unordered_map<std::string, std::string> m_udqdef_data;
-        std::unordered_set<std::string> keywords;
 	std::unordered_map<std::string, std::size_t> m_key_seq_no;
 	std::unordered_map<std::size_t, std::unordered_map<std::string, std::size_t> > m_keytype_keyname_seq_no;
     };

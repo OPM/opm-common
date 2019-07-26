@@ -11,6 +11,8 @@
 #include <opm/output/eclipse/AggregateUDQData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
+#include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/VectorItems/intehead.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
@@ -676,11 +678,13 @@ struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
 	: es   { deck }
+	, grid { deck }
 	, sched{ deck, es }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Opm::EclipseState es;
+    Opm::EclipseGrid  grid;
     Opm::Schedule     sched;
 
 };
@@ -698,6 +702,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
     
     Opm::EclipseState es = simCase.es;
     Opm::Schedule     sched = simCase.sched;
+    Opm::EclipseGrid  grid = simCase.grid;
     const auto& ioConfig = es.getIOConfig();
     const auto& restart = es.cfg().restart();
     Opm::UDQActive udq_act = udq_active();
@@ -713,9 +718,13 @@ BOOST_AUTO_TEST_CASE (Constructor)
     Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
 	  Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
         };
+	
+    double secs_elapsed = 3.1536E07;
+    const auto ih = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
+                                                secs_elapsed, rptStep, rptStep);
        
     //const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, udq_act, rptStep);
-    const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep);
+    const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     Opm::RestartIO::Helpers::iUADData iuad_test;
     //iuad_test.noIUADs(sched, rptStep, udq_act);

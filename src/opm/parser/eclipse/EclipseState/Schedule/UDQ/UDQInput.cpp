@@ -106,10 +106,6 @@ namespace Opm {
 		this->m_keytype_keyname_seq_no[var_typ][quantity] = 1;
 	      }
 	    }
-	    this->keywords.insert(quantity);
-	    for (auto item : this->keywords) {
-		std::cout << "UDQInput_gen - keywords " << item << std::endl;
-	    }
         }
     }
 
