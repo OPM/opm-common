@@ -47,7 +47,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -93,7 +93,7 @@ namespace {
         m_runspec( runspec ),
         wtest_config(this->m_timeMap, std::make_shared<WellTestConfig>() ),
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
-        udq_config(this->m_timeMap, std::make_shared<UDQInput>(deck)),
+        udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
         rft_config(this->m_timeMap)
     {
@@ -1127,7 +1127,7 @@ namespace {
 
     void Schedule::handleUDQ(const DeckKeyword& keyword, size_t currentStep) {
         const auto& current = *this->udq_config.get(currentStep);
-        std::shared_ptr<UDQInput> new_udq = std::make_shared<UDQInput>(current);
+        std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
         for (const auto& record : keyword)
             new_udq->add_record(record);
 
@@ -2489,7 +2489,7 @@ namespace {
         return *ptr;
     }
 
-    const UDQInput& Schedule::getUDQConfig(size_t timeStep) const {
+    const UDQConfig& Schedule::getUDQConfig(size_t timeStep) const {
         const auto& ptr = this->udq_config.get(timeStep);
         return *ptr;
     }

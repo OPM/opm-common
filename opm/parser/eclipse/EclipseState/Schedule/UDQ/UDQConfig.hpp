@@ -38,9 +38,9 @@ namespace Opm {
     class DeckRecord;
     class Deck;
 
-    class UDQInput {
+    class UDQConfig {
     public:
-        explicit UDQInput(const Deck& deck);
+        explicit UDQConfig(const Deck& deck);
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
@@ -49,34 +49,7 @@ namespace Opm {
 
         std::vector<UDQDefine> definitions() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
-
-        /*
-          The input_definitions() function is written to supply the information
-          needed when writing the restart file. The return value is a list of
-          pairs, where the first element in the pair is the index in the deck
-          for a particular UDQ keyword, and then the corresponding keyword.
-          Assume a deck keyword which looks like this:
-
-          UDQ
-            ASSIGN WUX 10 /
-            UNITS  WUX 'BARSA' /
-            DEFINE WUPR SUM(WOPR) * 0.75 /
-            DEFINE FUCK MAX(WOPR) * 1.25 /
-            ASSIGN FUX 100 /
-            DEFINE BUPR ?? /
-          /
-
-         Then the return value from input_definitions() will be:
-
-          {{1, UDQDefine("WUPR")},
-           {2, UDQDefine("FUCK")},
-           {4, UDQDefine("BUPR")}
-
-
-         Where the the numerical index is the index in a fictious vector
-         consisting of only the ASSIGN and DEFINE keywords, in input order.
-        */
-        std::vector<std::pair<size_t, UDQDefine>> input_definitions() const;
+        std::vector<UDQInput> input() const;
 
         std::vector<UDQAssign> assignments() const;
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
