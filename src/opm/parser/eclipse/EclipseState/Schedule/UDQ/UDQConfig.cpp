@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 Statoil ASA.
+  Copyright 2019 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -15,14 +15,12 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#include <algorithm>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 
 namespace Opm {
 
@@ -42,11 +40,9 @@ namespace Opm {
     {
     }
 
-
     const UDQParams& UDQConfig::params() const {
         return this->udq_params;
     }
-
 
     void UDQConfig::add_record(const DeckRecord& record) {
         auto action = UDQ::actionType(record.getItem("ACTION").get<std::string>(0));
@@ -60,13 +56,10 @@ namespace Opm {
             this->assign_unit( quantity, data[0] );
         else {
             auto index_iter = this->input_index.find(quantity);
-            if (this->input_index.find(quantity) == this->input_index.end()) {
-                auto var_type = UDQ::varType(quantity);
-                auto insert_index = this->input_index.size();
-                this->type_count[var_type] += 1;
-                this->input_index[quantity] = UDQIndex(insert_index, this->type_count[var_type], action);
-            } else
-                index_iter->second.action = action;
+            if (this->input_index.find(quantity) == this->input_index.end())
+                this->input_index[quantity] = std::make_pair(this->input_index.size(), action);
+            else
+                index_iter->second.second = action;
 
 
             if (action == UDQAction::ASSIGN) {
@@ -77,13 +70,9 @@ namespace Opm {
                     this->m_assignments.insert( std::make_pair(quantity, UDQAssign(quantity, selector, value )));
                 else
                     assignment->second.add_record(selector, value);
-            } else if (action == UDQAction::DEFINE) {
-                auto defined_iter = this->m_definitions.find( quantity );
-                if (defined_iter != this->m_definitions.end())
-                    this->m_definitions.erase( defined_iter );
-
+            } else if (action == UDQAction::DEFINE)
                 this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, data)));
-            } else
+            else
                 throw std::runtime_error("Internal error - should not be here");
         }
     }
@@ -92,7 +81,7 @@ namespace Opm {
     std::vector<UDQDefine> UDQConfig::definitions() const {
         std::vector<UDQDefine> ret;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::DEFINE) {
+            if (index_pair.second.second == UDQAction::DEFINE) {
                 const std::string& key = index_pair.first;
                 ret.push_back(this->m_definitions.at(key));
             }
@@ -104,7 +93,7 @@ namespace Opm {
     std::vector<UDQDefine> UDQConfig::definitions(UDQVarType var_type) const {
         std::vector<UDQDefine> filtered_defines;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::DEFINE) {
+            if (index_pair.second.second == UDQAction::DEFINE) {
                 const std::string& key = index_pair.first;
                 const auto& udq_define = this->m_definitions.at(key);
                 if (udq_define.var_type() == var_type)
@@ -115,41 +104,22 @@ namespace Opm {
     }
 
 
-    std::vector<UDQInput> UDQConfig::input() const {
-        std::vector<UDQInput> res;
+    std::vector<std::pair<size_t, UDQDefine>> UDQConfig::input_definitions() const {
+        std::vector<std::pair<size_t, UDQDefine>> res;
         for (const auto& index_pair : this->input_index) {
-            const UDQIndex& index = index_pair.second;
-            std::string u;
-            if (this->has_unit(index_pair.first))
-                u = this->unit(index_pair.first);
-
-            if (index.action == UDQAction::DEFINE) {
+            if (index_pair.second.second == UDQAction::DEFINE) {
                 const std::string& key = index_pair.first;
-                res.push_back(UDQInput(index, this->m_definitions.at(key), u));
-            } else if (index_pair.second.action == UDQAction::ASSIGN) {
-                const std::string& key = index_pair.first;
-                res.push_back(UDQInput(index, this->m_assignments.at(key), u));
+                res.emplace_back(index_pair.second.first, this->m_definitions.at(key));
             }
         }
         return res;
-    }
-
-    std::size_t UDQConfig::size() const {
-        std::size_t s = 0;
-        for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::DEFINE)
-                s += 1;
-            else if (index_pair.second.action == UDQAction::ASSIGN)
-                s += 1;
-        }
-        return s;
     }
 
 
     std::vector<UDQAssign> UDQConfig::assignments() const {
         std::vector<UDQAssign> ret;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::ASSIGN) {
+            if (index_pair.second.second == UDQAction::ASSIGN) {
                 const std::string& key = index_pair.first;
                 ret.push_back(this->m_assignments.at(key));
             }
@@ -161,7 +131,7 @@ namespace Opm {
     std::vector<UDQAssign> UDQConfig::assignments(UDQVarType var_type) const {
         std::vector<UDQAssign> filtered_defines;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::ASSIGN) {
+            if (index_pair.second.second == UDQAction::ASSIGN) {
                 const std::string& key = index_pair.first;
                 const auto& udq_define = this->m_assignments.at(key);
                 if (udq_define.var_type() == var_type)
@@ -208,7 +178,7 @@ namespace Opm {
 
         /*
           That a keyword is mentioned with UNITS is enough to consider it
-          as a keyword which is present.
+           as a keyword which is present.
         */
         if (this->units.count(keyword) > 0)
             return true;
@@ -217,26 +187,50 @@ namespace Opm {
     }
 
 
-    const UDQInput UDQConfig::operator[](const std::string& keyword) const {
-        const auto index_iter = this->input_index.find(keyword);
-        if (index_iter == this->input_index.end())
-            throw std::invalid_argument("Keyword: " + keyword + " not recognized as ASSIGN/DEFINE UDQ");
-
-        std::string u;
-        if (this->has_unit(keyword))
-            u = this->unit(keyword);
-
-        if (index_iter->second.action == UDQAction::ASSIGN)
-            return UDQInput(this->input_index.at(keyword), this->m_assignments.at(keyword), u);
-
-        if (index_iter->second.action == UDQAction::DEFINE)
-            return UDQInput(this->input_index.at(keyword), this->m_definitions.at(keyword), u);
-
-        throw std::logic_error("Internal error - should not be here");
-    }
-
-
     const UDQFunctionTable& UDQConfig::function_table() const {
         return this->udqft;
     }
 }
+
+const std::string& UDQInput::keyword() const {
+    return this->m_keyword;
+}
+
+template<>
+bool UDQInput::is<UDQAssign>() const {
+    if (this->assign)
+        return true;
+    return false;
+}
+
+
+template<>
+bool UDQInput::is<UDQDefine>() const {
+    if (this->define)
+        return true;
+    return false;
+}
+
+template<>
+const UDQAssign& UDQInput::get<UDQAssign>() const {
+    if (this->assign)
+        return *this->assign;
+
+    throw std::runtime_error("Invalid get");
+}
+
+
+template<>
+const UDQDefine& UDQInput::get<UDQDefine>() const {
+    if (this->define)
+        return *this->define;
+
+    throw std::runtime_error("Invalid get");
+}
+
+
+
+
+}
+
+

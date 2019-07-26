@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 Statoil ASA.
+  Copyright 2019 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -18,26 +18,18 @@
 */
 
 
-#ifndef UDQINPUT_HPP_
-#define UDQINPUT_HPP_
+#ifndef UDQINPUT__HPP_
+#define UDQINPUT__HPP_
 
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <memory>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
-
 
 namespace Opm {
 
     class DeckRecord;
     class Deck;
+
     class UDQConfig {
     public:
         explicit UDQConfig(const Deck& deck);
@@ -50,13 +42,6 @@ namespace Opm {
         std::vector<UDQDefine> definitions() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;
-
-        // The size() method will return the number of active DEFINE and ASSIGN
-        // statements; this will correspond to the length of the vector returned
-        // from input().
-        size_t size() const;
-
-        const UDQInput operator[](const std::string& keyword) const;
 
         std::vector<UDQAssign> assignments() const;
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
@@ -80,8 +65,7 @@ namespace Opm {
         std::unordered_map<std::string, UDQAssign> m_assignments;
         std::unordered_map<std::string, std::string> units;
 
-        OrderedMap<std::string, UDQIndex> input_index;
-        std::unordered_map<UDQVarType, std::size_t> type_count;
+        OrderedMap<std::string, std::pair<size_t, UDQAction>> input_index;
     };
 }
 
