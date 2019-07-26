@@ -1240,5 +1240,6 @@ UDQ
     BOOST_CHECK( fuopr.is<UDQDefine>() );
     const auto& def2 = fuopr.get<UDQDefine>();
     BOOST_CHECK_EQUAL(def2.input_string(), "MAX(WOPR)");
+    BOOST_CHECK( input[0].is<UDQDefine>());
 }
 
