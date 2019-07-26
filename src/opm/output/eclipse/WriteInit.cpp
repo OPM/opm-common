@@ -27,28 +27,262 @@
 #include <opm/io/eclipse/OutputStream.hpp>
 
 #include <opm/output/data/Solution.hpp>
+#include <opm/output/eclipse/LogiHEAD.hpp>
 #include <opm/output/eclipse/Tables.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
+#include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/GridProperty.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/NNC.hpp>
+#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <cstddef>
 #include <exception>
+#include <initializer_list>
 #include <stdexcept>
 #include <utility>
 
 namespace {
+
+    struct CellProperty
+    {
+        std::string                name;
+        ::Opm::UnitSystem::measure unit;
+    };
+
+    using Properties = std::vector<CellProperty>;
+
+    class ScalingVectors
+    {
+    public:
+        ScalingVectors& withHysteresis(const bool active);
+        ScalingVectors& collect(const ::Opm::Phases& ph);
+
+        const Properties& getVectors() const
+        {
+            return this->vectors_;
+        }
+
+    private:
+        Properties vectors_{};
+        bool       useHysteresis_{false};
+
+        void insertScaledWaterEndPoints();
+        void insertScaledGasEndPoints();
+        void insertScaledOilEndPoints(const ::Opm::Phases& ph);
+        void insertScaledRelpermValues(const ::Opm::Phases& ph);
+        void insertScaledCapillaryPressure(const ::Opm::Phases& ph);
+        void insertImbibitionPoints();
+    };
+
+    ScalingVectors& ScalingVectors::withHysteresis(const bool active)
+    {
+        this->useHysteresis_ = active;
+
+        return *this;
+    }
+
+    ScalingVectors& ScalingVectors::collect(const ::Opm::Phases& ph)
+    {
+        if (ph.active(::Opm::Phase::WATER)) {
+            this->insertScaledWaterEndPoints();
+        }
+
+        if (ph.active(::Opm::Phase::GAS)) {
+            this->insertScaledGasEndPoints();
+        }
+
+        if (ph.active(::Opm::Phase::OIL)) {
+            this->insertScaledOilEndPoints(ph);
+        }
+
+        this->insertScaledRelpermValues(ph);
+
+        if (ph.active(::Opm::Phase::OIL)) {
+            this->insertScaledCapillaryPressure(ph);
+        }
+
+        if (this->useHysteresis_) {
+            // Run uses hysteresis.  Output scaled imbibition curve too.
+            this->insertImbibitionPoints();
+        }
+
+        return *this;
+    }
+
+    void ScalingVectors::insertScaledWaterEndPoints()
+    {
+        this->vectors_.insert(this->vectors_.end(),
+        {
+            {"SWL" , ::Opm::UnitSystem::measure::identity },
+            {"SWCR", ::Opm::UnitSystem::measure::identity },
+            {"SWU" , ::Opm::UnitSystem::measure::identity },
+        });
+    }
+
+    void ScalingVectors::insertScaledGasEndPoints()
+    {
+        this->vectors_.insert(this->vectors_.end(),
+        {
+            {"SGL" , ::Opm::UnitSystem::measure::identity },
+            {"SGCR", ::Opm::UnitSystem::measure::identity },
+            {"SGU" , ::Opm::UnitSystem::measure::identity },
+        });
+    }
+
+    void ScalingVectors::insertScaledOilEndPoints(const ::Opm::Phases& ph)
+    {
+        if (ph.active(::Opm::Phase::WATER)) {
+            this->vectors_.push_back(CellProperty {
+                "SOWCR", ::Opm::UnitSystem::measure::identity
+            });
+        }
+
+        if (ph.active(::Opm::Phase::GAS)) {
+            this->vectors_.push_back(CellProperty {
+                "SOGCR", ::Opm::UnitSystem::measure::identity
+            });
+        }
+    }
+
+    void ScalingVectors::insertScaledRelpermValues(const ::Opm::Phases& ph)
+    {
+        if (ph.active(::Opm::Phase::WATER)) {
+            this->vectors_.insert(this->vectors_.end(),
+            {
+                {"KRW" , ::Opm::UnitSystem::measure::identity },
+                {"KRWR", ::Opm::UnitSystem::measure::identity },
+            });
+        }
+
+        if (ph.active(::Opm::Phase::GAS)) {
+            this->vectors_.insert(this->vectors_.end(),
+            {
+                {"KRG" , ::Opm::UnitSystem::measure::identity },
+                {"KRGR", ::Opm::UnitSystem::measure::identity },
+            });
+        }
+
+        if (ph.active(::Opm::Phase::OIL)) {
+            this->vectors_.push_back(CellProperty {
+                "KRO", ::Opm::UnitSystem::measure::identity
+            });
+
+            if (ph.active(::Opm::Phase::WATER)) {
+                this->vectors_.push_back(CellProperty {
+                    "KRORW", ::Opm::UnitSystem::measure::identity
+                });
+            }
+
+            if (ph.active(::Opm::Phase::GAS)) {
+                this->vectors_.push_back(CellProperty {
+                    "KRORG", ::Opm::UnitSystem::measure::identity
+                });
+            }
+        }
+    }
+
+    void ScalingVectors::insertScaledCapillaryPressure(const ::Opm::Phases& ph)
+    {
+        if (ph.active(::Opm::Phase::WATER)) {
+            this->vectors_.insert(this->vectors_.end(),
+            {
+                {"SWLPC", ::Opm::UnitSystem::measure::identity },
+                {"PCW"  , ::Opm::UnitSystem::measure::pressure },
+            });
+        }
+
+        if (ph.active(::Opm::Phase::GAS)) {
+            this->vectors_.insert(this->vectors_.end(),
+            {
+                {"SGLPC", ::Opm::UnitSystem::measure::identity },
+                {"PCG"  , ::Opm::UnitSystem::measure::pressure },
+            });
+        }
+    }
+
+    void ScalingVectors::insertImbibitionPoints()
+    {
+        const auto start = static_cast<std::string::size_type>(0);
+        const auto count = static_cast<std::string::size_type>(1);
+        const auto npt   = this->vectors_.size();
+
+        this->vectors_.reserve(2 * npt);
+
+        for (auto i = 0*npt; i < npt; ++i) {
+            auto pt = this->vectors_[i]; // Copy, preserve unit of measure.
+
+            // Imbibition vector.  E.g., SOWCR -> ISOWCR
+            pt.name.insert(start, count, 'I');
+
+            this->vectors_.push_back(std::move(pt));
+        }
+    }
+
+    // =================================================================
+
     std::vector<float> singlePrecision(const std::vector<double>& x)
     {
         return { x.begin(), x.end() };
+    }
+
+    ::Opm::RestartIO::LogiHEAD::PVTModel
+    pvtFlags(const ::Opm::Runspec& rspec, const ::Opm::TableManager& tabMgr)
+    {
+        auto pvt = ::Opm::RestartIO::LogiHEAD::PVTModel{};
+
+        const auto& phases = rspec.phases();
+
+        pvt.isLiveOil = phases.active(::Opm::Phase::OIL) &&
+            !tabMgr.getPvtoTables().empty();
+
+        pvt.isWetGas = phases.active(::Opm::Phase::GAS) &&
+            !tabMgr.getPvtgTables().empty();
+
+        pvt.constComprOil = phases.active(::Opm::Phase::OIL) &&
+            !(pvt.isLiveOil ||
+              tabMgr.hasTables("PVDO") ||
+              tabMgr.getPvcdoTable().empty());
+
+        return pvt;
+    }
+
+    ::Opm::RestartIO::LogiHEAD::SatfuncFlags
+    satfuncFlags(const ::Opm::Runspec& rspec)
+    {
+        auto flags = ::Opm::RestartIO::LogiHEAD::SatfuncFlags{};
+
+        const auto& eps = rspec.endpointScaling();
+        if (eps) {
+            flags.useEndScale       = true;
+            flags.useDirectionalEPS = eps.directional();
+            flags.useReversibleEPS  = eps.reversible();
+            flags.useAlternateEPS   = eps.threepoint();
+        }
+
+        return flags;
+    }
+
+    std::vector<bool> logihead(const ::Opm::EclipseState& es)
+    {
+        const auto& rspec   = es.runspec();
+        const auto& wsd     = rspec.wellSegmentDimensions();
+        const auto& hystPar = rspec.hysterPar();
+
+        const auto lh = ::Opm::RestartIO::LogiHEAD{}
+            .variousParam(false, false, wsd.maxSegmentedWells(), hystPar.active())
+            .pvtModel(pvtFlags(rspec, es.getTableManager()))
+            .saturationFunction(satfuncFlags(rspec))
+            ;
+
+        return lh.data();
     }
 
     void writeInitFileHeader(const ::Opm::EclipseState&      es,
@@ -64,10 +298,7 @@ namespace {
         }
 
         {
-            const auto lh = ::Opm::RestartIO::Helpers::
-                createLogiHead(es);
-
-            initFile.write("LOGIHEAD", lh);
+            initFile.write("LOGIHEAD", logihead(es));
         }
 
         {
@@ -127,17 +358,88 @@ namespace {
         initFile.write("DZ"   , dz);
     }
 
+    template <typename T, class WriteVector>
+    void writeCellPropertiesWithDefaultFlag(const Properties& propList,
+                                            const ::Opm::GridProperties<T>& propValues,
+                                            const ::Opm::EclipseGrid&       grid,
+                                            WriteVector&&                   write)
+    {
+        for (const auto& prop : propList) {
+            if (! propValues.hasKeyword(prop.name)) {
+                continue;
+            }
+
+            const auto& opm_property = propValues.getKeyword(prop.name);
+            const auto& dflt         = opm_property.wasDefaulted();
+
+            write(prop, grid.compressedVector(dflt),
+                  opm_property.compressedCopy(grid));
+        }
+    }
+
+    template <typename T, class WriteVector>
+    void writeCellPropertiesValuesOnly(const Properties& propList,
+                                       const ::Opm::GridProperties<T>& propValues,
+                                       const ::Opm::EclipseGrid&       grid,
+                                       WriteVector&&                   write)
+    {
+        for (const auto& prop : propList) {
+            if (! propValues.hasKeyword(prop.name)) {
+                continue;
+            }
+
+            const auto& opm_property = propValues.getKeyword(prop.name);
+
+            write(prop, opm_property.compressedCopy(grid));
+        }
+    }
+
+    void writeDoubleCellProperties(const Properties&                    propList,
+                                   const ::Opm::GridProperties<double>& propValues,
+                                   const ::Opm::EclipseGrid&            grid,
+                                   const ::Opm::UnitSystem&             units,
+                                   const bool                           needDflt,
+                                   ::Opm::EclIO::OutputStream::Init&    initFile)
+    {
+        if (needDflt) {
+            writeCellPropertiesWithDefaultFlag(propList, propValues, grid,
+                [&units, &initFile](const CellProperty&   prop,
+                                    std::vector<bool>&&   dflt,
+                                    std::vector<double>&& value)
+            {
+                units.from_si(prop.unit, value);
+
+                for (auto n = dflt.size(), i = decltype(n){}; i < n; ++i) {
+                    if (dflt[i]) {
+                        // Element defaulted.  Output sentinel value
+                        // (-1.0e+20) to signify defaulted element.
+                        //
+                        // Note: Start as float for roundtripping through
+                        // function singlePrecision().
+                        value[i] = static_cast<double>(-1.0e+20f);
+                    }
+                }
+
+                initFile.write(prop.name, singlePrecision(value));
+            });
+        }
+        else {
+            writeCellPropertiesValuesOnly(propList, propValues, grid,
+                [&units, &initFile](const CellProperty&   prop,
+                                    std::vector<double>&& value)
+            {
+                units.from_si(prop.unit, value);
+                initFile.write(prop.name, singlePrecision(value));
+            });
+        }
+    }
+
     void writeDoubleCellProperties(const ::Opm::EclipseState&        es,
                                    const ::Opm::EclipseGrid&         grid,
                                    const ::Opm::UnitSystem&          units,
                                    ::Opm::EclIO::OutputStream::Init& initFile)
     {
-        using double_kw = std::pair<std::string, ::Opm::UnitSystem::measure>;
-
-        // This is a rather arbitrary hardcoded list of 3D keywords
-        // which are written to the INIT file, if they are in the
-        // current EclipseState.
-        const auto doubleKeywords = std::vector<double_kw> {
+        const auto doubleKeywords = Properties {
             {"PORO"  , ::Opm::UnitSystem::measure::identity },
             {"PERMX" , ::Opm::UnitSystem::measure::permeability },
             {"PERMY" , ::Opm::UnitSystem::measure::permeability },
@@ -151,17 +453,8 @@ namespace {
         const auto& properties = es.get3DProperties().getDoubleProperties();
         properties.assertKeyword("NTG");
 
-        for (const auto& kw_pair : doubleKeywords) {
-            if (! properties.hasKeyword( kw_pair.first)) {
-                continue;
-            }
-
-            const auto& opm_property = properties.getKeyword(kw_pair.first);
-            auto ecl_data = opm_property.compressedCopy(grid);
-            units.from_si(kw_pair.second, ecl_data);
-
-            initFile.write(kw_pair.first, singlePrecision(ecl_data));
-        }
+        writeDoubleCellProperties(doubleKeywords, properties,
+                                  grid, units, false, initFile);
     }
 
     void writeIntegerCellProperties(const ::Opm::EclipseState&        es,
@@ -228,6 +521,54 @@ namespace {
         }
     }
 
+    void writeFilledSatFuncScaling(const Properties&                 propList,
+                                   ::Opm::GridProperties<double>&&   propValues,
+                                   const ::Opm::EclipseGrid&         grid,
+                                   const ::Opm::UnitSystem&          units,
+                                   ::Opm::EclIO::OutputStream::Init& initFile)
+    {
+        for (const auto& prop : propList) {
+            propValues.assertKeyword(prop.name);
+        }
+
+        // Don't write sentinel value if input defaulted.
+        writeDoubleCellProperties(propList, propValues, grid,
+                                  units, false, initFile);
+    }
+
+    void writeSatFuncScaling(const ::Opm::EclipseState&        es,
+                             const ::Opm::EclipseGrid&         grid,
+                             const ::Opm::UnitSystem&          units,
+                             ::Opm::EclIO::OutputStream::Init& initFile)
+    {
+        const auto epsVectors = ScalingVectors{}
+            .withHysteresis(es.runspec().hysterPar().active())
+            .collect       (es.runspec().phases());
+
+        const auto& props = es.get3DProperties().getDoubleProperties();
+
+        if (! es.cfg().init().filleps()) {
+            // No FILLEPS in input deck.  Output those endpoint arrays that
+            // exist in the input deck.  Write sentinel value if input
+            // defaulted.
+            writeDoubleCellProperties(epsVectors.getVectors(), props,
+                                      grid, units, true, initFile);
+        }
+        else {
+            // Input deck specified FILLEPS so we should output all endpoint
+            // arrays, whether explicitly defined in the input deck or not.
+            // However, downstream clients of GridProperties<double> should
+            // not see scaling arrays created for output purposes only, so
+            // make a copy of the properties object and modify that copy in
+            // order to leave the original intact.  Don't write sentinel
+            // value if input defaulted.
+            auto propsCopy = props;
+            writeFilledSatFuncScaling(epsVectors.getVectors(),
+                                      std::move(propsCopy),
+                                      grid, units, initFile);
+        }
+    }
+
     void writeNonNeighbourConnections(const ::Opm::NNC&                 nnc,
                                       const ::Opm::UnitSystem&          units,
                                       ::Opm::EclIO::OutputStream::Init& initFile)
@@ -276,7 +617,9 @@ void Opm::InitIO::write(const ::Opm::EclipseState&              es,
 
     writeIntegerMaps(std::move(int_data), initFile);
 
-    if (true || (nnc.numNNC() > std::size_t{0})) {
+    writeSatFuncScaling(es, grid, units, initFile);
+
+    if (nnc.numNNC() > std::size_t{0}) {
         writeNonNeighbourConnections(nnc, units, initFile);
     }
 }
