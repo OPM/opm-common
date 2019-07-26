@@ -43,7 +43,6 @@ public:
 
     void update( const std::string& name);
     void update( const std::string& name, const std::string& parent);
-    void updateSeqIndex( const std::string& name, const std::string& other_parent);
     bool exists( const std::string& group ) const;
     const std::string& parent( const std::string& name ) const;
     std::vector< std::string > children( const std::string& parent ) const;
@@ -57,8 +56,18 @@ private:
     friend bool operator<( const std::string&, const group& );
     std::vector<GroupTree::group>::const_iterator begin() const;
     std::vector<GroupTree::group>::const_iterator end() const;
+    void updateSeqIndex( const std::string& name );
 
     std::vector< group > groups = { group { "FIELD", "" } };
+
+    /*
+      These two maps maintain an insert order <-> name mapping for the groups in
+      the group tree. Observe that these maps are only updated if the model has
+      a non-trivial group structure; i.e. it contains the GRUPTREE keyword. In
+      the simple case of FIELD : GROUP : WELL these maps will be empty, for
+      models with two group levels like: FIELD : G1 : G2 : WELL the maps will
+      index both groups 'G1' and 'G2' but not 'FIELD'.
+    */
     std::map<std::string , size_t> m_nameSeqIndMap;
     std::map<size_t, std::string > m_seqIndNameMap;
 };

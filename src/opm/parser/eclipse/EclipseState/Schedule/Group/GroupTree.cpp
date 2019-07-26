@@ -45,46 +45,35 @@ const std::map<size_t, std::string >& GroupTree::seqIndNameMap() const {
     return m_seqIndNameMap;
 }
 
-void GroupTree::update( const std::string& name, const std::string& other_parent) {
+void GroupTree::update( const std::string& name, const std::string& parent) {
     if( name == "FIELD" )
         throw std::invalid_argument( "The FIELD group name is reserved." );
 
-    if( other_parent.empty() )
+    if( parent.empty() )
         throw std::invalid_argument( "Parent group must have a name." );
 
-    auto root = this->find( other_parent );
-    if( root == this->groups.end() || root->name != other_parent )
-        this->groups.insert( root, 1, group { other_parent, "FIELD" } );
+    auto root = this->find( parent );
+    if( root == this->groups.end() || root->name != parent )
+        this->groups.insert( root, 1, group { parent, "FIELD" } );
 
     auto node = this->find( name );
-    if( node == this->groups.end() || node->name != name ) {
-        this->groups.insert( node, 1, group { name, other_parent } );
-        return;
-    }
+    if( node == this->groups.end() || node->name != name )
+        this->groups.insert( node, 1, group { name, parent } );
+    else
+        node->parent = parent;
 
-    node->parent = other_parent;
+    if (parent != "FIELD") {
+        this->updateSeqIndex(name);
+        this->updateSeqIndex(parent);
+    }
 }
 
-void GroupTree::updateSeqIndex( const std::string& name, const std::string& other_parent) {
-    if( name == "FIELD" )
-        throw std::invalid_argument( "The FIELD group name is reserved." );
+void GroupTree::updateSeqIndex( const std::string& name ) {
+    if (this->m_nameSeqIndMap.count(name) == 0) {
+        size_t index = this->m_nameSeqIndMap.size();
 
-    if( other_parent.empty() )
-        throw std::invalid_argument( "Parent group must have a name." );
-
-    // add code to set an index that determine the sequence of the groups
-    // defined in the group tree
-    size_t index = this->m_nameSeqIndMap.size();
-    auto name_itr = this->m_nameSeqIndMap.find(name);
-    if (name_itr == this->m_nameSeqIndMap.end()) {
         this->m_nameSeqIndMap.insert(std::make_pair(name, index));
         this->m_seqIndNameMap.insert(std::make_pair(index, name));
-        index +=1;
-    }
-    auto parent_itr = this->m_nameSeqIndMap.find(other_parent);
-    if (parent_itr == this->m_nameSeqIndMap.end()) {
-        this->m_nameSeqIndMap.insert(std::make_pair(other_parent, index));
-        this->m_seqIndNameMap.insert(std::make_pair(index, other_parent));
     }
 }
 
