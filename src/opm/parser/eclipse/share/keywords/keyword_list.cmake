@@ -13,6 +13,7 @@
 set( keywords
      000_Eclipse100/A/ACTDIMS
      000_Eclipse100/A/ACTION
+     000_Eclipse100/A/ACTIONG
      000_Eclipse100/A/ACTIONX
      000_Eclipse100/A/ACTNUM
      000_Eclipse100/A/ADD
