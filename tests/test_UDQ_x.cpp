@@ -441,234 +441,20 @@ END
       update_count += udq_act.update(uda1, "PROD1", Opm::UDAControl::WCONPROD_ORAT);
       Opm::UDAValue uda2("WULPRL");
       update_count += udq_act.update(uda2, "PROD1", Opm::UDAControl::WCONPROD_LRAT);
-      //udq_act.add("GUOPRU", "GCONPROD", "GRP1" , "ORAT");
       Opm::UDAValue uda3("WUOPRU");
       update_count += udq_act.update(uda3, "PROD2", Opm::UDAControl::WCONPROD_ORAT);
       Opm::UDAValue uda4("WULPRU");
       update_count += udq_act.update(uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
-      //udq_act.add("WUOPRL", "WCONPROD", "PROD1", "ORAT");
-      //udq_act.add("WULPRL", "WCONPROD", "PROD1", "LRAT");
-      std::cout << "ind, udq_key, name, ctrl_type" << std::endl;
+
       for (auto it = udq_act.begin(); it != udq_act.end(); it++) 
       {
 	  auto ind = it->index;
 	  auto udq_key = it->udq;
-	  //auto ctrl_keywrd = it->keyword;
 	  auto name = it->wgname;
 	  auto ctrl_type = it->control;
-	  std::cout << " " << ind << " " << udq_key << " "  << name << " " << static_cast<int>(ctrl_type) << std::endl;
       }
       return udq_act;
     }
-#if 0
-    template < typename T>
-    std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const T  & element)
-    {
-	std::pair<bool, int > result;
-    
-	// Find given element in vector
-	auto it = std::find(vecOfElements.begin(), vecOfElements.end(), element);
-    
-	if (it != vecOfElements.end())
-	{
-	    result.second = std::distance(vecOfElements.begin(), it);
-	    result.first = true;
-	}
-	else
-	{
-	    result.first = false;
-	    result.second = -1;
-	}
-        return result;
-    }
-    
-    class loc_iUADData {
-	public:
-	    const std::vector <std::size_t>& wgkey_ctrl_type() const;
-	    const std::vector<std::size_t>&	udq_seq_no() const;
-	    const std::vector<std::size_t>&	no_use_wgkey() const;
-	    const std::vector<std::size_t>&	first_use_wg() const; 
-	    std::size_t count() ;
-	    
-	    
-	std::unordered_map<std::string,int> UDACtrlType {
-	  { "NONE", 0 },
-	  { "GCONPROD_ORAT", 200019 },
-	  { "GCONPROD_WRAT", 300019 },
-	  { "GCONPROD_GRAT", 400019 },
-	  { "GCONPROD_LRAT", 500019 },
-	  
-	  { "WCONPROD_ORAT", 300004 },
-	  { "WCONPROD_WRAT", 400004 },
-	  { "WCONPROD_GRAT", 500004 },
-	  { "WCONPROD_LRAT", 600004 },
-	  
-	  { "WCONINJE_ORAT", 300003 },
-	  { "WCONINJE_WRAT", 400003 },
-	  { "WCONINJE_GRAT", 500003 },
-      };
-
-    void noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active);
-
-    private:
-	std::vector<std::size_t>	m_wgkey_ctrl_type;
-	std::vector<std::size_t> 	m_udq_seq_no;
-	std::vector<std::size_t> 	m_no_use_wgkey;
-	std::vector<std::size_t> 	m_first_use_wg; 
-	std::size_t m_count;
-    };
-    
-    void  loc_iUADData::noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active)
-    {
-	auto udq_cfg = sched.getUDQConfig(simStep);
-	//auto udq_active = sched.udqActive(simStep);
-	
-	// Loop over the number of Active UDQs and set all UDQActive restart data items
-	
-	std::vector<std::size_t>	wgkey_ctrl_type;
-	std::vector<std::size_t> 	udq_seq_no;
-	std::vector<std::size_t> 	no_use_wgkey;
-	std::vector<std::size_t> 	first_use_wg; 
-	std::size_t count = 0;
-	
-	auto mx_iuads = udq_active.size();
-	wgkey_ctrl_type.resize(mx_iuads, 0);
-	udq_seq_no.resize(mx_iuads, 0);
-	no_use_wgkey.resize(mx_iuads, 0);
-	first_use_wg.resize(mx_iuads, 0);
-	
-	std::cout << "noIUDAs:  ind, udq_key, ctrl_keywrd, name, ctrl_type wg_kc " << std::endl;
-	std::size_t cnt_inp = 0;
-	for (auto it = udq_active.begin(); it != udq_active.end(); it++) 
-	{
-	    cnt_inp+=1;
-	    auto ind = it->index;
-	    auto udq_key = it->udq;
-	    auto ctrl_keywrd = it->keyword;
-	    auto name = it->wgname;
-	    auto ctrl_type = it->control;
-	    std::string wg_kc = ctrl_keywrd + "_" + ctrl_type;
-	    
-	    std::cout << "noIUDAs:" << ind << " " <<  udq_key << " " << ctrl_keywrd << " " << name << " " << ctrl_type << " " << wg_kc << std::endl;
-	    
-	    //auto hash_key = hash(udq_key, ctrl_keywrd, ctrl_type);
-	    const auto key_it = loc_iUADData::UDACtrlType.find(wg_kc);
-	    if (key_it == loc_iUADData::UDACtrlType.end()) {
-		std::cout << "Invalid argument - end of map loc_iUADData::UDACtrlType: " << wg_kc << std::endl; 
-		throw std::invalid_argument("noIUDAs - UDACtrlType - unknown ctrl_key_type " + wg_kc);
-	    }
-	    else {
-		const std::size_t v_typ = static_cast<std::size_t>(key_it->second);
-		std::pair<bool,std::size_t> res = findInVector<std::size_t>(wgkey_ctrl_type, v_typ);
-		if (res.first) {
-		    //key already exist
-		    auto key_ind = res.second;
-		    no_use_wgkey[key_ind]+=1;
-		    std::cout << "key exists - key_ind:" << key_ind << " no_use_wgkey: " << no_use_wgkey[key_ind] << std::endl;
-		}
-		else {
-		    //new key
-		    wgkey_ctrl_type[count] = v_typ;
-		    const std::size_t var_typ = static_cast<std::size_t>(Opm::UDQ::varType(udq_key));
-		    udq_seq_no[count] = udq_cfg.keytype_keyname_seq_no(var_typ, udq_key);
-		    no_use_wgkey[count] = 1;
-		    first_use_wg[count] =  cnt_inp;
-		    
-		    std::cout << "new key - key_ind:" << count << " wgkey_ctrl_type: " << wgkey_ctrl_type[count] << " udq_seq_no: " << udq_seq_no[count];
-		    std::cout << " no_use_wgkey:" << no_use_wgkey[count] << " first_use_wg: " << first_use_wg[count] <<  std::endl;
-		    
-		    count+=1;
-	      }
-	    }
-	}
-	this->m_wgkey_ctrl_type = wgkey_ctrl_type;
-	this->m_udq_seq_no = udq_seq_no;
-	this->m_no_use_wgkey = no_use_wgkey;
-	this->m_first_use_wg = first_use_wg;
-	this->m_count = count;
-     } 
-
-    std::size_t old_noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active)
-    //std::size_t noIUDAs(const Opm::Schedule& sched, const std::size_t simStep)
-    {
-	auto udqCfg = sched.getUDQConfig(simStep);
-	//auto udq_active = sched.udqActive(simStep);
-	std::size_t no_udqs = udqCfg.noUdqs();
-	// find the number of IUDAs for the current report step
-	std::vector<std::string> wg_ctrl_key;
-	std::vector<std::string> ctrl;
-	std::vector<std::string> wg_nm;
-	std::map<std::string, std::map<std::string, std::map<std::string, int> > > seq_ind;
-	std::map<std::string, std::map<std::string, std::map<std::string, std::string> > > udq_name;
-	
-	std::cout << "noIUDAs:  ind, udq_key, ctrl_keywrd, name, ctrl_type" << std::endl;
-	
-	for (auto it = udq_active.begin(); it != udq_active.end(); it++) 
-	{
-	    auto ind = it->index;
-	    auto udq_key = it->udq;
-	    auto ctrl_keywrd = it->keyword;
-	    auto name = it->wgname;
-	    auto ctrl_type = it->control;
-	    std::cout << " " << ind << " " << udq_key << " " << ctrl_keywrd <<  " " << name << " " << ctrl_type << std::endl;
-
-	    // store the input well and group controls into map in order to obtain
-	    // the resulting set of controls to be  used for a time step
-	    // Add udq to list of used udq keywords if not used earlier
-	    
-	    seq_ind[ctrl_keywrd][ctrl_type][name] = ind;
-	    udq_name[ctrl_keywrd][ctrl_type][name] = udq_key;
-	    
-	    std::cout << "noIUDAs: ind: " << ind << " seq_ind: " << seq_ind[ctrl_keywrd][ctrl_type][name] << " udq_key: " << 
-	      udq_key << " udq_name: " << udq_name[ctrl_keywrd][ctrl_type][name] << std::endl;
-	    
-	    // build vectors that holds the keys of the maps
-	    auto it_wgc = std::find(wg_ctrl_key.begin(), wg_ctrl_key.end(), ctrl_keywrd);
-	    if (it_wgc == wg_ctrl_key.end()) wg_ctrl_key.emplace_back(ctrl_keywrd);
-	    
-	    auto it_ctrl = std::find(ctrl.begin(), ctrl.end(), ctrl_type);
-	    if (it_ctrl == ctrl.end()) ctrl.emplace_back(ctrl_type);
-	    
-	    auto it_wgn = std::find(wg_nm.begin(), wg_nm.end(), name);
-	    if (it_wgn == wg_nm.end()) wg_nm.emplace_back(name);
-	}
-	auto max_no_ctrl = wg_ctrl_key.size() * ctrl.size() * wg_nm.size();
-	std::cout << " max_no_ctrl: " << max_no_ctrl << std::endl;
-	
-	std::vector<int> sorted_seq_ind;
-	std::vector<std::string> sorted_wg_ctrl_key;
-	std::vector<std::string> sorted_ctrl;
-	std::vector<std::string> sorted_wg_nm;
-	
-	// resize the vectors to the actual size
-	sorted_seq_ind.resize(max_no_ctrl, 0);
-	sorted_wg_ctrl_key.resize(max_no_ctrl);
-	sorted_ctrl.resize(max_no_ctrl);
-	sorted_wg_nm.resize(max_no_ctrl);
-	
-	std::size_t no_ctrl = 0;
-	std::cout << " sorted_seq_ind sorted_wg_ctrl_key sorted_ctrl sorted_wg_nm" << std::endl;
-	for (auto & outer_map : seq_ind) {
-	    auto & key_0 = outer_map.first;
-	    std::cout << "key_0 " << key_0 << std::endl;
-	    for (auto & inner_map_1 : outer_map.second) {
-		auto & key_1 = inner_map_1.first;
-		std::cout << "key_1 " << key_1 << std::endl;
-		for (auto & inner_map_2 : inner_map_1.second) {
-		      no_ctrl++;
-		      auto & key_2 = inner_map_2.first;
-		      auto s_ind = inner_map_2.second;
-		      std::cout << "no_ctrl: " << no_ctrl << " key_2 " << key_2 << " s_ind: " << s_ind << std::endl;
-		      sorted_seq_ind	[s_ind] = s_ind;
-		      sorted_wg_ctrl_key	[s_ind] = key_0;
-		      sorted_ctrl		[s_ind] = key_1;
-		      sorted_wg_nm		[s_ind] = key_2;
-		}
-	    }
-	}
-	return no_udqs;
-    } 
-#endif    
 }
 
 
@@ -695,11 +481,8 @@ BOOST_AUTO_TEST_SUITE(Aggregate_UDQ)
 // test dimensions of multisegment data
 BOOST_AUTO_TEST_CASE (Constructor)
 {
-    std::cout << " before creation of SimulationCase" << std::endl;
     const auto simCase = SimulationCase{first_sim()};
-    
-    std::cout << " after creation of SimulationCase" << std::endl;
-    
+        
     Opm::EclipseState es = simCase.es;
     Opm::Schedule     sched = simCase.sched;
     Opm::EclipseGrid  grid = simCase.grid;
@@ -723,13 +506,10 @@ BOOST_AUTO_TEST_CASE (Constructor)
     const auto ih = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
                                                 secs_elapsed, rptStep, rptStep);
        
-    //const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, udq_act, rptStep);
     const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     Opm::RestartIO::Helpers::iUADData iuad_test;
-    //iuad_test.noIUADs(sched, rptStep, udq_act);
     iuad_test.noIUADs(sched, rptStep);
-    //udqData.captureDeclaredUDQData(sched, udq_act, rptStep);
     udqData.captureDeclaredUDQData(sched, rptStep);
      
     rstFile.write("IUDQ", udqData.getIUDQ());

@@ -24,9 +24,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 //#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-//#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-//#include <opm/parser/eclipse/EclipseState/Schedule/GroupTree.hpp>
-//#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well.hpp>
+
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
@@ -283,54 +281,46 @@ namespace {
 	std::size_t count = 0;
 	
 	auto mx_iuads = udq_active.size();
-	std::cout << "udqActive size: " << mx_iuads << std::endl;
 	wgkey_udqkey_ctrl_type.resize(mx_iuads, "");
 	wgkey_ctrl_type.resize(mx_iuads, 0);
 	udq_seq_no.resize(mx_iuads, 0);
 	no_use_wgkey.resize(mx_iuads, 0);
 	first_use_wg.resize(mx_iuads, 0);
 	
-	std::cout << "noIUDAs:  ind, udq_key, wgname, ctrl_type wg_udqk_kc" << std::endl;
+	//std::cout << "noIUDAs:  ind, udq_key, wgname, ctrl_type wg_udqk_kc" << std::endl;
 	std::size_t cnt_inp = 0;
 	for (auto it = udq_active.begin(); it != udq_active.end(); it++) 
 	{
 	    cnt_inp+=1;
-	    std::cout << "Loop over all udqActive: cnt_inp:" << cnt_inp << std::endl;
 	    auto ind = it->index;
 	    auto udq_key = it->udq;
 	    //auto ctrl_keywrd = it->keyword;
 	    auto name = it->wgname;
 	    auto ctrl_type = it->control;
-	    std::cout << "ctrl_type: " << static_cast<int>(ctrl_type) << std::endl;
+	    //std::cout << "ctrl_type: " << static_cast<int>(ctrl_type) << std::endl;
 	    std::string wg_udqk_kc = udq_key + "_" + std::to_string(static_cast<int>(ctrl_type));
 	    
-	    std::cout << "noIUDAs:" << ind << " " <<  udq_key << " " << name << " " << static_cast<int>(ctrl_type) << " " << wg_udqk_kc << std::endl;
+	    //std::cout << "noIUDAs:" << ind << " " <<  udq_key << " " << name << " " << static_cast<int>(ctrl_type) << " " << wg_udqk_kc << std::endl;
 
-	    const auto key_it = iUADData::UDACtrlType.find(static_cast<int>(ctrl_type));
-	    if (key_it == iUADData::UDACtrlType.end()) {
-		std::cout << "Invalid argument - end of map loc_iUADData::UDACtrlType: " << static_cast<int>(ctrl_type) << std::endl; 
-		throw std::invalid_argument("noIUDAs - UDACtrlType - unknown ctrl_key_type " + static_cast<int>(ctrl_type));
+	    const auto v_typ = UDQ::uadCode(ctrl_type);
+	    std::pair<bool,int> res = findInVector<std::string>(wgkey_udqkey_ctrl_type, wg_udqk_kc);
+	    if (res.first) {
+		auto key_ind = res.second;
+		no_use_wgkey[key_ind] += 1;
+		
+		//std::cout << "key exists - key_ind:" << key_ind << " no_use_wgkey: " << no_use_wgkey[key_ind] << std::endl;
 	    }
 	    else {
-		const int v_typ = key_it->second;
-		std::pair<bool,int> res = findInVector<std::string>(wgkey_udqkey_ctrl_type, wg_udqk_kc);
-		if (res.first) {
-		    auto key_ind = res.second;
-		    no_use_wgkey[key_ind] += 1;
-		    std::cout << "key exists - key_ind:" << key_ind << " no_use_wgkey: " << no_use_wgkey[key_ind] << std::endl;
-		}
-		else {
-		    wgkey_ctrl_type[count] = v_typ;
-		    wgkey_udqkey_ctrl_type[count] = wg_udqk_kc;
-		    udq_seq_no[count] = udq_cfg.key_seq_no(udq_key);
-		    no_use_wgkey[count] = 1;
-		    
-		    std::cout << "new key - key_ind:" << count << " wgkey_ctrl_type: " << wgkey_ctrl_type[count] << " udq_seq_no: " << udq_seq_no[count];
-		    std::cout << " no_use_wgkey:" << no_use_wgkey[count] << " first_use_wg: " << first_use_wg[count] <<  std::endl;
-		    
-		    count+=1;
+		wgkey_ctrl_type[count] = v_typ;
+		wgkey_udqkey_ctrl_type[count] = wg_udqk_kc;
+		udq_seq_no[count] = udq_cfg.key_seq_no(udq_key);
+		no_use_wgkey[count] = 1;
+		
+		//std::cout << "new key - key_ind:" << count << " wgkey_ctrl_type: " << wgkey_ctrl_type[count] << " udq_seq_no: " << udq_seq_no[count];
+		//std::cout << " no_use_wgkey:" << no_use_wgkey[count] << " first_use_wg: " << first_use_wg[count] <<  std::endl;
+		
+		count+=1;
 	      }
-	    }
 	}
 	
 	// Loop over all iUADs to set the first use paramter

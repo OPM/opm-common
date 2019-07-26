@@ -320,5 +320,61 @@ UDAKeyword keyword(UDAControl control) {
 
     throw std::logic_error("Unrecognized enum type - internal error");
 }
+
+
+int uadCode(UDAControl control) {
+    if (control == UDAControl::WCONPROD_ORAT)
+        return 300004;
+
+    if (control == UDAControl::WCONPROD_GRAT)
+        return 500004;
+
+    if (control == UDAControl::WCONPROD_WRAT)
+        return 400004;
+
+    if (control == UDAControl::WCONPROD_LRAT)
+        return 600004;
+
+    if (control == UDAControl::WCONPROD_RESV)
+        return 999999;
+
+    if (control == UDAControl::WCONPROD_BHP)
+        return 999999;
+
+    if (control == UDAControl::WCONPROD_THP)
+        return 999999;
+
+    /*-----------------------------------------------------------*/
+
+    if (control == UDAControl::WCONINJE_RATE)
+        return 400003;
+
+    if (control == UDAControl::WCONINJE_RESV)
+        return 500003;
+
+    if (control == UDAControl::WCONINJE_BHP)
+        return 999999;
+
+    if (control == UDAControl::WCONINJE_THP)
+        return 999999;
+
+    /*-----------------------------------------------------------*/
+
+    if (control == UDAControl::GCONPROD_OIL_TARGET)
+        return 200019;
+
+    if (control == UDAControl::GCONPROD_WATER_TARGET)
+        return 300019;
+
+    if (control == UDAControl::GCONPROD_GAS_TARGET)
+        return 400019;
+
+    if (control == UDAControl::GCONPROD_LIQUID_TARGET)
+        return 500019;
+
+    throw std::logic_error("Unrecognized enum type - internal error");
+}
+  
+  
 }
 }

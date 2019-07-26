@@ -83,18 +83,15 @@ namespace Opm {
 		for (auto it = data.begin(); it != data.end(); it++) {
 		    all_data+= *it + " ";
 		}
-		std::cout << "UDQInput - all_data: " << all_data << std::endl;
 		this->m_udqdef_data[quantity] = all_data;
 	    }
             else 
                 throw std::runtime_error("Internal error - should not be here");
 	    
-	    //std::cout << "UDQInput_gen - treat new keywords" << std::endl;
 	    if (!this->has_udqkey(quantity)) {
 	      std::size_t no_udqs = m_udq_keys.size();
 	      this->m_udq_keys.emplace_back(quantity);
 	      this->m_key_seq_no[quantity] = no_udqs + 1;
-	      std::cout << "UDQInput_gen - m_key_seq_no: " << this->m_key_seq_no[quantity] << std::endl;
 	      const std::size_t var_typ = static_cast<std::size_t>(UDQ::varType(quantity));
 
 	      map_kksn::const_iterator vt_it = this->m_keytype_keyname_seq_no.find(var_typ);
@@ -221,11 +218,9 @@ namespace Opm {
     bool UDQInput::has_udqkey(const std::string& keyword) const {
 	auto cnt = std::count (this->m_udq_keys.begin(), this->m_udq_keys.end(), keyword);
         if ( cnt > 0) {
-	    std::cout << "keyword: " << keyword << " " << " m_udq_keys - count: "  <<  cnt << std::endl;
 	    return true;
 	}
         else {
-	  std::cout << "keyword: " << keyword << " " << "has_keydef - keyword not found: "  << std::endl;
 	  return false;
 	}
     }

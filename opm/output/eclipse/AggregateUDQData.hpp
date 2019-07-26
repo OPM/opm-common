@@ -66,48 +66,7 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	  return m_count;
 	}
 
-  
-    std::unordered_map<int,int> UDACtrlType {  
-      { 0 , 300004 }, // "WCONPROD_ORAT"
-      { 1 , 400004 }, // "WCONPROD_WRAT"
-      { 2 , 500004 }, // "WCONPROD_GRAT"
-      { 3 , 600004 }, // "WCONPROD_LRAT"
-      { 4 , 999999 }, // "WCONPROD_RESV"
-      { 5 , 999999 }, // "WCONPROD_BHP"
-      { 6 , 999999 }, // "WCONPROD_THP"
-      
-      { 7 , 400003 }, // "WCONINJE_RATE"
-      { 8 , 500003 }, // "WCONINJE_RESV"
-      { 9 , 999999 }, // "WCONINJE_BHP"
-      {10 , 999999 }, // "WCONINJE_BHP"
-      
-      { 11 , 200019 }, // "GCONPROD_ORAT"
-      { 12 , 300019 }, // "GCONPROD_WRAT"
-      { 13 , 400019 }, // "GCONPROD_GRAT"
-      { 14 , 500019 }, // "GCONPROD_LRAT"
-    }; 
-    
-    std::unordered_map<int,std::string> UDACtrlTypeToKeyword {
-      { 0 , "WCONPROD_ORAT" }, // 
-      { 1 , "WCONPROD_WRAT" }, // 
-      { 2 , "WCONPROD_GRAT" }, // 
-      { 3 , "WCONPROD_LRAT" }, // 
-      { 4 , "WCONPROD_RESV" }, // 
-      { 5 , "WCONPROD_BHP"  }, // 
-      { 6 , "WCONPROD_THP"  }, // 
-      
-      { 7 , "WCONINJE_RATE" }, // 
-      { 8 , "WCONINJE_RESV" }, // 
-      { 9 , "WCONINJE_BHP"  }, // 
-      {10 , "WCONINJE_BHP"  }, // 
-      
-      { 11 , "GCONPROD_ORAT"}, // 
-      { 12 , "GCONPROD_WRAT"}, // 
-      { 13 , "GCONPROD_GRAT"}, // 
-      { 14 , "GCONPROD_LRAT"}, // 
-    }; 
 
-    //void noIUADs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active);
     void noIUADs(const Opm::Schedule& sched, const std::size_t simStep);
 
     private:
