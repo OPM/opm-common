@@ -51,21 +51,17 @@ public:
     const std::map<size_t, std::string >& seqIndNameMap() const;
     bool operator==( const GroupTree& ) const;
     bool operator!=( const GroupTree& ) const;
-    std::vector<GroupTree::group>::const_iterator begin() const;
-    std::vector<GroupTree::group>::const_iterator end() const;
 
 private:
     std::vector< group >::iterator find( const std::string& );
     friend bool operator<( const std::string&, const group& );
+    std::vector<GroupTree::group>::const_iterator begin() const;
+    std::vector<GroupTree::group>::const_iterator end() const;
 
     std::vector< group > groups = { group { "FIELD", "" } };
     std::map<std::string , size_t> m_nameSeqIndMap;
     std::map<size_t, std::string > m_seqIndNameMap;
 };
-
-
-std::ostream& operator<<(std::ostream& stream, const GroupTree& gt);
-
 
 }
 
