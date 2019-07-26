@@ -38,9 +38,9 @@ namespace Opm {
     class DeckRecord;
     class Deck;
 
-    class UDQInput {
+    class UDQConfig {
     public:
-        explicit UDQInput(const Deck& deck);
+        explicit UDQConfig(const Deck& deck);
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;

@@ -20,7 +20,7 @@
 #include <algorithm>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {
@@ -35,17 +35,17 @@ namespace Opm {
 
     }
 
-    UDQInput::UDQInput(const Deck& deck) :
+    UDQConfig::UDQConfig(const Deck& deck) :
         udq_params(deck),
         udqft(this->udq_params)
     {
     }
 
-    const UDQParams& UDQInput::params() const {
+    const UDQParams& UDQConfig::params() const {
         return this->udq_params;
     }
 
-    void UDQInput::add_record(const DeckRecord& record) {
+    void UDQConfig::add_record(const DeckRecord& record) {
         auto action = UDQ::actionType(record.getItem("ACTION").get<std::string>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = record.getItem("DATA").getData<std::string>();
@@ -79,7 +79,7 @@ namespace Opm {
     }
 
 
-    std::vector<UDQDefine> UDQInput::definitions() const {
+    std::vector<UDQDefine> UDQConfig::definitions() const {
         std::vector<UDQDefine> ret;
         for (const auto& index_pair : this->input_index) {
             if (index_pair.second.second == UDQAction::DEFINE) {
@@ -91,7 +91,7 @@ namespace Opm {
     }
 
 
-    std::vector<UDQDefine> UDQInput::definitions(UDQVarType var_type) const {
+    std::vector<UDQDefine> UDQConfig::definitions(UDQVarType var_type) const {
         std::vector<UDQDefine> filtered_defines;
         for (const auto& index_pair : this->input_index) {
             if (index_pair.second.second == UDQAction::DEFINE) {
@@ -105,7 +105,7 @@ namespace Opm {
     }
 
 
-    std::vector<std::pair<size_t, UDQDefine>> UDQInput::input_definitions() const {
+    std::vector<std::pair<size_t, UDQDefine>> UDQConfig::input_definitions() const {
         std::vector<std::pair<size_t, UDQDefine>> res;
         for (const auto& index_pair : this->input_index) {
             if (index_pair.second.second == UDQAction::DEFINE) {
@@ -117,7 +117,7 @@ namespace Opm {
     }
 
 
-    std::vector<UDQAssign> UDQInput::assignments() const {
+    std::vector<UDQAssign> UDQConfig::assignments() const {
         std::vector<UDQAssign> ret;
         for (const auto& index_pair : this->input_index) {
             if (index_pair.second.second == UDQAction::ASSIGN) {
@@ -129,7 +129,7 @@ namespace Opm {
     }
 
 
-    std::vector<UDQAssign> UDQInput::assignments(UDQVarType var_type) const {
+    std::vector<UDQAssign> UDQConfig::assignments(UDQVarType var_type) const {
         std::vector<UDQAssign> filtered_defines;
         for (const auto& index_pair : this->input_index) {
             if (index_pair.second.second == UDQAction::ASSIGN) {
@@ -144,7 +144,7 @@ namespace Opm {
 
 
 
-    const std::string& UDQInput::unit(const std::string& key) const {
+    const std::string& UDQConfig::unit(const std::string& key) const {
         const auto pair_ptr = this->units.find(key);
         if (pair_ptr == this->units.end())
             throw std::invalid_argument("No such UDQ quantity: " + key);
@@ -153,7 +153,7 @@ namespace Opm {
     }
 
 
-    void UDQInput::assign_unit(const std::string& keyword, const std::string& quoted_unit) {
+    void UDQConfig::assign_unit(const std::string& keyword, const std::string& quoted_unit) {
         const std::string unit = strip_quotes(quoted_unit);
         const auto pair_ptr = this->units.find(keyword);
         if (pair_ptr != this->units.end()) {
@@ -165,12 +165,12 @@ namespace Opm {
         this->units[keyword] = unit;
     }
 
-    bool UDQInput::has_unit(const std::string& keyword) const {
+    bool UDQConfig::has_unit(const std::string& keyword) const {
         return (this->units.count(keyword) > 0);
     }
 
 
-    bool UDQInput::has_keyword(const std::string& keyword) const {
+    bool UDQConfig::has_keyword(const std::string& keyword) const {
         if (this->m_assignments.count(keyword) > 0)
             return true;
 
@@ -188,7 +188,7 @@ namespace Opm {
     }
 
 
-    const UDQFunctionTable& UDQInput::function_table() const {
+    const UDQFunctionTable& UDQConfig::function_table() const {
         return this->udqft;
     }
 }
