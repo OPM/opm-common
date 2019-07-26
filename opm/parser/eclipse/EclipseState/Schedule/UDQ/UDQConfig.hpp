@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
@@ -37,6 +38,7 @@ namespace Opm {
 
     class DeckRecord;
     class Deck;
+
 
     class UDQConfig {
     public:

@@ -143,6 +143,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.cpp
     src/opm/parser/eclipse/Parser/ErrorGuard.cpp
@@ -565,6 +566,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp
