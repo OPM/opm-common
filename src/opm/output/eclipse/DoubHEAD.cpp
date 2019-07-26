@@ -486,13 +486,8 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
 
     this->data_[Index::dh_210] = 0.0;
     this->data_[Index::dh_211] = 0.0;
-    /*
-      UdqPar_2 and UdqPar_3 correspond to indices 212 og 213 respectively, they
-      were not set at all in the original code, therefor temporarily commented
-      out here to avoid effect of UDQ.
-    */
-    //this->data_[UdqPar_2]      = 1.0E+20;
-    //this->data_[UdqPar_3]      = 0.0;
+    this->data_[UdqPar_2]      = 1.0E+20;
+    this->data_[UdqPar_3]      = 0.0;
     this->data_[UdqPar_4]      = 1.0e-4;
     this->data_[Index::dh_215] = -2.0e+20;
     this->data_[Index::dh_217] = 0.0;
@@ -624,11 +619,11 @@ Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
 }
 
 Opm::RestartIO::DoubHEAD&
-Opm::RestartIO::DoubHEAD::udq_param(const UDQParams& udqPar)
+Opm::RestartIO::DoubHEAD::udq_param(const udqParam& udqPar)
 {
-    this->data_[UdqPar_2] = udqPar.range();
-    this->data_[UdqPar_3] = udqPar.undefinedValue();
-    this->data_[UdqPar_4] = udqPar.cmpEpsilon();
+    this->data_[UdqPar_2] = udqPar.udq_param_2;
+    this->data_[UdqPar_3] = udqPar.udq_param_3;
+    this->data_[UdqPar_4] = udqPar.udq_param_4;
 
     return *this;
 }

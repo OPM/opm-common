@@ -39,6 +39,7 @@ namespace Opm { namespace RestartIO {
             int maxPerf;
             int maxWellInGroup;
             int maxGroupInField;
+            int maxWellsInField;
         };
 
         struct WellSegDims {

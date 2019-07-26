@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 Statoil ASA.
+  Copyright 2019 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -18,8 +18,8 @@
 */
 
 
-#ifndef UDQINPUT_HPP_
-#define UDQINPUT_HPP_
+#ifndef UDQINPUT__HPP_
+#define UDQINPUT__HPP_
 
 #include <string>
 #include <unordered_map>
@@ -30,10 +30,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
-
 
 namespace Opm {
 

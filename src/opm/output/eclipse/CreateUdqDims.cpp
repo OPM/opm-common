@@ -25,6 +25,8 @@
 #include <opm/output/eclipse/DoubHEAD.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
+
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -69,6 +71,28 @@ std::size_t entriesPerIGph(const std::vector<int>& inteHead)
     std::size_t no_entries = inteHead[20];
     return no_entries;
 }
+
+// maximum number of wells
+std::size_t nwmaxz(const std::vector<int>& inteHead)
+{
+        return inteHead[163];
+}
+
+
+
+int noWellUdqs(const Opm::Schedule& sched,
+               const std::size_t    simStep)
+{
+    const auto& udqCfg = sched.getUDQConfig(simStep);
+    std::size_t i_wudq = 0;
+    for (const auto& udq_input : udqCfg.input()) {
+        if (udq_input.var_type() ==  Opm::UDQVarType::WELL_VAR) {
+            i_wudq++;
+        }
+    }   
+    return i_wudq;
+}
+
 } // Anonymous
 
 // #####################################################################
@@ -78,21 +102,32 @@ std::size_t entriesPerIGph(const std::vector<int>& inteHead)
 std::vector<int>
 Opm::RestartIO::Helpers::
 createUdqDims(const Schedule&     		sched,
-              const std::size_t       simStep,
-              const std::vector<int>& inteHead)
+              const std::size_t        	lookup_step,
+              const std::vector<int>&   inteHead) 
 {
-    const auto& udqCfg = sched.getUDQConfig(simStep);
-    const auto& udqActive = sched.udqActive(simStep);
-    std::vector<int> udqDims(8);
-
-    udqDims[0] = udqCfg.size();
-    udqDims[1] = entriesPerIUDQ();
-    udqDims[2] = udqActive.IUAD_size();
-    udqDims[3] = entriesPerIUAD();
-    udqDims[4] = entriesPerZUDN();
-    udqDims[5] = entriesPerZUDL();
-    udqDims[6] = entriesPerIGph(inteHead);
-    udqDims[7] = udqActive.IUAP_size();
+    const auto& udqCfg = sched.getUDQConfig(lookup_step);
+    const auto& udqActive = sched.udqActive(lookup_step);
+    std::vector<int> udqDims; 
+    // 0
+    udqDims.emplace_back(udqCfg.size());
+    // 1
+    udqDims.emplace_back(entriesPerIUDQ());
+    // 2
+    udqDims.emplace_back(udqActive.IUAD_size());
+    // 3
+    udqDims.emplace_back(entriesPerIUAD());
+    // 4
+    udqDims.emplace_back(entriesPerZUDN());
+    // 5
+    udqDims.emplace_back(entriesPerZUDL());
+    // 6
+    udqDims.emplace_back(entriesPerIGph(inteHead));
+    // 7
+    udqDims.emplace_back(udqActive.IUAP_size());
+    // 8
+    udqDims.emplace_back(nwmaxz(inteHead));
+    // 9
+    udqDims.emplace_back(noWellUdqs(sched, lookup_step));
 
     return udqDims;
 }

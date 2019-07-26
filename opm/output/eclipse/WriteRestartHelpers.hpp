@@ -69,6 +69,11 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                   const std::size_t       lookup_step,
                   const std::vector<int>& inteHead);
 
+    std::vector<int>
+    createUdqDims(const Schedule&     		sched,
+                  const std::size_t       lookup_step,
+                  const std::vector<int>& inteHead);
+
 
 }}} // Opm::RestartIO::Helpers
 

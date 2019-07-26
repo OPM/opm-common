@@ -43,6 +43,17 @@ namespace {
                 double, std::chrono::seconds::period>{ elapsed },
         };
     }
+    
+    Opm::RestartIO::DoubHEAD::udqParam 
+    getUDQParam(const ::Opm::Runspec rspec)
+    {
+        const auto udqPar = rspec.udqParams();
+        return {
+            udqPar.range(),
+            udqPar.undefinedValue(),
+            udqPar.cmpEpsilon()
+        };
+    }
 
     double getTimeConv(const ::Opm::UnitSystem& us)
     {

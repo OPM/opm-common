@@ -315,6 +315,6 @@ int uadCode(UDAControl control) {
       return it->second;
 
     throw std::logic_error("Unrecognized enum type - internal error");
-}
+}  
 }
 }

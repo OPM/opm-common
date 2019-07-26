@@ -1240,8 +1240,211 @@ UDQ
     BOOST_CHECK( fuopr.is<UDQDefine>() );
     const auto& def2 = fuopr.get<UDQDefine>();
     BOOST_CHECK_EQUAL(def2.input_string(), "MAX(WOPR)");
+
 }
 
+
+BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
+    UDQActive usage;
+    UDQParams params;
+    UDQConfig conf(params);
+    BOOST_CHECK_EQUAL( usage.IUAD_size(), 0 );
+
+    UDAValue uda1("WUX");
+    conf.add_assign(uda1.get<std::string>(), {}, 100);
+
+    usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
+    BOOST_CHECK_EQUAL( usage.IUAD_size(), 1 );
+    BOOST_CHECK_EQUAL( usage[0].use_count, 1);
+
+    usage.update(conf, uda1, "W1", UDAControl::WCONPROD_GRAT);
+    BOOST_CHECK_EQUAL( usage.IUAD_size(), 2 );
+    BOOST_CHECK_EQUAL( usage[1].use_count, 1);
+
+    const auto& rec = usage[0];
+    BOOST_CHECK_EQUAL(rec.wgname, "W1");
+    BOOST_CHECK_EQUAL(rec.udq, "WUX");
+    BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
+
+
+    for (std::size_t index = 0; index < usage.IUAD_size(); index++) {
+        const auto& record = usage[index];
+        BOOST_CHECK_EQUAL(record.input_index, 0);
+        BOOST_CHECK_EQUAL(record.wgname, "W1");
+
+        if (index == 0)
+            BOOST_CHECK(record.control == UDAControl::WCONPROD_ORAT);
+        else
+            BOOST_CHECK(record.control == UDAControl::WCONPROD_GRAT);
+
+        index += 1;
+    }
+
+}
+
+
+BOOST_AUTO_TEST_CASE(IntegrationTest) {
+#include "data/integration_tests/udq.data"
+    auto schedule = make_schedule(deck_string);
+    {
+        const auto& active = schedule.udqActive(1);
+        BOOST_CHECK_EQUAL(active.IUAD_size(), 4);
+
+        BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
+        BOOST_CHECK(active[1].control == UDAControl::WCONPROD_LRAT);
+        BOOST_CHECK(active[2].control == UDAControl::WCONPROD_ORAT);
+        BOOST_CHECK(active[3].control == UDAControl::WCONPROD_LRAT);
+
+        BOOST_CHECK(active[0].wgname == "OPL02");
+        BOOST_CHECK(active[1].wgname == "OPL02");
+        BOOST_CHECK(active[2].wgname == "OPU02");
+        BOOST_CHECK(active[3].wgname == "OPU02");
+
+        BOOST_CHECK(active[0].udq == "WUOPRL");
+        BOOST_CHECK(active[1].udq == "WULPRL");
+        BOOST_CHECK(active[2].udq == "WUOPRU");
+        BOOST_CHECK(active[3].udq == "WULPRU");
+
+        BOOST_CHECK(active[0].input_index == 0);
+        BOOST_CHECK(active[1].input_index == 1);
+        BOOST_CHECK(active[2].input_index == 2);
+        BOOST_CHECK(active[3].input_index == 3);
+
+        BOOST_CHECK(active[0].use_count == 1);
+        BOOST_CHECK(active[1].use_count == 1);
+        BOOST_CHECK(active[2].use_count == 1);
+        BOOST_CHECK(active[3].use_count == 1);
+    }
+}
+
+Schedule make_udq_schedule(const std::string& schedule_string) {
+#include "data/integration_tests/udq2.data"
+    deck_string += schedule_string;
+    return make_schedule(deck_string);
+}
+
+BOOST_AUTO_TEST_CASE(IntegrationTest2) {
+    const std::string udq_string = R"(
+UDQ
+DEFINE WUOPRL (WOPR PROD1 - 150) * 0.90 /
+DEFINE WULPRL (WLPR PROD1 - 200) * 0.90 /
+DEFINE WUOPRU (WOPR PROD2 - 250) * 0.80 /
+DEFINE WULPRU (WLPR PROD2 - 300) * 0.80 /
+DEFINE WUOPRL (WOPR PROD1 - 170) * 0.60 /
+DEFINE WUXO   (WOPR PROD1 - 170) * 0.60 /
+DEFINE WUXL   (WOPR PROD1 - 170) * 0.60 /
+-- units
+UNITS  WUOPRL SM3/DAY /
+UNITS  WULPRL SM3/DAY /
+UNITS  WUOPRU SM3/DAY /
+UNITS  WULPRU SM3/DAY /
+/
+
+WCONPROD
+  'PROD1'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
+/
+
+
+WCONPROD
+  'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
+ /
+
+WCONINJE
+ 'WINJ1' 'WAT' 'OPEN' 'BHP'  1*  1200  3500  1*  /
+ 'WINJ2' 'WAT' 'OPEN' 'BHP'  1*    800  3500  1*  /
+/
+
+TSTEP
+ 5 /
+
+WCONPROD
+  'PROD2'     'OPEN'  'GRUP' WUXO 1*  1*  WUXL 1* 60.0   / single wells
+/
+
+TSTEP
+ 5 /
+
+WCONPROD
+  'PROD1'     'OPEN'  'GRUP' 100 1*  1*  100 1* 60.0   / single wells
+/
+
+
+
+
+)";
+    auto schedule = make_udq_schedule(udq_string);
+
+    // First timestep
+    {
+        const auto& udq_active = schedule.udqActive(0);
+        BOOST_CHECK(udq_active);
+        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 2);
+
+        const auto& record0 = udq_active[0];
+        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        BOOST_CHECK_EQUAL( record0.input_index, 2);
+        BOOST_CHECK_EQUAL( record0.use_count, 2);
+        BOOST_CHECK_EQUAL( record0.use_index, 0);
+
+        const auto& record1 = udq_active[1];
+        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        BOOST_CHECK_EQUAL( record1.input_index, 3);
+        BOOST_CHECK_EQUAL( record1.use_count, 2);
+        BOOST_CHECK_EQUAL( record1.use_index, 2);
+    }
+
+    {
+        // Second timestep
+        //  - The WUOPRU and WULPRU udq are still used in the same manner for the PROD1 well.
+        //  - The new UDQs WUXO and WUXL are now used for the PROD2 well.
+        const auto& udq_active = schedule.udqActive(1);
+        BOOST_CHECK(udq_active);
+        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 4);
+
+        const auto& record0 = udq_active[0];
+        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        BOOST_CHECK_EQUAL( record0.input_index, 2);
+        BOOST_CHECK_EQUAL( record0.use_count, 1);
+        BOOST_CHECK_EQUAL( record0.use_index, 0);
+
+        const auto& record1 = udq_active[1];
+        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        BOOST_CHECK_EQUAL( record1.input_index, 3);
+        BOOST_CHECK_EQUAL( record1.use_count, 1);
+        BOOST_CHECK_EQUAL( record1.use_index, 1);
+
+        const auto& record2 = udq_active[2];
+        BOOST_CHECK_EQUAL( record2.uad_code, 300004);
+        BOOST_CHECK_EQUAL( record2.input_index, 4);
+        BOOST_CHECK_EQUAL( record2.use_count, 1);
+        BOOST_CHECK_EQUAL( record2.use_index, 2);
+
+        const auto& record3 = udq_active[3];
+        BOOST_CHECK_EQUAL( record3.uad_code, 600004);
+        BOOST_CHECK_EQUAL( record3.input_index, 5);
+        BOOST_CHECK_EQUAL( record3.use_count, 1);
+        BOOST_CHECK_EQUAL( record3.use_index, 3);
+    }
+
+    {
+        // Third timestep
+        //  - The new UDQs WUXO and WUXL are now used for the PROD2 well.
+        //  - The PROD1 well does not use UDQ
+        const auto& udq_active = schedule.udqActive(2);
+        BOOST_CHECK(udq_active);
+        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 2);
+
+        const auto& record0 = udq_active[0];
+        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
+        BOOST_CHECK_EQUAL( record0.input_index, 4);
+        BOOST_CHECK_EQUAL( record0.use_count, 1);
+        BOOST_CHECK_EQUAL( record0.use_index, 0);
+
+        const auto& record1 = udq_active[1];
+        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
+        BOOST_CHECK_EQUAL( record1.input_index, 5);
+        BOOST_CHECK_EQUAL( record1.use_count, 1);
+        BOOST_CHECK_EQUAL( record1.use_index, 1);
 
 BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     UDQActive usage;

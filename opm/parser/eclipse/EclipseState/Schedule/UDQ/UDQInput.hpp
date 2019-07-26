@@ -34,10 +34,11 @@ class UDQIndex {
 public:
     UDQIndex() = default;
 
-    UDQIndex(std::size_t insert_index_arg, std::size_t typed_insert_index_arg, UDQAction action_arg) :
+    UDQIndex(std::size_t insert_index_arg, std::size_t typed_insert_index_arg, UDQAction action_arg, UDQVarType var_type_arg) :
         insert_index(insert_index_arg),
         typed_insert_index(typed_insert_index_arg),
-        action(action_arg)
+        action(action_arg),
+        var_type(var_type_arg)
     {
     }
 
@@ -45,6 +46,7 @@ public:
     std::size_t insert_index;
     std::size_t typed_insert_index;
     UDQAction action;
+    UDQVarType var_type;
 };
 
 
@@ -60,7 +62,7 @@ public:
     bool is() const;
 
     const std::string& keyword() const;
-    UDQVarType var_type() const;
+    const UDQVarType& var_type() const;
     const std::string& unit() const;
     const UDQIndex index;
 private:

@@ -26,8 +26,9 @@
 //#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
@@ -53,7 +54,18 @@ namespace {
     {
         return inteHead[20];
     }
+    
+        // maximum number of wells
+    std::size_t nwmaxz(const std::vector<int>& inteHead)
+    {
+        return inteHead[163];
+    }
 
+    // maximum number of groups
+    std::size_t ngmaxz(const std::vector<int>& inteHead)
+    {
+        return inteHead[20];
+    }
 
     namespace iUdq {
 
@@ -218,7 +230,39 @@ namespace {
         }
     } // iUap
 
+    namespace dUdw {
+
+        Opm::RestartIO::Helpers::WindowedArray<double>
+        allocate(const std::vector<int>& udqDims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
+            return WV {
+                WV::NumWindows{ static_cast<std::size_t>(udqDims[9]) },
+                WV::WindowSize{ static_cast<std::size_t>(udqDims[8]) }
+            };
+        }
+
+        template <class DUDWArray>
+        void staticContrib(const Opm::SummaryState& st,
+                           const std::vector<std::string>& wnames,
+                           const std::string udq,
+                           const std::size_t nwmaxz,
+                           DUDWArray&   dUdw)
+        {
+            //initialize array to the default value for the array
+            for (std::size_t ind = 0; ind < wnames.size(); ind++) {
+                dUdw[ind] = st.get_well_var(wnames[ind], udq);        
+            }
+            if (wnames.size() < nwmaxz) {
+                for (std::size_t ind = wnames.size(); ind < nwmaxz; ind++) {
+                    dUdw[ind] = -0.3E+21;
+                }
+            }
+        }
+    } // iUap
+
 }
+
 
 // =====================================================================
 
@@ -294,8 +338,6 @@ const std::vector<int> iuap_data(const Opm::Schedule& sched,
     return wg_no;
 }
 
-
-
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const std::vector<int>& udqDims)
     : iUDQ_ (iUdq::allocate(udqDims)),
@@ -303,7 +345,8 @@ AggregateUDQData(const std::vector<int>& udqDims)
       zUDN_ (zUdn::allocate(udqDims)),
       zUDL_ (zUdl::allocate(udqDims)),
       iGPH_ (iGph::allocate(udqDims)),
-      iUAP_ (iUap::allocate(udqDims))
+      iUAP_ (iUap::allocate(udqDims)),
+      dUDW_ (dUdw::allocate(udqDims))
 {}
 
 // ---------------------------------------------------------------------
@@ -312,9 +355,10 @@ void
 Opm::RestartIO::Helpers::AggregateUDQData::
 captureDeclaredUDQData(const Opm::Schedule&                 sched,
                        const std::size_t                    simStep,
+                       const Opm::SummaryState&             st,
                        const std::vector<int>&              inteHead)
 {
-    auto udqCfg = sched.getUDQConfig(simStep);
+    const auto& udqCfg = sched.getUDQConfig(simStep);
     for (const auto& udq_input : udqCfg.input()) {
         auto udq_index = udq_input.index.insert_index;
         {
@@ -356,5 +400,16 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             iGph::staticContrib(igph[index], i_igph);
         }
         
+    std::size_t i_wudq = 0;
+    const auto& wnames = sched.wellNames(simStep);
+    const auto nwmax = nwmaxz(inteHead);
+    for (const auto& udq_input : udqCfg.input()) {
+        if (udq_input.var_type() ==  UDQVarType::WELL_VAR) {
+            const std::string& udq = udq_input.keyword();
+            auto i_dudw = this->dUDW_[i_wudq];
+            dUdw::staticContrib(st, wnames, udq, nwmax, i_dudw);
+            i_wudq++;
+        }
+    }
 }
 

@@ -262,7 +262,8 @@ namespace {
 
     void writeUDQ(int                           sim_step,
                   const Schedule&               schedule,
-                  const std::vector<int>&      	ih,
+                  const SummaryState&           sum_state,
+                  const std::vector<int>&       ih,
                   EclIO::OutputStream::Restart& rstFile)
     {
         return;
@@ -274,12 +275,15 @@ namespace {
 
         const auto udqDims = Helpers::createUdqDims(schedule, simStep, ih);
         auto  udqData = Helpers::AggregateUDQData(udqDims);
-        udqData.captureDeclaredUDQData(schedule, simStep, ih);
-
-        rstFile.write("IUDQ", udqData.getIUDQ());
-        rstFile.write("IUAD", udqData.getIUAD());
+        udqData.captureDeclaredUDQData(schedule, simStep, sum_state, ih);
+        
         rstFile.write("ZUDN", udqData.getZUDN());
         rstFile.write("ZUDL", udqData.getZUDL());
+        rstFile.write("IUDQ", udqData.getIUDQ());
+        rstFile.write("DUDW", udqData.getDUDW());
+        rstFile.write("IUAD", udqData.getIUAD());
+        rstFile.write("IUAP", udqData.getIUAP());
+        rstFile.write("IGPH", udqData.getIGPH());
     }
 
     void writeWell(int                           sim_step,
@@ -391,11 +395,12 @@ namespace {
     }
 
     void writeSolution(const RestartValue&           value,
-		       const Schedule& 	   	     schedule,
-		       int 			     report_step,
+                       const Schedule&               schedule,
+                       const SummaryState&           sum_state,
+                       int                           report_step,
                        const bool                    ecl_compatible_rst,
                        const bool                    write_double_arg,
-		       const std::vector<int>&       inteHD,
+                       const std::vector<int>&       inteHD,
                        EclIO::OutputStream::Restart& rstFile)
     {
         rstFile.message("STARTSOL");
@@ -422,7 +427,7 @@ namespace {
             }
         }
 
-        writeUDQ(report_step, schedule, inteHD, rstFile);
+        writeUDQ(report_step, schedule, sum_state, inteHD, rstFile);
         
         for (const auto& elm : value.extra) {
             const std::string& key = elm.first.key;
@@ -518,7 +523,7 @@ void save(EclIO::OutputStream::Restart& rstFile,
         }
     }
     
-    writeSolution(value, schedule, sim_step, ecl_compatible_rst, write_double, inteHD, rstFile);
+    writeSolution(value, schedule, sumState, sim_step, ecl_compatible_rst, write_double, inteHD, rstFile);
 
     if (! ecl_compatible_rst) {
         writeExtraData(value.extra, rstFile);

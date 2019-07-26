@@ -89,12 +89,15 @@ namespace {
 
         const auto maxGroupInField =
             std::max(wd.maxGroupsInField(), ngmax);
+            
+        const auto nWMaxz = wd.maxWellsInField();
 
         return {
             numWells,
             maxPerf,
             maxWellInGroup,
             maxGroupInField,
+            nWMaxz
         };
     }
 

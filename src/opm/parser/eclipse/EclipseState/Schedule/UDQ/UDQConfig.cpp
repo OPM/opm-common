@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 Statoil ASA.
+  Copyright 2019 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -15,9 +15,7 @@
 
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-#include <algorithm>
+*/
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
@@ -59,7 +57,7 @@ namespace Opm {
             auto var_type = UDQ::varType(quantity);
             auto insert_index = this->input_index.size();
             this->type_count[var_type] += 1;
-            this->input_index[quantity] = UDQIndex(insert_index, this->type_count[var_type], action);
+            this->input_index[quantity] = UDQIndex(insert_index, this->type_count[var_type], action, var_type);
         } else
             index_iter->second.action = action;
     }
@@ -257,4 +255,7 @@ namespace Opm {
     const UDQFunctionTable& UDQConfig::function_table() const {
         return this->udqft;
     }
+
 }
+
+
