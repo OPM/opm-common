@@ -101,7 +101,7 @@ namespace Opm
     class UnitSystem;
     class ErrorGuard;
     class WListManager;
-    class UDQInput;
+    class UDQConfig;
 
     class Schedule {
     public:
@@ -179,7 +179,7 @@ namespace Opm
 
         const WellTestConfig& wtestConfig(size_t timestep) const;
         const WListManager& getWListManager(size_t timeStep) const;
-        const UDQInput& getUDQConfig(size_t timeStep) const;
+        const UDQConfig& getUDQConfig(size_t timeStep) const;
         const Action::Actions& actions() const;
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
@@ -226,7 +226,7 @@ namespace Opm
         std::map<int, DynamicState<std::shared_ptr<VFPInjTable>>> vfpinj_tables;
         DynamicState<std::shared_ptr<WellTestConfig>> wtest_config;
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
-        DynamicState<std::shared_ptr<UDQInput>> udq_config;
+        DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<WellProducer::ControlModeEnum> global_whistctl_mode;
         RFTConfig rft_config;
 
