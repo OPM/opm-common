@@ -21,9 +21,12 @@ set( keywords
      000_Eclipse100/A/ACTPARAM
      000_Eclipse100/A/ADD
      000_Eclipse100/A/ADDREG
+     000_Eclipse100/A/ADDZCORN
      000_Eclipse100/A/ADSALNOD
      000_Eclipse100/A/AITS
+     000_Eclipse100/A/AITSOFF
      000_Eclipse100/A/ALL
+     000_Eclipse100/A/ALKADS
      000_Eclipse100/A/API
      000_Eclipse100/A/APIGROUP
      000_Eclipse100/A/AQUANCON
