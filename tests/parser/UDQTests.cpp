@@ -1173,20 +1173,26 @@ UDQ
     const auto& udq = schedule.getUDQConfig(0);
 
 
-    const auto& def_input = udq.input_definitions();
+    const auto& input = udq.input();
     const auto& def = udq.definitions();
-    BOOST_CHECK_EQUAL(def_input.size(), 3);
-    for (std::size_t i = 0; i < def_input.size(); i++)
-        BOOST_CHECK_EQUAL(def[i].input_string(), def_input[i].second.input_string());
+    BOOST_CHECK_EQUAL(input.size(), 7);
 
-    BOOST_CHECK_EQUAL(def_input[0].first, 3);
-    BOOST_CHECK_EQUAL(def_input[1].first, 4);
-    BOOST_CHECK_EQUAL(def_input[2].first, 6);
+    BOOST_CHECK( input[0].is<UDQAssign>() );
+    BOOST_CHECK( input[1].is<UDQAssign>() );
+    BOOST_CHECK( input[2].is<UDQAssign>() );
+    BOOST_CHECK( input[3].is<UDQDefine>() );
+    BOOST_CHECK( input[4].is<UDQDefine>() );
+    BOOST_CHECK( input[5].is<UDQAssign>() );
+    BOOST_CHECK( input[6].is<UDQDefine>() );
 
 
     BOOST_CHECK_EQUAL(def[0].keyword(), "WUWCT");
     BOOST_CHECK_EQUAL(def[1].keyword(), "FUOPR");
     BOOST_CHECK_EQUAL(def[2].keyword(), "FUOPRX");
+
+    BOOST_CHECK_EQUAL( input[3].get<UDQDefine>().keyword(), "WUWCT");
+    BOOST_CHECK_EQUAL( input[4].get<UDQDefine>().keyword(), "FUOPR");
+    BOOST_CHECK_EQUAL( input[6].get<UDQDefine>().keyword(), "FUOPRX");
 
     BOOST_CHECK( udq.has_keyword("FUXXX") );
 }
@@ -1217,14 +1223,10 @@ UDQ
     const auto& udq = schedule.getUDQConfig(0);
 
 
-    const auto& def_input = udq.input_definitions();
+    const auto& input = udq.input();
     const auto& def = udq.definitions();
-    BOOST_CHECK_EQUAL(def_input.size(), 3);
-    for (std::size_t i = 0; i < def_input.size(); i++)
-        BOOST_CHECK_EQUAL(def[i].input_string(), def_input[i].second.input_string());
+    BOOST_CHECK_EQUAL(input.size(), 5);
 
-    BOOST_CHECK_EQUAL(def_input[0].first, 0);
-    BOOST_CHECK_EQUAL(def_input[1].first, 3);
-    BOOST_CHECK_EQUAL(def_input[2].first, 4);
+    BOOST_CHECK( input[0].is<UDQDefine>());
 }
 

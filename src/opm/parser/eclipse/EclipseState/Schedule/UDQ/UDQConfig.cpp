@@ -22,6 +22,7 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 
 namespace Opm {
 
@@ -41,9 +42,11 @@ namespace Opm {
     {
     }
 
+
     const UDQParams& UDQConfig::params() const {
         return this->udq_params;
     }
+
 
     void UDQConfig::add_record(const DeckRecord& record) {
         auto action = UDQ::actionType(record.getItem("ACTION").get<std::string>(0));
@@ -105,12 +108,15 @@ namespace Opm {
     }
 
 
-    std::vector<std::pair<size_t, UDQDefine>> UDQConfig::input_definitions() const {
-        std::vector<std::pair<size_t, UDQDefine>> res;
+    std::vector<UDQInput> UDQConfig::input() const {
+        std::vector<UDQInput> res;
         for (const auto& index_pair : this->input_index) {
             if (index_pair.second.second == UDQAction::DEFINE) {
                 const std::string& key = index_pair.first;
-                res.emplace_back(index_pair.second.first, this->m_definitions.at(key));
+                res.push_back(UDQInput(this->m_definitions.at(key)));
+            } else if (index_pair.second.second == UDQAction::ASSIGN) {
+                const std::string& key = index_pair.first;
+                res.push_back(UDQInput(this->m_assignments.at(key)));
             }
         }
         return res;
