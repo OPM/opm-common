@@ -394,15 +394,18 @@ UNITS  WULPRU SM3/DAY /
 
 -- Well production rate targets/limits:
 -- testing UDQs as production constrains
---WCONPROD
+WCONPROD
 -- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
+  'PROD1'     'OPEN'  'GRUP' WUOPRL  1*  1*  WULPRL 1* 60.0   / single wells
 --  'PROD1'     'OPEN'  'GRUP' -2  1*  1*  -3 1* 60.0   / single wells
---/
+/
 
 
 WCONPROD
- 'PROD1' 'OPEN' 'LRAT'  3*  1200  1*  2500  1*  /
- 'PROD2' 'OPEN' 'LRAT'  3*    800  1*  2500  1*  /
+-- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
+  'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
+-- 'PROD1' 'OPEN' 'LRAT'  3*  1200  1*  2500  1*  /
+-- 'PROD2' 'OPEN' 'LRAT'  3*    800  1*  2500  1*  /
  /
 
 WCONINJE
@@ -429,25 +432,29 @@ END
 	}
   
     Opm::UDQActive udq_active() {
-
+      int update_count = 0;
       // construct record data for udq_active
       Opm::UDQActive udq_act;
-      udq_act.add("WUOPRL", "WCONPROD", "PROD1", "ORAT");
-      udq_act.add("WULPRL", "WCONPROD", "PROD1", "LRAT");
+      Opm::UDAValue uda1("WUOPRL");
+      update_count += udq_act.update(uda1, "PROD1", Opm::UDAControl::WCONPROD_ORAT);
+      Opm::UDAValue uda2("WULPRL");
+      update_count += udq_act.update(uda2, "PROD1", Opm::UDAControl::WCONPROD_LRAT);
       //udq_act.add("GUOPRU", "GCONPROD", "GRP1" , "ORAT");
-      udq_act.add("WUOPRU", "WCONPROD", "PROD2", "ORAT");
-      udq_act.add("WULPRU", "WCONPROD", "PROD2", "LRAT");
+      Opm::UDAValue uda3("WUOPRU");
+      update_count += udq_act.update(uda3, "PROD2", Opm::UDAControl::WCONPROD_ORAT);
+      Opm::UDAValue uda4("WULPRU");
+      update_count += udq_act.update(uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
       //udq_act.add("WUOPRL", "WCONPROD", "PROD1", "ORAT");
       //udq_act.add("WULPRL", "WCONPROD", "PROD1", "LRAT");
-      std::cout << "ind, udq_key, ctrl_keywrd, name, ctrl_type" << std::endl;
+      std::cout << "ind, udq_key, name, ctrl_type" << std::endl;
       for (auto it = udq_act.begin(); it != udq_act.end(); it++) 
       {
 	  auto ind = it->index;
 	  auto udq_key = it->udq;
-	  auto ctrl_keywrd = it->keyword;
+	  //auto ctrl_keywrd = it->keyword;
 	  auto name = it->wgname;
 	  auto ctrl_type = it->control;
-	  std::cout << " " << ind << " " << udq_key << " " << ctrl_keywrd <<  " " << name << " " << ctrl_type << std::endl;
+	  std::cout << " " << ind << " " << udq_key << " "  << name << " " << static_cast<int>(ctrl_type) << std::endl;
       }
       return udq_act;
     }
@@ -578,8 +585,7 @@ END
 	this->m_first_use_wg = first_use_wg;
 	this->m_count = count;
      } 
-#endif
-    
+
     std::size_t old_noIUDAs(const Opm::Schedule& sched, const std::size_t simStep, const Opm::UDQActive& udq_active)
     //std::size_t noIUDAs(const Opm::Schedule& sched, const std::size_t simStep)
     {
@@ -660,7 +666,10 @@ END
 	}
 	return no_udqs;
     } 
+#endif    
 }
+
+
 
 //int main(int argc, char* argv[])
 struct SimulationCase
@@ -704,24 +713,20 @@ BOOST_AUTO_TEST_CASE (Constructor)
     Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
 	  Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
         };
-    
-
-   
-    //std::size_t no_iudas =  noIUDAs(sched, rptStep, udq_act);
-    //Opm::RestartIO::Helpers::iUADData::iUADData iuad_test;
-    //iuad_test.noIUDAs(sched, rptStep, udq_act);
-    
+       
     //const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, udq_act, rptStep);
     const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     Opm::RestartIO::Helpers::iUADData iuad_test;
-    //iuad_test.noIUDAs(sched, rptStep, udq_act);
-    iuad_test.noIUDAs(sched, rptStep);
+    //iuad_test.noIUADs(sched, rptStep, udq_act);
+    iuad_test.noIUADs(sched, rptStep);
     //udqData.captureDeclaredUDQData(sched, udq_act, rptStep);
     udqData.captureDeclaredUDQData(sched, rptStep);
      
     rstFile.write("IUDQ", udqData.getIUDQ());
     rstFile.write("IUAD", udqData.getIUAD());
+    rstFile.write("ZUDN", udqData.getZUDN());
+    rstFile.write("ZUDL", udqData.getZUDL());
     
     }
     

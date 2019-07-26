@@ -80,12 +80,10 @@ namespace {
 std::vector<int>
 Opm::RestartIO::Helpers::
 createUdqDims(const Schedule&     	sched,
-//	      const Opm::UDQActive& 	udq_active,
               const std::size_t        	lookup_step) 
 {
     Opm::RestartIO::Helpers::iUADData iuad_data;
-    //iuad_data.noIUDAs(sched, lookup_step, udq_active);
-    iuad_data.noIUDAs(sched, lookup_step);
+    iuad_data.noIUADs(sched, lookup_step);
     const auto& no_iuad = iuad_data.count();
     std::vector<int> udqDims; 
     // 0

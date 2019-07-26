@@ -50,6 +50,7 @@ namespace Opm {
         bool has_unit(const std::string& keyword) const;
 	bool is_define(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
+	bool has_udqkey(const std::string& keyword) const;
         void add_record(const DeckRecord& record);
         void assign_unit(const std::string& keyword, const std::string& unit);
 

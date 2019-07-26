@@ -66,7 +66,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
     
     std::vector<int>
     createUdqDims(const Schedule&     	sched,
-//		  const UDQActive& 	udq_active,
 		  const std::size_t     lookup_step); 
 
 

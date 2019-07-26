@@ -264,7 +264,7 @@ namespace {
                   const Schedule&                schedule,
 		  EclIO::OutputStream::Restart&  rstFile)
     {
-        // write IGRP to restart file
+        // write UDQ - data to restart file
         const std::size_t simStep = static_cast<size_t> (sim_step);
 
 	const auto udqDims = Helpers::createUdqDims(schedule, simStep);
@@ -276,7 +276,7 @@ namespace {
 	rstFile.write("ZUDN", udqData.getZUDN());
 	rstFile.write("ZUDL", udqData.getZUDL());
     }
-    
+   
     void writeWell(int                           sim_step,
                    const bool                    ecl_compatible_rst,
                    const Phases&                 phases,
