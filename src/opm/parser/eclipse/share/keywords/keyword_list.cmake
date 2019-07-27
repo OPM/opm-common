@@ -14,13 +14,24 @@ set( keywords
      000_Eclipse100/A/ACTDIMS
      000_Eclipse100/A/ACTION
      000_Eclipse100/A/ACTIONG
+     000_Eclipse100/A/ACTIONR
+     000_Eclipse100/A/ACTIONW
      000_Eclipse100/A/ACTIONX
      000_Eclipse100/A/ACTNUM
+     000_Eclipse100/A/ACTPARAM
      000_Eclipse100/A/ADD
      000_Eclipse100/A/ADDREG
+     000_Eclipse100/A/ADDZCORN
      000_Eclipse100/A/ADSALNOD
      000_Eclipse100/A/AITS
+     000_Eclipse100/A/AITSOFF
      000_Eclipse100/A/ALL
+     000_Eclipse100/A/ALKADS
+     000_Eclipse100/A/ALKALINE
+     000_Eclipse100/A/ALKROCK
+     000_Eclipse100/A/ALPOLADS
+     000_Eclipse100/A/ALSURFAD
+     000_Eclipse100/A/ALSURFST
      000_Eclipse100/A/API
      000_Eclipse100/A/APIGROUP
      000_Eclipse100/A/AQUANCON
