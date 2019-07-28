@@ -122,6 +122,17 @@ namespace Opm {
         return res;
     }
 
+    std::size_t UDQConfig::size() const {
+        std::size_t s = 0;
+        for (const auto& index_pair : this->input_index) {
+            if (index_pair.second.second == UDQAction::DEFINE)
+                s += 1;
+            else if (index_pair.second.second == UDQAction::ASSIGN)
+                s += 1;
+        }
+        return s;
+    }
+
 
     std::vector<UDQAssign> UDQConfig::assignments() const {
         std::vector<UDQAssign> ret;

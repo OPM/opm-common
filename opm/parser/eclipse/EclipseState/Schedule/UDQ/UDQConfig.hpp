@@ -53,6 +53,11 @@ namespace Opm {
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;
 
+        // The size() method will return the number of active DEFINE and ASSIGN
+        // statements; this will correspond to the length of the vector returned
+        // from input().
+        size_t size() const;
+
         std::vector<UDQAssign> assignments() const;
         std::vector<UDQAssign> assignments(UDQVarType var_type) const;
         const UDQParams& params() const;
