@@ -1176,6 +1176,7 @@ UDQ
     const auto& input = udq.input();
     const auto& def = udq.definitions();
     BOOST_CHECK_EQUAL(input.size(), 7);
+    BOOST_CHECK_EQUAL(udq.size(), 7);
 
     BOOST_CHECK( input[0].is<UDQAssign>() );
     BOOST_CHECK( input[1].is<UDQAssign>() );
@@ -1226,6 +1227,7 @@ UDQ
     const auto& input = udq.input();
     const auto& def = udq.definitions();
     BOOST_CHECK_EQUAL(input.size(), 5);
+    BOOST_CHECK_EQUAL(udq.size(), 5);
 
     BOOST_CHECK( input[0].is<UDQDefine>());
     BOOST_CHECK_EQUAL( input[0].keyword(), "WUBHP1");
