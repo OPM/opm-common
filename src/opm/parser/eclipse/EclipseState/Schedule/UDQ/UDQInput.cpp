@@ -48,6 +48,10 @@ const std::string& UDQInput::unit() const {
     return this->m_unit;
 }
 
+const std::string& UDQInput::keyword() const {
+    return this->m_keyword;
+}
+
 template<>
 bool UDQInput::is<UDQAssign>() const {
     if (this->assign)
