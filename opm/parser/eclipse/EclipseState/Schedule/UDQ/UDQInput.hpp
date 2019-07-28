@@ -23,6 +23,8 @@
 
 #include <memory>
 
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
+
 namespace Opm {
 
 class UDQAssign;
@@ -39,9 +41,13 @@ public:
     template<typename T>
     bool is() const;
 
+    const std::string& keyword() const;
+    UDQVarType var_type() const;
 private:
     const UDQDefine * define;
     const UDQAssign * assign;
+    const std::string m_keyword;
+    UDQVarType m_var_type;
 };
 }
 
