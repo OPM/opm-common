@@ -24,7 +24,7 @@
 #include <opm/output/eclipse/InteHEAD.hpp>
 #include <opm/output/eclipse/DoubHEAD.hpp>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -42,9 +42,7 @@ namespace {
     std::size_t noUDQs(const Opm::Schedule& sched, const std::size_t simStep)
     {
 	auto udqCfg = sched.getUDQConfig(simStep);
-	// find the number of UDQs for the current time step
-	std::size_t no_udqs = udqCfg.noUdqs();
-	return no_udqs;
+  return udqCfg.size();
     }  
 
 
