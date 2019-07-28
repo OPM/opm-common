@@ -14,6 +14,7 @@ from erst_bind import ERstBind
 from erft_bind import ERftBind
 from esmry_bind import ESmryBind
 from eminit_bind import EclModInitBind
+from eclwrite_bind import EclWriteNewBind, EclWriteAppBind
 
 from enum import Enum
 import datetime
@@ -461,3 +462,97 @@ class EclModInit:
 
     def getNumberOfActiveCells(self):
         return self.eclmod.getNumberOfActiveCells()
+
+
+class EclWrite:	
+
+    def __init__(self, fileName, formatted, newFile = True):
+        self.name = fileName
+        self.formatted = fileName
+        
+        if newFile:
+            self.eclwrite = EclWriteNewBind(fileName, formatted)
+        else:
+            self.eclwrite = EclWriteAppBind(fileName, formatted)
+            
+
+    def writeArray(self, name, array, arrType="fromFirstElement"):
+        
+        if (len(array)==0):
+            print ("\n!Error, not possible to write array with zero length")
+            print ("is member function message what you need ?\n")
+            exit(1)
+
+        try:  
+            if isinstance(array, numpy.ndarray):
+
+                if (arrType!="fromFirstElement"):
+                    print ("!Warning, arrType='%s' is ignored. Data type derived from numpy meta data " % arrType)
+            
+                if (type(array[0]) is numpy.str_):
+                    self.eclwrite.writeString(name, array) 
+                elif (type(array[0]) is numpy.bool_):    
+                    self.eclwrite.writeBool(name, array) 
+                elif (type(array[0]) is numpy.int32) or (type(array[0]) is numpy.int64):    
+                    self.eclwrite.writeInteger(name, array) 
+                elif (type(array[0]) is numpy.float32):    
+                    self.eclwrite.writeFloat(name, array) 
+                elif (type(array[0]) is numpy.float64):    
+                    self.eclwrite.writeDouble(name, array) 
+            
+            elif isinstance(array, list):
+ 
+                if (type(array[0]) is int):
+                    self.eclwrite.writeInteger(name, array) 
+                elif (type(array[0]) is bool):
+                    self.eclwrite.writeBool(name, array) 
+                elif (type(array[0]) is str):
+                    self.eclwrite.writeString(name, array) 
+                elif (type(array[0]) is float):
+                    
+                    if (arrType=="fromFirstElement"):
+                        print ("\n!Error, arrType for array '%s' needs to be specified explicitly, float can be both 32 bit (REAL), or 64 bit (DOUB)." % name) 
+                        print ("\nExample: writeArray(\"FLOAT32\", arr1, arrType=\"REAL\") or writeArray(\"FLOAT64\", arr1, arrType=\"DOUB\").")
+                        print ("\nNotice that using numpy arrays are more safe and therefor recommended \n")
+                        exit(1)
+                        
+                    elif (arrType[0:4].upper()=="DOUB"):                         
+                        self.eclwrite.writeDouble(name, array) 
+                    elif (arrType[0:4].upper()=="REAL"):                         
+                        self.eclwrite.writeFloat(name, array) 
+                    else:
+                        print ("\nInvalied array type '%s' for array '%s' " % (arrType,name))
+                        exit(1)
+ 
+            else:
+                print ("\nError, unknown array type, supported array types are numpy and python list \n")
+                exit(1)
+
+        except Exception as e: 
+
+            print ("\n!Error with EclWrite class \n")
+            print ("\n-----------------------------------------------")
+            
+            for element in array[1:]:
+                if type(element) != type(array[0]):
+                    print ("\n > all alenemts are not with same type. Arrays with mixed type elments not supported \n")
+                    exit(1)
+                    
+            for x in array:  
+                if x == float('-inf'):
+                    print ("\n > -inf value found in array '%s'\n" % name)
+                    exit(1)
+
+                if x == float('+inf'):
+                    print ("\n > +inf value found in array '%s'\n" % name)
+                    exit(1)
+                    
+ 
+            print(e)
+            exit(1)
+
+        
+    def message(self, mess):
+        self.eclwrite.message(mess) 
+
+
