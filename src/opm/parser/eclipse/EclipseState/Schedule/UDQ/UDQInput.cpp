@@ -27,13 +27,25 @@ namespace Opm {
 
 UDQInput::UDQInput(const UDQDefine& udq_define) :
     define(std::addressof(udq_define)),
+<<<<<<< HEAD
     assign(nullptr)
+=======
+    assign(nullptr),
+    m_keyword(udq_define.keyword()),
+    m_var_type(udq_define.var_type())
+>>>>>>> 302d82969... Add UDQVarTYpe member to UDQInput class
 {}
 
 
 UDQInput::UDQInput(const UDQAssign& udq_assign):
     define(nullptr),
+<<<<<<< HEAD
     assign(std::addressof(udq_assign))
+=======
+    assign(std::addressof(udq_assign)),
+    m_keyword(udq_assign.keyword()),
+    m_var_type(udq_assign.var_type())
+>>>>>>> 302d82969... Add UDQVarTYpe member to UDQInput class
 {}
 
 
