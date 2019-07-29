@@ -39,42 +39,42 @@
 
 namespace {
 
-    std::size_t noUDQs(const Opm::Schedule& sched, const std::size_t simStep)
-    {
-	auto udqCfg = sched.getUDQConfig(simStep);
-  return udqCfg.size();
-    }  
+std::size_t noUDQs(const Opm::Schedule& sched, const std::size_t simStep)
+{
+    auto udqCfg = sched.getUDQConfig(simStep);
+    return udqCfg.size();
+}
 
 
-    std::size_t entriesPerIUDQ()
-    {
-	std::size_t no_entries = 3;
-        return no_entries;
-    }
-    
-    std::size_t entriesPerIUAD()
-    {
-	std::size_t no_entries = 5;
-        return no_entries;
-    }
-    
-    std::size_t entriesPerZUDN()
-    {
-	std::size_t no_entries = 2;
-        return no_entries;
-    }
-    
-    std::size_t entriesPerZUDL()
-    {
+std::size_t entriesPerIUDQ()
+{
+    std::size_t no_entries = 3;
+    return no_entries;
+}
+
+std::size_t entriesPerIUAD()
+{
+    std::size_t no_entries = 5;
+    return no_entries;
+}
+
+std::size_t entriesPerZUDN()
+{
+    std::size_t no_entries = 2;
+    return no_entries;
+}
+
+std::size_t entriesPerZUDL()
+{
     std::size_t no_entries = 16;
-        return no_entries;
-    }
+    return no_entries;
+}
 
-    std::size_t entriesPerIGph(const std::vector<int>& inteHead)
-    {
-	std::size_t no_entries = inteHead[20];
-        return no_entries;
-    }
+std::size_t entriesPerIGph(const std::vector<int>& inteHead)
+{
+    std::size_t no_entries = inteHead[20];
+    return no_entries;
+}
 } // Anonymous
 
 // #####################################################################
@@ -85,26 +85,20 @@ std::vector<int>
 Opm::RestartIO::Helpers::
 createUdqDims(const Schedule&     		sched,
               const std::size_t        		lookup_step,
-	      const std::vector<int>&           inteHead) 
+	      const std::vector<int>&           inteHead)
 {
     Opm::RestartIO::Helpers::iUADData iuad_data;
     iuad_data.noIUADs(sched, lookup_step);
     const auto& no_iuad = iuad_data.count();
-    std::vector<int> udqDims; 
-    // 0
-    udqDims.emplace_back(noUDQs(sched, lookup_step));
-    // 1
-    udqDims.emplace_back(entriesPerIUDQ());
-    // 2
-    udqDims.emplace_back(no_iuad);
-    // 3
-    udqDims.emplace_back(entriesPerIUAD());
-    // 4
-    udqDims.emplace_back(entriesPerZUDN());
-    // 5
-    udqDims.emplace_back(entriesPerZUDL());
-    // 6
-    udqDims.emplace_back(entriesPerIGph(inteHead));
+    std::vector<int> udqDims(7);
+
+    udqDims[0] = noUDQs(sched, lookup_step);
+    udqDims[1] = entriesPerIUDQ();
+    udqDims[2] = no_iuad;
+    udqDims[3] = entriesPerIUAD();
+    udqDims[4] = entriesPerZUDN();
+    udqDims[5] = entriesPerZUDL();
+    udqDims[6] = entriesPerIGph(inteHead);
 
     return udqDims;
 }
