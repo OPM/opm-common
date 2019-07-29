@@ -270,7 +270,7 @@ namespace {
 
 	const auto udqDims = Helpers::createUdqDims(schedule, simStep, ih);
 	auto  udqData = Helpers::AggregateUDQData(udqDims);
-        udqData.captureDeclaredUDQData(schedule, simStep);
+        udqData.captureDeclaredUDQData(schedule, simStep, ih);
 	
 	rstFile.write("IUDQ", udqData.getIUDQ());
 	rstFile.write("IUAD", udqData.getIUAD());

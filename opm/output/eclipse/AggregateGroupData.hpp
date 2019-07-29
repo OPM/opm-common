@@ -42,6 +42,10 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 	const std::map <size_t, const Opm::Group*>& indexGroupMap() const;
 	const std::map <const std::string, size_t>& groupNameIndexMap() const;
 
+	std::map <size_t, const Opm::Group*>  currentGroupMapIndexGroup(const Opm::Schedule& sched, 
+									const size_t simStep, 
+									const std::vector<int>& inteHead);
+									
 	void currentGrpTreeNameSeqIndMap(const Opm::Schedule&                        sched,
 	                                 const size_t                                simStep,
 	                                 const std::map<const std::string , size_t>& GnIMap,

@@ -46,45 +46,54 @@ namespace Opm {
 namespace Opm { namespace RestartIO { namespace Helpers {
 
     class iUADData {
-    public:
-	const std::vector <std::string>& wgkey_udqkey_ctrl_type() const {
-	      return m_wgkey_udqkey_ctrl_type;
-	}
-	const std::vector <int>& wgkey_ctrl_type() const {
-	      return m_wgkey_ctrl_type;
-	}
-	const std::vector<int>&	udq_seq_no() const {
-	      return m_udq_seq_no;
-	}
-	const std::vector<int>&	no_use_wgkey() const {
-	      return m_no_use_wgkey;
-	}
-	const std::vector<int>&	first_use_wg() const {
-	      return m_first_use_wg; 
-	}
-	std::size_t count() {
-	  return m_count;
-	}
+	public:
+	    const std::vector <std::string>& wgkey_udqkey_ctrl_type() const {
+		  return m_wgkey_udqkey_ctrl_type;
+	    }
+	    const std::vector <int>& wgkey_ctrl_type() const {
+		  return m_wgkey_ctrl_type;
+	    }
+	    const std::vector<int>&	udq_seq_no() const {
+		  return m_udq_seq_no;
+	    }
+	    const std::vector<int>&	no_use_wgkey() const {
+		  return m_no_use_wgkey;
+	    }
+	    const std::vector<int>&	first_use_wg() const {
+		  return m_first_use_wg; 
+	    }
+	    std::size_t count() {
+	      return m_count;
+	    }
 
 
-    void noIUADs(const Opm::Schedule& sched, const std::size_t simStep);
+	    void iuad(const Opm::Schedule& sched, const std::size_t simStep);
 
-    private:
-	std::vector<std::string>	m_wgkey_udqkey_ctrl_type;
-	std::vector<int>		m_wgkey_ctrl_type;
-	std::vector<int> 		m_udq_seq_no;
-	std::vector<int> 		m_no_use_wgkey;
-	std::vector<int> 		m_first_use_wg; 
-	std::size_t m_count;
+	private:
+	    std::vector<std::string>	m_wgkey_udqkey_ctrl_type;
+	    std::vector<int>		m_wgkey_ctrl_type;
+	    std::vector<int> 		m_udq_seq_no;
+	    std::vector<int> 		m_no_use_wgkey;
+	    std::vector<int> 		m_first_use_wg; 
+	  std::size_t m_count;
     };
   
+    class igphData {
+	public:
+	    const std::map <size_t, const Opm::Group*>  currentGroupMapIndexGroup(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead);
+	    const std::vector<int> ig_phase(const Opm::Schedule& sched, const std::size_t simStep, const std::vector<int>& inteHead);
+	private: 
+      
+      
+    };
     class AggregateUDQData
     {
     public:
 	explicit AggregateUDQData(const std::vector<int>& udqDims);
 
 	void captureDeclaredUDQData(const Opm::Schedule&	sched,
-				    const std::size_t           simStep);
+				    const std::size_t           simStep,
+				    const std::vector<int>&     inteHead);
 
         const std::vector<int>& getIUDQ() const
         {

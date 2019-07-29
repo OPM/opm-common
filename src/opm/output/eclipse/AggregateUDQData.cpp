@@ -18,6 +18,7 @@
 */
 
 #include <opm/output/eclipse/AggregateUDQData.hpp>
+#include <opm/output/eclipse/AggregateGroupData.hpp>
 #include <opm/output/eclipse/WriteRestartHelpers.hpp>
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
@@ -46,6 +47,12 @@
 
 
 namespace {
+  
+    // maximum number of groups
+    std::size_t ngmaxz(const std::vector<int>& inteHead)
+    {
+        return inteHead[20];
+    }
 
 
     template <typename UDQOp>
@@ -233,10 +240,13 @@ namespace {
         }
 
         template <class IGPHArray>
-        void staticContrib(const int indGph,
-			   IGPHArray& iGph)
+        void staticContrib(const Opm::Schedule&    sched,
+			   const Opm::Group&       group,
+			   const std::size_t       simStep,
+			   const int 		   indGph,
+			   IGPHArray& 		   iGph)
         {
-	    // to be added
+	    
 	}
     } // iGph
 
@@ -266,7 +276,7 @@ namespace {
         return result;
     }
 
-    void  Opm::RestartIO::Helpers::iUADData::noIUADs(const Opm::Schedule& sched, const std::size_t simStep)
+    void  Opm::RestartIO::Helpers::iUADData::iuad(const Opm::Schedule& sched, const std::size_t simStep)
     {
 	auto udq_cfg = sched.getUDQConfig(simStep);
 	auto udq_active = sched.udqActive(simStep);
@@ -287,7 +297,6 @@ namespace {
 	no_use_wgkey.resize(mx_iuads, 0);
 	first_use_wg.resize(mx_iuads, 0);
 	
-	//std::cout << "noIUDAs:  ind, udq_key, wgname, ctrl_type wg_udqk_kc" << std::endl;
 	std::size_t cnt_inp = 0;
 	for (auto it = udq_active.begin(); it != udq_active.end(); it++) 
 	{
@@ -300,7 +309,7 @@ namespace {
 	    //std::cout << "ctrl_type: " << static_cast<int>(ctrl_type) << std::endl;
 	    std::string wg_udqk_kc = udq_key + "_" + std::to_string(static_cast<int>(ctrl_type));
 	    
-	    //std::cout << "noIUDAs:" << ind << " " <<  udq_key << " " << name << " " << static_cast<int>(ctrl_type) << " " << wg_udqk_kc << std::endl;
+	    //std::cout << "iuad:" << ind << " " <<  udq_key << " " << name << " " << static_cast<int>(ctrl_type) << " " << wg_udqk_kc << std::endl;
 
 	    const auto v_typ = UDQ::uadCode(ctrl_type);
 	    std::pair<bool,int> res = findInVector<std::string>(wgkey_udqkey_ctrl_type, wg_udqk_kc);
@@ -337,6 +346,45 @@ namespace {
 	this->m_count = count;
      }
      
+    const std::map <size_t, const Opm::Group*>  Opm::RestartIO::Helpers::igphData::currentGroupMapIndexGroup(const Opm::Schedule& sched, 
+									  const size_t simStep, 
+									  const std::vector<int>& inteHead)
+    {
+        // make group index for current report step
+        std::map <size_t, const Opm::Group*> indexGroupMap;
+        for (const auto& group_name : sched.groupNames(simStep)) {
+            const auto& group = sched.getGroup(group_name);
+            int ind = (group.name() == "FIELD")
+                ? ngmaxz(inteHead)-1 : group.seqIndex()-1;
+
+            const std::pair<size_t, const Opm::Group*> groupPair = std::make_pair(static_cast<size_t>(ind), std::addressof(group));
+            indexGroupMap.insert(groupPair);
+        }
+        return indexGroupMap;
+    }
+     
+     const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Schedule& sched, 
+								   const std::size_t simStep, 
+								   const std::vector<int>& inteHead) 
+     {
+	//construct the current list of groups to output the IGPH array
+	const auto indexGroupMap = Opm::RestartIO::Helpers::igphData::currentGroupMapIndexGroup(sched, simStep, inteHead);
+	//std::vector<const Opm::Group*> curGroups(ngmaxz(inteHead), nullptr);
+	std::vector<int> inj_phase(ngmaxz(inteHead), 0);
+	
+	auto it = indexGroupMap.begin();
+	while (it != indexGroupMap.end())
+	{
+	    auto ind = static_cast<int>(it->first);
+	    auto group_ptr = it->second;
+	    if (group_ptr->isInjectionGroup(simStep)) {
+		auto phase = group_ptr->getInjectionPhase(simStep);
+	      if ( phase == Opm::Phase::WATER ) inj_phase[ind] = 2;
+	    }
+	    it++;
+	}
+     }
+     
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const std::vector<int>& udqDims)
     : iUDQ_ (iUdq::allocate(udqDims)),
@@ -351,7 +399,8 @@ AggregateUDQData(const std::vector<int>& udqDims)
 void
 Opm::RestartIO::Helpers::AggregateUDQData::
 captureDeclaredUDQData(const Opm::Schedule&                 sched,
-		       const std::size_t                    simStep)
+		       const std::size_t                    simStep,
+		       const std::vector<int>&              inteHead)
 {
     //get list of current UDQs
     auto udqCfg = sched.getUDQConfig(simStep);
@@ -359,9 +408,10 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
     const auto& no_udq = udqCfg.noUdqs();
     
     Opm::RestartIO::Helpers::iUADData iuad_data;
-    iuad_data.noIUADs(sched, simStep);
+    iuad_data.iuad(sched, simStep);
     const auto& no_iuad = iuad_data.count(); 
-    
+      
+
     UDQLoop(no_udq, [&sched, simStep, this]
         (const std::size_t& ind_iudq, const std::size_t udqID) -> void
     {
@@ -386,7 +436,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
         zUdn::staticContrib(sched, simStep, ind_zudn, z_udn);
     });
     
-        UDQLoop(no_udq, [&sched, simStep, this]
+    UDQLoop(no_udq, [&sched, simStep, this]
         (const std::size_t& ind_zudl, const std::size_t udqID) -> void
     {
         auto z_udl = this->zUDL_[udqID];
