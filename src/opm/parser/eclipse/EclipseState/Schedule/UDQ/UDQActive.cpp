@@ -26,6 +26,9 @@ std::size_t UDQActive::size() const {
     return this->data.size();
 }
 
+UDQActive::operator bool() const {
+    return this->data.size() > 0;
+}
 
 std::string UDQActive::hash(const std::string& wgname, UDAControl control) {
   return wgname + std::to_string(static_cast<int64_t>(control));
