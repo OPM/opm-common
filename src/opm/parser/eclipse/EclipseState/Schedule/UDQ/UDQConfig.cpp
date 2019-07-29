@@ -62,8 +62,9 @@ namespace Opm {
             auto index_iter = this->input_index.find(quantity);
             if (this->input_index.find(quantity) == this->input_index.end()) {
                 auto var_type = UDQ::varType(quantity);
+                auto insert_index = this->input_index.size();
                 this->type_count[var_type] += 1;
-                this->input_index[quantity] = UDQIndex(this->input_index.size(), this->type_count[var_type], action);
+                this->input_index[quantity] = UDQIndex(insert_index, this->type_count[var_type], action);
             } else
                 index_iter->second.action = action;
 
