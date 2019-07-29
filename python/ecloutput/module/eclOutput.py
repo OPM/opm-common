@@ -459,6 +459,14 @@ class EclModInit:
     def resetFilter(self):
         self.eclmod.resetFilter()
         
+    def addHCvolFilter(self):
+        self.eclmod.addHCvolFilter()
+       
+    def setDepthFWL(self, fwl):
+        self.eclmod.setDepthfwl(fwl)
+
+    def getDims(self):
+        return self.eclmod.gridDims()
 
     def getNumberOfActiveCells(self):
         return self.eclmod.getNumberOfActiveCells()
@@ -549,6 +557,7 @@ class EclWrite:
                     
  
             print(e)
+	    
             exit(1)
 
         
