@@ -1198,6 +1198,8 @@ UDQ
     BOOST_CHECK_EQUAL( input[6].get<UDQDefine>().keyword(), "FUOPRX");
 
     BOOST_CHECK( udq.has_keyword("FUXXX") );
+    const auto wubhp1 = udq["WUBHP1"];
+    BOOST_CHECK( wubhp1.is<UDQAssign>() );
 }
 
 
@@ -1232,6 +1234,10 @@ UDQ
     BOOST_CHECK_EQUAL(udq.size(), 5);
 
     BOOST_CHECK( input[0].is<UDQDefine>());
+    BOOST_CHECK_EQUAL( input[0].keyword(), "WUBHP1");
+
+    const auto wubhp1 = udq["WUBHP1"];
+    BOOST_CHECK( wubhp1.is<UDQDefine>() );
 }
 
 
