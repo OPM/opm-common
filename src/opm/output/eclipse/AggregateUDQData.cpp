@@ -48,14 +48,6 @@
 namespace {
 
 
-    template <typename UDQOp>
-    void UDQLoop(const Opm::UDQConfig& udqCfg,
-                  UDQOp&&         udqOp)
-    {
-        for (const auto& udq_input : udqCfg.input())
-            udqOp(udq_input);
-    }
-
     namespace iUdq {
 
         Opm::RestartIO::Helpers::WindowedArray<int>
@@ -89,6 +81,7 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            printf("iUAD num:%d  ws:%d \n ", udqDims[2], udqDims[3]);
             return WV {
                 WV::NumWindows{ static_cast<std::size_t>(udqDims[2]) },
                     WV::WindowSize{ static_cast<std::size_t>(udqDims[3]) }
@@ -316,8 +309,7 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
                        const std::size_t                    simStep)
 {
     auto udqCfg = sched.getUDQConfig(simStep);
-    Opm::RestartIO::Helpers::iUADData iuad_data;
-    iuad_data.noIUADs(sched, simStep);
+    auto udq_active = sched.udqActive(simStep);
 
     for (const auto& udq_input : udqCfg.input()) {
         auto udq_index = udq_input.index.insert_index;
@@ -326,16 +318,23 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             iUdq::staticContrib(udq_input, i_udq);
         }
         {
-            auto i_uad = this->iUAD_[udq_index];
-            iUad::staticContrib(iuad_data, udq_input.index.insert_index, i_uad);
-        }
-        {
             auto z_udn = this->zUDN_[udq_index];
             zUdn::staticContrib(udq_input, z_udn);
         }
         {
             auto z_udl = this->zUDL_[udq_index];
             zUdl::staticContrib(udq_input, z_udl);
+        }
+    }
+
+    if (udq_active) {
+        Opm::RestartIO::Helpers::iUADData iuad_data;
+        iuad_data.noIUADs(sched, simStep);
+
+        // Loop not correct ...
+        for (const auto& udq_input : udqCfg.input()) {
+            auto i_uad = this->iUAD_[udq_index];
+            iUad::staticContrib(iuad_data, udq_input.index.insert_index, i_uad);
         }
     }
 

@@ -262,22 +262,23 @@ namespace {
 
     void writeUDQ(int                           sim_step,
                   const Schedule&               schedule,
-		  const std::vector<int>&      	ih,
-		  EclIO::OutputStream::Restart& rstFile)
+                  const std::vector<int>&      	ih,
+                  EclIO::OutputStream::Restart& rstFile)
     {
         // write UDQ - data to restart file
         const std::size_t simStep = static_cast<size_t> (sim_step);
 
-	const auto udqDims = Helpers::createUdqDims(schedule, simStep, ih);
-	auto  udqData = Helpers::AggregateUDQData(udqDims);
+        const auto udqDims = Helpers::createUdqDims(schedule, simStep, ih);
+        auto  udqData = Helpers::AggregateUDQData(udqDims);
         udqData.captureDeclaredUDQData(schedule, simStep);
-	
-	rstFile.write("IUDQ", udqData.getIUDQ());
-	rstFile.write("IUAD", udqData.getIUAD());
-	rstFile.write("ZUDN", udqData.getZUDN());
-	rstFile.write("ZUDL", udqData.getZUDL());
+
+        /*rstFile.write("IUDQ", udqData.getIUDQ());
+        rstFile.write("IUAD", udqData.getIUAD());
+        rstFile.write("ZUDN", udqData.getZUDN());
+        rstFile.write("ZUDL", udqData.getZUDL());
+        */
     }
-   
+
     void writeWell(int                           sim_step,
                    const bool                    ecl_compatible_rst,
                    const Phases&                 phases,

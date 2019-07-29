@@ -467,7 +467,7 @@ struct SimulationCase
 
 // =====================================================================
 
-BOOST_AUTO_TEST_SUITE(Aggregate_Group)
-
-
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(DummyPlaceholder)
+{
+    BOOST_CHECK(true);
+}
