@@ -88,7 +88,7 @@ createUdqDims(const Schedule&     		sched,
 	      const std::vector<int>&           inteHead)
 {
     Opm::RestartIO::Helpers::iUADData iuad_data;
-    iuad_data.noIUADs(sched, lookup_step);
+    iuad_data.iuad(sched, lookup_step);
     const auto& no_iuad = iuad_data.count();
     std::vector<int> udqDims(7);
 
