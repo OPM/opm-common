@@ -1187,6 +1187,7 @@ UDQ
     BOOST_CHECK( input[5].is<UDQAssign>() );
     BOOST_CHECK( input[6].is<UDQDefine>() );
 
+    BOOST_CHECK_EQUAL( input[4].unit(), "SM3/DAY" );
 
     BOOST_CHECK_EQUAL(def[0].keyword(), "WUWCT");
     BOOST_CHECK_EQUAL(def[1].keyword(), "FUOPR");
