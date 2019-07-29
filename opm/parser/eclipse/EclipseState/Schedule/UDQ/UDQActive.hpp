@@ -46,6 +46,7 @@ public:
     std::size_t size() const;
     std::size_t use_count(const std::string& udq) const;
 
+    explicit operator bool() const;
     const Record& operator[](std::size_t index) const;
     std::vector<Record>::const_iterator begin() const;
     std::vector<Record>::const_iterator end() const;
