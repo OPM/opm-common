@@ -50,8 +50,8 @@ public:
 
 class UDQInput{
 public:
-    UDQInput(const UDQIndex& index, const UDQDefine& udq_define);
-    UDQInput(const UDQIndex& index, const UDQAssign& udq_assign);
+    UDQInput(const UDQIndex& index, const UDQDefine& udq_define, const std::string& unit);
+    UDQInput(const UDQIndex& index, const UDQAssign& udq_assign, const std::string& unit);
 
     template<typename T>
     const T& get() const;
@@ -61,13 +61,14 @@ public:
 
     const std::string& keyword() const;
     UDQVarType var_type() const;
-
-private:
+    const std::string& unit() const;
     UDQIndex index;
+private:
     const UDQDefine * define;
     const UDQAssign * assign;
     std::string m_keyword;
     UDQVarType m_var_type;
+    const std::string m_unit;
 };
 }
 
