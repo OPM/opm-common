@@ -39,12 +39,6 @@
 
 namespace {
 
-std::size_t noUDQs(const Opm::Schedule& sched, const std::size_t simStep)
-{
-    auto udqCfg = sched.getUDQConfig(simStep);
-    return udqCfg.size();
-}
-
 
 std::size_t entriesPerIUDQ()
 {
@@ -84,17 +78,16 @@ std::size_t entriesPerIGph(const std::vector<int>& inteHead)
 std::vector<int>
 Opm::RestartIO::Helpers::
 createUdqDims(const Schedule&     		sched,
-              const std::size_t        		lookup_step,
-	      const std::vector<int>&           inteHead)
+              const std::size_t       simStep,
+              const std::vector<int>& inteHead)
 {
-    Opm::RestartIO::Helpers::iUADData iuad_data;
-    iuad_data.iuad(sched, lookup_step);
-    const auto& no_iuad = iuad_data.count();
+    const auto& udqCfg = sched.getUDQConfig(simStep);
+    const auto& udqActive = sched.udqActive(simStep);
     std::vector<int> udqDims(7);
 
-    udqDims[0] = noUDQs(sched, lookup_step);
+    udqDims[0] = udqCfg.size();
     udqDims[1] = entriesPerIUDQ();
-    udqDims[2] = no_iuad;
+    udqDims[2] = udqActive.size();
     udqDims[3] = entriesPerIUAD();
     udqDims[4] = entriesPerZUDN();
     udqDims[5] = entriesPerZUDL();
