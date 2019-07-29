@@ -269,108 +269,50 @@ std::string typeName(UDQVarType var_type) {
 }
 
 UDAKeyword keyword(UDAControl control) {
-    if (control == UDAControl::WCONPROD_ORAT)
-        return UDAKeyword::WCONPROD;
+    const std::unordered_map<UDAControl, UDAKeyword> c2k = {{UDAControl::WCONPROD_ORAT, UDAKeyword::WCONPROD},
+                                                            {UDAControl::WCONPROD_GRAT, UDAKeyword::WCONPROD},
+                                                            {UDAControl::WCONPROD_WRAT, UDAKeyword::WCONPROD},
+                                                            {UDAControl::WCONPROD_LRAT, UDAKeyword::WCONPROD},
+                                                            {UDAControl::WCONPROD_RESV, UDAKeyword::WCONPROD},
+                                                            {UDAControl::WCONPROD_BHP,  UDAKeyword::WCONPROD},
+                                                            {UDAControl::WCONPROD_THP,  UDAKeyword::WCONPROD},
+                                                            {UDAControl::WCONINJE_RATE, UDAKeyword::WCONINJE},
+                                                            {UDAControl::WCONINJE_RESV, UDAKeyword::WCONINJE},
+                                                            {UDAControl::WCONINJE_BHP,  UDAKeyword::WCONINJE},
+                                                            {UDAControl::WCONINJE_THP,  UDAKeyword::WCONINJE},
+                                                            {UDAControl::GCONPROD_OIL_TARGET,    UDAKeyword::GCONPROD},
+                                                            {UDAControl::GCONPROD_WATER_TARGET,  UDAKeyword::GCONPROD},
+                                                            {UDAControl::GCONPROD_GAS_TARGET,    UDAKeyword::GCONPROD},
+                                                            {UDAControl::GCONPROD_LIQUID_TARGET, UDAKeyword::GCONPROD}};
 
-    if (control == UDAControl::WCONPROD_GRAT)
-        return UDAKeyword::WCONPROD;
-
-    if (control == UDAControl::WCONPROD_WRAT)
-        return UDAKeyword::WCONPROD;
-
-    if (control == UDAControl::WCONPROD_LRAT)
-        return UDAKeyword::WCONPROD;
-
-    if (control == UDAControl::WCONPROD_RESV)
-        return UDAKeyword::WCONPROD;
-
-    if (control == UDAControl::WCONPROD_BHP)
-        return UDAKeyword::WCONPROD;
-
-    if (control == UDAControl::WCONPROD_THP)
-        return UDAKeyword::WCONPROD;
-
-    /*-----------------------------------------------------------*/
-
-    if (control == UDAControl::WCONINJE_RATE)
-        return UDAKeyword::WCONINJE;
-
-    if (control == UDAControl::WCONINJE_RESV)
-        return UDAKeyword::WCONINJE;
-
-    if (control == UDAControl::WCONINJE_BHP)
-        return UDAKeyword::WCONINJE;
-
-    if (control == UDAControl::WCONINJE_THP)
-        return UDAKeyword::WCONINJE;
-
-    /*-----------------------------------------------------------*/
-
-    if (control == UDAControl::GCONPROD_OIL_TARGET)
-        return UDAKeyword::GCONPROD;
-
-    if (control == UDAControl::GCONPROD_WATER_TARGET)
-        return UDAKeyword::GCONPROD;
-
-    if (control == UDAControl::GCONPROD_GAS_TARGET)
-        return UDAKeyword::GCONPROD;
-
-    if (control == UDAControl::GCONPROD_LIQUID_TARGET)
-        return UDAKeyword::GCONPROD;
+    auto it = c2k.find(control);
+    if (it != c2k.end())
+      return it->second;
 
     throw std::logic_error("Unrecognized enum type - internal error");
 }
 
 
 int uadCode(UDAControl control) {
-    if (control == UDAControl::WCONPROD_ORAT)
-        return 300004;
+    const std::unordered_map<UDAControl, int> c2uad = {{UDAControl::WCONPROD_ORAT,  300004},
+                                                       {UDAControl::WCONPROD_GRAT,  500004},
+                                                       {UDAControl::WCONPROD_WRAT,  400004},
+                                                       {UDAControl::WCONPROD_LRAT,  600004},
+                                                       {UDAControl::WCONPROD_RESV,  999999},
+                                                       {UDAControl::WCONPROD_BHP,   999999},
+                                                       {UDAControl::WCONPROD_THP,   999999},
+                                                       {UDAControl::WCONINJE_RATE,  400003},
+                                                       {UDAControl::WCONINJE_RESV,  500003},
+                                                       {UDAControl::WCONINJE_BHP,   999999},
+                                                       {UDAControl::WCONINJE_THP,   999999},
+                                                       {UDAControl::GCONPROD_OIL_TARGET,    200019},
+                                                       {UDAControl::GCONPROD_WATER_TARGET,  300019},
+                                                       {UDAControl::GCONPROD_GAS_TARGET,    400019},
+                                                       {UDAControl::GCONPROD_LIQUID_TARGET, 500019}};
 
-    if (control == UDAControl::WCONPROD_GRAT)
-        return 500004;
-
-    if (control == UDAControl::WCONPROD_WRAT)
-        return 400004;
-
-    if (control == UDAControl::WCONPROD_LRAT)
-        return 600004;
-
-    if (control == UDAControl::WCONPROD_RESV)
-        return 999999;
-
-    if (control == UDAControl::WCONPROD_BHP)
-        return 999999;
-
-    if (control == UDAControl::WCONPROD_THP)
-        return 999999;
-
-    /*-----------------------------------------------------------*/
-
-    if (control == UDAControl::WCONINJE_RATE)
-        return 400003;
-
-    if (control == UDAControl::WCONINJE_RESV)
-        return 500003;
-
-    if (control == UDAControl::WCONINJE_BHP)
-        return 999999;
-
-    if (control == UDAControl::WCONINJE_THP)
-        return 999999;
-
-    /*-----------------------------------------------------------*/
-
-    if (control == UDAControl::GCONPROD_OIL_TARGET)
-        return 200019;
-
-    if (control == UDAControl::GCONPROD_WATER_TARGET)
-        return 300019;
-
-    if (control == UDAControl::GCONPROD_GAS_TARGET)
-        return 400019;
-
-    if (control == UDAControl::GCONPROD_LIQUID_TARGET)
-        return 500019;
+    auto it = c2uad.find(control);
+    if (it != c2uad.end())
+      return it->second;
 
     throw std::logic_error("Unrecognized enum type - internal error");
 }
