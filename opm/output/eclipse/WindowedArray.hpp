@@ -72,7 +72,10 @@ namespace Opm { namespace RestartIO { namespace Helpers {
         explicit WindowedArray(const NumWindows n, const WindowSize sz)
             : x_         (n.value * sz.value)
             , windowSize_(sz.value)
-        {}
+        {
+            if (sz.value == 0)
+                throw std::invalid_argument("Window array with windowsize==0 is not permitted");
+        }
 
         /// Retrieve number of windows allocated for this array.
         Idx numWindows() const
@@ -179,7 +182,10 @@ namespace Opm { namespace RestartIO { namespace Helpers {
                                 const WindowSize& sz)
             : data_   (NumWindows{ nRows.value * nCols.value }, sz)
             , numCols_(nCols.value)
-        {}
+        {
+            if (nCols.value == 0)
+                throw std::invalid_argument("Window matrix with columns==0 is not permitted");
+        }
 
         /// Retrieve number of columns allocated for this matrix.
         Idx numCols() const

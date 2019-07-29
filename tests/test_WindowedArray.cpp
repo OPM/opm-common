@@ -30,6 +30,19 @@
 
 BOOST_AUTO_TEST_SUITE(WriteOperations)
 
+BOOST_AUTO_TEST_CASE(EmptyArray)
+{
+    using Wa = Opm::RestartIO::Helpers::WindowedArray<int>;
+    using Wm = Opm::RestartIO::Helpers::WindowedMatrix<int>;
+    BOOST_CHECK_NO_THROW( Wa( Wa::NumWindows{ 0 }, Wa::WindowSize{ 1 }) );
+    BOOST_CHECK_NO_THROW( Wm( Wm::NumRows{ 0 }, Wm::NumCols{ 2 }, Wm::WindowSize{ 3 } ));
+
+    BOOST_CHECK_THROW( Wa(Wa::NumWindows{ 5 }, Wa::WindowSize{ 0 }), std::invalid_argument);
+    BOOST_CHECK_THROW( Wm(Wm::NumRows{ 3 }, Wm::NumCols{ 0 }, Wm::WindowSize{ 4 } ), std::invalid_argument);
+    BOOST_CHECK_THROW( Wm(Wm::NumRows{ 3 }, Wm::NumCols{ 2 }, Wm::WindowSize{ 0 } ), std::invalid_argument);
+}
+
+
 BOOST_AUTO_TEST_CASE(Array)
 {
     using Wa = Opm::RestartIO::Helpers::WindowedArray<int>;
