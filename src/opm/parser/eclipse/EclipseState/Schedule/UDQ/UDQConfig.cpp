@@ -203,12 +203,31 @@ namespace Opm {
 
         /*
           That a keyword is mentioned with UNITS is enough to consider it
-           as a keyword which is present.
+          as a keyword which is present.
         */
         if (this->units.count(keyword) > 0)
             return true;
 
         return false;
+    }
+
+
+    const UDQInput UDQConfig::operator[](const std::string& keyword) const {
+        const auto index_iter = this->input_index.find(keyword);
+        if (index_iter == this->input_index.end())
+            throw std::invalid_argument("Keyword: " + keyword + " not recognized as ASSIGN/DEFINE UDQ");
+
+        std::string u;
+        if (this->has_unit(keyword))
+            u = this->unit(keyword);
+
+        if (index_iter->second.action == UDQAction::ASSIGN)
+            return UDQInput(this->input_index.at(keyword), this->m_assignments.at(keyword), u);
+
+        if (index_iter->second.action == UDQAction::DEFINE)
+            return UDQInput(this->input_index.at(keyword), this->m_definitions.at(keyword), u);
+
+        throw std::logic_error("Internal error - should not be here");
     }
 
 
