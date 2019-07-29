@@ -25,23 +25,28 @@
 namespace Opm {
 
 
-UDQInput::UDQInput(const UDQIndex& index_arg, const UDQDefine& udq_define) :
+UDQInput::UDQInput(const UDQIndex& index_arg, const UDQDefine& udq_define, const std::string& unit_arg) :
     index(index_arg),
     define(std::addressof(udq_define)),
     assign(nullptr),
     m_keyword(udq_define.keyword()),
-    m_var_type(udq_define.var_type())
+    m_var_type(udq_define.var_type()),
+    m_unit(unit_arg)
 {}
 
 
-UDQInput::UDQInput(const UDQIndex& index_arg, const UDQAssign& udq_assign):
+UDQInput::UDQInput(const UDQIndex& index_arg, const UDQAssign& udq_assign, const std::string& unit_arg):
     index(index_arg),
     define(nullptr),
     assign(std::addressof(udq_assign)),
     m_keyword(udq_assign.keyword()),
-    m_var_type(udq_assign.var_type())
+    m_var_type(udq_assign.var_type()),
+    m_unit(unit_arg)
 {}
 
+const std::string& UDQInput::unit() const {
+    return this->m_unit;
+}
 
 const std::string& UDQInput::keyword() const {
     return this->m_keyword;

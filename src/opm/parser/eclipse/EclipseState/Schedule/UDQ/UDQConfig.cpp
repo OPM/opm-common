@@ -114,12 +114,16 @@ namespace Opm {
         std::vector<UDQInput> res;
         for (const auto& index_pair : this->input_index) {
             const UDQIndex& index = index_pair.second;
+            std::string u;
+            if (this->has_unit(index_pair.first))
+                u = this->unit(index_pair.first);
+
             if (index.action == UDQAction::DEFINE) {
                 const std::string& key = index_pair.first;
-                res.push_back(UDQInput(index, this->m_definitions.at(key)));
+                res.push_back(UDQInput(index, this->m_definitions.at(key), u));
             } else if (index_pair.second.action == UDQAction::ASSIGN) {
                 const std::string& key = index_pair.first;
-                res.push_back(UDQInput(index, this->m_assignments.at(key)));
+                res.push_back(UDQInput(index, this->m_assignments.at(key), u));
             }
         }
         return res;
