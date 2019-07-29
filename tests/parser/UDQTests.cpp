@@ -1261,6 +1261,11 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     BOOST_CHECK_EQUAL( usage.size(), 2 );
     BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 2);
 
+    const auto& rec = usage.get("W1", UDAControl::WCONPROD_ORAT);
+    BOOST_CHECK_EQUAL(rec.wgname, "W1");
+    BOOST_CHECK_EQUAL(rec.udq, "UDQ");
+    BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
+
 
     std::size_t index = 0;
     for (const auto& record : usage) {
