@@ -48,6 +48,7 @@ public:
 
     explicit operator bool() const;
     const Record& operator[](std::size_t index) const;
+    const UDQActive::Record& get(const std::string& wgname, UDAControl control);
     std::vector<Record>::const_iterator begin() const;
     std::vector<Record>::const_iterator end() const;
 private:

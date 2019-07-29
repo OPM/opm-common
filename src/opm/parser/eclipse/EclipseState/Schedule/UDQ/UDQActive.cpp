@@ -91,6 +91,12 @@ std::vector<UDQActive::Record>::const_iterator UDQActive::end() const {
     return this->data.end();
 }
 
+const UDQActive::Record& UDQActive::get(const std::string& wgname, UDAControl control) {
+    auto hash_key = this->hash(wgname, control);
+    auto index = this->keys.at(hash_key);
+    return this->data[index];
+}
+
 const UDQActive::Record& UDQActive::operator[](std::size_t index) const {
     return this->data[index];
 }
