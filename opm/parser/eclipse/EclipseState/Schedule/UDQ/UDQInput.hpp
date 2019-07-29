@@ -30,10 +30,28 @@ namespace Opm {
 class UDQAssign;
 class UDQDefine;
 
+class UDQIndex {
+public:
+    UDQIndex() = default;
+
+    UDQIndex(std::size_t insert_index_arg, std::size_t typed_insert_index_arg, UDQAction action_arg) :
+        insert_index(insert_index_arg),
+        typed_insert_index(typed_insert_index_arg),
+        action(action_arg)
+    {
+    }
+
+
+    std::size_t insert_index;
+    std::size_t typed_insert_index;
+    UDQAction action;
+};
+
+
 class UDQInput{
 public:
-    UDQInput(const UDQDefine& udq_define);
-    UDQInput(const UDQAssign& udq_assign);
+    UDQInput(const UDQIndex& index, const UDQDefine& udq_define);
+    UDQInput(const UDQIndex& index, const UDQAssign& udq_assign);
 
     template<typename T>
     const T& get() const;
@@ -45,6 +63,7 @@ public:
     UDQVarType var_type() const;
 
 private:
+    UDQIndex index;
     const UDQDefine * define;
     const UDQAssign * assign;
     std::string m_keyword;

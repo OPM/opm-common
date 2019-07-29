@@ -25,7 +25,8 @@
 namespace Opm {
 
 
-UDQInput::UDQInput(const UDQDefine& udq_define) :
+UDQInput::UDQInput(const UDQIndex& index_arg, const UDQDefine& udq_define) :
+    index(index_arg),
     define(std::addressof(udq_define)),
 <<<<<<< HEAD
     assign(nullptr)
@@ -37,7 +38,8 @@ UDQInput::UDQInput(const UDQDefine& udq_define) :
 {}
 
 
-UDQInput::UDQInput(const UDQAssign& udq_assign):
+UDQInput::UDQInput(const UDQIndex& index_arg, const UDQAssign& udq_assign):
+    index(index_arg),
     define(nullptr),
 <<<<<<< HEAD
     assign(std::addressof(udq_assign))

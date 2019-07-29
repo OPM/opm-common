@@ -59,10 +59,12 @@ namespace Opm {
             this->assign_unit( quantity, data[0] );
         else {
             auto index_iter = this->input_index.find(quantity);
-            if (this->input_index.find(quantity) == this->input_index.end())
-                this->input_index[quantity] = std::make_pair(this->input_index.size(), action);
-            else
-                index_iter->second.second = action;
+            if (this->input_index.find(quantity) == this->input_index.end()) {
+                auto var_type = UDQ::varType(quantity);
+                this->type_count[var_type] += 1;
+                this->input_index[quantity] = UDQIndex(this->input_index.size(), this->type_count[var_type], action);
+            } else
+                index_iter->second.action = action;
 
 
             if (action == UDQAction::ASSIGN) {
@@ -84,7 +86,7 @@ namespace Opm {
     std::vector<UDQDefine> UDQConfig::definitions() const {
         std::vector<UDQDefine> ret;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.second == UDQAction::DEFINE) {
+            if (index_pair.second.action == UDQAction::DEFINE) {
                 const std::string& key = index_pair.first;
                 ret.push_back(this->m_definitions.at(key));
             }
@@ -96,7 +98,7 @@ namespace Opm {
     std::vector<UDQDefine> UDQConfig::definitions(UDQVarType var_type) const {
         std::vector<UDQDefine> filtered_defines;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.second == UDQAction::DEFINE) {
+            if (index_pair.second.action == UDQAction::DEFINE) {
                 const std::string& key = index_pair.first;
                 const auto& udq_define = this->m_definitions.at(key);
                 if (udq_define.var_type() == var_type)
@@ -110,12 +112,13 @@ namespace Opm {
     std::vector<UDQInput> UDQConfig::input() const {
         std::vector<UDQInput> res;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.second == UDQAction::DEFINE) {
+            const UDQIndex& index = index_pair.second;
+            if (index.action == UDQAction::DEFINE) {
                 const std::string& key = index_pair.first;
-                res.push_back(UDQInput(this->m_definitions.at(key)));
-            } else if (index_pair.second.second == UDQAction::ASSIGN) {
+                res.push_back(UDQInput(index, this->m_definitions.at(key)));
+            } else if (index_pair.second.action == UDQAction::ASSIGN) {
                 const std::string& key = index_pair.first;
-                res.push_back(UDQInput(this->m_assignments.at(key)));
+                res.push_back(UDQInput(index, this->m_assignments.at(key)));
             }
         }
         return res;
@@ -124,9 +127,9 @@ namespace Opm {
     std::size_t UDQConfig::size() const {
         std::size_t s = 0;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.second == UDQAction::DEFINE)
+            if (index_pair.second.action == UDQAction::DEFINE)
                 s += 1;
-            else if (index_pair.second.second == UDQAction::ASSIGN)
+            else if (index_pair.second.action == UDQAction::ASSIGN)
                 s += 1;
         }
         return s;
@@ -136,7 +139,7 @@ namespace Opm {
     std::vector<UDQAssign> UDQConfig::assignments() const {
         std::vector<UDQAssign> ret;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.second == UDQAction::ASSIGN) {
+            if (index_pair.second.action == UDQAction::ASSIGN) {
                 const std::string& key = index_pair.first;
                 ret.push_back(this->m_assignments.at(key));
             }
@@ -148,7 +151,7 @@ namespace Opm {
     std::vector<UDQAssign> UDQConfig::assignments(UDQVarType var_type) const {
         std::vector<UDQAssign> filtered_defines;
         for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.second == UDQAction::ASSIGN) {
+            if (index_pair.second.action == UDQAction::ASSIGN) {
                 const std::string& key = index_pair.first;
                 const auto& udq_define = this->m_assignments.at(key);
                 if (udq_define.var_type() == var_type)

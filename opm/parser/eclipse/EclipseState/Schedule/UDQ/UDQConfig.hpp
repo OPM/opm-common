@@ -32,8 +32,6 @@ namespace Opm {
 
     class DeckRecord;
     class Deck;
-
-
     class UDQConfig {
     public:
         explicit UDQConfig(const Deck& deck);
@@ -74,7 +72,8 @@ namespace Opm {
         std::unordered_map<std::string, UDQAssign> m_assignments;
         std::unordered_map<std::string, std::string> units;
 
-        OrderedMap<std::string, std::pair<size_t, UDQAction>> input_index;
+        OrderedMap<std::string, UDQIndex> input_index;
+        std::unordered_map<UDQVarType, std::size_t> type_count;
     };
 }
 
