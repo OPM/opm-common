@@ -509,8 +509,8 @@ BOOST_AUTO_TEST_CASE (Constructor)
     const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     Opm::RestartIO::Helpers::iUADData iuad_test;
-    iuad_test.noIUADs(sched, rptStep);
-    udqData.captureDeclaredUDQData(sched, rptStep);
+    iuad_test.iuad(sched, rptStep);
+    udqData.captureDeclaredUDQData(sched, rptStep, ih);
      
     rstFile.write("IUDQ", udqData.getIUDQ());
     rstFile.write("IUAD", udqData.getIUAD());
