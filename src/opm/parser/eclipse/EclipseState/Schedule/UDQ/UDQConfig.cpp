@@ -77,9 +77,13 @@ namespace Opm {
                     this->m_assignments.insert( std::make_pair(quantity, UDQAssign(quantity, selector, value )));
                 else
                     assignment->second.add_record(selector, value);
-            } else if (action == UDQAction::DEFINE)
+            } else if (action == UDQAction::DEFINE) {
+                auto defined_iter = this->m_definitions.find( quantity );
+                if (defined_iter != this->m_definitions.end())
+                    this->m_definitions.erase( defined_iter );
+
                 this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, data)));
-            else
+            } else
                 throw std::runtime_error("Internal error - should not be here");
         }
     }
