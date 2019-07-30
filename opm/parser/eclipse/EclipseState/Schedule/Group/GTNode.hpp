@@ -42,6 +42,10 @@ public:
 private:
     const Group2 m_group;
     const GTNode * m_parent;
+    /*
+      Class T with a stl container <T> - supposedly undefined behavior before
+      C++17 - but it compiles without warnings.
+    */
     std::vector<GTNode> m_child_groups;
     std::vector<Well2> m_wells;
 };

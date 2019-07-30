@@ -1446,7 +1446,7 @@ namespace {
                     injection.target_void_fraction = voidage_target;
 
                     if (group_ptr->updateInjection(injection))
-                        this->updateGroup(group_ptr, currentStep);
+                        this->updateGroup(std::move(group_ptr), currentStep);
                 }
             }
         }
@@ -1492,7 +1492,7 @@ namespace {
                     production.exceed_action = exceedAction;
 
                     if (group_ptr->updateProduction(production))
-                        this->updateGroup(group_ptr, currentStep);
+                        this->updateGroup(std::move(group_ptr), currentStep);
                 }
             }
         }
@@ -1519,7 +1519,7 @@ namespace {
                 {
                     auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
                     if (group_ptr->update_gefac(gefac, transfer))
-                        this->updateGroup(group_ptr, currentStep);
+                        this->updateGroup(std::move(group_ptr), currentStep);
                 }
             }
         }
@@ -1729,6 +1729,8 @@ namespace {
                         OpmLog::note(msg);
                     }
 
+                    if (well2->updateConnections(connections))
+                        this->updateWell(well2, currentStep);
                 }
                 this->addWellEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
             }
@@ -1820,7 +1822,7 @@ namespace {
             {
                 auto group_ptr = std::make_shared<Group2>( this->getGroup2(groupName, currentStep) );
                 if (group_ptr->updateNetVFPTable(table))
-                    this->updateGroup(group_ptr, currentStep);
+                    this->updateGroup(std::move(group_ptr), currentStep);
             }
         }
     }
@@ -2089,7 +2091,7 @@ namespace {
 
     void Schedule::updateGroup(std::shared_ptr<Group2> group, size_t reportStep) {
         auto& dynamic_state = this->groups.at(group->name());
-        dynamic_state.update(reportStep, group);
+        dynamic_state.update(reportStep, std::move(group));
     }
 
     /*
@@ -2292,17 +2294,17 @@ namespace {
         auto& dynamic_state = this->groups.at(parent_group);
         auto parent_ptr = std::make_shared<Group2>( *dynamic_state[timeStep] );
         if (parent_ptr->addGroup(child_group.name()))
-            this->updateGroup(parent_ptr, timeStep);
+            this->updateGroup(std::move(parent_ptr), timeStep);
 
         // Check and update backreference in child
         if (child_group.parent() != parent_group) {
             auto old_parent = std::make_shared<Group2>( this->getGroup2(child_group.parent(), timeStep) );
             old_parent->delGroup(child_group.name());
-            this->updateGroup(old_parent, timeStep);
+            this->updateGroup(std::move(old_parent), timeStep);
 
             auto child_ptr = std::make_shared<Group2>( child_group );
             child_ptr->updateParent(parent_group);
-            this->updateGroup(child_ptr, timeStep);
+            this->updateGroup(std::move(child_ptr), timeStep);
 
         }
     }
@@ -2332,7 +2334,7 @@ namespace {
             {
                 auto group = std::make_shared<Group2>(this->getGroup2(old_gname, timeStep));
                 group->delWell(well_name);
-                this->updateGroup(group, timeStep);
+                this->updateGroup(std::move(group), timeStep);
             }
         }
 
@@ -2344,7 +2346,7 @@ namespace {
         {
             auto group = std::make_shared<Group2>(this->getGroup2(group_name, timeStep));
             group->addWell(well_name);
-            this->updateGroup(group, timeStep);
+            this->updateGroup(std::move(group), timeStep);
         }
    }
 

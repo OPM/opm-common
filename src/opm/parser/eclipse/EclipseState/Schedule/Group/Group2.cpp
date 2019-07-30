@@ -41,10 +41,7 @@ std::size_t Group2::insert_index() const {
 }
 
 bool Group2::defined(size_t timeStep) const {
-    if (timeStep < this->init_step)
-        return false;
-    else
-        return true;
+    return (timeStep >= this->init_step);
 }
 
 const std::string& Group2::name() const {
@@ -190,6 +187,11 @@ const std::vector<std::string>& Group2::groups() const {
     return this->m_groups.data();
 }
 
+bool Group2::wellgroup() const {
+    if (this->m_groups.size() > 0)
+        return false;
+    return true;
+}
 
 bool Group2::addWell(const std::string& well_name) {
     if (!this->m_groups.empty())

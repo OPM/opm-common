@@ -45,6 +45,48 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp>
 
+
+/*
+  The DynamicState<std::shared_ptr<T>> pattern: The quantities in the Schedule
+  section like e.g. wellrates and completion properties are typically
+  characterized by the following behaviour:
+
+    1. They can be updated repeatedly at arbitrary points in the Schedule
+       section.
+
+    2. The value set at one timestep will apply until is explicitly set again at
+       a later timestep.
+
+  These properties are typically stored in a DynamicState<T> container; the
+  DynamicState<T> class is a container which implements this semantics:
+
+    1. It is legitimate to ask for an out-of-range value, you will then get the
+       last value which has been set.
+
+    2. When assigning an out-of-bounds value the container will append the
+       currently set value until correct length has been reached, and then the
+       new value will be assigned.
+
+    3. The DynamicState<T> has an awareness of the total length of the time
+       axis, trying to access values beyound that is illegal.
+
+  For many of the non-trival objects like eg Well2 and Group2 the DynamicState<>
+  contains a shared pointer to an underlying object, that way the fill operation
+  when the vector is resized is quite fast. The following pattern is quite
+  common for the Schedule implementation:
+
+
+       // Create a new well object.
+       std::shared_ptr<Well> new_well = this->getWell2( well_name, time_step );
+
+       // Update the new well object with new settings from the deck, the
+       // updateXXXX() method will return true if the well object was actually
+       // updated:
+       if (new_well->updateRate( new_rate ))
+           this->dynamic_state.update( time_step, new_well);
+
+*/
+
 namespace Opm
 {
 

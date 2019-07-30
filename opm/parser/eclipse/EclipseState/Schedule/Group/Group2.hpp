@@ -90,6 +90,7 @@ struct GroupProductionProperties {
 
     const std::vector<std::string>& wells() const;
     const std::vector<std::string>& groups() const;
+    bool wellgroup() const;
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
