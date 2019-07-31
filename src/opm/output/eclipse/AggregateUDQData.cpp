@@ -100,7 +100,7 @@ namespace {
             const auto& udq = udq_active[iactive];
 
             iUad[0] = Opm::UDQ::uadCode(udq.control);
-            iUad[1] = udq.index;
+            iUad[1] = udq.input_index;
 
             // entry 3  - unknown meaning - value = 1
             iUad[2] = 1;

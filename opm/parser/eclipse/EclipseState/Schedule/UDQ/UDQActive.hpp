@@ -31,17 +31,18 @@
 namespace Opm {
 
 class UDAValue;
+class UDQConfig;
 class UDQActive {
 public:
     struct Record{
-        std::size_t index;
+        std::size_t input_index;
         std::string udq;
         std::string wgname;
         UDAControl  control;
         bool active;
     };
 
-    int update(const UDAValue& uda, const std::string& wgname, UDAControl control);
+    int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
 
     std::size_t size() const;
     std::size_t use_count(const std::string& udq) const;
@@ -53,7 +54,7 @@ public:
     std::vector<Record>::const_iterator end() const;
 private:
     std::string hash(const std::string& wgname, UDAControl control);
-    int add(const std::string& udq, const std::string& wgname, UDAControl control);
+    int add(const UDQConfig& udq_config, const std::string& udq, const std::string& wgname, UDAControl control);
     int drop(const std::string& wgname, UDAControl control);
 
     std::vector<Record> data;

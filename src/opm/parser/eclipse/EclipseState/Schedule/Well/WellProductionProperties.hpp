@@ -82,7 +82,7 @@ namespace Opm {
         void resetDefaultBHPLimit();
         void clearControls();
         ProductionControls controls(const SummaryState& st, double udq_default) const;
-        bool updateUDQActive(UDQActive& active) const;
+        bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
     private:
         int m_productionControls = 0;
         void init_rates( const DeckRecord& record );

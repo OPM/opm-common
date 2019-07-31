@@ -36,15 +36,64 @@ namespace Opm {
 
     }
 
+    UDQConfig::UDQConfig(const UDQParams& params) :
+        udq_params(params),
+        udqft(this->udq_params)
+    {}
+
+
     UDQConfig::UDQConfig(const Deck& deck) :
         udq_params(deck),
         udqft(this->udq_params)
-    {
-    }
+    {}
+
 
 
     const UDQParams& UDQConfig::params() const {
         return this->udq_params;
+    }
+
+    void UDQConfig::add_node( const std::string& quantity, UDQAction action) {
+        auto index_iter = this->input_index.find(quantity);
+        if (this->input_index.find(quantity) == this->input_index.end()) {
+            auto var_type = UDQ::varType(quantity);
+            auto insert_index = this->input_index.size();
+            this->type_count[var_type] += 1;
+            this->input_index[quantity] = UDQIndex(insert_index, this->type_count[var_type], action);
+        } else
+            index_iter->second.action = action;
+    }
+
+    void UDQConfig::add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value) {
+        this->add_node(quantity, UDQAction::ASSIGN);
+        auto assignment = this->m_assignments.find(quantity);
+        if (assignment == this->m_assignments.end())
+            this->m_assignments.insert( std::make_pair(quantity, UDQAssign(quantity, selector, value )));
+        else
+            assignment->second.add_record(selector, value);
+    }
+
+
+    void UDQConfig::add_define(const std::string& quantity, const std::vector<std::string>& expression) {
+        this->add_node(quantity, UDQAction::DEFINE);
+        auto defined_iter = this->m_definitions.find( quantity );
+        if (defined_iter != this->m_definitions.end())
+            this->m_definitions.erase( defined_iter );
+
+        this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, expression)));
+    }
+
+
+    void UDQConfig::add_unit(const std::string& keyword, const std::string& quoted_unit) {
+        const std::string unit = strip_quotes(quoted_unit);
+        const auto pair_ptr = this->units.find(keyword);
+        if (pair_ptr != this->units.end()) {
+            if (pair_ptr->second != unit)
+                throw std::invalid_argument("Illegal to change unit of UDQ keyword runtime");
+
+            return;
+        }
+        this->units[keyword] = unit;
     }
 
 
@@ -57,33 +106,15 @@ namespace Opm {
             throw std::invalid_argument("The UDQ action UPDATE is not yet implemented in opm/flow");
 
         if (action == UDQAction::UNITS)
-            this->assign_unit( quantity, data[0] );
+            this->add_unit( quantity, data[0] );
         else {
-            auto index_iter = this->input_index.find(quantity);
-            if (this->input_index.find(quantity) == this->input_index.end()) {
-                auto var_type = UDQ::varType(quantity);
-                auto insert_index = this->input_index.size();
-                this->type_count[var_type] += 1;
-                this->input_index[quantity] = UDQIndex(insert_index, this->type_count[var_type], action);
-            } else
-                index_iter->second.action = action;
-
-
             if (action == UDQAction::ASSIGN) {
                 std::vector<std::string> selector(data.begin(), data.end() - 1);
                 double value = std::stod(data.back());
-                auto assignment = this->m_assignments.find(quantity);
-                if (assignment == this->m_assignments.end())
-                    this->m_assignments.insert( std::make_pair(quantity, UDQAssign(quantity, selector, value )));
-                else
-                    assignment->second.add_record(selector, value);
-            } else if (action == UDQAction::DEFINE) {
-                auto defined_iter = this->m_definitions.find( quantity );
-                if (defined_iter != this->m_definitions.end())
-                    this->m_definitions.erase( defined_iter );
-
-                this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, data)));
-            } else
+                this->add_assign(quantity, selector, value);
+            } else if (action == UDQAction::DEFINE)
+                this->add_define(quantity, data);
+            else
                 throw std::runtime_error("Internal error - should not be here");
         }
     }
@@ -179,19 +210,6 @@ namespace Opm {
             throw std::invalid_argument("No such UDQ quantity: " + key);
 
         return pair_ptr->second;
-    }
-
-
-    void UDQConfig::assign_unit(const std::string& keyword, const std::string& quoted_unit) {
-        const std::string unit = strip_quotes(quoted_unit);
-        const auto pair_ptr = this->units.find(keyword);
-        if (pair_ptr != this->units.end()) {
-            if (pair_ptr->second != unit)
-                throw std::invalid_argument("Illegal to change unit of UDQ keyword runtime");
-
-            return;
-        }
-        this->units[keyword] = unit;
     }
 
     bool UDQConfig::has_unit(const std::string& keyword) const {

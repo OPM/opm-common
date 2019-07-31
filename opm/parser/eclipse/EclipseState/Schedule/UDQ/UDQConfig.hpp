@@ -41,11 +41,15 @@ namespace Opm {
     class UDQConfig {
     public:
         explicit UDQConfig(const Deck& deck);
+        explicit UDQConfig(const UDQParams& params);
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
         void add_record(const DeckRecord& record);
-        void assign_unit(const std::string& keyword, const std::string& unit);
+
+        void add_unit(const std::string& keyword, const std::string& unit);
+        void add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value);
+        void add_define(const std::string& quantity, const std::vector<std::string>& expression);
 
         std::vector<UDQDefine> definitions() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
@@ -63,6 +67,8 @@ namespace Opm {
         const UDQParams& params() const;
         const UDQFunctionTable& function_table() const;
     private:
+        void add_node(const std::string& quantity, UDQAction action);
+
         UDQParams udq_params;
         UDQFunctionTable udqft;
 

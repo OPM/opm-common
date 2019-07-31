@@ -298,16 +298,16 @@ namespace Opm {
         return controls;
     }
 
-    bool WellProductionProperties::updateUDQActive(UDQActive& active) const {
+    bool WellProductionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
         int update_count = 0;
 
-        update_count += active.update(this->OilRate, this->name, UDAControl::WCONPROD_ORAT);
-        update_count += active.update(this->WaterRate, this->name, UDAControl::WCONPROD_WRAT);
-        update_count += active.update(this->GasRate, this->name, UDAControl::WCONPROD_GRAT);
-        update_count += active.update(this->LiquidRate, this->name, UDAControl::WCONPROD_LRAT);
-        update_count += active.update(this->ResVRate, this->name, UDAControl::WCONPROD_RESV);
-        update_count += active.update(this->BHPLimit, this->name, UDAControl::WCONPROD_BHP);
-        update_count += active.update(this->THPLimit, this->name, UDAControl::WCONPROD_THP);
+        update_count += active.update(udq_config, this->OilRate, this->name, UDAControl::WCONPROD_ORAT);
+        update_count += active.update(udq_config, this->WaterRate, this->name, UDAControl::WCONPROD_WRAT);
+        update_count += active.update(udq_config, this->GasRate, this->name, UDAControl::WCONPROD_GRAT);
+        update_count += active.update(udq_config, this->LiquidRate, this->name, UDAControl::WCONPROD_LRAT);
+        update_count += active.update(udq_config, this->ResVRate, this->name, UDAControl::WCONPROD_RESV);
+        update_count += active.update(udq_config, this->BHPLimit, this->name, UDAControl::WCONPROD_BHP);
+        update_count += active.update(udq_config, this->THPLimit, this->name, UDAControl::WCONPROD_THP);
 
         return (update_count > 0);
     }
