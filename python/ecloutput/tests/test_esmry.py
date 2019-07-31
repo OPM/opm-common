@@ -1,4 +1,5 @@
 import sys
+import datetime
 
 try:
     import numpy as np 
@@ -16,10 +17,10 @@ if __name__ == "__main__":
         print ("\nWarning!, numpy package not found found !\n")
 
     smry1 = ESmry("../data/9_EDITNNC.SMSPEC")
-    print (smry1.sos)
     
-    print ("testing, good so far")
-    exit(1)
+    ref_sos=datetime.datetime(2018, 11,1,0,0,0)
+    assert smry1.sos==ref_sos
+    
 
     assert smry1.hasKey("FOPT")==True
     assert smry1.hasKey("WOPR:X-2H")==False
@@ -99,8 +100,13 @@ if __name__ == "__main__":
     
     
     tVect=[890, 900, 910, 920]
+    tVectNp=np.array(tVect) 
+    
+    isinstance(tVectNp, np.ndarray)==True
+    
     resVect1=smry1.getLinIt("FOPT", tVect, numpy=False)
     resVect2=smry1.getLinIt("FOPT", tVect, numpy=True)
+    resVect3=smry1.getLinIt("FOPT", tVectNp, numpy=True)
 
     assert isinstance(resVect1, list)==True
     assert isinstance(resVect2, np.ndarray)==True

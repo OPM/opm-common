@@ -2,7 +2,7 @@ import os
 import sys
 
 try:
-    import numpy
+    import numpy as np
     numpyOk =True
 except:
     numpyOk =False
@@ -389,18 +389,14 @@ class ESmry:
             else: 
                 return self.esmry.get(name)        
 
+
     def getLinIt(self,name, time, numpy=True):
 
-        if isinstance(time, list)==True:
+        if isinstance(time, list) or isinstance(time, np.ndarray):
             if numpy and numpyOk:
                 return self.esmry.getLinItNumpy(name, time)        
             else:
                 return self.esmry.getLinItList(name, time)        
-                
-#            print ("is vector input !! ")
-#            print ("under construction !!")
-#            exit(0)
-            
         else:        
             return self.esmry.getLinIt(name, time)        
 
