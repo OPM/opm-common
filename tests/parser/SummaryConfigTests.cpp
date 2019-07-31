@@ -369,22 +369,20 @@ BOOST_AUTO_TEST_CASE( merge_move ) {
 }
 
 static const auto ALL_keywords = {
-    "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
-    "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
-    "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
-    "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
-    "FWIT",  "FWPR",  "FWPT", "FWPP",  "FOPP", "FGPP",  "FWPI",
-    "FOPI",  "FGPI",
-    "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
-    "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
-    "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT", "GWPP",  "GOPP",
-    "GGPP",  "GWPI",  "GOPI", "GGPI",
-    "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
-    "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
-    "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
-    "WWPT",  "WWPP",  "WOPP", "WGPP",  "WWPI", "WGPI",  "WOPI",
-    // ALL will not expand to these keywords yet
-    "AAQR",  "AAQRG", "AAQT", "AAQTG"
+        "FAQR",  "FAQRG", "FAQT", "FAQTG", "FGIP", "FGIPG", "FGIPL",
+        "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
+        "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
+        "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
+        "FWIT",  "FWPR",  "FWPT",
+        "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
+        "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
+        "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT",
+        "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
+        "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
+        "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
+        "WWPT",
+        // ALL will not expand to these keywords yet
+        "AAQR",  "AAQRG", "AAQT", "AAQTG"
 };
 
 
@@ -424,6 +422,9 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
     BOOST_CHECK_EQUAL( true , summary.hasKeyword( "FOPT"));
     BOOST_CHECK_EQUAL( true , summary.hasKeyword( "GGIT"));
     BOOST_CHECK_EQUAL( true , summary.hasKeyword( "WWCT"));
+
+    BOOST_CHECK_EQUAL( false, summary.hasKeyword( "WOPP"));
+    BOOST_CHECK_EQUAL( false, summary.hasKeyword( "FOPP"));
 
     BOOST_CHECK_EQUAL( false , summary.hasKeyword("NO-NOT-THIS"));
 }
