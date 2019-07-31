@@ -381,7 +381,7 @@ DEFINE WULPRL (WLPR PROD1 - 200) * 0.90 /
 DEFINE WUOPRU (WOPR PROD2 - 250) * 0.80 /
 DEFINE WULPRU (WLPR PROD2 - 300) * 0.80 /
 --DEFINE GUOPRU (GOPR GRP1 - 100) * 0.70 /
---DEFINE WUOPRL (WOPR PROD1 - 170) * 0.60 /
+DEFINE WUOPRL (WOPR PROD1 - 170) * 0.60 /
 -- units
 UNITS  WUOPRL SM3/DAY /
 UNITS  WULPRL SM3/DAY /
@@ -399,14 +399,14 @@ UNITS  WULPRU SM3/DAY /
 -- Well production rate targets/limits:
 -- testing UDQs as production constrains
 WCONPROD
--- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
+-- name      status  ctrl   qo     qw  qg  ql         qr bhp  thp  vfp  alq 
   'PROD1'     'OPEN'  'GRUP' WUOPRL  1*  1*  WULPRL 1* 60.0   / single wells
 --  'PROD1'     'OPEN'  'GRUP' -2  1*  1*  -3 1* 60.0   / single wells
 /
 
 
 WCONPROD
--- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
+-- name      status  ctrl   qo     qw  qg  ql         qr bhp  thp  vfp  alq 
   'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
 -- 'PROD1' 'OPEN' 'LRAT'  3*  1200  1*  2500  1*  /
 -- 'PROD2' 'OPEN' 'LRAT'  3*    800  1*  2500  1*  /
@@ -432,9 +432,9 @@ END
 
 )~" };
 
-	    return Opm::Parser{}.parseString(input);
-	}
-
+            return Opm::Parser{}.parseString(input);
+        }
+  
     Opm::UDQActive udq_active() {
       int update_count = 0;
       // construct record data for udq_active
@@ -460,7 +460,8 @@ END
           auto ctrl_type = record.control;
        }
       return udq_act;
-    }
+    }  
+
 }
 
 
@@ -468,9 +469,9 @@ END
 struct SimulationCase
 {
     explicit SimulationCase(const Opm::Deck& deck)
-	: es   { deck }
-	, grid { deck }
-	, sched{ deck, es }
+        : es   { deck }
+        , grid { deck }
+        , sched{ deck, es }
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
@@ -502,9 +503,9 @@ BOOST_AUTO_TEST_CASE (Constructor)
     Opm::EclIO::OutputStream::ResultSet { outputDir, baseName },
     rptStep,
     Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
-	  Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
+          Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
         };
-	
+        
     double secs_elapsed = 3.1536E07;
     const auto ih = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
                                                 secs_elapsed, rptStep, rptStep);
