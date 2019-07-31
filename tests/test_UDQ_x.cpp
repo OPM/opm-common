@@ -493,7 +493,6 @@ BOOST_AUTO_TEST_CASE (Constructor)
     Opm::EclipseGrid  grid = simCase.grid;
     const auto& ioConfig = es.getIOConfig();
     const auto& restart = es.cfg().restart();
-    */
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};    
     

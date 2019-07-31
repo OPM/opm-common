@@ -20,6 +20,7 @@
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
 namespace Opm {
 
@@ -94,17 +95,39 @@ std::vector<UDQActive::Record>::const_iterator UDQActive::end() const {
     return this->data.end();
 }
 
-const UDQActive::Record& UDQActive::get(const std::string& wgname, UDAControl control) {
+UDQActive::Record UDQActive::get(const std::string& wgname, UDAControl control) {
     auto hash_key = this->hash(wgname, control);
     auto index = this->keys.at(hash_key);
-    return this->data[index];
+    return this->operator[](index);
 }
 
-const UDQActive::Record& UDQActive::operator[](std::size_t index) const {
-    return this->data[index];
+UDQActive::Record UDQActive::operator[](std::size_t index) const {
+    Record data_record = this->data[index];
+
+    data_record.use_count = this->use_count(data_record.udq);
+    data_record.uad_code  = UDQ::uadCode(data_record.control);
+    data_record.use_index = 1;
+    if (index > 0) {
+        for (std::size_t i=0; i < (index - 1); i++) {
+            const auto& prev_record = this->data[i];
+            if (prev_record.active)
+                data_record.use_index += this->use_count(prev_record.udq);
+        }
+    }
+
+
+    return data_record;
 }
 
 std::size_t UDQActive::use_count(const std::string& udq) const {
+    const auto iter = this->m_use_count.find(udq);
+    if (iter == this->m_use_count.end())
+        return 0;
+
+    return iter->second;
+}
+
+std::size_t UDQActive::use_index(const std::string& udq) const {
     const auto iter = this->m_use_count.find(udq);
     if (iter == this->m_use_count.end())
         return 0;

@@ -34,22 +34,30 @@ class UDAValue;
 class UDQConfig;
 class UDQActive {
 public:
+
     struct Record{
         std::size_t input_index;
         std::string udq;
         std::string wgname;
         UDAControl  control;
         bool active;
+
+        // The three elements below are not used internally, but only filled in
+        // when a record is returned from operator[] or get().
+        std::size_t use_count;
+        std::size_t use_index;
+        int uad_code;
     };
+
 
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
 
     std::size_t size() const;
     std::size_t use_count(const std::string& udq) const;
-
+    std::size_t use_index(const std::string& udq) const;
     explicit operator bool() const;
-    const Record& operator[](std::size_t index) const;
-    const UDQActive::Record& get(const std::string& wgname, UDAControl control);
+    Record operator[](std::size_t index) const;
+    UDQActive::Record get(const std::string& wgname, UDAControl control);
     std::vector<Record>::const_iterator begin() const;
     std::vector<Record>::const_iterator end() const;
 private:

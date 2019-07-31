@@ -99,14 +99,14 @@ namespace {
         {
             const auto& udq = udq_active[iactive];
 
-            iUad[0] = Opm::UDQ::uadCode(udq.control);
+            iUad[0] = udq.uad_code;
             iUad[1] = udq.input_index;
 
             // entry 3  - unknown meaning - value = 1
             iUad[2] = 1;
 
-            iUad[3] = udq_active.use_count(udq.udq);
-            iUad[4] = udq_config[udq.udq].index.typed_insert_index;
+            iUad[3] = udq.use_count;
+            iUad[4] = udq.use_index;
         }
     } // iUad
 
