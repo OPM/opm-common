@@ -82,15 +82,6 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
 
     group2.setProductionGroup(3);
     BOOST_CHECK(group2.isProductionGroup(4));
-
-    group2.setInjectionGroup(4);
-    BOOST_CHECK(group2.isInjectionGroup(5));
-
-
-    // Testing that a group can be both; that seems slightly dubious - but was the old behavior
-    group2.setProductionGroup(4);
-    BOOST_CHECK(group2.isProductionGroup(5));
-    BOOST_CHECK(group2.isInjectionGroup(5));
 }
 
 
@@ -435,5 +426,18 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
 
 
 BOOST_AUTO_TEST_CASE(Group2Create) {
-    Opm::Group2 group("NAME");
+    Opm::Group2 g1("NAME", 1, 1);
+    Opm::Group2 g2("NAME", 1, 1);
+
+    BOOST_CHECK( g1.addWell("W1") );
+    BOOST_CHECK( !g1.addWell("W1") );
+    BOOST_CHECK( g1.addWell("W2") );
+
+    BOOST_CHECK( g2.addGroup("G1") );
+    BOOST_CHECK( !g2.addGroup("G1") );
+    BOOST_CHECK( g2.addGroup("G2") );
+
+    // The children must be either all wells - or all groups.
+    BOOST_CHECK_THROW(g1.addGroup("G1"), std::logic_error);
+    BOOST_CHECK_THROW(g2.addWell("W1"), std::logic_error);
 }

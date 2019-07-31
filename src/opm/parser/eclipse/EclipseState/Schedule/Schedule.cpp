@@ -115,9 +115,8 @@ namespace {
 
         if (Section::hasSCHEDULE(deck))
             iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, eclipseProperties );
-#ifdef WELL_TEST
-        checkWells(parseContext, errors);
-#endif
+
+        checkGroups(parseContext, errors);
     }
 
 
@@ -580,7 +579,7 @@ namespace {
                     }
                 }
                 this->addWell(wellName, record, currentStep, wellConnectionOrder, unit_system);
-                this->addWellToGroup(this->m_groups.at( groupName ), wellName, currentStep);
+                this->addWellToGroup(groupName, wellName, currentStep);
             } else {
                 const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
                 const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
@@ -1418,28 +1417,37 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                auto& group = this->getGroup(group_name);
-                {
-                    Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0) );
-                    group.setInjectionPhase( currentStep , phase );
-                }
-                {
-                    GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                    group.setInjectionControlMode( currentStep , controlMode );
-                }
-
-                Phase wellPhase = get_phase( record.getItem("PHASE").getTrimmedString(0));
-
+                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
+                Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
                 double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0).get<double>();
-                surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, wellPhase, section.unitSystem());
                 double reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0).get<double>();
+                double reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>();
+                double voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>();
 
-                group.setSurfaceMaxRate( currentStep , surfaceInjectionRate);
-                group.setReservoirMaxRate( currentStep , reservoirInjectionRate);
-                group.setTargetReinjectFraction( currentStep , record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>());
-                group.setTargetVoidReplacementFraction( currentStep , record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>());
+                surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
+                {
+                    auto& group = this->getGroup(group_name);
+                    group.setInjectionPhase( currentStep , phase );
+                    group.setInjectionControlMode( currentStep , controlMode );
+                    group.setSurfaceMaxRate( currentStep, surfaceInjectionRate);
+                    group.setReservoirMaxRate( currentStep, reservoirInjectionRate);
+                    group.setTargetReinjectFraction( currentStep, reinj_target);
+                    group.setTargetVoidReplacementFraction( currentStep, voidage_target);
+                    group.setInjectionGroup(currentStep);
+                }
+                {
+                    auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
+                    Group2::GroupInjectionProperties injection;
+                    injection.phase = phase;
+                    injection.cmode = controlMode;
+                    injection.surface_max_rate = surfaceInjectionRate;
+                    injection.resv_max_rate = reservoirInjectionRate;
+                    injection.target_reinj_fraction = reinj_target;
+                    injection.target_void_fraction = voidage_target;
 
-                group.setInjectionGroup(currentStep);
+                    if (group_ptr->updateInjection(injection))
+                        this->updateGroup(std::move(group_ptr), currentStep);
+                }
             }
         }
     }
@@ -1453,22 +1461,39 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                auto& group = this->getGroup(group_name);
-                {
-                    GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                    group.setProductionControlMode( currentStep , controlMode );
-                }
-                group.setOilTargetRate( currentStep , record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>());
-                group.setGasTargetRate( currentStep , record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>());
-                group.setWaterTargetRate( currentStep , record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>());
-                group.setLiquidTargetRate( currentStep , record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>());
-                group.setReservoirVolumeTargetRate( currentStep , record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0));
-                {
-                    GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
-                    group.setProductionExceedLimitAction( currentStep , exceedAction );
-                }
+                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
+                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
+                auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>();
+                auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>();
+                auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>();
+                auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>();
+                auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
 
-                group.setProductionGroup(currentStep);
+                {
+                    auto& group = this->getGroup(group_name);
+                    group.setProductionControlMode( currentStep , controlMode );
+                    group.setOilTargetRate( currentStep , oil_target);
+                    group.setGasTargetRate( currentStep , gas_target);
+                    group.setWaterTargetRate( currentStep , water_target);
+                    group.setLiquidTargetRate( currentStep , liquid_target);
+                    group.setReservoirVolumeTargetRate( currentStep , resv_target);
+                    group.setProductionExceedLimitAction( currentStep , exceedAction );
+                    group.setProductionGroup(currentStep);
+                }
+                {
+                    auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
+                    Group2::GroupProductionProperties production;
+                    production.cmode = controlMode;
+                    production.oil_target = oil_target;
+                    production.gas_target = gas_target;
+                    production.water_target = water_target;
+                    production.liquid_target = liquid_target;
+                    production.resv_target = resv_target;
+                    production.exceed_action = exceedAction;
+
+                    if (group_ptr->updateProduction(production))
+                        this->updateGroup(std::move(group_ptr), currentStep);
+                }
             }
         }
     }
@@ -1483,12 +1508,19 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                auto& group = this->getGroup(group_name);
-                const std::string& transfer_str = record.getItem("TRANSFER_EXT_NET").getTrimmedString(0);
-                bool transfer = (transfer_str == "YES") ? true : false;
+                bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
+                auto gefac = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
+                {
+                    auto& group = this->getGroup(group_name);
 
-                group.setGroupEfficiencyFactor(currentStep, record.getItem("EFFICIENCY_FACTOR").get< double >(0));
-                group.setTransferGroupEfficiencyFactor(currentStep, transfer);
+                    group.setGroupEfficiencyFactor(currentStep, gefac);
+                    group.setTransferGroupEfficiencyFactor(currentStep, transfer);
+                }
+                {
+                    auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
+                    if (group_ptr->update_gefac(gefac, transfer))
+                        this->updateGroup(std::move(group_ptr), currentStep);
+                }
             }
         }
     }
@@ -1697,6 +1729,8 @@ namespace {
                         OpmLog::note(msg);
                     }
 
+                    if (well2->updateConnections(connections))
+                        this->updateWell(well2, currentStep);
                 }
                 this->addWellEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
             }
@@ -1766,9 +1800,12 @@ namespace {
 
             if (!hasGroup(childName))
                 addGroup( childName , currentStep );
+
+            this->addGroupToGroup(parentName, childName, currentStep);
         }
         m_rootGroupTree.update(currentStep, newTree);
     }
+
 
     void Schedule::handleGRUPNET( const DeckKeyword& keyword, size_t currentStep) {
         for( const auto& record : keyword ) {
@@ -1777,9 +1814,16 @@ namespace {
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep);
 
-            auto& group = this->m_groups.at( groupName );
             int table = record.getItem("VFP_TABLE").get< int >(0);
-            group.setGroupNetVFPTable(currentStep, table);
+            {
+                auto& group = this->m_groups.at( groupName );
+                group.setGroupNetVFPTable(currentStep, table);
+            }
+            {
+                auto group_ptr = std::make_shared<Group2>( this->getGroup2(groupName, currentStep) );
+                if (group_ptr->updateNetVFPTable(table))
+                    this->updateGroup(std::move(group_ptr), currentStep);
+            }
         }
     }
 
@@ -1832,6 +1876,33 @@ namespace {
 
     const GroupTree& Schedule::getGroupTree(size_t timeStep) const {
         return m_rootGroupTree.get(timeStep);
+    }
+
+
+    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const {
+        auto root_group = this->getGroup2(root_node, report_step);
+        GTNode tree(root_group, parent);
+
+        for (const auto& wname : root_group.wells()) {
+            const auto& well = this->getWell2(wname, report_step);
+            tree.add_well(well);
+        }
+
+        for (const auto& gname : root_group.groups()) {
+            auto child_group = this->groupTree(gname, report_step, std::addressof(tree));
+            tree.add_group(child_group);
+        }
+
+        return tree;
+    }
+
+    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step) const {
+        return this->groupTree(root_node, report_step, nullptr);
+    }
+
+
+    GTNode Schedule::groupTree(std::size_t report_step) const {
+        return this->groupTree("FIELD", report_step);
     }
 
     void Schedule::addWell(const std::string& wellName,
@@ -1928,7 +1999,7 @@ namespace {
 
     std::vector< Well2 > Schedule::getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const {
         if (!hasGroup(group_name))
-            throw std::invalid_argument("No such group: " + group_name);
+            throw std::invalid_argument("No such group: '" + group_name + "'");
         {
             const auto& group = getGroup( group_name );
             std::vector<Well2> wells;
@@ -1954,7 +2025,7 @@ namespace {
 
     std::vector< const Group* > Schedule::getChildGroups(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
-            throw std::invalid_argument("No such group: " + group_name);
+            throw std::invalid_argument("No such group: '" + group_name + "'");
         {
             const auto& group = getGroup( group_name );
             std::vector<const Group*> child_groups;
@@ -2006,6 +2077,22 @@ namespace {
         return *well_ptr;
     }
 
+    const Group2& Schedule::getGroup2(const std::string& groupName, size_t timeStep) const {
+        if (this->groups.count(groupName) == 0)
+            throw std::invalid_argument("No such group: '" + groupName + "'");
+
+        const auto& dynamic_state = this->groups.at(groupName);
+        auto& group_ptr = dynamic_state.get(timeStep);
+        if (!group_ptr)
+            throw std::invalid_argument("Group: " + groupName + " not yet defined at step: " + std::to_string(timeStep));
+
+        return *group_ptr;
+    }
+
+    void Schedule::updateGroup(std::shared_ptr<Group2> group, size_t reportStep) {
+        auto& dynamic_state = this->groups.at(group->name());
+        dynamic_state.update(reportStep, std::move(group));
+    }
 
     /*
       There are many SCHEDULE keyword which take a wellname as argument. In
@@ -2158,8 +2245,21 @@ namespace {
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
         const size_t gseqIndex = m_groups.size();
+        // Old group
         m_groups.insert( std::make_pair( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } ));
+
+        // New group
+        groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group2>>(this->m_timeMap, nullptr)));
+        auto group_ptr = std::make_shared<Group2>(groupName, gseqIndex, timeStep);
+        auto& dynamic_state = this->groups.at(groupName);
+        dynamic_state.update(timeStep, group_ptr);
+
         m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
+
+        // All newly created groups are attached to the field group,
+        // can then be relocated with the GRUPTREE keyword.
+        if (groupName != "FIELD")
+            this->addGroupToGroup("FIELD", *group_ptr, timeStep);
     }
 
     size_t Schedule::numGroups() const {
@@ -2189,16 +2289,65 @@ namespace {
             throw std::invalid_argument("Group: " + groupName + " does not exist");
     }
 
+    void Schedule::addGroupToGroup( const std::string& parent_group, const Group2& child_group, size_t timeStep) {
+        // Add to new parent
+        auto& dynamic_state = this->groups.at(parent_group);
+        auto parent_ptr = std::make_shared<Group2>( *dynamic_state[timeStep] );
+        if (parent_ptr->addGroup(child_group.name()))
+            this->updateGroup(std::move(parent_ptr), timeStep);
 
-    void Schedule::addWellToGroup( Group& newGroup, const std::string& wellName , size_t timeStep) {
-        auto& dynamic_state = this->wells_static.at(wellName);
-        auto well_ptr = std::make_shared<Well2>( *dynamic_state[timeStep] );
-        if (well_ptr->groupName() != "")
-            this->m_groups.at(well_ptr->groupName()).delWell(timeStep, wellName);
+        // Check and update backreference in child
+        if (child_group.parent() != parent_group) {
+            auto old_parent = std::make_shared<Group2>( this->getGroup2(child_group.parent(), timeStep) );
+            old_parent->delGroup(child_group.name());
+            this->updateGroup(std::move(old_parent), timeStep);
 
-        well_ptr->updateGroup(newGroup.name());
-        newGroup.addWell(timeStep, well_ptr->name());
-        this->updateWell(well_ptr, timeStep);
+            auto child_ptr = std::make_shared<Group2>( child_group );
+            child_ptr->updateParent(parent_group);
+            this->updateGroup(std::move(child_ptr), timeStep);
+
+        }
+    }
+
+    void Schedule::addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep) {
+        this->addGroupToGroup(parent_group, this->getGroup2(child_group, timeStep), timeStep);
+    }
+
+    void Schedule::addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep) {
+        const auto& well = this->getWell2(well_name, timeStep);
+        const auto old_gname = well.groupName();
+        {
+            auto well_ptr = std::make_shared<Well2>( well );
+            well_ptr->updateGroup(group_name);
+            this->updateWell(well_ptr, timeStep);
+        }
+
+        // Remove well child reference from previous group
+        // Old Group implementation
+        if (old_gname != group_name) {
+            {
+                auto& group = this->m_groups.at(old_gname);
+                group.delWell(timeStep, well_name);
+            }
+
+            // New Group2 implementation
+            {
+                auto group = std::make_shared<Group2>(this->getGroup2(old_gname, timeStep));
+                group->delWell(well_name);
+                this->updateGroup(std::move(group), timeStep);
+            }
+        }
+
+        // Add well child reference to new parent group
+        {
+            auto& group = this->m_groups.at(group_name);
+            group.addWell(timeStep, well_name);
+        }
+        {
+            auto group = std::make_shared<Group2>(this->getGroup2(group_name, timeStep));
+            group->addWell(well_name);
+            this->updateGroup(std::move(group), timeStep);
+        }
    }
 
 
@@ -2383,5 +2532,161 @@ namespace {
 
     }
 
-}
 
+#ifdef GROUP_TEST
+
+    bool Schedule::checkGroups(const ParseContext& parseContext, ErrorGuard& errors) {
+        if (this->m_groups.size() != this->groups.size())
+            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group count mismatch", errors);
+
+        // Check group names
+        for (const auto& group_pair : this->m_groups) {
+            if (this->groups.count(group_pair.second.name()) == 0)
+                parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group missing named group", errors);
+        }
+
+
+        // Insert index and defined()
+        for (const auto& group_pair : this->m_groups) {
+            const auto& group = group_pair.second;
+            const auto& dynamic_state = this->groups.at(group.name());
+
+            if (group.seqIndex() != dynamic_state.back()->insert_index())
+                parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group - seq index error", errors);
+
+            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
+                const auto& group2_ptr = dynamic_state[index];
+                if (group2_ptr == nullptr) {
+                    if (group.hasBeenDefined(index))
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
+                } else {
+                    if (!group.hasBeenDefined(index))
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
+
+                    if (group.hasBeenDefined(index) != group2_ptr->defined(index))
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
+                }
+            }
+        }
+
+
+        // GCONINJE
+        for (const auto& group_pair : this->m_groups) {
+            const auto& group = group_pair.second;
+            const auto& dynamic_state = this->groups.at(group.name());
+
+            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
+                const auto& group_ptr = dynamic_state[index];
+                if (group_ptr == nullptr) {
+                    if (group.getSurfaceMaxRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 2", errors);
+
+                    if (group.getReservoirMaxRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 3", errors);
+
+                    if (group.getTargetReinjectFraction(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 4", errors);
+
+                    if (group.getTargetVoidReplacementFraction(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 5", errors);
+                } else {
+                    if (group_ptr->isInjectionGroup()) {
+                        const auto& injection = group_ptr->injectionProperties();
+                        if (group.getReservoirMaxRate(index) != injection.resv_max_rate)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 6", errors);
+
+                        if (group.getSurfaceMaxRate(index) != injection.surface_max_rate)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 7", errors);
+
+                        if (group.getTargetReinjectFraction(index) != injection.target_reinj_fraction)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 9", errors);
+
+                        if (group.getTargetVoidReplacementFraction(index) != injection.target_void_fraction)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 10", errors);
+
+                        if (group.getInjectionControlMode(index) != injection.cmode)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 11", errors);
+
+                        if (group.getInjectionPhase(index) != injection.phase)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 12", errors);
+
+                        if (group.isProductionGroup(index) != group_ptr->isProductionGroup())
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 13", errors);
+                    }
+                }
+            }
+        }
+
+
+        // GCONPROD && GEFAC
+        for (const auto& group_pair : this->m_groups) {
+            const auto& group = group_pair.second;
+            const auto& dynamic_state = this->groups.at(group.name());
+
+            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
+                const auto& group_ptr = dynamic_state[index];
+                if (group_ptr == nullptr) {
+                    if (group.getOilTargetRate(index) != 0) {
+                        printf("Looking at group: %s  step:%ld  orat:%lg \n", group.name().c_str(), index, group.getOilTargetRate(index));
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 2", errors);
+                    }
+
+                    if (group.getGasTargetRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 3", errors);
+
+                    if (group.getWaterTargetRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 4", errors);
+
+                    if (group.getLiquidTargetRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 5", errors);
+
+                    if (group.getReservoirVolumeTargetRate(index) != 0)
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 6", errors);
+                } else {
+                    if (group_ptr->isProductionGroup()) {
+                        const auto& production = group_ptr->productionProperties();
+                        if (group.getOilTargetRate(index) != production.oil_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 7", errors);
+
+                        if (group.getGasTargetRate(index) != production.gas_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 8", errors);
+
+                        if (group.getWaterTargetRate(index) != production.water_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 9", errors);
+
+                        if (group.getLiquidTargetRate(index) != production.liquid_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 10", errors);
+
+                        if (group.getReservoirVolumeTargetRate(index) != production.resv_target)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 11", errors);
+
+                        if (group.getProductionControlMode(index) != production.cmode) {
+                            printf("Looking at group: %s  step:%ld  cmode:%d != %d \n", group.name().c_str(), index, static_cast<int>(group.getProductionControlMode(index)), static_cast<int>(production.cmode));
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 12", errors);
+                        }
+                        if (group.getProductionExceedLimitAction(index) != production.exceed_action)
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 13", errors);
+
+                        if (group.isProductionGroup(index) != group_ptr->isProductionGroup())
+                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 14", errors);
+                    }
+
+                    if (group.getGroupEfficiencyFactor(index) != group_ptr->getGroupEfficiencyFactor())
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "GEFAC error", errors);
+
+                    if (group.getTransferGroupEfficiencyFactor(index) != group_ptr->getTransferGroupEfficiencyFactor())
+                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "GEFAC error", errors);
+                }
+            }
+        }
+        return true;
+    }
+
+#else
+
+    bool Schedule::checkGroups(const ParseContext& parseContext, ErrorGuard& errors) {
+        return true;
+    }
+
+#endif
+}

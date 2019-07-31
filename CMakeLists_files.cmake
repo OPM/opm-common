@@ -88,6 +88,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/Group2.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
@@ -543,6 +544,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
        opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp
        opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp
        opm/parser/eclipse/EclipseState/Schedule/Events.hpp
