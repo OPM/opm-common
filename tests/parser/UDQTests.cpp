@@ -1246,27 +1246,31 @@ UDQ
 
 BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     UDQActive usage;
+    UDQParams params;
+    UDQConfig conf(params);
     BOOST_CHECK_EQUAL( usage.size(), 0 );
     BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 0);
 
-    UDAValue uda1("UDQ");
-    usage.update(uda1, "W1", UDAControl::WCONPROD_ORAT);
-    BOOST_CHECK_EQUAL( usage.size(), 1 );
-    BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 1);
+    UDAValue uda1("WUX");
+    conf.add_assign(uda1.get<std::string>(), {}, 100);
 
-    usage.update(uda1, "W1", UDAControl::WCONPROD_GRAT);
+    usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
+    BOOST_CHECK_EQUAL( usage.size(), 1 );
+    BOOST_CHECK_EQUAL( usage.use_count("WUX"), 1);
+
+    usage.update(conf, uda1, "W1", UDAControl::WCONPROD_GRAT);
     BOOST_CHECK_EQUAL( usage.size(), 2 );
-    BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 2);
+    BOOST_CHECK_EQUAL( usage.use_count("WUX"), 2);
 
     const auto& rec = usage.get("W1", UDAControl::WCONPROD_ORAT);
     BOOST_CHECK_EQUAL(rec.wgname, "W1");
-    BOOST_CHECK_EQUAL(rec.udq, "UDQ");
+    BOOST_CHECK_EQUAL(rec.udq, "WUX");
     BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
 
 
     std::size_t index = 0;
     for (const auto& record : usage) {
-        BOOST_CHECK_EQUAL(record.index, index);
+        BOOST_CHECK_EQUAL(record.input_index, 0);
         BOOST_CHECK_EQUAL(record.wgname, "W1");
         BOOST_CHECK_EQUAL(record.active, true);
 
@@ -1280,10 +1284,10 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
 
 
     UDAValue uda2(100);
-    usage.update(uda2, "W1", UDAControl::WCONPROD_ORAT);
+    usage.update(conf, uda2, "W1", UDAControl::WCONPROD_ORAT);
     BOOST_CHECK_EQUAL(usage[0].active, false);
     BOOST_CHECK_EQUAL(usage[1].active, true);
-    BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 1);
+    BOOST_CHECK_EQUAL( usage.use_count("WUX"), 1);
 }
 
 
@@ -1309,10 +1313,10 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
         BOOST_CHECK(active[2].udq == "WUOPRU");
         BOOST_CHECK(active[3].udq == "WULPRU");
 
-        BOOST_CHECK(active[0].index == 0);
-        BOOST_CHECK(active[1].index == 1);
-        BOOST_CHECK(active[2].index == 2);
-        BOOST_CHECK(active[3].index == 3);
+        BOOST_CHECK(active[0].input_index == 0);
+        BOOST_CHECK(active[1].input_index == 1);
+        BOOST_CHECK(active[2].input_index == 2);
+        BOOST_CHECK(active[3].input_index == 3);
 
         BOOST_CHECK(active[0].active == true);
         BOOST_CHECK(active[1].active == true);
@@ -1344,10 +1348,10 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
         BOOST_CHECK(active[2].udq == "WUOPRU");
         BOOST_CHECK(active[3].udq == "WULPRU");
 
-        BOOST_CHECK(active[0].index == 0);
-        BOOST_CHECK(active[1].index == 1);
-        BOOST_CHECK(active[2].index == 2);
-        BOOST_CHECK(active[3].index == 3);
+        BOOST_CHECK(active[0].input_index == 0);
+        BOOST_CHECK(active[1].input_index == 1);
+        BOOST_CHECK(active[2].input_index == 2);
+        BOOST_CHECK(active[3].input_index == 3);
 
         BOOST_CHECK(active[0].active == false);
         BOOST_CHECK(active[1].active == false);

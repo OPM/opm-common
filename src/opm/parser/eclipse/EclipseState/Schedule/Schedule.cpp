@@ -800,7 +800,7 @@ namespace {
                     }
 
                     auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
-                    if (properties->updateUDQActive(*udq))
+                    if (properties->updateUDQActive(this->getUDQConfig(currentStep), *udq))
                         this->updateUDQActive(currentStep, udq);
                 }
             }
@@ -908,7 +908,7 @@ namespace {
                     }
 
                     auto udq = std::make_shared<UDQActive>(this->udqActive(currentStep));
-                    if (injection->updateUDQActive(*udq))
+                    if (injection->updateUDQActive(this->getUDQConfig(currentStep), *udq))
                         this->updateUDQActive(currentStep, udq);
                 }
             }

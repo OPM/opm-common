@@ -17,6 +17,8 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
 
 //#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 //#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -432,23 +434,26 @@ END
 
 	    return Opm::Parser{}.parseString(input);
 	}
-  
+
     Opm::UDQActive udq_active() {
       int update_count = 0;
       // construct record data for udq_active
+      Opm::UDQParams params;
+      Opm::UDQConfig conf(params);
       Opm::UDQActive udq_act;
       Opm::UDAValue uda1("WUOPRL");
-      update_count += udq_act.update(uda1, "PROD1", Opm::UDAControl::WCONPROD_ORAT);
+      update_count += udq_act.update(conf, uda1, "PROD1", Opm::UDAControl::WCONPROD_ORAT);
+
       Opm::UDAValue uda2("WULPRL");
-      update_count += udq_act.update(uda2, "PROD1", Opm::UDAControl::WCONPROD_LRAT);
+      update_count += udq_act.update(conf, uda2, "PROD1", Opm::UDAControl::WCONPROD_LRAT);
       Opm::UDAValue uda3("WUOPRU");
-      update_count += udq_act.update(uda3, "PROD2", Opm::UDAControl::WCONPROD_ORAT);
+      update_count += udq_act.update(conf, uda3, "PROD2", Opm::UDAControl::WCONPROD_ORAT);
       Opm::UDAValue uda4("WULPRU");
-      update_count += udq_act.update(uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
+      update_count += udq_act.update(conf, uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
 
       for (auto it = udq_act.begin(); it != udq_act.end(); it++) 
       {
-	  auto ind = it->index;
+	  auto ind = it->input_index;
 	  auto udq_key = it->udq;
 	  auto name = it->wgname;
 	  auto ctrl_type = it->control;
@@ -488,8 +493,7 @@ BOOST_AUTO_TEST_CASE (Constructor)
     Opm::EclipseGrid  grid = simCase.grid;
     const auto& ioConfig = es.getIOConfig();
     const auto& restart = es.cfg().restart();
-    Opm::UDQActive udq_act = udq_active();
-
+    */
     // Report Step 1: 2008-10-10 --> 2011-01-20
     const auto rptStep = std::size_t{1};    
     

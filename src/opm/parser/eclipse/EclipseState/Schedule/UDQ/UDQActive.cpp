@@ -19,6 +19,7 @@
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 
 namespace Opm {
 
@@ -35,11 +36,13 @@ std::string UDQActive::hash(const std::string& wgname, UDAControl control) {
 }
 
 
-int UDQActive::add(const std::string& udq, const std::string& wgname, UDAControl control) {
+int UDQActive::add(const UDQConfig& udq_config, const std::string& udq, const std::string& wgname, UDAControl control) {
     auto hash_key = this->hash(wgname, control);
     const auto iter = this->keys.find( hash_key );
     if (iter == this->keys.end()) {
-        auto index = this->data.size();
+        const auto& udq_input = udq_config[udq];
+        auto index = udq_input.index.insert_index;
+
         this->data.push_back( {index, udq, wgname, control, true} );
         this->keys.insert( std::make_pair(hash_key, index) );
     } else {
@@ -76,9 +79,9 @@ int UDQActive::drop(const std::string& wgname, UDAControl control) {
 }
 
 
-int UDQActive::update(const UDAValue& uda, const std::string& wgname, UDAControl control) {
+int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control) {
     if (uda.is<std::string>())
-        return this->add(uda.get<std::string>(), wgname, control);
+        return this->add(udq_config, uda.get<std::string>(), wgname, control);
     else
         return this->drop(wgname, control);
 }
