@@ -95,7 +95,7 @@ namespace {
         }
 
         template <class IUADArray>
-        void staticContrib(const Opm::UDQConfig& udq_config, const Opm::UDQActive& udq_active, std::size_t iactive, IUADArray& iUad)
+        void staticContrib(const Opm::UDQActive& udq_active, std::size_t iactive, IUADArray& iUad)
         {
             const auto& udq = udq_active[iactive];
 
@@ -307,10 +307,10 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
     }
 
     auto udq_active = sched.udqActive(simStep);
-    if (udq_active) {
+    if (udq_active)
         for (std::size_t iactive = 0; iactive < udq_active.size(); iactive++) {
             auto i_uad = this->iUAD_[iactive];
-            iUad::staticContrib(udqCfg, udq_active, iactive, i_uad);
+            iUad::staticContrib(udq_active, iactive, i_uad);
         }
     }
 
