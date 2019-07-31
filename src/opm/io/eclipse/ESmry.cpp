@@ -98,6 +98,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
         smspec1.loadData();   // loading all data
 
+        startdat = smspec1.get<int>("STARTDAT");
         std::vector<int> dimens = smspec1.get<int>("DIMENS");
 
         nI = dimens[1]; // This is correct -- dimens[0] is something else!
@@ -136,6 +137,8 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         std::vector<std::string> keywords = smspec_rst.get<std::string>("KEYWORDS");
         std::vector<std::string> wgnames = smspec_rst.get<std::string>("WGNAMES");
         std::vector<int> nums = smspec_rst.get<int>("NUMS");
+
+        startdat = smspec_rst.get<int>("STARTDAT");
 
         for (size_t i = 0; i < keywords.size(); i++) {
             std::string str1 = makeKeyString(keywords[i], wgnames[i], nums[i]);
@@ -179,7 +182,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
         std::vector<int> nums = smspec.get<int>("NUMS");
 
-	std::vector<int> tmpVect(keywords.size(), -1);
+        std::vector<int> tmpVect(keywords.size(), -1);
         arrayInd[n]=tmpVect;
 
         std::set<std::string>::iterator it;

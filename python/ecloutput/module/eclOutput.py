@@ -359,6 +359,14 @@ class ESmry:
         self.name = fileName
         self.esmry = ESmryBind(fileName,loadBaseRun)
 
+        startdat= self.esmry.getStartDate()
+        
+        if len(startdat)>3:
+            self.sos = datetime.datetime(startdat[2],startdat[1],startdat[0],startdat[3],startdat[4],startdat[5])
+        else:
+            self.sos = datetime.datetime(startdat[2],startdat[1],startdat[0],0,0,0)
+
+            
     def hasKey(self, key):
         return self.esmry.hasKey(key)	
 
@@ -380,6 +388,21 @@ class ESmry:
                 return self.esmry.getNumpy(name) 
             else: 
                 return self.esmry.get(name)        
+
+    def getLinIt(self,name, time, numpy=True):
+
+        if isinstance(time, list)==True:
+            if numpy and numpyOk:
+                return self.esmry.getLinItNumpy(name, time)        
+            else:
+                return self.esmry.getLinItList(name, time)        
+                
+#            print ("is vector input !! ")
+#            print ("under construction !!")
+#            exit(0)
+            
+        else:        
+            return self.esmry.getLinIt(name, time)        
 
 
 class EclModInit:	

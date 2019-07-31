@@ -16,6 +16,10 @@ if __name__ == "__main__":
         print ("\nWarning!, numpy package not found found !\n")
 
     smry1 = ESmry("../data/9_EDITNNC.SMSPEC")
+    print (smry1.sos)
+    
+    print ("testing, good so far")
+    exit(1)
 
     assert smry1.hasKey("FOPT")==True
     assert smry1.hasKey("WOPR:X-2H")==False
@@ -77,6 +81,33 @@ if __name__ == "__main__":
     print ("len fopt : %i " % len(fopt))
     fopt2 = smry3.get("FOPT",True)
     print ("len fopt2: %i " % len(fopt2))
+    
+    # ---------------------------------
 
+    print ("testing new stuff !")
+    
+    smry1 = ESmry("../data/9_EDITNNC.SMSPEC")
+
+    time2 = smry1.get("TIME", numpy=True)
+    fopt2 = smry1.get("FOPT", numpy=True)
+
+    for i,(t,qot) in enumerate(zip(time2,fopt2)):
+        print (i, t, qot)
+    
+    testTime=883.0
+    print ("time=%10.3f | res = %10.4f " % (883.0, smry1.getLinIt("FOPT", testTime, numpy=False)))
+    
+    
+    tVect=[890, 900, 910, 920]
+    resVect1=smry1.getLinIt("FOPT", tVect, numpy=False)
+    resVect2=smry1.getLinIt("FOPT", tVect, numpy=True)
+
+    assert isinstance(resVect1, list)==True
+    assert isinstance(resVect2, np.ndarray)==True
+    
+    print ("\n")
+
+    for t,res1,res2 in zip(tVect, resVect1, resVect2):
+        print (t,res1, res2)
     
     print ("finished, all good")
