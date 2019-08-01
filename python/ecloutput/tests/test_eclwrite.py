@@ -12,21 +12,21 @@ from eclOutput import EclWrite
 
 if __name__ == "__main__":
     
-    '''
-       Almost all platforms represent Python float values as 64-bit “double-precision” values, according to the IEEE 754 standard.    
-       
-       https://realpython.com/python-data-types/
-
-       float	32 bits	-3.4E+38 to +3.4E+38
-       double	64 bits	-1.7E+308 to +1.7E+308
-    
-
-    '''
     
    # intTest=np.array([1,2,3])
    # print (type(intTest[0])) 
    # > default is numpy.int64 if not explicit asking for numpy.int32 
    #  >     npInt32Arr=np.array([1,2,3,4], dtype='int32')
+
+    '''
+       Almost all platforms represent Python float values as 64-bit "double-precision" values, according to the IEEE 754 standard
+       https://realpython.com/python-data-types/
+
+       float    32 bits -3.4E+38 to +3.4E+38
+       double   64 bits -1.7E+308 to +1.7E+308
+    
+
+    '''
 
 
     # test numpy arrays 

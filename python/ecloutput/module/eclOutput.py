@@ -362,7 +362,7 @@ class ESmry:
         startdat= self.esmry.getStartDate()
         
         if len(startdat)>3:
-            self.sos = datetime.datetime(startdat[2],startdat[1],startdat[0],startdat[3],startdat[4],startdat[5])
+            self.sos = datetime.datetime(startdat[2],startdat[1],startdat[0],startdat[3],startdat[4],int(startdat[5]/1000000))
         else:
             self.sos = datetime.datetime(startdat[2],startdat[1],startdat[0],0,0,0)
 
@@ -511,20 +511,20 @@ class EclWrite:
             exit(1)
 
         try:  
-            if isinstance(array, numpy.ndarray):
+            if isinstance(array, np.ndarray):
 
                 if (arrType!="fromFirstElement"):
                     print ("!Warning, arrType='%s' is ignored. Data type derived from numpy meta data " % arrType)
             
-                if (type(array[0]) is numpy.str_):
+                if (type(array[0]) is np.str_):
                     self.eclwrite.writeString(name, array) 
-                elif (type(array[0]) is numpy.bool_):    
+                elif (type(array[0]) is np.bool_):    
                     self.eclwrite.writeBool(name, array) 
-                elif (type(array[0]) is numpy.int32) or (type(array[0]) is numpy.int64):    
+                elif (type(array[0]) is np.int32) or (type(array[0]) is np.int64):    
                     self.eclwrite.writeInteger(name, array) 
-                elif (type(array[0]) is numpy.float32):    
+                elif (type(array[0]) is np.float32):    
                     self.eclwrite.writeFloat(name, array) 
-                elif (type(array[0]) is numpy.float64):    
+                elif (type(array[0]) is np.float64):    
                     self.eclwrite.writeDouble(name, array) 
             
             elif isinstance(array, list):
