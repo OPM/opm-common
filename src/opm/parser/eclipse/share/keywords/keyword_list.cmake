@@ -223,6 +223,7 @@ set( keywords
      000_Eclipse100/P/PERFORMANCE_PROBE
      000_Eclipse100/P/PERMR
      000_Eclipse100/P/PERMTHT
+     000_Eclipse100/P/PERMFUN
      000_Eclipse100/P/PERMX
      000_Eclipse100/P/PERMXY
      000_Eclipse100/P/PERMY

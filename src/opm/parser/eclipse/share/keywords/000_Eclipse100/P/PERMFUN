@@ -1,0 +1,3 @@
+{"name" : "PERMFUN" , "sections" : ["GRID"], "items" :
+   [{"value_type" : "DOUBLE" , "dimension" : "Permeability", "name" : "MIN_PERM"},
+    {"value_type" : "DOUBLE", "dimension" : "1", "name" : "POWER"}]}
