@@ -19,7 +19,7 @@
 
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
+#include <map>
 #include <set>
 #include <stdexcept>
 
@@ -269,21 +269,21 @@ std::string typeName(UDQVarType var_type) {
 }
 
 UDAKeyword keyword(UDAControl control) {
-    const std::unordered_map<UDAControl, UDAKeyword> c2k = {{UDAControl::WCONPROD_ORAT, UDAKeyword::WCONPROD},
-                                                            {UDAControl::WCONPROD_GRAT, UDAKeyword::WCONPROD},
-                                                            {UDAControl::WCONPROD_WRAT, UDAKeyword::WCONPROD},
-                                                            {UDAControl::WCONPROD_LRAT, UDAKeyword::WCONPROD},
-                                                            {UDAControl::WCONPROD_RESV, UDAKeyword::WCONPROD},
-                                                            {UDAControl::WCONPROD_BHP,  UDAKeyword::WCONPROD},
-                                                            {UDAControl::WCONPROD_THP,  UDAKeyword::WCONPROD},
-                                                            {UDAControl::WCONINJE_RATE, UDAKeyword::WCONINJE},
-                                                            {UDAControl::WCONINJE_RESV, UDAKeyword::WCONINJE},
-                                                            {UDAControl::WCONINJE_BHP,  UDAKeyword::WCONINJE},
-                                                            {UDAControl::WCONINJE_THP,  UDAKeyword::WCONINJE},
-                                                            {UDAControl::GCONPROD_OIL_TARGET,    UDAKeyword::GCONPROD},
-                                                            {UDAControl::GCONPROD_WATER_TARGET,  UDAKeyword::GCONPROD},
-                                                            {UDAControl::GCONPROD_GAS_TARGET,    UDAKeyword::GCONPROD},
-                                                            {UDAControl::GCONPROD_LIQUID_TARGET, UDAKeyword::GCONPROD}};
+    const std::map<UDAControl, UDAKeyword> c2k = {{UDAControl::WCONPROD_ORAT, UDAKeyword::WCONPROD},
+                                                  {UDAControl::WCONPROD_GRAT, UDAKeyword::WCONPROD},
+                                                  {UDAControl::WCONPROD_WRAT, UDAKeyword::WCONPROD},
+                                                  {UDAControl::WCONPROD_LRAT, UDAKeyword::WCONPROD},
+                                                  {UDAControl::WCONPROD_RESV, UDAKeyword::WCONPROD},
+                                                  {UDAControl::WCONPROD_BHP,  UDAKeyword::WCONPROD},
+                                                  {UDAControl::WCONPROD_THP,  UDAKeyword::WCONPROD},
+                                                  {UDAControl::WCONINJE_RATE, UDAKeyword::WCONINJE},
+                                                  {UDAControl::WCONINJE_RESV, UDAKeyword::WCONINJE},
+                                                  {UDAControl::WCONINJE_BHP,  UDAKeyword::WCONINJE},
+                                                  {UDAControl::WCONINJE_THP,  UDAKeyword::WCONINJE},
+                                                  {UDAControl::GCONPROD_OIL_TARGET,    UDAKeyword::GCONPROD},
+                                                  {UDAControl::GCONPROD_WATER_TARGET,  UDAKeyword::GCONPROD},
+                                                  {UDAControl::GCONPROD_GAS_TARGET,    UDAKeyword::GCONPROD},
+                                                  {UDAControl::GCONPROD_LIQUID_TARGET, UDAKeyword::GCONPROD}};
 
     auto it = c2k.find(control);
     if (it != c2k.end())
@@ -294,21 +294,21 @@ UDAKeyword keyword(UDAControl control) {
 
 
 int uadCode(UDAControl control) {
-    const std::unordered_map<UDAControl, int> c2uad = {{UDAControl::WCONPROD_ORAT,  300004},
-                                                       {UDAControl::WCONPROD_GRAT,  500004},
-                                                       {UDAControl::WCONPROD_WRAT,  400004},
-                                                       {UDAControl::WCONPROD_LRAT,  600004},
-                                                       {UDAControl::WCONPROD_RESV,  999999},
-                                                       {UDAControl::WCONPROD_BHP,   999999},
-                                                       {UDAControl::WCONPROD_THP,   999999},
-                                                       {UDAControl::WCONINJE_RATE,  400003},
-                                                       {UDAControl::WCONINJE_RESV,  500003},
-                                                       {UDAControl::WCONINJE_BHP,   999999},
-                                                       {UDAControl::WCONINJE_THP,   999999},
-                                                       {UDAControl::GCONPROD_OIL_TARGET,    200019},
-                                                       {UDAControl::GCONPROD_WATER_TARGET,  300019},
-                                                       {UDAControl::GCONPROD_GAS_TARGET,    400019},
-                                                       {UDAControl::GCONPROD_LIQUID_TARGET, 500019}};
+    const std::map<UDAControl, int> c2uad = {{UDAControl::WCONPROD_ORAT,  300004},
+                                             {UDAControl::WCONPROD_GRAT,  500004},
+                                             {UDAControl::WCONPROD_WRAT,  400004},
+                                             {UDAControl::WCONPROD_LRAT,  600004},
+                                             {UDAControl::WCONPROD_RESV,  999999},
+                                             {UDAControl::WCONPROD_BHP,   999999},
+                                             {UDAControl::WCONPROD_THP,   999999},
+                                             {UDAControl::WCONINJE_RATE,  400003},
+                                             {UDAControl::WCONINJE_RESV,  500003},
+                                             {UDAControl::WCONINJE_BHP,   999999},
+                                             {UDAControl::WCONINJE_THP,   999999},
+                                             {UDAControl::GCONPROD_OIL_TARGET,    200019},
+                                             {UDAControl::GCONPROD_WATER_TARGET,  300019},
+                                             {UDAControl::GCONPROD_GAS_TARGET,    400019},
+                                             {UDAControl::GCONPROD_LIQUID_TARGET, 500019}};
 
     auto it = c2uad.find(control);
     if (it != c2uad.end())
@@ -316,7 +316,5 @@ int uadCode(UDAControl control) {
 
     throw std::logic_error("Unrecognized enum type - internal error");
 }
-  
-  
 }
 }

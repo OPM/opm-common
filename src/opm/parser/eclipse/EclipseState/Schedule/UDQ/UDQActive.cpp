@@ -24,6 +24,15 @@
 
 namespace Opm {
 
+std::size_t UDQActive::active_size() const {
+    std::size_t as = 0;
+    for (const auto& record : this->data) {
+        if (record.active)
+            as += 1;
+    }
+    return as;
+}
+
 std::size_t UDQActive::size() const {
     return this->data.size();
 }
@@ -87,13 +96,6 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
         return this->drop(wgname, control);
 }
 
-std::vector<UDQActive::Record>::const_iterator UDQActive::begin() const {
-    return this->data.begin();
-}
-
-std::vector<UDQActive::Record>::const_iterator UDQActive::end() const {
-    return this->data.end();
-}
 
 UDQActive::Record UDQActive::get(const std::string& wgname, UDAControl control) {
     auto hash_key = this->hash(wgname, control);

@@ -95,18 +95,16 @@ namespace {
         }
 
         template <class IUADArray>
-        void staticContrib(const Opm::UDQActive& udq_active, std::size_t iactive, IUADArray& iUad)
+        void staticContrib(const Opm::UDQActive::Record& udq_record, IUADArray& iUad)
         {
-            const auto& udq = udq_active[iactive];
-
-            iUad[0] = udq.uad_code;
-            iUad[1] = udq.input_index;
+            iUad[0] = udq_record.uad_code;
+            iUad[1] = udq_record.input_index;
 
             // entry 3  - unknown meaning - value = 1
             iUad[2] = 1;
 
-            iUad[3] = udq.use_count;
-            iUad[4] = udq.use_index;
+            iUad[3] = udq_record.use_count;
+            iUad[4] = udq_record.use_index;
         }
     } // iUad
 
@@ -307,10 +305,15 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
     }
 
     auto udq_active = sched.udqActive(simStep);
-    if (udq_active)
-        for (std::size_t iactive = 0; iactive < udq_active.size(); iactive++) {
-            auto i_uad = this->iUAD_[iactive];
-            iUad::staticContrib(udq_active, iactive, i_uad);
+    if (udq_active) {
+        std::size_t iactive = 0;
+        for (std::size_t index = 0; index < udq_active.size(); index++) {
+            const auto& record = udq_active[index];
+            if (record.active) {
+                auto i_uad = this->iUAD_[iactive];
+                iUad::staticContrib(record, i_uad);
+                iactive += 1;
+            }
         }
     }
 

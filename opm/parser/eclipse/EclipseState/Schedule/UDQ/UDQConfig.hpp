@@ -23,6 +23,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <unordered_set>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
@@ -87,7 +88,7 @@ namespace Opm {
         std::unordered_map<std::string, std::string> units;
 
         OrderedMap<std::string, UDQIndex> input_index;
-        std::unordered_map<UDQVarType, std::size_t> type_count;
+        std::map<UDQVarType, std::size_t> type_count;
     };
 }
 
