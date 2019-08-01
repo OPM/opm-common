@@ -290,6 +290,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateConnectionData.cpp
           tests/test_CreateUdqDims.cpp
           tests/test_UDQ_x.cpp
+          tests/test_UDQ_x_file.cpp
           tests/test_ArrayDimChecker.cpp
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
@@ -330,6 +331,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE1A.SMSPEC
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
+          tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
       )
 endif()
 
