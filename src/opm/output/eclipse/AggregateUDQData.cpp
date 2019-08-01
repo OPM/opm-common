@@ -98,7 +98,7 @@ namespace {
         void staticContrib(const Opm::UDQActive::Record& udq_record, IUADArray& iUad)
         {
             iUad[0] = udq_record.uad_code;
-            iUad[1] = udq_record.input_index;
+            iUad[1] = udq_record.input_index + 1;
 
             // entry 3  - unknown meaning - value = 1
             iUad[2] = 1;
