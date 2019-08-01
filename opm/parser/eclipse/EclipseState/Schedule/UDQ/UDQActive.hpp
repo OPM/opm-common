@@ -35,11 +35,12 @@ class UDQConfig;
 class UDQActive {
 public:
 
-    struct Record{
+    class Record{
     public:
-        Record(const std::string& udq_arg, std::size_t input_index_arg, const std::string& wgname_arg, UDAControl control_arg) :
+        Record(const std::string& udq_arg, std::size_t input_index_arg, std::size_t use_index_arg, const std::string& wgname_arg, UDAControl control_arg) :
             udq(udq_arg),
             input_index(input_index_arg),
+            use_index(use_index_arg),
             wgname(wgname_arg),
             control(control_arg),
             uad_code(UDQ::uadCode(control_arg)),
@@ -49,15 +50,12 @@ public:
 
         std::string udq;
         std::size_t input_index;
+        std::size_t use_index;
         std::string wgname;
         UDAControl  control;
         int uad_code;
         bool active;
         std::size_t use_count;
-
-        // The elements below are not used internally, but only filled in
-        // when a record is returned from operator[] or get().
-        std::size_t use_index;
     };
 
 
@@ -75,6 +73,8 @@ private:
 
     std::vector<Record> data;
     std::unordered_map<std::string, std::size_t> keys;
+
+    // COuld make index based on composite key of og wgname and control
 };
 
 }

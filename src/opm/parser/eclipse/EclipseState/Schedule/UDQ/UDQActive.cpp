@@ -51,14 +51,20 @@ int UDQActive::add(const UDQConfig& udq_config, const std::string& udq, const st
     const auto iter = this->keys.find( hash_key );
     if (iter == this->keys.end()) {
         const auto& udq_input = udq_config[udq];
-        auto index = udq_input.index.insert_index;
-        //Record rec(udq, index, wgname, control);
+        auto udq_index = udq_input.index.insert_index;
+        std::size_t use_index = 1;
+        for (const auto& rec : this->data)
+            use_index += rec.use_count;
 
-        this->data.emplace_back( udq, index, wgname, control);
-        this->keys.insert( std::make_pair(hash_key, index) );
+        this->keys.insert( std::make_pair(hash_key, this->data.size()) );
+        this->data.emplace_back(udq, udq_index, use_index, wgname, control);
     } else {
-        auto& record = this->data[iter->second];
+        auto data_index = iter->second;
+        auto& record = this->data[data_index];
         record.use_count += 1;
+
+        for (std::size_t index = data_index + 1; index < this->data.size(); index++)
+            this->data[index].use_index += 1;
     }
     return 1;
 }
@@ -90,8 +96,28 @@ int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const st
     else {
         if (this->data.empty())
             return 0;
+        /*
+          The situation where a certain control is given by a UDA, and then in a
+          later timestep is just given with a numerical value is just not
+          supported in the current code; consider the situation below:
 
-        // Can not drop a UDQ - do not know which name it used to have.
+             -- The ORAT is given by the UDA 'WUOPRU'
+             WCONDPROD
+                'PROD'  'OPEN' 'GRUP' WUOPRU  /
+             /
+
+             TSTEP
+                 10 /
+
+             -- The ORAT is given by as the plain number 123
+             WCONDPROD
+                'PROD'  'OPEN' 'GRUP' 123 /
+             /
+
+          For the second WCONDPROD keyword we should ideally reduce the use
+          count of the 'WUOPRU' UDQ, but when evaluating this WCONPROD keyword
+          we do not know which UDQ was previously active.
+        */
         std::string udq = "UNKNWON";
         return this->drop(udq, control);
     }
@@ -106,17 +132,6 @@ UDQActive::Record UDQActive::get(const std::string& udq, UDAControl control) {
 
 UDQActive::Record UDQActive::operator[](std::size_t index) const {
     Record data_record = this->data[index];
-
-    data_record.uad_code  = UDQ::uadCode(data_record.control);
-    data_record.use_index = 1;
-    if (index > 0) {
-        for (std::size_t i=0; i < (index - 1); i++) {
-            const auto& prev_record = this->data[i];
-            if (prev_record.active)
-                data_record.use_index += prev_record.use_count;
-        }
-    }
-
 
     return data_record;
 }
