@@ -1249,20 +1249,19 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     UDQParams params;
     UDQConfig conf(params);
     BOOST_CHECK_EQUAL( usage.active_size(), 0 );
-    BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 0);
 
     UDAValue uda1("WUX");
     conf.add_assign(uda1.get<std::string>(), {}, 100);
 
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
     BOOST_CHECK_EQUAL( usage.active_size(), 1 );
-    BOOST_CHECK_EQUAL( usage.use_count("WUX"), 1);
+    BOOST_CHECK_EQUAL( usage.get(uda1.get<std::string>(), UDAControl::WCONPROD_ORAT).use_count, 1);
 
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_GRAT);
     BOOST_CHECK_EQUAL( usage.active_size(), 2 );
-    BOOST_CHECK_EQUAL( usage.use_count("WUX"), 2);
+    BOOST_CHECK_EQUAL( usage.get(uda1.get<std::string>(), UDAControl::WCONPROD_GRAT).use_count, 1);
 
-    const auto& rec = usage.get("W1", UDAControl::WCONPROD_ORAT);
+    const auto& rec = usage.get(uda1.get<std::string>(), UDAControl::WCONPROD_ORAT);
     BOOST_CHECK_EQUAL(rec.wgname, "W1");
     BOOST_CHECK_EQUAL(rec.udq, "WUX");
     BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
@@ -1282,13 +1281,6 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
         index += 1;
     }
 
-
-    UDAValue uda2(100);
-    usage.update(conf, uda2, "W1", UDAControl::WCONPROD_ORAT);
-    BOOST_CHECK_EQUAL(usage[0].active, false);
-    BOOST_CHECK_EQUAL(usage[1].active, true);
-    BOOST_CHECK_EQUAL( usage.use_count("WUX"), 1);
-    BOOST_CHECK_EQUAL( 1, usage.active_size());
 }
 
 
@@ -1324,44 +1316,9 @@ BOOST_AUTO_TEST_CASE(IntegrationTest) {
         BOOST_CHECK(active[2].active == true);
         BOOST_CHECK(active[3].active == true);
 
-        BOOST_CHECK(active.use_count("WUOPRL") == 1);
-        BOOST_CHECK(active.use_count("WULPRL") == 1);
-        BOOST_CHECK(active.use_count("WUOPRU") == 1);
-        BOOST_CHECK(active.use_count("WULPRU") == 1);
-    }
-
-    {
-        const auto& active = schedule.udqActive(6);
-        BOOST_CHECK_EQUAL(active.size(), 4);
-
-        BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
-        BOOST_CHECK(active[1].control == UDAControl::WCONPROD_LRAT);
-        BOOST_CHECK(active[2].control == UDAControl::WCONPROD_ORAT);
-        BOOST_CHECK(active[3].control == UDAControl::WCONPROD_LRAT);
-
-        BOOST_CHECK(active[0].wgname == "OPL02");
-        BOOST_CHECK(active[1].wgname == "OPL02");
-        BOOST_CHECK(active[2].wgname == "OPU02");
-        BOOST_CHECK(active[3].wgname == "OPU02");
-
-        BOOST_CHECK(active[0].udq == "WUOPRL");
-        BOOST_CHECK(active[1].udq == "WULPRL");
-        BOOST_CHECK(active[2].udq == "WUOPRU");
-        BOOST_CHECK(active[3].udq == "WULPRU");
-
-        BOOST_CHECK(active[0].input_index == 0);
-        BOOST_CHECK(active[1].input_index == 1);
-        BOOST_CHECK(active[2].input_index == 2);
-        BOOST_CHECK(active[3].input_index == 3);
-
-        BOOST_CHECK(active[0].active == false);
-        BOOST_CHECK(active[1].active == false);
-        BOOST_CHECK(active[2].active == true);
-        BOOST_CHECK(active[3].active == true);
-
-        BOOST_CHECK_EQUAL(active.use_count("WUOPRL"), 0);
-        BOOST_CHECK_EQUAL(active.use_count("WULPRL"), 0);
-        BOOST_CHECK_EQUAL(active.use_count("WUOPRU"), 1);
-        BOOST_CHECK_EQUAL(active.use_count("WULPRU"), 1);
+        BOOST_CHECK(active[0].use_count == 1);
+        BOOST_CHECK(active[1].use_count == 1);
+        BOOST_CHECK(active[2].use_count == 1);
+        BOOST_CHECK(active[3].use_count == 1);
     }
 }

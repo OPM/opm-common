@@ -451,7 +451,7 @@ END
       Opm::UDAValue uda4("WULPRU");
       update_count += udq_act.update(conf, uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
 
-      for (std::size_t index=0; index < udq_act.size(); index++) 
+      for (std::size_t index=0; index < udq_act.size(); index++)
       {
           const auto & record = udq_act[index];
           auto ind = record.input_index;
@@ -462,7 +462,6 @@ END
       return udq_act;
     }
 }
-
 
 
 //int main(int argc, char* argv[])

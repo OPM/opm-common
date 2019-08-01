@@ -41,46 +41,41 @@ UDQActive::operator bool() const {
     return this->data.size() > 0;
 }
 
-std::string UDQActive::hash(const std::string& wgname, UDAControl control) {
-  return wgname + std::to_string(static_cast<int64_t>(control));
+std::string UDQActive::hash(const std::string& udq, UDAControl control) {
+  return udq + std::to_string(static_cast<int64_t>(control));
 }
 
 
 int UDQActive::add(const UDQConfig& udq_config, const std::string& udq, const std::string& wgname, UDAControl control) {
-    auto hash_key = this->hash(wgname, control);
+    auto hash_key = this->hash(udq, control);
     const auto iter = this->keys.find( hash_key );
     if (iter == this->keys.end()) {
         const auto& udq_input = udq_config[udq];
         auto index = udq_input.index.insert_index;
+        //Record rec(udq, index, wgname, control);
 
-        this->data.push_back( {index, udq, wgname, control, true} );
+        this->data.emplace_back( udq, index, wgname, control);
         this->keys.insert( std::make_pair(hash_key, index) );
     } else {
         auto& record = this->data[iter->second];
-        this->m_use_count[record.udq] -= 1;
-        record.udq = udq;
+        record.use_count += 1;
     }
-
-    this->m_use_count[udq] += 1;
     return 1;
 }
 
 
-int UDQActive::drop(const std::string& wgname, UDAControl control) {
-    if (this->data.empty())
-        return 0;
-
-    auto hash_key = this->hash(wgname, control);
+int UDQActive::drop(const std::string& udq, UDAControl control) {
+    auto hash_key = this->hash(udq, control);
     const auto iter = this->keys.find( hash_key );
     if (iter != this->keys.end()) {
         auto index = iter->second;
         auto& record = this->data[index];
 
-        if (record.active)
-            record.active = false;
-
-        if (this->m_use_count[record.udq] > 0)
-            this->m_use_count[record.udq] -= 1;
+        if (record.use_count > 0) {
+            record.use_count -= 1;
+            if (record.use_count == 0)
+                record.active = false;
+        }
 
         return 1;
     }
@@ -92,13 +87,19 @@ int UDQActive::drop(const std::string& wgname, UDAControl control) {
 int UDQActive::update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control) {
     if (uda.is<std::string>())
         return this->add(udq_config, uda.get<std::string>(), wgname, control);
-    else
-        return this->drop(wgname, control);
+    else {
+        if (this->data.empty())
+            return 0;
+
+        // Can not drop a UDQ - do not know which name it used to have.
+        std::string udq = "UNKNWON";
+        return this->drop(udq, control);
+    }
 }
 
 
-UDQActive::Record UDQActive::get(const std::string& wgname, UDAControl control) {
-    auto hash_key = this->hash(wgname, control);
+UDQActive::Record UDQActive::get(const std::string& udq, UDAControl control) {
+    auto hash_key = this->hash(udq, control);
     auto index = this->keys.at(hash_key);
     return this->operator[](index);
 }
@@ -106,14 +107,13 @@ UDQActive::Record UDQActive::get(const std::string& wgname, UDAControl control) 
 UDQActive::Record UDQActive::operator[](std::size_t index) const {
     Record data_record = this->data[index];
 
-    data_record.use_count = this->use_count(data_record.udq);
     data_record.uad_code  = UDQ::uadCode(data_record.control);
     data_record.use_index = 1;
     if (index > 0) {
         for (std::size_t i=0; i < (index - 1); i++) {
             const auto& prev_record = this->data[i];
             if (prev_record.active)
-                data_record.use_index += this->use_count(prev_record.udq);
+                data_record.use_index += prev_record.use_count;
         }
     }
 
@@ -121,21 +121,6 @@ UDQActive::Record UDQActive::operator[](std::size_t index) const {
     return data_record;
 }
 
-std::size_t UDQActive::use_count(const std::string& udq) const {
-    const auto iter = this->m_use_count.find(udq);
-    if (iter == this->m_use_count.end())
-        return 0;
-
-    return iter->second;
-}
-
-std::size_t UDQActive::use_index(const std::string& udq) const {
-    const auto iter = this->m_use_count.find(udq);
-    if (iter == this->m_use_count.end())
-        return 0;
-
-    return iter->second;
-}
 
 }
 

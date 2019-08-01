@@ -36,17 +36,28 @@ class UDQActive {
 public:
 
     struct Record{
-        std::size_t input_index;
+    public:
+        Record(const std::string& udq_arg, std::size_t input_index_arg, const std::string& wgname_arg, UDAControl control_arg) :
+            udq(udq_arg),
+            input_index(input_index_arg),
+            wgname(wgname_arg),
+            control(control_arg),
+            uad_code(UDQ::uadCode(control_arg)),
+            active(true),
+            use_count(1)
+        {}
+
         std::string udq;
+        std::size_t input_index;
         std::string wgname;
         UDAControl  control;
-        bool active;
-
-        // The three elements below are not used internally, but only filled in
-        // when a record is returned from operator[] or get().
-        std::size_t use_count;
-        std::size_t use_index;
         int uad_code;
+        bool active;
+        std::size_t use_count;
+
+        // The elements below are not used internally, but only filled in
+        // when a record is returned from operator[] or get().
+        std::size_t use_index;
     };
 
 
@@ -54,11 +65,9 @@ public:
 
     std::size_t active_size() const;
     std::size_t size() const;
-    std::size_t use_count(const std::string& udq) const;
-    std::size_t use_index(const std::string& udq) const;
     explicit operator bool() const;
     Record operator[](std::size_t index) const;
-    UDQActive::Record get(const std::string& wgname, UDAControl control);
+    UDQActive::Record get(const std::string& udq, UDAControl control);
 private:
     std::string hash(const std::string& wgname, UDAControl control);
     int add(const UDQConfig& udq_config, const std::string& udq, const std::string& wgname, UDAControl control);
@@ -66,7 +75,6 @@ private:
 
     std::vector<Record> data;
     std::unordered_map<std::string, std::size_t> keys;
-    std::unordered_map<std::string, std::size_t> m_use_count;
 };
 
 }
