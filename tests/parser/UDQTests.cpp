@@ -1248,18 +1248,18 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     UDQActive usage;
     UDQParams params;
     UDQConfig conf(params);
-    BOOST_CHECK_EQUAL( usage.size(), 0 );
+    BOOST_CHECK_EQUAL( usage.active_size(), 0 );
     BOOST_CHECK_EQUAL( usage.use_count("UDQ"), 0);
 
     UDAValue uda1("WUX");
     conf.add_assign(uda1.get<std::string>(), {}, 100);
 
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
-    BOOST_CHECK_EQUAL( usage.size(), 1 );
+    BOOST_CHECK_EQUAL( usage.active_size(), 1 );
     BOOST_CHECK_EQUAL( usage.use_count("WUX"), 1);
 
     usage.update(conf, uda1, "W1", UDAControl::WCONPROD_GRAT);
-    BOOST_CHECK_EQUAL( usage.size(), 2 );
+    BOOST_CHECK_EQUAL( usage.active_size(), 2 );
     BOOST_CHECK_EQUAL( usage.use_count("WUX"), 2);
 
     const auto& rec = usage.get("W1", UDAControl::WCONPROD_ORAT);
@@ -1268,8 +1268,8 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
 
 
-    std::size_t index = 0;
-    for (const auto& record : usage) {
+    for (std::size_t index = 0; index < usage.size(); index++) {
+        const auto& record = usage[index];
         BOOST_CHECK_EQUAL(record.input_index, 0);
         BOOST_CHECK_EQUAL(record.wgname, "W1");
         BOOST_CHECK_EQUAL(record.active, true);
@@ -1288,6 +1288,7 @@ BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
     BOOST_CHECK_EQUAL(usage[0].active, false);
     BOOST_CHECK_EQUAL(usage[1].active, true);
     BOOST_CHECK_EQUAL( usage.use_count("WUX"), 1);
+    BOOST_CHECK_EQUAL( 1, usage.active_size());
 }
 
 

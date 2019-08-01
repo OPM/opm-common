@@ -52,14 +52,13 @@ public:
 
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
 
+    std::size_t active_size() const;
     std::size_t size() const;
     std::size_t use_count(const std::string& udq) const;
     std::size_t use_index(const std::string& udq) const;
     explicit operator bool() const;
     Record operator[](std::size_t index) const;
     UDQActive::Record get(const std::string& wgname, UDAControl control);
-    std::vector<Record>::const_iterator begin() const;
-    std::vector<Record>::const_iterator end() const;
 private:
     std::string hash(const std::string& wgname, UDAControl control);
     int add(const UDQConfig& udq_config, const std::string& udq, const std::string& wgname, UDAControl control);

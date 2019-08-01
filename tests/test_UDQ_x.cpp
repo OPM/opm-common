@@ -451,13 +451,14 @@ END
       Opm::UDAValue uda4("WULPRU");
       update_count += udq_act.update(conf, uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
 
-      for (auto it = udq_act.begin(); it != udq_act.end(); it++) 
+      for (std::size_t index=0; index < udq_act.size(); index++) 
       {
-	  auto ind = it->input_index;
-	  auto udq_key = it->udq;
-	  auto name = it->wgname;
-	  auto ctrl_type = it->control;
-      }
+          const auto & record = udq_act[index];
+          auto ind = record.input_index;
+          auto udq_key = record.udq;
+          auto name = record.wgname;
+          auto ctrl_type = record.control;
+       }
       return udq_act;
     }
 }
