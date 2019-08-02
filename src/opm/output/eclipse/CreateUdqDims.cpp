@@ -87,7 +87,7 @@ createUdqDims(const Schedule&     		sched,
 
     udqDims[0] = udqCfg.size();
     udqDims[1] = entriesPerIUDQ();
-    udqDims[2] = udqActive.size();
+    udqDims[2] = udqActive.IUAD_size();
     udqDims[3] = entriesPerIUAD();
     udqDims[4] = entriesPerZUDN();
     udqDims[5] = entriesPerZUDL();

@@ -104,7 +104,7 @@ namespace {
             iUad[2] = 1;
 
             iUad[3] = udq_record.use_count;
-            iUad[4] = udq_record.use_index;
+            iUad[4] = udq_record.use_index + 1;
         }
     } // iUad
 
@@ -306,14 +306,11 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
 
     auto udq_active = sched.udqActive(simStep);
     if (udq_active) {
-        std::size_t iactive = 0;
-        for (std::size_t index = 0; index < udq_active.size(); index++) {
-            const auto& record = udq_active[index];
-            if (record.active) {
-                auto i_uad = this->iUAD_[iactive];
-                iUad::staticContrib(record, i_uad);
-                iactive += 1;
-            }
+        const auto& udq_records = udq_active.get_output();
+        for (std::size_t index = 0; index < udq_records.size(); index++) {
+            const auto& record = udq_records[index];
+            auto i_uad = this->iUAD_[index];
+            iUad::staticContrib(record, i_uad);
         }
     }
 
