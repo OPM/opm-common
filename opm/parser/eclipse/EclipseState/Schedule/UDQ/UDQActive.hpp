@@ -44,37 +44,68 @@ public:
             wgname(wgname_arg),
             control(control_arg),
             uad_code(UDQ::uadCode(control_arg)),
-            active(true),
             use_count(1)
         {}
 
+        bool operator==(const Record& other) const  {
+            if ((this->udq == other.udq) &&
+                (this->input_index == other.input_index) &&
+                (this->use_index == other.use_index) &&
+                (this->wgname == other.wgname) &&
+                (this->control == other.control) &&
+                (this->uad_code == other.uad_code) &&
+                (this->use_count == other.use_count))
+                return true;
+            return false;
+        }
+
+        bool operator!=(const Record& other) const  {
+            return !(*this == other);
+        }
+
         std::string udq;
         std::size_t input_index;
-        std::size_t use_index;
+        std::size_t use_index = 0;
         std::string wgname;
         UDAControl  control;
         int uad_code;
-        bool active;
         std::size_t use_count;
     };
 
 
-    int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
 
-    std::size_t active_size() const;
-    std::size_t size() const;
+    class InputRecord {
+    public:
+        InputRecord(std::size_t input_index_arg, const std::string& udq_arg, const std::string& wgname_arg, UDAControl control_arg) :
+            input_index(input_index_arg),
+            udq(udq_arg),
+            wgname(wgname_arg),
+            control(control_arg)
+        {}
+
+        std::size_t input_index;
+        std::string udq;
+        std::string wgname;
+        UDAControl control;
+        int uad_code;
+    };
+
+    int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
+    std::size_t IUAD_size() const;
     explicit operator bool() const;
     Record operator[](std::size_t index) const;
-    UDQActive::Record get(const std::string& udq, UDAControl control);
+    const std::vector<Record>& get_output() const;
 private:
-    std::string hash(const std::string& wgname, UDAControl control);
+    std::string udq_hash(const std::string& udq, UDAControl control);
+    std::string wg_hash(const std::string& wgname, UDAControl control);
     int add(const UDQConfig& udq_config, const std::string& udq, const std::string& wgname, UDAControl control);
+    int update_input(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
     int drop(const std::string& wgname, UDAControl control);
 
-    std::vector<Record> data;
-    std::unordered_map<std::string, std::size_t> keys;
-
-    // COuld make index based on composite key of og wgname and control
+    std::vector<InputRecord> input_data;
+    std::vector<Record> mutable output_data;
+    std::unordered_map<std::string, std::size_t> udq_keys;
+    std::unordered_map<std::string, std::size_t> wg_keys;
 };
 
 }

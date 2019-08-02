@@ -1,46 +1,4 @@
-#define BOOST_TEST_MODULE UDQ_Data
-
-#include <boost/test/unit_test.hpp>
-
-#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
-#include <opm/parser/eclipse/Parser/Parser.hpp>
-#include <opm/parser/eclipse/Deck/Deck.hpp>
-
-#include <opm/output/eclipse/AggregateUDQData.hpp>
-#include <opm/output/eclipse/WriteRestartHelpers.hpp>
-
-#include <opm/output/eclipse/InteHEAD.hpp>
-#include <opm/output/eclipse/VectorItems/intehead.hpp>
-#include <opm/output/eclipse/DoubHEAD.hpp>
-
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-
-//#include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
-//#include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-
-#include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/Units/Units.hpp>
-
-#include <opm/io/eclipse/OutputStream.hpp>
-
-#include <stdexcept>
-#include <utility>
-#include <exception>
-#include <iostream>
-#include <string>
-#include <vector>
-
-namespace {
-    Opm::Deck first_sim()
-    {
-        // Mostly copy of tests/FIRST_SIM.DATA
-        const std::string input = std::string {
-            R"~(
+std::string deck_string = R"(
 RUNSPEC
 
 TITLE
@@ -128,8 +86,8 @@ EQUALS
 -- 'DZ'     20   /
  'PORO'   0.2  /
 -- 'TOPS'   7000   1 10  1 5  1 1  /
--- 'DZ'     100    1 10  1 5  3 3  /
--- 'PORO'   0.0    1 10  1 5  3 3  /
+ --'DZ'     100    1 10  1 5  3 3  /
+ 'PORO'   0.0    1 10  1 5  3 3  /
  /
 
 COPY
@@ -325,23 +283,7 @@ MSUMLINS
 MSUMNEWT
 
 SEPARATE
-
 SCHEDULE     ===========================================================
-
-DEBUG
-   1 3   /
-
-DRSDT
-   1.0E20  /
-
-RPTSCHED
-  'PRES'  'SWAT'  'SGAS'  'RESTART=1'  'RS'  'WELLS=2'  'SUMMARY=2'
-  'CPU=2' 'WELSPECS'   'NEWTON=2' /
-
-NOECHO
-
-
-ECHO
 
 GRUPTREE
  'GRP1' 'FIELD' /
@@ -373,151 +315,4 @@ COMPDAT
 
 
 
-UDQ
--- test 
---oil & liquid capacities at GEFAC = 0.8995
-DEFINE WUOPRL (WOPR PROD1 - 150) * 0.90 /
-DEFINE WULPRL (WLPR PROD1 - 200) * 0.90 /
-DEFINE WUOPRU (WOPR PROD2 - 250) * 0.80 /
-DEFINE WULPRU (WLPR PROD2 - 300) * 0.80 /
---DEFINE GUOPRU (GOPR GRP1 - 100) * 0.70 /
---DEFINE WUOPRL (WOPR PROD1 - 170) * 0.60 /
--- units
-UNITS  WUOPRL SM3/DAY /
-UNITS  WULPRL SM3/DAY /
-UNITS  WUOPRU SM3/DAY /
---UNITS  GUOPRU SM3/DAY /
-UNITS  WULPRU SM3/DAY /
---
-/
-
-
---GCONPROD
---'GRP1' 'FLD'  -1  1* 1* 6000 'RATE' 'YES' 1* 'FORM' 7* /
---/
-
--- Well production rate targets/limits:
--- testing UDQs as production constrains
-WCONPROD
--- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
-  'PROD1'     'OPEN'  'GRUP' WUOPRL  1*  1*  WULPRL 1* 60.0   / single wells
---  'PROD1'     'OPEN'  'GRUP' -2  1*  1*  -3 1* 60.0   / single wells
-/
-
-
-WCONPROD
--- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
-  'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
--- 'PROD1' 'OPEN' 'LRAT'  3*  1200  1*  2500  1*  /
--- 'PROD2' 'OPEN' 'LRAT'  3*    800  1*  2500  1*  /
- /
-
-WCONINJE
- 'WINJ1' 'WAT' 'OPEN' 'BHP'  1*  1200  3500  1*  /
- 'WINJ2' 'WAT' 'OPEN' 'BHP'  1*    800  3500  1*  /
- /
-
-
-TUNING
- /
- /
- /
-
-TSTEP
- 4
-/
-
-
-END
-
-)~" };
-
-	    return Opm::Parser{}.parseString(input);
-	}
-
-    Opm::UDQActive udq_active() {
-      int update_count = 0;
-      // construct record data for udq_active
-      Opm::UDQParams params;
-      Opm::UDQConfig conf(params);
-      Opm::UDQActive udq_act;
-      Opm::UDAValue uda1("WUOPRL");
-      update_count += udq_act.update(conf, uda1, "PROD1", Opm::UDAControl::WCONPROD_ORAT);
-
-      Opm::UDAValue uda2("WULPRL");
-      update_count += udq_act.update(conf, uda2, "PROD1", Opm::UDAControl::WCONPROD_LRAT);
-      Opm::UDAValue uda3("WUOPRU");
-      update_count += udq_act.update(conf, uda3, "PROD2", Opm::UDAControl::WCONPROD_ORAT);
-      Opm::UDAValue uda4("WULPRU");
-      update_count += udq_act.update(conf, uda4, "PROD2", Opm::UDAControl::WCONPROD_LRAT);
-
-      for (std::size_t index=0; index < udq_act.IUAD_size(); index++)
-      {
-          const auto & record = udq_act[index];
-          auto ind = record.input_index;
-          auto udq_key = record.udq;
-          auto name = record.wgname;
-          auto ctrl_type = record.control;
-       }
-      return udq_act;
-    }
-}
-
-
-//int main(int argc, char* argv[])
-struct SimulationCase
-{
-    explicit SimulationCase(const Opm::Deck& deck)
-	: es   { deck }
-	, grid { deck }
-	, sched{ deck, es }
-    {}
-
-    // Order requirement: 'es' must be declared/initialised before 'sched'.
-    Opm::EclipseState es;
-    Opm::EclipseGrid  grid;
-    Opm::Schedule     sched;
-
-};
-    
-BOOST_AUTO_TEST_SUITE(Aggregate_UDQ)
-
-
-// test dimensions of multisegment data
-BOOST_AUTO_TEST_CASE (Constructor)
-{
-    const auto simCase = SimulationCase{first_sim()};
-        
-    Opm::EclipseState es = simCase.es;
-    Opm::Schedule     sched = simCase.sched;
-    Opm::EclipseGrid  grid = simCase.grid;
-    const auto& ioConfig = es.getIOConfig();
-    const auto& restart = es.cfg().restart();
-    // Report Step 1: 2008-10-10 --> 2011-01-20
-    const auto rptStep = std::size_t{1};    
-    
-    std::string outputDir = "./";
-    std::string baseName = "TEST_UDQRST";
-    Opm::EclIO::OutputStream::Restart rstFile {
-    Opm::EclIO::OutputStream::ResultSet { outputDir, baseName },
-    rptStep,
-    Opm::EclIO::OutputStream::Formatted { ioConfig.getFMTOUT() },
-	  Opm::EclIO::OutputStream::Unified   { ioConfig.getUNIFOUT() }
-        };
-	
-    double secs_elapsed = 3.1536E07;
-    const auto ih = Opm::RestartIO::Helpers::createInteHead(es, grid, sched,
-                                                secs_elapsed, rptStep, rptStep);
-       
-    const auto udqDims = Opm::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
-    auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
-    udqData.captureDeclaredUDQData(sched, rptStep, ih);
-     
-    rstFile.write("IUDQ", udqData.getIUDQ());
-    rstFile.write("IUAD", udqData.getIUAD());
-    rstFile.write("ZUDN", udqData.getZUDN());
-    rstFile.write("ZUDL", udqData.getZUDL());
-    
-    }
-    
-BOOST_AUTO_TEST_SUITE_END()
+)";
