@@ -29,7 +29,7 @@
 
 #include "WellInjectionProperties.hpp"
 #include "injection.hpp"
-#include "well_uda.hpp"
+#include "../eval_uda.hpp"
 
 namespace Opm {
 
