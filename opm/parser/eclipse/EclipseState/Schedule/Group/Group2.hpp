@@ -23,6 +23,7 @@
 
 #include <string>
 
+#include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
@@ -30,42 +31,59 @@
 
 namespace Opm {
 
+class SummaryState;
 class Group2 {
 public:
 
 struct GroupInjectionProperties {
     Phase phase = Phase::WATER;
     GroupInjection::ControlEnum cmode = GroupInjection::NONE;
-    double surface_max_rate = 0;
-    double resv_max_rate = 0;
-    double target_reinj_fraction = 0;
-    double target_void_fraction = 0;
+    UDAValue surface_max_rate;
+    UDAValue resv_max_rate;
+    UDAValue target_reinj_fraction;
+    UDAValue target_void_fraction;
 
     bool operator==(const GroupInjectionProperties& other) const;
     bool operator!=(const GroupInjectionProperties& other) const;
 };
 
+struct InjectionControls {
+    Phase phase;
+    GroupInjection::ControlEnum cmode;
+    double surface_max_rate;
+    double resv_max_rate;
+    double target_reinj_fraction;
+    double target_void_fraction;
+};
 
 struct GroupProductionProperties {
     GroupProduction::ControlEnum cmode = GroupProduction::NONE;
     GroupProductionExceedLimit::ActionEnum exceed_action = GroupProductionExceedLimit::NONE;
-    double oil_target = 0;
-    double water_target = 0;
-    double gas_target = 0;
-    double liquid_target = 0;
+    UDAValue oil_target;
+    UDAValue water_target;
+    UDAValue gas_target;
+    UDAValue liquid_target;
     double resv_target = 0;
 
     bool operator==(const GroupProductionProperties& other) const;
     bool operator!=(const GroupProductionProperties& other) const;
 };
 
-    Group2(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, const UnitSystem& unit_system_arg);
+struct ProductionControls {
+    GroupProduction::ControlEnum cmode;
+    GroupProductionExceedLimit::ActionEnum exceed_action;
+    double oil_target;
+    double water_target;
+    double gas_target;
+    double liquid_target;
+    double resv_target = 0;
+};
+
+    Group2(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
 
     bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;
     const std::string& name() const;
-    const GroupProductionProperties& productionProperties() const;
-    const GroupInjectionProperties& injectionProperties() const;
     int getGroupNetVFPTable() const;
     bool updateNetVFPTable(int vfp_arg);
     bool update_gefac(double gefac, bool transfer_gefac);
@@ -92,13 +110,18 @@ struct GroupProductionProperties {
     const std::vector<std::string>& wells() const;
     const std::vector<std::string>& groups() const;
     bool wellgroup() const;
+    ProductionControls productionControls(const SummaryState& st) const;
+    InjectionControls injectionControls(const SummaryState& st) const;
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
+    const GroupProductionProperties& productionProperties() const;
+    const GroupInjectionProperties& injectionProperties() const;
 
     std::string m_name;
     std::size_t m_insert_index;
     std::size_t init_step;
+    double udq_undefined;
     UnitSystem unit_system;
     GroupType group_type;
     double gefac;
@@ -109,8 +132,8 @@ private:
     IOrderSet<std::string> m_wells;
     IOrderSet<std::string> m_groups;
 
-    GroupInjectionProperties injection_properties;
-    GroupProductionProperties production_properties;
+    GroupInjectionProperties injection_properties{};
+    GroupProductionProperties production_properties{};
 };
 
 }
