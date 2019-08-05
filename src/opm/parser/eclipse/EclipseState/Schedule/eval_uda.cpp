@@ -22,8 +22,8 @@
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
-#include "injection.hpp"
-#include "well_uda.hpp"
+#include "Well/injection.hpp"
+#include "eval_uda.hpp"
 
 namespace Opm {
 namespace UDA {

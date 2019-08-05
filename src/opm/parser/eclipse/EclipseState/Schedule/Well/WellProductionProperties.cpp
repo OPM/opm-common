@@ -29,7 +29,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 #include "WellProductionProperties.hpp"
-#include "well_uda.hpp"
+#include "../eval_uda.hpp"
 
 namespace Opm {
 
