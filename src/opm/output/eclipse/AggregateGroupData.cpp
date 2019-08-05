@@ -30,8 +30,10 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
-#include <string>
+#include <exception>
 #include <iostream>
+#include <string>
+#include <stdexcept>
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateGroupData

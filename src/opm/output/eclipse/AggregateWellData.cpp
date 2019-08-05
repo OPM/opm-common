@@ -37,10 +37,10 @@
 #include <cassert>
 #include <cstddef>
 #include <cstring>
+#include <exception>
 #include <iterator>
+#include <stdexcept>
 #include <string>
-
-
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 
