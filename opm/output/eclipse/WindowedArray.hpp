@@ -21,7 +21,9 @@
 #define OPM_WINDOWED_ARRAY_HPP
 
 #include <cassert>
+#include <exception>
 #include <iterator>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 

@@ -31,9 +31,11 @@
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <cassert>
-#include <cstddef>
-#include <iostream>
 #include <cmath>
+#include <cstddef>
+#include <exception>
+#include <iostream>
+#include <stdexcept>
 
 namespace VI = Opm::RestartIO::Helpers::VectorItems;
 

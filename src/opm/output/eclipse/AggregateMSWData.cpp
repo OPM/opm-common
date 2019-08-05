@@ -33,9 +33,11 @@
 #include <cmath>
 #include <cstddef>
 #include <cstring>
-#include <string>
+#include <exception>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
+#include <string>
 
 // #####################################################################
 // Class Opm::RestartIO::Helpers::AggregateMSWData
