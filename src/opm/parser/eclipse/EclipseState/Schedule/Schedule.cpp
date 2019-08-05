@@ -97,7 +97,7 @@ namespace {
         global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
         rft_config(this->m_timeMap)
     {
-        addGroup( "FIELD", 0 );
+        addGroup( "FIELD", 0, deck.getActiveUnitSystem());
 
         /*
           We can have the MESSAGES keyword anywhere in the deck, we
@@ -294,10 +294,10 @@ namespace {
             handleWELTARG(section, keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "GRUPTREE")
-            handleGRUPTREE(keyword, currentStep);
+            handleGRUPTREE(keyword, currentStep, unit_system);
 
         else if (keyword.name() == "GRUPNET")
-            handleGRUPNET(keyword, currentStep);
+            handleGRUPNET(keyword, currentStep, unit_system);
 
         else if (keyword.name() == "GCONINJE")
             handleGCONINJE(section, keyword, currentStep, parseContext, errors);
@@ -560,7 +560,7 @@ namespace {
             const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
 
             if (!hasGroup(groupName))
-                addGroup(groupName , currentStep);
+                addGroup(groupName , currentStep, unit_system);
 
             if (!hasWell(wellName)) {
                 WellCompletion::CompletionOrderEnum wellConnectionOrder = WellCompletion::TRACK;
@@ -1787,7 +1787,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
         const auto& currentTree = m_rootGroupTree.get(currentStep);
         auto newTree = currentTree;
         for( const auto& record : keyword ) {
@@ -1796,10 +1796,10 @@ namespace {
             newTree.update(childName, parentName);
 
             if (!hasGroup(parentName))
-                addGroup( parentName , currentStep );
+                addGroup( parentName , currentStep, unit_system );
 
             if (!hasGroup(childName))
-                addGroup( childName , currentStep );
+                addGroup( childName , currentStep, unit_system );
 
             this->addGroupToGroup(parentName, childName, currentStep);
         }
@@ -1807,12 +1807,12 @@ namespace {
     }
 
 
-    void Schedule::handleGRUPNET( const DeckKeyword& keyword, size_t currentStep) {
+    void Schedule::handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
         for( const auto& record : keyword ) {
             const auto& groupName = record.getItem("NAME").getTrimmedString(0);
 
             if (!hasGroup(groupName))
-                addGroup(groupName , currentStep);
+                addGroup(groupName , currentStep, unit_system);
 
             int table = record.getItem("VFP_TABLE").get< int >(0);
             {
@@ -2243,14 +2243,14 @@ namespace {
     }
 
 
-    void Schedule::addGroup(const std::string& groupName, size_t timeStep) {
+    void Schedule::addGroup(const std::string& groupName, size_t timeStep, const UnitSystem& unit_system) {
         const size_t gseqIndex = m_groups.size();
         // Old group
         m_groups.insert( std::make_pair( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } ));
 
         // New group
         groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group2>>(this->m_timeMap, nullptr)));
-        auto group_ptr = std::make_shared<Group2>(groupName, gseqIndex, timeStep);
+        auto group_ptr = std::make_shared<Group2>(groupName, gseqIndex, timeStep, unit_system);
         auto& dynamic_state = this->groups.at(groupName);
         dynamic_state.update(timeStep, group_ptr);
 

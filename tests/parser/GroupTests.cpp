@@ -426,8 +426,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
 
 
 BOOST_AUTO_TEST_CASE(Group2Create) {
-    Opm::Group2 g1("NAME", 1, 1);
-    Opm::Group2 g2("NAME", 1, 1);
+    Opm::Group2 g1("NAME", 1, 1, UnitSystem::newMETRIC());
+    Opm::Group2 g2("NAME", 1, 1, UnitSystem::newMETRIC());
 
     BOOST_CHECK( g1.addWell("W1") );
     BOOST_CHECK( !g1.addWell("W1") );
