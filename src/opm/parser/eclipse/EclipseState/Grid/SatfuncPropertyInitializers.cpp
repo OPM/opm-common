@@ -363,21 +363,21 @@ namespace Opm {
         auto rbegin = reverse( col.begin() + sgofTable.numRows() );
         auto rend = reverse( col.begin() );
         const auto critical = std::upper_bound( rbegin, rend, 0.0 );
+        if( critical == rend ) {
+            return 0.0;
+        }
         const auto index = std::distance( col.begin(), critical.base() - 1 );
-
-        if( critical == rend ) return 0.0;
-
-        return 1 - sgofTable.getSgColumn()[ index + 1 ];
+        return 1.0 - sgofTable.getSgColumn()[ index + 1 ];
     }
 
     static inline double critical_oil_gas( const SlgofTable& sgofTable ) {
 
         const auto& col = sgofTable.getKrogColumn();
         const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
-        const auto index = std::distance( col.begin(), critical - 1);
         if (critical == col.end()) {
             return 0.0;
         }
+        const auto index = std::distance( col.begin(), critical - 1);
         return sgofTable.getSlColumn()[ index ];
     }
 
