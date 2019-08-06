@@ -2018,6 +2018,11 @@ namespace {
                         wells.push_back( this->getWell2( well_name, timeStep ));
                 }
             }
+
+            std::sort(wells.begin(), wells.end(), [](const Well2& well1, const Well2& well2)
+                                                  {
+                                                      return well1.seqIndex() < well2.seqIndex();
+                                                  });
             return wells;
         }
     }
