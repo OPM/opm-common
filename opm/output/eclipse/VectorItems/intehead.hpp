@@ -85,7 +85,7 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NRSEGZ  = 179,      //  Number of entries per segment in RSEG array
         NILBRZ  = 180,      //  Number of entries per segment in ILBR array
 	
-	ISEEDVAL= 267,      //  Integer seed value for the RAND /  
+	UDQPAR_1 = 267,      //  Integer seed value for the RAND /  
     };
 }}}} // Opm::RestartIO::Helpers::VectorItems
 

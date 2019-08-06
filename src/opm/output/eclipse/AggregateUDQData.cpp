@@ -75,7 +75,7 @@ namespace {
                 iUdq[1] = -4;
             } else {
                 iUdq[0] = 0;
-                iUdq[1] = 0;
+                iUdq[1] = -4;
             }
             iUdq[2] = udq_input.index.typed_insert_index;
         }
@@ -191,13 +191,10 @@ namespace {
         }
 
         template <class IGPHArray>
-        void staticContrib(const Opm::Schedule&    sched,
-			   const Opm::Group&       group,
-			   const std::size_t       simStep,
-			   const int 		   indGph,
-			   IGPHArray& 		   iGph)
+        void staticContrib(const int    inj_phase,
+                           IGPHArray&   iGph)
         {
-
+                iGph[0] = inj_phase;
         }
     } // iGph
 
@@ -262,7 +259,9 @@ const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Sc
         auto group_ptr = it->second;
         if (group_ptr->isInjectionGroup(simStep)) {
             auto phase = group_ptr->getInjectionPhase(simStep);
+            if ( phase == Opm::Phase::OIL   ) inj_phase[ind] = 1;
             if ( phase == Opm::Phase::WATER ) inj_phase[ind] = 2;
+            if ( phase == Opm::Phase::GAS   ) inj_phase[ind] = 3;
         }
         it++;
     }
@@ -313,6 +312,12 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             iUad::staticContrib(record, i_uad);
         }
     }
+    Opm::RestartIO::Helpers::igphData igph_dat;
+    auto igph = igph_dat.ig_phase(sched, simStep, inteHead);
+    for (std::size_t index = 0; index < igph.size(); index++) {
+            auto i_igph = this->iGPH_[index];
+            iGph::staticContrib(igph[index], i_igph);
+        }
 
 }
 

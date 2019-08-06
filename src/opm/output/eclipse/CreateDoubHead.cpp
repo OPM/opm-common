@@ -43,6 +43,17 @@ namespace {
                 double, std::chrono::seconds::period>{ elapsed },
         };
     }
+    
+    Opm::RestartIO::DoubHEAD::udqParam 
+    getUDQParam(const ::Opm::Runspec rspec)
+    {
+        const auto udqPar = rspec.udqParams();
+        return {
+            udqPar.range(),
+            udqPar.undefinedValue(),
+            udqPar.cmpEpsilon()
+        };
+    }
 
     double getTimeConv(const ::Opm::UnitSystem& us)
     {
@@ -82,12 +93,14 @@ createDoubHead(const EclipseState& es,
                const double        nextTimeStep)
 {
     const auto& usys  = es.getDeckUnitSystem();
+    const auto& rspec  = es.runspec();
     const auto  tconv = getTimeConv(usys);
 
     auto dh = DoubHEAD{}
         .tuningParameters(sched.getTuning(), lookup_step, tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
         .drsdt           (sched, lookup_step, tconv)
+        .udq_param(getUDQParam(rspec))
         ;
 
     if (nextTimeStep > 0.0) {

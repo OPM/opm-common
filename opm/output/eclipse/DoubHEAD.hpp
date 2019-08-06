@@ -39,6 +39,12 @@ namespace Opm { namespace RestartIO {
             std::chrono::time_point<std::chrono::system_clock>          start;
             std::chrono::duration<double, std::chrono::seconds::period> elapsed;
         };
+        
+        struct udqParam {
+            double udq_param_2;
+            double udq_param_3;
+            double udq_param_4;
+        };
 
         DoubHEAD();
 
@@ -60,7 +66,7 @@ namespace Opm { namespace RestartIO {
                         const std::size_t lookup_step,
 			const double      cnvT);
 	
-	DoubHEAD& udqParam(const UDQParams& udqPar);
+	DoubHEAD& udq_param(const udqParam& udqPar);
 
         const std::vector<double>& data() const
         {

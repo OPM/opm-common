@@ -92,9 +92,6 @@ namespace Opm { namespace RestartIO {
 	
 	struct UdqParam {
 	  int    udqParam_1;
-	  double udqParam_2;
-	  double udqParam_3;
-	  double udqParam_4;
 	};
 
         InteHEAD();
@@ -124,6 +121,7 @@ namespace Opm { namespace RestartIO {
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
         InteHEAD& regionDimensions(const RegDims& rdim);
 	InteHEAD& ngroups(const Group& gr);
+        InteHEAD& udqParam_1(const UdqParam& udqpar);
 
         const std::vector<int>& data() const
         {

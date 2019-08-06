@@ -31,7 +31,7 @@ namespace Opm {
     public:
         explicit UDQParams(const Deck& deck);
         UDQParams();
-
+        int rand_seed() const noexcept;
         void   reseedRNG(int seed);
         double range() const noexcept;
         double undefinedValue() const noexcept;
