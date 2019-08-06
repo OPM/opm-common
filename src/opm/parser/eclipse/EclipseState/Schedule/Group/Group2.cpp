@@ -22,10 +22,11 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 
 namespace Opm {
-Group2::Group2(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg) :
+Group2::Group2(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg, const UnitSystem& unit_system_arg) :
     m_name(name),
     m_insert_index(insert_index_arg),
     init_step(init_step_arg),
+    unit_system(unit_system_arg),
     group_type(GroupType::NONE),
     gefac(1),
     transfer_gefac(true),

@@ -253,7 +253,7 @@ namespace Opm
         bool handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const;
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group2& child_group, size_t timeStep);
-        void addGroup(const std::string& groupName , size_t timeStep);
+        void addGroup(const std::string& groupName , size_t timeStep, const UnitSystem& unit_system);
         void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder, const UnitSystem& unit_system);
         void handleUDQ(const DeckKeyword& keyword, size_t currentStep);
         void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
@@ -283,8 +283,8 @@ namespace Opm
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
-        void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep);
-        void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep);
+        void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
+        void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
         void handleWRFT( const DeckKeyword& keyword, size_t currentStep);
         void handleWTEST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWRFTPLT( const DeckKeyword& keyword, size_t currentStep);

@@ -26,9 +26,11 @@
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
+class UnitSystem;
 class Group2 {
 public:
 
@@ -58,7 +60,7 @@ struct GroupProductionProperties {
     bool operator!=(const GroupProductionProperties& other) const;
 };
 
-    Group2(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg);
+    Group2(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, const UnitSystem& unit_system_arg);
 
     bool defined(std::size_t timeStep) const;
     std::size_t insert_index() const;
@@ -98,6 +100,7 @@ private:
     std::string m_name;
     std::size_t m_insert_index;
     std::size_t init_step;
+    UnitSystem unit_system;
     GroupType group_type;
     double gefac;
     bool transfer_gefac;
