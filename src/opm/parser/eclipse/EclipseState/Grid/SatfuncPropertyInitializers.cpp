@@ -61,7 +61,7 @@ namespace Opm {
         bool family1 = !sgofTables.empty() || !swofTables.empty() || !slgofTables.empty();
         bool family2 = !swfnTables.empty() || !sgfnTables.empty() || !sof3Tables.empty();
 
-        if (!swofTables.empty() && !slgofTables.empty()) {
+        if (!sgofTables.empty() && !slgofTables.empty()) {
             throw std::invalid_argument("Both, the SGOF and SLGOF have been specified but they are mutually exclusive!");
         }
 
@@ -373,15 +373,12 @@ namespace Opm {
     static inline double critical_oil_gas( const SlgofTable& sgofTable ) {
 
         const auto& col = sgofTable.getKrogColumn();
-        using reverse = std::reverse_iterator< decltype( col.begin() ) >;
-        auto rbegin = reverse( col.begin() + sgofTable.numRows() );
-        auto rend = reverse( col.begin() );
-        const auto critical = std::upper_bound( rbegin, rend, 0.0 );
-        const auto index = std::distance( col.begin(), critical.base() - 1 );
-
-        if( critical == rend ) return 0.0;
-
-        return 1 - sgofTable.getSlColumn()[ index + 1 ];
+        const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
+        const auto index = std::distance( col.begin(), critical - 1);
+        if (critical == col.end()) {
+            return 0.0;
+        }
+        return sgofTable.getSlColumn()[ index ];
     }
 
 
@@ -426,10 +423,15 @@ namespace Opm {
     static std::vector< double > findMaxKrg( const TableManager* tm ) {
         const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
+        const auto& slgofTables = tm->getSlgofTables();
         const auto& sgfnTables = tm->getSgfnTables();
 
-        const auto& famI = [&sgofTables]( int i ) {
+        const auto& famI_sgof = [&sgofTables]( int i ) {
             return sgofTables.getTable< SgofTable >( i ).getKrgColumn().back();
+        };
+
+        const auto& famI_slgof = [&slgofTables]( int i ) {
+            return slgofTables.getTable< SlgofTable >( i ).getKrgColumn().front();
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
@@ -438,7 +440,12 @@ namespace Opm {
 
         switch( getSaturationFunctionFamily( tm ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                if( sgofTables.empty() && slgofTables.empty() )
+                    throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
+                if( !sgofTables.empty() )
+                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                else
+                    return fun::map( famI_slgof, fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return fun::map( famII, fun::iota( num_tables ) );
             default:
@@ -449,10 +456,15 @@ namespace Opm {
     static std::vector< double > findKrgr( const TableManager* tm ) {
         const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
+        const auto& slgofTables = tm->getSlgofTables();
         const auto& sgfnTables = tm->getSgfnTables();
 
-        const auto& famI = [&sgofTables]( int i ) {
+        const auto& famI_sgof = [&sgofTables]( int i ) {
             return sgofTables.getTable< SgofTable >( i ).getKrgColumn().front();
+        };
+
+        const auto& famI_slgof = [&slgofTables]( int i ) {
+            return slgofTables.getTable< SlgofTable >( i ).getKrgColumn().back();
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
@@ -461,7 +473,12 @@ namespace Opm {
 
         switch( getSaturationFunctionFamily( tm ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                if( sgofTables.empty() && slgofTables.empty() )
+                    throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
+                if( !sgofTables.empty() )
+                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                else
+                    return fun::map( famI_slgof, fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return fun::map( famII, fun::iota( num_tables ) );
             default:
@@ -529,9 +546,10 @@ namespace Opm {
     static std::vector< double > findKrorg( const TableManager* tm ) {
         const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
+        const auto& slgofTables = tm->getSlgofTables();
         const auto& sof3Tables = tm->getSof3Tables();
 
-        const auto& famI = [&sgofTables]( int i ) {
+        const auto& famI_sgof = [&sgofTables]( int i ) {
             const auto& sgofTable = sgofTables.getTable< SgofTable >( i );
             const auto& krgCol = sgofTable.getKrgColumn();
             const auto crit = std::upper_bound( krgCol.begin(), krgCol.end(), 0.0 );
@@ -540,6 +558,21 @@ namespace Opm {
             if( crit == krgCol.end() ) return 0.0;
 
             return sgofTable.getKrogColumn()[ index - 1 ];
+        };
+
+        const auto& famI_slgof = [&slgofTables]( int i ) {
+            const auto& slgofTable = slgofTables.getTable< SlgofTable >( i );
+            const auto& col = slgofTable.getKrgColumn();
+            using reverse = std::reverse_iterator< decltype( col.begin() ) >;
+            auto rbegin = reverse( col.begin() + slgofTable.numRows() );
+            auto rend = reverse( col.begin() );
+            const auto crit = std::upper_bound( rbegin, rend, 0.0 );
+            // base() points to the next element in the forward order
+            const auto index = std::distance( col.begin(), crit.base());
+
+            if( crit == rend ) return 0.0;
+
+            return slgofTable.getKrogColumn()[ index ];
         };
 
         const auto crit_gas = findCriticalGas( tm );
@@ -552,7 +585,12 @@ namespace Opm {
 
         switch( getSaturationFunctionFamily( tm ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                if( sgofTables.empty() && slgofTables.empty() )
+                    throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
+                if( !sgofTables.empty() )
+                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                else
+                    return fun::map( famI_slgof, fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return fun::map( famII, fun::iota( num_tables ) );
             default:
@@ -572,10 +610,15 @@ namespace Opm {
     static std::vector< double > findMaxPcog( const TableManager* tm ) {
         const auto num_tables = tm->getTabdims().getNumSatTables();
         const auto& sgofTables = tm->getSgofTables();
+        const auto& slgofTables = tm->getSlgofTables();
         const auto& sgfnTables = tm->getSgfnTables();
 
-        const auto& famI = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getPcogColumn().front();
+        const auto& famI_sgof = [&sgofTables]( int i ) {
+            return sgofTables.getTable< SgofTable >( i ).getPcogColumn().back();
+        };
+
+        const auto& famI_slgof = [&slgofTables]( int i ) {
+            return slgofTables.getTable< SlgofTable >( i ).getPcogColumn().front();
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
@@ -584,7 +627,12 @@ namespace Opm {
 
         switch( getSaturationFunctionFamily( tm ) ) {
             case SatfuncFamily::I:
-                return fun::map( famI, fun::iota( num_tables ) );
+                if( sgofTables.empty() && slgofTables.empty() )
+                    throw std::runtime_error( "Saturation keyword family I requires either sgof or slgof non-empty" );
+                if( !sgofTables.empty() )
+                    return fun::map( famI_sgof, fun::iota( num_tables ) );
+                else
+                    return fun::map( famI_slgof, fun::iota( num_tables ) );
             case SatfuncFamily::II:
                 return fun::map( famII, fun::iota( num_tables ) );
             default:
