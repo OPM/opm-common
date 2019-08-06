@@ -84,7 +84,6 @@ namespace {
                         const ParseContext& parseContext,
                         ErrorGuard& errors) :
         m_timeMap( deck ),
-        m_rootGroupTree( this->m_timeMap, GroupTree{} ),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
         m_modifierDeck( this->m_timeMap, Deck{} ),
@@ -115,8 +114,6 @@ namespace {
 
         if (Section::hasSCHEDULE(deck))
             iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, eclipseProperties );
-
-        checkGroups(parseContext, errors);
     }
 
 
@@ -426,13 +423,6 @@ namespace {
     }
 
 
-    bool Schedule::handleGroupFromWELSPECS(const std::string& groupName, GroupTree& newTree) const {
-        if( newTree.exists( groupName ) ) return false;
-
-        newTree.update( groupName );
-        return true;
-    }
-
 
     void Schedule::handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& record = keyword.getRecord(0);
@@ -538,9 +528,6 @@ namespace {
                                    size_t index,
                                    size_t currentStep,
                                    const UnitSystem& unit_system) {
-        bool needNewTree = false;
-        auto newTree = m_rootGroupTree.get(currentStep);
-
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
             auto itr = section.begin() + index;
             for( ; itr != section.end(); ++itr ) {
@@ -595,15 +582,6 @@ namespace {
                     update |= well2->updateRefDepth(refDepth);
                     update |= well2->updateDrainageRadius(drainageRadius);
 
-                    if (well2->groupName() != groupName) {
-                        auto& old_group = this->m_groups.at(well2->groupName());
-                        auto& new_group = this->m_groups.at(groupName);
-
-                        old_group.delWell(currentStep, well2->name());
-                        new_group.addWell(currentStep, well2->name());
-                        update = true;
-                    }
-
                     if (update) {
                         this->updateWell(well2, currentStep);
                         this->addWellEvent(well2->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, currentStep);
@@ -611,13 +589,7 @@ namespace {
                 }
             }
 
-            if (handleGroupFromWELSPECS(groupName, newTree))
-                needNewTree = true;
-        }
-
-        if (needNewTree) {
-            m_rootGroupTree.update(currentStep, newTree);
-            m_events.addEvent( ScheduleEvents::GROUP_CHANGE , currentStep);
+            this->addWellToGroup(groupName, wellName, currentStep);
         }
     }
 
@@ -1426,16 +1398,6 @@ namespace {
 
                 surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
                 {
-                    auto& group = this->getGroup(group_name);
-                    group.setInjectionPhase( currentStep , phase );
-                    group.setInjectionControlMode( currentStep , controlMode );
-                    group.setSurfaceMaxRate( currentStep, surfaceInjectionRate);
-                    group.setReservoirMaxRate( currentStep, reservoirInjectionRate);
-                    group.setTargetReinjectFraction( currentStep, reinj_target);
-                    group.setTargetVoidReplacementFraction( currentStep, voidage_target);
-                    group.setInjectionGroup(currentStep);
-                }
-                {
                     auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
                     Group2::GroupInjectionProperties injection;
                     injection.phase = phase;
@@ -1470,17 +1432,6 @@ namespace {
                 auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
 
                 {
-                    auto& group = this->getGroup(group_name);
-                    group.setProductionControlMode( currentStep , controlMode );
-                    group.setOilTargetRate( currentStep , oil_target);
-                    group.setGasTargetRate( currentStep , gas_target);
-                    group.setWaterTargetRate( currentStep , water_target);
-                    group.setLiquidTargetRate( currentStep , liquid_target);
-                    group.setReservoirVolumeTargetRate( currentStep , resv_target);
-                    group.setProductionExceedLimitAction( currentStep , exceedAction );
-                    group.setProductionGroup(currentStep);
-                }
-                {
                     auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
                     Group2::GroupProductionProperties production;
                     production.cmode = controlMode;
@@ -1510,12 +1461,6 @@ namespace {
             for (const auto& group_name : group_names){
                 bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
                 auto gefac = record.getItem("EFFICIENCY_FACTOR").get< double >(0);
-                {
-                    auto& group = this->getGroup(group_name);
-
-                    group.setGroupEfficiencyFactor(currentStep, gefac);
-                    group.setTransferGroupEfficiencyFactor(currentStep, transfer);
-                }
                 {
                     auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
                     if (group_ptr->update_gefac(gefac, transfer))
@@ -1788,12 +1733,9 @@ namespace {
     }
 
     void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
-        const auto& currentTree = m_rootGroupTree.get(currentStep);
-        auto newTree = currentTree;
         for( const auto& record : keyword ) {
             const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
             const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
-            newTree.update(childName, parentName);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep, unit_system );
@@ -1803,7 +1745,6 @@ namespace {
 
             this->addGroupToGroup(parentName, childName, currentStep);
         }
-        m_rootGroupTree.update(currentStep, newTree);
     }
 
 
@@ -1815,10 +1756,6 @@ namespace {
                 addGroup(groupName , currentStep, unit_system);
 
             int table = record.getItem("VFP_TABLE").get< int >(0);
-            {
-                auto& group = this->m_groups.at( groupName );
-                group.setGroupNetVFPTable(currentStep, table);
-            }
             {
                 auto group_ptr = std::make_shared<Group2>( this->getGroup2(groupName, currentStep) );
                 if (group_ptr->updateNetVFPTable(table))
@@ -1872,10 +1809,6 @@ namespace {
 
     const TimeMap& Schedule::getTimeMap() const {
         return this->m_timeMap;
-    }
-
-    const GroupTree& Schedule::getGroupTree(size_t timeStep) const {
-        return m_rootGroupTree.get(timeStep);
     }
 
 
@@ -1997,55 +1930,47 @@ namespace {
         return well.hasBeenDefined(timeStep);
     }
 
-    std::vector< Well2 > Schedule::getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const {
+    std::vector< const Group2* > Schedule::getChildGroups2(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
         {
-            const auto& group = getGroup( group_name );
-            std::vector<Well2> wells;
+            const auto& group = getGroup2( group_name, timeStep );
+            std::vector<const Group2*> child_groups;
 
-            if (group.hasBeenDefined( timeStep )) {
-                const GroupTree& group_tree = getGroupTree( timeStep );
-                const auto& child_groups = group_tree.children( group_name );
-
-                if (child_groups.size() && query_mode == GroupWellQueryMode::Recursive) {
-                    for (const auto& child : child_groups) {
-                        const auto& child_wells = getChildWells2( child, timeStep, query_mode );
-                        wells.insert( wells.end() , child_wells.begin() , child_wells.end());
-                    }
-                } else {
-                    for (const auto& well_name : group.getWells( timeStep ))
-                        wells.push_back( this->getWell2( well_name, timeStep ));
-                }
-            }
-
-            std::sort(wells.begin(), wells.end(), [](const Well2& well1, const Well2& well2)
-                                                  {
-                                                      return well1.seqIndex() < well2.seqIndex();
-                                                  });
-            return wells;
-        }
-    }
-
-
-    std::vector< const Group* > Schedule::getChildGroups(const std::string& group_name, size_t timeStep) const {
-        if (!hasGroup(group_name))
-            throw std::invalid_argument("No such group: '" + group_name + "'");
-        {
-            const auto& group = getGroup( group_name );
-            std::vector<const Group*> child_groups;
-
-            if (group.hasBeenDefined( timeStep )) {
-                const GroupTree& group_tree = getGroupTree( timeStep );
-                const auto& ch_grps = group_tree.children( group_name );
-                //for (const std::string& group_name : ch_grps) {
-                for ( auto it = ch_grps.begin() ; it != ch_grps.end(); it++) {
-                    child_groups.push_back( &getGroup(*it));
-                }
+            if (group.defined( timeStep )) {
+                for (const auto& child_name : group.groups())
+                    child_groups.push_back( std::addressof(this->getGroup2(child_name, timeStep)));
             }
             return child_groups;
         }
     }
+
+
+    std::vector< Well2 > Schedule::getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const {
+        if (!hasGroup(group_name))
+            throw std::invalid_argument("No such group: '" + group_name + "'");
+        {
+            const auto& dynamic_state = this->groups.at(group_name);
+            const auto& group_ptr = dynamic_state.get(timeStep);
+            if (group_ptr) {
+                std::vector<Well2> wells;
+
+                if (group_ptr->groups().size() && query_mode == GroupWellQueryMode::Recursive) {
+                    for (const auto& child_name : group_ptr->groups()) {
+                        const auto& child_wells = getChildWells2( child_name, timeStep, query_mode );
+                        wells.insert( wells.end() , child_wells.begin() , child_wells.end());
+                    }
+                } else {
+                    for (const auto& well_name : group_ptr->wells( ))
+                        wells.push_back( this->getWell2( well_name, timeStep ));
+                }
+
+                return wells;
+            } else
+                return {};
+        }
+    }
+
 
 
     std::vector<Well2> Schedule::getWells2(size_t timeStep) const {
@@ -2187,10 +2112,11 @@ namespace {
         auto star_pos = pattern.find('*');
         if (star_pos != std::string::npos) {
             std::vector<std::string> names;
-            for (const auto& group_pair : this->m_groups) {
+            for (const auto& group_pair : this->groups) {
                 if (name_match(pattern, group_pair.first)) {
-                    const auto& group = group_pair.second;
-                    if (group.hasBeenDefined(timeStep))
+                    const auto& dynamic_state = group_pair.second;
+                    const auto& group_ptr = dynamic_state.get(timeStep);
+                    if (group_ptr)
                         names.push_back(group_pair.first);
                 }
             }
@@ -2199,8 +2125,9 @@ namespace {
 
         // Normal group name without any special characters
         if (this->hasGroup(pattern)) {
-            const auto& group = this->m_groups.at(pattern);
-            if (group.hasBeenDefined(timeStep))
+            const auto& dynamic_state = this->groups.at(pattern);
+            const auto& group_ptr = dynamic_state.get(timeStep);
+            if (group_ptr)
                 return { pattern };
         }
         return {};
@@ -2208,10 +2135,11 @@ namespace {
 
     std::vector<std::string> Schedule::groupNames(size_t timeStep) const {
         std::vector<std::string> names;
-        for (const auto& group_pair : this->m_groups) {
-            const auto& group = group_pair.second;
-            if (group.hasBeenDefined(timeStep))
-                names.push_back( group.name() );
+        for (const auto& group_pair : this->groups) {
+            const auto& dynamic_state = group_pair.second;
+            const auto& group_ptr = dynamic_state.get(timeStep);
+            if (group_ptr)
+                names.push_back(group_pair.first);
         }
         return names;
     }
@@ -2225,7 +2153,7 @@ namespace {
         if (star_pos != std::string::npos) {
             int flags = 0;
             std::vector<std::string> names;
-            for (const auto& group_pair : this->m_groups) {
+            for (const auto& group_pair : this->groups) {
                 if (fnmatch(pattern.c_str(), group_pair.first.c_str(), flags) == 0)
                     names.push_back(group_pair.first);
             }
@@ -2241,7 +2169,7 @@ namespace {
 
     std::vector<std::string> Schedule::groupNames() const {
         std::vector<std::string> names;
-        for (const auto& group_pair : this->m_groups)
+        for (const auto& group_pair : this->groups)
             names.push_back(group_pair.first);
 
         return names;
@@ -2249,11 +2177,8 @@ namespace {
 
 
     void Schedule::addGroup(const std::string& groupName, size_t timeStep, const UnitSystem& unit_system) {
-        const size_t gseqIndex = m_groups.size();
-        // Old group
-        m_groups.insert( std::make_pair( groupName, Group { groupName, gseqIndex, m_timeMap, timeStep } ));
+        const size_t gseqIndex = this->groups.size();
 
-        // New group
         groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group2>>(this->m_timeMap, nullptr)));
         auto group_ptr = std::make_shared<Group2>(groupName, gseqIndex, timeStep, unit_system);
         auto& dynamic_state = this->groups.at(groupName);
@@ -2268,7 +2193,7 @@ namespace {
     }
 
     size_t Schedule::numGroups() const {
-        return m_groups.size();
+        return groups.size();
     }
 
     size_t Schedule::numGroups(size_t timeStep) const {
@@ -2277,22 +2202,9 @@ namespace {
     }
 
     bool Schedule::hasGroup(const std::string& groupName) const {
-        return m_groups.count(groupName) > 0;
+        return groups.count(groupName) > 0;
     }
 
-    const Group& Schedule::getGroup(const std::string& groupName) const {
-        if (hasGroup(groupName)) {
-            return m_groups.at(groupName);
-        } else
-            throw std::invalid_argument("Group: " + groupName + " does not exist");
-    }
-
-    Group& Schedule::getGroup(const std::string& groupName) {
-        if (hasGroup(groupName)) {
-            return m_groups.at(groupName);
-        } else
-            throw std::invalid_argument("Group: " + groupName + " does not exist");
-    }
 
     void Schedule::addGroupToGroup( const std::string& parent_group, const Group2& child_group, size_t timeStep) {
         // Add to new parent
@@ -2321,38 +2233,23 @@ namespace {
     void Schedule::addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep) {
         const auto& well = this->getWell2(well_name, timeStep);
         const auto old_gname = well.groupName();
-        {
+        if (old_gname != group_name) {
             auto well_ptr = std::make_shared<Well2>( well );
             well_ptr->updateGroup(group_name);
             this->updateWell(well_ptr, timeStep);
-        }
+            this->addWellEvent(well_ptr->name(), ScheduleEvents::WELL_WELSPECS_UPDATE, timeStep);
 
-        // Remove well child reference from previous group
-        // Old Group implementation
-        if (old_gname != group_name) {
-            {
-                auto& group = this->m_groups.at(old_gname);
-                group.delWell(timeStep, well_name);
-            }
-
-            // New Group2 implementation
-            {
-                auto group = std::make_shared<Group2>(this->getGroup2(old_gname, timeStep));
-                group->delWell(well_name);
-                this->updateGroup(std::move(group), timeStep);
-            }
-        }
-
-        // Add well child reference to new parent group
-        {
-            auto& group = this->m_groups.at(group_name);
-            group.addWell(timeStep, well_name);
-        }
-        {
-            auto group = std::make_shared<Group2>(this->getGroup2(group_name, timeStep));
-            group->addWell(well_name);
+            // Remove well child reference from previous group
+            auto group = std::make_shared<Group2>(this->getGroup2(old_gname, timeStep));
+            group->delWell(well_name);
             this->updateGroup(std::move(group), timeStep);
         }
+
+        // Add well child reference to new group
+        auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, timeStep));
+        group_ptr->addWell(well_name);
+        this->updateGroup(group_ptr, timeStep);
+        this->m_events.addEvent( ScheduleEvents::GROUP_CHANGE , timeStep);
    }
 
 
@@ -2538,160 +2435,4 @@ namespace {
     }
 
 
-#ifdef GROUP_TEST
-
-    bool Schedule::checkGroups(const ParseContext& parseContext, ErrorGuard& errors) {
-        if (this->m_groups.size() != this->groups.size())
-            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group count mismatch", errors);
-
-        // Check group names
-        for (const auto& group_pair : this->m_groups) {
-            if (this->groups.count(group_pair.second.name()) == 0)
-                parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group missing named group", errors);
-        }
-
-
-        // Insert index and defined()
-        for (const auto& group_pair : this->m_groups) {
-            const auto& group = group_pair.second;
-            const auto& dynamic_state = this->groups.at(group.name());
-
-            if (group.seqIndex() != dynamic_state.back()->insert_index())
-                parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group - seq index error", errors);
-
-            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
-                const auto& group2_ptr = dynamic_state[index];
-                if (group2_ptr == nullptr) {
-                    if (group.hasBeenDefined(index))
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
-                } else {
-                    if (!group.hasBeenDefined(index))
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
-
-                    if (group.hasBeenDefined(index) != group2_ptr->defined(index))
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group defined error", errors);
-                }
-            }
-        }
-
-
-        // GCONINJE
-        for (const auto& group_pair : this->m_groups) {
-            const auto& group = group_pair.second;
-            const auto& dynamic_state = this->groups.at(group.name());
-
-            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
-                const auto& group_ptr = dynamic_state[index];
-                if (group_ptr == nullptr) {
-                    if (group.getSurfaceMaxRate(index) != 0)
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 2", errors);
-
-                    if (group.getReservoirMaxRate(index) != 0)
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 3", errors);
-
-                    if (group.getTargetReinjectFraction(index) != 0)
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 4", errors);
-
-                    if (group.getTargetVoidReplacementFraction(index) != 0)
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 5", errors);
-                } else {
-                    if (group_ptr->isInjectionGroup()) {
-                        const auto& injection = group_ptr->injectionProperties();
-                        if (group.getReservoirMaxRate(index) != injection.resv_max_rate)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 6", errors);
-
-                        if (group.getSurfaceMaxRate(index) != injection.surface_max_rate)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 7", errors);
-
-                        if (group.getTargetReinjectFraction(index) != injection.target_reinj_fraction)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 9", errors);
-
-                        if (group.getTargetVoidReplacementFraction(index) != injection.target_void_fraction)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 10", errors);
-
-                        if (group.getInjectionControlMode(index) != injection.cmode)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 11", errors);
-
-                        if (group.getInjectionPhase(index) != injection.phase)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 12", errors);
-
-                        if (group.isProductionGroup(index) != group_ptr->isProductionGroup())
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "Group rate error 13", errors);
-                    }
-                }
-            }
-        }
-
-
-        // GCONPROD && GEFAC
-        for (const auto& group_pair : this->m_groups) {
-            const auto& group = group_pair.second;
-            const auto& dynamic_state = this->groups.at(group.name());
-
-            for (std::size_t index = 0; index < dynamic_state.size(); index++) {
-                const auto& group_ptr = dynamic_state[index];
-                if (group_ptr == nullptr) {
-                    if (group.getOilTargetRate(index) != 0) {
-                        printf("Looking at group: %s  step:%ld  orat:%lg \n", group.name().c_str(), index, group.getOilTargetRate(index));
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 2", errors);
-                    }
-
-                    if (group.getGasTargetRate(index) != 0)
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 3", errors);
-
-                    if (group.getWaterTargetRate(index) != 0)
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 4", errors);
-
-                    if (group.getLiquidTargetRate(index) != 0)
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 5", errors);
-
-                    if (group.getReservoirVolumeTargetRate(index) != 0)
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 6", errors);
-                } else {
-                    if (group_ptr->isProductionGroup()) {
-                        const auto& production = group_ptr->productionProperties();
-                        if (group.getOilTargetRate(index) != production.oil_target)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 7", errors);
-
-                        if (group.getGasTargetRate(index) != production.gas_target)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 8", errors);
-
-                        if (group.getWaterTargetRate(index) != production.water_target)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 9", errors);
-
-                        if (group.getLiquidTargetRate(index) != production.liquid_target)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 10", errors);
-
-                        if (group.getReservoirVolumeTargetRate(index) != production.resv_target)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 11", errors);
-
-                        if (group.getProductionControlMode(index) != production.cmode) {
-                            printf("Looking at group: %s  step:%ld  cmode:%d != %d \n", group.name().c_str(), index, static_cast<int>(group.getProductionControlMode(index)), static_cast<int>(production.cmode));
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 12", errors);
-                        }
-                        if (group.getProductionExceedLimitAction(index) != production.exceed_action)
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 13", errors);
-
-                        if (group.isProductionGroup(index) != group_ptr->isProductionGroup())
-                            parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "PRODGroup rate error 14", errors);
-                    }
-
-                    if (group.getGroupEfficiencyFactor(index) != group_ptr->getGroupEfficiencyFactor())
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "GEFAC error", errors);
-
-                    if (group.getTransferGroupEfficiencyFactor(index) != group_ptr->getTransferGroupEfficiencyFactor())
-                        parseContext.handleError(ParseContext::SCHEDULE_GROUP_ERROR, "GEFAC error", errors);
-                }
-            }
-        }
-        return true;
-    }
-
-#else
-
-    bool Schedule::checkGroups(const ParseContext& parseContext, ErrorGuard& errors) {
-        return true;
-    }
-
-#endif
 }

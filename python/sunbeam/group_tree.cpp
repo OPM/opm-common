@@ -1,4 +1,4 @@
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
 #include "sunbeam.hpp"
@@ -6,19 +6,20 @@
 
 namespace {
 
-    std::string parent( const GroupTree& gt, const std::string& name ) {
-        return gt.parent(name);
+    GTNode parent( const GTNode & gt ) {
+        return gt.parent();
     }
 
-    py::list children( const GroupTree& gt, const std::string& name ) {
-        return iterable_to_pylist(gt.children(name)) ;
+    py::list children( const GTNode & gt ) {
+        return iterable_to_pylist(gt.groups()) ;
     }
 }
 
 void sunbeam::export_GroupTree(py::module& module) {
 
-  py::class_< GroupTree >(module, "GroupTree")
+  py::class_<GTNode>(module, "GroupTree")
 
+        .def( "name", &GTNode::name)
         .def( "_parent", &parent,                       "parent function returning parent of a group")
         .def( "_children", &children,                   "children function returning python"
                                                        " list containing children of a group")

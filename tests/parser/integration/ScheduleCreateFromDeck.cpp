@@ -29,8 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
@@ -283,30 +281,7 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_with_explicit_L0_parenting) {
-    Parser parser;
-    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_GRUPTREE_EXPLICIT_PARENTING");
-    auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(10,10,3);
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule sched(deck,  grid , eclipseProperties, runspec);
 
-    const auto& grouptree = sched.getGroupTree( 0 );
-
-    BOOST_CHECK( grouptree.exists( "FIRST_LEVEL1" ) );
-    BOOST_CHECK( grouptree.exists( "FIRST_LEVEL2" ) );
-    BOOST_CHECK( grouptree.exists( "SECOND_LEVEL1" ) );
-    BOOST_CHECK( grouptree.exists( "SECOND_LEVEL2" ) );
-    BOOST_CHECK( grouptree.exists( "THIRD_LEVEL1" ) );
-
-    BOOST_CHECK_EQUAL( "FIELD", grouptree.parent( "FIRST_LEVEL1" ) );
-    BOOST_CHECK_EQUAL( "FIELD", grouptree.parent( "FIRST_LEVEL2" ) );
-    BOOST_CHECK_EQUAL( "FIRST_LEVEL1", grouptree.parent( "SECOND_LEVEL1" ) );
-    BOOST_CHECK_EQUAL( "FIRST_LEVEL2", grouptree.parent( "SECOND_LEVEL2" ) );
-    BOOST_CHECK_EQUAL( "SECOND_LEVEL1", grouptree.parent( "THIRD_LEVEL1" ) );
-}
 
 
 BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
@@ -330,55 +305,6 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_correct) {
 
 
 
-BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_size ) {
-    Parser parser;
-    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
-    auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(10,10,3);
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule schedule(deck,  grid , eclipseProperties,runspec);
-
-    // Time 0, only from WELSPECS
-    BOOST_CHECK_EQUAL( 3U, schedule.getGroupTree(0).children("FIELD").size() );
-
-    // Time 1, a new group added in tree
-    BOOST_CHECK_EQUAL( 3U, schedule.getGroupTree(1).children("FIELD").size() );
-}
-
-BOOST_AUTO_TEST_CASE(GroupTreeTest_WELSPECS_AND_GRUPTREE_correct_tree) {
-    Parser parser;
-    std::string scheduleFile(pathprefix() + "SCHEDULE/SCHEDULE_WELSPECS_GROUPS");
-    auto deck =  parser.parseFile(scheduleFile);
-    EclipseGrid grid(10,10,3);
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule schedule(deck,  grid , eclipseProperties, runspec);
-
-    // Time 0, only from WELSPECS
-    const auto& tree0 = schedule.getGroupTree( 0 );
-    BOOST_CHECK( tree0.exists( "FIELD" ) );
-    BOOST_CHECK_EQUAL( "FIELD", tree0.parent( "GROUP_NILS" ) );
-    BOOST_CHECK( tree0.exists("GROUP_ODD") );
-
-    // Time 1, now also from GRUPTREE
-    const auto& tree1 = schedule.getGroupTree( 1 );
-    BOOST_CHECK( tree1.exists( "FIELD" ) );
-    BOOST_CHECK_EQUAL( "FIELD", tree1.parent( "GROUP_BJARNE" ) );
-    BOOST_CHECK( tree1.exists("GROUP_ODD"));
-
-    // - from GRUPTREE
-    BOOST_CHECK( tree1.exists( "GROUP_BIRGER" ) );
-    BOOST_CHECK_EQUAL( "GROUP_BJARNE", tree1.parent( "GROUP_BIRGER" ) );
-
-    BOOST_CHECK( tree1.exists( "GROUP_NEW" ) );
-    BOOST_CHECK_EQUAL( "FIELD", tree1.parent( "GROUP_NEW" ) );
-
-    BOOST_CHECK( tree1.exists( "GROUP_NILS" ) );
-    BOOST_CHECK_EQUAL( "GROUP_NEW", tree1.parent( "GROUP_NILS" ) );
-}
 
 BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     Parser parser;
@@ -389,16 +315,6 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     Schedule sched(deck,  grid , eclipseProperties, runspec);
-
-
-    const auto& tree0 = sched.getGroupTree( 0 );
-
-    BOOST_CHECK( tree0.exists( "GROUP_BJARNE" ) );
-    BOOST_CHECK( tree0.exists( "GROUP_NILS" ) );
-    BOOST_CHECK( tree0.exists( "GROUP_NEW" ) );
-    BOOST_CHECK_EQUAL( "FIELD", tree0.parent( "GROUP_BJARNE" ) );
-    BOOST_CHECK_EQUAL( "GROUP_BJARNE", tree0.parent( "GROUP_BIRGER" ) );
-    BOOST_CHECK_EQUAL( "GROUP_NEW", tree0.parent( "GROUP_NILS" ) );
 
     const auto& field_group = sched.getGroup2("FIELD", 1);
     const auto& new_group = sched.getGroup2("GROUP_NEW", 1);
@@ -426,30 +342,34 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     BOOST_CHECK( sched.hasGroup( "OP" ));
 
     {
-        auto& group = sched.getGroup("INJ");
-        BOOST_CHECK_EQUAL( Phase::WATER , group.getInjectionPhase( 3 ));
-        BOOST_CHECK_EQUAL( GroupInjection::VREP , group.getInjectionControlMode( 3 ));
-        BOOST_CHECK_CLOSE( 10/Metric::Time , group.getSurfaceMaxRate( 3 ) , 0.001);
-        BOOST_CHECK_CLOSE( 20/Metric::Time , group.getReservoirMaxRate( 3 ) , 0.001);
-        BOOST_CHECK_EQUAL( 0.75 , group.getTargetReinjectFraction( 3 ));
-        BOOST_CHECK_EQUAL( 0.95 , group.getTargetVoidReplacementFraction( 3 ));
-
-        BOOST_CHECK_EQUAL( Phase::OIL , group.getInjectionPhase( 6 ));
-        BOOST_CHECK_EQUAL( GroupInjection::RATE , group.getInjectionControlMode( 6 ));
-        BOOST_CHECK_CLOSE( 1000/Metric::Time , group.getSurfaceMaxRate( 6 ) , 0.0001);
-
-        BOOST_CHECK(group.isInjectionGroup(3));
+        auto& group = sched.getGroup2("INJ", 3);
+        const auto& injection = group.injectionProperties();
+        BOOST_CHECK_EQUAL( Phase::WATER , injection.phase);
+        BOOST_CHECK_EQUAL( GroupInjection::VREP , injection.cmode);
+        BOOST_CHECK_CLOSE( 10/Metric::Time , injection.surface_max_rate, 0.001);
+        BOOST_CHECK_CLOSE( 20/Metric::Time , injection.resv_max_rate, 0.001);
+        BOOST_CHECK_EQUAL( 0.75 , injection.target_reinj_fraction);
+        BOOST_CHECK_EQUAL( 0.95 , injection.target_void_fraction);
+        BOOST_CHECK(group.isInjectionGroup());
+    }
+    {
+        auto& group = sched.getGroup2("INJ", 6);
+        const auto& injection = group.injectionProperties();
+        BOOST_CHECK_EQUAL( Phase::OIL , injection.phase);
+        BOOST_CHECK_EQUAL( GroupInjection::RATE , injection.cmode);
+        BOOST_CHECK_CLOSE( 1000/Metric::Time , injection.surface_max_rate, 0.0001);
+        BOOST_CHECK(group.isInjectionGroup());
     }
 
     {
-        auto& group = sched.getGroup("OP");
-        BOOST_CHECK_EQUAL( GroupProduction::ORAT , group.getProductionControlMode(3));
-        BOOST_CHECK_CLOSE( 10/Metric::Time , group.getOilTargetRate(3) , 0.001);
-        BOOST_CHECK_CLOSE( 20/Metric::Time , group.getWaterTargetRate(3) , 0.001);
-        BOOST_CHECK_CLOSE( 30/Metric::Time , group.getGasTargetRate(3) , 0.001);
-        BOOST_CHECK_CLOSE( 40/Metric::Time , group.getLiquidTargetRate(3) , 0.001);
-
-        BOOST_CHECK(group.isProductionGroup(3));
+        auto& group = sched.getGroup2("OP", 3);
+        const auto& production = group.productionProperties();
+        BOOST_CHECK_EQUAL( GroupProduction::ORAT , production.cmode);
+        BOOST_CHECK_CLOSE( 10/Metric::Time , production.oil_target , 0.001);
+        BOOST_CHECK_CLOSE( 20/Metric::Time , production.water_target , 0.001);
+        BOOST_CHECK_CLOSE( 30/Metric::Time , production.gas_target , 0.001);
+        BOOST_CHECK_CLOSE( 40/Metric::Time , production.liquid_target , 0.001);
+        BOOST_CHECK(group.isProductionGroup());
     }
 
 }
@@ -465,22 +385,26 @@ BOOST_AUTO_TEST_CASE( WellTestGroupAndWellRelation ) {
     Runspec runspec (deck);
     Schedule sched(deck,  grid , eclipseProperties, runspec);
 
-    auto& group1 = sched.getGroup("GROUP1");
-    auto& group2 = sched.getGroup("GROUP2");
+    {
+        auto& group1 = sched.getGroup2("GROUP1", 0);
 
-    BOOST_CHECK(  group1.hasBeenDefined(0) );
-    BOOST_CHECK( !group2.hasBeenDefined(0));
-    BOOST_CHECK(  group2.hasBeenDefined(1));
+        BOOST_CHECK(  group1.defined(0));
+        BOOST_CHECK(  group1.hasWell("W_1"));
+        BOOST_CHECK(  group1.hasWell("W_2"));
+    }
 
-    BOOST_CHECK(  group1.hasWell("W_1" , 0));
-    BOOST_CHECK(  group1.hasWell("W_2" , 0));
-    BOOST_CHECK( !group2.hasWell("W_1" , 0));
-    BOOST_CHECK( !group2.hasWell("W_2" , 0));
+    {
+        auto& group1 = sched.getGroup2("GROUP1", 1);
+        auto& group2 = sched.getGroup2("GROUP2", 1);
 
-    BOOST_CHECK(  group1.hasWell("W_1" , 1));
-    BOOST_CHECK( !group1.hasWell("W_2" , 1));
-    BOOST_CHECK( !group2.hasWell("W_1" , 1));
-    BOOST_CHECK(  group2.hasWell("W_2" , 1));
+        BOOST_CHECK(  group1.hasWell("W_1"));
+        BOOST_CHECK( !group1.hasWell("W_2"));
+        BOOST_CHECK( !group2.hasWell("W_1"));
+        BOOST_CHECK(  group2.hasWell("W_2"));
+
+        BOOST_CHECK( !group2.defined(0));
+        BOOST_CHECK(  group2.defined(1));
+    }
 }
 
 

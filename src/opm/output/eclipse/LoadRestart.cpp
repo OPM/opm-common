@@ -1182,7 +1182,7 @@ namespace {
             };
 
             for (const auto& gname : schedule.groupNames(sim_step)) {
-                const auto& group = schedule.getGroup(gname);
+                const auto& group = schedule.getGroup2(gname, sim_step);
                 // Note: Order of group values in {I,X}GRP arrays mostly
                 // matches group's order of occurrence in .DATA file.
                 // Values pertaining to FIELD are stored at zero-based order
@@ -1190,12 +1190,12 @@ namespace {
                 // latter value is groupData.maxGroups().
                 //
                 // As a final wrinkle, Flow internally stores FIELD at
-                // seqIndex() == 0, so subtract one to account for this
-                // fact.  Max(seqIndex(), 1) - 1 is just a bit of future
+                // insert_index() == 0, so subtract one to account for this
+                // fact.  Max(insert_index(), 1) - 1 is just a bit of future
                 // proofing and robustness in case that ever changes.
                 const auto groupOrderIx = (gname == "FIELD")
                     ? groupData.maxGroups() // NGMAXZ -- Item 3 of WELLDIMS
-                    : std::max(group.seqIndex(), std::size_t{1}) - 1;
+                    : std::max(group.insert_index(), std::size_t{1}) - 1;
 
                 assign_group_cumulatives(gname, groupOrderIx, groupData, smry);
             }

@@ -9,11 +9,6 @@ option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
 option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
 option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
 option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
-option(ENABLE_GROUP_TEST "" ON)
-
-if (ENABLE_GROUP_TEST)
-  add_definitions(-DGROUP_TEST)
-endif()
 
 # Output implies input
 if(ENABLE_ECL_OUTPUT)
