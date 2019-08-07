@@ -42,7 +42,9 @@ set( keywords
      000_Eclipse100/A/AQUCT
      000_Eclipse100/A/AQUCWFAC
      000_Eclipse100/A/AQUDIMS
+     000_Eclipse100/A/AQUFET
      000_Eclipse100/A/AQUFETP
+     000_Eclipse100/A/AQUFLUX
      000_Eclipse100/A/AQUIFER_PROBE_ANALYTIC
      000_Eclipse100/A/AQUIFER_PROBE_NUMERIC
      000_Eclipse100/A/AQUNUM
