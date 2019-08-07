@@ -31,218 +31,72 @@
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
 
 #include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
 #include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp"
 
 using namespace Opm;
 
-static TimeMap createXDaysTimeMap(size_t numDays) {
-    const std::time_t startDate = Opm::TimeMap::mkdate(2010, 1, 1);
-    Opm::TimeMap timeMap{ startDate };
-    for (size_t i = 0; i < numDays; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
-    return timeMap;
-}
-
 
 
 BOOST_AUTO_TEST_CASE(CreateGroup_CorrectNameAndDefaultValues) {
-    auto timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , 1, timeMap , 0);
+    Opm::Group2 group("G1" , 1, 0, UnitSystem::newMETRIC());
     BOOST_CHECK_EQUAL( "G1" , group.name() );
 }
 
 
 BOOST_AUTO_TEST_CASE(CreateGroupCreateTimeOK) {
-    auto timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , 1, timeMap , 5);
-    BOOST_CHECK_EQUAL( false, group.hasBeenDefined( 4 ));
-    BOOST_CHECK_EQUAL( true, group.hasBeenDefined( 5 ));
-    BOOST_CHECK_EQUAL( true, group.hasBeenDefined( 6 ));
+    Opm::Group2 group("G1" , 1, 5, UnitSystem::newMETRIC());
+    BOOST_CHECK_EQUAL( false, group.defined( 4 ));
+    BOOST_CHECK_EQUAL( true, group.defined( 5 ));
+    BOOST_CHECK_EQUAL( true, group.defined( 6 ));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
-    auto timeMap = createXDaysTimeMap(10);
-    Opm::Group group1("IGROUP" , 1, timeMap , 0);
-    Opm::Group group2("PGROUP" , 2, timeMap , 0);
+    Opm::Group2 group1("IGROUP" , 1,  0, UnitSystem::newMETRIC());
+    Opm::Group2 group2("PGROUP" , 2,  0, UnitSystem::newMETRIC());
 
-    group1.setProductionGroup(0);
-    BOOST_CHECK(group1.isProductionGroup(1));
-    BOOST_CHECK(!group1.isInjectionGroup(1));
+    group1.setProductionGroup();
+    BOOST_CHECK(group1.isProductionGroup());
+    BOOST_CHECK(!group1.isInjectionGroup());
 
-    group2.setInjectionGroup(0);
-    BOOST_CHECK(!group2.isProductionGroup(1));
-    BOOST_CHECK(group2.isInjectionGroup(1));
-
-    group2.setProductionGroup(3);
-    BOOST_CHECK(group2.isProductionGroup(4));
+    group2.setInjectionGroup();
+    BOOST_CHECK(!group2.isProductionGroup());
+    BOOST_CHECK(group2.isInjectionGroup());
 }
 
 
 
 BOOST_AUTO_TEST_CASE(ControlModeOK) {
-    auto timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , 1, timeMap , 0);
-    BOOST_CHECK_EQUAL( Opm::GroupInjection::NONE , group.getInjectionControlMode( 0 ));
-    group.setInjectionControlMode( 2 , Opm::GroupInjection::RESV );
-    BOOST_CHECK_EQUAL( Opm::GroupInjection::RESV , group.getInjectionControlMode( 2 ));
-    BOOST_CHECK_EQUAL( Opm::GroupInjection::RESV , group.getInjectionControlMode( 8 ));
+    Opm::Group2 group("G1" , 1, 0, UnitSystem::newMETRIC());
+    const auto& prod = group.productionProperties();
+    BOOST_CHECK_EQUAL( Opm::GroupInjection::NONE , prod.cmode);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(GroupChangePhaseSameTimeThrows) {
-    auto timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , 1, timeMap , 0);
-    BOOST_CHECK_EQUAL( Opm::Phase::WATER , group.getInjectionPhase( 0 )); // Default phase - assumed WATER
-    group.setInjectionPhase( 5, Opm::Phase::WATER );
-    group.setInjectionPhase( 5, Opm::Phase::WATER );
-    group.setInjectionPhase( 6, Opm::Phase::GAS );
-    BOOST_CHECK_EQUAL( Opm::Phase::GAS , group.getInjectionPhase( 6 ));
-    BOOST_CHECK_EQUAL( Opm::Phase::GAS , group.getInjectionPhase( 8 ));
+    Opm::Group2 group("G1" , 1, 0, UnitSystem::newMETRIC());
+    const auto& inj = group.injectionProperties();
+    BOOST_CHECK_EQUAL( Opm::Phase::WATER , inj.phase); // Default phase - assumed WATER
 }
 
 
-
-
-BOOST_AUTO_TEST_CASE(GroupMiscInjection) {
-    auto timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , 1, timeMap , 0);
-
-    group.setSurfaceMaxRate( 3 , 100 );
-    BOOST_CHECK_EQUAL( 100 , group.getSurfaceMaxRate( 5 ));
-
-    group.setReservoirMaxRate( 3 , 200 );
-    BOOST_CHECK_EQUAL( 200 , group.getReservoirMaxRate( 5 ));
-
-    group.setTargetReinjectFraction( 3 , 300 );
-    BOOST_CHECK_EQUAL( 300 , group.getTargetReinjectFraction( 5 ));
-
-    group.setTargetVoidReplacementFraction( 3 , 400 );
-    BOOST_CHECK_EQUAL( 400 , group.getTargetVoidReplacementFraction( 5 ));
-}
 
 
 
 BOOST_AUTO_TEST_CASE(GroupDoesNotHaveWell) {
-    auto timeMap = createXDaysTimeMap(10);
-    Opm::Group group("G1" , 1, timeMap , 0);
+    Opm::Group2 group("G1" , 1, 0, UnitSystem::newMETRIC());
 
-    BOOST_CHECK_EQUAL(false , group.hasWell("NO", 2));
-    BOOST_CHECK_EQUAL(0U , group.numWells(2));
-}
-
-
-BOOST_AUTO_TEST_CASE(GroupAddWell) {
-
-    auto timeMap = createXDaysTimeMap( 10 );
-    Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
-    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
-
-    BOOST_CHECK_EQUAL(0U , group.numWells(2));
-    group.addWell( 3 , well1->name() );
-    BOOST_CHECK_EQUAL( 1U , group.numWells(3));
-    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
-
-    group.addWell( 4 , well1->name() );
-    BOOST_CHECK_EQUAL( 1U , group.numWells(4));
-    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
-    BOOST_CHECK_EQUAL( 1U , group.numWells(5));
-
-    group.addWell( 6 , well2->name() );
-    BOOST_CHECK_EQUAL( 1U , group.numWells(4));
-    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
-    BOOST_CHECK_EQUAL( 1U , group.numWells(5));
-    BOOST_CHECK_EQUAL( 2U , group.numWells(6));
-    BOOST_CHECK_EQUAL( 2U , group.numWells(8));
-
-    BOOST_CHECK(group.hasWell("WELL1" , 8 ));
-    BOOST_CHECK(group.hasWell("WELL2" , 8 ));
-
-    BOOST_CHECK_EQUAL(false , group.hasWell("WELL1" , 0 ));
-    BOOST_CHECK_EQUAL(false , group.hasWell("WELL2" , 0 ));
-
-    BOOST_CHECK_EQUAL(true  , group.hasWell("WELL1" , 5 ));
-    BOOST_CHECK_EQUAL(false , group.hasWell("WELL2" , 5 ));
-
+    BOOST_CHECK_EQUAL(false , group.hasWell("NO"));
+    BOOST_CHECK_EQUAL(0U , group.numWells());
 }
 
 
 
-BOOST_AUTO_TEST_CASE(GroupAddAndDelWell) {
-
-    auto timeMap = createXDaysTimeMap( 10 );
-    Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
-    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
-
-    BOOST_CHECK_EQUAL(0U , group.numWells(2));
-    group.addWell( 3 , well1->name() );
-    BOOST_CHECK_EQUAL( 1U , group.numWells(3));
-    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
-
-    group.addWell( 6 , well2->name() );
-    BOOST_CHECK_EQUAL( 1U , group.numWells(4));
-    BOOST_CHECK_EQUAL( 0U , group.numWells(1));
-    BOOST_CHECK_EQUAL( 1U , group.numWells(5));
-    BOOST_CHECK_EQUAL( 2U , group.numWells(6));
-    BOOST_CHECK_EQUAL( 2U , group.numWells(8));
-
-    group.delWell( 7 , "WELL1");
-    BOOST_CHECK_EQUAL(false , group.hasWell("WELL1" , 7));
-    BOOST_CHECK_EQUAL(true , group.hasWell("WELL2" , 7));
-    BOOST_CHECK_EQUAL( 1U , group.numWells(7));
-    BOOST_CHECK_EQUAL( 2U , group.numWells(6));
-
-
-    group.delWell( 8 , "WELL2");
-    BOOST_CHECK_EQUAL(false , group.hasWell("WELL1" , 8));
-    BOOST_CHECK_EQUAL(false , group.hasWell("WELL2" , 8));
-    BOOST_CHECK_EQUAL( 0U , group.numWells(8));
-    BOOST_CHECK_EQUAL( 1U , group.numWells(7));
-    BOOST_CHECK_EQUAL( 2U , group.numWells(6));
-}
-
-BOOST_AUTO_TEST_CASE(getWells) {
-    auto timeMap = createXDaysTimeMap( 10 );
-    Opm::Group group("G1" , 1, timeMap , 0);
-    auto well1 = std::make_shared< Well2 >("WELL1", "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
-    auto well2 = std::make_shared< Well2 >("WELL2", "G1", 0, 2, 0, 0, 0.0, Opm::Phase::OIL, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
-
-    group.addWell( 2 , well1->name() );
-    group.addWell( 3 , well1->name() );
-    group.addWell( 3 , well2->name() );
-    group.addWell( 4 , well1->name() );
-
-    std::vector< std::string > names = { "WELL1", "WELL2" };
-    std::vector< std::string > wnames;
-    for( const auto& wname : group.getWells( 3 ) )
-        wnames.push_back( wname );
-
-    BOOST_CHECK_EQUAL_COLLECTIONS( names.begin(), names.end(),
-                                   wnames.begin(), wnames.end() );
-
-    const auto& wells = group.getWells( 3 );
-    BOOST_CHECK_EQUAL( wells.size(), 2U );
-    BOOST_CHECK( wells.count( "WELL1" ) > 0 );
-    BOOST_CHECK( wells.count( "WELL2" ) > 0 );
-
-    BOOST_CHECK_EQUAL( group.getWells( 0 ).size(), 0U );
-    BOOST_CHECK_EQUAL( group.getWells( 2 ).size(), 1U );
-    BOOST_CHECK( group.getWells( 2 ).count( "WELL1" ) > 0 );
-    BOOST_CHECK( group.getWells( 2 ).count( "WELL2" ) == 0 );
-    BOOST_CHECK_EQUAL( group.getWells( 4 ).size(), 2U );
-    BOOST_CHECK( group.getWells( 4 ).count( "WELL1" ) > 0 );
-    BOOST_CHECK( group.getWells( 4 ).count( "WELL2" ) > 0 );
-
-}
 
 BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     Opm::Parser parser;
@@ -276,9 +130,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     BOOST_CHECK_EQUAL(group_names.size(), 1);
     BOOST_CHECK_EQUAL(group_names[0], "PRODUC");
 
-    const auto& group1 = schedule.getGroup("PRODUC");
-    BOOST_CHECK_EQUAL(group1.getGroupEfficiencyFactor(0), 0.85);
-    BOOST_CHECK(group1.getTransferGroupEfficiencyFactor(0));
+    const auto& group1 = schedule.getGroup2("PRODUC", 0);
+    BOOST_CHECK_EQUAL(group1.getGroupEfficiencyFactor(), 0.85);
+    BOOST_CHECK(group1.getTransferGroupEfficiencyFactor());
 }
 
 
@@ -336,56 +190,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
 }
 
-BOOST_AUTO_TEST_CASE(CreateGroupTree_DefaultConstructor_HasFieldNode) {
-    GroupTree tree;
-    BOOST_CHECK(tree.exists("FIELD"));
-}
 
-BOOST_AUTO_TEST_CASE(GetNode_NonExistingNode_ReturnsNull) {
-    GroupTree tree;
-    BOOST_CHECK(!tree.exists("Non-existing"));
-}
 
-BOOST_AUTO_TEST_CASE(GetNodeAndParent_AllOK) {
-    GroupTree tree;
-    tree.update("GRANDPARENT", "FIELD");
-    tree.update("PARENT", "GRANDPARENT");
-    tree.update("GRANDCHILD", "PARENT");
 
-    const auto grandchild = tree.exists("GRANDCHILD");
-    BOOST_CHECK(grandchild);
-    auto parent = tree.parent("GRANDCHILD");
-    BOOST_CHECK_EQUAL("PARENT", parent);
-    BOOST_CHECK( tree.children( "PARENT" ).front() == "GRANDCHILD" );
-}
-
-BOOST_AUTO_TEST_CASE(UpdateTree_ParentNotSpecified_AddedUnderField) {
-    GroupTree tree;
-    tree.update("CHILD_OF_FIELD");
-    BOOST_CHECK(tree.exists("CHILD_OF_FIELD"));
-    BOOST_CHECK_EQUAL( "FIELD", tree.parent( "CHILD_OF_FIELD" ) );
-}
-
-BOOST_AUTO_TEST_CASE(UpdateTree_ParentIsField_AddedUnderField) {
-    GroupTree tree;
-    tree.update("CHILD_OF_FIELD", "FIELD");
-    BOOST_CHECK( tree.exists( "CHILD_OF_FIELD" ) );
-    BOOST_CHECK_EQUAL( "FIELD", tree.parent( "CHILD_OF_FIELD" ) );
-}
-
-BOOST_AUTO_TEST_CASE(UpdateTree_ParentNotAdded_ChildAndParentAdded) {
-    GroupTree tree;
-    tree.update("CHILD", "NEWPARENT");
-    BOOST_CHECK( tree.exists("CHILD") );
-    BOOST_CHECK_EQUAL( "NEWPARENT", tree.parent( "CHILD" ) );
-    BOOST_CHECK_EQUAL( "CHILD", tree.children( "NEWPARENT" ).front() );
-}
-
-BOOST_AUTO_TEST_CASE(UpdateTree_AddFieldNode_Throws) {
-    GroupTree tree;
-    BOOST_CHECK_THROW(tree.update("FIELD", "NEWPARENT"), std::invalid_argument );
-    BOOST_CHECK_THROW(tree.update("FIELD"), std::invalid_argument );
-}
 
 BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         Opm::Parser parser;
@@ -416,12 +223,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         Runspec runspec (deck );
         Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
 
-        const auto& group1 = schedule.getGroup("PROD");
-        const auto& group2 = schedule.getGroup("MANI-E2");
-        const auto& group3 = schedule.getGroup("MANI-K1");
-        BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(0), 0);
-        BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(0), 9);
-        BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(0), 9999);
+        const auto& group1 = schedule.getGroup2("PROD", 0);
+        const auto& group2 = schedule.getGroup2("MANI-E2", 0);
+        const auto& group3 = schedule.getGroup2("MANI-K1", 0);
+        BOOST_CHECK_EQUAL(group1.getGroupNetVFPTable(), 0);
+        BOOST_CHECK_EQUAL(group2.getGroupNetVFPTable(), 9);
+        BOOST_CHECK_EQUAL(group3.getGroupNetVFPTable(), 9999);
 }
 
 
@@ -432,6 +239,14 @@ BOOST_AUTO_TEST_CASE(Group2Create) {
     BOOST_CHECK( g1.addWell("W1") );
     BOOST_CHECK( !g1.addWell("W1") );
     BOOST_CHECK( g1.addWell("W2") );
+    BOOST_CHECK( g1.hasWell("W1"));
+    BOOST_CHECK( g1.hasWell("W2"));
+    BOOST_CHECK( !g1.hasWell("W3"));
+    BOOST_CHECK_EQUAL( g1.numWells(), 2);
+    BOOST_CHECK_THROW(g1.delWell("W3"), std::invalid_argument);
+    BOOST_CHECK_NO_THROW(g1.delWell("W1"));
+    BOOST_CHECK_EQUAL( g1.numWells(), 1);
+
 
     BOOST_CHECK( g2.addGroup("G1") );
     BOOST_CHECK( !g2.addGroup("G1") );

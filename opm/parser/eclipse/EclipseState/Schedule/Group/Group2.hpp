@@ -30,7 +30,6 @@
 
 namespace Opm {
 
-class UnitSystem;
 class Group2 {
 public:
 

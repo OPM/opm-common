@@ -86,10 +86,8 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ASTNode.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Events.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Group/Group.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/Group2.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Well/injection.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MessageLimits.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/MSW/Compsegs.cpp
@@ -543,14 +541,12 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp
        opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp
        opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp
        opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp
        opm/parser/eclipse/EclipseState/Schedule/Events.hpp
        opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp
        opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp
-       opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/WellSegments.hpp

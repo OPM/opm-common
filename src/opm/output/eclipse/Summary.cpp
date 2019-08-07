@@ -38,7 +38,7 @@
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
@@ -1430,26 +1430,25 @@ well_efficiency_factors( const ecl::smspec_node* node,
 
     const bool is_group = (var_type == ECL_SMSPEC_GROUP_VAR);
     const bool is_rate = !node->is_total();
-    const auto &groupTree = schedule.getGroupTree(sim_step);
+    const auto groupTree = schedule.groupTree(sim_step);
 
     for( const auto& well : schedule_wells ) {
         if (!well.hasBeenDefined(sim_step))
             continue;
 
         double eff_factor = well.getEfficiencyFactor();
-        const auto* group_node = &schedule.getGroup(well.groupName());
+        const auto* group_ptr = std::addressof(schedule.getGroup2(well.groupName(), sim_step));
 
         while(true){
             if((   is_group
                 && is_rate
-                && group_node->name() == node->get_wgname() ))
+                && group_ptr->name() == node->get_wgname() ))
                 break;
-            eff_factor *= group_node->getGroupEfficiencyFactor( sim_step );
+            eff_factor *= group_ptr->getGroupEfficiencyFactor();
 
-            const auto& parent = groupTree.parent( group_node->name() );
-            if( !schedule.hasGroup( parent ) )
+            if (group_ptr->name() == "FIELD")
                 break;
-            group_node = &schedule.getGroup( parent );
+            group_ptr = std::addressof( schedule.getGroup2( group_ptr->parent(), sim_step ) );
         }
         efac.emplace_back( well.name(), eff_factor );
     }

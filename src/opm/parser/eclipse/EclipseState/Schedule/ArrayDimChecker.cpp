@@ -26,8 +26,8 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
@@ -138,6 +138,20 @@ namespace {
         WellDims::checkNumGroups  (wdims, sched, ctxt, guard);
         WellDims::checkGroupSize  (wdims, sched, ctxt, guard);
     }
+
+    std::size_t groupSize(const Opm::GTNode& tree) {
+        auto nwgmax = std::size_t{0};
+        for (const auto& node : tree.groups()) {
+            const auto& group = node.group();
+            if (group.wellgroup())
+                nwgmax = std::max(nwgmax, group.wells().size());
+            else
+                nwgmax = std::max(nwgmax, groupSize(node));
+        }
+        return nwgmax;
+    }
+
+
 } // Anonymous
 
 void
@@ -149,40 +163,13 @@ Opm::checkConsistentArrayDimensions(const EclipseState& es,
     consistentWellDims(es.runspec().wellDimensions(), sched, ctxt, guard);
 }
 
+
+
+
 int
 Opm::maxGroupSize(const Opm::Schedule& sched,
                   const std::size_t    step)
 {
-    const auto& gt = sched.getGroupTree(step);
-
-    auto groups = std::vector<std::string>{"FIELD"};
-    auto nwgmax = std::size_t{0};
-
-    auto update_size = [&nwgmax](const std::size_t n) {
-        nwgmax = std::max(nwgmax, n);
-    };
-
-    // Note: We update 'groups' in the body of the loop, so
-    //       groups.size() is potentially increasing as we
-    //       traverse down the group tree to its leaf nodes.
-    for (auto i = 0*groups.size(); i < groups.size(); ++i) {
-        const auto& grp      = groups[i];
-        auto        children = gt.children(grp);
-
-        if (children.empty()) {
-            // Well group.  Size is number of wells.
-            update_size(sched.getGroup(grp).numWells(step));
-        }
-        else {
-            // Node group.  Size is number of child nodes.
-            update_size(children.size());
-
-            // Enqueue those children to get their sizes.
-            groups.insert(groups.end(),
-                          std::make_move_iterator(children.begin()),
-                          std::make_move_iterator(children.end()));
-        }
-    }
-
-    return nwgmax;
+    const auto& gt = sched.groupTree(step);
+    return static_cast<int>(groupSize(gt));
 }

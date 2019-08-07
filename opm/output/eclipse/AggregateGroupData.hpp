@@ -32,25 +32,10 @@
 namespace Opm {
 class Schedule;
 class SummaryState;
-class Group;
+class Group2;
 } // Opm
 
 namespace Opm { namespace RestartIO { namespace Helpers {
-
-class groupMaps {
-public:
-    const std::map <size_t, const Opm::Group*>& indexGroupMap() const;
-    const std::map <const std::string, size_t>& groupNameIndexMap() const;
-
-    void currentGrpTreeNameSeqIndMap(const Opm::Schedule&                        sched,
-                                     const size_t                                simStep,
-                                     const std::map<const std::string , size_t>& GnIMap,
-                                     const std::map<size_t, const Opm::Group*>&  IGMap);
-
-private:
-    std::map <size_t, const Opm::Group*> m_indexGroupMap;
-    std::map <const std::string, size_t> m_groupNameIndexMap;
-};
 
 class AggregateGroupData
 {

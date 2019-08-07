@@ -18,7 +18,7 @@ class Schedule(object):
         return {grp.name: grp for grp in self.groups(timestep)}
 
     def groups(self, timestep=0):
-        return [Group(x, self, timestep) for x in self._groups if x.name != 'FIELD']
+        return [Group(x, self, timestep) for x in self._groups(timestep) if x.name != 'FIELD']
 
     def get_well(self, well, timestep):
          return Well(self._getwell(well, timestep))
@@ -125,26 +125,25 @@ class Group(object):
 
     @property
     def wells(self):
-        names = self._wellnames(self.timestep)
+        names = self._wellnames()
         return [w for w in self._schedule.get_wells(self.timestep) if w.name in names]
 
     @property
     def vfp_table_nr(self):
-        vfp_table_nr = self._vfp_table_nr(self.timestep)
+        vfp_table_nr = self._vfp_table_nr()
         return vfp_table_nr
 
     @property
     def parent(self):
-        par = self._schedule._group_tree(self.timestep)._parent(self.name)
         if self.name == 'FIELD':
             return None
         else:
-            return Group(self._schedule._group(par), self._schedule, self.timestep)
+            return Group(self._schedule._group(par.name, self.timestep), self._schedule, self.timestep) 
 
     @property
     def children(self):
-        chl = self._schedule._group_tree(self.timestep)._children(self.name)
-        g = lambda elt : Group(self._schedule._group(elt),
+        chl = self._schedule._group_tree(self.name, self.timestep)._children()
+        g = lambda elt : Group(self._schedule._group(elt.name(), self.timestep),
                                self._schedule,
                                self.timestep)
         return [g(elem) for elem in chl]

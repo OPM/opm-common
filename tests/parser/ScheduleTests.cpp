@@ -31,8 +31,6 @@
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/TimeMap.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/Group.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GroupTree.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/RFTConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
@@ -508,45 +506,7 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasNoWells) {
     BOOST_CHECK_THROW( schedule.getWell2("WELL2", 0) , std::invalid_argument );
 }
 
-BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithoutGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
-    EclipseGrid grid(10,10,10);
-    auto deck = createDeck();
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec);
-    BOOST_CHECK(schedule.getGroupTree(0).exists("FIELD"));
-}
 
-static Deck deckWithGRUPTREE() {
-    auto deck = createDeck();
-    DeckKeyword gruptreeKeyword("GRUPTREE");
-
-    DeckRecord recordChildOfField;
-    DeckItem itemChild1( "CHILD_GROUP", std::string() );
-    itemChild1.push_back(std::string("BARNET"));
-    DeckItem itemParent1( "PARENT_GROUP", std::string() );
-    itemParent1.push_back(std::string("FAREN"));
-
-    recordChildOfField.addItem( std::move( itemChild1 ) );
-    recordChildOfField.addItem( std::move( itemParent1 ) );
-    gruptreeKeyword.addRecord( std::move( recordChildOfField ) );
-    deck.addKeyword( std::move( gruptreeKeyword ) );
-
-    return deck;
-}
-
-BOOST_AUTO_TEST_CASE(CreateSchedule_DeckWithGRUPTREE_HasRootGroupTreeNodeForTimeStepZero) {
-    EclipseGrid grid(10,10,10);
-    auto deck = deckWithGRUPTREE();
-    TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    Runspec runspec (deck);
-    Schedule schedule(deck, grid , eclipseProperties, runspec);
-    BOOST_CHECK( schedule.getGroupTree( 0 ).exists( "FIELD" ) );
-    BOOST_CHECK( schedule.getGroupTree( 0 ).exists( "FAREN" ) );
-    BOOST_CHECK_EQUAL( "FAREN", schedule.getGroupTree( 0 ).parent( "BARNET" ) );
-}
 
 BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     EclipseGrid grid(10,10,10);
@@ -559,7 +519,7 @@ BOOST_AUTO_TEST_CASE(EmptyScheduleHasFIELDGroup) {
     BOOST_CHECK_EQUAL( 1U , schedule.numGroups() );
     BOOST_CHECK_EQUAL( true , schedule.hasGroup("FIELD") );
     BOOST_CHECK_EQUAL( false , schedule.hasGroup("GROUP") );
-    BOOST_CHECK_THROW( schedule.getGroup("GROUP") , std::invalid_argument );
+    BOOST_CHECK_THROW( schedule.getGroup2("GROUP", 0) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(WellsIterator_Empty_EmptyVectorReturned) {
@@ -1181,14 +1141,19 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
 
-        auto g_g1 = schedule.getGroup("G1");
-        BOOST_CHECK_EQUAL(g_g1.getOilTargetRate(1), 1000 * siFactorL);
-        BOOST_CHECK_EQUAL(g_g1.getOilTargetRate(2), 2000 * siFactorL);
+        {
+            auto g = schedule.getGroup2("G1", 1);
+            BOOST_CHECK_EQUAL(g.productionProperties().oil_target, 1000 * siFactorL);
+        }
+        {
+            auto g = schedule.getGroup2("G1", 2);
+            BOOST_CHECK_EQUAL(g.productionProperties().oil_target, 2000 * siFactorL);
+        }
 
-        auto g_g2 = schedule.getGroup("G2");
-        BOOST_CHECK_EQUAL(g_g2.getOilTargetRate(2), 2000 * siFactorL);
+        auto g2 = schedule.getGroup2("G2", 2);
+        BOOST_CHECK_EQUAL(g2.productionProperties().oil_target, 2000 * siFactorL);
 
-        auto g_h1 = schedule.getGroup("H1");
+        auto gh = schedule.getGroup2("H1", 1);
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {

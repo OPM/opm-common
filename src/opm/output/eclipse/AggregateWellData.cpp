@@ -109,9 +109,9 @@ namespace {
             // make group name to index map for the current time step
             std::map <const std::string, size_t> groupIndexMap;
             for (const auto& group_name : sched.groupNames(simStep)) {
-                const auto& group = sched.getGroup(group_name);
+                const auto& group = sched.getGroup2(group_name, simStep);
                 int ind = (group.name() == "FIELD")
-                    ? inteHead[VI::intehead::NGMAXZ]-1 : group.seqIndex()-1;
+                    ? inteHead[VI::intehead::NGMAXZ]-1 : group.insert_index()-1;
                 std::pair<const std::string, size_t> groupPair = std::make_pair(group.name(), ind);
                 groupIndexMap.insert(groupPair);
             }
