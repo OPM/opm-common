@@ -83,7 +83,7 @@ createUdqDims(const Schedule&     		sched,
 {
     const auto& udqCfg = sched.getUDQConfig(simStep);
     const auto& udqActive = sched.udqActive(simStep);
-    std::vector<int> udqDims(7);
+    std::vector<int> udqDims(8);
 
     udqDims[0] = udqCfg.size();
     udqDims[1] = entriesPerIUDQ();
@@ -92,6 +92,7 @@ createUdqDims(const Schedule&     		sched,
     udqDims[4] = entriesPerZUDN();
     udqDims[5] = entriesPerZUDL();
     udqDims[6] = entriesPerIGph(inteHead);
+    udqDims[7] = udqActive.IUAP_size();
 
     return udqDims;
 }

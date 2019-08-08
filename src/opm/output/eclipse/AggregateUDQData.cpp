@@ -198,6 +198,26 @@ namespace {
         }
     } // iGph
 
+    namespace iUap {
+
+        Opm::RestartIO::Helpers::WindowedArray<int>
+        allocate(const std::vector<int>& udqDims)
+        {
+            using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            return WV {
+                WV::NumWindows{ static_cast<std::size_t>(udqDims[7]) },
+                WV::WindowSize{ static_cast<std::size_t>(1) }
+            };
+        }
+
+        template <class IUAPArray>
+        void staticContrib(const int    wg_no,
+                           IUAPArray&   iUap)
+        {
+                iUap[0] = wg_no+1;
+        }
+    } // iUap
+
 }
 
 // =====================================================================
@@ -268,6 +288,37 @@ const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Sc
     return inj_phase;
 }
 
+const std::vector<int> iuap_data(const Opm::Schedule& sched,
+                                    const std::size_t simStep,
+                                    const std::vector<Opm::UDQActive::InputRecord>& iuap)
+{
+    //construct the current list of well or group sequence numbers to output the IUAP array
+    std::vector<int> wg_no;
+    Opm::UDAKeyword wg_key;
+    
+    //wg_no.resize(iuap.size(), 0);
+    for (auto ind = 0; ind < iuap.size(); ind++) {
+        auto& ctrl = iuap[ind].control;
+        wg_key = Opm::UDQ::keyword(ctrl);
+        if ((wg_key == Opm::UDAKeyword::WCONPROD) || (wg_key == Opm::UDAKeyword::WCONINJE)) {
+            const auto& well = sched.getWell2(iuap[ind].wgname, simStep);
+            wg_no.push_back(well.seqIndex());
+        }
+        else if ((wg_key == Opm::UDAKeyword::GCONPROD) || (wg_key == Opm::UDAKeyword::GCONINJE)) {
+            const auto& group = sched.getGroup2(iuap[ind].wgname, simStep);
+            wg_no.push_back(group.insert_index());
+        }
+        else {
+            std::cout << "Invalid Control keyword: " << static_cast<int>(ctrl) << std::endl;
+            throw std::invalid_argument("UDQ - variable: " + iuap[ind].udq );
+        }
+            
+    }
+
+    return wg_no;
+}
+
+
 
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const std::vector<int>& udqDims)
@@ -275,7 +326,8 @@ AggregateUDQData(const std::vector<int>& udqDims)
       iUAD_ (iUad::allocate(udqDims)),
       zUDN_ (zUdn::allocate(udqDims)),
       zUDL_ (zUdl::allocate(udqDims)),
-      iGPH_ (iGph::allocate(udqDims))
+      iGPH_ (iGph::allocate(udqDims)),
+      iUAP_ (iUap::allocate(udqDims))
 {}
 
 // ---------------------------------------------------------------------
@@ -305,12 +357,21 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
 
     auto udq_active = sched.udqActive(simStep);
     if (udq_active) {
-        const auto& udq_records = udq_active.get_output();
+        const auto& udq_records = udq_active.get_iuad();
         for (std::size_t index = 0; index < udq_records.size(); index++) {
             const auto& record = udq_records[index];
             auto i_uad = this->iUAD_[index];
             iUad::staticContrib(record, i_uad);
         }
+        
+        const auto& iuap_records = udq_active.get_iuap();
+        const auto iuap_vect = iuap_data(sched, simStep,iuap_records);
+        for (std::size_t index = 0; index < iuap_vect.size(); index++) {
+            const auto& wg_no = iuap_vect[index];
+            auto i_uap = this->iUAP_[index];
+            iUap::staticContrib(wg_no, i_uap);
+        }
+
     }
     Opm::RestartIO::Helpers::igphData igph_dat;
     auto igph = igph_dat.ig_phase(sched, simStep, inteHead);
@@ -318,6 +379,6 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             auto i_igph = this->iGPH_[index];
             iGph::staticContrib(igph[index], i_igph);
         }
-
+        
 }
 

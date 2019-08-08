@@ -85,12 +85,12 @@ public:
     {
         return this->iGPH_.data();
     }
-#if 0
+
     const std::vector<int>& getIUAP() const
     {
         return this->iUAP_.data();
     }
-
+#if 0
     const std::vector<double>& getDUDW() const
     {
         return this->dUDW_.data();
@@ -119,10 +119,10 @@ private:
 
     /// Aggregate 'IGPH' array (Integer) for all UDQ data  (3 - zeroes - as of current understanding)
     WindowedArray<int> iGPH_;
-#if 0
+
     /// Aggregate 'IUAP' array (ICharArrayNullTermnteger) for all UDQ data  (1 integer pr UDQ constraint used)
     WindowedArray<int> iUAP_;
-
+#if 0
     /// Aggregate 'DUDW' array (Double Precision) for all UDQ data. (Dimension = max no wells * noOfUDQ's)
     WindowedArray<double> dUDW_;
 

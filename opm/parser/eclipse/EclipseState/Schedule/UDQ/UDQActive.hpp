@@ -71,9 +71,7 @@ public:
         int uad_code;
         std::size_t use_count;
     };
-
-
-
+   
     class InputRecord {
     public:
         InputRecord(std::size_t input_index_arg, const std::string& udq_arg, const std::string& wgname_arg, UDAControl control_arg) :
@@ -92,9 +90,11 @@ public:
 
     int update(const UDQConfig& udq_config, const UDAValue& uda, const std::string& wgname, UDAControl control);
     std::size_t IUAD_size() const;
+    std::size_t IUAP_size() const;
     explicit operator bool() const;
     Record operator[](std::size_t index) const;
-    const std::vector<Record>& get_output() const;
+    const std::vector<Record>& get_iuad() const;
+    std::vector<InputRecord> get_iuap() const;
 private:
     std::string udq_hash(const std::string& udq, UDAControl control);
     std::string wg_hash(const std::string& wgname, UDAControl control);

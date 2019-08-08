@@ -130,6 +130,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     rstFile.write("IUDQ", udqData.getIUDQ());
     rstFile.write("IUAD", udqData.getIUAD());
     rstFile.write("IGPH", udqData.getIGPH());
+    rstFile.write("IUAP", udqData.getIUAP());
     rstFile.write("ZUDN", udqData.getZUDN());
     rstFile.write("ZUDL", udqData.getZUDL());
     
