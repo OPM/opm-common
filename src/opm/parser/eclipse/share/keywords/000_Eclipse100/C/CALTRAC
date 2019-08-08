@@ -1,0 +1,6 @@
+{"name" : "CALTRAC" , "sections" : ["SCHEDULE"], "size": 1,
+        "items" : [
+        {"name" : "IX1" , "value_type" : "STRING"}
+
+                  ]
+}

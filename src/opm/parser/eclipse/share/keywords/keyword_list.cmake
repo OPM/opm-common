@@ -63,7 +63,10 @@ set( keywords
      000_Eclipse100/B/BRINE
      000_Eclipse100/B/BTOBALFA
      000_Eclipse100/B/BTOBALFV
+     000_Eclipse100/C/CALTRAC
      000_Eclipse100/C/CARFIN
+     000_Eclipse100/C/CART
+     000_Eclipse100/C/CBMOPTS
      000_Eclipse100/C/CECON
      000_Eclipse100/C/COMPDAT
      000_Eclipse100/C/COMPDATL
