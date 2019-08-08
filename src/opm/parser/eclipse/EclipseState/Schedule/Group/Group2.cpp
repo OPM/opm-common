@@ -287,4 +287,16 @@ Group2::InjectionControls Group2::injectionControls(const SummaryState& st) cons
     return ic;
 }
 
+GroupProduction::ControlEnum Group2::production_cmode() const {
+    return this->production_properties.cmode;
+}
+
+GroupInjection::ControlEnum Group2::injection_cmode() const {
+    return this->injection_properties.cmode;
+}
+
+Phase Group2::injection_phase() const {
+    return this->injection_properties.phase;
+}
+
 }

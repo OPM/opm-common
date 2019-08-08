@@ -112,6 +112,9 @@ struct ProductionControls {
     bool wellgroup() const;
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
+    GroupProduction::ControlEnum production_cmode() const;
+    GroupInjection::ControlEnum injection_cmode() const;
+    Phase injection_phase() const;
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
