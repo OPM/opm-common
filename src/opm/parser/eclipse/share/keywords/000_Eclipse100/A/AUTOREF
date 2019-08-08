@@ -1,4 +1,4 @@
-{"name" : "AUTOCOAR" , "sections" : ["RUNSPEC"],
+{"name" : "AUTOREF" , "sections" : ["RUNSPEC"],
         "items" : [
         {"name" : "NX" , "value_type" : "INT", "default": 1},
         {"name" : "NY" , "value_type" : "INT", "default": 1},
