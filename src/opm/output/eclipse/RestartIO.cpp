@@ -265,6 +265,10 @@ namespace {
                   const std::vector<int>&      	ih,
                   EclIO::OutputStream::Restart& rstFile)
     {
+        return;
+        //need to add test if UDQ-data exist and UDQ - active exist etc. 
+        // do not write unless data exists and copy E100 logic.
+        
         // write UDQ - data to restart file
         const std::size_t simStep = static_cast<size_t> (sim_step);
 

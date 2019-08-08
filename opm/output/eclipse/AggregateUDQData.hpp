@@ -47,7 +47,6 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
 class igphData {
 public:
-    const std::map <size_t, const Opm::Group*>  currentGroupMapIndexGroup(const Opm::Schedule& sched, const size_t simStep, const std::vector<int>& inteHead);
     const std::vector<int> ig_phase(const Opm::Schedule& sched, const std::size_t simStep, const std::vector<int>& inteHead);
 };
 

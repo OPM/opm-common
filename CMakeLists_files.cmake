@@ -288,9 +288,8 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateGroupData.cpp
           tests/test_AggregateMSWData.cpp
           tests/test_AggregateConnectionData.cpp
-          tests/test_CreateUdqDims.cpp
-          tests/test_UDQ_x.cpp
-          tests/test_UDQ_x_file.cpp
+          #tests/test_UDQ_x.cpp
+          #tests/test_UDQ_x_file.cpp
           tests/test_ArrayDimChecker.cpp
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp

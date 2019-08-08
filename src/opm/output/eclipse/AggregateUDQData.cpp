@@ -244,46 +244,23 @@ std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const 
     return result;
 }
 
-
-const std::map <size_t, const Opm::Group*>  Opm::RestartIO::Helpers::igphData::currentGroupMapIndexGroup(const Opm::Schedule& sched,
-                                                                                                         const size_t simStep,
-                                                                                                         const std::vector<int>& inteHead)
-{
-    // make group index for current report step
-    std::map <size_t, const Opm::Group*> indexGroupMap;
-    for (const auto& group_name : sched.groupNames(simStep)) {
-        const auto& group = sched.getGroup(group_name);
-        int ind = (group.name() == "FIELD")
-            ? ngmaxz(inteHead)-1 : group.seqIndex()-1;
-
-        const std::pair<size_t, const Opm::Group*> groupPair = std::make_pair(static_cast<size_t>(ind), std::addressof(group));
-        indexGroupMap.insert(groupPair);
-    }
-    return indexGroupMap;
-}
-
-
 const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Schedule& sched,
                                                                    const std::size_t simStep,
-                                                                   const std::vector<int>& inteHead)
+                                                                   const std::vector<int>& inteHead
+                                                                  )
 {
-    //construct the current list of groups to output the IGPH array
-    const auto indexGroupMap = Opm::RestartIO::Helpers::igphData::currentGroupMapIndexGroup(sched, simStep, inteHead);
-    //std::vector<const Opm::Group*> curGroups(ngmaxz(inteHead), nullptr);
     std::vector<int> inj_phase(ngmaxz(inteHead), 0);
 
-    auto it = indexGroupMap.begin();
-    while (it != indexGroupMap.end())
-    {
-        auto ind = static_cast<int>(it->first);
-        auto group_ptr = it->second;
-        if (group_ptr->isInjectionGroup(simStep)) {
-            auto phase = group_ptr->getInjectionPhase(simStep);
-            if ( phase == Opm::Phase::OIL   ) inj_phase[ind] = 1;
-            if ( phase == Opm::Phase::WATER ) inj_phase[ind] = 2;
-            if ( phase == Opm::Phase::GAS   ) inj_phase[ind] = 3;
+    for (const auto& gname : sched.groupNames(simStep)) {
+        const auto& group = sched.getGroup2(gname, simStep);
+        if (group.isInjectionGroup()) {
+            //auto phase = group.getInjectionPhase();
+            auto phase = Opm::Phase::OIL;
+            if ( phase == Opm::Phase::OIL   ) inj_phase[group.insert_index()] = 1;
+            if ( phase == Opm::Phase::WATER ) inj_phase[group.insert_index()] = 2;
+            if ( phase == Opm::Phase::GAS   ) inj_phase[group.insert_index()] = 3;
         }
-        it++;
+        
     }
     return inj_phase;
 }
