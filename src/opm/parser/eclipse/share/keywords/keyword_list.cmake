@@ -34,15 +34,24 @@ set( keywords
      000_Eclipse100/A/ALSURFST
      000_Eclipse100/A/API
      000_Eclipse100/A/APIGROUP
+     000_Eclipse100/A/AQANCONL
+     000_Eclipse100/A/AQANNC
+     000_Eclipse100/A/AQANTRC
      000_Eclipse100/A/AQUANCON
      000_Eclipse100/A/AQUCON
      000_Eclipse100/A/AQUCT
+     000_Eclipse100/A/AQUCWFAC
      000_Eclipse100/A/AQUDIMS
+     000_Eclipse100/A/AQUFET
      000_Eclipse100/A/AQUFETP
+     000_Eclipse100/A/AQUFLUX
      000_Eclipse100/A/AQUIFER_PROBE_ANALYTIC
      000_Eclipse100/A/AQUIFER_PROBE_NUMERIC
+     000_Eclipse100/A/AQUNNC
      000_Eclipse100/A/AQUNUM
      000_Eclipse100/A/AQUTAB
+     000_Eclipse100/A/AUTOCOAR
+     000_Eclipse100/A/AUTOREF
      000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
      000_Eclipse100/B/BOX
