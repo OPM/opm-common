@@ -114,6 +114,7 @@ bool Group2::GroupInjectionProperties::operator==(const GroupInjectionProperties
         this->surface_max_rate      == other.surface_max_rate &&
         this->resv_max_rate         == other.resv_max_rate &&
         this->target_reinj_fraction == other.target_reinj_fraction &&
+        this->injection_controls    == other.injection_controls &&
         this->target_void_fraction  == other.target_void_fraction;
 }
 
@@ -125,13 +126,14 @@ bool Group2::GroupInjectionProperties::operator!=(const GroupInjectionProperties
 
 bool Group2::GroupProductionProperties::operator==(const GroupProductionProperties& other) const {
     return
-        this->cmode         == other.cmode &&
-        this->exceed_action == other.exceed_action &&
-        this->oil_target    == other.oil_target &&
-        this->water_target  == other.oil_target &&
-        this->gas_target    == other.gas_target &&
-        this->liquid_target == other.liquid_target &&
-        this->resv_target   == other.resv_target;
+        this->cmode               == other.cmode &&
+        this->exceed_action       == other.exceed_action &&
+        this->oil_target          == other.oil_target &&
+        this->water_target        == other.oil_target &&
+        this->gas_target          == other.gas_target &&
+        this->liquid_target       == other.liquid_target &&
+        this->production_controls == other.production_controls &&
+        this->resv_target         == other.resv_target;
 }
 
 
@@ -299,4 +301,21 @@ Phase Group2::injection_phase() const {
     return this->injection_properties.phase;
 }
 
+
+bool Group2::ProductionControls::has_control(GroupProduction::ControlEnum control) const {
+    return (this->production_controls & control) != 0;
+}
+
+
+bool Group2::InjectionControls::has_control(GroupInjection::ControlEnum control) const {
+    return (this->injection_controls & control) != 0;
+}
+
+bool Group2::has_control(GroupProduction::ControlEnum control) const {
+    return (this->production_properties.production_controls & control) != 0;
+}
+
+bool Group2::has_control(GroupInjection::ControlEnum control) const {
+    return (this->injection_properties.injection_controls & control) != 0;
+}
 }

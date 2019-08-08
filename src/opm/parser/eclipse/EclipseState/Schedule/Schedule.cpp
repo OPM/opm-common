@@ -1406,6 +1406,19 @@ namespace {
                     injection.resv_max_rate = reservoirInjectionRate;
                     injection.target_reinj_fraction = reinj_target;
                     injection.target_void_fraction = voidage_target;
+                    injection.injection_controls = 0;
+
+                    if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
+                        injection.injection_controls += GroupInjection::RATE;
+
+                    if (!record.getItem("RESV_TARGET").defaultApplied(0))
+                        injection.injection_controls += GroupInjection::RESV;
+
+                    if (!record.getItem("REINJ_TARGET").defaultApplied(0))
+                        injection.injection_controls += GroupInjection::REIN;
+
+                    if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
+                        injection.injection_controls += GroupInjection::VREP;
 
                     if (group_ptr->updateInjection(injection))
                         this->updateGroup(std::move(group_ptr), currentStep);
@@ -1441,6 +1454,22 @@ namespace {
                     production.liquid_target = liquid_target;
                     production.resv_target = resv_target;
                     production.exceed_action = exceedAction;
+                    production.production_controls = 0;
+
+                    if (!record.getItem("OIL_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::ORAT;
+
+                    if (!record.getItem("GAS_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::GRAT;
+
+                    if (!record.getItem("WATER_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::WRAT;
+
+                    if (!record.getItem("LIQUID_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::LRAT;
+
+                    if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::RESV;
 
                     if (group_ptr->updateProduction(production))
                         this->updateGroup(std::move(group_ptr), currentStep);

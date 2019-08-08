@@ -43,6 +43,7 @@ struct GroupInjectionProperties {
     UDAValue target_reinj_fraction;
     UDAValue target_void_fraction;
 
+    int injection_controls = 0;
     bool operator==(const GroupInjectionProperties& other) const;
     bool operator!=(const GroupInjectionProperties& other) const;
 };
@@ -54,6 +55,8 @@ struct InjectionControls {
     double resv_max_rate;
     double target_reinj_fraction;
     double target_void_fraction;
+    int injection_controls = 0;
+    bool has_control(GroupInjection::ControlEnum control) const;
 };
 
 struct GroupProductionProperties {
@@ -65,6 +68,7 @@ struct GroupProductionProperties {
     UDAValue liquid_target;
     double resv_target = 0;
 
+    int production_controls = 0;
     bool operator==(const GroupProductionProperties& other) const;
     bool operator!=(const GroupProductionProperties& other) const;
 };
@@ -77,6 +81,8 @@ struct ProductionControls {
     double gas_target;
     double liquid_target;
     double resv_target = 0;
+    int production_controls = 0;
+    bool has_control(GroupProduction::ControlEnum control) const;
 };
 
     Group2(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
@@ -115,6 +121,8 @@ struct ProductionControls {
     GroupProduction::ControlEnum production_cmode() const;
     GroupInjection::ControlEnum injection_cmode() const;
     Phase injection_phase() const;
+    bool has_control(GroupProduction::ControlEnum control) const;
+    bool has_control(GroupInjection::ControlEnum control) const;
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
