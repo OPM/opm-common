@@ -52,10 +52,13 @@ set( keywords
      000_Eclipse100/A/AQUTAB
      000_Eclipse100/A/AUTOCOAR
      000_Eclipse100/A/AUTOREF
+     000_Eclipse100/B/BIGMODEL
      000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
+     000_Eclipse100/B/BOUNDARY
      000_Eclipse100/B/BOX
      000_Eclipse100/B/BRANPROP
+     000_Eclipse100/B/BPARA
      000_Eclipse100/C/CARFIN
      000_Eclipse100/C/CECON
      000_Eclipse100/C/COMPDAT
