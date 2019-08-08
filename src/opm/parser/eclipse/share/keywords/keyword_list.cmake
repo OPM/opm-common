@@ -47,8 +47,11 @@ set( keywords
      000_Eclipse100/A/AQUFLUX
      000_Eclipse100/A/AQUIFER_PROBE_ANALYTIC
      000_Eclipse100/A/AQUIFER_PROBE_NUMERIC
+     000_Eclipse100/A/AQUNNC
      000_Eclipse100/A/AQUNUM
      000_Eclipse100/A/AQUTAB
+     000_Eclipse100/A/AUTOCOAR
+     000_Eclipse100/A/AUTOREF
      000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
      000_Eclipse100/B/BOX
