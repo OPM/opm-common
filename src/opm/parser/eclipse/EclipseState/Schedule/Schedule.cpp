@@ -297,7 +297,7 @@ namespace {
             handleGRUPNET(keyword, currentStep, unit_system);
 
         else if (keyword.name() == "GCONINJE")
-            handleGCONINJE(section, keyword, currentStep, parseContext, errors);
+            handleGCONINJE(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "GCONPROD")
             handleGCONPROD(keyword, currentStep, parseContext, errors);
@@ -1380,7 +1380,7 @@ namespace {
         }
     }
 
-    void Schedule::handleGCONINJE( const SCHEDULESection& section,  const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleGCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
@@ -1391,12 +1391,12 @@ namespace {
             for (const auto& group_name : group_names){
                 GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
-                double surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0).get<double>();
-                double reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0).get<double>();
-                double reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0).get<double>();
-                double voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0).get<double>();
+                auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0);
+                auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
+                auto reinj_target = record.getItem("REINJ_TARGET").get<UDAValue>(0);
+                auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
 
-                surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
+                //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
                 {
                     auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
                     Group2::GroupInjectionProperties injection;
@@ -1406,6 +1406,19 @@ namespace {
                     injection.resv_max_rate = reservoirInjectionRate;
                     injection.target_reinj_fraction = reinj_target;
                     injection.target_void_fraction = voidage_target;
+                    injection.injection_controls = 0;
+
+                    if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
+                        injection.injection_controls += GroupInjection::RATE;
+
+                    if (!record.getItem("RESV_TARGET").defaultApplied(0))
+                        injection.injection_controls += GroupInjection::RESV;
+
+                    if (!record.getItem("REINJ_TARGET").defaultApplied(0))
+                        injection.injection_controls += GroupInjection::REIN;
+
+                    if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
+                        injection.injection_controls += GroupInjection::VREP;
 
                     if (group_ptr->updateInjection(injection))
                         this->updateGroup(std::move(group_ptr), currentStep);
@@ -1425,10 +1438,10 @@ namespace {
             for (const auto& group_name : group_names){
                 GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
-                auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0).get<double>();
-                auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0).get<double>();
-                auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0).get<double>();
-                auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0).get<double>();
+                auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
+                auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
+                auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
+                auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
                 auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
 
                 {
@@ -1441,6 +1454,22 @@ namespace {
                     production.liquid_target = liquid_target;
                     production.resv_target = resv_target;
                     production.exceed_action = exceedAction;
+                    production.production_controls = 0;
+
+                    if (!record.getItem("OIL_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::ORAT;
+
+                    if (!record.getItem("GAS_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::GRAT;
+
+                    if (!record.getItem("WATER_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::WRAT;
+
+                    if (!record.getItem("LIQUID_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::LRAT;
+
+                    if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
+                        production.production_controls += GroupProduction::RESV;
 
                     if (group_ptr->updateProduction(production))
                         this->updateGroup(std::move(group_ptr), currentStep);
@@ -2180,7 +2209,7 @@ namespace {
         const size_t gseqIndex = this->groups.size();
 
         groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group2>>(this->m_timeMap, nullptr)));
-        auto group_ptr = std::make_shared<Group2>(groupName, gseqIndex, timeStep, unit_system);
+        auto group_ptr = std::make_shared<Group2>(groupName, gseqIndex, timeStep, this->getUDQConfig(timeStep).params().undefinedValue(), unit_system);
         auto& dynamic_state = this->groups.at(groupName);
         dynamic_state.update(timeStep, group_ptr);
 

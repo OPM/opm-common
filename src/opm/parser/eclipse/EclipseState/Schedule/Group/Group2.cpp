@@ -18,14 +18,18 @@
 */
 
 
-
+#include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 
+#include "../eval_uda.hpp"
+
 namespace Opm {
-Group2::Group2(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg, const UnitSystem& unit_system_arg) :
+
+Group2::Group2(const std::string& name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     m_name(name),
     m_insert_index(insert_index_arg),
     init_step(init_step_arg),
+    udq_undefined(udq_undefined_arg),
     unit_system(unit_system_arg),
     group_type(GroupType::NONE),
     gefac(1),
@@ -110,6 +114,7 @@ bool Group2::GroupInjectionProperties::operator==(const GroupInjectionProperties
         this->surface_max_rate      == other.surface_max_rate &&
         this->resv_max_rate         == other.resv_max_rate &&
         this->target_reinj_fraction == other.target_reinj_fraction &&
+        this->injection_controls    == other.injection_controls &&
         this->target_void_fraction  == other.target_void_fraction;
 }
 
@@ -121,13 +126,14 @@ bool Group2::GroupInjectionProperties::operator!=(const GroupInjectionProperties
 
 bool Group2::GroupProductionProperties::operator==(const GroupProductionProperties& other) const {
     return
-        this->cmode         == other.cmode &&
-        this->exceed_action == other.exceed_action &&
-        this->oil_target    == other.oil_target &&
-        this->water_target  == other.oil_target &&
-        this->gas_target    == other.gas_target &&
-        this->liquid_target == other.liquid_target &&
-        this->resv_target   == other.resv_target;
+        this->cmode               == other.cmode &&
+        this->exceed_action       == other.exceed_action &&
+        this->oil_target          == other.oil_target &&
+        this->water_target        == other.oil_target &&
+        this->gas_target          == other.gas_target &&
+        this->liquid_target       == other.liquid_target &&
+        this->production_controls == other.production_controls &&
+        this->resv_target         == other.resv_target;
 }
 
 
@@ -257,5 +263,59 @@ bool Group2::updateParent(const std::string& parent) {
     return false;
 }
 
+Group2::ProductionControls Group2::productionControls(const SummaryState& st) const {
+    Group2::ProductionControls pc;
 
+    pc.cmode = this->production_properties.cmode;
+    pc.exceed_action = this->production_properties.exceed_action;
+    pc.oil_target = UDA::eval_group_uda(this->production_properties.oil_target, this->m_name, st, this->udq_undefined);
+    pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st, this->udq_undefined);
+    pc.gas_target = UDA::eval_group_uda(this->production_properties.gas_target, this->m_name, st, this->udq_undefined);
+    pc.liquid_target = UDA::eval_group_uda(this->production_properties.liquid_target, this->m_name, st, this->udq_undefined);
+    pc.resv_target = this->production_properties.resv_target;
+
+    return pc;
+}
+
+Group2::InjectionControls Group2::injectionControls(const SummaryState& st) const {
+    Group2::InjectionControls ic;
+
+    ic.phase = this->injection_properties.phase;
+    ic.cmode = this->injection_properties.cmode;
+    ic.surface_max_rate = UDA::eval_group_uda_rate(this->injection_properties.surface_max_rate, this->m_name, st, this->udq_undefined, ic.phase, this->unit_system);
+    ic.resv_max_rate = UDA::eval_group_uda(this->injection_properties.resv_max_rate, this->m_name, st, this->udq_undefined);
+    ic.target_reinj_fraction = UDA::eval_group_uda(this->injection_properties.target_reinj_fraction, this->m_name, st, this->udq_undefined);
+    ic.target_void_fraction = UDA::eval_group_uda(this->injection_properties.target_void_fraction, this->m_name, st, this->udq_undefined);
+    return ic;
+}
+
+GroupProduction::ControlEnum Group2::production_cmode() const {
+    return this->production_properties.cmode;
+}
+
+GroupInjection::ControlEnum Group2::injection_cmode() const {
+    return this->injection_properties.cmode;
+}
+
+Phase Group2::injection_phase() const {
+    return this->injection_properties.phase;
+}
+
+
+bool Group2::ProductionControls::has_control(GroupProduction::ControlEnum control) const {
+    return (this->production_controls & control) != 0;
+}
+
+
+bool Group2::InjectionControls::has_control(GroupInjection::ControlEnum control) const {
+    return (this->injection_controls & control) != 0;
+}
+
+bool Group2::has_control(GroupProduction::ControlEnum control) const {
+    return (this->production_properties.production_controls & control) != 0;
+}
+
+bool Group2::has_control(GroupInjection::ControlEnum control) const {
+    return (this->injection_properties.injection_controls & control) != 0;
+}
 }

@@ -1137,21 +1137,24 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         Eclipse3DProperties eclipseProperties ( deck , table, grid);
         Runspec runspec (deck);
         Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
+        Opm::SummaryState st;
 
         Opm::UnitSystem unitSystem = deck.getActiveUnitSystem();
         double siFactorL = unitSystem.parse("LiquidSurfaceVolume/Time").getSIScaling();
 
         {
             auto g = schedule.getGroup2("G1", 1);
-            BOOST_CHECK_EQUAL(g.productionProperties().oil_target, 1000 * siFactorL);
+            BOOST_CHECK_EQUAL(g.productionControls(st).oil_target, 1000 * siFactorL);
+            BOOST_CHECK(g.has_control(GroupProduction::ORAT));
+            BOOST_CHECK(!g.has_control(GroupProduction::WRAT));
         }
         {
             auto g = schedule.getGroup2("G1", 2);
-            BOOST_CHECK_EQUAL(g.productionProperties().oil_target, 2000 * siFactorL);
+            BOOST_CHECK_EQUAL(g.productionControls(st).oil_target, 2000 * siFactorL);
         }
 
         auto g2 = schedule.getGroup2("G2", 2);
-        BOOST_CHECK_EQUAL(g2.productionProperties().oil_target, 2000 * siFactorL);
+        BOOST_CHECK_EQUAL(g2.productionControls(st).oil_target, 2000 * siFactorL);
 
         auto gh = schedule.getGroup2("H1", 1);
 }

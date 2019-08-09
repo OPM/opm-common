@@ -167,9 +167,9 @@ namespace Opm {
             NONE = 0,
             RATE = 1,
             RESV = 2,
-            REIN = 3,
-            VREP = 4,
-            FLD  = 5
+            REIN = 4,
+            VREP = 8,
+            FLD  = 16
         };
 
         const std::string ControlEnum2String( ControlEnum enumValue );
@@ -209,12 +209,12 @@ namespace Opm {
             NONE = 0,
             ORAT = 1,
             WRAT = 2,
-            GRAT = 3,
-            LRAT = 4,
-            CRAT = 5,
-            RESV = 6,
-            PRBL = 7,
-            FLD  = 8
+            GRAT = 4,
+            LRAT = 8,
+            CRAT = 16,
+            RESV = 32,
+            PRBL = 64,
+            FLD  = 128
         };
 
         const std::string ControlEnum2String( GroupProduction::ControlEnum enumValue );

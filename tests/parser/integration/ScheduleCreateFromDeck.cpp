@@ -336,6 +336,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck);
     Schedule sched(deck,  grid , eclipseProperties, runspec);
+    SummaryState st;
 
     BOOST_CHECK_EQUAL( 3U , sched.numGroups() );
     BOOST_CHECK( sched.hasGroup( "INJ" ));
@@ -343,7 +344,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
 
     {
         auto& group = sched.getGroup2("INJ", 3);
-        const auto& injection = group.injectionProperties();
+        const auto& injection = group.injectionControls(st);
         BOOST_CHECK_EQUAL( Phase::WATER , injection.phase);
         BOOST_CHECK_EQUAL( GroupInjection::VREP , injection.cmode);
         BOOST_CHECK_CLOSE( 10/Metric::Time , injection.surface_max_rate, 0.001);
@@ -354,7 +355,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     }
     {
         auto& group = sched.getGroup2("INJ", 6);
-        const auto& injection = group.injectionProperties();
+        const auto& injection = group.injectionControls(st);
         BOOST_CHECK_EQUAL( Phase::OIL , injection.phase);
         BOOST_CHECK_EQUAL( GroupInjection::RATE , injection.cmode);
         BOOST_CHECK_CLOSE( 1000/Metric::Time , injection.surface_max_rate, 0.0001);
@@ -363,7 +364,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
 
     {
         auto& group = sched.getGroup2("OP", 3);
-        const auto& production = group.productionProperties();
+        const auto& production = group.productionControls(st);
         BOOST_CHECK_EQUAL( GroupProduction::ORAT , production.cmode);
         BOOST_CHECK_CLOSE( 10/Metric::Time , production.oil_target , 0.001);
         BOOST_CHECK_CLOSE( 20/Metric::Time , production.water_target , 0.001);
