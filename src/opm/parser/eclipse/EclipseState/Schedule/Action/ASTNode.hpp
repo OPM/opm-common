@@ -6,6 +6,7 @@
 #include "ActionValue.hpp"
 
 namespace Opm {
+namespace Action {
 
 class ActionContext;
 class WellSet;
@@ -17,14 +18,14 @@ public:
     ASTNode(double value);
     ASTNode(TokenType type_arg, const std::string& func_arg, const std::vector<std::string>& arg_list_arg);
 
-    bool eval(const ActionContext& context, WellSet& matching_wells) const;
-    ActionValue value(const ActionContext& context) const;
+    Action::Result eval(const Action::Context& context) const;
+    Action::Value value(const Action::Context& context) const;
     TokenType type;
     void add_child(const ASTNode& child);
     size_t size() const;
+    std::string func;
 
 private:
-    std::string func;
     std::vector<std::string> arg_list;
     double number = 0.0;
 
@@ -35,6 +36,6 @@ private:
     */
     std::vector<ASTNode> children;
 };
-
+}
 }
 #endif

@@ -22,9 +22,10 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
+#include "ActionValue.hpp"
 
 namespace Opm {
-
+namespace Action {
 
 
 bool ActionX::valid_keyword(const std::string& keyword) {
@@ -59,7 +60,7 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
         for (const auto& token : record.getItem("CONDITION").getData<std::string>())
             tokens.push_back(token);
     }
-    this->condition = ActionAST(tokens);
+    this->condition = Action::AST(tokens);
 }
 
 
@@ -69,11 +70,11 @@ void ActionX::addKeyword(const DeckKeyword& kw) {
 
 
 
-bool ActionX::eval(std::time_t sim_time, const ActionContext& context, std::vector<std::string>& matching_wells) const {
+Action::Result ActionX::eval(std::time_t sim_time, const Action::Context& context) const {
     if (!this->ready(sim_time))
-        return false;
+        return Action::Result(false);
 
-    bool result = this->condition.eval(context, matching_wells);
+    auto result = this->condition.eval(context);
 
     if (result) {
         this->run_count += 1;
@@ -109,4 +110,5 @@ std::vector<DeckKeyword>::const_iterator ActionX::end() const {
     return this->keywords.end();
 }
 
+}
 }

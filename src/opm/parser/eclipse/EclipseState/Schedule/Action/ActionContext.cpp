@@ -22,28 +22,29 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 
 namespace Opm {
+namespace Action {
 
-    void ActionContext::add(const std::string& func, const std::string& arg, double value) {
+    void Context::add(const std::string& func, const std::string& arg, double value) {
         this->values[func + ":" + arg] = value;
     }
 
-    ActionContext::ActionContext(const SummaryState& summary_state_arg) :
+    Context::Context(const SummaryState& summary_state_arg) :
         summary_state(summary_state_arg)
     {
         for (const auto& pair : TimeMap::eclipseMonthIndices())
             this->add(pair.first, pair.second);
     }
 
-    void ActionContext::add(const std::string& func, double value) {
+    void Context::add(const std::string& func, double value) {
         this->values[func] = value;
     }
 
 
-    double ActionContext::get(const std::string& func, const std::string& arg) const {
+    double Context::get(const std::string& func, const std::string& arg) const {
         return this->get(func + ":" + arg);
     }
 
-    double ActionContext::get(const std::string& key) const {
+    double Context::get(const std::string& key) const {
         const auto& iter = this->values.find(key);
         if (iter != this->values.end())
             return iter->second;
@@ -52,8 +53,9 @@ namespace Opm {
     }
 
 
-    std::vector<std::string> ActionContext::wells(const std::string& key) const {
+    std::vector<std::string> Context::wells(const std::string& key) const {
         return this->summary_state.wells(key);
     }
 
+}
 }

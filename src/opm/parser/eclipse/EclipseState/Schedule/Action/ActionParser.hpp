@@ -28,6 +28,8 @@
 
 namespace Opm {
 
+namespace Action {
+
 struct ParseNode {
     ParseNode(TokenType type_arg, const std::string& value_arg) :
         type(type_arg),
@@ -45,23 +47,23 @@ struct ParseNode {
 
 
 
-class ActionParser {
+class Parser {
 public:
-    static ASTNode parse(const std::vector<std::string>& tokens);
+    static Action::ASTNode parse(const std::vector<std::string>& tokens);
 
 private:
-    explicit ActionParser(const std::vector<std::string>& tokens);
+    explicit Parser(const std::vector<std::string>& tokens);
 
     TokenType get_type(const std::string& arg) const;
     ParseNode current() const;
     ParseNode next();
     size_t pos() const;
-    ASTNode parse_cmp();
-    ASTNode parse_op();
-    ASTNode parse_left();
-    ASTNode parse_right();
-    ASTNode parse_and();
-    ASTNode parse_or();
+    Action::ASTNode parse_cmp();
+    Action::ASTNode parse_op();
+    Action::ASTNode parse_left();
+    Action::ASTNode parse_right();
+    Action::ASTNode parse_and();
+    Action::ASTNode parse_or();
 
     const std::vector<std::string>& tokens;
     ssize_t current_pos = -1;
@@ -69,5 +71,5 @@ private:
 
 
 }
-
+}
 #endif

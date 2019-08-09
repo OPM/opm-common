@@ -27,8 +27,13 @@
 
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
 namespace Opm {
+class DeckKeyword;
+
+namespace Action {
+
 /*
   The ActionX class internalizes the ACTIONX keyword. This keyword represents a
   small in-deck programming language for the SCHEDULE section. In the deck the
@@ -53,9 +58,6 @@ namespace Opm {
 
 */
 
-class DeckKeyword;
-class ActionContext;
-
 class ActionX {
 public:
     ActionX(const std::string& name, size_t max_run, double max_wait, std::time_t start_time);
@@ -64,7 +66,7 @@ public:
 
     void addKeyword(const DeckKeyword& kw);
     bool ready(std::time_t sim_time) const;
-    bool eval(std::time_t sim_time, const ActionContext& context, std::vector<std::string>& wells) const;
+    Action::Result eval(std::time_t sim_time, const Action::Context& context) const;
 
 
     std::string name() const { return this->m_name; }
@@ -81,10 +83,11 @@ private:
     std::time_t m_start_time;
 
     std::vector<DeckKeyword> keywords;
-    ActionAST condition;
+    Action::AST condition;
     mutable size_t run_count = 0;
     mutable std::time_t last_run = 0;
 };
 
+}
 }
 #endif /* WELL_HPP_ */

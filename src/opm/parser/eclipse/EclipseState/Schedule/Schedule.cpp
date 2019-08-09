@@ -39,6 +39,7 @@
 
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
@@ -376,7 +377,7 @@ namespace {
         while (true) {
             const auto& keyword = section.getKeyword(keywordIdx);
             if (keyword.name() == "ACTIONX") {
-                ActionX action(keyword, this->m_timeMap.getStartTime(currentStep + 1));
+                Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep + 1));
                 while (true) {
                     keywordIdx++;
                     if (keywordIdx == section.size())
@@ -386,7 +387,7 @@ namespace {
                     if (action_keyword.name() == "ENDACTIO")
                         break;
 
-                    if (ActionX::valid_keyword(action_keyword.name()))
+                    if (Action::ActionX::valid_keyword(action_keyword.name()))
                         action.addKeyword(action_keyword);
                     else {
                         std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
@@ -1279,6 +1280,14 @@ namespace {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
             const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
+
+            printf("Running WELOPEN: matching_wells:");
+            for (const auto& w : matching_wells)
+              printf("%s ", w.c_str());
+            printf(" -> ");
+            for (const auto& w : well_names)
+              printf("%s ", w.c_str());
+            printf("\n");
 
             if (well_names.empty())
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
@@ -2444,21 +2453,21 @@ namespace {
     }
 
 
-    const Actions& Schedule::actions() const {
+    const Action::Actions& Schedule::actions() const {
         return this->m_actions;
     }
 
 
-    void Schedule::applyAction(size_t reportStep, const ActionX& action, const std::vector<std::string>& matching_wells) {
+    void Schedule::applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result) {
         ParseContext parseContext;
         ErrorGuard errors;
 
         for (const auto& keyword : action) {
-            if (!ActionX::valid_keyword(keyword.name()))
+            if (!Action::ActionX::valid_keyword(keyword.name()))
                 throw std::invalid_argument("The keyword: " + keyword.name() + " can not be handled in the ACTION body");
 
             if (keyword.name() == "WELOPEN")
-                this->handleWELOPEN(keyword, reportStep, parseContext, errors, matching_wells);
+                this->handleWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
         }
 
     }

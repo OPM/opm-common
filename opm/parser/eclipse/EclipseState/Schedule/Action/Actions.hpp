@@ -28,6 +28,12 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
 namespace Opm {
+namespace Action {
+
+/*
+  The Actions class is a container of ACTIONX keywords. The main functionality
+  is to provide a list of ACTIONX keywords which are ready to be evaluated.
+*/
 
 class Actions {
 public:
@@ -36,10 +42,11 @@ public:
     bool empty() const;
     void add(const ActionX& action);
     bool ready(std::time_t sim_time) const;
-    ActionX& at(const std::string& name);
+    Action::ActionX& at(const std::string& name);
     std::vector<const ActionX *> pending(std::time_t sim_time) const;
 private:
     std::map<std::string, ActionX> actions;
 };
+}
 }
 #endif

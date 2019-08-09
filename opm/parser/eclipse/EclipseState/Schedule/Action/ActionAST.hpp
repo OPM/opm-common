@@ -25,26 +25,35 @@
 #include <vector>
 #include <memory>
 
-namespace Opm {
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp>
 
-class ActionContext;
+namespace Opm {
+namespace Action {
+
+class Context;
 class ASTNode;
 
 
+/*
+  The Action::AST class implements a tree with the result of the parsing of the
+  ACTIONX condition. The AST does not contain any context, that is supplied with
+  a Action::Context instace when calling the eval() methoid is called.
+*/
 
-class ActionAST{
+class AST{
 public:
-    ActionAST() = default;
-    explicit ActionAST(const std::vector<std::string>& tokens);
-    bool eval(const ActionContext& context, std::vector<std::string>& matching_wells) const;
+    AST() = default;
+    explicit AST(const std::vector<std::string>& tokens);
+    Result eval(const Context& context) const;
 private:
     /*
       The use of a pointer here is to be able to create this class with only a
       forward declaration of the ASTNode class. Would have prefered to use a
       unique_ptr, but that requires writing custom destructors - the use of a
-      shared_ptr does not imply any shared ownership.
+      shared_ptr does not imply any shared ownership of the ASTNode.
     */
     std::shared_ptr<ASTNode> condition;
 };
+}
 }
 #endif
