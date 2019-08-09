@@ -100,7 +100,7 @@ createDoubHead(const EclipseState& es,
         .tuningParameters(sched.getTuning(), lookup_step, tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
         .drsdt           (sched, lookup_step, tconv)
-        .udq_param(getUDQParam(rspec))
+        //.udq_param(getUDQParam(rspec))
         ;
 
     if (nextTimeStep > 0.0) {
