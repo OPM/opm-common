@@ -654,6 +654,14 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if( parser.isRecognizedKeyword( rawKeyword->getKeywordName() ) ) {
             const auto& kwname = rawKeyword->getKeywordName();
             const auto& parserKeyword = parser.getParserKeywordFromDeckName( kwname );
+            {
+                std::stringstream ss;
+
+                ss << std::setw(5) << parserState.deck.size()
+                   << " Reading " << std::setw(8) << std::left << rawKeyword->getKeywordName()
+                   << " from: " << rawKeyword->getFilename() << ":" << std::to_string(rawKeyword->getLineNR());
+                OpmLog::info(ss.str());
+            }
             try {
                 parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext, parserState.errors, *rawKeyword, filename ) );
             } catch (const std::exception& exc) {
