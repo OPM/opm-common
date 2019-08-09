@@ -7,6 +7,13 @@ import setuptools
 
 import glob
 import os
+import subprocess
+
+try:
+  subprocess.call(['ccache', '--version'])
+  os.environ['CC'] = 'ccache g++'
+except OSError as e:
+  print('\nNOTE: please install ccache for faster compilation of python bindings.\n')
 
 if 'build' in sys.argv:
   if not 'build_ext' in sys.argv:
