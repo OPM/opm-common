@@ -1094,6 +1094,58 @@ BOOST_AUTO_TEST_CASE(createDeckWithWPIMULT) {
     BOOST_CHECK_EQUAL(year, 2011);
 }
 
+BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
+        Opm::Parser parser;
+        const std::string input = R"(
+        START  -- 0
+         10 'JAN' 2000 /
+        RUNSPEC
+        DIMENS
+          10 10 10 /
+        GRID
+        DX
+        1000*0.25 /
+        DY
+        1000*0.25 /
+        DZ
+        1000*0.25 /
+        TOPS
+        100*0.25 /
+        SCHEDULE
+        DATES             -- 1
+         10  OKT 2008 /
+        /
+        WELSPECS
+            ' PROD1' 'G1'  1 1 10 'OIL' /
+            'PROD2' 'G2'  2 2 10 'OIL' /
+            'PROD3' 'H1'  3 3 10 'OIL' /
+        /
+        GCONPROD
+        'G1' 'ORAT' 1000 /
+        /
+        DATES             -- 2
+         10  NOV 2008 /
+        /
+        GCONPROD
+        'G*' 'ORAT' 2000 /
+        /
+        )";
+
+        auto deck = parser.parseString(input);
+        EclipseGrid grid( deck );
+        TableManager table ( deck );
+        Eclipse3DProperties eclipseProperties ( deck , table, grid);
+        Runspec runspec (deck);
+        ParseContext parseContext;
+        ErrorGuard errors;
+
+        parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputError::THROW_EXCEPTION);
+        BOOST_CHECK_THROW( Opm::Schedule(deck,  grid, eclipseProperties, runspec, parseContext, errors), std::invalid_argument);
+
+        parseContext.update(ParseContext::PARSE_WGNAME_SPACE, InputError::IGNORE);
+        BOOST_CHECK_NO_THROW( Opm::Schedule(deck,  grid, eclipseProperties, runspec, parseContext, errors));
+}
+
 BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         Opm::Parser parser;
         const std::string input = R"(

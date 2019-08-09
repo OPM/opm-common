@@ -75,6 +75,30 @@ namespace {
         return (fnmatch(pattern.c_str(), name.c_str(), flags) == 0);
     }
 
+
+    /*
+      The function trim_wgname() is used to trim the leading and trailing spaces
+      away from the group and well arguments given in the WELSPECS and GRUPTREE
+      keywords. If the deck argument contains a leading or trailing space that is
+      treated as an input error, and the action taken is regulated by the setting
+      ParseContext::PARSE_WGNAME_SPACE.
+
+      Observe that the spaces are trimmed *unconditionally* - i.e. if the
+      ParseContext::PARSE_WGNAME_SPACE setting is set to InputError::IGNORE that
+      means that we do not inform the user about "our fix", but it is *not* possible
+      to configure the parser to leave the spaces intact.
+    */
+
+    std::string trim_wgname(const DeckKeyword& keyword, const std::string& wgname_arg, const ParseContext& parseContext, ErrorGuard errors) {
+        std::string wgname = boost::algorithm::trim_copy(wgname_arg);
+        if (wgname != wgname_arg)  {
+            std::string msg = "Illegal space: \"" + wgname_arg + "\" found when defining WELL/GROUP in keyword: " + keyword.name() + " at " + keyword.getFileName() + ":" + std::to_string(keyword.getLineNumber());
+            parseContext.handleError(ParseContext::PARSE_WGNAME_SPACE, msg, errors);
+        }
+        return wgname;
+    }
+
+
 }
 
     Schedule::Schedule( const Deck& deck,
@@ -228,7 +252,7 @@ namespace {
             handleWLIST( keyword, currentStep );
 
         else if (keyword.name() == "WELSPECS")
-            handleWELSPECS( section, keywordIdx, currentStep, unit_system);
+            handleWELSPECS( section, keywordIdx, currentStep, unit_system, parseContext, errors);
 
         else if (keyword.name() == "WHISTCTL")
             handleWHISTCTL(keyword, currentStep, parseContext, errors);
@@ -291,7 +315,7 @@ namespace {
             handleWELTARG(section, keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "GRUPTREE")
-            handleGRUPTREE(keyword, currentStep, unit_system);
+            handleGRUPTREE(keyword, currentStep, unit_system, parseContext, errors);
 
         else if (keyword.name() == "GRUPNET")
             handleGRUPNET(keyword, currentStep, unit_system);
@@ -527,7 +551,9 @@ namespace {
     void Schedule::handleWELSPECS( const SCHEDULESection& section,
                                    size_t index,
                                    size_t currentStep,
-                                   const UnitSystem& unit_system) {
+                                   const UnitSystem& unit_system,
+                                   const ParseContext& parseContext,
+                                   ErrorGuard& errors) {
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
             auto itr = section.begin() + index;
             for( ; itr != section.end(); ++itr ) {
@@ -543,8 +569,8 @@ namespace {
 
         for (size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
-            const std::string& wellName = record.getItem("WELL").getTrimmedString(0);
-            const std::string& groupName = record.getItem("GROUP").getTrimmedString(0);
+            const std::string& wellName = trim_wgname(keyword, record.getItem("WELL").get<std::string>(0), parseContext, errors);
+            const std::string& groupName = trim_wgname(keyword, record.getItem("GROUP").get<std::string>(0), parseContext, errors);
 
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep, unit_system);
@@ -1761,10 +1787,10 @@ namespace {
         }
     }
 
-    void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system) {
+void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
-            const std::string& childName = record.getItem("CHILD_GROUP").getTrimmedString(0);
-            const std::string& parentName = record.getItem("PARENT_GROUP").getTrimmedString(0);
+            const std::string& childName = trim_wgname(keyword, record.getItem("CHILD_GROUP").get<std::string>(0), parseContext, errors);
+            const std::string& parentName = trim_wgname(keyword, record.getItem("PARENT_GROUP").get<std::string>(0), parseContext, errors);
 
             if (!hasGroup(parentName))
                 addGroup( parentName , currentStep, unit_system );
