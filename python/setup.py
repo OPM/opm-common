@@ -10,8 +10,9 @@ import os
 import subprocess
 
 try:
+  subprocess.call(["c++", "--version"])
   subprocess.call(['ccache', '--version'])
-  os.environ['CC'] = 'ccache g++'
+  os.environ['CC'] = 'ccache c++'
 except OSError as e:
   print('\nNOTE: please install ccache for faster compilation of python bindings.\n')
 
