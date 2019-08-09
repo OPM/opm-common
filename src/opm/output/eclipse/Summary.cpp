@@ -68,6 +68,8 @@ namespace {
             "WCT", "GOR",
             "OPTH", "WPTH", "GPTH",
             "WITH", "GITH",
+            "OPP", "WPP", "GPP",
+            "OPI", "WPI", "GPI"
         };
     }
 

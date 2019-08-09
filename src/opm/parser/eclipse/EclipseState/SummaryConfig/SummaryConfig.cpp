@@ -58,16 +58,14 @@ namespace {
         "FGIR",  "FGIT",  "FGOR", "FGPR",  "FGPT", "FOIP",  "FOIPG",
         "FOIPL", "FOIR",  "FOIT", "FOPR",  "FOPT", "FPR",   "FVIR",
         "FVIT",  "FVPR",  "FVPT", "FWCT",  "FWGR", "FWIP",  "FWIR",
-        "FWIT",  "FWPR",  "FWPT", "FWPP",  "FOPP", "FGPP",  "FWPI",
-	"FOPI",  "FGPI",
+        "FWIT",  "FWPR",  "FWPT",
         "GGIR",  "GGIT",  "GGOR", "GGPR",  "GGPT", "GOIR",  "GOIT",
         "GOPR",  "GOPT",  "GVIR", "GVIT",  "GVPR", "GVPT",  "GWCT",
-        "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT", "GWPP",  "GOPP",
-	"GGPP",  "GWPI",  "GOPI", "GGPI",
+        "GWGR",  "GWIR",  "GWIT", "GWPR",  "GWPT",
         "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
         "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
         "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
-        "WWPT",  "WWPP",  "WOPP", "WGPP",  "WWPI", "WGPI",  "WOPI",
+        "WWPT",
         // ALL will not expand to these keywords yet
         "AAQR",  "AAQRG", "AAQT", "AAQTG"
     };
