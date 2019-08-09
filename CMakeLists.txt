@@ -211,8 +211,46 @@ install(DIRECTORY cmake DESTINATION share/opm)
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (OPM_ENABLE_PYTHON)
+
+  if (EXISTS "/etc/debian_version")
+    set( PYTHON_PACKAGE_PATH "dist-packages")
+  else()
+    set( PYTHON_PACKAGE_PATH "site-packages")
+  endif()
+  set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}/sunbeam" CACHE STRING "Subdirectory to install Python modules in")
+
+  add_custom_target(sunbeam ALL)
+  add_dependencies(sunbeam opmcommon)
+  add_custom_command(TARGET sunbeam PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python)
+
+  get_target_property(_ecl_include_dirs ecl INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(_opmcommon_include_dirs opmcommon INCLUDE_DIRECTORIES)
+  list(APPEND _opmcommon_include_dirs ${_ecl_include_dirs})
+  string(REPLACE ";" ":" _setup_include_dirs "${_opmcommon_include_dirs}")
+
+  get_target_property(_ecl_lib ecl LOCATION)
+  get_filename_component(_ecl_lib_dir ${_ecl_lib} DIRECTORY)
+  set(_opmcommon_lib_dirs ${_ecl_lib_dir} ${CMAKE_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/lib)
+  string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
+
+
+  add_custom_command(TARGET sunbeam PRE_BUILD COMMAND python ${CMAKE_BINARY_DIR}/python/setup.py
+                                                      build
+                                                      build_ext
+                                                      --build-lib=${CMAKE_BINARY_DIR}/python/python/sunbeam
+                                                      --library-dirs=${_setup_lib_dirs}
+                                                      --include-dirs=${_setup_include_dirs}
+                                                      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
+                     )
+
+  INSTALL( DIRECTORY ${CMAKE_BINARY_DIR}/python/python/sunbeam/  DESTINATION ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX})
+
+  add_test(NAME python_tests
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
+            COMMAND python setup.py build_ext --dry-run --build-lib ${CMAKE_BINARY_DIR}/python/python/sunbeam test
+           )
+
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  add_subdirectory(python)
 endif()
 
 
