@@ -28,7 +28,8 @@ namespace Opm {
         SLASH_TERMINATED = 0,
         FIXED = 1,
         OTHER_KEYWORD_IN_DECK = 2,
-        UNKNOWN=3
+        UNKNOWN = 3,
+        FIXED_CODE = 4
     };
 
 

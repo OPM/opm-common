@@ -77,18 +77,24 @@ inline bool even_quotes( const T& str ) {
 
 }
 
-    RawRecord::RawRecord(const string_view& singleRecordString) :
-        m_sanitizedRecordString( singleRecordString ),
-        m_recordItems( splitSingleRecordString( m_sanitizedRecordString ) )
+    RawRecord::RawRecord(const string_view& singleRecordString, bool text) :
+        m_sanitizedRecordString( singleRecordString )
     {
 
-        if( !even_quotes( singleRecordString ) )
-            throw std::invalid_argument(
-                "Input string is not a complete record string, "
-                "offending string: '" + singleRecordString + "'"
-            );
+        if (text)
+            this->m_recordItems.push_back(this->m_sanitizedRecordString);
+        else {
+            this->m_recordItems = splitSingleRecordString( m_sanitizedRecordString );
+
+            if( !even_quotes( singleRecordString ) )
+                throw std::invalid_argument("Input string is not a complete record string, "
+                                            "offending string: '" + singleRecordString + "'");
+        }
     }
 
+    RawRecord::RawRecord(const string_view& singleRecordString) :
+        RawRecord(singleRecordString, false)
+    {}
 
     void RawRecord::prepend( size_t count, string_view tok ) {
         this->m_recordItems.insert( this->m_recordItems.begin(), count, tok );

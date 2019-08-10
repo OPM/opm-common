@@ -35,6 +35,7 @@ namespace Opm {
 
     class RawRecord {
     public:
+        RawRecord( const string_view&, bool text);
         explicit RawRecord( const string_view&);
 
         inline string_view pop_front();

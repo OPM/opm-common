@@ -123,6 +123,8 @@ namespace Opm {
                                          const ParseContext& context,
                                          ErrorGuard& errors);
 
+        const std::vector<std::pair<std::string,std::string>> codeKeywords() const;
+
     private:
         // associative map of the parser internal name and the corresponding ParserKeyword object
         std::vector< std::unique_ptr< const ParserKeyword > > keyword_storage;
@@ -131,6 +133,8 @@ namespace Opm {
         // associative map of the parser internal names and the corresponding
         // ParserKeyword object for keywords which match a regular expression
         std::map< string_view, const ParserKeyword* > m_wildCardKeywords;
+
+        std::vector<std::pair<std::string,std::string>> code_keywords;
 
         bool hasWildCardKeyword(const std::string& keyword) const;
         const ParserKeyword* matchingKeyword(const string_view& keyword) const;

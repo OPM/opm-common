@@ -46,10 +46,8 @@ namespace Opm {
            RAW_STRING and UDA.
 
         DataType: This the C++ type of items generated when parsing the deck,
-           currently the available datatypes are int, double and std::string.
-           The mapping from input type to data type is many-to-one, and
-           currently both STRING and RAW_STRING map to std::string and both
-           DOUBLE and UDA map to double.
+           currently the available datatypes are int, double, std::string and
+           the user defined type UDAValue.
 
       Splitting the type treatment in two layers in this way enables
       properties/transformations to be added to the data before they are
@@ -65,7 +63,7 @@ namespace Opm {
         static item_size   size_from_string( const std::string& );
         static std::string string_from_size( item_size );
 
-        enum class itype {UNKNOWN, DOUBLE, INT, STRING, RAW_STRING, UDA};
+        enum class itype {UNKNOWN, DOUBLE, INT, STRING, RAW_STRING, UDA, CODE};
         static itype from_string(const std::string& string_value);
         static std::string to_string(itype input_type);
         std::string type_literal() const;
