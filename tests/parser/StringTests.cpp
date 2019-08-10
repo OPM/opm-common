@@ -156,3 +156,22 @@ BOOST_AUTO_TEST_CASE(plusOperator) {
     BOOST_CHECK_EQUAL( lhs + ws, lhs_view + ws );
     BOOST_CHECK_EQUAL( ws + rhs, ws + rhs_view );
 }
+
+
+
+BOOST_AUTO_TEST_CASE(strncmp_function) {
+    std::string s = "A BB CCC DDDD";
+    string_view view(s);
+
+    BOOST_CHECK(!view.starts_with("this is a very long string -longer than the view"));
+    BOOST_CHECK(view.starts_with("A"));
+    BOOST_CHECK(view.starts_with("A BB"));
+    BOOST_CHECK(!view.starts_with("A BB D"));
+    BOOST_CHECK(view.starts_with(s));
+
+    BOOST_CHECK_EQUAL( view.find("A"), 0);
+    BOOST_CHECK_EQUAL( view.find("BB"), 2);
+    BOOST_CHECK_EQUAL( view.find("C"), 5);
+    BOOST_CHECK_EQUAL( view.find("CCCC"), std::string::npos);
+    BOOST_CHECK_EQUAL( view.find("DDDD"), 9);
+}
