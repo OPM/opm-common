@@ -114,15 +114,19 @@ namespace Opm {
         }
 
         if( RawRecord::isTerminatedRecordString( partialRecordString ) ) {
-
-            auto recstr = string_view{ m_partialRecordString.begin(), m_partialRecordString.end() - 1 };
-            m_records.emplace_back( recstr, m_filename, m_name );
-            m_partialRecordString = emptystr;
-
-            if( m_sizeType == Raw::FIXED && m_records.size() == m_fixedSize )
-                m_isFinished = true;
+            this->m_partialRecordString = string_view{ this->m_partialRecordString.begin(), this->m_partialRecordString.end() - 1 };
+            this->terminateRecord();
         }
     }
+
+
+    void RawKeyword::terminateRecord() {
+        this->m_records.emplace_back( this->m_partialRecordString, this->m_filename, this->m_name );
+        m_partialRecordString = emptystr;
+
+        if( m_sizeType == Raw::FIXED && m_records.size() == m_fixedSize )
+            m_isFinished = true;
+    };
 
     const RawRecord& RawKeyword::getFirstRecord() const {
         return *m_records.begin();

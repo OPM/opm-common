@@ -59,6 +59,7 @@ namespace Opm {
         bool isFinished() const;
         bool unKnownSize() const;
         void finalizeUnknownSize();
+        void terminateRecord();
 
         const std::string& getFilename() const;
         size_t getLineNR() const;
