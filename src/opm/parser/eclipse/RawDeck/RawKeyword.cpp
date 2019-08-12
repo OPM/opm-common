@@ -84,7 +84,7 @@ namespace Opm {
         else m_partialRecordString = { m_partialRecordString.begin(), partialRecordString.end() };
 
 
-        if( m_sizeType != Raw::FIXED && isTerminator( m_partialRecordString ) ) {
+        if( isTerminator( m_partialRecordString ) ) {
             if (m_sizeType == Raw::TABLE_COLLECTION) {
                 m_currentNumTables += 1;
                 if (m_currentNumTables == m_numTables) {
@@ -92,7 +92,7 @@ namespace Opm {
                     m_partialRecordString = emptystr;
                     return;
                 }
-            } else if( m_sizeType != Raw::UNKNOWN ) {
+            } else if( m_sizeType == Raw::SLASH_TERMINATED) {
                 m_isFinished = true;
                 m_partialRecordString = emptystr;
                 return;
