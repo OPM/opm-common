@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from sunbeam import libsunbeam as lib
+from opm import libopmcommon_python as lib
 from .sunbeam import delegate
 
 @delegate(lib.SummaryConfig)

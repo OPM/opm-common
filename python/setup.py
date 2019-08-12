@@ -22,7 +22,7 @@ if 'build' in sys.argv:
 
 ext_modules = [
     Extension(
-        'libsunbeam',
+        'libopmcommon_python',
         [
                 'cxx/connection.cpp',
                 'cxx/deck.cpp',
@@ -48,16 +48,16 @@ ext_modules = [
 ]
 
 setup(
-    name='Sunbeam',
+    name='Opm',
     package_dir = {'': 'python'},
     packages=[
-                'sunbeam',
-                'sunbeam.tools',
-                'sunbeam.deck',
+                'opm',
+                'opm.tools',
+                'opm.deck',
             ],
     ext_modules=ext_modules,
     license='Open Source',
     zip_safe=False,
-    test_suite='tests',
+    tests_suite='tests',
     setup_requires=["pytest-runner", 'setuptools_scm'],
 )

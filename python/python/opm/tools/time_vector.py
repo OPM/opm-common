@@ -6,7 +6,7 @@ except ImportError:
     from io import StringIO
 
 
-import sunbeam.deck
+import opm.deck
 
 # This is from the TimeMap.cpp implementation in opm
 ecl_month = {"JAN" : 1,
@@ -172,7 +172,7 @@ class TimeVector(object):
         Basic usage example:
 
            #!/usr/bin/env python
-           from sunbeam.tools import TimeVector
+           from opm.tools import TimeVector
 
            # Create vector and load history.
            tv = TimeVector( start )
@@ -213,11 +213,11 @@ class TimeVector(object):
         self._add_dates_block(ts)
         start_dt = datetime.datetime(start_date.year, start_date.month, start_date.day)
         if base_file:
-            deck = sunbeam.deck.parse(base_file)
+            deck = opm.deck.parse(base_file)
             self._add_deck(deck, start_dt)
 
         if base_string:
-            deck = sunbeam.deck.parse_string(base_string)
+            deck = opm.deck.parse_string(base_string)
             self._add_deck(deck, start_dt)
 
 
@@ -328,7 +328,7 @@ class TimeVector(object):
             tv.load("well.sch", date = datetime.datetime(2017, 4, 1))
 
         """
-        deck = sunbeam.deck.parse(filename)
+        deck = opm.deck.parse(filename)
         self._add_deck(deck, date)
 
 
@@ -336,7 +336,7 @@ class TimeVector(object):
         """
         Like load() - but load from a string literal instead of file.
         """
-        deck = sunbeam.deck.parse_string(deck_string)
+        deck = opm.deck.parse_string(deck_string)
         self._add_deck(deck, date)
 
 

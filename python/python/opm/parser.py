@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import os.path
 import json
 
-from sunbeam import libsunbeam as lib
+from opm import libopmcommon_python as lib
 from .properties import SunbeamState
 
 

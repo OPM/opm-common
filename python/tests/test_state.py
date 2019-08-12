@@ -1,5 +1,5 @@
 import unittest
-import sunbeam
+import opm
 
 class TestState(unittest.TestCase):
     FAULTS_DECK = """
@@ -49,8 +49,8 @@ SATNUM
 
     @classmethod
     def setUpClass(cls):
-        cls.spe3 = sunbeam.parse('tests/spe3/SPE3CASE1.DATA')
-        cpa = sunbeam.parse('tests/data/CORNERPOINT_ACTNUM.DATA')
+        cls.spe3 = opm.parse('tests/spe3/SPE3CASE1.DATA')
+        cpa = opm.parse('tests/data/CORNERPOINT_ACTNUM.DATA')
         cls.state = cls.spe3.state
         cls.cp_state = cpa.state
 
@@ -124,7 +124,7 @@ SATNUM
     def test_faults(self):
         self.assertEquals([], self.state.faultNames())
         self.assertEquals({}, self.state.faults())
-        faultdeck = sunbeam.parse_string(self.FAULTS_DECK).state
+        faultdeck = opm.parse_string(self.FAULTS_DECK).state
         self.assertEqual(['F1', 'F2'], faultdeck.faultNames())
         # 'F2'  5  5  1  4   1  4  'X-' / \n"
         f2 = faultdeck.faultFaces('F2')
@@ -139,7 +139,7 @@ SATNUM
         # jf["OIL_WATER"]    = 21.0   # set in deck
         # jf["GAS_OIL"]      = -1.0   # N/A
 
-        js = sunbeam.parse('tests/data/JFUNC.DATA').state
+        js = opm.parse('tests/data/JFUNC.DATA').state
         self.assertEqual('JFUNC TEST', js.title)
         jf = js.jfunc()
         print(jf)
@@ -167,7 +167,7 @@ JFUNC
   GAS * 13.0 0.6 0.7 Z /
 PROPS\nREGIONS
 """
-        js_gas = sunbeam.parse_string(jfunc_gas).state
+        js_gas = opm.parse_string(jfunc_gas).state
         jf = js_gas.jfunc()
         self.assertEqual(jf['FLAG'], 'GAS')
         self.assertEqual(jf['DIRECTION'], 'Z')

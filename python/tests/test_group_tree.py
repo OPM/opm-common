@@ -1,12 +1,12 @@
 import sys
 import unittest
 
-import sunbeam
+import opm
 
 class TestGroupTree(unittest.TestCase):
     def setUp(self):
         norne = 'examples/data/norne/NORNE_ATW2013.DATA'
-        self.sch = sunbeam.parse(norne, [('PARSE_RANDOM_SLASH', sunbeam.action.ignore)]).schedule
+        self.sch = opm.parse(norne, [('PARSE_RANDOM_SLASH', opm.action.ignore)]).schedule
 
     def test_group(self):
         gr = self.sch.group(timestep=2)['PROD']
@@ -35,7 +35,7 @@ class TestGroupTree(unittest.TestCase):
         group = self.sch.group(timestep=3)['PROD']
         children = ['MANI-B1', 'MANI-B2', 'MANI-D1', 'MANI-D2', 'MANI-E1', 'MANI-E2']
         names = [child.name for child in group.children]
-        self.assertEqual(sunbeam.schedule.Group, type(child))
+        self.assertEqual(opm.schedule.Group, type(child))
         self.assertEqual(set(children), set(names))
 
 if __name__ == '__main__':

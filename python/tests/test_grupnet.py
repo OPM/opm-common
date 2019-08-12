@@ -1,13 +1,13 @@
 import sys
 import unittest
 
-import sunbeam
+import opm
 
 class TestGrupnet(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         norne = 'examples/data/norne/NORNE_ATW2013.DATA'
-        cls.sch = sunbeam.parse(norne, [('PARSE_RANDOM_SLASH', sunbeam.action.ignore)]).schedule
+        cls.sch = opm.parse(norne, [('PARSE_RANDOM_SLASH', opm.action.ignore)]).schedule
 
     def test_vfp_table(self):
         self.assertEqual(0, self.sch.group(timestep=0)['PROD'].vfp_table_nr)

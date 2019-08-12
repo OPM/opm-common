@@ -1,7 +1,7 @@
 import unittest
 import datetime
-from sunbeam.tools import *
-import sunbeam.deck
+from opm.tools import *
+import opm.deck
 
 from utils import tmp
 class TestTimeVector(unittest.TestCase):
@@ -120,7 +120,7 @@ class TestTimeVector(unittest.TestCase):
     def test_no_leading_DATES(self):
         tv = TimeVector(datetime.date(1997, 11, 6), base_file="tests/data/schedule/part1.sch")
         s = str(tv)
-        d = sunbeam.deck.parse_string(s)
+        d = opm.deck.parse_string(s)
         kw0 = d[0]
         self.assertEqual(kw0.name, "WELSPECS")
 

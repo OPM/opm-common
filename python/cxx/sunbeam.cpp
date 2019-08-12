@@ -2,7 +2,7 @@
 #include "sunbeam.hpp"
 
 
-PYBIND11_MODULE(libsunbeam, module) {
+PYBIND11_MODULE(libopmcommon_python, module) {
     sunbeam::export_Parser(module);
     sunbeam::export_Deck(module);
     sunbeam::export_DeckKeyword(module);

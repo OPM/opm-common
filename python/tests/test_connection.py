@@ -1,11 +1,11 @@
 import unittest
-import sunbeam
+import opm
 
 class TestWells(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.sch = sunbeam.parse('tests/spe3/SPE3CASE1.DATA').schedule 
+        cls.sch = opm.parse('tests/spe3/SPE3CASE1.DATA').schedule 
         cls.timesteps = cls.sch.timesteps
 
     def test_connection_pos(self):
@@ -26,8 +26,8 @@ class TestWells(unittest.TestCase):
                     self.assertEqual("OPEN", connection.state)
 
     def test_filters(self):
-        flowing = sunbeam.Connection.flowing()
-        closed = sunbeam.Connection.closed()
+        flowing = opm.Connection.flowing()
+        closed = opm.Connection.closed()
         connections = self.sch.get_wells(0)[0].connections()
         self.assertEqual(len(list(filter(flowing, connections))), 2)
         self.assertEqual(len(list(filter(closed, connections))), 0)
