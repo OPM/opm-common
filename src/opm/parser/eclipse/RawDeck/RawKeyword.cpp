@@ -80,8 +80,10 @@ namespace Opm {
     /// it is added to the list of records, and a new record is started.
 
     void RawKeyword::addRawRecordString(const string_view& partialRecordString) {
-        if( m_partialRecordString == emptystr ) m_partialRecordString = partialRecordString;
-        else m_partialRecordString = { m_partialRecordString.begin(), partialRecordString.end() };
+        if( m_partialRecordString == emptystr )
+            m_partialRecordString = partialRecordString;
+        else
+            m_partialRecordString = { m_partialRecordString.begin(), partialRecordString.end() };
 
 
         if( isTerminator( m_partialRecordString ) ) {
