@@ -615,6 +615,7 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
         && parserState.rawKeyword->getSizeType() == Raw::UNKNOWN)
     {
         parserState.rawKeyword->finalizeUnknownSize();
+        return true;
     }
 
     return false;
