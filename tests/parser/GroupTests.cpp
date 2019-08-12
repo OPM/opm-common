@@ -259,3 +259,39 @@ BOOST_AUTO_TEST_CASE(Group2Create) {
     BOOST_CHECK_THROW(g1.addGroup("G1"), std::logic_error);
     BOOST_CHECK_THROW(g2.addWell("W1"), std::logic_error);
 }
+
+BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
+    Opm::Parser parser;
+    std::string input = R"(
+        START             -- 0
+        31 AUG 1993 /
+        SCHEDULE
+
+        GRUPTREE
+           'G1'  'FIELD' /
+           'G2'  'FIELD' /
+        /
+
+        GCONPROD
+            'G1' 'ORAT' 10000 3* 'CON' /
+            'G2' 'RESV' 10000 3* 'CON' /
+        /)";
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck );
+    Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
+    SummaryState st;
+
+    const auto& group1 = schedule.getGroup2("G1", 0);
+    const auto& group2 = schedule.getGroup2("G2", 0);
+
+    auto ctrl1 = group1.productionControls(st);
+    auto ctrl2 = group2.productionControls(st);
+
+    BOOST_CHECK_EQUAL(ctrl1.exceed_action, GroupProductionExceedLimit::RATE);
+    BOOST_CHECK_EQUAL(ctrl2.exceed_action, GroupProductionExceedLimit::CON);
+}
+

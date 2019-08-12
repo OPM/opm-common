@@ -1462,7 +1462,14 @@ namespace {
                     production.water_target = water_target;
                     production.liquid_target = liquid_target;
                     production.resv_target = resv_target;
-                    production.exceed_action = exceedAction;
+                    if ((production.cmode == GroupProduction::ORAT) ||
+                        (production.cmode == GroupProduction::WRAT) ||
+                        (production.cmode == GroupProduction::GRAT) ||
+                        (production.cmode == GroupProduction::LRAT))
+                        production.exceed_action = GroupProductionExceedLimit::RATE;
+                    else
+                        production.exceed_action = exceedAction;
+
                     production.production_controls = 0;
 
                     if (!record.getItem("OIL_TARGET").defaultApplied(0))
