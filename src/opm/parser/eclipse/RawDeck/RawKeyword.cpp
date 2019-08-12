@@ -115,10 +115,7 @@ namespace Opm {
 
         if( RawRecord::isTerminatedRecordString( partialRecordString ) ) {
 
-            auto recstr = partialRecordString.back() == '/'
-                ? string_view{ m_partialRecordString.begin(), m_partialRecordString.end() - 1 }
-                : m_partialRecordString;
-
+            auto recstr = string_view{ m_partialRecordString.begin(), m_partialRecordString.end() - 1 };
             m_records.emplace_back( recstr, m_filename, m_name );
             m_partialRecordString = emptystr;
 
