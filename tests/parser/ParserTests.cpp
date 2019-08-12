@@ -1031,7 +1031,7 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     ParseContext parseContext;
     ErrorGuard errors;
     RawRecord raw( string_view( "100 443" ) );
-    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, raw ) );
+    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, raw , "KEYWORD", "filename") );
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
@@ -1039,7 +1039,7 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
     RawRecord rawRecord( string_view( "100 443" ) );
     ParseContext parseContext;
     ErrorGuard errors;
-    const auto deckRecord = record.parse(parseContext , errors, rawRecord);
+    const auto deckRecord = record.parse(parseContext , errors, rawRecord, "KEYWORD", "filename");
     BOOST_CHECK_EQUAL(2U, deckRecord.size());
 }
 
@@ -1070,7 +1070,7 @@ BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
     RawRecord rawRecord( string_view( "1 2 10.0 20.0 4 90.0") );
     ParseContext parseContext;
     ErrorGuard errors;
-    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, rawRecord));
+    BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, rawRecord, "KEYWORD", "filename"));
 }
 
 BOOST_AUTO_TEST_CASE(Equal_Equal_ReturnsTrue) {
@@ -1211,13 +1211,13 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
 
     RawRecord rawRecord(  "3 3 3 " );
 
-    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord));
+    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, "KEYWORD", "filename"));
 
     RawRecord rawRecordOneExtra(  "3 3 3 4 " );
-    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordOneExtra), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordOneExtra, "KEYWORD", "filename"), std::invalid_argument);
 
     RawRecord rawRecordForgotRecordTerminator(  "3 3 3 \n 4 4 4 " );
-    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordForgotRecordTerminator), std::invalid_argument);
+    BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordForgotRecordTerminator, "KEYWORD", "filename"), std::invalid_argument);
 
 }
 
@@ -1237,8 +1237,8 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
     RawRecord rawRecord(  "3 3  " );
     // no default specified for the third item, record can be parsed just fine but trying
     // to access the data will raise an exception...;
-    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord));
-    auto record = parserRecord.parse(parseContext, errors , rawRecord);
+    BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, "KEWYORD", "filename"));
+    auto record = parserRecord.parse(parseContext, errors , rawRecord, "KEYWORD", "filename");
     BOOST_CHECK_NO_THROW(record.getItem(2));
     BOOST_CHECK_THROW(record.getItem(2).get< int >(0), std::out_of_range);
 }
@@ -1621,7 +1621,7 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     record.addItem(item);
     tabdimsKeyword->addRecord( record );
 
-    const auto deckKeyword = tabdimsKeyword->parse( parseContext, errors, rawkeyword );
+    const auto deckKeyword = tabdimsKeyword->parse( parseContext, errors, rawkeyword , "filename");
     BOOST_REQUIRE_EQUAL( 1U , deckKeyword.size());
 
     const auto& deckRecord = deckKeyword.getRecord(0);

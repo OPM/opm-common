@@ -250,16 +250,4 @@ BOOST_AUTO_TEST_CASE(Rawrecord_spaceOnlyEmpty_OK) {
     BOOST_CHECK_EQUAL(0U, record.size());
 }
 
-BOOST_AUTO_TEST_CASE(Rawrecord_noFileAndKeywordGiven_EmptyStringUsed) {
-    Opm::RawRecord record("32 33  ");
-    BOOST_CHECK_EQUAL("", record.getKeywordName());
-    BOOST_CHECK_EQUAL("", record.getFileName());
-}
 
-BOOST_AUTO_TEST_CASE(Rawrecord_FileAndKeywordGiven_CorrectStringsReturned) {
-    const std::string fileName = "/this/is/it";
-    const std::string keywordName = "KEYWD";
-    Opm::RawRecord record("32 33  ", fileName, keywordName);
-    BOOST_CHECK_EQUAL(keywordName, record.getKeywordName());
-    BOOST_CHECK_EQUAL(fileName, record.getFileName());
-}

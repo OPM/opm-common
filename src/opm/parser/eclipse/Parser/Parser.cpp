@@ -622,6 +622,7 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
 }
 
 bool parseState( ParserState& parserState, const Parser& parser ) {
+    std::string filename = parserState.current_path().string();
 
     while( !parserState.done() ) {
 
@@ -662,7 +663,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             const auto& kwname = parserState.rawKeyword->getKeywordName();
             const auto* parserKeyword = parser.getParserKeywordFromDeckName( kwname );
             try {
-                parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.errors, parserState.rawKeyword ) );
+                parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.errors, parserState.rawKeyword, filename ) );
             } catch (const std::exception& exc) {
                 /*
                   This catch-all of parsing errors is to be able to write a good
@@ -671,7 +672,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 */
                 const auto& rawKeyword = *parserState.rawKeyword;
                 std::string msg = "\nFailed to parse keyword: " + rawKeyword.getKeywordName() + "\n" +
-                                  "Starting at location: " + rawKeyword.getFilename() + "(" +  std::to_string(rawKeyword.getLineNR()) + ")\n\n" +
+                                  "Starting at location: " + filename + "(" +  std::to_string(rawKeyword.getLineNR()) + ")\n\n" +
                                   "Inner exception: " + exc.what() + "\n";
 
                 throw std::invalid_argument(msg);
@@ -679,7 +680,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         } else {
             DeckKeyword deckKeyword( parserState.rawKeyword->getKeywordName(), false );
             const std::string msg = "The keyword " + parserState.rawKeyword->getKeywordName() + " is not recognized";
-            deckKeyword.setLocation( parserState.rawKeyword->getFilename(),
+            deckKeyword.setLocation( filename,
                     parserState.rawKeyword->getLineNR());
             parserState.deck.addKeyword( std::move( deckKeyword ) );
             OpmLog::warning(Log::fileMessage(parserState.current_path().string(), parserState.line(), msg));
@@ -759,7 +760,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
     }
 
     Deck Parser::parseFile(const std::string &dataFileName, const ParseContext& parseContext, ErrorGuard& errors) const {
-        ParserState parserState( parseContext, errors, dataFileName );
+    ParserState parserState( parseContext, errors, dataFileName );
         parseState( parserState, *this );
         applyUnitsToDeck( parserState.deck );
 

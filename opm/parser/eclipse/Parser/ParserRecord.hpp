@@ -43,7 +43,7 @@ namespace Opm {
         void addDataItem( ParserItem item );
         const ParserItem& get(size_t index) const;
         const ParserItem& get(const std::string& itemName) const;
-        DeckRecord parse( const ParseContext&, ErrorGuard&, RawRecord&) const;
+        DeckRecord parse( const ParseContext&, ErrorGuard&, RawRecord&, const std::string& keyword, const std::string& filename) const;
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
         bool hasDimension() const;

@@ -76,13 +76,9 @@ inline bool even_quotes( const T& str ) {
 
 }
 
-    RawRecord::RawRecord(const string_view& singleRecordString,
-                         const std::string& fileName,
-                         const std::string& keywordName) :
+    RawRecord::RawRecord(const string_view& singleRecordString) :
         m_sanitizedRecordString( singleRecordString ),
-        m_recordItems( splitSingleRecordString( m_sanitizedRecordString ) ),
-        m_fileName(fileName),
-        m_keywordName(keywordName)
+        m_recordItems( splitSingleRecordString( m_sanitizedRecordString ) )
     {
 
         if( !even_quotes( singleRecordString ) )
@@ -92,13 +88,6 @@ inline bool even_quotes( const T& str ) {
             );
     }
 
-    const std::string& RawRecord::getFileName() const {
-        return m_fileName;
-    }
-
-    const std::string& RawRecord::getKeywordName() const {
-        return m_keywordName;
-    }
 
     void RawRecord::prepend( size_t count, string_view tok ) {
         this->m_recordItems.insert( this->m_recordItems.begin(), count, tok );

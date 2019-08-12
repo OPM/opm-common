@@ -109,7 +109,7 @@ namespace Opm {
                                ? "untitled"
                                : m_partialRecordString;
 
-            m_records.emplace_back( recstr, m_filename, m_name );
+            m_records.emplace_back( recstr );
             m_partialRecordString = emptystr;
             m_isFinished = true;
             return;
@@ -123,7 +123,7 @@ namespace Opm {
 
 
     void RawKeyword::terminateRecord() {
-        this->m_records.emplace_back( this->m_partialRecordString, this->m_filename, this->m_name );
+        this->m_records.emplace_back( this->m_partialRecordString );
         m_partialRecordString = emptystr;
 
         if( m_sizeType == Raw::FIXED && m_records.size() == m_fixedSize )
