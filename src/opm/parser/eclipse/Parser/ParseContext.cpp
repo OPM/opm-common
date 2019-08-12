@@ -78,6 +78,7 @@ namespace Opm {
         addKey(PARSE_EXTRA_DATA, InputError::THROW_EXCEPTION);
         addKey(PARSE_MISSING_INCLUDE, InputError::EXIT1);
         addKey(PARSE_LONG_KEYWORD, InputError::WARN);
+        addKey(PARSE_WGNAME_SPACE, InputError::THROW_EXCEPTION);
 
         addKey(UNIT_SYSTEM_MISMATCH, InputError::THROW_EXCEPTION);
 
@@ -315,6 +316,7 @@ namespace Opm {
     const std::string ParseContext::PARSE_MISSING_SECTIONS = "PARSE_MISSING_SECTIONS";
     const std::string ParseContext::PARSE_MISSING_INCLUDE = "PARSE_MISSING_INCLUDE";
     const std::string ParseContext::PARSE_LONG_KEYWORD = "PARSE_LONG_KEYWORD";
+    const std::string ParseContext::PARSE_WGNAME_SPACE = "PARSE_WGNAME_SPACE";
 
     const std::string ParseContext::UNIT_SYSTEM_MISMATCH = "UNIT_SYSTEM_MISMATCH";
 

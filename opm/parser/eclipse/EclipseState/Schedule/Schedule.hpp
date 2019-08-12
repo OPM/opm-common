@@ -247,7 +247,7 @@ namespace Opm
         void handleUDQ(const DeckKeyword& keyword, size_t currentStep);
         void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t currentStep);
-        void handleWELSPECS( const SCHEDULESection&, size_t, size_t , const UnitSystem& unit_system);
+        void handleWELSPECS( const SCHEDULESection&, size_t, size_t , const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
@@ -272,7 +272,7 @@ namespace Opm
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
-        void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
+        void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
         void handleWRFT( const DeckKeyword& keyword, size_t currentStep);
         void handleWTEST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);

@@ -23,8 +23,7 @@ SCHEDULE
 
 GRUPTREE 
    'INJE'          'FIELD'  /
--- the spaces around the names are intentional!
-   ' PROD '          ' FIELD '  /
+   'PROD'          'FIELD'  /
    'MANI-PROD'     'PROD'  /
    'MANI-INJ'      'INJE'  /
    'DUMMY-PROD'    'MANI-PROD'  /
