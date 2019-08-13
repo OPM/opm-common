@@ -211,17 +211,13 @@ install(DIRECTORY cmake DESTINATION share/opm)
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (OPM_ENABLE_PYTHON)
-
+  make_directory(${CMAKE_BINARY_DIR}/python)
   if (EXISTS "/etc/debian_version")
     set( PYTHON_PACKAGE_PATH "dist-packages")
   else()
     set( PYTHON_PACKAGE_PATH "site-packages")
   endif()
   set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}/sunbeam" CACHE STRING "Subdirectory to install Python modules in")
-
-  add_custom_target(sunbeam ALL)
-  add_dependencies(sunbeam opmcommon)
-  add_custom_command(TARGET sunbeam PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python)
 
   get_target_property(_ecl_include_dirs ecl INTERFACE_INCLUDE_DIRECTORIES)
   get_target_property(_opmcommon_include_dirs opmcommon INCLUDE_DIRECTORIES)
@@ -233,16 +229,36 @@ if (OPM_ENABLE_PYTHON)
   set(_opmcommon_lib_dirs ${_ecl_lib_dir} ${CMAKE_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/lib)
   string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
 
-
-  add_custom_command(TARGET sunbeam PRE_BUILD COMMAND python ${CMAKE_BINARY_DIR}/python/setup.py
+  add_custom_command(OUTPUT python/python/sunbeam/libsunbeam.so
+                     DEPENDS python/cxx/connection.cpp
+                     python/cxx/converters.hpp
+                     python/cxx/deck.cpp
+                     python/cxx/deck_keyword.cpp
+                     python/cxx/eclipse_3d_properties.cpp
+                     python/cxx/eclipse_config.cpp
+                     python/cxx/eclipse_grid.cpp
+                     python/cxx/eclipse_state.cpp
+                     python/cxx/group.cpp
+                     python/cxx/group_tree.cpp
+                     python/cxx/parser.cpp
+                     python/cxx/schedule.cpp
+                     python/cxx/sunbeam.cpp
+                     python/cxx/sunbeam.hpp
+                     python/cxx/sunbeam_state.cpp
+                     python/cxx/sunbeam_state.hpp
+                     python/cxx/table_manager.cpp
+                     python/cxx/well.cpp
+                     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python
+                     COMMAND python ${CMAKE_BINARY_DIR}/python/setup.py
                                                       build
                                                       build_ext
                                                       --build-lib=${CMAKE_BINARY_DIR}/python/python/sunbeam
                                                       --library-dirs=${_setup_lib_dirs}
                                                       --include-dirs=${_setup_include_dirs}
-                                                      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
-                     )
-
+                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
+                     COMMENT "Building python bindings")
+  add_custom_target(sunbeam ALL DEPENDS python/python/sunbeam/libsunbeam.so)
+  add_dependencies(sunbeam opmcommon)
   INSTALL( DIRECTORY ${CMAKE_BINARY_DIR}/python/python/sunbeam/  DESTINATION ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX})
 
   add_test(NAME python_tests
@@ -251,6 +267,7 @@ if (OPM_ENABLE_PYTHON)
            )
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/python/python)
 endif()
 
 
