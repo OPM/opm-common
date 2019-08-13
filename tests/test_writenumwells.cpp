@@ -32,8 +32,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
 
-#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
-#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp"
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 
 // ERT stuff
 #include <ert/ecl/ecl_kw.h>

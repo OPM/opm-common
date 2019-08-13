@@ -47,8 +47,8 @@
 #include <opm/output/eclipse/Summary.hpp>
 #include <opm/output/eclipse/RegionCache.hpp>
 
-#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
-#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp"
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 
 namespace {
     struct SegmentResultDescriptor
