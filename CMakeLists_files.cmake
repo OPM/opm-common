@@ -533,7 +533,9 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Well/WListManager.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellEconProductionLimits.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellFoamProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTracerProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTestConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/Well/WellTestState.hpp

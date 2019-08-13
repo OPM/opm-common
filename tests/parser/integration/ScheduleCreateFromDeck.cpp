@@ -34,8 +34,8 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
-#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp"
-#include "src/opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp"
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 
 using namespace Opm;
 
