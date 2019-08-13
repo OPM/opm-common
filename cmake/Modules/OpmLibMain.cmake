@@ -261,9 +261,13 @@ macro (cond_disable_test name)
 	endif ((NOT DEFINED HAVE_${name}) OR (NOT HAVE_${name}))
 endmacro (cond_disable_test name)
 
-# use this target to run all tests
+# use this target to run all tests, with parallel execution
+cmake_host_system_information(RESULT TESTJOBS QUERY NUMBER_OF_PHYSICAL_CORES)
+if(TESTJOBS EQUAL 0)
+	set(TESTJOBS 1)
+endif()
 add_custom_target (check
-	COMMAND ${CMAKE_CTEST_COMMAND}
+	COMMAND ${CMAKE_CTEST_COMMAND} -j${TESTJOBS}
 	DEPENDS test-suite
 	COMMENT "Checking if library is functional"
 	VERBATIM
