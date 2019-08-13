@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 
 #include "injection.hpp"
@@ -261,4 +262,16 @@ namespace Opm {
 
         return controls;
     }
+
+    bool WellInjectionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
+        int update_count = 0;
+
+        update_count += active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WCONINJE_RATE);
+        update_count += active.update(udq_config, this->reservoirInjectionRate, this->name, UDAControl::WCONINJE_RESV);
+        update_count += active.update(udq_config, this->BHPLimit, this->name, UDAControl::WCONINJE_BHP);
+        update_count += active.update(udq_config, this->THPLimit, this->name, UDAControl::WCONINJE_THP);
+
+        return (update_count > 0);
+    }
+
 }

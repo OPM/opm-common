@@ -100,7 +100,6 @@ enum class UDQAction {
     UPDATE
 };
 
-
 enum class UDAControl {
     WCONPROD_ORAT,
     WCONPROD_GRAT,
@@ -122,6 +121,15 @@ enum class UDAControl {
 };
 
 
+enum class UDAKeyword {
+    WCONPROD,
+    WCONINJE,
+    GCONINJE,
+    GCONPROD
+};
+
+
+
 namespace UDQ {
 
     bool compatibleTypes(UDQVarType lhs, UDQVarType rhs);
@@ -135,6 +143,9 @@ namespace UDQ {
     bool cmpFunc(UDQTokenType token_type);
 
     std::string typeName(UDQVarType var_type);
+    UDAKeyword keyword(UDAControl control);
+    int uadCode(UDAControl control);
+
 }
 }
 

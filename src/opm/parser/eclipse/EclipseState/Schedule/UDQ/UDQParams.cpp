@@ -88,6 +88,9 @@ namespace Opm {
             this->m_true_rng.seed( seed );
     }
 
+    int UDQParams::rand_seed() const noexcept {
+        return this->random_seed;
+    }
 
     double UDQParams::range() const noexcept {
         return this->value_range;

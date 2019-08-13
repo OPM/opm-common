@@ -136,13 +136,15 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParser.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPInjTable.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/VFPProdTable.cpp
     src/opm/parser/eclipse/Parser/ErrorGuard.cpp
@@ -178,10 +180,12 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
+          src/opm/output/eclipse/AggregateUDQData.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
           src/opm/output/eclipse/CreateLogiHead.cpp
+          src/opm/output/eclipse/CreateUdqDims.cpp
           src/opm/output/eclipse/DoubHEAD.cpp
           src/opm/output/eclipse/EclipseGridInspector.cpp
           src/opm/output/eclipse/EclipseIO.cpp
@@ -284,6 +288,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/test_AggregateGroupData.cpp
           tests/test_AggregateMSWData.cpp
           tests/test_AggregateConnectionData.cpp
+          #tests/test_AggregateUDQData.cpp
           tests/test_ArrayDimChecker.cpp
           tests/test_EclipseIO.cpp
           tests/test_DoubHEAD.cpp
@@ -324,6 +329,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE1CASE1A.SMSPEC
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
+          tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
       )
 endif()
 
@@ -564,10 +570,11 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQContext.hpp
-       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQInput.hpp
+       opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQSet.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunction.hpp
        opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp
@@ -608,6 +615,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/AggregateGroupData.hpp
         opm/output/eclipse/AggregateConnectionData.hpp
         opm/output/eclipse/AggregateMSWData.hpp
+        opm/output/eclipse/AggregateUDQData.hpp
         opm/output/eclipse/AggregateWellData.hpp
         opm/output/eclipse/DoubHEAD.hpp
         opm/output/eclipse/EclipseGridInspector.hpp

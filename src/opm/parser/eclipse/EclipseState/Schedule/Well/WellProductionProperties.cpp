@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
@@ -102,7 +103,7 @@ namespace Opm {
 
 
 
-    void WellProductionProperties::handleWCONPROD( const DeckRecord& record )
+    void WellProductionProperties::handleWCONPROD( const std::string& /* well */, const DeckRecord& record)
     {
         this->predictionMode = true;
 
@@ -295,6 +296,20 @@ namespace Opm {
         controls.cmode = this->controlMode;
 
         return controls;
+    }
+
+    bool WellProductionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
+        int update_count = 0;
+
+        update_count += active.update(udq_config, this->OilRate, this->name, UDAControl::WCONPROD_ORAT);
+        update_count += active.update(udq_config, this->WaterRate, this->name, UDAControl::WCONPROD_WRAT);
+        update_count += active.update(udq_config, this->GasRate, this->name, UDAControl::WCONPROD_GRAT);
+        update_count += active.update(udq_config, this->LiquidRate, this->name, UDAControl::WCONPROD_LRAT);
+        update_count += active.update(udq_config, this->ResVRate, this->name, UDAControl::WCONPROD_RESV);
+        update_count += active.update(udq_config, this->BHPLimit, this->name, UDAControl::WCONPROD_BHP);
+        update_count += active.update(udq_config, this->THPLimit, this->name, UDAControl::WCONPROD_THP);
+
+        return (update_count > 0);
     }
 
 

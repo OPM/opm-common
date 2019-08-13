@@ -298,9 +298,9 @@ enum Index : std::vector<double>::size_type {
     // 210..219
     dh_210  = 210,
     dh_211  = 211,
-    dh_212  = 212,
-    dh_213  = 213,
-    dh_214  = 214,
+    UdqPar_2= VI::doubhead::UdqPar_2,
+    UdqPar_3= VI::doubhead::UdqPar_3,
+    UdqPar_4= VI::doubhead::UdqPar_4,
     dh_215  = 215,
     dh_216  = 216,
     dh_217  = 217,
@@ -487,7 +487,14 @@ Opm::RestartIO::DoubHEAD::DoubHEAD()
 
     this->data_[Index::dh_210] = 0.0;
     this->data_[Index::dh_211] = 0.0;
-    this->data_[Index::dh_214] = 1.0e-4;
+    /*
+      UdqPar_2 and UdqPar_3 correspond to indices 212 og 213 respectively, they
+      were not set at all in the original code, therefor temporarily commented
+      out here to avoid effect of UDQ.
+    */
+    //this->data_[UdqPar_2]      = 1.0E+20;
+    //this->data_[UdqPar_3]      = 0.0;
+    this->data_[UdqPar_4]      = 1.0e-4;
     this->data_[Index::dh_215] = -2.0e+20;
     this->data_[Index::dh_217] = 0.0;
     this->data_[Index::dh_218] = 0.0;
@@ -613,6 +620,16 @@ Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
         (vappar.getType() == Opm::OilVaporizationEnum::DRDT)
         ? vappar.getMaxDRSDT(0)*cnvT
         : 1.0e+20;
+
+    return *this;
+}
+
+Opm::RestartIO::DoubHEAD&
+Opm::RestartIO::DoubHEAD::udq_param(const UDQParams& udqPar)
+{
+    this->data_[UdqPar_2] = udqPar.range();
+    this->data_[UdqPar_3] = udqPar.undefinedValue();
+    this->data_[UdqPar_4] = udqPar.cmpEpsilon();
 
     return *this;
 }

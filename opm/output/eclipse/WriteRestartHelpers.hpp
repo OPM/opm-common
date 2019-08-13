@@ -36,6 +36,7 @@ namespace Opm {
     class Schedule;
     class Well;
     class UnitSystem;
+    class UDQActive;
 
 } // Opm
 
@@ -62,6 +63,11 @@ namespace Opm { namespace RestartIO { namespace Helpers {
 
     std::vector<bool>
     createLogiHead(const EclipseState& es);
+
+    std::vector<int>
+    createUdqDims(const Schedule&     		sched,
+                  const std::size_t       lookup_step,
+                  const std::vector<int>& inteHead);
 
 
 }}} // Opm::RestartIO::Helpers

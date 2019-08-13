@@ -1,5 +1,5 @@
 /*
-  Copyright 2018 Statoil ASA.
+  Copyright 2019 Equinor ASA.
 
   This file is part of the Open Porous Media project (OPM).
 
@@ -18,90 +18,58 @@
 */
 
 
-#ifndef UDQINPUT_HPP_
-#define UDQINPUT_HPP_
+#ifndef UDQINPUT__HPP_
+#define UDQINPUT__HPP_
 
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <memory>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQAssign.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQFunctionTable.hpp>
-#include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
-
 
 namespace Opm {
 
-    class DeckRecord;
-    class Deck;
+class UDQAssign;
+class UDQDefine;
 
-    class UDQInput {
-    public:
-        explicit UDQInput(const Deck& deck);
-        const std::string& unit(const std::string& key) const;
-        bool has_unit(const std::string& keyword) const;
-        bool has_keyword(const std::string& keyword) const;
-        void add_record(const DeckRecord& record);
-        void assign_unit(const std::string& keyword, const std::string& unit);
+class UDQIndex {
+public:
+    UDQIndex() = default;
 
-        std::vector<UDQDefine> definitions() const;
-        std::vector<UDQDefine> definitions(UDQVarType var_type) const;
-
-        /*
-          The input_definitions() function is written to supply the information
-          needed when writing the restart file. The return value is a list of
-          pairs, where the first element in the pair is the index in the deck
-          for a particular UDQ keyword, and then the corresponding keyword.
-          Assume a deck keyword which looks like this:
-
-          UDQ
-            ASSIGN WUX 10 /
-            UNITS  WUX 'BARSA' /
-            DEFINE WUPR SUM(WOPR) * 0.75 /
-            DEFINE FUCK MAX(WOPR) * 1.25 /
-            ASSIGN FUX 100 /
-            DEFINE BUPR ?? /
-          /
-
-         Then the return value from input_definitions() will be:
-
-          {{1, UDQDefine("WUPR")},
-           {2, UDQDefine("FUCK")},
-           {4, UDQDefine("BUPR")}
+    UDQIndex(std::size_t insert_index_arg, std::size_t typed_insert_index_arg, UDQAction action_arg) :
+        insert_index(insert_index_arg),
+        typed_insert_index(typed_insert_index_arg),
+        action(action_arg)
+    {
+    }
 
 
-         Where the the numerical index is the index in a fictious vector
-         consisting of only the ASSIGN and DEFINE keywords, in input order.
-        */
-        std::vector<std::pair<size_t, UDQDefine>> input_definitions() const;
-
-        std::vector<UDQAssign> assignments() const;
-        std::vector<UDQAssign> assignments(UDQVarType var_type) const;
-        const UDQParams& params() const;
-        const UDQFunctionTable& function_table() const;
-    private:
-        UDQParams udq_params;
-        UDQFunctionTable udqft;
+    std::size_t insert_index;
+    std::size_t typed_insert_index;
+    UDQAction action;
+};
 
 
-        /*
-          The choices of datastructures are strongly motivated by the
-          constraints imposed by the Eclipse formatted restart files; for
-          writing restart files it is essential to keep meticolous control over
-          the ordering of the keywords. In this class the ordering is mainly
-          maintained by the input_index map which keeps track of the insert
-          order of each keyword, and whether the keyword is currently DEFINE'ed
-          or ASSIGN'ed.
-        */
-        std::unordered_map<std::string, UDQDefine> m_definitions;
-        std::unordered_map<std::string, UDQAssign> m_assignments;
-        std::unordered_map<std::string, std::string> units;
+class UDQInput{
+public:
+    UDQInput(const UDQIndex& index, const UDQDefine& udq_define, const std::string& unit);
+    UDQInput(const UDQIndex& index, const UDQAssign& udq_assign, const std::string& unit);
 
-        OrderedMap<std::string, std::pair<size_t, UDQAction>> input_index;
-    };
+    template<typename T>
+    const T& get() const;
+
+    template<typename T>
+    bool is() const;
+
+    const std::string& keyword() const;
+    UDQVarType var_type() const;
+    const std::string& unit() const;
+    const UDQIndex index;
+private:
+    const UDQDefine * define;
+    const UDQAssign * assign;
+    const std::string m_keyword;
+    UDQVarType m_var_type;
+    const std::string m_unit;
+};
 }
 
 

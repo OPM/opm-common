@@ -182,7 +182,18 @@ namespace {
             mxwpit,
         };
     }
-
+    
+    /*
+    Opm::RestartIO::InteHEAD::UdqParam
+    getRandSeedPar(const ::Opm::Runspec& rspec)
+    { 
+        const auto& udq_par = rspec.udqParams();
+        const auto r_seed = udq_par.rand_seed();
+        
+        return { r_seed};
+    }
+    */
+    
     Opm::RestartIO::InteHEAD::WellSegDims
     getWellSegDims(const ::Opm::Runspec&  rspec,
                    const ::Opm::Schedule& sched,
@@ -280,6 +291,7 @@ createInteHead(const EclipseState& es,
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })
         .variousParam       (201702, 100)  // Output should be compatible with Eclipse 100, 2017.02 version.
+        //.udqParam_1         (getRandSeedPar(rspec))
         ;
 
     return ih.data();

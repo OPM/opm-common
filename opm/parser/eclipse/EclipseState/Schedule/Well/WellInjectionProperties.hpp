@@ -31,6 +31,8 @@ namespace Opm {
     class DeckRecord;
     class UnitSystem;
     class SummaryState;
+    class UDQActive;
+    class UDQConfig;
 
     struct WellInjectionProperties {
         std::string name;
@@ -75,6 +77,7 @@ namespace Opm {
 
         void setBHPLimit(const double limit);
         InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
+        bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
     };
 
     std::ostream& operator<<( std::ostream&, const WellInjectionProperties& );

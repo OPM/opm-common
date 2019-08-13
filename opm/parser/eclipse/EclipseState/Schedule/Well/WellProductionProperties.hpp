@@ -32,6 +32,7 @@ namespace Opm {
 
     class DeckRecord;
     class SummaryState;
+    class UDQActive;
 
     class WellProductionProperties {
     public:
@@ -75,13 +76,13 @@ namespace Opm {
 
         // this is used to check whether the specified control mode is an effective history matching production mode
         static bool effectiveHistoryProductionControl(const WellProducer::ControlModeEnum cmode);
-        void handleWCONPROD( const DeckRecord& record);
+        void handleWCONPROD( const std::string& well, const DeckRecord& record);
         void handleWCONHIST( const DeckRecord& record);
         void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
         void resetDefaultBHPLimit();
         void clearControls();
-
         ProductionControls controls(const SummaryState& st, double udq_default) const;
+        bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
     private:
         int m_productionControls = 0;
         void init_rates( const DeckRecord& record );
