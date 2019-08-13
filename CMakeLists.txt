@@ -251,6 +251,7 @@ if (OPM_ENABLE_PYTHON)
            )
 
   set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/python/python)
 endif()
 
 
