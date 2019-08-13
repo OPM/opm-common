@@ -273,8 +273,7 @@ const std::vector<int> iuap_data(const Opm::Schedule& sched,
     std::vector<int> wg_no;
     Opm::UDAKeyword wg_key;
     
-    //wg_no.resize(iuap.size(), 0);
-    for (auto ind = 0; ind < iuap.size(); ind++) {
+    for (std::size_t ind = 0; ind < iuap.size(); ind++) {
         auto& ctrl = iuap[ind].control;
         wg_key = Opm::UDQ::keyword(ctrl);
         if ((wg_key == Opm::UDAKeyword::WCONPROD) || (wg_key == Opm::UDAKeyword::WCONINJE)) {
