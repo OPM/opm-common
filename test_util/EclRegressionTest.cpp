@@ -575,36 +575,42 @@ void ECLRegressionTest::results_init()
                     OPM_THROW(std::runtime_error, "\nArray with same name '"<< keywords1[i] << "', but of different type. Init file ");
                 }
 
-                std::cout << "Comparing " << keywords1[i] << " ... ";
+                auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), keywords1[i]);
+                
+                if (it != keywordsBlackList.end()){
+                    std::cout << "Skipping  " << keywords1[i] << std::endl;
+                } else {    
+                    std::cout << "Comparing " << keywords1[i] << " ... ";
 
-                if (arrayType1[i] == INTE) {
-                    auto vect1 = init1.get<int>(keywords1[i]);
-                    auto vect2 = init2.get<int>(keywords2[ind2]);
-                    compareVectors(vect1, vect2, keywords1[i],reference);
-                } else if (arrayType1[i] == REAL) {
-                    auto vect1 = init1.get<float>(keywords1[i]);
-                    auto vect2 = init2.get<float>(keywords2[ind2]);
-                    compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
-                } else if (arrayType1[i] == DOUB) {
-                    auto vect1 = init1.get<double>(keywords1[i]);
-                    auto vect2 = init2.get<double>(keywords2[ind2]);
-                    compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
-                } else if (arrayType1[i] == LOGI) {
-                    auto vect1 = init1.get<bool>(keywords1[i]);
-                    auto vect2 = init2.get<bool>(keywords2[ind2]);
-                    compareVectors(vect1, vect2, keywords1[i], reference);
-                } else if (arrayType1[i] == CHAR) {
-                    auto vect1 = init1.get<std::string>(keywords1[i]);
-                    auto vect2 = init2.get<std::string>(keywords2[ind2]);
-                    compareVectors(vect1, vect2, keywords1[i], reference);
-                } else if (arrayType1[i] == MESS) {
-                    // shold not be any associated data
-                } else {
-                    std::cout << "unknown array type " << std::endl;
-                    exit(1);
+                    if (arrayType1[i] == INTE) {
+                        auto vect1 = init1.get<int>(keywords1[i]);
+                        auto vect2 = init2.get<int>(keywords2[ind2]);
+                        compareVectors(vect1, vect2, keywords1[i],reference);
+                    } else if (arrayType1[i] == REAL) {
+                        auto vect1 = init1.get<float>(keywords1[i]);
+                        auto vect2 = init2.get<float>(keywords2[ind2]);
+                        compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
+                    } else if (arrayType1[i] == DOUB) {
+                        auto vect1 = init1.get<double>(keywords1[i]);
+                        auto vect2 = init2.get<double>(keywords2[ind2]);
+                        compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
+                    } else if (arrayType1[i] == LOGI) {
+                        auto vect1 = init1.get<bool>(keywords1[i]);
+                        auto vect2 = init2.get<bool>(keywords2[ind2]);
+                        compareVectors(vect1, vect2, keywords1[i], reference);
+                    } else if (arrayType1[i] == CHAR) {
+                        auto vect1 = init1.get<std::string>(keywords1[i]);
+                        auto vect2 = init2.get<std::string>(keywords2[ind2]);
+                        compareVectors(vect1, vect2, keywords1[i], reference);
+                    } else if (arrayType1[i] == MESS) {
+                        // shold not be any associated data
+                    } else {
+                        std::cout << "unknown array type " << std::endl;
+                        exit(1);
+                    }
+
+                    std::cout << " done." << std::endl;
                 }
-
-                std::cout << " done." << std::endl;
             }
 
             if (!deviations.empty()) {
@@ -659,7 +665,9 @@ void ECLRegressionTest::results_rst()
 
             seqnums2.clear();
             seqnums2.push_back(spesificSequence);
+            
         } else if (onlyLastSequence) {
+
             if (seqnums1.back() != seqnums2.back()) {
                 OPM_THROW(std::runtime_error, "\nLast sequence not same for for case 1 and case 2");
             }
@@ -708,6 +716,7 @@ void ECLRegressionTest::results_rst()
 
             std::vector<std::string> keywords2;
             std::vector<eclArrType> arrayType2;
+            
             for (const auto& array : arrays2) {
                 keywords2.push_back(std::get<0>(array));
                 arrayType2.push_back(std::get<1>(array));
@@ -753,36 +762,43 @@ void ECLRegressionTest::results_rst()
                                   " sequenze " << std::to_string(seqn));
                     }
 
-                    std::cout << "Comparing " << keywords1[i] << " ... ";
+                    auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), keywords1[i]);
+                
+                    if (it != keywordsBlackList.end()){
+                        std::cout << "Skipping  " << keywords1[i] << std::endl;
+                    } else {    
 
-                    if (arrayType1[i] == INTE) {
-                        auto vect1 = rst1.getRst<int>(keywords1[i], seqn);
-                        auto vect2 = rst2.getRst<int>(keywords2[ind2], seqn);
-                        compareVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == REAL) {
-                        auto vect1 = rst1.getRst<float>(keywords1[i], seqn);
-                        auto vect2 = rst2.getRst<float>(keywords2[ind2], seqn);
-                        compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == DOUB) {
-                        auto vect1 = rst1.getRst<double>(keywords1[i], seqn);
-                        auto vect2 = rst2.getRst<double>(keywords2[ind2], seqn);
-                        compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == LOGI) {
-                        auto vect1 = rst1.getRst<bool>(keywords1[i], seqn);
-                        auto vect2 = rst2.getRst<bool>(keywords2[ind2], seqn);
-                        compareVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == CHAR) {
-                        auto vect1 = rst1.getRst<std::string>(keywords1[i], seqn);
-                        auto vect2 = rst2.getRst<std::string>(keywords2[ind2], seqn);
-                        compareVectors(vect1, vect2, keywords1[i], reference);
-                    } else if (arrayType1[i] == MESS) {
-                        // shold not be any associated data
-                    } else {
-                        std::cout << "unknown array type " << std::endl;
-                        exit(1);
+                        std::cout << "Comparing " << keywords1[i] << " ... ";
+
+                        if (arrayType1[i] == INTE) {
+                            auto vect1 = rst1.getRst<int>(keywords1[i], seqn);
+                            auto vect2 = rst2.getRst<int>(keywords2[ind2], seqn);
+                            compareVectors(vect1, vect2, keywords1[i], reference);
+                        } else if (arrayType1[i] == REAL) {
+                            auto vect1 = rst1.getRst<float>(keywords1[i], seqn);
+                            auto vect2 = rst2.getRst<float>(keywords2[ind2], seqn);
+                            compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
+                        } else if (arrayType1[i] == DOUB) {
+                            auto vect1 = rst1.getRst<double>(keywords1[i], seqn);
+                            auto vect2 = rst2.getRst<double>(keywords2[ind2], seqn);
+                            compareFloatingPointVectors(vect1, vect2, keywords1[i], reference);
+                        } else if (arrayType1[i] == LOGI) {
+                            auto vect1 = rst1.getRst<bool>(keywords1[i], seqn);
+                            auto vect2 = rst2.getRst<bool>(keywords2[ind2], seqn);
+                            compareVectors(vect1, vect2, keywords1[i], reference);
+                        } else if (arrayType1[i] == CHAR) {
+                            auto vect1 = rst1.getRst<std::string>(keywords1[i], seqn);
+                            auto vect2 = rst2.getRst<std::string>(keywords2[ind2], seqn);
+                            compareVectors(vect1, vect2, keywords1[i], reference);
+                        } else if (arrayType1[i] == MESS) {
+                            // shold not be any associated data
+                        } else {
+                            std::cout << "unknown array type " << std::endl;
+                            exit(1);
+                        }
+
+                        std::cout << " done." << std::endl;
                     }
-
-                    std::cout << " done." << std::endl;
                 }
             }
         }
@@ -868,6 +884,18 @@ void ECLRegressionTest::results_smry()
                 checkSpesificKeyword(keywords1, keywords2, arrayType1, arrayType2, reference);
             }
 
+            std::vector<std::string> blackListed;
+            
+            for (std::vector<std::string>::iterator keywit = keywords1.begin(); keywit != keywords1.end(); ++keywit) {
+                auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), *keywit );
+                
+                if (it != keywordsBlackList.end()){
+                    blackListed.push_back(*keywit);
+                    keywords1.erase(keywit);
+                    --keywit;
+                }
+             }
+             
             std::cout << "\nChecking " << keywords1.size() << "  vectors  ... ";
 
             for (size_t i = 0; i < keywords1.size(); i++) {
@@ -891,6 +919,10 @@ void ECLRegressionTest::results_smry()
             }
 
             std::cout << " done." << std::endl;
+            
+            if (blackListed.size()>0){
+                std::cout << "Number of black listed vectors " << blackListed.size() << " (not compared) " << std::endl;
+            }
 
             if (!deviations.empty()) {
                 printDeviationReport();
@@ -986,39 +1018,45 @@ void ECLRegressionTest::results_rft()
                 }
 
                 for (auto& array : vectList1 ) {
-                    std::string keywords = std::get<0>(array);
+                    std::string keyword = std::get<0>(array);
                     eclArrType arrayType = std::get<1>(array);
 
-                    std::cout << "Comparing: " << keywords << " ... ";
+                    auto it = std::find(keywordsBlackList.begin(), keywordsBlackList.end(), keyword);
+                
+                    if (it != keywordsBlackList.end()){
+                        std::cout << "Skipping  " << keyword << std::endl;
+                    } else {    
+                        std::cout << "Comparing: " << keyword << " ... ";
 
-                    if (arrayType == INTE) {
-                        auto vect1 = rft1.getRft<int>(keywords, well, date);
-                        auto vect2 = rft2.getRft<int>(keywords, well, date);
-                        compareVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == REAL) {
-                        auto vect1 = rft1.getRft<float>(keywords, well, date);
-                        auto vect2 = rft2.getRft<float>(keywords, well, date);
-                        compareFloatingPointVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == DOUB) {
-                        auto vect1 = rft1.getRft<double>(keywords, well, date);
-                        auto vect2 = rft2.getRft<double>(keywords, well, date);
-                        compareFloatingPointVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == LOGI) {
-                        auto vect1 = rft1.getRft<bool>(keywords, well, date);
-                        auto vect2 = rft2.getRft<bool>(keywords, well, date);
-                        compareVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == CHAR) {
-                        auto vect1 = rft1.getRft<std::string>(keywords, well, date);
-                        auto vect2 = rft2.getRft<std::string>(keywords, well, date);
-                        compareVectors(vect1, vect2, keywords, reference);
-                    } else if (arrayType == MESS) {
-                        // shold not be any associated data
-                    } else {
-                        std::cout << "unknown array type " << std::endl;
-                        exit(1);
+                        if (arrayType == INTE) {
+                            auto vect1 = rft1.getRft<int>(keyword, well, date);
+                            auto vect2 = rft2.getRft<int>(keyword, well, date);
+                            compareVectors(vect1, vect2, keyword, reference);
+                        } else if (arrayType == REAL) {
+                            auto vect1 = rft1.getRft<float>(keyword, well, date);
+                            auto vect2 = rft2.getRft<float>(keyword, well, date);
+                            compareFloatingPointVectors(vect1, vect2, keyword, reference);
+                        } else if (arrayType == DOUB) {
+                            auto vect1 = rft1.getRft<double>(keyword, well, date);
+                            auto vect2 = rft2.getRft<double>(keyword, well, date);
+                            compareFloatingPointVectors(vect1, vect2, keyword, reference);
+                        } else if (arrayType == LOGI) {
+                            auto vect1 = rft1.getRft<bool>(keyword, well, date);
+                            auto vect2 = rft2.getRft<bool>(keyword, well, date);
+                            compareVectors(vect1, vect2, keyword, reference);
+                        } else if (arrayType == CHAR) {
+                            auto vect1 = rft1.getRft<std::string>(keyword, well, date);
+                            auto vect2 = rft2.getRft<std::string>(keyword, well, date);
+                            compareVectors(vect1, vect2, keyword, reference);
+                        } else if (arrayType == MESS) {
+                            // shold not be any associated data
+                        } else {
+                            std::cout << "unknown array type " << std::endl;
+                            exit(1);
+                        }
+
+                        std::cout << " done." << std::endl;
                     }
-
-                    std::cout << " done." << std::endl;
                 }
             }
             std::cout << std::endl;
