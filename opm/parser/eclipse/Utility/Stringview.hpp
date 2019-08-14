@@ -85,6 +85,8 @@ namespace Opm {
             inline std::string substr( size_t from = 0 ) const;
             inline std::string substr( size_t from, size_t to ) const;
 
+            inline bool starts_with(const std::string& str) const;
+            inline std::size_t find(const std::string& substring) const;
         private:
             const_iterator fst = nullptr;
             const_iterator lst = nullptr;
@@ -234,6 +236,52 @@ namespace Opm {
 
         return std::string( this->begin() + from, this->begin() + to );
     }
+
+
+    inline std::size_t string_view::find(const std::string& substring) const {
+        auto substring_size = substring.size();
+        if (substring_size > this->size())
+            return std::string::npos;
+
+        auto substring_data = substring.data();
+        auto pos = this->fst;
+        auto last_pos = this->lst - substring.size() + 1;
+
+        while (pos != last_pos) {
+            std::size_t si = 0;
+            while (substring_data[si] == *(pos + si)) {
+                si += 1;
+                if (si == substring_size)
+                    return pos - this->fst;
+            }
+            ++pos;
+        }
+
+        return std::string::npos;
+    }
+
+
+    inline bool string_view::starts_with(const std::string& str) const {
+        auto str_size = str.size();
+        if (str_size > this->size())
+            return false;
+
+        auto str_data = str.data();
+        auto pos = this->fst;
+
+        std::size_t si = 0;
+        while (true) {
+            if (*pos != str_data[si])
+                return false;
+
+            ++pos;
+            ++si;
+
+            if (si == str_size)
+                return true;
+        }
+    }
+
 
 }
 
