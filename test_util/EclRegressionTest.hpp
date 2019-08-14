@@ -162,6 +162,8 @@ private:
     const std::vector<std::string> keywordsStrictTol = {"COORD", "ZCORN", "PORV", "DEPTH", "DX", "DY", "DZ", "PERMX", "PERMY", "PERMZ", "NTG",
                                                         "TRANX", "TRANY", "TRANZ", "TRANNNC", "SGRP", "SCON", "DOUBHEAD"
                                                        };
+    // keywords that should not be compared
+    const std::vector<std::string> keywordsBlackList = {"TCPU"};
 
     bool reportStepOnly = false;
 
