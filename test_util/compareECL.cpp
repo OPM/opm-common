@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string>
 #include <getopt.h>
+#include <fstream>
 
 static void printHelp() {
     std::cout << "\ncompareECL compares ECLIPSE files (restart (.RST), unified restart (.UNRST), initial (.INIT), summary (.SMRY), unified summary (.UNSMRY) or .RFT) and gridsizes (from .EGRID or .GRID file) from two simulations.\n"
@@ -61,6 +62,20 @@ static void printHelp() {
 }
 
 
+
+static bool has_result_files(const std::string& rootName)
+{
+    std::vector<std::string> extList = { "EGRID", "INIT", "UNRST", "SMSPEC", "RFT" };
+
+    for (const auto& ext : extList) {
+        std::ifstream is(rootName + '.' + ext);
+        if (is) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 //------------------------------------------------//
 
@@ -154,6 +169,11 @@ int main(int argc, char** argv) {
     double relTolerance   = strtod(argv[argOffset + 3], nullptr);
 
     std::cout << "Comparing '" << basename1 << "' to '" << basename2 << "'." << std::endl;
+
+    if (!has_result_files(basename1)){
+        std::cerr << "No files found for reference case." << std::endl;
+        return EXIT_FAILURE;
+    }
 
     try {
         ECLRegressionTest comparator(basename1, basename2, absTolerance, relTolerance);
