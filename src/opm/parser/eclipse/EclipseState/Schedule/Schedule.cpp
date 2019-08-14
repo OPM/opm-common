@@ -1890,33 +1890,6 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         return this->m_timeMap;
     }
 
-
-    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const {
-        auto root_group = this->getGroup2(root_node, report_step);
-        GTNode tree(root_group, parent);
-
-        for (const auto& wname : root_group.wells()) {
-            const auto& well = this->getWell2(wname, report_step);
-            tree.add_well(well);
-        }
-
-        for (const auto& gname : root_group.groups()) {
-            auto child_group = this->groupTree(gname, report_step, std::addressof(tree));
-            tree.add_group(child_group);
-        }
-
-        return tree;
-    }
-
-    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step) const {
-        return this->groupTree(root_node, report_step, nullptr);
-    }
-
-
-    GTNode Schedule::groupTree(std::size_t report_step) const {
-        return this->groupTree("FIELD", report_step);
-    }
-
     void Schedule::addWell(const std::string& wellName,
                            const DeckRecord& record,
                            size_t timeStep,
@@ -2096,6 +2069,19 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             throw std::invalid_argument("Group: " + groupName + " not yet defined at step: " + std::to_string(timeStep));
 
         return *group_ptr;
+    }
+
+    std::vector<Group2*> Schedule::getGroups2(size_t timeStep) const {
+        std::vector<Group2*> groupsAtTimestep;
+        if (timeStep >= this->m_timeMap.size())
+            throw std::invalid_argument("timeStep argument beyond the length of the simulation");
+
+        for (const auto& dynamic_pair : this->groups) {
+            auto& group_ptr = dynamic_pair.second.get(timeStep);
+            if (group_ptr)
+                groupsAtTimestep.push_back(group_ptr.get());
+        }
+        return groupsAtTimestep;
     }
 
     void Schedule::updateGroup(std::shared_ptr<Group2> group, size_t reportStep) {

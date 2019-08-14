@@ -27,7 +27,6 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp>
@@ -139,19 +138,6 @@ namespace {
         WellDims::checkGroupSize  (wdims, sched, ctxt, guard);
     }
 
-    std::size_t groupSize(const Opm::GTNode& tree) {
-        auto nwgmax = std::size_t{0};
-        for (const auto& node : tree.groups()) {
-            const auto& group = node.group();
-            if (group.wellgroup())
-                nwgmax = std::max(nwgmax, group.wells().size());
-            else
-                nwgmax = std::max(nwgmax, groupSize(node));
-        }
-        return nwgmax;
-    }
-
-
 } // Anonymous
 
 void
@@ -170,6 +156,11 @@ int
 Opm::maxGroupSize(const Opm::Schedule& sched,
                   const std::size_t    step)
 {
-    const auto& gt = sched.groupTree(step);
-    return static_cast<int>(groupSize(gt));
+    size_t nwgmax = 0;
+    for (const auto& group : sched.getGroups2(step)) {
+        if (group->wellgroup()) {
+            nwgmax = std::max(nwgmax, group->wells().size());
+        }
+    }
+    return static_cast<int>(nwgmax);
 }
