@@ -52,8 +52,6 @@ namespace Opm {
     private:
         string_view m_sanitizedRecordString;
         std::deque< string_view > m_recordItems;
-
-        void setRecordString(const std::string& singleRecordString);
     };
 
     /*
