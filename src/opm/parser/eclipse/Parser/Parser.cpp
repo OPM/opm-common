@@ -453,8 +453,8 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
 
         auto raw_keyword = std::make_shared< RawKeyword >( keywordString, rawSizeType,
                                                            parserState.current_path().string(),
-                                                           parserState.line() );
-        raw_keyword->slash_terminated_records = slash_terminated_records;
+                                                           parserState.line(),
+                                                           slash_terminated_records);
         return raw_keyword;
     }
 
@@ -463,8 +463,8 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
                                                            parserState.current_path().string(),
                                                            parserState.line(),
                                                            parserKeyword.getFixedSize(),
+                                                           slash_terminated_records,
                                                            parserKeyword.isTableCollection() );
-        raw_keyword->slash_terminated_records = slash_terminated_records;
         return raw_keyword;
     }
 
@@ -479,8 +479,8 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
                                                            parserState.current_path().string(),
                                                            parserState.line(),
                                                            targetSize,
+                                                           slash_terminated_records,
                                                            parserKeyword.isTableCollection() );
-        raw_keyword->slash_terminated_records = slash_terminated_records;
         return raw_keyword;
     }
 
@@ -497,8 +497,8 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
                                                        parserState.current_path().string(),
                                                        parserState.line(),
                                                        targetSize,
+                                                       slash_terminated_records,
                                                        parserKeyword.isTableCollection() );
-    raw_keyword->slash_terminated_records = slash_terminated_records;
     return raw_keyword;
 }
 
@@ -595,7 +595,7 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
                 }
             }
 
-            if (parserState.rawKeyword->slash_terminated_records)
+            if (parserState.rawKeyword->slashTerminatedRecords())
                 line = strip_slash(line);
             else
                 line = strip_last_slash(line);

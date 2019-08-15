@@ -40,8 +40,18 @@ namespace Opm {
 
     class RawKeyword {
     public:
-        RawKeyword(const string_view& name , Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR);
-        RawKeyword(const string_view& name , const std::string& filename, size_t lineNR , size_t inputSize , bool isTableCollection = false);
+        RawKeyword(const string_view& name,
+                   Raw::KeywordSizeEnum sizeType,
+                   const std::string& filename,
+                   size_t lineNR,
+                   bool slash_terminated);
+
+        RawKeyword(const string_view& name,
+                   const std::string& filename,
+                   size_t lineNR ,
+                   size_t inputSize,
+                   bool slash_terminated,
+                   bool isTableCollection);
 
         const std::string& getKeywordName() const;
         void addRawRecordString( const string_view& );
@@ -60,6 +70,7 @@ namespace Opm {
         bool unKnownSize() const;
         void finalizeUnknownSize();
         void terminateRecord();
+        bool slashTerminatedRecords() const;
 
         const std::string& getFilename() const;
         size_t getLineNR() const;
@@ -73,7 +84,6 @@ namespace Opm {
         iterator end();
 
         bool is_title() const;
-        bool slash_terminated_records = true;
     private:
         Raw::KeywordSizeEnum m_sizeType;
         bool m_isFinished = false;
@@ -82,6 +92,7 @@ namespace Opm {
         size_t m_currentNumTables = 0;
         std::string m_name;
         std::list< RawRecord > m_records;
+        bool slash_terminated_records;
         string_view m_partialRecordString;
 
         size_t m_lineNR;

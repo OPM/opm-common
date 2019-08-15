@@ -1612,7 +1612,7 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     const auto& tabdimsKeyword = createFixedSized("TEST" , 1);
     ParserRecord record;
     ParserItem item("ITEM", INT);
-    auto rawkeyword = std::make_shared< RawKeyword >( tabdimsKeyword->getName() , "FILE" , 10U , 1 );
+    auto rawkeyword = std::make_shared< RawKeyword >( tabdimsKeyword->getName() , "FILE" , 10U , 1 , true, false);
     ParseContext parseContext;
     ErrorGuard errors;
 
