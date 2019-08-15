@@ -469,7 +469,7 @@ void set_dimensions( ParserItem& item,
 
     DeckKeyword ParserKeyword::parse(const ParseContext& parseContext,
                                      ErrorGuard& errors,
-                                     std::shared_ptr< RawKeyword > rawKeyword,
+                                     std::unique_ptr< RawKeyword >& rawKeyword,
                                      const std::string& filename) const {
         if( !rawKeyword->isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword->getKeywordName());

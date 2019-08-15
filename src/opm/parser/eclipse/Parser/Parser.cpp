@@ -256,7 +256,7 @@ class ParserState {
         boost::filesystem::path rootPath;
 
     public:
-        std::shared_ptr< RawKeyword > rawKeyword;
+        std::unique_ptr< RawKeyword > rawKeyword;
         ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
         std::string lastKeyWord;
 
@@ -442,7 +442,7 @@ void ParserState::addPathAlias( const std::string& alias, const std::string& pat
 }
 
 
-std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
+std::unique_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
     bool slash_terminated_records = parserKeyword.slashTerminatedRecords();
 
     if( parserKeyword.getSizeType() == SLASH_TERMINATED || parserKeyword.getSizeType() == UNKNOWN) {
@@ -451,7 +451,7 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
             ? Raw::SLASH_TERMINATED
             : Raw::UNKNOWN;
 
-        auto raw_keyword = std::make_shared< RawKeyword >( keywordString, rawSizeType,
+        auto raw_keyword = std::make_unique< RawKeyword >( keywordString, rawSizeType,
                                                            parserState.current_path().string(),
                                                            parserState.line(),
                                                            slash_terminated_records);
@@ -459,7 +459,7 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
     }
 
     if( parserKeyword.hasFixedSize() ) {
-        auto raw_keyword = std::make_shared< RawKeyword >( keywordString,
+        auto raw_keyword = std::make_unique< RawKeyword >( keywordString,
                                                            parserState.current_path().string(),
                                                            parserState.line(),
                                                            parserKeyword.getFixedSize(),
@@ -475,7 +475,7 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
         const auto& sizeDefinitionKeyword = deck.getKeyword(keyword_size.keyword);
         const auto& record = sizeDefinitionKeyword.getRecord(0);
         const auto targetSize = record.getItem( keyword_size.item ).get< int >( 0 ) + keyword_size.shift;
-        auto raw_keyword = std::make_shared< RawKeyword >( keywordString,
+        auto raw_keyword = std::make_unique< RawKeyword >( keywordString,
                                                            parserState.current_path().string(),
                                                            parserState.line(),
                                                            targetSize,
@@ -493,7 +493,7 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
     const auto& int_item = record.get( keyword_size.item);
 
     const auto targetSize = int_item.getDefault< int >( ) + keyword_size.shift;
-    auto raw_keyword = std::make_shared< RawKeyword >( keywordString,
+    auto raw_keyword = std::make_unique< RawKeyword >( keywordString,
                                                        parserState.current_path().string(),
                                                        parserState.line(),
                                                        targetSize,
@@ -503,7 +503,7 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword,
 }
 
 
-std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserState& parserState, const Parser& parser ) {
+std::unique_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserState& parserState, const Parser& parser ) {
     auto keywordString = ParserKeyword::getDeckName( kw );
 
     if (parser.isRecognizedKeyword(keywordString)) {
