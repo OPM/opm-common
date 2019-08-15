@@ -1030,14 +1030,17 @@ namespace {
 
     const Dimension& UnitSystem::getNewDimension(const std::string& dimension) {
         if( !hasDimension( dimension ) )
-            this->addDimension( parse( dimension ) );
+            this->addDimension( this->parse( dimension ) );
 
         return getDimension( dimension );
     }
 
 
     const Dimension& UnitSystem::getDimension(const std::string& dimension) const {
-        return this->m_dimensions.at( dimension );
+        auto iter = this->m_dimensions.find(dimension);
+        if (iter == this->m_dimensions.end())
+            throw std::out_of_range("The dimension: '" + dimension + "' was not recognized");
+        return iter->second;
     }
 
 
@@ -1083,7 +1086,7 @@ namespace {
 
         double SIfactor = 1.0;
         for( const auto& x : dimensionList ) {
-            auto dim = getDimension( x );
+            auto dim = this->getDimension( x );
 
             // all constituing dimension must be compositable. The
             // only exception is if there is the "composite" dimension
@@ -1103,12 +1106,12 @@ namespace {
                 throw std::invalid_argument("Dimension string can only have one division sign '/'");
 
         const bool haveDivisor = divCount == 1;
-        if( !haveDivisor ) return parseFactor( dimension );
+        if( !haveDivisor ) return this->parseFactor( dimension );
 
         std::vector<std::string> parts;
         boost::split(parts , dimension , boost::is_any_of("/"));
-        Dimension dividend = parseFactor( parts[0] );
-        Dimension divisor = parseFactor( parts[1] );
+        Dimension dividend = this->parseFactor( parts[0] );
+        Dimension divisor = this->parseFactor( parts[1] );
 
         if (dividend.getSIOffset() != 0.0 || divisor.getSIOffset() != 0.0)
             throw std::invalid_argument("Composite dimensions cannot currently require a conversion offset");
