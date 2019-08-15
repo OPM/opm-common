@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <pybind11/stl.h>
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {

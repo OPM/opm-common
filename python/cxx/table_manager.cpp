@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Tables/TableManager.hpp>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {

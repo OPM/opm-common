@@ -1,5 +1,5 @@
 #include <pybind11/pybind11.h>
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 PYBIND11_MODULE(libopmcommon_python, module) {

@@ -4,7 +4,7 @@
 
 #include <pybind11/stl.h>
 #include <pybind11/chrono.h>
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {

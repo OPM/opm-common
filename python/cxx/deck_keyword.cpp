@@ -5,7 +5,7 @@
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Utility/Typetools.hpp>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 #include "converters.hpp"
 
 

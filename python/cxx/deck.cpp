@@ -2,7 +2,7 @@
 
 #include <pybind11/pybind11.h>
 #include "converters.hpp"
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {

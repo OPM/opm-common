@@ -3,8 +3,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <pybind11/stl.h>
 
-#include "sunbeam_state.hpp"
-#include "sunbeam.hpp"
+#include "common_state.hpp"
+#include "common.hpp"
 
 
 namespace {

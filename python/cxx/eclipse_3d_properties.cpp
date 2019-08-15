@@ -1,7 +1,7 @@
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <pybind11/stl.h>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 #include "converters.hpp"
 
 namespace {

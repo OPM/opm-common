@@ -242,10 +242,10 @@ if (OPM_ENABLE_PYTHON)
                      python/cxx/group_tree.cpp
                      python/cxx/parser.cpp
                      python/cxx/schedule.cpp
-                     python/cxx/sunbeam.cpp
-                     python/cxx/sunbeam.hpp
-                     python/cxx/sunbeam_state.cpp
-                     python/cxx/sunbeam_state.hpp
+                     python/cxx/common.cpp
+                     python/cxx/common.hpp
+                     python/cxx/common_state.cpp
+                     python/cxx/common_state.hpp
                      python/cxx/table_manager.cpp
                      python/cxx/well.cpp
                      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/python/ ${CMAKE_BINARY_DIR}/python

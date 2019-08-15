@@ -35,10 +35,10 @@ ext_modules = [
                 'cxx/group_tree.cpp',
                 'cxx/parser.cpp',
                 'cxx/schedule.cpp',
-                'cxx/sunbeam_state.cpp',
+                'cxx/common_state.cpp',
                 'cxx/table_manager.cpp',
                 'cxx/well.cpp',
-                'cxx/sunbeam.cpp'
+                'cxx/common.cpp'
         ],
         libraries=['opmcommon', 'boost_filesystem', 'boost_regex', 'ecl'],
         language='c++',

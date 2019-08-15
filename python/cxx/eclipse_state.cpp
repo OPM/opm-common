@@ -1,7 +1,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {

@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 namespace {
 
