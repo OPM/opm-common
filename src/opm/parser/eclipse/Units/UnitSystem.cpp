@@ -73,7 +73,8 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        Metric::APIOffset,
     };
 
     static const double to_metric[] = {
@@ -107,9 +108,8 @@ namespace {
         1, /* water inverse formation volume factor */
         1 / (Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure),
         1 / (Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure),
-        1 / Metric::Energy
-
-
+        1 / Metric::Energy,
+        1 / Metric::API,
     };
 
     static const double from_metric[] = {
@@ -143,8 +143,8 @@ namespace {
         1, /* water inverse formation volume factor */
         Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure,
         Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure,
-        Metric::Energy
-
+        Metric::Energy,
+        Metric::API,
     };
 
     static constexpr const char* metric_names[] = {
@@ -179,7 +179,7 @@ namespace {
         "SM3/DAY/BARS",
         "SM3/DAY/BARS",
         "KJ", /* energy */
-
+        "API"
     };
 
     // =================================================================
@@ -216,7 +216,8 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        Field::APIOffset,
     };
 
     static const double to_field[] = {
@@ -250,8 +251,8 @@ namespace {
         1, /* water inverse formation volume factor */
         1 / (Field::LiquidSurfaceVolume / Field::Time / Field::Pressure),
         1 / (Field::GasSurfaceVolume / Field::Time / Field::Pressure),
-        1 / Field::Energy
-
+        1 / Field::Energy,
+        1 / Field::API,
     };
 
     static const double from_field[] = {
@@ -285,8 +286,8 @@ namespace {
          1, /* water inverse formation volume factor */
          Field::LiquidSurfaceVolume / Field::Time / Field::Pressure,
          Field::GasSurfaceVolume / Field::Time / Field::Pressure,
-         Field::Energy
-
+         Field::Energy,
+         Field::API,
     };
 
     static constexpr const char* field_names[] = {
@@ -321,7 +322,7 @@ namespace {
         "STB/DAY/PSIA",
         "MSCF/DAY/PSIA",
         "BTU", /* energy */
-
+        "API",
     };
 
     // =================================================================
@@ -358,7 +359,8 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        Lab::APIOffset,
     };
 
     static const double to_lab[] = {
@@ -392,8 +394,8 @@ namespace {
         1, /* water inverse formation volume factor */
         1 / (Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure),
         1 / (Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure),
-        1 / Lab::Energy
-
+        1 / Lab::Energy,
+        1 / Lab::API,
     };
 
     static const double from_lab[] = {
@@ -427,8 +429,8 @@ namespace {
         1, /* water inverse formation volume factor */
         Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure,
         Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure,
-        Lab::Energy
-
+        Lab::Energy,
+        Lab::API
     };
 
     static constexpr const char* lab_names[] = {
@@ -463,7 +465,7 @@ namespace {
         "SCC/HR/ATM",
         "SCC/HR/ATM",
         "J", /* energy */
-
+        "API",
     };
 
     // =================================================================
@@ -500,7 +502,8 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        PVT_M::APIOffset,
     };
 
     static const double to_pvt_m[] = {
@@ -534,8 +537,8 @@ namespace {
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bw */
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
         1 / (PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
-        1 / PVT_M::Energy
-
+        1 / PVT_M::Energy,
+        1 / PVT_M::API
     };
 
     static const double from_pvt_m[] = {
@@ -569,8 +572,8 @@ namespace {
         PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bw */
         PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
         PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
-        PVT_M::Energy
-
+        PVT_M::Energy,
+        PVT_M::API,
     };
 
     static constexpr const char* pvt_m_names[] = {
@@ -605,7 +608,7 @@ namespace {
         "SM3/DAY/ATM",
         "SM3/DAY/ATM",
         "KJ" /* energy */,
-
+        "API",
     };
 
     // =================================================================
@@ -642,7 +645,8 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        0.0,
     };
 
     static const double to_input[] = {
@@ -676,7 +680,8 @@ namespace {
         1,
         1,
         1,
-        1
+        1,
+        1,
     };
 
     static const double from_input[] = {
@@ -710,7 +715,8 @@ namespace {
         1,
         1,
         1,
-        1
+        1,
+        1,
     };
 
     static constexpr const char* input_names[] = {
@@ -745,7 +751,7 @@ namespace {
         "SM3/DAY/BARS",
         "SM3/DAY/BARS",
         "KJ", /* energy */
-
+        "API",
     };
 
 } // namespace Anonymous
@@ -847,6 +853,7 @@ namespace {
         this->addDimension("SurfaceTension"  , PVT_M::SurfaceTension);
         this->addDimension("Energy", PVT_M::Energy);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        this->addDimension("API", PVT_M::API, PVT_M::APIOffset);
     }
 
 
@@ -882,6 +889,7 @@ namespace {
         this->addDimension("SurfaceTension"  , Lab::SurfaceTension);
         this->addDimension("Energy", Lab::Energy);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        this->addDimension("API", Lab::API, Lab::APIOffset);
     }
 
 
@@ -918,6 +926,7 @@ namespace {
         this->addDimension("SurfaceTension"  , Metric::SurfaceTension);
         this->addDimension("Energy", Metric::Energy);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        this->addDimension("API", Metric::API, Metric::APIOffset);
     }
 
     void UnitSystem::initFIELD() {
@@ -952,6 +961,7 @@ namespace {
         this->addDimension("SurfaceTension"  , Field::SurfaceTension);
         this->addDimension("Energy", Field::Energy);
         this->addDimension("ContextDependent", std::numeric_limits<double>::quiet_NaN());
+        this->addDimension("API", Field::API, Field::APIOffset);
     }
 
 

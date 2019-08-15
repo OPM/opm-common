@@ -72,7 +72,8 @@ namespace Opm {
             water_inverse_formation_volume_factor,
             liquid_productivity_index,
             gas_productivity_index,
-            energy
+            energy,
+            api
         };
 
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
