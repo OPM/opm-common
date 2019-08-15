@@ -29,7 +29,8 @@ namespace Opm {
 
     static const std::string emptystr = "";
 
-    RawKeyword::RawKeyword(const string_view& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR) :
+    RawKeyword::RawKeyword(const string_view& name, Raw::KeywordSizeEnum sizeType , const std::string& filename, size_t lineNR, bool slash_terminated) :
+        slash_terminated_records(slash_terminated),
         m_partialRecordString( emptystr )
     {
         if (sizeType == Raw::SLASH_TERMINATED || sizeType == Raw::UNKNOWN) {
@@ -39,7 +40,9 @@ namespace Opm {
             throw std::invalid_argument("Error - invalid sizetype on input");
     }
 
-    RawKeyword::RawKeyword(const string_view& name , const std::string& filename, size_t lineNR , size_t inputSize, bool isTableCollection ) {
+    RawKeyword::RawKeyword(const string_view& name , const std::string& filename, size_t lineNR , size_t inputSize, bool slash_terminated, bool isTableCollection ) :
+        slash_terminated_records(slash_terminated)
+    {
         commonInit(name.string(),filename,lineNR);
         if (isTableCollection) {
             m_sizeType = Raw::TABLE_COLLECTION;
@@ -206,5 +209,10 @@ namespace Opm {
     Raw::KeywordSizeEnum RawKeyword::getSizeType() const {
         return m_sizeType;
     }
+
+    bool RawKeyword::slashTerminatedRecords() const {
+        return this->slash_terminated_records;
+    }
+
 }
 

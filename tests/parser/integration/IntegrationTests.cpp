@@ -231,8 +231,8 @@ BOOST_AUTO_TEST_CASE(parse_truncatedrecords_deckFilledWithDefaults) {
     BOOST_CHECK(lastItem_1.defaultApplied(0));
     BOOST_CHECK_EQUAL(lastItem_1.get< int >(0), 1);
 
-    auto* parserKeyword = parser.getParserKeywordFromDeckName("RADFIN4");
-    const auto& parserRecord = parserKeyword->getRecord(0);
+    const auto& parserKeyword = parser.getParserKeywordFromDeckName("RADFIN4");
+    const auto& parserRecord = parserKeyword.getRecord(0);
     const auto& intItem = parserRecord.get("NWMAX");
 
     BOOST_CHECK_EQUAL(18, radfin4_0_full.getRecord(0).getItem(10).get< int >(0));
