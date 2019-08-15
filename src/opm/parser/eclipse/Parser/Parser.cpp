@@ -442,12 +442,12 @@ void ParserState::addPathAlias( const std::string& alias, const std::string& pat
 }
 
 
-std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
-    bool slash_terminated_records = parserKeyword->slashTerminatedRecords();
+std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword& parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
+    bool slash_terminated_records = parserKeyword.slashTerminatedRecords();
 
-    if( parserKeyword->getSizeType() == SLASH_TERMINATED || parserKeyword->getSizeType() == UNKNOWN) {
+    if( parserKeyword.getSizeType() == SLASH_TERMINATED || parserKeyword.getSizeType() == UNKNOWN) {
 
-        const auto rawSizeType = parserKeyword->getSizeType() == SLASH_TERMINATED
+        const auto rawSizeType = parserKeyword.getSizeType() == SLASH_TERMINATED
             ? Raw::SLASH_TERMINATED
             : Raw::UNKNOWN;
 
@@ -458,17 +458,17 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword,
         return raw_keyword;
     }
 
-    if( parserKeyword->hasFixedSize() ) {
+    if( parserKeyword.hasFixedSize() ) {
         auto raw_keyword = std::make_shared< RawKeyword >( keywordString,
                                                            parserState.current_path().string(),
                                                            parserState.line(),
-                                                           parserKeyword->getFixedSize(),
-                                                           parserKeyword->isTableCollection() );
+                                                           parserKeyword.getFixedSize(),
+                                                           parserKeyword.isTableCollection() );
         raw_keyword->slash_terminated_records = slash_terminated_records;
         return raw_keyword;
     }
 
-    const auto& keyword_size = parserKeyword->getKeywordSize();
+    const auto& keyword_size = parserKeyword.getKeywordSize();
     const auto& deck = parserState.deck;
 
     if( deck.hasKeyword(keyword_size.keyword ) ) {
@@ -479,7 +479,7 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword,
                                                            parserState.current_path().string(),
                                                            parserState.line(),
                                                            targetSize,
-                                                           parserKeyword->isTableCollection() );
+                                                           parserKeyword.isTableCollection() );
         raw_keyword->slash_terminated_records = slash_terminated_records;
         return raw_keyword;
     }
@@ -488,8 +488,8 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword,
         + " to infer the number of records in: " + keywordString;
     parserState.parseContext.handleError(ParseContext::PARSE_MISSING_DIMS_KEYWORD , msg, parserState.errors );
 
-    const auto* keyword = parser.getKeyword( keyword_size.keyword );
-    const auto& record = keyword->getRecord(0);
+    const auto& keyword = parser.getKeyword( keyword_size.keyword );
+    const auto& record = keyword.getRecord(0);
     const auto& int_item = record.get( keyword_size.item);
 
     const auto targetSize = int_item.getDefault< int >( ) + keyword_size.shift;
@@ -497,7 +497,7 @@ std::shared_ptr<RawKeyword> createRawKeyword(const ParserKeyword* parserKeyword,
                                                        parserState.current_path().string(),
                                                        parserState.line(),
                                                        targetSize,
-                                                       parserKeyword->isTableCollection() );
+                                                       parserKeyword.isTableCollection() );
     raw_keyword->slash_terminated_records = slash_terminated_records;
     return raw_keyword;
 }
@@ -508,7 +508,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
 
     if (parser.isRecognizedKeyword(keywordString)) {
         parserState.unknown_keyword = false;
-        const auto* parserKeyword = parser.getParserKeywordFromDeckName( keywordString.string() );
+        const auto& parserKeyword = parser.getParserKeywordFromDeckName( keywordString.string() );
         return createRawKeyword(parserKeyword, keywordString.string(), parserState, parser);
     }
 
@@ -519,7 +519,7 @@ std::shared_ptr< RawKeyword > createRawKeyword( const string_view& kw, ParserSta
             parserState.parseContext.handleError(ParseContext::PARSE_LONG_KEYWORD, msg, parserState.errors);
 
             parserState.unknown_keyword = false;
-            const auto* parserKeyword = parser.getParserKeywordFromDeckName( keyword8 );
+            const auto& parserKeyword = parser.getParserKeywordFromDeckName( keyword8 );
             return createRawKeyword(parserKeyword, keyword8, parserState, parser);
         }
     }
@@ -559,8 +559,8 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser ) {
                 parserState.rawKeyword = createRawKeyword( keywordString, parserState, parser );
                 parserState.lastSizeType = SLASH_TERMINATED;
                 if ( parser.isRecognizedKeyword(line) ) {
-                   const auto* parserKeyword = parser.getParserKeywordFromDeckName( line );
-                   parserState.lastSizeType = parserKeyword->getSizeType();
+                   const auto& parserKeyword = parser.getParserKeywordFromDeckName( line );
+                   parserState.lastSizeType = parserKeyword.getSizeType();
                    parserState.lastKeyWord = parserState.rawKeyword->getKeywordName();
                 }
             } else {
@@ -661,9 +661,9 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
 
         if( parser.isRecognizedKeyword( parserState.rawKeyword->getKeywordName() ) ) {
             const auto& kwname = parserState.rawKeyword->getKeywordName();
-            const auto* parserKeyword = parser.getParserKeywordFromDeckName( kwname );
+            const auto& parserKeyword = parser.getParserKeywordFromDeckName( kwname );
             try {
-                parserState.deck.addKeyword( parserKeyword->parse( parserState.parseContext, parserState.errors, parserState.rawKeyword, filename ) );
+                parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext, parserState.errors, parserState.rawKeyword, filename ) );
             } catch (const std::exception& exc) {
                 /*
                   This catch-all of parsing errors is to be able to write a good
@@ -862,21 +862,21 @@ bool Parser::hasKeyword( const std::string& name ) const {
         != this->m_deckParserKeywords.end();
 }
 
-const ParserKeyword* Parser::getKeyword( const std::string& name ) const {
+const ParserKeyword& Parser::getKeyword( const std::string& name ) const {
     return getParserKeywordFromDeckName( string_view( name ) );
 }
 
-const ParserKeyword* Parser::getParserKeywordFromDeckName(const string_view& name ) const {
+const ParserKeyword& Parser::getParserKeywordFromDeckName(const string_view& name ) const {
     auto candidate = m_deckParserKeywords.find( name );
 
-    if( candidate != m_deckParserKeywords.end() ) return candidate->second;
+    if( candidate != m_deckParserKeywords.end() ) return *candidate->second;
 
     const auto* wildCardKeyword = matchingKeyword( name );
 
     if ( !wildCardKeyword )
         throw std::invalid_argument( "Do not have parser keyword for parsing: " + name );
 
-    return wildCardKeyword;
+    return *wildCardKeyword;
 }
 
 std::vector<std::string> Parser::getAllDeckNames () const {
@@ -951,10 +951,10 @@ std::vector<std::string> Parser::getAllDeckNames () const {
 
             if( !isRecognizedKeyword( deckKeyword.name() ) ) continue;
 
-            const auto* parserKeyword = getParserKeywordFromDeckName( deckKeyword.name() );
-            if( !parserKeyword->hasDimension() ) continue;
+            const auto& parserKeyword = getParserKeywordFromDeckName( deckKeyword.name() );
+            if( !parserKeyword.hasDimension() ) continue;
 
-            parserKeyword->applyUnitsToDeck(deck , deckKeyword);
+            parserKeyword.applyUnitsToDeck(deck , deckKeyword);
         }
     }
 
@@ -998,7 +998,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
                     continue;
 
                 const auto& parserKeyword = parser.getParserKeywordFromDeckName( curKeywordName );
-                if (ensureKeywordSectionAffiliation && !parserKeyword->isValidSection(curSectionName)) {
+                if (ensureKeywordSectionAffiliation && !parserKeyword.isValidSection(curSectionName)) {
                     std::string msg =
                         "The keyword '"+curKeywordName+"' is located in the '"+curSectionName
                         +"' section where it is invalid";

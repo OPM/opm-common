@@ -74,10 +74,10 @@ namespace Opm {
          * \brief Returns whether the parser knows about a keyword
          */
         bool hasKeyword( const std::string& ) const;
-        const ParserKeyword* getKeyword(const std::string& name) const;
+        const ParserKeyword& getKeyword(const std::string& name) const;
 
         bool isRecognizedKeyword( const string_view& deckKeywordName) const;
-        const ParserKeyword* getParserKeywordFromDeckName(const string_view& deckKeywordName) const;
+        const ParserKeyword& getParserKeywordFromDeckName(const string_view& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);

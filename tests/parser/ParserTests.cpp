@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(canParseDeckKeyword_returnstrue) {
 BOOST_AUTO_TEST_CASE(getKeyword_haskeyword_returnskeyword) {
     Parser parser;
     parser.addParserKeyword( createDynamicSized( "FJAS" ) );
-    BOOST_CHECK_EQUAL("FJAS", parser.getParserKeywordFromDeckName("FJAS")->getName());
+    BOOST_CHECK_EQUAL("FJAS", parser.getParserKeywordFromDeckName("FJAS").getName());
 }
 
 BOOST_AUTO_TEST_CASE(getKeyword_hasnotkeyword_getKeywordThrowsException) {
@@ -271,8 +271,8 @@ BOOST_AUTO_TEST_CASE(ReplaceKeyword) {
     Parser parser;
     BOOST_CHECK( parser.loadKeywordFromFile( prefix() + "parser/EQLDIMS2" ) );
 
-    const auto* eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
-    const auto& record = eqldims->getRecord(0);
+    const auto& eqldims = parser.getParserKeywordFromDeckName("EQLDIMS");
+    const auto& record = eqldims.getRecord(0);
     BOOST_CHECK(record.hasItem("NEW"));
 }
 
@@ -286,9 +286,9 @@ BOOST_AUTO_TEST_CASE(WildCardTest) {
 
     BOOST_CHECK(!parser.isRecognizedKeyword("TVDP"));
 
-    const auto* keyword1 = parser.getParserKeywordFromDeckName("TVDPA");
-    const auto* keyword2 = parser.getParserKeywordFromDeckName("TVDPBC");
-    const auto* keyword3 = parser.getParserKeywordFromDeckName("TVDPXXX");
+    const auto& keyword1 = parser.getParserKeywordFromDeckName("TVDPA");
+    const auto& keyword2 = parser.getParserKeywordFromDeckName("TVDPBC");
+    const auto& keyword3 = parser.getParserKeywordFromDeckName("TVDPXXX");
 
     BOOST_CHECK_EQUAL( keyword1 , keyword2 );
     BOOST_CHECK_EQUAL( keyword1 , keyword3 );
