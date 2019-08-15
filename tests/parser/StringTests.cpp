@@ -174,4 +174,10 @@ BOOST_AUTO_TEST_CASE(strncmp_function) {
     BOOST_CHECK_EQUAL( view.find("C"), 5);
     BOOST_CHECK_EQUAL( view.find("CCCC"), std::string::npos);
     BOOST_CHECK_EQUAL( view.find("DDDD"), 9);
+
+    BOOST_CHECK_EQUAL( view.find('A'), 0);
+    BOOST_CHECK_EQUAL( view.find('B'), 2);
+    BOOST_CHECK_EQUAL( view.find('C'), 5);
+    BOOST_CHECK_EQUAL( view.find('X'), std::string::npos);
+    BOOST_CHECK_EQUAL( view.find('D'), 9);
 }

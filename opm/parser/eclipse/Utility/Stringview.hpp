@@ -87,6 +87,7 @@ namespace Opm {
 
             inline bool starts_with(const std::string& str) const;
             inline std::size_t find(const std::string& substring) const;
+            inline std::size_t find(char c) const;
         private:
             const_iterator fst = nullptr;
             const_iterator lst = nullptr;
@@ -237,7 +238,6 @@ namespace Opm {
         return std::string( this->begin() + from, this->begin() + to );
     }
 
-
     inline std::size_t string_view::find(const std::string& substring) const {
         auto substring_size = substring.size();
         if (substring_size > this->size())
@@ -254,6 +254,19 @@ namespace Opm {
                 if (si == substring_size)
                     return pos - this->fst;
             }
+            ++pos;
+        }
+
+        return std::string::npos;
+    }
+
+    inline std::size_t string_view::find(char c) const {
+        auto pos = this->fst;
+
+        while (pos != this->lst) {
+            if (*pos == c)
+                return pos - this->fst;
+
             ++pos;
         }
 
