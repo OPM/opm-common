@@ -415,9 +415,17 @@ set( keywords
      000_Eclipse100/V/VFPPDIMS
      000_Eclipse100/V/VFPPROD
      000_Eclipse100/V/VISCREF
+     000_Eclipse100/W/WAGHYSTR
+     000_Eclipse100/W/WAITBAL
+     000_Eclipse100/W/WALKALIN
+     000_Eclipse100/W/WALQCALC
+     000_Eclipse100/W/WAPI
      000_Eclipse100/W/WARN
      000_Eclipse100/W/WATER
      000_Eclipse100/W/WATVISCT
+     000_Eclipse100/W/WBHGLR
+     000_Eclipse100/W/WBOREVOL
+     000_Eclipse100/W/WCALCVAL
      000_Eclipse100/W/WCONHIST
      000_Eclipse100/W/WCONINJ
      000_Eclipse100/W/WCONINJE
