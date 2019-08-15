@@ -8,6 +8,11 @@ import setuptools
 import glob
 import os
 import subprocess
+import argparse
+
+setupdir = os.path.dirname(__file__)
+if setupdir != '':
+  os.chdir( setupdir )
 
 try:
   subprocess.call(["c++", "--version"])
@@ -56,6 +61,10 @@ setup(
                 'opm.deck',
             ],
     ext_modules=ext_modules,
+    package_data={
+        '': ['*.so']
+    },
+    include_package_data=True,
     license='Open Source',
     zip_safe=False,
     tests_suite='tests',

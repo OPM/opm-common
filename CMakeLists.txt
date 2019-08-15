@@ -211,13 +211,13 @@ install(DIRECTORY cmake DESTINATION share/opm)
 install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
 
 if (OPM_ENABLE_PYTHON)
+
+  find_package(PythonInterp REQUIRED)
+  include(FindPythonInterp)
+
   make_directory(${CMAKE_BINARY_DIR}/python)
-  if (EXISTS "/etc/debian_version")
-    set( PYTHON_PACKAGE_PATH "dist-packages")
-  else()
-    set( PYTHON_PACKAGE_PATH "site-packages")
-  endif()
-  set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}/opm" CACHE STRING "Subdirectory to install Python modules in")
+  set(PYTHON_PACKAGE_PATH "site-packages")
+  set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}" CACHE STRING "Subdirectory to install Python modules in")
 
   get_target_property(_ecl_include_dirs ecl INTERFACE_INCLUDE_DIRECTORIES)
   get_target_property(_opmcommon_include_dirs opmcommon INCLUDE_DIRECTORIES)
@@ -259,7 +259,9 @@ if (OPM_ENABLE_PYTHON)
                      COMMENT "Building python bindings")
   add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/libopmcommon_python.so)
   add_dependencies(opmcommon_python opmcommon)
-  INSTALL( DIRECTORY ${CMAKE_BINARY_DIR}/python/python/opm/  DESTINATION ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX})
+
+  install( CODE "execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX}  )" )  
+  install( CODE "execute_process(COMMAND python python/setup.py build_ext --dry-run install --prefix=${CMAKE_INSTALL_PREFIX}  )" )
 
   add_test(NAME python_tests
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
