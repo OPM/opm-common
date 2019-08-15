@@ -469,21 +469,21 @@ void set_dimensions( ParserItem& item,
 
     DeckKeyword ParserKeyword::parse(const ParseContext& parseContext,
                                      ErrorGuard& errors,
-                                     std::unique_ptr< RawKeyword >& rawKeyword,
+                                     RawKeyword& rawKeyword,
                                      const std::string& filename) const {
-        if( !rawKeyword->isFinished() )
-            throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword->getKeywordName());
+        if( !rawKeyword.isFinished() )
+            throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword.getKeywordName());
 
-        DeckKeyword keyword( rawKeyword->getKeywordName() );
-        keyword.setLocation( rawKeyword->getFilename(), rawKeyword->getLineNR() );
+        DeckKeyword keyword( rawKeyword.getKeywordName() );
+        keyword.setLocation( rawKeyword.getFilename(), rawKeyword.getLineNR() );
         keyword.setDataKeyword( isDataKeyword() );
 
         size_t record_nr = 0;
-        for( auto& rawRecord : *rawKeyword ) {
+        for( auto& rawRecord : rawKeyword ) {
             if( m_records.size() == 0 && rawRecord.size() > 0 )
-                throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
+                throw std::invalid_argument("Missing item information " + rawKeyword.getKeywordName());
 
-            keyword.addRecord( getRecord( record_nr ).parse( parseContext, errors, rawRecord, rawKeyword->getKeywordName(), filename ) );
+            keyword.addRecord( getRecord( record_nr ).parse( parseContext, errors, rawRecord, rawKeyword.getKeywordName(), filename ) );
             record_nr++;
         }
 

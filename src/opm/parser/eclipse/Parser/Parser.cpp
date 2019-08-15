@@ -663,7 +663,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
             const auto& kwname = parserState.rawKeyword->getKeywordName();
             const auto& parserKeyword = parser.getParserKeywordFromDeckName( kwname );
             try {
-                parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext, parserState.errors, parserState.rawKeyword, filename ) );
+                parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext, parserState.errors, *parserState.rawKeyword, filename ) );
             } catch (const std::exception& exc) {
                 /*
                   This catch-all of parsing errors is to be able to write a good

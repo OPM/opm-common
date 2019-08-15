@@ -21,7 +21,6 @@
 
 #include <iosfwd>
 #include <string>
-#include <memory>
 #include <set>
 
 #include <boost/regex.hpp>
@@ -124,7 +123,7 @@ namespace Opm {
         SectionNameSet::const_iterator validSectionNamesBegin() const;
         SectionNameSet::const_iterator validSectionNamesEnd() const;
 
-        DeckKeyword parse(const ParseContext& parseContext, ErrorGuard& errors, std::unique_ptr< RawKeyword >& rawKeyword, const std::string& filename) const;
+        DeckKeyword parse(const ParseContext& parseContext, ErrorGuard& errors, RawKeyword& rawKeyword, const std::string& filename) const;
         enum ParserKeywordSizeEnum getSizeType() const;
         const KeywordSize& getKeywordSize() const;
         bool isDataKeyword() const;

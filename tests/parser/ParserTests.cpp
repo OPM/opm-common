@@ -1612,12 +1612,12 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     const auto& tabdimsKeyword = createFixedSized("TEST" , 1);
     ParserRecord record;
     ParserItem item("ITEM", INT);
-    auto rawkeyword = std::make_unique< RawKeyword >( tabdimsKeyword->getName() , "FILE" , 10U , 1 , true, false);
+    RawKeyword rawkeyword( tabdimsKeyword->getName() , "FILE" , 10U , 1 , true, false);
     ParseContext parseContext;
     ErrorGuard errors;
 
-    BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword->getSizeType());
-    rawkeyword->addRawRecordString("/");
+    BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword.getSizeType());
+    rawkeyword.addRawRecordString("/");
     record.addItem(item);
     tabdimsKeyword->addRecord( record );
 
