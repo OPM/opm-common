@@ -28,7 +28,8 @@ namespace Opm {
             SLASH_TERMINATED = 0,
             FIXED = 1,
             UNKNOWN = 3,
-            TABLE_COLLECTION = 4
+            TABLE_COLLECTION = 4,
+            CODE = 5,
         };
     }
 }

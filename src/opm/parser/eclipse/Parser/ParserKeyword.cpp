@@ -30,9 +30,10 @@
 #include <opm/parser/eclipse/Parser/ParserConst.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
-#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+
+#include "raw/RawConsts.hpp"
+#include "raw/RawKeyword.hpp"
+#include "raw/RawRecord.hpp"
 
 namespace Opm {
 
@@ -222,12 +223,6 @@ namespace Opm {
         return std::all_of( name.begin() + 1, name.end(), ok );
     }
 
-    string_view ParserKeyword::getDeckName( const string_view& str ) {
-
-        auto first_sep = std::find_if( str.begin(), str.end(), RawConsts::is_separator() );
-        return { str.begin(), first_sep };
-
-    }
 
     bool ParserKeyword::validDeckName( const string_view& name) {
 
@@ -418,8 +413,8 @@ void set_dimensions( ParserItem& item,
 
     void ParserKeyword::addRecord( ParserRecord record ) {
         m_records.push_back( std::move( record ) );
-        if (!record.slashTerminatedRecords())
-            this->slash_terminated_records = false;
+        if (record.rawStringRecord())
+            this->raw_string_keyword = true;
     }
 
 
@@ -475,7 +470,7 @@ void set_dimensions( ParserItem& item,
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword.getKeywordName());
 
         DeckKeyword keyword( rawKeyword.getKeywordName() );
-        keyword.setLocation( rawKeyword.getFilename(), rawKeyword.getLineNR() );
+        keyword.setLocation( rawKeyword.getLocation( ) );
         keyword.setDataKeyword( isDataKeyword() );
 
         size_t record_nr = 0;
@@ -483,7 +478,7 @@ void set_dimensions( ParserItem& item,
             if( m_records.size() == 0 && rawRecord.size() > 0 )
                 throw std::invalid_argument("Missing item information " + rawKeyword.getKeywordName());
 
-            keyword.addRecord( getRecord( record_nr ).parse( parseContext, errors, rawRecord, rawKeyword.getKeywordName(), filename ) );
+            keyword.addRecord( this->getRecord( record_nr ).parse( parseContext, errors, rawRecord, rawKeyword.getKeywordName(), filename ) );
             record_nr++;
         }
 
@@ -515,8 +510,8 @@ void set_dimensions( ParserItem& item,
         return m_keywordSizeType;
     }
 
-    bool ParserKeyword::slashTerminatedRecords() const {
-        return this->slash_terminated_records;
+    bool ParserKeyword::rawStringKeyword() const {
+        return this->raw_string_keyword;
     }
 
     const KeywordSize& ParserKeyword::getKeywordSize() const {
@@ -555,9 +550,8 @@ void set_dimensions( ParserItem& item,
         else if( m_deckNames.count( name.string() ) )
             return true;
 
-        else if (hasMatchRegex()) {
+        else if (hasMatchRegex())
             return boost::regex_match( name.begin(), name.end(), m_matchRegex);
-        }
 
         return false;
     }

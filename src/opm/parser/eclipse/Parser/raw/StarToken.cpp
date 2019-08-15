@@ -26,9 +26,10 @@
 
 #include <boost/spirit/include/qi.hpp>
 
-#include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
+
+#include "StarToken.hpp"
 
 namespace qi = boost::spirit::qi;
 

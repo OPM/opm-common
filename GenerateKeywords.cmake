@@ -14,9 +14,9 @@ set(genkw_SOURCES src/opm/json/JsonObject.cpp
                   src/opm/parser/eclipse/Parser/ParserItem.cpp
                   src/opm/parser/eclipse/Parser/ParserKeyword.cpp
                   src/opm/parser/eclipse/Parser/ParserRecord.cpp
-                  src/opm/parser/eclipse/RawDeck/RawKeyword.cpp
-                  src/opm/parser/eclipse/RawDeck/RawRecord.cpp
-                  src/opm/parser/eclipse/RawDeck/StarToken.cpp
+                  src/opm/parser/eclipse/Parser/raw/RawKeyword.cpp
+                  src/opm/parser/eclipse/Parser/raw/RawRecord.cpp
+                  src/opm/parser/eclipse/Parser/raw/StarToken.cpp
                   src/opm/parser/eclipse/Units/Dimension.cpp
                   src/opm/parser/eclipse/Units/UnitSystem.cpp
                   src/opm/parser/eclipse/Utility/Stringview.cpp

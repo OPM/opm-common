@@ -45,9 +45,7 @@ namespace Opm {
         std::string getRecordString() const;
         inline string_view getItem(size_t index) const;
 
-        static bool isTerminatedRecordString( const string_view& );
-
-       void dump() const;
+        void dump() const;
 
     private:
         string_view m_sanitizedRecordString;
