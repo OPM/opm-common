@@ -1432,7 +1432,6 @@ well_efficiency_factors( const ecl::smspec_node* node,
 
     const bool is_group = (var_type == ECL_SMSPEC_GROUP_VAR);
     const bool is_rate = !node->is_total();
-    const auto groupTree = schedule.groupTree(sim_step);
 
     for( const auto& well : schedule_wells ) {
         if (!well.hasBeenDefined(sim_step))
