@@ -144,14 +144,14 @@ namespace {
         return *itr;
     }
 
-    DeckRecord ParserRecord::parse(const ParseContext& parseContext , ErrorGuard& errors , RawRecord& rawRecord) const {
+    DeckRecord ParserRecord::parse(const ParseContext& parseContext , ErrorGuard& errors , RawRecord& rawRecord, const std::string& keyword, const std::string& filename) const {
         std::vector< DeckItem > items;
         items.reserve( this->size() + 20 );
         for( const auto& parserItem : *this )
             items.emplace_back( parserItem.scan( rawRecord ) );
 
         if (rawRecord.size() > 0) {
-            std::string msg = "The RawRecord for keyword \""  + rawRecord.getKeywordName() + "\" in file\"" + rawRecord.getFileName() + "\" contained " +
+            std::string msg = "The RawRecord for keyword \""  + keyword + "\" in file\"" + filename + "\" contained " +
                 std::to_string(rawRecord.size()) +
                 " too many items according to the spec. RawRecord was: " + rawRecord.getRecordString();
             parseContext.handleError(ParseContext::PARSE_EXTRA_DATA , msg, errors);

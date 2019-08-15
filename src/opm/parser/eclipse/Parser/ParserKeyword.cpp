@@ -469,7 +469,8 @@ void set_dimensions( ParserItem& item,
 
     DeckKeyword ParserKeyword::parse(const ParseContext& parseContext,
                                      ErrorGuard& errors,
-                                     std::shared_ptr< RawKeyword > rawKeyword) const {
+                                     std::shared_ptr< RawKeyword > rawKeyword,
+                                     const std::string& filename) const {
         if( !rawKeyword->isFinished() )
             throw std::invalid_argument("Tried to create a deck keyword from an incomplete raw keyword " + rawKeyword->getKeywordName());
 
@@ -482,7 +483,7 @@ void set_dimensions( ParserItem& item,
             if( m_records.size() == 0 && rawRecord.size() > 0 )
                 throw std::invalid_argument("Missing item information " + rawKeyword->getKeywordName());
 
-            keyword.addRecord( getRecord( record_nr ).parse( parseContext, errors, rawRecord ) );
+            keyword.addRecord( getRecord( record_nr ).parse( parseContext, errors, rawRecord, rawKeyword->getKeywordName(), filename ) );
             record_nr++;
         }
 

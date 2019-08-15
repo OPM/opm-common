@@ -80,11 +80,13 @@ namespace Opm {
     /// it is added to the list of records, and a new record is started.
 
     void RawKeyword::addRawRecordString(const string_view& partialRecordString) {
-        if( m_partialRecordString == emptystr ) m_partialRecordString = partialRecordString;
-        else m_partialRecordString = { m_partialRecordString.begin(), partialRecordString.end() };
+        if( m_partialRecordString == emptystr )
+            m_partialRecordString = partialRecordString;
+        else
+            m_partialRecordString = { m_partialRecordString.begin(), partialRecordString.end() };
 
 
-        if( m_sizeType != Raw::FIXED && isTerminator( m_partialRecordString ) ) {
+        if( isTerminator( m_partialRecordString ) ) {
             if (m_sizeType == Raw::TABLE_COLLECTION) {
                 m_currentNumTables += 1;
                 if (m_currentNumTables == m_numTables) {
@@ -92,7 +94,7 @@ namespace Opm {
                     m_partialRecordString = emptystr;
                     return;
                 }
-            } else if( m_sizeType != Raw::UNKNOWN ) {
+            } else if( m_sizeType == Raw::SLASH_TERMINATED) {
                 m_isFinished = true;
                 m_partialRecordString = emptystr;
                 return;
@@ -107,25 +109,26 @@ namespace Opm {
                                ? "untitled"
                                : m_partialRecordString;
 
-            m_records.emplace_back( recstr, m_filename, m_name );
+            m_records.emplace_back( recstr );
             m_partialRecordString = emptystr;
             m_isFinished = true;
             return;
         }
 
         if( RawRecord::isTerminatedRecordString( partialRecordString ) ) {
-
-            auto recstr = partialRecordString.back() == '/'
-                ? string_view{ m_partialRecordString.begin(), m_partialRecordString.end() - 1 }
-                : m_partialRecordString;
-
-            m_records.emplace_back( recstr, m_filename, m_name );
-            m_partialRecordString = emptystr;
-
-            if( m_sizeType == Raw::FIXED && m_records.size() == m_fixedSize )
-                m_isFinished = true;
+            this->m_partialRecordString = string_view{ this->m_partialRecordString.begin(), this->m_partialRecordString.end() - 1 };
+            this->terminateRecord();
         }
     }
+
+
+    void RawKeyword::terminateRecord() {
+        this->m_records.emplace_back( this->m_partialRecordString );
+        m_partialRecordString = emptystr;
+
+        if( m_sizeType == Raw::FIXED && m_records.size() == m_fixedSize )
+            m_isFinished = true;
+    };
 
     const RawRecord& RawKeyword::getFirstRecord() const {
         return *m_records.begin();
