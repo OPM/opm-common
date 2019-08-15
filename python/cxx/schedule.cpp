@@ -90,7 +90,7 @@ namespace {
 
 }
 
-void sunbeam::export_Schedule(py::module& module) {
+void opmcommon_python::export_Schedule(py::module& module) {
 
     py::class_< Schedule >( module, "Schedule")
     .def("_groups", &get_groups )

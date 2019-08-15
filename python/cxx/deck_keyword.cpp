@@ -56,7 +56,7 @@ struct DeckRecordIterator
 
 }
 
-void sunbeam::export_DeckKeyword(py::module& module) {
+void opmcommon_python::export_DeckKeyword(py::module& module) {
     py::class_< DeckKeyword >( module, "DeckKeyword")
         .def( "__repr__", &DeckKeyword::name )
         .def( "__str__", &str<DeckKeyword> )

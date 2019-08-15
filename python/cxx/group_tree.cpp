@@ -15,7 +15,7 @@ namespace {
     }
 }
 
-void sunbeam::export_GroupTree(py::module& module) {
+void opmcommon_python::export_GroupTree(py::module& module) {
 
   py::class_<GTNode>(module, "GroupTree")
 

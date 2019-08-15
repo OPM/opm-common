@@ -14,7 +14,7 @@ namespace {
     }
 }
 
-void sunbeam::export_Group(py::module& module) {
+void opmcommon_python::export_Group(py::module& module) {
 
   py::class_< Group2 >( module, "Group")
     .def_property_readonly( "name", &Group2::name)

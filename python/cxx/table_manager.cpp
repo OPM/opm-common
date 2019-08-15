@@ -16,7 +16,7 @@ namespace {
 
 }
 
-void sunbeam::export_TableManager(py::module& module) {
+void opmcommon_python::export_TableManager(py::module& module) {
 
   py::class_< TableManager >( module, "Tables")
     .def( "__contains__",   &TableManager::hasTables )

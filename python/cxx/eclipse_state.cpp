@@ -85,7 +85,7 @@ namespace {
 
 }
 
-void sunbeam::export_EclipseState(py::module& module) {
+void opmcommon_python::export_EclipseState(py::module& module) {
 
     py::class_< EclipseState >( module, "EclipseState" )
         .def_property_readonly( "title", &EclipseState::getTitle )

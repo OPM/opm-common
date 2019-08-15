@@ -41,7 +41,7 @@ namespace {
 
 }
 
-void sunbeam::export_EclipseGrid(py::module& module) {
+void opmcommon_python::export_EclipseGrid(py::module& module) {
 
     py::class_< EclipseGrid >( module, "EclipseGrid")
         .def( "_getXYZ",        &getXYZ )

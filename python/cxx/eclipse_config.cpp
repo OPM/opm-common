@@ -8,7 +8,7 @@
 #include "common.hpp"
 
 
-void sunbeam::export_EclipseConfig(py::module& module)
+void opmcommon_python::export_EclipseConfig(py::module& module)
 {
     py::class_< EclipseConfig >( module, "EclipseConfig" )
       .def( "init",            &EclipseConfig::init, ref_internal)
