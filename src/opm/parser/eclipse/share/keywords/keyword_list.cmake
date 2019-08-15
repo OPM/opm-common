@@ -462,6 +462,7 @@ set( keywords
      000_Eclipse100/W/WTRACER
      000_Eclipse100/Z/ZCORN
      000_Eclipse100/Z/ZIPPY2
+     000_Eclipse100/Z/ZIPP2OFF
 
      001_Eclipse300/B/BLOCK_PROBE300
      001_Eclipse300/C/CIRCLE
