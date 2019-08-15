@@ -339,6 +339,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.to_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::liquid_productivity_index , 1.0 ) , 1.1574074074074073e-10 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.to_si( Meas::gas_productivity_index , 1.0 ) , 1.1574074074074073e-10 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.to_si( Meas::energy, 1.0), 1000, 1e-10);
 
     // ----------------------------------------------------------------
     // SI -> METRIC
@@ -371,6 +372,7 @@ BOOST_AUTO_TEST_CASE(METRIC_UNITS)
     BOOST_CHECK_CLOSE( metric.from_si( Meas::water_inverse_formation_volume_factor , 1.0 ) , 1.0 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::liquid_productivity_index , 1.0 ) , 86.400e8 , 1.0e-10 );
     BOOST_CHECK_CLOSE( metric.from_si( Meas::gas_productivity_index , 1.0 ) , 86.400e8 , 1.0e-10 );
+    BOOST_CHECK_CLOSE( metric.from_si( Meas::energy, 1000.0), 1, 1e-10);
 }
 
 BOOST_AUTO_TEST_CASE(FIELD_UNITS)
