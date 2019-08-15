@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicVector.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -185,12 +184,11 @@ namespace Opm
         const Action::Actions& actions() const;
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
-        GTNode groupTree(std::size_t report_step) const;
-        GTNode groupTree(const std::string& root_node, std::size_t report_step) const;
         size_t numGroups() const;
         size_t numGroups(size_t timeStep) const;
         bool hasGroup(const std::string& groupName) const;
         const Group2& getGroup2(const std::string& groupName, size_t timeStep) const;
+        std::vector<Group2*> getGroups2(size_t timeStep) const;
 
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
@@ -237,7 +235,6 @@ namespace Opm
 
         std::map<std::string,Events> well_events;
 
-        GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group2> group, size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );

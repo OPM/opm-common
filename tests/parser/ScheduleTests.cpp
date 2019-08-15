@@ -450,24 +450,9 @@ BOOST_AUTO_TEST_CASE(GroupTree2TEST) {
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
 
-    BOOST_CHECK_THROW( schedule.groupTree("NO_SUCH_GROUP", 0), std::invalid_argument);
     auto cg1 = schedule.getGroup2("CG1", 0);
     BOOST_CHECK( cg1.hasWell("DW_0"));
     BOOST_CHECK( cg1.hasWell("CW_1"));
-
-    auto cg1_tree = schedule.groupTree("CG1", 0);
-    BOOST_CHECK_EQUAL(cg1_tree.wells().size(), 2);
-
-    auto gt = schedule.groupTree(0);
-    BOOST_CHECK_EQUAL(gt.wells().size(), 0);
-    BOOST_CHECK_EQUAL(gt.group().name(), "FIELD");
-    BOOST_CHECK_THROW(gt.parent(), std::invalid_argument);
-
-    auto cg = gt.groups();
-    auto pg = cg[0];
-    BOOST_CHECK_EQUAL(cg.size(), 1);
-    BOOST_CHECK_EQUAL(pg.group().name(), "PLATFORM");
-    BOOST_CHECK_EQUAL(pg.parent().name(), "FIELD");
 }
 
 
