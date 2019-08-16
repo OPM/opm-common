@@ -80,7 +80,7 @@ setup(
             ],
     ext_modules=ext_modules,
     package_data={
-        '': ['*.so']
+        '': ['cxx/libopmcommon_python.so']
     },
     include_package_data=True,
     license='Open Source',
