@@ -115,7 +115,7 @@ namespace Opm {
         if( view.size() < 2 || view[ view.size() - 1 ] != '\'')
             throw std::invalid_argument("Unable to parse string '" + view + "' as a string token");
 
-        return view.substr( 1, view.size() - 1 );
+        return view.substr( 1, view.size() - 2 );
     }
 
     template<>
