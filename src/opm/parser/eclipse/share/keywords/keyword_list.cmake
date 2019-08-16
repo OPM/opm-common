@@ -63,20 +63,36 @@ set( keywords
      000_Eclipse100/B/BRINE
      000_Eclipse100/B/BTOBALFA
      000_Eclipse100/B/BTOBALFV
+     000_Eclipse100/C/CALTRAC
      000_Eclipse100/C/CARFIN
+     000_Eclipse100/C/CART
+     000_Eclipse100/C/CBMOPTS
      000_Eclipse100/C/CECON
+     000_Eclipse100/C/COAL
+     000_Eclipse100/C/COALADS
+     000_Eclipse100/C/COALPP
+     000_Eclipse100/C/COARSEN
+     000_Eclipse100/C/COLLAPSE
+     000_Eclipse100/C/COLUMNS
      000_Eclipse100/C/COMPDAT
      000_Eclipse100/C/COMPDATL
+     000_Eclipse100/C/COMPFLSH
      000_Eclipse100/C/COMPIMB
+     000_Eclipse100/C/COMPLMPL
      000_Eclipse100/C/COMPLUMP
+     000_Eclipse100/C/COMPOFF
      000_Eclipse100/C/COMPORD
+     000_Eclipse100/C/COMPRIV
+     000_Eclipse100/C/COMPSEGL
      000_Eclipse100/C/COMPSEGS
      000_Eclipse100/C/CONNECTION_PROBE
      000_Eclipse100/C/COORD
      000_Eclipse100/C/COORDSYS
      000_Eclipse100/C/COPY
+     000_Eclipse100/C/COPYBOX
      000_Eclipse100/C/COPYREG
      000_Eclipse100/C/CPR
+     000_Eclipse100/C/CRITPERM
      000_Eclipse100/D/DATE
      000_Eclipse100/D/DATES
      000_Eclipse100/D/DATUM
