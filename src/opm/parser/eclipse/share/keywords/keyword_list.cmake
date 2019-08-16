@@ -76,8 +76,11 @@ set( keywords
      000_Eclipse100/C/COLUMNS
      000_Eclipse100/C/COMPDAT
      000_Eclipse100/C/COMPDATL
+     000_Eclipse100/C/COMPFLSH
      000_Eclipse100/C/COMPIMB
+     000_Eclipse100/C/COMPLMPL
      000_Eclipse100/C/COMPLUMP
+     000_Eclipse100/C/COMPOFF
      000_Eclipse100/C/COMPORD
      000_Eclipse100/C/COMPSEGS
      000_Eclipse100/C/CONNECTION_PROBE
