@@ -71,6 +71,9 @@ set( keywords
      000_Eclipse100/C/COAL
      000_Eclipse100/C/COALADS
      000_Eclipse100/C/COALPP
+     000_Eclipse100/C/COARSEN
+     000_Eclipse100/C/COLLAPSE
+     000_Eclipse100/C/COLUMNS
      000_Eclipse100/C/COMPDAT
      000_Eclipse100/C/COMPDATL
      000_Eclipse100/C/COMPIMB
