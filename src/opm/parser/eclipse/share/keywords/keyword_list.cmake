@@ -82,13 +82,17 @@ set( keywords
      000_Eclipse100/C/COMPLUMP
      000_Eclipse100/C/COMPOFF
      000_Eclipse100/C/COMPORD
+     000_Eclipse100/C/COMPRIV
+     000_Eclipse100/C/COMPSEGL
      000_Eclipse100/C/COMPSEGS
      000_Eclipse100/C/CONNECTION_PROBE
      000_Eclipse100/C/COORD
      000_Eclipse100/C/COORDSYS
      000_Eclipse100/C/COPY
+     000_Eclipse100/C/COPYBOX
      000_Eclipse100/C/COPYREG
      000_Eclipse100/C/CPR
+     000_Eclipse100/C/CRITPERM
      000_Eclipse100/D/DATE
      000_Eclipse100/D/DATES
      000_Eclipse100/D/DATUM
