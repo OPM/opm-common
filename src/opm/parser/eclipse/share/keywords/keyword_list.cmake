@@ -100,6 +100,7 @@ set( keywords
      000_Eclipse100/D/DATUMRX
      000_Eclipse100/D/DCQDEFN
      000_Eclipse100/D/DEBUG
+     000_Eclipse100/D/DELAYACT
      000_Eclipse100/D/DENSITY
      000_Eclipse100/D/DEPTH
      000_Eclipse100/D/DEPTHZ
