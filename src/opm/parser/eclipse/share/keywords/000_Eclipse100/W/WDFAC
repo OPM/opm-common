@@ -1,0 +1,3 @@
+{"name" : "WDFAC", "sections" : ["SCHEDULE"], "items" :
+      [{"name" : "WELL"         , "value_type" : "STRING"},
+       {"name" : "DFACTOR" , "value_type" : "DOUBLE", "default" : 0.0, "dimension":"Time/GasSurfaceVolume"}]}

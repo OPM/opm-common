@@ -446,10 +446,18 @@ set( keywords
      000_Eclipse100/W/WCONINJ
      000_Eclipse100/W/WCONINJE
      000_Eclipse100/W/WCONINJH
+     000_Eclipse100/W/WCONINJP
      000_Eclipse100/W/WCONPROD
+     000_Eclipse100/W/WCUTBACK
+     000_Eclipse100/W/WCUTBACT
+     000_Eclipse100/W/WCYCLE
+     000_Eclipse100/W/WDFAC
      000_Eclipse100/W/WDFACCOR
+     000_Eclipse100/W/WDRILPRI
+     000_Eclipse100/W/WDRILRES
      000_Eclipse100/W/WDRILTIM
      000_Eclipse100/W/WECON
+     000_Eclipse100/W/WECONINJ
      000_Eclipse100/W/WEFAC
      000_Eclipse100/W/WELLDIMS
      000_Eclipse100/W/WELL_PROBE
