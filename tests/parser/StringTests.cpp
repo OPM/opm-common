@@ -108,11 +108,11 @@ BOOST_AUTO_TEST_CASE(viewSubstr) {
     BOOST_CHECK_EQUAL( "", view.substr( 0, 0 ) );
 
     BOOST_CHECK_EQUAL( srcstr.substr( 1 ), view.substr( 1 ) );
+    BOOST_CHECK_EQUAL( srcstr, view.substr( 0, srcstr.size() + 1 ));
+    BOOST_CHECK_EQUAL( "", view.substr( 1, 0 ));
+    BOOST_CHECK_EQUAL( "", view.substr( 0, 0 ) );
 
     BOOST_CHECK_THROW( view.substr( srcstr.size() + 1 ), std::out_of_range );
-    BOOST_CHECK_THROW( view.substr( 0, srcstr.size() + 1 ), std::out_of_range );
-    BOOST_CHECK_THROW( view.substr( 1, 0 ), std::invalid_argument );
-    BOOST_CHECK_NO_THROW( view.substr( 0, 0 ) );
 }
 
 BOOST_AUTO_TEST_CASE(viewStream) {

@@ -72,18 +72,9 @@ namespace Opm {
             inline size_t size() const;
             inline size_t length() const;
 
-            /*
-             * substr operations are bounds checked, i.e. if to > from or to >
-             * size then exceptions are thrown.
-             *
-             * returns the substring [from,to), meaning
-             * view = "sample";
-             * view.substr( 0, view.size() ) => sample
-             * view.substr( 0, 5 ) => sampl
-             */
             inline std::string string() const;
             inline std::string substr( size_t from = 0 ) const;
-            inline std::string substr( size_t from, size_t to ) const;
+            inline std::string substr( size_t from, size_t len ) const;
 
             inline bool starts_with(const std::string& str) const;
             inline std::size_t find(const std::string& substring) const;
@@ -225,17 +216,14 @@ namespace Opm {
         return this->substr( from, this->size() );
     }
 
-    inline std::string string_view::substr( size_t from, size_t to ) const {
+    inline std::string string_view::substr( size_t from, size_t len ) const {
         if( from > this->size() )
             throw std::out_of_range( "'from' is greater than length" );
 
-        if( to > this->size() )
-            throw std::out_of_range( "'to' is greater than length" );
+        if (from + len > this->size())
+            return std::string( this->begin() + from, this->lst );
 
-        if( from > to )
-            throw std::invalid_argument( "'from' is greater than 'to'" );
-
-        return std::string( this->begin() + from, this->begin() + to );
+        return std::string( this->begin() + from, this->begin() + len  + from);
     }
 
     inline std::size_t string_view::find(const std::string& substring) const {

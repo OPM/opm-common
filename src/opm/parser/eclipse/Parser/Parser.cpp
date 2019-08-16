@@ -579,9 +579,8 @@ bool tryParseKeyword( ParserState& parserState, const Parser& parser, std::uniqu
                   line variable before we check if it is the start of a new
                   keyword.
                 */
-                const std::string line_string = line.string();
-                auto space_pos = line_string.find(' ');
-                const std::string candidate_name = line_string.substr(0, space_pos);
+                auto space_pos = line.find(' ');
+                const std::string candidate_name = line.substr(0, space_pos);
                 if( parser.isRecognizedKeyword( candidate_name ) ) {
                     rawKeyword->finalizeUnknownSize();
                     parserState.nextKeyword = line;
