@@ -33,9 +33,34 @@
 
 using namespace Opm;
 
-inline std::string pathprefix() {
-    return boost::unit_test::framework::master_test_suite().argv[1];
-}
+
+std::string deck_string = R"(
+SPECGRID
+ 20  20 10 /
+
+IGNORED
+Have no clue /
+how to /
+parse This keyword/
+/
+
+GRID
+
+FAULTS
+  'F1'  1  1  1  4   1  4  'X' /
+  'F2'  5  5  1  4   1  4  'X-' /
+/
+
+And then comes more crap??!
+
+-- And a valid keyword:
+TABDIMS
+ 1 2 3 /
+
+And it ends with crap?!
+
+)";
+
 
 BOOST_AUTO_TEST_CASE( test_parse ) {
     Parser parser(false);
@@ -49,7 +74,7 @@ BOOST_AUTO_TEST_CASE( test_parse ) {
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
 
-    auto deck = parser.parseFile(pathprefix() + "Resinsight/DECK1.DATA" , parseContext, errors);
+    auto deck = parser.parseString(deck_string, parseContext, errors);
 
     BOOST_CHECK( deck.hasKeyword<ParserKeywords::SPECGRID>() );
     BOOST_CHECK( deck.hasKeyword<ParserKeywords::FAULTS>() );
@@ -72,7 +97,7 @@ BOOST_AUTO_TEST_CASE( test_state ) {
     parser.addKeyword<ParserKeywords::SPECGRID>();
     parser.addKeyword<ParserKeywords::FAULTS>();
     parser.addKeyword<ParserKeywords::GRID>();
-    auto deck = parser.parseFile(pathprefix() + "Resinsight/DECK1.DATA" , parseContext, errors);
+    auto deck = parser.parseString(deck_string, parseContext, errors);
 
     GridDims grid(deck);
     GRIDSection gsec(deck);
