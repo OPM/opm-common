@@ -253,6 +253,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/ParseContext_EXIT1.cpp
     tests/parser/PORVTests.cpp
     tests/parser/RawKeywordTests.cpp
+    tests/parser/ResinsightTest.cpp
     tests/parser/RestartConfigTests.cpp
     tests/parser/RockTableTests.cpp
     tests/parser/RunspecTests.cpp

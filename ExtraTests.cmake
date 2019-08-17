@@ -49,7 +49,7 @@ list(APPEND EXTRA_TESTS EclipseStateTests)
 foreach (test BoxTest
               CheckDeckValidity
               EclipseGridCreateFromDeck
-	      EDITNNCTests
+              EDITNNCTests
               IncludeTest
               IntegrationTests
               IOConfigIntegrationTest
@@ -57,7 +57,6 @@ foreach (test BoxTest
               ParseKEYWORD
               ParseDATAWithDefault
               Polymer
-              ResinsightTest
               ScheduleCreateFromDeck
               TransMultIntegrationTests)
 
