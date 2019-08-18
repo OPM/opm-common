@@ -55,7 +55,6 @@ foreach (test BoxTest
               IOConfigIntegrationTest
               NNCTests
               ParseKEYWORD
-              ParseDATAWithDefault
               Polymer
               ScheduleCreateFromDeck
               TransMultIntegrationTests)

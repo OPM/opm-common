@@ -251,6 +251,7 @@ if(ENABLE_ECL_INPUT)
     tests/parser/OrderedMapTests.cpp
     tests/parser/ParseContextTests.cpp
     tests/parser/ParseContext_EXIT1.cpp
+    tests/parser/ParseDATAWithDefault.cpp
     tests/parser/PORVTests.cpp
     tests/parser/RawKeywordTests.cpp
     tests/parser/ResinsightTest.cpp
