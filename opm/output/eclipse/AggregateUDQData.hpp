@@ -105,7 +105,7 @@ void captureDeclaredUDQData(const Opm::Schedule&                 sched,
 private:
     /// Aggregate 'IUDQ' array (Integer) for all UDQ data  (3 integers pr UDQ)
     WindowedArray<int> iUDQ_;
-||
+
     /// Aggregate 'IUAD' array (Integer) for all UDQ data  (5 integers pr UDQ that is used for various well and group controls)
     WindowedArray<int> iUAD_;
 

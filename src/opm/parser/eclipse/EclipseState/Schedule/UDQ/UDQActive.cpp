@@ -171,15 +171,8 @@ std::vector<UDQActive::InputRecord> UDQActive::get_iuap() const {
 UDQActive::Record UDQActive::operator[](std::size_t index) const {
     const auto& output_record = this->get_iuad()[index];
     return output_record;
-}
+}   
 
 
-std::size_t UDQActive::use_index(const std::string& udq) const {
-    const auto iter = this->m_use_count.find(udq);
-    if (iter == this->m_use_count.end())
-        return 0;
-
-    return iter->second;
-}
 }
 

@@ -1,18 +1,14 @@
 /*
 Copyright 2018 Statoil ASA.
-
   This file is part of the Open Porous Media project (OPM).
-
   OPM is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
   (at your option) any later version.
-
   OPM is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-
   You should have received a copy of the GNU General Public License
   along with OPM.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -223,13 +219,10 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINETEST) {
 BOOST_AUTO_TEST_CASE(KEYWORDS) {
     const std::string input = R"(
 RUNSPEC
-
 UDQDIMS
    10* 'N'/
-
 UDQPARAM
   3* 0.25 /
-
 )";
     Parser parser;
 
@@ -281,15 +274,11 @@ BOOST_AUTO_TEST_CASE(ENUM_CONVERSION) {
 BOOST_AUTO_TEST_CASE(UDQ_KEWYORDS) {
     const std::string input = R"(
 RUNSPEC
-
 UDQDIMS
    10* 'Y'/
-
 UDQPARAM
   3* 0.25 /
-
 SCHEDULE
-
 UDQ
   ASSIGN WUBHP 0.0 /
   UNITS  WUBHP 'BARSA' /
@@ -297,11 +286,9 @@ UDQ
   ASSIGN WUXUNIT 0.0 /
   DEFINE FUOPR  AVEG(WOPR)/
 /
-
 DATES
   10 'JAN' 2010 /
 /
-
 UDQ
   ASSIGN WUBHP 0.0 /
   DEFINE FUOPR  AVEG(WOPR)/
@@ -342,25 +329,19 @@ UDQ
 BOOST_AUTO_TEST_CASE(UDQ_CHANGE_UNITS_ILLEGAL) {
   const std::string input = R"(
 RUNSPEC
-
 UDQDIMS
    10* 'Y'/
-
 UDQPARAM
   3* 0.25 /
-
 SCHEDULE
-
 UDQ
   ASSIGN WUBHP 0.0 /
   UNITS  WUBHP 'BARSA' /
   DEFINE FUOPR  AVEG(WOPR) + 1/
 /
-
 DATES
   10 'JAN' 2010 /
 /
-
 UDQ
   ASSIGN WUBHP 0.0 /
   DEFINE FUOPR  AVEG(WOPR) + 1/
@@ -380,8 +361,6 @@ BOOST_AUTO_TEST_CASE(UDQ_DEFINE_WITH_SLASH) {
 UDQ
  DEFINE WUWCT WWPR / ( WWPR + WOPR ) /
 /
-
-
 )";
     Parser parser;
     auto deck = parser.parseString(input);
@@ -398,21 +377,15 @@ UDQ
 BOOST_AUTO_TEST_CASE(UDQ_ASSIGN_DATA) {
     const std::string input = R"(
 RUNSPEC
-
 UDQDIMS
    10* 'Y'/
-
 UDQPARAM
   3* 0.25 /
-
 SCHEDULE
-
 UDQ
 ASSIGN WU1 P12 4.0 /
 ASSIGN WU2 8.0 /
 /
-
-
 )";
     const auto schedule = make_schedule(input);
     const auto& udq = schedule.getUDQConfig(0);
@@ -1150,7 +1123,6 @@ BOOST_AUTO_TEST_CASE(UDA_VALUE_DIM) {
 BOOST_AUTO_TEST_CASE(UDQ_INPUT_BASIC) {
     std::string deck_string = R"(
 SCHEDULE
-
 UDQ
     ASSIGN WUBHP1 11 /
     ASSIGN WUOPR  20 /
@@ -1163,12 +1135,10 @@ UDQ
     UNITS  FUOPR 'SM3/DAY' /
     UNITS  FUXXX 'SM3/DAY' /
 /
-
 UDQ
     ASSIGN WUBHPX P2 12 /
     DEFINE FUOPRX SUM(WOPR) /
 /
-
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
@@ -1206,7 +1176,6 @@ UDQ
 BOOST_AUTO_TEST_CASE(UDQ_INPUT_OVERWRITE) {
     std::string deck_string = R"(
 SCHEDULE
-
 UDQ
     ASSIGN WUBHP1 11 /
     ASSIGN WUOPR  20 /
@@ -1218,12 +1187,10 @@ UDQ
     DEFINE FUOPR SUM(WOPR) /
     UNITS  FUOPR 'SM3/DAY' /
 /
-
 UDQ
     DEFINE WUBHP1 SUM(WOPR) /
     DEFINE FUOPR MAX(WOPR) /
 /
-
 )";
     auto schedule = make_schedule(deck_string);
     const auto& udq = schedule.getUDQConfig(0);
@@ -1240,7 +1207,6 @@ UDQ
     BOOST_CHECK( fuopr.is<UDQDefine>() );
     const auto& def2 = fuopr.get<UDQDefine>();
     BOOST_CHECK_EQUAL(def2.input_string(), "MAX(WOPR)");
-
 }
 
 
@@ -1339,240 +1305,26 @@ UNITS  WULPRL SM3/DAY /
 UNITS  WUOPRU SM3/DAY /
 UNITS  WULPRU SM3/DAY /
 /
-
 WCONPROD
   'PROD1'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
 /
-
-
 WCONPROD
   'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
  /
-
 WCONINJE
  'WINJ1' 'WAT' 'OPEN' 'BHP'  1*  1200  3500  1*  /
  'WINJ2' 'WAT' 'OPEN' 'BHP'  1*    800  3500  1*  /
 /
-
 TSTEP
  5 /
-
 WCONPROD
   'PROD2'     'OPEN'  'GRUP' WUXO 1*  1*  WUXL 1* 60.0   / single wells
 /
-
 TSTEP
  5 /
-
 WCONPROD
   'PROD1'     'OPEN'  'GRUP' 100 1*  1*  100 1* 60.0   / single wells
 /
-
-
-
-
-)";
-    auto schedule = make_udq_schedule(udq_string);
-
-    // First timestep
-    {
-        const auto& udq_active = schedule.udqActive(0);
-        BOOST_CHECK(udq_active);
-        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 2);
-
-        const auto& record0 = udq_active[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
-        BOOST_CHECK_EQUAL( record0.input_index, 2);
-        BOOST_CHECK_EQUAL( record0.use_count, 2);
-        BOOST_CHECK_EQUAL( record0.use_index, 0);
-
-        const auto& record1 = udq_active[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
-        BOOST_CHECK_EQUAL( record1.input_index, 3);
-        BOOST_CHECK_EQUAL( record1.use_count, 2);
-        BOOST_CHECK_EQUAL( record1.use_index, 2);
-    }
-
-    {
-        // Second timestep
-        //  - The WUOPRU and WULPRU udq are still used in the same manner for the PROD1 well.
-        //  - The new UDQs WUXO and WUXL are now used for the PROD2 well.
-        const auto& udq_active = schedule.udqActive(1);
-        BOOST_CHECK(udq_active);
-        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 4);
-
-        const auto& record0 = udq_active[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
-        BOOST_CHECK_EQUAL( record0.input_index, 2);
-        BOOST_CHECK_EQUAL( record0.use_count, 1);
-        BOOST_CHECK_EQUAL( record0.use_index, 0);
-
-        const auto& record1 = udq_active[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
-        BOOST_CHECK_EQUAL( record1.input_index, 3);
-        BOOST_CHECK_EQUAL( record1.use_count, 1);
-        BOOST_CHECK_EQUAL( record1.use_index, 1);
-
-        const auto& record2 = udq_active[2];
-        BOOST_CHECK_EQUAL( record2.uad_code, 300004);
-        BOOST_CHECK_EQUAL( record2.input_index, 4);
-        BOOST_CHECK_EQUAL( record2.use_count, 1);
-        BOOST_CHECK_EQUAL( record2.use_index, 2);
-
-        const auto& record3 = udq_active[3];
-        BOOST_CHECK_EQUAL( record3.uad_code, 600004);
-        BOOST_CHECK_EQUAL( record3.input_index, 5);
-        BOOST_CHECK_EQUAL( record3.use_count, 1);
-        BOOST_CHECK_EQUAL( record3.use_index, 3);
-    }
-
-    {
-        // Third timestep
-        //  - The new UDQs WUXO and WUXL are now used for the PROD2 well.
-        //  - The PROD1 well does not use UDQ
-        const auto& udq_active = schedule.udqActive(2);
-        BOOST_CHECK(udq_active);
-        BOOST_CHECK_EQUAL(udq_active.IUAD_size(), 2);
-
-        const auto& record0 = udq_active[0];
-        BOOST_CHECK_EQUAL( record0.uad_code, 300004);
-        BOOST_CHECK_EQUAL( record0.input_index, 4);
-        BOOST_CHECK_EQUAL( record0.use_count, 1);
-        BOOST_CHECK_EQUAL( record0.use_index, 0);
-
-        const auto& record1 = udq_active[1];
-        BOOST_CHECK_EQUAL( record1.uad_code, 600004);
-        BOOST_CHECK_EQUAL( record1.input_index, 5);
-        BOOST_CHECK_EQUAL( record1.use_count, 1);
-        BOOST_CHECK_EQUAL( record1.use_index, 1);
-
-BOOST_AUTO_TEST_CASE(UDQ_USAGE) {
-    UDQActive usage;
-    UDQParams params;
-    UDQConfig conf(params);
-    BOOST_CHECK_EQUAL( usage.IUAD_size(), 0 );
-
-    UDAValue uda1("WUX");
-    conf.add_assign(uda1.get<std::string>(), {}, 100);
-
-    usage.update(conf, uda1, "W1", UDAControl::WCONPROD_ORAT);
-    BOOST_CHECK_EQUAL( usage.IUAD_size(), 1 );
-    BOOST_CHECK_EQUAL( usage[0].use_count, 1);
-
-    usage.update(conf, uda1, "W1", UDAControl::WCONPROD_GRAT);
-    BOOST_CHECK_EQUAL( usage.IUAD_size(), 2 );
-    BOOST_CHECK_EQUAL( usage[1].use_count, 1);
-
-    const auto& rec = usage[0];
-    BOOST_CHECK_EQUAL(rec.wgname, "W1");
-    BOOST_CHECK_EQUAL(rec.udq, "WUX");
-    BOOST_CHECK(rec.control == UDAControl::WCONPROD_ORAT);
-
-
-    for (std::size_t index = 0; index < usage.IUAD_size(); index++) {
-        const auto& record = usage[index];
-        BOOST_CHECK_EQUAL(record.input_index, 0);
-        BOOST_CHECK_EQUAL(record.wgname, "W1");
-
-        if (index == 0)
-            BOOST_CHECK(record.control == UDAControl::WCONPROD_ORAT);
-        else
-            BOOST_CHECK(record.control == UDAControl::WCONPROD_GRAT);
-
-        index += 1;
-    }
-
-}
-
-
-BOOST_AUTO_TEST_CASE(IntegrationTest) {
-#include "data/integration_tests/udq.data"
-    auto schedule = make_schedule(deck_string);
-    {
-        const auto& active = schedule.udqActive(1);
-        BOOST_CHECK_EQUAL(active.IUAD_size(), 4);
-
-        BOOST_CHECK(active[0].control == UDAControl::WCONPROD_ORAT);
-        BOOST_CHECK(active[1].control == UDAControl::WCONPROD_LRAT);
-        BOOST_CHECK(active[2].control == UDAControl::WCONPROD_ORAT);
-        BOOST_CHECK(active[3].control == UDAControl::WCONPROD_LRAT);
-
-        BOOST_CHECK(active[0].wgname == "OPL02");
-        BOOST_CHECK(active[1].wgname == "OPL02");
-        BOOST_CHECK(active[2].wgname == "OPU02");
-        BOOST_CHECK(active[3].wgname == "OPU02");
-
-        BOOST_CHECK(active[0].udq == "WUOPRL");
-        BOOST_CHECK(active[1].udq == "WULPRL");
-        BOOST_CHECK(active[2].udq == "WUOPRU");
-        BOOST_CHECK(active[3].udq == "WULPRU");
-
-        BOOST_CHECK(active[0].input_index == 0);
-        BOOST_CHECK(active[1].input_index == 1);
-        BOOST_CHECK(active[2].input_index == 2);
-        BOOST_CHECK(active[3].input_index == 3);
-
-        BOOST_CHECK(active[0].use_count == 1);
-        BOOST_CHECK(active[1].use_count == 1);
-        BOOST_CHECK(active[2].use_count == 1);
-        BOOST_CHECK(active[3].use_count == 1);
-    }
-}
-
-Schedule make_udq_schedule(const std::string& schedule_string) {
-#include "data/integration_tests/udq2.data"
-    deck_string += schedule_string;
-    return make_schedule(deck_string);
-}
-
-BOOST_AUTO_TEST_CASE(IntegrationTest2) {
-    const std::string udq_string = R"(
-UDQ
-DEFINE WUOPRL (WOPR PROD1 - 150) * 0.90 /
-DEFINE WULPRL (WLPR PROD1 - 200) * 0.90 /
-DEFINE WUOPRU (WOPR PROD2 - 250) * 0.80 /
-DEFINE WULPRU (WLPR PROD2 - 300) * 0.80 /
-DEFINE WUOPRL (WOPR PROD1 - 170) * 0.60 /
-DEFINE WUXO   (WOPR PROD1 - 170) * 0.60 /
-DEFINE WUXL   (WOPR PROD1 - 170) * 0.60 /
--- units
-UNITS  WUOPRL SM3/DAY /
-UNITS  WULPRL SM3/DAY /
-UNITS  WUOPRU SM3/DAY /
-UNITS  WULPRU SM3/DAY /
-/
-
-WCONPROD
-  'PROD1'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
-/
-
-
-WCONPROD
-  'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
- /
-
-WCONINJE
- 'WINJ1' 'WAT' 'OPEN' 'BHP'  1*  1200  3500  1*  /
- 'WINJ2' 'WAT' 'OPEN' 'BHP'  1*    800  3500  1*  /
-/
-
-TSTEP
- 5 /
-
-WCONPROD
-  'PROD2'     'OPEN'  'GRUP' WUXO 1*  1*  WUXL 1* 60.0   / single wells
-/
-
-TSTEP
- 5 /
-
-WCONPROD
-  'PROD1'     'OPEN'  'GRUP' 100 1*  1*  100 1* 60.0   / single wells
-/
-
-
-
-
 )";
     auto schedule = make_udq_schedule(udq_string);
 

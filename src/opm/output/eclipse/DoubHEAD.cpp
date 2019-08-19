@@ -619,11 +619,11 @@ Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
 }
 
 Opm::RestartIO::DoubHEAD&
-Opm::RestartIO::DoubHEAD::udq_param(const udqParam& udqPar)
+Opm::RestartIO::DoubHEAD::udq_param(const UDQParams& udqPar)
 {
-    this->data_[UdqPar_2] = udqPar.udq_param_2;
-    this->data_[UdqPar_3] = udqPar.udq_param_3;
-    this->data_[UdqPar_4] = udqPar.udq_param_4;
+    this->data_[UdqPar_2] = udqPar.range();
+    this->data_[UdqPar_3] = udqPar.undefinedValue();
+    this->data_[UdqPar_4] = udqPar.cmpEpsilon();
 
     return *this;
 }

@@ -61,11 +61,6 @@ namespace {
         return inteHead[163];
     }
 
-    // maximum number of groups
-    std::size_t ngmaxz(const std::vector<int>& inteHead)
-    {
-        return inteHead[20];
-    }
 
     namespace iUdq {
 
