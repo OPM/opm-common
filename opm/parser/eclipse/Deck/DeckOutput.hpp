@@ -25,10 +25,11 @@
 #include <cstddef>
 
 namespace Opm {
+    class UnitSystem;
 
     class DeckOutput {
     public:
-        explicit DeckOutput(std::ostream& s, int precision = 10);
+        explicit DeckOutput(std::ostream& s, int precision = 10, const UnitSystem * output_units_arg = nullptr);
         ~DeckOutput();
         void stash_default( );
 
@@ -42,6 +43,8 @@ namespace Opm {
         void endl();
         void write_string(const std::string& s);
         template <typename T> void write(const T& value);
+        const UnitSystem* output_units() const;
+
 
         std::string item_sep = " ";        // Separator between items on a row.
         size_t      columns = 16;          // The maximum number of columns on a record.
@@ -53,6 +56,7 @@ namespace Opm {
         size_t row_count;
         bool record_on;
         int org_precision;
+        const UnitSystem* m_output_units;
 
         template <typename T> void write_value(const T& value);
         void write_sep( );

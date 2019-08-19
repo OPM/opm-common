@@ -21,6 +21,7 @@
 #include <opm/parser/eclipse/Deck/DeckKeyword.hpp>
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 namespace Opm {
 
@@ -150,9 +151,24 @@ namespace Opm {
         if (this->name() == "TITLE")
             this->write_TITLE( output );
         else {
+            /*
+              If unit conversion is requested on output we must capture the unit
+              system keyword from the deck and then write the keyword for the
+              requested unit system; the requested unit system will always be
+              the keyword immediately following the 'RUNSPEC' keyword.
+            */
+            const auto * output_units = output.output_units();
+            if (output_units && UnitSystem::valid_name(this->name()))
+                return;
+
             output.start_keyword( this->name( ) );
             this->write_data( output );
             output.end_keyword( this->m_slashTerminated );
+
+            if (output_units && this->name() == "RUNSPEC") {
+                output.start_keyword( output_units->deck_name() );
+                output.end_keyword(false);
+            }
         }
     }
 

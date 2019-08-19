@@ -20,6 +20,7 @@
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/DeckItem.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <boost/algorithm/string.hpp>
 
@@ -338,7 +339,6 @@ type_tag DeckItem::getType() const {
 }
 
 
-
 template< typename T >
 void DeckItem::write_vector(DeckOutput& stream, const std::vector<T>& data) const {
     for (size_t index = 0; index < this->out_size(); index++) {
@@ -350,19 +350,60 @@ void DeckItem::write_vector(DeckOutput& stream, const std::vector<T>& data) cons
 }
 
 
+
+void DeckItem::write_double_vector(DeckOutput& stream) const {
+    if (stream.output_units() && !this->dimensions.empty()) {
+        std::vector<double> output_data = this->getSIDoubleData();
+        const auto dim_size = this->dimensions.size();
+        const auto sz = output_data.size();
+
+        for( size_t index = 0; index < sz; index++ ) {
+            const auto dim_index = index % dim_size;
+            double si_value = output_data[index];
+            output_data[ index ] = this->dimensions[ dim_index ].convertSiToRaw(si_value);
+        }
+
+        this->write_vector(stream, output_data);
+    } else
+        this->write_vector(stream, this->dval);
+}
+
+void DeckItem::write_UDA_vector(DeckOutput& stream) const {
+    const auto * output_units = stream.output_units();
+    if (output_units) {
+        for (std::size_t index = 0; index < this->out_size(); index++) {
+            if (this->defaultApplied(index))
+                stream.stash_default();
+            else {
+                const auto& value = this->uval[index];
+                if (value.is<std::string>())
+                    stream.write( value.get<std::string>() );
+                else {
+                    double si_value = value.get<double>();
+                    const auto& input_dim = value.get_dim();
+                    const auto& output_dim = output_units->parse(input_dim.getName());
+                    double output_value = output_dim.convertSiToRaw(si_value);
+                    stream.write(output_value);
+                }
+            }
+        }
+    } else
+        this->write_vector(stream, this->uval);
+}
+
 void DeckItem::write(DeckOutput& stream) const {
     switch( this->type ) {
     case type_tag::integer:
         this->write_vector( stream, this->ival );
         break;
     case type_tag::fdouble:
-        this->write_vector( stream,  this->dval );
+        this->write_double_vector( stream );
         break;
     case type_tag::string:
         this->write_vector( stream,  this->sval );
         break;
     case type_tag::uda:
-        this->write_vector( stream,  this->uval );
+        this->write_UDA_vector( stream );
         break;
     default:
         throw std::logic_error( "DeckItem::write: Type not set." );

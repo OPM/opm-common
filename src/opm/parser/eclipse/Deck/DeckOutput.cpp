@@ -19,25 +19,30 @@
 
 #include <ostream>
 
+#include <opm/common/OpmLog/OpmLog.hpp>
 #include <opm/parser/eclipse/Deck/DeckOutput.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 
 namespace Opm {
 
-    DeckOutput::DeckOutput( std::ostream& s, int precision) :
+    DeckOutput::DeckOutput( std::ostream& s, int precision, const UnitSystem* output_units_arg) :
         os( s ),
         default_count( 0 ),
         row_count( 0 ),
         record_on( false ),
-        org_precision( os.precision(precision) )
+        org_precision( os.precision(precision) ),
+        m_output_units(output_units_arg)
     {}
-
 
     DeckOutput::~DeckOutput() {
         this->set_precision(this->org_precision);
     }
 
+    const UnitSystem* DeckOutput::output_units() const {
+        return this->m_output_units;
+    }
 
     void DeckOutput::set_precision(int precision) {
         this->os.precision(precision);
@@ -101,6 +106,11 @@ namespace Opm {
 
 
     void DeckOutput::start_keyword(const std::string& kw) {
+        if (this->m_output_units) {
+            if (kw == "FILEUNIT" || kw == "GRIDUNIT")
+                OpmLog::warning("The content of the " + kw + " keywords is not updated when doing unit conversion");
+        }
+
         this->os << kw << std::endl;
     }
 
