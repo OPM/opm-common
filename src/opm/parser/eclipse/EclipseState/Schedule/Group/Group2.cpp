@@ -272,6 +272,8 @@ Group2::ProductionControls Group2::productionControls(const SummaryState& st) co
     pc.water_target = UDA::eval_group_uda(this->production_properties.water_target, this->m_name, st, this->udq_undefined);
     pc.gas_target = UDA::eval_group_uda(this->production_properties.gas_target, this->m_name, st, this->udq_undefined);
     pc.liquid_target = UDA::eval_group_uda(this->production_properties.liquid_target, this->m_name, st, this->udq_undefined);
+    pc.guide_rate = this->production_properties.guide_rate;
+    pc.guide_rate_def = this->production_properties.guide_rate_def;
     pc.resv_target = this->production_properties.resv_target;
 
     return pc;

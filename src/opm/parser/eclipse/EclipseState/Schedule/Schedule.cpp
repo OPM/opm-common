@@ -1486,6 +1486,13 @@ namespace {
                 auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
                 auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
                 auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
+                double guide_rate = -1;
+                std::string guide_rate_def;
+                if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {                  
+                  guide_rate_def = record.getItem("GUIDE_RATE_DEF").get<std::string>(0);
+                  if (! (guide_rate_def == "INJ" || guide_rate_def == "POTN" || guide_rate_def == "FORM"))
+                    guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
+                }
                 auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
                 {
                     auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
@@ -1495,6 +1502,8 @@ namespace {
                     production.gas_target = gas_target;
                     production.water_target = water_target;
                     production.liquid_target = liquid_target;
+                    production.guide_rate = guide_rate;
+                    production.guide_rate_def = guide_rate_def;
                     production.resv_target = resv_target;
                     if ((production.cmode == GroupProduction::ORAT) ||
                         (production.cmode == GroupProduction::WRAT) ||
