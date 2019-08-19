@@ -1316,14 +1316,6 @@ namespace {
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
             const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
 
-            printf("Running WELOPEN: matching_wells:");
-            for (const auto& w : matching_wells)
-              printf("%s ", w.c_str());
-            printf(" -> ");
-            for (const auto& w : well_names)
-              printf("%s ", w.c_str());
-            printf("\n");
-
             if (well_names.empty())
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
