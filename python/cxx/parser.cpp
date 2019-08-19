@@ -3,8 +3,8 @@
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <pybind11/stl.h>
 
-#include "sunbeam_state.hpp"
-#include "sunbeam.hpp"
+#include "common_state.hpp"
+#include "common.hpp"
 
 
 namespace {
@@ -46,7 +46,7 @@ namespace {
     }
 }
 
-void sunbeam::export_Parser(py::module& module) {
+void opmcommon_python::export_Parser(py::module& module) {
 
     module.def( "parse", parse_file );
     module.def( "parse_string", parse_string);

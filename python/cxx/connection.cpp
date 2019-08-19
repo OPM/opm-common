@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 namespace {
 
@@ -15,7 +15,7 @@ std::string direction( const Connection& c ) {
 }
 
 
-void sunbeam::export_Connection(py::module& module) {
+void opmcommon_python::export_Connection(py::module& module) {
 
   py::class_< Connection >( module, "Connection")
     .def_property_readonly("direction",            &direction )

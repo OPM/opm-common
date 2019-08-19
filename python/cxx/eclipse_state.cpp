@@ -1,7 +1,7 @@
 #include <opm/parser/eclipse/EclipseState/EclipseState.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/FaultCollection.hpp>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {
@@ -85,7 +85,7 @@ namespace {
 
 }
 
-void sunbeam::export_EclipseState(py::module& module) {
+void opmcommon_python::export_EclipseState(py::module& module) {
 
     py::class_< EclipseState >( module, "EclipseState" )
         .def_property_readonly( "title", &EclipseState::getTitle )

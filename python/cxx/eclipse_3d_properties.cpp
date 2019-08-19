@@ -1,7 +1,7 @@
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <pybind11/stl.h>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 #include "converters.hpp"
 
 namespace {
@@ -35,7 +35,7 @@ namespace {
 
 }
 
-void sunbeam::export_Eclipse3DProperties(py::module& module) {
+void opmcommon_python::export_Eclipse3DProperties(py::module& module) {
 
   py::class_< Eclipse3DProperties >( module, "Eclipse3DProperties") 
     .def( "getRegions",   &regions )

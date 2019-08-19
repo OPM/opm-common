@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from os.path import isfile
 
-from sunbeam import libsunbeam as lib
+from opm import libopmcommon_python as lib
 from .sunbeam import delegate
 from .schedule import Schedule
 from .config import EclipseConfig

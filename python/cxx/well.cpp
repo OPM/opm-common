@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 #include <pybind11/stl.h>
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {
@@ -33,7 +33,7 @@ namespace {
 
 }
 
-void sunbeam::export_Well(py::module& module) {
+void opmcommon_python::export_Well(py::module& module) {
 
     py::class_< Well2 >( module, "Well")
         .def_property_readonly( "name", &Well2::name )

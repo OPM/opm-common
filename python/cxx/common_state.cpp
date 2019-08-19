@@ -1,4 +1,4 @@
-#include "sunbeam_state.hpp"
+#include "common_state.hpp"
 
 
 SunbeamState::SunbeamState(bool file_input, const std::string& deck_input, const Opm::ParseContext& context, const Opm::Parser& parser)

@@ -1,7 +1,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 #include "converters.hpp"
 
 namespace {
@@ -15,7 +15,7 @@ namespace {
     }
 }
 
-void sunbeam::export_GroupTree(py::module& module) {
+void opmcommon_python::export_GroupTree(py::module& module) {
 
   py::class_<GTNode>(module, "GroupTree")
 

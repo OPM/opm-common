@@ -1,5 +1,5 @@
 import unittest
-import sunbeam.deck
+import opm.deck
 
 class TestParse(unittest.TestCase):
 
@@ -27,7 +27,7 @@ FIPNUM
 """
 
     def setUp(self):
-        self.deck = sunbeam.deck.parse_string(self.DECK_STRING)
+        self.deck = opm.deck.parse_string(self.DECK_STRING)
 
     def test_deck_in(self):
         map(lambda kw: self.assertIn(kw, self.deck), [
@@ -49,7 +49,7 @@ FIPNUM
             str(self.deck['DX']).split()
         )
         self.assertEqual(
-            str(sunbeam.deck.parse_string('RUNSPEC\n\nDX\n4*0.5 /')).split(),
+            str(opm.deck.parse_string('RUNSPEC\n\nDX\n4*0.5 /')).split(),
             'RUNSPEC DX 0.5 0.5 0.5 0.5 /'.split()
         )
 

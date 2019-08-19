@@ -4,7 +4,7 @@
 
 #include <pybind11/stl.h>
 #include <pybind11/chrono.h>
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {
@@ -90,7 +90,7 @@ namespace {
 
 }
 
-void sunbeam::export_Schedule(py::module& module) {
+void opmcommon_python::export_Schedule(py::module& module) {
 
     py::class_< Schedule >( module, "Schedule")
     .def("_groups", &get_groups )

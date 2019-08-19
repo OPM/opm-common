@@ -2,7 +2,7 @@
 
 #include <pybind11/pybind11.h>
 #include "converters.hpp"
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {
@@ -37,7 +37,7 @@ namespace {
 
 }
 
-void sunbeam::export_Deck(py::module &module) {
+void opmcommon_python::export_Deck(py::module &module) {
 
     py::class_< Deck >(module, "Deck")
         .def( "__len__", &size )

@@ -5,10 +5,10 @@
 #include <opm/parser/eclipse/EclipseState/SummaryConfig/SummaryConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/SimulationConfig/SimulationConfig.hpp>
 
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
-void sunbeam::export_EclipseConfig(py::module& module)
+void opmcommon_python::export_EclipseConfig(py::module& module)
 {
     py::class_< EclipseConfig >( module, "EclipseConfig" )
       .def( "init",            &EclipseConfig::init, ref_internal)

@@ -8,6 +8,29 @@ import setuptools
 import glob
 import os
 import subprocess
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("build")
+parser.add_argument("build_ext")
+parser.add_argument("--build-lib")
+parser.add_argument("--prefix")
+parser.add_argument("--library-dirs")
+parser.add_argument("--include-dirs")
+parser.add_argument("--dry-run", action='store_true')
+args = parser.parse_args()
+
+#Circumnventing setuptools' PYTHONPATH check.
+#This is necessary during install
+if args.prefix:
+   python_version = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
+   pkg_path_root = os.path.join(args.prefix, 'lib', python_version, 'site-packages')
+   os.environ['PYTHONPATH'] += ':' + pkg_path_root
+
+setupdir = os.path.dirname(__file__)
+if setupdir != '':
+  os.chdir( setupdir )
 
 try:
   subprocess.call(["c++", "--version"])
@@ -22,7 +45,7 @@ if 'build' in sys.argv:
 
 ext_modules = [
     Extension(
-        'libsunbeam',
+        'libopmcommon_python',
         [
                 'cxx/connection.cpp',
                 'cxx/deck.cpp',
@@ -35,10 +58,10 @@ ext_modules = [
                 'cxx/group_tree.cpp',
                 'cxx/parser.cpp',
                 'cxx/schedule.cpp',
-                'cxx/sunbeam_state.cpp',
+                'cxx/common_state.cpp',
                 'cxx/table_manager.cpp',
                 'cxx/well.cpp',
-                'cxx/sunbeam.cpp'
+                'cxx/common.cpp'
         ],
         libraries=['opmcommon', 'boost_filesystem', 'boost_regex', 'ecl'],
         language='c++',
@@ -48,16 +71,20 @@ ext_modules = [
 ]
 
 setup(
-    name='Sunbeam',
+    name='Opm',
     package_dir = {'': 'python'},
     packages=[
-                'sunbeam',
-                'sunbeam.tools',
-                'sunbeam.deck',
+                'opm',
+                'opm.tools',
+                'opm.deck',
             ],
     ext_modules=ext_modules,
+    package_data={
+        '': ['cxx/libopmcommon_python.so']
+    },
+    include_package_data=True,
     license='Open Source',
     zip_safe=False,
-    test_suite='tests',
+    tests_suite='tests',
     setup_requires=["pytest-runner", 'setuptools_scm'],
 )

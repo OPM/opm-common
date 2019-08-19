@@ -11,7 +11,7 @@ const py::return_value_policy ref_internal = py::return_value_policy::reference_
 const py::return_value_policy python_owner = py::return_value_policy::take_ownership;
 const py::return_value_policy move         = py::return_value_policy::move;
 
-namespace sunbeam {
+namespace opmcommon_python {
 
   void export_Connection(py::module& module);
   void export_Deck(py::module& module);

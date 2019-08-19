@@ -1,6 +1,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <pybind11/stl.h>
-#include "sunbeam.hpp"
+#include "common.hpp"
 
 
 namespace {
@@ -14,7 +14,7 @@ namespace {
     }
 }
 
-void sunbeam::export_Group(py::module& module) {
+void opmcommon_python::export_Group(py::module& module) {
 
   py::class_< Group2 >( module, "Group")
     .def_property_readonly( "name", &Group2::name)

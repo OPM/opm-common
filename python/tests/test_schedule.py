@@ -1,13 +1,13 @@
 import unittest
 import datetime as dt
-import sunbeam
+import opm
 
 
 class TestSchedule(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.sch = sunbeam.parse('tests/spe3/SPE3CASE1.DATA').schedule
+        cls.sch = opm.parse('tests/spe3/SPE3CASE1.DATA').schedule
 
     def testWells(self):
         self.assertEqual(2, len(self.sch.get_wells(0)))
@@ -36,8 +36,8 @@ class TestSchedule(unittest.TestCase):
 
         def head(xs): return next(iter(xs))
 
-        inje = head(filter(sunbeam.Well.injector(), g1))
-        prod = head(filter(sunbeam.Well.producer(), g1))
+        inje = head(filter(opm.Well.injector(), g1))
+        prod = head(filter(opm.Well.producer(), g1))
 
         self.assertEqual(self.sch.get_well('INJ', 0).isinjector(),  inje.isinjector())
         self.assertEqual(self.sch.get_well('PROD', 0).isproducer(), prod.isproducer())
