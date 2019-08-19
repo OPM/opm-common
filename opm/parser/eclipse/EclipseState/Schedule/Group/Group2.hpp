@@ -67,7 +67,7 @@ struct GroupProductionProperties {
     UDAValue gas_target;
     UDAValue liquid_target;
     double guide_rate;
-    std::string guide_rate_def;
+    GroupProduction::GuideRateDef guide_rate_def;
     double resv_target = 0;
 
     int production_controls = 0;
@@ -83,7 +83,7 @@ struct ProductionControls {
     double gas_target;
     double liquid_target;
     double guide_rate;
-    std::string guide_rate_def;
+    GroupProduction::GuideRateDef guide_rate_def;
     double resv_target = 0;
     int production_controls = 0;
     bool has_control(GroupProduction::ControlEnum control) const;

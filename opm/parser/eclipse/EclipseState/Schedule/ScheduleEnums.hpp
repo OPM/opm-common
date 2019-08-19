@@ -219,6 +219,23 @@ namespace Opm {
 
         const std::string ControlEnum2String( GroupProduction::ControlEnum enumValue );
         GroupProduction::ControlEnum ControlEnumFromString( const std::string& stringValue );
+
+        enum GuideRateDef {
+            OIL = 0,
+            WAT = 1,
+            GAS = 2,
+            LIQ = 3,
+            COMB = 4,
+            WGA =  5,
+            CVAL = 6,
+            INJV = 7,
+            POTN = 8,
+            FORM = 9,
+            NO_GUIDE_RATE = 10
+        };
+
+        GroupProduction::GuideRateDef GetGuideRateFromString( const std::string& stringValue );
+
     }
 
     namespace GuideRate {
