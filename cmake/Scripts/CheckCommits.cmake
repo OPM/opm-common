@@ -31,28 +31,13 @@ if(NOT check_target)
 endif()
 
 # Build threads
+include(ProcessorCount)
 set(build_threads $ENV{CHECK_THREADS})
 if(NOT build_threads)
-  if(UNIX)
-    if(APPLE)
-      execute_process(COMMAND sysctl hw.ncpu
-                      OUTPUT_VARIABLE build_threads)
-      string(REPLACE " " ";" build_threads_list ${build_threads)
-      list(GET build_threads_list 1 build_threads)
-    else()
-      find_program(NPROC_COMMAND nproc)
-      if(NPROC_COMMAND)
-        execute_process(COMMAND ${NPROC_COMMAND}
-                        OUTPUT_VARIABLE build_threads)
-        string(REGEX REPLACE "(\r?\n)+$" "" build_threads "${build_threads}")
-      endif()
-    endif()
+  ProcessorCount(build_threads)
+  if(build_threads EQUAL 0)
+    set(build_threads 1)
   endif()
-endif()
-
-# If for some reason we could not find the info - e.g. centos5 where nproc is missing
-if(NOT build_threads)
-  set(build_threads 1)
 endif()
 
 # Record current HEAD
