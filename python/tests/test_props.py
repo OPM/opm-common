@@ -1,5 +1,5 @@
 import unittest
-import opm
+import opm.parser
 
 class TestProps(unittest.TestCase):
 
@@ -9,7 +9,7 @@ class TestProps(unittest.TestCase):
         self.assertTrue(diff <= epsilon, msg=err_msg)
 
     def setUp(self):
-        self.spe3 = opm.parse('tests/spe3/SPE3CASE1.DATA').state
+        self.spe3 = opm.parser.parse('tests/spe3/SPE3CASE1.DATA').state
         self.props = self.spe3.props()
 
     def test_repr(self):

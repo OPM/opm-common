@@ -1,12 +1,12 @@
 import sys
 import unittest
 
-import opm
+import opm.parser
 
 class TestGroupTree(unittest.TestCase):
     def setUp(self):
         norne = 'examples/data/norne/NORNE_ATW2013.DATA'
-        self.sch = opm.parse(norne, [('PARSE_RANDOM_SLASH', opm.action.ignore)]).schedule
+        self.sch = opm.parser.parse(norne, [('PARSE_RANDOM_SLASH', opm.parser.action.ignore)]).schedule
 
     def test_group(self):
         gr = self.sch.group(timestep=2)['PROD']
@@ -35,7 +35,7 @@ class TestGroupTree(unittest.TestCase):
         group = self.sch.group(timestep=3)['PROD']
         children = ['MANI-B1', 'MANI-B2', 'MANI-D1', 'MANI-D2', 'MANI-E1', 'MANI-E2']
         names = [child.name for child in group.children]
-        self.assertEqual(opm.schedule.Group, type(child))
+        self.assertEqual(opm.parser.schedule.Group, type(child))
         self.assertEqual(set(children), set(names))
 
 if __name__ == '__main__':

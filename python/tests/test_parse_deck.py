@@ -1,6 +1,6 @@
 import unittest
 import opm
-import opm.deck
+import opm.parser
 import os.path
 
 class TestParse(unittest.TestCase):
@@ -55,24 +55,20 @@ FIPNUM
 
     def test_IOError(self):
         with self.assertRaises(IOError):
-            opm.parse("file/not/found")
-
-        with self.assertRaises(IOError):
-            opm.deck.parse("/file/not/found")
-
+            opm.parser.load_deck("file/not/found")
 
 
     def test_parser_fail_without_extension(self):
-        error_recovery = [("PARSE_RANDOM_SLASH", opm.action.ignore)]
+        error_recovery = [("PARSE_RANDOM_SLASH", opm.parser.action.ignore)]
         with self.assertRaises(ValueError):
-            opm.deck.parse_string(self.DECK_ADDITIONAL_KEYWORDS,
-                                      recovery=error_recovery )
+            opm.parser.load_deck_string(self.DECK_ADDITIONAL_KEYWORDS,
+                                        recovery=error_recovery )
 
     def test_parser_extension(self):
-        error_recovery = [("PARSE_RANDOM_SLASH", opm.action.ignore)]
-        deck = opm.deck.parse_string(self.DECK_ADDITIONAL_KEYWORDS,
-                                         keywords=self.KEYWORDS,
-                                         recovery=error_recovery )
+        error_recovery = [("PARSE_RANDOM_SLASH", opm.parser.action.ignore)]
+        deck = opm.parser.load_deck_string(self.DECK_ADDITIONAL_KEYWORDS,
+                                           keywords=self.KEYWORDS,
+                                           recovery=error_recovery )
         self.assertIn( 'TESTKEY0', deck )
         self.assertIn( 'TESTKEY1', deck )
         self.assertIn( 'TESTKEY2', deck )

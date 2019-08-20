@@ -1,19 +1,20 @@
 import unittest
 import opm
+from opm.parser import parse
 
 class TestWells(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.sch = opm.parse('tests/spe3/SPE3CASE1.DATA').schedule
+        cls.sch = parse('tests/spe3/SPE3CASE1.DATA').schedule
         cls.timesteps = cls.sch.timesteps
 #        cls.wells = cls.sch.wells
 
     def inje(self, wells):
-        return next(iter(filter(opm.Well.injector(), wells)))
+        return next(iter(filter(opm.parser.schedule.Well.injector(), wells)))
 
     def prod(self, wells):
-        return next(iter(filter(opm.Well.producer(), wells)))
+        return next(iter(filter(opm.parser.schedule.Well.producer(), wells)))
 
     def testWellPos0(self):
         wells = self.sch.get_wells(0)
@@ -63,14 +64,14 @@ class TestWells(unittest.TestCase):
         self.assertTrue(prod.available_gctrl())
 
     def testWellDefinedFilter(self):
-        defined0 = list(filter(opm.Well.defined(0), self.sch.get_wells(0) ))
-        defined1 = list(filter(opm.Well.defined(1), self.sch.get_wells(1) ))
+        defined0 = list(filter(opm.parser.schedule.Well.defined(0), self.sch.get_wells(0) ))
+        defined1 = list(filter(opm.parser.schedule.Well.defined(1), self.sch.get_wells(1) ))
         self.assertEqual(len(list(defined0)), 2)
         self.assertEqual(len(list(defined1)), 2)
 
     def testWellProdInjeFilter(self):
-        inje = list(filter(opm.Well.injector(), self.sch.get_wells(0) ))
-        prod = list(filter(opm.Well.producer(), self.sch.get_wells(0) ))
+        inje = list(filter(opm.parser.schedule.Well.injector(), self.sch.get_wells(0) ))
+        prod = list(filter(opm.parser.schedule.Well.producer(), self.sch.get_wells(0) ))
 
         self.assertEqual(len(inje), 1)
         self.assertEqual(len(prod), 1)
@@ -79,17 +80,17 @@ class TestWells(unittest.TestCase):
         self.assertEqual(prod[0].name, "PROD")
 
     def testOpenFilter(self):
-        wells = self.sch.get_wells(1) 
+        wells = self.sch.get_wells(1)
 
-        open_at_1 = opm.Well.flowing()
+        open_at_1 = opm.parser.schedule.Well.flowing()
         flowing = list(filter(open_at_1, wells))
         closed  = list(filter(lambda well: not open_at_1(well), wells))
 
         self.assertEqual(2, len(flowing))
         self.assertEqual(0, len(closed))
 
-        flowing1 = filter(lambda x: not opm.Well.closed()(x), wells)
-        closed1  = filter(opm.Well.closed(), wells)
+        flowing1 = filter(lambda x: not opm.parser.schedule.Well.closed()(x), wells)
+        closed1  = filter(opm.parser.schedule.Well.closed(), wells)
         self.assertListEqual(list(closed), list(closed1))
 
     def testCompletions(self):
