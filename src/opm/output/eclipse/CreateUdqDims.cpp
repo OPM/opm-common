@@ -66,7 +66,7 @@ std::size_t entriesPerZUDL()
     return no_entries;
 }
 
-std::size_t entriesPerIGph(const std::vector<int>& inteHead)
+std::size_t noIGphs(const std::vector<int>& inteHead)
 {
     std::size_t no_entries = inteHead[20];
     return no_entries;
@@ -78,7 +78,11 @@ std::size_t nwmaxz(const std::vector<int>& inteHead)
         return inteHead[163];
 }
 
-
+// maximum number of groups
+std::size_t ngmaxz(const std::vector<int>& inteHead)
+{
+    return inteHead[20];
+}
 
 int noWellUdqs(const Opm::Schedule& sched,
                const std::size_t    simStep)
@@ -91,6 +95,33 @@ int noWellUdqs(const Opm::Schedule& sched,
         }
     }   
     return i_wudq;
+}
+
+int noGroupUdqs(const Opm::Schedule& sched,
+               const std::size_t    simStep)
+{
+    const auto& udqCfg = sched.getUDQConfig(simStep);
+    std::size_t i_gudq = 0;
+    for (const auto& udq_input : udqCfg.input()) {
+        if (udq_input.var_type() ==  Opm::UDQVarType::GROUP_VAR) {
+            i_gudq++;
+        }
+    }   
+    return i_gudq;
+}
+
+
+int noFieldUdqs(const Opm::Schedule& sched,
+               const std::size_t    simStep)
+{
+    const auto& udqCfg = sched.getUDQConfig(simStep);
+    std::size_t i_fudq = 0;
+    for (const auto& udq_input : udqCfg.input()) {
+        if (udq_input.var_type() ==  Opm::UDQVarType::FIELD_VAR) {
+            i_fudq++;
+        }
+    return i_fudq;
+    }
 }
 
 } // Anonymous
@@ -121,13 +152,19 @@ createUdqDims(const Schedule&     		sched,
     // 5
     udqDims.emplace_back(entriesPerZUDL());
     // 6
-    udqDims.emplace_back(entriesPerIGph(inteHead));
+    udqDims.emplace_back(noIGphs(inteHead));
     // 7
     udqDims.emplace_back(udqActive.IUAP_size());
     // 8
     udqDims.emplace_back(nwmaxz(inteHead));
     // 9
     udqDims.emplace_back(noWellUdqs(sched, lookup_step));
+    // 10
+    udqDims.emplace_back(ngmaxz(inteHead));
+    // 11
+    udqDims.emplace_back(noGroupUdqs(sched, lookup_step));
+    // 12
+    udqDims.emplace_back(noFieldUdqs(sched, lookup_step));
 
     return udqDims;
 }

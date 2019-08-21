@@ -160,13 +160,15 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
     auto  udqData = Opm::RestartIO::Helpers::AggregateUDQData(udqDims);
     udqData.captureDeclaredUDQData(sched, rptStep, st, ih);
      
-    rstFile.write("ZUDN", udqData.getZUDN());
-    rstFile.write("ZUDL", udqData.getZUDL());
-    rstFile.write("IUDQ", udqData.getIUDQ());
-    rstFile.write("DUDW", udqData.getDUDW());
-    rstFile.write("IUAD", udqData.getIUAD());
-    rstFile.write("IUAP", udqData.getIUAP());
-    rstFile.write("IGPH", udqData.getIGPH());
+        rstFile.write("ZUDN", udqData.getZUDN());
+        rstFile.write("ZUDL", udqData.getZUDL());
+        rstFile.write("IUDQ", udqData.getIUDQ());
+        rstFile.write("DUDF", udqData.getDUDF());
+        rstFile.write("DUDG", udqData.getDUDG());
+        rstFile.write("DUDW", udqData.getDUDW());
+        rstFile.write("IUAD", udqData.getIUAD());
+        rstFile.write("IUAP", udqData.getIUAP());
+        rstFile.write("IGPH", udqData.getIGPH());
     
     {
         /*

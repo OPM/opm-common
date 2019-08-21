@@ -266,7 +266,7 @@ namespace {
                   const std::vector<int>&       ih,
                   EclIO::OutputStream::Restart& rstFile)
     {
-        return;
+        //return;
         //need to add test if UDQ-data exist and UDQ - active exist etc. 
         // do not write unless data exists and copy E100 logic.
         
@@ -277,13 +277,17 @@ namespace {
         auto  udqData = Helpers::AggregateUDQData(udqDims);
         udqData.captureDeclaredUDQData(schedule, simStep, sum_state, ih);
         
-        rstFile.write("ZUDN", udqData.getZUDN());
-        rstFile.write("ZUDL", udqData.getZUDL());
-        rstFile.write("IUDQ", udqData.getIUDQ());
-        rstFile.write("DUDW", udqData.getDUDW());
-        rstFile.write("IUAD", udqData.getIUAD());
-        rstFile.write("IUAP", udqData.getIUAP());
-        rstFile.write("IGPH", udqData.getIGPH());
+        if (udqDims[0] >= 1) {
+            rstFile.write("ZUDN", udqData.getZUDN());
+            rstFile.write("ZUDL", udqData.getZUDL());
+            rstFile.write("IUDQ", udqData.getIUDQ());
+            if (udqDims[12] >= 1) rstFile.write("DUDF", udqData.getDUDF());
+            if (udqDims[11] >= 1) rstFile.write("DUDG", udqData.getDUDG());
+            if (udqDims[ 9] >= 1) rstFile.write("DUDW", udqData.getDUDW());
+            if (udqDims[ 2] >= 1) rstFile.write("IUAD", udqData.getIUAD());
+            if (udqDims[ 7] >= 1) rstFile.write("IUAP", udqData.getIUAP());
+            if (udqDims[ 6] >= 1) rstFile.write("IGPH", udqData.getIGPH());
+        }
     }
 
     void writeWell(int                           sim_step,

@@ -94,13 +94,16 @@ void captureDeclaredUDQData(const Opm::Schedule&                 sched,
     {
         return this->dUDW_.data();
     }
-#if 0
+    
+        const std::vector<double>& getDUDG() const
+    {
+        return this->dUDG_.data();
+    }
+    
     const std::vector<double>& getDUDF() const
     {
         return this->dUDF_.data();
     }
-#endif
-
 
 private:
     /// Aggregate 'IUDQ' array (Integer) for all UDQ data  (3 integers pr UDQ)
@@ -124,10 +127,12 @@ private:
 
     /// Aggregate 'DUDW' array (Double Precision) for all UDQ data. (Dimension = max no wells * noOfUDQ's)
     WindowedArray<double> dUDW_;
-#if 0
+    
+    /// Aggregate 'DUDG' array (Double Precision) for all UDQ data. (Dimension = max no wells * noOfUDQ's)
+    WindowedArray<double> dUDG_;
+    
     /// Aggregate 'DUDF' array (Double Precision) for all UDQ data.  (Dimension = Number of FU - UDQ's, with value equal to the actual constraint)
     WindowedArray<double> dUDF_;
-#endif
 
 
 };
