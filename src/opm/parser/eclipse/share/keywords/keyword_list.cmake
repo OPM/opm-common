@@ -96,10 +96,23 @@ set( keywords
      000_Eclipse100/D/DATE
      000_Eclipse100/D/DATES
      000_Eclipse100/D/DATUM
+     000_Eclipse100/D/DATUMR
+     000_Eclipse100/D/DATUMRX
+     000_Eclipse100/D/DCQDEFN
      000_Eclipse100/D/DEBUG
+     000_Eclipse100/D/DELAYACT
      000_Eclipse100/D/DENSITY
      000_Eclipse100/D/DEPTH
      000_Eclipse100/D/DEPTHZ
+     000_Eclipse100/D/DIAGDISP
+     000_Eclipse100/D/DIFFC
+     000_Eclipse100/D/DIFFDP
+     000_Eclipse100/D/DIFFMMF
+     000_Eclipse100/D/DIFFMR
+     000_Eclipse100/D/DIFFMTHT
+     000_Eclipse100/D/DIFFMX
+     000_Eclipse100/D/DIFFMY
+     000_Eclipse100/D/DIFFMZ
      000_Eclipse100/D/DIMENS
      000_Eclipse100/D/DISGAS
      000_Eclipse100/D/DR
