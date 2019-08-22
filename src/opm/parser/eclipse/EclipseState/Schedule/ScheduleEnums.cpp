@@ -216,30 +216,30 @@ namespace Opm {
                 throw std::invalid_argument("Unknown enum state string: " + stringValue );
         }
 
-        GroupProduction::GuideRateDef GetGuideRateFromString( const std::string& stringValue ) {
+        GuideRateDef GetGuideRateFromString( const std::string& stringValue ) {
 
             if (stringValue == "OIL")
-                return OIL;
+                return GuideRateDef::OIL;
             else if (stringValue == "WAT")
-                return WAT;
+                return GuideRateDef::WAT;
             else if (stringValue == "GAS")
-                return GAS;
+                return GuideRateDef::GAS;
             else if (stringValue == "LIQ")
-                return LIQ;
+                return GuideRateDef::LIQ;
             else if (stringValue == "COMB")
-                return COMB;
+                return GuideRateDef::COMB;
             else if (stringValue == "WGA")
-                return WGA;
+                return GuideRateDef::WGA;
             else if (stringValue == "CVAL")
-                return CVAL;
+                return GuideRateDef::CVAL;
             else if (stringValue == "INJV")
-                return INJV;
+                return GuideRateDef::INJV;
             else if (stringValue == "POTN")
-                return POTN;
+                return GuideRateDef::POTN;
             else if (stringValue == "FORM")
-                return FORM;
+                return GuideRateDef::FORM;
             else
-                return NO_GUIDE_RATE;
+                return GuideRateDef::NO_GUIDE_RATE;
 
         }
 

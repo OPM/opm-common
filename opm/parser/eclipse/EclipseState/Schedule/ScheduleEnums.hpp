@@ -220,7 +220,7 @@ namespace Opm {
         const std::string ControlEnum2String( GroupProduction::ControlEnum enumValue );
         GroupProduction::ControlEnum ControlEnumFromString( const std::string& stringValue );
 
-        enum GuideRateDef {
+        enum class GuideRateDef  {
             OIL = 0,
             WAT = 1,
             GAS = 2,
