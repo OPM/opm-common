@@ -30,6 +30,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Events.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/Group2.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
@@ -195,6 +196,7 @@ namespace Opm
         const Tuning& getTuning() const;
         const MessageLimits& getMessageLimits() const;
         void invalidNamePattern (const std::string& namePattern, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword) const;
+        const GuideRateModel& guideRateModel(size_t timeStep) const;
 
         const RFTConfig& rftConfig() const;
         const Events& getEvents() const;
@@ -230,6 +232,7 @@ namespace Opm
         DynamicState<std::shared_ptr<WListManager>> wlist_manager;
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
+        DynamicState<std::shared_ptr<GuideRateModel>> guide_rate_model;
         DynamicState<WellProducer::ControlModeEnum> global_whistctl_mode;
         RFTConfig rft_config;
 
@@ -275,6 +278,7 @@ namespace Opm
         void handleGCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
