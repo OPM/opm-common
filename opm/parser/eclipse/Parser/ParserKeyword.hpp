@@ -90,7 +90,6 @@ namespace Opm {
         typedef std::set<std::string> SectionNameSet;
 
 
-        static string_view getDeckName(const string_view& rawString);
         static bool validInternalName(const std::string& name);
         static bool validDeckName(const string_view& name);
         bool hasMatchRegex() const;
@@ -127,7 +126,7 @@ namespace Opm {
         enum ParserKeywordSizeEnum getSizeType() const;
         const KeywordSize& getKeywordSize() const;
         bool isDataKeyword() const;
-        bool slashTerminatedRecords() const;
+        bool rawStringKeyword() const;
 
         std::string createDeclaration(const std::string& indent) const;
         std::string createDecl() const;
@@ -149,7 +148,7 @@ namespace Opm {
         size_t m_fixedSize;
         bool m_isTableCollection;
         std::string m_Description;
-        bool slash_terminated_records = true;
+        bool raw_string_keyword = false;
 
         static bool validNameStart(const string_view& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );

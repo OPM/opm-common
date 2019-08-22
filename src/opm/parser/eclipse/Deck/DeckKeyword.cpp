@@ -47,9 +47,9 @@ namespace Opm {
         m_slashTerminated = false;
     }
 
-    void DeckKeyword::setLocation(const std::string& fileName, int lineNumber) {
-        m_fileName = fileName;
-        m_lineNumber = lineNumber;
+    void DeckKeyword::setLocation(const std::pair<const std::string&, std::size_t>& location) {
+        m_fileName = location.first;
+        m_lineNumber = location.second;
     }
 
     const std::string& DeckKeyword::getFileName() const {

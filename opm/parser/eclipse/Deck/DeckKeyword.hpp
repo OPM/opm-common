@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <utility>
 
 #include <opm/parser/eclipse/Deck/DeckRecord.hpp>
 
@@ -39,7 +40,7 @@ namespace Opm {
 
         const std::string& name() const;
         void setFixedSize();
-        void setLocation(const std::string& fileName, int lineNumber);
+        void setLocation(const std::pair<const std::string&, std::size_t>& location);
         const std::string& getFileName() const;
         int getLineNumber() const;
 

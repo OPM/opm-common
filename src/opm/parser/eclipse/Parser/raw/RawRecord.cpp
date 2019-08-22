@@ -23,10 +23,11 @@
 #include <vector>
 #include <deque>
 
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
-#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
-
 #include <opm/parser/eclipse/Utility/Stringview.hpp>
+
+#include "RawRecord.hpp"
+#include "RawConsts.hpp"
+
 
 using namespace Opm;
 using namespace std;
@@ -105,9 +106,5 @@ inline bool even_quotes( const T& str ) {
 
     std::string RawRecord::getRecordString() const {
         return m_sanitizedRecordString.string();
-    }
-
-    bool RawRecord::isTerminatedRecordString( const string_view& str ) {
-        return str.back() == RawConsts::slash;
     }
 }

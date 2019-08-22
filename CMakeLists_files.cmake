@@ -154,9 +154,9 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/Parser/ParserItem.cpp
     src/opm/parser/eclipse/Parser/ParserKeyword.cpp
     src/opm/parser/eclipse/Parser/ParserRecord.cpp
-    src/opm/parser/eclipse/RawDeck/RawKeyword.cpp
-    src/opm/parser/eclipse/RawDeck/RawRecord.cpp
-    src/opm/parser/eclipse/RawDeck/StarToken.cpp
+    src/opm/parser/eclipse/Parser/raw/RawKeyword.cpp
+    src/opm/parser/eclipse/Parser/raw/RawRecord.cpp
+    src/opm/parser/eclipse/Parser/raw/StarToken.cpp
     src/opm/parser/eclipse/Units/Dimension.cpp
     src/opm/parser/eclipse/Units/UnitSystem.cpp
     src/opm/parser/eclipse/Utility/Functional.cpp
@@ -586,12 +586,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/Deck/DeckOutput.hpp
        opm/parser/eclipse/Deck/DeckKeyword.hpp
        opm/parser/eclipse/Deck/DeckRecord.hpp
-       opm/parser/eclipse/Deck/UDAValue.hpp
-       opm/parser/eclipse/RawDeck/StarToken.hpp
-       opm/parser/eclipse/RawDeck/RawEnums.hpp
-       opm/parser/eclipse/RawDeck/RawRecord.hpp
-       opm/parser/eclipse/RawDeck/RawKeyword.hpp
-       opm/parser/eclipse/RawDeck/RawConsts.hpp)
+       opm/parser/eclipse/Deck/UDAValue.hpp)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list(APPEND PUBLIC_HEADER_FILES

@@ -28,9 +28,10 @@
 
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserEnums.hpp>
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
-#include <opm/parser/eclipse/RawDeck/StarToken.hpp>
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
+
+#include "raw/RawRecord.hpp"
+#include "raw/StarToken.hpp"
 
 namespace Opm {
 

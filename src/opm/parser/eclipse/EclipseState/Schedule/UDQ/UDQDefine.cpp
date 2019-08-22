@@ -23,10 +23,10 @@
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ErrorGuard.hpp>
-#include <opm/parser/eclipse/RawDeck/RawConsts.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQDefine.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQEnums.hpp>
 
+#include "../../../Parser/raw/RawConsts.hpp"
 #include "UDQParser.hpp"
 #include "UDQASTNode.hpp"
 

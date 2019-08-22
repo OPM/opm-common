@@ -22,8 +22,9 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
+
+#include "raw/RawRecord.hpp"
 
 namespace Opm {
 
@@ -46,8 +47,8 @@ namespace {
         return m_items.size();
     }
 
-    bool ParserRecord::slashTerminatedRecords() const {
-        return this->slash_terminated_records;
+    bool ParserRecord::rawStringRecord() const {
+        return this->raw_string_record;
     }
 
     void ParserRecord::addItem( ParserItem item ) {
@@ -62,7 +63,7 @@ namespace {
             throw std::invalid_argument("Itemname: " + item.name() + " already exists.");
 
         if (item.parseRaw())
-            this->slash_terminated_records = false;
+            this->raw_string_record = true;
 
         this->m_items.push_back( std::move( item ) );
     }

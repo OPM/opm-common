@@ -32,7 +32,8 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserItem.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+
+#include "src/opm/parser/eclipse/Parser/raw/RawRecord.hpp"
 
 using namespace Opm;
 

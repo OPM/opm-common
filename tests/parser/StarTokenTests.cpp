@@ -20,7 +20,8 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <stdexcept>
 #include <boost/test/unit_test.hpp>
-#include <opm/parser/eclipse/RawDeck/StarToken.hpp>
+
+#include "src/opm/parser/eclipse/Parser/raw/StarToken.hpp"
 
 
 BOOST_AUTO_TEST_CASE(NoStarThrows) {

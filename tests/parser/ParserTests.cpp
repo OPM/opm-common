@@ -29,8 +29,9 @@
 #include <opm/parser/eclipse/Parser/ParserKeyword.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserRecord.hpp>
-#include <opm/parser/eclipse/RawDeck/RawKeyword.hpp>
-#include <opm/parser/eclipse/RawDeck/RawRecord.hpp>
+
+#include "src/opm/parser/eclipse/Parser/raw/RawKeyword.hpp"
+#include "src/opm/parser/eclipse/Parser/raw/RawRecord.hpp"
 
 using namespace Opm;
 
@@ -337,7 +338,8 @@ BOOST_AUTO_TEST_CASE( handle_empty_title ) {
 
     Parser parser;
     const auto deck = parser.parseString( input_deck);
-    BOOST_CHECK_EQUAL( "untitled", deck.getKeyword( "TITLE" ).getStringData().front() );
+    BOOST_CHECK_EQUAL( "opm/flow", deck.getKeyword( "TITLE" ).getStringData().front() );
+    BOOST_CHECK_EQUAL( "simulation", deck.getKeyword( "TITLE" ).getStringData().back() );
  }
 
 BOOST_AUTO_TEST_CASE( deck_comma_separated_fields ) {
@@ -1612,12 +1614,12 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     const auto& tabdimsKeyword = createFixedSized("TEST" , 1);
     ParserRecord record;
     ParserItem item("ITEM", INT);
-    RawKeyword rawkeyword( tabdimsKeyword->getName() , "FILE" , 10U , 1 , true, false);
+    RawKeyword rawkeyword( tabdimsKeyword->getName() , "FILE" , 10U , false, Raw::FIXED, 1);
     ParseContext parseContext;
     ErrorGuard errors;
 
     BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword.getSizeType());
-    rawkeyword.addRawRecordString("/");
+    rawkeyword.addRecord( RawRecord("") );
     record.addItem(item);
     tabdimsKeyword->addRecord( record );
 
