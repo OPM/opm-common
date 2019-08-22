@@ -104,6 +104,9 @@ set( keywords
      000_Eclipse100/D/DENSITY
      000_Eclipse100/D/DEPTH
      000_Eclipse100/D/DEPTHZ
+     000_Eclipse100/D/DIAGDISP
+     000_Eclipse100/D/DIFFC
+     000_Eclipse100/D/DIFFDP
      000_Eclipse100/D/DIMENS
      000_Eclipse100/D/DISGAS
      000_Eclipse100/D/DR
