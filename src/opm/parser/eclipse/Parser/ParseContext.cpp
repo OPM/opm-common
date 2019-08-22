@@ -112,6 +112,7 @@ namespace Opm {
         this->addKey(UDQ_PARSE_ERROR, InputError::THROW_EXCEPTION);
         this->addKey(UDQ_TYPE_ERROR, InputError::THROW_EXCEPTION);
         this->addKey(SCHEDULE_GROUP_ERROR, InputError::THROW_EXCEPTION);
+        this->addKey(SCHEDULE_IGNORED_GUIDE_RATE, InputError::WARN);
         this->addKey(SCHEDULE_COMPSEGS_INVALID, InputError::THROW_EXCEPTION);
         this->addKey(SCHEDULE_COMPSEGS_NOT_SUPPORTED, InputError::THROW_EXCEPTION);
     }
@@ -350,6 +351,7 @@ namespace Opm {
     const std::string ParseContext::UDQ_PARSE_ERROR = "UDQ_PARSE_ERROR";
     const std::string ParseContext::UDQ_TYPE_ERROR = "UDQ_TYPE_ERROR";
     const std::string ParseContext::SCHEDULE_GROUP_ERROR = "SCHEDULE_GROUP_ERROR";
+    const std::string ParseContext::SCHEDULE_IGNORED_GUIDE_RATE = "SCHEDULE_IGNORED_GUIDE_RATE";
 
     const std::string ParseContext::SCHEDULE_COMPSEGS_INVALID = "SCHEDULE_COMPSEG_INVALID";
     const std::string ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED = "SCHEDULE_COMPSEGS_NOT_SUPPORTED";

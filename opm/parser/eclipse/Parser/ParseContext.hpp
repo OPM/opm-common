@@ -341,6 +341,7 @@ namespace Opm {
         const static std::string RPT_UNKNOWN_MNEMONIC;
 
         const static std::string SCHEDULE_GROUP_ERROR;
+        const static std::string SCHEDULE_IGNORED_GUIDE_RATE;
 
         const static std::string SCHEDULE_COMPSEGS_INVALID;
         const static std::string SCHEDULE_COMPSEGS_NOT_SUPPORTED;

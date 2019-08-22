@@ -1478,6 +1478,24 @@ namespace {
                 auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
                 auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
                 auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
+                double guide_rate = 0;
+                GroupProduction::GuideRateDef guide_rate_def = GroupProduction::GuideRateDef::NO_GUIDE_RATE;
+                if (group_name != "FIELD") {
+                    if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {                  
+                        std::string guide_rate_str = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
+                        guide_rate_def = GroupProduction::GetGuideRateFromString( guide_rate_str );
+
+                        if ((guide_rate_str == "INJ" || guide_rate_str == "POTN" || guide_rate_str == "FORM")) {
+                            std::string msg = "The supplied guide_rate value will be ignored";
+                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg, errors);                            
+                        }   
+                        else {
+                            guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
+                            if (guide_rate == 0)
+                                guide_rate_def = GroupProduction::GuideRateDef::POTN;
+                        }
+                    }
+                }
                 auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
                 {
                     auto group_ptr = std::make_shared<Group2>(this->getGroup2(group_name, currentStep));
@@ -1487,6 +1505,8 @@ namespace {
                     production.gas_target = gas_target;
                     production.water_target = water_target;
                     production.liquid_target = liquid_target;
+                    production.guide_rate = guide_rate;
+                    production.guide_rate_def = guide_rate_def;
                     production.resv_target = resv_target;
                     if ((production.cmode == GroupProduction::ORAT) ||
                         (production.cmode == GroupProduction::WRAT) ||
