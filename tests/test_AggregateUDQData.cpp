@@ -91,7 +91,6 @@ namespace {
         state.update_group_var("WGRP1", "GUOPRU", 360.);
         state.update_group_var("WGRP2", "GUOPRU", 361.);
         state.update_group_var("GRP1",  "GUOPRU", 362.);
-        state.update_group_var("GRP2",  "GUOPRU", 363.);
         
         state.update_well_var("PROD1", "WULPRU", 160.);
         state.update_well_var("PROD2", "WULPRU", 161.);
@@ -411,7 +410,41 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         
     }
 
+    {
+        /*
+        'DUDG    '          5 'DOUB'
+           
+        Dimension = (max no groups+1) * no of group UDQ's
+        Value = value of UDQ for the different groups 
+        */
+        
+        const auto& dUdg = udqData.getDUDG();
+        
+        auto start = 0*udqDims[11];
+        BOOST_CHECK_EQUAL(dUdg[start + 0] ,       362); // duDg NO. 1  
+        BOOST_CHECK_EQUAL(dUdg[start + 1] ,       360); // duDg NO. 1  
+        BOOST_CHECK_EQUAL(dUdg[start + 2] ,       361); // duDg NO. 1  
+        BOOST_CHECK_EQUAL(dUdg[start + 3] ,  -0.3E+21); // duDg NO. 1  
+        BOOST_CHECK_EQUAL(dUdg[start + 4] ,  -0.3E+21); // duDg NO. 1          
+
+        
+    } 
     
+    
+    {
+        /*
+        'DUDG    '          1 'DOUB'
+           
+        Dimension = 1 * no of Field UDQ's
+        Value = value of UDQ for the field
+        */
+        
+        const auto& dUdf = udqData.getDUDF();
+        
+        auto start = 0*udqDims[12];
+        BOOST_CHECK_EQUAL(dUdf[start + 0] ,       460); // duDf NO. 1  
+        
+    } 
 }
     
 BOOST_AUTO_TEST_SUITE_END()

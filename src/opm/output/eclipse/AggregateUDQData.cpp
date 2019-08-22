@@ -68,8 +68,9 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            int nwin = std::max(udqDims[0], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[0]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(udqDims[1]) }
             };
         }
@@ -95,9 +96,10 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            int nwin = std::max(udqDims[2], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[2]) },
-                    WV::WindowSize{ static_cast<std::size_t>(udqDims[3]) }
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
+                WV::WindowSize{ static_cast<std::size_t>(udqDims[3]) }
             };
         }
 
@@ -124,11 +126,10 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
-                Opm::EclIO::PaddedOutputString<8>
-            >;
-
+                Opm::EclIO::PaddedOutputString<8>>;
+            int nwin = std::max(udqDims[0], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[0]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(udqDims[4]) }
             };
         }
@@ -150,11 +151,10 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<
-                Opm::EclIO::PaddedOutputString<8>
-            >;
-
+                Opm::EclIO::PaddedOutputString<8>>;
+            int nwin = std::max(udqDims[0], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[0]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(udqDims[5]) }
             };
         }
@@ -211,8 +211,9 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<int>;
+            int nwin = std::max(udqDims[7], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[7]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(1) }
             };
         }
@@ -231,8 +232,9 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
+            int nwin = std::max(udqDims[9], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[9]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(udqDims[8]) }
             };
         }
@@ -267,8 +269,9 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
+            int nwin = std::max(udqDims[11], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[11]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(udqDims[10]) }
             };
         }
@@ -303,8 +306,9 @@ namespace {
         allocate(const std::vector<int>& udqDims)
         {
             using WV = Opm::RestartIO::Helpers::WindowedArray<double>;
+            int nwin = std::max(udqDims[12], 1);
             return WV {
-                WV::NumWindows{ static_cast<std::size_t>(udqDims[12]) },
+                WV::NumWindows{ static_cast<std::size_t>(nwin) },
                 WV::WindowSize{ static_cast<std::size_t>(1) }
             };
         }
