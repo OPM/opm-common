@@ -31,6 +31,16 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#include <iostream>
+
+//#include <algorithm>
+//#include <iostream>
+//#include <list>
+#include <numeric>
+//#include <random>
+//#include <vector>
+
+
 
 // anonymous namespace for EclFile
 
@@ -339,11 +349,11 @@ std::vector<T> readFormattedArray(const std::string& file_str, const int size, l
 
     long int p1=fromPos;
     long int p2=0;
-
+    
     for (int i=0; i< size; i++) {
         p1 = file_str.find_first_not_of(' ',p1);
         p2 = file_str.find_first_of(' ', p1);
-
+        
         arr.push_back(process(file_str.substr(p1, p2-p1)));
 
         p1 = file_str.find_first_not_of(' ',p2);
@@ -527,7 +537,7 @@ EclFile::EclFile(const std::string& filename) : inputFilename(filename)
 }
 
 
-void EclFile::loadBinaryArray(std::fstream& fileH, int arrIndex)
+void EclFile::loadBinaryArray(std::fstream& fileH, std::size_t arrIndex)
 {
     fileH.seekg (ifStreamPos[arrIndex], fileH.beg);
 
@@ -557,11 +567,10 @@ void EclFile::loadBinaryArray(std::fstream& fileH, int arrIndex)
     arrayLoaded[arrIndex] = true;
 }
 
-void EclFile::loadFormattedArray(const std::string& fileStr, int arrIndex, long int fromPos)
+void EclFile::loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, long int fromPos)
 {
 
     switch (array_type[arrIndex]) {
-
     case INTE:
         inte_array[arrIndex] = readFormattedInteArray(fileStr, array_size[arrIndex], fromPos);
         break;
@@ -593,17 +602,11 @@ void EclFile::loadData()
 
     if (formatted) {
 
-        std::ifstream inFile(inputFilename);
-        std::stringstream strStream;
+        std::vector<int> arrIndices(array_name.size());
+        std::iota(arrIndices.begin(), arrIndices.end(), 0);
 
-        strStream <<  inFile.rdbuf();
-
-        std::string fileStr = strStream.str();
-
-        for (unsigned int arrIndex = 0; arrIndex < array_name.size(); arrIndex++) {
-            loadFormattedArray(fileStr, arrIndex, ifStreamPos[arrIndex]);
-        }
-
+        this->loadData(arrIndices);
+        
     } else {
 
         std::fstream fileH;
@@ -687,7 +690,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
             inFile.read (buffer, size);
 
             std::string fileStr = std::string(buffer, size);
-            
+
             loadFormattedArray(fileStr, ind, 0);
             
             delete[] buffer;
