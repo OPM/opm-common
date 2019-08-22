@@ -488,6 +488,7 @@ set( keywords
      000_Eclipse100/W/WRFTPLT
      000_Eclipse100/W/WSEGDIMS
      000_Eclipse100/W/WSEGITER
+     000_Eclipse100/W/WSEGVALV
      000_Eclipse100/W/WSOLVENT
      000_Eclipse100/W/WTEMP
      000_Eclipse100/W/WTEST
