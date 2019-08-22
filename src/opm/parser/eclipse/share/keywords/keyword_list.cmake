@@ -113,6 +113,9 @@ set( keywords
      000_Eclipse100/D/DIFFMX
      000_Eclipse100/D/DIFFMY
      000_Eclipse100/D/DIFFMZ
+     000_Eclipse100/D/DIFFR
+     000_Eclipse100/D/DIFFTHT
+     000_Eclipse100/D/DIFFUSE
      000_Eclipse100/D/DIMENS
      000_Eclipse100/D/DISGAS
      000_Eclipse100/D/DR
