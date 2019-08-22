@@ -107,6 +107,9 @@ set( keywords
      000_Eclipse100/D/DIAGDISP
      000_Eclipse100/D/DIFFC
      000_Eclipse100/D/DIFFDP
+     000_Eclipse100/D/DIFFMMF
+     000_Eclipse100/D/DIFFMR
+     000_Eclipse100/D/DIFFMTHT
      000_Eclipse100/D/DIMENS
      000_Eclipse100/D/DISGAS
      000_Eclipse100/D/DR
