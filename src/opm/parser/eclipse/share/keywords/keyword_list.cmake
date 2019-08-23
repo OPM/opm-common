@@ -126,6 +126,9 @@ set( keywords
      000_Eclipse100/D/DISPDIMS
      000_Eclipse100/D/DISPERSE
      000_Eclipse100/D/DOMAINS
+     000_Eclipse100/D/DPGRID
+     000_Eclipse100/D/DPKRMOD
+     000_Eclipse100/D/DPNUM
      000_Eclipse100/D/DR
      000_Eclipse100/D/DRSDT
      000_Eclipse100/D/DRSDTR
