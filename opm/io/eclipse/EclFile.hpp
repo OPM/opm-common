@@ -106,7 +106,9 @@ protected:
 private:
     std::vector<bool> arrayLoaded;
 
-    void loadArray(std::fstream& fileH, int arrIndex);
+    void loadBinaryArray(std::fstream& fileH, std::size_t arrIndex);
+    void loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, long int fromPos);
+    
 };
 
 }} // namespace Opm::EclIO

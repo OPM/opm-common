@@ -31,6 +31,16 @@
 
 #include <opm/common/ErrorMacros.hpp>
 
+#include <iostream>
+
+//#include <algorithm>
+//#include <iostream>
+//#include <list>
+#include <numeric>
+//#include <random>
+//#include <vector>
+
+
 
 // anonymous namespace for EclFile
 
@@ -287,18 +297,6 @@ std::vector<std::string> readBinaryCharArray(std::fstream& fileH, const int size
 }
 
 
-std::vector<std::string> split_string(const std::string& inputStr)
-{
-    std::istringstream iss(inputStr);
-
-    std::vector<std::string> tokens {std::istream_iterator<std::string>{iss},
-                                     std::istream_iterator<std::string>{}
-                                    };
-
-    return tokens;
-}
-
-
 void readFormattedHeader(std::fstream& fileH, std::string& arrName,
                          int &num, Opm::EclIO::eclArrType &arrType)
 {
@@ -342,100 +340,77 @@ void readFormattedHeader(std::fstream& fileH, std::string& arrName,
 
 
 template<typename T>
-std::vector<T> readFormattedArray(std::fstream& fileH, const int size,
+std::vector<T> readFormattedArray(const std::string& file_str, const int size, long int fromPos,
                                  std::function<T(const std::string&)>& process)
 {
     std::vector<T> arr;
-    std::vector<std::string> tokens;
-    std::string line;
 
-    int num = 0;
-    while (num < size) {
-        if (fileH.eof()) {
-            OPM_THROW(std::runtime_error, "End of file reached when reading array");
-        }
+    arr.reserve(size);
 
-        getline(fileH, line);
-        tokens = split_string(line);
+    long int p1=fromPos;
+    long int p2=0;
+    
+    for (int i=0; i< size; i++) {
+        p1 = file_str.find_first_not_of(' ',p1);
+        p2 = file_str.find_first_of(' ', p1);
+        
+        arr.push_back(process(file_str.substr(p1, p2-p1)));
 
-        for (const std::string& token : tokens) {
-            arr.push_back(process(token));
-        }
-
-        num = num + tokens.size();
+        p1 = file_str.find_first_not_of(' ',p2);
     }
 
     return arr;
+
 }
 
 
-std::vector<int> readFormattedInteArray(std::fstream& fileH, const int size)
+std::vector<int> readFormattedInteArray(const std::string& file_str, const int size, long int fromPos)
 {
+
     std::function<int(const std::string&)> f = [](const std::string& val)
                                                {
                                                    return std::stoi(val);
                                                };
-    return readFormattedArray(fileH, size, f);
+
+    return readFormattedArray(file_str, size, fromPos, f);
 }
 
 
-std::vector<std::string> readFormattedCharArray(std::fstream& fileH, const int size)
+std::vector<std::string> readFormattedCharArray(const std::string& file_str, const int size, long int fromPos)
 {
-    if (!fileH.is_open()) {
-        OPM_THROW(std::runtime_error, "fstream fileH not open for reading");
-    }
-
     std::vector<std::string> arr;
-    int num = 0;
-    while (num < size) {
-        std::string line;
-        getline(fileH, line);
+    arr.reserve(size);
 
-        if (line.empty()) {
-            std::string message="Reading formatted char array, end of file or blank line, read " + std::to_string(arr.size()) + " of " + std::to_string(size) + " elements";
+    long int p1=fromPos;
+    long int p2=0;
+
+    for (int i=0; i< size; i++) {
+        p1 = file_str.find_first_of('\'',p1);
+        p2 = file_str.find_first_of('\'', p1+1);
+
+        std::string value = file_str.substr(p1 + 1, p2 - p1 - 1);
+
+        if (value.size() != 8) {
+            std::string message="Reading formatted char array, all strings should have 8 characters";
             OPM_THROW(std::runtime_error, message);
         }
 
-        int p1 = line.find_first_of("'");
-
-        if (p1 == -1) {
-            std::string message="Reading formatted char array, all strings must be enclosed by apostrophe (')";
-            OPM_THROW(std::runtime_error, message);
+        if (value == "        ") {
+            arr.push_back("");
+        } else {
+            arr.push_back(Opm::EclIO::trimr(value));
         }
 
-        while (p1 > -1) {
-            int p2 = line.find_first_of("'", p1 + 1);
-
-            if (p2 == -1) {
-                std::string message="Reading formatted char array, all strings must be enclosed by apostrophe (')";
-                OPM_THROW(std::runtime_error, message);
-            }
-
-            std::string value = line.substr(p1 + 1, p2 - p1 - 1);
-
-            if (value.size() != 8) {
-                std::string message="Reading formatted char array, all strings should have 8 characters";
-                OPM_THROW(std::runtime_error, message);
-            }
-
-            if (value == "        ") {
-                arr.push_back("");
-            } else {
-                arr.push_back(Opm::EclIO::trimr(value));
-            }
-
-            num++;
-
-            p1 = line.find_first_of("'", p2 + 1);
-        }
+        p1 = p2+1;
     }
 
     return arr;
 }
 
 
-std::vector<float> readFormattedRealArray(std::fstream &fileH, const int size)
+std::vector<float> readFormattedRealArray(const std::string& file_str, const int size, long int fromPos)
 {
+
     std::function<float(const std::string&)> f = [](const std::string& val)
                                                  {
                                                      // tskille: temporary fix, need to be discussed. OPM flow writes numbers
@@ -443,28 +418,32 @@ std::vector<float> readFormattedRealArray(std::fstream &fileH, const int size)
                                                      double dtmpv = std::stod(val);
                                                      return dtmpv;
                                                  };
-    return readFormattedArray<float>(fileH, size, f);
+
+    return readFormattedArray<float>(file_str, size, fromPos, f);
 }
 
 
-std::vector<bool> readFormattedLogiArray(std::fstream& fileH, const int size)
+std::vector<bool> readFormattedLogiArray(const std::string& file_str, const int size, long int fromPos)
 {
+
     std::function<bool(const std::string&)> f = [](const std::string& val)
                                                 {
-                                                    if (val == "T") {
+                                                    if (val[0] == 'T') {
                                                         return true;
-                                                    } else if (val == "F") {
+                                                    } else if (val[0] == 'F') {
                                                         return false;
                                                     } else {
                                                         std::string message="Could not convert '" + val + "' to a bool value ";
                                                         OPM_THROW(std::invalid_argument, message);
                                                     }
                                                 };
-    return readFormattedArray<bool>(fileH, size, f);
+
+    return readFormattedArray<bool>(file_str, size, fromPos, f);
 }
 
-std::vector<double> readFormattedDoubArray(std::fstream& fileH, const int size)
+std::vector<double> readFormattedDoubArray(const std::string& file_str, const int size, long int fromPos)
 {
+
     std::function<double(const std::string&)> f = [](const std::string& value)
                                                   {
                                                       std::string val(value);
@@ -490,7 +469,8 @@ std::vector<double> readFormattedDoubArray(std::fstream& fileH, const int size)
 
                                                       return std::stod(val);
                                                   };
-    return readFormattedArray<double>(fileH, size, f);
+
+    return readFormattedArray<double>(file_str, size, fromPos, f);
 }
 
 } // anonymous namespace
@@ -557,57 +537,60 @@ EclFile::EclFile(const std::string& filename) : inputFilename(filename)
 }
 
 
-void EclFile::loadArray(std::fstream& fileH, int arrIndex)
+void EclFile::loadBinaryArray(std::fstream& fileH, std::size_t arrIndex)
 {
     fileH.seekg (ifStreamPos[arrIndex], fileH.beg);
 
-    if (formatted) {
-        switch (array_type[arrIndex]) {
-        case INTE:
-            inte_array[arrIndex] = readFormattedInteArray(fileH, array_size[arrIndex]);
-            break;
-        case REAL:
-            real_array[arrIndex] = readFormattedRealArray(fileH, array_size[arrIndex]);
-            break;
-        case DOUB:
-            doub_array[arrIndex] = readFormattedDoubArray(fileH, array_size[arrIndex]);
-            break;
-        case LOGI:
-            logi_array[arrIndex] = readFormattedLogiArray(fileH, array_size[arrIndex]);
-            break;
-        case CHAR:
-            char_array[arrIndex] = readFormattedCharArray(fileH, array_size[arrIndex]);
-            break;
-        case MESS:
-            break;
-        default:
-            OPM_THROW(std::runtime_error, "Asked to read unexpected array type");
-            break;
-        }
+    switch (array_type[arrIndex]) {
+    case INTE:
+        inte_array[arrIndex] = readBinaryInteArray(fileH, array_size[arrIndex]);
+        break;
+    case REAL:
+        real_array[arrIndex] = readBinaryRealArray(fileH, array_size[arrIndex]);
+        break;
+    case DOUB:
+        doub_array[arrIndex] = readBinaryDoubArray(fileH, array_size[arrIndex]);
+        break;
+    case LOGI:
+        logi_array[arrIndex] = readBinaryLogiArray(fileH, array_size[arrIndex]);
+        break;
+    case CHAR:
+        char_array[arrIndex] = readBinaryCharArray(fileH, array_size[arrIndex]);
+        break;
+    case MESS:
+        break;
+    default:
+        OPM_THROW(std::runtime_error, "Asked to read unexpected array type");
+        break;
+    }
 
-    } else {
-        switch (array_type[arrIndex]) {
-        case INTE:
-            inte_array[arrIndex] = readBinaryInteArray(fileH, array_size[arrIndex]);
-            break;
-        case REAL:
-            real_array[arrIndex] = readBinaryRealArray(fileH, array_size[arrIndex]);
-            break;
-        case DOUB:
-            doub_array[arrIndex] = readBinaryDoubArray(fileH, array_size[arrIndex]);
-            break;
-        case LOGI:
-            logi_array[arrIndex] = readBinaryLogiArray(fileH, array_size[arrIndex]);
-            break;
-        case CHAR:
-            char_array[arrIndex] = readBinaryCharArray(fileH, array_size[arrIndex]);
-            break;
-        case MESS:
-            break;
-        default:
-            OPM_THROW(std::runtime_error, "Asked to read unexpected array type");
-            break;
-        }
+    arrayLoaded[arrIndex] = true;
+}
+
+void EclFile::loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, long int fromPos)
+{
+
+    switch (array_type[arrIndex]) {
+    case INTE:
+        inte_array[arrIndex] = readFormattedInteArray(fileStr, array_size[arrIndex], fromPos);
+        break;
+    case REAL:
+        real_array[arrIndex] = readFormattedRealArray(fileStr, array_size[arrIndex], fromPos);
+        break;
+    case DOUB:
+        doub_array[arrIndex] = readFormattedDoubArray(fileStr, array_size[arrIndex], fromPos);
+        break;
+    case LOGI:
+        logi_array[arrIndex] = readFormattedLogiArray(fileStr, array_size[arrIndex], fromPos);
+        break;
+    case CHAR:
+        char_array[arrIndex] = readFormattedCharArray(fileStr, array_size[arrIndex], fromPos);
+        break;
+    case MESS:
+        break;
+    default:
+        OPM_THROW(std::runtime_error, "Asked to read unexpected array type");
+        break;
     }
 
     arrayLoaded[arrIndex] = true;
@@ -616,95 +599,156 @@ void EclFile::loadArray(std::fstream& fileH, int arrIndex)
 
 void EclFile::loadData()
 {
-    std::fstream fileH;
 
     if (formatted) {
-        fileH.open(inputFilename, std::ios::in);
+
+        std::vector<int> arrIndices(array_name.size());
+        std::iota(arrIndices.begin(), arrIndices.end(), 0);
+
+        this->loadData(arrIndices);
+        
     } else {
+
+        std::fstream fileH;
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
-    }
 
-    if (!fileH) {
-        std::string message="Could not open file: '" + inputFilename +"'";
-        OPM_THROW(std::runtime_error, message);
-    }
+        if (!fileH) {
+            std::string message="Could not open file: '" + inputFilename +"'";
+            OPM_THROW(std::runtime_error, message);
+        }
 
-    for (size_t i = 0; i < array_name.size(); i++) {
-        loadArray(fileH, i);
-    }
+        for (size_t i = 0; i < array_name.size(); i++) {
+            loadBinaryArray(fileH, i);
+        }
 
-    fileH.close();
+        fileH.close();
+    }
 }
 
 
 void EclFile::loadData(const std::string& name)
 {
-    std::fstream fileH;
 
     if (formatted) {
-        fileH.open(inputFilename, std::ios::in);
-    } else {
-        fileH.open(inputFilename, std::ios::in |  std::ios::binary);
-    }
 
-    if (!fileH) {
-        std::string message="Could not open file: '" + inputFilename +"'";
-        OPM_THROW(std::runtime_error, message);
-    }
+        std::ifstream inFile(inputFilename);
+        
+        for (unsigned int arrIndex = 0; arrIndex < array_name.size(); arrIndex++) {
+            
+            if (array_name[arrIndex] == name) {
+                
+                inFile.seekg(ifStreamPos[arrIndex]);
 
-    for (size_t i = 0; i < array_name.size(); i++) {
-        if (array_name[i] == name) {
-            loadArray(fileH, i);
+                char* buffer;
+                size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex])+1;
+                buffer = new char [size];
+                inFile.read (buffer, size);
+
+                std::string fileStr = std::string(buffer, size);
+
+                loadFormattedArray(fileStr, arrIndex, 0);
+                
+                delete[] buffer;
+            }
         }
-    }
 
-    fileH.close();
+    } else {
+
+        std::fstream fileH;
+        fileH.open(inputFilename, std::ios::in |  std::ios::binary);
+
+        if (!fileH) {
+            std::string message="Could not open file: '" + inputFilename +"'";
+            OPM_THROW(std::runtime_error, message);
+        }
+
+        for (size_t i = 0; i < array_name.size(); i++) {
+            if (array_name[i] == name) {
+                loadBinaryArray(fileH, i);
+            }
+        }
+
+        fileH.close();
+    }
 }
 
 
 void EclFile::loadData(const std::vector<int>& arrIndex)
 {
-    std::fstream fileH;
 
     if (formatted) {
-        fileH.open(inputFilename, std::ios::in);
+
+        std::ifstream inFile(inputFilename);
+
+        for (int ind : arrIndex) {
+            
+            inFile.seekg(ifStreamPos[ind]);
+
+            char* buffer;
+            size_t size = sizeOnDiskFormatted(array_size[ind], array_type[ind])+1;
+            buffer = new char [size];
+            inFile.read (buffer, size);
+
+            std::string fileStr = std::string(buffer, size);
+
+            loadFormattedArray(fileStr, ind, 0);
+            
+            delete[] buffer;
+        }
+
     } else {
+        std::fstream fileH;
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
-    }
 
-    if (!fileH) {
-        std::string message="Could not open file: '" + inputFilename +"'";
-        OPM_THROW(std::runtime_error, message);
-    }
+        if (!fileH) {
+            std::string message="Could not open file: '" + inputFilename +"'";
+            OPM_THROW(std::runtime_error, message);
+        }
 
-    for (int ind : arrIndex) {
-        loadArray(fileH, ind);
-    }
+        for (int ind : arrIndex) {
+            loadBinaryArray(fileH, ind);
+        }
 
-    fileH.close();
+        fileH.close();
+    }
 }
 
 
 void EclFile::loadData(int arrIndex)
 {
-    std::fstream fileH;
 
     if (formatted) {
-        fileH.open(inputFilename, std::ios::in);
+
+        std::ifstream inFile(inputFilename);
+
+            inFile.seekg(ifStreamPos[arrIndex]);
+
+            char* buffer;
+            size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex])+1;
+            buffer = new char [size];
+            inFile.read (buffer, size);
+
+            std::string fileStr = std::string(buffer, size);
+            
+            loadFormattedArray(fileStr, arrIndex, 0);
+            
+            delete[] buffer;
+
+
     } else {
+        std::fstream fileH;
         fileH.open(inputFilename, std::ios::in |  std::ios::binary);
+
+        if (!fileH) {
+            std::string message="Could not open file: '" + inputFilename +"'";
+            OPM_THROW(std::runtime_error, message);
+        }
+
+        loadBinaryArray(fileH, arrIndex);
+
+        fileH.close();
     }
-
-    if (!fileH) {
-        std::string message="Could not open file: '" + inputFilename +"'";
-        OPM_THROW(std::runtime_error, message);
-    }
-
-    loadArray(fileH, arrIndex);
-
-    fileH.close();
 }
-
 
 std::vector<EclFile::EclEntry> EclFile::getList() const
 {
