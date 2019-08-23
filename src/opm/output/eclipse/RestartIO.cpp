@@ -113,7 +113,7 @@ namespace {
         std::vector< double > xwel;
         for (const auto& sched_well : sched_wells) {
             if (wells.count(sched_well.name()) == 0 ||
-                sched_well.getStatus() == Opm::WellCommon::SHUT)
+                sched_well.getStatus() == Opm::Well2::Status::SHUT)
             {
                 const auto elems = (sched_well.getConnections().size()
                                     * (phases.size() + data::Connection::restart_size))

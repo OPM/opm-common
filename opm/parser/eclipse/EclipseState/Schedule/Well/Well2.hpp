@@ -56,6 +56,17 @@ struct WellGuideRate {
 
 class Well2 {
 public:
+    enum class Status {
+        OPEN = 1,
+        STOP = 2,
+        SHUT = 3,
+        AUTO = 4
+    };
+
+    static std::string Status2String(Status enumValue);
+    static Status StatusFromString(const std::string& stringValue);
+
+
     Well2(const std::string& wname,
           const std::string& gname,
           std::size_t init_step,
@@ -101,7 +112,7 @@ public:
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
     double getSolventFraction() const;
-    WellCommon::StatusEnum getStatus() const;
+    Status getStatus() const;
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
     /* The rate of a given phase under the following assumptions:
@@ -138,7 +149,7 @@ public:
     bool updateRefDepth(double ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     bool updateConnections(const std::shared_ptr<WellConnections> connections);
-    bool updateStatus(WellCommon::StatusEnum status);
+    bool updateStatus(Status status);
     bool updateGroup(const std::string& group);
     bool updateProducer(bool is_producer);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRate::GuideRatePhaseEnum guide_phase, double scale_factor);
@@ -179,7 +190,7 @@ private:
     UnitSystem unit_system;
     double udq_undefined;
 
-    WellCommon::StatusEnum status;
+    Status status;
     double drainage_radius;
     bool allow_cross_flow;
     bool automatic_shutin;

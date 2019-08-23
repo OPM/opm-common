@@ -142,14 +142,14 @@ BOOST_AUTO_TEST_CASE(UDQ_SORTA_EXAMPLE) {
         {
             const auto& w1 = td.schedule.getWell2("P1", 1);
             const auto& w4 = td.schedule.getWell2("P4", 1);
-            BOOST_CHECK_EQUAL(w1.getStatus(), WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w4.getStatus(), WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK(w1.getStatus() == Well2::Status::OPEN );
+            BOOST_CHECK(w4.getStatus() == Well2::Status::OPEN );
         }
         {
             const auto& w1 = td.schedule.getWell2atEnd("P1");
             const auto& w4 = td.schedule.getWell2atEnd("P4");
-            BOOST_CHECK_EQUAL(w1.getStatus(), WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w4.getStatus(), WellCommon::StatusEnum::SHUT );
+            BOOST_CHECK(w1.getStatus() == Well2::Status::OPEN );
+            BOOST_CHECK(w4.getStatus() == Well2::Status::SHUT );
         }
 
         test_work_area_free(work_area);
@@ -182,10 +182,10 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
             const auto& w3 = td.schedule.getWell2("P3", 15);
             const auto& w4 = td.schedule.getWell2("P4", 15);
 
-            BOOST_CHECK_EQUAL(w1.getStatus(),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w2.getStatus(),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w3.getStatus(),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w4.getStatus(),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK(w1.getStatus() == Well2::Status::OPEN );
+            BOOST_CHECK(w2.getStatus() == Well2::Status::OPEN );
+            BOOST_CHECK(w3.getStatus() == Well2::Status::OPEN );
+            BOOST_CHECK(w4.getStatus() == Well2::Status::OPEN );
         }
 
 
@@ -193,20 +193,20 @@ BOOST_AUTO_TEST_CASE(WELL_CLOSE_EXAMPLE) {
         {
             const auto& w1 = td.schedule.getWell2("P1", 15);
             const auto& w3 = td.schedule.getWell2("P3", 15);
-            BOOST_CHECK_EQUAL(w1.getStatus(),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w3.getStatus(),  WellCommon::StatusEnum::OPEN );
+            BOOST_CHECK(w1.getStatus() ==  Well2::Status::OPEN );
+            BOOST_CHECK(w3.getStatus() ==  Well2::Status::OPEN );
         }
         {
             const auto& w2_5 = td.schedule.getWell2("P2", 5);
             const auto& w2_6 = td.schedule.getWell2("P2", 6);
-            BOOST_CHECK_EQUAL(w2_5.getStatus(),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w2_6.getStatus(),  WellCommon::StatusEnum::SHUT );
+            BOOST_CHECK(w2_5.getStatus() == Well2::Status::OPEN );
+            BOOST_CHECK(w2_6.getStatus() == Well2::Status::SHUT );
         }
         {
             const auto& w4_10 = td.schedule.getWell2("P4", 10);
             const auto& w4_11 = td.schedule.getWell2("P4", 11);
-            BOOST_CHECK_EQUAL(w4_10.getStatus(),  WellCommon::StatusEnum::OPEN );
-            BOOST_CHECK_EQUAL(w4_11.getStatus(),  WellCommon::StatusEnum::SHUT );
+            BOOST_CHECK(w4_10.getStatus() == Well2::Status::OPEN );
+            BOOST_CHECK(w4_11.getStatus() == Well2::Status::SHUT );
         }
 
         test_work_area_free(work_area);

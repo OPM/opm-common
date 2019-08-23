@@ -246,7 +246,7 @@ namespace Opm
         void updateGroup(std::shared_ptr<Group2> group, size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, size_t reportStep , WellCommon::StatusEnum status);
+        bool updateWellStatus( const std::string& well, size_t reportStep , Well2::Status status);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const Eclipse3DProperties& eclipseProperties);

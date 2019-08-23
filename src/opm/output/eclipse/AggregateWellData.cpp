@@ -195,7 +195,7 @@ namespace {
                 {
                     const auto stat = well.getStatus();
 
-                    using WStat = ::Opm::WellCommon::StatusEnum;
+                    using WStat = ::Opm::Well2::Status;
 
                     if (stat == WStat::SHUT) {
                         return WMCtrlVal::Shut;
@@ -224,7 +224,7 @@ namespace {
                 {
                     const auto stat = well.getStatus();
 
-                    using WStat = ::Opm::WellCommon::StatusEnum;
+                    using WStat = ::Opm::Well2::Status;
 
                     if (stat == WStat::SHUT) {
                         return WMCtrlVal::Shut;

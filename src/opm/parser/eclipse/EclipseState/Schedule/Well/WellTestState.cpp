@@ -119,7 +119,7 @@ namespace Opm {
                 throw std::runtime_error("No well named " + well.name + " is found in wells_ecl.");
 
             // if the well is SHUT, we do not consider to test it
-            if (well_ecl->getStatus() != WellCommon::OPEN)
+            if (well_ecl->getStatus() != Well2::Status::OPEN)
                 continue;
 
             if (well.closed && config.has(well.name, well.reason)) {

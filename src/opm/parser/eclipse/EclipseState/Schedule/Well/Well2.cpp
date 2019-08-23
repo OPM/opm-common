@@ -95,7 +95,7 @@ Well2::Well2(const std::string& wname_arg,
     ordering(ordering_arg),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
-    status(WellCommon::SHUT),
+    status(Status::SHUT),
     drainage_radius(ParserKeywords::WELSPECS::D_RADIUS::defaultValue),
     allow_cross_flow(DeckItem::to_bool(ParserKeywords::WELSPECS::CROSSFLOW::defaultValue)),
     automatic_shutin( ParserKeywords::WELSPECS::CROSSFLOW::defaultValue == "SHUT"),
@@ -285,7 +285,7 @@ bool Well2::updateHead(int I, int J) {
 }
 
 
-bool Well2::updateStatus(WellCommon::StatusEnum status_arg) {
+bool Well2::updateStatus(Status status_arg) {
     if (this->status != status_arg) {
         this->status = status_arg;
         return true;
@@ -502,7 +502,7 @@ const WellInjectionProperties& Well2::getInjectionProperties() const {
     return *this->injection;
 }
 
-WellCommon::StatusEnum Well2::getStatus() const {
+Well2::Status Well2::getStatus() const {
     return this->status;
 }
 
@@ -780,5 +780,36 @@ double Well2::temperature() const {
 
     throw std::runtime_error("Can not ask for temperature in a producer");
 }
+
+
+std::string Well2::Status2String(Well2::Status enumValue) {
+    switch( enumValue ) {
+    case Status::OPEN:
+        return "OPEN";
+    case Status::SHUT:
+        return "SHUT";
+    case Status::AUTO:
+        return "AUTO";
+    case Status::STOP:
+        return "STOP";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+
+Well2::Status Well2::StatusFromString(const std::string& stringValue) {
+    if (stringValue == "OPEN")
+        return Status::OPEN;
+    else if (stringValue == "SHUT")
+        return Status::SHUT;
+    else if (stringValue == "STOP")
+        return Status::STOP;
+    else if (stringValue == "AUTO")
+        return Status::AUTO;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
 
 }

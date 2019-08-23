@@ -111,10 +111,8 @@ BOOST_AUTO_TEST_CASE(WellTestRefDepth) {
     EclipseGrid grid(40,60,30);
     TableManager table ( deck );
     Eclipse3DProperties eclipseProperties ( deck , table, grid);
-    BOOST_CHECK_EQUAL(3, 3);
     Runspec runspec (deck);
     Schedule sched(deck , grid , eclipseProperties, runspec);
-    BOOST_CHECK_EQUAL(4, 4);
 
     const auto& well1 = sched.getWell2atEnd("W_1");
     const auto& well2 = sched.getWell2atEnd("W_2");
@@ -146,7 +144,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     BOOST_CHECK_CLOSE( 777/Metric::Time , sched.getWell2("W_2", 7).getProductionProperties().ResVRate.get<double>() , 0.0001);
     BOOST_CHECK_EQUAL( 0 ,                sched.getWell2("W_2", 8).getProductionProperties().ResVRate.get<double>());
 
-    BOOST_CHECK_EQUAL( WellCommon::SHUT , sched.getWell2("W_2", 3).getStatus());
+    BOOST_CHECK( Well2::Status::SHUT == sched.getWell2("W_2", 3).getStatus());
 
     {
         const auto& rft_config = sched.rftConfig();
@@ -165,7 +163,7 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
     }
 
 
-    BOOST_CHECK_EQUAL( WellCommon::AUTO, sched.getWell2("W_3", 3).getStatus());
+    BOOST_CHECK( Well2::Status::AUTO == sched.getWell2("W_3", 3).getStatus());
     {
         const WellProductionProperties& prop7 = sched.getWell2("W_3", 7).getProductionProperties();
         BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate.get<double>() , 0.001);
@@ -222,10 +220,10 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         }
 
 
-        BOOST_CHECK_EQUAL( WellCommon::OPEN, sched.getWell2("W_1", 11).getStatus( ));
-        BOOST_CHECK_EQUAL( WellCommon::OPEN, sched.getWell2("W_1", 12).getStatus( ));
-        BOOST_CHECK_EQUAL( WellCommon::SHUT, sched.getWell2("W_1", 13).getStatus( ));
-        BOOST_CHECK_EQUAL( WellCommon::OPEN, sched.getWell2("W_1", 14).getStatus( ));
+        BOOST_CHECK( Well2::Status::OPEN == sched.getWell2("W_1", 11).getStatus( ));
+        BOOST_CHECK( Well2::Status::OPEN == sched.getWell2("W_1", 12).getStatus( ));
+        BOOST_CHECK( Well2::Status::SHUT == sched.getWell2("W_1", 13).getStatus( ));
+        BOOST_CHECK( Well2::Status::OPEN == sched.getWell2("W_1", 14).getStatus( ));
         {
             SummaryState st;
             const auto controls = sched.getWell2("W_1", 12).injectionControls(st);
@@ -270,13 +268,13 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
             const auto& connections = sched.getWell2("W_1", 3).getConnections();
             BOOST_CHECK_EQUAL(4U, connections.size());
 
-            BOOST_CHECK_EQUAL(WellCompletion::OPEN, connections.get(3).state());
+            BOOST_CHECK(WellCompletion::OPEN == connections.get(3).state());
             BOOST_CHECK_EQUAL(2.2836805555555556e-12 , connections.get(3).CF());
         }
         {
             const auto& connections = sched.getWell2("W_1", 7).getConnections();
             BOOST_CHECK_EQUAL(4U, connections.size() );
-            BOOST_CHECK_EQUAL(WellCompletion::SHUT, connections.get( 3 ).state() );
+            BOOST_CHECK(WellCompletion::SHUT == connections.get( 3 ).state() );
         }
     }
 }
@@ -533,17 +531,17 @@ BOOST_AUTO_TEST_CASE(WELLS_SHUT) {
         const auto& well1 = sched.getWell2("W1", 1);
         const auto& well2 = sched.getWell2("W2", 1);
         const auto& well3 = sched.getWell2("W3", 1);
-        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well1.getStatus());
-        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well2.getStatus());
-        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::OPEN , well3.getStatus());
+        BOOST_CHECK( Well2::Status::OPEN == well1.getStatus());
+        BOOST_CHECK( Well2::Status::OPEN == well2.getStatus());
+        BOOST_CHECK( Well2::Status::OPEN == well3.getStatus());
     }
     {
         const auto& well1 = sched.getWell2("W1", 2);
         const auto& well2 = sched.getWell2("W2", 2);
         const auto& well3 = sched.getWell2("W3", 2);
-        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well1.getStatus());
-        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well2.getStatus());
-        BOOST_CHECK_EQUAL( WellCommon::StatusEnum::SHUT , well3.getStatus());
+        BOOST_CHECK( Well2::Status::SHUT == well1.getStatus());
+        BOOST_CHECK( Well2::Status::SHUT == well2.getStatus());
+        BOOST_CHECK( Well2::Status::SHUT == well3.getStatus());
     }
 }
 

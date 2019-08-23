@@ -584,12 +584,12 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK_EQUAL(schedule.getWell2("BAN", 0).getAllowCrossFlow(), false);
     BOOST_CHECK_EQUAL(schedule.getWell2("ALLOW", 0).getAllowCrossFlow(), true);
     BOOST_CHECK_EQUAL(schedule.getWell2("DEFAULT", 0).getAllowCrossFlow(), true);
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, schedule.getWell2("BAN", 0).getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, schedule.getWell2("BAN", 1).getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, schedule.getWell2("BAN", 2).getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, schedule.getWell2("BAN", 3).getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, schedule.getWell2("BAN", 4).getStatus()); // not allow to open
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, schedule.getWell2("BAN", 5).getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == schedule.getWell2("BAN", 0).getStatus());
+    BOOST_CHECK(Well2::Status::OPEN == schedule.getWell2("BAN", 1).getStatus());
+    BOOST_CHECK(Well2::Status::OPEN == schedule.getWell2("BAN", 2).getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == schedule.getWell2("BAN", 3).getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == schedule.getWell2("BAN", 4).getStatus()); // not allow to open
+    BOOST_CHECK(Well2::Status::OPEN == schedule.getWell2("BAN", 5).getStatus());
 }
 
 static Deck createDeckWithWellsAndConnectionDataWithWELOPEN() {
@@ -654,12 +654,12 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
     Runspec runspec (deck);
     Schedule schedule(deck ,grid , eclipseProperties, runspec);
     {
-        constexpr auto well_shut = WellCommon::StatusEnum::SHUT;
-        constexpr auto well_open = WellCommon::StatusEnum::OPEN;
+        constexpr auto well_shut = Well2::Status::SHUT;
+        constexpr auto well_open = Well2::Status::OPEN;
 
-        BOOST_CHECK_EQUAL(well_shut, schedule.getWell2("OP_1", 3).getStatus(  ));
-        BOOST_CHECK_EQUAL(well_open, schedule.getWell2("OP_1", 4).getStatus(  ));
-        BOOST_CHECK_EQUAL(well_shut, schedule.getWell2("OP_1", 5).getStatus(  ));
+        BOOST_CHECK(well_shut == schedule.getWell2("OP_1", 3).getStatus(  ));
+        BOOST_CHECK(well_open == schedule.getWell2("OP_1", 4).getStatus(  ));
+        BOOST_CHECK(well_shut == schedule.getWell2("OP_1", 5).getStatus(  ));
     }
     {
         constexpr auto comp_shut = WellCompletion::StateEnum::SHUT;
@@ -739,8 +739,8 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
     Schedule schedule(deck ,  grid , eclipseProperties, runspec);
     const auto& well2_3 = schedule.getWell2("OP_1",3);
     const auto& well2_4 = schedule.getWell2("OP_1",4);
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well2_3.getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well2_4.getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == well2_3.getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == well2_4.getStatus());
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddNewCompletionsDoNotShutWell) {
@@ -801,14 +801,14 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
   const auto& well_4 = schedule.getWell2("OP_1", 4);
   const auto& well_5 = schedule.getWell2("OP_1", 5);
   // timestep 3. Close all completions with WELOPEN and immediately open new completions with COMPDAT.
-  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_3.getStatus());
+  BOOST_CHECK(Well2::Status::OPEN == well_3.getStatus());
   BOOST_CHECK( !schedule.hasWellEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
   // timestep 4. Close all completions with WELOPEN. The well will be shut since no completions
   // are open.
-  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_4.getStatus());
+  BOOST_CHECK(Well2::Status::SHUT == well_4.getStatus());
   BOOST_CHECK( schedule.hasWellEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
   // timestep 5. Open new completions. But keep the well shut,
-  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_5.getStatus());
+  BOOST_CHECK(Well2::Status::SHUT == well_5.getStatus());
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
@@ -914,7 +914,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
     const auto& well = schedule.getWell2("OP_1", 4);
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well.getStatus());
+    BOOST_CHECK(Well2::Status::OPEN == well.getStatus());
 
     const auto& rft_config = schedule.rftConfig();
     BOOST_CHECK_EQUAL(rft_config.rft("OP_1", 3),false);
@@ -2589,33 +2589,33 @@ BOOST_AUTO_TEST_CASE(InjectorControlModeEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnum2String) {
-    BOOST_CHECK_EQUAL( "OPEN"  ,  WellCommon::Status2String(WellCommon::OPEN));
-    BOOST_CHECK_EQUAL( "SHUT"  ,  WellCommon::Status2String(WellCommon::SHUT));
-    BOOST_CHECK_EQUAL( "AUTO"   ,  WellCommon::Status2String(WellCommon::AUTO));
-    BOOST_CHECK_EQUAL( "STOP"   ,  WellCommon::Status2String(WellCommon::STOP));
+    BOOST_CHECK_EQUAL( "OPEN",  Well2::Status2String(Well2::Status::OPEN));
+    BOOST_CHECK_EQUAL( "SHUT",  Well2::Status2String(Well2::Status::SHUT));
+    BOOST_CHECK_EQUAL( "AUTO",  Well2::Status2String(Well2::Status::AUTO));
+    BOOST_CHECK_EQUAL( "STOP",  Well2::Status2String(Well2::Status::STOP));
 }
 
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnumFromString) {
-    BOOST_CHECK_THROW( WellCommon::StatusFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellCommon::OPEN   , WellCommon::StatusFromString("OPEN"));
-    BOOST_CHECK_EQUAL( WellCommon::AUTO , WellCommon::StatusFromString("AUTO"));
-    BOOST_CHECK_EQUAL( WellCommon::SHUT   , WellCommon::StatusFromString("SHUT"));
-    BOOST_CHECK_EQUAL( WellCommon::STOP , WellCommon::StatusFromString("STOP"));
+    BOOST_CHECK_THROW( Well2::StatusFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well2::Status::OPEN == Well2::StatusFromString("OPEN"));
+    BOOST_CHECK( Well2::Status::AUTO == Well2::StatusFromString("AUTO"));
+    BOOST_CHECK( Well2::Status::SHUT == Well2::StatusFromString("SHUT"));
+    BOOST_CHECK( Well2::Status::STOP == Well2::StatusFromString("STOP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnumLoop) {
-    BOOST_CHECK_EQUAL( WellCommon::OPEN     , WellCommon::StatusFromString( WellCommon::Status2String( WellCommon::OPEN ) ));
-    BOOST_CHECK_EQUAL( WellCommon::AUTO   , WellCommon::StatusFromString( WellCommon::Status2String( WellCommon::AUTO ) ));
-    BOOST_CHECK_EQUAL( WellCommon::SHUT     , WellCommon::StatusFromString( WellCommon::Status2String( WellCommon::SHUT ) ));
-    BOOST_CHECK_EQUAL( WellCommon::STOP   , WellCommon::StatusFromString( WellCommon::Status2String( WellCommon::STOP ) ));
+    BOOST_CHECK( Well2::Status::OPEN == Well2::StatusFromString( Well2::Status2String( Well2::Status::OPEN ) ));
+    BOOST_CHECK( Well2::Status::AUTO == Well2::StatusFromString( Well2::Status2String( Well2::Status::AUTO ) ));
+    BOOST_CHECK( Well2::Status::SHUT == Well2::StatusFromString( Well2::Status2String( Well2::Status::SHUT ) ));
+    BOOST_CHECK( Well2::Status::STOP == Well2::StatusFromString( Well2::Status2String( Well2::Status::STOP ) ));
 
-    BOOST_CHECK_EQUAL( "STOP"    , WellCommon::Status2String(WellCommon::StatusFromString(  "STOP" ) ));
-    BOOST_CHECK_EQUAL( "OPEN"      , WellCommon::Status2String(WellCommon::StatusFromString(  "OPEN" ) ));
-    BOOST_CHECK_EQUAL( "SHUT"      , WellCommon::Status2String(WellCommon::StatusFromString(  "SHUT" ) ));
-    BOOST_CHECK_EQUAL( "AUTO"    , WellCommon::Status2String(WellCommon::StatusFromString(  "AUTO" ) ));
+    BOOST_CHECK_EQUAL( "STOP", Well2::Status2String(Well2::StatusFromString(  "STOP" ) ));
+    BOOST_CHECK_EQUAL( "OPEN", Well2::Status2String(Well2::StatusFromString(  "OPEN" ) ));
+    BOOST_CHECK_EQUAL( "SHUT", Well2::Status2String(Well2::StatusFromString(  "SHUT" ) ));
+    BOOST_CHECK_EQUAL( "AUTO", Well2::Status2String(Well2::StatusFromString(  "AUTO" ) ));
 }
 
 
@@ -3190,9 +3190,9 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     BOOST_CHECK(ws.updateRefDepth(1.0));
     BOOST_CHECK(!ws.updateRefDepth(1.0));
 
-    ws.updateStatus(WellCommon::OPEN);
-    BOOST_CHECK(!ws.updateStatus(WellCommon::OPEN));
-    BOOST_CHECK(ws.updateStatus(WellCommon::SHUT));
+    ws.updateStatus(Well2::Status::OPEN);
+    BOOST_CHECK(!ws.updateStatus(Well2::Status::OPEN));
+    BOOST_CHECK(ws.updateStatus(Well2::Status::SHUT));
 
     const auto& connections = ws.getConnections();
     BOOST_CHECK_EQUAL(connections.size(), 0);

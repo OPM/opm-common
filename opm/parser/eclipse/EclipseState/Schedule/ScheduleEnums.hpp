@@ -23,18 +23,8 @@
 #include <string>
 
 namespace Opm {
-    namespace WellCommon {
 
-        enum StatusEnum {
-            OPEN = 1,
-            STOP = 2,
-            SHUT = 3,
-            AUTO = 4
-        };
 
-        const std::string Status2String(StatusEnum enumValue);
-        StatusEnum StatusFromString(const std::string& stringValue);
-    }
 
     namespace WellCompletion {
 

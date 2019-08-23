@@ -720,8 +720,7 @@ namespace {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
 
-            const WellCommon::StatusEnum status =
-                WellCommon::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well2::Status status = Well2::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             auto well_names = this->wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
@@ -771,7 +770,7 @@ namespace {
                                 "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
                                 "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                             OpmLog::note(msg);
-                            updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                            updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                         }
                     }
                 }
@@ -785,9 +784,7 @@ namespace {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
 
-            const WellCommon::StatusEnum status =
-                WellCommon::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
-
+            const Well2::Status status = Well2::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
             auto well_names = this->wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
@@ -844,7 +841,7 @@ namespace {
       Function is quite dangerous - because if this is called while holding a
       Well2 pointer that will go stale and needs to be refreshed.
     */
-    bool Schedule::updateWellStatus( const std::string& well_name, size_t reportStep , WellCommon::StatusEnum status) {
+    bool Schedule::updateWellStatus( const std::string& well_name, size_t reportStep , Well2::Status status) {
         bool update = false;
         {
             auto& dynamic_state = this->wells_static.at(well_name);
@@ -887,7 +884,7 @@ namespace {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names ) {
-                WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+                Well2::Status status = Well2::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
                 updateWellStatus( well_name , currentStep , status );
                 {
                     bool update_well = false;
@@ -921,14 +918,14 @@ namespace {
                          if (injection->surfaceInjectionRate.is<double>()) {
                              if (injection->hasInjectionControl(WellInjector::RATE) && injection->surfaceInjectionRate.get<double>() == 0) {
                                  OpmLog::note(msg);
-                                 updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                                 updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                              }
                          }
 
                          if (injection->reservoirInjectionRate.is<double>()) {
                              if (injection->hasInjectionControl(WellInjector::RESV) && injection->reservoirInjectionRate.get<double>() == 0) {
                                  OpmLog::note(msg);
-                                 updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                                 updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                              }
                          }
                     }
@@ -944,7 +941,7 @@ namespace {
     void Schedule::handleWCONINJH(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+            Well2::Status status = Well2::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
@@ -979,7 +976,7 @@ namespace {
                             "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                         OpmLog::note(msg);
-                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                        updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                     }
                 }
             }
@@ -1336,7 +1333,7 @@ namespace {
             return std::all_of( rec.begin() + 2, rec.end(), defaulted );
         };
 
-        constexpr auto open = WellCommon::StatusEnum::OPEN;
+        constexpr auto open = Well2::Status::OPEN;
 
         for( const auto& record : keyword ) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
@@ -1350,7 +1347,7 @@ namespace {
              * well status is updated
              */
             if( conn_defaulted( record ) ) {
-                const auto well_status = WellCommon::StatusFromString( status_str );
+                const auto well_status = Well2::StatusFromString( status_str );
                 for (const auto& wname : well_names) {
                     {
                         const auto& well = this->getWell2(wname, currentStep);
@@ -1806,7 +1803,7 @@ namespace {
                     if (well2->updateConnections(connections))
                         this->updateWell(well2, currentStep);
 
-                    if (well2->getStatus() == WellCommon::StatusEnum::SHUT) {
+                    if (well2->getStatus() == Well2::Status::SHUT) {
                         std::string msg =
                             "All completions in well " + well2->name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
                             "The well is therefore also shut.";
@@ -2444,7 +2441,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             const auto& well = this->getWell2(wname, timeStep);
             const auto& connections = well.getConnections();
             if (connections.allConnectionsShut())
-                this->updateWellStatus( well.name(), timeStep, WellCommon::StatusEnum::SHUT);
+                this->updateWellStatus( well.name(), timeStep, Well2::Status::SHUT);
         }
     }
 
