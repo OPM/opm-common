@@ -162,7 +162,7 @@ macro (find_package_deps module)
           # (i.e. if an optional package requests a package to be required,
           # the build will fail if it's not found)
 	  string (REPLACE "REQUIRED" "${_${module}_required}" _args_req "${_${module}_args}")
-          if(_dep MATCHES "opm-" OR _dep MATCHES "ewoms")
+          if(_dep MATCHES "opm-")
             set(deplist ${_dep})
             string(STRIP "${_dep}" _dep)
             string(REPLACE " " ";" deplist "${_dep}")

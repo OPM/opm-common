@@ -16,7 +16,7 @@ upstreamRev[libecl]=master
 declare -a downstreams
 downstreams=(opm-material
              opm-grid
-             ewoms
+             opm-models
              opm-simulators
              opm-upscaling
              )
@@ -24,7 +24,7 @@ downstreams=(opm-material
 declare -A downstreamRev
 downstreamRev[opm-material]=master
 downstreamRev[opm-grid]=master
-downstreamRev[ewoms]=master
+downstreamRev[opm-models]=master
 downstreamRev[opm-simulators]=master
 downstreamRev[opm-upscaling]=master
 
