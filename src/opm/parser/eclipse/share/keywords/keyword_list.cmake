@@ -471,11 +471,17 @@ set( keywords
      000_Eclipse100/W/WDRILTIM
      000_Eclipse100/W/WECON
      000_Eclipse100/W/WECONINJ
+     000_Eclipse100/W/WECONT
      000_Eclipse100/W/WEFAC
+     000_Eclipse100/W/WELCNTL
+     000_Eclipse100/W/WELDEBUG
+     000_Eclipse100/W/WELDRAW
+     000_Eclipse100/W/WELEVNT
      000_Eclipse100/W/WELLDIMS
      000_Eclipse100/W/WELL_PROBE
      000_Eclipse100/W/WELL_COMPLETION_PROBE
      000_Eclipse100/W/WELOPEN
+     000_Eclipse100/W/WELOPENL
      000_Eclipse100/W/WELPI
      000_Eclipse100/W/WELSEGS
      000_Eclipse100/W/WSEGSICD

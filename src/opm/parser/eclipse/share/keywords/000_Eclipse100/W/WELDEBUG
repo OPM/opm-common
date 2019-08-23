@@ -1,0 +1,5 @@
+ {"name" : "WELDEBUG" , "sections" : ["SCHEDULE"], "items" : [
+    {"name" : "WELL"         , "value_type" : "STRING" },
+    {"name" : "DEBUG_FLAG"        , "value_type" : "INT" }
+]}
+ 
