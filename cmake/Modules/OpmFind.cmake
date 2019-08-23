@@ -66,10 +66,6 @@ set (_opm_proj_exemptions
   dune-fem
   )
 
-# although a DUNE module, it is delivered in the OPM suite
-set (opm-core_SUITE "opm")
-set (ewoms_SUITE "opm")
-
 # insert this boilerplate whenever we are going to find a new package
 macro (find_and_append_package_to prefix name)
   # special handling for Boost to avoid inadvertedly picking up system
@@ -156,9 +152,6 @@ macro (find_and_append_package_to prefix name)
     if ( (NOT DEFINED ${name}_FOUND AND NOT DEFINED ${NAME}_FOUND )
          OR _search_components GREATER -1)
       string(REGEX MATCH "(dune|opm)-.*" _is_opm ${name})
-      if(NOT _is_opm)
-        string(REGEX MATCH "ewoms" _is_opm ${name})
-      endif()
       if(${name} STREQUAL "ecl")
         # Give us a chance to find ecl installed to CMAKE_INSTALL_PREFIX.
         # We need to deactivate the package registry for this.

@@ -9,7 +9,7 @@ upstreams=(libecl
            opm-common
            opm-material
            opm-grid
-           ewoms
+           opm-models
            opm-simulators
            opm-upscaling
           )
@@ -19,7 +19,7 @@ upstreamRev[libecl]=master
 upstreamRev[opm-common]=master
 upstreamRev[opm-material]=master
 upstreamRev[opm-grid]=master
-upstreamRev[ewoms]=master
+upstreamRev[opm-models]=master
 upstreamRev[opm-simulators]=master
 upstreamRev[opm-upscaling]=master
 
