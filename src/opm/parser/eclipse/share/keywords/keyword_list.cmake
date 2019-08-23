@@ -140,7 +140,9 @@ set( keywords
      000_Eclipse100/D/DTHETA
      000_Eclipse100/D/DTHETAV
      000_Eclipse100/D/DUALPERM
+     000_Eclipse100/D/DUALPORO
      000_Eclipse100/D/DUMPFLUX
+     000_Eclipse100/D/DUMPCUPL
      000_Eclipse100/D/DX
      000_Eclipse100/D/DXV
      000_Eclipse100/D/DY
