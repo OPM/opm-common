@@ -34,6 +34,7 @@
 #include <opm/parser/eclipse/Deck/Section.hpp>
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/C.hpp>
+#include <opm/parser/eclipse/Parser/ParserKeywords/G.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/V.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/W.hpp>
 
@@ -120,6 +121,7 @@ namespace {
         wlist_manager( this->m_timeMap, std::make_shared<WListManager>()),
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
+        guide_rate_model(this->m_timeMap, std::make_shared<GuideRateModel>()),
         global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
         rft_config(this->m_timeMap)
     {
@@ -331,6 +333,9 @@ namespace {
 
         else if (keyword.name() == "GEFAC")
             handleGEFAC(keyword, currentStep, parseContext, errors);
+
+        else if (keyword.name() == "GUIDERAT")
+            handleGUIDERAT(keyword, currentStep);
 
         else if (keyword.name() == "TUNING")
             handleTUNING(keyword, currentStep);
@@ -1561,6 +1566,27 @@ namespace {
         }
     }
 
+    void Schedule::handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep) {
+        const auto& record = keyword.getRecord(0);
+
+        double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
+        auto phase = GuideRateTargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
+        double A = record.getItem<ParserKeywords::GUIDERAT::A>().get<double>(0);
+        double B = record.getItem<ParserKeywords::GUIDERAT::B>().get<double>(0);
+        double C = record.getItem<ParserKeywords::GUIDERAT::C>().get<double>(0);
+        double D = record.getItem<ParserKeywords::GUIDERAT::D>().get<double>(0);
+        double E = record.getItem<ParserKeywords::GUIDERAT::E>().get<double>(0);
+        double F = record.getItem<ParserKeywords::GUIDERAT::F>().get<double>(0);
+        bool allow_increase = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::ALLOW_INCREASE>().getTrimmedString(0));
+        double damping_factor = record.getItem<ParserKeywords::GUIDERAT::DAMPING_FACTOR>().get<double>(0);
+        bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
+
+        auto new_model = std::make_shared<GuideRateModel>(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
+        const auto& current_model = this->guide_rate_model.get(currentStep);
+        if (*current_model != *new_model)
+            this->guide_rate_model.update( currentStep, new_model );
+    }
+
 
     void Schedule::handleTUNING( const DeckKeyword& keyword, size_t currentStep) {
 
@@ -2491,6 +2517,13 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
 
     const UDQConfig& Schedule::getUDQConfig(size_t timeStep) const {
         const auto& ptr = this->udq_config.get(timeStep);
+        return *ptr;
+    }
+
+    const GuideRateModel& Schedule::guideRateModel(size_t timeStep) const {
+        const auto& ptr = this->guide_rate_model.get(timeStep);
+        if (ptr == nullptr)
+            throw std::runtime_error("Tried to dereference invalid GuideRateModel - internal error in opm/flow");
         return *ptr;
     }
 

@@ -760,4 +760,25 @@ namespace Opm {
         return static_cast<GroupType>(static_cast<std::underlying_type<GroupType>::type>(lhs) & static_cast<std::underlying_type<GroupType>::type>(rhs));
     }
 
+    GuideRateTarget GuideRateTargetFromString(const std::string& s) {
+        if (s == "OIL")
+            return GuideRateTarget::OIL;
+
+        if (s == "LIQ")
+            return GuideRateTarget::LIQ;
+
+        if (s == "GAS")
+            return GuideRateTarget::GAS;
+
+        if (s == "RES")
+            return GuideRateTarget::RES;
+
+        if (s == "COMB")
+            return GuideRateTarget::COMB;
+
+        if (s == "NONE")
+            return GuideRateTarget::NONE;
+
+        throw std::invalid_argument("Could not convert: " + s + " to a valid GuideRateTarget enum value");
+    }
 }

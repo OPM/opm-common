@@ -203,6 +203,18 @@ namespace Opm {
     GroupType operator |(GroupType lhs, GroupType rhs);
     GroupType operator &(GroupType lhs, GroupType rhs);
 
+
+    enum class GuideRateTarget {
+        OIL = 0,
+        LIQ = 1,
+        GAS = 2,
+        RES = 3,
+        COMB = 4,
+        NONE = 5
+    };
+    GuideRateTarget GuideRateTargetFromString(const std::string& s);
+
+
     namespace GroupProduction {
 
         enum ControlEnum {
