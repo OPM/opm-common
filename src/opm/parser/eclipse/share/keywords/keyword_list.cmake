@@ -130,13 +130,16 @@ set( keywords
      000_Eclipse100/D/DPKRMOD
      000_Eclipse100/D/DPNUM
      000_Eclipse100/D/DR
+     000_Eclipse100/D/DRILPRI
      000_Eclipse100/D/DRSDT
      000_Eclipse100/D/DRSDTR
      000_Eclipse100/D/DRV
      000_Eclipse100/D/DRVDT
      000_Eclipse100/D/DRVDTR
+     000_Eclipse100/D/DSPDEINT
      000_Eclipse100/D/DTHETA
      000_Eclipse100/D/DTHETAV
+     000_Eclipse100/D/DUALPERM
      000_Eclipse100/D/DUMPFLUX
      000_Eclipse100/D/DX
      000_Eclipse100/D/DXV
