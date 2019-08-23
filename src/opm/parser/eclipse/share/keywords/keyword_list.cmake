@@ -120,7 +120,9 @@ set( keywords
      000_Eclipse100/D/DIFFY
      000_Eclipse100/D/DIFFZ
      000_Eclipse100/D/DIMENS
+     000_Eclipse100/D/DIMPLICT
      000_Eclipse100/D/DISGAS
+     000_Eclipse100/D/DISPDIMS
      000_Eclipse100/D/DR
      000_Eclipse100/D/DRSDT
      000_Eclipse100/D/DRSDTR
