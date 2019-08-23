@@ -6,7 +6,7 @@ except ImportError:
     from io import StringIO
 
 
-from opm.parser import load_deck, load_deck_string
+from opm.io.parser import load_deck, load_deck_string
 
 # This is from the TimeMap.cpp implementation in opm
 ecl_month = {"JAN" : 1,

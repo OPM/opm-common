@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from opm import libopmcommon_python as lib
-from .sunbeam import delegate
+from ..parser.sunbeam import delegate
 
 @delegate(lib.Schedule)
 class Schedule(object):
