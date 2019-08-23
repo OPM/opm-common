@@ -128,7 +128,7 @@ private:
     /// Aggregate 'DUDW' array (Double Precision) for all UDQ data. (Dimension = max no wells * noOfUDQ's)
     WindowedArray<double> dUDW_;
     
-    /// Aggregate 'DUDG' array (Double Precision) for all UDQ data. (Dimension = max no wells * noOfUDQ's)
+    /// Aggregate 'DUDG' array (Double Precision) for all UDQ data. (Dimension = (max no groups + 1) * noOfUDQ's)
     WindowedArray<double> dUDG_;
     
     /// Aggregate 'DUDF' array (Double Precision) for all UDQ data.  (Dimension = Number of FU - UDQ's, with value equal to the actual constraint)

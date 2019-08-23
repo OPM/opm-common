@@ -247,17 +247,12 @@ namespace {
                            DUDWArray&   dUdw)
         {
             //initialize array to the default value for the array
+            for (std::size_t ind = 0; ind < nwmaxz; ind++) {
+                dUdw[ind] = -0.3E+21;
+            }
             for (std::size_t ind = 0; ind < wnames.size(); ind++) {
                 if (st.has_well_var(wnames[ind], udq)) {
                     dUdw[ind] = st.get_well_var(wnames[ind], udq);        
-                }
-                else {
-                   dUdw[ind] = -0.3E+21; 
-                }
-            }
-            if (wnames.size() < nwmaxz) {
-                for (std::size_t ind = wnames.size(); ind < nwmaxz; ind++) {
-                    dUdw[ind] = -0.3E+21;
                 }
             }
         }
@@ -354,18 +349,30 @@ std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const 
     return result;
 }
 
-const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Schedule& sched,
-                                                                   const std::size_t simStep,
-                                                                   const std::vector<int>& inteHead
-                                                                  )
+// Make ordered list of current groups
+const std::vector<const Opm::Group2*> currentGroups(const Opm::Schedule& sched,
+                                                    const std::size_t simStep,
+                                                    const std::vector<int>& inteHead )
 {
     std::vector<const Opm::Group2*> curGroups(ngmaxz(inteHead), nullptr);
     for (const auto& group_name : sched.groupNames(simStep)) {
         const auto& group = sched.getGroup2(group_name, simStep);
+        
+        //The FIELD group is the first group according to the insert_index()
+        //In the Eclipse compatible restart file, the FILED group is put at the end of the list of groups (ngmaxz(inteHead)-1)
         int ind = (group.name() == "FIELD")
             ? ngmaxz(inteHead)-1 : group.insert_index()-1;
         curGroups[ind] = std::addressof(group);
-    }
+
+    }   
+    return curGroups;
+}
+
+const std::vector<int> Opm::RestartIO::Helpers::igphData::ig_phase(const Opm::Schedule& sched,
+                                                                   const std::size_t simStep,
+                                                                   const std::vector<int>& inteHead )
+{
+    const auto curGroups = currentGroups(sched, simStep, inteHead);
     std::vector<int> inj_phase(ngmaxz(inteHead), 0);
     for (std::size_t ind = 0; ind < curGroups.size(); ind++) {
         if (curGroups[ind] != nullptr) {
@@ -409,7 +416,7 @@ const std::vector<int> iuap_data(const Opm::Schedule& sched,
 
     return wg_no;
 }
-
+            
 Opm::RestartIO::Helpers::AggregateUDQData::
 AggregateUDQData(const std::vector<int>& udqDims)
     : iUDQ_ (iUdq::allocate(udqDims)),
@@ -485,16 +492,9 @@ captureDeclaredUDQData(const Opm::Schedule&                 sched,
             i_wudq++;
         }
     }
-    
-    // Make ordered list of current groups
-    std::vector<const Opm::Group2*> curGroups(ngmaxz(inteHead), nullptr);
-    for (const auto& group_name : sched.groupNames(simStep)) {
-        const auto& group = sched.getGroup2(group_name, simStep);
-        int ind = (group.name() == "FIELD")
-            ? ngmaxz(inteHead)-1 : group.insert_index()-1;
-        curGroups[ind] = std::addressof(group);
-    }
+
     std::size_t i_gudq = 0;
+    const auto curGroups = currentGroups(sched, simStep, inteHead);
     const auto ngmax = ngmaxz(inteHead);
     for (const auto& udq_input : udqCfg.input()) {
         if (udq_input.var_type() ==  UDQVarType::GROUP_VAR) {

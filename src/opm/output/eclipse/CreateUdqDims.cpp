@@ -101,15 +101,10 @@ int noGroupUdqs(const Opm::Schedule& sched,
                const std::size_t    simStep)
 {
     const auto& udqCfg = sched.getUDQConfig(simStep);
-    std::size_t i_gudq = 0;
-    for (const auto& udq_input : udqCfg.input()) {
-        if (udq_input.var_type() ==  Opm::UDQVarType::GROUP_VAR) {
-            i_gudq++;
-        }
-    }   
-    return i_gudq;
-}
+    const auto& input = udqCfg.input();
+    return std::count_if(input.begin(), input.end(), [](const Opm::UDQInput inp) { return (inp.var_type() == Opm::UDQVarType::GROUP_VAR); });
 
+}
 
 int noFieldUdqs(const Opm::Schedule& sched,
                const std::size_t    simStep)
@@ -120,8 +115,8 @@ int noFieldUdqs(const Opm::Schedule& sched,
         if (udq_input.var_type() ==  Opm::UDQVarType::FIELD_VAR) {
             i_fudq++;
         }
-    return i_fudq;
     }
+    return i_fudq;
 }
 
 } // Anonymous
@@ -139,32 +134,21 @@ createUdqDims(const Schedule&     		sched,
     const auto& udqCfg = sched.getUDQConfig(lookup_step);
     const auto& udqActive = sched.udqActive(lookup_step);
     std::vector<int> udqDims; 
-    // 0
-    udqDims.emplace_back(udqCfg.size());
-    // 1
-    udqDims.emplace_back(entriesPerIUDQ());
-    // 2
-    udqDims.emplace_back(udqActive.IUAD_size());
-    // 3
-    udqDims.emplace_back(entriesPerIUAD());
-    // 4
-    udqDims.emplace_back(entriesPerZUDN());
-    // 5
-    udqDims.emplace_back(entriesPerZUDL());
-    // 6
-    udqDims.emplace_back(noIGphs(inteHead));
-    // 7
-    udqDims.emplace_back(udqActive.IUAP_size());
-    // 8
-    udqDims.emplace_back(nwmaxz(inteHead));
-    // 9
-    udqDims.emplace_back(noWellUdqs(sched, lookup_step));
-    // 10
-    udqDims.emplace_back(ngmaxz(inteHead));
-    // 11
-    udqDims.emplace_back(noGroupUdqs(sched, lookup_step));
-    // 12
-    udqDims.emplace_back(noFieldUdqs(sched, lookup_step));
+    udqDims.resize(13,0);
+    
+    udqDims[ 0] = udqCfg.size();
+    udqDims[ 1] = entriesPerIUDQ();
+    udqDims[ 2] = udqActive.IUAD_size();
+    udqDims[ 3] = entriesPerIUAD();
+    udqDims[ 4] = entriesPerZUDN();
+    udqDims[ 5] = entriesPerZUDL();
+    udqDims[ 6] = noIGphs(inteHead);
+    udqDims[ 7] = udqActive.IUAP_size();
+    udqDims[ 8] = nwmaxz(inteHead);
+    udqDims[ 9] = noWellUdqs(sched, lookup_step);
+    udqDims[10] = ngmaxz(inteHead);
+    udqDims[11] = noGroupUdqs(sched, lookup_step);
+    udqDims[12] = noFieldUdqs(sched, lookup_step);
 
     return udqDims;
 }
