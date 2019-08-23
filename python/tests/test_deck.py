@@ -1,5 +1,5 @@
 import unittest
-from opm.parser import load_deck_string
+from opm.io import load_deck_string
 
 class TestParse(unittest.TestCase):
 

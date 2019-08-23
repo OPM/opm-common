@@ -75,7 +75,7 @@ setup(
     package_dir = {'': 'python'},
     packages=[
                 'opm',
-                'opm.parser',
+                'opm.io',
                 'opm.tools'
             ],
     ext_modules=ext_modules,

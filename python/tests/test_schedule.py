@@ -1,8 +1,8 @@
 import unittest
 import datetime as dt
 
-import opm.parser.schedule
-from opm.parser import parse
+import opm.io.schedule
+from opm.io import parse
 
 class TestSchedule(unittest.TestCase):
 
@@ -37,8 +37,8 @@ class TestSchedule(unittest.TestCase):
 
         def head(xs): return next(iter(xs))
 
-        inje = head(filter(opm.parser.schedule.Well.injector(), g1))
-        prod = head(filter(opm.parser.schedule.Well.producer(), g1))
+        inje = head(filter(opm.io.schedule.Well.injector(), g1))
+        prod = head(filter(opm.io.schedule.Well.producer(), g1))
 
         self.assertEqual(self.sch.get_well('INJ', 0).isinjector(),  inje.isinjector())
         self.assertEqual(self.sch.get_well('PROD', 0).isproducer(), prod.isproducer())
