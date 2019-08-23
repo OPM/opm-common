@@ -27,6 +27,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 
 #include "injection.hpp"
 #include "../eval_uda.hpp"
@@ -34,9 +35,9 @@
 namespace Opm {
 
 
-    WellInjectionProperties::WellInjectionProperties(const std::string& wname)
+    Well2::WellInjectionProperties::WellInjectionProperties(const std::string& wname)
         : name(wname),
-          injectorType(WellInjector::WATER),
+          injectorType(InjectorType::WATER),
           controlMode(WellInjector::CMODE_UNDEFINED)
     {
         temperature=
@@ -50,8 +51,8 @@ namespace Opm {
     }
 
 
-    void WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name) {
-        this->injectorType = WellInjector::TypeFromString( record.getItem("TYPE").getTrimmedString(0) );
+    void Well2::WellInjectionProperties::handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name) {
+        this->injectorType = Well2::InjectorTypeFromString( record.getItem("TYPE").getTrimmedString(0) );
         this->predictionMode = true;
 
         if (!record.getItem("RATE").defaultApplied(0)) {
@@ -104,25 +105,25 @@ namespace Opm {
 
 
 
-    void WellInjectionProperties::handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
+    void Well2::WellInjectionProperties::handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
         if (cmode == WellTarget::BHP){
             this->BHPLimit.reset( newValue * siFactorP );
         }
         else if (cmode == WellTarget::ORAT){
-            if(this->injectorType == WellInjector::TypeEnum::OIL){
+            if(this->injectorType == Well2::InjectorType::OIL){
                 this->surfaceInjectionRate.reset( newValue * siFactorL );
             }else{
                 std::invalid_argument("Well type must be OIL to set the oil rate");
             }
         }
         else if (cmode == WellTarget::WRAT){
-            if(this->injectorType == WellInjector::TypeEnum::WATER)
+            if(this->injectorType == Well2::InjectorType::WATER)
                 this->surfaceInjectionRate.reset( newValue * siFactorL );
             else
                 std::invalid_argument("Well type must be WATER to set the water rate");
         }
         else if (cmode == WellTarget::GRAT){
-            if(this->injectorType == WellInjector::TypeEnum::GAS){
+            if(this->injectorType == Well2::InjectorType::GAS){
                 this->surfaceInjectionRate.reset( newValue * siFactorG );
             }else{
                 std::invalid_argument("Well type must be GAS to set the gas rate");
@@ -143,14 +144,14 @@ namespace Opm {
     }
 
 
-    void WellInjectionProperties::handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name) {
+    void Well2::WellInjectionProperties::handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name) {
         // convert injection rates to SI
         const auto& typeItem = record.getItem("TYPE");
         if (typeItem.defaultApplied(0)) {
             const std::string msg = "Injection type can not be defaulted for keyword WCONINJH";
             throw std::invalid_argument(msg);
         }
-        this->injectorType = WellInjector::TypeFromString( typeItem.getTrimmedString(0));
+        this->injectorType = Well2::InjectorTypeFromString( typeItem.getTrimmedString(0));
 
         if (!record.getItem("RATE").defaultApplied(0)) {
             double injectionRate = record.getItem("RATE").get<double>(0);
@@ -195,7 +196,7 @@ namespace Opm {
         }
     }
 
-    bool WellInjectionProperties::operator==(const WellInjectionProperties& other) const {
+    bool Well2::WellInjectionProperties::operator==(const Well2::WellInjectionProperties& other) const {
         if ((surfaceInjectionRate == other.surfaceInjectionRate) &&
             (reservoirInjectionRate == other.reservoirInjectionRate) &&
             (temperature == other.temperature) &&
@@ -213,24 +214,24 @@ namespace Opm {
             return false;
     }
 
-    bool WellInjectionProperties::operator!=(const WellInjectionProperties& other) const {
+    bool Well2::WellInjectionProperties::operator!=(const Well2::WellInjectionProperties& other) const {
         return !(*this == other);
     }
 
-    void WellInjectionProperties::resetDefaultHistoricalBHPLimit() {
+    void Well2::WellInjectionProperties::resetDefaultHistoricalBHPLimit() {
         // this default BHP value is from simulation result,
         // without finding any related document
         BHPLimit.reset( 6891.2 * unit::barsa );
     }
 
-    void WellInjectionProperties::setBHPLimit(const double limit) {
+    void Well2::WellInjectionProperties::setBHPLimit(const double limit) {
         BHPLimit.reset( limit );
     }
 
     std::ostream& operator<<( std::ostream& stream,
-                              const WellInjectionProperties& wp ) {
+                              const Well2::WellInjectionProperties& wp ) {
         return stream
-            << "WellInjectionProperties { "
+            << "Well2::WellInjectionProperties { "
             << "surfacerate: "      << wp.surfaceInjectionRate << ", "
             << "reservoir rate "    << wp.reservoirInjectionRate << ", "
             << "temperature: "      << wp.temperature << ", "
@@ -241,12 +242,12 @@ namespace Opm {
             << "VFP table: "        << wp.VFPTableNumber << ", "
             << "prediction mode: "  << wp.predictionMode << ", "
             << "injection ctrl: "   << wp.injectionControls << ", "
-            << "injector type: "    << wp.injectorType << ", "
+            << "injector type: "    << Well2::InjectorType2String(wp.injectorType) << ", "
             << "control mode: "     << wp.controlMode << " }";
     }
 
 
-    InjectionControls WellInjectionProperties::controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const {
+Well2::InjectionControls Well2::WellInjectionProperties::controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const {
         InjectionControls controls(this->injectionControls);
 
         controls.surface_rate = UDA::eval_well_uda_rate(this->surfaceInjectionRate, this->name, st, udq_default, this->injectorType, unit_system);
@@ -263,7 +264,7 @@ namespace Opm {
         return controls;
     }
 
-    bool WellInjectionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
+    bool Well2::WellInjectionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
         int update_count = 0;
 
         update_count += active.update(udq_config, this->surfaceInjectionRate, this->name, UDAControl::WCONINJE_RATE);

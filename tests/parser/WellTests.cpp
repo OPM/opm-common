@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
         BOOST_CHECK_EQUAL( true , well.isProducer());
 
         /* Set a surface injection rate => Well becomes an Injector */
-        auto injectionProps1 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+        auto injectionProps1 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
         injectionProps1->surfaceInjectionRate.reset(100);
         well.updateInjection(injectionProps1);
         BOOST_CHECK_EQUAL( true  , well.isInjector());
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
         Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
 
         /* Set a reservoir injection rate => Well becomes an Injector */
-        auto injectionProps2 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+        auto injectionProps2 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
         injectionProps2->reservoirInjectionRate.reset(200);
         well.updateInjection(injectionProps2);
         BOOST_CHECK_EQUAL( false , well.isProducer());
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
         Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
 
         /* Set rates => Well becomes a producer; injection rate should be set to 0. */
-        auto injectionProps3 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+        auto injectionProps3 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
         well.updateInjection(injectionProps3);
 
         auto properties = std::make_shared<Opm::WellProductionProperties>( well.getProductionProperties() );
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
     BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPLimit.get<double>());
     BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Opm::WellProducer::BHP ));
 
-    auto injProps = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+    auto injProps = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps->THPLimit.reset(200);
     well.updateInjection(injProps);
     BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPLimit.get<double>());
@@ -293,12 +293,12 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 BOOST_AUTO_TEST_CASE(InjectorType) {
     Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
 
-    auto injectionProps = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
-    injectionProps->injectorType = Opm::WellInjector::WATER;
+    auto injectionProps = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
+    injectionProps->injectorType = Opm::Well2::InjectorType::WATER;
     well.updateInjection(injectionProps);
     // TODO: Should we test for something other than wate here, as long as
     //       the default value for InjectorType is WellInjector::WATER?
-    BOOST_CHECK_EQUAL( Opm::WellInjector::WATER , well.getInjectionProperties().injectorType);
+    BOOST_CHECK( Opm::Well2::InjectorType::WATER == well.getInjectionProperties().injectorType);
 }
 
 
@@ -359,20 +359,20 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
 
-    auto injProps1 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+    auto injProps1 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps1->surfaceInjectionRate.reset(100);
     injProps1->addInjectionControl(Opm::WellInjector::RATE);
     well.updateInjection(injProps1);
     BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
 
-    auto injProps2 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+    auto injProps2 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps2->reservoirInjectionRate.reset(100);
     injProps2->addInjectionControl(Opm::WellInjector::RESV);
     well.updateInjection(injProps2);
     BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
 
-    auto injProps3 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+    auto injProps3 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps3->BHPLimit.reset(100);
     injProps3->addInjectionControl(Opm::WellInjector::BHP);
     injProps3->THPLimit.reset(100);
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::BHP ));
 
 
-    auto injProps4 = std::make_shared<Opm::WellInjectionProperties>(well.getInjectionProperties());
+    auto injProps4 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps4->dropInjectionControl( Opm::WellInjector::RESV );
     well.updateInjection(injProps4);
     BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RATE ));
@@ -748,7 +748,7 @@ BOOST_AUTO_TEST_CASE(BHP_CMODE)
 
 BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
     const Opm::WellProductionProperties Pproperties("W");
-    const Opm::WellInjectionProperties Iproperties("W");
+    const Opm::Well2::WellInjectionProperties Iproperties("W");
 
     BOOST_CHECK_EQUAL( Pproperties.controlMode , Opm::WellProducer::CMODE_UNDEFINED );
     BOOST_CHECK_EQUAL( Iproperties.controlMode , Opm::WellInjector::CMODE_UNDEFINED );
@@ -782,7 +782,7 @@ BOOST_AUTO_TEST_CASE(ExtraAccessors) {
     Opm::Well2 inj("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
     Opm::Well2 prod("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
 
-    auto inj_props= std::make_shared<Opm::WellInjectionProperties>(inj.getInjectionProperties());
+    auto inj_props= std::make_shared<Opm::Well2::WellInjectionProperties>(inj.getInjectionProperties());
     inj_props->VFPTableNumber = 100;
     inj.updateInjection(inj_props);
 

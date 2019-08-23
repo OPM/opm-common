@@ -386,7 +386,7 @@ bool Well2::isInjector() const {
 }
 
 
-WellInjector::TypeEnum Well2::injectorType() const {
+Well2::InjectorType Well2::injectorType() const {
     if (this->producer)
         throw std::runtime_error("Can not access injectorType attribute of a producer");
 
@@ -498,7 +498,7 @@ const WellSegments& Well2::getSegments() const {
         throw std::logic_error("Asked for segment information in not MSW well: " + this->name());
 }
 
-const WellInjectionProperties& Well2::getInjectionProperties() const {
+const Well2::WellInjectionProperties& Well2::getInjectionProperties() const {
     return *this->injection;
 }
 
@@ -716,9 +716,9 @@ double Well2::injection_rate(const SummaryState& st, Phase phase_arg) const {
 
     const auto type = controls.injector_type;
 
-    if( phase_arg == Phase::WATER && type != WellInjector::WATER ) return 0.0;
-    if( phase_arg == Phase::OIL   && type != WellInjector::OIL   ) return 0.0;
-    if( phase_arg == Phase::GAS   && type != WellInjector::GAS   ) return 0.0;
+    if( phase_arg == Phase::WATER && type != Well2::InjectorType::WATER ) return 0.0;
+    if( phase_arg == Phase::OIL   && type != Well2::InjectorType::OIL   ) return 0.0;
+    if( phase_arg == Phase::GAS   && type != Well2::InjectorType::GAS   ) return 0.0;
 
     return controls.surface_rate;
 }
@@ -742,7 +742,7 @@ ProductionControls Well2::productionControls(const SummaryState& st) const {
         throw std::logic_error("Trying to get production data from an injector");
 }
 
-InjectionControls Well2::injectionControls(const SummaryState& st) const {
+Well2::InjectionControls Well2::injectionControls(const SummaryState& st) const {
     if (!this->isProducer()) {
         auto controls = this->injection->controls(this->unit_system, st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
@@ -807,6 +807,37 @@ Well2::Status Well2::StatusFromString(const std::string& stringValue) {
         return Status::STOP;
     else if (stringValue == "AUTO")
         return Status::AUTO;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+const std::string Well2::InjectorType2String( Well2::InjectorType enumValue ) {
+    switch( enumValue ) {
+    case InjectorType::OIL:
+        return "OIL";
+    case InjectorType::GAS:
+        return "GAS";
+    case InjectorType::WATER:
+        return "WATER";
+    case InjectorType::MULTI:
+        return "MULTI";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+Well2::InjectorType Well2::InjectorTypeFromString( const std::string& stringValue ) {
+    if (stringValue == "OIL")
+        return InjectorType::OIL;
+    else if (stringValue == "WATER")
+        return InjectorType::WATER;
+    else if (stringValue == "WAT")
+        return InjectorType::WATER;
+    else if (stringValue == "GAS")
+        return InjectorType::GAS;
+    else if (stringValue == "MULTI")
+        return InjectorType::MULTI;
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }

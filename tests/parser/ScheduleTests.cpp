@@ -2518,34 +2518,34 @@ BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestInjectorEnum2String) {
-    BOOST_CHECK_EQUAL( "OIL"  ,  WellInjector::Type2String(WellInjector::OIL));
-    BOOST_CHECK_EQUAL( "GAS"  ,  WellInjector::Type2String(WellInjector::GAS));
-    BOOST_CHECK_EQUAL( "WATER" , WellInjector::Type2String(WellInjector::WATER));
-    BOOST_CHECK_EQUAL( "MULTI" , WellInjector::Type2String(WellInjector::MULTI));
+    BOOST_CHECK_EQUAL( "OIL"  ,  Well2::InjectorType2String(Well2::InjectorType::OIL));
+    BOOST_CHECK_EQUAL( "GAS"  ,  Well2::InjectorType2String(Well2::InjectorType::GAS));
+    BOOST_CHECK_EQUAL( "WATER" , Well2::InjectorType2String(Well2::InjectorType::WATER));
+    BOOST_CHECK_EQUAL( "MULTI" , Well2::InjectorType2String(Well2::InjectorType::MULTI));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestInjectorEnumFromString) {
-    BOOST_CHECK_THROW( WellInjector::TypeFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellInjector::OIL   , WellInjector::TypeFromString("OIL"));
-    BOOST_CHECK_EQUAL( WellInjector::WATER , WellInjector::TypeFromString("WATER"));
-    BOOST_CHECK_EQUAL( WellInjector::WATER , WellInjector::TypeFromString("WAT"));
-    BOOST_CHECK_EQUAL( WellInjector::GAS   , WellInjector::TypeFromString("GAS"));
-    BOOST_CHECK_EQUAL( WellInjector::MULTI , WellInjector::TypeFromString("MULTI"));
+    BOOST_CHECK_THROW( Well2::InjectorTypeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well2::InjectorType::OIL   == Well2::InjectorTypeFromString("OIL"));
+    BOOST_CHECK( Well2::InjectorType::WATER == Well2::InjectorTypeFromString("WATER"));
+    BOOST_CHECK( Well2::InjectorType::WATER == Well2::InjectorTypeFromString("WAT"));
+    BOOST_CHECK( Well2::InjectorType::GAS   == Well2::InjectorTypeFromString("GAS"));
+    BOOST_CHECK( Well2::InjectorType::MULTI == Well2::InjectorTypeFromString("MULTI"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestInjectorEnumLoop) {
-    BOOST_CHECK_EQUAL( WellInjector::OIL     , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::OIL ) ));
-    BOOST_CHECK_EQUAL( WellInjector::WATER   , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::WATER ) ));
-    BOOST_CHECK_EQUAL( WellInjector::GAS     , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::GAS ) ));
-    BOOST_CHECK_EQUAL( WellInjector::MULTI   , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::MULTI ) ));
+    BOOST_CHECK( Well2::InjectorType::OIL   == Well2::InjectorTypeFromString( Well2::InjectorType2String( Well2::InjectorType::OIL ) ));
+    BOOST_CHECK( Well2::InjectorType::WATER == Well2::InjectorTypeFromString( Well2::InjectorType2String( Well2::InjectorType::WATER ) ));
+    BOOST_CHECK( Well2::InjectorType::GAS   == Well2::InjectorTypeFromString( Well2::InjectorType2String( Well2::InjectorType::GAS ) ));
+    BOOST_CHECK( Well2::InjectorType::MULTI == Well2::InjectorTypeFromString( Well2::InjectorType2String( Well2::InjectorType::MULTI ) ));
 
-    BOOST_CHECK_EQUAL( "MULTI"    , WellInjector::Type2String(WellInjector::TypeFromString(  "MULTI" ) ));
-    BOOST_CHECK_EQUAL( "OIL"      , WellInjector::Type2String(WellInjector::TypeFromString(  "OIL" ) ));
-    BOOST_CHECK_EQUAL( "GAS"      , WellInjector::Type2String(WellInjector::TypeFromString(  "GAS" ) ));
-    BOOST_CHECK_EQUAL( "WATER"    , WellInjector::Type2String(WellInjector::TypeFromString(  "WATER" ) ));
+    BOOST_CHECK_EQUAL( "MULTI"    , Well2::InjectorType2String(Well2::InjectorTypeFromString(  "MULTI" ) ));
+    BOOST_CHECK_EQUAL( "OIL"      , Well2::InjectorType2String(Well2::InjectorTypeFromString(  "OIL" ) ));
+    BOOST_CHECK_EQUAL( "GAS"      , Well2::InjectorType2String(Well2::InjectorTypeFromString(  "GAS" ) ));
+    BOOST_CHECK_EQUAL( "WATER"    , Well2::InjectorType2String(Well2::InjectorTypeFromString(  "WATER" ) ));
 }
 
 /*****************************************************************/

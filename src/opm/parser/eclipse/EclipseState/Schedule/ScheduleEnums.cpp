@@ -345,37 +345,6 @@ namespace Opm {
 
 
     namespace WellInjector {
-
-        const std::string Type2String( TypeEnum enumValue ) {
-            switch( enumValue ) {
-            case OIL:
-                return "OIL";
-            case GAS:
-                return "GAS";
-            case WATER:
-                return "WATER";
-            case MULTI:
-                return "MULTI";
-            default:
-                throw std::invalid_argument("unhandled enum value");
-            }
-        }
-
-        TypeEnum TypeFromString( const std::string& stringValue ) {
-            if (stringValue == "OIL")
-                return OIL;
-            else if (stringValue == "WATER")
-                return WATER;
-            else if (stringValue == "WAT")
-                return WATER;
-            else if (stringValue == "GAS")
-                return GAS;
-            else if (stringValue == "MULTI")
-                return MULTI;
-            else
-                throw std::invalid_argument("Unknown enum state string: " + stringValue );
-        }
-
         /*****************************************************************/
 
         const std::string ControlMode2String( ControlModeEnum enumValue ) {

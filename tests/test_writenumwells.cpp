@@ -89,17 +89,17 @@ void verifyWellState(const std::string& rst_filename,
       }
       else {
           switch( well.getInjectionProperties(  ).injectorType ) {
-              case WellInjector::WATER:
-                  well_type = ERT_WATER_INJECTOR;
-                  break;
-              case WellInjector::GAS:
-                  well_type = ERT_GAS_INJECTOR;
-                  break;
-              case WellInjector::OIL:
-                  well_type = ERT_OIL_INJECTOR;
-                  break;
-              default:
-                  break;
+          case Well2::InjectorType::WATER:
+              well_type = ERT_WATER_INJECTOR;
+              break;
+          case Well2::InjectorType::GAS:
+              well_type = ERT_GAS_INJECTOR;
+              break;
+          case Well2::InjectorType::OIL:
+              well_type = ERT_OIL_INJECTOR;
+              break;
+          default:
+              break;
           }
       }
 

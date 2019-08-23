@@ -740,7 +740,7 @@ namespace {
                         properties->resetDefaultBHPLimit();
                         well2->updateProducer(true);
 
-                        auto inj_props = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                        auto inj_props = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                         inj_props->setBHPLimit(0);
                         well2->updateInjection(inj_props);
                     }
@@ -890,7 +890,7 @@ namespace {
                     bool update_well = false;
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-                    auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                    auto injection = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name);
 
                     if (well2->updateProducer(false))
@@ -953,7 +953,7 @@ namespace {
                     bool update_well = false;
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-                    auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                    auto injection = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJH(record, well2->isProducer(), well_name);
 
                     if (well2->updateProducer(false))
@@ -1205,7 +1205,7 @@ namespace {
                 {
                     const auto& well = this->getWell2(well_name, currentStep);
                     const auto& inj = well.getInjectionProperties();
-                    if (!well.isProducer() && inj.injectorType == WellInjector::GAS) {
+                    if (!well.isProducer() && inj.injectorType == Well2::InjectorType::GAS) {
                         if (well.getSolventFraction() != fraction) {
                             auto new_well = std::make_shared<Well2>(well);
                             new_well->updateSolventFraction(fraction);
@@ -1262,7 +1262,7 @@ namespace {
                     if (current_temp != temp && !well.isProducer()) {
                         auto& dynamic_state = this->wells_static.at(well_name);
                         auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
-                        auto inj = std::make_shared<WellInjectionProperties>(well_ptr->getInjectionProperties());
+                        auto inj = std::make_shared<Well2::WellInjectionProperties>(well_ptr->getInjectionProperties());
                         inj->temperature = temp;
                         well_ptr->updateInjection(inj);
                         this->updateWell(well_ptr, currentStep);
@@ -1296,7 +1296,7 @@ namespace {
                     if (current_temp != temp && !well.isProducer()) {
                         auto& dynamic_state = this->wells_static.at(well_name);
                         auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
-                        auto inj = std::make_shared<WellInjectionProperties>(well_ptr->getInjectionProperties());
+                        auto inj = std::make_shared<Well2::WellInjectionProperties>(well_ptr->getInjectionProperties());
                         inj->temperature = temp;
                         well_ptr->updateInjection(inj);
                         this->updateWell(well_ptr, currentStep);
@@ -1339,7 +1339,6 @@ namespace {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
             const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
-
             if (well_names.empty())
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
@@ -1427,7 +1426,7 @@ namespace {
                         if (cmode == WellTarget::GUID)
                             update |= well2->updateWellGuideRate(newValue);
                     } else {
-                        auto inj = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                        auto inj = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                         inj->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
                         update = well2->updateInjection(inj);
                         if (cmode == WellTarget::GUID)

@@ -85,13 +85,6 @@ namespace Opm {
 
 
     namespace WellInjector {
-        enum TypeEnum {
-            WATER = 1,
-            GAS = 2,
-            OIL = 3,
-            MULTI = 4
-        };
-
 
         enum ControlModeEnum {
             RATE =  1 ,
@@ -111,9 +104,6 @@ namespace Opm {
 
         const std::string ControlMode2String( ControlModeEnum enumValue );
         ControlModeEnum ControlModeFromString( const std::string& stringValue );
-
-        const std::string Type2String( TypeEnum enumValue );
-        TypeEnum TypeFromString( const std::string& stringValue );
     }
 
 

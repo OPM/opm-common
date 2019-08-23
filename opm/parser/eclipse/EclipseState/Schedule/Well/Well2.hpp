@@ -45,6 +45,8 @@ class DeckKeyword;
 struct WellInjectionProperties;
 class WellProductionProperties;
 class UDQActive;
+class UDQConfig;
+
 
 struct WellGuideRate {
     bool available;
@@ -62,9 +64,92 @@ public:
         SHUT = 3,
         AUTO = 4
     };
-
     static std::string Status2String(Status enumValue);
     static Status StatusFromString(const std::string& stringValue);
+
+
+    enum class InjectorType {
+        WATER = 1,
+        GAS = 2,
+        OIL = 3,
+        MULTI = 4
+    };
+    static const std::string InjectorType2String( InjectorType enumValue );
+    static InjectorType InjectorTypeFromString( const std::string& stringValue );
+
+
+    struct InjectionControls {
+    public:
+        InjectionControls(int controls_arg) :
+            controls(controls_arg)
+        {}
+
+        double bhp_limit;
+        double thp_limit;
+
+
+        InjectorType injector_type;
+        WellInjector::ControlModeEnum cmode;
+        double surface_rate;
+        double reservoir_rate;
+        double temperature;
+        int    vfp_table_number;
+        bool   prediction_mode;
+
+        bool hasControl(WellInjector::ControlModeEnum cmode_arg) const {
+            return (this->controls & cmode_arg) != 0;
+        }
+    private:
+        int controls;
+    };
+
+
+
+    struct WellInjectionProperties {
+        std::string name;
+        UDAValue  surfaceInjectionRate;
+        UDAValue  reservoirInjectionRate;
+        UDAValue  BHPLimit;
+        UDAValue  THPLimit;
+        double  temperature;
+        double  BHPH;
+        double  THPH;
+        int     VFPTableNumber;
+        bool    predictionMode;
+        int     injectionControls;
+        Well2::InjectorType injectorType;
+        WellInjector::ControlModeEnum controlMode;
+
+        bool operator==(const WellInjectionProperties& other) const;
+        bool operator!=(const WellInjectionProperties& other) const;
+
+        WellInjectionProperties(const std::string& wname);
+        void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
+        void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
+        void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
+        bool hasInjectionControl(WellInjector::ControlModeEnum controlModeArg) const {
+            if (injectionControls & controlModeArg)
+                return true;
+            else
+                return false;
+        }
+
+        void dropInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
+            if ((injectionControls & controlModeArg) != 0)
+                injectionControls -= controlModeArg;
+        }
+
+        void addInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
+            if ((injectionControls & controlModeArg) == 0)
+                injectionControls += controlModeArg;
+        }
+
+        void resetDefaultHistoricalBHPLimit();
+
+        void setBHPLimit(const double limit);
+        InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
+        bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+    };
 
 
     Well2(const std::string& wname,
@@ -92,7 +177,7 @@ public:
     bool canOpen() const;
     bool isProducer() const;
     bool isInjector() const;
-    WellInjector::TypeEnum injectorType() const;
+    InjectorType injectorType() const;
     size_t seqIndex() const;
     bool getAutomaticShutIn() const;
     bool getAllowCrossFlow() const;
@@ -209,6 +294,8 @@ private:
     std::shared_ptr<const WellInjectionProperties> injection;
     std::shared_ptr<const WellSegments> segments;
 };
+
+std::ostream& operator<<( std::ostream&, const Well2::WellInjectionProperties& );
 
 
 }

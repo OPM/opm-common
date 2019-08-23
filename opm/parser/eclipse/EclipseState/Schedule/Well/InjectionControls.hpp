@@ -22,29 +22,5 @@
 #define INJECTION_CONTROLS_HPP
 
 namespace Opm {
-struct InjectionControls {
-public:
-    InjectionControls(int controls_arg) :
-        controls(controls_arg)
-    {}
-
-    double bhp_limit;
-    double thp_limit;
-
-
-    WellInjector::TypeEnum injector_type;
-    WellInjector::ControlModeEnum cmode;
-    double surface_rate;
-    double reservoir_rate;
-    double temperature;
-    int    vfp_table_number;
-    bool   prediction_mode;
-
-    bool hasControl(WellInjector::ControlModeEnum cmode_arg) const {
-        return (this->controls & cmode_arg) != 0;
-    }
-private:
-    int controls;
-};
 }
 #endif

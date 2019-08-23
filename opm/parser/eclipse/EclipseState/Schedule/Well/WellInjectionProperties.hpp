@@ -34,53 +34,6 @@ namespace Opm {
     class UDQActive;
     class UDQConfig;
 
-    struct WellInjectionProperties {
-        std::string name;
-        UDAValue  surfaceInjectionRate;
-        UDAValue  reservoirInjectionRate;
-        UDAValue  BHPLimit;
-        UDAValue  THPLimit;
-        double  temperature;
-        double  BHPH;
-        double  THPH;
-        int     VFPTableNumber;
-        bool    predictionMode;
-        int     injectionControls;
-        WellInjector::TypeEnum injectorType;
-        WellInjector::ControlModeEnum controlMode;
-
-        bool operator==(const WellInjectionProperties& other) const;
-        bool operator!=(const WellInjectionProperties& other) const;
-
-        WellInjectionProperties(const std::string& wname);
-        void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
-        void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
-        void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
-        bool hasInjectionControl(WellInjector::ControlModeEnum controlModeArg) const {
-            if (injectionControls & controlModeArg)
-                return true;
-            else
-                return false;
-        }
-
-        void dropInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
-            if ((injectionControls & controlModeArg) != 0)
-                injectionControls -= controlModeArg;
-        }
-
-        void addInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
-            if ((injectionControls & controlModeArg) == 0)
-                injectionControls += controlModeArg;
-        }
-
-        void resetDefaultHistoricalBHPLimit();
-
-        void setBHPLimit(const double limit);
-        InjectionControls controls(const UnitSystem& unit_system, const SummaryState& st, double udq_default) const;
-        bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
-    };
-
-    std::ostream& operator<<( std::ostream&, const WellInjectionProperties& );
 }
 
 #endif
