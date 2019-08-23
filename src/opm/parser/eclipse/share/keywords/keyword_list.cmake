@@ -9,6 +9,25 @@
 # you are therefore encouraged to go to the opm-simulators repository and update
 # the file: opm/autodiff/MissingFeatures.cpp
 
+#Some keywords are found to be of 'special' structure:
+#W             WHAT
+#ECONT         Terminates with two /
+#COALNUM       matrix structure
+#COMPDATM      alias for COMPDATL
+#COMPINJK      undef default
+#COMPRP        strange defaults
+#COMPRPL       strange defaults
+#COMPVE        default: negative
+#COMPVEL       default: negative
+#CSKIN         strange default
+#DEPTHTAB      different unit in table
+#DIFFCOAL      default for item3 same as value for item 1
+#DIFFMR-       no support for character '-' in kw. 
+#DIFFMTH-      no support for character '-' in kw. 
+#DIFFMX-       no support for character '-' in kw. 
+#DIFFMY-       no support for character '-' in kw. 
+#DYNAMICR      records of records
+
 
 set( keywords
      000_Eclipse100/A/ACTDIMS
