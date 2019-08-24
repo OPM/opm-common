@@ -21,7 +21,6 @@
 #include <cmath>
 #include <opm/common/utility/numeric/calculateCellVol.hpp>
 
-
 /* 
     Cell volume calculation based on following publication:
    
@@ -89,7 +88,7 @@ double perm123sign(int i1, int i2, int i3){
    if ((i1 ==1 ) && (i2==2) && (i3 == 3)){
       temp = 1.0;
    }
-   
+
    if ((i1 == 1) && (i2==3) && (i3 == 2)){
       temp = -1.0;
    }
@@ -113,7 +112,7 @@ double perm123sign(int i1, int i2, int i3){
    return temp;
 }
 
-double calculateCellVol(const std::vector<double>& X, const std::vector<double>& Y, const std::vector<double>& Z){
+double calculateCellVol(const std::array<double,8>& X, const std::array<double,8>& Y, const std::array<double,8>& Z){
       
   double volume = 0.0;
   const double* vect[3]; 
@@ -134,7 +133,8 @@ double calculateCellVol(const std::vector<double>& X, const std::vector<double>&
 	     assert(false);
 	     vect[j] = 0;
         } 
-     }
+     }  
+
     
      for (int pb = 0; pb < 2; ++pb){
        for (int pg = 0; pg < 2; ++pg){

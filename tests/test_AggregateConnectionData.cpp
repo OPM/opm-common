@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(InactiveCell) {
     std::vector<int> actnum(500, 1);
     // Here we deactive the cell holding connection number 2.
     actnum[simCase.grid.getGlobalIndex(2,4,1)] = 0;
-    simCase.grid.resetACTNUM(actnum.data());
+    simCase.grid.resetACTNUM(actnum);
 
     auto conn1 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
     conn1.captureDeclaredConnData(simCase.sched,

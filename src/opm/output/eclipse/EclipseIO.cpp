@@ -118,8 +118,7 @@ void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) {
                                               ECL_EGRID_FILE,
                                               ioConfig.getFMTOUT() ));
 
-    this->grid.addNNC( nnc );
-    this->grid.save( egridFile, this->es.getDeckUnitSystem().getType());
+    this->grid.save( egridFile, ioConfig.getFMTOUT(), nnc, this->es.getDeckUnitSystem());
 }
 
 /*

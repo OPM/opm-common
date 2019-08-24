@@ -120,19 +120,19 @@ void checkEgridFile( const EclipseGrid& eclGrid ) {
         std::string keywordName(ecl_kw_get_header(eclKeyword));
         if (keywordName == "COORD") {
             std::vector< double > sourceData;
-            eclGrid.exportCOORD( sourceData );
+            sourceData = eclGrid.getCOORD();
             auto resultData = getErtData< float >( eclKeyword );
             compareErtData(sourceData, resultData, 1e-6);
         }
         else if (keywordName == "ZCORN") {
             std::vector< double > sourceData;
-            eclGrid.exportZCORN(sourceData);
+            sourceData = eclGrid.getZCORN();
             auto resultData = getErtData< float >( eclKeyword );
             compareErtData(sourceData, resultData, /*percentTolerance=*/1e-6);
         }
         else if (keywordName == "ACTNUM") {
             std::vector< int > sourceData( numCells );
-            eclGrid.exportACTNUM(sourceData);
+            sourceData = eclGrid.getACTNUM();
             auto resultData = getErtData< int >( eclKeyword );
 
             if( sourceData.empty() )

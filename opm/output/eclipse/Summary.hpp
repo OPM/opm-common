@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <ert/ecl/ecl_sum.h>
+#include <ert/util/ert_unique_ptr.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>

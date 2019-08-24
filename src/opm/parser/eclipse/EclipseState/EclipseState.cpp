@@ -61,7 +61,7 @@ namespace Opm {
         m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, m_eclipseProperties ),
         m_transMult(         GridDims(deck), deck, m_eclipseProperties )
     {
-        m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData().data());
+        m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData());
 
         if( this->runspec().phases().size() < 3 )
             OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )

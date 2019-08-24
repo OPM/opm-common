@@ -75,9 +75,8 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
 
     std::vector<int> actnum;
 
-    actnum.push_back(100);
-    grid.exportACTNUM( actnum );
-    BOOST_CHECK_EQUAL( actnum.size() , 0U );
+    actnum = grid.getACTNUM();
+    BOOST_CHECK_EQUAL( actnum.size() , 500U );
 }
 
 
@@ -95,13 +94,13 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     std::vector<int> actnum;
     size_t volume = grid.getNX()*grid.getNY()*grid.getNZ();
 
-    grid.exportCOORD( coord );
+    coord = grid.getCOORD();
     BOOST_CHECK_EQUAL( coord.size() , (grid.getNX() + 1) * (grid.getNY() + 1) * 6);
 
-    grid.exportZCORN( zcorn );
+    zcorn = grid.getZCORN();
     BOOST_CHECK_EQUAL( zcorn.size() , volume * 8);
 
-    grid.exportACTNUM( actnum );
+    actnum = grid.getACTNUM();
     BOOST_CHECK_EQUAL( actnum.size() , volume );
 
     {
