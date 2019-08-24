@@ -1,7 +1,7 @@
 import unittest
 import datetime
 from opm.tools import *
-from opm.parser import load_deck_string, load_deck
+from opm.io import load_deck_string, load_deck
 from utils import tmp
 class TestTimeVector(unittest.TestCase):
 

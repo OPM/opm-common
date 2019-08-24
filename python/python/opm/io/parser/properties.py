@@ -3,8 +3,8 @@ from os.path import isfile
 
 from opm import libopmcommon_python as lib
 from .sunbeam import delegate
-from .schedule import Schedule
-from .config import EclipseConfig
+from ..schedule import Schedule
+from ..config import EclipseConfig
 
 @delegate(lib.EclipseState)
 class EclipseState(object):

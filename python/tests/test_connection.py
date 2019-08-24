@@ -1,11 +1,11 @@
 import unittest
-import opm.parser
+import opm.io
 
 class TestWells(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.sch = opm.parser.parse('tests/spe3/SPE3CASE1.DATA').schedule 
+        cls.sch = opm.io.parse('tests/spe3/SPE3CASE1.DATA').schedule 
         cls.timesteps = cls.sch.timesteps
 
     def test_connection_pos(self):
@@ -26,8 +26,8 @@ class TestWells(unittest.TestCase):
                     self.assertEqual("OPEN", connection.state)
 
     def test_filters(self):
-        flowing = opm.parser.schedule.Connection.flowing()
-        closed = opm.parser.schedule.Connection.closed()
+        flowing = opm.io.schedule.Connection.flowing()
+        closed = opm.io.schedule.Connection.closed()
         connections = self.sch.get_wells(0)[0].connections()
         self.assertEqual(len(list(filter(flowing, connections))), 2)
         self.assertEqual(len(list(filter(closed, connections))), 0)
