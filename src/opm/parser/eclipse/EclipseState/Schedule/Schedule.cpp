@@ -516,7 +516,11 @@ namespace {
     }
 
 
-  void Schedule::handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t /* currentStep */) {
+    /*
+      The COMPORD keyword is handled together with the WELSPECS keyword in the
+      handleWELSPECS function.
+    */
+    void Schedule::handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t /* currentStep */) {
         for (const auto& record : compordKeyword) {
             const auto& methodItem = record.getItem<ParserKeywords::COMPORD::ORDER_TYPE>();
             if ((methodItem.get< std::string >(0) != "TRACK")  && (methodItem.get< std::string >(0) != "INPUT")) {

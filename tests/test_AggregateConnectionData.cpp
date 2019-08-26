@@ -395,11 +395,10 @@ COMPDAT
 
  'PROD' 1 5 2 2   3*  0.2   3*  'X' /
  'PROD' 2 5 2 2   3*  0.2   3*  'X' /
- 'PROD' 3 5 2 2   3*  0.2   3*  'X' /
+ 'PROD' 3 5 2 2   3*  0.2   3*  'X' /   -- This connection is explicitly made inactive in the InactiveCell test
  'PROD' 4 5 2 2   3*  0.2   3*  'X' /
  'PROD' 5 5 2 2   3*  0.2   3*  'X' /
-
-'WINJ' 10 1  9 9   3*  0.2   3*  'X' /
+ 'WINJ' 10 1  9 9   3*  0.2   3*  'X' /
  'WINJ'   9 1  9 9   3*  0.2   3*  'X' /
  'WINJ'   8 1  9 9   3*  0.2   3*  'X' /
  'WINJ'   7 1  9 9   3*  0.2   3*  'X' /
@@ -570,6 +569,7 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
     // ICONN (PROD)
     {
 	using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+
         auto start = 0*ih.niconz;
 
         const auto& iConn = amconn.getIConn();
@@ -703,6 +703,88 @@ BOOST_AUTO_TEST_CASE (Declared_Connection_Data)
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::Pressure ],         units.from_si(M::pressure,                         218.) , 1.0e-5);   // WINJ - conn 3 : Connection pressure
 	BOOST_CHECK_CLOSE(xconn[i0 + Ix::ResVRate ],                                                              0.  , 1.0e-5);  // WINJ - conn 3 : Reservoir volume rate
 
+    }
+}
+
+
+BOOST_AUTO_TEST_CASE(InactiveCell) {
+    auto simCase = SimulationCase{first_sim()};
+    const auto rptStep = std::size_t{1};
+    const auto ih = MockIH {static_cast<int>(simCase.sched.getWells2(rptStep).size())};
+    const Opm::data::WellRates wrc = wr();
+    auto conn0 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
+    conn0.captureDeclaredConnData(simCase.sched,
+                                  simCase.grid,
+                                  simCase.es.getUnits(),
+                                  wrc,
+                                  rptStep
+                                  );
+
+    std::vector<int> actnum(500, 1);
+    // Here we deactive the cell holding connection number 2.
+    actnum[simCase.grid.getGlobalIndex(2,4,1)] = 0;
+    simCase.grid.resetACTNUM(actnum.data());
+
+    auto conn1 = Opm::RestartIO::Helpers::AggregateConnectionData{ih.value};
+    conn1.captureDeclaredConnData(simCase.sched,
+                                  simCase.grid,
+                                  simCase.es.getUnits(),
+                                  wrc,
+                                  rptStep
+                                  );
+
+    const std::size_t num_test_connections = 4;
+
+    {
+        using IC = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
+        const auto iconn0 = conn0.getIConn();
+        const auto iconn1 = conn1.getIConn();
+        for (std::size_t conn_index = 0; conn_index < num_test_connections; conn_index++) {
+            std::size_t offset1 = conn_index * ih.niconz;
+            std::size_t offset0 = offset1;
+
+            if (conn_index >= 2)
+                offset0 += ih.niconz;
+
+            for (std::size_t elm_index = 0; elm_index < ih.niconz; elm_index++) {
+                if (elm_index == IC::SeqIndex && conn_index >= 2) {
+                    // Comparing the connection ID - which should be different;
+                    BOOST_CHECK_EQUAL(iconn1[offset1 + elm_index] + 1 , iconn0[offset0 + elm_index]);
+                } else
+                    BOOST_CHECK_EQUAL(iconn1[offset1 + elm_index], iconn0[offset0 + elm_index]);
+            }
+        }
+    }
+
+
+    {
+        const auto sconn0 = conn0.getSConn();
+        const auto sconn1 = conn1.getSConn();
+        for (std::size_t conn_index = 0; conn_index < num_test_connections; conn_index++) {
+            std::size_t offset1 = conn_index * ih.nsconz;
+            std::size_t offset0 = offset1;
+
+            if (conn_index >= 2)
+                offset0 += ih.nsconz;
+
+            for (std::size_t elm_index = 0; elm_index < ih.nsconz; elm_index++)
+                BOOST_CHECK_EQUAL(sconn1[offset1 + elm_index], sconn0[offset0 + elm_index]);
+        }
+    }
+
+    // The XCON data consults the open/shut status of the connection. That
+    // should already be correct, i.e. shut, for an inactive cell. Hence no
+    // change in the XCON vector.
+    {
+        const auto xconn0 = conn0.getXConn();
+        const auto xconn1 = conn1.getXConn();
+        for (std::size_t conn_index = 0; conn_index < num_test_connections; conn_index++) {
+            std::size_t offset1 = conn_index * ih.nxconz;
+            std::size_t offset0 = offset1;
+
+            for (std::size_t elm_index = 0; elm_index < ih.nxconz; elm_index++)
+                BOOST_CHECK_EQUAL(xconn1[offset1 + elm_index], xconn0[offset0 + elm_index]);
+        }
     }
 }
 
