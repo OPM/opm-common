@@ -172,7 +172,7 @@ namespace {
                 const auto wmctl = controls.cmode;
                 const auto wtype = controls.injector_type;
 
-                using CMode = ::Opm::WellInjector::ControlModeEnum;
+                using CMode = ::Opm::Well2::InjectorCMode;
                 using WType = ::Opm::Well2::InjectorType;
 
                 switch (wmctl) {
@@ -513,7 +513,7 @@ namespace {
             else if (well.isInjector()) {
                 const auto& ic = well.injectionControls(smry);
 
-                using IP = ::Opm::WellInjector::ControlModeEnum;
+                using IP = ::Opm::Well2::InjectorCMode;
                 using IT = ::Opm::Well2::InjectorType;
 
                 if (ic.hasControl(IP::RATE)) {

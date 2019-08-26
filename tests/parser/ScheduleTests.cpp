@@ -1455,13 +1455,13 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     BOOST_CHECK_EQUAL(sched.getWell2("I", 1).getInjectionProperties().BHPLimit.get<double>(), 600 * 1e5); // 1
     BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().BHPLimit.get<double>(), 600 * 1e5); // 2
 
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), true);
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().hasInjectionControl(Opm::Well2::InjectorCMode::BHP), true);
 
     // The well is producer for timestep 3 and the injection properties BHPLimit should be set to zero.
     BOOST_CHECK(sched.getWell2("I", 3).isProducer());
     BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getInjectionProperties().BHPLimit.get<double>(), 0); // 3
     BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::BHP), true );
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), true );
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().hasInjectionControl(Opm::Well2::InjectorCMode::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().BHPLimit.get<double>(), 6891.2 * 1e5); // 4
 }
 
@@ -2551,37 +2551,37 @@ BOOST_AUTO_TEST_CASE(TestInjectorEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InjectorCOntrolMopdeEnum2String) {
-    BOOST_CHECK_EQUAL( "RATE"  ,  WellInjector::ControlMode2String(WellInjector::RATE));
-    BOOST_CHECK_EQUAL( "RESV"  ,  WellInjector::ControlMode2String(WellInjector::RESV));
-    BOOST_CHECK_EQUAL( "BHP" , WellInjector::ControlMode2String(WellInjector::BHP));
-    BOOST_CHECK_EQUAL( "THP" , WellInjector::ControlMode2String(WellInjector::THP));
-    BOOST_CHECK_EQUAL( "GRUP" , WellInjector::ControlMode2String(WellInjector::GRUP));
+    BOOST_CHECK_EQUAL( "RATE"  , Well2::InjectorCMode2String(Well2::InjectorCMode::RATE));
+    BOOST_CHECK_EQUAL( "RESV"  , Well2::InjectorCMode2String(Well2::InjectorCMode::RESV));
+    BOOST_CHECK_EQUAL( "BHP"   , Well2::InjectorCMode2String(Well2::InjectorCMode::BHP));
+    BOOST_CHECK_EQUAL( "THP"   , Well2::InjectorCMode2String(Well2::InjectorCMode::THP));
+    BOOST_CHECK_EQUAL( "GRUP"  , Well2::InjectorCMode2String(Well2::InjectorCMode::GRUP));
 }
 
 
 BOOST_AUTO_TEST_CASE(InjectorControlModeEnumFromString) {
-    BOOST_CHECK_THROW( WellInjector::ControlModeFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellInjector::RATE   , WellInjector::ControlModeFromString("RATE"));
-    BOOST_CHECK_EQUAL( WellInjector::BHP , WellInjector::ControlModeFromString("BHP"));
-    BOOST_CHECK_EQUAL( WellInjector::RESV   , WellInjector::ControlModeFromString("RESV"));
-    BOOST_CHECK_EQUAL( WellInjector::THP , WellInjector::ControlModeFromString("THP"));
-    BOOST_CHECK_EQUAL( WellInjector::GRUP , WellInjector::ControlModeFromString("GRUP"));
+    BOOST_CHECK_THROW( Well2::InjectorCModeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well2::InjectorCMode::RATE == Well2::InjectorCModeFromString("RATE"));
+    BOOST_CHECK( Well2::InjectorCMode::BHP  == Well2::InjectorCModeFromString("BHP"));
+    BOOST_CHECK( Well2::InjectorCMode::RESV == Well2::InjectorCModeFromString("RESV"));
+    BOOST_CHECK( Well2::InjectorCMode::THP  == Well2::InjectorCModeFromString("THP"));
+    BOOST_CHECK( Well2::InjectorCMode::GRUP == Well2::InjectorCModeFromString("GRUP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(InjectorControlModeEnumLoop) {
-    BOOST_CHECK_EQUAL( WellInjector::RATE     , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::RATE ) ));
-    BOOST_CHECK_EQUAL( WellInjector::BHP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::BHP ) ));
-    BOOST_CHECK_EQUAL( WellInjector::RESV     , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::RESV ) ));
-    BOOST_CHECK_EQUAL( WellInjector::THP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::THP ) ));
-    BOOST_CHECK_EQUAL( WellInjector::GRUP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::GRUP ) ));
+    BOOST_CHECK( Well2::InjectorCMode::RATE == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::RATE ) ));
+    BOOST_CHECK( Well2::InjectorCMode::BHP  == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::BHP ) ));
+    BOOST_CHECK( Well2::InjectorCMode::RESV == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::RESV ) ));
+    BOOST_CHECK( Well2::InjectorCMode::THP  == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::THP ) ));
+    BOOST_CHECK( Well2::InjectorCMode::GRUP == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::GRUP ) ));
 
-    BOOST_CHECK_EQUAL( "THP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "THP" ) ));
-    BOOST_CHECK_EQUAL( "RATE"      , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "RATE" ) ));
-    BOOST_CHECK_EQUAL( "RESV"      , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "RESV" ) ));
-    BOOST_CHECK_EQUAL( "BHP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "BHP" ) ));
-    BOOST_CHECK_EQUAL( "GRUP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "GRUP" ) ));
+    BOOST_CHECK_EQUAL( "THP"  , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "THP" ) ));
+    BOOST_CHECK_EQUAL( "RATE" , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "RATE" ) ));
+    BOOST_CHECK_EQUAL( "RESV" , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "RESV" ) ));
+    BOOST_CHECK_EQUAL( "BHP"  , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "BHP" ) ));
+    BOOST_CHECK_EQUAL( "GRUP" , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "GRUP" ) ));
 }
 
 

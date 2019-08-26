@@ -176,7 +176,7 @@ void Well2::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
 
     p->BHPLimit.reset( 0 );
-    p->dropInjectionControl( Opm::WellInjector::BHP );
+    p->dropInjectionControl( Opm::Well2::InjectorCMode::BHP );
     this->updateInjection( p );
     this->updateProducer(true);
 }
@@ -842,5 +842,37 @@ Well2::InjectorType Well2::InjectorTypeFromString( const std::string& stringValu
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+const std::string Well2::InjectorCMode2String( InjectorCMode enumValue ) {
+    switch( enumValue ) {
+    case InjectorCMode::RESV:
+        return "RESV";
+    case InjectorCMode::RATE:
+        return "RATE";
+    case InjectorCMode::BHP:
+        return "BHP";
+    case InjectorCMode::THP:
+        return "THP";
+    case InjectorCMode::GRUP:
+        return "GRUP";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+
+Well2::InjectorCMode Well2::InjectorCModeFromString(const std::string &stringValue) {
+    if (stringValue == "RATE")
+        return InjectorCMode::RATE;
+    else if (stringValue == "RESV")
+        return InjectorCMode::RESV;
+    else if (stringValue == "BHP")
+        return InjectorCMode::BHP;
+    else if (stringValue == "THP")
+        return InjectorCMode::THP;
+    else if (stringValue == "GRUP")
+        return InjectorCMode::GRUP;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue);
+}
 
 }

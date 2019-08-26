@@ -916,14 +916,14 @@ namespace {
                          "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
 
                          if (injection->surfaceInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(WellInjector::RATE) && injection->surfaceInjectionRate.get<double>() == 0) {
+                             if (injection->hasInjectionControl(Well2::InjectorCMode::RATE) && injection->surfaceInjectionRate.get<double>() == 0) {
                                  OpmLog::note(msg);
                                  updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                              }
                          }
 
                          if (injection->reservoirInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(WellInjector::RESV) && injection->reservoirInjectionRate.get<double>() == 0) {
+                             if (injection->hasInjectionControl(Well2::InjectorCMode::RESV) && injection->reservoirInjectionRate.get<double>() == 0) {
                                  OpmLog::note(msg);
                                  updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                              }

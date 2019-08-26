@@ -212,11 +212,11 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
             BOOST_CHECK_CLOSE(200000/Metric::Time , controls.reservoir_rate, 0.001);
             BOOST_CHECK_CLOSE(6895 * Metric::Pressure , controls.bhp_limit, 0.001);
             BOOST_CHECK_CLOSE(0 , controls.thp_limit , 0.001);
-            BOOST_CHECK_EQUAL( WellInjector::RESV  , controls.cmode);
-            BOOST_CHECK(  controls.hasControl(WellInjector::RATE ));
-            BOOST_CHECK(  controls.hasControl(WellInjector::RESV ));
-            BOOST_CHECK( !controls.hasControl(WellInjector::THP));
-            BOOST_CHECK(  controls.hasControl(WellInjector::BHP));
+            BOOST_CHECK( Well2::InjectorCMode::RESV == controls.cmode);
+            BOOST_CHECK(  controls.hasControl(Well2::InjectorCMode::RATE ));
+            BOOST_CHECK(  controls.hasControl(Well2::InjectorCMode::RESV ));
+            BOOST_CHECK( !controls.hasControl(Well2::InjectorCMode::THP));
+            BOOST_CHECK(  controls.hasControl(Well2::InjectorCMode::BHP));
         }
 
 
@@ -227,10 +227,10 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         {
             SummaryState st;
             const auto controls = sched.getWell2("W_1", 12).injectionControls(st);
-            BOOST_CHECK(  controls.hasControl(WellInjector::RATE ));
-            BOOST_CHECK( !controls.hasControl(WellInjector::RESV));
-            BOOST_CHECK(  controls.hasControl(WellInjector::THP ));
-            BOOST_CHECK(  controls.hasControl(WellInjector::BHP ));
+            BOOST_CHECK(  controls.hasControl(Well2::InjectorCMode::RATE ));
+            BOOST_CHECK( !controls.hasControl(Well2::InjectorCMode::RESV));
+            BOOST_CHECK(  controls.hasControl(Well2::InjectorCMode::THP ));
+            BOOST_CHECK(  controls.hasControl(Well2::InjectorCMode::BHP ));
         }
     }
 }

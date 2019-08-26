@@ -78,6 +78,24 @@ public:
     static InjectorType InjectorTypeFromString( const std::string& stringValue );
 
 
+    /*
+      The elements in this enum are used as bitmasks to keep track
+      of which controls are present, i.e. the 2^n structure must
+      be intact.
+    */
+    enum class InjectorCMode : int{
+        RATE =  1 ,
+        RESV =  2 ,
+        BHP  =  4 ,
+        THP  =  8 ,
+        GRUP = 16 ,
+        CMODE_UNDEFINED = 512
+    };
+    static const std::string InjectorCMode2String( InjectorCMode enumValue );
+    static InjectorCMode InjectorCModeFromString( const std::string& stringValue );
+
+
+
     struct InjectionControls {
     public:
         InjectionControls(int controls_arg) :
@@ -89,16 +107,17 @@ public:
 
 
         InjectorType injector_type;
-        WellInjector::ControlModeEnum cmode;
+        InjectorCMode cmode;
         double surface_rate;
         double reservoir_rate;
         double temperature;
         int    vfp_table_number;
         bool   prediction_mode;
 
-        bool hasControl(WellInjector::ControlModeEnum cmode_arg) const {
-            return (this->controls & cmode_arg) != 0;
+        bool hasControl(InjectorCMode cmode_arg) const {
+            return (this->controls & static_cast<int>(cmode_arg)) != 0;
         }
+
     private:
         int controls;
     };
@@ -118,7 +137,7 @@ public:
         bool    predictionMode;
         int     injectionControls;
         Well2::InjectorType injectorType;
-        WellInjector::ControlModeEnum controlMode;
+        InjectorCMode controlMode;
 
         bool operator==(const WellInjectionProperties& other) const;
         bool operator!=(const WellInjectionProperties& other) const;
@@ -127,21 +146,23 @@ public:
         void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
         void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
-        bool hasInjectionControl(WellInjector::ControlModeEnum controlModeArg) const {
-            if (injectionControls & controlModeArg)
+        bool hasInjectionControl(InjectorCMode controlModeArg) const {
+            if (injectionControls & static_cast<int>(controlModeArg))
                 return true;
             else
                 return false;
         }
 
-        void dropInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
-            if ((injectionControls & controlModeArg) != 0)
-                injectionControls -= controlModeArg;
+        void dropInjectionControl(InjectorCMode controlModeArg) {
+            auto int_arg = static_cast<int>(controlModeArg);
+            if ((injectionControls & int_arg) != 0)
+                injectionControls -= int_arg;
         }
 
-        void addInjectionControl(WellInjector::ControlModeEnum controlModeArg) {
-            if ((injectionControls & controlModeArg) == 0)
-                injectionControls += controlModeArg;
+        void addInjectionControl(InjectorCMode controlModeArg) {
+            auto int_arg = static_cast<int>(controlModeArg);
+            if ((injectionControls & int_arg) == 0)
+                injectionControls += int_arg;
         }
 
         void resetDefaultHistoricalBHPLimit();

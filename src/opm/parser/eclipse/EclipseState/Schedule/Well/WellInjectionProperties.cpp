@@ -38,7 +38,7 @@ namespace Opm {
     Well2::WellInjectionProperties::WellInjectionProperties(const std::string& wname)
         : name(wname),
           injectorType(InjectorType::WATER),
-          controlMode(WellInjector::CMODE_UNDEFINED)
+          controlMode(InjectorCMode::CMODE_UNDEFINED)
     {
         temperature=
             Metric::TemperatureOffset
@@ -57,23 +57,23 @@ namespace Opm {
 
         if (!record.getItem("RATE").defaultApplied(0)) {
             this->surfaceInjectionRate = record.getItem("RATE").get<UDAValue>(0);
-            this->addInjectionControl(WellInjector::RATE);
+            this->addInjectionControl(InjectorCMode::RATE);
         } else
-            this->dropInjectionControl(WellInjector::RATE);
+            this->dropInjectionControl(InjectorCMode::RATE);
 
 
         if (!record.getItem("RESV").defaultApplied(0)) {
             this->reservoirInjectionRate = record.getItem("RESV").get<UDAValue>(0);
-            this->addInjectionControl(WellInjector::RESV);
+            this->addInjectionControl(InjectorCMode::RESV);
         } else
-            this->dropInjectionControl(WellInjector::RESV);
+            this->dropInjectionControl(InjectorCMode::RESV);
 
 
         if (!record.getItem("THP").defaultApplied(0)) {
             this->THPLimit       = record.getItem("THP").get<UDAValue>(0);
-            this->addInjectionControl(WellInjector::THP);
+            this->addInjectionControl(InjectorCMode::THP);
         } else
-            this->dropInjectionControl(WellInjector::THP);
+            this->dropInjectionControl(InjectorCMode::THP);
 
         this->VFPTableNumber = record.getItem("VFP_TABLE").get< int >(0);
 
@@ -86,15 +86,15 @@ namespace Opm {
         */
         this->setBHPLimit(record.getItem("BHP").get<UDAValue>(0).get<double>());
         // BHP control should always be there.
-        this->addInjectionControl(WellInjector::BHP);
+        this->addInjectionControl(InjectorCMode::BHP);
 
         if (availableForGroupControl)
-            this->addInjectionControl(WellInjector::GRUP);
+            this->addInjectionControl(InjectorCMode::GRUP);
         else
-            this->dropInjectionControl(WellInjector::GRUP);
+            this->dropInjectionControl(InjectorCMode::GRUP);
         {
             const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-            WellInjector::ControlModeEnum controlModeArg = WellInjector::ControlModeFromString( cmodeString );
+            InjectorCMode controlModeArg = InjectorCModeFromString( cmodeString );
             if (this->hasInjectionControl( controlModeArg))
                 this->controlMode = controlModeArg;
             else {
@@ -163,20 +163,20 @@ namespace Opm {
             this->THPH = record.getItem("THP").getSIDouble(0);
 
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const WellInjector::ControlModeEnum newControlMode = WellInjector::ControlModeFromString( cmodeString );
+        const InjectorCMode newControlMode = InjectorCModeFromString( cmodeString );
 
-        if ( !(newControlMode == WellInjector::RATE || newControlMode == WellInjector::BHP) ) {
+        if ( !(newControlMode == InjectorCMode::RATE || newControlMode == InjectorCMode::BHP) ) {
             const std::string msg = "Only RATE and BHP control are allowed for WCONINJH for well " + well_name;
             throw std::invalid_argument(msg);
         }
 
         // when well is under BHP control, we use its historical BHP value as BHP limit
-        if (newControlMode == WellInjector::BHP) {
+        if (newControlMode == InjectorCMode::BHP) {
             this->setBHPLimit(this->BHPH);
         } else {
             const bool switching_from_producer = is_producer;
             const bool switching_from_prediction = this->predictionMode;
-            const bool switching_from_BHP_control = (this->controlMode == WellInjector::BHP);
+            const bool switching_from_BHP_control = (this->controlMode == InjectorCMode::BHP);
             if (switching_from_prediction ||
                 switching_from_BHP_control ||
                 switching_from_producer) {
@@ -185,7 +185,7 @@ namespace Opm {
             // otherwise, we keep its previous BHP limit
         }
 
-        this->addInjectionControl(WellInjector::BHP);
+        this->addInjectionControl(InjectorCMode::BHP);
         this->addInjectionControl(newControlMode);
         this->controlMode = newControlMode;
         this->predictionMode = false;
@@ -243,7 +243,7 @@ namespace Opm {
             << "prediction mode: "  << wp.predictionMode << ", "
             << "injection ctrl: "   << wp.injectionControls << ", "
             << "injector type: "    << Well2::InjectorType2String(wp.injectorType) << ", "
-            << "control mode: "     << wp.controlMode << " }";
+            << "control mode: "     << Well2::InjectorCMode2String(wp.controlMode) << " }";
     }
 
 

@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
     injProps->THPLimit.reset(200);
     well.updateInjection(injProps);
     BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPLimit.get<double>());
-    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::THP ));
+    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::THP ));
 }
 
 
@@ -356,42 +356,42 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
 BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, WellProducer::CMODE_UNDEFINED, WellCompletion::DEPTH, UnitSystem::newMETRIC(), 0);
 
-    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RATE ));
-    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
+    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RATE ));
+    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RESV ));
 
     auto injProps1 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps1->surfaceInjectionRate.reset(100);
-    injProps1->addInjectionControl(Opm::WellInjector::RATE);
+    injProps1->addInjectionControl(Opm::Well2::InjectorCMode::RATE);
     well.updateInjection(injProps1);
-    BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RATE ));
-    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
+    BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RATE ));
+    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RESV ));
 
     auto injProps2 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps2->reservoirInjectionRate.reset(100);
-    injProps2->addInjectionControl(Opm::WellInjector::RESV);
+    injProps2->addInjectionControl(Opm::Well2::InjectorCMode::RESV);
     well.updateInjection(injProps2);
-    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
+    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RESV ));
 
     auto injProps3 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps3->BHPLimit.reset(100);
-    injProps3->addInjectionControl(Opm::WellInjector::BHP);
+    injProps3->addInjectionControl(Opm::Well2::InjectorCMode::BHP);
     injProps3->THPLimit.reset(100);
-    injProps3->addInjectionControl(Opm::WellInjector::THP);
+    injProps3->addInjectionControl(Opm::Well2::InjectorCMode::THP);
     well.updateInjection(injProps3);
 
-    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RATE ));
-    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
-    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::THP ));
-    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::BHP ));
+    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RATE ));
+    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RESV ));
+    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::THP ));
+    BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::BHP ));
 
 
     auto injProps4 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
-    injProps4->dropInjectionControl( Opm::WellInjector::RESV );
+    injProps4->dropInjectionControl( Opm::Well2::InjectorCMode::RESV );
     well.updateInjection(injProps4);
-    BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RATE ));
-    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::RESV ));
-    BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::THP ));
-    BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::WellInjector::BHP ));
+    BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RATE ));
+    BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RESV ));
+    BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::THP ));
+    BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::BHP ));
 }
 /*********************************************************************/
 
@@ -751,7 +751,7 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
     const Opm::Well2::WellInjectionProperties Iproperties("W");
 
     BOOST_CHECK_EQUAL( Pproperties.controlMode , Opm::WellProducer::CMODE_UNDEFINED );
-    BOOST_CHECK_EQUAL( Iproperties.controlMode , Opm::WellInjector::CMODE_UNDEFINED );
+    BOOST_CHECK( Iproperties.controlMode == Opm::Well2::InjectorCMode::CMODE_UNDEFINED );
 }
 
 
