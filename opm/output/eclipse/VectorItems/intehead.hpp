@@ -75,6 +75,10 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NICAQZ  =  45,      //  Number of data elements per aquifer connection in ICAQ array
         NSCAQZ  =  46,      //  Number of data elements per aquifer connection in SCAQ array
         NACAQZ  =  47,      //  Number of data elements per aquifer connection in ACAQ array
+        
+        NOOFACTIONS = 156,  //  The number of actions in the dataset
+        MAXNOLINES = 157,   //  Maximum number of lines of schedule data for ACTION keyword - including ENDACTIO
+        MAXNOSTRPRLINE = 158,   //  Maximum number of 8-chars strings pr input line of Action data (rounded up from input)
 
         NWMAXZ  = 163,      //  Maximum number of wells in the model
         
@@ -86,7 +90,11 @@ namespace Opm { namespace RestartIO { namespace Helpers { namespace VectorItems 
         NISEGZ  = 178,      //  Number of entries per segment in ISEG array
         NRSEGZ  = 179,      //  Number of entries per segment in RSEG array
         NILBRZ  = 180,      //  Number of entries per segment in ILBR array
+	
+        MAX_ACT_COND = 245,      //  Maximum number of conditions pr action /  
+        NO_UDQS = 266,      //  No of UDQ data (parameters) /  
         UDQPAR_1 = 267,      //  Integer seed value for the RAND /  
+        RSEED    = 296,
     };
 }}}} // Opm::RestartIO::Helpers::VectorItems
 

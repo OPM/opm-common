@@ -93,8 +93,15 @@ namespace Opm { namespace RestartIO {
 	
 	struct UdqParam {
 	  int    udqParam_1;
+      int    no_udqs;
 	};
 
+    struct ActionParam {
+      int   no_actions;
+      int   max_no_sched_lines_per_action;
+      int   max_no_conditions_per_action;
+      int   max_no_characters_per_line;
+     };
         InteHEAD();
         ~InteHEAD() = default;
 
@@ -121,8 +128,9 @@ namespace Opm { namespace RestartIO {
         InteHEAD& variousParam(const int version, const int iprog);
         InteHEAD& wellSegDimensions(const WellSegDims& wsdim);
         InteHEAD& regionDimensions(const RegDims& rdim);
-	InteHEAD& ngroups(const Group& gr);
+        InteHEAD& ngroups(const Group& gr);
         InteHEAD& udqParam_1(const UdqParam& udqpar);
+        InteHEAD& actionParam(const ActionParam& act_par);
 
         const std::vector<int>& data() const
         {

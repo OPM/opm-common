@@ -55,6 +55,14 @@ const ActionX& Actions::get(std::size_t index) const {
     return this->actions[index];
 }
 
+int Actions::max_input_lines() const {
+    std::size_t max_il = 0;
+    for (const auto& act : this-> actions) {
+        if (act.keyword_strings().size() > max_il) max_il = act.keyword_strings().size() ;
+    }
+    return static_cast<int>(max_il);
+}
+
 
 bool Actions::ready(std::time_t sim_time) const {
     for (const auto& action : this->actions) {

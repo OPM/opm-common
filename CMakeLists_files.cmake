@@ -210,11 +210,13 @@ if(ENABLE_ECL_OUTPUT)
           src/opm/io/eclipse/ERst.cpp
           src/opm/io/eclipse/ESmry.cpp
           src/opm/io/eclipse/OutputStream.cpp
+          src/opm/output/eclipse/AggregateActionxData.cpp
           src/opm/output/eclipse/AggregateConnectionData.cpp
           src/opm/output/eclipse/AggregateGroupData.cpp
           src/opm/output/eclipse/AggregateMSWData.cpp
           src/opm/output/eclipse/AggregateUDQData.cpp
           src/opm/output/eclipse/AggregateWellData.cpp
+          src/opm/output/eclipse/CreateActionxDims.cpp
           src/opm/output/eclipse/CreateDoubHead.cpp
           src/opm/output/eclipse/CreateInteHead.cpp
           src/opm/output/eclipse/CreateLogiHead.cpp
@@ -323,6 +325,7 @@ if(ENABLE_ECL_INPUT)
 endif()
 if(ENABLE_ECL_OUTPUT)
   list (APPEND TEST_SOURCE_FILES
+          tests/test_AggregateActionxData.cpp
           tests/test_AggregateWellData.cpp
           tests/test_AggregateGroupData.cpp
           tests/test_AggregateMSWData.cpp
@@ -370,6 +373,7 @@ if(ENABLE_ECL_OUTPUT)
           tests/SPE9_CP_PACKED.DATA
           tests/SOFR_TEST.DATA
           tests/UDQ_TEST_WCONPROD_IUAD-2.DATA
+          tests/UDQ_ACTIONX_TEST1.DATA
       )
 endif()
 
@@ -654,6 +658,7 @@ if(ENABLE_ECL_OUTPUT)
         opm/output/eclipse/VectorItems/msw.hpp
         opm/output/eclipse/VectorItems/tabdims.hpp
         opm/output/eclipse/VectorItems/well.hpp
+        opm/output/eclipse/AggregateActionxData.hpp
         opm/output/eclipse/AggregateGroupData.hpp
         opm/output/eclipse/AggregateConnectionData.hpp
         opm/output/eclipse/AggregateMSWData.hpp
