@@ -65,34 +65,6 @@ namespace Opm {
         }
 
 
-        const std::string StateEnum2String( StateEnum enumValue ) {
-            switch( enumValue ) {
-            case OPEN:
-                return "OPEN";
-            case AUTO:
-                return "AUTO";
-            case SHUT:
-                return "SHUT";
-            default:
-                throw std::invalid_argument("Unhandled enum value");
-            }
-        }
-
-
-        StateEnum StateEnumFromString( const std::string& stringValue ) {
-            if (stringValue == "OPEN")
-                return OPEN;
-            else if (stringValue == "SHUT")
-                return SHUT;
-            else if (stringValue == "STOP")
-                return SHUT;
-            else if (stringValue == "AUTO")
-                return AUTO;
-            else
-                throw std::invalid_argument("Unknown enum state string: " + stringValue );
-        }
-
-
         const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue ) {
             switch( enumValue ) {
             case DEPTH:

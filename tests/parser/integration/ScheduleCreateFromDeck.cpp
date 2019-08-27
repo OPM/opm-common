@@ -268,13 +268,13 @@ BOOST_AUTO_TEST_CASE(WellTestCOMPDAT) {
             const auto& connections = sched.getWell2("W_1", 3).getConnections();
             BOOST_CHECK_EQUAL(4U, connections.size());
 
-            BOOST_CHECK(WellCompletion::OPEN == connections.get(3).state());
+            BOOST_CHECK(Connection::State::OPEN == connections.get(3).state());
             BOOST_CHECK_EQUAL(2.2836805555555556e-12 , connections.get(3).CF());
         }
         {
             const auto& connections = sched.getWell2("W_1", 7).getConnections();
             BOOST_CHECK_EQUAL(4U, connections.size() );
-            BOOST_CHECK(WellCompletion::SHUT == connections.get( 3 ).state() );
+            BOOST_CHECK(Connection::State::SHUT == connections.get( 3 ).state() );
         }
     }
 }

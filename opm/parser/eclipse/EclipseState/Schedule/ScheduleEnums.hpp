@@ -28,12 +28,6 @@ namespace Opm {
 
     namespace WellCompletion {
 
-        enum StateEnum {
-            OPEN = 1,
-            SHUT = 2,
-            AUTO = 3
-        };
-
 
         enum DirectionEnum {
             X = 1,
@@ -51,8 +45,6 @@ namespace Opm {
         std::string   DirectionEnum2String(const DirectionEnum enumValue);
         DirectionEnum DirectionEnumFromString(const std::string& stringValue);
 
-        const std::string StateEnum2String( StateEnum enumValue );
-        StateEnum StateEnumFromString( const std::string& stringValue );
 
         const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue );
         CompletionOrderEnum CompletionOrderEnumFromString(const std::string& comporderStringValue);

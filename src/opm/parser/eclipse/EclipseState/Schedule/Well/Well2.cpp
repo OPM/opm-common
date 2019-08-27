@@ -526,7 +526,7 @@ Phase Well2::getPreferredPhase() const {
     return this->phase;
 }
 
-bool Well2::handleWELOPEN(const DeckRecord& record, WellCompletion::StateEnum status_arg) {
+bool Well2::handleWELOPEN(const DeckRecord& record, Connection::State state_arg) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -542,7 +542,7 @@ bool Well2::handleWELOPEN(const DeckRecord& record, WellCompletion::StateEnum st
 
     for (auto c : *this->connections) {
         if (match(c))
-            c.setState( status_arg );
+            c.setState( state_arg );
 
         new_connections->add(c);
     }

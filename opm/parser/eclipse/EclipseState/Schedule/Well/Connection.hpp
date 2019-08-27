@@ -39,10 +39,20 @@ namespace Opm {
 
     class Connection {
     public:
+        enum class State {
+            OPEN = 1,
+            SHUT = 2,
+            AUTO = 3
+        };
+
+        static const std::string State2String( State enumValue );
+        static State StateFromString( const std::string& stringValue );
+
+
         Connection(int i, int j , int k ,
                    int complnum,
                    double depth,
-                   WellCompletion::StateEnum state,
+                   State state,
                    double CF,
                    double Kh,
                    double rw,
@@ -61,7 +71,7 @@ namespace Opm {
         int getI() const;
         int getJ() const;
         int getK() const;
-        WellCompletion::StateEnum state() const;
+        State state() const;
         WellCompletion::DirectionEnum dir() const;
         double depth() const;
         int satTableId() const;
@@ -74,7 +84,7 @@ namespace Opm {
         double skinFactor() const;
         double wellPi() const;
 
-        void setState(WellCompletion::StateEnum state);
+        void setState(State state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
         void updateSegment(int segment_number, double center_depth, std::size_t seqIndex);
@@ -94,7 +104,7 @@ namespace Opm {
     private:
         WellCompletion::DirectionEnum direction;
         double center_depth;
-        WellCompletion::StateEnum open_state;
+        State open_state;
         int sat_tableId;
         int m_complnum;
         double m_CF;

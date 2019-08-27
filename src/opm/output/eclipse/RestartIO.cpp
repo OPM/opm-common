@@ -137,7 +137,7 @@ namespace {
                 const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
 
                 const auto rs_size = phases.size() + data::Connection::restart_size;
-                if (!grid.cellActive(i, j, k) || sc.state() == WellCompletion::SHUT) {
+                if (!grid.cellActive(i, j, k) || sc.state() == Connection::State::SHUT) {
                     xwel.insert(xwel.end(), rs_size, 0.0);
                     continue;
                 }

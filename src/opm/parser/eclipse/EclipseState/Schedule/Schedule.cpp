@@ -1369,7 +1369,7 @@ namespace {
             }
 
             for (const auto& wname : well_names) {
-                const auto comp_status = WellCompletion::StateEnumFromString( status_str );
+                const auto comp_status = Connection::StateFromString( status_str );
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );

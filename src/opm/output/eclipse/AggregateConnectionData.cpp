@@ -116,7 +116,7 @@ namespace {
                            const std::size_t      connID,
                            IConnArray&            iConn)
         {
-            using ConnState = ::Opm::WellCompletion::StateEnum;
+            using ConnState = ::Opm::Connection::State;
             using Ix = ::Opm::RestartIO::Helpers::VectorItems::IConn::index;
 
             iConn[Ix::SeqIndex] = connID + 1;
@@ -298,12 +298,12 @@ captureDeclaredConnData(const Schedule&        sched,
             for (auto nConn = conns.size(), connID = 0*nConn; connID < nConn; connID++) {
                 //
                 // WellRates connections are only defined for OPEN connections
-                if ((conns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) &&
+                if ((conns[connID].state() == Opm::Connection::State::OPEN) &&
                     (rCInd < xr->second.connections.size())) {
                     it->second[connID] = &(xr->second.connections[rCInd]);
                     rCInd+= 1;
                 }
-                else if ((conns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) && (rCInd >= xr->second.connections.size())) {
+                else if ((conns[connID].state() == Opm::Connection::State::OPEN) && (rCInd >= xr->second.connections.size())) {
                     throw std::invalid_argument {
                         "Inconsistent number of open connections I in vector<Opm::data::Connection*> (" +
                         std::to_string(xr->second.connections.size()) + ") in Well " + wl.name()

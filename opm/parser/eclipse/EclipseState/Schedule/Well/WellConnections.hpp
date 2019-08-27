@@ -33,7 +33,7 @@ namespace Opm {
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
         void addConnection(int i, int j , int k ,
                            double depth,
-                           WellCompletion::StateEnum state ,
+                           Connection::State state ,
                            double CF,
                            double Kh,
                            double rw,
@@ -82,7 +82,7 @@ namespace Opm {
         void addConnection(int i, int j , int k ,
                            int complnum,
                            double depth,
-                           WellCompletion::StateEnum state ,
+                           Connection::State state ,
                            double CF,
                            double Kh,
                            double rw,

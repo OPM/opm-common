@@ -136,7 +136,7 @@ namespace {
     void WellConnections::addConnection(int i, int j , int k ,
                                         int complnum,
                                         double depth,
-                                        WellCompletion::StateEnum state,
+                                        Connection::State state,
                                         double CF,
                                         double Kh,
                                         double rw,
@@ -159,7 +159,7 @@ namespace {
 
     void WellConnections::addConnection(int i, int j , int k ,
                                         double depth,
-                                        WellCompletion::StateEnum state ,
+                                        Connection::State state ,
                                         double CF,
                                         double Kh,
                                         double rw,
@@ -208,7 +208,7 @@ namespace {
 
         int K1 = record.getItem("K1").get< int >(0) - 1;
         int K2 = record.getItem("K2").get< int >(0) - 1;
-        WellCompletion::StateEnum state = WellCompletion::StateEnumFromString( record.getItem("STATE").getTrimmedString(0) );
+        Connection::State state = Connection::StateFromString( record.getItem("STATE").getTrimmedString(0) );
 
         const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
         int satTableId = -1;
@@ -388,7 +388,7 @@ namespace {
 
 
         auto shut = []( const Connection& c ) {
-            return c.state() == WellCompletion::StateEnum::SHUT;
+            return c.state() == Connection::State::SHUT;
         };
 
         return std::all_of( this->m_connections.begin(),

@@ -40,7 +40,7 @@ namespace Opm {
     Connection::Connection(int i, int j , int k ,
                            int compnum,
                            double depth,
-                           WellCompletion::StateEnum stateArg ,
+                           State stateArg ,
                            double CF,
                            double Kh,
                            double rw,
@@ -150,7 +150,7 @@ namespace Opm {
         return this->center_depth;
     }
 
-    WellCompletion::StateEnum Connection::state() const {
+    Connection::State Connection::state() const {
         return this->open_state;
     }
 
@@ -186,7 +186,7 @@ namespace Opm {
         return this->m_skin_factor;
     }
 
-    void Connection::setState(WellCompletion::StateEnum state) {
+    void Connection::setState(State state) {
         this->open_state = state;
     }
 
@@ -221,7 +221,7 @@ namespace Opm {
         ss << "wPi " << this->wPi << std::endl;
         ss << "kh " << this->m_Kh << std::endl;
         ss << "sat_tableId " << this->sat_tableId << std::endl;
-        ss << "open_state " << this->open_state << std::endl;
+        ss << "open_state " << Connection::State2String(this->open_state) << std::endl;
         ss << "direction " << this->direction << std::endl;
         ss << "segment_nr " << this->segment_number << std::endl;
         ss << "center_depth " << this->center_depth << std::endl;
@@ -254,4 +254,38 @@ namespace Opm {
     bool Connection::operator!=( const Connection& rhs ) const {
         return !( *this == rhs );
     }
+
+
+
+const std::string Connection::State2String( State enumValue ) {
+    switch( enumValue ) {
+    case State::OPEN:
+        return "OPEN";
+    case State::AUTO:
+        return "AUTO";
+    case State::SHUT:
+        return "SHUT";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
 }
+
+
+Connection::State Connection::StateFromString( const std::string& stringValue ) {
+    if (stringValue == "OPEN")
+        return State::OPEN;
+    else if (stringValue == "SHUT")
+        return State::SHUT;
+    else if (stringValue == "STOP")
+        return State::SHUT;
+    else if (stringValue == "AUTO")
+        return State::AUTO;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+
+
+}
+

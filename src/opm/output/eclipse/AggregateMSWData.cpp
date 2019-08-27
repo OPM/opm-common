@@ -195,7 +195,7 @@ namespace {
         using M  = ::Opm::UnitSystem::measure;
         using R  = ::Opm::data::Rates::opt;
         for (auto nConn = welConns.size(), connID = 0*nConn; connID < nConn; connID++) {
-            if (welConns[connID].state() == Opm::WellCompletion::StateEnum::OPEN) openConnections.push_back(&welConns[connID]);
+            if (welConns[connID].state() == Opm::Connection::State::OPEN) openConnections.push_back(&welConns[connID]);
         }
         if (openConnections.size() != rateConns.size()) {
             throw std::invalid_argument {

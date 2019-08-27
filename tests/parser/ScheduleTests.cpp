@@ -662,35 +662,35 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
         BOOST_CHECK(well_shut == schedule.getWell2("OP_1", 5).getStatus(  ));
     }
     {
-        constexpr auto comp_shut = WellCompletion::StateEnum::SHUT;
-        constexpr auto comp_open = WellCompletion::StateEnum::OPEN;
+        constexpr auto comp_shut = Connection::State::SHUT;
+        constexpr auto comp_open = Connection::State::OPEN;
         {
             const auto& well = schedule.getWell2("OP_2", 3);
             const auto& cs = well.getConnections( );
 
             BOOST_CHECK_EQUAL( 7U, cs.size() );
-            BOOST_CHECK_EQUAL(comp_shut, cs.getFromIJK( 7, 6, 2 ).state());
-            BOOST_CHECK_EQUAL(comp_shut, cs.getFromIJK( 7, 6, 3 ).state());
-            BOOST_CHECK_EQUAL(comp_shut, cs.getFromIJK( 7, 6, 4 ).state());
-            BOOST_CHECK_EQUAL(comp_open, cs.getFromIJK( 7, 7, 2 ).state());
+            BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 2 ).state());
+            BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 3 ).state());
+            BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 4 ).state());
+            BOOST_CHECK(comp_open == cs.getFromIJK( 7, 7, 2 ).state());
         }
         {
             const auto& well = schedule.getWell2("OP_2", 4);
             const auto& cs2 = well.getConnections( );
-            BOOST_CHECK_EQUAL(comp_open, cs2.getFromIJK( 7, 6, 2 ).state());
-            BOOST_CHECK_EQUAL(comp_open, cs2.getFromIJK( 7, 6, 3 ).state());
-            BOOST_CHECK_EQUAL(comp_open, cs2.getFromIJK( 7, 6, 4 ).state());
-            BOOST_CHECK_EQUAL(comp_open, cs2.getFromIJK( 7, 7, 2 ).state());
+            BOOST_CHECK(comp_open == cs2.getFromIJK( 7, 6, 2 ).state());
+            BOOST_CHECK(comp_open == cs2.getFromIJK( 7, 6, 3 ).state());
+            BOOST_CHECK(comp_open == cs2.getFromIJK( 7, 6, 4 ).state());
+            BOOST_CHECK(comp_open == cs2.getFromIJK( 7, 7, 2 ).state());
         }
         {
             const auto& well = schedule.getWell2("OP_3", 3);
             const auto& cs3 = well.getConnections(  );
-            BOOST_CHECK_EQUAL(comp_shut, cs3.get( 0 ).state());
+            BOOST_CHECK(comp_shut == cs3.get( 0 ).state());
         }
         {
             const auto& well = schedule.getWell2("OP_3", 4);
             const auto& cs4 = well.getConnections(  );
-            BOOST_CHECK_EQUAL(comp_open, cs4.get( 0 ).state());
+            BOOST_CHECK(comp_open == cs4.get( 0 ).state());
         }
     }
 }
@@ -2201,8 +2201,8 @@ BOOST_AUTO_TEST_CASE( complump ) {
             /
     )";
 
-    constexpr auto open = WellCompletion::StateEnum::OPEN;
-    constexpr auto shut = WellCompletion::StateEnum::SHUT;
+    constexpr auto open = Connection::State::OPEN;
+    constexpr auto shut = Connection::State::SHUT;
 
     auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
@@ -2217,15 +2217,15 @@ BOOST_AUTO_TEST_CASE( complump ) {
     BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 1 ).complnum() );
     BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 2 ).complnum() );
 
-    BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 0 ).state() );
-    BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 1 ).state() );
-    BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 2 ).state() );
+    BOOST_CHECK( shut == sc0.getFromIJK( 2, 2, 0 ).state() );
+    BOOST_CHECK( shut == sc0.getFromIJK( 2, 2, 1 ).state() );
+    BOOST_CHECK( shut == sc0.getFromIJK( 2, 2, 2 ).state() );
 
     const auto& sc1  = schedule.getWell2("W1", 1).getConnections();
-    BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 0 ).state() );
-    BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 1 ).state() );
-    BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 2 ).state() );
-    BOOST_CHECK_EQUAL( shut, sc1.getFromIJK( 2, 2, 3 ).state() );
+    BOOST_CHECK( open == sc1.getFromIJK( 2, 2, 0 ).state() );
+    BOOST_CHECK( open == sc1.getFromIJK( 2, 2, 1 ).state() );
+    BOOST_CHECK( open == sc1.getFromIJK( 2, 2, 2 ).state() );
+    BOOST_CHECK( shut == sc1.getFromIJK( 2, 2, 3 ).state() );
 
     const auto& completions = schedule.getWell2("W1", 1).getCompletions();
     BOOST_CHECK_EQUAL(completions.size(), 4);
@@ -2291,8 +2291,8 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
         /
     )";
 
-    constexpr auto open = WellCompletion::StateEnum::OPEN;
-    constexpr auto shut = WellCompletion::StateEnum::SHUT;
+    constexpr auto open = Connection::State::OPEN;
+    constexpr auto shut = Connection::State::SHUT;
 
     auto deck = Parser().parseString( input);
     EclipseGrid grid( 10, 10, 10 );
@@ -2304,50 +2304,50 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     const auto& cs1 = schedule.getWell2("W1", 1).getConnections();
     const auto& cs2 = schedule.getWell2("W1", 2).getConnections();
     BOOST_CHECK_EQUAL( 9U, cs1.size() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 0, 0, 1 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 0 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 1 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 2 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 0 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 3 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 4 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 5 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 0, 0, 1 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 2, 2, 0 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 2, 2, 1 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 2, 2, 2 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 1, 1, 0 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 1, 1, 3 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 1, 1, 4 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 1, 1, 5 ).state() );
 
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 0, 0, 1 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs2.getFromIJK( 2, 2, 0 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 2, 2, 1 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 2, 2, 2 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 0 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 3 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 4 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs2.getFromIJK( 1, 1, 5 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 0, 0, 1 ).state() );
+    BOOST_CHECK( shut == cs2.getFromIJK( 2, 2, 0 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 2, 2, 1 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 2, 2, 2 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 1, 1, 0 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 1, 1, 3 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 1, 1, 4 ).state() );
+    BOOST_CHECK( shut == cs2.getFromIJK( 1, 1, 5 ).state() );
 }
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnum2String) {
-    BOOST_CHECK_EQUAL( "AUTO" , WellCompletion::StateEnum2String(WellCompletion::AUTO));
-    BOOST_CHECK_EQUAL( "OPEN" , WellCompletion::StateEnum2String(WellCompletion::OPEN));
-    BOOST_CHECK_EQUAL( "SHUT" , WellCompletion::StateEnum2String(WellCompletion::SHUT));
+    BOOST_CHECK( "AUTO" == Connection::State2String(Connection::State::AUTO));
+    BOOST_CHECK( "OPEN" == Connection::State2String(Connection::State::OPEN));
+    BOOST_CHECK( "SHUT" == Connection::State2String(Connection::State::SHUT));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnumFromString) {
-    BOOST_CHECK_THROW( WellCompletion::StateEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellCompletion::AUTO , WellCompletion::StateEnumFromString("AUTO"));
-    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString("SHUT"));
-    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString("STOP"));
-    BOOST_CHECK_EQUAL( WellCompletion::OPEN , WellCompletion::StateEnumFromString("OPEN"));
+    BOOST_CHECK_THROW( Connection::StateFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Connection::State::AUTO == Connection::StateFromString("AUTO"));
+    BOOST_CHECK( Connection::State::SHUT == Connection::StateFromString("SHUT"));
+    BOOST_CHECK( Connection::State::SHUT == Connection::StateFromString("STOP"));
+    BOOST_CHECK( Connection::State::OPEN == Connection::StateFromString("OPEN"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnumLoop) {
-    BOOST_CHECK_EQUAL( WellCompletion::AUTO , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::AUTO ) ));
-    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::SHUT ) ));
-    BOOST_CHECK_EQUAL( WellCompletion::OPEN , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::OPEN ) ));
+    BOOST_CHECK( Connection::State::AUTO == Connection::StateFromString( Connection::State2String( Connection::State::AUTO ) ));
+    BOOST_CHECK( Connection::State::SHUT == Connection::StateFromString( Connection::State2String( Connection::State::SHUT ) ));
+    BOOST_CHECK( Connection::State::OPEN == Connection::StateFromString( Connection::State2String( Connection::State::OPEN ) ));
 
-    BOOST_CHECK_EQUAL( "AUTO" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "AUTO" ) ));
-    BOOST_CHECK_EQUAL( "OPEN" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "OPEN" ) ));
-    BOOST_CHECK_EQUAL( "SHUT" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "SHUT" ) ));
+    BOOST_CHECK( "AUTO" == Connection::State2String(Connection::StateFromString(  "AUTO" ) ));
+    BOOST_CHECK( "OPEN" == Connection::State2String(Connection::StateFromString(  "OPEN" ) ));
+    BOOST_CHECK( "SHUT" == Connection::State2String(Connection::StateFromString(  "SHUT" ) ));
 }
 
 
@@ -3199,7 +3199,7 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     auto c2 = std::make_shared<WellConnections>(1,1);
     c2->addConnection(1,1,1,
                       100,
-                      WellCompletion::StateEnum::OPEN,
+                      Connection::State::OPEN,
                       10,
                       10,
                       10,

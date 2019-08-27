@@ -5,7 +5,7 @@
 namespace {
 
 std::string state( const Connection& c ) {
-    return WellCompletion::StateEnum2String( c.state() );
+    return Connection::State2String( c.state() );
 }
 
 std::string direction( const Connection& c ) {
