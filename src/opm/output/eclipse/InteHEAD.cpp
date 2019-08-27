@@ -175,9 +175,9 @@ enum index : std::vector<int>::size_type {
   ih_153       =      153       ,              //       0       0
   ih_154       =      154       ,              //       0       0
   ih_155       =      155       ,              //       0       0
-  ih_156       =      156       ,              //       0       0
-  ih_157       =      157       ,              //       0       0
-  ih_158       =      158       ,              //       0       0
+  NO_ACT       =    VI::intehead::NOOFACTIONS, //       0       0
+  MAX_LINES    =    VI::intehead::MAXNOLINES,  //       0       0
+  MAXSPRLINE   =    VI::intehead::MAXNOSTRPRLINE,  //       0       0
   ih_159       =      159       ,              //       0       0
   ih_160       =      160       ,              //       0       0
   ih_161       =      161       ,              //       0       0
@@ -264,7 +264,7 @@ enum index : std::vector<int>::size_type {
   ih_242       =      242       ,              //       0
   ih_243       =      243       ,              //       0
   ih_244       =      244       ,              //       0
-  ih_245       =      245       ,              //       0
+  MXACTC       =      VI::intehead::MAX_ACT_COND, //       Max no of conditions pr action 
   ih_246       =      246       ,              //       0
   ih_247       =      247       ,              //       0
   ih_248       =      248       ,              //       0
@@ -285,8 +285,8 @@ enum index : std::vector<int>::size_type {
   ih_263       =      263       ,              //       0
   ih_264       =      264       ,              //       0
   ih_265       =      265       ,              //       0
-  ih_266       =      266       ,              //       0
-  UDQPAR_1      =      VI::intehead::UDQPAR_1,  //       0
+  NOUDQS       =      VI::intehead::NO_UDQS,   //       0
+  UDQPAR_1     =      VI::intehead::UDQPAR_1,  //       0
   ih_268       =      268       ,              //       0
   ih_269       =      269       ,              //       0
   ih_270       =      270       ,              //       0
@@ -315,7 +315,7 @@ enum index : std::vector<int>::size_type {
   ih_293       =      293       ,              //       0
   ih_294       =      294       ,              //       0
   ih_295       =      295       ,              //       0
-  ih_296       =      296       ,              //       0
+  R_SEED       =      VI::intehead::RSEED,     //       0
   ih_297       =      297       ,              //       0
   ih_298       =      298       ,              //       0
   ih_299       =      299       ,              //       0
@@ -683,6 +683,21 @@ Opm::RestartIO::InteHEAD::
 udqParam_1(const UdqParam& udq_par)
 {
     this -> data_[UDQPAR_1] = - udq_par.udqParam_1;
+    this -> data_[R_SEED]   = - udq_par.udqParam_1;
+    this -> data_[NOUDQS]   = udq_par.no_udqs;
+
+    return *this;
+}
+
+Opm::RestartIO::InteHEAD&
+Opm::RestartIO::InteHEAD::
+actionParam(const ActionParam& act_par)
+{
+    this -> data_[NO_ACT]     = act_par.no_actions;
+    this -> data_[MAX_LINES]  = act_par.max_no_sched_lines_per_action;
+    this -> data_[MXACTC]     = act_par.max_no_conditions_per_action;
+    this -> data_[MAXSPRLINE] = ((act_par.max_no_characters_per_line % 8) == 0) ? act_par.max_no_characters_per_line / 8 : 
+                                (act_par.max_no_characters_per_line / 8) + 1;
 
     return *this;
 }
