@@ -37,7 +37,7 @@ namespace Opm {
 
 
     Compsegs::Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
-                       WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in, size_t seqIndex_in)
+                       Connection::Direction dir_in, double center_depth_in, int segment_number_in, size_t seqIndex_in)
     : m_i(i_in),
       m_j(j_in),
       m_k(k_in),
@@ -116,9 +116,9 @@ namespace Opm {
              * Defaulted well connection. Must be non-defaulted if DISTANCE_END
              * is set or a range is specified. If not this is effectively ignored.
              */
-            WellCompletion::DirectionEnum direction = WellCompletion::X;
+            auto direction = Connection::Direction::X;
             if( record.getItem< ParserKeywords::COMPSEGS::DIRECTION >().hasValue( 0 ) ) {
-                direction = WellCompletion::DirectionEnumFromString(record.getItem<ParserKeywords::COMPSEGS::DIRECTION>().get< std::string >(0));
+                direction = Connection::DirectionFromString(record.getItem<ParserKeywords::COMPSEGS::DIRECTION>().get< std::string >(0));
             }
 
             double center_depth;

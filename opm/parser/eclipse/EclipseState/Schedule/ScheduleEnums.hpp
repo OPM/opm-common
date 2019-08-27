@@ -29,21 +29,11 @@ namespace Opm {
     namespace WellCompletion {
 
 
-        enum DirectionEnum {
-            X = 1,
-            Y = 2,
-            Z = 3
-        };
-
-
         enum CompletionOrderEnum{
             DEPTH,
             INPUT,
             TRACK
         };
-
-        std::string   DirectionEnum2String(const DirectionEnum enumValue);
-        DirectionEnum DirectionEnumFromString(const std::string& stringValue);
 
 
         const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue );

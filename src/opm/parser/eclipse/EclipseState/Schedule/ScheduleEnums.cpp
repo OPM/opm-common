@@ -26,44 +26,6 @@ namespace Opm {
 
     namespace WellCompletion {
 
-        std::string
-        DirectionEnum2String(const DirectionEnum enumValue)
-        {
-            std::string stringValue;
-
-            switch (enumValue) {
-            case DirectionEnum::X:
-                stringValue = "X";
-                break;
-
-            case DirectionEnum::Y:
-                stringValue = "Y";
-                break;
-
-            case DirectionEnum::Z:
-                stringValue = "Z";
-                break;
-            }
-
-            return stringValue;
-        }
-
-        DirectionEnum
-        DirectionEnumFromString(const std::string& s )
-        {
-            DirectionEnum direction;
-
-            if      (s == "X") { direction = DirectionEnum::X; }
-            else if (s == "Y") { direction = DirectionEnum::Y; }
-            else if (s == "Z") { direction = DirectionEnum::Z; }
-            else {
-                std::string msg = "Unsupported completion direction " + s;
-                throw std::invalid_argument(msg);
-            }
-
-            return direction;
-        }
-
 
         const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue ) {
             switch( enumValue ) {

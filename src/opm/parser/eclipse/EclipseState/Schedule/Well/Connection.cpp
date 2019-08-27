@@ -47,12 +47,11 @@ namespace Opm {
                            double r0,
                            double skin_factor,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum directionArg,
+                           const Direction directionArg,
 			   const std::size_t seqIndex,
 			   const double segDistStart,
 			   const double segDistEnd,
-			   const bool defaultSatTabId
-			  )
+			   const bool defaultSatTabId)
         : direction(directionArg),
           center_depth(depth),
           open_state(stateArg),
@@ -70,14 +69,6 @@ namespace Opm {
           m_defaultSatTabId(defaultSatTabId)
     {}
 
-    /*bool Connection::sameCoordinate(const Connection& other) const {
-        if ((m_i == other.m_i) &&
-            (m_j == other.m_j) &&
-            (m_k == other.m_k))
-            return true;
-        else
-            return false;
-    }*/
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
         if ((ijk[0] == i) && (ijk[1] == j) && (ijk[2] == k)) {
@@ -86,8 +77,6 @@ namespace Opm {
             return false;
         }
     }
-
-
 
     int Connection::getI() const {
         return ijk[0];
@@ -117,7 +106,7 @@ namespace Opm {
         return m_compSeg_seqIndex;
     }
 
-    WellCompletion::DirectionEnum Connection::dir() const {
+    Connection::Direction Connection::dir() const {
         return this->direction;
     }
 
@@ -222,7 +211,7 @@ namespace Opm {
         ss << "kh " << this->m_Kh << std::endl;
         ss << "sat_tableId " << this->sat_tableId << std::endl;
         ss << "open_state " << Connection::State2String(this->open_state) << std::endl;
-        ss << "direction " << this->direction << std::endl;
+        ss << "direction " << Connection::Direction2String(this->direction) << std::endl;
         ss << "segment_nr " << this->segment_number << std::endl;
         ss << "center_depth " << this->center_depth << std::endl;
         ss << "seqIndex " << this->m_seqIndex << std::endl;
@@ -282,6 +271,44 @@ Connection::State Connection::StateFromString( const std::string& stringValue ) 
         return State::AUTO;
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+std::string Connection::Direction2String(const Direction enumValue)
+{
+    std::string stringValue;
+
+    switch (enumValue) {
+    case Direction::X:
+        stringValue = "X";
+        break;
+
+    case Direction::Y:
+        stringValue = "Y";
+        break;
+
+    case Direction::Z:
+        stringValue = "Z";
+        break;
+    }
+
+    return stringValue;
+}
+
+
+Connection::Direction Connection::DirectionFromString(const std::string& s )
+{
+    Direction direction;
+
+    if      (s == "X") { direction = Direction::X; }
+    else if (s == "Y") { direction = Direction::Y; }
+    else if (s == "Z") { direction = Direction::Z; }
+    else {
+        std::string msg = "Unsupported completion direction " + s;
+        throw std::invalid_argument(msg);
+    }
+
+    return direction;
 }
 
 

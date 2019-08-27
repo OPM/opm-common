@@ -139,7 +139,7 @@ namespace {
             iConn[Ix::ComplNum] = std::abs(conn.complnum());
             //iConn[Ix::ComplNum] = iConn[Ix::SeqIndex];
 
-            iConn[Ix::ConnDir] = conn.dir();
+            iConn[Ix::ConnDir] = static_cast<int>(conn.dir());
             iConn[Ix::Segment] = conn.attachedToSegment()
                 ? conn.segment() : 0;
         }

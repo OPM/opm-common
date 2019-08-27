@@ -37,16 +37,16 @@ namespace {
     // direction.  First two elements of return value are directions
     // perpendicular to completion while last element is direction
     // along completion.
-    inline std::array< size_t, 3> directionIndices(const Opm::WellCompletion::DirectionEnum direction)
+inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction direction)
     {
         switch (direction) {
-        case Opm::WellCompletion::DirectionEnum::X:
+        case Opm::Connection::Direction::X:
             return {{ 1,2,0 }};
 
-        case Opm::WellCompletion::DirectionEnum::Y:
+        case Opm::Connection::Direction::Y:
             return {{ 2,0,1}};
 
-        case Opm::WellCompletion::DirectionEnum::Z:
+        case Opm::Connection::Direction::Z:
             return {{ 0,1,2 }};
         }
         // All enum values should be handled above. Therefore
@@ -59,7 +59,7 @@ namespace {
     // Permute (diagonal) permeability components according to
     // completion's direction.
     inline std::array<double,3>
-    permComponents(const Opm::WellCompletion::DirectionEnum direction,
+    permComponents(const Opm::Connection::Direction direction,
                    const std::array<double,3>& perm)
     {
         const auto p = directionIndices(direction);
@@ -75,9 +75,9 @@ namespace {
     // Note: 'extent' is intentionally accepted by modifiable value
     // rather than reference-to-const to support NTG manipulation.
     inline std::array<double,3>
-    effectiveExtent(const Opm::WellCompletion::DirectionEnum direction,
-                    const double                                  ntg,
-                    std::array<double,3>                          extent)
+    effectiveExtent(const Opm::Connection::Direction direction,
+                    const double                     ntg,
+                    std::array<double,3>             extent)
     {
         // Vertical extent affected by net-to-gross ratio.
         extent[2] *= ntg;
@@ -143,7 +143,7 @@ namespace {
                                         double r0,
                                         double skin_factor,
                                         const int satTableId,
-                                        const WellCompletion::DirectionEnum direction,
+                                        const Connection::Direction direction,
                                         const std::size_t seqIndex,
                                         const double segDistStart,
                                         const double segDistEnd,
@@ -166,7 +166,7 @@ namespace {
                                         double r0,
                                         double skin_factor,
                                         const int satTableId,
-                                        const WellCompletion::DirectionEnum direction,
+                                        const Connection::Direction direction,
                                         const std::size_t seqIndex,
                                         const double segDistStart,
                                         const double segDistEnd,
@@ -218,7 +218,7 @@ namespace {
         const auto& KhItem = record.getItem("Kh");
         const auto& satTableIdItem = record.getItem("SAT_TABLE");
         const auto& r0Item = record.getItem("PR");
-        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(record.getItem("DIR").getTrimmedString(0));
+        const auto direction = Connection::DirectionFromString(record.getItem("DIR").getTrimmedString(0));
         double skin_factor = record.getItem("SKIN").getSIDouble(0);
         double rw;
         double r0=0.0;

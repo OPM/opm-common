@@ -41,17 +41,17 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
-    Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
+    auto dir = Opm::Connection::Direction::Z;
     Opm::WellConnections connection_set(10,10);
     Opm::EclipseGrid grid(20,20,20);
     connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
     connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
     connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
 
-    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -129,17 +129,17 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 }
 
 BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
-    Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
+    auto dir = Opm::Connection::Direction::Z;
     Opm::WellConnections connection_set(10,10);
     Opm::EclipseGrid grid(20,20,20);
     connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
     connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
     connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
 
-    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -186,17 +186,17 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
 }
 
 BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
-    Opm::WellCompletion::DirectionEnum dir = Opm::WellCompletion::DirectionEnum::Z;
+    auto dir = Opm::Connection::Direction::Z;
     Opm::WellConnections connection_set(10,10);
     Opm::EclipseGrid grid(20,20,20);
     connection_set.add(Opm::Connection( 19, 0, 0, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
     connection_set.add(Opm::Connection( 19, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
     connection_set.add(Opm::Connection( 19, 0, 2, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
 
-    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
-    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::WellCompletion::DirectionEnum::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 18, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 17, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 16, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Opm::Connection( 15, 0, 1, 1, 0.0, Opm::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Opm::Connection::Direction::X,0, 0., 0., true) );
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 

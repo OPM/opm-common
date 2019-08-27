@@ -2357,33 +2357,33 @@ BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnum2String)
 {
     using namespace WellCompletion;
 
-    BOOST_CHECK_EQUAL("X", DirectionEnum2String(DirectionEnum::X));
-    BOOST_CHECK_EQUAL("Y", DirectionEnum2String(DirectionEnum::Y));
-    BOOST_CHECK_EQUAL("Z", DirectionEnum2String(DirectionEnum::Z));
+    BOOST_CHECK("X" == Connection::Direction2String(Connection::Direction::X));
+    BOOST_CHECK("Y" == Connection::Direction2String(Connection::Direction::Y));
+    BOOST_CHECK("Z" == Connection::Direction2String(Connection::Direction::Z));
 }
 
 BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumFromString)
 {
     using namespace WellCompletion;
 
-    BOOST_CHECK_THROW(DirectionEnumFromString("XXX"), std::invalid_argument);
+    BOOST_CHECK_THROW(Connection::DirectionFromString("XXX"), std::invalid_argument);
 
-    BOOST_CHECK_EQUAL(DirectionEnum::X, DirectionEnumFromString("X"));
-    BOOST_CHECK_EQUAL(DirectionEnum::Y, DirectionEnumFromString("Y"));
-    BOOST_CHECK_EQUAL(DirectionEnum::Z, DirectionEnumFromString("Z"));
+    BOOST_CHECK(Connection::Direction::X == Connection::DirectionFromString("X"));
+    BOOST_CHECK(Connection::Direction::Y == Connection::DirectionFromString("Y"));
+    BOOST_CHECK(Connection::Direction::Z == Connection::DirectionFromString("Z"));
 }
 
-BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumLoop)
+BOOST_AUTO_TEST_CASE(TestCompletionConnectionDirectionLoop)
 {
     using namespace WellCompletion;
 
-    BOOST_CHECK_EQUAL(DirectionEnum::X, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::X)));
-    BOOST_CHECK_EQUAL(DirectionEnum::Y, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::Y)));
-    BOOST_CHECK_EQUAL(DirectionEnum::Z, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::Z)));
+    BOOST_CHECK(Connection::Direction::X == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::X)));
+    BOOST_CHECK(Connection::Direction::Y == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::Y)));
+    BOOST_CHECK(Connection::Direction::Z == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::Z)));
 
-    BOOST_CHECK_EQUAL("X", DirectionEnum2String(DirectionEnumFromString("X")));
-    BOOST_CHECK_EQUAL("Y", DirectionEnum2String(DirectionEnumFromString("Y")));
-    BOOST_CHECK_EQUAL("Z", DirectionEnum2String(DirectionEnumFromString("Z")));
+    BOOST_CHECK("X" == Connection::Direction2String(Connection::DirectionFromString("X")));
+    BOOST_CHECK("Y" == Connection::Direction2String(Connection::DirectionFromString("Y")));
+    BOOST_CHECK("Z" == Connection::Direction2String(Connection::DirectionFromString("Z")));
 }
 
 /*****************************************************************/

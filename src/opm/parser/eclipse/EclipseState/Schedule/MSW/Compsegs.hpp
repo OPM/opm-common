@@ -26,6 +26,7 @@
 
 #include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 
 namespace Opm {
@@ -45,8 +46,8 @@ namespace Opm {
         int m_branch_number;
         double m_distance_start;
         double m_distance_end;
+        Connection::Direction m_dir;
 
-        WellCompletion::DirectionEnum m_dir;
         double center_depth;
         // we do not handle thermal length for the moment
         // double m_thermal_length;
@@ -54,7 +55,7 @@ namespace Opm {
         std::size_t m_seqIndex;
 
         Compsegs(int i_in, int j_in, int k_in, int branch_number_in, double distance_start_in, double distance_end_in,
-                 WellCompletion::DirectionEnum dir_in, double center_depth_in, int segment_number_in, std::size_t seqIndex_in);
+                 Connection::Direction dir_in, double center_depth_in, int segment_number_in, std::size_t seqIndex_in);
 
         void calculateCenterDepthWithSegments(const WellSegments& segment_set);
 
@@ -66,7 +67,7 @@ namespace Opm {
 
         // update the segment related information for Connections
         static void updateConnectionsWithSegment(const std::vector< Compsegs >& compsegs,
-						                         const EclipseGrid& grid,
+                                                 const EclipseGrid& grid,
                                                  WellConnections& connection_set);
 
     };

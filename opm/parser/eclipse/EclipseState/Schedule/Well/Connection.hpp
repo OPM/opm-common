@@ -48,6 +48,18 @@ namespace Opm {
         static const std::string State2String( State enumValue );
         static State StateFromString( const std::string& stringValue );
 
+        enum class Direction{
+            X = 1,
+            Y = 2,
+            Z = 3
+        };
+
+        static std::string Direction2String(const Direction enumValue);
+        static Direction   DirectionFromString(const std::string& stringValue);
+
+
+
+
 
         Connection(int i, int j , int k ,
                    int complnum,
@@ -59,7 +71,7 @@ namespace Opm {
                    double r0,
                    double skin_factor,
                    const int satTableId,
-                   const WellCompletion::DirectionEnum direction,
+                   const Direction direction,
                    const std::size_t seqIndex,
                    const double segDistStart,
                    const double segDistEnd,
@@ -72,7 +84,7 @@ namespace Opm {
         int getJ() const;
         int getK() const;
         State state() const;
-        WellCompletion::DirectionEnum dir() const;
+        Direction dir() const;
         double depth() const;
         int satTableId() const;
         int complnum() const;
@@ -102,7 +114,7 @@ namespace Opm {
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
     private:
-        WellCompletion::DirectionEnum direction;
+        Direction direction;
         double center_depth;
         State open_state;
         int sat_tableId;
