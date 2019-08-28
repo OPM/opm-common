@@ -29,6 +29,7 @@
 #include <opm/output/data/Wells.hpp>
 #include <opm/output/eclipse/EclipseIO.hpp>
 #include <opm/output/eclipse/InteHEAD.hpp>
+#include <opm/output/eclipse/WriteRFT.hpp>
 
 #include <opm/parser/eclipse/Deck/Deck.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
@@ -38,6 +39,9 @@
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/Parser/Parser.hpp>
+
+#include <opm/parser/eclipse/Units/Units.hpp>
+#include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
 #include <cstddef>
 #include <ctime>
@@ -236,6 +240,8 @@ namespace {
     }
 } // Anonymous namespace
 
+BOOST_AUTO_TEST_SUITE(Using_EclipseIO)
+
 BOOST_AUTO_TEST_CASE(test_RFT)
 {
     const auto rset = RSet{ "TESTRFT" };
@@ -430,3 +436,1985 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         }
     }
 }
+
+BOOST_AUTO_TEST_SUITE_END() // Using_EclipseIO
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Using_Direct_Write)
+
+namespace {
+    struct Setup
+    {
+        explicit Setup(const std::string& deckfile)
+            : Setup{ ::Opm::Parser{}.parseFile(deckfile) }
+        {}
+
+        explicit Setup(const ::Opm::Deck& deck)
+            : es   { deck }
+            , sched{ deck, es }
+        {
+        }
+
+        ::Opm::EclipseState es;
+        ::Opm::Schedule     sched;
+    };
+
+    std::vector<Opm::data::Connection>
+    connRes_OP1(const ::Opm::EclipseGrid& grid)
+    {
+        auto xcon = std::vector<Opm::data::Connection>{};
+        xcon.reserve(9);
+
+        for (auto con = 0; con < 9; ++con) {
+            xcon.emplace_back();
+
+            auto& c = xcon.back();
+            c.index = grid.getGlobalIndex(8, 8, con);
+
+            c.cell_pressure = (120 + con*10)*::Opm::unit::barsa;
+
+            c.cell_saturation_gas   = 0.15;
+            c.cell_saturation_water = 0.3 + con/20.0;
+        }
+
+        return xcon;
+    }
+
+    ::Opm::data::Well wellSol_OP1(const ::Opm::EclipseGrid& grid)
+    {
+        auto xw = ::Opm::data::Well{};
+        xw.connections = connRes_OP1(grid);
+
+        return xw;
+    }
+
+    std::vector<Opm::data::Connection>
+    connRes_OP2(const ::Opm::EclipseGrid& grid)
+    {
+        auto xcon = std::vector<Opm::data::Connection>{};
+        xcon.reserve(6);
+
+        for (auto con = 3; con < 9; ++con) {
+            xcon.emplace_back();
+
+            auto& c = xcon.back();
+            c.index = grid.getGlobalIndex(3, 3, con);
+
+            c.cell_pressure = (120 + con*10)*::Opm::unit::barsa;
+
+            c.cell_saturation_gas   = 0.6 - con/20.0;
+            c.cell_saturation_water = 0.25;
+        }
+
+        return xcon;
+    }
+
+    ::Opm::data::Well wellSol_OP2(const ::Opm::EclipseGrid& grid)
+    {
+        auto xw = ::Opm::data::Well{};
+        xw.connections = connRes_OP2(grid);
+
+        return xw;
+    }
+
+    ::Opm::data::WellRates wellSol(const ::Opm::EclipseGrid& grid)
+    {
+        auto xw = ::Opm::data::Wells{};
+
+        xw["OP_1"] = wellSol_OP1(grid);
+        xw["OP_2"] = wellSol_OP2(grid);
+
+        return xw;
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Basic_Unformatted)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTRFT" };
+    const auto model = Setup{ "testrft.DATA" };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 2;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 120.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 130.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 140.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+    }
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ true }
+        };
+
+        const auto  reportStep = 3;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 120.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 130.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 140.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 11, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 11, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Basic_Formatted)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTRFT" };
+    const auto model = Setup{ "testrft.DATA" };
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { true  },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 2;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "FRFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 120.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 130.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 140.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+    }
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { true },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ true }
+        };
+
+        const auto  reportStep = 3;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, model.es.getUnits(),
+                            grid, model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "FRFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 120.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 130.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 140.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 11, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 150.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 160.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 170.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 180.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 190.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 200.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 11, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  BARSA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Field_Units)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTRFT" };
+    const auto model = Setup{ "testrft.DATA" };
+    const auto usys  = ::Opm::UnitSystem::newFIELD();
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 2;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, usys, grid,
+                            model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = ::Opm::unit::convert::to(0.25f, ::Opm::unit::feet);
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 5.0e-6f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 1.740452852762511e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 1.885490590492720e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 2.030528328222930e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 2.175566065953139e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 2.320603803683348e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 2.465641541413557e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 2.610679279143767e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 2.755717016873976e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 2.900754754604185e+03f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = ::Opm::unit::convert::to(0.25f, ::Opm::unit::feet);
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 5.0e-6f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 2.175566065953139e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 2.320603803683348e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 2.465641541413557e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 2.610679279143767e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 2.755717016873976e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 2.900754754604185e+03f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "  FEET");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  PSIA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " STB/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], "MSCF/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RB/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " FT/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " LB/STB");
+            BOOST_CHECK_EQUAL(welletc[14], " LB/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  LB/LB");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "  FEET");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  PSIA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " STB/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], "MSCF/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RB/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " FT/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " LB/STB");
+            BOOST_CHECK_EQUAL(welletc[14], " LB/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  LB/LB");
+        }
+    }
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ true }
+        };
+
+        const auto  reportStep = 3;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, usys, grid,
+                            model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = ::Opm::unit::convert::to(0.25f, ::Opm::unit::feet);
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 5.0e-6f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 1.740452852762511e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 1.885490590492720e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 2.030528328222930e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 2.175566065953139e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 2.320603803683348e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 2.465641541413557e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 2.610679279143767e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 2.755717016873976e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 2.900754754604185e+03f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = ::Opm::unit::convert::to(0.25f, ::Opm::unit::feet);
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 5.0e-6f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 2.175566065953139e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 2.320603803683348e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 2.465641541413557e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 2.610679279143767e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 2.755717016873976e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 2.900754754604185e+03f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 11, 10 }
+            };
+
+            const auto thick = ::Opm::unit::convert::to(0.25f, ::Opm::unit::feet);
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 5.0e-6f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 5.0e-6f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 2.175566065953139e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 2.320603803683348e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 2.465641541413557e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 2.610679279143767e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 2.755717016873976e+03f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 2.900754754604185e+03f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "  FEET");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  PSIA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " STB/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], "MSCF/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RB/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " FT/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " LB/STB");
+            BOOST_CHECK_EQUAL(welletc[14], " LB/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  LB/LB");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "  FEET");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  PSIA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " STB/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], "MSCF/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RB/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " FT/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " LB/STB");
+            BOOST_CHECK_EQUAL(welletc[14], " LB/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  LB/LB");
+        }
+
+        {
+            const auto date = RftDate{2008, 11, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "  FEET");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  PSIA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " STB/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], "MSCF/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RB/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " FT/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " LB/STB");
+            BOOST_CHECK_EQUAL(welletc[14], " LB/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  LB/LB");
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Lab_Units)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTRFT" };
+    const auto model = Setup{ "testrft.DATA" };
+    const auto usys  = ::Opm::UnitSystem::newLAB();
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 2;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, usys, grid,
+                            model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 25.0f; // cm
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 1.184307920059215e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 1.283000246730817e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 1.381692573402418e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 25.0f; // cm
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "   HR");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "   CM");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RCC/HR");
+            BOOST_CHECK_EQUAL(welletc[10], " CM/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " GM/SCC");
+            BOOST_CHECK_EQUAL(welletc[14], " GM/HR");
+            BOOST_CHECK_EQUAL(welletc[15], "  GM/GM");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "   HR");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "   CM");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RCC/HR");
+            BOOST_CHECK_EQUAL(welletc[10], " CM/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " GM/SCC");
+            BOOST_CHECK_EQUAL(welletc[14], " GM/HR");
+            BOOST_CHECK_EQUAL(welletc[15], "  GM/GM");
+        }
+    }
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ true }
+        };
+
+        const auto  reportStep = 3;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, usys, grid,
+                            model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 25.0f; // cm
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 1.184307920059215e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 1.283000246730817e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 1.381692573402418e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 25.0f; // cm
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 11, 10 }
+            };
+
+            const auto thick = 25.0f; // cm
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "   HR");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "   CM");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RCC/HR");
+            BOOST_CHECK_EQUAL(welletc[10], " CM/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " GM/SCC");
+            BOOST_CHECK_EQUAL(welletc[14], " GM/HR");
+            BOOST_CHECK_EQUAL(welletc[15], "  GM/GM");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "   HR");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "   CM");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RCC/HR");
+            BOOST_CHECK_EQUAL(welletc[10], " CM/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " GM/SCC");
+            BOOST_CHECK_EQUAL(welletc[14], " GM/HR");
+            BOOST_CHECK_EQUAL(welletc[15], "  GM/GM");
+        }
+
+        {
+            const auto date = RftDate{2008, 11, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "   HR");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], "   CM");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SCC/HR");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RCC/HR");
+            BOOST_CHECK_EQUAL(welletc[10], " CM/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " GM/SCC");
+            BOOST_CHECK_EQUAL(welletc[14], " GM/HR");
+            BOOST_CHECK_EQUAL(welletc[15], "  GM/GM");
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(PVT_M_Units)
+{
+    using RftDate = ::Opm::EclIO::ERft::RftDate;
+
+    const auto rset  = RSet { "TESTRFT" };
+    const auto model = Setup{ "testrft.DATA" };
+    const auto usys  = ::Opm::UnitSystem::newPVT_M();
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false }
+        };
+
+        const auto  reportStep = 2;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, usys, grid,
+                            model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 1.184307920059215e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 1.283000246730817e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 1.381692573402418e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25f;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+    }
+
+    {
+        auto rftFile = ::Opm::EclIO::OutputStream::RFT {
+            rset, ::Opm::EclIO::OutputStream::Formatted  { false },
+            ::Opm::EclIO::OutputStream::RFT::OpenExisting{ true }
+        };
+
+        const auto  reportStep = 3;
+        const auto  elapsed    = model.sched.seconds(reportStep);
+        const auto& grid       = model.es.getInputGrid();
+
+        ::Opm::RftIO::write(reportStep, elapsed, usys, grid,
+                            model.sched, wellSol(grid), rftFile);
+    }
+
+    {
+        const auto rft = ::Opm::EclIO::ERft {
+            ::Opm::EclIO::OutputStream::outputFileName(rset, "RFT")
+        };
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_1", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 1), 1*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 2), 2*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 3), 3*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(9, 9, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 1), 1.184307920059215e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 2), 1.283000246730817e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 3), 1.381692573402418e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(9, 9, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 1), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 2), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 3), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 4), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 5), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 6), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 7), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 8), 0.15f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(9, 9, 9), 0.15f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 1), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 2), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 3), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 5), 0.50f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 6), 0.55f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 7), 0.60f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 8), 0.65f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(9, 9, 9), 0.70f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 10, 10 }
+            };
+
+            const auto thick = 0.25;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto xRFT = RFTRresults {
+                rft, "OP_2", RftDate{ 2008, 11, 10 }
+            };
+
+            const auto thick = 0.25;
+
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 4), 4*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 5), 5*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 6), 6*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 7), 7*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 8), 8*thick + thick/2.0f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.depth(4, 4, 9), 9*thick + thick/2.0f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 4), 1.480384900074019e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 5), 1.579077226745621e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 6), 1.677769553417222e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 7), 1.776461880088823e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 8), 1.875154206760424e+02f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.pressure(4, 4, 9), 1.973846533432026e+02f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 4), 0.45f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 5), 0.40f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 6), 0.35f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 7), 0.30f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.sgas(4, 4, 9), 0.20f, 1.0e-10f);
+
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 4), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 5), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 6), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 7), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 8), 0.25f, 1.0e-10f);
+            BOOST_CHECK_CLOSE(xRFT.swat(4, 4, 9), 0.25f, 1.0e-10f);
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_1", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_1", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_1");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 10, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+
+        {
+            const auto date = RftDate{2008, 11, 10};
+
+            BOOST_CHECK(rft.hasArray("WELLETC", "OP_2", date));
+
+            const auto& welletc = rft.getRft<std::string>("WELLETC", "OP_2", date);
+
+            BOOST_CHECK_EQUAL(welletc[ 0], "  DAYS");
+            BOOST_CHECK_EQUAL(welletc[ 1], "OP_2");
+            BOOST_CHECK_EQUAL(welletc[ 2], "");
+            BOOST_CHECK_EQUAL(welletc[ 3], " METRES");
+            BOOST_CHECK_EQUAL(welletc[ 4], "  ATMA");
+            BOOST_CHECK_EQUAL(welletc[ 5], "R");
+            BOOST_CHECK_EQUAL(welletc[ 6], "STANDARD");
+            BOOST_CHECK_EQUAL(welletc[ 7], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 8], " SM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[ 9], " RM3/DAY");
+            BOOST_CHECK_EQUAL(welletc[10], " M/SEC");
+            // No check for welletc[11]
+            BOOST_CHECK_EQUAL(welletc[12], "   CP");
+            BOOST_CHECK_EQUAL(welletc[13], " KG/SM3");
+            BOOST_CHECK_EQUAL(welletc[14], " KG/DAY");
+            BOOST_CHECK_EQUAL(welletc[15], "  KG/KG");
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Using_Direct_Write
