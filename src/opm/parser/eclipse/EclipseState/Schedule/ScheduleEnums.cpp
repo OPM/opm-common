@@ -24,36 +24,6 @@
 
 namespace Opm {
 
-    namespace WellCompletion {
-
-
-        const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue ) {
-            switch( enumValue ) {
-            case DEPTH:
-                return "DEPTH";
-            case INPUT:
-                return "INPUT";
-            case TRACK:
-                return "TRACK";
-            default:
-                throw std::invalid_argument("Unhandled enum value");
-            }
-
-        }
-
-        CompletionOrderEnum CompletionOrderEnumFromString(const std::string& stringValue ) {
-            if (stringValue == "DEPTH")
-                return DEPTH;
-            else if (stringValue == "INPUT")
-                return INPUT;
-            else if (stringValue == "TRACK")
-                return TRACK;
-            else
-                throw std::invalid_argument("Unknown enum state string: " + stringValue );
-        }
-    }
-
-
     /*****************************************************************/
 
     namespace GroupInjection {

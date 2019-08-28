@@ -81,7 +81,7 @@ Well2::Well2(const std::string& wname_arg,
              double ref_depth_arg,
              Phase phase_arg,
              WellProducer::ControlModeEnum whistctl_cmode,
-             WellCompletion::CompletionOrderEnum ordering_arg,
+             Connection::Order ordering_arg,
              const UnitSystem& unit_system_arg,
              double udq_undefined_arg) :
     wname(wname_arg),
@@ -334,7 +334,7 @@ bool Well2::updateAutoShutin(bool auto_shutin) {
 
 
 bool Well2::updateConnections(const std::shared_ptr<WellConnections> connections_arg) {
-    if( this->ordering  == WellCompletion::TRACK)
+    if( this->ordering  == Connection::Order::TRACK)
         connections_arg->orderConnections( this->headI, this->headJ );
 
     if (*this->connections != *connections_arg) {
@@ -681,7 +681,7 @@ bool Well2::updatePrediction(bool prediction_mode_arg) {
 }
 
 
-WellCompletion::CompletionOrderEnum Well2::getWellConnectionOrdering() const {
+Connection::Order Well2::getWellConnectionOrdering() const {
     return this->ordering;
 }
 

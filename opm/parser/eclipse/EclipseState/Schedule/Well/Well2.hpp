@@ -182,7 +182,7 @@ public:
           double ref_depth,
           Phase phase,
           WellProducer::ControlModeEnum whistctl_cmode,
-          WellCompletion::CompletionOrderEnum ordering,
+          Connection::Order ordering,
           const UnitSystem& unit_system,
           double udq_undefined);
 
@@ -208,7 +208,7 @@ public:
     double getRefDepth() const;
     double getDrainageRadius() const;
     double getEfficiencyFactor() const;
-    WellCompletion::CompletionOrderEnum getWellConnectionOrdering() const;
+    Connection::Order getWellConnectionOrdering() const;
     const WellProductionProperties& getProductionProperties() const;
     const WellInjectionProperties& getInjectionProperties() const;
     const WellEconProductionLimits& getEconLimits() const;
@@ -292,7 +292,7 @@ private:
     int headJ;
     double ref_depth;
     Phase phase;
-    WellCompletion::CompletionOrderEnum ordering;
+    Connection::Order ordering;
     UnitSystem unit_system;
     double udq_undefined;
 

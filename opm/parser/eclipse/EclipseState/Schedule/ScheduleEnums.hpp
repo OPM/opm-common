@@ -26,21 +26,6 @@ namespace Opm {
 
 
 
-    namespace WellCompletion {
-
-
-        enum CompletionOrderEnum{
-            DEPTH,
-            INPUT,
-            TRACK
-        };
-
-
-        const std::string CompletionOrderEnum2String( CompletionOrderEnum enumValue );
-        CompletionOrderEnum CompletionOrderEnumFromString(const std::string& comporderStringValue);
-
-    }
-
     namespace WellTarget {
         enum ControlModeEnum {
              ORAT =  1,

@@ -312,6 +312,31 @@ Connection::Direction Connection::DirectionFromString(const std::string& s )
 }
 
 
+const std::string Connection::Order2String( Order enumValue ) {
+    switch( enumValue ) {
+    case Order::DEPTH:
+        return "DEPTH";
+    case Order::INPUT:
+        return "INPUT";
+    case Order::TRACK:
+        return "TRACK";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+
+Connection::Order Connection::OrderFromString(const std::string& stringValue ) {
+    if (stringValue == "DEPTH")
+        return Order::DEPTH;
+    else if (stringValue == "INPUT")
+        return Order::INPUT;
+    else if (stringValue == "TRACK")
+        return Order::TRACK;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
 
 
 }

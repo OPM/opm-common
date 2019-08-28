@@ -2355,8 +2355,6 @@ BOOST_AUTO_TEST_CASE(TestCompletionStateEnumLoop) {
 
 BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnum2String)
 {
-    using namespace WellCompletion;
-
     BOOST_CHECK("X" == Connection::Direction2String(Connection::Direction::X));
     BOOST_CHECK("Y" == Connection::Direction2String(Connection::Direction::Y));
     BOOST_CHECK("Z" == Connection::Direction2String(Connection::Direction::Z));
@@ -2364,8 +2362,6 @@ BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnum2String)
 
 BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumFromString)
 {
-    using namespace WellCompletion;
-
     BOOST_CHECK_THROW(Connection::DirectionFromString("XXX"), std::invalid_argument);
 
     BOOST_CHECK(Connection::Direction::X == Connection::DirectionFromString("X"));
@@ -2375,8 +2371,6 @@ BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumFromString)
 
 BOOST_AUTO_TEST_CASE(TestCompletionConnectionDirectionLoop)
 {
-    using namespace WellCompletion;
-
     BOOST_CHECK(Connection::Direction::X == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::X)));
     BOOST_CHECK(Connection::Direction::Y == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::Y)));
     BOOST_CHECK(Connection::Direction::Z == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::Z)));

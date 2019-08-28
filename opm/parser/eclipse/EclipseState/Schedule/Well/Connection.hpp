@@ -48,6 +48,7 @@ namespace Opm {
         static const std::string State2String( State enumValue );
         static State StateFromString( const std::string& stringValue );
 
+
         enum class Direction{
             X = 1,
             Y = 2,
@@ -58,6 +59,14 @@ namespace Opm {
         static Direction   DirectionFromString(const std::string& stringValue);
 
 
+        enum class Order {
+                          DEPTH,
+                          INPUT,
+                          TRACK
+        };
+
+        static const std::string Order2String( Order enumValue );
+        static Order OrderFromString(const std::string& comporderStringValue);
 
 
 

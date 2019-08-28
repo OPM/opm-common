@@ -239,7 +239,7 @@ namespace {
 
         int compOrder(const Opm::Well2& well)
         {
-            using WCO   = ::Opm::WellCompletion::CompletionOrderEnum;
+            using WCO   = ::Opm::Connection::Order;
             using COVal = ::Opm::RestartIO::Helpers::
                 VectorItems::IWell::Value::CompOrder;
 

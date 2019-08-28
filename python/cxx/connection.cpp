@@ -9,7 +9,7 @@ std::string state( const Connection& c ) {
 }
 
 std::string direction( const Connection& c ) {
-    return WellCompletion::DirectionEnum2String( c.dir() );
+    return Connection::Direction2String( c.dir() );
 }
 
 }

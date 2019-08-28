@@ -606,7 +606,7 @@ namespace {
                 addGroup(groupName , currentStep, unit_system);
 
             if (!hasWell(wellName)) {
-                WellCompletion::CompletionOrderEnum wellConnectionOrder = WellCompletion::TRACK;
+                auto wellConnectionOrder = Connection::Order::TRACK;
 
                 if( const auto* compordp = COMPORD_in_timestep() ) {
                      const auto& compord = *compordp;
@@ -617,7 +617,7 @@ namespace {
                         const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
                         if (Well2::wellNameInWellNamePattern(wellName, wellNamePattern)) {
                             const std::string& compordString = compordRecord.getItem(1).getTrimmedString(0);
-                            wellConnectionOrder = WellCompletion::CompletionOrderEnumFromString(compordString);
+                            wellConnectionOrder = Connection::OrderFromString(compordString);
                         }
                     }
                 }
@@ -1976,7 +1976,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     void Schedule::addWell(const std::string& wellName,
                            const DeckRecord& record,
                            size_t timeStep,
-                           WellCompletion::CompletionOrderEnum wellConnectionOrder,
+                           Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system) {
 
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
