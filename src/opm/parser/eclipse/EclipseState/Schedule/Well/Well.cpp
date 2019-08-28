@@ -108,6 +108,7 @@ Well::Well(const std::string& wname_arg,
     econ_limits(std::make_shared<WellEconProductionLimits>()),
     foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
+    saltwater_properties(std::make_shared<WellSaltwaterProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
     production(std::make_shared<WellProductionProperties>(wname)),
@@ -158,6 +159,19 @@ bool Well::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polyme
     }
     if (*this->polymer_properties != *polymer_properties_arg) {
         this->polymer_properties = polymer_properties_arg;
+        return true;
+    }
+
+    return false;
+}
+
+bool Well::updateSaltwaterProperties(std::shared_ptr<WellSaltwaterProperties> saltwater_properties_arg) {
+    if (this->producer) {
+        throw std::runtime_error("Not allowed to set saltwater injection properties for well " + name() +
+                                 " since it is a production well");
+    }
+    if (*this->saltwater_properties != *saltwater_properties_arg) {
+        this->saltwater_properties = saltwater_properties_arg;
         return true;
     }
 
@@ -480,6 +494,9 @@ const WellPolymerProperties& Well::getPolymerProperties() const {
     return *this->polymer_properties;
 }
 
+const WellSaltwaterProperties& Well::getSaltwaterProperties() const {
+    return *this->saltwater_properties;
+}
 
 const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
@@ -726,6 +743,8 @@ double Well::production_rate(const SummaryState& st, Phase prod_phase) const {
             throw std::invalid_argument( "Production of 'POLYMW' requested.");
         case Phase::FOAM:
             throw std::invalid_argument( "Production of 'FOAM' requested.");
+        case Phase::SALTWATER:
+        throw std::invalid_argument( "Production of 'SALTWATER' requested.");
     }
 
     throw std::logic_error( "Unreachable state. Invalid Phase value. "

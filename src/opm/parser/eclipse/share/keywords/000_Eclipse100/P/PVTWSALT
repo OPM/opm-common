@@ -1,0 +1,9 @@
+{"name" : "PVTWSALT" ,
+"sections" : ["PROPS"],
+"size" : "UNKNOWN",
+"records": [
+[{"name":"P_REF", "value_type" : "DOUBLE", "dimension":"Pressure" },
+{"name":"SALT_CONCENTRATION_REF", "value_type" : "DOUBLE", "default" : 0.0,"dimension":"Density"}],
+[{"name":"DATA", "value_type" : "DOUBLE", "size_type" : "ALL", "dimension":["Density","1","1/Pressure","Viscosity", "1/Pressure"]}]
+]}
+

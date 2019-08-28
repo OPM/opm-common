@@ -67,6 +67,7 @@ set( keywords
      000_Eclipse100/A/AQUTAB
      000_Eclipse100/A/AUTOCOAR
      000_Eclipse100/A/AUTOREF
+     000_Eclipse100/B/BDENSITY
      000_Eclipse100/B/BIGMODEL
      000_Eclipse100/B/BLACKOIL
      000_Eclipse100/B/BLOCK_PROBE
@@ -631,7 +632,8 @@ set( keywords
      000_Eclipse100/P/PVTG
      000_Eclipse100/P/PVTNUM
      000_Eclipse100/P/PVTO
-     000_Eclipse100/P/PVTW
+     000_Eclipse100/P/PVTW  
+     000_Eclipse100/P/PVTWSALT
      000_Eclipse100/Q/QDRILL
      000_Eclipse100/Q/QHRATING
      000_Eclipse100/Q/QMOBIL
