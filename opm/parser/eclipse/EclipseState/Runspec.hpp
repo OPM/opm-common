@@ -25,6 +25,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/Tabdims.hpp>
 #include <opm/parser/eclipse/EclipseState/EndpointScaling.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQParams.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp>
 
 namespace Opm {
 class Deck;
@@ -171,6 +172,7 @@ public:
     const WellSegmentDims& wellSegmentDimensions() const noexcept;
     int eclPhaseMask( ) const noexcept;
     const EclHysterConfig& hysterPar() const noexcept;
+    const Actdims& actdims() const noexcept;
 
 private:
     Phases active_phases;
@@ -180,6 +182,7 @@ private:
     WellSegmentDims wsegdims;
     UDQParams udq_params;
     EclHysterConfig hystpar;
+    Actdims m_actdims;
 };
 
 
