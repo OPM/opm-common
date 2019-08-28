@@ -36,6 +36,7 @@
 #include <opm/parser/eclipse/Parser/ParserKeywords/A.hpp>
 #include <opm/parser/eclipse/Parser/ParserKeywords/S.hpp>
 
+#include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnkrvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/EnptvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/GasvisctTable.hpp>
@@ -65,6 +66,7 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PdvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RtempvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/RvvdTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/SaltvdTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgcwmisTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgfnTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SgofTable.hpp>
@@ -162,6 +164,7 @@ namespace Opm {
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
+
         if( deck.hasKeyword( "PVTW" ) )
             this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
 
@@ -190,6 +193,14 @@ namespace Opm {
 
         if ( deck.hasKeyword( "ROCK2DTR") )
             initRockTables(deck, "ROCK2DTR", m_rock2dtrTables );
+
+        if ( deck.hasKeyword( "PVTWSALT") )
+            initPvtwsaltTables(deck, m_pvtwsaltTables );
+
+        if ( deck.hasKeyword( "BDENSITY") )
+            initBrineTables(deck, m_bdensityTables );
+
+
 
     }
 
@@ -290,6 +301,7 @@ namespace Opm {
     }
 
     void TableManager::initSimpleTables(const Deck& deck) {
+
         addTables( "SWOF" , m_tabdims.getNumSatTables() );
         addTables( "SGWFN", m_tabdims.getNumSatTables() );
         addTables( "SGOF",  m_tabdims.getNumSatTables() );
@@ -325,6 +337,7 @@ namespace Opm {
         addTables( "RVVD", m_eqldims->getNumEquilRegions());
         addTables( "PBVD", m_eqldims->getNumEquilRegions());
         addTables( "PDVD", m_eqldims->getNumEquilRegions());
+	addTables( "SALTVD", m_eqldims->getNumEquilRegions());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -387,6 +400,7 @@ namespace Opm {
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims->getNumEquilRegions());
+	initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
@@ -767,6 +781,10 @@ namespace Opm {
         return getTables("PDVD");
     }
 
+    const TableContainer& TableManager::getSaltvdTables() const {
+        return getTables("SALTVD");
+    }
+
     const TableContainer& TableManager::getEnkrvdTables() const {
         return getTables("ENKRVD");
     }
@@ -887,6 +905,14 @@ namespace Opm {
 
     const PvtwTable& TableManager::getPvtwTable() const {
         return this->m_pvtwTable;
+    }
+
+    const std::vector<PvtwsaltTable>& TableManager::getPvtwSaltTables() const {
+        return this->m_pvtwsaltTables;
+    }
+
+    const std::vector<BrineDensityTable>& TableManager::getBrineDensityTables() const {
+        return this->m_bdensityTables;
     }
 
     const PvcdoTable& TableManager::getPvcdoTable() const {

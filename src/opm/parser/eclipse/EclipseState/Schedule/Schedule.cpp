@@ -63,6 +63,7 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellInjectionProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellPolymerProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellProductionProperties.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/WellSaltwaterProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/Units/Dimension.hpp>
@@ -340,6 +341,9 @@ namespace {
 
         else if (keyword.name() == "WPOLYMER")
             handleWPOLYMER(keyword, currentStep, parseContext, errors);
+
+        else if (keyword.name() == "WSALT")
+            handleWSALT(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WSOLVENT")
             handleWSOLVENT(keyword, currentStep, parseContext, errors);
@@ -1101,6 +1105,25 @@ namespace {
                     if (well2->updatePolymerProperties(polymer_properties))
                         this->updateWell(well2, currentStep);
                 }
+            }
+        }
+    }
+
+    void Schedule::handleWSALT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, currentStep );
+
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+
+            for (const auto& well_name : well_names) {
+                const auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                auto saltwater_properties = std::make_shared<WellSaltwaterProperties>(well2->getSaltwaterProperties());
+                saltwater_properties->handleWSALT(record);
+                if (well2->updateSaltwaterProperties(saltwater_properties))
+                    this->updateWell(well2, currentStep);
             }
         }
     }

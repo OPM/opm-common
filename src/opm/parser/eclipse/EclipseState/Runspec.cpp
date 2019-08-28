@@ -35,6 +35,7 @@ Phase get_phase( const std::string& str ) {
     if( str == "ENERGY" ) return Phase::ENERGY;
     if( str == "POLYMW" ) return Phase::POLYMW;
     if( str == "FOAM" ) return Phase::FOAM;
+    if( str == "SALTWATER" ) return Phase::SALTWATER;
 
     throw std::invalid_argument( "Unknown phase '" + str + "'" );
 }
@@ -49,6 +50,7 @@ std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
         case Phase::ENERGY:  return stream << "ENERGY";
         case Phase::POLYMW:  return stream << "POLYMW";
         case Phase::FOAM:    return stream << "FOAM";
+        case Phase::SALTWATER:    return stream << "SALTWATER";
 
     }
 
@@ -57,7 +59,7 @@ std::ostream& operator<<( std::ostream& stream, const Phase& p ) {
 
 using un = std::underlying_type< Phase >::type;
 
-Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, bool polymw, bool foam ) noexcept :
+Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, bool polymw, bool foam, bool saltwater) noexcept :
     bits( (oil ? (1 << static_cast< un >( Phase::OIL ) )     : 0) |
           (gas ? (1 << static_cast< un >( Phase::GAS ) )     : 0) |
           (wat ? (1 << static_cast< un >( Phase::WATER ) )   : 0) |
@@ -65,7 +67,8 @@ Phases::Phases( bool oil, bool gas, bool wat, bool sol, bool pol, bool energy, b
           (pol ? (1 << static_cast< un >( Phase::POLYMER ) ) : 0) |
           (energy ? (1 << static_cast< un >( Phase::ENERGY ) ) : 0) |
           (polymw ? (1 << static_cast< un >( Phase::POLYMW ) ) : 0) |
-          (foam ? (1 << static_cast< un >( Phase::FOAM ) ) : 0) )
+          (foam ? (1 << static_cast< un >( Phase::FOAM ) ) : 0) |
+          (saltwater ? (1 << static_cast< un >( Phase::SALTWATER ) ) : 0) )
 
 {}
 
@@ -239,7 +242,8 @@ Runspec::Runspec( const Deck& deck ) :
                            deck.hasKeyword( "POLYMER" ),
                            deck.hasKeyword( "THERMAL" ),
                            deck.hasKeyword( "POLYMW"  ),
-                           deck.hasKeyword( "FOAM" ) ) ),
+                           deck.hasKeyword( "FOAM" ),
+                           deck.hasKeyword( "BRINE" ) ) ),
     m_tabdims( deck ),
     endscale( deck ),
     welldims( deck ),

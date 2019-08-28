@@ -1,5 +1,5 @@
 {"name" : "WSALT", "sections" : ["SCHEDULE"],
-"comment" : "The CONCENTRATION item should be UDA - but UDA & size_type:ALL is not supported",
+"comment" : "UDA & size_type:ALL is not supported i.e Multi-Component Brine Model not supported",
 "items" :
       [{"name" : "WELL"         , "value_type" : "STRING"},
-       {"name" : "CONCENTRATION" , "value_type" : "DOUBLE" , "size_type" : "ALL"}]}
+       {"name" : "CONCENTRATION" , "value_type" : "UDA"}]}

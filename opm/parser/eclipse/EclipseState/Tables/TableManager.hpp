@@ -34,6 +34,9 @@
 #include <opm/parser/eclipse/EclipseState/Tables/PvtoTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/Rock2dtrTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/PvtwsaltTable.hpp>
+#include <opm/parser/eclipse/EclipseState/Tables/BrineDensityTable.hpp>
+
 
 #include <opm/parser/eclipse/EclipseState/Tables/FlatTable.hpp>
 #include <opm/parser/eclipse/EclipseState/Tables/SorwmisTable.hpp>
@@ -111,6 +114,7 @@ namespace Opm {
         const TableContainer& getRvvdTables() const;
         const TableContainer& getPbvdTables() const;
         const TableContainer& getPdvdTables() const;
+	const TableContainer& getSaltvdTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;
@@ -152,6 +156,9 @@ namespace Opm {
         const TableContainer& getOverburdTables() const;
 
         const PvtwTable& getPvtwTable() const;
+        const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
+        const std::vector<BrineDensityTable>& getBrineDensityTables() const;
+
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
         const RockTable& getRockTable() const;
@@ -232,6 +239,38 @@ namespace Opm {
                 }
             }
             assert(regionIdx == numTables - 1 );
+        }
+
+
+        template <class TableType>
+        void initPvtwsaltTables(const Deck& deck,  std::vector<TableType>& pvtwtables ) {
+
+            size_t numTables = m_tabdims.getNumPVTTables();
+            pvtwtables.resize(numTables);
+
+            const auto& keyword = deck.getKeyword("PVTWSALT");
+            size_t numEntries = keyword.size();
+            size_t regionIdx = 0;
+            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+                pvtwtables[regionIdx].init(keyword.getRecord(lineIdx), keyword.getRecord(lineIdx+1));
+                ++regionIdx;
+                ++lineIdx;
+            }
+            assert(regionIdx == numTables);
+        }
+
+        template <class TableType>
+        void initBrineTables(const Deck& deck,  std::vector<TableType>& brinetables ) {
+
+            size_t numTables = m_tabdims.getNumPVTTables();
+            brinetables.resize(numTables);
+
+            const auto& keyword = deck.getKeyword("BDENSITY");
+            size_t numEntries = keyword.size();
+            assert(numEntries == numTables);
+            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+                brinetables[lineIdx].init(keyword.getRecord(lineIdx));
+            }
         }
 
 
@@ -371,6 +410,8 @@ namespace Opm {
         RockTable m_rockTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
+        std::vector<PvtwsaltTable> m_pvtwsaltTables;
+        std::vector<BrineDensityTable> m_bdensityTables;
         std::map<int, PlymwinjTable> m_plymwinjTables;
         std::map<int, SkprwatTable> m_skprwatTables;
         std::map<int, SkprpolyTable> m_skprpolyTables;

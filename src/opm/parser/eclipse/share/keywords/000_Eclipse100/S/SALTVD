@@ -1,4 +1,5 @@
-{"name" : "SALTVD" ,
- "sections" : ["SOLUTION"],
- "size" : {"keyword" : "EQLDIMS", "item" : "NTEQUL"},
- "items" : [{"name" : "DATA", "value_type" : "DOUBLE", "size_type" : "ALL"}]}
+{"name" : "SALTVD" , "sections" : ["SOLUTION"], "size" : {"keyword" : "EQLDIMS" , "item" : "NTEQUL"},
+        "items" : [{"name" : "DATA" ,
+                   "value_type" : "DOUBLE" ,
+                   "size_type" : "ALL",
+                   "dimension" : ["Length" , "Density"]}]}
