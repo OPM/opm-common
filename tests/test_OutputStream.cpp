@@ -26,6 +26,7 @@
 #include <opm/io/eclipse/EclFile.hpp>
 #include <opm/io/eclipse/EclOutput.hpp>
 #include <opm/io/eclipse/ERst.hpp>
+#include <opm/io/eclipse/PaddedOutputString.hpp>
 
 #include <opm/io/eclipse/EclIOdata.hpp>
 
@@ -1085,3 +1086,647 @@ BOOST_AUTO_TEST_CASE(Formatted_Separate)
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Class_Restart
+
+// ==========================================================================
+
+BOOST_AUTO_TEST_SUITE(Class_RFT)
+
+BOOST_AUTO_TEST_CASE(Unformatted_New)
+{
+    using Char8 = ::Opm::EclIO::PaddedOutputString<8>;
+
+    const auto rset  = RSet("CASE");
+    const auto fmt   = ::Opm::EclIO::OutputStream::Formatted{ false };
+    const auto exist = ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false };
+
+    {
+        auto rft = ::Opm::EclIO::OutputStream::RFT {
+            rset, fmt, exist
+        };
+
+        rft.write("I", std::vector<int>   {1, 7, 2, 9});
+        rft.write("S", std::vector<float> {3.1f, 4.1f, 59.265f});
+        rft.write("Z", std::vector<Char8> {
+            Char8{"  Hello "}, Char8{" World "}
+        });
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "RFT");
+
+        auto rft = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(rft.hasKey("I"));
+        BOOST_CHECK(rft.hasKey("S"));
+        BOOST_CHECK(rft.hasKey("Z"));
+        BOOST_CHECK(!rft.hasKey("C"));
+
+        {
+            const auto vectors        = rft.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        rft.loadData();
+
+        {
+            const auto& I = rft.get<int>("I");
+            const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S");
+            const auto  expect_S = std::vector<float>{
+                3.1f, 4.1f, 59.265f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z");
+            const auto  expect_Z = std::vector<std::string>{
+                "  Hello", " World" // Trailing blanks trimmed
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+    }
+
+    {
+        auto rft = ::Opm::EclIO::OutputStream::RFT {
+            rset, fmt, exist
+        };
+
+        rft.write("I2", std::vector<int>   {11, 22, 33});
+        rft.write("S2", std::vector<float> {2.71f, 828.1f, 8.218f});
+        rft.write("Z2", std::vector<Char8> {
+            Char8{"Good B"}, Char8{" ye"}, Char8{ "W0rlD" },
+        });
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "RFT");
+
+        auto rft = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(!rft.hasKey("I"));
+        BOOST_CHECK(!rft.hasKey("S"));
+        BOOST_CHECK(!rft.hasKey("Z"));
+
+        BOOST_CHECK(rft.hasKey("I2"));
+        BOOST_CHECK(rft.hasKey("S2"));
+        BOOST_CHECK(rft.hasKey("Z2"));
+
+        {
+            const auto vectors        = rft.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I2", Opm::EclIO::eclArrType::INTE, 3},
+                Opm::EclIO::EclFile::EclEntry{"S2", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z2", Opm::EclIO::eclArrType::CHAR, 3},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        rft.loadData();
+
+        {
+            const auto& I = rft.get<int>("I2");
+            const auto  expect_I = std::vector<int>{ 11, 22, 33 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S2");
+            const auto  expect_S = std::vector<float>{
+                2.71f, 828.1f, 8.218f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z2");
+            const auto  expect_Z = std::vector<std::string>{
+                "Good B", " ye", "W0rlD"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Unformatted_Existing)
+{
+    using Char8 = ::Opm::EclIO::PaddedOutputString<8>;
+
+    const auto rset  = RSet("CASE");
+    const auto fmt   = ::Opm::EclIO::OutputStream::Formatted{ false };
+    const auto exist = ::Opm::EclIO::OutputStream::RFT::OpenExisting{ true };
+
+    {
+        auto rft = ::Opm::EclIO::OutputStream::RFT {
+            rset, fmt, exist
+        };
+
+        rft.write("I", std::vector<int>   {1, 7, 2, 9});
+        rft.write("S", std::vector<float> {3.1f, 4.1f, 59.265f});
+        rft.write("Z", std::vector<Char8> {
+            Char8{"  Hello "}, Char8{" World "}
+        });
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "RFT");
+
+        auto rft = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(rft.hasKey("I"));
+        BOOST_CHECK(rft.hasKey("S"));
+        BOOST_CHECK(rft.hasKey("Z"));
+
+        BOOST_CHECK(!rft.hasKey("C"));
+
+        {
+            const auto vectors        = rft.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        rft.loadData();
+
+        {
+            const auto& I = rft.get<int>("I");
+            const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S");
+            const auto  expect_S = std::vector<float>{
+                3.1f, 4.1f, 59.265f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z");
+            const auto  expect_Z = std::vector<std::string>{
+                "  Hello", " World" // Trailing blanks trimmed
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+    }
+
+    {
+        auto rft = ::Opm::EclIO::OutputStream::RFT {
+            rset, fmt, exist
+        };
+
+        rft.write("I2", std::vector<int>   {11, 22, 33});
+        rft.write("S2", std::vector<float> {2.71f, 828.1f, 8.218f});
+        rft.write("Z2", std::vector<Char8> {
+            Char8{"Good B"}, Char8{" ye"}, Char8{ "W0rlD" },
+        });
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "RFT");
+
+        auto rft = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(rft.hasKey("I"));
+        BOOST_CHECK(rft.hasKey("S"));
+        BOOST_CHECK(rft.hasKey("Z"));
+        BOOST_CHECK(rft.hasKey("I2"));
+        BOOST_CHECK(rft.hasKey("S2"));
+        BOOST_CHECK(rft.hasKey("Z2"));
+
+        BOOST_CHECK(!rft.hasKey("C"));
+
+        {
+            const auto vectors        = rft.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
+                Opm::EclIO::EclFile::EclEntry{"I2", Opm::EclIO::eclArrType::INTE, 3},
+                Opm::EclIO::EclFile::EclEntry{"S2", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z2", Opm::EclIO::eclArrType::CHAR, 3},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        rft.loadData();
+
+        {
+            const auto& I = rft.get<int>("I");
+            const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S");
+            const auto  expect_S = std::vector<float>{
+                3.1f, 4.1f, 59.265f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z");
+            const auto  expect_Z = std::vector<std::string>{
+                "  Hello", " World" // Trailing blanks trimmed
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+        {
+            const auto& I = rft.get<int>("I2");
+            const auto  expect_I = std::vector<int>{ 11, 22, 33 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S2");
+            const auto  expect_S = std::vector<float>{
+                2.71f, 828.1f, 8.218f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z2");
+            const auto  expect_Z = std::vector<std::string>{
+                "Good B", " ye", "W0rlD"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Formatted_New)
+{
+    using Char8 = ::Opm::EclIO::PaddedOutputString<8>;
+
+    const auto rset  = RSet("CASE");
+    const auto fmt   = ::Opm::EclIO::OutputStream::Formatted{ true };
+    const auto exist = ::Opm::EclIO::OutputStream::RFT::OpenExisting{ false };
+
+    {
+        auto rft = ::Opm::EclIO::OutputStream::RFT {
+            rset, fmt, exist
+        };
+
+        rft.write("I", std::vector<int>   {1, 7, 2, 9});
+        rft.write("S", std::vector<float> {3.1f, 4.1f, 59.265f});
+        rft.write("Z", std::vector<Char8> {
+            Char8{"  Hello "}, Char8{" World "}
+        });
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "FRFT");
+
+        auto rft = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(rft.hasKey("I"));
+        BOOST_CHECK(rft.hasKey("S"));
+        BOOST_CHECK(rft.hasKey("Z"));
+        BOOST_CHECK(!rft.hasKey("C"));
+
+        {
+            const auto vectors        = rft.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        rft.loadData();
+
+        {
+            const auto& I = rft.get<int>("I");
+            const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S");
+            const auto  expect_S = std::vector<float>{
+                3.1f, 4.1f, 59.265f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z");
+            const auto  expect_Z = std::vector<std::string>{
+                "  Hello", " World" // Trailing blanks trimmed
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+    }
+
+    {
+        auto rft = ::Opm::EclIO::OutputStream::RFT {
+            rset, fmt, exist
+        };
+
+        rft.write("I2", std::vector<int>   {11, 22, 33});
+        rft.write("S2", std::vector<float> {2.71f, 828.1f, 8.218f});
+        rft.write("Z2", std::vector<Char8> {
+            Char8{"Good B"}, Char8{" ye"}, Char8{ "W0rlD" },
+        });
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "FRFT");
+
+        auto rft = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(!rft.hasKey("I"));
+        BOOST_CHECK(!rft.hasKey("S"));
+        BOOST_CHECK(!rft.hasKey("Z"));
+
+        BOOST_CHECK(rft.hasKey("I2"));
+        BOOST_CHECK(rft.hasKey("S2"));
+        BOOST_CHECK(rft.hasKey("Z2"));
+
+        {
+            const auto vectors        = rft.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I2", Opm::EclIO::eclArrType::INTE, 3},
+                Opm::EclIO::EclFile::EclEntry{"S2", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z2", Opm::EclIO::eclArrType::CHAR, 3},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        rft.loadData();
+
+        {
+            const auto& I = rft.get<int>("I2");
+            const auto  expect_I = std::vector<int>{ 11, 22, 33 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S2");
+            const auto  expect_S = std::vector<float>{
+                2.71f, 828.1f, 8.218f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z2");
+            const auto  expect_Z = std::vector<std::string>{
+                "Good B", " ye", "W0rlD"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Formatted_Existing)
+{
+    using Char8 = ::Opm::EclIO::PaddedOutputString<8>;
+
+    const auto rset  = RSet("CASE");
+    const auto fmt   = ::Opm::EclIO::OutputStream::Formatted{ true };
+    const auto exist = ::Opm::EclIO::OutputStream::RFT::OpenExisting{ true };
+
+    {
+        auto rft = ::Opm::EclIO::OutputStream::RFT {
+            rset, fmt, exist
+        };
+
+        rft.write("I", std::vector<int>   {1, 7, 2, 9});
+        rft.write("S", std::vector<float> {3.1f, 4.1f, 59.265f});
+        rft.write("Z", std::vector<Char8> {
+            Char8{"  Hello "}, Char8{" World "}
+        });
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "FRFT");
+
+        auto rft = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(rft.hasKey("I"));
+        BOOST_CHECK(rft.hasKey("S"));
+        BOOST_CHECK(rft.hasKey("Z"));
+
+        BOOST_CHECK(!rft.hasKey("C"));
+
+        {
+            const auto vectors        = rft.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        rft.loadData();
+
+        {
+            const auto& I = rft.get<int>("I");
+            const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S");
+            const auto  expect_S = std::vector<float>{
+                3.1f, 4.1f, 59.265f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z");
+            const auto  expect_Z = std::vector<std::string>{
+                "  Hello", " World" // Trailing blanks trimmed
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+    }
+
+    {
+        auto rft = ::Opm::EclIO::OutputStream::RFT {
+            rset, fmt, exist
+        };
+
+        rft.write("I2", std::vector<int>   {11, 22, 33});
+        rft.write("S2", std::vector<float> {2.71f, 828.1f, 8.218f});
+        rft.write("Z2", std::vector<Char8> {
+            Char8{"Good B"}, Char8{" ye"}, Char8{ "W0rlD" },
+        });
+    }
+
+    {
+        const auto fname = ::Opm::EclIO::OutputStream::
+            outputFileName(rset, "FRFT");
+
+        auto rft = ::Opm::EclIO::EclFile{fname};
+
+        BOOST_CHECK(rft.hasKey("I"));
+        BOOST_CHECK(rft.hasKey("S"));
+        BOOST_CHECK(rft.hasKey("Z"));
+        BOOST_CHECK(rft.hasKey("I2"));
+        BOOST_CHECK(rft.hasKey("S2"));
+        BOOST_CHECK(rft.hasKey("Z2"));
+
+        BOOST_CHECK(!rft.hasKey("C"));
+
+        {
+            const auto vectors        = rft.getList();
+            const auto expect_vectors = std::vector<Opm::EclIO::EclFile::EclEntry>{
+                Opm::EclIO::EclFile::EclEntry{"I", Opm::EclIO::eclArrType::INTE, 4},
+                Opm::EclIO::EclFile::EclEntry{"S", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z", Opm::EclIO::eclArrType::CHAR, 2},
+                Opm::EclIO::EclFile::EclEntry{"I2", Opm::EclIO::eclArrType::INTE, 3},
+                Opm::EclIO::EclFile::EclEntry{"S2", Opm::EclIO::eclArrType::REAL, 3},
+                Opm::EclIO::EclFile::EclEntry{"Z2", Opm::EclIO::eclArrType::CHAR, 3},
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(vectors.begin(), vectors.end(),
+                                          expect_vectors.begin(),
+                                          expect_vectors.end());
+        }
+
+        rft.loadData();
+
+        {
+            const auto& I = rft.get<int>("I");
+            const auto  expect_I = std::vector<int>{ 1, 7, 2, 9 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S");
+            const auto  expect_S = std::vector<float>{
+                3.1f, 4.1f, 59.265f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z");
+            const auto  expect_Z = std::vector<std::string>{
+                "  Hello", " World" // Trailing blanks trimmed
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+        {
+            const auto& I = rft.get<int>("I2");
+            const auto  expect_I = std::vector<int>{ 11, 22, 33 };
+            BOOST_CHECK_EQUAL_COLLECTIONS(I.begin(), I.end(),
+                                          expect_I.begin(),
+                                          expect_I.end());
+        }
+
+        {
+            const auto& S = rft.get<float>("S2");
+            const auto  expect_S = std::vector<float>{
+                2.71f, 828.1f, 8.218f,
+            };
+
+            check_is_close(S, expect_S);
+        }
+
+        {
+            const auto& Z = rft.get<std::string>("Z2");
+            const auto  expect_Z = std::vector<std::string>{
+                "Good B", " ye", "W0rlD"
+            };
+
+            BOOST_CHECK_EQUAL_COLLECTIONS(Z.begin(), Z.end(),
+                                          expect_Z.begin(), expect_Z.end());
+        }
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Class_RFT
