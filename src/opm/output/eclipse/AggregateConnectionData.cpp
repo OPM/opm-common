@@ -54,29 +54,6 @@ namespace {
         return inteHead[VI::intehead::NCWMAX];
     }
 
-    std::map <std::size_t, const Opm::Connection*>  mapSeqIndexToConnection(const Opm::WellConnections& conns)
-    {
-        // make seqIndex to Connection map
-        std::map <std::size_t, const Opm::Connection*> seqIndConnMap;
-        for (const auto & conn : conns) {
-            std::size_t sI = conn.getSeqIndex();
-            seqIndConnMap.insert(std::make_pair(sI, &conn));
-        }
-        return seqIndConnMap;
-    }
-
-    std::map <std::size_t, const Opm::Connection*>  mapCompSegSeqIndexToConnection(const Opm::WellConnections& conns)
-    {
-        // make CompSegSeqIndex to Connection map
-        std::map <std::size_t, const Opm::Connection*> cs_seqIndConnMap;
-        for (const auto & conn : conns) {
-            std::size_t sI = conn.getCompSegSeqIndex();
-            cs_seqIndConnMap.insert(std::make_pair(sI, &conn));
-        }
-        return cs_seqIndConnMap;
-    }
-
-
     template <class ConnOp>
     void connectionLoop(const std::vector<Opm::Well2>& wells,
                         const Opm::EclipseGrid&        grid,
@@ -86,28 +63,28 @@ namespace {
              wellID < nWell; ++wellID)
         {
             const auto& well = wells[wellID];
-            const auto& conn0 = well.getConnections();
-            const auto& conns = Opm::WellConnections( conn0, grid );
-            const int niSI = static_cast<int>(conn0.size());
-            std::map <std::size_t, const Opm::Connection*> sIToConn;
+            std::vector<const Opm::Connection*> connSI;
+            for (const auto& conn : well.getConnections()) {
+                if (grid.cellActive(conn.getI(), conn.getJ(), conn.getK()))
+                    connSI.push_back( &conn );
+            }
 
             //Branch according to MSW well or not and
             //sort active connections according to appropriate seqIndex
             if (well.isMultiSegment()) {
                 //sort connections according to input sequence in COMPSEGS
-                sIToConn = mapCompSegSeqIndexToConnection(conns);
+                std::sort(connSI.begin(), connSI.end(), [](const Opm::Connection* conn1, const Opm::Connection* conn2)
+                                                            {
+                                                                return conn1->getCompSegSeqIndex() < conn2->getCompSegSeqIndex();
+                                                            });
             } else {
-                //sort connections according to input sequence in COMPDAT
-                sIToConn = mapSeqIndexToConnection(conns);
+                std::sort(connSI.begin(), connSI.end(), [](const Opm::Connection* conn1, const Opm::Connection* conn2)
+                                                        {
+                                                            return conn1->getSeqIndex() < conn2->getSeqIndex();
+                                                        });
             }
 
-            std::vector<const Opm::Connection*> connSI;
-            for (int iSI = 0; iSI < niSI; iSI++) {
-                const auto searchSI = sIToConn.find(static_cast<std::size_t>(iSI));
-                if (searchSI != sIToConn.end()) {
-                    connSI.push_back(searchSI->second);
-                }
-            }
+
             for (auto nConn = connSI.size(), connID = 0*nConn;
                  connID < nConn; ++connID)
             {
