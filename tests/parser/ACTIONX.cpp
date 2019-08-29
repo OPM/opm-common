@@ -595,3 +595,41 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
         BOOST_CHECK_EQUAL(wells[0], "OP3");
     }
 }
+
+BOOST_AUTO_TEST_CASE(SCAN2) {
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+TSTEP
+10 /
+
+ACTIONX
+   'ACTION1' /
+   WWCT OPX  > 0.75 /
+/
+
+WELSPECS
+  'W1'  'OP'  1 1 3.33  'OIL' 7*/
+/
+
+ENDACTIO
+
+TSTEP
+   10 /
+)"};
+
+    Opm::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid1);
+    Runspec runspec (deck);
+    Schedule sched(deck, grid1, eclipseProperties, runspec);
+    const auto& actions0 = sched.actions(0);
+    BOOST_CHECK_EQUAL(actions0.size(), 0);
+
+    const auto& actions1 = sched.actions(1);
+    BOOST_CHECK_EQUAL(actions1.size(), 1);
+}
+
+

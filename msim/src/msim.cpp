@@ -57,7 +57,7 @@ void msim::run(Schedule& schedule, EclipseIO& io, bool report_only) {
 
 
 void msim::post_step(Schedule& schedule, const SummaryState& st, data::Solution& /* sol */, data::Wells& /* well_data */, size_t report_step) const {
-    const auto& actions = schedule.actions();
+    const auto& actions = schedule.actions(report_step);
     if (actions.empty())
         return;
 

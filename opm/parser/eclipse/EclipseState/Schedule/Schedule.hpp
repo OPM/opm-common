@@ -183,7 +183,7 @@ namespace Opm
         const WellTestConfig& wtestConfig(size_t timestep) const;
         const WListManager& getWListManager(size_t timeStep) const;
         const UDQConfig& getUDQConfig(size_t timeStep) const;
-        const Action::Actions& actions() const;
+        const Action::Actions& actions(std::size_t timeStep) const;
         void evalAction(const SummaryState& summary_state, size_t timeStep);
 
         GTNode groupTree(std::size_t report_step) const;
@@ -235,9 +235,9 @@ namespace Opm
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateModel>> guide_rate_model;
         DynamicState<WellProducer::ControlModeEnum> global_whistctl_mode;
+        DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         RFTConfig rft_config;
 
-        Action::Actions m_actions;
 
         std::map<std::string,Events> well_events;
         DynamicState<int> m_nupcol;
@@ -250,6 +250,7 @@ namespace Opm
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const Eclipse3DProperties& eclipseProperties);
+        void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group2& child_group, size_t timeStep);
         void addGroup(const std::string& groupName , size_t timeStep, const UnitSystem& unit_system);
