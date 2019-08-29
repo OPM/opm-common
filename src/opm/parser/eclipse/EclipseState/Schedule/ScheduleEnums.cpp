@@ -195,56 +195,6 @@ namespace Opm {
     /*****************************************************************/
 
     namespace WellProducer {
-
-        const std::string ControlMode2String( ControlModeEnum enumValue ) {
-            switch( enumValue ) {
-            case ORAT:
-                return "ORAT";
-            case WRAT:
-                return "WRAT";
-            case GRAT:
-                return "GRAT";
-            case LRAT:
-                return "LRAT";
-            case CRAT:
-                return "CRAT";
-            case RESV:
-                return "RESV";
-            case BHP:
-                return "BHP";
-            case THP:
-                return "THP";
-            case GRUP:
-                return "GRUP";
-            default:
-                throw std::invalid_argument("unhandled enum value");
-            }
-        }
-
-        ControlModeEnum ControlModeFromString( const std::string& stringValue ) {
-            if (stringValue == "ORAT")
-                return ORAT;
-            else if (stringValue == "WRAT")
-                return WRAT;
-            else if (stringValue == "GRAT")
-                return GRAT;
-            else if (stringValue == "LRAT")
-                return LRAT;
-            else if (stringValue == "CRAT")
-                return CRAT;
-            else if (stringValue == "RESV")
-                return RESV;
-            else if (stringValue == "BHP")
-                return BHP;
-            else if (stringValue == "THP")
-                return THP;
-            else if (stringValue == "GRUP")
-                return GRUP;
-            else if (stringValue == "NONE")
-                return NONE;
-            else
-                throw std::invalid_argument("Unknown enum state string: " + stringValue );
-        }
     }
 
 
@@ -452,45 +402,6 @@ namespace Opm {
     }
 
 
-    namespace WellTarget {
-
-        ControlModeEnum ControlModeFromString(const std::string& string_value) {
-            if (string_value == "ORAT")
-                return ORAT;
-
-            if (string_value == "WRAT")
-                return WRAT;
-
-            if (string_value == "GRAT")
-                return GRAT;
-
-            if (string_value == "LRAT")
-                return LRAT;
-
-            if (string_value == "CRAT")
-                return CRAT;
-
-            if (string_value == "RESV")
-                return RESV;
-
-            if (string_value == "BHP")
-                return BHP;
-
-            if (string_value == "THP")
-                return THP;
-
-            if (string_value == "VFP")
-                return VFP;
-
-            if (string_value == "LIFT")
-                return LIFT;
-
-            if (string_value == "GUID")
-                return GUID;
-
-            throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
-        }
-    }
 
 
 

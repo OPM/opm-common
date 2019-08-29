@@ -234,13 +234,13 @@ namespace Opm
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateModel>> guide_rate_model;
-        DynamicState<WellProducer::ControlModeEnum> global_whistctl_mode;
+        DynamicState<Well2::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         RFTConfig rft_config;
+        DynamicState<int> m_nupcol;
 
 
         std::map<std::string,Events> well_events;
-        DynamicState<int> m_nupcol;
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group2> group, size_t reportStep);

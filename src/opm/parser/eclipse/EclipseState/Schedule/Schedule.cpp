@@ -122,7 +122,7 @@ namespace {
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_model(this->m_timeMap, std::make_shared<GuideRateModel>()),
-        global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
+        global_whistctl_mode(this->m_timeMap, Well2::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, 3)
@@ -471,10 +471,10 @@ namespace {
     void Schedule::handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& record = keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const WellProducer::ControlModeEnum controlMode = WellProducer::ControlModeFromString( cmodeString );
+        const auto controlMode = Well2::ProducerCModeFromString( cmodeString );
 
-        if (controlMode != WellProducer::NONE) {
-            if (!WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
+        if (controlMode != Well2::ProducerCMode::NONE) {
+            if (!Well2::WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
                 std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
                     + ", which makes WHISTCTL keyword not affect the simulation at all";
                 OpmLog::warning(msg);
@@ -493,7 +493,7 @@ namespace {
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
             auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-            auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+            auto prop = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
@@ -505,7 +505,7 @@ namespace {
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
             auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-            auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+            auto prop = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
@@ -517,7 +517,7 @@ namespace {
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
             auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-            auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+            auto prop = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
@@ -732,7 +732,7 @@ namespace {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool switching_from_injector = !well2->isProducer();
-                    auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                    auto properties = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
                     bool update_well = false;
                     properties->handleWCONHIST(record);
 
@@ -796,11 +796,11 @@ namespace {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool switching_from_injector = !well2->isProducer();
-                    auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                    auto properties = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
                     bool update_well = switching_from_injector;
                     properties->clearControls();
                     if (well2->isAvailableForGroupControl())
-                        properties->addProductionControl(WellProducer::GRUP);
+                        properties->addProductionControl(Well2::ProducerCMode::GRUP);
 
                     properties->handleWCONPROD(well_name, record);
 
@@ -1406,7 +1406,7 @@ namespace {
         for( const auto& record : keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto cmode = WellTarget::ControlModeFromString(record.getItem("CMODE").getTrimmedString(0));
+            const auto cmode = Well2::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
             double newValue = record.getItem("NEW_VALUE").get< double >(0);
 
             const auto well_names = wellNames( wellNamePattern, currentStep );
@@ -1420,16 +1420,16 @@ namespace {
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool update = false;
                     if (well2->isProducer()) {
-                        auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                        auto prop = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
                         prop->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
                         update = well2->updateProduction(prop);
-                        if (cmode == WellTarget::GUID)
+                        if (cmode == Well2::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);
                     } else {
                         auto inj = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                         inj->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
                         update = well2->updateInjection(inj);
-                        if (cmode == WellTarget::GUID)
+                        if (cmode == Well2::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);
                     }
                     if (update)

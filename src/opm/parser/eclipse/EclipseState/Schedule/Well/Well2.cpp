@@ -80,7 +80,7 @@ Well2::Well2(const std::string& wname_arg,
              int headJ_arg,
              double ref_depth_arg,
              Phase phase_arg,
-             WellProducer::ControlModeEnum whistctl_cmode,
+             ProducerCMode whistctl_cmode,
              Connection::Order ordering_arg,
              const UnitSystem& unit_system_arg,
              double udq_undefined_arg) :
@@ -187,7 +187,7 @@ void Well2::switchToInjector() {
 
     p->BHPLimit.assert_numeric();
     p->BHPLimit.reset(0);
-    p->dropProductionControl( Opm::WellProducer::BHP );
+    p->dropProductionControl( ProducerCMode::BHP );
     this->updateProduction( p );
     this->updateProducer( false );
 }
@@ -487,7 +487,7 @@ const WellEconProductionLimits& Well2::getEconLimits() const {
     return *this->econ_limits;
 }
 
-const WellProductionProperties& Well2::getProductionProperties() const {
+const Well2::WellProductionProperties& Well2::getProductionProperties() const {
     return *this->production;
 }
 
@@ -733,7 +733,7 @@ bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::st
 }
 
 
-ProductionControls Well2::productionControls(const SummaryState& st) const {
+Well2::ProductionControls Well2::productionControls(const SummaryState& st) const {
     if (this->isProducer()) {
         auto controls = this->production->controls(st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
@@ -875,4 +875,91 @@ Well2::InjectorCMode Well2::InjectorCModeFromString(const std::string &stringVal
         throw std::invalid_argument("Unknown enum state string: " + stringValue);
 }
 
+Well2::WELTARGCMode Well2::WELTARGCModeFromString(const std::string& string_value) {
+    if (string_value == "ORAT")
+        return WELTARGCMode::ORAT;
+
+    if (string_value == "WRAT")
+        return WELTARGCMode::WRAT;
+
+    if (string_value == "GRAT")
+        return WELTARGCMode::GRAT;
+
+    if (string_value == "LRAT")
+        return WELTARGCMode::LRAT;
+
+    if (string_value == "CRAT")
+        return WELTARGCMode::CRAT;
+
+    if (string_value == "RESV")
+        return WELTARGCMode::RESV;
+
+    if (string_value == "BHP")
+        return WELTARGCMode::BHP;
+
+    if (string_value == "THP")
+        return WELTARGCMode::THP;
+
+    if (string_value == "VFP")
+        return WELTARGCMode::VFP;
+
+    if (string_value == "LIFT")
+        return WELTARGCMode::LIFT;
+
+    if (string_value == "GUID")
+        return WELTARGCMode::GUID;
+
+    throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
+}
+
+
+const std::string Well2::ProducerCMode2String( ProducerCMode enumValue ) {
+    switch( enumValue ) {
+    case ProducerCMode::ORAT:
+        return "ORAT";
+    case ProducerCMode::WRAT:
+        return "WRAT";
+    case ProducerCMode::GRAT:
+        return "GRAT";
+    case ProducerCMode::LRAT:
+        return "LRAT";
+    case ProducerCMode::CRAT:
+        return "CRAT";
+    case ProducerCMode::RESV:
+        return "RESV";
+    case ProducerCMode::BHP:
+        return "BHP";
+    case ProducerCMode::THP:
+        return "THP";
+    case ProducerCMode::GRUP:
+        return "GRUP";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+Well2::ProducerCMode Well2::ProducerCModeFromString( const std::string& stringValue ) {
+    if (stringValue == "ORAT")
+        return ProducerCMode::ORAT;
+    else if (stringValue == "WRAT")
+        return ProducerCMode::WRAT;
+    else if (stringValue == "GRAT")
+        return ProducerCMode::GRAT;
+    else if (stringValue == "LRAT")
+        return ProducerCMode::LRAT;
+    else if (stringValue == "CRAT")
+        return ProducerCMode::CRAT;
+    else if (stringValue == "RESV")
+        return ProducerCMode::RESV;
+    else if (stringValue == "BHP")
+        return ProducerCMode::BHP;
+    else if (stringValue == "THP")
+        return ProducerCMode::THP;
+    else if (stringValue == "GRUP")
+        return ProducerCMode::GRUP;
+    else if (stringValue == "NONE")
+        return ProducerCMode::NONE;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
 }

@@ -1460,7 +1460,7 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     // The well is producer for timestep 3 and the injection properties BHPLimit should be set to zero.
     BOOST_CHECK(sched.getWell2("I", 3).isProducer());
     BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getInjectionProperties().BHPLimit.get<double>(), 0); // 3
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::BHP), true );
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().hasInjectionControl(Opm::Well2::InjectorCMode::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().BHPLimit.get<double>(), 6891.2 * 1e5); // 4
 }
@@ -1538,20 +1538,20 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
     BOOST_CHECK_THROW(schedule.getWell2("P2", 0), std::invalid_argument);
 
     //10  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK(schedule.getWell2("P1", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
+    BOOST_CHECK(schedule.getWell2("P2", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
 
     //15  OKT 2008
     {
         const auto& props1 = schedule.getWell2("P1", 2).getProductionProperties();
         const auto& props2 = schedule.getWell2("P2", 2).getProductionProperties();
 
-        BOOST_CHECK_EQUAL(props1.controlMode, Opm::WellProducer::RESV);
-        BOOST_CHECK_EQUAL(props2.controlMode, Opm::WellProducer::RESV);
+        BOOST_CHECK(props1.controlMode == Opm::Well2::ProducerCMode::RESV);
+        BOOST_CHECK(props2.controlMode == Opm::Well2::ProducerCMode::RESV);
         // under history mode, a producing well should have only one rate target/limit or have no rate target/limit.
         // the rate target/limit from previous report step should not be kept.
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::ORAT) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::ORAT) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
     }
 
     //18  OKT 2008
@@ -1559,11 +1559,11 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
         const auto& props1 = schedule.getWell2("P1", 3).getProductionProperties();
         const auto& props2 = schedule.getWell2("P2", 3).getProductionProperties();
 
-        BOOST_CHECK_EQUAL(props1.controlMode, Opm::WellProducer::RESV);
-        BOOST_CHECK_EQUAL(props2.controlMode, Opm::WellProducer::RESV);
+        BOOST_CHECK(props1.controlMode == Opm::Well2::ProducerCMode::RESV);
+        BOOST_CHECK(props2.controlMode == Opm::Well2::ProducerCMode::RESV);
 
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::ORAT) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::ORAT) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
     }
 
     // 20 OKT 2008
@@ -1571,13 +1571,13 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
         const auto& props1 = schedule.getWell2("P1", 4).getProductionProperties();
         const auto& props2 = schedule.getWell2("P2", 4).getProductionProperties();
 
-        BOOST_CHECK_EQUAL(props1.controlMode, Opm::WellProducer::LRAT);
-        BOOST_CHECK_EQUAL(props2.controlMode, Opm::WellProducer::LRAT);
+        BOOST_CHECK(props1.controlMode == Opm::Well2::ProducerCMode::LRAT);
+        BOOST_CHECK(props2.controlMode == Opm::Well2::ProducerCMode::LRAT);
 
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::ORAT) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::ORAT) );
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::RESV) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::RESV) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
     }
 
     // 25 OKT 2008
@@ -1585,13 +1585,13 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
         const auto& props1 = schedule.getWell2("P1", 5).getProductionProperties();
         const auto& props2 = schedule.getWell2("P2", 5).getProductionProperties();
 
-        BOOST_CHECK_EQUAL(props1.controlMode, Opm::WellProducer::ORAT);
-        BOOST_CHECK_EQUAL(props2.controlMode, Opm::WellProducer::ORAT);
+        BOOST_CHECK(props1.controlMode == Opm::Well2::ProducerCMode::ORAT);
+        BOOST_CHECK(props2.controlMode == Opm::Well2::ProducerCMode::ORAT);
 
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::LRAT) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::LRAT) );
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::RESV) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::RESV) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::LRAT) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::LRAT) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
     }
 }
 
@@ -1644,17 +1644,17 @@ BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
     BOOST_CHECK_THROW(schedule.getWell2("P2", 0), std::invalid_argument);
 
     //10  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK(schedule.getWell2("P1", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
+    BOOST_CHECK(schedule.getWell2("P2", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
 
     //15  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 2).getProductionProperties().controlMode, Opm::WellProducer::GRAT);
-    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::WRAT) );
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 2).getProductionProperties().controlMode, Opm::WellProducer::WRAT);
-    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::GRAT) );
+    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::GRAT);
+    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::WRAT) );
+    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::WRAT);
+    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::GRAT) );
     // the previous control limits/targets should not stay
-    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
 }
 
 BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
@@ -1728,38 +1728,38 @@ BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
     Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     //10  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 1).getProductionProperties().controlMode, Opm::WellProducer::GRAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 1).getProductionProperties().controlMode, Opm::WellProducer::GRAT);
+    BOOST_CHECK(schedule.getWell2("P1", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::GRAT);
+    BOOST_CHECK(schedule.getWell2("P2", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::GRAT);
 
     //15  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 2).getProductionProperties().controlMode, Opm::WellProducer::RESV);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 2).getProductionProperties().controlMode, Opm::WellProducer::RESV);
+    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::RESV);
+    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::RESV);
     // under history mode, a producing well should have only one rate target/limit or have no rate target/limit.
     // the rate target/limit from previous report step should not be kept.
-    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
 
     //18  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 3).getProductionProperties().controlMode, Opm::WellProducer::RESV);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 3).getProductionProperties().controlMode, Opm::WellProducer::RESV);
-    BOOST_CHECK( !schedule.getWell2("P1", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK(schedule.getWell2("P1", 3).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::RESV);
+    BOOST_CHECK(schedule.getWell2("P2", 3).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::RESV);
+    BOOST_CHECK( !schedule.getWell2("P1", 3).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 3).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
 
     // 20 OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 4).getProductionProperties().controlMode, Opm::WellProducer::LRAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 4).getProductionProperties().controlMode, Opm::WellProducer::LRAT);
-    BOOST_CHECK( !schedule.getWell2("P1", 4).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 4).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P1", 4).getProductionProperties().hasProductionControl(Opm::WellProducer::RESV) );
-    BOOST_CHECK( !schedule.getWell2("P2", 4).getProductionProperties().hasProductionControl(Opm::WellProducer::RESV) );
+    BOOST_CHECK(schedule.getWell2("P1", 4).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::LRAT);
+    BOOST_CHECK(schedule.getWell2("P2", 4).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::LRAT);
+    BOOST_CHECK( !schedule.getWell2("P1", 4).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 4).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P1", 4).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+    BOOST_CHECK( !schedule.getWell2("P2", 4).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
 
     // 25 OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 5).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 5).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
-    BOOST_CHECK( !schedule.getWell2("P1", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::RESV) );
-    BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::RESV) );
-    BOOST_CHECK( !schedule.getWell2("P1", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::LRAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::LRAT) );
+    BOOST_CHECK(schedule.getWell2("P1", 5).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
+    BOOST_CHECK(schedule.getWell2("P2", 5).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
+    BOOST_CHECK( !schedule.getWell2("P1", 5).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+    BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+    BOOST_CHECK( !schedule.getWell2("P1", 5).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::LRAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::LRAT) );
 }
 
 
@@ -2617,53 +2617,53 @@ BOOST_AUTO_TEST_CASE(InjectorStatusEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(ProducerCOntrolMopdeEnum2String) {
-    BOOST_CHECK_EQUAL( "ORAT"  ,  WellProducer::ControlMode2String(WellProducer::ORAT));
-    BOOST_CHECK_EQUAL( "WRAT"  ,  WellProducer::ControlMode2String(WellProducer::WRAT));
-    BOOST_CHECK_EQUAL( "GRAT"  , WellProducer::ControlMode2String(WellProducer::GRAT));
-    BOOST_CHECK_EQUAL( "LRAT"  , WellProducer::ControlMode2String(WellProducer::LRAT));
-    BOOST_CHECK_EQUAL( "CRAT"  , WellProducer::ControlMode2String(WellProducer::CRAT));
-    BOOST_CHECK_EQUAL( "RESV"  ,  WellProducer::ControlMode2String(WellProducer::RESV));
-    BOOST_CHECK_EQUAL( "BHP"   , WellProducer::ControlMode2String(WellProducer::BHP));
-    BOOST_CHECK_EQUAL( "THP"   , WellProducer::ControlMode2String(WellProducer::THP));
-    BOOST_CHECK_EQUAL( "GRUP"  , WellProducer::ControlMode2String(WellProducer::GRUP));
+    BOOST_CHECK_EQUAL( "ORAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::ORAT));
+    BOOST_CHECK_EQUAL( "WRAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::WRAT));
+    BOOST_CHECK_EQUAL( "GRAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::GRAT));
+    BOOST_CHECK_EQUAL( "LRAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::LRAT));
+    BOOST_CHECK_EQUAL( "CRAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::CRAT));
+    BOOST_CHECK_EQUAL( "RESV"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::RESV));
+    BOOST_CHECK_EQUAL( "BHP"   ,  Well2::ProducerCMode2String(Well2::ProducerCMode::BHP));
+    BOOST_CHECK_EQUAL( "THP"   ,  Well2::ProducerCMode2String(Well2::ProducerCMode::THP));
+    BOOST_CHECK_EQUAL( "GRUP"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::GRUP));
 }
 
 
 BOOST_AUTO_TEST_CASE(ProducerControlModeEnumFromString) {
-    BOOST_CHECK_THROW( WellProducer::ControlModeFromString("XRAT") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellProducer::ORAT   , WellProducer::ControlModeFromString("ORAT"));
-    BOOST_CHECK_EQUAL( WellProducer::WRAT   , WellProducer::ControlModeFromString("WRAT"));
-    BOOST_CHECK_EQUAL( WellProducer::GRAT   , WellProducer::ControlModeFromString("GRAT"));
-    BOOST_CHECK_EQUAL( WellProducer::LRAT   , WellProducer::ControlModeFromString("LRAT"));
-    BOOST_CHECK_EQUAL( WellProducer::CRAT   , WellProducer::ControlModeFromString("CRAT"));
-    BOOST_CHECK_EQUAL( WellProducer::RESV   , WellProducer::ControlModeFromString("RESV"));
-    BOOST_CHECK_EQUAL( WellProducer::BHP    , WellProducer::ControlModeFromString("BHP" ));
-    BOOST_CHECK_EQUAL( WellProducer::THP    , WellProducer::ControlModeFromString("THP" ));
-    BOOST_CHECK_EQUAL( WellProducer::GRUP   , WellProducer::ControlModeFromString("GRUP"));
+    BOOST_CHECK_THROW( Well2::ProducerCModeFromString("XRAT") , std::invalid_argument );
+    BOOST_CHECK( Well2::ProducerCMode::ORAT   == Well2::ProducerCModeFromString("ORAT"));
+    BOOST_CHECK( Well2::ProducerCMode::WRAT   == Well2::ProducerCModeFromString("WRAT"));
+    BOOST_CHECK( Well2::ProducerCMode::GRAT   == Well2::ProducerCModeFromString("GRAT"));
+    BOOST_CHECK( Well2::ProducerCMode::LRAT   == Well2::ProducerCModeFromString("LRAT"));
+    BOOST_CHECK( Well2::ProducerCMode::CRAT   == Well2::ProducerCModeFromString("CRAT"));
+    BOOST_CHECK( Well2::ProducerCMode::RESV   == Well2::ProducerCModeFromString("RESV"));
+    BOOST_CHECK( Well2::ProducerCMode::BHP    == Well2::ProducerCModeFromString("BHP" ));
+    BOOST_CHECK( Well2::ProducerCMode::THP    == Well2::ProducerCModeFromString("THP" ));
+    BOOST_CHECK( Well2::ProducerCMode::GRUP   == Well2::ProducerCModeFromString("GRUP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(ProducerControlModeEnumLoop) {
-    BOOST_CHECK_EQUAL( WellProducer::ORAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::ORAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::WRAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::WRAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::GRAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::GRAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::LRAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::LRAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::CRAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::CRAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::RESV     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::RESV ) ));
-    BOOST_CHECK_EQUAL( WellProducer::BHP      , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::BHP  ) ));
-    BOOST_CHECK_EQUAL( WellProducer::THP      , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::THP  ) ));
-    BOOST_CHECK_EQUAL( WellProducer::GRUP     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::GRUP ) ));
+    BOOST_CHECK( Well2::ProducerCMode::ORAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::ORAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::WRAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::WRAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::GRAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::GRAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::LRAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::LRAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::CRAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::CRAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::RESV == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::RESV ) ));
+    BOOST_CHECK( Well2::ProducerCMode::BHP  == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::BHP  ) ));
+    BOOST_CHECK( Well2::ProducerCMode::THP  == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::THP  ) ));
+    BOOST_CHECK( Well2::ProducerCMode::GRUP == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::GRUP ) ));
 
-    BOOST_CHECK_EQUAL( "ORAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "ORAT"  ) ));
-    BOOST_CHECK_EQUAL( "WRAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "WRAT"  ) ));
-    BOOST_CHECK_EQUAL( "GRAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "GRAT"  ) ));
-    BOOST_CHECK_EQUAL( "LRAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "LRAT"  ) ));
-    BOOST_CHECK_EQUAL( "CRAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "CRAT"  ) ));
-    BOOST_CHECK_EQUAL( "RESV"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "RESV"  ) ));
-    BOOST_CHECK_EQUAL( "BHP"       , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "BHP"   ) ));
-    BOOST_CHECK_EQUAL( "THP"       , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "THP"   ) ));
-    BOOST_CHECK_EQUAL( "GRUP"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "GRUP"  ) ));
+    BOOST_CHECK_EQUAL( "ORAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "ORAT"  ) ));
+    BOOST_CHECK_EQUAL( "WRAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "WRAT"  ) ));
+    BOOST_CHECK_EQUAL( "GRAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "GRAT"  ) ));
+    BOOST_CHECK_EQUAL( "LRAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "LRAT"  ) ));
+    BOOST_CHECK_EQUAL( "CRAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "CRAT"  ) ));
+    BOOST_CHECK_EQUAL( "RESV"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "RESV"  ) ));
+    BOOST_CHECK_EQUAL( "BHP"       , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "BHP"   ) ));
+    BOOST_CHECK_EQUAL( "THP"       , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "THP"   ) ));
+    BOOST_CHECK_EQUAL( "GRUP"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "GRUP"  ) ));
 }
 
 /*******************************************************************/

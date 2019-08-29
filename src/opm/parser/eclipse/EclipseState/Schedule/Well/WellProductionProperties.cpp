@@ -34,20 +34,20 @@
 
 namespace Opm {
 
-    WellProductionProperties::WellProductionProperties(const std::string& name_arg) :
+    Well2::WellProductionProperties::WellProductionProperties(const std::string& name_arg) :
         name(name_arg),
         predictionMode( true )
     {}
 
 
-    void WellProductionProperties::init_rates( const DeckRecord& record ) {
+    void Well2::WellProductionProperties::init_rates( const DeckRecord& record ) {
         this->OilRate    = record.getItem("ORAT").get<UDAValue>(0);
         this->WaterRate  = record.getItem("WRAT").get<UDAValue>(0);
         this->GasRate    = record.getItem("GRAT").get<UDAValue>(0);
     }
 
 
-    void WellProductionProperties::init_history(const DeckRecord& record)
+    void Well2::WellProductionProperties::init_history(const DeckRecord& record)
     {
         this->predictionMode = false;
         // update LiquidRate
@@ -64,13 +64,12 @@ namespace Opm {
             throw std::invalid_argument(msg);
         }
 
-        namespace wp = WellProducer;
-        auto cmode = wp::CMODE_UNDEFINED;
+        auto cmode = ProducerCMode::CMODE_UNDEFINED;
 
         if (effectiveHistoryProductionControl(this->whistctl_cmode) )
             cmode = this->whistctl_cmode;
         else
-            cmode = wp::ControlModeFromString( cmodeItem.getTrimmedString( 0 ) );
+            cmode = ProducerCModeFromString( cmodeItem.getTrimmedString( 0 ) );
 
         // clearing the existing targets/limits
         clearControls();
@@ -86,10 +85,10 @@ namespace Opm {
 
         // always have a BHP control/limit, while the limit value needs to be determined
         // the control mode added above can be a BHP control or a type of RATE control
-        if ( !this->hasProductionControl( wp::BHP ) )
-            this->addProductionControl( wp::BHP );
+        if ( !this->hasProductionControl( ProducerCMode::BHP ) )
+            this->addProductionControl( ProducerCMode::BHP );
 
-        if (cmode == wp::BHP)
+        if (cmode == ProducerCMode::BHP)
             this->setBHPLimit(this->BHPH);
 
         const auto vfp_table = record.getItem("VFPTable").get< int >(0);
@@ -103,7 +102,7 @@ namespace Opm {
 
 
 
-    void WellProductionProperties::handleWCONPROD( const std::string& /* well */, const DeckRecord& record)
+    void Well2::WellProductionProperties::handleWCONPROD( const std::string& /* well */, const DeckRecord& record)
     {
         this->predictionMode = true;
 
@@ -114,11 +113,10 @@ namespace Opm {
         this->LiquidRate     = record.getItem("LRAT").get<UDAValue>(0);
         this->ResVRate       = record.getItem("RESV").get<UDAValue>(0);
 
-        namespace wp = WellProducer;
-        using mode = std::pair< const std::string, wp::ControlModeEnum >;
+        using mode = std::pair< const std::string, ProducerCMode >;
         static const mode modes[] = {
-            { "ORAT", wp::ORAT }, { "WRAT", wp::WRAT }, { "GRAT", wp::GRAT },
-            { "LRAT", wp::LRAT }, { "RESV", wp::RESV }, { "THP", wp::THP }
+            { "ORAT", ProducerCMode::ORAT }, { "WRAT", ProducerCMode::WRAT }, { "GRAT", ProducerCMode::GRAT },
+            { "LRAT", ProducerCMode::LRAT }, { "RESV", ProducerCMode::RESV }, { "THP", ProducerCMode::THP }
         };
 
 
@@ -136,11 +134,11 @@ namespace Opm {
         }
 
         // There is always a BHP constraint, when not specified, will use the default value
-        this->addProductionControl( wp::BHP );
+        this->addProductionControl( ProducerCMode::BHP );
         {
             const auto& cmodeItem = record.getItem("CMODE");
             if (cmodeItem.hasValue(0)) {
-                const WellProducer::ControlModeEnum cmode = WellProducer::ControlModeFromString( cmodeItem.getTrimmedString(0) );
+                auto cmode = Well2::ProducerCModeFromString( cmodeItem.getTrimmedString(0) );
 
                 if (this->hasProductionControl( cmode ))
                     this->controlMode = cmode;
@@ -155,7 +153,7 @@ namespace Opm {
       originate from the WCONHIST keyword. Predictions are handled with the
       default constructor and the handleWCONPROD() method.
     */
-    void WellProductionProperties::handleWCONHIST(const DeckRecord& record)
+    void Well2::WellProductionProperties::handleWCONHIST(const DeckRecord& record)
     {
         this->init_rates(record);
         this->LiquidRate.reset(0);
@@ -168,7 +166,7 @@ namespace Opm {
         if (this->predictionMode)
             this->resetDefaultBHPLimit();
 
-        if (this->controlMode == WellProducer::BHP)
+        if (this->controlMode == ProducerCMode::BHP)
             this->resetDefaultBHPLimit();
 
         this->init_history(record);
@@ -176,44 +174,44 @@ namespace Opm {
 
 
 
-  void WellProductionProperties::handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
-        if (cmode == WellTarget::ORAT){
+void Well2::WellProductionProperties::handleWELTARG(Well2::WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
+        if (cmode == WELTARGCMode::ORAT){
             this->OilRate.assert_numeric("Can not combine UDA and WELTARG");
             this->OilRate.reset( newValue * siFactorL );
         }
-        else if (cmode == WellTarget::WRAT){
+        else if (cmode == WELTARGCMode::WRAT){
             this->WaterRate.assert_numeric("Can not combine UDA and WELTARG");
             this->WaterRate.reset( newValue * siFactorL );
         }
-        else if (cmode == WellTarget::GRAT){
+        else if (cmode == WELTARGCMode::GRAT){
             this->GasRate.assert_numeric("Can not combine UDA and WELTARG");
             this->GasRate.reset( newValue * siFactorG );
         }
-        else if (cmode == WellTarget::LRAT){
+        else if (cmode == WELTARGCMode::LRAT){
             this->LiquidRate.assert_numeric("Can not combine UDA and WELTARG");
             this->LiquidRate.reset( newValue * siFactorL );
         }
-        else if (cmode == WellTarget::RESV){
+        else if (cmode == WELTARGCMode::RESV){
             this->ResVRate.assert_numeric("Can not combine UDA and WELTARG");
             this->ResVRate.reset( newValue * siFactorL );
         }
-        else if (cmode == WellTarget::BHP){
+        else if (cmode == WELTARGCMode::BHP){
             this->BHPLimit.assert_numeric("Can not combine UDA and WELTARG");
             this->BHPLimit.reset( newValue * siFactorP );
         }
-        else if (cmode == WellTarget::THP){
+        else if (cmode == WELTARGCMode::THP){
             this->THPLimit.assert_numeric("Can not combine UDA and WELTARG");
             this->THPLimit.reset(newValue * siFactorP);
         }
-        else if (cmode == WellTarget::VFP)
+        else if (cmode == WELTARGCMode::VFP)
             this->VFPTableNumber = static_cast<int> (newValue);
-        else if (cmode != WellTarget::GUID)
+        else if (cmode != WELTARGCMode::GUID)
             throw std::invalid_argument("Invalid keyword (MODE) supplied");
     }
 
 
 
-    bool WellProductionProperties::operator==(const WellProductionProperties& other) const {
+    bool Well2::WellProductionProperties::operator==(const Well2::WellProductionProperties& other) const {
         return OilRate              == other.OilRate
             && WaterRate            == other.WaterRate
             && GasRate              == other.GasRate
@@ -231,14 +229,14 @@ namespace Opm {
     }
 
 
-    bool WellProductionProperties::operator!=(const WellProductionProperties& other) const {
+    bool Well2::WellProductionProperties::operator!=(const Well2::WellProductionProperties& other) const {
         return !(*this == other);
     }
 
 
-    std::ostream& operator<<( std::ostream& stream, const WellProductionProperties& wp ) {
+    std::ostream& operator<<( std::ostream& stream, const Well2::WellProductionProperties& wp ) {
         return stream
-            << "WellProductionProperties { "
+            << "Well2::WellProductionProperties { "
             << "oil rate: "     << wp.OilRate           << ", "
             << "water rate: "   << wp.WaterRate         << ", "
             << "gas rate: "     << wp.GasRate           << ", "
@@ -250,36 +248,35 @@ namespace Opm {
             << "THPH: "         << wp.THPH              << ", "
             << "VFP table: "    << wp.VFPTableNumber    << ", "
             << "ALQ: "          << wp.ALQValue          << ", "
-            << "WHISTCTL: "     << wp.whistctl_cmode    << ", "
+            << "WHISTCTL: "     << Well2::ProducerCMode2String(wp.whistctl_cmode)    << ", "
             << "prediction: "   << wp.predictionMode    << " }";
     }
 
-    bool WellProductionProperties::effectiveHistoryProductionControl(const WellProducer::ControlModeEnum cmode) {
+bool Well2::WellProductionProperties::effectiveHistoryProductionControl(const Well2::ProducerCMode cmode) {
         // Note, not handling CRAT for now
-        namespace wp = WellProducer;
-        return ( (cmode == wp::LRAT || cmode == wp::RESV || cmode == wp::ORAT ||
-                  cmode == wp::WRAT || cmode == wp::GRAT || cmode == wp::BHP) );
+        return ( (cmode == ProducerCMode::LRAT || cmode == ProducerCMode::RESV || cmode == ProducerCMode::ORAT ||
+                  cmode == ProducerCMode::WRAT || cmode == ProducerCMode::GRAT || cmode == ProducerCMode::BHP) );
     }
 
-    void WellProductionProperties::resetDefaultBHPLimit() {
+    void Well2::WellProductionProperties::resetDefaultBHPLimit() {
         BHPLimit = UDAValue( 1. * unit::atm );
     }
 
-    void WellProductionProperties::clearControls() {
+    void Well2::WellProductionProperties::clearControls() {
         m_productionControls = 0;
     }
 
-    void WellProductionProperties::setBHPLimit(const double limit) {
+    void Well2::WellProductionProperties::setBHPLimit(const double limit) {
         BHPLimit = UDAValue( limit );
     }
 
-    double WellProductionProperties::getBHPLimit() const {
+    double Well2::WellProductionProperties::getBHPLimit() const {
         return BHPLimit.get<double>();
     }
 
 
-    ProductionControls WellProductionProperties::controls(const SummaryState& st, double udq_undefined) const {
-        ProductionControls controls(this->m_productionControls);
+    Well2::ProductionControls Well2::WellProductionProperties::controls(const SummaryState& st, double udq_undefined) const {
+        Well2::ProductionControls controls(this->m_productionControls);
 
         controls.oil_rate = UDA::eval_well_uda(this->OilRate, this->name, st, udq_undefined);
         controls.water_rate = UDA::eval_well_uda(this->WaterRate, this->name, st, udq_undefined);
@@ -298,7 +295,7 @@ namespace Opm {
         return controls;
     }
 
-    bool WellProductionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
+    bool Well2::WellProductionProperties::updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const {
         int update_count = 0;
 
         update_count += active.update(udq_config, this->OilRate, this->name, UDAControl::WCONPROD_ORAT);

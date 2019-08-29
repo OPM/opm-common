@@ -207,7 +207,7 @@ namespace {
             else if (well.isProducer()) {
                 const auto& controls = well.productionControls(st);
 
-                using CMode = ::Opm::WellProducer::ControlModeEnum;
+                using CMode = ::Opm::Well2::ProducerCMode;
 
                 switch (controls.cmode) {
                 case CMode::ORAT: return WMCtrlVal::OilRate;

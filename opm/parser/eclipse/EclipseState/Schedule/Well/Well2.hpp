@@ -95,6 +95,51 @@ public:
     static InjectorCMode InjectorCModeFromString( const std::string& stringValue );
 
 
+    /*
+      The items BHP, THP and GRUP only apply in prediction mode:
+      WCONPROD. The elements in this enum are used as bitmasks to
+      keep track of which controls are present, i.e. the 2^n
+      structure must be intact.The NONE item is only used in WHISTCTL
+      to cancel its effect.
+
+      The properties are initialized with the CMODE_UNDEFINED
+      value, but the undefined value is never assigned apart from
+      that; and it is not part of the string conversion routines.
+    */
+    enum class ProducerCMode : int {
+        NONE =     0,
+        ORAT =     1,
+        WRAT =     2,
+        GRAT =     4,
+        LRAT =     8,
+        CRAT =    16,
+        RESV =    32,
+        BHP  =    64,
+        THP  =   128,
+        GRUP =   256,
+        CMODE_UNDEFINED = 1024
+    };
+    static const std::string ProducerCMode2String( ProducerCMode enumValue );
+    static ProducerCMode ProducerCModeFromString( const std::string& stringValue );
+
+
+
+    enum class WELTARGCMode {
+        ORAT =  1,
+        WRAT =  2,
+        GRAT =  3,
+        LRAT =  4,
+        CRAT =  5,   // Not supported
+        RESV =  6,
+        BHP  =  7,
+        THP  =  8,
+        VFP  =  9,
+        LIFT = 10,   // Not supported
+        GUID = 11
+    };
+
+    static WELTARGCMode WELTARGCModeFromString(const std::string& stringValue);
+
 
     struct InjectionControls {
     public:
@@ -143,7 +188,7 @@ public:
         bool operator!=(const WellInjectionProperties& other) const;
 
         WellInjectionProperties(const std::string& wname);
-        void handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
+        void handleWELTARG(WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
         void handleWCONINJE(const DeckRecord& record, bool availableForGroupControl, const std::string& well_name);
         void handleWCONINJH(const DeckRecord& record, bool is_producer, const std::string& well_name);
         bool hasInjectionControl(InjectorCMode controlModeArg) const {
@@ -172,6 +217,98 @@ public:
         bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
     };
 
+    struct ProductionControls {
+    public:
+        ProductionControls(int controls_arg) :
+            controls(controls_arg)
+        {
+        }
+
+        ProducerCMode cmode;
+        double oil_rate;
+        double water_rate;
+        double gas_rate;
+        double liquid_rate;
+        double resv_rate;
+        double bhp_history;
+        double thp_history;
+        double bhp_limit;
+        double thp_limit;
+        double alq_value;
+        int    vfp_table_number;
+        bool   prediction_mode;
+
+        bool hasControl(ProducerCMode cmode_arg) const {
+            return (this->controls & static_cast<int>(cmode_arg)) != 0;
+        }
+
+    private:
+        int controls;
+    };
+
+
+    class WellProductionProperties {
+    public:
+        // the rates serve as limits under prediction mode
+        // while they are observed rates under historical mode
+        std::string name;
+        UDAValue  OilRate;
+        UDAValue  WaterRate;
+        UDAValue  GasRate;
+        UDAValue  LiquidRate;
+        UDAValue  ResVRate;
+        // BHP and THP limit
+        UDAValue  BHPLimit;
+        UDAValue  THPLimit;
+        // historical BHP and THP under historical mode
+        double  BHPH        = 0.0;
+        double  THPH        = 0.0;
+        int     VFPTableNumber = 0;
+        double  ALQValue    = 0.0;
+        bool    predictionMode = false;
+        ProducerCMode controlMode = ProducerCMode::CMODE_UNDEFINED;
+        ProducerCMode whistctl_cmode = ProducerCMode::CMODE_UNDEFINED;
+
+        bool operator==(const WellProductionProperties& other) const;
+        bool operator!=(const WellProductionProperties& other) const;
+        WellProductionProperties(const std::string& name_arg);
+
+        bool hasProductionControl(ProducerCMode controlModeArg) const {
+            return (m_productionControls & static_cast<int>(controlModeArg)) != 0;
+        }
+
+        void dropProductionControl(ProducerCMode controlModeArg) {
+            if (hasProductionControl(controlModeArg))
+                m_productionControls -= static_cast<int>(controlModeArg);
+        }
+
+        void addProductionControl(ProducerCMode controlModeArg) {
+            if (! hasProductionControl(controlModeArg))
+                m_productionControls += static_cast<int>(controlModeArg);
+        }
+
+        // this is used to check whether the specified control mode is an effective history matching production mode
+        static bool effectiveHistoryProductionControl(ProducerCMode cmode);
+        void handleWCONPROD( const std::string& well, const DeckRecord& record);
+        void handleWCONHIST( const DeckRecord& record);
+        void handleWELTARG( WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP);
+        void resetDefaultBHPLimit();
+        void clearControls();
+        ProductionControls controls(const SummaryState& st, double udq_default) const;
+        bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
+    private:
+        int m_productionControls = 0;
+        void init_rates( const DeckRecord& record );
+
+        void init_history(const DeckRecord& record);
+
+        WellProductionProperties(const DeckRecord& record);
+
+        void setBHPLimit(const double limit);
+
+        double getBHPLimit() const;
+    };
+
 
     Well2(const std::string& wname,
           const std::string& gname,
@@ -181,7 +318,7 @@ public:
           int headJ,
           double ref_depth,
           Phase phase,
-          WellProducer::ControlModeEnum whistctl_cmode,
+          ProducerCMode whistctl_cmode,
           Connection::Order ordering,
           const UnitSystem& unit_system,
           double udq_undefined);
@@ -317,6 +454,7 @@ private:
 };
 
 std::ostream& operator<<( std::ostream&, const Well2::WellInjectionProperties& );
+std::ostream& operator<<( std::ostream&, const WellProductionProperties& );
 
 
 }

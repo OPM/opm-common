@@ -26,65 +26,6 @@ namespace Opm {
 
 
 
-    namespace WellTarget {
-        enum ControlModeEnum {
-             ORAT =  1,
-             WRAT =  2,
-             GRAT =  3,
-             LRAT =  4,
-             CRAT =  5,   // Not supported
-             RESV =  6,
-             BHP  =  7,
-             THP  =  8,
-             VFP  =  9,
-             LIFT = 10,   // Not supported
-             GUID = 11
-        };
-        /*
-          There are unfortuntaley separate enums for production controls,
-          injection controls and also for WELTARG control arguments. Since the
-          WELTARG control arguments are *not* used to enumerate available
-          controls the numerical values are - conciously - not in 2^n range.
-        */
-
-        ControlModeEnum ControlModeFromString(const std::string& string_value);
-    }
-
-
-
-    namespace WellProducer {
-
-        enum ControlModeEnum {
-            NONE =     0,
-            ORAT =     1,
-            WRAT =     2,
-            GRAT =     4,
-            LRAT =     8,
-            CRAT =    16,
-            RESV =    32,
-            BHP  =    64,
-            THP  =   128,
-            GRUP =   256,
-            CMODE_UNDEFINED = 1024
-        };
-
-        /*
-          The items BHP, THP and GRUP only apply in prediction mode:
-          WCONPROD. The elements in this enum are used as bitmasks to
-          keep track of which controls are present, i.e. the 2^n
-          structure must be intact.The NONE item is only used in WHISTCTL
-          to cancel its effect.
-
-          The properties are initialized with the CMODE_UNDEFINED
-          value, but the undefined value is never assigned apart from
-          that; and it is not part of the string conversion routines.
-        */
-
-
-        const std::string ControlMode2String( ControlModeEnum enumValue );
-        ControlModeEnum ControlModeFromString( const std::string& stringValue );
-    }
-
 
     namespace GroupInjection {
 

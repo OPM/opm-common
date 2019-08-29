@@ -155,19 +155,19 @@ BOOST_AUTO_TEST_CASE(WellTesting) {
         BOOST_CHECK( rft_config.rft("W_1", 3));
     }
     {
-        const WellProductionProperties& prop3 = sched.getWell2("W_2", 3).getProductionProperties();
-        BOOST_CHECK_EQUAL( WellProducer::ORAT , prop3.controlMode);
-        BOOST_CHECK(  prop3.hasProductionControl(WellProducer::ORAT));
-        BOOST_CHECK( !prop3.hasProductionControl(WellProducer::GRAT));
-        BOOST_CHECK( !prop3.hasProductionControl(WellProducer::WRAT));
+        const auto & prop3 = sched.getWell2("W_2", 3).getProductionProperties();
+        BOOST_CHECK( Well2::ProducerCMode::ORAT == prop3.controlMode);
+        BOOST_CHECK(  prop3.hasProductionControl(Well2::ProducerCMode::ORAT));
+        BOOST_CHECK( !prop3.hasProductionControl(Well2::ProducerCMode::GRAT));
+        BOOST_CHECK( !prop3.hasProductionControl(Well2::ProducerCMode::WRAT));
     }
 
 
     BOOST_CHECK( Well2::Status::AUTO == sched.getWell2("W_3", 3).getStatus());
     {
-        const WellProductionProperties& prop7 = sched.getWell2("W_3", 7).getProductionProperties();
+        const auto& prop7 = sched.getWell2("W_3", 7).getProductionProperties();
         BOOST_CHECK_CLOSE( 999/Metric::Time , prop7.LiquidRate.get<double>() , 0.001);
-        BOOST_CHECK_EQUAL( WellProducer::RESV, prop7.controlMode);
+        BOOST_CHECK( Well2::ProducerCMode::RESV == prop7.controlMode);
     }
     BOOST_CHECK_CLOSE( 8000./Metric::Time , sched.getWell2("W_3", 3).getProductionProperties().LiquidRate.get<double>(), 1.e-12);
     BOOST_CHECK_CLOSE( 18000./Metric::Time, sched.getWell2("W_3", 8).getProductionProperties().LiquidRate.get<double>(), 1.e-12);

@@ -22,33 +22,5 @@
 #define PRODUCTION_CONTROLS_HPP
 
 namespace Opm {
-struct ProductionControls {
-public:
-    ProductionControls(int controls_arg) :
-        controls(controls_arg)
-    {
-    }
-
-    WellProducer::ControlModeEnum cmode;
-    double oil_rate;
-    double water_rate;
-    double gas_rate;
-    double liquid_rate;
-    double resv_rate;
-    double bhp_history;
-    double thp_history;
-    double bhp_limit;
-    double thp_limit;
-    double alq_value;
-    int    vfp_table_number;
-    bool   prediction_mode;
-
-    bool hasControl(WellProducer::ControlModeEnum cmode_arg) const {
-        return (this->controls & cmode_arg) != 0;
-    }
-
-private:
-    int controls;
-};
 }
 #endif

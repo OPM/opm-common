@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
 }
 
 BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
-    Opm::Well2 well("WELL1", "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED,  Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1", "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED,  Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
     BOOST_CHECK_EQUAL( 0U , well.getConnections( ).size() );
 }
 
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     // HACK: This test checks correctly setting of isProducer/isInjector. This property depends on which of
     //       WellProductionProperties/WellInjectionProperties is set last, independent of actual values.
     {
-        Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+        Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
 
         /* 1: Well is created as producer */
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
 
     {
-        Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+        Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
         /* Set a reservoir injection rate => Well becomes an Injector */
         auto injectionProps2 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
@@ -229,13 +229,13 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     }
 
     {
-        Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+        Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
         /* Set rates => Well becomes a producer; injection rate should be set to 0. */
         auto injectionProps3 = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
         well.updateInjection(injectionProps3);
 
-        auto properties = std::make_shared<Opm::WellProductionProperties>( well.getProductionProperties() );
+        auto properties = std::make_shared<Opm::Well2::WellProductionProperties>( well.getProductionProperties() );
         properties->OilRate.reset(100);
         properties->GasRate.reset(200);
         properties->WaterRate.reset(300);
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 }
 
 BOOST_AUTO_TEST_CASE(GroupnameCorretlySet) {
-    Opm::Well2 well("WELL1" , "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1" , "G1", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
     BOOST_CHECK_EQUAL("G1" , well.groupName());
     well.updateGroup( "GROUP2");
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(GroupnameCorretlySet) {
 
 
 BOOST_AUTO_TEST_CASE(addWELSPECS_setData_dataSet) {
-    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
     BOOST_CHECK_EQUAL(23, well.getHeadI());
     BOOST_CHECK_EQUAL(42, well.getHeadJ());
@@ -271,15 +271,15 @@ BOOST_AUTO_TEST_CASE(addWELSPECS_setData_dataSet) {
 
 
 BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
-    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
 
-    auto productionProps = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
+    auto productionProps = std::make_shared<Opm::Well2::WellProductionProperties>(well.getProductionProperties());
     productionProps->BHPLimit.reset(100);
-    productionProps->addProductionControl(Opm::WellProducer::BHP);
+    productionProps->addProductionControl(Opm::Well2::ProducerCMode::BHP);
     well.updateProduction(productionProps);
     BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPLimit.get<double>());
-    BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Opm::WellProducer::BHP ));
+    BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::BHP ));
 
     auto injProps = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injProps->THPLimit.reset(200);
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
 
 
 BOOST_AUTO_TEST_CASE(InjectorType) {
-    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
     auto injectionProps = std::make_shared<Opm::Well2::WellInjectionProperties>(well.getInjectionProperties());
     injectionProps->injectorType = Opm::Well2::InjectorType::WATER;
@@ -307,26 +307,26 @@ BOOST_AUTO_TEST_CASE(InjectorType) {
 
 
 BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
-    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
 
-    BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::WellProducer::ORAT ));
-    BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
+    BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::ORAT ));
+    BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::RESV ));
 
-    auto properties1 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
+    auto properties1 = std::make_shared<Opm::Well2::WellProductionProperties>(well.getProductionProperties());
     properties1->OilRate.reset(100);
-    properties1->addProductionControl(Opm::WellProducer::ORAT);
+    properties1->addProductionControl(Opm::Well2::ProducerCMode::ORAT);
     well.updateProduction(properties1);
-    BOOST_CHECK(  well.getProductionProperties().hasProductionControl( Opm::WellProducer::ORAT ));
-    BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
+    BOOST_CHECK(  well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::ORAT ));
+    BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::RESV ));
 
-    auto properties2 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
+    auto properties2 = std::make_shared<Opm::Well2::WellProductionProperties>(well.getProductionProperties());
     properties2->ResVRate.reset( 100 );
-    properties2->addProductionControl(Opm::WellProducer::RESV);
+    properties2->addProductionControl(Opm::Well2::ProducerCMode::RESV);
     well.updateProduction(properties2);
-    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::RESV ));
+    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::RESV ));
 
-    auto properties3 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
+    auto properties3 = std::make_shared<Opm::Well2::WellProductionProperties>(well.getProductionProperties());
     properties3->OilRate.reset(100);
     properties3->WaterRate.reset(100);
     properties3->GasRate.reset(100);
@@ -334,27 +334,27 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     properties3->ResVRate.reset(100);
     properties3->BHPLimit.reset(100);
     properties3->THPLimit.reset(100);
-    properties3->addProductionControl(Opm::WellProducer::ORAT);
-    properties3->addProductionControl(Opm::WellProducer::LRAT);
-    properties3->addProductionControl(Opm::WellProducer::BHP);
+    properties3->addProductionControl(Opm::Well2::ProducerCMode::ORAT);
+    properties3->addProductionControl(Opm::Well2::ProducerCMode::LRAT);
+    properties3->addProductionControl(Opm::Well2::ProducerCMode::BHP);
     well.updateProduction(properties3);
 
-    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::ORAT ));
-    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::LRAT ));
-    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::BHP ));
+    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::ORAT ));
+    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::LRAT ));
+    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::BHP ));
 
-    auto properties4 = std::make_shared<Opm::WellProductionProperties>(well.getProductionProperties());
-    properties4->dropProductionControl( Opm::WellProducer::LRAT );
+    auto properties4 = std::make_shared<Opm::Well2::WellProductionProperties>(well.getProductionProperties());
+    properties4->dropProductionControl( Opm::Well2::ProducerCMode::LRAT );
     well.updateProduction(properties4);
 
-    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::ORAT ));
-    BOOST_CHECK(!well.getProductionProperties().hasProductionControl( Opm::WellProducer::LRAT ));
-    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::WellProducer::BHP ));
+    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::ORAT ));
+    BOOST_CHECK(!well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::LRAT ));
+    BOOST_CHECK( well.getProductionProperties().hasProductionControl( Opm::Well2::ProducerCMode::BHP ));
 }
 
 
 BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
-    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Opm::Phase::WATER, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Opm::Well2::InjectorCMode::RESV ));
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
 /*********************************************************************/
 
 BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
-    Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
     BOOST_CHECK_EQUAL(Opm::GuideRate::UNDEFINED, well.getGuideRatePhase());
 
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
 }
 
 BOOST_AUTO_TEST_CASE(WellEfficiencyFactorSet) {
-    Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
     BOOST_CHECK_EQUAL(1.0, well.getEfficiencyFactor());
     BOOST_CHECK( well.updateEfficiencyFactor(0.9));
@@ -487,12 +487,12 @@ namespace {
         }
 
 
-        Opm::WellProductionProperties properties(const std::string& input) {
+        Opm::Well2::WellProductionProperties properties(const std::string& input) {
             Opm::Parser parser;
 
             auto deck = parser.parseString(input);
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
-            Opm::WellProductionProperties hist("W");
+            Opm::Well2::WellProductionProperties hist("W");
             hist.handleWCONHIST(record);
 
 
@@ -539,13 +539,13 @@ namespace {
         }
 
 
-        Opm::WellProductionProperties properties(const std::string& input)
+        Opm::Well2::WellProductionProperties properties(const std::string& input)
         {
             Opm::Parser parser;
             auto deck = parser.parseString(input);
             const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
-            Opm::WellProductionProperties pred("W");
+            Opm::Well2::WellProductionProperties pred("W");
             pred.handleWCONPROD("WELL", record);
 
             return pred;
@@ -556,100 +556,100 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_specified());
 
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
 
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::ORAT);
 
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::orat_defaulted());
 
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::WRAT);
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::WRAT);
 
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::owrat_defaulted());
 
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::GRAT);
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::GRAT);
 
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted());
 
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::LRAT);
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::LRAT);
 
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted_with_bhp());
 
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
 
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::RESV);
 
-    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table());
 
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK(p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK(p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
 
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::RESV);
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::RESV);
 
-    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
     BOOST_CHECK_EQUAL(p.ALQValue, 10.);
     BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
@@ -657,36 +657,36 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 
 BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::bhp_defaulted());
 
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
 
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::BHP);
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::BHP);
 
-    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
 
     BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 5.e7); // 500 barsa
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
 {
-    const Opm::WellProductionProperties& p = WCONPROD::properties(WCONPROD::orat_CMODE_other_defaulted());
+    const Opm::Well2::WellProductionProperties& p = WCONPROD::properties(WCONPROD::orat_CMODE_other_defaulted());
 
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::THP));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::THP));
 
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::ORAT);
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::ORAT);
 
-    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 0);
     BOOST_CHECK_EQUAL(p.ALQValue, 0.);
@@ -694,19 +694,19 @@ BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
 
 BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONPROD::properties(WCONPROD::thp_CMODE());
 
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::THP));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::THP));
 
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::THP);
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::THP);
 
-    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
     BOOST_CHECK_EQUAL(p.ALQValue, 13.);
@@ -716,19 +716,19 @@ BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 
 BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
 {
-    const Opm::WellProductionProperties& p =
+    const Opm::Well2::WellProductionProperties& p =
         WCONPROD::properties(WCONPROD::bhp_CMODE());
 
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::ORAT));
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::WRAT));
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::GRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::LRAT));
-    BOOST_CHECK( !p.hasProductionControl(Opm::WellProducer::RESV));
-    BOOST_CHECK( p.hasProductionControl(Opm::WellProducer::THP));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::ORAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::WRAT));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::GRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::LRAT));
+    BOOST_CHECK( !p.hasProductionControl(Opm::Well2::ProducerCMode::RESV));
+    BOOST_CHECK( p.hasProductionControl(Opm::Well2::ProducerCMode::THP));
 
-    BOOST_CHECK_EQUAL(p.controlMode , Opm::WellProducer::BHP);
+    BOOST_CHECK(p.controlMode == Opm::Well2::ProducerCMode::BHP);
 
-    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::WellProducer::BHP));
+    BOOST_CHECK_EQUAL(true, p.hasProductionControl(Opm::Well2::ProducerCMode::BHP));
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
     BOOST_CHECK_EQUAL(p.ALQValue, 13.);
@@ -747,10 +747,10 @@ BOOST_AUTO_TEST_CASE(BHP_CMODE)
 
 
 BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
-    const Opm::WellProductionProperties Pproperties("W");
+    const Opm::Well2::WellProductionProperties Pproperties("W");
     const Opm::Well2::WellInjectionProperties Iproperties("W");
 
-    BOOST_CHECK_EQUAL( Pproperties.controlMode , Opm::WellProducer::CMODE_UNDEFINED );
+    BOOST_CHECK( Pproperties.controlMode == Opm::Well2::ProducerCMode::CMODE_UNDEFINED );
     BOOST_CHECK( Iproperties.controlMode == Opm::Well2::InjectorCMode::CMODE_UNDEFINED );
 }
 
@@ -758,8 +758,8 @@ BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
 
 
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
-    Opm::Well2 well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
-    Opm::WellProductionProperties prod("OP1");
+    Opm::Well2 well("WELL", "GROUP", 0, 0, 0, 0, 1000, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Opm::Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2::WellProductionProperties prod("OP1");
     Opm::SummaryState st;
     well.productionControls(st);
 
@@ -779,14 +779,14 @@ BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
 
 
 BOOST_AUTO_TEST_CASE(ExtraAccessors) {
-    Opm::Well2 inj("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
-    Opm::Well2 prod("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::WellProducer::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 inj("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
+    Opm::Well2 prod("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
     auto inj_props= std::make_shared<Opm::Well2::WellInjectionProperties>(inj.getInjectionProperties());
     inj_props->VFPTableNumber = 100;
     inj.updateInjection(inj_props);
 
-    auto prod_props = std::make_shared<Opm::WellProductionProperties>( prod.getProductionProperties() );
+    auto prod_props = std::make_shared<Opm::Well2::WellProductionProperties>( prod.getProductionProperties() );
     prod_props->VFPTableNumber = 200;
     prod.updateProduction(prod_props);
 

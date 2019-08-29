@@ -183,8 +183,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     Runspec runspec (deck );
     Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
     const auto& currentWell = schedule.getWell2("B-37T2", 0);
-    const Opm::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
-    BOOST_CHECK_EQUAL(wellProductionProperties.controlMode, Opm::WellProducer::ControlModeEnum::GRUP);
+    const Opm::Well2::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
+    BOOST_CHECK(wellProductionProperties.controlMode == Opm::Well2::ProducerCMode::GRUP);
 
     BOOST_CHECK_EQUAL(currentWell.isAvailableForGroupControl(), true);
     BOOST_CHECK_EQUAL(currentWell.getGuideRate(), 30);

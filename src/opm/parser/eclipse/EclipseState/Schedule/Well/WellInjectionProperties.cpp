@@ -105,40 +105,40 @@ namespace Opm {
 
 
 
-    void Well2::WellInjectionProperties::handleWELTARG(WellTarget::ControlModeEnum cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
-        if (cmode == WellTarget::BHP){
+    void Well2::WellInjectionProperties::handleWELTARG(WELTARGCMode cmode, double newValue, double siFactorG, double siFactorL, double siFactorP) {
+        if (cmode == Well2::WELTARGCMode::BHP){
             this->BHPLimit.reset( newValue * siFactorP );
         }
-        else if (cmode == WellTarget::ORAT){
+        else if (cmode == WELTARGCMode::ORAT){
             if(this->injectorType == Well2::InjectorType::OIL){
                 this->surfaceInjectionRate.reset( newValue * siFactorL );
             }else{
                 std::invalid_argument("Well type must be OIL to set the oil rate");
             }
         }
-        else if (cmode == WellTarget::WRAT){
+        else if (cmode == WELTARGCMode::WRAT){
             if(this->injectorType == Well2::InjectorType::WATER)
                 this->surfaceInjectionRate.reset( newValue * siFactorL );
             else
                 std::invalid_argument("Well type must be WATER to set the water rate");
         }
-        else if (cmode == WellTarget::GRAT){
+        else if (cmode == WELTARGCMode::GRAT){
             if(this->injectorType == Well2::InjectorType::GAS){
                 this->surfaceInjectionRate.reset( newValue * siFactorG );
             }else{
                 std::invalid_argument("Well type must be GAS to set the gas rate");
             }
         }
-        else if (cmode == WellTarget::THP){
+        else if (cmode == WELTARGCMode::THP){
             this->THPLimit.reset( newValue * siFactorP );
         }
-        else if (cmode == WellTarget::VFP){
+        else if (cmode == WELTARGCMode::VFP){
             this->VFPTableNumber = static_cast<int> (newValue);
         }
-        else if (cmode == WellTarget::RESV){
+        else if (cmode == WELTARGCMode::RESV){
             this->reservoirInjectionRate.reset( newValue * siFactorL );
         }
-        else if (cmode != WellTarget::GUID){
+        else if (cmode != WELTARGCMode::GUID){
             throw std::invalid_argument("Invalid keyword (MODE) supplied");
         }
     }
