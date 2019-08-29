@@ -209,7 +209,8 @@ Runspec::Runspec( const Deck& deck ) :
     welldims( deck ),
     wsegdims( deck ),
     udq_params( deck ),
-    hystpar( deck )
+    hystpar( deck ),
+    m_actdims( deck )
 {}
 
 const Phases& Runspec::phases() const noexcept {
@@ -218,6 +219,10 @@ const Phases& Runspec::phases() const noexcept {
 
 const Tabdims& Runspec::tabdims() const noexcept {
     return this->m_tabdims;
+}
+
+const Actdims& Runspec::actdims() const noexcept {
+    return this->m_actdims;
 }
 
 const EndpointScaling& Runspec::endpointScaling() const noexcept {

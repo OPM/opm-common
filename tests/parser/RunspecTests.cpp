@@ -571,4 +571,23 @@ BOOST_AUTO_TEST_CASE(Foam) {
     BOOST_CHECK( phases.active( Phase::WATER ) );
     BOOST_CHECK( phases.active( Phase::FOAM) );
 
+    // not in deck - default constructor.
+    const auto& actdims = runspec.actdims();
+    BOOST_CHECK_EQUAL(actdims.max_keywords(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(ACTDIMS) {
+    const std::string input = R"(
+    RUNSPEC
+    ACTDIMS
+       2* 13 14 /
+    )";
+
+    Parser parser;
+    auto deck = parser.parseString(input);
+
+    Runspec runspec( deck );
+    const auto& actdims = runspec.actdims();
+    BOOST_CHECK_EQUAL(actdims.max_keywords(), 2);
+    BOOST_CHECK_EQUAL(actdims.max_conditions(), 14);
 }

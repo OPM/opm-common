@@ -80,6 +80,7 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.cpp
+    src/opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/Actions.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Action/ActionParser.cpp
@@ -528,6 +529,7 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionAST.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionContext.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionResult.hpp
+       opm/parser/eclipse/EclipseState/Schedule/Action/Actdims.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/Actions.hpp
        opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp
        opm/parser/eclipse/EclipseState/Schedule/ArrayDimChecker.hpp
