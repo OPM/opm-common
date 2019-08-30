@@ -43,6 +43,8 @@ namespace Opm {
         void setLocation(const std::pair<const std::string&, std::size_t>& location);
         const std::string& getFileName() const;
         int getLineNumber() const;
+        std::pair<std::string, std::size_t> location() const;
+
 
         size_t size() const;
         void addRecord(DeckRecord&& record);
