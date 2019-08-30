@@ -170,8 +170,8 @@ namespace {
         auto conIx = this->xConIx_.find(std::make_tuple(i, j, k));
 
         if (conIx == this->xConIx_.end()) {
-            BOOST_TEST_FAIL("Invalid IJK Tuple (" << i << ", "
-                            << j << ", " << k << ')');
+            BOOST_FAIL("Invalid IJK Tuple (" << i << ", "
+                       << j << ", " << k << ')');
         }
 
         return conIx->second;
@@ -325,7 +325,7 @@ namespace {
         {
             auto op_1 = dates.find("OP_1");
             if (op_1 == dates.end()) {
-                BOOST_TEST_FAIL("Missing RFT Data for Well OP_1");
+                BOOST_FAIL("Missing RFT Data for Well OP_1");
             }
 
             const auto expect = std::vector<Opm::EclIO::ERft::RftDate> {
@@ -341,7 +341,7 @@ namespace {
         {
             auto op_2 = dates.find("OP_2");
             if (op_2 == dates.end()) {
-                BOOST_TEST_FAIL("Missing RFT Data for Well OP_2");
+                BOOST_FAIL("Missing RFT Data for Well OP_2");
             }
 
             const auto expect = std::vector<RftDate> {
