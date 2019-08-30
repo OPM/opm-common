@@ -605,7 +605,8 @@ TSTEP
 
 ACTIONX
    'ACTION1' /
-   WWCT OPX  > 0.75 /
+   WWCT 'OPX'     > 0.75    AND /   -- The spaces will/should be normalized in Condition::expression()
+   FPR < 100 /
 /
 
 WELSPECS
@@ -630,6 +631,36 @@ TSTEP
 
     const auto& actions1 = sched.actions(1);
     BOOST_CHECK_EQUAL(actions1.size(), 1);
+
+
+    const auto& act1 = actions1.at("ACTION1");
+    const auto& strings = act1.keyword_strings();
+    BOOST_CHECK_EQUAL(strings.size(), 4);
+    BOOST_CHECK_EQUAL(strings.back(), "ENDACTIO");
+
+
+    std::string rdeck_string = "";
+    for (std::size_t i = 0; i < strings.size(); i++)
+        rdeck_string += strings[i] + "\n";
+
+    auto deck2 = parser.parseString(rdeck_string);
+    BOOST_CHECK(deck2.getKeyword("WELSPECS") == deck.getKeyword("WELSPECS"));
+
+
+    const auto& conditions = act1.conditions();
+    BOOST_CHECK_EQUAL(conditions.size() , 2);
+
+    const auto& cond0 = conditions[0];
+    BOOST_CHECK_EQUAL(cond0.expression, "WWCT 'OPX' > 0.75 AND");
+    BOOST_CHECK_EQUAL(cond0.quantity, "WWCT");
+    BOOST_CHECK(cond0.cmp == Action::Condition::Comparator::GREATER);
+    BOOST_CHECK(cond0.logic == Action::Condition::Logical::AND);
+
+    const auto& cond1 = conditions[1];
+    BOOST_CHECK_EQUAL(cond1.expression, "FPR < 100");
+    BOOST_CHECK_EQUAL(cond1.quantity, "FPR");
+    BOOST_CHECK(cond1.cmp == Action::Condition::Comparator::LESS);
+    BOOST_CHECK(cond1.logic == Action::Condition::Logical::END);
 }
 
 

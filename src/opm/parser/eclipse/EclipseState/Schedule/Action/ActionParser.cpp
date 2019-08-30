@@ -31,7 +31,7 @@ Parser::Parser(const std::vector<std::string>& tokens_arg) :
 {}
 
 
-TokenType Parser::get_type(const std::string& arg) const {
+TokenType Parser::get_type(const std::string& arg) {
     std::string lower_arg = arg;
     std::for_each(lower_arg.begin(),
                   lower_arg.end(),

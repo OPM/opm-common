@@ -50,11 +50,11 @@ struct ParseNode {
 class Parser {
 public:
     static Action::ASTNode parse(const std::vector<std::string>& tokens);
+    static TokenType get_type(const std::string& arg);
 
 private:
     explicit Parser(const std::vector<std::string>& tokens);
 
-    TokenType get_type(const std::string& arg) const;
     ParseNode current() const;
     ParseNode next();
     size_t pos() const;
