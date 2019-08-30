@@ -216,6 +216,7 @@ namespace Opm
         size_t size() const;
 
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
+        int getNupcol(size_t reportStep) const;
     private:
         TimeMap m_timeMap;
         OrderedMap< std::string, DynamicState<std::shared_ptr<Well2>>> wells_static;
@@ -239,6 +240,7 @@ namespace Opm
         Action::Actions m_actions;
 
         std::map<std::string,Events> well_events;
+        DynamicState<int> m_nupcol;
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group2> group, size_t reportStep);
@@ -281,6 +283,7 @@ namespace Opm
         void handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
+        void handleNUPCOL( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
         void handleWRFT( const DeckKeyword& keyword, size_t currentStep);
