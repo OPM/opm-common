@@ -41,7 +41,8 @@ void Actions::add(const ActionX& action) {
     this->actions.insert(std::pair<std::string,ActionX>(action.name(), action));
 }
 
-ActionX& Actions::at(const std::string& name) {
+
+const ActionX& Actions::at(const std::string& name) const {
     return this->actions.at(name);
 }
 
