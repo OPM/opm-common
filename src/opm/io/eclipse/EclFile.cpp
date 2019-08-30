@@ -49,12 +49,11 @@ namespace {
 
 bool isFormatted(const std::string& filename)
 {
-    int p = filename.find_last_of(".");
-    int l = filename.length();
-
-    std::string extension = filename.substr(p,l-p);
-
-    return extension.substr(1,1) == "F" || extension.substr(1,1) == "A";
+    const auto p = filename.find_last_of(".");
+    if (p == std::string::npos)
+      OPM_THROW(std::invalid_argument,
+                "Purported ECLIPSE Filename'" + filename + "'does not contain extension");
+    return std::strchr("ABCFGH", static_cast<int>(filename[p+1])) != nullptr;
 }
 
 
