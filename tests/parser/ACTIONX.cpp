@@ -604,7 +604,7 @@ TSTEP
 10 /
 
 ACTIONX
-   'ACTION1' /
+   'B' /
    WWCT 'OPX'     > 0.75    AND /   -- The spaces will/should be normalized in Condition::expression()
    FPR < 100 /
 /
@@ -617,6 +617,27 @@ ENDACTIO
 
 TSTEP
    10 /
+
+
+ACTIONX
+   'A' /
+   WOPR 'OPX'  = 1000 /
+/
+
+ENDACTIO
+
+ACTIONX
+   'B' /
+   FWCT < 0.50 /
+/
+
+
+
+ENDACTIO
+
+TSTEP
+10 /
+
 )"};
 
     Opm::Parser parser;
@@ -633,7 +654,7 @@ TSTEP
     BOOST_CHECK_EQUAL(actions1.size(), 1);
 
 
-    const auto& act1 = actions1.at("ACTION1");
+    const auto& act1 = actions1.get("B");
     const auto& strings = act1.keyword_strings();
     BOOST_CHECK_EQUAL(strings.size(), 4);
     BOOST_CHECK_EQUAL(strings.back(), "ENDACTIO");
@@ -661,6 +682,37 @@ TSTEP
     BOOST_CHECK_EQUAL(cond1.quantity, "FPR");
     BOOST_CHECK(cond1.cmp == Action::Condition::Comparator::LESS);
     BOOST_CHECK(cond1.logic == Action::Condition::Logical::END);
+
+    /*****************************************************************/
+
+    const auto& actions2 = sched.actions(2);
+    BOOST_CHECK_EQUAL(actions2.size(), 2);
+
+    const auto& actB = actions2.get("B");
+    const auto& condB = actB.conditions();
+    BOOST_CHECK_EQUAL(condB.size() , 1);
+    BOOST_CHECK_EQUAL(condB[0].expression, "FWCT < 0.50");
+    BOOST_CHECK_EQUAL(condB[0].quantity, "FWCT");
+    BOOST_CHECK(condB[0].cmp == Action::Condition::Comparator::LESS);
+    BOOST_CHECK(condB[0].logic == Action::Condition::Logical::END);
+
+    const auto& actA = actions2.get("A");
+    const auto& condA = actA.conditions();
+    BOOST_CHECK_EQUAL(condA.size() , 1);
+    BOOST_CHECK_EQUAL(condA[0].expression, "WOPR 'OPX' = 1000");
+    BOOST_CHECK_EQUAL(condA[0].quantity, "WOPR");
+    BOOST_CHECK(condA[0].cmp == Action::Condition::Comparator::EQUAL);
+    BOOST_CHECK(condA[0].logic == Action::Condition::Logical::END);
+
+    std::size_t index = 0;
+    for (const auto& act : actions2) {
+        if (index == 0)
+            BOOST_CHECK_EQUAL("B", act.name());
+
+        if (index == 1)
+            BOOST_CHECK_EQUAL("A", act.name());
+        index++;
+    }
 }
 
 

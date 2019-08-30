@@ -23,7 +23,7 @@
 
 #include <string>
 #include <ctime>
-#include <map>
+#include <vector>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/Action/ActionX.hpp>
 
@@ -42,10 +42,14 @@ public:
     bool empty() const;
     void add(const ActionX& action);
     bool ready(std::time_t sim_time) const;
-    const ActionX& at(const std::string& name) const;
+    const ActionX& get(const std::string& name) const;
+    const ActionX& get(std::size_t index) const;
     std::vector<const ActionX *> pending(std::time_t sim_time) const;
+
+    std::vector<ActionX>::const_iterator begin() const;
+    std::vector<ActionX>::const_iterator end() const;
 private:
-    std::map<std::string, ActionX> actions;
+    std::vector<ActionX> actions;
 };
 }
 }
