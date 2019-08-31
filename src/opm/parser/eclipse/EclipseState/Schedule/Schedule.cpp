@@ -123,7 +123,8 @@ namespace {
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_model(this->m_timeMap, std::make_shared<GuideRateModel>()),
         global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
-        rft_config(this->m_timeMap)
+        rft_config(this->m_timeMap),
+        m_nupcol(this->m_timeMap, 3)
     {
         addGroup( "FIELD", 0, deck.getActiveUnitSystem());
 
@@ -385,6 +386,9 @@ namespace {
         else if (keyword.name() == "VFPPROD")
             handleVFPPROD(keyword, unit_system, currentStep);
 
+        else if (keyword.name() == "NUPCOL")
+            handleNUPCOL(keyword, currentStep);
+
         else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
             bool supported = geoModifiers.at( keyword.name() );
             if (supported) {
@@ -515,6 +519,12 @@ namespace {
         }
     }
 
+    void Schedule::handleNUPCOL( const DeckKeyword& keyword, size_t currentStep) {
+        const int nupcol = keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
+        this->m_nupcol.update(currentStep, nupcol);
+    }
+
+    
 
     /*
       The COMPORD keyword is handled together with the WELSPECS keyword in the
@@ -2568,6 +2578,11 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         }
 
     }
+
+    int Schedule::getNupcol(size_t reportStep) const {
+        return this->m_nupcol.get(reportStep);
+    }
+
 
 
 }

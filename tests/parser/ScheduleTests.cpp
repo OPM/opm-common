@@ -3336,3 +3336,40 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG2) {
     const auto& rft_config = schedule.rftConfig();
     BOOST_CHECK_EQUAL(1, rft_config.firstRFTOutput());
 }
+
+
+BOOST_AUTO_TEST_CASE(nupcol) {
+    Opm::Parser parser;
+    std::string input =
+        "START             -- 0 \n"
+        "19 JUN 2007 / \n"
+        "SCHEDULE\n"
+        "DATES\n             -- 1\n"
+        " 10  OKT 2008 / \n"
+        "/\n"
+        "NUPCOL\n"
+        "  4 /\n"
+        "DATES\n             -- 1\n"
+        " 10  OKT 2009 / \n"
+        "/\n"
+        "NUPCOL\n"
+        "  10 /\n"
+        "DATES\n             -- 1\n"
+        " 10  OKT 2010 / \n"
+        "/\n"
+
+        ;
+
+    auto deck = parser.parseString(input);
+    EclipseGrid grid(10,10,10);
+    TableManager table ( deck );
+    Eclipse3DProperties eclipseProperties ( deck , table, grid);
+    Runspec runspec (deck);
+    Schedule schedule( deck, grid, eclipseProperties,runspec);
+
+    {
+        BOOST_CHECK_EQUAL(schedule.getNupcol(0),3);
+        BOOST_CHECK_EQUAL(schedule.getNupcol(1),4);
+        BOOST_CHECK_EQUAL(schedule.getNupcol(2),10);
+    }
+}
