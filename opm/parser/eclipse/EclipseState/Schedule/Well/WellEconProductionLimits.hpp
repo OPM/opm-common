@@ -28,8 +28,33 @@ namespace Opm {
 
     class DeckRecord;
 
-    class WellEconProductionLimits{
+    class WellEconProductionLimits {
     public:
+
+        enum class QuantityLimit {
+            RATE = 0,
+            POTN = 1
+        };
+
+        static const std::string QuantityLimit2String(QuantityLimit enumValue);
+        static QuantityLimit QuantityLimitFromString(const std::string& stringValue);
+
+
+        enum class EconWorkover {
+            NONE = 0,
+            CON  = 1, // CON
+            CONP = 2, // +CON
+            WELL = 3,
+            PLUG = 4,
+            // the following two only related to workover action
+            // on exceeding secondary water cut limit
+            LAST = 5,
+            RED  = 6
+        };
+        static std::string EconWorkover2String(EconWorkover enumValue);
+        static EconWorkover EconWorkoverFromString(const std::string& stringValue);
+
+
         explicit WellEconProductionLimits(const DeckRecord& record);
         WellEconProductionLimits();
 
@@ -37,128 +62,53 @@ namespace Opm {
         // for the moment.
 
         // limit switch on?
-        bool onAnyEffectiveLimit() const {
-            return (onAnyRatioLimit() ||
-                    onAnyRateLimit());
-        };
-
-        bool onAnyRatioLimit() const {
-            return (onMaxWaterCut()       ||
-                    onMaxGasOilRatio()    ||
-                    onMaxWaterGasRatio()  ||
-                    onMaxGasLiquidRatio());
-        };
-
-
-        bool onAnyRateLimit() const {
-            return (onMinOilRate()            ||
-                    onMinGasRate()            ||
-                    onMinLiquidRate()         ||
-                    onMinReservoirFluidRate());
-        };
-
-        bool onMinOilRate() const {
-            return (m_min_oil_rate > 0.0);
-        };
-
-        bool onMinGasRate() const {
-            return (m_min_gas_rate > 0.0);
-        };
-
-        bool onMaxWaterCut() const {
-            return (m_max_water_cut > 0.0);
-        };
-
-        bool onMaxGasOilRatio() const {
-            return (m_max_gas_oil_ratio > 0.0);
-        };
-
-        bool onMaxWaterGasRatio() const {
-            return (m_max_water_gas_ratio > 0.0);
-        };
-
-        bool onSecondaryMaxWaterCut() const {
-            return (m_secondary_max_water_cut > 0.0);
-        };
-
-        bool onMaxGasLiquidRatio() const {
-            return (m_max_gas_oil_ratio > 0.0);
-        };
-
-        // assuming Celsius temperature is used internally
-        bool onMaxTemperature() const {
-            return (m_max_temperature > -273.15);
-        };
-
-        bool onMinLiquidRate() const {
-            return (m_min_liquid_rate > 0.0);
-        };
-
-        bool onMinReservoirFluidRate() const {
-            return (m_min_reservoir_fluid_rate > 0.0);
-        };
-
-        // not sure what will happen if the followon well is a well does not exist.
-        bool validFollowonWell() const {
-            return (m_followon_well != "'");
-        };
-
-        bool requireWorkover() const {
-            return (m_workover != WellEcon::NONE);
-        };
-
-        bool requireSecondaryWorkover() const {
-            return (m_workover_secondary != WellEcon::NONE);
-        }
-
-        bool endRun() const {
-            return m_end_run;
-        }
-
-        double minOilRate() const { return m_min_oil_rate; };
-
-        double minGasRate() const { return m_min_gas_rate; };
-
-        double maxWaterCut() const { return m_max_water_cut; };
-
-        double maxGasOilRatio() const { return m_max_gas_oil_ratio; };
-
-        double maxWaterGasRatio() const { return m_max_water_gas_ratio; };
-
-        WellEcon::WorkoverEnum workover() const { return m_workover; };
-
-        const std::string& followonWell() const { return m_followon_well; };
-
-        WellEcon::QuantityLimitEnum quantityLimit() const {return m_quantity_limit; };
-
-        double maxSecondaryMaxWaterCut() const { return m_secondary_max_water_cut; };
-
-        WellEcon::WorkoverEnum workoverSecondary() const { return m_workover_secondary; };
-
-        double maxGasLiquidRatio() const { return m_max_gas_liquid_ratio; };
-
-        double minLiquidRate() const { return m_min_liquid_rate; };
-
-        double maxTemperature() const { return m_max_temperature; };
-
-        double minReservoirFluidRate() const { return m_min_reservoir_fluid_rate; };
-
+        bool onAnyEffectiveLimit() const;
+        bool onAnyRatioLimit() const;
+        bool onAnyRateLimit() const;
+        bool onMinOilRate() const;
+        bool onMinGasRate() const;
+        bool onMaxWaterCut() const;
+        bool onMaxGasOilRatio() const;
+        bool onMaxWaterGasRatio() const;
+        bool onSecondaryMaxWaterCut() const;
+        bool onMaxGasLiquidRatio() const;
+        // assuming Celsius temperature is used internally;
+        bool onMaxTemperature() const;
+        bool onMinLiquidRate() const;
+        bool onMinReservoirFluidRate() const;
+        // not sure what will happen if the followon well is a well does not exist.;
+        bool validFollowonWell() const;
+        bool requireWorkover() const;
+        bool requireSecondaryWorkover() const;
+        bool endRun() const;
+        double minOilRate() const;
+        double minGasRate() const;
+        double maxWaterCut() const;
+        double maxGasOilRatio() const;
+        double maxWaterGasRatio() const;
+        EconWorkover workover() const;
+        const std::string& followonWell() const;
+        QuantityLimit quantityLimit() const;
+        double maxSecondaryMaxWaterCut() const;
+        EconWorkover workoverSecondary() const;
+        double maxGasLiquidRatio() const;
+        double minLiquidRate() const;
+        double maxTemperature() const;
+        double minReservoirFluidRate() const;
         bool operator==(const WellEconProductionLimits& other) const;
-
         bool operator!=(const WellEconProductionLimits& other) const;
-
     private:
         double m_min_oil_rate;
         double m_min_gas_rate;
         double m_max_water_cut;
         double m_max_gas_oil_ratio;
         double m_max_water_gas_ratio;
-        WellEcon::WorkoverEnum m_workover;
+        EconWorkover m_workover;
         bool m_end_run;
         std::string m_followon_well;
-        WellEcon::QuantityLimitEnum m_quantity_limit;
+        QuantityLimit m_quantity_limit;
         double m_secondary_max_water_cut;
-        WellEcon::WorkoverEnum m_workover_secondary;
+        EconWorkover m_workover_secondary;
         double m_max_gas_liquid_ratio;
         double m_min_liquid_rate;
         double m_max_temperature;

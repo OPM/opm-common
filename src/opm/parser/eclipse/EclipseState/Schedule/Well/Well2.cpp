@@ -962,4 +962,5 @@ Well2::ProducerCMode Well2::ProducerCModeFromString( const std::string& stringVa
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
+
 }

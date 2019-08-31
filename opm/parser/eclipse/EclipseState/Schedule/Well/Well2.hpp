@@ -58,6 +58,9 @@ struct WellGuideRate {
 
 class Well2 {
 public:
+
+
+
     enum class Status {
         OPEN = 1,
         STOP = 2,
