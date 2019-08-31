@@ -3295,13 +3295,13 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
     BOOST_CHECK(!conf.getWellOpenRFT("W1", 0));
 
 
-    conf.updateRFT("W1", 2, RFTConnections::YES);
+    conf.updateRFT("W1", 2, RFTConfig::RFT::YES);
     BOOST_CHECK(conf.rft("W1", 2));
     BOOST_CHECK(!conf.rft("W1", 1));
     BOOST_CHECK(!conf.rft("W1", 3));
 
-    conf.updateRFT("W2", 2, RFTConnections::REPT);
-    conf.updateRFT("W2", 4, RFTConnections::NO);
+    conf.updateRFT("W2", 2, RFTConfig::RFT::REPT);
+    conf.updateRFT("W2", 4, RFTConfig::RFT::NO);
     BOOST_CHECK(!conf.rft("W2", 1));
     BOOST_CHECK( conf.rft("W2", 2));
     BOOST_CHECK( conf.rft("W2", 3));
@@ -3311,7 +3311,7 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
     conf.setWellOpenRFT("W3");
     BOOST_CHECK(conf.getWellOpenRFT("W3", 2));
 
-    conf.updateRFT("W4", 2, RFTConnections::FOPN);
+    conf.updateRFT("W4", 2, RFTConfig::RFT::FOPN);
     BOOST_CHECK(conf.getWellOpenRFT("W4", 2));
 
 

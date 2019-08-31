@@ -1910,7 +1910,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, currentStep);
             for(const auto& well_name : well_names)
-                this->rft_config.updateRFT(well_name, currentStep, RFTConnections::RFTEnum::YES);
+                this->rft_config.updateRFT(well_name, currentStep, RFTConfig::RFT::YES);
 
         }
 
@@ -1922,8 +1922,8 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
-            RFTConnections::RFTEnum RFTKey = RFTConnections::RFTEnumFromString(record.getItem("OUTPUT_RFT").getTrimmedString(0));
-            PLTConnections::PLTEnum PLTKey = PLTConnections::PLTEnumFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
+            RFTConfig::RFT RFTKey = RFTConfig::RFTFromString(record.getItem("OUTPUT_RFT").getTrimmedString(0));
+            RFTConfig::PLT PLTKey = RFTConfig::PLTFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
             const auto well_names = wellNames(wellNamePattern, currentStep);
             for(const auto& well_name : well_names) {
                 this->rft_config.updateRFT(well_name, currentStep, RFTKey);

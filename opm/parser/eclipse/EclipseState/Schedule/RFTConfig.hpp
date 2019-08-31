@@ -32,6 +32,26 @@ namespace Opm {
 class TimeMap;
 class RFTConfig {
 public:
+    enum class RFT {
+        YES = 1,
+        REPT = 2,
+        TIMESTEP = 3,
+        FOPN = 4,
+        NO = 5
+    };
+    static std::string RFT2String(RFT enumValue);
+    static RFT RFTFromString(const std::string &stringValue);
+
+    enum class PLT {
+        YES      = 1,
+        REPT     = 2,
+        TIMESTEP = 3,
+        NO       = 4
+    };
+    static std::string PLT2String(PLT enumValue);
+    static PLT PLTFromString( const std::string& stringValue);
+
+
     explicit RFTConfig(const TimeMap& time_map);
     bool rft(const std::string& well, std::size_t report_step) const;
     bool plt(const std::string& well, std::size_t report_step) const;
@@ -41,16 +61,16 @@ public:
 
     bool active(std::size_t report_step) const;
     std::size_t firstRFTOutput() const;
-    void updateRFT(const std::string& well, std::size_t report_step, RFTConnections::RFTEnum value);
-    void updatePLT(const std::string& well, std::size_t report_step, PLTConnections::PLTEnum value);
+    void updateRFT(const std::string& well, std::size_t report_step, RFT value);
+    void updatePLT(const std::string& well, std::size_t report_step, PLT value);
     void addWellOpen(const std::string& well, std::size_t report_step);
 private:
     const TimeMap& tm;
     std::pair<bool, std::size_t> well_open_rft_time;
     std::unordered_set<std::string> well_open_rft_name;
     std::unordered_map<std::string, std::size_t> well_open;
-    std::unordered_map<std::string, DynamicState<std::pair<RFTConnections::RFTEnum, std::size_t>>> rft_config;
-    std::unordered_map<std::string, DynamicState<std::pair<PLTConnections::PLTEnum, std::size_t>>> plt_config;
+    std::unordered_map<std::string, DynamicState<std::pair<RFT, std::size_t>>> rft_config;
+    std::unordered_map<std::string, DynamicState<std::pair<PLT, std::size_t>>> plt_config;
 };
 
 }
