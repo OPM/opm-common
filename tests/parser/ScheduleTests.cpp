@@ -1238,7 +1238,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
     const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
 
     BOOST_CHECK_EQUAL(true,   ovap.getOption(0));
-    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::DRDT);
+    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRDT);
+
     BOOST_CHECK_EQUAL(true,   ovap.drsdtActive());
     BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
 }
@@ -1276,7 +1277,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
         BOOST_CHECK_EQUAL(true,   ovap.getOption(i));
     }
 
-    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::DRDT);
+    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap.drsdtActive());
     BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
 }
@@ -1316,19 +1317,19 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
 
     const OilVaporizationProperties& ovap1 = schedule.getOilVaporizationProperties(1);
-    BOOST_CHECK_EQUAL(ovap1.getType(), Opm::OilVaporizationEnum::DRDT);
+    BOOST_CHECK(ovap1.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap1.drsdtActive());
     BOOST_CHECK_EQUAL(false,   ovap1.drvdtActive());
 
     const OilVaporizationProperties& ovap2 = schedule.getOilVaporizationProperties(2);
     //double value =  ovap2.getMaxDRVDT(0);
     //BOOST_CHECK_EQUAL(1.1574074074074074e-06, value);
-    BOOST_CHECK_EQUAL(ovap2.getType(), Opm::OilVaporizationEnum::DRDT);
+    BOOST_CHECK(ovap2.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap2.drvdtActive());
     BOOST_CHECK_EQUAL(true,   ovap2.drsdtActive());
 
     const OilVaporizationProperties& ovap3 = schedule.getOilVaporizationProperties(3);
-    BOOST_CHECK_EQUAL(ovap3.getType(), Opm::OilVaporizationEnum::VAPPARS);
+    BOOST_CHECK(ovap3.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
     BOOST_CHECK_EQUAL(false,   ovap3.drvdtActive());
     BOOST_CHECK_EQUAL(false,   ovap3.drsdtActive());
 
@@ -1357,7 +1358,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
-    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::VAPPARS);
+    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
     double vap1 =  ovap.getVap1(0);
     BOOST_CHECK_EQUAL(2, vap1);
     double vap2 =  ovap.getVap2(0);

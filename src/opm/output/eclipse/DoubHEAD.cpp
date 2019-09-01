@@ -617,7 +617,7 @@ Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
         sched.getOilVaporizationProperties(lookup_step);
 
     this->data_[dRsdt] =
-        (vappar.getType() == Opm::OilVaporizationEnum::DRDT)
+        (vappar.getType() == Opm::OilVaporizationProperties::OilVaporization::DRDT)
         ? vappar.getMaxDRSDT(0)*cnvT
         : 1.0e+20;
 

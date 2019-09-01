@@ -35,12 +35,19 @@ namespace Opm
      */
     class OilVaporizationProperties {
     public:
+        enum class OilVaporization {
+            UNDEF = 0,
+            VAPPARS = 1,
+            DRDT = 2 // DRSDT or DRVDT
+        };
+
+
         explicit OilVaporizationProperties(const size_t numPvtReginIdx);
         static void updateDRSDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
         static void updateDRVDT(Opm::OilVaporizationProperties& ovp, const std::vector<double>& maxDRVDT);
         static void updateVAPPARS(Opm::OilVaporizationProperties& ovp, const std::vector<double>& vap1, const std::vector<double>& vap2);
 
-        Opm::OilVaporizationEnum getType() const;
+        OilVaporization getType() const;
         double getVap1(const size_t pvtRegionIdx) const;
         double getVap2(const size_t pvtRegionIdx) const;
         double getMaxDRSDT(const size_t pvtRegionIdx) const;
@@ -59,7 +66,7 @@ namespace Opm
         bool operator!=( const OilVaporizationProperties& ) const;
 
     private:
-        Opm::OilVaporizationEnum m_type = OilVaporizationEnum::UNDEF;
+        OilVaporization m_type = OilVaporization::UNDEF;
         std::vector<double> m_vap1;
         std::vector<double> m_vap2;
         std::vector<double> m_maxDRSDT;
