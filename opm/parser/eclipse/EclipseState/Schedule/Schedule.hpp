@@ -176,7 +176,7 @@ namespace Opm
         std::vector<Well2> getWells2atEnd() const;
 
         std::vector<const Group2*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
-        std::vector<Well2> getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const;
+        std::vector<Well2> getChildWells2(const std::string& group_name, size_t timeStep) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const UDQActive& udqActive(size_t timeStep) const;

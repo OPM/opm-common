@@ -2081,7 +2081,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     }
 
 
-    std::vector< Well2 > Schedule::getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const {
+    std::vector< Well2 > Schedule::getChildWells2(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
         {
@@ -2090,9 +2090,9 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             if (group_ptr) {
                 std::vector<Well2> wells;
 
-                if (group_ptr->groups().size() && query_mode == GroupWellQueryMode::Recursive) {
+                if (group_ptr->groups().size()) {
                     for (const auto& child_name : group_ptr->groups()) {
-                        const auto& child_wells = getChildWells2( child_name, timeStep, query_mode );
+                        const auto& child_wells = getChildWells2( child_name, timeStep);
                         wells.insert( wells.end() , child_wells.begin() , child_wells.end());
                     }
                 } else {

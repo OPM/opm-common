@@ -162,12 +162,6 @@ namespace Opm {
     }
 
 
-
-    enum class GroupWellQueryMode {
-        Immediate,
-        Recursive
-    };
-
 }
 
 #endif
