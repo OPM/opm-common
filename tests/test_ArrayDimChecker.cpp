@@ -194,7 +194,7 @@ END
 
 struct CaseObjects
 {
-    explicit CaseObjects(const Opm::Deck& deck);
+    explicit CaseObjects(const Opm::Deck& deck, const Opm::ParseContext& ctxt);
     ~CaseObjects();
 
     CaseObjects(const CaseObjects& rhs) = default;
@@ -204,17 +204,16 @@ struct CaseObjects
     CaseObjects& operator=(CaseObjects&& rhs) = default;
 
     Opm::ErrorGuard   guard;
-    Opm::ParseContext ctxt;
     Opm::EclipseState es;
     Opm::Schedule     sched;
 };
 
-CaseObjects::CaseObjects(const Opm::Deck& deck)
+CaseObjects::CaseObjects(const Opm::Deck& deck, const Opm::ParseContext& ctxt)
     : guard{}
-    , ctxt {}
     , es   (deck,     ctxt, guard)
     , sched(deck, es, ctxt, guard)
-{}
+{
+}
 
 CaseObjects::~CaseObjects()
 {
@@ -247,7 +246,8 @@ BOOST_AUTO_TEST_SUITE(WellDimensions)
 
 BOOST_AUTO_TEST_CASE(MaxGroupSize)
 {
-    auto cse = CaseObjects{ simCaseWellDims() };
+    Opm::ParseContext parseContext;
+    auto cse = CaseObjects{ simCaseWellDims(), parseContext };
 
     // Verify at most ten wells in a single group.
     BOOST_CHECK_EQUAL(Opm::maxGroupSize(cse.sched, 1), 10);
@@ -255,13 +255,27 @@ BOOST_AUTO_TEST_CASE(MaxGroupSize)
 
 BOOST_AUTO_TEST_CASE(WellDims)
 {
-    auto cse = CaseObjects{ simCaseWellDims() };
+    Opm::ParseContext parseContext;
+    parseContext.update(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE, Opm::InputError::THROW_EXCEPTION);
+    parseContext.update(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, Opm::InputError::THROW_EXCEPTION);
+    parseContext.update(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE, Opm::InputError::THROW_EXCEPTION);
+    parseContext.update(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE, Opm::InputError::THROW_EXCEPTION);
+
+    auto cse = CaseObjects{ simCaseWellDims(),  parseContext};
 
     // There should be no failures in basic input layer
     BOOST_CHECK(!cse.guard);
 
+    BOOST_CHECK_THROW( Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
+                                                           parseContext, cse.guard),
+                       std::invalid_argument);
+
+    parseContext.update(Opm::ParseContext::RUNSPEC_NUMWELLS_TOO_LARGE, Opm::InputError::DELAYED_EXIT1);
+    parseContext.update(Opm::ParseContext::RUNSPEC_CONNS_PER_WELL_TOO_LARGE, Opm::InputError::DELAYED_EXIT1);
+    parseContext.update(Opm::ParseContext::RUNSPEC_NUMGROUPS_TOO_LARGE, Opm::InputError::DELAYED_EXIT1);
+    parseContext.update(Opm::ParseContext::RUNSPEC_GROUPSIZE_TOO_LARGE, Opm::InputError::DELAYED_EXIT1);
     Opm::checkConsistentArrayDimensions(cse.es  , cse.sched,
-                                        cse.ctxt, cse.guard);
+                                        parseContext, cse.guard);
 
     // There *should* be errors from dimension checking
     BOOST_CHECK(cse.guard);
@@ -276,5 +290,6 @@ BOOST_AUTO_TEST_CASE(WellDims)
         BOOST_CHECK(output.match_pattern());
     }
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()

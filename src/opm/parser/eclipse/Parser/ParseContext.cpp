@@ -82,10 +82,10 @@ namespace Opm {
 
         addKey(UNIT_SYSTEM_MISMATCH, InputError::THROW_EXCEPTION);
 
-        this->addKey(RUNSPEC_NUMWELLS_TOO_LARGE, InputError::DELAYED_EXIT1);
-        this->addKey(RUNSPEC_CONNS_PER_WELL_TOO_LARGE, InputError::DELAYED_EXIT1);
-        this->addKey(RUNSPEC_NUMGROUPS_TOO_LARGE, InputError::DELAYED_EXIT1);
-        this->addKey(RUNSPEC_GROUPSIZE_TOO_LARGE, InputError::DELAYED_EXIT1);
+        this->addKey(RUNSPEC_NUMWELLS_TOO_LARGE, InputError::THROW_EXCEPTION);
+        this->addKey(RUNSPEC_CONNS_PER_WELL_TOO_LARGE, InputError::THROW_EXCEPTION);
+        this->addKey(RUNSPEC_NUMGROUPS_TOO_LARGE, InputError::THROW_EXCEPTION);
+        this->addKey(RUNSPEC_GROUPSIZE_TOO_LARGE, InputError::THROW_EXCEPTION);
 
         addKey(UNSUPPORTED_SCHEDULE_GEO_MODIFIER, InputError::THROW_EXCEPTION);
         addKey(UNSUPPORTED_COMPORD_TYPE, InputError::THROW_EXCEPTION);
