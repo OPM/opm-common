@@ -47,9 +47,21 @@ static const std::string ExceedAction2String( ExceedAction enumValue );
 static ExceedAction ExceedActionFromString( const std::string& stringValue );
 
 
+enum class InjectionCMode  : int {
+    NONE = 0,
+    RATE = 1,
+    RESV = 2,
+    REIN = 4,
+    VREP = 8,
+    FLD  = 16
+};
+static const std::string InjectionCMode2String( InjectionCMode enumValue );
+static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
+
+
 struct GroupInjectionProperties {
     Phase phase = Phase::WATER;
-    GroupInjection::ControlEnum cmode = GroupInjection::NONE;
+    InjectionCMode cmode = InjectionCMode::NONE;
     UDAValue surface_max_rate;
     UDAValue resv_max_rate;
     UDAValue target_reinj_fraction;
@@ -62,13 +74,13 @@ struct GroupInjectionProperties {
 
 struct InjectionControls {
     Phase phase;
-    GroupInjection::ControlEnum cmode;
+    InjectionCMode cmode;
     double surface_max_rate;
     double resv_max_rate;
     double target_reinj_fraction;
     double target_void_fraction;
     int injection_controls = 0;
-    bool has_control(GroupInjection::ControlEnum control) const;
+    bool has_control(InjectionCMode control) const;
 };
 
 struct GroupProductionProperties {
@@ -136,10 +148,10 @@ struct ProductionControls {
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
     GroupProduction::ControlEnum production_cmode() const;
-    GroupInjection::ControlEnum injection_cmode() const;
+    InjectionCMode injection_cmode() const;
     Phase injection_phase() const;
     bool has_control(GroupProduction::ControlEnum control) const;
-    bool has_control(GroupInjection::ControlEnum control) const;
+    bool has_control(InjectionCMode control) const;
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);

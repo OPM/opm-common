@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
 BOOST_AUTO_TEST_CASE(ControlModeOK) {
     Opm::Group2 group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
     Opm::SummaryState st;
-    const auto& prod = group.productionControls(st);
-    BOOST_CHECK_EQUAL( Opm::GroupInjection::NONE , prod.cmode);
+    const auto& inj = group.injectionControls(st);
+    BOOST_CHECK( Opm::Group2::InjectionCMode::NONE == inj.cmode);
 }
 
 

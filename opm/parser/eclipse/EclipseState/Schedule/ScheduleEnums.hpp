@@ -27,22 +27,6 @@ namespace Opm {
 
 
 
-    namespace GroupInjection {
-
-          enum ControlEnum {
-            NONE = 0,
-            RATE = 1,
-            RESV = 2,
-            REIN = 4,
-            VREP = 8,
-            FLD  = 16
-        };
-
-        const std::string ControlEnum2String( ControlEnum enumValue );
-        ControlEnum ControlEnumFromString( const std::string& stringValue );
-    }
-
-
 
     // A group can have both injection controls and production controls set at
     // the same time, i.e. this enum is used as a bitmask.

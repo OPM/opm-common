@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
         auto& group = sched.getGroup2("INJ", 3);
         const auto& injection = group.injectionControls(st);
         BOOST_CHECK_EQUAL( Phase::WATER , injection.phase);
-        BOOST_CHECK_EQUAL( GroupInjection::VREP , injection.cmode);
+        BOOST_CHECK( Group2::InjectionCMode::VREP == injection.cmode);
         BOOST_CHECK_CLOSE( 10/Metric::Time , injection.surface_max_rate, 0.001);
         BOOST_CHECK_CLOSE( 20/Metric::Time , injection.resv_max_rate, 0.001);
         BOOST_CHECK_EQUAL( 0.75 , injection.target_reinj_fraction);
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
         auto& group = sched.getGroup2("INJ", 6);
         const auto& injection = group.injectionControls(st);
         BOOST_CHECK_EQUAL( Phase::OIL , injection.phase);
-        BOOST_CHECK_EQUAL( GroupInjection::RATE , injection.cmode);
+        BOOST_CHECK( Group2::InjectionCMode::RATE == injection.cmode);
         BOOST_CHECK_CLOSE( 1000/Metric::Time , injection.surface_max_rate, 0.0001);
         BOOST_CHECK(group.isInjectionGroup());
     }
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     {
         auto& group = sched.getGroup2("OP", 3);
         const auto& production = group.productionControls(st);
-        BOOST_CHECK_EQUAL( GroupProduction::ORAT , production.cmode);
+        BOOST_CHECK( GroupProduction::ORAT == production.cmode);
         BOOST_CHECK_CLOSE( 10/Metric::Time , production.oil_target , 0.001);
         BOOST_CHECK_CLOSE( 20/Metric::Time , production.water_target , 0.001);
         BOOST_CHECK_CLOSE( 30/Metric::Time , production.gas_target , 0.001);

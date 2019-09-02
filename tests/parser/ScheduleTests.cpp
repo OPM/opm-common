@@ -2384,41 +2384,41 @@ BOOST_AUTO_TEST_CASE(TestCompletionConnectionDirectionLoop)
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnum2String) {
-    BOOST_CHECK_EQUAL( "NONE" , GroupInjection::ControlEnum2String(GroupInjection::NONE));
-    BOOST_CHECK_EQUAL( "RATE" , GroupInjection::ControlEnum2String(GroupInjection::RATE));
-    BOOST_CHECK_EQUAL( "RESV" , GroupInjection::ControlEnum2String(GroupInjection::RESV));
-    BOOST_CHECK_EQUAL( "REIN" , GroupInjection::ControlEnum2String(GroupInjection::REIN));
-    BOOST_CHECK_EQUAL( "VREP" , GroupInjection::ControlEnum2String(GroupInjection::VREP));
-    BOOST_CHECK_EQUAL( "FLD"  , GroupInjection::ControlEnum2String(GroupInjection::FLD));
+    BOOST_CHECK_EQUAL( "NONE" , Group2::InjectionCMode2String(Group2::InjectionCMode::NONE));
+    BOOST_CHECK_EQUAL( "RATE" , Group2::InjectionCMode2String(Group2::InjectionCMode::RATE));
+    BOOST_CHECK_EQUAL( "RESV" , Group2::InjectionCMode2String(Group2::InjectionCMode::RESV));
+    BOOST_CHECK_EQUAL( "REIN" , Group2::InjectionCMode2String(Group2::InjectionCMode::REIN));
+    BOOST_CHECK_EQUAL( "VREP" , Group2::InjectionCMode2String(Group2::InjectionCMode::VREP));
+    BOOST_CHECK_EQUAL( "FLD"  , Group2::InjectionCMode2String(Group2::InjectionCMode::FLD));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnumFromString) {
-    BOOST_CHECK_THROW( GroupInjection::ControlEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( GroupInjection::NONE , GroupInjection::ControlEnumFromString("NONE"));
-    BOOST_CHECK_EQUAL( GroupInjection::RATE , GroupInjection::ControlEnumFromString("RATE"));
-    BOOST_CHECK_EQUAL( GroupInjection::RESV , GroupInjection::ControlEnumFromString("RESV"));
-    BOOST_CHECK_EQUAL( GroupInjection::REIN , GroupInjection::ControlEnumFromString("REIN"));
-    BOOST_CHECK_EQUAL( GroupInjection::VREP , GroupInjection::ControlEnumFromString("VREP"));
-    BOOST_CHECK_EQUAL( GroupInjection::FLD  , GroupInjection::ControlEnumFromString("FLD"));
+    BOOST_CHECK_THROW( Group2::InjectionCModeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Group2::InjectionCMode::NONE == Group2::InjectionCModeFromString("NONE"));
+    BOOST_CHECK( Group2::InjectionCMode::RATE == Group2::InjectionCModeFromString("RATE"));
+    BOOST_CHECK( Group2::InjectionCMode::RESV == Group2::InjectionCModeFromString("RESV"));
+    BOOST_CHECK( Group2::InjectionCMode::REIN == Group2::InjectionCModeFromString("REIN"));
+    BOOST_CHECK( Group2::InjectionCMode::VREP == Group2::InjectionCModeFromString("VREP"));
+    BOOST_CHECK( Group2::InjectionCMode::FLD  == Group2::InjectionCModeFromString("FLD"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnumLoop) {
-    BOOST_CHECK_EQUAL( GroupInjection::NONE , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::NONE ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::RATE , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::RATE ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::RESV , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::RESV ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::REIN , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::REIN ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::VREP , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::VREP ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::FLD  , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::FLD ) ));
+    BOOST_CHECK( Group2::InjectionCMode::NONE == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::NONE ) ));
+    BOOST_CHECK( Group2::InjectionCMode::RATE == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::RATE ) ));
+    BOOST_CHECK( Group2::InjectionCMode::RESV == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::RESV ) ));
+    BOOST_CHECK( Group2::InjectionCMode::REIN == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::REIN ) ));
+    BOOST_CHECK( Group2::InjectionCMode::VREP == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::VREP ) ));
+    BOOST_CHECK( Group2::InjectionCMode::FLD  == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::FLD ) ));
 
-    BOOST_CHECK_EQUAL( "NONE" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "NONE" ) ));
-    BOOST_CHECK_EQUAL( "RATE" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "RATE" ) ));
-    BOOST_CHECK_EQUAL( "RESV" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "RESV" ) ));
-    BOOST_CHECK_EQUAL( "REIN" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "REIN" ) ));
-    BOOST_CHECK_EQUAL( "VREP" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "VREP" ) ));
-    BOOST_CHECK_EQUAL( "FLD"  , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "FLD"  ) ));
+    BOOST_CHECK_EQUAL( "NONE" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "NONE" ) ));
+    BOOST_CHECK_EQUAL( "RATE" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "RATE" ) ));
+    BOOST_CHECK_EQUAL( "RESV" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "RESV" ) ));
+    BOOST_CHECK_EQUAL( "REIN" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "REIN" ) ));
+    BOOST_CHECK_EQUAL( "VREP" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "VREP" ) ));
+    BOOST_CHECK_EQUAL( "FLD"  , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "FLD"  ) ));
 }
 
 /*****************************************************************/

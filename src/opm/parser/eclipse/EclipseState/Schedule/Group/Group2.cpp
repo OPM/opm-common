@@ -295,7 +295,7 @@ GroupProduction::ControlEnum Group2::production_cmode() const {
     return this->production_properties.cmode;
 }
 
-GroupInjection::ControlEnum Group2::injection_cmode() const {
+Group2::InjectionCMode Group2::injection_cmode() const {
     return this->injection_properties.cmode;
 }
 
@@ -309,16 +309,16 @@ bool Group2::ProductionControls::has_control(GroupProduction::ControlEnum contro
 }
 
 
-bool Group2::InjectionControls::has_control(GroupInjection::ControlEnum control) const {
-    return (this->injection_controls & control) != 0;
+bool Group2::InjectionControls::has_control(InjectionCMode cmode_arg) const {
+    return (this->injection_controls & static_cast<int>(cmode_arg)) != 0;
 }
 
 bool Group2::has_control(GroupProduction::ControlEnum control) const {
     return (this->production_properties.production_controls & control) != 0;
 }
 
-bool Group2::has_control(GroupInjection::ControlEnum control) const {
-    return (this->injection_properties.injection_controls & control) != 0;
+bool Group2::has_control(InjectionCMode control) const {
+    return (this->injection_properties.injection_controls & static_cast<int>(control)) != 0;
 }
 
 
@@ -360,6 +360,43 @@ Group2::ExceedAction Group2::ExceedActionFromString( const std::string& stringVa
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+
+const std::string Group2::InjectionCMode2String( InjectionCMode enumValue ) {
+    switch( enumValue ) {
+    case InjectionCMode::NONE:
+        return "NONE";
+    case InjectionCMode::RATE:
+        return "RATE";
+    case InjectionCMode::RESV:
+        return "RESV";
+    case InjectionCMode::REIN:
+        return "REIN";
+    case InjectionCMode::VREP:
+        return "VREP";
+    case InjectionCMode::FLD:
+        return "FLD";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+
+Group2::InjectionCMode Group2::InjectionCModeFromString( const std::string& stringValue ) {
+    if (stringValue == "NONE")
+        return InjectionCMode::NONE;
+    else if (stringValue == "RATE")
+        return InjectionCMode::RATE;
+    else if (stringValue == "RESV")
+        return InjectionCMode::RESV;
+    else if (stringValue == "REIN")
+        return InjectionCMode::REIN;
+    else if (stringValue == "VREP")
+        return InjectionCMode::VREP;
+    else if (stringValue == "FLD")
+        return InjectionCMode::FLD;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
 
 
 }

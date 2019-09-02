@@ -1448,7 +1448,7 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
+                Group2::InjectionCMode controlMode = Group2::InjectionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
                 auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0);
                 auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
@@ -1468,16 +1468,16 @@ namespace {
                     injection.injection_controls = 0;
 
                     if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
-                        injection.injection_controls += GroupInjection::RATE;
+                        injection.injection_controls += static_cast<int>(Group2::InjectionCMode::RATE);
 
                     if (!record.getItem("RESV_TARGET").defaultApplied(0))
-                        injection.injection_controls += GroupInjection::RESV;
+                        injection.injection_controls += static_cast<int>(Group2::InjectionCMode::RESV);
 
                     if (!record.getItem("REINJ_TARGET").defaultApplied(0))
-                        injection.injection_controls += GroupInjection::REIN;
+                        injection.injection_controls += static_cast<int>(Group2::InjectionCMode::REIN);
 
                     if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
-                        injection.injection_controls += GroupInjection::VREP;
+                        injection.injection_controls += static_cast<int>(Group2::InjectionCMode::VREP);
 
                     if (group_ptr->updateInjection(injection))
                         this->updateGroup(std::move(group_ptr), currentStep);
