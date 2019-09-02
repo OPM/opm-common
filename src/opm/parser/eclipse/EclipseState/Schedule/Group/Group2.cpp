@@ -398,5 +398,13 @@ Group2::InjectionCMode Group2::InjectionCModeFromString( const std::string& stri
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+Group2::GroupType operator|(Group2::GroupType lhs, Group2::GroupType rhs) {
+    return static_cast<Group2::GroupType>(static_cast<std::underlying_type<Group2::GroupType>::type>(lhs) | static_cast<std::underlying_type<Group2::GroupType>::type>(rhs));
+}
+
+
+Group2::GroupType operator&(Group2::GroupType lhs, Group2::GroupType rhs) {
+    return static_cast<Group2::GroupType>(static_cast<std::underlying_type<Group2::GroupType>::type>(lhs) & static_cast<std::underlying_type<Group2::GroupType>::type>(rhs));
+}
 
 }

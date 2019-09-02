@@ -35,6 +35,17 @@ class SummaryState;
 class Group2 {
 public:
 
+// A group can have both injection controls and production controls set at
+// the same time, i.e. this enum is used as a bitmask.
+enum class GroupType : unsigned {
+    NONE = 0,
+    PRODUCTION = 1,
+    INJECTION = 2,
+    MIXED = 3
+};
+
+
+
 enum class ExceedAction {
     NONE = 0,
     CON = 1,
@@ -175,6 +186,9 @@ private:
     GroupInjectionProperties injection_properties{};
     GroupProductionProperties production_properties{};
 };
+
+Group2::GroupType operator |(Group2::GroupType lhs, Group2::GroupType rhs);
+Group2::GroupType operator &(Group2::GroupType lhs, Group2::GroupType rhs);
 
 }
 
