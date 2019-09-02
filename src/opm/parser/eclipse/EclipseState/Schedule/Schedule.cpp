@@ -532,7 +532,7 @@ namespace {
         this->m_nupcol.update(currentStep, nupcol);
     }
 
-    
+
 
     /*
       The COMPORD keyword is handled together with the WELSPECS keyword in the
@@ -1496,7 +1496,7 @@ namespace {
 
             for (const auto& group_name : group_names){
                 GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
+                Group2::ExceedAction exceedAction = Group2::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
                 auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
                 auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
                 auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
@@ -1504,14 +1504,14 @@ namespace {
                 double guide_rate = 0;
                 GroupProduction::GuideRateDef guide_rate_def = GroupProduction::GuideRateDef::NO_GUIDE_RATE;
                 if (group_name != "FIELD") {
-                    if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {                  
+                    if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {
                         std::string guide_rate_str = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
                         guide_rate_def = GroupProduction::GetGuideRateFromString( guide_rate_str );
 
                         if ((guide_rate_str == "INJ" || guide_rate_str == "POTN" || guide_rate_str == "FORM")) {
                             std::string msg = "The supplied guide_rate value will be ignored";
-                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg, errors);                            
-                        }   
+                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg, errors);
+                        }
                         else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
@@ -1535,7 +1535,7 @@ namespace {
                         (production.cmode == GroupProduction::WRAT) ||
                         (production.cmode == GroupProduction::GRAT) ||
                         (production.cmode == GroupProduction::LRAT))
-                        production.exceed_action = GroupProductionExceedLimit::RATE;
+                        production.exceed_action = Group2::ExceedAction::RATE;
                     else
                         production.exceed_action = exceedAction;
 

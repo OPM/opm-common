@@ -152,44 +152,6 @@ namespace Opm {
     /*****************************************************************/
     namespace GroupProductionExceedLimit {
 
-        const std::string ActionEnum2String( ActionEnum enumValue ) {
-            switch(enumValue) {
-            case NONE:
-                return "NONE";
-            case CON:
-                return "CON";
-            case CON_PLUS:
-                return "+CON";
-            case WELL:
-                return "WELL";
-            case PLUG:
-                return "PLUG";
-            case RATE:
-                return "RATE";
-            default:
-                throw std::invalid_argument("unhandled enum value");
-            }
-        }
-
-
-        ActionEnum ActionEnumFromString( const std::string& stringValue ) {
-
-            if (stringValue == "NONE")
-                return NONE;
-            else if (stringValue == "CON")
-                return CON;
-            else if (stringValue == "+CON")
-                return CON_PLUS;
-            else if (stringValue == "WELL")
-                return WELL;
-            else if (stringValue == "PLUG")
-                return PLUG;
-            else if (stringValue == "RATE")
-                return RATE;
-            else
-                throw std::invalid_argument("Unknown enum state string: " + stringValue );
-        }
-
     }
 
     /*****************************************************************/

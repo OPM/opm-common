@@ -35,6 +35,18 @@ class SummaryState;
 class Group2 {
 public:
 
+enum class ExceedAction {
+    NONE = 0,
+    CON = 1,
+    CON_PLUS = 2,   // String: "+CON"
+    WELL = 3,
+    PLUG = 4,
+    RATE = 5
+};
+static const std::string ExceedAction2String( ExceedAction enumValue );
+static ExceedAction ExceedActionFromString( const std::string& stringValue );
+
+
 struct GroupInjectionProperties {
     Phase phase = Phase::WATER;
     GroupInjection::ControlEnum cmode = GroupInjection::NONE;
@@ -61,7 +73,7 @@ struct InjectionControls {
 
 struct GroupProductionProperties {
     GroupProduction::ControlEnum cmode = GroupProduction::NONE;
-    GroupProductionExceedLimit::ActionEnum exceed_action = GroupProductionExceedLimit::NONE;
+    ExceedAction exceed_action = ExceedAction::NONE;
     UDAValue oil_target;
     UDAValue water_target;
     UDAValue gas_target;
@@ -77,7 +89,7 @@ struct GroupProductionProperties {
 
 struct ProductionControls {
     GroupProduction::ControlEnum cmode;
-    GroupProductionExceedLimit::ActionEnum exceed_action;
+    ExceedAction exceed_action;
     double oil_target;
     double water_target;
     double gas_target;
@@ -88,6 +100,7 @@ struct ProductionControls {
     int production_controls = 0;
     bool has_control(GroupProduction::ControlEnum control) const;
 };
+
 
     Group2(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
 

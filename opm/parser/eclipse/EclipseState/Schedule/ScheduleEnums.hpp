@@ -43,19 +43,6 @@ namespace Opm {
     }
 
 
-    namespace GroupProductionExceedLimit {
-        enum ActionEnum {
-            NONE = 0,
-            CON = 1,
-            CON_PLUS = 2,   // String: "+CON"
-            WELL = 3,
-            PLUG = 4,
-            RATE = 5
-        };
-
-        const std::string ActionEnum2String( ActionEnum enumValue );
-        ActionEnum ActionEnumFromString( const std::string& stringValue );
-    }
 
     // A group can have both injection controls and production controls set at
     // the same time, i.e. this enum is used as a bitmask.

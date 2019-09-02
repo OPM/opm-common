@@ -320,4 +320,46 @@ bool Group2::has_control(GroupProduction::ControlEnum control) const {
 bool Group2::has_control(GroupInjection::ControlEnum control) const {
     return (this->injection_properties.injection_controls & control) != 0;
 }
+
+
+const std::string Group2::ExceedAction2String( ExceedAction enumValue ) {
+    switch(enumValue) {
+    case ExceedAction::NONE:
+        return "NONE";
+    case ExceedAction::CON:
+        return "CON";
+    case ExceedAction::CON_PLUS:
+        return "+CON";
+    case ExceedAction::WELL:
+        return "WELL";
+    case ExceedAction::PLUG:
+        return "PLUG";
+    case ExceedAction::RATE:
+        return "RATE";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+
+Group2::ExceedAction Group2::ExceedActionFromString( const std::string& stringValue ) {
+
+    if (stringValue == "NONE")
+        return ExceedAction::NONE;
+    else if (stringValue == "CON")
+        return ExceedAction::CON;
+    else if (stringValue == "+CON")
+        return ExceedAction::CON_PLUS;
+    else if (stringValue == "WELL")
+        return ExceedAction::WELL;
+    else if (stringValue == "PLUG")
+        return ExceedAction::PLUG;
+    else if (stringValue == "RATE")
+        return ExceedAction::RATE;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+
 }

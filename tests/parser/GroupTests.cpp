@@ -292,8 +292,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
     auto ctrl1 = group1.productionControls(st);
     auto ctrl2 = group2.productionControls(st);
 
-    BOOST_CHECK_EQUAL(ctrl1.exceed_action, GroupProductionExceedLimit::RATE);
-    BOOST_CHECK_EQUAL(ctrl2.exceed_action, GroupProductionExceedLimit::CON);
+    BOOST_CHECK(ctrl1.exceed_action == Group2::ExceedAction::RATE);
+    BOOST_CHECK(ctrl2.exceed_action == Group2::ExceedAction::CON);
 }
 
 

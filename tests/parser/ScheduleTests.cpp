@@ -2472,42 +2472,42 @@ BOOST_AUTO_TEST_CASE(TestGroupProductionControlEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitControlEnum2String) {
-    BOOST_CHECK_EQUAL( "NONE"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::NONE));
-    BOOST_CHECK_EQUAL( "CON"      , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::CON));
-    BOOST_CHECK_EQUAL( "+CON"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::CON_PLUS));
-    BOOST_CHECK_EQUAL( "WELL"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::WELL));
-    BOOST_CHECK_EQUAL( "PLUG"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::PLUG));
-    BOOST_CHECK_EQUAL( "RATE"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::RATE));
+    BOOST_CHECK_EQUAL( "NONE"     , Group2::ExceedAction2String(Group2::ExceedAction::NONE));
+    BOOST_CHECK_EQUAL( "CON"      , Group2::ExceedAction2String(Group2::ExceedAction::CON));
+    BOOST_CHECK_EQUAL( "+CON"     , Group2::ExceedAction2String(Group2::ExceedAction::CON_PLUS));
+    BOOST_CHECK_EQUAL( "WELL"     , Group2::ExceedAction2String(Group2::ExceedAction::WELL));
+    BOOST_CHECK_EQUAL( "PLUG"     , Group2::ExceedAction2String(Group2::ExceedAction::PLUG));
+    BOOST_CHECK_EQUAL( "RATE"     , Group2::ExceedAction2String(Group2::ExceedAction::RATE));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumFromString) {
-    BOOST_CHECK_THROW( GroupProductionExceedLimit::ActionEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_THROW( Group2::ExceedActionFromString("XXX") , std::invalid_argument );
 
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::NONE     , GroupProductionExceedLimit::ActionEnumFromString("NONE"));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::CON      , GroupProductionExceedLimit::ActionEnumFromString("CON" ));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::CON_PLUS , GroupProductionExceedLimit::ActionEnumFromString("+CON"));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::WELL     , GroupProductionExceedLimit::ActionEnumFromString("WELL"));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::PLUG     , GroupProductionExceedLimit::ActionEnumFromString("PLUG"));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::RATE     , GroupProductionExceedLimit::ActionEnumFromString("RATE"));
+    BOOST_CHECK(Group2::ExceedAction::NONE     == Group2::ExceedActionFromString("NONE"));
+    BOOST_CHECK(Group2::ExceedAction::CON      == Group2::ExceedActionFromString("CON" ));
+    BOOST_CHECK(Group2::ExceedAction::CON_PLUS == Group2::ExceedActionFromString("+CON"));
+    BOOST_CHECK(Group2::ExceedAction::WELL     == Group2::ExceedActionFromString("WELL"));
+    BOOST_CHECK(Group2::ExceedAction::PLUG     == Group2::ExceedActionFromString("PLUG"));
+    BOOST_CHECK(Group2::ExceedAction::RATE     == Group2::ExceedActionFromString("RATE"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumLoop) {
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::NONE     , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::NONE     ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::CON      , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::CON      ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::CON_PLUS , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::CON_PLUS ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::WELL     , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::WELL     ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::PLUG     , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::PLUG     ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::RATE     , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::RATE     ) ));
+    BOOST_CHECK( Group2::ExceedAction::NONE     == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::NONE     ) ));
+    BOOST_CHECK( Group2::ExceedAction::CON      == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::CON      ) ));
+    BOOST_CHECK( Group2::ExceedAction::CON_PLUS == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::CON_PLUS ) ));
+    BOOST_CHECK( Group2::ExceedAction::WELL     == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::WELL     ) ));
+    BOOST_CHECK( Group2::ExceedAction::PLUG     == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::PLUG     ) ));
+    BOOST_CHECK( Group2::ExceedAction::RATE     == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::RATE     ) ));
 
-    BOOST_CHECK_EQUAL("NONE" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "NONE" ) ));
-    BOOST_CHECK_EQUAL("CON"  , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "CON"  ) ));
-    BOOST_CHECK_EQUAL("+CON" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "+CON" ) ));
-    BOOST_CHECK_EQUAL("WELL" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "WELL" ) ));
-    BOOST_CHECK_EQUAL("PLUG" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "PLUG" ) ));
-    BOOST_CHECK_EQUAL("RATE" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "RATE" ) ));
+    BOOST_CHECK_EQUAL("NONE" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "NONE" ) ));
+    BOOST_CHECK_EQUAL("CON"  , Group2::ExceedAction2String(Group2::ExceedActionFromString( "CON"  ) ));
+    BOOST_CHECK_EQUAL("+CON" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "+CON" ) ));
+    BOOST_CHECK_EQUAL("WELL" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "WELL" ) ));
+    BOOST_CHECK_EQUAL("PLUG" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "PLUG" ) ));
+    BOOST_CHECK_EQUAL("RATE" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "RATE" ) ));
 }
 
 /*****************************************************************/
