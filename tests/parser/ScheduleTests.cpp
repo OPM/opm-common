@@ -1197,8 +1197,8 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         {
             auto g = schedule.getGroup2("G1", 1);
             BOOST_CHECK_EQUAL(g.productionControls(st).oil_target, 1000 * siFactorL);
-            BOOST_CHECK(g.has_control(GroupProduction::ORAT));
-            BOOST_CHECK(!g.has_control(GroupProduction::WRAT));
+            BOOST_CHECK(g.has_control(Group2::ProductionCMode::ORAT));
+            BOOST_CHECK(!g.has_control(Group2::ProductionCMode::WRAT));
             BOOST_CHECK_EQUAL(g.productionControls(st).guide_rate, 0);
         }
         {
@@ -2424,49 +2424,49 @@ BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionControlEnum2String) {
-    BOOST_CHECK_EQUAL( "NONE" , GroupProduction::ControlEnum2String(GroupProduction::NONE));
-    BOOST_CHECK_EQUAL( "ORAT" , GroupProduction::ControlEnum2String(GroupProduction::ORAT));
-    BOOST_CHECK_EQUAL( "WRAT" , GroupProduction::ControlEnum2String(GroupProduction::WRAT));
-    BOOST_CHECK_EQUAL( "GRAT" , GroupProduction::ControlEnum2String(GroupProduction::GRAT));
-    BOOST_CHECK_EQUAL( "LRAT" , GroupProduction::ControlEnum2String(GroupProduction::LRAT));
-    BOOST_CHECK_EQUAL( "CRAT" , GroupProduction::ControlEnum2String(GroupProduction::CRAT));
-    BOOST_CHECK_EQUAL( "RESV" , GroupProduction::ControlEnum2String(GroupProduction::RESV));
-    BOOST_CHECK_EQUAL( "PRBL" , GroupProduction::ControlEnum2String(GroupProduction::PRBL));
+    BOOST_CHECK_EQUAL( "NONE" , Group2::ProductionCMode2String(Group2::ProductionCMode::NONE));
+    BOOST_CHECK_EQUAL( "ORAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::ORAT));
+    BOOST_CHECK_EQUAL( "WRAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::WRAT));
+    BOOST_CHECK_EQUAL( "GRAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::GRAT));
+    BOOST_CHECK_EQUAL( "LRAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::LRAT));
+    BOOST_CHECK_EQUAL( "CRAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::CRAT));
+    BOOST_CHECK_EQUAL( "RESV" , Group2::ProductionCMode2String(Group2::ProductionCMode::RESV));
+    BOOST_CHECK_EQUAL( "PRBL" , Group2::ProductionCMode2String(Group2::ProductionCMode::PRBL));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionControlEnumFromString) {
-    BOOST_CHECK_THROW( GroupProduction::ControlEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL(GroupProduction::NONE  , GroupProduction::ControlEnumFromString("NONE"));
-    BOOST_CHECK_EQUAL(GroupProduction::ORAT  , GroupProduction::ControlEnumFromString("ORAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::WRAT  , GroupProduction::ControlEnumFromString("WRAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::GRAT  , GroupProduction::ControlEnumFromString("GRAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::LRAT  , GroupProduction::ControlEnumFromString("LRAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::CRAT  , GroupProduction::ControlEnumFromString("CRAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::RESV  , GroupProduction::ControlEnumFromString("RESV"));
-    BOOST_CHECK_EQUAL(GroupProduction::PRBL  , GroupProduction::ControlEnumFromString("PRBL"));
+    BOOST_CHECK_THROW(Group2::ProductionCModeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK(Group2::ProductionCMode::NONE  == Group2::ProductionCModeFromString("NONE"));
+    BOOST_CHECK(Group2::ProductionCMode::ORAT  == Group2::ProductionCModeFromString("ORAT"));
+    BOOST_CHECK(Group2::ProductionCMode::WRAT  == Group2::ProductionCModeFromString("WRAT"));
+    BOOST_CHECK(Group2::ProductionCMode::GRAT  == Group2::ProductionCModeFromString("GRAT"));
+    BOOST_CHECK(Group2::ProductionCMode::LRAT  == Group2::ProductionCModeFromString("LRAT"));
+    BOOST_CHECK(Group2::ProductionCMode::CRAT  == Group2::ProductionCModeFromString("CRAT"));
+    BOOST_CHECK(Group2::ProductionCMode::RESV  == Group2::ProductionCModeFromString("RESV"));
+    BOOST_CHECK(Group2::ProductionCMode::PRBL  == Group2::ProductionCModeFromString("PRBL"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionControlEnumLoop) {
-    BOOST_CHECK_EQUAL( GroupProduction::NONE, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::NONE ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::ORAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::ORAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::WRAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::WRAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::GRAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::GRAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::LRAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::LRAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::CRAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::CRAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::RESV, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::RESV ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::PRBL, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::PRBL ) ));
+    BOOST_CHECK( Group2::ProductionCMode::NONE == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::NONE ) ));
+    BOOST_CHECK( Group2::ProductionCMode::ORAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::ORAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::WRAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::WRAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::GRAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::GRAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::LRAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::LRAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::CRAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::CRAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::RESV == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::RESV ) ));
+    BOOST_CHECK( Group2::ProductionCMode::PRBL == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::PRBL ) ));
 
-    BOOST_CHECK_EQUAL( "NONE" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "NONE" ) ));
-    BOOST_CHECK_EQUAL( "ORAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "ORAT" ) ));
-    BOOST_CHECK_EQUAL( "WRAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "WRAT" ) ));
-    BOOST_CHECK_EQUAL( "GRAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "GRAT" ) ));
-    BOOST_CHECK_EQUAL( "LRAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "LRAT" ) ));
-    BOOST_CHECK_EQUAL( "CRAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "CRAT" ) ));
-    BOOST_CHECK_EQUAL( "RESV" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "RESV" ) ));
-    BOOST_CHECK_EQUAL( "PRBL" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "PRBL" ) ));
+    BOOST_CHECK_EQUAL( "NONE" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "NONE" ) ));
+    BOOST_CHECK_EQUAL( "ORAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "ORAT" ) ));
+    BOOST_CHECK_EQUAL( "WRAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "WRAT" ) ));
+    BOOST_CHECK_EQUAL( "GRAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "GRAT" ) ));
+    BOOST_CHECK_EQUAL( "LRAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "LRAT" ) ));
+    BOOST_CHECK_EQUAL( "CRAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "CRAT" ) ));
+    BOOST_CHECK_EQUAL( "RESV" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "RESV" ) ));
+    BOOST_CHECK_EQUAL( "PRBL" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "PRBL" ) ));
 }
 
 /*****************************************************************/

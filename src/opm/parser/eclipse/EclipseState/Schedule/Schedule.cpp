@@ -1495,7 +1495,7 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
+                Group2::ProductionCMode controlMode = Group2::ProductionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 Group2::ExceedAction exceedAction = Group2::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
                 auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
                 auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
@@ -1531,10 +1531,10 @@ namespace {
                     production.guide_rate = guide_rate;
                     production.guide_rate_def = guide_rate_def;
                     production.resv_target = resv_target;
-                    if ((production.cmode == GroupProduction::ORAT) ||
-                        (production.cmode == GroupProduction::WRAT) ||
-                        (production.cmode == GroupProduction::GRAT) ||
-                        (production.cmode == GroupProduction::LRAT))
+                    if ((production.cmode == Group2::ProductionCMode::ORAT) ||
+                        (production.cmode == Group2::ProductionCMode::WRAT) ||
+                        (production.cmode == Group2::ProductionCMode::GRAT) ||
+                        (production.cmode == Group2::ProductionCMode::LRAT))
                         production.exceed_action = Group2::ExceedAction::RATE;
                     else
                         production.exceed_action = exceedAction;
@@ -1542,19 +1542,19 @@ namespace {
                     production.production_controls = 0;
 
                     if (!record.getItem("OIL_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::ORAT;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::ORAT);
 
                     if (!record.getItem("GAS_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::GRAT;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::GRAT);
 
                     if (!record.getItem("WATER_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::WRAT;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::WRAT);
 
                     if (!record.getItem("LIQUID_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::LRAT;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::LRAT);
 
                     if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::RESV;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::RESV);
 
                     if (group_ptr->updateProduction(production))
                         this->updateGroup(std::move(group_ptr), currentStep);

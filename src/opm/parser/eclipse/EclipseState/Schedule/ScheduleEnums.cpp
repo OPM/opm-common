@@ -31,54 +31,6 @@ namespace Opm {
 
     namespace GroupProduction {
 
-        const std::string ControlEnum2String( ControlEnum enumValue ) {
-            switch( enumValue ) {
-            case NONE:
-                return "NONE";
-            case ORAT:
-                return "ORAT";
-            case WRAT:
-                return "WRAT";
-            case GRAT:
-                return "GRAT";
-            case LRAT:
-                return "LRAT";
-            case CRAT:
-                return "CRAT";
-            case RESV:
-                return "RESV";
-            case PRBL:
-                return "PRBL";
-            case FLD:
-                return "FLD";
-            default:
-                throw std::invalid_argument("Unhandled enum value");
-            }
-        }
-
-
-        ControlEnum ControlEnumFromString( const std::string& stringValue ) {
-            if (stringValue == "NONE")
-                return NONE;
-            else if (stringValue == "ORAT")
-                return ORAT;
-            else if (stringValue == "WRAT")
-                return WRAT;
-            else if (stringValue == "GRAT")
-                return GRAT;
-            else if (stringValue == "LRAT")
-                return LRAT;
-            else if (stringValue == "CRAT")
-                return CRAT;
-            else if (stringValue == "RESV")
-                return RESV;
-            else if (stringValue == "PRBL")
-                return PRBL;
-            else if (stringValue == "FLD")
-                return FLD;
-            else
-                throw std::invalid_argument("Unknown enum state string: " + stringValue );
-        }
 
         GuideRateDef GetGuideRateFromString( const std::string& stringValue ) {
 

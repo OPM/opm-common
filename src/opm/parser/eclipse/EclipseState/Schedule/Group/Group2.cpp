@@ -291,7 +291,7 @@ Group2::InjectionControls Group2::injectionControls(const SummaryState& st) cons
     return ic;
 }
 
-GroupProduction::ControlEnum Group2::production_cmode() const {
+Group2::ProductionCMode Group2::production_cmode() const {
     return this->production_properties.cmode;
 }
 
@@ -304,8 +304,8 @@ Phase Group2::injection_phase() const {
 }
 
 
-bool Group2::ProductionControls::has_control(GroupProduction::ControlEnum control) const {
-    return (this->production_controls & control) != 0;
+bool Group2::ProductionControls::has_control(Group2::ProductionCMode control) const {
+    return (this->production_controls & static_cast<int>(control)) != 0;
 }
 
 
@@ -313,8 +313,8 @@ bool Group2::InjectionControls::has_control(InjectionCMode cmode_arg) const {
     return (this->injection_controls & static_cast<int>(cmode_arg)) != 0;
 }
 
-bool Group2::has_control(GroupProduction::ControlEnum control) const {
-    return (this->production_properties.production_controls & control) != 0;
+bool Group2::has_control(Group2::ProductionCMode control) const {
+    return (this->production_properties.production_controls & static_cast<int>(control)) != 0;
 }
 
 bool Group2::has_control(InjectionCMode control) const {
@@ -405,6 +405,56 @@ Group2::GroupType operator|(Group2::GroupType lhs, Group2::GroupType rhs) {
 
 Group2::GroupType operator&(Group2::GroupType lhs, Group2::GroupType rhs) {
     return static_cast<Group2::GroupType>(static_cast<std::underlying_type<Group2::GroupType>::type>(lhs) & static_cast<std::underlying_type<Group2::GroupType>::type>(rhs));
+}
+
+
+const std::string Group2::ProductionCMode2String( ProductionCMode enumValue ) {
+    switch( enumValue ) {
+    case ProductionCMode::NONE:
+        return "NONE";
+    case ProductionCMode::ORAT:
+        return "ORAT";
+    case ProductionCMode::WRAT:
+        return "WRAT";
+    case ProductionCMode::GRAT:
+        return "GRAT";
+    case ProductionCMode::LRAT:
+        return "LRAT";
+    case ProductionCMode::CRAT:
+        return "CRAT";
+    case ProductionCMode::RESV:
+        return "RESV";
+    case ProductionCMode::PRBL:
+        return "PRBL";
+    case ProductionCMode::FLD:
+        return "FLD";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+
+Group2::ProductionCMode Group2::ProductionCModeFromString( const std::string& stringValue ) {
+    if (stringValue == "NONE")
+        return ProductionCMode::NONE;
+    else if (stringValue == "ORAT")
+        return ProductionCMode::ORAT;
+    else if (stringValue == "WRAT")
+        return ProductionCMode::WRAT;
+    else if (stringValue == "GRAT")
+        return ProductionCMode::GRAT;
+    else if (stringValue == "LRAT")
+        return ProductionCMode::LRAT;
+    else if (stringValue == "CRAT")
+        return ProductionCMode::CRAT;
+    else if (stringValue == "RESV")
+        return ProductionCMode::RESV;
+    else if (stringValue == "PRBL")
+        return ProductionCMode::PRBL;
+    else if (stringValue == "FLD")
+        return ProductionCMode::FLD;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
 }

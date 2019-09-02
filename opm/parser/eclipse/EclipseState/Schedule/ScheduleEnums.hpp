@@ -42,20 +42,6 @@ namespace Opm {
 
     namespace GroupProduction {
 
-        enum ControlEnum {
-            NONE = 0,
-            ORAT = 1,
-            WRAT = 2,
-            GRAT = 4,
-            LRAT = 8,
-            CRAT = 16,
-            RESV = 32,
-            PRBL = 64,
-            FLD  = 128
-        };
-
-        const std::string ControlEnum2String( GroupProduction::ControlEnum enumValue );
-        GroupProduction::ControlEnum ControlEnumFromString( const std::string& stringValue );
 
         enum class GuideRateDef  {
             OIL = 0,

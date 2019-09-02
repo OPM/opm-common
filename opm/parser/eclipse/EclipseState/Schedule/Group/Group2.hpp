@@ -69,6 +69,20 @@ enum class InjectionCMode  : int {
 static const std::string InjectionCMode2String( InjectionCMode enumValue );
 static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
 
+enum class ProductionCMode : int {
+    NONE = 0,
+    ORAT = 1,
+    WRAT = 2,
+    GRAT = 4,
+    LRAT = 8,
+    CRAT = 16,
+    RESV = 32,
+    PRBL = 64,
+    FLD  = 128
+};
+
+static const std::string ProductionCMode2String( ProductionCMode enumValue );
+static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
 
 struct GroupInjectionProperties {
     Phase phase = Phase::WATER;
@@ -95,7 +109,7 @@ struct InjectionControls {
 };
 
 struct GroupProductionProperties {
-    GroupProduction::ControlEnum cmode = GroupProduction::NONE;
+    ProductionCMode cmode = ProductionCMode::NONE;
     ExceedAction exceed_action = ExceedAction::NONE;
     UDAValue oil_target;
     UDAValue water_target;
@@ -111,7 +125,7 @@ struct GroupProductionProperties {
 };
 
 struct ProductionControls {
-    GroupProduction::ControlEnum cmode;
+    ProductionCMode cmode;
     ExceedAction exceed_action;
     double oil_target;
     double water_target;
@@ -121,7 +135,7 @@ struct ProductionControls {
     GroupProduction::GuideRateDef guide_rate_def;
     double resv_target = 0;
     int production_controls = 0;
-    bool has_control(GroupProduction::ControlEnum control) const;
+    bool has_control(ProductionCMode control) const;
 };
 
 
@@ -158,10 +172,10 @@ struct ProductionControls {
     bool wellgroup() const;
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
-    GroupProduction::ControlEnum production_cmode() const;
+    ProductionCMode production_cmode() const;
     InjectionCMode injection_cmode() const;
     Phase injection_phase() const;
-    bool has_control(GroupProduction::ControlEnum control) const;
+    bool has_control(ProductionCMode control) const;
     bool has_control(InjectionCMode control) const;
 private:
     bool hasType(GroupType gtype) const;
