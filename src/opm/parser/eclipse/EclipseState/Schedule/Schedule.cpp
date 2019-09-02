@@ -1588,7 +1588,7 @@ namespace {
         const auto& record = keyword.getRecord(0);
 
         double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
-        auto phase = GuideRateTargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
+        auto phase = GuideRateModel::TargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
         double A = record.getItem<ParserKeywords::GUIDERAT::A>().get<double>(0);
         double B = record.getItem<ParserKeywords::GUIDERAT::B>().get<double>(0);
         double C = record.getItem<ParserKeywords::GUIDERAT::C>().get<double>(0);

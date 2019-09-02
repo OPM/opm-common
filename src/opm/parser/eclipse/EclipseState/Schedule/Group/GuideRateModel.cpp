@@ -24,18 +24,18 @@
 namespace Opm {
 
 GuideRateModel::GuideRateModel(double time_interval_arg,
-                                 GuideRateTarget phase_arg,
-                                 double A_arg,
-                                 double B_arg,
-                                 double C_arg,
-                                 double D_arg,
-                                 double E_arg,
-                                 double F_arg,
-                                 bool allow_increase_arg,
-                                 double damping_factor_arg,
-                                 bool use_free_gas_arg) :
+                               Target target_arg,
+                               double A_arg,
+                               double B_arg,
+                               double C_arg,
+                               double D_arg,
+                               double E_arg,
+                               double F_arg,
+                               bool allow_increase_arg,
+                               double damping_factor_arg,
+                               bool use_free_gas_arg) :
     time_interval(time_interval_arg),
-    phase(phase_arg),
+    target(target_arg),
     A(A_arg),
     B(B_arg),
     C(C_arg),
@@ -84,7 +84,7 @@ double GuideRateModel::eval(double pot, double R1, double R2) const {
 
 bool GuideRateModel::operator==(const GuideRateModel& other) const {
     return (this->time_interval == other.time_interval) &&
-        (this->phase == other.phase) &&
+        (this->target == other.target) &&
         (this->A == other.A) &&
         (this->B == other.B) &&
         (this->C == other.C) &&
@@ -98,6 +98,29 @@ bool GuideRateModel::operator==(const GuideRateModel& other) const {
 
 bool GuideRateModel::operator!=(const GuideRateModel& other) const {
     return !(*this == other);
+}
+
+
+GuideRateModel::Target GuideRateModel::TargetFromString(const std::string& s) {
+    if (s == "OIL")
+        return Target::OIL;
+
+    if (s == "LIQ")
+        return Target::LIQ;
+
+    if (s == "GAS")
+        return Target::GAS;
+
+    if (s == "RES")
+        return Target::RES;
+
+    if (s == "COMB")
+        return Target::COMB;
+
+    if (s == "NONE")
+        return Target::NONE;
+
+    throw std::invalid_argument("Could not convert: " + s + " to a valid Target enum value");
 }
 
 }
