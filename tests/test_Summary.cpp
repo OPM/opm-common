@@ -224,16 +224,16 @@ static data::Wells result_wells() {
       The completions
     */
     data::Well well1 {
-        rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,
+        rates1, 0.1 * ps, 0.2 * ps, 0.3 * ps, 1,2,
         { {well1_comp1} },
         { { segment.segNumber, segment } },
     };
 
     using SegRes = decltype(well1.segments);
 
-    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, { {well2_comp1 , well2_comp2} }, SegRes{} };
-    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} }, SegRes{} };
-    data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well6_comp1} }, SegRes{} };
+    data::Well well2 { rates2, 1.1 * ps, 1.2 * ps, 1.3 * ps, 2, 2,{ {well2_comp1 , well2_comp2} }, SegRes{} };
+    data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, 3,{ {well3_comp1} }, SegRes{} };
+    data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, 3,{ {well6_comp1} }, SegRes{} };
 
     data::Wells wellrates;
 
@@ -2427,7 +2427,8 @@ data::Well SegmentResultHelpers::prod01_results()
     res.bhp         = 123.45*unit::barsa;
     res.thp         = 60.221409*unit::barsa;
     res.temperature = 298.15;
-    res.control     = 0;
+    res.injectionControl = 0;
+    res.productionControl = 0;
 
     res.connections = prod01_conn_results();
     res.segments    = prod01_seg_results();
@@ -2444,8 +2445,8 @@ data::Well SegmentResultHelpers::inje01_results()
     res.bhp         = 543.21*unit::barsa;
     res.thp         = 256.821*unit::barsa;
     res.temperature = 298.15;
-    res.control     = 0;
-
+    res.injectionControl = 0;
+    res.productionControl = 0;
     res.connections = inje01_conn_results();
 
     return res;

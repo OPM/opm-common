@@ -292,8 +292,8 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         using SegRes = decltype(wells["w"].segments);
 
-        wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{} };
-        wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{} };
+        wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, 2, well1_comps, SegRes{} };
+        wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, 2, well2_comps, SegRes{} };
 
         RestartValue restart_value(std::move(solution), std::move(wells));
 
@@ -414,8 +414,8 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
                 using SegRes = decltype(wells["w"].segments);
 
-                wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{} };
-                wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{} };
+                wells["OP_1"] = { r1, 1.0, 1.1, 3.1, 1, 2, well1_comps, SegRes{} };
+                wells["OP_2"] = { r2, 1.0, 1.1, 3.2, 1, 2, well2_comps, SegRes{} };
 
                 RestartValue restart_value(std::move(solution), std::move(wells));
 

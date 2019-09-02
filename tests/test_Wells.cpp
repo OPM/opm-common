@@ -97,7 +97,8 @@ BOOST_AUTO_TEST_CASE(get_completions) {
     w1.rates = r1;
     w1.bhp = 1.23;
     w1.temperature = 3.45;
-    w1.control = 1;
+    w1.injectionControl = 1;
+    w1.productionControl = 2;
 
     /*
      *  the completion keys (active indices) and well names correspond to the
@@ -109,7 +110,8 @@ BOOST_AUTO_TEST_CASE(get_completions) {
     w2.rates = r2;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
-    w2.control = 2;
+    w2.injectionControl = 1;
+    w2.productionControl = 2;
     w2.connections.push_back( { 188, rc3, 36.22, 19.28, 28.91, 0.125, 0.125, 3.141 } );
 
     data::Wells wellRates;

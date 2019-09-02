@@ -257,7 +257,9 @@ bool operator==( const Well& lhs, const Well& rhs ) {
     BOOST_CHECK_EQUAL( lhs.rates, rhs.rates );
     BOOST_CHECK_EQUAL( lhs.bhp, rhs.bhp );
     BOOST_CHECK_EQUAL( lhs.temperature, rhs.temperature );
-    BOOST_CHECK_EQUAL( lhs.control, rhs.control );
+    BOOST_CHECK_EQUAL( lhs.productionControl, rhs.productionControl );
+    BOOST_CHECK_EQUAL( lhs.injectionControl, rhs.injectionControl );
+
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
             lhs.connections.begin(), lhs.connections.end(),
@@ -295,7 +297,8 @@ data::Wells mkWells() {
     w1.rates = r1;
     w1.bhp = 1.23;
     w1.temperature = 3.45;
-    w1.control = 1;
+    w1.injectionControl = 1;
+    w1.productionControl = 1;
 
     /*
      *  the completion keys (active indices) and well names correspond to the
@@ -307,7 +310,8 @@ data::Wells mkWells() {
     w2.rates = r2;
     w2.bhp = 2.34;
     w2.temperature = 4.56;
-    w2.control = 2;
+    w2.injectionControl = 1;
+    w2.productionControl = 1;
     w2.connections.push_back( { 188, rc3, 36.22, 123.4, 256.1, 0.55, 0.0125, 314.15 } );
 
     {

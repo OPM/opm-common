@@ -151,7 +151,8 @@ namespace Opm {
         double bhp;
         double thp;
         double temperature;
-        int control;
+        int injectionControl;
+        int productionControl;
         std::vector< Connection > connections;
         std::unordered_map<std::size_t, Segment> segments;
         inline bool flowing() const noexcept;
@@ -351,7 +352,8 @@ namespace Opm {
         buffer.write(this->bhp);
         buffer.write(this->thp);
         buffer.write(this->temperature);
-        buffer.write(this->control);
+        buffer.write(this->injectionControl);
+        buffer.write(this->productionControl);
         unsigned int size = this->connections.size();
         buffer.write(size);
         for (const Connection& comp : this->connections)
@@ -415,7 +417,8 @@ namespace Opm {
         buffer.read(this->bhp);
         buffer.read(this->thp);
         buffer.read(this->temperature);
-        buffer.read(this->control);
+        buffer.read(this->injectionControl);
+        buffer.read(this->productionControl);
 
         // Connection information
         unsigned int size = 0.0; //this->connections.size();

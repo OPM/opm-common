@@ -718,7 +718,7 @@ namespace {
             };
         }
 
-        if (opm_iwel.size() != sched_wells.size()) {
+        if (opm_iwel.size() != sched_wells.size() * 2) {
             throw std::runtime_error {
                 "Mismatch between OPM_IWEL and deck; "
                 "OPM_IWEL size was " + std::to_string(opm_iwel.size()) +
@@ -765,7 +765,8 @@ namespace {
 
             well.bhp         = *opm_xwel_data;  ++opm_xwel_data;
             well.temperature = *opm_xwel_data;  ++opm_xwel_data;
-            well.control     = *opm_iwel_data;  ++opm_iwel_data;
+            well.injectionControl = *opm_iwel_data;  ++opm_iwel_data;
+            well.productionControl = *opm_iwel_data;  ++opm_iwel_data;
 
             for (const auto& phase : phases) {
                 well.rates.set(phase, *opm_xwel_data);

@@ -84,16 +84,22 @@ namespace {
 
     std::vector<int>
     serialize_OPM_IWEL(const data::Wells&              wells,
-                       const std::vector<std::string>& sched_wells)
+                       const std::vector<Opm::Well2>& sched_wells)
     {
-      const auto getctrl = [&]( const std::string& wname ) {
-            const auto itr = wells.find( wname );
-            return itr == wells.end() ? 0 : itr->second.control;
-        };
 
-        std::vector<int> iwel(sched_wells.size(), 0.0);
-        std::transform(sched_wells.begin(), sched_wells.end(), iwel.begin(), getctrl);
-
+        std::vector<int> iwel;
+        for (const auto& sched_well : sched_wells) {
+            if (wells.count(sched_well.name()) == 0 ||
+                sched_well.getStatus() == Well2::Status::SHUT)
+            {
+                iwel.push_back( -1 );
+                iwel.push_back( -1 );
+                continue;
+            }
+            const auto& well = wells.at( sched_well.name() );
+            iwel.push_back( well.injectionControl );
+            iwel.push_back( well.productionControl );
+        }
         return iwel;
     }
 
@@ -307,12 +313,11 @@ namespace {
         if (!ecl_compatible_rst)
         {
             const auto sched_wells = schedule.getWells2(sim_step);
-            const auto sched_well_names = schedule.wellNames(sim_step);
 
             const auto opm_xwel =
                 serialize_OPM_XWEL(wells, sched_wells, phases, grid);
 
-            const auto opm_iwel = serialize_OPM_IWEL(wells, sched_well_names);
+            const auto opm_iwel = serialize_OPM_IWEL(wells, sched_wells);
 
             rstFile.write("OPM_IWEL", opm_iwel);
             rstFile.write("OPM_XWEL", opm_xwel);
