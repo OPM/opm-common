@@ -457,4 +457,29 @@ Group2::ProductionCMode Group2::ProductionCModeFromString( const std::string& st
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+Group2::GuideRateTarget Group2::GuideRateTargetFromString( const std::string& stringValue ) {
+    if (stringValue == "OIL")
+        return GuideRateTarget::OIL;
+    else if (stringValue == "WAT")
+        return GuideRateTarget::WAT;
+    else if (stringValue == "GAS")
+        return GuideRateTarget::GAS;
+    else if (stringValue == "LIQ")
+        return GuideRateTarget::LIQ;
+    else if (stringValue == "COMB")
+        return GuideRateTarget::COMB;
+    else if (stringValue == "WGA")
+        return GuideRateTarget::WGA;
+    else if (stringValue == "CVAL")
+        return GuideRateTarget::CVAL;
+    else if (stringValue == "INJV")
+        return GuideRateTarget::INJV;
+    else if (stringValue == "POTN")
+        return GuideRateTarget::POTN;
+    else if (stringValue == "FORM")
+        return GuideRateTarget::FORM;
+    else
+        return GuideRateTarget::NO_GUIDE_RATE;
+}
+
 }

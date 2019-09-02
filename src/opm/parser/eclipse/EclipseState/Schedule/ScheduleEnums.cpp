@@ -32,32 +32,6 @@ namespace Opm {
     namespace GroupProduction {
 
 
-        GuideRateDef GetGuideRateFromString( const std::string& stringValue ) {
-
-            if (stringValue == "OIL")
-                return GuideRateDef::OIL;
-            else if (stringValue == "WAT")
-                return GuideRateDef::WAT;
-            else if (stringValue == "GAS")
-                return GuideRateDef::GAS;
-            else if (stringValue == "LIQ")
-                return GuideRateDef::LIQ;
-            else if (stringValue == "COMB")
-                return GuideRateDef::COMB;
-            else if (stringValue == "WGA")
-                return GuideRateDef::WGA;
-            else if (stringValue == "CVAL")
-                return GuideRateDef::CVAL;
-            else if (stringValue == "INJV")
-                return GuideRateDef::INJV;
-            else if (stringValue == "POTN")
-                return GuideRateDef::POTN;
-            else if (stringValue == "FORM")
-                return GuideRateDef::FORM;
-            else
-                return GuideRateDef::NO_GUIDE_RATE;
-
-        }
 
     }
 

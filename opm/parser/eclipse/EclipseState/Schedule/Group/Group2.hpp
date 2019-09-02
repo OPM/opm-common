@@ -69,6 +69,7 @@ enum class InjectionCMode  : int {
 static const std::string InjectionCMode2String( InjectionCMode enumValue );
 static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
 
+
 enum class ProductionCMode : int {
     NONE = 0,
     ORAT = 1,
@@ -80,9 +81,26 @@ enum class ProductionCMode : int {
     PRBL = 64,
     FLD  = 128
 };
-
 static const std::string ProductionCMode2String( ProductionCMode enumValue );
 static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
+
+
+enum class GuideRateTarget {
+    OIL = 0,
+    WAT = 1,
+    GAS = 2,
+    LIQ = 3,
+    COMB = 4,
+    WGA =  5,
+    CVAL = 6,
+    INJV = 7,
+    POTN = 8,
+    FORM = 9,
+    NO_GUIDE_RATE = 10
+};
+static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
+
+
 
 struct GroupInjectionProperties {
     Phase phase = Phase::WATER;
@@ -116,7 +134,7 @@ struct GroupProductionProperties {
     UDAValue gas_target;
     UDAValue liquid_target;
     double guide_rate;
-    GroupProduction::GuideRateDef guide_rate_def;
+    GuideRateTarget guide_rate_def;
     double resv_target = 0;
 
     int production_controls = 0;
@@ -132,7 +150,7 @@ struct ProductionControls {
     double gas_target;
     double liquid_target;
     double guide_rate;
-    GroupProduction::GuideRateDef guide_rate_def;
+    GuideRateTarget guide_rate_def;
     double resv_target = 0;
     int production_controls = 0;
     bool has_control(ProductionCMode control) const;

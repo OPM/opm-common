@@ -1486,6 +1486,7 @@ namespace {
         }
     }
 
+
     void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
@@ -1501,12 +1502,12 @@ namespace {
                 auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
                 auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
                 auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
+                auto guide_rate_def = Group2::GuideRateTarget::NO_GUIDE_RATE;
                 double guide_rate = 0;
-                GroupProduction::GuideRateDef guide_rate_def = GroupProduction::GuideRateDef::NO_GUIDE_RATE;
                 if (group_name != "FIELD") {
                     if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {
                         std::string guide_rate_str = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
-                        guide_rate_def = GroupProduction::GetGuideRateFromString( guide_rate_str );
+                        guide_rate_def = Group2::GuideRateTargetFromString( guide_rate_str );
 
                         if ((guide_rate_str == "INJ" || guide_rate_str == "POTN" || guide_rate_str == "FORM")) {
                             std::string msg = "The supplied guide_rate value will be ignored";
@@ -1515,7 +1516,7 @@ namespace {
                         else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
-                                guide_rate_def = GroupProduction::GuideRateDef::POTN;
+                                guide_rate_def = Group2::GuideRateTarget::POTN;
                         }
                     }
                 }
