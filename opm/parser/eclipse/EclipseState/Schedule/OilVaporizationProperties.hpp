@@ -23,8 +23,6 @@
 #include <memory>
 #include <vector>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-
 namespace Opm
 {
      /*

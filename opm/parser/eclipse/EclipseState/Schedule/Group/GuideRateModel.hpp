@@ -20,8 +20,6 @@
 #ifndef GUIDE_RATE_MODEL_HPP
 #define GUIDE_RATE_MODEL_HPP
 
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-
 namespace Opm {
 
 class GuideRateModel {

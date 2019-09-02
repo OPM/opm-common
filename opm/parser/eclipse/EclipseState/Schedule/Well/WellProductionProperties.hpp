@@ -20,14 +20,6 @@
 #ifndef WELLPRODUCTIONPROPERTIES_HPP_HEADER_INCLUDED
 #define WELLPRODUCTIONPROPERTIES_HPP_HEADER_INCLUDED
 
-#include <iosfwd>
-#include <memory>
-
-#include <opm/parser/eclipse/Deck/UDAValue.hpp>
-#include <opm/parser/eclipse/EclipseState/Runspec.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/ProductionControls.hpp>
-
 namespace Opm {
 
     class DeckRecord;
@@ -35,6 +27,6 @@ namespace Opm {
     class UDQActive;
 
 
-} // namespace Opm
+}
 
-#endif  // WELLPRODUCTIONPROPERTIES_HPP_HEADER_INCLUDED
+#endif

@@ -20,11 +20,6 @@
 #ifndef WELLINJECTIONPROPERTIES_HPP_HEADER_INCLUDED
 #define WELLINJECTIONPROPERTIES_HPP_HEADER_INCLUDED
 
-#include <iosfwd>
-
-#include <opm/parser/eclipse/Deck/UDAValue.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/Well/InjectionControls.hpp>
 
 namespace Opm {
 
