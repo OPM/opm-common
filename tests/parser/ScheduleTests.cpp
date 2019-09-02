@@ -2671,57 +2671,57 @@ BOOST_AUTO_TEST_CASE(ProducerControlModeEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2String) {
-    BOOST_CHECK_EQUAL( "OIL"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::OIL));
-    BOOST_CHECK_EQUAL( "WAT"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::WAT));
-    BOOST_CHECK_EQUAL( "GAS"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::GAS));
-    BOOST_CHECK_EQUAL( "LIQ"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::LIQ));
-    BOOST_CHECK_EQUAL( "COMB"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::COMB));
-    BOOST_CHECK_EQUAL( "WGA"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::WGA));
-    BOOST_CHECK_EQUAL( "CVAL"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::CVAL));
-    BOOST_CHECK_EQUAL( "RAT"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::RAT));
-    BOOST_CHECK_EQUAL( "RES"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::RES));
-    BOOST_CHECK_EQUAL( "UNDEFINED"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::UNDEFINED));
+    BOOST_CHECK_EQUAL( "OIL"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::OIL));
+    BOOST_CHECK_EQUAL( "WAT"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::WAT));
+    BOOST_CHECK_EQUAL( "GAS"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::GAS));
+    BOOST_CHECK_EQUAL( "LIQ"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::LIQ));
+    BOOST_CHECK_EQUAL( "COMB" ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::COMB));
+    BOOST_CHECK_EQUAL( "WGA"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::WGA));
+    BOOST_CHECK_EQUAL( "CVAL" ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::CVAL));
+    BOOST_CHECK_EQUAL( "RAT"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::RAT));
+    BOOST_CHECK_EQUAL( "RES"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::RES));
+    BOOST_CHECK_EQUAL( "UNDEFINED"  ,  Well2::GuideRateTarget2String(Well2::GuideRateTarget::UNDEFINED));
 }
 
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnumFromString) {
-    BOOST_CHECK_THROW( GuideRate::GuideRatePhaseEnumFromString("XRAT") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( GuideRate::OIL   , GuideRate::GuideRatePhaseEnumFromString("OIL"));
-    BOOST_CHECK_EQUAL( GuideRate::WAT   , GuideRate::GuideRatePhaseEnumFromString("WAT"));
-    BOOST_CHECK_EQUAL( GuideRate::GAS   , GuideRate::GuideRatePhaseEnumFromString("GAS"));
-    BOOST_CHECK_EQUAL( GuideRate::LIQ   , GuideRate::GuideRatePhaseEnumFromString("LIQ"));
-    BOOST_CHECK_EQUAL( GuideRate::COMB   , GuideRate::GuideRatePhaseEnumFromString("COMB"));
-    BOOST_CHECK_EQUAL( GuideRate::WGA   , GuideRate::GuideRatePhaseEnumFromString("WGA"));
-    BOOST_CHECK_EQUAL( GuideRate::CVAL   , GuideRate::GuideRatePhaseEnumFromString("CVAL"));
-    BOOST_CHECK_EQUAL( GuideRate::RAT   , GuideRate::GuideRatePhaseEnumFromString("RAT"));
-    BOOST_CHECK_EQUAL( GuideRate::RES   , GuideRate::GuideRatePhaseEnumFromString("RES"));
-    BOOST_CHECK_EQUAL( GuideRate::UNDEFINED, GuideRate::GuideRatePhaseEnumFromString("UNDEFINED"));
+    BOOST_CHECK_THROW( Well2::GuideRateTargetFromString("XRAT") , std::invalid_argument );
+    BOOST_CHECK( Well2::GuideRateTarget::OIL       == Well2::GuideRateTargetFromString("OIL"));
+    BOOST_CHECK( Well2::GuideRateTarget::WAT       == Well2::GuideRateTargetFromString("WAT"));
+    BOOST_CHECK( Well2::GuideRateTarget::GAS       == Well2::GuideRateTargetFromString("GAS"));
+    BOOST_CHECK( Well2::GuideRateTarget::LIQ       == Well2::GuideRateTargetFromString("LIQ"));
+    BOOST_CHECK( Well2::GuideRateTarget::COMB      == Well2::GuideRateTargetFromString("COMB"));
+    BOOST_CHECK( Well2::GuideRateTarget::WGA       == Well2::GuideRateTargetFromString("WGA"));
+    BOOST_CHECK( Well2::GuideRateTarget::CVAL      == Well2::GuideRateTargetFromString("CVAL"));
+    BOOST_CHECK( Well2::GuideRateTarget::RAT       == Well2::GuideRateTargetFromString("RAT"));
+    BOOST_CHECK( Well2::GuideRateTarget::RES       == Well2::GuideRateTargetFromString("RES"));
+    BOOST_CHECK( Well2::GuideRateTarget::UNDEFINED == Well2::GuideRateTargetFromString("UNDEFINED"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2Loop) {
-    BOOST_CHECK_EQUAL( GuideRate::OIL     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::OIL ) ));
-    BOOST_CHECK_EQUAL( GuideRate::WAT     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::WAT ) ));
-    BOOST_CHECK_EQUAL( GuideRate::GAS     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::GAS ) ));
-    BOOST_CHECK_EQUAL( GuideRate::LIQ     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::LIQ ) ));
-    BOOST_CHECK_EQUAL( GuideRate::COMB     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::COMB ) ));
-    BOOST_CHECK_EQUAL( GuideRate::WGA     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::WGA ) ));
-    BOOST_CHECK_EQUAL( GuideRate::CVAL     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::CVAL ) ));
-    BOOST_CHECK_EQUAL( GuideRate::RAT     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::RAT ) ));
-    BOOST_CHECK_EQUAL( GuideRate::RES     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::RES ) ));
-    BOOST_CHECK_EQUAL( GuideRate::UNDEFINED     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::UNDEFINED ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::OIL        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::OIL ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::WAT        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::WAT ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::GAS        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::GAS ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::LIQ        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::LIQ ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::COMB       == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::COMB ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::WGA        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::WGA ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::CVAL       == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::CVAL ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::RAT        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::RAT ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::RES        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::RES ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::UNDEFINED  == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::UNDEFINED ) ));
 
-    BOOST_CHECK_EQUAL( "OIL"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "OIL"  ) ));
-    BOOST_CHECK_EQUAL( "WAT"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "WAT"  ) ));
-    BOOST_CHECK_EQUAL( "GAS"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "GAS"  ) ));
-    BOOST_CHECK_EQUAL( "LIQ"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "LIQ"  ) ));
-    BOOST_CHECK_EQUAL( "COMB"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "COMB"  ) ));
-    BOOST_CHECK_EQUAL( "WGA"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "WGA"  ) ));
-    BOOST_CHECK_EQUAL( "CVAL"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "CVAL"  ) ));
-    BOOST_CHECK_EQUAL( "RAT"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "RAT"  ) ));
-    BOOST_CHECK_EQUAL( "RES"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "RES"  ) ));
-    BOOST_CHECK_EQUAL( "UNDEFINED"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "UNDEFINED"  ) ));
+    BOOST_CHECK_EQUAL( "OIL"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "OIL"  ) ));
+    BOOST_CHECK_EQUAL( "WAT"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "WAT"  ) ));
+    BOOST_CHECK_EQUAL( "GAS"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "GAS"  ) ));
+    BOOST_CHECK_EQUAL( "LIQ"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "LIQ"  ) ));
+    BOOST_CHECK_EQUAL( "COMB"       , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "COMB"  ) ));
+    BOOST_CHECK_EQUAL( "WGA"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "WGA"  ) ));
+    BOOST_CHECK_EQUAL( "CVAL"       , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "CVAL"  ) ));
+    BOOST_CHECK_EQUAL( "RAT"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "RAT"  ) ));
+    BOOST_CHECK_EQUAL( "RES"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "RES"  ) ));
+    BOOST_CHECK_EQUAL( "UNDEFINED"  , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "UNDEFINED"  ) ));
 
 }
 

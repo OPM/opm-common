@@ -100,7 +100,7 @@ Well2::Well2(const std::string& wname_arg,
     allow_cross_flow(DeckItem::to_bool(ParserKeywords::WELSPECS::CROSSFLOW::defaultValue)),
     automatic_shutin( ParserKeywords::WELSPECS::CROSSFLOW::defaultValue == "SHUT"),
     producer(true),
-    guide_rate({true, -1, GuideRate::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
+    guide_rate({true, -1, Well2::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
     solvent_fraction(0.0),
     econ_limits(std::make_shared<WellEconProductionLimits>()),
@@ -225,7 +225,7 @@ bool Well2::updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties
     return false;
 }
 
-bool Well2::updateWellGuideRate(bool available, double guide_rate_arg, GuideRate::GuideRatePhaseEnum guide_phase, double scale_factor) {
+bool Well2::updateWellGuideRate(bool available, double guide_rate_arg, GuideRateTarget guide_phase, double scale_factor) {
     bool update = false;
     if (this->guide_rate.available != available) {
         this->guide_rate.available = available;
@@ -403,7 +403,7 @@ double Well2::getGuideRate() const {
     return this->guide_rate.guide_rate;
 }
 
-GuideRate::GuideRatePhaseEnum Well2::getGuideRatePhase() const {
+Well2::GuideRateTarget Well2::getGuideRatePhase() const {
     return this->guide_rate.guide_phase;
 }
 
@@ -963,4 +963,56 @@ Well2::ProducerCMode Well2::ProducerCModeFromString( const std::string& stringVa
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+
+const std::string Well2::GuideRateTarget2String( GuideRateTarget enumValue ) {
+    switch( enumValue ) {
+    case GuideRateTarget::OIL:
+        return "OIL";
+    case GuideRateTarget::WAT:
+        return "WAT";
+    case GuideRateTarget::GAS:
+        return "GAS";
+    case GuideRateTarget::LIQ:
+        return "LIQ";
+    case GuideRateTarget::COMB:
+        return "COMB";
+    case GuideRateTarget::WGA:
+        return "WGA";
+    case GuideRateTarget::CVAL:
+        return "CVAL";
+    case GuideRateTarget::RAT:
+        return "RAT";
+    case GuideRateTarget::RES:
+        return "RES";
+    case GuideRateTarget::UNDEFINED:
+        return "UNDEFINED";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+Well2::GuideRateTarget Well2::GuideRateTargetFromString( const std::string& stringValue ) {
+    if (stringValue == "OIL")
+        return GuideRateTarget::OIL;
+    else if (stringValue == "WAT")
+        return GuideRateTarget::WAT;
+    else if (stringValue == "GAS")
+        return GuideRateTarget::GAS;
+    else if (stringValue == "LIQ")
+        return GuideRateTarget::LIQ;
+    else if (stringValue == "COMB")
+        return GuideRateTarget::COMB;
+    else if (stringValue == "WGA")
+        return GuideRateTarget::WGA;
+    else if (stringValue == "CVAL")
+        return GuideRateTarget::CVAL;
+    else if (stringValue == "RAT")
+        return GuideRateTarget::RAT;
+    else if (stringValue == "RES")
+        return GuideRateTarget::RES;
+    else if (stringValue == "UNDEFINED")
+        return GuideRateTarget::UNDEFINED;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
 }

@@ -398,10 +398,10 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
 BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
     Opm::Well2 well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Opm::Phase::OIL, Opm::Well2::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
-    BOOST_CHECK_EQUAL(Opm::GuideRate::UNDEFINED, well.getGuideRatePhase());
+    BOOST_CHECK(Opm::Well2::GuideRateTarget::UNDEFINED == well.getGuideRatePhase());
 
-    BOOST_CHECK(well.updateWellGuideRate(true, 100, Opm::GuideRate::RAT, 66.0));
-    BOOST_CHECK_EQUAL(Opm::GuideRate::RAT, well.getGuideRatePhase());
+    BOOST_CHECK(well.updateWellGuideRate(true, 100, Opm::Well2::GuideRateTarget::RAT, 66.0));
+    BOOST_CHECK(Opm::Well2::GuideRateTarget::RAT == well.getGuideRatePhase());
     BOOST_CHECK_EQUAL(100, well.getGuideRate());
     BOOST_CHECK_EQUAL(66.0, well.getGuideRateScalingFactor());
 }

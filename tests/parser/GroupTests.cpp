@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
 
     BOOST_CHECK_EQUAL(currentWell.isAvailableForGroupControl(), true);
     BOOST_CHECK_EQUAL(currentWell.getGuideRate(), 30);
-    BOOST_CHECK_EQUAL(currentWell.getGuideRatePhase(), Opm::GuideRate::OIL);
+    BOOST_CHECK(currentWell.getGuideRatePhase() == Opm::Well2::GuideRateTarget::OIL);
     BOOST_CHECK_EQUAL(currentWell.getGuideRateScalingFactor(), 1.0);
 
 

@@ -1852,10 +1852,10 @@ namespace {
               bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
                 double guide_rate = record.getItem("GUIDE_RATE").get< double >(0);
                 double scaling_factor = record.getItem("SCALING_FACTOR").get< double >(0);
-                GuideRate::GuideRatePhaseEnum phase = GuideRate::UNDEFINED;
+                auto phase = Well2::GuideRateTarget::UNDEFINED;
                 if (!record.getItem("PHASE").defaultApplied(0)) {
                     std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
-                    phase = GuideRate::GuideRatePhaseEnumFromString(guideRatePhase);
+                    phase = Well2::GuideRateTargetFromString(guideRatePhase);
                 }
 
                 {

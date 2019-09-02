@@ -48,18 +48,8 @@ class UDQActive;
 class UDQConfig;
 
 
-struct WellGuideRate {
-    bool available;
-    double guide_rate;
-    GuideRate::GuideRatePhaseEnum guide_phase;
-    double scale_factor;
-};
-
-
 class Well2 {
 public:
-
-
 
     enum class Status {
         OPEN = 1,
@@ -144,6 +134,31 @@ public:
     static WELTARGCMode WELTARGCModeFromString(const std::string& stringValue);
 
 
+    enum class GuideRateTarget {
+        OIL = 0,
+        WAT = 1,
+        GAS = 2,
+        LIQ = 3,
+        COMB = 4,
+        WGA = 5,
+        CVAL = 6,
+        RAT = 7,
+        RES = 8,
+        UNDEFINED = 9
+    };
+    static const std::string GuideRateTarget2String( GuideRateTarget enumValue );
+    static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
+
+
+
+    struct WellGuideRate {
+        bool available;
+        double guide_rate;
+        GuideRateTarget guide_phase;
+        double scale_factor;
+    };
+
+    
     struct InjectionControls {
     public:
         InjectionControls(int controls_arg) :
@@ -329,7 +344,7 @@ public:
     bool isMultiSegment() const;
     bool isAvailableForGroupControl() const;
     double getGuideRate() const;
-    GuideRate::GuideRatePhaseEnum getGuideRatePhase() const;
+    GuideRateTarget getGuideRatePhase() const;
     double getGuideRateScalingFactor() const;
 
     bool hasBeenDefined(size_t timeStep) const;
@@ -398,7 +413,7 @@ public:
     bool updateStatus(Status status);
     bool updateGroup(const std::string& group);
     bool updateProducer(bool is_producer);
-    bool updateWellGuideRate(bool available, double guide_rate, GuideRate::GuideRatePhaseEnum guide_phase, double scale_factor);
+    bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
     bool updateEfficiencyFactor(double efficiency_factor);
     bool updateSolventFraction(double solvent_fraction);

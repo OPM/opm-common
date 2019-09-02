@@ -449,19 +449,19 @@ BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     const auto& well1 = sched.getWell2("W_1", 0);
     BOOST_CHECK(well1.isAvailableForGroupControl( ));
     BOOST_CHECK_EQUAL(-1, well1.getGuideRate( ));
-    BOOST_CHECK_EQUAL(GuideRate::OIL, well1.getGuideRatePhase( ));
+    BOOST_CHECK(Well2::GuideRateTarget::OIL == well1.getGuideRatePhase( ));
     BOOST_CHECK_EQUAL(1.0, well1.getGuideRateScalingFactor( ));
 
     const auto& well2 = sched.getWell2("W_2", 0);
     BOOST_CHECK(!well2.isAvailableForGroupControl( ));
     BOOST_CHECK_EQUAL(-1, well2.getGuideRate( ));
-    BOOST_CHECK_EQUAL(GuideRate::UNDEFINED, well2.getGuideRatePhase( ));
+    BOOST_CHECK(Well2::GuideRateTarget::UNDEFINED == well2.getGuideRatePhase( ));
     BOOST_CHECK_EQUAL(1.0, well2.getGuideRateScalingFactor( ));
 
     const auto& well3 = sched.getWell2("W_3", 0);
     BOOST_CHECK(well3.isAvailableForGroupControl( ));
     BOOST_CHECK_EQUAL(100, well3.getGuideRate( ));
-    BOOST_CHECK_EQUAL(GuideRate::RAT, well3.getGuideRatePhase( ));
+    BOOST_CHECK(Well2::GuideRateTarget::RAT == well3.getGuideRatePhase( ));
     BOOST_CHECK_EQUAL(0.5, well3.getGuideRateScalingFactor( ));
 }
 
