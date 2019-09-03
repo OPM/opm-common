@@ -891,8 +891,9 @@ void ECLRegressionTest::results_smry()
                 
                 if (it != keywordsBlackList.end()){
                     blackListed.push_back(*keywit);
-                    keywords1.erase(keywit);
-                    --keywit;
+                    keywit = keywords1.erase(keywit);
+                    if (keywit != keywords1.end())
+                      --keywit;
                 }
              }
              
