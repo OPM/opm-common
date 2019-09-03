@@ -347,11 +347,10 @@ std::vector<T> readFormattedArray(const std::string& file_str, const int size, l
     arr.reserve(size);
 
     long int p1=fromPos;
-    long int p2=0;
     
     for (int i=0; i< size; i++) {
         p1 = file_str.find_first_not_of(' ',p1);
-        p2 = file_str.find_first_of(' ', p1);
+        long int p2 = file_str.find_first_of(' ', p1);
         
         arr.push_back(process(file_str.substr(p1, p2-p1)));
 
