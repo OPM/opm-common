@@ -52,16 +52,16 @@ bool RFTConfig::rft(const std::string& well_name, std::size_t report_step) const
         return false;
 
     auto rft_pair = this->rft_config.at(well_name)[report_step];
-    if (rft_pair.first == RFTConnections::YES)
+    if (rft_pair.first == RFT::YES)
         return (rft_pair.second == report_step);
 
-    if (rft_pair.first == RFTConnections::NO)
+    if (rft_pair.first == RFT::NO)
         return false;
 
-    if (rft_pair.first == RFTConnections::REPT)
+    if (rft_pair.first == RFT::REPT)
         return true;
 
-    if (rft_pair.first == RFTConnections::TIMESTEP)
+    if (rft_pair.first == RFT::TIMESTEP)
         return true;
 
     return false;
@@ -75,36 +75,36 @@ bool RFTConfig::plt(const std::string& well_name, std::size_t report_step) const
         return false;
 
     auto plt_pair = this->plt_config.at(well_name)[report_step];
-    if (plt_pair.first == PLTConnections::YES)
+    if (plt_pair.first == PLT::YES)
         return (plt_pair.second == report_step);
 
-    if (plt_pair.first == PLTConnections::NO)
+    if (plt_pair.first == PLT::NO)
         return false;
 
-    if (plt_pair.first == PLTConnections::REPT)
+    if (plt_pair.first == PLT::REPT)
         return true;
 
-    if (plt_pair.first == PLTConnections::TIMESTEP)
+    if (plt_pair.first == PLT::TIMESTEP)
         return true;
 
     return false;
 }
 
-void RFTConfig::updateRFT(const std::string& well_name, std::size_t report_step, RFTConnections::RFTEnum value) {
-    if (value == RFTConnections::FOPN)
+void RFTConfig::updateRFT(const std::string& well_name, std::size_t report_step, RFT value) {
+    if (value == RFT::FOPN)
         this->setWellOpenRFT(well_name);
     else {
         if (this->rft_config.count(well_name) == 0) {
-            auto state = DynamicState<std::pair<RFTConnections::RFTEnum, std::size_t>>(this->tm, std::make_pair(RFTConnections::NO, 0));
+            auto state = DynamicState<std::pair<RFT, std::size_t>>(this->tm, std::make_pair(RFT::NO, 0));
             this->rft_config.emplace( well_name, state );
         }
         this->rft_config.at(well_name).update(report_step, std::make_pair(value, report_step));
     }
 }
 
-void RFTConfig::updatePLT(const std::string& well_name, std::size_t report_step, PLTConnections::PLTEnum value) {
+void RFTConfig::updatePLT(const std::string& well_name, std::size_t report_step, PLT value) {
     if (this->plt_config.count(well_name) == 0) {
-        auto state = DynamicState<std::pair<PLTConnections::PLTEnum, std::size_t>>(this->tm, std::make_pair(PLTConnections::NO, 0));
+        auto state = DynamicState<std::pair<PLT, std::size_t>>(this->tm, std::make_pair(PLT::NO, 0));
         this->plt_config.emplace( well_name, state );
     }
     this->plt_config.at(well_name).update(report_step, std::make_pair(value, report_step));
@@ -154,7 +154,7 @@ std::size_t RFTConfig::firstRFTOutput() const {
           We do not really output PLT, so this predictae will unconditionally
           return false.
         */
-        auto pred = [] (const std::pair<PLTConnections::PLTEnum, std::size_t>& ) { return false; };
+        auto pred = [] (const std::pair<PLT, std::size_t>& ) { return false; };
         int this_first_rft = dynamic_state.find_if(pred);
         if (this_first_rft >= 0)
             first_rft = std::min(first_rft, static_cast<std::size_t>(this_first_rft));
@@ -163,12 +163,12 @@ std::size_t RFTConfig::firstRFTOutput() const {
     for (const auto& rft_pair : this->rft_config) {
       const auto& dynamic_state = rft_pair.second;
 
-      auto pred = [] (const std::pair<RFTConnections::RFTEnum, std::size_t>& pred_arg) {
-                    if (pred_arg.first == RFTConnections::RFTEnum::YES)
+      auto pred = [] (const std::pair<RFT, std::size_t>& pred_arg) {
+                    if (pred_arg.first == RFT::YES)
                         return true;
-                    if (pred_arg.first == RFTConnections::RFTEnum::REPT)
+                    if (pred_arg.first == RFT::REPT)
                         return true;
-                    if (pred_arg.first == RFTConnections::RFTEnum::TIMESTEP)
+                    if (pred_arg.first == RFT::TIMESTEP)
                         return true;
                     return false;
                   };
@@ -194,4 +194,63 @@ bool RFTConfig::active(std::size_t report_step) const {
     return false;
 }
 
+std::string RFTConfig::RFT2String(RFT enumValue) {
+    switch (enumValue) {
+    case RFT::YES:
+        return "YES";
+    case RFT::REPT:
+        return "REPT";
+    case RFT::TIMESTEP:
+        return "TIMESTEP";
+    case RFT::FOPN:
+        return "FOPN";
+    case RFT::NO:
+        return "NO";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+RFTConfig::RFT RFTConfig::RFTFromString(const std::string& stringValue) {
+    if (stringValue == "YES")
+        return RFT::YES;
+    else if (stringValue == "REPT")
+        return RFT::REPT;
+    else if (stringValue == "TIMESTEP")
+        return RFT::TIMESTEP;
+    else if (stringValue == "FOPN")
+        return RFT::FOPN;
+    else if (stringValue == "NO")
+        return RFT::NO;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue);
+}
+
+std::string RFTConfig::PLT2String(PLT enumValue) {
+    switch (enumValue) {
+    case PLT::YES:
+        return "YES";
+    case PLT::REPT:
+        return "REPT";
+    case PLT::TIMESTEP:
+        return "TIMESTEP";
+    case PLT::NO:
+        return "NO";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+RFTConfig::PLT RFTConfig::PLTFromString( const std::string& stringValue ){
+    if (stringValue == "YES")
+        return PLT::YES;
+    else if (stringValue == "REPT")
+        return PLT::REPT;
+    else if (stringValue == "TIMESTEP")
+        return PLT::TIMESTEP;
+    else if (stringValue == "NO")
+        return PLT::NO;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
 }

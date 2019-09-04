@@ -465,19 +465,19 @@ BOOST_AUTO_TEST_CASE( MULTISEGMENT_ABS ) {
         const double depth_top = rec1.getItem("DEPTH").get< double >(0);
         const double length_top = rec1.getItem("LENGTH").get< double >(0);
         const double volume_top = rec1.getItem("WELLBORE_VOLUME").get< double >(0);
-        const WellSegment::LengthDepthEnum length_depth_type = WellSegment::LengthDepthEnumFromString(rec1.getItem("INFO_TYPE").getTrimmedString(0));
-        const WellSegment::CompPressureDropEnum comp_pressure_drop = WellSegment::CompPressureDropEnumFromString(rec1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
-        const WellSegment::MultiPhaseModelEnum multiphase_model = WellSegment::MultiPhaseModelEnumFromString(rec1.getItem("FLOW_MODEL").getTrimmedString(0));
+        const WellSegments::LengthDepth length_depth_type = WellSegments::LengthDepthFromString(rec1.getItem("INFO_TYPE").getTrimmedString(0));
+        const WellSegments::CompPressureDrop comp_pressure_drop = WellSegments::CompPressureDropFromString(rec1.getItem("PRESSURE_COMPONENTS").getTrimmedString(0));
+        const WellSegments::MultiPhaseModel multiphase_model = WellSegments::MultiPhaseModelFromString(rec1.getItem("FLOW_MODEL").getTrimmedString(0));
 
         BOOST_CHECK_EQUAL( "PROD01", well_name );
         BOOST_CHECK_EQUAL( 2512.5, depth_top );
         BOOST_CHECK_EQUAL( 2512.5, length_top );
         BOOST_CHECK_EQUAL( 1.0e-5, volume_top );
-        const std::string length_depth_type_string = WellSegment::LengthDepthEnumToString(length_depth_type);
+        const std::string length_depth_type_string = WellSegments::LengthDepthToString(length_depth_type);
         BOOST_CHECK_EQUAL( length_depth_type_string, "ABS" );
-        const std::string comp_pressure_drop_string = WellSegment::CompPressureDropEnumToString(comp_pressure_drop);
+        const std::string comp_pressure_drop_string = WellSegments::CompPressureDropToString(comp_pressure_drop);
         BOOST_CHECK_EQUAL( comp_pressure_drop_string, "H--" );
-        const std::string multiphase_model_string = WellSegment::MultiPhaseModelEnumToString(multiphase_model);
+        const std::string multiphase_model_string = WellSegments::MultiPhaseModelToString(multiphase_model);
         BOOST_CHECK_EQUAL( multiphase_model_string, "HO" );
     }
 

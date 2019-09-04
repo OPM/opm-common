@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(CreateGroup_SetInjectorProducer_CorrectStatusSet) {
 BOOST_AUTO_TEST_CASE(ControlModeOK) {
     Opm::Group2 group("G1" , 1, 0, 0, UnitSystem::newMETRIC());
     Opm::SummaryState st;
-    const auto& prod = group.productionControls(st);
-    BOOST_CHECK_EQUAL( Opm::GroupInjection::NONE , prod.cmode);
+    const auto& inj = group.injectionControls(st);
+    BOOST_CHECK( Opm::Group2::InjectionCMode::NONE == inj.cmode);
 }
 
 
@@ -183,12 +183,12 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     Runspec runspec (deck );
     Opm::Schedule schedule(deck,  grid, eclipseProperties, runspec);
     const auto& currentWell = schedule.getWell2("B-37T2", 0);
-    const Opm::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
-    BOOST_CHECK_EQUAL(wellProductionProperties.controlMode, Opm::WellProducer::ControlModeEnum::GRUP);
+    const Opm::Well2::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
+    BOOST_CHECK(wellProductionProperties.controlMode == Opm::Well2::ProducerCMode::GRUP);
 
     BOOST_CHECK_EQUAL(currentWell.isAvailableForGroupControl(), true);
     BOOST_CHECK_EQUAL(currentWell.getGuideRate(), 30);
-    BOOST_CHECK_EQUAL(currentWell.getGuideRatePhase(), Opm::GuideRate::OIL);
+    BOOST_CHECK(currentWell.getGuideRatePhase() == Opm::Well2::GuideRateTarget::OIL);
     BOOST_CHECK_EQUAL(currentWell.getGuideRateScalingFactor(), 1.0);
 
 
@@ -292,16 +292,16 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
     auto ctrl1 = group1.productionControls(st);
     auto ctrl2 = group2.productionControls(st);
 
-    BOOST_CHECK_EQUAL(ctrl1.exceed_action, GroupProductionExceedLimit::RATE);
-    BOOST_CHECK_EQUAL(ctrl2.exceed_action, GroupProductionExceedLimit::CON);
+    BOOST_CHECK(ctrl1.exceed_action == Group2::ExceedAction::RATE);
+    BOOST_CHECK(ctrl2.exceed_action == Group2::ExceedAction::CON);
 }
 
 
 BOOST_AUTO_TEST_CASE(TESTGuideRateModel) {
     Opm::GuideRateModel grc_default;
-    BOOST_CHECK_THROW(Opm::GuideRateModel(0.0,GuideRateTarget::NONE, -5,0,0,0,0,0,true,1,true), std::invalid_argument);
+    BOOST_CHECK_THROW(Opm::GuideRateModel(0.0,GuideRateModel::Target::NONE, -5,0,0,0,0,0,true,1,true), std::invalid_argument);
     BOOST_CHECK_THROW(grc_default.eval(1,0.50,0.50), std::invalid_argument);
 
-    Opm::GuideRateModel grc_delay(10, GuideRateTarget::NONE, 1,1,0,0,0,0,true,1,true);
+    Opm::GuideRateModel grc_delay(10, GuideRateModel::Target::NONE, 1,1,0,0,0,0,true,1,true);
     BOOST_CHECK_NO_THROW(grc_delay.eval(1.0, 0.5, 0.5));
 }

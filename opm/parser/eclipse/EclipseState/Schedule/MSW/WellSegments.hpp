@@ -23,7 +23,6 @@
 #include <vector>
 #include <map>
 
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp>
 
 namespace Opm {
@@ -32,6 +31,31 @@ namespace Opm {
 
     class WellSegments {
     public:
+        enum class LengthDepth{
+            INC = 0,
+            ABS = 1
+        };
+        static const std::string LengthDepthToString(LengthDepth enumValue);
+        static LengthDepth LengthDepthFromString(const std::string& stringValue);
+
+
+        enum class CompPressureDrop {
+            HFA = 0,
+            HF_ = 1,
+            H__ = 2
+        };
+        static const std::string CompPressureDropToString(CompPressureDrop enumValue);
+        static CompPressureDrop CompPressureDropFromString(const std::string& stringValue);
+
+
+        enum class MultiPhaseModel {
+            HO = 0,
+            DF = 1
+        };
+        static const std::string MultiPhaseModelToString(MultiPhaseModel enumValue);
+        static MultiPhaseModel MultiPhaseModelFromString(const std::string& stringValue);
+
+
         WellSegments() = default;
 
         const std::string& wellName() const;
@@ -40,8 +64,8 @@ namespace Opm {
         double lengthTopSegment() const;
         double volumeTopSegment() const;
 
-        WellSegment::CompPressureDropEnum compPressureDrop() const;
-        WellSegment::MultiPhaseModelEnum multiPhaseModel() const;
+        CompPressureDrop compPressureDrop() const;
+        MultiPhaseModel multiPhaseModel() const;
 
         // mapping the segment number to the index in the vector of segments
         int segmentNumberToIndex(const int segment_number) const;
@@ -63,7 +87,6 @@ namespace Opm {
         void processABS();
         void processINC(const bool first_time);
 
-        // name of the well
         std::string m_well_name;
         // depth of the nodal point of the top segment
         // it is taken as the BHP reference depth of the well
@@ -74,11 +97,11 @@ namespace Opm {
         // effective wellbore volume of the top segment
         double m_volume_top;
         // type of the tubing length and depth information
-        WellSegment::LengthDepthEnum m_length_depth_type;
+        LengthDepth m_length_depth_type;
         // components of the pressure drop to be included
-        WellSegment::CompPressureDropEnum m_comp_pressure_drop;
+        CompPressureDrop m_comp_pressure_drop;
         // multi-phase flow model
-        WellSegment::MultiPhaseModelEnum m_multiphase_model;
+        MultiPhaseModel m_multiphase_model;
         // There are X and Y cooridnate of the nodal point of the top segment
         // Since they are not used for simulations and we are not supporting plotting,
         // we are not handling them at the moment.

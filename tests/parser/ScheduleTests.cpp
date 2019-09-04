@@ -399,9 +399,9 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
 
-    BOOST_CHECK_THROW( schedule.getChildWells2( "NO_SUCH_GROUP" , 1 , GroupWellQueryMode::Recursive), std::invalid_argument);
+    BOOST_CHECK_THROW( schedule.getChildWells2( "NO_SUCH_GROUP" , 1 ), std::invalid_argument);
     {
-        auto field_wells = schedule.getChildWells2("FIELD" , 0, GroupWellQueryMode::Recursive);
+        auto field_wells = schedule.getChildWells2("FIELD" , 0);
         BOOST_CHECK_EQUAL( field_wells.size() , 4U);
 
         BOOST_CHECK( has_well( field_wells, "DW_0" ));
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     }
 
     {
-        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0, GroupWellQueryMode::Recursive);
+        auto platform_wells = schedule.getChildWells2("PLATFORM" , 0);
         BOOST_CHECK_EQUAL( platform_wells.size() , 4U);
 
         BOOST_CHECK( has_well( platform_wells, "DW_0" ));
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     }
 
     {
-        auto child_wells1 = schedule.getChildWells2("CG1" , 0, GroupWellQueryMode::Recursive);
+        auto child_wells1 = schedule.getChildWells2("CG1" , 0);
         BOOST_CHECK_EQUAL( child_wells1.size() , 2U);
 
         BOOST_CHECK( has_well( child_wells1, "DW_0" ));
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsOrderedGRUPTREE) {
     }
 
     {
-        auto parent_wells2 = schedule.getChildWells2("PG2" , 0, GroupWellQueryMode::Recursive);
+        auto parent_wells2 = schedule.getChildWells2("PG2" , 0);
         BOOST_CHECK_EQUAL( parent_wells2.size() , 2U);
 
         BOOST_CHECK( has_well( parent_wells2, "BW_2" ));
@@ -584,12 +584,12 @@ BOOST_AUTO_TEST_CASE(TestCrossFlowHandling) {
     BOOST_CHECK_EQUAL(schedule.getWell2("BAN", 0).getAllowCrossFlow(), false);
     BOOST_CHECK_EQUAL(schedule.getWell2("ALLOW", 0).getAllowCrossFlow(), true);
     BOOST_CHECK_EQUAL(schedule.getWell2("DEFAULT", 0).getAllowCrossFlow(), true);
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, schedule.getWell2("BAN", 0).getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, schedule.getWell2("BAN", 1).getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, schedule.getWell2("BAN", 2).getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, schedule.getWell2("BAN", 3).getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, schedule.getWell2("BAN", 4).getStatus()); // not allow to open
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, schedule.getWell2("BAN", 5).getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == schedule.getWell2("BAN", 0).getStatus());
+    BOOST_CHECK(Well2::Status::OPEN == schedule.getWell2("BAN", 1).getStatus());
+    BOOST_CHECK(Well2::Status::OPEN == schedule.getWell2("BAN", 2).getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == schedule.getWell2("BAN", 3).getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == schedule.getWell2("BAN", 4).getStatus()); // not allow to open
+    BOOST_CHECK(Well2::Status::OPEN == schedule.getWell2("BAN", 5).getStatus());
 }
 
 static Deck createDeckWithWellsAndConnectionDataWithWELOPEN() {
@@ -654,43 +654,43 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWellsAndConnectionDataWithWELOPEN) {
     Runspec runspec (deck);
     Schedule schedule(deck ,grid , eclipseProperties, runspec);
     {
-        constexpr auto well_shut = WellCommon::StatusEnum::SHUT;
-        constexpr auto well_open = WellCommon::StatusEnum::OPEN;
+        constexpr auto well_shut = Well2::Status::SHUT;
+        constexpr auto well_open = Well2::Status::OPEN;
 
-        BOOST_CHECK_EQUAL(well_shut, schedule.getWell2("OP_1", 3).getStatus(  ));
-        BOOST_CHECK_EQUAL(well_open, schedule.getWell2("OP_1", 4).getStatus(  ));
-        BOOST_CHECK_EQUAL(well_shut, schedule.getWell2("OP_1", 5).getStatus(  ));
+        BOOST_CHECK(well_shut == schedule.getWell2("OP_1", 3).getStatus(  ));
+        BOOST_CHECK(well_open == schedule.getWell2("OP_1", 4).getStatus(  ));
+        BOOST_CHECK(well_shut == schedule.getWell2("OP_1", 5).getStatus(  ));
     }
     {
-        constexpr auto comp_shut = WellCompletion::StateEnum::SHUT;
-        constexpr auto comp_open = WellCompletion::StateEnum::OPEN;
+        constexpr auto comp_shut = Connection::State::SHUT;
+        constexpr auto comp_open = Connection::State::OPEN;
         {
             const auto& well = schedule.getWell2("OP_2", 3);
             const auto& cs = well.getConnections( );
 
             BOOST_CHECK_EQUAL( 7U, cs.size() );
-            BOOST_CHECK_EQUAL(comp_shut, cs.getFromIJK( 7, 6, 2 ).state());
-            BOOST_CHECK_EQUAL(comp_shut, cs.getFromIJK( 7, 6, 3 ).state());
-            BOOST_CHECK_EQUAL(comp_shut, cs.getFromIJK( 7, 6, 4 ).state());
-            BOOST_CHECK_EQUAL(comp_open, cs.getFromIJK( 7, 7, 2 ).state());
+            BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 2 ).state());
+            BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 3 ).state());
+            BOOST_CHECK(comp_shut == cs.getFromIJK( 7, 6, 4 ).state());
+            BOOST_CHECK(comp_open == cs.getFromIJK( 7, 7, 2 ).state());
         }
         {
             const auto& well = schedule.getWell2("OP_2", 4);
             const auto& cs2 = well.getConnections( );
-            BOOST_CHECK_EQUAL(comp_open, cs2.getFromIJK( 7, 6, 2 ).state());
-            BOOST_CHECK_EQUAL(comp_open, cs2.getFromIJK( 7, 6, 3 ).state());
-            BOOST_CHECK_EQUAL(comp_open, cs2.getFromIJK( 7, 6, 4 ).state());
-            BOOST_CHECK_EQUAL(comp_open, cs2.getFromIJK( 7, 7, 2 ).state());
+            BOOST_CHECK(comp_open == cs2.getFromIJK( 7, 6, 2 ).state());
+            BOOST_CHECK(comp_open == cs2.getFromIJK( 7, 6, 3 ).state());
+            BOOST_CHECK(comp_open == cs2.getFromIJK( 7, 6, 4 ).state());
+            BOOST_CHECK(comp_open == cs2.getFromIJK( 7, 7, 2 ).state());
         }
         {
             const auto& well = schedule.getWell2("OP_3", 3);
             const auto& cs3 = well.getConnections(  );
-            BOOST_CHECK_EQUAL(comp_shut, cs3.get( 0 ).state());
+            BOOST_CHECK(comp_shut == cs3.get( 0 ).state());
         }
         {
             const auto& well = schedule.getWell2("OP_3", 4);
             const auto& cs4 = well.getConnections(  );
-            BOOST_CHECK_EQUAL(comp_open, cs4.get( 0 ).state());
+            BOOST_CHECK(comp_open == cs4.get( 0 ).state());
         }
     }
 }
@@ -739,8 +739,8 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_TryToOpenWellWithShutCompleti
     Schedule schedule(deck ,  grid , eclipseProperties, runspec);
     const auto& well2_3 = schedule.getWell2("OP_1",3);
     const auto& well2_4 = schedule.getWell2("OP_1",4);
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well2_3.getStatus());
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well2_4.getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == well2_3.getStatus());
+    BOOST_CHECK(Well2::Status::SHUT == well2_4.getStatus());
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddNewCompletionsDoNotShutWell) {
@@ -801,14 +801,14 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWELOPEN_CombineShutCompletionsAndAddN
   const auto& well_4 = schedule.getWell2("OP_1", 4);
   const auto& well_5 = schedule.getWell2("OP_1", 5);
   // timestep 3. Close all completions with WELOPEN and immediately open new completions with COMPDAT.
-  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well_3.getStatus());
+  BOOST_CHECK(Well2::Status::OPEN == well_3.getStatus());
   BOOST_CHECK( !schedule.hasWellEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 3 ));
   // timestep 4. Close all completions with WELOPEN. The well will be shut since no completions
   // are open.
-  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_4.getStatus());
+  BOOST_CHECK(Well2::Status::SHUT == well_4.getStatus());
   BOOST_CHECK( schedule.hasWellEvent( "OP_1", ScheduleEvents::WELL_STATUS_CHANGE , 4 ));
   // timestep 5. Open new completions. But keep the well shut,
-  BOOST_CHECK_EQUAL(WellCommon::StatusEnum::SHUT, well_5.getStatus());
+  BOOST_CHECK(Well2::Status::SHUT == well_5.getStatus());
 }
 
 BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFT) {
@@ -914,7 +914,7 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckWithWRFTPLT) {
     Runspec runspec (deck);
     Schedule schedule(deck, grid , eclipseProperties, runspec);
     const auto& well = schedule.getWell2("OP_1", 4);
-    BOOST_CHECK_EQUAL(WellCommon::StatusEnum::OPEN, well.getStatus());
+    BOOST_CHECK(Well2::Status::OPEN == well.getStatus());
 
     const auto& rft_config = schedule.rftConfig();
     BOOST_CHECK_EQUAL(rft_config.rft("OP_1", 3),false);
@@ -1197,15 +1197,15 @@ BOOST_AUTO_TEST_CASE(createDeckModifyMultipleGCONPROD) {
         {
             auto g = schedule.getGroup2("G1", 1);
             BOOST_CHECK_EQUAL(g.productionControls(st).oil_target, 1000 * siFactorL);
-            BOOST_CHECK(g.has_control(GroupProduction::ORAT));
-            BOOST_CHECK(!g.has_control(GroupProduction::WRAT));
+            BOOST_CHECK(g.has_control(Group2::ProductionCMode::ORAT));
+            BOOST_CHECK(!g.has_control(Group2::ProductionCMode::WRAT));
             BOOST_CHECK_EQUAL(g.productionControls(st).guide_rate, 0);
         }
         {
             auto g = schedule.getGroup2("G1", 2);
             BOOST_CHECK_EQUAL(g.productionControls(st).oil_target, 2000 * siFactorL);
             BOOST_CHECK_EQUAL(g.productionControls(st).guide_rate, 148);
-            BOOST_CHECK_EQUAL(true, g.productionControls(st).guide_rate_def == GroupProduction::GuideRateDef::OIL);
+            BOOST_CHECK_EQUAL(true, g.productionControls(st).guide_rate_def == Group2::GuideRateTarget::OIL);
         }
 
         auto g2 = schedule.getGroup2("G2", 2);
@@ -1238,7 +1238,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDT) {
     const auto& ovap = schedule.getOilVaporizationProperties(currentStep);
 
     BOOST_CHECK_EQUAL(true,   ovap.getOption(0));
-    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::DRDT);
+    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRDT);
+
     BOOST_CHECK_EQUAL(true,   ovap.drsdtActive());
     BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
 }
@@ -1276,7 +1277,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTR) {
         BOOST_CHECK_EQUAL(true,   ovap.getOption(i));
     }
 
-    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::DRDT);
+    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap.drsdtActive());
     BOOST_CHECK_EQUAL(false,   ovap.drvdtActive());
 }
@@ -1316,19 +1317,19 @@ BOOST_AUTO_TEST_CASE(createDeckWithDRSDTthenDRVDT) {
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
 
     const OilVaporizationProperties& ovap1 = schedule.getOilVaporizationProperties(1);
-    BOOST_CHECK_EQUAL(ovap1.getType(), Opm::OilVaporizationEnum::DRDT);
+    BOOST_CHECK(ovap1.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap1.drsdtActive());
     BOOST_CHECK_EQUAL(false,   ovap1.drvdtActive());
 
     const OilVaporizationProperties& ovap2 = schedule.getOilVaporizationProperties(2);
     //double value =  ovap2.getMaxDRVDT(0);
     //BOOST_CHECK_EQUAL(1.1574074074074074e-06, value);
-    BOOST_CHECK_EQUAL(ovap2.getType(), Opm::OilVaporizationEnum::DRDT);
+    BOOST_CHECK(ovap2.getType() == OilVaporizationProperties::OilVaporization::DRDT);
     BOOST_CHECK_EQUAL(true,   ovap2.drvdtActive());
     BOOST_CHECK_EQUAL(true,   ovap2.drsdtActive());
 
     const OilVaporizationProperties& ovap3 = schedule.getOilVaporizationProperties(3);
-    BOOST_CHECK_EQUAL(ovap3.getType(), Opm::OilVaporizationEnum::VAPPARS);
+    BOOST_CHECK(ovap3.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
     BOOST_CHECK_EQUAL(false,   ovap3.drvdtActive());
     BOOST_CHECK_EQUAL(false,   ovap3.drsdtActive());
 
@@ -1357,7 +1358,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithVAPPARS) {
     size_t currentStep = 1;
     BOOST_CHECK_EQUAL(schedule.hasOilVaporizationProperties(), true);
     const OilVaporizationProperties& ovap = schedule.getOilVaporizationProperties(currentStep);
-    BOOST_CHECK_EQUAL(ovap.getType(), Opm::OilVaporizationEnum::VAPPARS);
+    BOOST_CHECK(ovap.getType() == OilVaporizationProperties::OilVaporization::VAPPARS);
     double vap1 =  ovap.getVap1(0);
     BOOST_CHECK_EQUAL(2, vap1);
     double vap2 =  ovap.getVap2(0);
@@ -1455,13 +1456,13 @@ BOOST_AUTO_TEST_CASE(changeBhpLimitInHistoryModeWithWeltarg) {
     BOOST_CHECK_EQUAL(sched.getWell2("I", 1).getInjectionProperties().BHPLimit.get<double>(), 600 * 1e5); // 1
     BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().BHPLimit.get<double>(), 600 * 1e5); // 2
 
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), true);
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 2).getInjectionProperties().hasInjectionControl(Opm::Well2::InjectorCMode::BHP), true);
 
     // The well is producer for timestep 3 and the injection properties BHPLimit should be set to zero.
     BOOST_CHECK(sched.getWell2("I", 3).isProducer());
     BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getInjectionProperties().BHPLimit.get<double>(), 0); // 3
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::BHP), true );
-    BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().hasInjectionControl(Opm::WellInjector::BHP), true );
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 3).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::BHP), true );
+    BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().hasInjectionControl(Opm::Well2::InjectorCMode::BHP), true );
     BOOST_CHECK_EQUAL(sched.getWell2("I", 4).getInjectionProperties().BHPLimit.get<double>(), 6891.2 * 1e5); // 4
 }
 
@@ -1538,20 +1539,20 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
     BOOST_CHECK_THROW(schedule.getWell2("P2", 0), std::invalid_argument);
 
     //10  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK(schedule.getWell2("P1", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
+    BOOST_CHECK(schedule.getWell2("P2", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
 
     //15  OKT 2008
     {
         const auto& props1 = schedule.getWell2("P1", 2).getProductionProperties();
         const auto& props2 = schedule.getWell2("P2", 2).getProductionProperties();
 
-        BOOST_CHECK_EQUAL(props1.controlMode, Opm::WellProducer::RESV);
-        BOOST_CHECK_EQUAL(props2.controlMode, Opm::WellProducer::RESV);
+        BOOST_CHECK(props1.controlMode == Opm::Well2::ProducerCMode::RESV);
+        BOOST_CHECK(props2.controlMode == Opm::Well2::ProducerCMode::RESV);
         // under history mode, a producing well should have only one rate target/limit or have no rate target/limit.
         // the rate target/limit from previous report step should not be kept.
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::ORAT) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::ORAT) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
     }
 
     //18  OKT 2008
@@ -1559,11 +1560,11 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
         const auto& props1 = schedule.getWell2("P1", 3).getProductionProperties();
         const auto& props2 = schedule.getWell2("P2", 3).getProductionProperties();
 
-        BOOST_CHECK_EQUAL(props1.controlMode, Opm::WellProducer::RESV);
-        BOOST_CHECK_EQUAL(props2.controlMode, Opm::WellProducer::RESV);
+        BOOST_CHECK(props1.controlMode == Opm::Well2::ProducerCMode::RESV);
+        BOOST_CHECK(props2.controlMode == Opm::Well2::ProducerCMode::RESV);
 
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::ORAT) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::ORAT) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
     }
 
     // 20 OKT 2008
@@ -1571,13 +1572,13 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
         const auto& props1 = schedule.getWell2("P1", 4).getProductionProperties();
         const auto& props2 = schedule.getWell2("P2", 4).getProductionProperties();
 
-        BOOST_CHECK_EQUAL(props1.controlMode, Opm::WellProducer::LRAT);
-        BOOST_CHECK_EQUAL(props2.controlMode, Opm::WellProducer::LRAT);
+        BOOST_CHECK(props1.controlMode == Opm::Well2::ProducerCMode::LRAT);
+        BOOST_CHECK(props2.controlMode == Opm::Well2::ProducerCMode::LRAT);
 
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::ORAT) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::ORAT) );
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::RESV) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::RESV) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
     }
 
     // 25 OKT 2008
@@ -1585,13 +1586,13 @@ BOOST_AUTO_TEST_CASE(changeModeWithWHISTCTL) {
         const auto& props1 = schedule.getWell2("P1", 5).getProductionProperties();
         const auto& props2 = schedule.getWell2("P2", 5).getProductionProperties();
 
-        BOOST_CHECK_EQUAL(props1.controlMode, Opm::WellProducer::ORAT);
-        BOOST_CHECK_EQUAL(props2.controlMode, Opm::WellProducer::ORAT);
+        BOOST_CHECK(props1.controlMode == Opm::Well2::ProducerCMode::ORAT);
+        BOOST_CHECK(props2.controlMode == Opm::Well2::ProducerCMode::ORAT);
 
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::LRAT) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::LRAT) );
-        BOOST_CHECK( !props1.hasProductionControl(Opm::WellProducer::RESV) );
-        BOOST_CHECK( !props2.hasProductionControl(Opm::WellProducer::RESV) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::LRAT) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::LRAT) );
+        BOOST_CHECK( !props1.hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+        BOOST_CHECK( !props2.hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
     }
 }
 
@@ -1644,17 +1645,17 @@ BOOST_AUTO_TEST_CASE(fromWCONHISTtoWCONPROD) {
     BOOST_CHECK_THROW(schedule.getWell2("P2", 0), std::invalid_argument);
 
     //10  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 1).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
+    BOOST_CHECK(schedule.getWell2("P1", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
+    BOOST_CHECK(schedule.getWell2("P2", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
 
     //15  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 2).getProductionProperties().controlMode, Opm::WellProducer::GRAT);
-    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::WRAT) );
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 2).getProductionProperties().controlMode, Opm::WellProducer::WRAT);
-    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::GRAT) );
+    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::GRAT);
+    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::WRAT) );
+    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::WRAT);
+    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::GRAT) );
     // the previous control limits/targets should not stay
-    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
 }
 
 BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
@@ -1728,38 +1729,38 @@ BOOST_AUTO_TEST_CASE(WHISTCTL_NEW_WELL) {
     Schedule schedule(deck, grid , eclipseProperties, runspec);
 
     //10  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 1).getProductionProperties().controlMode, Opm::WellProducer::GRAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 1).getProductionProperties().controlMode, Opm::WellProducer::GRAT);
+    BOOST_CHECK(schedule.getWell2("P1", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::GRAT);
+    BOOST_CHECK(schedule.getWell2("P2", 1).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::GRAT);
 
     //15  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 2).getProductionProperties().controlMode, Opm::WellProducer::RESV);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 2).getProductionProperties().controlMode, Opm::WellProducer::RESV);
+    BOOST_CHECK(schedule.getWell2("P1", 2).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::RESV);
+    BOOST_CHECK(schedule.getWell2("P2", 2).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::RESV);
     // under history mode, a producing well should have only one rate target/limit or have no rate target/limit.
     // the rate target/limit from previous report step should not be kept.
-    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P1", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 2).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
 
     //18  OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 3).getProductionProperties().controlMode, Opm::WellProducer::RESV);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 3).getProductionProperties().controlMode, Opm::WellProducer::RESV);
-    BOOST_CHECK( !schedule.getWell2("P1", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 3).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
+    BOOST_CHECK(schedule.getWell2("P1", 3).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::RESV);
+    BOOST_CHECK(schedule.getWell2("P2", 3).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::RESV);
+    BOOST_CHECK( !schedule.getWell2("P1", 3).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 3).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
 
     // 20 OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 4).getProductionProperties().controlMode, Opm::WellProducer::LRAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 4).getProductionProperties().controlMode, Opm::WellProducer::LRAT);
-    BOOST_CHECK( !schedule.getWell2("P1", 4).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 4).getProductionProperties().hasProductionControl(Opm::WellProducer::ORAT) );
-    BOOST_CHECK( !schedule.getWell2("P1", 4).getProductionProperties().hasProductionControl(Opm::WellProducer::RESV) );
-    BOOST_CHECK( !schedule.getWell2("P2", 4).getProductionProperties().hasProductionControl(Opm::WellProducer::RESV) );
+    BOOST_CHECK(schedule.getWell2("P1", 4).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::LRAT);
+    BOOST_CHECK(schedule.getWell2("P2", 4).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::LRAT);
+    BOOST_CHECK( !schedule.getWell2("P1", 4).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 4).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::ORAT) );
+    BOOST_CHECK( !schedule.getWell2("P1", 4).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+    BOOST_CHECK( !schedule.getWell2("P2", 4).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
 
     // 25 OKT 2008
-    BOOST_CHECK_EQUAL(schedule.getWell2("P1", 5).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
-    BOOST_CHECK_EQUAL(schedule.getWell2("P2", 5).getProductionProperties().controlMode, Opm::WellProducer::ORAT);
-    BOOST_CHECK( !schedule.getWell2("P1", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::RESV) );
-    BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::RESV) );
-    BOOST_CHECK( !schedule.getWell2("P1", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::LRAT) );
-    BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::WellProducer::LRAT) );
+    BOOST_CHECK(schedule.getWell2("P1", 5).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
+    BOOST_CHECK(schedule.getWell2("P2", 5).getProductionProperties().controlMode == Opm::Well2::ProducerCMode::ORAT);
+    BOOST_CHECK( !schedule.getWell2("P1", 5).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+    BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::RESV) );
+    BOOST_CHECK( !schedule.getWell2("P1", 5).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::LRAT) );
+    BOOST_CHECK( !schedule.getWell2("P2", 5).getProductionProperties().hasProductionControl(Opm::Well2::ProducerCMode::LRAT) );
 }
 
 
@@ -2201,8 +2202,8 @@ BOOST_AUTO_TEST_CASE( complump ) {
             /
     )";
 
-    constexpr auto open = WellCompletion::StateEnum::OPEN;
-    constexpr auto shut = WellCompletion::StateEnum::SHUT;
+    constexpr auto open = Connection::State::OPEN;
+    constexpr auto shut = Connection::State::SHUT;
 
     auto deck = Parser().parseString(input);
     EclipseGrid grid(10,10,10);
@@ -2217,15 +2218,15 @@ BOOST_AUTO_TEST_CASE( complump ) {
     BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 1 ).complnum() );
     BOOST_CHECK_EQUAL( 1, sc0.getFromIJK( 2, 2, 2 ).complnum() );
 
-    BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 0 ).state() );
-    BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 1 ).state() );
-    BOOST_CHECK_EQUAL( shut, sc0.getFromIJK( 2, 2, 2 ).state() );
+    BOOST_CHECK( shut == sc0.getFromIJK( 2, 2, 0 ).state() );
+    BOOST_CHECK( shut == sc0.getFromIJK( 2, 2, 1 ).state() );
+    BOOST_CHECK( shut == sc0.getFromIJK( 2, 2, 2 ).state() );
 
     const auto& sc1  = schedule.getWell2("W1", 1).getConnections();
-    BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 0 ).state() );
-    BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 1 ).state() );
-    BOOST_CHECK_EQUAL( open, sc1.getFromIJK( 2, 2, 2 ).state() );
-    BOOST_CHECK_EQUAL( shut, sc1.getFromIJK( 2, 2, 3 ).state() );
+    BOOST_CHECK( open == sc1.getFromIJK( 2, 2, 0 ).state() );
+    BOOST_CHECK( open == sc1.getFromIJK( 2, 2, 1 ).state() );
+    BOOST_CHECK( open == sc1.getFromIJK( 2, 2, 2 ).state() );
+    BOOST_CHECK( shut == sc1.getFromIJK( 2, 2, 3 ).state() );
 
     const auto& completions = schedule.getWell2("W1", 1).getCompletions();
     BOOST_CHECK_EQUAL(completions.size(), 4);
@@ -2291,8 +2292,8 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
         /
     )";
 
-    constexpr auto open = WellCompletion::StateEnum::OPEN;
-    constexpr auto shut = WellCompletion::StateEnum::SHUT;
+    constexpr auto open = Connection::State::OPEN;
+    constexpr auto shut = Connection::State::SHUT;
 
     auto deck = Parser().parseString( input);
     EclipseGrid grid( 10, 10, 10 );
@@ -2304,50 +2305,50 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     const auto& cs1 = schedule.getWell2("W1", 1).getConnections();
     const auto& cs2 = schedule.getWell2("W1", 2).getConnections();
     BOOST_CHECK_EQUAL( 9U, cs1.size() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 0, 0, 1 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 0 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 1 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 2, 2, 2 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 0 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 3 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 4 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs1.getFromIJK( 1, 1, 5 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 0, 0, 1 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 2, 2, 0 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 2, 2, 1 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 2, 2, 2 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 1, 1, 0 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 1, 1, 3 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 1, 1, 4 ).state() );
+    BOOST_CHECK( shut == cs1.getFromIJK( 1, 1, 5 ).state() );
 
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 0, 0, 1 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs2.getFromIJK( 2, 2, 0 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 2, 2, 1 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 2, 2, 2 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 0 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 3 ).state() );
-    BOOST_CHECK_EQUAL( open, cs2.getFromIJK( 1, 1, 4 ).state() );
-    BOOST_CHECK_EQUAL( shut, cs2.getFromIJK( 1, 1, 5 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 0, 0, 1 ).state() );
+    BOOST_CHECK( shut == cs2.getFromIJK( 2, 2, 0 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 2, 2, 1 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 2, 2, 2 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 1, 1, 0 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 1, 1, 3 ).state() );
+    BOOST_CHECK( open == cs2.getFromIJK( 1, 1, 4 ).state() );
+    BOOST_CHECK( shut == cs2.getFromIJK( 1, 1, 5 ).state() );
 }
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnum2String) {
-    BOOST_CHECK_EQUAL( "AUTO" , WellCompletion::StateEnum2String(WellCompletion::AUTO));
-    BOOST_CHECK_EQUAL( "OPEN" , WellCompletion::StateEnum2String(WellCompletion::OPEN));
-    BOOST_CHECK_EQUAL( "SHUT" , WellCompletion::StateEnum2String(WellCompletion::SHUT));
+    BOOST_CHECK( "AUTO" == Connection::State2String(Connection::State::AUTO));
+    BOOST_CHECK( "OPEN" == Connection::State2String(Connection::State::OPEN));
+    BOOST_CHECK( "SHUT" == Connection::State2String(Connection::State::SHUT));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnumFromString) {
-    BOOST_CHECK_THROW( WellCompletion::StateEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellCompletion::AUTO , WellCompletion::StateEnumFromString("AUTO"));
-    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString("SHUT"));
-    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString("STOP"));
-    BOOST_CHECK_EQUAL( WellCompletion::OPEN , WellCompletion::StateEnumFromString("OPEN"));
+    BOOST_CHECK_THROW( Connection::StateFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Connection::State::AUTO == Connection::StateFromString("AUTO"));
+    BOOST_CHECK( Connection::State::SHUT == Connection::StateFromString("SHUT"));
+    BOOST_CHECK( Connection::State::SHUT == Connection::StateFromString("STOP"));
+    BOOST_CHECK( Connection::State::OPEN == Connection::StateFromString("OPEN"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestCompletionStateEnumLoop) {
-    BOOST_CHECK_EQUAL( WellCompletion::AUTO , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::AUTO ) ));
-    BOOST_CHECK_EQUAL( WellCompletion::SHUT , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::SHUT ) ));
-    BOOST_CHECK_EQUAL( WellCompletion::OPEN , WellCompletion::StateEnumFromString( WellCompletion::StateEnum2String( WellCompletion::OPEN ) ));
+    BOOST_CHECK( Connection::State::AUTO == Connection::StateFromString( Connection::State2String( Connection::State::AUTO ) ));
+    BOOST_CHECK( Connection::State::SHUT == Connection::StateFromString( Connection::State2String( Connection::State::SHUT ) ));
+    BOOST_CHECK( Connection::State::OPEN == Connection::StateFromString( Connection::State2String( Connection::State::OPEN ) ));
 
-    BOOST_CHECK_EQUAL( "AUTO" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "AUTO" ) ));
-    BOOST_CHECK_EQUAL( "OPEN" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "OPEN" ) ));
-    BOOST_CHECK_EQUAL( "SHUT" , WellCompletion::StateEnum2String(WellCompletion::StateEnumFromString(  "SHUT" ) ));
+    BOOST_CHECK( "AUTO" == Connection::State2String(Connection::StateFromString(  "AUTO" ) ));
+    BOOST_CHECK( "OPEN" == Connection::State2String(Connection::StateFromString(  "OPEN" ) ));
+    BOOST_CHECK( "SHUT" == Connection::State2String(Connection::StateFromString(  "SHUT" ) ));
 }
 
 
@@ -2355,233 +2356,227 @@ BOOST_AUTO_TEST_CASE(TestCompletionStateEnumLoop) {
 
 BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnum2String)
 {
-    using namespace WellCompletion;
-
-    BOOST_CHECK_EQUAL("X", DirectionEnum2String(DirectionEnum::X));
-    BOOST_CHECK_EQUAL("Y", DirectionEnum2String(DirectionEnum::Y));
-    BOOST_CHECK_EQUAL("Z", DirectionEnum2String(DirectionEnum::Z));
+    BOOST_CHECK("X" == Connection::Direction2String(Connection::Direction::X));
+    BOOST_CHECK("Y" == Connection::Direction2String(Connection::Direction::Y));
+    BOOST_CHECK("Z" == Connection::Direction2String(Connection::Direction::Z));
 }
 
 BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumFromString)
 {
-    using namespace WellCompletion;
+    BOOST_CHECK_THROW(Connection::DirectionFromString("XXX"), std::invalid_argument);
 
-    BOOST_CHECK_THROW(DirectionEnumFromString("XXX"), std::invalid_argument);
-
-    BOOST_CHECK_EQUAL(DirectionEnum::X, DirectionEnumFromString("X"));
-    BOOST_CHECK_EQUAL(DirectionEnum::Y, DirectionEnumFromString("Y"));
-    BOOST_CHECK_EQUAL(DirectionEnum::Z, DirectionEnumFromString("Z"));
+    BOOST_CHECK(Connection::Direction::X == Connection::DirectionFromString("X"));
+    BOOST_CHECK(Connection::Direction::Y == Connection::DirectionFromString("Y"));
+    BOOST_CHECK(Connection::Direction::Z == Connection::DirectionFromString("Z"));
 }
 
-BOOST_AUTO_TEST_CASE(TestCompletionDirectionEnumLoop)
+BOOST_AUTO_TEST_CASE(TestCompletionConnectionDirectionLoop)
 {
-    using namespace WellCompletion;
+    BOOST_CHECK(Connection::Direction::X == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::X)));
+    BOOST_CHECK(Connection::Direction::Y == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::Y)));
+    BOOST_CHECK(Connection::Direction::Z == Connection::DirectionFromString(Connection::Direction2String(Connection::Direction::Z)));
 
-    BOOST_CHECK_EQUAL(DirectionEnum::X, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::X)));
-    BOOST_CHECK_EQUAL(DirectionEnum::Y, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::Y)));
-    BOOST_CHECK_EQUAL(DirectionEnum::Z, DirectionEnumFromString(DirectionEnum2String(DirectionEnum::Z)));
-
-    BOOST_CHECK_EQUAL("X", DirectionEnum2String(DirectionEnumFromString("X")));
-    BOOST_CHECK_EQUAL("Y", DirectionEnum2String(DirectionEnumFromString("Y")));
-    BOOST_CHECK_EQUAL("Z", DirectionEnum2String(DirectionEnumFromString("Z")));
+    BOOST_CHECK("X" == Connection::Direction2String(Connection::DirectionFromString("X")));
+    BOOST_CHECK("Y" == Connection::Direction2String(Connection::DirectionFromString("Y")));
+    BOOST_CHECK("Z" == Connection::Direction2String(Connection::DirectionFromString("Z")));
 }
 
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnum2String) {
-    BOOST_CHECK_EQUAL( "NONE" , GroupInjection::ControlEnum2String(GroupInjection::NONE));
-    BOOST_CHECK_EQUAL( "RATE" , GroupInjection::ControlEnum2String(GroupInjection::RATE));
-    BOOST_CHECK_EQUAL( "RESV" , GroupInjection::ControlEnum2String(GroupInjection::RESV));
-    BOOST_CHECK_EQUAL( "REIN" , GroupInjection::ControlEnum2String(GroupInjection::REIN));
-    BOOST_CHECK_EQUAL( "VREP" , GroupInjection::ControlEnum2String(GroupInjection::VREP));
-    BOOST_CHECK_EQUAL( "FLD"  , GroupInjection::ControlEnum2String(GroupInjection::FLD));
+    BOOST_CHECK_EQUAL( "NONE" , Group2::InjectionCMode2String(Group2::InjectionCMode::NONE));
+    BOOST_CHECK_EQUAL( "RATE" , Group2::InjectionCMode2String(Group2::InjectionCMode::RATE));
+    BOOST_CHECK_EQUAL( "RESV" , Group2::InjectionCMode2String(Group2::InjectionCMode::RESV));
+    BOOST_CHECK_EQUAL( "REIN" , Group2::InjectionCMode2String(Group2::InjectionCMode::REIN));
+    BOOST_CHECK_EQUAL( "VREP" , Group2::InjectionCMode2String(Group2::InjectionCMode::VREP));
+    BOOST_CHECK_EQUAL( "FLD"  , Group2::InjectionCMode2String(Group2::InjectionCMode::FLD));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnumFromString) {
-    BOOST_CHECK_THROW( GroupInjection::ControlEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( GroupInjection::NONE , GroupInjection::ControlEnumFromString("NONE"));
-    BOOST_CHECK_EQUAL( GroupInjection::RATE , GroupInjection::ControlEnumFromString("RATE"));
-    BOOST_CHECK_EQUAL( GroupInjection::RESV , GroupInjection::ControlEnumFromString("RESV"));
-    BOOST_CHECK_EQUAL( GroupInjection::REIN , GroupInjection::ControlEnumFromString("REIN"));
-    BOOST_CHECK_EQUAL( GroupInjection::VREP , GroupInjection::ControlEnumFromString("VREP"));
-    BOOST_CHECK_EQUAL( GroupInjection::FLD  , GroupInjection::ControlEnumFromString("FLD"));
+    BOOST_CHECK_THROW( Group2::InjectionCModeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Group2::InjectionCMode::NONE == Group2::InjectionCModeFromString("NONE"));
+    BOOST_CHECK( Group2::InjectionCMode::RATE == Group2::InjectionCModeFromString("RATE"));
+    BOOST_CHECK( Group2::InjectionCMode::RESV == Group2::InjectionCModeFromString("RESV"));
+    BOOST_CHECK( Group2::InjectionCMode::REIN == Group2::InjectionCModeFromString("REIN"));
+    BOOST_CHECK( Group2::InjectionCMode::VREP == Group2::InjectionCModeFromString("VREP"));
+    BOOST_CHECK( Group2::InjectionCMode::FLD  == Group2::InjectionCModeFromString("FLD"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestGroupInjectionControlEnumLoop) {
-    BOOST_CHECK_EQUAL( GroupInjection::NONE , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::NONE ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::RATE , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::RATE ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::RESV , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::RESV ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::REIN , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::REIN ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::VREP , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::VREP ) ));
-    BOOST_CHECK_EQUAL( GroupInjection::FLD  , GroupInjection::ControlEnumFromString( GroupInjection::ControlEnum2String( GroupInjection::FLD ) ));
+    BOOST_CHECK( Group2::InjectionCMode::NONE == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::NONE ) ));
+    BOOST_CHECK( Group2::InjectionCMode::RATE == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::RATE ) ));
+    BOOST_CHECK( Group2::InjectionCMode::RESV == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::RESV ) ));
+    BOOST_CHECK( Group2::InjectionCMode::REIN == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::REIN ) ));
+    BOOST_CHECK( Group2::InjectionCMode::VREP == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::VREP ) ));
+    BOOST_CHECK( Group2::InjectionCMode::FLD  == Group2::InjectionCModeFromString( Group2::InjectionCMode2String( Group2::InjectionCMode::FLD ) ));
 
-    BOOST_CHECK_EQUAL( "NONE" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "NONE" ) ));
-    BOOST_CHECK_EQUAL( "RATE" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "RATE" ) ));
-    BOOST_CHECK_EQUAL( "RESV" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "RESV" ) ));
-    BOOST_CHECK_EQUAL( "REIN" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "REIN" ) ));
-    BOOST_CHECK_EQUAL( "VREP" , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "VREP" ) ));
-    BOOST_CHECK_EQUAL( "FLD"  , GroupInjection::ControlEnum2String(GroupInjection::ControlEnumFromString( "FLD"  ) ));
+    BOOST_CHECK_EQUAL( "NONE" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "NONE" ) ));
+    BOOST_CHECK_EQUAL( "RATE" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "RATE" ) ));
+    BOOST_CHECK_EQUAL( "RESV" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "RESV" ) ));
+    BOOST_CHECK_EQUAL( "REIN" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "REIN" ) ));
+    BOOST_CHECK_EQUAL( "VREP" , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "VREP" ) ));
+    BOOST_CHECK_EQUAL( "FLD"  , Group2::InjectionCMode2String(Group2::InjectionCModeFromString( "FLD"  ) ));
 }
 
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionControlEnum2String) {
-    BOOST_CHECK_EQUAL( "NONE" , GroupProduction::ControlEnum2String(GroupProduction::NONE));
-    BOOST_CHECK_EQUAL( "ORAT" , GroupProduction::ControlEnum2String(GroupProduction::ORAT));
-    BOOST_CHECK_EQUAL( "WRAT" , GroupProduction::ControlEnum2String(GroupProduction::WRAT));
-    BOOST_CHECK_EQUAL( "GRAT" , GroupProduction::ControlEnum2String(GroupProduction::GRAT));
-    BOOST_CHECK_EQUAL( "LRAT" , GroupProduction::ControlEnum2String(GroupProduction::LRAT));
-    BOOST_CHECK_EQUAL( "CRAT" , GroupProduction::ControlEnum2String(GroupProduction::CRAT));
-    BOOST_CHECK_EQUAL( "RESV" , GroupProduction::ControlEnum2String(GroupProduction::RESV));
-    BOOST_CHECK_EQUAL( "PRBL" , GroupProduction::ControlEnum2String(GroupProduction::PRBL));
+    BOOST_CHECK_EQUAL( "NONE" , Group2::ProductionCMode2String(Group2::ProductionCMode::NONE));
+    BOOST_CHECK_EQUAL( "ORAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::ORAT));
+    BOOST_CHECK_EQUAL( "WRAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::WRAT));
+    BOOST_CHECK_EQUAL( "GRAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::GRAT));
+    BOOST_CHECK_EQUAL( "LRAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::LRAT));
+    BOOST_CHECK_EQUAL( "CRAT" , Group2::ProductionCMode2String(Group2::ProductionCMode::CRAT));
+    BOOST_CHECK_EQUAL( "RESV" , Group2::ProductionCMode2String(Group2::ProductionCMode::RESV));
+    BOOST_CHECK_EQUAL( "PRBL" , Group2::ProductionCMode2String(Group2::ProductionCMode::PRBL));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionControlEnumFromString) {
-    BOOST_CHECK_THROW( GroupProduction::ControlEnumFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL(GroupProduction::NONE  , GroupProduction::ControlEnumFromString("NONE"));
-    BOOST_CHECK_EQUAL(GroupProduction::ORAT  , GroupProduction::ControlEnumFromString("ORAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::WRAT  , GroupProduction::ControlEnumFromString("WRAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::GRAT  , GroupProduction::ControlEnumFromString("GRAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::LRAT  , GroupProduction::ControlEnumFromString("LRAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::CRAT  , GroupProduction::ControlEnumFromString("CRAT"));
-    BOOST_CHECK_EQUAL(GroupProduction::RESV  , GroupProduction::ControlEnumFromString("RESV"));
-    BOOST_CHECK_EQUAL(GroupProduction::PRBL  , GroupProduction::ControlEnumFromString("PRBL"));
+    BOOST_CHECK_THROW(Group2::ProductionCModeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK(Group2::ProductionCMode::NONE  == Group2::ProductionCModeFromString("NONE"));
+    BOOST_CHECK(Group2::ProductionCMode::ORAT  == Group2::ProductionCModeFromString("ORAT"));
+    BOOST_CHECK(Group2::ProductionCMode::WRAT  == Group2::ProductionCModeFromString("WRAT"));
+    BOOST_CHECK(Group2::ProductionCMode::GRAT  == Group2::ProductionCModeFromString("GRAT"));
+    BOOST_CHECK(Group2::ProductionCMode::LRAT  == Group2::ProductionCModeFromString("LRAT"));
+    BOOST_CHECK(Group2::ProductionCMode::CRAT  == Group2::ProductionCModeFromString("CRAT"));
+    BOOST_CHECK(Group2::ProductionCMode::RESV  == Group2::ProductionCModeFromString("RESV"));
+    BOOST_CHECK(Group2::ProductionCMode::PRBL  == Group2::ProductionCModeFromString("PRBL"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionControlEnumLoop) {
-    BOOST_CHECK_EQUAL( GroupProduction::NONE, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::NONE ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::ORAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::ORAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::WRAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::WRAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::GRAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::GRAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::LRAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::LRAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::CRAT, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::CRAT ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::RESV, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::RESV ) ));
-    BOOST_CHECK_EQUAL( GroupProduction::PRBL, GroupProduction::ControlEnumFromString( GroupProduction::ControlEnum2String( GroupProduction::PRBL ) ));
+    BOOST_CHECK( Group2::ProductionCMode::NONE == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::NONE ) ));
+    BOOST_CHECK( Group2::ProductionCMode::ORAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::ORAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::WRAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::WRAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::GRAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::GRAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::LRAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::LRAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::CRAT == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::CRAT ) ));
+    BOOST_CHECK( Group2::ProductionCMode::RESV == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::RESV ) ));
+    BOOST_CHECK( Group2::ProductionCMode::PRBL == Group2::ProductionCModeFromString( Group2::ProductionCMode2String( Group2::ProductionCMode::PRBL ) ));
 
-    BOOST_CHECK_EQUAL( "NONE" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "NONE" ) ));
-    BOOST_CHECK_EQUAL( "ORAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "ORAT" ) ));
-    BOOST_CHECK_EQUAL( "WRAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "WRAT" ) ));
-    BOOST_CHECK_EQUAL( "GRAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "GRAT" ) ));
-    BOOST_CHECK_EQUAL( "LRAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "LRAT" ) ));
-    BOOST_CHECK_EQUAL( "CRAT" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "CRAT" ) ));
-    BOOST_CHECK_EQUAL( "RESV" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "RESV" ) ));
-    BOOST_CHECK_EQUAL( "PRBL" , GroupProduction::ControlEnum2String(GroupProduction::ControlEnumFromString( "PRBL" ) ));
+    BOOST_CHECK_EQUAL( "NONE" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "NONE" ) ));
+    BOOST_CHECK_EQUAL( "ORAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "ORAT" ) ));
+    BOOST_CHECK_EQUAL( "WRAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "WRAT" ) ));
+    BOOST_CHECK_EQUAL( "GRAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "GRAT" ) ));
+    BOOST_CHECK_EQUAL( "LRAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "LRAT" ) ));
+    BOOST_CHECK_EQUAL( "CRAT" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "CRAT" ) ));
+    BOOST_CHECK_EQUAL( "RESV" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "RESV" ) ));
+    BOOST_CHECK_EQUAL( "PRBL" , Group2::ProductionCMode2String(Group2::ProductionCModeFromString( "PRBL" ) ));
 }
 
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitControlEnum2String) {
-    BOOST_CHECK_EQUAL( "NONE"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::NONE));
-    BOOST_CHECK_EQUAL( "CON"      , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::CON));
-    BOOST_CHECK_EQUAL( "+CON"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::CON_PLUS));
-    BOOST_CHECK_EQUAL( "WELL"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::WELL));
-    BOOST_CHECK_EQUAL( "PLUG"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::PLUG));
-    BOOST_CHECK_EQUAL( "RATE"     , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::RATE));
+    BOOST_CHECK_EQUAL( "NONE"     , Group2::ExceedAction2String(Group2::ExceedAction::NONE));
+    BOOST_CHECK_EQUAL( "CON"      , Group2::ExceedAction2String(Group2::ExceedAction::CON));
+    BOOST_CHECK_EQUAL( "+CON"     , Group2::ExceedAction2String(Group2::ExceedAction::CON_PLUS));
+    BOOST_CHECK_EQUAL( "WELL"     , Group2::ExceedAction2String(Group2::ExceedAction::WELL));
+    BOOST_CHECK_EQUAL( "PLUG"     , Group2::ExceedAction2String(Group2::ExceedAction::PLUG));
+    BOOST_CHECK_EQUAL( "RATE"     , Group2::ExceedAction2String(Group2::ExceedAction::RATE));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumFromString) {
-    BOOST_CHECK_THROW( GroupProductionExceedLimit::ActionEnumFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK_THROW( Group2::ExceedActionFromString("XXX") , std::invalid_argument );
 
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::NONE     , GroupProductionExceedLimit::ActionEnumFromString("NONE"));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::CON      , GroupProductionExceedLimit::ActionEnumFromString("CON" ));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::CON_PLUS , GroupProductionExceedLimit::ActionEnumFromString("+CON"));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::WELL     , GroupProductionExceedLimit::ActionEnumFromString("WELL"));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::PLUG     , GroupProductionExceedLimit::ActionEnumFromString("PLUG"));
-    BOOST_CHECK_EQUAL(GroupProductionExceedLimit::RATE     , GroupProductionExceedLimit::ActionEnumFromString("RATE"));
+    BOOST_CHECK(Group2::ExceedAction::NONE     == Group2::ExceedActionFromString("NONE"));
+    BOOST_CHECK(Group2::ExceedAction::CON      == Group2::ExceedActionFromString("CON" ));
+    BOOST_CHECK(Group2::ExceedAction::CON_PLUS == Group2::ExceedActionFromString("+CON"));
+    BOOST_CHECK(Group2::ExceedAction::WELL     == Group2::ExceedActionFromString("WELL"));
+    BOOST_CHECK(Group2::ExceedAction::PLUG     == Group2::ExceedActionFromString("PLUG"));
+    BOOST_CHECK(Group2::ExceedAction::RATE     == Group2::ExceedActionFromString("RATE"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestGroupProductionExceedLimitActionEnumLoop) {
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::NONE     , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::NONE     ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::CON      , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::CON      ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::CON_PLUS , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::CON_PLUS ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::WELL     , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::WELL     ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::PLUG     , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::PLUG     ) ));
-    BOOST_CHECK_EQUAL( GroupProductionExceedLimit::RATE     , GroupProductionExceedLimit::ActionEnumFromString( GroupProductionExceedLimit::ActionEnum2String( GroupProductionExceedLimit::RATE     ) ));
+    BOOST_CHECK( Group2::ExceedAction::NONE     == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::NONE     ) ));
+    BOOST_CHECK( Group2::ExceedAction::CON      == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::CON      ) ));
+    BOOST_CHECK( Group2::ExceedAction::CON_PLUS == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::CON_PLUS ) ));
+    BOOST_CHECK( Group2::ExceedAction::WELL     == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::WELL     ) ));
+    BOOST_CHECK( Group2::ExceedAction::PLUG     == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::PLUG     ) ));
+    BOOST_CHECK( Group2::ExceedAction::RATE     == Group2::ExceedActionFromString( Group2::ExceedAction2String( Group2::ExceedAction::RATE     ) ));
 
-    BOOST_CHECK_EQUAL("NONE" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "NONE" ) ));
-    BOOST_CHECK_EQUAL("CON"  , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "CON"  ) ));
-    BOOST_CHECK_EQUAL("+CON" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "+CON" ) ));
-    BOOST_CHECK_EQUAL("WELL" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "WELL" ) ));
-    BOOST_CHECK_EQUAL("PLUG" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "PLUG" ) ));
-    BOOST_CHECK_EQUAL("RATE" , GroupProductionExceedLimit::ActionEnum2String(GroupProductionExceedLimit::ActionEnumFromString( "RATE" ) ));
+    BOOST_CHECK_EQUAL("NONE" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "NONE" ) ));
+    BOOST_CHECK_EQUAL("CON"  , Group2::ExceedAction2String(Group2::ExceedActionFromString( "CON"  ) ));
+    BOOST_CHECK_EQUAL("+CON" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "+CON" ) ));
+    BOOST_CHECK_EQUAL("WELL" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "WELL" ) ));
+    BOOST_CHECK_EQUAL("PLUG" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "PLUG" ) ));
+    BOOST_CHECK_EQUAL("RATE" , Group2::ExceedAction2String(Group2::ExceedActionFromString( "RATE" ) ));
 }
 
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(TestInjectorEnum2String) {
-    BOOST_CHECK_EQUAL( "OIL"  ,  WellInjector::Type2String(WellInjector::OIL));
-    BOOST_CHECK_EQUAL( "GAS"  ,  WellInjector::Type2String(WellInjector::GAS));
-    BOOST_CHECK_EQUAL( "WATER" , WellInjector::Type2String(WellInjector::WATER));
-    BOOST_CHECK_EQUAL( "MULTI" , WellInjector::Type2String(WellInjector::MULTI));
+    BOOST_CHECK_EQUAL( "OIL"  ,  Well2::InjectorType2String(Well2::InjectorType::OIL));
+    BOOST_CHECK_EQUAL( "GAS"  ,  Well2::InjectorType2String(Well2::InjectorType::GAS));
+    BOOST_CHECK_EQUAL( "WATER" , Well2::InjectorType2String(Well2::InjectorType::WATER));
+    BOOST_CHECK_EQUAL( "MULTI" , Well2::InjectorType2String(Well2::InjectorType::MULTI));
 }
 
 
 BOOST_AUTO_TEST_CASE(TestInjectorEnumFromString) {
-    BOOST_CHECK_THROW( WellInjector::TypeFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellInjector::OIL   , WellInjector::TypeFromString("OIL"));
-    BOOST_CHECK_EQUAL( WellInjector::WATER , WellInjector::TypeFromString("WATER"));
-    BOOST_CHECK_EQUAL( WellInjector::WATER , WellInjector::TypeFromString("WAT"));
-    BOOST_CHECK_EQUAL( WellInjector::GAS   , WellInjector::TypeFromString("GAS"));
-    BOOST_CHECK_EQUAL( WellInjector::MULTI , WellInjector::TypeFromString("MULTI"));
+    BOOST_CHECK_THROW( Well2::InjectorTypeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well2::InjectorType::OIL   == Well2::InjectorTypeFromString("OIL"));
+    BOOST_CHECK( Well2::InjectorType::WATER == Well2::InjectorTypeFromString("WATER"));
+    BOOST_CHECK( Well2::InjectorType::WATER == Well2::InjectorTypeFromString("WAT"));
+    BOOST_CHECK( Well2::InjectorType::GAS   == Well2::InjectorTypeFromString("GAS"));
+    BOOST_CHECK( Well2::InjectorType::MULTI == Well2::InjectorTypeFromString("MULTI"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(TestInjectorEnumLoop) {
-    BOOST_CHECK_EQUAL( WellInjector::OIL     , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::OIL ) ));
-    BOOST_CHECK_EQUAL( WellInjector::WATER   , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::WATER ) ));
-    BOOST_CHECK_EQUAL( WellInjector::GAS     , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::GAS ) ));
-    BOOST_CHECK_EQUAL( WellInjector::MULTI   , WellInjector::TypeFromString( WellInjector::Type2String( WellInjector::MULTI ) ));
+    BOOST_CHECK( Well2::InjectorType::OIL   == Well2::InjectorTypeFromString( Well2::InjectorType2String( Well2::InjectorType::OIL ) ));
+    BOOST_CHECK( Well2::InjectorType::WATER == Well2::InjectorTypeFromString( Well2::InjectorType2String( Well2::InjectorType::WATER ) ));
+    BOOST_CHECK( Well2::InjectorType::GAS   == Well2::InjectorTypeFromString( Well2::InjectorType2String( Well2::InjectorType::GAS ) ));
+    BOOST_CHECK( Well2::InjectorType::MULTI == Well2::InjectorTypeFromString( Well2::InjectorType2String( Well2::InjectorType::MULTI ) ));
 
-    BOOST_CHECK_EQUAL( "MULTI"    , WellInjector::Type2String(WellInjector::TypeFromString(  "MULTI" ) ));
-    BOOST_CHECK_EQUAL( "OIL"      , WellInjector::Type2String(WellInjector::TypeFromString(  "OIL" ) ));
-    BOOST_CHECK_EQUAL( "GAS"      , WellInjector::Type2String(WellInjector::TypeFromString(  "GAS" ) ));
-    BOOST_CHECK_EQUAL( "WATER"    , WellInjector::Type2String(WellInjector::TypeFromString(  "WATER" ) ));
+    BOOST_CHECK_EQUAL( "MULTI"    , Well2::InjectorType2String(Well2::InjectorTypeFromString(  "MULTI" ) ));
+    BOOST_CHECK_EQUAL( "OIL"      , Well2::InjectorType2String(Well2::InjectorTypeFromString(  "OIL" ) ));
+    BOOST_CHECK_EQUAL( "GAS"      , Well2::InjectorType2String(Well2::InjectorTypeFromString(  "GAS" ) ));
+    BOOST_CHECK_EQUAL( "WATER"    , Well2::InjectorType2String(Well2::InjectorTypeFromString(  "WATER" ) ));
 }
 
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InjectorCOntrolMopdeEnum2String) {
-    BOOST_CHECK_EQUAL( "RATE"  ,  WellInjector::ControlMode2String(WellInjector::RATE));
-    BOOST_CHECK_EQUAL( "RESV"  ,  WellInjector::ControlMode2String(WellInjector::RESV));
-    BOOST_CHECK_EQUAL( "BHP" , WellInjector::ControlMode2String(WellInjector::BHP));
-    BOOST_CHECK_EQUAL( "THP" , WellInjector::ControlMode2String(WellInjector::THP));
-    BOOST_CHECK_EQUAL( "GRUP" , WellInjector::ControlMode2String(WellInjector::GRUP));
+    BOOST_CHECK_EQUAL( "RATE"  , Well2::InjectorCMode2String(Well2::InjectorCMode::RATE));
+    BOOST_CHECK_EQUAL( "RESV"  , Well2::InjectorCMode2String(Well2::InjectorCMode::RESV));
+    BOOST_CHECK_EQUAL( "BHP"   , Well2::InjectorCMode2String(Well2::InjectorCMode::BHP));
+    BOOST_CHECK_EQUAL( "THP"   , Well2::InjectorCMode2String(Well2::InjectorCMode::THP));
+    BOOST_CHECK_EQUAL( "GRUP"  , Well2::InjectorCMode2String(Well2::InjectorCMode::GRUP));
 }
 
 
 BOOST_AUTO_TEST_CASE(InjectorControlModeEnumFromString) {
-    BOOST_CHECK_THROW( WellInjector::ControlModeFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellInjector::RATE   , WellInjector::ControlModeFromString("RATE"));
-    BOOST_CHECK_EQUAL( WellInjector::BHP , WellInjector::ControlModeFromString("BHP"));
-    BOOST_CHECK_EQUAL( WellInjector::RESV   , WellInjector::ControlModeFromString("RESV"));
-    BOOST_CHECK_EQUAL( WellInjector::THP , WellInjector::ControlModeFromString("THP"));
-    BOOST_CHECK_EQUAL( WellInjector::GRUP , WellInjector::ControlModeFromString("GRUP"));
+    BOOST_CHECK_THROW( Well2::InjectorCModeFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well2::InjectorCMode::RATE == Well2::InjectorCModeFromString("RATE"));
+    BOOST_CHECK( Well2::InjectorCMode::BHP  == Well2::InjectorCModeFromString("BHP"));
+    BOOST_CHECK( Well2::InjectorCMode::RESV == Well2::InjectorCModeFromString("RESV"));
+    BOOST_CHECK( Well2::InjectorCMode::THP  == Well2::InjectorCModeFromString("THP"));
+    BOOST_CHECK( Well2::InjectorCMode::GRUP == Well2::InjectorCModeFromString("GRUP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(InjectorControlModeEnumLoop) {
-    BOOST_CHECK_EQUAL( WellInjector::RATE     , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::RATE ) ));
-    BOOST_CHECK_EQUAL( WellInjector::BHP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::BHP ) ));
-    BOOST_CHECK_EQUAL( WellInjector::RESV     , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::RESV ) ));
-    BOOST_CHECK_EQUAL( WellInjector::THP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::THP ) ));
-    BOOST_CHECK_EQUAL( WellInjector::GRUP   , WellInjector::ControlModeFromString( WellInjector::ControlMode2String( WellInjector::GRUP ) ));
+    BOOST_CHECK( Well2::InjectorCMode::RATE == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::RATE ) ));
+    BOOST_CHECK( Well2::InjectorCMode::BHP  == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::BHP ) ));
+    BOOST_CHECK( Well2::InjectorCMode::RESV == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::RESV ) ));
+    BOOST_CHECK( Well2::InjectorCMode::THP  == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::THP ) ));
+    BOOST_CHECK( Well2::InjectorCMode::GRUP == Well2::InjectorCModeFromString( Well2::InjectorCMode2String( Well2::InjectorCMode::GRUP ) ));
 
-    BOOST_CHECK_EQUAL( "THP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "THP" ) ));
-    BOOST_CHECK_EQUAL( "RATE"      , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "RATE" ) ));
-    BOOST_CHECK_EQUAL( "RESV"      , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "RESV" ) ));
-    BOOST_CHECK_EQUAL( "BHP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "BHP" ) ));
-    BOOST_CHECK_EQUAL( "GRUP"    , WellInjector::ControlMode2String(WellInjector::ControlModeFromString(  "GRUP" ) ));
+    BOOST_CHECK_EQUAL( "THP"  , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "THP" ) ));
+    BOOST_CHECK_EQUAL( "RATE" , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "RATE" ) ));
+    BOOST_CHECK_EQUAL( "RESV" , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "RESV" ) ));
+    BOOST_CHECK_EQUAL( "BHP"  , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "BHP" ) ));
+    BOOST_CHECK_EQUAL( "GRUP" , Well2::InjectorCMode2String(Well2::InjectorCModeFromString(  "GRUP" ) ));
 }
 
 
@@ -2589,33 +2584,33 @@ BOOST_AUTO_TEST_CASE(InjectorControlModeEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnum2String) {
-    BOOST_CHECK_EQUAL( "OPEN"  ,  WellCommon::Status2String(WellCommon::OPEN));
-    BOOST_CHECK_EQUAL( "SHUT"  ,  WellCommon::Status2String(WellCommon::SHUT));
-    BOOST_CHECK_EQUAL( "AUTO"   ,  WellCommon::Status2String(WellCommon::AUTO));
-    BOOST_CHECK_EQUAL( "STOP"   ,  WellCommon::Status2String(WellCommon::STOP));
+    BOOST_CHECK_EQUAL( "OPEN",  Well2::Status2String(Well2::Status::OPEN));
+    BOOST_CHECK_EQUAL( "SHUT",  Well2::Status2String(Well2::Status::SHUT));
+    BOOST_CHECK_EQUAL( "AUTO",  Well2::Status2String(Well2::Status::AUTO));
+    BOOST_CHECK_EQUAL( "STOP",  Well2::Status2String(Well2::Status::STOP));
 }
 
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnumFromString) {
-    BOOST_CHECK_THROW( WellCommon::StatusFromString("XXX") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellCommon::OPEN   , WellCommon::StatusFromString("OPEN"));
-    BOOST_CHECK_EQUAL( WellCommon::AUTO , WellCommon::StatusFromString("AUTO"));
-    BOOST_CHECK_EQUAL( WellCommon::SHUT   , WellCommon::StatusFromString("SHUT"));
-    BOOST_CHECK_EQUAL( WellCommon::STOP , WellCommon::StatusFromString("STOP"));
+    BOOST_CHECK_THROW( Well2::StatusFromString("XXX") , std::invalid_argument );
+    BOOST_CHECK( Well2::Status::OPEN == Well2::StatusFromString("OPEN"));
+    BOOST_CHECK( Well2::Status::AUTO == Well2::StatusFromString("AUTO"));
+    BOOST_CHECK( Well2::Status::SHUT == Well2::StatusFromString("SHUT"));
+    BOOST_CHECK( Well2::Status::STOP == Well2::StatusFromString("STOP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(InjectorStatusEnumLoop) {
-    BOOST_CHECK_EQUAL( WellCommon::OPEN     , WellCommon::StatusFromString( WellCommon::Status2String( WellCommon::OPEN ) ));
-    BOOST_CHECK_EQUAL( WellCommon::AUTO   , WellCommon::StatusFromString( WellCommon::Status2String( WellCommon::AUTO ) ));
-    BOOST_CHECK_EQUAL( WellCommon::SHUT     , WellCommon::StatusFromString( WellCommon::Status2String( WellCommon::SHUT ) ));
-    BOOST_CHECK_EQUAL( WellCommon::STOP   , WellCommon::StatusFromString( WellCommon::Status2String( WellCommon::STOP ) ));
+    BOOST_CHECK( Well2::Status::OPEN == Well2::StatusFromString( Well2::Status2String( Well2::Status::OPEN ) ));
+    BOOST_CHECK( Well2::Status::AUTO == Well2::StatusFromString( Well2::Status2String( Well2::Status::AUTO ) ));
+    BOOST_CHECK( Well2::Status::SHUT == Well2::StatusFromString( Well2::Status2String( Well2::Status::SHUT ) ));
+    BOOST_CHECK( Well2::Status::STOP == Well2::StatusFromString( Well2::Status2String( Well2::Status::STOP ) ));
 
-    BOOST_CHECK_EQUAL( "STOP"    , WellCommon::Status2String(WellCommon::StatusFromString(  "STOP" ) ));
-    BOOST_CHECK_EQUAL( "OPEN"      , WellCommon::Status2String(WellCommon::StatusFromString(  "OPEN" ) ));
-    BOOST_CHECK_EQUAL( "SHUT"      , WellCommon::Status2String(WellCommon::StatusFromString(  "SHUT" ) ));
-    BOOST_CHECK_EQUAL( "AUTO"    , WellCommon::Status2String(WellCommon::StatusFromString(  "AUTO" ) ));
+    BOOST_CHECK_EQUAL( "STOP", Well2::Status2String(Well2::StatusFromString(  "STOP" ) ));
+    BOOST_CHECK_EQUAL( "OPEN", Well2::Status2String(Well2::StatusFromString(  "OPEN" ) ));
+    BOOST_CHECK_EQUAL( "SHUT", Well2::Status2String(Well2::StatusFromString(  "SHUT" ) ));
+    BOOST_CHECK_EQUAL( "AUTO", Well2::Status2String(Well2::StatusFromString(  "AUTO" ) ));
 }
 
 
@@ -2623,110 +2618,110 @@ BOOST_AUTO_TEST_CASE(InjectorStatusEnumLoop) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(ProducerCOntrolMopdeEnum2String) {
-    BOOST_CHECK_EQUAL( "ORAT"  ,  WellProducer::ControlMode2String(WellProducer::ORAT));
-    BOOST_CHECK_EQUAL( "WRAT"  ,  WellProducer::ControlMode2String(WellProducer::WRAT));
-    BOOST_CHECK_EQUAL( "GRAT"  , WellProducer::ControlMode2String(WellProducer::GRAT));
-    BOOST_CHECK_EQUAL( "LRAT"  , WellProducer::ControlMode2String(WellProducer::LRAT));
-    BOOST_CHECK_EQUAL( "CRAT"  , WellProducer::ControlMode2String(WellProducer::CRAT));
-    BOOST_CHECK_EQUAL( "RESV"  ,  WellProducer::ControlMode2String(WellProducer::RESV));
-    BOOST_CHECK_EQUAL( "BHP"   , WellProducer::ControlMode2String(WellProducer::BHP));
-    BOOST_CHECK_EQUAL( "THP"   , WellProducer::ControlMode2String(WellProducer::THP));
-    BOOST_CHECK_EQUAL( "GRUP"  , WellProducer::ControlMode2String(WellProducer::GRUP));
+    BOOST_CHECK_EQUAL( "ORAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::ORAT));
+    BOOST_CHECK_EQUAL( "WRAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::WRAT));
+    BOOST_CHECK_EQUAL( "GRAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::GRAT));
+    BOOST_CHECK_EQUAL( "LRAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::LRAT));
+    BOOST_CHECK_EQUAL( "CRAT"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::CRAT));
+    BOOST_CHECK_EQUAL( "RESV"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::RESV));
+    BOOST_CHECK_EQUAL( "BHP"   ,  Well2::ProducerCMode2String(Well2::ProducerCMode::BHP));
+    BOOST_CHECK_EQUAL( "THP"   ,  Well2::ProducerCMode2String(Well2::ProducerCMode::THP));
+    BOOST_CHECK_EQUAL( "GRUP"  ,  Well2::ProducerCMode2String(Well2::ProducerCMode::GRUP));
 }
 
 
 BOOST_AUTO_TEST_CASE(ProducerControlModeEnumFromString) {
-    BOOST_CHECK_THROW( WellProducer::ControlModeFromString("XRAT") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( WellProducer::ORAT   , WellProducer::ControlModeFromString("ORAT"));
-    BOOST_CHECK_EQUAL( WellProducer::WRAT   , WellProducer::ControlModeFromString("WRAT"));
-    BOOST_CHECK_EQUAL( WellProducer::GRAT   , WellProducer::ControlModeFromString("GRAT"));
-    BOOST_CHECK_EQUAL( WellProducer::LRAT   , WellProducer::ControlModeFromString("LRAT"));
-    BOOST_CHECK_EQUAL( WellProducer::CRAT   , WellProducer::ControlModeFromString("CRAT"));
-    BOOST_CHECK_EQUAL( WellProducer::RESV   , WellProducer::ControlModeFromString("RESV"));
-    BOOST_CHECK_EQUAL( WellProducer::BHP    , WellProducer::ControlModeFromString("BHP" ));
-    BOOST_CHECK_EQUAL( WellProducer::THP    , WellProducer::ControlModeFromString("THP" ));
-    BOOST_CHECK_EQUAL( WellProducer::GRUP   , WellProducer::ControlModeFromString("GRUP"));
+    BOOST_CHECK_THROW( Well2::ProducerCModeFromString("XRAT") , std::invalid_argument );
+    BOOST_CHECK( Well2::ProducerCMode::ORAT   == Well2::ProducerCModeFromString("ORAT"));
+    BOOST_CHECK( Well2::ProducerCMode::WRAT   == Well2::ProducerCModeFromString("WRAT"));
+    BOOST_CHECK( Well2::ProducerCMode::GRAT   == Well2::ProducerCModeFromString("GRAT"));
+    BOOST_CHECK( Well2::ProducerCMode::LRAT   == Well2::ProducerCModeFromString("LRAT"));
+    BOOST_CHECK( Well2::ProducerCMode::CRAT   == Well2::ProducerCModeFromString("CRAT"));
+    BOOST_CHECK( Well2::ProducerCMode::RESV   == Well2::ProducerCModeFromString("RESV"));
+    BOOST_CHECK( Well2::ProducerCMode::BHP    == Well2::ProducerCModeFromString("BHP" ));
+    BOOST_CHECK( Well2::ProducerCMode::THP    == Well2::ProducerCModeFromString("THP" ));
+    BOOST_CHECK( Well2::ProducerCMode::GRUP   == Well2::ProducerCModeFromString("GRUP"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(ProducerControlModeEnumLoop) {
-    BOOST_CHECK_EQUAL( WellProducer::ORAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::ORAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::WRAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::WRAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::GRAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::GRAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::LRAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::LRAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::CRAT     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::CRAT ) ));
-    BOOST_CHECK_EQUAL( WellProducer::RESV     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::RESV ) ));
-    BOOST_CHECK_EQUAL( WellProducer::BHP      , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::BHP  ) ));
-    BOOST_CHECK_EQUAL( WellProducer::THP      , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::THP  ) ));
-    BOOST_CHECK_EQUAL( WellProducer::GRUP     , WellProducer::ControlModeFromString( WellProducer::ControlMode2String( WellProducer::GRUP ) ));
+    BOOST_CHECK( Well2::ProducerCMode::ORAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::ORAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::WRAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::WRAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::GRAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::GRAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::LRAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::LRAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::CRAT == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::CRAT ) ));
+    BOOST_CHECK( Well2::ProducerCMode::RESV == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::RESV ) ));
+    BOOST_CHECK( Well2::ProducerCMode::BHP  == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::BHP  ) ));
+    BOOST_CHECK( Well2::ProducerCMode::THP  == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::THP  ) ));
+    BOOST_CHECK( Well2::ProducerCMode::GRUP == Well2::ProducerCModeFromString( Well2::ProducerCMode2String( Well2::ProducerCMode::GRUP ) ));
 
-    BOOST_CHECK_EQUAL( "ORAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "ORAT"  ) ));
-    BOOST_CHECK_EQUAL( "WRAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "WRAT"  ) ));
-    BOOST_CHECK_EQUAL( "GRAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "GRAT"  ) ));
-    BOOST_CHECK_EQUAL( "LRAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "LRAT"  ) ));
-    BOOST_CHECK_EQUAL( "CRAT"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "CRAT"  ) ));
-    BOOST_CHECK_EQUAL( "RESV"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "RESV"  ) ));
-    BOOST_CHECK_EQUAL( "BHP"       , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "BHP"   ) ));
-    BOOST_CHECK_EQUAL( "THP"       , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "THP"   ) ));
-    BOOST_CHECK_EQUAL( "GRUP"      , WellProducer::ControlMode2String(WellProducer::ControlModeFromString( "GRUP"  ) ));
+    BOOST_CHECK_EQUAL( "ORAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "ORAT"  ) ));
+    BOOST_CHECK_EQUAL( "WRAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "WRAT"  ) ));
+    BOOST_CHECK_EQUAL( "GRAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "GRAT"  ) ));
+    BOOST_CHECK_EQUAL( "LRAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "LRAT"  ) ));
+    BOOST_CHECK_EQUAL( "CRAT"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "CRAT"  ) ));
+    BOOST_CHECK_EQUAL( "RESV"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "RESV"  ) ));
+    BOOST_CHECK_EQUAL( "BHP"       , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "BHP"   ) ));
+    BOOST_CHECK_EQUAL( "THP"       , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "THP"   ) ));
+    BOOST_CHECK_EQUAL( "GRUP"      , Well2::ProducerCMode2String(Well2::ProducerCModeFromString( "GRUP"  ) ));
 }
 
 /*******************************************************************/
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2String) {
-    BOOST_CHECK_EQUAL( "OIL"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::OIL));
-    BOOST_CHECK_EQUAL( "WAT"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::WAT));
-    BOOST_CHECK_EQUAL( "GAS"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::GAS));
-    BOOST_CHECK_EQUAL( "LIQ"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::LIQ));
-    BOOST_CHECK_EQUAL( "COMB"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::COMB));
-    BOOST_CHECK_EQUAL( "WGA"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::WGA));
-    BOOST_CHECK_EQUAL( "CVAL"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::CVAL));
-    BOOST_CHECK_EQUAL( "RAT"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::RAT));
-    BOOST_CHECK_EQUAL( "RES"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::RES));
-    BOOST_CHECK_EQUAL( "UNDEFINED"  ,  GuideRate::GuideRatePhaseEnum2String(GuideRate::UNDEFINED));
+    BOOST_CHECK_EQUAL( "OIL"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::OIL));
+    BOOST_CHECK_EQUAL( "WAT"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::WAT));
+    BOOST_CHECK_EQUAL( "GAS"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::GAS));
+    BOOST_CHECK_EQUAL( "LIQ"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::LIQ));
+    BOOST_CHECK_EQUAL( "COMB" ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::COMB));
+    BOOST_CHECK_EQUAL( "WGA"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::WGA));
+    BOOST_CHECK_EQUAL( "CVAL" ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::CVAL));
+    BOOST_CHECK_EQUAL( "RAT"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::RAT));
+    BOOST_CHECK_EQUAL( "RES"  ,        Well2::GuideRateTarget2String(Well2::GuideRateTarget::RES));
+    BOOST_CHECK_EQUAL( "UNDEFINED"  ,  Well2::GuideRateTarget2String(Well2::GuideRateTarget::UNDEFINED));
 }
 
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnumFromString) {
-    BOOST_CHECK_THROW( GuideRate::GuideRatePhaseEnumFromString("XRAT") , std::invalid_argument );
-    BOOST_CHECK_EQUAL( GuideRate::OIL   , GuideRate::GuideRatePhaseEnumFromString("OIL"));
-    BOOST_CHECK_EQUAL( GuideRate::WAT   , GuideRate::GuideRatePhaseEnumFromString("WAT"));
-    BOOST_CHECK_EQUAL( GuideRate::GAS   , GuideRate::GuideRatePhaseEnumFromString("GAS"));
-    BOOST_CHECK_EQUAL( GuideRate::LIQ   , GuideRate::GuideRatePhaseEnumFromString("LIQ"));
-    BOOST_CHECK_EQUAL( GuideRate::COMB   , GuideRate::GuideRatePhaseEnumFromString("COMB"));
-    BOOST_CHECK_EQUAL( GuideRate::WGA   , GuideRate::GuideRatePhaseEnumFromString("WGA"));
-    BOOST_CHECK_EQUAL( GuideRate::CVAL   , GuideRate::GuideRatePhaseEnumFromString("CVAL"));
-    BOOST_CHECK_EQUAL( GuideRate::RAT   , GuideRate::GuideRatePhaseEnumFromString("RAT"));
-    BOOST_CHECK_EQUAL( GuideRate::RES   , GuideRate::GuideRatePhaseEnumFromString("RES"));
-    BOOST_CHECK_EQUAL( GuideRate::UNDEFINED, GuideRate::GuideRatePhaseEnumFromString("UNDEFINED"));
+    BOOST_CHECK_THROW( Well2::GuideRateTargetFromString("XRAT") , std::invalid_argument );
+    BOOST_CHECK( Well2::GuideRateTarget::OIL       == Well2::GuideRateTargetFromString("OIL"));
+    BOOST_CHECK( Well2::GuideRateTarget::WAT       == Well2::GuideRateTargetFromString("WAT"));
+    BOOST_CHECK( Well2::GuideRateTarget::GAS       == Well2::GuideRateTargetFromString("GAS"));
+    BOOST_CHECK( Well2::GuideRateTarget::LIQ       == Well2::GuideRateTargetFromString("LIQ"));
+    BOOST_CHECK( Well2::GuideRateTarget::COMB      == Well2::GuideRateTargetFromString("COMB"));
+    BOOST_CHECK( Well2::GuideRateTarget::WGA       == Well2::GuideRateTargetFromString("WGA"));
+    BOOST_CHECK( Well2::GuideRateTarget::CVAL      == Well2::GuideRateTargetFromString("CVAL"));
+    BOOST_CHECK( Well2::GuideRateTarget::RAT       == Well2::GuideRateTargetFromString("RAT"));
+    BOOST_CHECK( Well2::GuideRateTarget::RES       == Well2::GuideRateTargetFromString("RES"));
+    BOOST_CHECK( Well2::GuideRateTarget::UNDEFINED == Well2::GuideRateTargetFromString("UNDEFINED"));
 }
 
 
 
 BOOST_AUTO_TEST_CASE(GuideRatePhaseEnum2Loop) {
-    BOOST_CHECK_EQUAL( GuideRate::OIL     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::OIL ) ));
-    BOOST_CHECK_EQUAL( GuideRate::WAT     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::WAT ) ));
-    BOOST_CHECK_EQUAL( GuideRate::GAS     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::GAS ) ));
-    BOOST_CHECK_EQUAL( GuideRate::LIQ     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::LIQ ) ));
-    BOOST_CHECK_EQUAL( GuideRate::COMB     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::COMB ) ));
-    BOOST_CHECK_EQUAL( GuideRate::WGA     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::WGA ) ));
-    BOOST_CHECK_EQUAL( GuideRate::CVAL     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::CVAL ) ));
-    BOOST_CHECK_EQUAL( GuideRate::RAT     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::RAT ) ));
-    BOOST_CHECK_EQUAL( GuideRate::RES     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::RES ) ));
-    BOOST_CHECK_EQUAL( GuideRate::UNDEFINED     , GuideRate::GuideRatePhaseEnumFromString( GuideRate::GuideRatePhaseEnum2String( GuideRate::UNDEFINED ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::OIL        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::OIL ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::WAT        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::WAT ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::GAS        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::GAS ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::LIQ        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::LIQ ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::COMB       == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::COMB ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::WGA        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::WGA ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::CVAL       == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::CVAL ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::RAT        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::RAT ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::RES        == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::RES ) ));
+    BOOST_CHECK( Well2::GuideRateTarget::UNDEFINED  == Well2::GuideRateTargetFromString( Well2::GuideRateTarget2String( Well2::GuideRateTarget::UNDEFINED ) ));
 
-    BOOST_CHECK_EQUAL( "OIL"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "OIL"  ) ));
-    BOOST_CHECK_EQUAL( "WAT"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "WAT"  ) ));
-    BOOST_CHECK_EQUAL( "GAS"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "GAS"  ) ));
-    BOOST_CHECK_EQUAL( "LIQ"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "LIQ"  ) ));
-    BOOST_CHECK_EQUAL( "COMB"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "COMB"  ) ));
-    BOOST_CHECK_EQUAL( "WGA"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "WGA"  ) ));
-    BOOST_CHECK_EQUAL( "CVAL"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "CVAL"  ) ));
-    BOOST_CHECK_EQUAL( "RAT"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "RAT"  ) ));
-    BOOST_CHECK_EQUAL( "RES"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "RES"  ) ));
-    BOOST_CHECK_EQUAL( "UNDEFINED"      , GuideRate::GuideRatePhaseEnum2String(GuideRate::GuideRatePhaseEnumFromString( "UNDEFINED"  ) ));
+    BOOST_CHECK_EQUAL( "OIL"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "OIL"  ) ));
+    BOOST_CHECK_EQUAL( "WAT"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "WAT"  ) ));
+    BOOST_CHECK_EQUAL( "GAS"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "GAS"  ) ));
+    BOOST_CHECK_EQUAL( "LIQ"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "LIQ"  ) ));
+    BOOST_CHECK_EQUAL( "COMB"       , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "COMB"  ) ));
+    BOOST_CHECK_EQUAL( "WGA"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "WGA"  ) ));
+    BOOST_CHECK_EQUAL( "CVAL"       , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "CVAL"  ) ));
+    BOOST_CHECK_EQUAL( "RAT"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "RAT"  ) ));
+    BOOST_CHECK_EQUAL( "RES"        , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "RES"  ) ));
+    BOOST_CHECK_EQUAL( "UNDEFINED"  , Well2::GuideRateTarget2String(Well2::GuideRateTargetFromString( "UNDEFINED"  ) ));
 
 }
 
@@ -3190,16 +3185,16 @@ BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     BOOST_CHECK(ws.updateRefDepth(1.0));
     BOOST_CHECK(!ws.updateRefDepth(1.0));
 
-    ws.updateStatus(WellCommon::OPEN);
-    BOOST_CHECK(!ws.updateStatus(WellCommon::OPEN));
-    BOOST_CHECK(ws.updateStatus(WellCommon::SHUT));
+    ws.updateStatus(Well2::Status::OPEN);
+    BOOST_CHECK(!ws.updateStatus(Well2::Status::OPEN));
+    BOOST_CHECK(ws.updateStatus(Well2::Status::SHUT));
 
     const auto& connections = ws.getConnections();
     BOOST_CHECK_EQUAL(connections.size(), 0);
     auto c2 = std::make_shared<WellConnections>(1,1);
     c2->addConnection(1,1,1,
                       100,
-                      WellCompletion::StateEnum::OPEN,
+                      Connection::State::OPEN,
                       10,
                       10,
                       10,
@@ -3301,13 +3296,13 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
     BOOST_CHECK(!conf.getWellOpenRFT("W1", 0));
 
 
-    conf.updateRFT("W1", 2, RFTConnections::YES);
+    conf.updateRFT("W1", 2, RFTConfig::RFT::YES);
     BOOST_CHECK(conf.rft("W1", 2));
     BOOST_CHECK(!conf.rft("W1", 1));
     BOOST_CHECK(!conf.rft("W1", 3));
 
-    conf.updateRFT("W2", 2, RFTConnections::REPT);
-    conf.updateRFT("W2", 4, RFTConnections::NO);
+    conf.updateRFT("W2", 2, RFTConfig::RFT::REPT);
+    conf.updateRFT("W2", 4, RFTConfig::RFT::NO);
     BOOST_CHECK(!conf.rft("W2", 1));
     BOOST_CHECK( conf.rft("W2", 2));
     BOOST_CHECK( conf.rft("W2", 3));
@@ -3317,7 +3312,7 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
     conf.setWellOpenRFT("W3");
     BOOST_CHECK(conf.getWellOpenRFT("W3", 2));
 
-    conf.updateRFT("W4", 2, RFTConnections::FOPN);
+    conf.updateRFT("W4", 2, RFTConfig::RFT::FOPN);
     BOOST_CHECK(conf.getWellOpenRFT("W4", 2));
 
 

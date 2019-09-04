@@ -100,7 +100,6 @@ if(ENABLE_ECL_INPUT)
     src/opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/RFTConfig.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Schedule.cpp
-    src/opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/SummaryState.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/TimeMap.cpp
     src/opm/parser/eclipse/EclipseState/Schedule/Tuning.cpp
@@ -562,7 +561,6 @@ if(ENABLE_ECL_INPUT)
        opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp
        opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp
        opm/parser/eclipse/EclipseState/Schedule/Events.hpp
-       opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp
        opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp
        opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp
        opm/parser/eclipse/EclipseState/Schedule/MSW/Segment.hpp

@@ -29,7 +29,6 @@
 #include <vector>
 
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
 
 namespace Opm {
@@ -39,17 +38,48 @@ namespace Opm {
 
     class Connection {
     public:
+        enum class State {
+            OPEN = 1,
+            SHUT = 2,
+            AUTO = 3
+        };
+
+        static const std::string State2String( State enumValue );
+        static State StateFromString( const std::string& stringValue );
+
+
+        enum class Direction{
+            X = 1,
+            Y = 2,
+            Z = 3
+        };
+
+        static std::string Direction2String(const Direction enumValue);
+        static Direction   DirectionFromString(const std::string& stringValue);
+
+
+        enum class Order {
+                          DEPTH,
+                          INPUT,
+                          TRACK
+        };
+
+        static const std::string Order2String( Order enumValue );
+        static Order OrderFromString(const std::string& comporderStringValue);
+
+
+
         Connection(int i, int j , int k ,
                    int complnum,
                    double depth,
-                   WellCompletion::StateEnum state,
+                   State state,
                    double CF,
                    double Kh,
                    double rw,
                    double r0,
                    double skin_factor,
                    const int satTableId,
-                   const WellCompletion::DirectionEnum direction,
+                   const Direction direction,
                    const std::size_t seqIndex,
                    const double segDistStart,
                    const double segDistEnd,
@@ -61,8 +91,8 @@ namespace Opm {
         int getI() const;
         int getJ() const;
         int getK() const;
-        WellCompletion::StateEnum state() const;
-        WellCompletion::DirectionEnum dir() const;
+        State state() const;
+        Direction dir() const;
         double depth() const;
         int satTableId() const;
         int complnum() const;
@@ -74,7 +104,7 @@ namespace Opm {
         double skinFactor() const;
         double wellPi() const;
 
-        void setState(WellCompletion::StateEnum state);
+        void setState(State state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
         void updateSegment(int segment_number, double center_depth, std::size_t seqIndex);
@@ -92,9 +122,9 @@ namespace Opm {
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
     private:
-        WellCompletion::DirectionEnum direction;
+        Direction direction;
         double center_depth;
-        WellCompletion::StateEnum open_state;
+        State open_state;
         int sat_tableId;
         int m_complnum;
         double m_CF;

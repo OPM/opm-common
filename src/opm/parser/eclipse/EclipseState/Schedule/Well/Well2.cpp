@@ -80,8 +80,8 @@ Well2::Well2(const std::string& wname_arg,
              int headJ_arg,
              double ref_depth_arg,
              Phase phase_arg,
-             WellProducer::ControlModeEnum whistctl_cmode,
-             WellCompletion::CompletionOrderEnum ordering_arg,
+             ProducerCMode whistctl_cmode,
+             Connection::Order ordering_arg,
              const UnitSystem& unit_system_arg,
              double udq_undefined_arg) :
     wname(wname_arg),
@@ -95,12 +95,12 @@ Well2::Well2(const std::string& wname_arg,
     ordering(ordering_arg),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
-    status(WellCommon::SHUT),
+    status(Status::SHUT),
     drainage_radius(ParserKeywords::WELSPECS::D_RADIUS::defaultValue),
     allow_cross_flow(DeckItem::to_bool(ParserKeywords::WELSPECS::CROSSFLOW::defaultValue)),
     automatic_shutin( ParserKeywords::WELSPECS::CROSSFLOW::defaultValue == "SHUT"),
     producer(true),
-    guide_rate({true, -1, GuideRate::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
+    guide_rate({true, -1, Well2::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
     solvent_fraction(0.0),
     econ_limits(std::make_shared<WellEconProductionLimits>()),
@@ -176,7 +176,7 @@ void Well2::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
 
     p->BHPLimit.reset( 0 );
-    p->dropInjectionControl( Opm::WellInjector::BHP );
+    p->dropInjectionControl( Opm::Well2::InjectorCMode::BHP );
     this->updateInjection( p );
     this->updateProducer(true);
 }
@@ -187,7 +187,7 @@ void Well2::switchToInjector() {
 
     p->BHPLimit.assert_numeric();
     p->BHPLimit.reset(0);
-    p->dropProductionControl( Opm::WellProducer::BHP );
+    p->dropProductionControl( ProducerCMode::BHP );
     this->updateProduction( p );
     this->updateProducer( false );
 }
@@ -225,7 +225,7 @@ bool Well2::updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties
     return false;
 }
 
-bool Well2::updateWellGuideRate(bool available, double guide_rate_arg, GuideRate::GuideRatePhaseEnum guide_phase, double scale_factor) {
+bool Well2::updateWellGuideRate(bool available, double guide_rate_arg, GuideRateTarget guide_phase, double scale_factor) {
     bool update = false;
     if (this->guide_rate.available != available) {
         this->guide_rate.available = available;
@@ -285,7 +285,7 @@ bool Well2::updateHead(int I, int J) {
 }
 
 
-bool Well2::updateStatus(WellCommon::StatusEnum status_arg) {
+bool Well2::updateStatus(Status status_arg) {
     if (this->status != status_arg) {
         this->status = status_arg;
         return true;
@@ -334,7 +334,7 @@ bool Well2::updateAutoShutin(bool auto_shutin) {
 
 
 bool Well2::updateConnections(const std::shared_ptr<WellConnections> connections_arg) {
-    if( this->ordering  == WellCompletion::TRACK)
+    if( this->ordering  == Connection::Order::TRACK)
         connections_arg->orderConnections( this->headI, this->headJ );
 
     if (*this->connections != *connections_arg) {
@@ -386,7 +386,7 @@ bool Well2::isInjector() const {
 }
 
 
-WellInjector::TypeEnum Well2::injectorType() const {
+Well2::InjectorType Well2::injectorType() const {
     if (this->producer)
         throw std::runtime_error("Can not access injectorType attribute of a producer");
 
@@ -403,7 +403,7 @@ double Well2::getGuideRate() const {
     return this->guide_rate.guide_rate;
 }
 
-GuideRate::GuideRatePhaseEnum Well2::getGuideRatePhase() const {
+Well2::GuideRateTarget Well2::getGuideRatePhase() const {
     return this->guide_rate.guide_phase;
 }
 
@@ -487,7 +487,7 @@ const WellEconProductionLimits& Well2::getEconLimits() const {
     return *this->econ_limits;
 }
 
-const WellProductionProperties& Well2::getProductionProperties() const {
+const Well2::WellProductionProperties& Well2::getProductionProperties() const {
     return *this->production;
 }
 
@@ -498,11 +498,11 @@ const WellSegments& Well2::getSegments() const {
         throw std::logic_error("Asked for segment information in not MSW well: " + this->name());
 }
 
-const WellInjectionProperties& Well2::getInjectionProperties() const {
+const Well2::WellInjectionProperties& Well2::getInjectionProperties() const {
     return *this->injection;
 }
 
-WellCommon::StatusEnum Well2::getStatus() const {
+Well2::Status Well2::getStatus() const {
     return this->status;
 }
 
@@ -526,7 +526,7 @@ Phase Well2::getPreferredPhase() const {
     return this->phase;
 }
 
-bool Well2::handleWELOPEN(const DeckRecord& record, WellCompletion::StateEnum status_arg) {
+bool Well2::handleWELOPEN(const DeckRecord& record, Connection::State state_arg) {
 
     auto match = [=]( const Connection &c) -> bool {
         if (!match_eq(c.getI(), record, "I" , -1)) return false;
@@ -542,7 +542,7 @@ bool Well2::handleWELOPEN(const DeckRecord& record, WellCompletion::StateEnum st
 
     for (auto c : *this->connections) {
         if (match(c))
-            c.setState( status_arg );
+            c.setState( state_arg );
 
         new_connections->add(c);
     }
@@ -681,7 +681,7 @@ bool Well2::updatePrediction(bool prediction_mode_arg) {
 }
 
 
-WellCompletion::CompletionOrderEnum Well2::getWellConnectionOrdering() const {
+Connection::Order Well2::getWellConnectionOrdering() const {
     return this->ordering;
 }
 
@@ -716,9 +716,9 @@ double Well2::injection_rate(const SummaryState& st, Phase phase_arg) const {
 
     const auto type = controls.injector_type;
 
-    if( phase_arg == Phase::WATER && type != WellInjector::WATER ) return 0.0;
-    if( phase_arg == Phase::OIL   && type != WellInjector::OIL   ) return 0.0;
-    if( phase_arg == Phase::GAS   && type != WellInjector::GAS   ) return 0.0;
+    if( phase_arg == Phase::WATER && type != Well2::InjectorType::WATER ) return 0.0;
+    if( phase_arg == Phase::OIL   && type != Well2::InjectorType::OIL   ) return 0.0;
+    if( phase_arg == Phase::GAS   && type != Well2::InjectorType::GAS   ) return 0.0;
 
     return controls.surface_rate;
 }
@@ -733,7 +733,7 @@ bool Well2::wellNameInWellNamePattern(const std::string& wellName, const std::st
 }
 
 
-ProductionControls Well2::productionControls(const SummaryState& st) const {
+Well2::ProductionControls Well2::productionControls(const SummaryState& st) const {
     if (this->isProducer()) {
         auto controls = this->production->controls(st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
@@ -742,7 +742,7 @@ ProductionControls Well2::productionControls(const SummaryState& st) const {
         throw std::logic_error("Trying to get production data from an injector");
 }
 
-InjectionControls Well2::injectionControls(const SummaryState& st) const {
+Well2::InjectionControls Well2::injectionControls(const SummaryState& st) const {
     if (!this->isProducer()) {
         auto controls = this->injection->controls(this->unit_system, st, this->udq_undefined);
         controls.prediction_mode = this->predictionMode();
@@ -781,4 +781,238 @@ double Well2::temperature() const {
     throw std::runtime_error("Can not ask for temperature in a producer");
 }
 
+
+std::string Well2::Status2String(Well2::Status enumValue) {
+    switch( enumValue ) {
+    case Status::OPEN:
+        return "OPEN";
+    case Status::SHUT:
+        return "SHUT";
+    case Status::AUTO:
+        return "AUTO";
+    case Status::STOP:
+        return "STOP";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+
+Well2::Status Well2::StatusFromString(const std::string& stringValue) {
+    if (stringValue == "OPEN")
+        return Status::OPEN;
+    else if (stringValue == "SHUT")
+        return Status::SHUT;
+    else if (stringValue == "STOP")
+        return Status::STOP;
+    else if (stringValue == "AUTO")
+        return Status::AUTO;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+const std::string Well2::InjectorType2String( Well2::InjectorType enumValue ) {
+    switch( enumValue ) {
+    case InjectorType::OIL:
+        return "OIL";
+    case InjectorType::GAS:
+        return "GAS";
+    case InjectorType::WATER:
+        return "WATER";
+    case InjectorType::MULTI:
+        return "MULTI";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+Well2::InjectorType Well2::InjectorTypeFromString( const std::string& stringValue ) {
+    if (stringValue == "OIL")
+        return InjectorType::OIL;
+    else if (stringValue == "WATER")
+        return InjectorType::WATER;
+    else if (stringValue == "WAT")
+        return InjectorType::WATER;
+    else if (stringValue == "GAS")
+        return InjectorType::GAS;
+    else if (stringValue == "MULTI")
+        return InjectorType::MULTI;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+const std::string Well2::InjectorCMode2String( InjectorCMode enumValue ) {
+    switch( enumValue ) {
+    case InjectorCMode::RESV:
+        return "RESV";
+    case InjectorCMode::RATE:
+        return "RATE";
+    case InjectorCMode::BHP:
+        return "BHP";
+    case InjectorCMode::THP:
+        return "THP";
+    case InjectorCMode::GRUP:
+        return "GRUP";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+
+Well2::InjectorCMode Well2::InjectorCModeFromString(const std::string &stringValue) {
+    if (stringValue == "RATE")
+        return InjectorCMode::RATE;
+    else if (stringValue == "RESV")
+        return InjectorCMode::RESV;
+    else if (stringValue == "BHP")
+        return InjectorCMode::BHP;
+    else if (stringValue == "THP")
+        return InjectorCMode::THP;
+    else if (stringValue == "GRUP")
+        return InjectorCMode::GRUP;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue);
+}
+
+Well2::WELTARGCMode Well2::WELTARGCModeFromString(const std::string& string_value) {
+    if (string_value == "ORAT")
+        return WELTARGCMode::ORAT;
+
+    if (string_value == "WRAT")
+        return WELTARGCMode::WRAT;
+
+    if (string_value == "GRAT")
+        return WELTARGCMode::GRAT;
+
+    if (string_value == "LRAT")
+        return WELTARGCMode::LRAT;
+
+    if (string_value == "CRAT")
+        return WELTARGCMode::CRAT;
+
+    if (string_value == "RESV")
+        return WELTARGCMode::RESV;
+
+    if (string_value == "BHP")
+        return WELTARGCMode::BHP;
+
+    if (string_value == "THP")
+        return WELTARGCMode::THP;
+
+    if (string_value == "VFP")
+        return WELTARGCMode::VFP;
+
+    if (string_value == "LIFT")
+        return WELTARGCMode::LIFT;
+
+    if (string_value == "GUID")
+        return WELTARGCMode::GUID;
+
+    throw std::invalid_argument("WELTARG control mode: " + string_value + " not recognized.");
+}
+
+
+const std::string Well2::ProducerCMode2String( ProducerCMode enumValue ) {
+    switch( enumValue ) {
+    case ProducerCMode::ORAT:
+        return "ORAT";
+    case ProducerCMode::WRAT:
+        return "WRAT";
+    case ProducerCMode::GRAT:
+        return "GRAT";
+    case ProducerCMode::LRAT:
+        return "LRAT";
+    case ProducerCMode::CRAT:
+        return "CRAT";
+    case ProducerCMode::RESV:
+        return "RESV";
+    case ProducerCMode::BHP:
+        return "BHP";
+    case ProducerCMode::THP:
+        return "THP";
+    case ProducerCMode::GRUP:
+        return "GRUP";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+Well2::ProducerCMode Well2::ProducerCModeFromString( const std::string& stringValue ) {
+    if (stringValue == "ORAT")
+        return ProducerCMode::ORAT;
+    else if (stringValue == "WRAT")
+        return ProducerCMode::WRAT;
+    else if (stringValue == "GRAT")
+        return ProducerCMode::GRAT;
+    else if (stringValue == "LRAT")
+        return ProducerCMode::LRAT;
+    else if (stringValue == "CRAT")
+        return ProducerCMode::CRAT;
+    else if (stringValue == "RESV")
+        return ProducerCMode::RESV;
+    else if (stringValue == "BHP")
+        return ProducerCMode::BHP;
+    else if (stringValue == "THP")
+        return ProducerCMode::THP;
+    else if (stringValue == "GRUP")
+        return ProducerCMode::GRUP;
+    else if (stringValue == "NONE")
+        return ProducerCMode::NONE;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+const std::string Well2::GuideRateTarget2String( GuideRateTarget enumValue ) {
+    switch( enumValue ) {
+    case GuideRateTarget::OIL:
+        return "OIL";
+    case GuideRateTarget::WAT:
+        return "WAT";
+    case GuideRateTarget::GAS:
+        return "GAS";
+    case GuideRateTarget::LIQ:
+        return "LIQ";
+    case GuideRateTarget::COMB:
+        return "COMB";
+    case GuideRateTarget::WGA:
+        return "WGA";
+    case GuideRateTarget::CVAL:
+        return "CVAL";
+    case GuideRateTarget::RAT:
+        return "RAT";
+    case GuideRateTarget::RES:
+        return "RES";
+    case GuideRateTarget::UNDEFINED:
+        return "UNDEFINED";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+Well2::GuideRateTarget Well2::GuideRateTargetFromString( const std::string& stringValue ) {
+    if (stringValue == "OIL")
+        return GuideRateTarget::OIL;
+    else if (stringValue == "WAT")
+        return GuideRateTarget::WAT;
+    else if (stringValue == "GAS")
+        return GuideRateTarget::GAS;
+    else if (stringValue == "LIQ")
+        return GuideRateTarget::LIQ;
+    else if (stringValue == "COMB")
+        return GuideRateTarget::COMB;
+    else if (stringValue == "WGA")
+        return GuideRateTarget::WGA;
+    else if (stringValue == "CVAL")
+        return GuideRateTarget::CVAL;
+    else if (stringValue == "RAT")
+        return GuideRateTarget::RAT;
+    else if (stringValue == "RES")
+        return GuideRateTarget::RES;
+    else if (stringValue == "UNDEFINED")
+        return GuideRateTarget::UNDEFINED;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
 }

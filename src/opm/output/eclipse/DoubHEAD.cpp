@@ -21,7 +21,6 @@
 
 // Note: DynamicState.hpp and <map> are prerequisites of Tuning.hpp
 #include <opm/parser/eclipse/EclipseState/Schedule/DynamicState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
@@ -617,7 +616,7 @@ Opm::RestartIO::DoubHEAD::drsdt(const Schedule&   sched,
         sched.getOilVaporizationProperties(lookup_step);
 
     this->data_[dRsdt] =
-        (vappar.getType() == Opm::OilVaporizationEnum::DRDT)
+        (vappar.getType() == Opm::OilVaporizationProperties::OilVaporization::DRDT)
         ? vappar.getMaxDRSDT(0)*cnvT
         : 1.0e+20;
 

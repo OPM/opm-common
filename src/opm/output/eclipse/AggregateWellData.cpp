@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/SummaryState.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 #include <opm/parser/eclipse/Units/Units.hpp>
 
@@ -141,7 +140,7 @@ namespace {
                 return WTypeVal::Producer;
             }
 
-            using IType = ::Opm::WellInjector::TypeEnum;
+            using IType = ::Opm::Well2::InjectorType;
 
             const auto itype = well.injectionControls(st).injector_type;
 
@@ -172,8 +171,8 @@ namespace {
                 const auto wmctl = controls.cmode;
                 const auto wtype = controls.injector_type;
 
-                using CMode = ::Opm::WellInjector::ControlModeEnum;
-                using WType = ::Opm::WellInjector::TypeEnum;
+                using CMode = ::Opm::Well2::InjectorCMode;
+                using WType = ::Opm::Well2::InjectorType;
 
                 switch (wmctl) {
                 case CMode::RATE: {
@@ -195,7 +194,7 @@ namespace {
                 {
                     const auto stat = well.getStatus();
 
-                    using WStat = ::Opm::WellCommon::StatusEnum;
+                    using WStat = ::Opm::Well2::Status;
 
                     if (stat == WStat::SHUT) {
                         return WMCtrlVal::Shut;
@@ -207,7 +206,7 @@ namespace {
             else if (well.isProducer()) {
                 const auto& controls = well.productionControls(st);
 
-                using CMode = ::Opm::WellProducer::ControlModeEnum;
+                using CMode = ::Opm::Well2::ProducerCMode;
 
                 switch (controls.cmode) {
                 case CMode::ORAT: return WMCtrlVal::OilRate;
@@ -224,7 +223,7 @@ namespace {
                 {
                     const auto stat = well.getStatus();
 
-                    using WStat = ::Opm::WellCommon::StatusEnum;
+                    using WStat = ::Opm::Well2::Status;
 
                     if (stat == WStat::SHUT) {
                         return WMCtrlVal::Shut;
@@ -239,7 +238,7 @@ namespace {
 
         int compOrder(const Opm::Well2& well)
         {
-            using WCO   = ::Opm::WellCompletion::CompletionOrderEnum;
+            using WCO   = ::Opm::Connection::Order;
             using COVal = ::Opm::RestartIO::Helpers::
                 VectorItems::IWell::Value::CompOrder;
 
@@ -513,8 +512,8 @@ namespace {
             else if (well.isInjector()) {
                 const auto& ic = well.injectionControls(smry);
 
-                using IP = ::Opm::WellInjector::ControlModeEnum;
-                using IT = ::Opm::WellInjector::TypeEnum;
+                using IP = ::Opm::Well2::InjectorCMode;
+                using IT = ::Opm::Well2::InjectorType;
 
                 if (ic.hasControl(IP::RATE)) {
                     if (ic.injector_type == IT::OIL) {
@@ -714,7 +713,7 @@ namespace {
                 assignProducer(well.name(), smry, xWell);
             }
             else if (well.isInjector()) {
-                using IType = ::Opm::WellInjector::TypeEnum;
+                using IType = ::Opm::Well2::InjectorType;
                 const auto itype = well.injectionControls(smry).injector_type;
 
                 switch (itype) {

@@ -113,7 +113,7 @@ namespace {
         std::vector< double > xwel;
         for (const auto& sched_well : sched_wells) {
             if (wells.count(sched_well.name()) == 0 ||
-                sched_well.getStatus() == Opm::WellCommon::SHUT)
+                sched_well.getStatus() == Opm::Well2::Status::SHUT)
             {
                 const auto elems = (sched_well.getConnections().size()
                                     * (phases.size() + data::Connection::restart_size))
@@ -137,7 +137,7 @@ namespace {
                 const auto i = sc.getI(), j = sc.getJ(), k = sc.getK();
 
                 const auto rs_size = phases.size() + data::Connection::restart_size;
-                if (!grid.cellActive(i, j, k) || sc.state() == WellCompletion::SHUT) {
+                if (!grid.cellActive(i, j, k) || sc.state() == Connection::State::SHUT) {
                     xwel.insert(xwel.end(), rs_size, 0.0);
                     continue;
                 }

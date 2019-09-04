@@ -52,12 +52,12 @@ namespace Opm {
         }
     }
 
-    Opm::OilVaporizationEnum OilVaporizationProperties::getType() const{
+    OilVaporizationProperties::OilVaporization OilVaporizationProperties::getType() const{
         return m_type;
     }
 
     double OilVaporizationProperties::getVap1(const size_t pvtRegionIdx) const{
-        if (m_type == Opm::OilVaporizationEnum::VAPPARS){
+        if (m_type == OilVaporization::VAPPARS){
             return m_vap1[pvtRegionIdx];
         }else{
             throw std::logic_error("Only valid if type is VAPPARS");
@@ -65,7 +65,7 @@ namespace Opm {
     }
 
     double OilVaporizationProperties::getVap2(const size_t pvtRegionIdx) const{
-        if (m_type == Opm::OilVaporizationEnum::VAPPARS){
+        if (m_type == OilVaporization::VAPPARS){
             return m_vap2[pvtRegionIdx];
         }else{
             throw std::logic_error("Only valid if type is VAPPARS");
@@ -73,54 +73,54 @@ namespace Opm {
     }
 
     void OilVaporizationProperties::updateDRSDT(OilVaporizationProperties& ovp, const std::vector<double>& maximums, const std::vector<std::string>& options){
-        ovp.m_type = Opm::OilVaporizationEnum::DRDT;
+        ovp.m_type = OilVaporization::DRDT;
         ovp.m_maxDRSDT = maximums;
         for (size_t pvtRegionIdx = 0; pvtRegionIdx < options.size(); ++pvtRegionIdx) {
             if (options[pvtRegionIdx] == "ALL"){
                 ovp.m_maxDRSDT_allCells[pvtRegionIdx] = true;
-            }else if (options[pvtRegionIdx] == "FREE") {
+            } else if (options[pvtRegionIdx] == "FREE") {
                 ovp.m_maxDRSDT_allCells[pvtRegionIdx] = false;
-            }else{
+            } else {
                 throw std::invalid_argument("Only ALL or FREE is allowed as option string");
             }
         }
     }
 
     void OilVaporizationProperties::updateDRVDT(OilVaporizationProperties& ovp, const std::vector<double>& maximums){
-        ovp.m_type = Opm::OilVaporizationEnum::DRDT;
+        ovp.m_type = OilVaporization::DRDT;
         ovp.m_maxDRVDT = maximums;
     }
 
     void OilVaporizationProperties::updateVAPPARS(OilVaporizationProperties& ovp, const std::vector<double>& vap1, const std::vector<double>& vap2){
-        ovp.m_type = Opm::OilVaporizationEnum::VAPPARS;
+        ovp.m_type = OilVaporization::VAPPARS;
         ovp.m_vap1 = vap1;
         ovp.m_vap2 = vap2;
     }
 
     bool OilVaporizationProperties::defined() const {
-        return this->m_type != OilVaporizationEnum::UNDEF;
+        return this->m_type != OilVaporization::UNDEF;
     }
 
     bool OilVaporizationProperties::drsdtActive() const {
-        return (m_maxDRSDT[0] >= 0 && m_type == Opm::OilVaporizationEnum::DRDT);
+        return (m_maxDRSDT[0] >= 0 && m_type == OilVaporization::DRDT);
     }
 
     bool OilVaporizationProperties::drvdtActive() const {
-        return (m_maxDRVDT[0] >= 0 && m_type == Opm::OilVaporizationEnum::DRDT);
+        return (m_maxDRVDT[0] >= 0 && m_type == OilVaporization::DRDT);
     }
 
     bool OilVaporizationProperties::operator==( const OilVaporizationProperties& rhs ) const {
-        if( this->m_type == OilVaporizationEnum::UNDEF
-         || rhs.m_type   == OilVaporizationEnum::UNDEF
+        if( this->m_type == OilVaporization::UNDEF
+         || rhs.m_type   == OilVaporization::UNDEF
          || this->m_type != rhs.m_type ) return false;
 
         switch( this->m_type ) {
-            case OilVaporizationEnum::DRDT:
+            case OilVaporization::DRDT:
                 return this->m_maxDRSDT == rhs.m_maxDRSDT
                     && this->m_maxDRSDT_allCells == rhs.m_maxDRSDT_allCells
                         && this->m_maxDRVDT == rhs.m_maxDRVDT;
 
-            case OilVaporizationEnum::VAPPARS:
+            case OilVaporization::VAPPARS:
                 return this->m_vap1 == rhs.m_vap1
                     && this->m_vap2 == rhs.m_vap2;
 

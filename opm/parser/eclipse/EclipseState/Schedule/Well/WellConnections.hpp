@@ -28,19 +28,21 @@ namespace Opm {
     class Eclipse3DProperties;
     class WellConnections {
     public:
+
+
         WellConnections(int headI, int headJ);
         // cppcheck-suppress noExplicitConstructor
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
         void addConnection(int i, int j , int k ,
                            double depth,
-                           WellCompletion::StateEnum state ,
+                           Connection::State state ,
                            double CF,
                            double Kh,
                            double rw,
                            double r0,
                            double skin_factor,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z,
+                           const Connection::Direction direction = Connection::Direction::Z,
                            const std::size_t seqIndex = 0,
                            const double segDistStart= 0.0,
                            const double segDistEnd= 0.0,
@@ -82,14 +84,14 @@ namespace Opm {
         void addConnection(int i, int j , int k ,
                            int complnum,
                            double depth,
-                           WellCompletion::StateEnum state ,
+                           Connection::State state ,
                            double CF,
                            double Kh,
                            double rw,
                            double r0,
                            double skin_factor,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnum::Z,
+                           const Connection::Direction direction = Connection::Direction::Z,
                            const std::size_t seqIndex = 0,
                            const double segDistStart= 0.0,
                            const double segDistEnd= 0.0,

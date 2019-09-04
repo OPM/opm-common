@@ -89,17 +89,17 @@ void verifyWellState(const std::string& rst_filename,
       }
       else {
           switch( well.getInjectionProperties(  ).injectorType ) {
-              case WellInjector::WATER:
-                  well_type = ERT_WATER_INJECTOR;
-                  break;
-              case WellInjector::GAS:
-                  well_type = ERT_GAS_INJECTOR;
-                  break;
-              case WellInjector::OIL:
-                  well_type = ERT_OIL_INJECTOR;
-                  break;
-              default:
-                  break;
+          case Well2::InjectorType::WATER:
+              well_type = ERT_WATER_INJECTOR;
+              break;
+          case Well2::InjectorType::GAS:
+              well_type = ERT_GAS_INJECTOR;
+              break;
+          case Well2::InjectorType::OIL:
+              well_type = ERT_OIL_INJECTOR;
+              break;
+          default:
+              break;
           }
       }
 
@@ -108,7 +108,7 @@ void verifyWellState(const std::string& rst_filename,
 
       //Verify wellstatus
       int ert_well_status = well_state_is_open(well_state) ? 1 : 0;
-      int wellstatus = well.getStatus(  ) == WellCommon::OPEN ? 1 : 0;
+      int wellstatus = well.getStatus(  ) == Well2::Status::OPEN ? 1 : 0;
 
       BOOST_CHECK_EQUAL(ert_well_status, wellstatus);
 

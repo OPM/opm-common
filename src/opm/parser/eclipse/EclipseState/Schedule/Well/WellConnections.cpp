@@ -25,7 +25,6 @@
 #include <opm/parser/eclipse/Units/Units.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/WellConnections.hpp>
 
@@ -37,16 +36,16 @@ namespace {
     // direction.  First two elements of return value are directions
     // perpendicular to completion while last element is direction
     // along completion.
-    inline std::array< size_t, 3> directionIndices(const Opm::WellCompletion::DirectionEnum direction)
+inline std::array< size_t, 3> directionIndices(const Opm::Connection::Direction direction)
     {
         switch (direction) {
-        case Opm::WellCompletion::DirectionEnum::X:
+        case Opm::Connection::Direction::X:
             return {{ 1,2,0 }};
 
-        case Opm::WellCompletion::DirectionEnum::Y:
+        case Opm::Connection::Direction::Y:
             return {{ 2,0,1}};
 
-        case Opm::WellCompletion::DirectionEnum::Z:
+        case Opm::Connection::Direction::Z:
             return {{ 0,1,2 }};
         }
         // All enum values should be handled above. Therefore
@@ -59,7 +58,7 @@ namespace {
     // Permute (diagonal) permeability components according to
     // completion's direction.
     inline std::array<double,3>
-    permComponents(const Opm::WellCompletion::DirectionEnum direction,
+    permComponents(const Opm::Connection::Direction direction,
                    const std::array<double,3>& perm)
     {
         const auto p = directionIndices(direction);
@@ -75,9 +74,9 @@ namespace {
     // Note: 'extent' is intentionally accepted by modifiable value
     // rather than reference-to-const to support NTG manipulation.
     inline std::array<double,3>
-    effectiveExtent(const Opm::WellCompletion::DirectionEnum direction,
-                    const double                                  ntg,
-                    std::array<double,3>                          extent)
+    effectiveExtent(const Opm::Connection::Direction direction,
+                    const double                     ntg,
+                    std::array<double,3>             extent)
     {
         // Vertical extent affected by net-to-gross ratio.
         extent[2] *= ntg;
@@ -136,14 +135,14 @@ namespace {
     void WellConnections::addConnection(int i, int j , int k ,
                                         int complnum,
                                         double depth,
-                                        WellCompletion::StateEnum state,
+                                        Connection::State state,
                                         double CF,
                                         double Kh,
                                         double rw,
                                         double r0,
                                         double skin_factor,
                                         const int satTableId,
-                                        const WellCompletion::DirectionEnum direction,
+                                        const Connection::Direction direction,
                                         const std::size_t seqIndex,
                                         const double segDistStart,
                                         const double segDistEnd,
@@ -159,14 +158,14 @@ namespace {
 
     void WellConnections::addConnection(int i, int j , int k ,
                                         double depth,
-                                        WellCompletion::StateEnum state ,
+                                        Connection::State state ,
                                         double CF,
                                         double Kh,
                                         double rw,
                                         double r0,
                                         double skin_factor,
                                         const int satTableId,
-                                        const WellCompletion::DirectionEnum direction,
+                                        const Connection::Direction direction,
                                         const std::size_t seqIndex,
                                         const double segDistStart,
                                         const double segDistEnd,
@@ -208,7 +207,7 @@ namespace {
 
         int K1 = record.getItem("K1").get< int >(0) - 1;
         int K2 = record.getItem("K2").get< int >(0) - 1;
-        WellCompletion::StateEnum state = WellCompletion::StateEnumFromString( record.getItem("STATE").getTrimmedString(0) );
+        Connection::State state = Connection::StateFromString( record.getItem("STATE").getTrimmedString(0) );
 
         const auto& satnum = eclipseProperties.getIntGridProperty("SATNUM");
         int satTableId = -1;
@@ -218,7 +217,7 @@ namespace {
         const auto& KhItem = record.getItem("Kh");
         const auto& satTableIdItem = record.getItem("SAT_TABLE");
         const auto& r0Item = record.getItem("PR");
-        const WellCompletion::DirectionEnum direction = WellCompletion::DirectionEnumFromString(record.getItem("DIR").getTrimmedString(0));
+        const auto direction = Connection::DirectionFromString(record.getItem("DIR").getTrimmedString(0));
         double skin_factor = record.getItem("SKIN").getSIDouble(0);
         double rw;
         double r0=0.0;
@@ -388,7 +387,7 @@ namespace {
 
 
         auto shut = []( const Connection& c ) {
-            return c.state() == WellCompletion::StateEnum::SHUT;
+            return c.state() == Connection::State::SHUT;
         };
 
         return std::all_of( this->m_connections.begin(),

@@ -32,7 +32,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GTNode.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Group/GuideRateModel.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Tuning.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/OrderedMap.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/MessageLimits.hpp>
@@ -176,7 +175,7 @@ namespace Opm
         std::vector<Well2> getWells2atEnd() const;
 
         std::vector<const Group2*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
-        std::vector<Well2> getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const;
+        std::vector<Well2> getChildWells2(const std::string& group_name, size_t timeStep) const;
         const OilVaporizationProperties& getOilVaporizationProperties(size_t timestep) const;
 
         const UDQActive& udqActive(size_t timeStep) const;
@@ -234,19 +233,19 @@ namespace Opm
         DynamicState<std::shared_ptr<UDQConfig>> udq_config;
         DynamicState<std::shared_ptr<UDQActive>> udq_active;
         DynamicState<std::shared_ptr<GuideRateModel>> guide_rate_model;
-        DynamicState<WellProducer::ControlModeEnum> global_whistctl_mode;
+        DynamicState<Well2::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         RFTConfig rft_config;
+        DynamicState<int> m_nupcol;
 
 
         std::map<std::string,Events> well_events;
-        DynamicState<int> m_nupcol;
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group2> group, size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, size_t reportStep , WellCommon::StatusEnum status);
+        bool updateWellStatus( const std::string& well, size_t reportStep , Well2::Status status);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const Eclipse3DProperties& eclipseProperties);
@@ -254,7 +253,7 @@ namespace Opm
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group2& child_group, size_t timeStep);
         void addGroup(const std::string& groupName , size_t timeStep, const UnitSystem& unit_system);
-        void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, WellCompletion::CompletionOrderEnum wellCompletionOrder, const UnitSystem& unit_system);
+        void addWell(const std::string& wellName, const DeckRecord& record, size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
         void handleUDQ(const DeckKeyword& keyword, size_t currentStep);
         void handleWLIST(const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPORD(const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& compordKeyword, size_t currentStep);

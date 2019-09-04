@@ -291,11 +291,11 @@ Group2::InjectionControls Group2::injectionControls(const SummaryState& st) cons
     return ic;
 }
 
-GroupProduction::ControlEnum Group2::production_cmode() const {
+Group2::ProductionCMode Group2::production_cmode() const {
     return this->production_properties.cmode;
 }
 
-GroupInjection::ControlEnum Group2::injection_cmode() const {
+Group2::InjectionCMode Group2::injection_cmode() const {
     return this->injection_properties.cmode;
 }
 
@@ -304,20 +304,182 @@ Phase Group2::injection_phase() const {
 }
 
 
-bool Group2::ProductionControls::has_control(GroupProduction::ControlEnum control) const {
-    return (this->production_controls & control) != 0;
+bool Group2::ProductionControls::has_control(Group2::ProductionCMode control) const {
+    return (this->production_controls & static_cast<int>(control)) != 0;
 }
 
 
-bool Group2::InjectionControls::has_control(GroupInjection::ControlEnum control) const {
-    return (this->injection_controls & control) != 0;
+bool Group2::InjectionControls::has_control(InjectionCMode cmode_arg) const {
+    return (this->injection_controls & static_cast<int>(cmode_arg)) != 0;
 }
 
-bool Group2::has_control(GroupProduction::ControlEnum control) const {
-    return (this->production_properties.production_controls & control) != 0;
+bool Group2::has_control(Group2::ProductionCMode control) const {
+    return (this->production_properties.production_controls & static_cast<int>(control)) != 0;
 }
 
-bool Group2::has_control(GroupInjection::ControlEnum control) const {
-    return (this->injection_properties.injection_controls & control) != 0;
+bool Group2::has_control(InjectionCMode control) const {
+    return (this->injection_properties.injection_controls & static_cast<int>(control)) != 0;
 }
+
+
+const std::string Group2::ExceedAction2String( ExceedAction enumValue ) {
+    switch(enumValue) {
+    case ExceedAction::NONE:
+        return "NONE";
+    case ExceedAction::CON:
+        return "CON";
+    case ExceedAction::CON_PLUS:
+        return "+CON";
+    case ExceedAction::WELL:
+        return "WELL";
+    case ExceedAction::PLUG:
+        return "PLUG";
+    case ExceedAction::RATE:
+        return "RATE";
+    default:
+        throw std::invalid_argument("unhandled enum value");
+    }
+}
+
+
+Group2::ExceedAction Group2::ExceedActionFromString( const std::string& stringValue ) {
+
+    if (stringValue == "NONE")
+        return ExceedAction::NONE;
+    else if (stringValue == "CON")
+        return ExceedAction::CON;
+    else if (stringValue == "+CON")
+        return ExceedAction::CON_PLUS;
+    else if (stringValue == "WELL")
+        return ExceedAction::WELL;
+    else if (stringValue == "PLUG")
+        return ExceedAction::PLUG;
+    else if (stringValue == "RATE")
+        return ExceedAction::RATE;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+const std::string Group2::InjectionCMode2String( InjectionCMode enumValue ) {
+    switch( enumValue ) {
+    case InjectionCMode::NONE:
+        return "NONE";
+    case InjectionCMode::RATE:
+        return "RATE";
+    case InjectionCMode::RESV:
+        return "RESV";
+    case InjectionCMode::REIN:
+        return "REIN";
+    case InjectionCMode::VREP:
+        return "VREP";
+    case InjectionCMode::FLD:
+        return "FLD";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+
+Group2::InjectionCMode Group2::InjectionCModeFromString( const std::string& stringValue ) {
+    if (stringValue == "NONE")
+        return InjectionCMode::NONE;
+    else if (stringValue == "RATE")
+        return InjectionCMode::RATE;
+    else if (stringValue == "RESV")
+        return InjectionCMode::RESV;
+    else if (stringValue == "REIN")
+        return InjectionCMode::REIN;
+    else if (stringValue == "VREP")
+        return InjectionCMode::VREP;
+    else if (stringValue == "FLD")
+        return InjectionCMode::FLD;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+Group2::GroupType operator|(Group2::GroupType lhs, Group2::GroupType rhs) {
+    return static_cast<Group2::GroupType>(static_cast<std::underlying_type<Group2::GroupType>::type>(lhs) | static_cast<std::underlying_type<Group2::GroupType>::type>(rhs));
+}
+
+
+Group2::GroupType operator&(Group2::GroupType lhs, Group2::GroupType rhs) {
+    return static_cast<Group2::GroupType>(static_cast<std::underlying_type<Group2::GroupType>::type>(lhs) & static_cast<std::underlying_type<Group2::GroupType>::type>(rhs));
+}
+
+
+const std::string Group2::ProductionCMode2String( ProductionCMode enumValue ) {
+    switch( enumValue ) {
+    case ProductionCMode::NONE:
+        return "NONE";
+    case ProductionCMode::ORAT:
+        return "ORAT";
+    case ProductionCMode::WRAT:
+        return "WRAT";
+    case ProductionCMode::GRAT:
+        return "GRAT";
+    case ProductionCMode::LRAT:
+        return "LRAT";
+    case ProductionCMode::CRAT:
+        return "CRAT";
+    case ProductionCMode::RESV:
+        return "RESV";
+    case ProductionCMode::PRBL:
+        return "PRBL";
+    case ProductionCMode::FLD:
+        return "FLD";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+
+Group2::ProductionCMode Group2::ProductionCModeFromString( const std::string& stringValue ) {
+    if (stringValue == "NONE")
+        return ProductionCMode::NONE;
+    else if (stringValue == "ORAT")
+        return ProductionCMode::ORAT;
+    else if (stringValue == "WRAT")
+        return ProductionCMode::WRAT;
+    else if (stringValue == "GRAT")
+        return ProductionCMode::GRAT;
+    else if (stringValue == "LRAT")
+        return ProductionCMode::LRAT;
+    else if (stringValue == "CRAT")
+        return ProductionCMode::CRAT;
+    else if (stringValue == "RESV")
+        return ProductionCMode::RESV;
+    else if (stringValue == "PRBL")
+        return ProductionCMode::PRBL;
+    else if (stringValue == "FLD")
+        return ProductionCMode::FLD;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+Group2::GuideRateTarget Group2::GuideRateTargetFromString( const std::string& stringValue ) {
+    if (stringValue == "OIL")
+        return GuideRateTarget::OIL;
+    else if (stringValue == "WAT")
+        return GuideRateTarget::WAT;
+    else if (stringValue == "GAS")
+        return GuideRateTarget::GAS;
+    else if (stringValue == "LIQ")
+        return GuideRateTarget::LIQ;
+    else if (stringValue == "COMB")
+        return GuideRateTarget::COMB;
+    else if (stringValue == "WGA")
+        return GuideRateTarget::WGA;
+    else if (stringValue == "CVAL")
+        return GuideRateTarget::CVAL;
+    else if (stringValue == "INJV")
+        return GuideRateTarget::INJV;
+    else if (stringValue == "POTN")
+        return GuideRateTarget::POTN;
+    else if (stringValue == "FORM")
+        return GuideRateTarget::FORM;
+    else
+        return GuideRateTarget::NO_GUIDE_RATE;
+}
+
 }

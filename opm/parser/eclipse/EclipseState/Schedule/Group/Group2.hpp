@@ -25,7 +25,6 @@
 
 #include <opm/parser/eclipse/Deck/UDAValue.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/IOrderSet.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Runspec.hpp>
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
 
@@ -35,9 +34,76 @@ class SummaryState;
 class Group2 {
 public:
 
+// A group can have both injection controls and production controls set at
+// the same time, i.e. this enum is used as a bitmask.
+enum class GroupType : unsigned {
+    NONE = 0,
+    PRODUCTION = 1,
+    INJECTION = 2,
+    MIXED = 3
+};
+
+
+
+enum class ExceedAction {
+    NONE = 0,
+    CON = 1,
+    CON_PLUS = 2,   // String: "+CON"
+    WELL = 3,
+    PLUG = 4,
+    RATE = 5
+};
+static const std::string ExceedAction2String( ExceedAction enumValue );
+static ExceedAction ExceedActionFromString( const std::string& stringValue );
+
+
+enum class InjectionCMode  : int {
+    NONE = 0,
+    RATE = 1,
+    RESV = 2,
+    REIN = 4,
+    VREP = 8,
+    FLD  = 16
+};
+static const std::string InjectionCMode2String( InjectionCMode enumValue );
+static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
+
+
+enum class ProductionCMode : int {
+    NONE = 0,
+    ORAT = 1,
+    WRAT = 2,
+    GRAT = 4,
+    LRAT = 8,
+    CRAT = 16,
+    RESV = 32,
+    PRBL = 64,
+    FLD  = 128
+};
+static const std::string ProductionCMode2String( ProductionCMode enumValue );
+static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
+
+
+enum class GuideRateTarget {
+    OIL = 0,
+    WAT = 1,
+    GAS = 2,
+    LIQ = 3,
+    COMB = 4,
+    WGA =  5,
+    CVAL = 6,
+    INJV = 7,
+    POTN = 8,
+    FORM = 9,
+    NO_GUIDE_RATE = 10
+};
+static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
+
+
+
 struct GroupInjectionProperties {
     Phase phase = Phase::WATER;
-    GroupInjection::ControlEnum cmode = GroupInjection::NONE;
+    InjectionCMode cmode = InjectionCMode::NONE;
     UDAValue surface_max_rate;
     UDAValue resv_max_rate;
     UDAValue target_reinj_fraction;
@@ -50,24 +116,24 @@ struct GroupInjectionProperties {
 
 struct InjectionControls {
     Phase phase;
-    GroupInjection::ControlEnum cmode;
+    InjectionCMode cmode;
     double surface_max_rate;
     double resv_max_rate;
     double target_reinj_fraction;
     double target_void_fraction;
     int injection_controls = 0;
-    bool has_control(GroupInjection::ControlEnum control) const;
+    bool has_control(InjectionCMode control) const;
 };
 
 struct GroupProductionProperties {
-    GroupProduction::ControlEnum cmode = GroupProduction::NONE;
-    GroupProductionExceedLimit::ActionEnum exceed_action = GroupProductionExceedLimit::NONE;
+    ProductionCMode cmode = ProductionCMode::NONE;
+    ExceedAction exceed_action = ExceedAction::NONE;
     UDAValue oil_target;
     UDAValue water_target;
     UDAValue gas_target;
     UDAValue liquid_target;
     double guide_rate;
-    GroupProduction::GuideRateDef guide_rate_def;
+    GuideRateTarget guide_rate_def;
     double resv_target = 0;
 
     int production_controls = 0;
@@ -76,18 +142,19 @@ struct GroupProductionProperties {
 };
 
 struct ProductionControls {
-    GroupProduction::ControlEnum cmode;
-    GroupProductionExceedLimit::ActionEnum exceed_action;
+    ProductionCMode cmode;
+    ExceedAction exceed_action;
     double oil_target;
     double water_target;
     double gas_target;
     double liquid_target;
     double guide_rate;
-    GroupProduction::GuideRateDef guide_rate_def;
+    GuideRateTarget guide_rate_def;
     double resv_target = 0;
     int production_controls = 0;
-    bool has_control(GroupProduction::ControlEnum control) const;
+    bool has_control(ProductionCMode control) const;
 };
+
 
     Group2(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
 
@@ -122,11 +189,11 @@ struct ProductionControls {
     bool wellgroup() const;
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
-    GroupProduction::ControlEnum production_cmode() const;
-    GroupInjection::ControlEnum injection_cmode() const;
+    ProductionCMode production_cmode() const;
+    InjectionCMode injection_cmode() const;
     Phase injection_phase() const;
-    bool has_control(GroupProduction::ControlEnum control) const;
-    bool has_control(GroupInjection::ControlEnum control) const;
+    bool has_control(ProductionCMode control) const;
+    bool has_control(InjectionCMode control) const;
 private:
     bool hasType(GroupType gtype) const;
     void addType(GroupType new_gtype);
@@ -150,6 +217,9 @@ private:
     GroupInjectionProperties injection_properties{};
     GroupProductionProperties production_properties{};
 };
+
+Group2::GroupType operator |(Group2::GroupType lhs, Group2::GroupType rhs);
+Group2::GroupType operator &(Group2::GroupType lhs, Group2::GroupType rhs);
 
 }
 

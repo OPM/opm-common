@@ -11,7 +11,7 @@ namespace {
     }
 
     std::string status( const Well2& w )  {
-        return WellCommon::Status2String( w.getStatus() );
+        return Well2::Status2String( w.getStatus() );
     }
 
     std::string preferred_phase( const Well2& w ) {

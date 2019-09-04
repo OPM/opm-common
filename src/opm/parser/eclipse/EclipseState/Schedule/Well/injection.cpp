@@ -22,27 +22,27 @@
 #include <stdexcept>
 
 #include <opm/parser/eclipse/Units/UnitSystem.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
+#include <opm/parser/eclipse/EclipseState/Schedule/Well/Well2.hpp>
 
 #include "injection.hpp"
 
 namespace Opm {
 namespace injection {
 
-    double rateToSI(double rawRate, WellInjector::TypeEnum wellType, const Opm::UnitSystem &unitSystem) {
+    double rateToSI(double rawRate, Well2::InjectorType wellType, const Opm::UnitSystem &unitSystem) {
         switch (wellType) {
-        case WellInjector::MULTI:
+        case Well2::InjectorType::MULTI:
             // multi-phase controlled injectors are a really funny
             // construct in Eclipse: the quantity controlled for is
             // not physically meaningful, i.e. Eclipse adds up
             // MCFT/day and STB/day.
             throw std::logic_error("There is no generic way to handle multi-phase injectors at this level!");
 
-        case WellInjector::OIL:
-        case WellInjector::WATER:
+        case Well2::InjectorType::OIL:
+        case Well2::InjectorType::WATER:
             return unitSystem.to_si( UnitSystem::measure::liquid_surface_rate, rawRate );
 
-        case WellInjector::GAS:
+        case Well2::InjectorType::GAS:
             return unitSystem.to_si( UnitSystem::measure::gas_surface_rate, rawRate );
 
         default:

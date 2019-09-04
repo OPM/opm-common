@@ -20,14 +20,24 @@
 #ifndef GUIDE_RATE_MODEL_HPP
 #define GUIDE_RATE_MODEL_HPP
 
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
-
 namespace Opm {
 
 class GuideRateModel {
 public:
+
+    enum class Target {
+        OIL = 0,
+        LIQ = 1,
+        GAS = 2,
+        RES = 3,
+        COMB = 4,
+        NONE = 5
+    };
+
+    static Target TargetFromString(const std::string& s);
+
     GuideRateModel(double time_interval_arg,
-                   GuideRateTarget phase_arg,
+                   Target target_arg,
                    double A_arg,
                    double B_arg,
                    double C_arg,
@@ -50,7 +60,7 @@ private:
       be evaluated, due to a division by zero problem.
     */
     double time_interval = 0;
-    GuideRateTarget phase = GuideRateTarget::NONE;
+    Target target = Target::NONE;
     double A = 0;
     double B = 0;
     double C = 0;

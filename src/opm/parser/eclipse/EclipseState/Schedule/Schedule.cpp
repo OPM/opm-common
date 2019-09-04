@@ -48,7 +48,6 @@
 #include <opm/parser/eclipse/EclipseState/Schedule/MSW/updatingConnectionsWithSegments.hpp>
 
 #include <opm/parser/eclipse/EclipseState/Schedule/OilVaporizationProperties.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQConfig.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/UDQ/UDQActive.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
@@ -122,7 +121,7 @@ namespace {
         udq_config(this->m_timeMap, std::make_shared<UDQConfig>(deck)),
         udq_active(this->m_timeMap, std::make_shared<UDQActive>()),
         guide_rate_model(this->m_timeMap, std::make_shared<GuideRateModel>()),
-        global_whistctl_mode(this->m_timeMap, WellProducer::CMODE_UNDEFINED),
+        global_whistctl_mode(this->m_timeMap, Well2::ProducerCMode::CMODE_UNDEFINED),
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, 3)
@@ -471,10 +470,10 @@ namespace {
     void Schedule::handleWHISTCTL(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         const auto& record = keyword.getRecord(0);
         const std::string& cmodeString = record.getItem("CMODE").getTrimmedString(0);
-        const WellProducer::ControlModeEnum controlMode = WellProducer::ControlModeFromString( cmodeString );
+        const auto controlMode = Well2::ProducerCModeFromString( cmodeString );
 
-        if (controlMode != WellProducer::NONE) {
-            if (!WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
+        if (controlMode != Well2::ProducerCMode::NONE) {
+            if (!Well2::WellProductionProperties::effectiveHistoryProductionControl(controlMode) ) {
                 std::string msg = "The WHISTCTL keyword specifies an un-supported control mode " + cmodeString
                     + ", which makes WHISTCTL keyword not affect the simulation at all";
                 OpmLog::warning(msg);
@@ -493,7 +492,7 @@ namespace {
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
             auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-            auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+            auto prop = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
@@ -505,7 +504,7 @@ namespace {
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
             auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-            auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+            auto prop = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
@@ -517,7 +516,7 @@ namespace {
         for (auto& well_pair : this->wells_static) {
             auto& dynamic_state = well_pair.second;
             auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-            auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+            auto prop = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
 
             if (prop->whistctl_cmode != controlMode) {
                 prop->whistctl_cmode = controlMode;
@@ -532,7 +531,7 @@ namespace {
         this->m_nupcol.update(currentStep, nupcol);
     }
 
-    
+
 
     /*
       The COMPORD keyword is handled together with the WELSPECS keyword in the
@@ -606,7 +605,7 @@ namespace {
                 addGroup(groupName , currentStep, unit_system);
 
             if (!hasWell(wellName)) {
-                WellCompletion::CompletionOrderEnum wellConnectionOrder = WellCompletion::TRACK;
+                auto wellConnectionOrder = Connection::Order::TRACK;
 
                 if( const auto* compordp = COMPORD_in_timestep() ) {
                      const auto& compord = *compordp;
@@ -617,7 +616,7 @@ namespace {
                         const std::string& wellNamePattern = compordRecord.getItem(0).getTrimmedString(0);
                         if (Well2::wellNameInWellNamePattern(wellName, wellNamePattern)) {
                             const std::string& compordString = compordRecord.getItem(1).getTrimmedString(0);
-                            wellConnectionOrder = WellCompletion::CompletionOrderEnumFromString(compordString);
+                            wellConnectionOrder = Connection::OrderFromString(compordString);
                         }
                     }
                 }
@@ -720,8 +719,7 @@ namespace {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
 
-            const WellCommon::StatusEnum status =
-                WellCommon::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
+            const Well2::Status status = Well2::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
 
             auto well_names = this->wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
@@ -733,7 +731,7 @@ namespace {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool switching_from_injector = !well2->isProducer();
-                    auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                    auto properties = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
                     bool update_well = false;
                     properties->handleWCONHIST(record);
 
@@ -741,7 +739,7 @@ namespace {
                         properties->resetDefaultBHPLimit();
                         well2->updateProducer(true);
 
-                        auto inj_props = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                        auto inj_props = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                         inj_props->setBHPLimit(0);
                         well2->updateInjection(inj_props);
                     }
@@ -771,7 +769,7 @@ namespace {
                                 "Well " + well2->name() + " is a history matched well with zero rate where crossflow is banned. " +
                                 "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                             OpmLog::note(msg);
-                            updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                            updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                         }
                     }
                 }
@@ -785,9 +783,7 @@ namespace {
             const std::string& wellNamePattern =
                 record.getItem("WELL").getTrimmedString(0);
 
-            const WellCommon::StatusEnum status =
-                WellCommon::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
-
+            const Well2::Status status = Well2::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
             auto well_names = this->wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
@@ -799,11 +795,11 @@ namespace {
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool switching_from_injector = !well2->isProducer();
-                    auto properties = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                    auto properties = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
                     bool update_well = switching_from_injector;
                     properties->clearControls();
                     if (well2->isAvailableForGroupControl())
-                        properties->addProductionControl(WellProducer::GRUP);
+                        properties->addProductionControl(Well2::ProducerCMode::GRUP);
 
                     properties->handleWCONPROD(well_name, record);
 
@@ -844,7 +840,7 @@ namespace {
       Function is quite dangerous - because if this is called while holding a
       Well2 pointer that will go stale and needs to be refreshed.
     */
-    bool Schedule::updateWellStatus( const std::string& well_name, size_t reportStep , WellCommon::StatusEnum status) {
+    bool Schedule::updateWellStatus( const std::string& well_name, size_t reportStep , Well2::Status status) {
         bool update = false;
         {
             auto& dynamic_state = this->wells_static.at(well_name);
@@ -887,13 +883,13 @@ namespace {
                 invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names ) {
-                WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+                Well2::Status status = Well2::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
                 updateWellStatus( well_name , currentStep , status );
                 {
                     bool update_well = false;
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-                    auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                    auto injection = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJE(record, well2->isAvailableForGroupControl(), well_name);
 
                     if (well2->updateProducer(false))
@@ -919,16 +915,16 @@ namespace {
                          "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
 
                          if (injection->surfaceInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(WellInjector::RATE) && injection->surfaceInjectionRate.get<double>() == 0) {
+                             if (injection->hasInjectionControl(Well2::InjectorCMode::RATE) && injection->surfaceInjectionRate.get<double>() == 0) {
                                  OpmLog::note(msg);
-                                 updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                                 updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                              }
                          }
 
                          if (injection->reservoirInjectionRate.is<double>()) {
-                             if (injection->hasInjectionControl(WellInjector::RESV) && injection->reservoirInjectionRate.get<double>() == 0) {
+                             if (injection->hasInjectionControl(Well2::InjectorCMode::RESV) && injection->reservoirInjectionRate.get<double>() == 0) {
                                  OpmLog::note(msg);
-                                 updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                                 updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                              }
                          }
                     }
@@ -944,7 +940,7 @@ namespace {
     void Schedule::handleWCONINJH(const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            WellCommon::StatusEnum status = WellCommon::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
+            Well2::Status status = Well2::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
@@ -956,7 +952,7 @@ namespace {
                     bool update_well = false;
                     auto& dynamic_state = this->wells_static.at(well_name);
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
-                    auto injection = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                    auto injection = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                     injection->handleWCONINJH(record, well2->isProducer(), well_name);
 
                     if (well2->updateProducer(false))
@@ -979,7 +975,7 @@ namespace {
                             "Well " + well_name + " is an injector with zero rate where crossflow is banned. " +
                             "This well will be closed at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days";
                         OpmLog::note(msg);
-                        updateWellStatus( well_name, currentStep, WellCommon::StatusEnum::SHUT );
+                        updateWellStatus( well_name, currentStep, Well2::Status::SHUT );
                     }
                 }
             }
@@ -1208,7 +1204,7 @@ namespace {
                 {
                     const auto& well = this->getWell2(well_name, currentStep);
                     const auto& inj = well.getInjectionProperties();
-                    if (!well.isProducer() && inj.injectorType == WellInjector::GAS) {
+                    if (!well.isProducer() && inj.injectorType == Well2::InjectorType::GAS) {
                         if (well.getSolventFraction() != fraction) {
                             auto new_well = std::make_shared<Well2>(well);
                             new_well->updateSolventFraction(fraction);
@@ -1265,7 +1261,7 @@ namespace {
                     if (current_temp != temp && !well.isProducer()) {
                         auto& dynamic_state = this->wells_static.at(well_name);
                         auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
-                        auto inj = std::make_shared<WellInjectionProperties>(well_ptr->getInjectionProperties());
+                        auto inj = std::make_shared<Well2::WellInjectionProperties>(well_ptr->getInjectionProperties());
                         inj->temperature = temp;
                         well_ptr->updateInjection(inj);
                         this->updateWell(well_ptr, currentStep);
@@ -1299,7 +1295,7 @@ namespace {
                     if (current_temp != temp && !well.isProducer()) {
                         auto& dynamic_state = this->wells_static.at(well_name);
                         auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
-                        auto inj = std::make_shared<WellInjectionProperties>(well_ptr->getInjectionProperties());
+                        auto inj = std::make_shared<Well2::WellInjectionProperties>(well_ptr->getInjectionProperties());
                         inj->temperature = temp;
                         well_ptr->updateInjection(inj);
                         this->updateWell(well_ptr, currentStep);
@@ -1336,13 +1332,12 @@ namespace {
             return std::all_of( rec.begin() + 2, rec.end(), defaulted );
         };
 
-        constexpr auto open = WellCommon::StatusEnum::OPEN;
+        constexpr auto open = Well2::Status::OPEN;
 
         for( const auto& record : keyword ) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
             const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
-
             if (well_names.empty())
                 invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
 
@@ -1350,7 +1345,7 @@ namespace {
              * well status is updated
              */
             if( conn_defaulted( record ) ) {
-                const auto well_status = WellCommon::StatusFromString( status_str );
+                const auto well_status = Well2::StatusFromString( status_str );
                 for (const auto& wname : well_names) {
                     {
                         const auto& well = this->getWell2(wname, currentStep);
@@ -1373,7 +1368,7 @@ namespace {
             }
 
             for (const auto& wname : well_names) {
-                const auto comp_status = WellCompletion::StateEnumFromString( status_str );
+                const auto comp_status = Connection::StateFromString( status_str );
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well2>( *dynamic_state[currentStep] );
@@ -1410,7 +1405,7 @@ namespace {
         for( const auto& record : keyword ) {
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
-            const auto cmode = WellTarget::ControlModeFromString(record.getItem("CMODE").getTrimmedString(0));
+            const auto cmode = Well2::WELTARGCModeFromString(record.getItem("CMODE").getTrimmedString(0));
             double newValue = record.getItem("NEW_VALUE").get< double >(0);
 
             const auto well_names = wellNames( wellNamePattern, currentStep );
@@ -1424,16 +1419,16 @@ namespace {
                     auto well2 = std::make_shared<Well2>(*dynamic_state[currentStep]);
                     bool update = false;
                     if (well2->isProducer()) {
-                        auto prop = std::make_shared<WellProductionProperties>(well2->getProductionProperties());
+                        auto prop = std::make_shared<Well2::WellProductionProperties>(well2->getProductionProperties());
                         prop->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
                         update = well2->updateProduction(prop);
-                        if (cmode == WellTarget::GUID)
+                        if (cmode == Well2::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);
                     } else {
-                        auto inj = std::make_shared<WellInjectionProperties>(well2->getInjectionProperties());
+                        auto inj = std::make_shared<Well2::WellInjectionProperties>(well2->getInjectionProperties());
                         inj->handleWELTARG(cmode, newValue, siFactorG, siFactorL, siFactorP);
                         update = well2->updateInjection(inj);
-                        if (cmode == WellTarget::GUID)
+                        if (cmode == Well2::WELTARGCMode::GUID)
                             update |= well2->updateWellGuideRate(newValue);
                     }
                     if (update)
@@ -1452,7 +1447,7 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                GroupInjection::ControlEnum controlMode = GroupInjection::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
+                Group2::InjectionCMode controlMode = Group2::InjectionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
                 Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
                 auto surfaceInjectionRate = record.getItem("SURFACE_TARGET").get< UDAValue >(0);
                 auto reservoirInjectionRate = record.getItem("RESV_TARGET").get<UDAValue>(0);
@@ -1472,16 +1467,16 @@ namespace {
                     injection.injection_controls = 0;
 
                     if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
-                        injection.injection_controls += GroupInjection::RATE;
+                        injection.injection_controls += static_cast<int>(Group2::InjectionCMode::RATE);
 
                     if (!record.getItem("RESV_TARGET").defaultApplied(0))
-                        injection.injection_controls += GroupInjection::RESV;
+                        injection.injection_controls += static_cast<int>(Group2::InjectionCMode::RESV);
 
                     if (!record.getItem("REINJ_TARGET").defaultApplied(0))
-                        injection.injection_controls += GroupInjection::REIN;
+                        injection.injection_controls += static_cast<int>(Group2::InjectionCMode::REIN);
 
                     if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
-                        injection.injection_controls += GroupInjection::VREP;
+                        injection.injection_controls += static_cast<int>(Group2::InjectionCMode::VREP);
 
                     if (group_ptr->updateInjection(injection))
                         this->updateGroup(std::move(group_ptr), currentStep);
@@ -1489,6 +1484,7 @@ namespace {
             }
         }
     }
+
 
     void Schedule::handleGCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
         for( const auto& record : keyword ) {
@@ -1499,27 +1495,27 @@ namespace {
                 invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
-                GroupProduction::ControlEnum controlMode = GroupProduction::ControlEnumFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
-                GroupProductionExceedLimit::ActionEnum exceedAction = GroupProductionExceedLimit::ActionEnumFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
+                Group2::ProductionCMode controlMode = Group2::ProductionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
+                Group2::ExceedAction exceedAction = Group2::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0) );
                 auto oil_target = record.getItem("OIL_TARGET").get<UDAValue>(0);
                 auto gas_target = record.getItem("GAS_TARGET").get<UDAValue>(0);
                 auto water_target = record.getItem("WATER_TARGET").get<UDAValue>(0);
                 auto liquid_target = record.getItem("LIQUID_TARGET").get<UDAValue>(0);
+                auto guide_rate_def = Group2::GuideRateTarget::NO_GUIDE_RATE;
                 double guide_rate = 0;
-                GroupProduction::GuideRateDef guide_rate_def = GroupProduction::GuideRateDef::NO_GUIDE_RATE;
                 if (group_name != "FIELD") {
-                    if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {                  
+                    if (record.getItem("GUIDE_RATE_DEF").hasValue(0)) {
                         std::string guide_rate_str = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
-                        guide_rate_def = GroupProduction::GetGuideRateFromString( guide_rate_str );
+                        guide_rate_def = Group2::GuideRateTargetFromString( guide_rate_str );
 
                         if ((guide_rate_str == "INJ" || guide_rate_str == "POTN" || guide_rate_str == "FORM")) {
                             std::string msg = "The supplied guide_rate value will be ignored";
-                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg, errors);                            
-                        }   
+                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg, errors);
+                        }
                         else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
-                                guide_rate_def = GroupProduction::GuideRateDef::POTN;
+                                guide_rate_def = Group2::GuideRateTarget::POTN;
                         }
                     }
                 }
@@ -1535,30 +1531,30 @@ namespace {
                     production.guide_rate = guide_rate;
                     production.guide_rate_def = guide_rate_def;
                     production.resv_target = resv_target;
-                    if ((production.cmode == GroupProduction::ORAT) ||
-                        (production.cmode == GroupProduction::WRAT) ||
-                        (production.cmode == GroupProduction::GRAT) ||
-                        (production.cmode == GroupProduction::LRAT))
-                        production.exceed_action = GroupProductionExceedLimit::RATE;
+                    if ((production.cmode == Group2::ProductionCMode::ORAT) ||
+                        (production.cmode == Group2::ProductionCMode::WRAT) ||
+                        (production.cmode == Group2::ProductionCMode::GRAT) ||
+                        (production.cmode == Group2::ProductionCMode::LRAT))
+                        production.exceed_action = Group2::ExceedAction::RATE;
                     else
                         production.exceed_action = exceedAction;
 
                     production.production_controls = 0;
 
                     if (!record.getItem("OIL_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::ORAT;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::ORAT);
 
                     if (!record.getItem("GAS_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::GRAT;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::GRAT);
 
                     if (!record.getItem("WATER_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::WRAT;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::WRAT);
 
                     if (!record.getItem("LIQUID_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::LRAT;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::LRAT);
 
                     if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
-                        production.production_controls += GroupProduction::RESV;
+                        production.production_controls += static_cast<int>(Group2::ProductionCMode::RESV);
 
                     if (group_ptr->updateProduction(production))
                         this->updateGroup(std::move(group_ptr), currentStep);
@@ -1592,7 +1588,7 @@ namespace {
         const auto& record = keyword.getRecord(0);
 
         double min_calc_delay = record.getItem<ParserKeywords::GUIDERAT::MIN_CALC_TIME>().getSIDouble(0);
-        auto phase = GuideRateTargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
+        auto phase = GuideRateModel::TargetFromString(record.getItem<ParserKeywords::GUIDERAT::NOMINATED_PHASE>().getTrimmedString(0));
         double A = record.getItem<ParserKeywords::GUIDERAT::A>().get<double>(0);
         double B = record.getItem<ParserKeywords::GUIDERAT::B>().get<double>(0);
         double C = record.getItem<ParserKeywords::GUIDERAT::C>().get<double>(0);
@@ -1806,7 +1802,7 @@ namespace {
                     if (well2->updateConnections(connections))
                         this->updateWell(well2, currentStep);
 
-                    if (well2->getStatus() == WellCommon::StatusEnum::SHUT) {
+                    if (well2->getStatus() == Well2::Status::SHUT) {
                         std::string msg =
                             "All completions in well " + well2->name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
                             "The well is therefore also shut.";
@@ -1855,10 +1851,10 @@ namespace {
               bool availableForGroupControl = DeckItem::to_bool(record.getItem("GROUP_CONTROLLED").getTrimmedString(0));
                 double guide_rate = record.getItem("GUIDE_RATE").get< double >(0);
                 double scaling_factor = record.getItem("SCALING_FACTOR").get< double >(0);
-                GuideRate::GuideRatePhaseEnum phase = GuideRate::UNDEFINED;
+                auto phase = Well2::GuideRateTarget::UNDEFINED;
                 if (!record.getItem("PHASE").defaultApplied(0)) {
                     std::string guideRatePhase = record.getItem("PHASE").getTrimmedString(0);
-                    phase = GuideRate::GuideRatePhaseEnumFromString(guideRatePhase);
+                    phase = Well2::GuideRateTargetFromString(guideRatePhase);
                 }
 
                 {
@@ -1914,7 +1910,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, currentStep);
             for(const auto& well_name : well_names)
-                this->rft_config.updateRFT(well_name, currentStep, RFTConnections::RFTEnum::YES);
+                this->rft_config.updateRFT(well_name, currentStep, RFTConfig::RFT::YES);
 
         }
 
@@ -1926,8 +1922,8 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
 
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
 
-            RFTConnections::RFTEnum RFTKey = RFTConnections::RFTEnumFromString(record.getItem("OUTPUT_RFT").getTrimmedString(0));
-            PLTConnections::PLTEnum PLTKey = PLTConnections::PLTEnumFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
+            RFTConfig::RFT RFTKey = RFTConfig::RFTFromString(record.getItem("OUTPUT_RFT").getTrimmedString(0));
+            RFTConfig::PLT PLTKey = RFTConfig::PLTFromString(record.getItem("OUTPUT_PLT").getTrimmedString(0));
             const auto well_names = wellNames(wellNamePattern, currentStep);
             for(const auto& well_name : well_names) {
                 this->rft_config.updateRFT(well_name, currentStep, RFTKey);
@@ -1980,7 +1976,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     void Schedule::addWell(const std::string& wellName,
                            const DeckRecord& record,
                            size_t timeStep,
-                           WellCompletion::CompletionOrderEnum wellConnectionOrder,
+                           Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system) {
 
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
@@ -2085,7 +2081,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
     }
 
 
-    std::vector< Well2 > Schedule::getChildWells2(const std::string& group_name, size_t timeStep, GroupWellQueryMode query_mode) const {
+    std::vector< Well2 > Schedule::getChildWells2(const std::string& group_name, size_t timeStep) const {
         if (!hasGroup(group_name))
             throw std::invalid_argument("No such group: '" + group_name + "'");
         {
@@ -2094,9 +2090,9 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             if (group_ptr) {
                 std::vector<Well2> wells;
 
-                if (group_ptr->groups().size() && query_mode == GroupWellQueryMode::Recursive) {
+                if (group_ptr->groups().size()) {
                     for (const auto& child_name : group_ptr->groups()) {
-                        const auto& child_wells = getChildWells2( child_name, timeStep, query_mode );
+                        const auto& child_wells = getChildWells2( child_name, timeStep);
                         wells.insert( wells.end() , child_wells.begin() , child_wells.end());
                     }
                 } else {
@@ -2444,7 +2440,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
             const auto& well = this->getWell2(wname, timeStep);
             const auto& connections = well.getConnections();
             if (connections.allConnectionsShut())
-                this->updateWellStatus( well.name(), timeStep, WellCommon::StatusEnum::SHUT);
+                this->updateWellStatus( well.name(), timeStep, Well2::Status::SHUT);
         }
     }
 

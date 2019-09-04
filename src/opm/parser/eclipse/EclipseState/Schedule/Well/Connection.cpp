@@ -29,7 +29,6 @@
 #include <opm/parser/eclipse/Parser/ParseContext.hpp>
 #include <opm/parser/eclipse/EclipseState/Eclipse3DProperties.hpp>
 #include <opm/parser/eclipse/EclipseState/Grid/EclipseGrid.hpp>
-#include <opm/parser/eclipse/EclipseState/Schedule/ScheduleEnums.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Well/Connection.hpp>
 #include <opm/parser/eclipse/EclipseState/Schedule/Schedule.hpp>
 #include <opm/parser/eclipse/EclipseState/Util/Value.hpp>
@@ -40,19 +39,18 @@ namespace Opm {
     Connection::Connection(int i, int j , int k ,
                            int compnum,
                            double depth,
-                           WellCompletion::StateEnum stateArg ,
+                           State stateArg ,
                            double CF,
                            double Kh,
                            double rw,
                            double r0,
                            double skin_factor,
                            const int satTableId,
-                           const WellCompletion::DirectionEnum directionArg,
+                           const Direction directionArg,
 			   const std::size_t seqIndex,
 			   const double segDistStart,
 			   const double segDistEnd,
-			   const bool defaultSatTabId
-			  )
+			   const bool defaultSatTabId)
         : direction(directionArg),
           center_depth(depth),
           open_state(stateArg),
@@ -70,14 +68,6 @@ namespace Opm {
           m_defaultSatTabId(defaultSatTabId)
     {}
 
-    /*bool Connection::sameCoordinate(const Connection& other) const {
-        if ((m_i == other.m_i) &&
-            (m_j == other.m_j) &&
-            (m_k == other.m_k))
-            return true;
-        else
-            return false;
-    }*/
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
         if ((ijk[0] == i) && (ijk[1] == j) && (ijk[2] == k)) {
@@ -86,8 +76,6 @@ namespace Opm {
             return false;
         }
     }
-
-
 
     int Connection::getI() const {
         return ijk[0];
@@ -117,7 +105,7 @@ namespace Opm {
         return m_compSeg_seqIndex;
     }
 
-    WellCompletion::DirectionEnum Connection::dir() const {
+    Connection::Direction Connection::dir() const {
         return this->direction;
     }
 
@@ -150,7 +138,7 @@ namespace Opm {
         return this->center_depth;
     }
 
-    WellCompletion::StateEnum Connection::state() const {
+    Connection::State Connection::state() const {
         return this->open_state;
     }
 
@@ -186,7 +174,7 @@ namespace Opm {
         return this->m_skin_factor;
     }
 
-    void Connection::setState(WellCompletion::StateEnum state) {
+    void Connection::setState(State state) {
         this->open_state = state;
     }
 
@@ -221,8 +209,8 @@ namespace Opm {
         ss << "wPi " << this->wPi << std::endl;
         ss << "kh " << this->m_Kh << std::endl;
         ss << "sat_tableId " << this->sat_tableId << std::endl;
-        ss << "open_state " << this->open_state << std::endl;
-        ss << "direction " << this->direction << std::endl;
+        ss << "open_state " << Connection::State2String(this->open_state) << std::endl;
+        ss << "direction " << Connection::Direction2String(this->direction) << std::endl;
         ss << "segment_nr " << this->segment_number << std::endl;
         ss << "center_depth " << this->center_depth << std::endl;
         ss << "seqIndex " << this->m_seqIndex << std::endl;
@@ -254,4 +242,101 @@ namespace Opm {
     bool Connection::operator!=( const Connection& rhs ) const {
         return !( *this == rhs );
     }
+
+
+
+const std::string Connection::State2String( State enumValue ) {
+    switch( enumValue ) {
+    case State::OPEN:
+        return "OPEN";
+    case State::AUTO:
+        return "AUTO";
+    case State::SHUT:
+        return "SHUT";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
 }
+
+
+Connection::State Connection::StateFromString( const std::string& stringValue ) {
+    if (stringValue == "OPEN")
+        return State::OPEN;
+    else if (stringValue == "SHUT")
+        return State::SHUT;
+    else if (stringValue == "STOP")
+        return State::SHUT;
+    else if (stringValue == "AUTO")
+        return State::AUTO;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+std::string Connection::Direction2String(const Direction enumValue)
+{
+    std::string stringValue;
+
+    switch (enumValue) {
+    case Direction::X:
+        stringValue = "X";
+        break;
+
+    case Direction::Y:
+        stringValue = "Y";
+        break;
+
+    case Direction::Z:
+        stringValue = "Z";
+        break;
+    }
+
+    return stringValue;
+}
+
+
+Connection::Direction Connection::DirectionFromString(const std::string& s )
+{
+    Direction direction;
+
+    if      (s == "X") { direction = Direction::X; }
+    else if (s == "Y") { direction = Direction::Y; }
+    else if (s == "Z") { direction = Direction::Z; }
+    else {
+        std::string msg = "Unsupported completion direction " + s;
+        throw std::invalid_argument(msg);
+    }
+
+    return direction;
+}
+
+
+const std::string Connection::Order2String( Order enumValue ) {
+    switch( enumValue ) {
+    case Order::DEPTH:
+        return "DEPTH";
+    case Order::INPUT:
+        return "INPUT";
+    case Order::TRACK:
+        return "TRACK";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+
+Connection::Order Connection::OrderFromString(const std::string& stringValue ) {
+    if (stringValue == "DEPTH")
+        return Order::DEPTH;
+    else if (stringValue == "INPUT")
+        return Order::INPUT;
+    else if (stringValue == "TRACK")
+        return Order::TRACK;
+    else
+        throw std::invalid_argument("Unknown enum state string: " + stringValue );
+}
+
+
+
+}
+
